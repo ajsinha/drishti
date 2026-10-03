@@ -15,14 +15,18 @@
  */
 package com.ash.drishti.engine.shape;
 
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Synthetic sample documents from a plain JSON Schema (draft 2020-12 or 07, or a shape.json): the types, {@code enum},
@@ -34,6 +38,8 @@ public final class SchemaSampler {
 
     private static final JsonNodeFactory F = JsonNodeFactory.instance;
     private static final int MAX_DEPTH = 8;
+    /** Past MAX_DEPTH only required members are written; this many levels further, nothing is. */
+    private static final int HARD_CAP = 6;
     private final JsonNode root;
 
     public SchemaSampler(JsonNode schema) {
@@ -107,25 +113,70 @@ public final class SchemaSampler {
 
     private JsonNode object(JsonNode s, Random rnd, int n, int depth, String path) {
         ObjectNode o = F.objectNode();
-        if (depth >= MAX_DEPTH) {
+        Set<String> required = new HashSet<>();
+        s.path("required").forEach(r -> required.add(r.asText()));
+        boolean cut = depth >= MAX_DEPTH;
+        if (depth >= MAX_DEPTH + HARD_CAP) {
             return o;
         }
         for (Map.Entry<String, JsonNode> e : (Iterable<Map.Entry<String, JsonNode>>) s.path("properties")::fields) {
+            if (e.getValue().isBoolean() && !e.getValue().asBoolean()) {
+                continue;
+            }
+            if (cut && !required.contains(e.getKey())) {
+                continue;
+            }
             o.set(e.getKey(), value(e.getValue(), rnd, n, depth + 1, path + "." + e.getKey()));
+        }
+        if (cut) {
+            return o;
+        }
+        int min = s.path("minProperties").asInt(0);
+        JsonNode patterns = s.path("patternProperties");
+        if (patterns.isObject() && patterns.size() > 0) {
+            int target = Math.max(min, 1);
+            for (int round = 0; round < 40 && o.size() < target; round++) {
+                for (Map.Entry<String, JsonNode> e : (Iterable<Map.Entry<String, JsonNode>>) patterns::fields) {
+                    String key = RegexSampler.sample(e.getKey(), rnd);
+                    if (key != null && !o.has(key) && o.size() < target) {
+                        o.set(key, value(e.getValue(), rnd, n, depth + 1, path + "." + key));
+                    }
+                }
+            }
+        }
+        JsonNode extra = s.path("additionalProperties");
+        for (int i = 1; o.size() < min && !(extra.isBoolean() && !extra.asBoolean()); i++) {
+            o.set("extra-" + i, value(extra.isObject() ? extra : F.objectNode(), rnd, n, depth + 1, path + ".extra"));
         }
         return o;
     }
 
     private JsonNode array(JsonNode s, Random rnd, int n, int depth, String path) {
         ArrayNode a = F.arrayNode();
-        if (depth >= MAX_DEPTH) {
+        boolean cut = depth >= MAX_DEPTH;
+        int min = s.path("minItems").asInt(cut ? 0 : 1);
+        if (depth >= MAX_DEPTH + HARD_CAP) {
             return a;
         }
-        int min = s.path("minItems").asInt(1);
+        JsonNode prefix = s.path("prefixItems");
+        JsonNode items = s.path("items");
+        if (!prefix.isArray() && items.isArray()) {
+            prefix = items;
+            items = s.path("additionalItems");
+        }
+        boolean noMore = items.isBoolean() && !items.asBoolean();
+        int fixed = prefix.isArray() ? prefix.size() : 0;
         int max = Math.max(min, s.path("maxItems").asInt(Math.max(min, 5)));
-        int size = Math.min(max, Math.max(min, 3 + n % 3));
+        int size = cut ? min : Math.min(max, Math.max(min, 3 + n % 3));
+        if (fixed > 0) {
+            size = noMore ? Math.min(fixed, max) : Math.max(size, Math.min(fixed, max));
+        }
         for (int i = 0; i < size; i++) {
-            a.add(value(s.path("items"), rnd, n + i, depth + 1, path + "[]"));
+            if (i < fixed) {
+                a.add(value(prefix.get(i), rnd, n + i, depth + 1, path + "[]"));
+            } else if (!noMore) {
+                a.add(value(items, rnd, n + i, depth + 1, path + "[]"));
+            }
         }
         return a;
     }
@@ -146,6 +197,12 @@ public final class SchemaSampler {
 
     private static String string(JsonNode s, Random rnd, int n, String path) {
         String format = s.path("format").asText("");
+        if (s.path("pattern").isTextual() && format.isEmpty()) {
+            String fromPattern = fromPattern(s, rnd);
+            if (fromPattern != null) {
+                return fromPattern;
+            }
+        }
         String field = path.substring(path.lastIndexOf('.') + 1).replace("[]", "");
         String out = switch (format) {
             case "date" -> java.time.LocalDate.of(2026, 1, 1).plusDays(n * 7L + rnd.nextInt(7)).toString();
@@ -168,6 +225,22 @@ public final class SchemaSampler {
         return b.toString();
     }
 
+    /** A string matching the schema's {@code pattern} (a simple subset) within its length bounds, or null. */
+    private static String fromPattern(JsonNode s, Random rnd) {
+        int min = s.path("minLength").asInt(0);
+        int max = s.path("maxLength").asInt(Integer.MAX_VALUE);
+        for (int attempt = 0; attempt < 25; attempt++) {
+            String out = RegexSampler.sample(s.get("pattern").asText(), rnd);
+            if (out == null) {
+                return null;
+            }
+            if (out.length() >= min && out.length() <= max) {
+                return out;
+            }
+        }
+        return null;
+    }
+
     private static String type(JsonNode s) {
         JsonNode t = s.get("type");
         if (t != null && t.isArray()) {
@@ -186,11 +259,15 @@ public final class SchemaSampler {
 
     private JsonNode resolve(JsonNode schema) {
         JsonNode s = schema;
+        if (s.has("$ref") && !s.get("$ref").asText().startsWith("#")) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST,
+                    "the schema's $ref " + s.get("$ref").asText() + " is not inside the schema; only local references (#/...) are followed");
+        }
         for (int i = 0; i < MAX_DEPTH && s.has("$ref") && s.get("$ref").asText().startsWith("#"); i++) {
             String ref = s.get("$ref").asText();
             JsonNode target = "#".equals(ref) ? root : root.at(ref.substring(1));
             if (target.isMissingNode()) {
-                break;
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "the schema's $ref " + ref + " points at nothing in the schema");
             }
             s = target;
         }

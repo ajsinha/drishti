@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -44,6 +46,53 @@ class SchemaSamplerTest {
              },
              "$defs":{"leg":{"type":"object","properties":{"ccy":{"enum":["USD","EUR"]},"amount":{"type":"number","minimum":0,"maximum":10}}}}}
             """;
+
+    private static List<JsonNode> docs(String schema, int n) throws Exception {
+        return new SchemaSampler(JSON.readTree(schema)).documents(n);
+    }
+
+    @Test
+    void patternOneOfPatternPropertiesPrefixItemsAndRecursionAreHonoured() throws Exception {
+        for (JsonNode d : docs("{\"type\":\"object\",\"required\":[\"id\"],\"properties\":{\"id\":{\"type\":\"string\",\"pattern\":\"^T-[0-9]{4}$\"},"
+                + "\"ccy\":{\"type\":\"string\",\"pattern\":\"^(USD|EUR|[A-Z]{3}-\\\\d+)$\"}}}", 12)) {
+            assertThat(d.path("id").asText()).matches("T-[0-9]{4}");
+            assertThat(d.path("ccy").asText()).matches("USD|EUR|[A-Z]{3}-\\d+");
+        }
+        for (JsonNode d : docs("{\"type\":\"object\",\"required\":[\"v\"],\"properties\":{\"v\":{\"oneOf\":[{\"type\":\"integer\",\"minimum\":10},"
+                + "{\"type\":\"string\",\"pattern\":\"^x+$\"}]}}}", 12)) {
+            JsonNode v = d.path("v");
+            assertThat(v.isIntegralNumber() && v.asInt() >= 10 || v.isTextual() && v.asText().matches("x+")).as(d.toString()).isTrue();
+        }
+        for (JsonNode d : docs("{\"type\":\"object\",\"patternProperties\":{\"^px_[A-Z]{3}$\":{\"type\":\"number\",\"minimum\":0}},"
+                + "\"additionalProperties\":false,\"minProperties\":2}", 6)) {
+            assertThat(d.size()).isGreaterThanOrEqualTo(2);
+            d.fieldNames().forEachRemaining(k -> assertThat(k).matches("px_[A-Z]{3}"));
+        }
+        for (JsonNode d : docs("{\"type\":\"object\",\"required\":[\"pt\"],\"properties\":{\"pt\":{\"type\":\"array\",\"prefixItems\":[{\"type\":\"number\"},"
+                + "{\"type\":\"string\"}],\"items\":false,\"minItems\":2},\"no\":false}}", 6)) {
+            assertThat(d.path("pt")).hasSize(2);
+            assertThat(d.path("pt").get(0).isNumber()).isTrue();
+            assertThat(d.path("pt").get(1).isTextual()).isTrue();
+            assertThat(d.has("no")).isFalse();
+        }
+        for (JsonNode d : docs("{\"$defs\":{\"node\":{\"type\":\"object\",\"required\":[\"name\"],\"properties\":{\"name\":{\"type\":\"string\"},"
+                + "\"children\":{\"type\":\"array\",\"items\":{\"$ref\":\"#/$defs/node\"}}}}},\"$ref\":\"#/$defs/node\"}", 3)) {
+            Deque<JsonNode> todo = new ArrayDeque<>(List.of(d));
+            while (!todo.isEmpty()) {
+                JsonNode node = todo.pop();
+                assertThat(node.has("name")).as("every level has the required name").isTrue();
+                node.path("children").forEach(todo::push);
+            }
+        }
+    }
+
+    @Test
+    void aDanglingOrRemoteRefIsRefused() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> docs("{\"type\":\"object\",\"properties\":{\"a\":{\"$ref\":\"#/$defs/missing\"}}}", 1))
+                .hasMessageContaining("points at nothing");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> docs("{\"type\":\"object\",\"properties\":{\"a\":{\"$ref\":\"http://example.invalid/x.json\"}}}", 1))
+                .hasMessageContaining("not inside the schema");
+    }
 
     @Test
     void syntheticDocumentsValidateAgainstTheirSchemaAndVary() throws Exception {
