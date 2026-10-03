@@ -218,6 +218,14 @@ class OpApplierTest {
     }
 
     @Test
+    void theTablesPivotMappingIsAccepted() throws Exception {
+        String text = Files.readString(EXAMPLES.resolve("all-panels-showcase.sutra.yaml"));
+        OpResult r = applier.apply(text, List.of(new SetOption("versions", "pivot", Map.of("heat", true))));
+        assertThat(r.problems()).isEmpty();
+        assertThat(r.yaml()).contains("heat: true");
+    }
+
+    @Test
     void aBadOperationIsALocatedProblemAndNeverCorruptsTheText() throws Exception {
         String text = Files.readString(EXAMPLES.resolve("all-panels-showcase.sutra.yaml"));
         List<Op> ops = List.of(

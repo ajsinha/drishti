@@ -113,7 +113,7 @@ public final class PanelOptions {
 
     /** Whether {@code option} of {@code kind} panels is written as a list or a mapping (every other option is one value). */
     public static boolean takesContainer(PanelKind kind, String option) {
-        return "columns".equals(option) || "body".equals(option) || "by".equals(option) && kind == PanelKind.PIVOT
+        return "columns".equals(option) || Panel.PIVOT.equals(option) || "body".equals(option) || "by".equals(option) && kind == PanelKind.PIVOT
                 || "markers".equals(option) && kind == PanelKind.HISTOGRAM || LISTS.getOrDefault(kind, Map.of()).containsKey(option);
     }
 

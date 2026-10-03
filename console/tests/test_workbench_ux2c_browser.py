@@ -32,12 +32,15 @@ def say(page):
 
 def test_unknown_example_design_and_sutra_addresses_say_so(live_console, page):
     page.goto(live_console + "/studio?example=nope")
+    page.locator("[data-start-go]").click()
     wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
     wait(page, "document.querySelector('[data-say]').textContent.indexOf(\"no example 'nope'\") >= 0")
     page.goto(live_console + "/studio?design=zzzz")
+    page.locator("[data-start-go]").click()
     wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
     wait(page, "document.querySelector('[data-say]').textContent.indexOf(\"design you asked for is not one of yours\") >= 0")
     page.goto(live_console + "/studio?sutra=nope@9")
+    page.locator("[data-start-go]").click()
     text = page.locator("[role=alert]").first.inner_text()
     assert "no Sutra 'nope@9' is loaded" in text and text.count("DRS-2003") == 1
 
@@ -103,9 +106,10 @@ def test_an_old_complaint_does_not_stay_on_the_status_line(live_console, page):
 
 def test_the_help_examples_page_has_one_link_per_example_and_it_opens_a_copy(live_console, page):
     page.goto(live_console + "/help/examples")
-    links = page.locator(".help-example-actions a")
+    links = page.locator(".help-example-actions [data-example-copy]")
     assert links.count() == page.locator(".help-example-item").count()
-    assert links.first.get_attribute("href").startswith("/studio?example=")
+    page.locator("[data-example-copy]").first.click()          # a POST: a GET never starts a design
+    page.wait_for_url("**/build/d/*?tab=split*")
 
 
 def test_the_designs_list_shows_sortable_iso_dates(live_console, page):

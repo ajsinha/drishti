@@ -31,6 +31,7 @@ def settled_selection(page, kind):
 
 def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_adds_a_draggable_panel(live_console, page):
     page.goto(live_console + "/studio?example=pnl-explain")
+    page.locator("[data-start-go]").click()                                  # a GET only asks; the button starts the design
     wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
     page.locator("[data-preview] [data-panel]").first.wait_for()
     assert "tab=split" in page.url
