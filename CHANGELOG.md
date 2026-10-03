@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Fixed:** Studio's preview draws expandable row groups (▸/▾ in tree tables and nested pivots): it now loads the same tree and pivot scripts as a view; the all-panels showcase has a desk → book → trade tree table.
 - **Added:** `source` on every panel kind that reads data, not only `line`: a pivot, candlestick, tabs, graph or any other panel can read a linked entity's document (`source: "link($.desk, 'desk')"`), fetched with the view's sources, business date and field masks; a table's Pivot tab reads it too.
 - **Fixed (SEC-12):** the console's `/readyz` calls the server with the console's service identity, so it reports UP with security on (it was always DOWN: the call carried no token).
 - **Fixed (SEC-10):** a missing query parameter answers `400 DRS-5001` naming it (it was a 401), and a parameter of the wrong type or a date that is not one (`/search/compare?from=xx`) answers `400 DRS-5001` with no stack trace (it was a 500), both as RFC 7807 problems.

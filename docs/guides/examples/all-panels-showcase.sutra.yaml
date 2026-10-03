@@ -75,6 +75,16 @@ panels:
       - { label: Event, bind: "@.event" }
       - { label: Reason, bind: "@.reason" }
       - { label: By, bind: "@.by" }
+  - id: tree
+    kind: table
+    title: "9b · table with children: desk → book → trade, click ▸ to expand"
+    rows: $.bookTree
+    children: "@.children"
+    expand: 1
+    columns:
+      - { label: Name, bind: "@.name" }
+      - { label: Trades, bind: "@.trades" }
+      - { label: MTM (USD), bind: "@.mtm", fmt: signed0, tone: sign, total: true }
   - id: sets
     kind: tabs
     title: "10 · tabs: netting sets, one tab each"

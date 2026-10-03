@@ -17,7 +17,7 @@
 {% block title %}Sutra Studio · {{ PRODUCT }}{% endblock %}
 {% block screen %}studio{% endblock %}
 {% block body_class %}terminal studio-page{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="studio" data-studio data-can-save="{{ 'true' if can_save else 'false' }}">
@@ -104,5 +104,8 @@
 <script src="/static/js/charts.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/command.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/studio.js?v={{ ASSET_V }}"></script>
 {% endblock %}
