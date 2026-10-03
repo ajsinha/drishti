@@ -28,6 +28,16 @@ spring:
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}
 
+  jpa:
+    open-in-view: false      # no lazy loading while a view renders: the identity services load what they return
+
+logging:
+  level:
+    # expected, not a fault: a Delta table without checkpoints is read from its log (said once per table and read)
+    io.delta.kernel.internal.snapshot.SnapshotManager: ERROR
+    # Hibernate flags a setting Spring Boot itself sets as incubating
+    org.hibernate.orm.incubating: ERROR
+
 server:
   port: ${DRISHTI_PORT:18480}
   shutdown: graceful
@@ -247,5 +257,7 @@ drishti:
 springdoc:
   api-docs:
     path: /api/docs
+    enabled: ${DRISHTI_API_DOCS:true}      # set explicitly, so a start does not warn that they are on by default
   swagger-ui:
     path: /api/docs/ui
+    enabled: ${DRISHTI_API_DOCS:true}

@@ -752,7 +752,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 |---|---|
 | `DRS-1001` | no source holds that entity |
 | `DRS-1002` | no source serves that kind |
-| `DRS-1003` / `DRS-1004` | a source failed / timed out | (a console page answers 504 for a timeout, 502 for a failed source)
+| `DRS-1003` / `DRS-1004` | a source failed / timed out (a console page answers 504 for a timeout, 502 for a failed source) |
 | `DRS-2001` / `DRS-2002` / `DRS-2003` | Sutra parse error / invalid / not found |
 | `DRS-2005` / `DRS-2006` / `DRS-2007` | proposal not found / stale / four eyes |
 | `DRS-2032` | a Sutra file could not be read at all (the log has the stack trace); the rest load |
