@@ -52,3 +52,11 @@
 .bs-why { margin: 0 0 .5rem; font-size: .84rem; }
 .bs-alts { margin: .2rem 0 0; padding-left: 1.2rem; list-style: none; color: var(--d-muted); }
 .bs-alts li { margin: .1rem 0; }
+.bs-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .8rem; }
+.bs-card { border: 1px solid var(--d-border); border-radius: 8px; padding: .7rem .9rem; display: flex; flex-direction: column; }
+.bs-card p { margin: .2rem 0; font-size: .84rem; }
+.bs-card p:last-child { margin-top: auto; padding-top: .4rem; display: flex; gap: .5rem; align-items: center; justify-content: space-between; }
+.bs-card-t { font-size: .95rem; font-weight: 700; margin: 0 0 .2rem; }
+.bs-start { border: 0; margin: 0 0 .6rem; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+.bs-bar label { font-size: .85rem; }
+.bs .prob { color: var(--d-warn); }

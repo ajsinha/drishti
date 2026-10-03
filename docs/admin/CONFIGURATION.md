@@ -641,6 +641,25 @@ with `413 DRS-5005` before it is all parsed.
 | `limit-names` | `limit, max, cap, threshold, budget, capacity` | Field names that hold a limit for a measure beside them (a gauge's maximum). |
 | `status-words`, `status-names`, `id-names`, `label-names`, `ohlc-names`, `graph-node-names`, `graph-edge-names`, `long-text-chars` | built in | The vocabulary the role rules read: values that are states, field names that hold a state or an id, names of a row's label, the four candle fields, the lists of a graph, the length of prose. Set one to replace its list. |
 
+### `drishti.builder.designs` — the Build workbench's Designs
+
+A Design (`/api/v1/builder/designs`, **Build → My designs**) keeps a user's samples, Sutra and notes on the server, so work
+survives a console restart and shows on every console. Only its owner can reach it (anyone else gets `404 DRS-5006`).
+Sample documents are never logged; deleting a Design deletes its samples at once. A limit answers `413 DRS-5005`.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `store` | `file` | `file`: `data/designs/<user>/<id>/design.json` and `samples/`, created readable by the server's account only (`rwx------`). `jpa`: the identity database (`drishti_design`, `drishti_design_sample`), for several server replicas. |
+| `dir` | `./data/designs` | The file store's directory. |
+| `max-per-user` | `50` | Designs one user keeps. |
+| `max-samples` | `50` | Samples in one Design. |
+| `max-mb` | `25` | Megabytes of sample documents in one Design (a reference to a stored entity counts nothing). |
+| `max-user-mb` | `250` | Megabytes of sample documents across one user's Designs. |
+| `scratch-ttl` | `1d` | An unnamed (scratch) Design is deleted this long after it was last touched. |
+| `named-ttl` | `90d` | A named Design is deleted this long after it was last touched (an edit, or opening it, touches it). |
+| `warn-after` | `75d` | A named Design untouched this long is listed with a warning that it will expire. |
+| `sweep-interval` | `1h` | How often expired Designs are deleted. |
+
 ### `drishti.commands` — the command line
 
 | Key | Default | Meaning |
@@ -1365,11 +1384,10 @@ read by both programs, so one set of variables configures both halves.
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that Studio (`/studio?example=<name>`, File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
 | `ui.studio_example` | `all-panels-showcase` | The example Studio opens on when no entity or Sutra is asked for. Blank, or a name that is not there: Studio opens on the first example entity of the user's packs, as before. |
-| `builder.max_samples` | `50` | Screen Builder shape extractor (`/build/shape`): files in one upload, and samples in all (a `.jsonl` line is one). Over it, the whole upload is refused (`413 DRS-5005`). Keep it at or under the server's `drishti.builder.max-samples`. |
+| `builder.max_samples` | `50` | Build workbench, **New** (`/build/new`): files in one upload, and samples in all (a `.jsonl` line is one). Over it, the whole upload is refused (`413 DRS-5005`). Keep it at or under the server's `drishti.builder.max-samples`. |
 | `builder.max_file_mb` | `5` | Largest single file; a larger one is left out and reported, the rest are shaped. |
 | `builder.max_total_mb` | `25` | All files together; over it the upload is refused. |
-| `builder.ttl_hours` | `24` | How long a user's last uploaded set is kept, in the console's memory only, so a reload keeps it. Nothing is written to a store or a log. |
-| `builder.studio_kind` | `sample` | The kind **Open in Studio** previews the first sample as (a pasted document has no kind of its own). |
+| `builder.studio_kind` | `sample` | The kind a new Design and **Open in Studio** preview a brought document as (a pasted document has no kind of its own). |
 
 `config/workspaces.yaml` holds the console's own starter workspaces (`templates`, none by default; packs add theirs)
 and `blank`, what a new workspace starts as (*New workspace* on `/w`): a `layout` (`2col`, `3col`, `2x2`, `1+2`) and one

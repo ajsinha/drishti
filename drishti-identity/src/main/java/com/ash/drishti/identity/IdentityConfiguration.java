@@ -27,7 +27,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * database ({@link IdentityDatabase}). The server supplies {@link RoleNames}: built-in roles plus administrators' roles.
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(IdentityProperties.class)
+@EnableConfigurationProperties({IdentityProperties.class, com.ash.drishti.identity.design.DesignProperties.class})
 @Import(IdentityDatabase.class)
 public class IdentityConfiguration {
 
@@ -44,6 +44,26 @@ public class IdentityConfiguration {
     @Bean
     public PreferenceStore preferenceStore(IdentityRepositories.Preferences prefs, TransactionTemplate identityTransactions) {
         return new JpaPreferenceStore(prefs, identityTransactions, 64 * 1024, 50);
+    }
+
+    /** The Build workbench's Designs: files ({@code drishti.builder.designs.store=file}, the default) or this database ({@code jpa}). */
+    @Bean
+    public com.ash.drishti.identity.design.DesignStore designStore(com.ash.drishti.identity.design.DesignProperties props,
+            IdentityRepositories.Designs designs, IdentityRepositories.DesignSamples samples, TransactionTemplate identityTransactions) {
+        return props.jpa() ? new com.ash.drishti.identity.design.JpaDesignStore(designs, samples, identityTransactions)
+                : new com.ash.drishti.identity.design.FileDesignStore(java.nio.file.Path.of(props.dir()));
+    }
+
+    @Bean
+    public com.ash.drishti.identity.design.DesignService designService(com.ash.drishti.identity.design.DesignStore store,
+            com.ash.drishti.identity.design.DesignProperties props) {
+        return new com.ash.drishti.identity.design.DesignService(store, props);
+    }
+
+    @Bean(destroyMethod = "close")
+    public com.ash.drishti.identity.design.DesignSweeper designSweeper(com.ash.drishti.identity.design.DesignService designs,
+            com.ash.drishti.identity.design.DesignProperties props) {
+        return new com.ash.drishti.identity.design.DesignSweeper(designs, props.sweepInterval());
     }
 
     @Bean

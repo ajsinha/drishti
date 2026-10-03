@@ -67,34 +67,47 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("")
-async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", build: str = "", draft: str = ""):
+async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", design: str = "", sample: str = ""):
     """Opens on the entity asked for, else on the first example entity of the user's packs (with a Sutra of its kind,
     unless a Sutra, or ``sutra=`` for a new one, is asked for), else empty with a hint: never on a sample of a pack that
     may not be installed (UX-05). ``example=`` opens a named example (its Sutra and its JSON, previewed against that JSON);
-    with nothing else asked for, the example named by ``ui.studio_example`` opens, if it exists."""
+    ``design=`` (with ``sample=``, a sample's name) opens a Build Design's Sutra on that sample; with nothing else asked for,
+    the example named by ``ui.studio_example`` opens, if it exists."""
     backend, me = request.app.state.backend, ident(request)
     sutras = await backend.sutras(me)
     examples = request.app.state.examples
-    ex = examples.get(example or (examples.default if not id.strip() and sutra is None and not kind and not build else ""))
-    kept = request.app.state.sample_sets.get(me.user) if build and not ex else None     # Screen Builder: its first sample, pasted
-    pasted = ""
-    first = kept.samples[0] if kept and kept.samples else None
-    if first:
-        kind, id = kind or str(request.app.state.settings.get("builder.studio_kind", "sample") or "sample"), first["name"]
-        pasted = json.dumps(first["document"], indent=2, ensure_ascii=False)
+    mine, pasted, picked_design = None, "", None
+    if design:                                          # Build: a Design's Sutra and its selected sample
+        try:
+            mine = await backend.designs("GET", f"/{design}", me)
+        except BackendError:
+            mine = None                                 # not yours or gone: Studio opens as usual
+    ex = examples.get(example or (examples.default if not id.strip() and sutra is None and not kind and mine is None else ""))
+    if mine is not None:
+        picked_design = next((s for s in mine.get("samples") or [] if s.get("name") == sample), None) or next(iter(mine.get("samples") or []), None)
+        kind = mine.get("kind") or "sample"
+        id = (picked_design or {}).get("name", "")
+        if picked_design and picked_design.get("type") == "ref":
+            kind, id = picked_design["ref"]["kind"], picked_design["ref"]["id"]
+        elif picked_design:
+            try:
+                pasted = json.dumps(await backend.designs("GET", f"/{design}/samples/document", me, name=picked_design["name"]), indent=2, ensure_ascii=False)
+            except BackendError:
+                pasted = ""
+        ex = None
     elif ex:
         kind, id = ex.kind, ex.name
     elif not id.strip():
         current = await packs(request)
-        sample = next(iter(samples(current)), None)
-        if sample:
-            kind, id = sample["kind"], sample["id"]
+        first = next(iter(samples(current)), None)
+        if first:
+            kind, id = first["kind"], first["id"]
             sutra = sutra if sutra is not None else next((f"{s['name']}@{s['latest']}" for s in sutras if s.get("kind") == kind), "")
         else:
             kind, id = kind or next((k for p in current for k in p.get("kinds") or []), ""), ""
     source, picked = (ex.yaml if ex else _new_sutra(kind or "trade")), ""
-    if build and draft and kept and kept.draft and not ex:        # Screen Builder step 3: the drafted Sutra
-        source, picked = kept.draft, ""
+    if mine is not None:                                            # a Design's Sutra (empty: a new one for its kind)
+        source = mine.get("sutra") or _new_sutra(kind or "trade")
     elif sutra and "@" in sutra and not ex:
         name, _, version = sutra.partition("@")
         try:
@@ -109,7 +122,7 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
         except BackendError:
             pending = 0
     return render(request, "studio/studio.html", sutras=sutras, source=source, picked=picked, ref_kind=kind, ref_id=id,
-                  sample_json=ex.json if ex else pasted if first else "", use_json=bool(ex or first), example_names=examples.names(),
+                  sample_json=ex.json if ex else pasted, use_json=bool(ex or pasted), example_names=examples.names(),
                   can_save=bool(settings.get("save")), review=bool(settings.get("review")), pending=pending)
 
 

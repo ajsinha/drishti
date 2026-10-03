@@ -1,0 +1,57 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}My designs · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm bs" data-designs>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/help/screen-builder">Screen Builder guide</a></nav>
+  <h1>My designs</h1>
+  <p class="text-muted-d">A design is your work on one screen: the data you brought, the Sutra, notes. Only you can open yours. They are kept on
+    the server{% if limits %}: up to {{ limits.maxPerUser }} designs, {{ limits.maxSamples }} samples and {{ limits.maxMb }} MB each; an unnamed design is
+    forgotten after {{ limits.scratchHours }} hours, a named one after {{ limits.namedDays }} days untouched{% endif %}.</p>
+  <p class="bs-actions"><a class="btn-pill btn-accent" href="/build/new"><i class="bi bi-plus-lg" aria-hidden="true"></i> New screen</a>
+    <a class="btn-pill btn-ghost" href="/build/new#examples">Examples</a></p>
+  <div class="bs-status" role="status" aria-live="polite" data-status></div>
+  {% if error %}<p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  {% elif not designs %}<p class="text-muted-d" data-empty>Nothing here yet. <a class="lnk" href="/build/new">Start a new screen</a>.</p>
+  {% else %}
+  <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl" aria-label="My designs">
+    <thead><tr><th>Name</th><th>Kind</th><th>Samples</th><th>Sutra</th><th>Last touched</th><th>Expires</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for d in designs %}
+      <tr data-design="{{ d.id }}" data-name="{{ d.name }}">
+        <td data-cell-name><a class="lnk" href="/build/d/{{ d.id }}">{% if d.name %}{{ d.name }}{% else %}<i>Untitled</i>{% endif %}</a>
+          {% if d.scratch %}<span class="bs-role" title="Unnamed: forgotten after a day unless you name it">scratch</span>{% endif %}
+          {% if d.base %}<span class="bs-role" title="Edits this Sutra">{{ d.base }}</span>{% endif %}</td>
+        <td class="mono">{{ d.kind }}</td>
+        <td>{{ d.samples | length }}{% if d.samples | selectattr('synthetic') | list | length %} <span class="bs-role" title="Generated from a schema">synthetic</span>{% endif %}</td>
+        <td>{% if d.rev %}rev {{ d.rev }}{% else %}none yet{% endif %} · {{ d.status }}</td>
+        <td><time data-ms="{{ d.updated }}"></time></td>
+        <td><time data-ms="{{ d.expiresAt }}"></time>{% if d.expiryWarning %} <span class="bs-role conflict" title="Open it, or edit it, to keep it">expires soon</span>{% endif %}</td>
+        <td class="bs-actions">
+          <a class="btn-pill btn-ghost" href="/build/d/{{ d.id }}">Open</a>
+          <button type="button" class="btn-pill btn-ghost" data-rename>Rename</button>
+          <button type="button" class="btn-pill btn-ghost" data-duplicate>Duplicate</button>
+          <button type="button" class="btn-pill btn-ghost" data-delete>Delete</button>
+        </td></tr>{% endfor %}
+    </tbody></table></div></div></section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/build-designs.js?v={{ ASSET_V }}"></script>{% endblock %}

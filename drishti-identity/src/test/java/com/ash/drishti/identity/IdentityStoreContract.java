@@ -128,6 +128,14 @@ abstract class IdentityStoreContract {
     }
 
     @Test
+    void designsRoundTripInTheDatabase() {
+        com.ash.drishti.identity.design.DesignStoreChecks.roundTrip(new com.ash.drishti.identity.design.JpaDesignStore(
+                bean(com.ash.drishti.identity.db.IdentityRepositories.Designs.class),
+                bean(com.ash.drishti.identity.db.IdentityRepositories.DesignSamples.class),
+                bean(org.springframework.transaction.support.TransactionTemplate.class)));
+    }
+
+    @Test
     void savedDocumentsAreBoundedAndPerUser() throws Exception {
         PreferenceStore prefs = bean(PreferenceStore.class);
         prefs.put("pat", "workspaces", "Rates", json.readTree("{\"layout\":\"2x2\",\"panes\":[\"TRD T-1\"]}"));

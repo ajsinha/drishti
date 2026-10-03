@@ -78,10 +78,12 @@ public class IdentityController {
     private final com.ash.drishti.identity.AlertHistory alerts;
     private final com.ash.drishti.identity.ApiTokenStore apiTokens;
     private final com.ash.drishti.identity.SessionStore sessions;
+    private final com.ash.drishti.identity.design.DesignService designs;
 
     public IdentityController(UserService users, Entitlements entitlements, com.ash.drishti.identity.PreferenceStore preferences,
             com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.identity.AlertHistory alerts, com.ash.drishti.identity.ApiTokenStore apiTokens,
-            com.ash.drishti.identity.SessionStore sessions) {
+            com.ash.drishti.identity.SessionStore sessions, com.ash.drishti.identity.design.DesignService designs) {
+        this.designs = designs;
         this.apiTokens = apiTokens;
         this.sessions = sessions;
         this.alerts = alerts;
@@ -172,6 +174,7 @@ public class IdentityController {
         entitlements.requireAdmin(p);
         users.delete(p.user(), username);
         preferences.forget(username);
+        designs.forget(username);       // the user's Build designs and their samples go with the account
         alerts.forget(username);
         apiTokens.forget(username);
         sessions.endAll(username.trim().toLowerCase(java.util.Locale.ROOT), p.user(), "deleted");

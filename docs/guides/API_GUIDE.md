@@ -971,6 +971,25 @@ curl -s -X POST $B/builder/shape -H 'Content-Type: application/json' \
   | jq -c '.roles'
 ```
 
+#### Designs: your work, kept on the server
+
+`/api/v1/builder/designs` keeps a user's samples, Sutra and notes (the Build workbench's *My designs*). Open to every signed-in
+user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`); limits answer `413 DRS-5005`
+(`drishti.builder.designs.*`). Sample contents are never logged.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/builder/designs` | `{designs: [...], limits}`: the caller's designs, with sample names and types, size and `expiresAt` (no Sutra text) |
+| `POST` | `/builder/designs` | body `{name, kind, base, sutra, notes}`, all optional (no name: a scratch design, forgotten after a day); `base` as `name@version` without `sutra` copies that Sutra; `201` with the design |
+| `GET` / `PATCH` / `DELETE` | `/builder/designs/{id}` | read (touches it), change `name`, `kind`, `notes`, `sutra` (a new text is a new `rev`), `tests`; delete (and its samples) |
+| `POST` | `/builder/designs/{id}/duplicate` | body `{name}` optional; a named copy with its samples |
+| `POST` | `/builder/designs/{id}/samples` | `{samples: [{name, document}]}` and/or `{refs: {kind, ids \| count}}` (stored entities, kept as references) and/or `{schema, count}` (synthetic documents generated from a JSON Schema or shape.json, labelled `synthetic`); a sample of an existing name replaces it |
+| `DELETE` | `/builder/designs/{id}/samples?name=` | remove a sample by name |
+| `GET` | `/builder/designs/{id}/samples/document?name=` | a kept sample document (a reference keeps none) |
+| `POST` | `/builder/designs/{id}/shape` | the shape of the samples, as `/builder/shape`, plus `skipped` (references that could not be read, with the reason) |
+| `GET` | `/builder/designs/{id}/preview?sample=` | the Sutra against one sample (default the first). A reference is read again through the sources with the caller's rights and masks; a kind the caller may not open is `403 DRS-5002` "no access" |
+| `POST` | `/builder/designs/{id}/autodesign` | drafts a Sutra from the samples as `/builder/design` does, keeps it as the design's Sutra and answers the draft with `rev` |
+
 #### Drafting a screen: design and suggest
 
 | Method | Path | Notes |
@@ -1218,8 +1237,9 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where), names a field the kind does not have, or has a `limit` outside 1 to 1000 |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
-| DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth` (`detail` names the limit and the file) |
+| DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
+| DRS-5006 | 404 | design not found | no Build design with that id, or it belongs to someone else |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |

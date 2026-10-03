@@ -1326,6 +1326,8 @@ server, `DRISHTI_STUDIO_SAVE=true`); without it Save is disabled with the note "
 a *stored* entity, and any panel that reads another entity with `source:`, still follow the kinds your roles open: a panel whose source you may not open shows
 "no access to <kind>" instead of its data.
 
+To start from your own JSON files instead of a blank Sutra, use **Build → New screen**: it keeps your files, schema or stored entities as a *design* of yours (see **Build → My designs**), drafts a first screen with auto-design, and opens in Studio with **Open in Studio**; every example opens there as your own copy. See the Screen Builder guide (`/help/screen-builder`).
+
 The Studio page has:
 
 - a **Sutra** picker (every loaded Sutra, `irs-fixfloat v1 · trade`, or *New Sutra…*);

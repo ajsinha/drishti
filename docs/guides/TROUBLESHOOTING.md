@@ -770,5 +770,6 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |
 | `DRS-5005` | a request body was larger than the sample limits of the builder endpoints (HTTP 413); send fewer or smaller documents |
 | `DRS-5004` | no cache by that name (cache purge) |
+| `DRS-5006` | no such Build design, or it is not yours (a design is only ever reachable by its owner) |
 | `DRS-5010` | not signed in |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |

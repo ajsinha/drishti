@@ -1,0 +1,119 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}{{ design.name or 'Untitled design' if design else 'Design not found' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% if not design %}
+<div class="adm bs">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a></nav>
+  <h1>Design not found</h1>
+  <p class="asof-banner" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.detail }} <span class="mono">({{ error.code }})</span></p>
+  <p class="text-muted-d">A design is only ever opened by the person who made it, and unnamed ones are forgotten after a day.
+    <a class="lnk" href="/build">My designs</a> · <a class="lnk" href="/build/new">New screen</a></p>
+</div>
+{% else %}
+<div class="adm bs" data-design-page data-id="{{ design.id }}" data-max-file-mb="{{ limits.maxFileMb }}" data-max-samples="{{ limits.maxSamples }}"
+     data-has-sutra="{{ 'yes' if design.sutra else 'no' }}" data-rev="{{ design.rev }}" data-sample-count="{{ design.samples | length }}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/screen-builder">Screen Builder guide</a></nav>
+  <h1>{% if design.name %}{{ design.name }}{% else %}<i>Untitled design</i>{% endif %}</h1>
+  <p class="text-muted-d">Kind <span class="mono">{{ design.kind }}</span> · {{ design.status }}
+    {% if design.base %}· edits <span class="mono">{{ design.base }}</span> {% endif %}
+    · {% if design.rev %}Sutra revision {{ design.rev }}{% else %}no Sutra yet{% endif %}
+    {% if design.scratch %}· <b>unnamed: forgotten after a day</b>, <a class="lnk" href="/build">name it in My designs</a>{% endif %}
+    {% if design.expiryWarning %}· <b>expires soon</b>{% endif %}</p>
+  <div class="bs-status" role="status" aria-live="polite" data-status></div>
+
+  <section class="pnl" aria-labelledby="bdData"><div class="pnl-b">
+    <h2 id="bdData" class="bs-h">Data</h2>
+    {% if design.samples %}
+    <ul class="bs-files" aria-label="Samples" data-samples>
+      {% for s in design.samples %}
+      <li data-sample="{{ s.name }}"><span class="mono">{{ s.name }}</span>
+        {% if s.type == 'ref' %}<span class="bs-role" title="Read again each time with your rights and masks">stored entity</span>
+        {% elif s.synthetic %}<span class="bs-role" title="Generated from a schema: not evidence that a screen works on real data">synthetic</span>{% endif %}
+        <button type="button" class="btn-pill btn-ghost" data-remove aria-label="Remove {{ s.name }}">Remove</button></li>{% endfor %}
+    </ul>
+    {% else %}<p class="text-muted-d">No samples yet.</p>{% endif %}
+    <p class="bs-actions"><label class="btn-pill btn-ghost" for="bdFiles"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add files
+      <input id="bdFiles" class="bs-file" type="file" multiple accept=".json,.jsonl,application/json" data-add-files></label>
+      <a class="btn-pill btn-ghost" href="/build/new#store" title="Stored entities and schemas are added when a design is created">More ways to bring data</a>
+      {% if design.samples %}
+      <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=shape" download="shape.json" title="The schema with Drishti's x-drishti roles">shape.json</a>
+      <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=schema" download="schema.json" title="Plain JSON Schema, annotations removed">JSON Schema</a>{% endif %}</p>
+    <div data-skipped></div>
+    <div data-shape hidden>
+      <section data-attention hidden><div data-conflicts></div><div data-rare></div></section>
+      <h3 class="bs-h2">Shape</h3>
+      <div class="bs-bar">
+        <label for="bdFilter" class="visually-hidden">Filter paths</label>
+        <input id="bdFilter" class="studio-in mono" type="search" placeholder="Filter paths, roles, types..." data-filter autocomplete="off">
+        <span class="text-muted-d" data-counts aria-live="polite"></span>
+        <button type="button" class="btn-pill btn-ghost" data-expand-all>Expand all</button>
+        <button type="button" class="btn-pill btn-ghost" data-collapse-all>Collapse all</button>
+      </div>
+      <p class="text-muted-d bs-keys">Arrow keys move, Right and Left open and close, Enter shows a field's reason, files and examples.</p>
+      <ul class="bs-tree" role="tree" aria-label="Shape of the samples" data-tree></ul>
+    </div>
+  </div></section>
+
+  <section class="pnl" aria-labelledby="bdSutra"><div class="pnl-b">
+    <h2 id="bdSutra" class="bs-h">Sutra</h2>
+    <p class="bs-actions">
+      <button type="button" class="btn-pill btn-accent" data-autodesign{% if not design.samples %} disabled{% endif %}
+              title="Draft a complete Sutra from the samples: it becomes this design's next revision"><i class="bi bi-magic" aria-hidden="true"></i> Auto-design</button>
+      <a class="btn-pill btn-ghost" href="/studio?design={{ design.id }}" data-studio-link title="Studio with this design's Sutra and the sample chosen below"><i class="bi bi-braces" aria-hidden="true"></i> Open in Studio</a>
+    </p>
+    {% if design.sutra %}<pre class="bs-yaml mono" tabindex="0" aria-label="Sutra (read-only)" data-yaml>{{ design.sutra }}</pre>
+    {% else %}<p class="text-muted-d">There is no Sutra yet. Auto-design drafts one from the samples.</p>{% endif %}
+    <div data-draft hidden>
+      <h3 class="bs-h2">Left out because the samples could not fill it</h3>
+      <ul class="bs-list" data-draft-pruned></ul>
+      <h3 class="bs-h2">Why each choice, and what else was considered</h3>
+      <div data-draft-reasons></div>
+    </div>
+  </div></section>
+
+  <section class="pnl" aria-labelledby="bdPrev"><div class="pnl-b">
+    <h2 id="bdPrev" class="bs-h">Preview</h2>
+    {% if design.sutra and design.samples %}
+    <div class="bs-bar">
+      <label for="bdSample">Sample</label>
+      <select id="bdSample" class="studio-in" data-sample-switch>
+        {% for s in design.samples %}<option value="{{ s.name }}">{{ s.name }}{% if s.synthetic %} (synthetic){% endif %}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="studio-preview bs-preview" data-preview aria-live="polite"></div>
+    {% else %}<p class="text-muted-d">The preview needs a Sutra and at least one sample.</p>{% endif %}
+  </div></section>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/charts.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/command.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/build-files.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/build-shape-tree.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/build-design.js?v={{ ASSET_V }}"></script>
+{% endblock %}

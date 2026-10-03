@@ -262,7 +262,7 @@ def test_a_non_author_designs_freely_but_cannot_save_or_propose(client, backend,
     assert page.status_code == 200 and "data-studio" in page.text and 'data-can-save="false"' in page.text
     assert "data-design-note" in page.text and "Designing is open to everyone; saving needs the author right." in page.text
     assert "data-save disabled" in page.text
-    assert client.get("/build/shape").status_code == 200
+    assert client.get("/build/new").status_code == 200
     ok = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "sample", "id": "P-1", "document": {"tradeId": "P-1", "mtm": 5}})
     assert ok.status_code == 200 and "P-1" in ok.text
 

@@ -15,7 +15,7 @@
 -->
 # Build workbench: one place to design, test and ship screens
 
-Status: agreed architecture; replaces steps 4–7 of [SCREEN_BUILDER.md](SCREEN_BUILDER.md) (steps 1–3 are built and stay:
+Status: agreed architecture; step 4 (Designs) is built; replaces steps 4–7 of [SCREEN_BUILDER.md](SCREEN_BUILDER.md) (steps 1–3 are built and stay:
 the shape API, the shape extractor, auto-design and suggest). Owner: the Build menu, the builder APIs, the Rachana editor.
 
 ## Why
@@ -188,7 +188,7 @@ Studio is folded in, because it is what users are waiting for.
 
 | Step | Delivers | Accepted when |
 |---|---|---|
-| **4. Designs** | `DesignStore` (file, JPA), `/builder/designs` with samples, quotas and expiry; `/build` (My designs) and `/build/new` (files, folder, schema with synthetic samples, store references, examples, existing Sutra); the extractor becomes the Data view; `/build/shape` redirects | a sample set survives a console restart; two consoles see the same Design; limits answer with DRS codes; a reference to a kind the user may no longer open previews as "no access" |
+| **4. Designs** (done) | `DesignStore` (file, JPA), `/builder/designs` with samples, quotas and expiry; `/build` (My designs) and `/build/new` (files, folder, schema with synthetic samples, store references, examples, existing Sutra); the extractor becomes the Data view; `/build/shape` redirects | a sample set survives a console restart; two consoles see the same Design; limits answer with DRS codes; a reference to a kind the user may no longer open previews as "no access" |
 | **5. Operations and one checker** | the `design.ops` package; stateless `/builder/edit` and `/builder/check`; `SampleChecker` behind Studio's test and auto-design's pruning | every operation on all 20 kinds keeps comments and order; a bad operation is a located problem; a sample set with a missing field shows the right empty and error cells |
 | **6. Workbench with the visual canvas** | `/build/d/{id}`: Data, Design (canvas, palette, field drops with suggestions, inspector, undo/redo, keyboard path, `grid-keys.js` shared with layout mode), YAML, Problems, Tests as you type, sample switcher, *Preview with a file…*, phone and theme toggles; the guide `docs/guides/SCREEN_DESIGNER.md` and its help entry | the all-panels showcase is built from its samples without typing YAML, by mouse and by keyboard only; a folder → auto-design → switch samples → fix → green matrix test; layout mode's tests pass with the shared module |
 | **7. Studio folded in** | all `/studio*` addresses redirect into the workbench; Studio's test entities become tests on a Design; command palette; diff and versions; the guide grows these chapters | every old Studio address in the console tests lands on an equivalent screen; keyboard-only use across panes |

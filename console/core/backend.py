@@ -187,6 +187,14 @@ class BackendClient:
         """Screen Builder, step 3: a drafted Sutra for the samples (yaml, reasons, alternatives, pruned, preview of the first)."""
         return await self._send("POST", "/builder/design", ident, json={"samples": samples, "kind": kind})
 
+    async def designs(self, method: str, path: str, ident, body=None, **params):
+        """Build workbench Designs (``/builder/designs``): the server keeps them per user (samples, Sutra, notes) and answers
+        404 DRS-5006 for anyone else's. ``path`` is below the collection (``""``, ``"/{id}"``, ``"/{id}/samples"``...)."""
+        kw = {"params": {k: v for k, v in params.items() if v is not None}} if params else {}
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/builder/designs" + path, ident, **kw)
+
     async def rachana_schema(self, ident=None) -> dict:
         """The Rachana JSON Schema, generated from the grammar with this server's kinds, formats and functions."""
         return await self._get("/rachana/schema", ident)

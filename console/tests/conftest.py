@@ -147,6 +147,127 @@ class FakeBackend:
                 "roles": {"$." + k: {"role": p["x-drishti"]["role"], "reason": "test", "kind": None} for k, p in props.items()},
                 "report": {"samples": len(samples), "files": [s["name"] for s in samples], "conflicts": [], "rare": [], "paths": paths}}
 
+    # Build workbench Designs: kept here, as the real server keeps them, so two consoles on one FakeBackend see the same ones
+    designs_limits = {"maxPerUser": 50, "maxSamples": 50, "maxMb": 25, "maxUserMb": 250, "scratchHours": 24, "namedDays": 90, "warnDays": 75}
+    designs_open = {"curve"}                      # stored kinds a ref sample may name; others answer "no access"
+
+    def _kept(self):
+        if not hasattr(self, "design_rows"):
+            self.design_rows = {}                 # (user, id) -> {"design": {...}, "docs": {name: document}}
+        return self.design_rows
+
+    def _own(self, ident, id_):
+        row = self._kept().get((ident.user, id_))
+        if row is None:
+            raise BackendError(404, "DRS-5006", f"no design '{id_}'")
+        return row
+
+    @staticmethod
+    def _slim(d):
+        return {k: v for k, v in d.items() if k not in ("sutra", "notes", "tests", "ops")}
+
+    async def designs(self, method, path, ident, body=None, **params):
+        """The server's /builder/designs, for the console tests (same shapes, same codes)."""
+        self.calls.append(("designs", method, path))
+        rows, user = self._kept(), ident.user
+        parts = [p for p in path.strip("/").split("/") if p]
+        if not parts:
+            if method == "GET":
+                return {"designs": [self._slim(r["design"]) for (u, _), r in rows.items() if u == user], "limits": self.designs_limits}
+            if sum(1 for (u, _) in rows if u == user) >= self.designs_limits["maxPerUser"]:
+                raise BackendError(413, "DRS-5005", "you keep 50 designs, the most allowed (drishti.builder.designs.max-per-user)")
+            id_ = f"d{len(rows) + 1:011d}"
+            name = (body.get("name") or "").strip()
+            sutra = body.get("sutra") or ""
+            if body.get("base") and not sutra:
+                sutra = f"rachana: 1\nsutra: {body['base'].split('@')[0]}\nversion: 1\n"
+            d = {"id": id_, "name": name, "scratch": not name, "kind": body.get("kind") or "sample", "status": "draft", "rev": 1 if sutra else 0,
+                 "created": 1, "updated": 1, "expiresAt": 2, "expiryWarning": False, "bytes": 0, "samples": [], "sutra": sutra,
+                 "notes": body.get("notes") or "", "tests": [], "ops": []}
+            if body.get("base"):
+                d["base"] = body["base"]
+            rows[(user, id_)] = {"design": d, "docs": {}}
+            return d
+        row = self._own(ident, parts[0])
+        d = row["design"]
+        rest = parts[1:]
+        if not rest:
+            if method == "GET":
+                return d
+            if method == "DELETE":
+                del rows[(user, parts[0])]
+                return None
+            for k in ("name", "kind", "notes", "tests"):
+                if k in body:
+                    d[k] = body[k]
+            if "name" in body:
+                d["scratch"] = not (body["name"] or "").strip()
+            if "sutra" in body and body["sutra"] != d["sutra"]:
+                d["sutra"], d["rev"] = body["sutra"], d["rev"] + 1
+            return d
+        if rest == ["duplicate"]:
+            copy = await self.designs("POST", "", ident, {"name": (body or {}).get("name") or (d["name"] or "Untitled") + " copy", "kind": d["kind"],
+                                                           "sutra": d["sutra"], "notes": d["notes"]})
+            new = self._own(ident, copy["id"])
+            new["design"]["samples"], new["docs"] = [dict(s) for s in d["samples"]], dict(row["docs"])
+            return new["design"]
+        if rest == ["samples"] and method == "POST":
+            for s in body.get("samples") or []:
+                row["docs"][s["name"]] = s["document"]
+                d["samples"] = [x for x in d["samples"] if x["name"] != s["name"]] + [{"name": s["name"], "type": "document", "synthetic": False, "bytes": 1}]
+            if (body.get("refs") or {}).get("kind"):
+                kind = body["refs"]["kind"]
+                if kind not in self.designs_open:
+                    raise BackendError(403, "DRS-5002", f"{user} may not open {kind} entities")
+                for i in body["refs"].get("ids") or [f"ID-{n}" for n in range(1, int(body["refs"].get("count", 3)) + 1)]:
+                    d["samples"].append({"name": f"{kind} {i}", "type": "ref", "synthetic": False, "bytes": 0, "ref": {"kind": kind, "id": i}})
+            if isinstance(body.get("schema"), dict):
+                for n in range(1, int(body.get("count", 5)) + 1):
+                    row["docs"][f"synthetic-{n}"] = {"tradeId": f"synthetic-{n}"}
+                    d["samples"].append({"name": f"synthetic-{n}", "type": "synthetic", "synthetic": True, "bytes": 1})
+            if len(d["samples"]) > self.designs_limits["maxSamples"]:
+                raise BackendError(413, "DRS-5005", "a design holds 50 samples, the most allowed (drishti.builder.designs.max-samples)")
+            return d
+        if rest == ["samples"] and method == "DELETE":
+            d["samples"] = [s for s in d["samples"] if s["name"] != params.get("name")]
+            row["docs"].pop(params.get("name"), None)
+            return d
+        if rest == ["samples", "document"]:
+            if params.get("name") not in row["docs"]:
+                raise BackendError(400, "DRS-5001", "a reference keeps no document")
+            return row["docs"][params["name"]]
+        if rest == ["shape"]:
+            docs = [{"name": n, "document": v} for n, v in row["docs"].items()]
+            if not docs:
+                raise BackendError(400, "DRS-5001", "this design has no readable sample")
+            return {**await self.builder_shape(docs, ident), "skipped": [], "samples": len(docs)}
+        if rest == ["preview"]:
+            if not d["sutra"]:
+                raise BackendError(400, "DRS-5001", "this design has no Sutra yet")
+            name = params.get("sample") or (d["samples"][0]["name"] if d["samples"] else None)
+            info = next((s for s in d["samples"] if s["name"] == name), None)
+            if info is None:
+                raise BackendError(400, "DRS-5001", "this design has no samples to preview against")
+            if info["type"] == "ref" and info["ref"]["kind"] not in self.designs_open:
+                raise BackendError(403, "DRS-5002", f"no access: you may not open {info['ref']['kind']} entities")
+            sutra_id = next((ln.split(":", 1)[1].strip() for ln in d["sutra"].splitlines() if ln.startswith("sutra:")), "")
+            captured = FIXTURES / f"view_sutra_{sutra_id}.json"       # a view captured from the real server for this Sutra, when there is one
+            if captured.exists():
+                return json.loads(captured.read_text())
+            v = await self.view("trade", "IRS-48213", ident)
+            doc = row["docs"].get(name)
+            v["title"]["id"] = doc.get("tradeId", "SAMPLE") if isinstance(doc, dict) else "SAMPLE"
+            return v
+        if rest == ["autodesign"]:
+            docs = [{"name": n, "document": v} for n, v in row["docs"].items()]
+            if not docs:
+                raise BackendError(400, "DRS-5001", "this design has no readable sample")
+            draft = await self.builder_design(docs, d["kind"], ident)
+            if draft["yaml"] != d["sutra"]:
+                d["sutra"], d["rev"] = draft["yaml"], d["rev"] + 1
+            return {**draft, "rev": d["rev"], "skipped": []}
+        raise BackendError(404, "DRS-1001", "no such design endpoint")
+
     async def inferred_from(self, kind, id_, name, document, ident=None):
         return f"sutra: {name}\nversion: 1\n# fields: {','.join(sorted(document))}\n"
 

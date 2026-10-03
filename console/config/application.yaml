@@ -94,14 +94,13 @@ live:                        # live updates (docs/architecture/LIVE.md): each br
 studio:
   enabled: true
   examples_dir: ../docs/guides/examples   # the Rachana examples Studio and the help centre offer (docs/guides/examples/README.md)
-builder:                     # Screen Builder, shape extractor page (/build/shape); docs/architecture/SCREEN_BUILDER.md
+builder:                     # Build workbench, New (/build/new); docs/architecture/BUILD_WORKBENCH.md
   # The upload limits, checked here before anything is sent on. Keep them at or under the server's drishti.builder limits,
   # which refuse the same way (413 DRS-5005).
   max_samples: 50            # files in one upload, and samples (a .jsonl line is one) in all
   max_file_mb: 5             # largest single file
   max_total_mb: 25           # all files together
-  ttl_hours: 24              # how long a user's last uploaded set is kept (in this console's memory only) so a reload keeps it
-  studio_kind: sample        # the kind "Open in Studio" previews the first sample as (a pasted document has no kind of its own)
+  studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
 calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc
   enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
 layouts:                     # layout mode (Alt+L): each user's own arrangement of a view's panels; also needs a role with layout

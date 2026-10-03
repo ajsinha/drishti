@@ -156,7 +156,7 @@ public class BuilderController {
     }
 
     /** Studio's preview path: the Sutra text against a pasted document, links masked and restricted for the caller. */
-    private DesignPreviewer previewer(Principal principal) {
+    DesignPreviewer previewer(Principal principal) {
         Object[] last = new Object[2];
         return (yaml, kind, document) -> {
             if (!yaml.equals(last[0])) {

@@ -90,6 +90,22 @@ CREATE TABLE IF NOT EXISTS drishti_preference (
     PRIMARY KEY (username, namespace, name)
 );
 
+CREATE TABLE IF NOT EXISTS drishti_design (
+    username   VARCHAR(64) NOT NULL,
+    id         VARCHAR(64) NOT NULL,
+    document   TEXT NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    PRIMARY KEY (username, id)
+);
+
+CREATE TABLE IF NOT EXISTS drishti_design_sample (
+    username   VARCHAR(64) NOT NULL,
+    design_id  VARCHAR(64) NOT NULL,
+    name       VARCHAR(255) NOT NULL,
+    content    TEXT NOT NULL,
+    PRIMARY KEY (username, design_id, name)
+);
+
 CREATE TABLE IF NOT EXISTS drishti_pack_state (
     name       VARCHAR(64)  PRIMARY KEY,
     enabled    BOOLEAN      NOT NULL,

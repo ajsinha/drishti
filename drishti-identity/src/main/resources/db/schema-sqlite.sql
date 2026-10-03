@@ -90,6 +90,22 @@ CREATE TABLE IF NOT EXISTS drishti_preference (
     PRIMARY KEY (username, namespace, name)
 );
 
+CREATE TABLE IF NOT EXISTS drishti_design (
+    username   TEXT NOT NULL,
+    id         TEXT NOT NULL,
+    document   TEXT NOT NULL,
+    updated_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (username, id)
+);
+
+CREATE TABLE IF NOT EXISTS drishti_design_sample (
+    username   TEXT NOT NULL,
+    design_id  TEXT NOT NULL,
+    name       TEXT NOT NULL,
+    content    TEXT NOT NULL,
+    PRIMARY KEY (username, design_id, name)
+);
+
 CREATE TABLE IF NOT EXISTS drishti_pack_state (
     name       TEXT    PRIMARY KEY,
     enabled    INTEGER NOT NULL,

@@ -12,26 +12,23 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Screen Builder, step 2 (docs/architecture/SCREEN_BUILDER.md): the console's side of the shape extractor.
+"""Build workbench, bringing data in (docs/architecture/BUILD_WORKBENCH.md): the console's side of reading files.
 
 * :class:`Limits` are the same three limits the server enforces (``drishti.builder.max-samples``, ``max-file-mb``,
   ``max-total-mb``), read from the console's ``builder`` settings, so a too-big upload is refused here, cleanly, before
   anything is forwarded.
 * :func:`read_files` turns the uploaded files into samples. A file that cannot be used is reported (its problems) and
   the others carry on.
-* :class:`SampleSets` keeps each user's last uploaded set for a while (``builder.ttl_hours``) so a reload does not lose
-  it. It lives in this process's memory only: nothing is written to a store, a file or a log.
 * :func:`plain_schema` strips Drishti's annotations (``x-drishti``) from a shape's schema.
+
+The samples themselves are kept by the server, in a Design owned by the signed-in user (``/api/v1/builder/designs``); this
+console keeps nothing, so a restart loses nothing and two consoles show the same Designs.
 """
 from __future__ import annotations
 
 import json
-import threading
-import time
-from dataclasses import dataclass, field
-from typing import Any, Callable
-
-from core.servers import scoped
+from dataclasses import dataclass
+from typing import Any
 
 ANNOTATION = "x-drishti"
 _NAME_MAPS = ("properties", "$defs", "definitions", "patternProperties")
@@ -142,51 +139,3 @@ def plain_schema(node: Any, names: bool = False) -> Any:
         else:
             out[k] = plain_schema(v)
     return out
-
-
-@dataclass
-class SampleSet:
-    samples: list[dict]
-    files: list[dict]
-    shape: dict
-    at: float = field(default=0.0)
-    draft: str = ""                      # the Sutra auto-design drafted for this set, for "Open in Studio"
-
-
-class SampleSets:
-    """Each user's last uploaded set, kept ``ttl`` seconds from its upload, in memory. Safe across threads."""
-
-    def __init__(self, ttl_seconds: float = 24 * 3600, clock: Callable[[], float] = time.monotonic):
-        self.ttl = ttl_seconds
-        self._clock = clock
-        self._sets: dict[str, SampleSet] = {}
-        self._lock = threading.Lock()
-
-    def put(self, user: str, samples: list[dict], files: list[dict], shape: dict) -> SampleSet:
-        with self._lock:
-            self._sweep()
-            s = self._sets[scoped(user)] = SampleSet(samples, files, shape, self._clock())
-            return s
-
-    def set_draft(self, user: str, yaml_text: str) -> None:
-        with self._lock:
-            s = self._sets.get(scoped(user))
-            if s is not None:
-                s.draft = yaml_text
-
-    def get(self, user: str) -> SampleSet | None:
-        with self._lock:
-            self._sweep()
-            return self._sets.get(scoped(user))
-
-    def drop(self, user: str) -> None:
-        with self._lock:
-            self._sets.pop(scoped(user), None)
-
-    def seconds_left(self, s: SampleSet) -> int:
-        return max(0, int(s.at + self.ttl - self._clock()))
-
-    def _sweep(self) -> None:
-        now = self._clock()
-        for k in [k for k, s in self._sets.items() if now - s.at >= self.ttl]:
-            del self._sets[k]

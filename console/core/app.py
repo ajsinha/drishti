@@ -223,7 +223,6 @@ def create_app(settings: Settings) -> FastAPI:
     from core import builder as screen_builder
 
     app.state.builder_limits = screen_builder.Limits.from_settings(settings)
-    app.state.sample_sets = screen_builder.SampleSets(float(settings.get("builder.ttl_hours", 24)) * 3600)
     from core.asof import BusinessDates
 
     app.state.business_dates = BusinessDates()

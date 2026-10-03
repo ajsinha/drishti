@@ -82,4 +82,16 @@ public final class IdentityRepositories {
 
         void deleteByKeyUsername(String username);
     }
+
+    public interface Designs extends JpaRepository<DesignEntity, DesignEntity.Key> {
+        List<DesignEntity> findByKeyUsername(String username);
+
+        void deleteByKeyUsername(String username);
+    }
+
+    public interface DesignSamples extends JpaRepository<DesignSampleEntity, DesignSampleEntity.Key> {
+        void deleteByKeyUsernameAndKeyDesignId(String username, String designId);
+
+        void deleteByKeyUsername(String username);
+    }
 }

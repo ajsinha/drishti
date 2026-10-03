@@ -1,0 +1,125 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}New screen · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm bs" data-new data-max-samples="{{ limits.maxSamples }}" data-max-file-mb="{{ limits.maxFileMb }}" data-max-total-mb="{{ limits.maxTotalMb }}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/screen-builder">Screen Builder guide</a></nav>
+  <h1>New screen</h1>
+  <p class="text-muted-d">Two steps: <b>bring data</b> (any mix of the five ways below), then choose what to <b>start from</b>. What you bring is
+    kept on the server in a <i>design</i> that only you can open, so you can leave and come back (see <a href="/build">My designs</a>).
+    An unnamed design is forgotten after a day; a named one after 90 days untouched.</p>
+
+  <h2 class="bs-h">1. Bring data</h2>
+
+  <section class="pnl" id="files" aria-labelledby="bsFilesH"><div class="pnl-b">
+    <h3 id="bsFilesH" class="bs-h2">JSON files or a folder</h3>
+    <label class="bs-drop" for="bsFiles" data-drop>
+      <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+      <span><b>Choose files</b> or drop them here</span>
+      <span class="text-muted-d">.json (one document) or .jsonl (one document per line) · up to {{ limits.maxSamples }} samples ·
+        {{ '%g' % limits.maxFileMb }} MB per file · {{ '%g' % limits.maxTotalMb }} MB in all</span>
+      <input id="bsFiles" class="bs-file" type="file" multiple accept=".json,.jsonl,application/json" data-files>
+    </label>
+    <p class="bs-actions"><label class="btn-pill btn-ghost" for="bsFolder"><i class="bi bi-folder2-open" aria-hidden="true"></i> Choose a folder
+      <input id="bsFolder" class="bs-file" type="file" webkitdirectory directory multiple data-folder></label>
+      <button type="button" class="btn-pill btn-ghost" data-clear-files hidden>Clear files</button></p>
+    <div class="bs-status" role="status" aria-live="polite" data-status></div>
+    <ul class="bs-files" aria-label="Files chosen" data-file-list hidden></ul>
+  </div></section>
+
+  <section class="pnl" id="schema" aria-labelledby="bsSchemaH"><div class="pnl-b">
+    <h3 id="bsSchemaH" class="bs-h2">A JSON Schema or shape.json</h3>
+    <p class="text-muted-d">Start from a schema alone: sample documents are generated from its types, enums, formats, examples and
+      bounds. They are labelled <b>synthetic</b> and are not evidence that a screen works on real data.</p>
+    <div class="bs-bar">
+      <label for="bsSchema">Schema file</label>
+      <input id="bsSchema" type="file" accept=".json,application/json" data-schema-file>
+      <label for="bsSchemaCount">Documents</label>
+      <input id="bsSchemaCount" class="studio-in" type="number" min="1" max="{{ limits.maxSamples }}" value="5" data-schema-count>
+    </div>
+  </div></section>
+
+  <section class="pnl" id="store" aria-labelledby="bsStoreH"><div class="pnl-b">
+    <h3 id="bsStoreH" class="bs-h2">Entities from a store</h3>
+    <p class="text-muted-d">Kept as references and read again each time with your current rights and field masks, never copied.
+      A kind you may not open is shown as <i>no access</i>.</p>
+    <div class="bs-bar">
+      <label for="bsKind">Kind</label>
+      <input id="bsKind" class="studio-in mono" type="text" placeholder="trade" autocomplete="off" data-store-kind>
+      <label for="bsIds">Ids (comma separated), or leave empty to take</label>
+      <input id="bsIds" class="studio-in mono" type="text" placeholder="IRS-48213, IRS-48214" autocomplete="off" data-store-ids>
+      <label for="bsCount">this many</label>
+      <input id="bsCount" class="studio-in" type="number" min="1" max="{{ limits.maxSamples }}" value="5" data-store-count>
+    </div>
+  </div></section>
+
+  <section class="pnl" id="examples" aria-labelledby="bsExH"><div class="pnl-b">
+    <h3 id="bsExH" class="bs-h2">Examples</h3>
+    <p class="text-muted-d">Every example opens as <b>your own copy</b>: its Sutra, its JSON as a sample and its README as notes. The
+      example files themselves are never changed.</p>
+    <ul class="bs-cards" data-examples>
+      {% for e in examples %}
+      <li class="bs-card">
+        <h4 class="bs-card-t">{{ e.title }}</h4>
+        <p class="text-muted-d">{{ e.summary }}</p>
+        <p><span class="bs-role">{{ e.kind }}</span>
+          <button type="button" class="btn-pill btn-accent" data-example="{{ e.name }}">Open as my copy</button></p>
+      </li>{% endfor %}
+    </ul>
+    {% if not examples %}<p class="text-muted-d">No examples are installed (studio.examples_dir).</p>{% endif %}
+  </div></section>
+
+  <section class="pnl" id="sutra" aria-labelledby="bsSutraH"><div class="pnl-b">
+    <h3 id="bsSutraH" class="bs-h2">An existing Sutra</h3>
+    <div class="bs-bar">
+      <label for="bsRegistry">From the registry</label>
+      <select id="bsRegistry" class="studio-in" data-registry>
+        <option value="">(none)</option>
+        {% for s in sutras %}<option value="{{ s.name }}@{{ s.latest }}">{{ s.name }}@{{ s.latest }}{% if s.kind %} · {{ s.kind }}{% endif %}</option>{% endfor %}
+      </select>
+      <label for="bsYaml">or a .yaml file</label>
+      <input id="bsYaml" type="file" accept=".yaml,.yml,text/yaml" data-yaml-file>
+    </div>
+  </div></section>
+
+  <h2 class="bs-h">2. Start from</h2>
+  <section class="pnl" aria-labelledby="bsStartH"><div class="pnl-b">
+    <fieldset class="bs-start" data-start>
+      <legend id="bsStartH" class="visually-hidden">Start from</legend>
+      <label><input type="radio" name="start" value="auto" checked> <b>Auto-design</b> a first screen from the samples (default)</label>
+      <label><input type="radio" name="start" value="existing"> The <b>existing Sutra</b> chosen above</label>
+      <label><input type="radio" name="start" value="empty"> An <b>empty</b> Sutra for the kind</label>
+    </fieldset>
+    <div class="bs-bar">
+      <label for="bsName">Name (optional; a design without one is forgotten after a day)</label>
+      <input id="bsName" class="studio-in" type="text" maxlength="120" autocomplete="off" data-name>
+      <label for="bsDesignKind">Kind of entity the screen is for</label>
+      <input id="bsDesignKind" class="studio-in mono" type="text" value="{{ studio_kind }}" autocomplete="off" data-kind>
+    </div>
+    <p class="bs-actions"><button type="button" class="btn-pill btn-accent" data-create><i class="bi bi-plus-lg" aria-hidden="true"></i> Create design</button></p>
+    <div class="bs-status" role="status" aria-live="polite" data-create-status></div>
+  </div></section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/build-files.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/build-new.js?v={{ ASSET_V }}"></script>
+{% endblock %}
