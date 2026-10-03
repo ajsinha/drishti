@@ -65,6 +65,12 @@ public final class StoredDesign {
     public int opsAt;
     public String notes = "";
     public String status = "draft";
+    /** A file under a Sutra directory this Design is bound to (development servers only), relative to that directory, or null. */
+    public String boundFile;
+    /** SHA-256 of the file text last written or read for {@link #boundFile}; a different hash on disk means the file was edited elsewhere. */
+    public String boundSync;
+    /** SHA-256 of the read-only share token, or null when the Design is not shared. */
+    public String shareHash;
     public long created;
     public long updated;
 
@@ -87,6 +93,9 @@ public final class StoredDesign {
         c.opsAt = opsAt;
         c.notes = notes;
         c.status = status;
+        c.boundFile = boundFile;
+        c.boundSync = boundSync;
+        c.shareHash = shareHash;
         c.created = created;
         c.updated = updated;
         return c;

@@ -54,21 +54,45 @@ public class SutraGovernance {
         this.users = users;
     }
 
+    private final java.util.List<ProposalListener> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(SutraGovernance.class);
+
+    /** Registers a listener told after every proposal is made or decided. */
+    public void addListener(ProposalListener l) {
+        listeners.add(l);
+    }
+
+    private Proposal told(Proposal p) {
+        for (ProposalListener l : listeners) {
+            try {
+                l.changed(p);
+            } catch (RuntimeException e) {
+                LOG.warn("proposal listener failed for {}: {}", p.id(), e.toString());
+            }
+        }
+        return p;
+    }
+
     public boolean enabled() {
         return props.enabled();
     }
 
     /** Validates the Sutra (it must be publishable as it stands) and records it as pending. */
     public Proposal propose(String text, String note, Principal p) {
+        return propose(text, note, p, null);
+    }
+
+    /** As {@link #propose(String, String, Principal)}, with the evidence the workbench attaches (shown to reviewers). */
+    public Proposal propose(String text, String note, Principal p, com.fasterxml.jackson.databind.JsonNode evidence) {
         requireAuthor(p);
         Sutra s = sutras.check(text);
         String base = sutras.source(s.name(), s.version()).orElse("");
         if (base.equals(text)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, s.id() + " is already live exactly as proposed");
         }
-        Proposal made = store.create(s.name(), s.version(), text, base, note == null ? "" : note.trim(), p.user());
+        Proposal made = store.create(s.name(), s.version(), text, base, note == null ? "" : note.trim(), p.user(), evidence);
         users.recordAudit(p.user(), "sutra-proposed", s.id(), made.id() + (made.note().isEmpty() ? "" : ": " + made.note()));
-        return made;
+        return told(made);
     }
 
     public Proposal approve(String id, String comment, Principal p) {
@@ -83,7 +107,7 @@ public class SutraGovernance {
             }
         }, () -> save(store.require(id).text()), Proposal.APPROVED, p.user(), comment);
         users.recordAudit(p.user(), "sutra-approved", done.name() + "@" + done.version(), id + " by " + done.author());
-        return done;
+        return told(done);
     }
 
     public Proposal reject(String id, String comment, Principal p) {
@@ -93,7 +117,7 @@ public class SutraGovernance {
         }
         Proposal done = store.decide(id, c -> { }, () -> { }, Proposal.REJECTED, p.user(), comment);
         users.recordAudit(p.user(), "sutra-rejected", done.name() + "@" + done.version(), id + ": " + comment.trim());
-        return done;
+        return told(done);
     }
 
     public Proposal withdraw(String id, Principal p) {
@@ -103,7 +127,7 @@ public class SutraGovernance {
             }
         }, () -> { }, Proposal.WITHDRAWN, p.user(), "withdrawn");
         users.recordAudit(p.user(), "sutra-withdrawn", done.name() + "@" + done.version(), id);
-        return done;
+        return told(done);
     }
 
     public List<Proposal> list(String status, String name, Principal p) {

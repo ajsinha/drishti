@@ -531,13 +531,17 @@ public class DesignController {
         return n != null && n.path(field).isTextual() ? n.get(field).asText() : null;
     }
 
-    private ObjectNode view(DesignService.Summary s, boolean full) {
+    public ObjectNode view(DesignService.Summary s, boolean full) {
         StoredDesign d = s.design();
         ObjectNode o = mapper.createObjectNode();
         o.put("id", d.id).put("name", d.name).put("scratch", d.scratch).put("kind", d.kind).put("status", d.status).put("rev", d.rev);
         if (d.base != null) {
             o.put("base", d.base);
         }
+        if (d.boundFile != null) {
+            o.put("boundFile", d.boundFile);
+        }
+        o.put("shared", d.shareHash != null);
         o.put("created", d.created).put("updated", d.updated).put("expiresAt", s.expiresAt()).put("expiryWarning", s.expiryWarning())
                 .put("bytes", s.bytes());
         ArrayNode samples = o.putArray("samples");

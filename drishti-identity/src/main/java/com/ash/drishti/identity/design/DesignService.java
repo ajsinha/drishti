@@ -213,6 +213,58 @@ public final class DesignService {
         });
     }
 
+    /** Sets the lifecycle status ({@code proposed(P-1)}, {@code live(v3)}, ...) without touching the Sutra or the revision; false when the design is gone or not at {@code onlyAtRev}. */
+    public boolean markStatus(String user, String id, String status, Integer onlyAtRev) {
+        return locked(user, () -> {
+            java.util.Optional<StoredDesign> found = store.get(user, id).filter(x -> user.equals(x.owner));
+            if (found.isEmpty()) {
+                return false;
+            }
+            StoredDesign d = found.get();
+            if (onlyAtRev != null && d.rev != onlyAtRev) {
+                return false;
+            }
+            d.status = status;
+            store.save(d);
+            return true;
+        });
+    }
+
+    /** Sets or clears (null) the share token hash. */
+    public StoredDesign setShare(String user, String id, String hash) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            d.shareHash = hash;
+            store.save(d);
+            return d;
+        });
+    }
+
+    /** Binds (file and the hash of its current text) or unbinds (null file) the Design. */
+    public StoredDesign setBinding(String user, String id, String file, String syncHash) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            d.boundFile = file;
+            d.boundSync = syncHash;
+            store.save(d);
+            return d;
+        });
+    }
+
+    /** The file text read from disk becomes the Sutra (a text step, so undo brings the old one back); {@code syncHash} is remembered. */
+    public StoredDesign adoptFileText(String user, String id, String text, String syncHash) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            if (!text.equals(d.sutra)) {
+                record(d, TEXT_OP, d.sutra, text);
+                d.updated = clock.getAsLong();
+            }
+            d.boundSync = syncHash;
+            store.save(d);
+            return d;
+        });
+    }
+
     /** Records the outcome of a check of revision {@code rev}: {@code checked} when it was green and the Sutra has not moved on, else {@code draft}. */
     public StoredDesign markChecked(String user, String id, int rev, boolean green) {
         return locked(user, () -> {

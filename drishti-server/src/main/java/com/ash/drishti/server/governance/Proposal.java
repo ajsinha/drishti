@@ -33,9 +33,10 @@ import java.time.Instant;
  * @param reviewer who decided
  * @param reviewedAt when
  * @param comment the reviewer's comment
+ * @param evidence what the author attached from the workbench (check matrix, sample names, notes, the design's id), or null
  */
 public record Proposal(String id, String name, int version, String text, String baseText, String note, String author, Instant createdAt,
-        String status, String reviewer, Instant reviewedAt, String comment) {
+        String status, String reviewer, Instant reviewedAt, String comment, com.fasterxml.jackson.databind.JsonNode evidence) {
 
     public static final String PENDING = "pending";
     public static final String APPROVED = "approved";
@@ -47,6 +48,6 @@ public record Proposal(String id, String name, int version, String text, String 
     }
 
     Proposal decided(String newStatus, String by, Instant at, String why) {
-        return new Proposal(id, name, version, text, baseText, note, author, createdAt, newStatus, by, at, why);
+        return new Proposal(id, name, version, text, baseText, note, author, createdAt, newStatus, by, at, why, evidence);
     }
 }

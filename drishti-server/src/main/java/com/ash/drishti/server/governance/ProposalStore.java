@@ -67,10 +67,15 @@ public final class ProposalStore {
     }
 
     public Proposal create(String name, int version, String text, String baseText, String note, String author) {
+        return create(name, version, text, baseText, note, author, null);
+    }
+
+    public Proposal create(String name, int version, String text, String baseText, String note, String author,
+            com.fasterxml.jackson.databind.JsonNode evidence) {
         lock.lock();
         try {
             Proposal p = new Proposal(String.format("P-%06d", next.incrementAndGet()), name, version, text, baseText, note, author, Instant.now(),
-                    Proposal.PENDING, null, null, null);
+                    Proposal.PENDING, null, null, null, evidence);
             write(p);
             return p;
         } finally {
