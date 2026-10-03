@@ -52,11 +52,16 @@
   <div class="wb-main">
     <aside class="wb-left" aria-label="Data" data-left>
       <section aria-labelledby="wbSamples"><h2 id="wbSamples" class="bs-h">Samples</h2>
-        <ul class="wb-samples" aria-label="Samples" data-samples></ul>
+        <ul class="wb-samples" aria-label="Samples" data-samples>{# drawn here first, redrawn by data.js once the page is live #}
+          {% for s in design.samples %}<li class="wb-sample" data-sample="{{ s.name }}"><span class="mono">{{ s.name }}</span>
+            {% if s.type == 'ref' %}<span class="bs-role" title="Read again each time with your rights and masks">stored entity</span>
+            {% elif s.synthetic %}<span class="bs-role" title="Generated from a schema: not evidence that a screen works on real data">synthetic</span>{% endif %}</li>{% endfor %}
+        </ul>
         <p class="bs-actions"><label class="btn-pill btn-ghost" for="wbFiles"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add files
           <input id="wbFiles" class="bs-file" type="file" multiple accept=".json,.jsonl,application/json" data-add-files></label>
           <a class="btn-pill btn-ghost" href="/build/new#store" title="Stored entities and schemas are added when a design is created">More ways</a>
-          <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=shape" download="shape.json" title="The schema with Drishti's x-drishti roles">shape.json</a></p>
+          <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=shape" download="shape.json" title="The schema with Drishti's x-drishti roles">shape.json</a>
+          <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=schema" download="schema.json" title="Plain JSON Schema, annotations removed">JSON Schema</a></p>
         <p class="text-muted-d" data-data-note></p>
       </section>
       <details class="wb-sec" open data-palette-box><summary id="wbPalette" class="bs-h">Panels</summary>

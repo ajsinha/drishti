@@ -112,14 +112,17 @@ def test_a_scratch_design_is_marked(app_client):
     assert "scratch" in app_client.get("/build").text
 
 
-def test_the_design_page_shows_data_yaml_and_a_sample_switcher(app_client):
+def test_the_design_page_is_the_workbench_with_its_panes_and_samples(app_client):
     d = _new(app_client, "Page", empty=True, kind="trade")
     app_client.post(f"/build/designs/{d['id']}/files", json=_files(("a.json", _doc(1)), ("b.json", _doc(2))))
     page = app_client.get(f"/build/d/{d['id']}").text
-    assert "data-design-page" in page and 'role="tree"' in page and "sutra: my-layout" in page
-    assert 'data-sample="a.json"' in page and 'data-sample="b.json"' in page and "data-sample-switch" in page
-    assert f'href="/studio?design={d["id"]}"' in page and "data-autodesign" in page and "build-design.js" in page
-    assert "Sutra (read-only)" in page
+    assert "data-workbench" in page and "data-design-page" in page and 'role="tree"' in page and "sutra: my-layout" in page
+    for pane in ("Design", "YAML", "Summary", "Inspector", "Problems", "Tests"):
+        assert f'role="tab"' in page and f">{pane}" in page
+    assert '"name": "a.json"' in page.replace("&#34;", '"') and '"name": "b.json"' in page.replace("&#34;", '"')
+    assert f'href="/studio?design={d["id"]}"' in page and "data-autodesign" in page and "build/workbench.js" in page and "build-design.js" not in page
+    assert "data-preview-file" in page and "data-undo" in page and "data-redo" in page and 'aria-live="polite"' in page
+    assert "build-workbench.css" in page
 
 
 def test_a_missing_or_foreign_design_is_a_404_page(app_client, backend):

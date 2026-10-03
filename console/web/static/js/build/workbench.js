@@ -86,7 +86,7 @@
   var tests = WB.Tests($('[data-tests]'), store, { gotoPanel: gotoPanel });
 
   // ---- the status bar --------------------------------------------------------------------------------------------------------
-  var pos = $('[data-sample-pos]'), result = $('[data-result]'), revEl = $('[data-rev]'), undoB = $('[data-undo]'), redoB = $('[data-redo]'), fileChip = $('[data-file-chip]');
+  var pos = $('[data-sample-pos]'), result = $('[data-result]'), revEl = $('[data-rev]'), undoB = $('[data-undo]'), redoB = $('[data-redo]'), fileChip = $('[data-file-chip]'), studio = $('[data-studio-link]');
   function paintBar() {
     var s = store.state, i = s.samples.indexOf(s.sample);
     pos.textContent = s.file ? 'file ' + s.file.name : (s.samples.length ? 'sample ' + (i + 1) + '/' + s.samples.length + ': ' + s.sample : 'no samples');
@@ -94,6 +94,7 @@
     revEl.textContent = 'rev ' + s.rev;
     undoB.disabled = s.opsAt <= 0; redoB.disabled = s.opsAt >= s.opsCount;
     fileChip.hidden = !s.file;
+    studio.href = '/studio?design=' + encodeURIComponent(s.id) + (s.sample && !s.file ? '&sample=' + encodeURIComponent(s.sample) : '');
   }
   function step(n) { var s = store.state, i = s.samples.indexOf(s.sample); if (s.samples.length) { store.setSample(s.samples[(i + n + s.samples.length) % s.samples.length]); } }
   $('[data-prev]').addEventListener('click', function () { step(-1); });
