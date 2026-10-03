@@ -171,7 +171,7 @@ source with its generation. No options. Never empty.
 ### table
 
 **For** a list of similar rows. **Options**: `rows` (required), `columns` (inferred when absent: scalar fields present
-in at least 60% of rows, up to 9), `limit`, `moreLabel`, `totalLabel`, `search`, `pivot`. **Server**: one row of formatted
+in at least 60% of rows, up to 9), `limit`, `moreLabel`, `totalLabel`, `search`, `pivot`, `children`, `expand`. **Server**: one row of formatted
 cells per element; a total row sums `total: true` columns over **all** rows, including those beyond `limit`; the
 "more" line counts the rest. A column bound to a field ending in `Id`, `Ref` or `_id` links automatically.
 **Console**: `tables.js` sorts by any heading (numbers, amounts such as `1.5m`, percentages and dates as values),
@@ -180,6 +180,14 @@ per browser) and walks with the keyboard. `search: false` hides the filter.
 
 On netting set `NS-MERIDIAN-RE-NY`, *Member trades* lists the trades with their MTM and a total. Data:
 `{"columns": […], "numeric": […], "rows": [{"cells": […], "highlight": false, "path": "$.trades[0]"}], "total": {…}, "more": "…", "search": true}`.
+
+**Tree rows (`children:`).** `children: "@.children"` is an expression evaluated per row giving the rows nested under it; `expand` is the
+number of levels shown open at first (default 1, only the top level; `all` opens every level). Each row carries
+`"children": [ …rows… ]` (absent on a leaf) and the data carries `"expand": n`. Columns, `highlight` and `total` evaluate against each child with `@`; a `total: true`
+column adds up the **leaf** rows only (rows without children), a masked value is never added up, and `limit` counts top-level rows. The console draws a
+▸/▾ button in the first cell (a native button, so Tab, Enter and Space work, with `aria-expanded`), indents each level, and its filter box keeps the
+ancestors of the rows that match; a tree is not sorted or paged. `drishti.panels.tree-depth` (12) and `tree-rows` (10,000) bound it. The CSV export lists
+every row, each followed by its children. The Pivot tab of a tree reads its top-level rows.
 
 **The Pivot tab (`pivot:`).** A table or ladder whose Sutra says `pivot: true`, or `pivot: { fields, rows, columns,
 values, filters, heat, chart }` ([reference](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)), gets a **Table | Pivot** switch; no option, no switch. The data
@@ -197,7 +205,7 @@ date as the view. `drishti.pivot.enabled: false` removes every Pivot tab.
 
 **For** a list where some rows matter more: a schedule with the next payment lit. Like `table` without `limit` or
 `moreLabel` (`DRS-2023`: a ladder shows every row); `highlight` is an expression per row (`@`, `#index`).
-`highlight: "#index == $.nextIndex"` on `MX-20000001` lights the 2026-12-30 cashflow. A ladder takes `search` and
+`highlight: "#index == $.nextIndex"` on `MX-20000001` lights the 2026-12-30 cashflow. A ladder takes `search`, `children`, `expand` and
 `pivot` as a table does: the banking packs' cash-flow ladders open their Pivot tab on PV by flow type and leg.
 
 ### tabs
@@ -604,7 +612,7 @@ the user arranges.
 | Option | Required | Default | Meaning |
 |---|---|---|---|
 | `rows` | yes | | Expression giving the rows. |
-| `by` | yes | | Field whose values are the row keys, in first-seen order. A missing value is `(none)`. |
+| `by` | yes | | Field whose values are the row keys, in first-seen order, or a **list of fields** (`by: [desk, book, productType]`, up to 6) for nested groups. A missing value is `(none)`. |
 | `across` | yes | | Field whose values are the column keys, in first-seen order. |
 | `value` | | | Field aggregated. Without it the pivot counts rows (whatever `agg` says). A row whose value is not a number is left out. |
 | `agg` | | `sum` | `sum`, `count`, `avg`, `min` or `max` (`DRS-2029` otherwise). |
@@ -612,6 +620,7 @@ the user arranges.
 | `tone` | | | Tone of the cells, for example `sign`. |
 | `heat` | | `false` | `true` shades each cell from the smallest to the largest value. Must be a boolean (`DRS-2029`). |
 | `totals` | | `true` | `false` hides the total column and row. Must be a boolean. |
+| `expand` | | `1` | With a list `by`: levels shown open at first (`1`: the outermost groups, closed; `all`: every level). A whole number from 1 or `all` (`DRS-2029`). |
 
 **Banking example.** The banking-core pack's `desk` Sutra has two:
 
@@ -655,6 +664,14 @@ and further row keys are counted in `more`. The smallest and largest shown cells
  "rows": [{"label": "BOOK-RATES-1", "cells": [{"text": "4.3m", "tone": "pos"}, …], "values": [4323568, 87191847, …], "total": {"text": "177.4m", "tone": "pos"}}, …],
  "totals": [{"text": "95.6m", "tone": "pos"}, …, {"text": "132.8m", "tone": "pos"}], "agg": "sum", "heat": true, "min": -48311455, "max": 106978259, "more": 0}
 ```
+
+**Nested groups (`by` as a list).** The server builds one group per distinct prefix of the keys and aggregates the rows of each, so a group's
+figures are the aggregate of its underlying rows (an `avg` subtotal is the average of its rows, not of its members' averages). The rows come in
+tree order: a group row (`"group": true`) before the groups and rows in it, each with `"path"` (its keys from the outermost level down); the data also
+carries `"levels"` (the fields), `"across"` and `"expand"`. `pivot-rows` limits the leaf rows; a group none of whose rows are shown is left out.
+A masked `value` shows the mask in every group and total, and is never added up. A single-field `by` has none of these keys and is unchanged. The console
+draws a nested pivot with the Pivot tab's grid (`pivot-grid.js`: ▸/▾ group toggles with `aria-expanded`, subtotals, sortable headings) from the
+panel's own data (`tree-rows.js`); heat shading is not drawn on it. The CSV has a column for each level.
 
 **How the console draws it.** As an HTML table (no chart): row keys as row headings, the total column and row in
 bold. With `heat`, each cell gets one of ten shades of the accent colour (`heat-0` to `heat-9`) by its place between
@@ -771,6 +788,8 @@ list cannot make a view slow to build or heavy to draw. `drishti.panels` sets th
 | `max-events` | 500 | events a `timeline` lists (the latest) | *N earlier events not shown* |
 | `pivot-rows` | 200 | row keys a `pivot` shows | *N more rows* |
 | `pivot-columns` | 40 | column keys a `pivot` shows | still counted in the row and grand totals |
+| `tree-depth` | 12 | levels a `table` or `ladder` with `children` descends | deeper rows are left out |
+| `tree-rows` | 10,000 | rows in all (every level) of one such table | further rows are left out |
 
 The Pivot tab of a table or ladder has its own limits, `drishti.pivot` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtipivot--the-pivot-tab)):
 `max-records` (rows of a panel sent to the browser, 50,000), `max-row-keys` (innermost row groups shown, 2,000) and

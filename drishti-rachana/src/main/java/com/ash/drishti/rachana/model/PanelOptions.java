@@ -51,7 +51,11 @@ public final class PanelOptions {
     private static final Map<PanelKind, Set<String>> BOOLEANS = Map.of(PanelKind.PIVOT, Set.of("heat", "totals"),
             PanelKind.TABLE, Set.of("search"), PanelKind.LADDER, Set.of("search"));
     /** Options that name a list (or one object) by an expression: a number, a truth value or a YAML list never is one. */
-    private static final Set<String> LIST_EXPRESSIONS = Set.of("rows", "each", "nodes", "edges", "source");
+    private static final Set<String> LIST_EXPRESSIONS = Set.of("rows", "each", "nodes", "edges", "source", "children");
+    /** What {@code expand: all} stands for: levels of a tree shown open (more than any tree is deep). */
+    public static final int EXPAND_ALL = 99;
+    /** The most fields a pivot panel may group its rows by. */
+    public static final int MAX_BY = 6;
     /** Options written as a YAML list of mappings, with the keys each item takes. */
     private static final Map<PanelKind, Map<String, String>> LISTS = Map.of(
             PanelKind.KV, Map.of("fields", "{ label, bind, fmt, tone }"),
@@ -78,6 +82,13 @@ public final class PanelOptions {
         if (kind == PanelKind.TABLE && option.equals("limit") && !(value instanceof Long n && n >= 1 && n <= Integer.MAX_VALUE)) {
             return Optional.of(what + " must be a whole number of rows, 1 or more, not '" + value + "'");
         }
+        if (option.equals("expand") && (kind == PanelKind.PIVOT || kind == PanelKind.TABLE || kind == PanelKind.LADDER)
+                && !(value instanceof Long n && n >= 1 && n <= Integer.MAX_VALUE || "all".equals(value))) {
+            return Optional.of(what + " must be a whole number of levels shown open, 1 or more, or all, not '" + value + "'");
+        }
+        if (kind == PanelKind.PIVOT && option.equals("by") && !byFields(value)) {
+            return Optional.of(what + " must be a field name or a list of 1 to " + MAX_BY + " field names, not '" + value + "'");
+        }
         String items = LISTS.getOrDefault(kind, Map.of()).get(option);
         if (items != null && !(value instanceof List<?>)) {
             return Optional.of(what + " must be a list of " + items + ", not '" + value + "'");
@@ -98,6 +109,17 @@ public final class PanelOptions {
             return markers(value);
         }
         return Optional.empty();
+    }
+
+    private static boolean byFields(Object value) {
+        if (value instanceof List<?> list) {
+            return !list.isEmpty() && list.size() <= MAX_BY && list.stream().allMatch(PanelOptions::fieldName);
+        }
+        return fieldName(value);
+    }
+
+    private static boolean fieldName(Object v) {
+        return v instanceof String s && !s.isBlank();
     }
 
     private static Optional<String> markers(Object value) {

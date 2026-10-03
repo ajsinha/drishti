@@ -143,6 +143,7 @@ Inside `columns`, `@` is the current row: `@.mtm` is the row's `mtm`.
 | `columns` | `{label?, bind, fmt?, tone?, total?, link?}`. Leave it out and inference picks the columns. |
 | `limit`, `moreLabel` | Show only the first N rows, and a line saying how many more there are. |
 | `totalLabel` | The text in the total row (default *Total*). Columns with `total: true` are summed. |
+| `children`, `expand` | `children: "@.children"` gives the rows nested under each row: those with children show a ▸/▾ toggle and expand in place, to any depth; columns read each child with `@`, `total: true` sums the leaf rows only, and the filter keeps the ancestors of a match. `expand` is the levels shown open at first (default 1; `all`). |
 | `link` | `link: true` on a column makes each cell open the entity it names. |
 | `pivot` | `true`, or `{ fields, rows, columns, values, filters, heat, chart }`: a **Table \| Pivot** switch over every row of the table, where readers drag fields into rows, columns, values and filters ([the Pivot tab](pivot-tab)). Without it, no switch. |
 
@@ -314,6 +315,7 @@ settlements with today's row.
 | `rows` (required) | The rows. |
 | `columns` | As for `table`. |
 | `highlight` | A condition evaluated per row. |
+| `children`, `expand` | Expandable rows, as for `table`. |
 | `totalLabel` | The total row's text. |
 | `pivot` | As for `table`: a [Pivot tab](pivot-tab) over the ladder's rows (the banking cash-flow ladders open on PV by flow type and leg). |
 
@@ -667,7 +669,8 @@ cell by its value. The table sorts, filters and pages like any other.
 
 | Option | Meaning |
 |---|---|
-| `rows`, `by`, `across` (required) | The rows, the field down the side, and the field across the top. |
+| `rows`, `by`, `across` (required) | The rows, the field down the side, and the field across the top. `by` may be a list (`by: [desk, book]`): groups nest, each with its subtotal and a ▸/▾ toggle. |
+| `expand` | With a list `by`, the levels shown open at first (default 1; `all`). |
 | `value` | The field aggregated; without it the pivot counts rows. |
 | `agg` | `sum` (default), `count`, `avg`, `min` or `max`. |
 | `heat` | `true` shades each cell by its value. |

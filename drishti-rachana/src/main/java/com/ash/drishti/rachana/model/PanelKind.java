@@ -25,12 +25,12 @@ import java.util.Set;
  */
 public enum PanelKind {
     KV(Set.of(), Set.of("rows", "columns", "fields")),
-    TABLE(Set.of("rows"), Set.of("totalLabel", "limit", "moreLabel", "link", "search", "pivot")),
+    TABLE(Set.of("rows"), Set.of("totalLabel", "limit", "moreLabel", "link", "search", "pivot", "children", "expand")),
     TABS(Set.of("each"), Set.of("tabTitle", "layout")),
     LINE(Set.of(), Set.of("rows", "source", "x", "y", "mark", "footer", "unit", "fmt")),
     AREA(Set.of("rows"), Set.of("x", "series", "limit", "limitLabel", "unit")),
     HBAR(Set.of("rows"), Set.of("label", "value", "fmt", "tone")),
-    LADDER(Set.of("rows"), Set.of("totalLabel", "highlight", "search", "pivot")),
+    LADDER(Set.of("rows"), Set.of("totalLabel", "highlight", "search", "pivot", "children", "expand")),
     LINKS(Set.of(), Set.of()),
     STATUS(Set.of(), Set.of("fields")),
     PROVENANCE(Set.of(), Set.of()),
@@ -55,7 +55,7 @@ public enum PanelKind {
     /** Dated events in order, each with a status tone and a short description. */
     TIMELINE(Set.of("rows"), Set.of("date", "label", "detail", "status", "tone")),
     /** A two-dimensional aggregate of the rows (by one field, across another) with totals and an optional heat scale. */
-    PIVOT(Set.of("rows", "by", "across"), Set.of("value", "agg", "fmt", "tone", "heat", "totals"));
+    PIVOT(Set.of("rows", "by", "across"), Set.of("value", "agg", "fmt", "tone", "heat", "totals", "expand"));
 
     private final Set<String> required;
     private final Set<String> optional;

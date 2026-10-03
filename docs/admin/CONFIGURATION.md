@@ -545,6 +545,8 @@ cannot make a view slow or a page heavy. A panel that stops short says so (*N mo
 | `max-events` | `500` | Events a timeline lists (the latest). |
 | `pivot-rows` | `200` | Row keys a pivot shows; the rest are counted under the table. |
 | `pivot-columns` | `40` | Column keys a pivot shows; values under further keys still count in the row totals. |
+| `tree-depth` | `12` | Levels a table or ladder with `children` descends; deeper rows are left out. |
+| `tree-rows` | `10000` | Rows in all (every level) one such table builds; further rows are left out. |
 
 ### `drishti.alerts` — alert history
 

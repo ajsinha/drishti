@@ -51,8 +51,8 @@ def panel_rows(panel: dict) -> tuple[list[str], list[list]]:
         return [], []
     if kind in _CHARTS:
         return _CHARTS[kind](d)
-    if "columns" in d and "rows" in d:                                   # table, ladder
-        rows = [[plain(c.get("text")) for c in r.get("cells", [])] for r in d.get("rows", [])]
+    if "columns" in d and "rows" in d:                                   # table, ladder (a tree: every row, each followed by its children)
+        rows = [[plain(c.get("text")) for c in r.get("cells", [])] for r in _walk(d.get("rows", []))]
         if d.get("total"):
             rows.append([plain(c.get("text")) for c in d["total"].get("cells", [])])
         return list(d["columns"]), rows
@@ -76,14 +76,23 @@ def panel_rows(panel: dict) -> tuple[list[str], list[list]]:
     return [], []
 
 
+def _walk(rows):
+    """The rows of a tree table in order: each row, then the rows nested under it."""
+    for r in rows:
+        yield r
+        yield from _walk(r.get("children") or [])
+
+
 def _pivot(d: dict) -> tuple[list[str], list[list]]:
     cols = list(d.get("columns") or [])
     totals = d.get("totals")
-    header = [d.get("by") or ""] + cols + (["Total"] if totals else [])
-    rows = [[r.get("label", "")] + list(r.get("values") or []) + ([plain((r.get("total") or {}).get("text"))] if totals else [])
+    levels = list(d.get("levels") or [])                                 # nested groups: a column per level, a group row's deeper ones empty
+    header = (levels or [d.get("by") or ""]) + cols + (["Total"] if totals else [])
+    rows = [((list(r.get("path") or []) + [""] * len(levels))[:len(levels)] if levels else [r.get("label", "")])
+            + list(r.get("values") or []) + ([plain((r.get("total") or {}).get("text"))] if totals else [])
             for r in d.get("rows") or []]
     if totals:
-        rows.append(["Total"] + [plain(c.get("text")) for c in totals])
+        rows.append(["Total"] + [""] * max(0, len(levels) - 1) + [plain(c.get("text")) for c in totals])
     return header, rows
 
 

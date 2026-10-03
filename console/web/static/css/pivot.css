@@ -153,3 +153,42 @@
   body.pv-printing .pv-print-this { position: absolute; left: 0; top: 0; width: 100%; }
   body.pv-printing .pv-print-this .pv-pane-table { display: none; }
 }
+
+/* ---- expandable rows (static/js/tree-rows.js): a table with children, and a pivot by several fields ---- */
+.tbl-tree .tr-ind { display: inline-flex; align-items: center; }
+.tr-d1 { margin-left: 1.1rem; }
+.tr-d2 { margin-left: 2.2rem; }
+.tr-d3 { margin-left: 3.3rem; }
+.tr-d4 { margin-left: 4.4rem; }
+.tr-d5 { margin-left: 5.5rem; }
+.tr-d6 { margin-left: 6.6rem; }
+.tr-d7 { margin-left: 7.7rem; }
+.tr-d8 { margin-left: 8.8rem; }
+.tr-d9 { margin-left: 9.9rem; }
+.tr-d10 { margin-left: 11.0rem; }
+.tr-d11 { margin-left: 12.1rem; }
+.tr-d12 { margin-left: 13.2rem; }
+.tr-d13 { margin-left: 14.3rem; }
+.tr-d14 { margin-left: 15.4rem; }
+.tr-d15 { margin-left: 16.5rem; }
+.tr-d16 { margin-left: 17.6rem; }
+.tr-d17 { margin-left: 18.7rem; }
+.tr-d18 { margin-left: 19.8rem; }
+.tr-d19 { margin-left: 20.9rem; }
+.tr-d20 { margin-left: 22.0rem; }
+.tr-d21 { margin-left: 23.1rem; }
+.tr-d22 { margin-left: 24.2rem; }
+.tr-d23 { margin-left: 25.3rem; }
+.tr-d24 { margin-left: 26.4rem; }
+.pivot .pv-i2 { padding-left: 1.4rem; }
+.pivot .pv-i3 { padding-left: 2.3rem; }
+.pivot .pv-i4 { padding-left: 3.2rem; }
+.pivot .pv-i5 { padding-left: 4.1rem; }
+.pivot .pv-i6 { padding-left: 5.0rem; }
+.tbl-tree .tr-tog { background: none; border: 0; color: var(--d-muted); padding: 0 .3rem 0 0; width: 1.1rem; font-size: .8rem; cursor: pointer; }
+.tbl-tree .tr-tog:focus-visible { outline: 2px solid var(--d-accent); }
+.tbl-tree .tr-sp { display: inline-block; width: 1.1rem; }
+.tbl-tree tr[data-kids] td:first-child { font-weight: 600; }
+.tr-q { margin: 0 0 .4rem; max-width: 16rem; }
+.pv-tree-host { font-size: .85rem; }
+@media print { .tr-tog, .tr-q { display: none !important; } }
