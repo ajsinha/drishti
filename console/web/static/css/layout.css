@@ -34,6 +34,7 @@
 .c-span-11 { grid-column: span 11; }
 .pnl { container-type: inline-size; }
 @container (max-width: 34rem) { .kv-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 15rem) { .kv-4, .kv-2 { grid-template-columns: minmax(0, 1fr); } }   /* a very narrow panel: one label per row, never side by side */
 .pnl[class*=" c-h-"] { display: flex; flex-direction: column; overflow: hidden; }
 .pnl[class*=" c-h-"] > .pnl-b { flex: 1 1 auto; min-height: 0; overflow: auto; }
 .c-h-1 { height: calc(1 * var(--layout-row)); }

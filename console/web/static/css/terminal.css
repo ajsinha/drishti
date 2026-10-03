@@ -81,7 +81,7 @@ body.terminal { font-size: 14px; }
 .kv { display: grid; gap: .55rem 1rem; margin: 0; }
 .kv-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .kv-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.kv dt { color: var(--d-muted); font-weight: 400; font-size: .8rem; }
+.kv dt { color: var(--d-muted); font-weight: 400; font-size: .8rem; min-width: 0; overflow-wrap: anywhere; hyphens: auto; }
 .kv dd { margin: 0; color: var(--d-ink); overflow-wrap: anywhere; }
 .kv-item { min-width: 0; }
 
