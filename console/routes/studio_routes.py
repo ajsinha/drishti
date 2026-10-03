@@ -35,7 +35,7 @@ sutra: my-layout
 version: 1
 description: What this layout shows, and for which entities.
 match: {{ kind: {kind} }}
-title: {{ pill: "{label}" }}
+title: {{ pill: "{label}", id: $.id }}
 panels:
   - {{ id: refs, kind: links, title: Linked entities, area: right }}
 """

@@ -268,3 +268,12 @@ def test_a_panel_whose_source_the_viewer_may_not_open_says_so_without_an_error(c
     html = env.from_string("{% from '_macros/panels.html' import no_data %}{{ no_data(p) }}").render(
         p={"id": "x", "kind": "table", "denied": "no access to curve", "error": None, "data": None, "empty": True})
     assert "data-denied" in html and "No access to curve" in html and "did not have the shape" not in html
+
+
+def test_the_new_sutra_template_has_a_title_id():
+    """A title written without `id` is DRS-2010 (GRAM-05): the starter template must carry one, or every new Sutra
+    opens with a problem (it did, from the Screen Builder's Open in Studio)."""
+    from routes.studio_routes import _new_sutra
+    import re
+    for kind in ("sample", "trade", "counterparty-group"):
+        assert re.search(r"title: \{[^}]*\bid: \$\.id", _new_sutra(kind))
