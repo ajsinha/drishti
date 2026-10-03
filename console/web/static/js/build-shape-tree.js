@@ -17,10 +17,12 @@
  * Home/End, Right/Left to open and close, Enter for a field's reason), with a filter. Used by New and by a Design's page.
  * window.DrishtiShapeTree(root) wires the elements inside root that carry data-tree, data-filter, data-counts, data-attention,
  * data-conflicts, data-rare, data-expand-all and data-collapse-all, and returns {show(report)}. All text from the data goes in as
- * text nodes, never as HTML. */
+ * text nodes, never as HTML. opts.onRow(row, li, line, detail), when given, is called for every field so the workbench can make it
+ * draggable and add its own buttons. */
 (function () {
   'use strict';
-  window.DrishtiShapeTree = function (root) {
+  window.DrishtiShapeTree = function (root, opts) {
+    opts = opts || {};
     var $ = function (s) { return root.querySelector(s); };
     var tree = $('[data-tree]'), counts = $('[data-counts]'), filter = $('[data-filter]');
     var rows = [];            // [{n, li, kids, detail, text}]
@@ -135,6 +137,7 @@
       n.children.forEach(function (c) { render(c, kids); });
       li.appendChild(kids);
     }
+    if (r && opts.onRow) { opts.onRow(r, li, line, detail); }
     ul.appendChild(li);
     var rec = { n: n, li: li, kids: kids, detail: detail, text: ((r ? r.path + ' ' + r.type + ' ' + (r.role || '') + ' ' + (r.reason || '') : n.label)).toLowerCase() };
     li._rec = rec;

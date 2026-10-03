@@ -113,5 +113,5 @@
 <script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if vm.provenance.live and asof == 'live' %}<script src="/static/js/live.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if layout and layout.offered and layout.allowed %}<script src="/static/js/layout-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/layout.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if layout and layout.offered and layout.allowed %}<script src="/static/js/layout-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/build/grid-keys.js?v={{ ASSET_V }}"></script><script src="/static/js/layout.js?v={{ ASSET_V }}"></script>{% endif %}
 {% endblock %}

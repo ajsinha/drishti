@@ -266,7 +266,53 @@ class FakeBackend:
             if draft["yaml"] != d["sutra"]:
                 d["sutra"], d["rev"] = draft["yaml"], d["rev"] + 1
             return {**draft, "rev": d["rev"], "skipped": []}
+        if rest in (["ops"], ["undo"], ["redo"]) and method == "POST":
+            return await self._fake_step(d, row, rest[0], body or {}, ident)
+        if rest == ["check"] and method == "POST":
+            infos = [{"name": s["name"], **({"ref": s["ref"]} if s.get("ref") else {"document": row["docs"].get(s["name"], {})})} for s in d["samples"]]
+            if not d["sutra"] or not infos:
+                raise BackendError(400, "DRS-5001", "this design has no Sutra or no samples to check")
+            m = await self.check(d["sutra"], d["kind"], infos, ident)
+            d["status"] = "checked" if m["ok"] else "draft"
+            return {**m, "rev": d["rev"]}
         raise BackendError(404, "DRS-1001", "no such design endpoint")
+
+    async def _fake_step(self, d, row, what, body, ident):
+        """The server's /ops, /undo and /redo in miniature: a stale baseRev is a 409, each operation appends a line to the Sutra."""
+        steps = row.setdefault("steps", {"list": [], "at": 0})
+        if what == "ops" and body.get("baseRev") != d["rev"]:
+            raise BackendError(409, "DRS-5007", f"the design is at revision {d['rev']}, not {body.get('baseRev')}: reload and try again")
+        problems = []
+        if what == "ops":
+            before = d["sutra"]
+            for i, op in enumerate(body.get("ops") or []):
+                if op.get("panel") == "nope":
+                    problems.append({"op": i, "name": op["op"], "code": "DRS-5021", "message": "no panel 'nope' in this Sutra", "line": 0})
+                elif op.get("op") == "text":
+                    d["sutra"] = op["yaml"]
+                else:
+                    d["sutra"] += f"# {json.dumps(op, sort_keys=True)}\n"
+            if d["sutra"] != before:
+                steps["list"] = steps["list"][:steps["at"]] + [(before, d["sutra"])]
+                steps["at"], d["rev"] = len(steps["list"]), d["rev"] + 1
+        elif what == "undo" and steps["at"] > 0:
+            steps["at"] -= 1
+            d["sutra"], d["rev"] = steps["list"][steps["at"]][0], d["rev"] + 1
+        elif what == "redo" and steps["at"] < len(steps["list"]):
+            d["sutra"], d["rev"] = steps["list"][steps["at"]][1], d["rev"] + 1
+            steps["at"] += 1
+        elif what in ("undo", "redo"):
+            raise BackendError(409, "DRS-5007", f"nothing to {what}")
+        d["opsAt"], d["opsCount"], d["status"] = steps["at"], len(steps["list"]), "draft"
+        out = {"rev": d["rev"], "yaml": d["sutra"], "status": "draft", "opsAt": steps["at"], "opsCount": len(steps["list"]), "problems": problems,
+               "applied": len(body.get("ops") or []) - len(problems)}
+        if d["samples"] and d["sutra"]:
+            out["preview"] = await self.view("trade", "IRS-48213", ident)
+        return out
+
+    async def builder_suggest(self, body, ident=None):
+        return {"path": body["path"], "suggestions": [{"kind": "kv", "score": 0.4, "reason": "the field as a labelled value", "area": "right",
+                                                         "title": "Field", "options": {}, "columns": [{"label": "Field", "bind": body["path"]}]}]}
 
     async def inferred_from(self, kind, id_, name, document, ident=None):
         return f"sutra: {name}\nversion: 1\n# fields: {','.join(sorted(document))}\n"

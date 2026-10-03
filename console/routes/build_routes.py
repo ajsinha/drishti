@@ -94,13 +94,15 @@ async def shape_moved(request: Request):
 
 @router.get("/d/{id_}")
 async def design_page(request: Request, id_: str):
-    """A Design: its data (samples and shape), its Sutra (read-only for now) and its preview, with a sample switcher."""
+    """The workbench: a Design's data, its canvas over the real preview, the YAML, the inspector, problems and tests."""
     try:
         design = await request.app.state.backend.designs("GET", f"/{id_}", ident(request))
     except BackendError as e:
         return render(request, "build/design.html", status_code=e.status, design=None, error=e, screen="build",
                       limits=request.app.state.builder_limits.as_dict())
-    return render(request, "build/design.html", design=design, error=None, screen="build", limits=request.app.state.builder_limits.as_dict())
+    init = {"samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
+            "status": design.get("status", "draft")}
+    return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict())
 
 
 # ---- designs -------------------------------------------------------------------------------------------------------------
@@ -115,6 +117,15 @@ async def create_design(request: Request):
         send["sutra"] = _new_sutra(send["kind"])
     try:
         return JSONResponse(await request.app.state.backend.designs("POST", "", ident(request), send), status_code=201)
+    except BackendError as e:
+        return _error(e)
+
+
+@router.get("/designs/{id_}")
+async def read_design(request: Request, id_: str):
+    """The Design as the server keeps it (revision, Sutra, samples, log position): what the workbench reloads after a 409."""
+    try:
+        return await request.app.state.backend.designs("GET", f"/{id_}", ident(request))
     except BackendError as e:
         return _error(e)
 
@@ -263,3 +274,94 @@ async def autodesign(request: Request, id_: str):
     LOG.info("design %s auto-designed: %d sample(s), %d panel(s) pruned", id_, result.get("samples", 0), len(result.get("pruned") or []))
     return result
 
+
+
+# ---- the workbench: operations, undo, check, suggestions, a file ---------------------------------------------------------------
+
+def _drawn(request: Request, result: dict) -> dict:
+    """An ops/undo/redo answer with its preview view model replaced by the HTML Studio draws (the server sends the model)."""
+    result["previewHtml"] = _html(request, result.pop("preview", None))
+    return result
+
+
+@router.post("/designs/{id_}/ops")
+async def apply_ops(request: Request, id_: str):
+    """Body ``{baseRev, ops, sample?}``: the server's ``/ops``. A stale ``baseRev`` is its ``409 DRS-5007`` (nothing changed)."""
+    body = await _body(request)
+    send = {k: body[k] for k in ("baseRev", "ops", "sample") if k in body}
+    try:
+        return _drawn(request, await request.app.state.backend.designs("POST", f"/{id_}/ops", ident(request), send))
+    except BackendError as e:
+        return _error(e)
+
+
+async def _step(request: Request, id_: str, move: str):
+    body = await _body(request)
+    try:
+        return _drawn(request, await request.app.state.backend.designs("POST", f"/{id_}/{move}", ident(request), {k: body[k] for k in ("baseRev",) if k in body}))
+    except BackendError as e:
+        return _error(e)
+
+
+@router.post("/designs/{id_}/undo")
+async def undo(request: Request, id_: str):
+    """Body ``{baseRev?}``: takes the last step of the Design's log back."""
+    return await _step(request, id_, "undo")
+
+
+@router.post("/designs/{id_}/redo")
+async def redo(request: Request, id_: str):
+    """Body ``{baseRev?}``: brings back the step undo took."""
+    return await _step(request, id_, "redo")
+
+
+@router.post("/designs/{id_}/check")
+async def check(request: Request, id_: str):
+    """The panel by sample matrix of the Design (the server's one checker)."""
+    try:
+        return await request.app.state.backend.designs("POST", f"/{id_}/check", ident(request), {})
+    except BackendError as e:
+        return _error(e)
+
+
+@router.post("/designs/{id_}/suggest")
+async def suggest(request: Request, id_: str):
+    """Body ``{path, at?}``: the panel kinds that suit a field of the Design's shape, best first, each with options and a reason."""
+    body = await _body(request)
+    if not isinstance(body.get("path"), str) or not body["path"].startswith("$"):
+        raise BodyError(400, "send 'path', the field to suggest panels for, for example \"$.profile\"")
+    me, backend = ident(request), request.app.state.backend
+    try:
+        shape = await backend.designs("POST", f"/{id_}/shape", me, {})
+        send = {"shape": {"schema": shape.get("schema"), "roles": shape.get("roles")}, "path": body["path"]}
+        if isinstance(body.get("at"), str):
+            send["at"] = body["at"]
+        return await backend.builder_suggest(send, me)
+    except BackendError as e:
+        return _error(e)
+
+
+@router.post("/designs/{id_}/preview-file")
+async def preview_file(request: Request, id_: str):
+    """Body ``{document}``: the Design's Sutra against any JSON document, drawn at once and kept nowhere ("try it on the spot")."""
+    body = await _body(request)
+    if "document" not in body:
+        raise BodyError(400, "send 'document', the JSON to preview the design against")
+    me, backend = ident(request), request.app.state.backend
+    try:
+        design = await backend.designs("GET", f"/{id_}", me)
+        if not (design.get("sutra") or "").strip():
+            return _refuse(400, "this design has no Sutra yet")
+        vm = await backend.preview(design["sutra"], design.get("kind") or _studio_kind(request), "SAMPLE", me, document=body["document"])
+    except BackendError as e:
+        return _error(e)
+    return {"previewHtml": _html(request, vm)}
+
+
+@router.get("/designs/{id_}/sample")
+async def sample_document(request: Request, id_: str, name: str = ""):
+    """One brought sample's JSON (the YAML editor completes fields from it); a stored entity keeps no document."""
+    try:
+        return await request.app.state.backend.designs("GET", f"/{id_}/samples/document", ident(request), name=name)
+    except BackendError as e:
+        return _error(e)

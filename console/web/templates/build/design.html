@@ -13,11 +13,13 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
+{# The workbench (docs/architecture/BUILD_WORKBENCH.md, step 6): Data on the left, the screen in the middle (Design, YAML, Summary), Inspector / Problems /
+   Tests on the right, a status bar below. static/js/build/*.js wires it; every control is a real element with a label, so the page works by keyboard. #}
 {% extends "base.html" %}
 {% block title %}{{ design.name or 'Untitled design' if design else 'Design not found' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% if not design %}
@@ -29,83 +31,117 @@
     <a class="lnk" href="/build">My designs</a> · <a class="lnk" href="/build/new">New screen</a></p>
 </div>
 {% else %}
-<div class="adm bs" data-design-page data-id="{{ design.id }}" data-max-file-mb="{{ limits.maxFileMb }}" data-max-samples="{{ limits.maxSamples }}"
-     data-has-sutra="{{ 'yes' if design.sutra else 'no' }}" data-rev="{{ design.rev }}" data-sample-count="{{ design.samples | length }}">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/screen-builder">Screen Builder guide</a></nav>
-  <h1>{% if design.name %}{{ design.name }}{% else %}<i>Untitled design</i>{% endif %}</h1>
-  <p class="text-muted-d">Kind <span class="mono">{{ design.kind }}</span> · {{ design.status }}
-    {% if design.base %}· edits <span class="mono">{{ design.base }}</span> {% endif %}
-    · {% if design.rev %}Sutra revision {{ design.rev }}{% else %}no Sutra yet{% endif %}
-    {% if design.scratch %}· <b>unnamed: forgotten after a day</b>, <a class="lnk" href="/build">name it in My designs</a>{% endif %}
-    {% if design.expiryWarning %}· <b>expires soon</b>{% endif %}</p>
-  <div class="bs-status" role="status" aria-live="polite" data-status></div>
+<div class="wb" data-workbench data-design-page data-id="{{ design.id }}" data-kind="{{ design.kind }}" data-rev="{{ design.rev }}" data-max-file-mb="{{ limits.maxFileMb }}"
+     data-init='{{ init | tojson }}'>
+  <div class="wb-head">
+    <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/screen-designer">Screen designer guide</a></nav>
+    <h1 class="wb-title">{% if design.name %}{{ design.name }}{% else %}<i>Untitled design</i>{% endif %}</h1>
+    <span class="text-muted-d wb-meta">kind <span class="mono">{{ design.kind }}</span>{% if design.base %} · edits <span class="mono">{{ design.base }}</span>{% endif %}
+      {% if design.scratch %} · <b>unnamed: forgotten after a day</b>, <a class="lnk" href="/build">name it in My designs</a>{% endif %}
+      {% if design.expiryWarning %} · <b>expires soon</b>{% endif %}</span>
+    <span class="wb-head-actions">
+      <button type="button" class="btn-pill btn-accent" data-autodesign{% if not design.samples %} disabled{% endif %} title="Draft a complete Sutra from the samples: a new revision; undo brings the old one back"><i class="bi bi-magic" aria-hidden="true"></i> Auto-design</button>
+      <a class="btn-pill btn-ghost" href="/studio?design={{ design.id }}" data-studio-link title="Studio with this design's Sutra"><i class="bi bi-braces" aria-hidden="true"></i> Open in Studio</a>
+      <a class="btn-pill btn-ghost" href="/help/screen-designer" title="The screen designer guide (F1)"><i class="bi bi-question-circle" aria-hidden="true"></i> Guide</a>
+    </span>
+  </div>
+  <div class="bs-status wb-status" role="status" data-say></div>
+  <div class="visually-hidden" aria-live="polite" aria-atomic="true" data-live></div>
+  <details class="wb-draft" data-draft hidden></details>
 
-  <section class="pnl" aria-labelledby="bdData"><div class="pnl-b">
-    <h2 id="bdData" class="bs-h">Data</h2>
-    {% if design.samples %}
-    <ul class="bs-files" aria-label="Samples" data-samples>
-      {% for s in design.samples %}
-      <li data-sample="{{ s.name }}"><span class="mono">{{ s.name }}</span>
-        {% if s.type == 'ref' %}<span class="bs-role" title="Read again each time with your rights and masks">stored entity</span>
-        {% elif s.synthetic %}<span class="bs-role" title="Generated from a schema: not evidence that a screen works on real data">synthetic</span>{% endif %}
-        <button type="button" class="btn-pill btn-ghost" data-remove aria-label="Remove {{ s.name }}">Remove</button></li>{% endfor %}
-    </ul>
-    {% else %}<p class="text-muted-d">No samples yet.</p>{% endif %}
-    <p class="bs-actions"><label class="btn-pill btn-ghost" for="bdFiles"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add files
-      <input id="bdFiles" class="bs-file" type="file" multiple accept=".json,.jsonl,application/json" data-add-files></label>
-      <a class="btn-pill btn-ghost" href="/build/new#store" title="Stored entities and schemas are added when a design is created">More ways to bring data</a>
-      {% if design.samples %}
-      <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=shape" download="shape.json" title="The schema with Drishti's x-drishti roles">shape.json</a>
-      <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=schema" download="schema.json" title="Plain JSON Schema, annotations removed">JSON Schema</a>{% endif %}</p>
-    <div data-skipped></div>
-    <div data-shape hidden>
-      <section data-attention hidden><div data-conflicts></div><div data-rare></div></section>
-      <h3 class="bs-h2">Shape</h3>
-      <div class="bs-bar">
-        <label for="bdFilter" class="visually-hidden">Filter paths</label>
-        <input id="bdFilter" class="studio-in mono" type="search" placeholder="Filter paths, roles, types..." data-filter autocomplete="off">
-        <span class="text-muted-d" data-counts aria-live="polite"></span>
-        <button type="button" class="btn-pill btn-ghost" data-expand-all>Expand all</button>
-        <button type="button" class="btn-pill btn-ghost" data-collapse-all>Collapse all</button>
+  <div class="wb-main">
+    <aside class="wb-left" aria-label="Data" data-left>
+      <section aria-labelledby="wbSamples"><h2 id="wbSamples" class="bs-h">Samples</h2>
+        <ul class="wb-samples" aria-label="Samples" data-samples></ul>
+        <p class="bs-actions"><label class="btn-pill btn-ghost" for="wbFiles"><i class="bi bi-plus-lg" aria-hidden="true"></i> Add files
+          <input id="wbFiles" class="bs-file" type="file" multiple accept=".json,.jsonl,application/json" data-add-files></label>
+          <a class="btn-pill btn-ghost" href="/build/new#store" title="Stored entities and schemas are added when a design is created">More ways</a>
+          <a class="btn-pill btn-ghost" href="/build/designs/{{ design.id }}/shape/download?kind=shape" download="shape.json" title="The schema with Drishti's x-drishti roles">shape.json</a></p>
+        <p class="text-muted-d" data-data-note></p>
+      </section>
+      <details class="wb-sec" open data-palette-box><summary id="wbPalette" class="bs-h">Panels</summary>
+        <p class="text-muted-d bs-keys">Drag a kind onto the canvas, or press Add.</p>
+        <ul class="wb-palette" aria-label="Panel kinds" data-palette></ul>
+      </details>
+      <details class="wb-sec" open><summary id="wbShape" class="bs-h">Shape</summary>
+        <div data-skipped></div>
+        <div data-shape hidden>
+          <section data-attention hidden><div data-conflicts></div><div data-rare></div></section>
+          <div class="bs-bar"><label for="wbFilter" class="visually-hidden">Filter paths</label>
+            <input id="wbFilter" class="studio-in mono" type="search" placeholder="Filter paths, roles..." data-filter autocomplete="off">
+            <span class="text-muted-d" data-counts aria-live="polite"></span>
+            <button type="button" class="btn-pill btn-ghost" data-expand-all>Expand</button><button type="button" class="btn-pill btn-ghost" data-collapse-all>Collapse</button></div>
+          <p class="text-muted-d bs-keys">Drag a field onto the canvas. Or: arrows move, Enter opens a field, S suggests panels, B binds it to the selected panel.</p>
+          <ul class="bs-tree" role="tree" aria-label="Shape of the samples" data-tree></ul>
+        </div>
+      </details>
+    </aside>
+
+    <section class="wb-centre" data-centre aria-label="Screen">
+      <div class="wb-tabs" role="tablist" aria-label="Screen views" data-centre-tabs>
+        <button type="button" role="tab" id="wbTabDesign" data-tab="design" aria-controls="wbPaneDesign" aria-selected="true">Design</button>
+        <button type="button" role="tab" id="wbTabYaml" data-tab="yaml" aria-controls="wbPaneYaml" aria-selected="false" tabindex="-1">YAML</button>
+        <button type="button" role="tab" id="wbTabSummary" data-tab="summary" aria-controls="wbPaneSummary" aria-selected="false" tabindex="-1">Summary</button>
+        <button type="button" class="btn-pill btn-ghost wb-split-b" data-split aria-pressed="false" title="Show the design and the YAML side by side"><i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i> Split</button>
       </div>
-      <p class="text-muted-d bs-keys">Arrow keys move, Right and Left open and close, Enter shows a field's reason, files and examples.</p>
-      <ul class="bs-tree" role="tree" aria-label="Shape of the samples" data-tree></ul>
-    </div>
-  </div></section>
+      <div class="wb-panes">
+        <div class="wb-pane" id="wbPaneDesign" role="tabpanel" aria-labelledby="wbTabDesign" data-split-ok>
+          <div class="wb-tools">
+            <button type="button" class="btn-pill btn-ghost" data-add-menu><i class="bi bi-plus-lg" aria-hidden="true"></i> Add panel…</button>
+            <button type="button" class="btn-pill btn-ghost" data-bind-menu><i class="bi bi-link-45deg" aria-hidden="true"></i> Bind field…</button>
+            <span class="text-muted-d wb-hint-keys">Arrows select · Alt+arrows move · Shift+arrows size · Enter opens the inspector · Delete removes · N adds · B binds</span>
+          </div>
+          <div class="wb-canvas" data-canvas>
+            <div class="wb-frame-wrap"><div class="studio-preview wb-frame" data-preview role="group" aria-label="The screen, as users see it"></div></div>
+          </div>
+        </div>
+        <div class="wb-pane" id="wbPaneYaml" role="tabpanel" aria-labelledby="wbTabYaml" hidden data-split-ok>
+          <div class="bs-status text-muted-d" data-field-help hidden></div>
+          <textarea data-yaml-src aria-label="Sutra (YAML)" spellcheck="false">{{ design.sutra }}</textarea>
+        </div>
+        <div class="wb-pane studio-summary" id="wbPaneSummary" role="tabpanel" aria-labelledby="wbTabSummary" hidden data-summary></div>
+      </div>
+    </section>
 
-  <section class="pnl" aria-labelledby="bdSutra"><div class="pnl-b">
-    <h2 id="bdSutra" class="bs-h">Sutra</h2>
-    <p class="bs-actions">
-      <button type="button" class="btn-pill btn-accent" data-autodesign{% if not design.samples %} disabled{% endif %}
-              title="Draft a complete Sutra from the samples: it becomes this design's next revision"><i class="bi bi-magic" aria-hidden="true"></i> Auto-design</button>
-      <a class="btn-pill btn-ghost" href="/studio?design={{ design.id }}" data-studio-link title="Studio with this design's Sutra and the sample chosen below"><i class="bi bi-braces" aria-hidden="true"></i> Open in Studio</a>
-    </p>
-    {% if design.sutra %}<pre class="bs-yaml mono" tabindex="0" aria-label="Sutra (read-only)" data-yaml>{{ design.sutra }}</pre>
-    {% else %}<p class="text-muted-d">There is no Sutra yet. Auto-design drafts one from the samples.</p>{% endif %}
-    <div data-draft hidden>
-      <h3 class="bs-h2">Left out because the samples could not fill it</h3>
-      <ul class="bs-list" data-draft-pruned></ul>
-      <h3 class="bs-h2">Why each choice, and what else was considered</h3>
-      <div data-draft-reasons></div>
-    </div>
-  </div></section>
+    <aside class="wb-right" aria-label="Details">
+      <div class="wb-tabs" role="tablist" aria-label="Details" data-right-tabs>
+        <button type="button" role="tab" id="wbTabIns" data-tab="inspector" aria-controls="wbPaneIns" aria-selected="true">Inspector</button>
+        <button type="button" role="tab" id="wbTabProb" data-tab="problems" aria-controls="wbPaneProb" aria-selected="false" tabindex="-1">Problems <span class="wb-count" data-problem-count hidden></span></button>
+        <button type="button" role="tab" id="wbTabTests" data-tab="tests" aria-controls="wbPaneTests" aria-selected="false" tabindex="-1">Tests</button>
+      </div>
+      <div class="wb-panes">
+        <div class="wb-pane" id="wbPaneIns" role="tabpanel" aria-labelledby="wbTabIns" data-inspector></div>
+        <div class="wb-pane" id="wbPaneProb" role="tabpanel" aria-labelledby="wbTabProb" hidden data-problems></div>
+        <div class="wb-pane" id="wbPaneTests" role="tabpanel" aria-labelledby="wbTabTests" hidden data-tests></div>
+      </div>
+    </aside>
+  </div>
 
-  <section class="pnl" aria-labelledby="bdPrev"><div class="pnl-b">
-    <h2 id="bdPrev" class="bs-h">Preview</h2>
-    {% if design.sutra and design.samples %}
-    <div class="bs-bar">
-      <label for="bdSample">Sample</label>
-      <select id="bdSample" class="studio-in" data-sample-switch>
-        {% for s in design.samples %}<option value="{{ s.name }}">{{ s.name }}{% if s.synthetic %} (synthetic){% endif %}</option>{% endfor %}
-      </select>
-    </div>
-    <div class="studio-preview bs-preview" data-preview aria-live="polite"></div>
-    {% else %}<p class="text-muted-d">The preview needs a Sutra and at least one sample.</p>{% endif %}
-  </div></section>
+  <footer class="wb-bar" aria-label="Status bar">
+    <span class="wb-group"><button type="button" class="btn-pill btn-ghost" data-prev aria-label="Previous sample">◀</button>
+      <span class="wb-pos mono" data-sample-pos></span>
+      <button type="button" class="btn-pill btn-ghost" data-next aria-label="Next sample">▶</button></span>
+    <span class="wb-group" role="group" aria-label="Preview width">
+      <button type="button" class="btn-pill btn-ghost" data-width="desktop" aria-pressed="true"><i class="bi bi-laptop" aria-hidden="true"></i> Desktop</button>
+      <button type="button" class="btn-pill btn-ghost" data-width="phone" aria-pressed="false"><i class="bi bi-phone" aria-hidden="true"></i> Phone</button></span>
+    <span class="wb-group"><label for="wbTheme">Theme</label> <select id="wbTheme" class="studio-in" data-theme-pick><option value="">(current)</option></select></span>
+    <span class="wb-group"><label class="btn-pill btn-ghost" for="wbPreviewFile"><i class="bi bi-upload" aria-hidden="true"></i> Preview with a file…
+      <input id="wbPreviewFile" class="bs-file" type="file" accept=".json,.jsonl,application/json" data-preview-file></label>
+      <span data-file-chip hidden><button type="button" class="btn-pill btn-ghost" data-file-clear>Back to the samples</button></span></span>
+    <span class="wb-result" data-result role="status" aria-label="Check result"></span>
+    <span class="wb-spacer"></span>
+    <span class="mono wb-rev" data-rev></span>
+    <span class="wb-group"><button type="button" class="btn-pill btn-ghost" data-undo aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo</button>
+      <button type="button" class="btn-pill btn-ghost" data-redo aria-label="Redo (Ctrl+Shift+Z)" title="Redo (Ctrl+Shift+Z)"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Redo</button></span>
+  </footer>
 </div>
 {% endif %}
 {% endblock %}
 {% block scripts %}
+<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/studio-yaml.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/studio-assist.js?v={{ ASSET_V }}"></script>
 <script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/charts.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/command.js?v={{ ASSET_V }}"></script>
@@ -113,7 +149,10 @@
 <script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/layout-rules.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-files.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-shape-tree.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/build-design.js?v={{ ASSET_V }}"></script>
+{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "actions", "canvas", "inspector", "data", "yamltab", "problems", "tests", "draft", "workbench"] %}
+<script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>
+{% endfor %}
 {% endblock %}

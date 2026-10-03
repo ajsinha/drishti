@@ -199,6 +199,10 @@ class BackendClient:
             kw["json"] = body
         return await self._send(method, "/builder/designs" + path, ident, **kw)
 
+    async def builder_suggest(self, body: dict, ident=None) -> dict:
+        """Panel kinds that suit a field (``POST /builder/suggest``): ``{shape: {schema, roles}, path, at?}``."""
+        return await self._send("POST", "/builder/suggest", ident, json=body)
+
     async def rachana_schema(self, ident=None) -> dict:
         """The Rachana JSON Schema, generated from the grammar with this server's kinds, formats and functions."""
         return await self._get("/rachana/schema", ident)

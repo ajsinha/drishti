@@ -255,20 +255,18 @@
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); save(false); return; }
     var p = e.target.closest && e.target.closest('.pnl[data-panel]');
     if (typing || !p || p !== e.target) { return; }
-    var k = e.key, done = true;
-    if (e.shiftKey && k === 'ArrowLeft') { setSpan(p, spanOf(p) - 1); changed(); relayout(); say(size(p)); }
-    else if (e.shiftKey && k === 'ArrowRight') { setSpan(p, spanOf(p) + 1); changed(); relayout(); say(size(p)); }
-    else if (e.shiftKey && k === 'ArrowUp') { taller(p, -1); }
-    else if (e.shiftKey && k === 'ArrowDown') { taller(p, 1); }
-    else if (k === '-' || k === '_') { setSpan(p, spanOf(p) - 1); changed(); relayout(); say(size(p)); }
-    else if (k === '+' || k === '=') { setSpan(p, spanOf(p) + 1); changed(); relayout(); say(size(p)); }
-    else if (k === 'ArrowUp') { move(p, -1); }
-    else if (k === 'ArrowDown') { move(p, 1); }
-    else if (k === 'ArrowLeft') { toColumn(p, 'main'); }
-    else if (k === 'ArrowRight') { toColumn(p, 'right'); }
-    else if (k === 'h' || k === 'H' || k === 'Delete') { toggleHidden(p); }
-    else if (k === 'a' || k === 'A') { setHeight(p, 0); changed(); relayout(); say(size(p)); }
-    else { done = false; }
+    var act = window.DrishtiGridKeys.interpret(e, window.DrishtiGridKeys.LAYOUT), done = !!act;
+    if (act) {
+      switch (act.type) {
+        case 'span': setSpan(p, spanOf(p) + act.delta); changed(); relayout(); say(size(p)); break;
+        case 'height': taller(p, act.delta); break;
+        case 'move': move(p, act.step); break;
+        case 'column': toColumn(p, act.area); break;
+        case 'hide': toggleHidden(p); break;
+        case 'natural': setHeight(p, 0); changed(); relayout(); say(size(p)); break;
+        default: done = false;
+      }
+    }
     if (done) { e.preventDefault(); e.stopPropagation(); }
   }, true);
 
