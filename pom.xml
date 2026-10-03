@@ -76,7 +76,6 @@
     <jctools.version>4.0.7</jctools.version>
     <hdrhistogram.version>2.2.2</hdrhistogram.version>
     <archunit.version>1.5.0</archunit.version>
-    <jqwik.version>1.10.1</jqwik.version>
     <errorprone.version>2.36.0</errorprone.version>
     <spotless.version>3.10.2</spotless.version>
     <jmh.version>1.37</jmh.version>
@@ -140,7 +139,6 @@
       <dependency><groupId>org.jctools</groupId><artifactId>jctools-core</artifactId><version>${jctools.version}</version></dependency>
       <dependency><groupId>org.hdrhistogram</groupId><artifactId>HdrHistogram</artifactId><version>${hdrhistogram.version}</version></dependency>
       <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><version>${archunit.version}</version></dependency>
-      <dependency><groupId>net.jqwik</groupId><artifactId>jqwik</artifactId><version>${jqwik.version}</version></dependency>
       <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId><version>${springdoc.version}</version></dependency>
     </dependencies>
   </dependencyManagement>

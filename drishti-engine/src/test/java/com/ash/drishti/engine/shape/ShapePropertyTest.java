@@ -23,11 +23,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import net.jqwik.api.Arbitraries;
-import net.jqwik.api.Arbitrary;
-import net.jqwik.api.ForAll;
-import net.jqwik.api.Property;
-import net.jqwik.api.Provide;
+import java.util.stream.IntStream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /** Property: every sample validates against the schema inferred from the set it belongs to. */
 class ShapePropertyTest {
@@ -37,32 +35,38 @@ class ShapePropertyTest {
     private static final String[] WORDS = {"Live", "Failed", "USD", "EUR", "2026-09-01", "2026-09-01T10:00:00Z", "a@b.com", "hello world", "•••",
             "123e4567-e89b-12d3-a456-426614174000", "", "X6"};
 
-    @Provide
-    Arbitrary<List<JsonNode>> sampleSets() {
-        return Arbitraries.longs().map(seed -> {
-            Random r = new Random(seed);
-            List<JsonNode> docs = new ArrayList<>();
-            int n = 1 + r.nextInt(8);
-            boolean uniform = r.nextInt(3) > 0;
-            for (int i = 0; i < n; i++) {
-                docs.add(uniform ? record(r, 0, 1.0) : value(r, 0));
-            }
-            return docs;
-        });
+    /** Number of generated cases; fixed base seed, overridable with {@code -Ddrishti.test.seed=N} to explore other inputs. */
+    private static final int TRIES = 400;
+    private static final long BASE_SEED = Long.getLong("drishti.test.seed", 20260903L);
+
+    static IntStream cases() {
+        return IntStream.range(0, TRIES);
     }
 
-    @Property(tries = 400)
-    void everySampleValidatesAgainstItsInferredSchema(@ForAll("sampleSets") List<JsonNode> docs) {
-        List<Sample> samples = new ArrayList<>();
-        for (int i = 0; i < docs.size(); i++) {
-            samples.add(new Sample("s" + i, docs.get(i)));
+    /** The seed of case {@code index}: reproducible from the base seed and the index alone. */
+    private static long caseSeed(int index) {
+        return new java.util.SplittableRandom(BASE_SEED + index).nextLong();
+    }
+
+    private static List<JsonNode> sampleSet(long seed) {
+        Random r = new Random(seed);
+        List<JsonNode> docs = new ArrayList<>();
+        int n = 1 + r.nextInt(8);
+        boolean uniform = r.nextInt(3) > 0;
+        for (int i = 0; i < n; i++) {
+            docs.add(uniform ? record(r, 0, 1.0) : value(r, 0));
         }
-        Shape shape = ShapeTestSupport.service().infer(samples);
-        MiniSchemaValidator v = new MiniSchemaValidator(shape.schema());
-        for (JsonNode d : docs) {
-            if (!v.validate(d).isEmpty()) {
-                throw new AssertionError(minimal(docs, d.deepCopy()));
-            }
+        return docs;
+    }
+
+    @ParameterizedTest(name = "case {0}")
+    @MethodSource("cases")
+    void everySampleValidatesAgainstItsInferredSchema(int index) {
+        long seed = caseSeed(index);
+        List<JsonNode> docs = sampleSet(seed);
+        if (fails(docs)) {
+            throw new AssertionError("case " + index + " baseSeed " + BASE_SEED + " caseSeed " + seed + " input " + docs + " -> "
+                    + minimal(docs, null));
         }
     }
 

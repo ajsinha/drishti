@@ -35,6 +35,5 @@
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>org.jctools</groupId><artifactId>jctools-core</artifactId></dependency>
     <dependency><groupId>org.hdrhistogram</groupId><artifactId>HdrHistogram</artifactId></dependency>
-    <dependency><groupId>net.jqwik</groupId><artifactId>jqwik</artifactId><scope>test</scope></dependency>
   </dependencies>
 </project>
