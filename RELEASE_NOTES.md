@@ -13,7 +13,51 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.13.0 — release notes
+# Drishti 1.14.0 — release notes
+
+*2026-10-03.* **The Build workbench: from JSON files to a working, reviewed screen in minutes; two rounds of adversarial QA closed.**
+
+- **Build workbench** (Build → New screen). One page to design, test and ship screens:
+  - **Bring data:** JSON or JSONL files, a whole folder, a JSON Schema (samples are generated), entities from a store,
+    an example, or an existing Sutra. Drishti infers a schema with a role for every field (id, link, measure,
+    dimension, series, tree, OHLC, …) and **auto-designs** a first screen, each panel with its reason and alternatives.
+  - **Visual canvas:** the real view, with **+ Add panel** on every tab, a palette of all 20 kinds, drag to move,
+    edges to resize, drop a field for suggested panels or to bind it, remove with the trash button (with Undo), an
+    inspector with an editor for every option, YAML side by side, Notes, and a keyboard path for everything.
+  - **Tested as you type** against every sample (panel × sample grid), **preview with any JSON file**, versions and
+    diffs, a command palette (Ctrl+K), undo and redo.
+  - **Ship:** propose with evidence (check grid, sample names, notes, diff); approval publishes the next version.
+    Export a pack fragment, import a pack folder or zip, read-only share links, and file binding to a draft folder for
+    IDE editing in development.
+  - **Designs are kept on the server** per user (file or database store), with quotas and expiry; examples open as
+    your own copy. Designing is open to every signed-in user; saving, proposing and approving keep their rights.
+  - Guide: [SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md) (with screenshots); design:
+    [BUILD_WORKBENCH.md](docs/architecture/BUILD_WORKBENCH.md).
+- **Headless `sutra` CLI** in the server jar: `lint | test | shape | design | preview`, JUnit XML and HTML snapshots for
+  CI ([SUTRA_CLI.md](docs/guides/SUTRA_CLI.md)).
+- **Panels:** `source:` on every data panel (read a linked entity), **expandable row groups** (pivot `by: [a, b, c]` with
+  subtotals; tree tables with `children`), ten [examples](docs/guides/examples/README.md) covering all 20 kinds.
+- **How it fits together:** [HOW_IT_FITS.md](docs/architecture/HOW_IT_FITS.md) follows a trade and a genomics variant
+  through packs, connectors, Sutras and the UI.
+- **Quality:** every finding of the [2026-10-01](docs/qa/2026-10-01/README.md) and
+  [2026-10-03](docs/qa/2026-10-03/README.md) adversarial QA rounds is fixed or addressed (sessions that follow the
+  user, masks everywhere, one live connection per browser, atomic loads, safe retention, stricter grammar, phone width
+  and contrast, and more). Browser tests run in the build (Playwright).
+
+**Upgrade notes**
+
+- **Sign in once** after upgrading: console sessions are now kept on the server; upgrade the server and console
+  together. Servers behind one load balancer share one identity database.
+- **Identity schema:** new tables for console sessions and designs are created at start (SQLite and PostgreSQL).
+- **Redis loads replace each day by default;** partial or intraday loads pass `--merge`.
+- **Stores** for one kind are consulted in configuration order (after `routes`).
+- **Old Studio links** (`/studio?example=…` and the like) show a confirmation page before a design is created.
+- **`deploy/compose.yaml`** requires `DRISHTI_ADMIN_USER` and `DRISHTI_ADMIN_PASSWORD` and publishes the server on
+  127.0.0.1 only.
+- New settings are listed in [CONFIGURATION.md](docs/admin/CONFIGURATION.md) (`drishti.builder.*`, `drishti.panels.*`,
+  `drishti.security.token-read-posts`, console `auth.*`, `live.*`, `ui.*`, `builder.*`).
+
+# Previous release: Drishti 1.13.0 — release notes
 
 *2026-10-01.* **A million trades a day, eight stores, Calc, pivots, twenty panel kinds and JDK 25.**
 

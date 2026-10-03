@@ -28,7 +28,7 @@ TRD where mtm < -10m order by mtm         →  every trade losing more than 10m,
 live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti shows the search it makes
 ```
 
-**Current release: 1.13.0** ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
+**Current release: 1.14.0** ([release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) ·
 [what shipped when](docs/architecture/IMPLEMENTATION_PLAN.md)).
 
 ## What you can do
@@ -119,7 +119,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/bankin
 
 # 3. Start the server on :18480 with the packs to load (their parents load with them)
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-1.13.0-exec.jar
+  java -jar drishti-server/target/drishti-server-1.14.0-exec.jar
 
 # 4. In a second terminal: the console on http://localhost:17480
 uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt
