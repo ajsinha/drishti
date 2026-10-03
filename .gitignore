@@ -18,5 +18,4 @@ hs_err_pid*
 .claude/
 # the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
 console/web/static/vendor/pyodide/
-.jqwik-database
 docs/qa/2026-10-03/ux/shots/
