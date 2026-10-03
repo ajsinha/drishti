@@ -69,6 +69,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Convert Markdown Sutras (`*.sutra.md`) from before 1.11 | [runbooks/sutra-broken.md](admin/runbooks/sutra-broken.md#step-1a-a-sutramd-or-plain-yaml-file-drs-2004-drs-2009) |
 | Understand the screens Drishti draws with no Sutra | [INFERENCE.md](architecture/INFERENCE.md) |
 | Design of the Screen Builder (JSON files → shape → visual designer → Sutra) | [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) |
+| The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) |
 
 ### Add an industry or data
 

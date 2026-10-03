@@ -322,6 +322,9 @@ no new framework.
 
 ## How it will be built, step by step
 
+> Steps 4–7 below are superseded by [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md), which organises all Build tools around one
+> persisted *Design* and one workbench page (steps 4–8 there). Steps 1–3 here are built and stay.
+
 Each step ships on its own, ends with tests that fail before it, its docs, and a drill. Later steps only add.
 
 | Step | Delivers | Proven by |
