@@ -166,7 +166,7 @@ def test_promotion_shows_the_diff_and_proposes_through_review(client, backend, l
     js = client.get("/static/js/layout.js").text
     assert "data-promote-moves" in js and "data-promote-full-diff" in js and "res.b.edits" in js
     r = client.post("/api/layout/irs-vanilla/trade/promotion", json={"note": "cashflows first", "dropHidden": True}).json()
-    assert r["proposal"]["id"] == "P-000042" and r["href"] == "/studio/reviews/P-000042"
+    assert r["proposal"]["id"] == "P-000042" and r["href"] == "/build/reviews/P-000042"
     assert ("promote", "irs-vanilla", "trade", "cashflows first", True) in backend.calls
     backend.layout_promote = False
     r = client.get("/api/layout/irs-vanilla/trade/promotion")
@@ -188,7 +188,7 @@ def test_a_new_version_is_reviewed_against_the_version_before_it(client, backend
                 "status": "pending", "newVersion": True, "stale": False, "mayApprove": True, "mayWithdraw": False,
                 "text": "sutra: irs-vanilla\nversion: 4\n", "baseText": "", "liveText": "", "previousText": "sutra: irs-vanilla\nversion: 3\n"}
     monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    html = client.get("/studio/reviews/P-000042").text
+    html = client.get("/build/reviews/P-000042").text
     assert "changes against the latest earlier version" in html
     assert '<span class="d-del">-version: 3</span>' in html and '<span class="d-add">+version: 4</span>' in html
 

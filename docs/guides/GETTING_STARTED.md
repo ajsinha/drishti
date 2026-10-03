@@ -189,7 +189,7 @@ What the settings do:
 | Setting | Meaning |
 |---|---|
 | `DRISHTI_PACKS` | The packs to load, separated by commas. A pack's parents load with it: `market-risk` brings `banking-core`, `market-data` and `trading`. Without this setting only the small `finance` pack loads. |
-| `DRISHTI_STUDIO_SAVE=true` | Lets Sutra Studio save Sutras (the view definitions it edits). Leave it out if you will not edit Sutras. |
+| `DRISHTI_STUDIO_SAVE=true` | Lets the Build workbench save Sutras (the view definitions it edits). Leave it out if you will not edit Sutras. |
 
 Leave this terminal open: the server runs in it and writes its log there. After a few seconds you
 should see a line like:
@@ -464,7 +464,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 |---|---|
 | Learn every feature of the console, with examples | [USER_GUIDE.md](USER_GUIDE.md) |
 | Know which packs exist and what commands they offer | [PACKS.md](PACKS.md) |
-| Change how a screen looks | the in-app *Sutra guide* and *Sutra Studio* tutorial, and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
+| Change how a screen looks | the in-app *Sutra guide* and *Screen designer guide*, and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Connect your own data | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | See every document | [the documentation map](../README.md) |

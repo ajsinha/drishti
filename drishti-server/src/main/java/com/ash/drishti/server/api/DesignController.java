@@ -374,6 +374,38 @@ public class DesignController {
         return outcome(d, result[0], text(b, "sample"), who);
     }
 
+    /**
+     * The Sutra texts the Design's log passes through, oldest first: version 0 is the text before the first step the log still
+     * holds, version n the text after step n. {@code current} marks the one the Design is at (undo moves it back). Answers
+     * {@code {versions: [{n, at, ops, current}]}}; the texts are read one at a time at {@code /versions/{n}}.
+     */
+    @GetMapping("/{id}/versions")
+    public ObjectNode versions(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
+        StoredDesign d = designs.get(who.user(), id);
+        ObjectNode o = mapper.createObjectNode();
+        ArrayNode list = o.putArray("versions");
+        list.addObject().put("n", 0).put("at", d.ops.isEmpty() ? d.created : d.ops.get(0).path("at").asLong()).put("ops", "start").put("current", d.opsAt == 0);
+        for (int i = 0; i < d.ops.size(); i++) {
+            JsonNode e = d.ops.get(i);
+            List<String> names = new ArrayList<>();
+            e.path("ops").forEach(x -> names.add(x.path("op").asText("?")));
+            list.addObject().put("n", i + 1).put("at", e.path("at").asLong()).put("ops", String.join(", ", names)).put("current", d.opsAt == i + 1);
+        }
+        o.put("opsAt", d.opsAt);
+        return o;
+    }
+
+    /** One version's Sutra text: {@code {n, yaml}}; {@code 404 DRS-5006} for a number the log does not hold. */
+    @GetMapping("/{id}/versions/{n}")
+    public ObjectNode version(@PathVariable String id, @PathVariable int n, @RequestAttribute(Principal.ATTRIBUTE) Principal who) {
+        StoredDesign d = designs.get(who.user(), id);
+        if (n < 0 || n > d.ops.size()) {
+            throw new DrishtiException(ErrorCode.DESIGN_NOT_FOUND, "version " + n + " (this design's log holds 0 to " + d.ops.size() + ")");
+        }
+        String text = d.ops.isEmpty() ? d.sutra : n == 0 ? d.ops.get(0).path("before").asText("") : d.ops.get(n - 1).path("after").asText("");
+        return mapper.createObjectNode().put("n", n).put("yaml", text);
+    }
+
     /** Body {@code {baseRev?}}: takes the last step of the log back; {@code 409 DRS-5007} when there is none. Answers as {@code /ops}. */
     @PostMapping(path = "/{id}/undo")
     public ObjectNode undo(@PathVariable String id, HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {

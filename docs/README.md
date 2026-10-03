@@ -60,7 +60,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 |---|---|
 | Learn the layout grammar from scratch, lesson by lesson | [RACHANA_GUIDE.md](guides/RACHANA_GUIDE.md) |
 | Learn what a Sutra is and write one | [Sutra guide](../console/web/guides/sutra-guide.md) |
-| Edit a Sutra with live preview and submit it for review | [Sutra Studio tutorial](../console/web/guides/sutra-studio.md) |
+| Edit a Sutra with live preview and submit it for review | [Screen designer guide](guides/SCREEN_DESIGNER.md) |
 | Lay out nested documents (lists inside lists) | [Nested documents tutorial](../console/web/guides/nested-data.md) |
 | Choose the right panel kind | [Panel kinds](../console/web/guides/panel-kinds.md) |
 | Know every panel kind in depth: data shape, options, how the server computes it, how it draws, limits, mistakes | [PANELS.md](guides/PANELS.md) |
@@ -189,7 +189,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Guide | Read this when… |
 |---|---|
 | [sutra-guide.md](../console/web/guides/sutra-guide.md) | you write your first Sutra |
-| [sutra-studio.md](../console/web/guides/sutra-studio.md) | you edit a Sutra in the browser and submit it for review |
+| [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
 | [nested-data.md](../console/web/guides/nested-data.md) | your documents hold lists inside lists |
 | [panel-kinds.md](../console/web/guides/panel-kinds.md) | you choose between table, ladder, chart, surface and the other panel kinds |
 | [build-a-pack.md](../console/web/guides/build-a-pack.md) | you generate a whole pack from Python |

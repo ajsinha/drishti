@@ -34,13 +34,12 @@
       ('/build/new', 'plus-square', 'New screen', 'Bring JSON files, a schema or stored entities, then design', '/build/new'),
       ('/build', 'collection', 'My designs', 'Your saved work: open, rename, duplicate, delete', '/build/d/'),
       ('/build/new#examples', 'journal-richtext', 'Examples', 'Every example opens as your own copy', None)]),
-    ('Layouts', [
-      ('/studio', 'braces', 'Sutra Studio', 'Write a layout and preview it on real data', '/studio'),
-      ('/studio/reviews', 'patch-check', 'Reviews', 'Proposed Sutras waiting for approval', '/studio/reviews')]),
+    ('Govern', [
+      ('/build/reviews', 'patch-check', 'Reviews', 'Proposed Sutras waiting for approval', '/build/reviews')]),
     ('Learn', [
       ('/help/screen-designer', 'bounding-box', 'Screen designer guide', 'From JSON files to a screen: the canvas, step by step', None),
-      ('/help/screen-builder', 'signpost-split', 'Screen Builder guide', 'From JSON files to a shape', None),
       ('/help/sutra-guide', 'journal-code', 'Sutra guide', 'How a layout is written, by example', None),
+      ('/help/rachana-reference', 'book', 'Rachana reference', 'Every key, panel option, format and problem code', None),
       ('/help/build-a-pack', 'box-seam', 'Build a pack', 'Bring a new domain in, step by step', None)])]),
 ] %}
 {% if me and me.is_admin %}{% set MENU = MENU + [
@@ -118,7 +117,7 @@
           {% for href, i, l, d, match in items %}{% set on = _on(href, match) %}
           <a class="mega-item{% if on %} active{% endif %}" href="{{ href }}"{% if on %} aria-current="page"{% endif %}>
             <span class="mega-icon"><i class="bi bi-{{ i }}" aria-hidden="true"></i></span>
-            <span><span class="mega-label">{{ l }}</span><span class="mega-desc">{{ d }}</span></span></a>
+            <span><span class="mega-label">{{ l }}{% if href == '/build/reviews' %} <span class="rv-count" data-review-count hidden></span>{% endif %}</span><span class="mega-desc">{{ d }}</span></span></a>
           {% endfor %}
         </div>
         {% endfor %}

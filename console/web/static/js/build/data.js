@@ -112,6 +112,6 @@
     store.on('sample', paintSamples);
     paintSamples();
     reloadShape();
-    return { reloadShape: reloadShape, fields: function () { return fields; }, paint: paintSamples };
+    return { adopt: adopt, reloadShape: reloadShape, fields: function () { return fields; }, paint: paintSamples };
   };
 })();

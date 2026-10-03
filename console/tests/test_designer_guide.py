@@ -27,7 +27,8 @@ IMG = ROOT / "docs" / "guides" / "img" / "designer"
 SHOTS = ROOT / "tools" / "docs" / "screenshots.py"
 SECTIONS = ["Start: bring data", "The workbench at a glance", "The Data pane", "The canvas and the grid", "Add a panel", "Drop a field", "Auto-design",
             "The inspector", "The YAML tab", "Problems", "Tests as you type", "Preview with a file", "Undo, redo", "Phone width", "Keyboard reference",
-            "Worked examples", "Troubleshooting", "Limits"]
+            "Worked examples", "Troubleshooting", "Limits", "Studio users: where things went", "The command palette", "Diff and versions",
+            "Saving and proposing"]
 FAMILIES = ["all-panels-showcase", "tree-table", "pivot-row-groups", "exposure-profile", "market-charts", "risk-distribution", "pnl-explain", "relationships",
             "operations-status"]
 

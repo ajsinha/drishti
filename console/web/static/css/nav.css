@@ -137,3 +137,6 @@
 @media (max-width: 480px) {
   .tbar-name { display: none; }
 }
+/* the pending-review count beside Build, Govern, Reviews (filled when the menu opens) */
+.rv-count { display: inline-block; min-width: 1.2em; margin-left: .35rem; padding: 0 .35rem; border-radius: 999px; background: var(--d-bad); color: #fff; font-size: .7rem; text-align: center; vertical-align: 1px; }
+.rv-count[hidden] { display: none; }

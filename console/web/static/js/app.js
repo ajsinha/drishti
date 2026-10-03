@@ -123,3 +123,18 @@ window.drsMessage = function (p, fallback) {
     el.style.setProperty('--srv', el.getAttribute('data-srv-color'));
   });
 })();
+
+/* Build → Govern → Reviews shows how many proposals wait; asked when the menu opens, once (not on every page load). */
+(function () {
+  'use strict';
+  var asked = false;
+  document.addEventListener('show.bs.dropdown', function (e) {
+    var menu = e.target && e.target.closest ? e.target.closest('.tbar-menu') : null;
+    var badge = menu && menu.querySelector('[data-review-count]');
+    if (!badge || asked) { return; }
+    asked = true;
+    fetch('/build/review-count', { headers: { Accept: 'application/json' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (j && j.pending > 0) { badge.textContent = String(j.pending); badge.hidden = false; badge.setAttribute('aria-label', j.pending + ' waiting'); }
+    }).catch(function () { asked = false; });
+  });
+})();

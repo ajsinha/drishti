@@ -20,7 +20,11 @@
 .wb-head .crumbs { margin: 0; font-size: .82rem; }
 .wb-title { font-size: 1.15rem; margin: 0; font-weight: 700; }
 .wb-meta { font-size: .8rem; }
-.wb-head-actions { margin-left: auto; display: inline-flex; gap: .4rem; }
+.wb-head-actions { margin-left: auto; display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.wb-note { width: 14rem; max-width: 40vw; }
+.wb-head-actions [aria-disabled="true"] { opacity: .65; }
+.wb-diff { max-height: 60vh; overflow: auto; margin-top: .4rem; }
+.wb-diff:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 .wb-status { margin: .15rem 0; min-height: 1.3rem; font-size: .85rem; }
 .wb-draft { border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .6rem; margin-bottom: .3rem; max-height: 9rem; overflow: auto; font-size: .85rem; }
 .wb-main { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr) minmax(17rem, 24rem); gap: .6rem; }

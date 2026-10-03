@@ -1127,7 +1127,7 @@ panel kind spans the grammar, the engine and the console:
 | `console/core/export.py` and the `data-export-panel` list in `panels.html` | Only if its data should download as CSV. |
 | `console/tests/test_terminal.py` | `"metric"` in `KINDS`, so it is rendered with broken data. |
 | `drishti-server/src/test/java/com/ash/drishti/server/StudioTest.java` | The schema test counts the kinds: `hasSize(20)` becomes `hasSize(21)`. |
-| `console/web/guides/panel-kinds.md`, `sutra-guide.md`, `sutra-studio.md`, `RACHANA_REFERENCE.md`, `console/config/help.yaml` | Documentation, and the count: "twenty panel kinds" is written in several places, including `PanelKind`'s Javadoc and the landing page's count (`grep -rni twenty`). `console/tests/test_help.py` checks the panel-kinds guide's title (`"The twenty panel kinds" in page`), so change it with the title. |
+| `console/web/guides/panel-kinds.md`, `sutra-guide.md`, `RACHANA_REFERENCE.md`, `console/config/help.yaml` | Documentation, and the count: "twenty panel kinds" is written in several places, including `PanelKind`'s Javadoc and the landing page's count (`grep -rni twenty`). `console/tests/test_help.py` checks the panel-kinds guide's title (`"The twenty panel kinds" in page`), so change it with the title. |
 
 Nothing to do for editors: the JSON Schema served at `GET /api/v1/rachana/schema` (`RachanaSchema`) is built from
 `PanelKind`, so `metric` and its options appear in Studio's completion, and in any editor that reads the schema, as

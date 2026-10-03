@@ -19,7 +19,7 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm review">
-  <nav class="crumbs" aria-label="Breadcrumb"><a href="/studio/reviews">← Reviews</a></nav>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build/reviews">← Reviews</a></nav>
   <h1><span class="mono">{{ p.id }}</span> · {{ p.name }} v{{ p.version }}</h1>
   <p>Proposed by <b>{{ p.author }}</b> on <span class="mono">{{ (p.createdAt or '')[:16] | replace('T', ' ') }}</span>{% if p.note %}: “{{ p.note }}”{% endif %}.
     <span class="cmp-k {{ 'added' if p.status == 'approved' else 'removed' if p.status in ('rejected', 'withdrawn') else 'changed' }}">{{ p.status }}</span>
@@ -29,24 +29,19 @@
     It cannot be approved: reject it and propose again from the live version.</p>{% endif %}
   <h2 class="ws-h">{{ ('New version: changes against the latest earlier version' if p.previousText else 'New version: the whole Sutra') if p.newVersion else 'Changes against the live Sutra' }}</h2>
   <section class="pnl"><div class="pnl-b">
-    {% if diff.moves %}<ul class="diff-moves" aria-label="Panels moved">{% for m in diff.moves %}
-      <li><i class="bi bi-arrows-move" aria-hidden="true"></i> {{ m.text }}</li>{% endfor %}</ul>
-    <p class="diff-cap text-muted-d">{{ 'Other edits' if diff.edits else 'No other edits: only panels moved.' }}</p>{% endif %}
-    {% if diff.edits or not diff.moves %}<pre class="diff mono" aria-label="{{ 'Edits besides the moves' if diff.moves else 'Differences' }}">{% for kind, line in diff.edits %}<span class="d-{{ kind }}">{{ line }}</span>{% endfor %}{% if not diff.full %}<span class="d-ctx">No differences.</span>{% endif %}</pre>{% endif %}
-    {% if diff.moves %}<details class="diff-full"><summary>Full line diff (moves as deleted and added lines)</summary>
-      <pre class="diff mono" aria-label="Full line diff">{% for kind, line in diff.full %}<span class="d-{{ kind }}">{{ line }}</span>{% endfor %}</pre></details>{% endif %}
+    {% include "build/_diff.html" %}
   </div></section>
-  <p><a class="lnk" href="/studio?sutra={{ p.name }}@{{ p.version }}">Open the live version in Studio</a></p>
+  <p><a class="lnk" href="/studio?sutra={{ p.name }}@{{ p.version }}">Open the live version in the workbench</a></p>
   {% if p.status == 'pending' %}
   <div class="review-actions">
     {% if p.mayApprove %}
-    <form method="post" action="/studio/reviews/{{ p.id }}/approve"><label for="okC" class="visually-hidden">Comment</label>
+    <form method="post" action="/build/reviews/{{ p.id }}/approve"><label for="okC" class="visually-hidden">Comment</label>
       <input id="okC" name="comment" placeholder="Comment (optional)" maxlength="500"><button type="submit" class="btn-pill btn-accent"><i class="bi bi-check2" aria-hidden="true"></i> Approve and publish</button></form>
-    <form method="post" action="/studio/reviews/{{ p.id }}/reject"><label for="noC" class="visually-hidden">Reason</label>
+    <form method="post" action="/build/reviews/{{ p.id }}/reject"><label for="noC" class="visually-hidden">Reason</label>
       <input id="noC" name="comment" placeholder="Why not (required)" maxlength="500" required><button type="submit" class="btn-pill btn-ghost"><i class="bi bi-x" aria-hidden="true"></i> Reject</button></form>
     {% endif %}
     {% if p.mayWithdraw %}
-    <form method="post" action="/studio/reviews/{{ p.id }}/withdraw"><button type="submit" class="btn-pill btn-ghost"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Withdraw</button></form>
+    <form method="post" action="/build/reviews/{{ p.id }}/withdraw"><button type="submit" class="btn-pill btn-ghost"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Withdraw</button></form>
     {% endif %}
     {% if not p.mayApprove and not p.mayWithdraw %}<p class="text-muted-d">Waiting for an approver{% if me and p.author == me.user %} other than you{% endif %}.</p>{% endif %}
   </div>

@@ -206,6 +206,27 @@ class BuilderOpsApiTest {
     }
 
     @Test
+    void theLogIsReadableAsVersionsAndEachTextCanBeFetched() throws Exception {
+        String ann = as("ann7", "author"), bob = as("bob7", "author");
+        String id = ok(send("/api/v1/builder/designs", ann, json("kind", "trade", "sutra", SUTRA))).path("id").asText();
+        String base = "/api/v1/builder/designs/" + id;
+        JsonNode none = ok(mvc.perform(get(base + "/versions").header("Authorization", ann)));
+        assertThat(none.path("versions")).hasSize(1);
+        assertThat(ok(mvc.perform(get(base + "/versions/0").header("Authorization", ann))).path("yaml").asText()).isEqualTo(SUTRA);
+        ok(send(base + "/ops", ann, json("baseRev", 1, "ops", tree("[{\"op\":\"setOption\",\"panel\":\"legs\",\"option\":\"title\",\"value\":\"Legs\"}]"))));
+        ok(send(base + "/ops", ann, json("baseRev", 2, "ops", tree("[{\"op\":\"remove\",\"panel\":\"terms\"}]"))));
+        JsonNode v = ok(mvc.perform(get(base + "/versions").header("Authorization", ann)));
+        assertThat(v.path("versions")).hasSize(3);
+        assertThat(v.path("versions").get(2).path("current").asBoolean()).isTrue();
+        assertThat(v.path("versions").get(1).path("ops").asText()).isEqualTo("setOption");
+        assertThat(ok(mvc.perform(get(base + "/versions/0").header("Authorization", ann))).path("yaml").asText()).isEqualTo(SUTRA);
+        assertThat(ok(mvc.perform(get(base + "/versions/1").header("Authorization", ann))).path("yaml").asText()).contains("title: Legs", "id: terms");
+        assertThat(ok(mvc.perform(get(base + "/versions/2").header("Authorization", ann))).path("yaml").asText()).doesNotContain("id: terms");
+        mvc.perform(get(base + "/versions/9").header("Authorization", ann)).andExpect(status().isNotFound());
+        mvc.perform(get(base + "/versions").header("Authorization", bob)).andExpect(status().isNotFound());
+    }
+
+    @Test
     void onlyTheOwnerReachesADesignsOperationsUndoRedoAndCheck() throws Exception {
         String ann = as("ann6", "author"), bob = as("bob6", "author");
         String id = ok(send("/api/v1/builder/designs", ann, json("kind", "trade", "sutra", SUTRA))).path("id").asText();

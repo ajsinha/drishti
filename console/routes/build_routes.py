@@ -24,11 +24,11 @@ import logging
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
-from core import builder
+from core import builder, designs, sutra_diff
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
-from routes.studio_routes import _new_sutra
+from routes.review_routes import pending_count
 
 router = APIRouter(prefix="/build", include_in_schema=False)
 LOG = logging.getLogger("drishti.console.build")
@@ -93,16 +93,21 @@ async def shape_moved(request: Request):
 
 
 @router.get("/d/{id_}")
-async def design_page(request: Request, id_: str):
+async def design_page(request: Request, id_: str, tab: str = "", sample: str = ""):
     """The workbench: a Design's data, its canvas over the real preview, the YAML, the inspector, problems and tests."""
     try:
         design = await request.app.state.backend.designs("GET", f"/{id_}", ident(request))
     except BackendError as e:
         return render(request, "build/design.html", status_code=e.status, design=None, error=e, screen="build",
                       limits=request.app.state.builder_limits.as_dict())
+    review, pending = await pending_count(request)
+    settings = await request.app.state.backend.studio_settings(ident(request))
     init = {"samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
-            "status": design.get("status", "draft")}
-    return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict())
+            "status": design.get("status", "draft"),
+            "tab": tab if tab in ("design", "yaml", "summary") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
+            "base": design.get("base") or ""}
+    return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict(),
+                  examples=request.app.state.examples.names(), pending=pending)
 
 
 # ---- designs -------------------------------------------------------------------------------------------------------------
@@ -114,9 +119,13 @@ async def create_design(request: Request):
     send = {k: body[k] for k in ("name", "kind", "sutra", "base", "notes") if isinstance(body.get(k), str)}
     send.setdefault("kind", _studio_kind(request))
     if body.get("empty") and not send.get("sutra"):
-        send["sutra"] = _new_sutra(send["kind"])
+        send["sutra"] = designs.new_sutra(send["kind"])
+    backend, me = request.app.state.backend, ident(request)
     try:
-        return JSONResponse(await request.app.state.backend.designs("POST", "", ident(request), send), status_code=201)
+        made = await backend.designs("POST", "", me, send)
+        if send.get("base"):                               # Studio's test entities of that Sutra become samples of the Design
+            made["migrated"] = await designs.migrate_tests(backend, me, made["id"], send["base"])
+        return JSONResponse(made, status_code=201)
     except BackendError as e:
         return _error(e)
 
@@ -169,9 +178,7 @@ async def open_example(request: Request, name: str):
         return JSONResponse({"code": "NOT_FOUND", "detail": "no such example"}, status_code=404)
     backend, me = request.app.state.backend, ident(request)
     try:
-        design = await backend.designs("POST", "", me, {"name": f"{ex.title} (copy)"[:100], "kind": ex.kind or _studio_kind(request),
-                                                        "sutra": ex.yaml, "notes": ex.readme})
-        await backend.designs("POST", f"/{design['id']}/samples", me, {"samples": [{"name": f"{ex.name}.json", "document": json.loads(ex.json)}]})
+        design = await designs.copy_example(backend, ex, me, _studio_kind(request))
     except BackendError as e:
         return _error(e)
     return JSONResponse({"id": design["id"], "url": f"/build/d/{design['id']}"}, status_code=201)
@@ -365,3 +372,67 @@ async def sample_document(request: Request, id_: str, name: str = ""):
         return await request.app.state.backend.designs("GET", f"/{id_}/samples/document", ident(request), name=name)
     except BackendError as e:
         return _error(e)
+
+
+# ---- versions, diff, saving -----------------------------------------------------------------------------------------------------
+
+@router.get("/designs/{id_}/versions")
+async def versions(request: Request, id_: str):
+    """The texts the Design's log passes through (``{versions: [{n, at, ops, current}]}``) and what it edits (``base``, if any)."""
+    backend, me = request.app.state.backend, ident(request)
+    try:
+        listing = await backend.designs("GET", f"/{id_}/versions", me)
+        design = await backend.designs("GET", f"/{id_}", me)
+    except BackendError as e:
+        return _error(e)
+    return {**listing, "base": design.get("base") or "", "rev": design.get("rev")}
+
+
+@router.get("/designs/{id_}/versions/{n}")
+async def version_text(request: Request, id_: str, n: int):
+    """One version's Sutra text: what the workbench turns into a ``text`` operation to restore it."""
+    try:
+        return await request.app.state.backend.designs("GET", f"/{id_}/versions/{n}", ident(request))
+    except BackendError as e:
+        return _error(e)
+
+
+async def _text_against(request: Request, design: dict, against: str) -> tuple[str, str]:
+    """(label, text) of what a Design is compared with: ``base`` (the registry Sutra it came from) or ``N`` (a version of its log)."""
+    backend, me = request.app.state.backend, ident(request)
+    if against == "base":
+        name, _, version = (design.get("base") or "").partition("@")
+        if not name or not version.isdigit():
+            raise BodyError(400, "this design was not made from a Sutra of the registry, so it has no base to compare with")
+        return f"the live Sutra {name} v{version}", await backend.sutra_source(name, int(version), me)
+    if against.isdigit():
+        got = await backend.designs("GET", f"/{design['id']}/versions/{against}", me)
+        return f"version {against}", got.get("yaml") or ""
+    raise BodyError(400, "against is 'base' or the number of a version")
+
+
+@router.get("/designs/{id_}/diff")
+async def diff(request: Request, id_: str, against: str = "base"):
+    """The Design's Sutra against its base or an earlier version, as the review page draws a diff (moves in words, then the lines)."""
+    backend = request.app.state.backend
+    try:
+        design = await backend.designs("GET", f"/{id_}", ident(request))
+        label, old = await _text_against(request, design, against)
+    except BackendError as e:
+        return _error(e)
+    d = sutra_diff.review(old, design.get("sutra") or "")
+    html = request.app.state.templates.get_template("build/_diff.html").render(diff=d)
+    return {"html": html, "label": label, "same": not any(k != "ctx" for k, _ in d["full"]), "moves": len(d["moves"])}
+
+
+@router.post("/designs/{id_}/save")
+async def save(request: Request, id_: str):
+    """Saves the Design's Sutra to the registry (author right, Studio saving on) or, where governance is on, submits it for review.
+    Body ``{note?}``. The server decides and says why not; the open-design policy is unchanged: designing needs no right."""
+    body = await _body(request) if int(request.headers.get("content-length") or 0) else {}
+    backend, me = request.app.state.backend, ident(request)
+    try:
+        design = await backend.designs("GET", f"/{id_}", me)
+        return await backend.save_sutra(design.get("sutra") or "", me, note=str(body.get("note", ""))[:300])
+    except BackendError as e:
+        return _error(e, problems=getattr(e, "problems", []))

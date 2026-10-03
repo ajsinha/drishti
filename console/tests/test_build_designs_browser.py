@@ -99,7 +99,6 @@ def test_new_folder_of_examples_then_auto_design(console_url, browser):
     page.locator("[data-preview] .studio-view").wait_for()
     page.locator("[data-next]").click()                                                       # the status bar's sample switcher
     assert page.evaluate("document.querySelector('[data-sample-pos]').textContent.startsWith('sample 2/')")
-    assert page.evaluate("document.querySelector('[data-studio-link]').href.includes('sample=')")
     assert "From the folder" in page.locator("h1").inner_text()
     page.get_by_role("link", name="My designs").first.click()
     assert "From the folder" in page.locator("[data-designs]").inner_text()

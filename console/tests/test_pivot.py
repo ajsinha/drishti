@@ -214,7 +214,7 @@ def test_promotion_shows_the_diff_and_proposes_for_review(client, pivot_backend)
     assert any(cls == "del" and "pivot: true" in text for cls, text in lines) or any("pivot: true" in text for _, text in lines)
     assert any("rows: [currency]" in text for _, text in lines)
     r = client.post("/api/pivot/saved/panel/netting-set/trades/promotion", json={"note": "desk default"})
-    assert r.json()["href"] == "/studio/reviews/P-000077" and r.json()["proposal"]["version"] == 2
+    assert r.json()["href"] == "/build/reviews/P-000077" and r.json()["proposal"]["version"] == 2
     assert ("promote", "panel/netting-set/trades", "desk default") in pivot_backend["calls"]
 
 

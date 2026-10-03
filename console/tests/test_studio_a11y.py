@@ -12,26 +12,23 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Studio's page and review page (QA 2026-10-01 UX-15): a heading, a labelled editor, a stale preview marked, and an
+"""The workbench's page and the review page (QA 2026-10-01 UX-15, ported from Studio's): a heading, a labelled editor, and an
 approved proposal's review page that still shows what it changed."""
 from pathlib import Path
 
-JS = (Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "studio.js").read_text()
+JS = (Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "build" / "yamltab.js").read_text()
 
 OLD = "rachana: 1\nsutra: s-test\nversion: 3\nmatch: { kind: trade }\npanels:\n  - id: legs\n    kind: kv\n"
 
 
-def test_studio_has_one_h1(client):
-    html = client.get("/studio").text
-    assert html.count("<h1") == 1 and "Sutra Studio</h1>" in html
+def test_the_workbench_has_one_h1(client):
+    d = client.post("/build/designs", json={"name": "H1", "kind": "trade", "empty": True}).json()
+    html = client.get(f"/build/d/{d['id']}").text
+    assert html.count("<h1") == 1
 
 
 def test_the_code_editors_own_input_is_labelled():
     assert "getInputField().setAttribute('aria-label'" in JS
-
-
-def test_a_failed_preview_marks_the_old_one_out_of_date():
-    assert "markStale()" in JS and JS.count("markStale()") >= 3 and "markFresh()" in JS
 
 
 def _proposal(status, base="", live=None):
@@ -53,7 +50,7 @@ def test_an_approved_new_version_still_shows_its_diff(client, backend, monkeypat
     monkeypatch.setattr(backend, "proposal", proposal, raising=False)
     monkeypatch.setattr(backend, "sutras", sutras)
     monkeypatch.setattr(backend, "sutra_source", sutra_source)
-    html = client.get("/studio/reviews/P-000042").text
+    html = client.get("/build/reviews/P-000042").text
     assert "No differences" not in html and '+version: 4' in html
 
 
@@ -61,5 +58,5 @@ def test_an_approved_change_to_a_live_version_is_shown_against_what_it_was_propo
     async def proposal(id_, ident=None):
         return _proposal("approved", base=OLD)
     monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    html = client.get("/studio/reviews/P-000042").text
+    html = client.get("/build/reviews/P-000042").text
     assert "No differences" not in html and "kind: table" in html

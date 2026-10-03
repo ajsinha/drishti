@@ -920,7 +920,7 @@
           if (!res.ok) { self.prMsg.textContent = drsMessage({ code: res.b.code, detail: problem(res) }); self.prMsg.classList.add('t-bad'); return; }
           if (res.b.proposal) {
             self.prMsg.appendChild(document.createTextNode('Proposed as ' + res.b.proposal.name + ' v' + res.b.proposal.version + ' (' + res.b.proposal.id + '): '));
-            var a = el('a', 'lnk', 'open the review'); a.href = res.b.href || '/studio/reviews'; self.prMsg.appendChild(a);
+            var a = el('a', 'lnk', 'open the review'); a.href = res.b.href || '/build/reviews'; self.prMsg.appendChild(a);
           } else if (res.b.saved) { self.prMsg.textContent = res.b.saved.name + ' v' + res.b.saved.version + ' is live.'; }
           self.say(self.prMsg.textContent);
         });

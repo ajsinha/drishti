@@ -97,7 +97,7 @@ java -jar drishti-server/target/drishti-server-1.13.0-exec.jar
 |---|---|---|
 | `DRISHTI_PACKS` | The domain packs to load. A pack's parents load with it: `market-risk` brings `banking-core`, `market-data` and `trading`. | `finance` |
 | `DRISHTI_PORT` | The server's port | `18480` |
-| `DRISHTI_STUDIO_SAVE` | `true` lets Sutra Studio save Sutras (the view definitions it edits) | `false` |
+| `DRISHTI_STUDIO_SAVE` | `true` lets the Build workbench save Sutras (the view definitions it edits) | `false` |
 
 When the log says `Started DrishtiApplication`, check it from another terminal:
 
@@ -340,7 +340,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | The packs and the commands each one adds | [PACKS.md](PACKS.md) |
 | Build a screen from your own JSON files, by dragging panels and fields, no YAML needed | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), or **Build → Screen designer guide** (F1 on any Build page) |
 | Change how a screen looks (Sutras) | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) and the in-app *Sutra guide* |
-| See every panel kind working, and copy from ten small Sutras with their data | [examples/](examples/README.md), or **File** in Studio, or **Help → Examples** |
+| See every panel kind working, and copy from ten small Sutras with their data | [examples/](examples/README.md), or **File** in the workbench, or **Help → Examples** |
 | Build Drishti from source, run the tests, add an endpoint, plugin, pack or page | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
 | Connect your own data | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Turn on sign-in and run it for others | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) and [OPERATIONS.md](../admin/OPERATIONS.md) |

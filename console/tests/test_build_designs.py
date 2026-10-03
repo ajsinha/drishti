@@ -55,6 +55,13 @@ def app_client(backend, request):
     return _console(backend, **getattr(request, "param", {}))
 
 
+def _land(client, url):
+    """Follows an old Studio address one step: it must be a 302 into the workbench; returns (location, the page it lands on)."""
+    r = client.get(url, follow_redirects=False)
+    assert r.status_code == 302 and r.headers["location"].startswith("/build/d/"), (url, r.status_code, r.headers.get("location"))
+    return r.headers["location"], client.get(r.headers["location"]).text
+
+
 def _new(c, name="Mine", **more):
     r = c.post("/build/designs", json={"name": name, **more})
     assert r.status_code == 201, r.text
@@ -79,7 +86,8 @@ def test_the_build_menu_has_create_my_designs_and_examples(app_client):
     page = app_client.get("/build").text
     assert 'href="/build/new"' in page and 'href="/build"' in page and 'href="/build/new#examples"' in page
     assert "New screen" in page and "My designs" in page and "Examples" in page
-    assert 'href="/studio"' in page and 'href="/studio/reviews"' in page                  # kept until Studio is folded in
+    assert 'href="/build/reviews"' in page and "Govern" in page and "Rachana reference" in page and "Screen designer guide" in page
+    assert 'href="/studio"' not in page and "Sutra Studio" not in page                    # no separate Studio entry any more
 
 
 def test_the_old_shape_extractor_address_redirects_and_keeps_the_query(app_client):
@@ -120,7 +128,7 @@ def test_the_design_page_is_the_workbench_with_its_panes_and_samples(app_client)
     for pane in ("Design", "YAML", "Summary", "Inspector", "Problems", "Tests"):
         assert f'role="tab"' in page and f">{pane}" in page
     assert '"name": "a.json"' in page.replace("&#34;", '"') and '"name": "b.json"' in page.replace("&#34;", '"')
-    assert f'href="/studio?design={d["id"]}"' in page and "data-autodesign" in page and "build/workbench.js" in page and "build-design.js" not in page
+    assert "data-autodesign" in page and "build/workbench.js" in page and "build-design.js" not in page
     assert "data-preview-file" in page and "data-undo" in page and "data-redo" in page and 'aria-live="polite"' in page
     assert "build-workbench.css" in page
 
@@ -314,30 +322,31 @@ def test_preview_switches_samples(app_client):
     assert "T-7" in one["previewHtml"] and "T-8" in two["previewHtml"] and "T-8" not in one["previewHtml"]
 
 
-def test_open_in_studio_carries_the_sutra_and_the_selected_sample(app_client):
+def test_the_old_studio_design_address_lands_on_the_design_with_its_sample(app_client):
     d = _new(app_client, "For Studio", kind="trade", sutra="rachana: 1\nsutra: my-own\nversion: 1\n")
     app_client.post(f"/build/designs/{d['id']}/files", json=_files(("first.json", _doc(7)), ("second.json", _doc(8))))
-    page = app_client.get(f"/studio?design={d['id']}&sample=second.json").text
-    assert "sutra: my-own" in page and "T-8" in page and "T-7" not in page and 'value="second.json"' in page and "data-use-json checked" in page
-    first = app_client.get(f"/studio?design={d['id']}").text           # no sample named: the first
-    assert "T-7" in first and 'value="first.json"' in first
+    r = app_client.get(f"/studio?design={d['id']}&sample=second.json", follow_redirects=False)
+    assert r.status_code == 302 and r.headers["location"] == f"/build/d/{d['id']}?tab=yaml&sample=second.json"
+    page = app_client.get(r.headers["location"]).text
+    assert "sutra: my-own" in page and '"sample": "second.json"' in page
+    assert app_client.get(f"/studio?design={d['id']}", follow_redirects=False).headers["location"] == f"/build/d/{d['id']}?tab=yaml"
 
 
-def test_studio_opens_a_references_entity_and_ignores_a_foreign_design(app_client, backend):
-    d = _new(app_client, kind="trade", sutra="rachana: 1\nsutra: my-own\nversion: 1\n")
-    app_client.post(f"/build/designs/{d['id']}/samples", json={"refs": {"kind": "curve", "ids": ["USD-SOFR"]}})
-    page = app_client.get(f"/studio?design={d['id']}").text
-    assert "sutra: my-own" in page and 'value="curve"' in page and 'value="USD-SOFR"' in page
+def test_studio_with_a_stored_entity_makes_a_design_with_it_as_a_sample_and_ignores_a_foreign_design(app_client, backend):
+    r = app_client.get("/studio?kind=curve&id=USD-SOFR", follow_redirects=False)
+    assert r.status_code == 302
+    d = app_client.get(r.headers["location"].split("?")[0].replace("/build/d/", "/build/designs/")).json()
+    assert d["samples"][0]["ref"] == {"kind": "curve", "id": "USD-SOFR"} and d["kind"] == "curve" and "match: { kind: curve }" in d["sutra"]
     backend.design_rows[("somebody-else", "dforeign0002")] = {"design": {"id": "dforeign0002", "sutra": "rachana: 1\nsutra: theirs\n", "samples": []}, "docs": {}}
-    assert "sutra: theirs" not in app_client.get("/studio?design=dforeign0002").text
+    loc = app_client.get("/studio?design=dforeign0002", follow_redirects=False).headers["location"]
+    assert "dforeign0002" not in loc and "sutra: theirs" not in app_client.get(loc).text      # not theirs to open: a new Design, as Studio opened as usual
 
 
 def test_studio_and_its_examples_keep_working(app_client):
-    assert "Preview against" in app_client.get("/studio").text
-    page = app_client.get("/studio?example=all-panels-showcase").text
-    assert "sutra: all-panels-showcase" in page and "data-use-json checked" in page
+    loc, page = _land(app_client, "/studio?example=all-panels-showcase")
+    assert "sutra: all-panels-showcase" in page and "all-panels-showcase.json" in page and loc.endswith("?tab=yaml")
     assert "all-panels-showcase" in app_client.get("/help/examples").text and "/studio?example=all-panels-showcase" in app_client.get("/help/examples").text
-    assert "sutra: all-panels-showcase" in app_client.get("/studio").text            # ui.studio_example: the showcase is the default
+    assert "sutra: all-panels-showcase" in _land(app_client, "/studio")[1]            # ui.studio_example: the showcase is the default
 
 
 # ---- examples open as Design copies ----------------------------------------------------------------------------------------

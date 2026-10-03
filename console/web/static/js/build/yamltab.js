@@ -62,10 +62,12 @@
 
     function send() {
       var text = value();
-      if (text === store.state.yaml) { store.emit('say', 'The YAML matches the design.'); return; }
+      if (text === store.state.yaml) { store.emit('say', 'The YAML matches the design.'); return Promise.resolve(); }
       sending = true;
-      store.send([{ op: 'text', yaml: text }], 'Applied the YAML').then(function () { sending = false; });
+      return store.send([{ op: 'text', yaml: text }], 'Applied the YAML').then(function (r) { sending = false; return r; });
     }
+    /** Sends what was typed now rather than after the pause (before a save, a preview or a palette command). */
+    function flush() { if (timer) { clearTimeout(timer); timer = 0; return send(); } return Promise.resolve(); }
     if (editor) {
       editor.on('change', function (cm, ch) {
         if (applying || ch.origin === 'setValue') { return; }
@@ -86,7 +88,7 @@
     return {
       goto: function (line, col) { if (editor) { editor.focus(); editor.setCursor({ line: Math.max(0, line - 1), ch: Math.max(0, (col || 1) - 1) }); editor.scrollIntoView(null, 80); } else { ta.focus(); } },
       focus: function () { if (editor) { editor.focus(); } else { ta.focus(); } },
-      refresh: function () { if (editor) { editor.refresh(); } }, value: value, checks: function () { return live; }, editor: editor
+      refresh: function () { if (editor) { editor.refresh(); } }, flush: flush, value: value, checks: function () { return live; }, editor: editor
     };
   };
 })();

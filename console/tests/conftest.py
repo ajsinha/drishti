@@ -117,6 +117,9 @@ class FakeBackend:
     async def studio_settings(self, ident=None):
         return {"save": False}
 
+    async def proposals(self, ident=None, status="", name=""):
+        return {"enabled": False, "proposals": []}
+
     builder_allowed = True
     shaped = []                                   # the samples each builder_shape call was sent
 
@@ -180,7 +183,8 @@ class FakeBackend:
             name = (body.get("name") or "").strip()
             sutra = body.get("sutra") or ""
             if body.get("base") and not sutra:
-                sutra = f"rachana: 1\nsutra: {body['base'].split('@')[0]}\nversion: 1\n"
+                name_, _, version_ = body["base"].partition("@")
+                sutra = await self.sutra_source(name_, int(version_ or 0), ident)             # as the server copies the registry's text
             d = {"id": id_, "name": name, "scratch": not name, "kind": body.get("kind") or "sample", "status": "draft", "rev": 1 if sutra else 0,
                  "created": 1, "updated": 1, "expiresAt": 2, "expiryWarning": False, "bytes": 0, "samples": [], "sutra": sutra,
                  "notes": body.get("notes") or "", "tests": [], "ops": []}
@@ -266,6 +270,15 @@ class FakeBackend:
             if draft["yaml"] != d["sutra"]:
                 d["sutra"], d["rev"] = draft["yaml"], d["rev"] + 1
             return {**draft, "rev": d["rev"], "skipped": []}
+        if rest[:1] == ["versions"] and method == "GET":
+            steps = row.setdefault("steps", {"list": [], "at": 0})["list"]
+            text = lambda n: d["sutra"] if not steps else (steps[0][0] if n == 0 else steps[n - 1][1])      # noqa: E731
+            if len(rest) == 1:
+                return {"versions": [{"n": n, "at": 1, "ops": "start" if n == 0 else "text", "current": n == row["steps"]["at"]} for n in range(len(steps) + 1)],
+                        "opsAt": row["steps"]["at"]}
+            if not rest[1].isdigit() or int(rest[1]) > len(steps):
+                raise BackendError(404, "DRS-5006", f"version {rest[1]}")
+            return {"n": int(rest[1]), "yaml": text(int(rest[1]))}
         if rest in (["ops"], ["undo"], ["redo"]) and method == "POST":
             return await self._fake_step(d, row, rest[0], body or {}, ident)
         if rest == ["check"] and method == "POST":

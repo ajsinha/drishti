@@ -77,6 +77,8 @@ async def help_file(request: Request, path: str):
 @router.get("/help/{slug}")
 async def help_guide(request: Request, slug: str):
     lib = await library(request)
+    if slug not in lib.guides and lib.moved.get(slug) in lib.guides:
+        return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=302)
     if slug not in lib.guides:
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
                       hits=lib.search(slug.replace("-", " ")), missing=slug, screen="help")

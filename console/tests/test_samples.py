@@ -17,35 +17,26 @@ only entities of packs that are switched on, never a sample id of a pack that ma
 import re
 
 
-def _value(page: str, attr: str) -> str:
-    return re.search(r'<input[^>]*' + attr + r'[^>]*>', page).group(0).split('value="')[1].split('"')[0]
+def _land(client, url, **params):
+    r = client.get(url, params=params, follow_redirects=False)
+    assert r.status_code == 302 and r.headers["location"].startswith("/build/d/")
+    return client.get(r.headers["location"]).text
 
 
-def _source(page: str) -> str:
-    return page.split('id="sutraSrc"')[1].split("</textarea>")[0]
-
-
-def test_studio_opens_on_an_entity_of_an_installed_pack(client, with_packs, monkeypatch):
-    monkeypatch.setattr(client.app.state.examples, "default", "")   # no default example: today's behaviour
-    with_packs("banking-core", "market-data", "trading")
-    page = client.get("/studio").text
-    assert "IRS-48213" not in page and "irs-vanilla" not in _source(page)
-    assert (_value(page, "data-kind"), _value(page, "data-id")) == ("counterparty", "CP-NORTHBRIDGE")   # banking-core's first example
-
-
-def test_studio_without_any_example_opens_empty_with_a_hint(client, with_packs, monkeypatch):
-    monkeypatch.setattr(client.app.state.examples, "default", "")   # no default example: today's behaviour
-    with_packs("no-such-pack")
-    page = client.get("/studio").text
-    assert "IRS-48213" not in page and _value(page, "data-id") == ""
-    assert "data-studio-empty" in page and "Type a kind and an id" in page
-    assert "productType" not in _source(page)                         # the new-Sutra template names no pack's fields
+def test_studio_names_no_entity_of_a_pack_that_may_be_absent(client, with_packs, monkeypatch):
+    monkeypatch.setattr(client.app.state.examples, "default", "")   # no default example
+    for packs in (("banking-core", "market-data", "trading"), ("no-such-pack",)):
+        with_packs(*packs)
+        page = _land(client, "/studio")
+        assert "IRS-48213" not in page and "CP-NORTHBRIDGE" not in page and "irs-vanilla" not in page
+        source = page.split("data-yaml-src")[1].split("</textarea>")[0]
+        assert "sutra: my-layout" in source and "productType" not in source              # the new-Sutra template names no pack's fields
 
 
 def test_studio_keeps_an_entity_asked_for(client, with_packs):
     with_packs("trading")
-    page = client.get("/studio", params={"kind": "trade", "id": "MX-20000005"}).text
-    assert _value(page, "data-id") == "MX-20000005" and "data-studio-empty" not in page
+    page = _land(client, "/studio", kind="curve", id="USD-SOFR")
+    assert "curve USD-SOFR" in page and "stored entity" in page
 
 
 def test_landing_commands_come_from_the_installed_packs(client, with_packs):

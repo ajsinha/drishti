@@ -37,6 +37,10 @@ This guide goes step by step, with a picture of each step. The pictures are made
 - [16. Worked examples, one per panel family](#16-worked-examples-one-per-panel-family)
 - [17. Troubleshooting](#17-troubleshooting)
 - [18. Limits](#18-limits)
+- [19. Studio users: where things went](#19-studio-users-where-things-went)
+- [20. The command palette](#20-the-command-palette)
+- [21. Diff and versions](#21-diff-and-versions)
+- [22. Saving and proposing](#22-saving-and-proposing)
 
 ## 1. Start: bring data
 
@@ -245,6 +249,9 @@ Everything the mouse does has a key. Changes are announced in a live region for 
 | Key | Does |
 |---|---|
 | Ctrl+Z, Ctrl+Shift+Z (Ctrl+Y) | Undo, redo (inside a text field or the YAML editor the field's own undo is kept). |
+| Ctrl+K | The command palette: add a panel, go to a panel, next sample, run the check, switch tab, undo, save, open the guide (section 20). |
+| Ctrl+S | Save to the registry, or propose it for review; says why when you may not (section 22). Never opens the browser's save dialog. |
+| Ctrl+Enter | Preview: sends what you typed, draws the screen again. Works in the YAML editor too. |
 | Shape tree: arrows, Enter, `S`, `B` | Move, show a field's reason, suggest panels for it, bind it to the selected panel. |
 | Menus (Add panel…, Bind field…, suggestions) | Type to filter; Up/Down; Enter picks; Esc closes. |
 | Expression fields | Up/Down, Enter or Tab take a suggestion; Esc closes; Ctrl+Space asks. |
@@ -340,6 +347,90 @@ The ladder highlights the row its `highlight` expression is true for. Exercise: 
 | Figures in the strip | 8 | the Rachana language |
 | Edited on the canvas | the panels of the top-level `panels:` list, written as a block or as one flow map each | other shapes are edited in the YAML tab (DRS-5024) |
 
-Sample contents are never logged. **Propose, export and the review of a design** arrive with the next steps of the workbench ([BUILD_WORKBENCH.md](../architecture/BUILD_WORKBENCH.md)); until then, **Open in Studio** carries the design's Sutra to Studio's save and review.
+Sample contents are never logged.
+
+## 19. Studio users: where things went
+
+**Sutra Studio no longer has a page of its own.** Everything it did is in the workbench, and every address you may have bookmarked still works: it sends you (a redirect) to the equivalent workbench screen, starting a design for you when it needs one.
+
+| You used to open | You land on |
+|---|---|
+| `/studio` | A new unnamed **scratch design** (forgotten after a day) on the all-panels showcase, on its **YAML** tab. The showcase is the one named by `ui.studio_example`. |
+| `/studio?example=tree-table` | A new design that is a **copy** of that example (its Sutra, its JSON as a sample, its notes), on the YAML tab. |
+| `/studio?sutra=irs-vanilla@3` | A new design that **edits that Sutra** (shown as *edits irs-vanilla@3*, with a base to compare with: section 21). The entities you kept as that Sutra's *test entities* in Studio are brought along as **stored-entity samples**. |
+| `/studio?kind=trade&id=T-1` | A new design for that kind with a starter Sutra and that **stored entity** as its sample. |
+| `/studio?design=ID&sample=NAME` | That design (if it is yours), with that sample selected. |
+| `/studio?build=1` (with any of the above) | The same, on the **Design** tab instead of the YAML. |
+| `/studio/reviews`, `/studio/reviews/P-000042` | **Build → Govern → Reviews** (`/build/reviews`). The review pages moved there, unchanged. |
+
+![Build → Create, Govern, Learn: where Studio's entries went](img/designer/25-build-menu.jpg)
+
+What Studio had, and where it is now:
+
+| In Studio | In the workbench |
+|---|---|
+| The YAML editor with completion and the light check | The **YAML** tab (the same editor). |
+| Summary tab | The **Summary** tab. |
+| Preview (Ctrl+Enter) | **Ctrl+Enter** previews: it sends what you typed, then draws the screen again (section 22). |
+| Save (Ctrl+S) | **Ctrl+S**, and the *Save* / *Submit for review* button (section 22). |
+| File → Open… and File → Examples | The **File** button above the screen: *Open…* takes a `.yaml` (replaces the Sutra; Undo brings it back) or `.json` documents (added as samples); each example opens as a new copy. |
+| The entity kind and id boxes, *Load entity JSON*, *Preview against this JSON* | **Samples**: add the entity as a sample (*More ways*), or **Preview with a file…**. Samples are listed, and you move between them with ◀ ▶. |
+| *Test entities* and *Run all* | The **Tests** tab checks **every sample** against the design as you type. |
+| *Start from inference* | **Auto-design** (section 7) drafts a complete Sutra from the samples. |
+| The Sutra picker (*New Sutra…*) | **Build → New screen → an existing Sutra**, or `/studio?sutra=name@version` as above. |
+| Reviews, with the pending count | **Build → Govern → Reviews** and the *Reviews* button beside *Submit for review*. |
+
+![File menu: Open a Sutra or sample documents, or an example as a new design](img/designer/21-file-menu.jpg)
+
+The JSON addresses Studio's own scripts used (`/studio/preview`, `/studio/summary`, `/studio/schema`, `/studio/save` and others) are unchanged, so existing notebooks and tests that call them keep working.
+
+## 20. The command palette
+
+Press **Ctrl+K** (Cmd+K on a Mac) anywhere on the workbench, or press **Commands** above the screen. A list opens with a filter box; type a few letters, move with Up and Down, press Enter, and the command runs. Esc, or Ctrl+K again, closes it and puts the focus back where it was.
+
+![The command palette, filtered to "go to"](img/designer/22-palette.jpg)
+
+| Type | Does |
+|---|---|
+| `add` / `Add panel…` | Choose a kind and add it after the selected panel. `Add panel: gauge` adds that kind straight away. |
+| `go to panel: terms` | Selects that panel on the canvas and puts the focus on it. |
+| `next sample`, `previous sample`, `go to sample: name` | Preview the design with another sample. |
+| `run check` | Opens the Tests tab and checks every sample now. |
+| `switch to yaml` (or design, summary, inspector, problems, tests, versions) | Shows that tab. |
+| `undo`, `redo` | The same as the status bar's buttons. |
+| `preview` | Sends what you typed and draws again (Ctrl+Enter). |
+| `save`, `propose` | *Save to the registry* or *Propose: submit for review*; the list says when you may not. |
+| `compare` | Opens the Versions tab (section 21). |
+| `open a file` | The File → Open… chooser. |
+| `guide` | This guide (F1 does the same). |
+
+It is the same keyboard menu as *Add panel…*: the filter box is a labelled combobox and the choices a listbox, so a screen reader hears each command as you move, and the status line says what ran. The panels and samples listed are the design's current ones, and *Undo* says when there is nothing to undo.
+
+## 21. Diff and versions
+
+The **Versions** tab (right-hand side, next to Tests) answers *what did I change?* in two ways:
+
+- **against the base**: the live Sutra the design came from (a design made with *edits irs-vanilla@3* has one). You see exactly what a proposal of this design would change.
+- **against an earlier version**: every step in the design's log (the last 100) is a version: *Version 0: as it started*, *Version 3: after move, setOption*. Pick one to see what has changed since.
+
+![The Versions tab: the design against an earlier version; moved panels are described in words, then the lines](img/designer/23-versions.jpg)
+
+The diff is the one the reviewers see: panels that only **moved** are named in words (so a reordering does not drown the edits), then the line diff, with removed lines in red and added in green. The tab says so when there is no difference.
+
+**Restore** puts the version you picked back **as an operation**: it is a new step in the log, so it is in the revision history, Undo takes it back, and nothing is lost. Restoring the base replaces the design's Sutra with the live one. A design that was not made from a Sutra has no base; its earlier versions are still there.
+
+## 22. Saving and proposing
+
+Designing is open to everyone: the design is yours, kept by the server, and you need no right to make or edit one. **Saving to the registry** is the author right with Studio saving switched on (`DRISHTI_STUDIO_SAVE`), and where governance is on, saving is a **proposal** an approver must approve.
+
+![The bar above the screen: Auto-design, File, Submit for review, Reviews with its count, Commands, Guide](img/designer/24-save-bar.jpg)
+
+| Your situation | The button says | What it does |
+|---|---|---|
+| You may not save (no author right, or saving is off on this server) | *Save* (dimmed) | Ctrl+S and the button say *Designing is open to everyone; saving needs the author right*. Nothing is lost: the design is in *My designs*. |
+| You may save, no review | *Save* | Writes the design's Sutra to the registry; views use it now. The message names the Sutra and its new version. |
+| You may save, review is on | *Submit for review* | Sends a **proposal** with your note (the *What changed?* box is for the reviewer); an approver makes it live, and never you alone when four eyes are on. The message links the review. |
+
+Typed YAML is sent first, so what is saved is what you see. A Sutra the server refuses (a located problem) is answered with the line, and nothing is saved. **Build → Govern → Reviews** lists what is waiting (the menu shows how many) and shows each proposal with the diff; approvers approve or reject there, and authors withdraw their own.
 
 See also: [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).

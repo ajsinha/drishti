@@ -110,6 +110,7 @@ class Library:
                                     "blurb": cat.get("blurb", ""), "guides": items})
         cats = {c["id"]: c for c in self.categories}
         self.contextual = dict(data.get("contextual", {}))
+        self.moved = dict(data.get("moved", {}))
         for pack in packs or []:
             for g in pack.get("guides", []):
                 if not g["path"].exists() or g["slug"] in self.guides:

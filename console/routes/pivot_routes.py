@@ -170,5 +170,5 @@ async def promote(request: Request, sutra: str, panel: str):
         return _problem(e)
     _forget(request)
     if r.get("proposal"):
-        return {**r, "href": f"/studio/reviews/{r['proposal'].get('id')}"}
+        return {**r, "href": f"/build/reviews/{r['proposal'].get('id')}"}
     return r

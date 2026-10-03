@@ -32,7 +32,7 @@
 </div>
 {% else %}
 <div class="wb" data-workbench data-design-page data-id="{{ design.id }}" data-kind="{{ design.kind }}" data-rev="{{ design.rev }}" data-max-file-mb="{{ limits.maxFileMb }}"
-     data-init='{{ init | tojson }}'>
+     data-init='{{ init | tojson }}' data-examples='{{ examples | tojson }}'>
   <div class="wb-head">
     <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/screen-designer">Screen designer guide</a></nav>
     <h1 class="wb-title">{% if design.name %}{{ design.name }}{% else %}<i>Untitled design</i>{% endif %}</h1>
@@ -41,7 +41,13 @@
       {% if design.expiryWarning %} · <b>expires soon</b>{% endif %}</span>
     <span class="wb-head-actions">
       <button type="button" class="btn-pill btn-accent" data-autodesign{% if not design.samples %} disabled{% endif %} title="Draft a complete Sutra from the samples: a new revision; undo brings the old one back"><i class="bi bi-magic" aria-hidden="true"></i> Auto-design</button>
-      <a class="btn-pill btn-ghost" href="/studio?design={{ design.id }}" data-studio-link title="Studio with this design's Sutra"><i class="bi bi-braces" aria-hidden="true"></i> Open in Studio</a>
+      <button type="button" class="btn-pill btn-ghost" data-file-menu aria-haspopup="dialog" title="Open a Sutra (.yaml) or sample documents (.json) from your computer, or an example as a new design"><i class="bi bi-folder2-open" aria-hidden="true"></i> File</button>
+      <input type="file" class="visually-hidden" data-file-input multiple accept=".yaml,.yml,.json,.jsonl,application/json" aria-label="Open a Sutra or sample documents" tabindex="-1">
+      {% if init.review and init.canSave %}<label for="wbNote" class="visually-hidden">What changed (for the reviewer)</label>
+      <input id="wbNote" class="studio-in wb-note" data-note placeholder="What changed? (for the reviewer)" maxlength="300">{% endif %}
+      <button type="button" class="btn-pill btn-ghost" data-save{% if not init.canSave %} aria-disabled="true" title="Designing is open to everyone; saving needs the author right (or saving is off here). Ctrl+S says so."{% elif init.review %} title="Submit for review: an approver makes it live (Ctrl+S)"{% else %} title="Save to the registry: views use it now (Ctrl+S)"{% endif %}><i class="bi bi-{{ 'send' if init.review else 'save' }}" aria-hidden="true"></i> {{ 'Submit for review' if init.review else 'Save' }}</button>
+      {% if init.review %}<a class="btn-pill btn-ghost" href="/build/reviews" title="Sutras waiting for review"><i class="bi bi-check2-square" aria-hidden="true"></i> Reviews{% if pending %} <span class="bell-count">{{ pending }}</span>{% endif %}</a>{% endif %}
+      <button type="button" class="btn-pill btn-ghost" data-palette-open title="Command palette (Ctrl+K)"><i class="bi bi-command" aria-hidden="true"></i> Commands</button>
       <a class="btn-pill btn-ghost" href="/help/screen-designer" title="The screen designer guide (F1)"><i class="bi bi-question-circle" aria-hidden="true"></i> Guide</a>
     </span>
   </div>
@@ -113,11 +119,13 @@
         <button type="button" role="tab" id="wbTabIns" data-tab="inspector" aria-controls="wbPaneIns" aria-selected="true">Inspector</button>
         <button type="button" role="tab" id="wbTabProb" data-tab="problems" aria-controls="wbPaneProb" aria-selected="false" tabindex="-1">Problems <span class="wb-count" data-problem-count hidden></span></button>
         <button type="button" role="tab" id="wbTabTests" data-tab="tests" aria-controls="wbPaneTests" aria-selected="false" tabindex="-1">Tests</button>
+        <button type="button" role="tab" id="wbTabVer" data-tab="versions" aria-controls="wbPaneVer" aria-selected="false" tabindex="-1">Versions</button>
       </div>
       <div class="wb-panes">
         <div class="wb-pane" id="wbPaneIns" role="tabpanel" aria-labelledby="wbTabIns" data-inspector></div>
         <div class="wb-pane" id="wbPaneProb" role="tabpanel" aria-labelledby="wbTabProb" hidden data-problems></div>
         <div class="wb-pane" id="wbPaneTests" role="tabpanel" aria-labelledby="wbTabTests" hidden data-tests></div>
+        <div class="wb-pane" id="wbPaneVer" role="tabpanel" aria-labelledby="wbTabVer" hidden data-versions></div>
       </div>
     </aside>
   </div>
@@ -157,7 +165,7 @@
 <script src="/static/js/layout-rules.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-files.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-shape-tree.js?v={{ ASSET_V }}"></script>
-{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "actions", "canvas", "inspector", "data", "yamltab", "problems", "tests", "draft", "workbench"] %}
+{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "actions", "canvas", "inspector", "data", "yamltab", "problems", "tests", "draft", "versions", "saving", "commands", "workbench"] %}
 <script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>
 {% endfor %}
 {% endblock %}

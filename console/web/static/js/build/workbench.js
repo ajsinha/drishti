@@ -55,7 +55,7 @@
     if (name === 'yaml' || split) { yaml.refresh(); }
     if (name === 'summary') { summarise(); }
   });
-  var right = tabs($('[data-right-tabs]'));
+  var right = tabs($('[data-right-tabs]'), function (name) { if (name === 'versions' && versions) { versions.refresh(); } });
   $('[data-split]').addEventListener('click', function (e) {
     split = !split; e.currentTarget.setAttribute('aria-pressed', split ? 'true' : 'false'); $('[data-centre]').classList.toggle('wb-split', split);
     centre.show(centre.current()); yaml.refresh();
@@ -67,7 +67,7 @@
   store.on('doc', function (x) { if (x.changed && centre.current() === 'summary') { summarise(); } });
 
   // ---- the parts ---------------------------------------------------------------------------------------------------------------
-  var canvas, inspector, actions, data;
+  var canvas, inspector, actions, data, versions;
   var schemaP = fetch('/studio/schema').then(function (r) { return r.json(); });
   var ui = { required: function (k) { return inspector ? inspector.required(k) : []; }, canvas: function () { return canvas; }, inspect: function (s, o) { if (s) { right.show('inspector'); } inspector.show(s, o); }, selection: function () { return canvas.selected(); } };
   actions = WB.Actions(store, ui);
@@ -85,9 +85,13 @@
   function gotoPanel(id) { centre.show('design'); canvas.select({ type: 'panel', id: id }); canvas.focus(); }
   WB.Problems($('[data-problems]'), $('[data-problem-count]'), store, { gotoLine: gotoLine, gotoPanel: gotoPanel });
   var tests = WB.Tests($('[data-tests]'), store, { gotoPanel: gotoPanel });
+  versions = WB.Versions($('[data-versions]'), store, init.base || '');
+  var saving = WB.Saving(root, store, { yaml: yaml, data: data, examples: JSON.parse(d.examples || '[]') });
+  var commands = WB.Commands(store, { actions: actions, centre: centre, right: right, canvas: function () { return canvas; }, tests: tests, saving: saving, versions: versions,
+    yaml: yaml, guide: '/help/screen-designer' });
 
   // ---- the status bar --------------------------------------------------------------------------------------------------------
-  var pos = $('[data-sample-pos]'), result = $('[data-result]'), revEl = $('[data-rev]'), undoB = $('[data-undo]'), redoB = $('[data-redo]'), fileChip = $('[data-file-chip]'), studio = $('[data-studio-link]');
+  var pos = $('[data-sample-pos]'), result = $('[data-result]'), revEl = $('[data-rev]'), undoB = $('[data-undo]'), redoB = $('[data-redo]'), fileChip = $('[data-file-chip]');
   function paintBar() {
     var s = store.state, i = s.samples.indexOf(s.sample);
     pos.textContent = s.file ? 'file ' + s.file.name : (s.samples.length ? 'sample ' + (i + 1) + '/' + s.samples.length + ': ' + s.sample : 'no samples');
@@ -95,7 +99,6 @@
     revEl.textContent = 'rev ' + s.rev;
     undoB.disabled = s.opsAt <= 0; redoB.disabled = s.opsAt >= s.opsCount;
     fileChip.hidden = !s.file;
-    studio.href = '/studio?design=' + encodeURIComponent(s.id) + (s.sample && !s.file ? '&sample=' + encodeURIComponent(s.sample) : '');
   }
   function step(n) { var s = store.state, i = s.samples.indexOf(s.sample); if (s.samples.length) { store.setSample(s.samples[(i + n + s.samples.length) % s.samples.length]); } }
   $('[data-prev]').addEventListener('click', function () { step(-1); });
@@ -170,7 +173,9 @@
     }
   });
   window.addEventListener('beforeunload', function (e) { if (store.state.sending) { e.preventDefault(); } });
-  paintBar();
+  if (init.sample && store.state.samples.indexOf(init.sample) >= 0) { store.state.sample = init.sample; }
+  if (init.tab) { centre.show(init.tab); }
+  data.paint(); paintBar();
   store.refresh().then(function () { tests.later(); });
-  window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests };
+  window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, saving: saving, commands: commands };
 })();

@@ -40,7 +40,7 @@ def _pages() -> list[str]:
     pages = ["/", "/t", *(f"/v/{v}" for v in views), "/v/trade/NOPE-404", "/v/nosuchkind/X",
              "/s?q=TRD%20where%20mtm%20%3E%201m%20order%20by%20mtm%20desc%20limit%2020",
              f"/compare/{first}?a=2026-09-29&b=2026-09-30", f"/impact/{first}", "/history", "/m", "/alerts", "/w",
-             "/studio", "/studio/reviews", "/reports", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
+             "/build", "/build/reviews", "/reports", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
              "/help", "/help/search?q=pivot", "/about", "/about/competitive"]
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     pages += [f"/help/{g['slug']}" for cat in catalogue["categories"] for g in cat.get("guides", [])]

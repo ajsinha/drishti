@@ -357,6 +357,63 @@ def autodesign(c: Ctx):
     c.save("20-autodesign.jpg")
 
 
+@shot("21-file-menu.jpg")
+def file_menu(c: Ctx):
+    c.example("all-panels-showcase")
+    c.page.locator("[data-file-menu]").click()
+    c.page.locator(".wb-menu").wait_for()
+    c.page.wait_for_timeout(300)
+    c.save("21-file-menu.jpg")
+    c.page.keyboard.press("Escape")
+
+
+@shot("22-palette.jpg")
+def command_palette(c: Ctx):
+    c.example("all-panels-showcase")
+    c.panel("terms").locator(".pnl-h").click()
+    c.page.keyboard.press("Control+k")
+    c.page.locator(".wb-menu input").wait_for()
+    c.page.keyboard.type("go to")
+    c.page.keyboard.press("ArrowDown")
+    c.page.wait_for_timeout(300)
+    c.save("22-palette.jpg")
+    c.page.keyboard.press("Escape")
+
+
+@shot("23-versions.jpg")
+def versions(c: Ctx):
+    c.page.goto(c.base + "/build/new")
+    base = c.page.locator("select option", has_text="@").first.get_attribute("value")
+    made = c.api("/build/designs", {"name": "Screenshots: versions", "base": base})
+    c.api(f"/build/designs/{made['id']}/files", {"files": [{"name": "s.json", "text": json.dumps({"id": "X-1", "value": 1})}]})
+    c.page.goto(f"{c.base}/build/d/{made['id']}?tab=yaml")
+    c.made.append(made["id"])
+    c.page.wait_for_timeout(2500)
+    for note in ("a first change", "a second change"):
+        rev = c.rev()
+        c.page.evaluate("(note) => window.drishtiWorkbench.store.send([{op: 'text', yaml: window.drishtiWorkbench.store.state.yaml + '# ' + note + '\\n'}])", note)
+        c.settle(rev)
+    c.page.locator("#wbTabVer").click()
+    c.page.wait_for_timeout(1200)
+    c.save("23-versions.jpg")
+
+
+@shot("24-save-bar.jpg")
+def save_bar(c: Ctx):
+    c.example("all-panels-showcase")
+    c.save("24-save-bar.jpg", ".wb-head")
+
+
+@shot("25-build-menu.jpg")
+def build_menu(c: Ctx):
+    c.example("all-panels-showcase")
+    c.page.locator('.tbar-menu-btn[title="Build"]').click()
+    c.page.locator(".mega-panel.show").wait_for()
+    c.page.wait_for_timeout(1200)                      # the pending-review count is asked when the menu opens
+    c.save("25-build-menu.jpg", clip={"x": 0, "y": 0, "width": 1440, "height": 400})
+    c.page.keyboard.press("Escape")
+
+
 FAMILIES = [("30-family-facts.jpg", "all-panels-showcase", "ops", "key figures, key/value and status"),
             ("31-family-tables.jpg", "tree-table", None, "tables and the tree table"),
             ("32-family-pivot.jpg", "pivot-row-groups", None, "pivot row groups"),

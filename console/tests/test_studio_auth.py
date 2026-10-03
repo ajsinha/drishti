@@ -27,8 +27,8 @@ from core.config import Settings, load_settings  # noqa: E402
 
 
 def test_studio_page_and_preview(client):
-    r = client.get("/studio")
-    assert r.status_code == 200 and "data-studio" in r.text and "irs-vanilla v3" in r.text
+    r = client.get("/studio?sutra=irs-vanilla@3")
+    assert r.status_code == 200 and "data-workbench" in r.text and "sutra: irs-vanilla" in r.text            # followed into the workbench
     assert "codemirror.js" in r.text and "cm-yaml.js" in r.text
     ok = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "trade", "id": "IRS-48213"})
     assert ok.status_code == 200 and 'id="p-cashflows"' in ok.text and "Sutra irs-vanilla v3 + inference" in ok.text
@@ -38,8 +38,6 @@ def test_studio_page_and_preview(client):
 
 
 def test_studio_previews_and_infers_from_pasted_json(client):
-    page = client.get("/studio").text
-    assert "Sample JSON" in page and "data-load-json" in page and "data-use-json" in page
     r = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "trade", "id": "P-1", "document": {"tradeId": "P-1", "mtm": 5}})
     assert r.status_code == 200 and "P-1" in r.text
     y = client.post("/studio/inferred", json={"kind": "trade", "id": "P-1", "name": "pasted", "document": {"tradeId": "P-1", "mtm": 5}})
@@ -138,11 +136,11 @@ def test_non_admins_do_not_see_admin_pages(backend):
     assert 'href="/admin/users"' not in c.get("/t").text
 
 
-def test_studio_is_a_yaml_editor(client):
-    page = client.get("/studio", params={"sutra": ""}).text
-    for marker in ("data-insert", "data-outline", "data-complete", "data-field-help", 'data-tab="summary"', "studio-yaml.js", "studio-assist.js"):
+def test_the_workbench_yaml_tab_is_a_yaml_editor(client):
+    page = client.get("/studio", params={"sutra": ""}).text            # followed: a blank new Sutra in the workbench
+    for marker in ("data-field-help", 'data-tab="summary"', 'data-tab="yaml"', "studio-yaml.js", "studio-assist.js", "data-yaml-src"):
         assert marker in page
-    for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js"):
+    for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js", "data-studio "):
         assert gone not in page
     assert "rachana: 1\nsutra: my-layout\nversion: 1" in page and "```" not in page  # the new-Sutra skeleton is YAML
     assert client.get("/static/js/cm-sutra-md.js").status_code == 404 and client.get("/static/js/md-editor.js").status_code == 404
@@ -258,10 +256,12 @@ def test_a_non_author_designs_freely_but_cannot_save_or_propose(client, backend,
     async def proposals(ident=None, status="", name=""):            # with review on, Studio counts pending proposals
         return {"proposals": []}
     monkeypatch.setattr(backend, "proposals", proposals, raising=False)
-    page = client.get("/studio")
-    assert page.status_code == 200 and "data-studio" in page.text and 'data-can-save="false"' in page.text
-    assert "data-design-note" in page.text and "Designing is open to everyone; saving needs the author right." in page.text
-    assert "data-save disabled" in page.text
+    d = client.post("/build/designs", json={"name": "Open", "kind": "trade", "empty": True}).json()
+    page = client.get(f"/build/d/{d['id']}")
+    assert page.status_code == 200 and "data-workbench" in page.text and '"canSave": false' in page.text
+    assert "data-save" in page.text and 'aria-disabled="true"' in page.text and "saving needs the author right" in page.text
+    ops = client.post(f"/build/designs/{d['id']}/ops", json={"baseRev": d["rev"], "ops": [{"op": "text", "yaml": "sutra: x\n"}]})
+    assert ops.status_code == 200                                      # designing is open to everyone
     assert client.get("/build/new").status_code == 200
     ok = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "sample", "id": "P-1", "document": {"tradeId": "P-1", "mtm": 5}})
     assert ok.status_code == 200 and "P-1" in ok.text
@@ -277,7 +277,7 @@ def test_a_panel_whose_source_the_viewer_may_not_open_says_so_without_an_error(c
 def test_the_new_sutra_template_has_a_title_id():
     """A title written without `id` is DRS-2010 (GRAM-05): the starter template must carry one, or every new Sutra
     opens with a problem (it did, from the Screen Builder's Open in Studio)."""
-    from routes.studio_routes import _new_sutra
+    from core.designs import new_sutra as _new_sutra
     import re
     for kind in ("sample", "trade", "counterparty-group"):
         assert re.search(r"title: \{[^}]*\bid: \$\.id", _new_sutra(kind))

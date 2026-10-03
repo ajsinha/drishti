@@ -84,12 +84,18 @@ def test_example_route_serves_names_and_nothing_else(client):
     assert client.get("/studio/example/../../etc/passwd").status_code == 404
 
 
+def _land(client, url):
+    r = client.get(url, follow_redirects=False)
+    assert r.status_code == 302 and r.headers["location"].startswith("/build/d/"), (url, r.status_code)
+    return r.headers["location"], client.get(r.headers["location"]).text
+
+
 def test_studio_opens_the_showcase_by_default_and_a_named_example_on_request(client):
-    page = client.get("/studio").text
-    assert "sutra: all-panels-showcase" in page and "DEMO-BOND-1" in page and "data-use-json checked" in page
-    page = client.get("/studio?example=tree-table").text
-    assert "sutra: tree-table" in page and "sutra: all-panels-showcase" not in page and 'value="organisation"' in page
-    assert 'href="/studio?example=exposure-profile"' in page, "the File menu lists the examples"
+    loc, page = _land(client, "/studio")
+    assert "sutra: all-panels-showcase" in page and "all-panels-showcase.json" in page and loc.endswith("?tab=yaml")
+    loc, page = _land(client, "/studio?example=tree-table")
+    assert "sutra: tree-table" in page and "sutra: all-panels-showcase" not in page and 'data-kind="organisation"' in page
+    assert "exposure-profile" in page, "the File menu lists the examples"
     assert 'data-file-input' in page and ".yaml,.yml,.json" in page
 
 
@@ -98,15 +104,15 @@ def test_studio_falls_back_when_the_example_is_not_there(client):
     try:
         for bad in ("", "no-such-example", "../README"):
             client.app.state.examples.default = bad
-            page = client.get("/studio").text
-            assert 'data-studio' in page and "sutra: all-panels-showcase" not in page and "data-use-json checked" not in page, bad
-        assert "sutra: all-panels-showcase" not in client.get("/studio?example=../README").text
+            page = _land(client, "/studio")[1]
+            assert "data-workbench" in page and "sutra: all-panels-showcase" not in page and "all-panels-showcase.json" not in page, bad
+        assert "sutra: all-panels-showcase" not in _land(client, "/studio?example=../README")[1]
     finally:
         client.app.state.examples.default = keep
 
 
 def test_studio_with_a_sutra_or_entity_asked_for_does_not_open_the_example(client):
-    assert "sutra: all-panels-showcase" not in client.get("/studio?kind=trade&id=IRS-48213").text
+    assert "sutra: all-panels-showcase" not in _land(client, "/studio?kind=trade&id=IRS-48213")[1]
 
 
 def test_the_help_centre_lists_every_example_with_note_yaml_json_and_a_studio_link(client):

@@ -161,7 +161,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     catalogue = Servers(settings)
     from routes import (admin_routes, api_routes, asof_routes, auth_routes, build_routes, calc_routes, export_routes, help_routes, home_routes,
-                        layout_routes, monitor_routes, pivot_routes, report_routes, server_routes, studio_routes, terminal_routes,
+                        layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, studio_routes, terminal_routes,
                         workspace_routes)
 
     @asynccontextmanager
@@ -253,6 +253,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)
+    app.include_router(review_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(help_routes.router)
     app.include_router(workspace_routes.router)

@@ -76,7 +76,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 **Shape it**
 - **Layout mode** (`Alt+L`): drag, resize and hide a view's panels on a 12-column grid, with the mouse, a pen, a finger
   or the keyboard, and keep it as your own layout of the Sutra; an author promotes it to the Sutra through review.
-- **Sutra Studio** (`/studio`): a YAML editor with completion from the language's JSON Schema, live checks and a
+- **The Build workbench** (`/build`; Sutra Studio's page is folded into it): drag panels and fields onto a live screen, or a YAML editor with completion from the language's JSON Schema, live checks and a
   preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
 - **Domain packs**, enabled per server and assigned per user: `banking-core`, `market-data`, `trading`
   (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk`,

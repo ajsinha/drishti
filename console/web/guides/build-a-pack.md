@@ -251,7 +251,7 @@ If an admin assigns packs per user, add `library` to your user under **Admin →
 
 - Real data: add a connector for your database or files, and route the kinds to it; see
   [Sources and plugins](plugins).
-- Better screens: edit a generated Sutra's layout in the script, preview ideas in [Sutra Studio](sutra-studio),
+- Better screens: edit a generated Sutra's layout in the script, preview ideas in [the screen designer](screen-designer),
   and read [The Sutra guide](sutra-guide).
 - Vocabulary: a `config/semantics.yaml` in the pack teaches labels and acronyms to every screen; see
   [Domain packs](packs).

@@ -96,5 +96,5 @@ async def promote(request: Request, sutra: str, kind: str):
     except BackendError as e:
         return _problem(e)
     if r.get("proposal"):
-        return {**r, "href": f"/studio/reviews/{r['proposal'].get('id')}"}
+        return {**r, "href": f"/build/reviews/{r['proposal'].get('id')}"}
     return r

@@ -12,39 +12,24 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Sutra Studio: a YAML editor for Sutras (Rachana 1). Edit with completion and checks from the server's Rachana
-schema, preview against any entity or pasted JSON, read the Summary, start from inference, save (authors)."""
+"""Sutra Studio, folded into the Build workbench (docs/architecture/BUILD_WORKBENCH.md, step 7). The page is gone: every
+``/studio`` address is a 302 into the workbench (``/build/d/{id}``) or the review pages (``/build/reviews``). What stays here is
+the JSON the workbench still asks of this prefix: preview, test, summary, schema, source, inference, save, an example, and the
+test entities Studio kept (read once, when a Design starts from a Sutra)."""
 from __future__ import annotations
 
-import json
-from urllib.parse import parse_qs
+from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 
-from core.csrf import BodyError, json_body
+from core import designs, sutra_summary
 from core.backend import BackendError
-from core import sutra_diff, sutra_summary
-from core.packs import samples
-from routes.common import ident, packs, render
+from core.csrf import BodyError, json_body
+from routes.common import ident, render
 
 router = APIRouter(prefix="/studio", include_in_schema=False)
 
-NEW_SUTRA = """rachana: 1
-sutra: my-layout
-version: 1
-description: What this layout shows, and for which entities.
-match: {{ kind: {kind} }}
-title: {{ pill: "{label}", id: $.id }}
-panels:
-  - {{ id: refs, kind: links, title: Linked entities, area: right }}
-"""
-
-
-def _new_sutra(kind: str) -> str:
-    """The starting text of a new Sutra: for the kind being previewed, binding no field (no pack's field names)."""
-    kind = kind if kind.replace("-", "").isalnum() else "trade"
-    return NEW_SUTRA.format(kind=kind, label=kind.replace("-", " ").capitalize())
 
 
 async def _preview_body(request: Request) -> dict:
@@ -67,63 +52,62 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("")
-async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", design: str = "", sample: str = ""):
-    """Opens on the entity asked for, else on the first example entity of the user's packs (with a Sutra of its kind,
-    unless a Sutra, or ``sutra=`` for a new one, is asked for), else empty with a hint: never on a sample of a pack that
-    may not be installed (UX-05). ``example=`` opens a named example (its Sutra and its JSON, previewed against that JSON);
-    ``design=`` (with ``sample=``, a sample's name) opens a Build Design's Sutra on that sample; with nothing else asked for,
-    the example named by ``ui.studio_example`` opens, if it exists."""
+async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", design: str = "",
+                 sample: str = "", build: str = ""):
+    """Studio's page is retired (BUILD_WORKBENCH.md, step 7): every address lands on the equivalent Design in the workbench, 302.
+    ``design=`` (with ``sample=``) opens that Design; ``example=`` an example as a copy; ``sutra=name@v`` a Design that edits that Sutra
+    (its Studio test entities become stored-entity samples); ``kind=&id=`` a Design with that stored entity as its sample; nothing
+    at all, a scratch Design on the default example (``ui.studio_example``). YAML tab, or the canvas for ``build=1``."""
     backend, me = request.app.state.backend, ident(request)
-    sutras = await backend.sutras(me)
-    examples = request.app.state.examples
-    mine, pasted, picked_design = None, "", None
-    if design:                                          # Build: a Design's Sutra and its selected sample
-        try:
-            mine = await backend.designs("GET", f"/{design}", me)
-        except BackendError:
-            mine = None                                 # not yours or gone: Studio opens as usual
-    ex = examples.get(example or (examples.default if not id.strip() and sutra is None and not kind and mine is None else ""))
-    if mine is not None:
-        picked_design = next((s for s in mine.get("samples") or [] if s.get("name") == sample), None) or next(iter(mine.get("samples") or []), None)
-        kind = mine.get("kind") or "sample"
-        id = (picked_design or {}).get("name", "")
-        if picked_design and picked_design.get("type") == "ref":
-            kind, id = picked_design["ref"]["kind"], picked_design["ref"]["id"]
-        elif picked_design:
-            try:
-                pasted = json.dumps(await backend.designs("GET", f"/{design}/samples/document", me, name=picked_design["name"]), indent=2, ensure_ascii=False)
-            except BackendError:
-                pasted = ""
-        ex = None
-    elif ex:
-        kind, id = ex.kind, ex.name
-    elif not id.strip():
-        current = await packs(request)
-        first = next(iter(samples(current)), None)
-        if first:
-            kind, id = first["kind"], first["id"]
-            sutra = sutra if sutra is not None else next((f"{s['name']}@{s['latest']}" for s in sutras if s.get("kind") == kind), "")
-        else:
-            kind, id = kind or next((k for p in current for k in p.get("kinds") or []), ""), ""
-    source, picked = (ex.yaml if ex else _new_sutra(kind or "trade")), ""
-    if mine is not None:                                            # a Design's Sutra (empty: a new one for its kind)
-        source = mine.get("sutra") or _new_sutra(kind or "trade")
-    elif sutra and "@" in sutra and not ex:
-        name, _, version = sutra.partition("@")
-        try:
-            source, picked = await backend.sutra_source(name, int(version), me), sutra
-        except (BackendError, ValueError):
-            pass
-    settings = await backend.studio_settings(me)
-    pending = 0
-    if settings.get("review"):
-        try:
-            pending = len((await backend.proposals(me, status="pending")).get("proposals", []))
-        except BackendError:
-            pending = 0
-    return render(request, "studio/studio.html", sutras=sutras, source=source, picked=picked, ref_kind=kind, ref_id=id,
-                  sample_json=ex.json if ex else pasted, use_json=bool(ex or pasted), example_names=examples.names(),
-                  can_save=bool(settings.get("save")), review=bool(settings.get("review")), pending=pending)
+    tab = "design" if build and build != "0" else "yaml"
+    try:
+        target = await _existing(backend, me, design)
+        if target is None:
+            target = (await _start(request, me, sutra, kind.strip(), id.strip(), example))["id"]
+    except BackendError as e:
+        return render(request, "build/designs.html", status_code=e.status, designs=[], limits={}, error=e, screen="build")
+    query = {"tab": tab}
+    if design and sample and target == design:
+        query["sample"] = sample
+    return RedirectResponse(f"/build/d/{target}?{urlencode(query)}", status_code=302)
+
+
+async def _existing(backend, me, design: str) -> str | None:
+    """The Design asked for when it is the user's; else None (not theirs or gone: Studio opened as usual, so a new one is made)."""
+    if not design:
+        return None
+    try:
+        await backend.designs("GET", f"/{design}", me)
+    except BackendError:
+        return None
+    return design
+
+
+async def _start(request: Request, me, sutra: str | None, kind: str, id_: str, example: str) -> dict:
+    """A new Design for the address: see ``studio``. An example that does not exist is not the default one: a blank Design."""
+    backend, examples = request.app.state.backend, request.app.state.examples
+    fallback = str(request.app.state.settings.get("builder.studio_kind", "sample") or "sample")
+    if example:
+        ex = examples.get(example)
+        if ex:
+            return await designs.copy_example(backend, ex, me, fallback)
+        return await backend.designs("POST", "", me, {"kind": fallback, "sutra": designs.new_sutra(fallback)})
+    if sutra and "@" in sutra:
+        name = sutra.partition("@")[0]
+        known = next((s for s in await backend.sutras(me) if s.get("name") == name), None)
+        d = await backend.designs("POST", "", me, {"kind": (known or {}).get("kind") or kind or fallback, "base": sutra})
+        await designs.migrate_tests(backend, me, d["id"], sutra)
+        if kind and id_:
+            await designs.add_entity(backend, me, d["id"], kind, id_)
+        return d
+    if id_:
+        d = await backend.designs("POST", "", me, {"kind": kind or fallback, "sutra": designs.new_sutra(kind or fallback)})
+        await designs.add_entity(backend, me, d["id"], kind or fallback, id_)
+        return d
+    ex = examples.get(examples.default) if sutra is None and not kind else None
+    if ex:
+        return await designs.copy_example(backend, ex, me, fallback, scratch=True)
+    return await backend.designs("POST", "", me, {"kind": kind or fallback, "sutra": designs.new_sutra(kind or fallback)})
 
 
 @router.get("/example/{name}")
@@ -135,60 +119,26 @@ async def example(request: Request, name: str):
     return {"name": ex.name, "title": ex.title, "kind": ex.kind, "yaml": ex.yaml, "json": ex.json}
 
 
+def _moved(request: Request, path: str, status: int = 302) -> RedirectResponse:
+    q = request.url.query
+    return RedirectResponse(f"/build/reviews{path}" + (f"?{q}" if q else ""), status_code=status)
+
+
 @router.get("/reviews")
-async def reviews(request: Request, status: str = "pending"):
-    """Sutra governance (W19): proposals waiting for review, or all of them."""
-    try:
-        data = await request.app.state.backend.proposals(ident(request), status="" if status == "all" else status)
-    except BackendError as e:
-        return render(request, "studio/reviews.html", status_code=e.status, proposals=[], status=status, error=e)
-    return render(request, "studio/reviews.html", proposals=data.get("proposals", []), status=status, error=None)
+async def reviews(request: Request):
+    """The review pages live in the workbench's Govern menu now (``/build/reviews``)."""
+    return _moved(request, "")
 
 
 @router.get("/reviews/{id_}")
 async def review(request: Request, id_: str):
-    try:
-        p = await request.app.state.backend.proposal(id_, ident(request))
-    except BackendError as e:
-        return render(request, "studio/reviews.html", status_code=e.status, proposals=[], status="pending", error=e)
-    return render(request, "studio/review.html", p=p, diff=sutra_diff.review(await _compared(request, p), p.get("text") or ""), error=None)
+    return _moved(request, f"/{quote(id_, safe='')}")
 
 
 @router.post("/reviews/{id_}/{action}")
 async def decide(request: Request, id_: str, action: str):
-    if action not in ("approve", "reject", "withdraw"):
-        return RedirectResponse(f"/studio/reviews/{id_}", status_code=303)
-    form = parse_qs((await request.body()).decode("utf-8", "replace"))
-    try:
-        await request.app.state.backend.decide(id_, action, ident(request), comment=form.get("comment", [""])[0][:500])
-    except BackendError as e:
-        p = await request.app.state.backend.proposal(id_, ident(request))
-        return render(request, "studio/review.html", status_code=e.status, p=p, diff=sutra_diff.review(await _compared(request, p), p.get("text") or ""), error=e)
-    return RedirectResponse(f"/studio/reviews/{id_}", status_code=303)
-
-
-async def _compared(request: Request, p: dict) -> str:
-    """What the review page shows a proposal against. Once approved, the live text IS the proposal, so a diff against it
-    is empty (UX-15): an approved change to a live version is shown against the text it was proposed on, and an approved
-    new version against the latest version before it."""
-    if p.get("status") != "approved":
-        return _against(p)
-    if p.get("baseText"):
-        return p["baseText"]
-    backend, who = request.app.state.backend, ident(request)
-    try:
-        known = next((x for x in await backend.sutras(who) if x.get("name") == p.get("name")), None)
-        earlier = max([v for v in (known or {}).get("versions", []) if v < int(p.get("version", 0))], default=None)
-        return await backend.sutra_source(p["name"], earlier, who) if earlier is not None else ""
-    except BackendError:
-        return ""
-
-
-def _against(p: dict) -> str:
-    """What a proposal is compared with: the live text of its version, or for a new version the latest earlier one."""
-    return p.get("liveText") or p.get("previousText") or ""
-
-
+    """A decision posted to the old address is sent on with its form (307 keeps the method and the body)."""
+    return _moved(request, f"/{quote(id_, safe='')}/{quote(action, safe='')}", status=307)
 
 
 @router.get("/source/{name}/{version}")

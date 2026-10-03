@@ -45,7 +45,6 @@ categories:
       - { slug: panel-kinds, title: The twenty panel kinds, icon: grid-1x2, summary: "What each panel kind shows, when to use it, and the Sutra that produces it." }
       - { slug: examples, doc: guides/examples/README.md, title: Examples, icon: collection, summary: "Ten working Sutras with their data, covering all twenty panel kinds, nested pivots and tree rows: read them here, open them in Studio." }
       - { slug: panels, doc: guides/PANELS.md, title: Panels in depth, icon: bar-chart, summary: "Every panel kind in detail: the data it needs, every option, what the server computes, how it is drawn, limits and common mistakes." }
-      - { slug: sutra-studio, title: "Tutorial 3 · Sutra Studio", kind: tutorial, icon: stars, summary: "Start from inference, edit with live preview, fix problems by line, and save." }
       - { slug: nested-data, title: "Tutorial 4 · Nested documents", kind: tutorial, icon: diagram-2, summary: "Paths of any depth, tables over nested arrays, tabs per element, and a whole Sutra over a real trade." }
       - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key, panel option, format, tone, Rachana-EL expression and problem code." }
       - { slug: inference, doc: architecture/INFERENCE.md, title: Inference, icon: diagram-3, summary: "The rules that lay out data with no Sutra, how they are scored, and how they fill a Sutra's gaps." }
@@ -122,11 +121,13 @@ categories:
       - { slug: changelog, doc: ../CHANGELOG.md, title: Changelog, icon: clock-history, summary: "Every change, wave by wave." }
       - { slug: notices, doc: ../THIRD-PARTY-NOTICES.md, title: Third-party notices, icon: file-earmark-text, summary: "Components and their licences." }
 # F1 opens the guide for the current screen.
+moved:                      # retired guides: the address keeps working and lands on the guide that took the subject over
+  sutra-studio: screen-designer
 contextual:
   landing: using-the-terminal
   terminal: using-the-terminal
   view: using-the-terminal
-  studio: sutra-studio
+  studio: screen-designer
   build: screen-designer
   admin: user-management
   account: user-management

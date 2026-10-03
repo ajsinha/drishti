@@ -52,7 +52,7 @@ def test_search_and_missing_guides(client):
 
 def test_f1_context_and_panel_help(client):
     assert client.get("/help/context/view", follow_redirects=False).headers["location"] == "/help/using-the-terminal"
-    assert client.get("/help/context/studio", follow_redirects=False).headers["location"] == "/help/sutra-studio"
+    assert client.get("/help/context/studio", follow_redirects=False).headers["location"] == "/help/screen-designer"
     view = client.get("/v/trade/IRS-48213").text
     assert 'data-screen="view"' in view and 'href="/help/panel-kinds#table"' in view
     kinds = client.get("/help/panel-kinds").text

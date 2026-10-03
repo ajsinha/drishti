@@ -132,7 +132,7 @@ def test_the_review_page_lists_moves_and_keeps_the_full_diff_behind_a_toggle(cli
                 "status": "pending", "newVersion": True, "stale": False, "mayApprove": True, "mayWithdraw": False,
                 "text": new, "baseText": "", "liveText": "", "previousText": OLD}
     monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    html = client.get("/studio/reviews/P-000042").text
+    html = client.get("/build/reviews/P-000042").text
     assert '<ul class="diff-moves"' in html and "moved: Cashflows from position 2 to 1</li>" in html
     edits = html.split('aria-label="Edits besides the moves">', 1)[1].split("</pre>", 1)[0]
     assert '<span class="d-add">+version: 4</span>' in edits and "d-add\">+  - id:" not in edits and "d-del\">-  - id:" not in edits
@@ -147,6 +147,6 @@ def test_a_review_without_moves_shows_the_plain_diff_and_no_toggle(client, backe
                 "status": "pending", "newVersion": True, "stale": False, "mayApprove": True, "mayWithdraw": False,
                 "text": OLD.replace("version: 3", "version: 4"), "baseText": "", "liveText": "", "previousText": OLD}
     monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    html = client.get("/studio/reviews/P-000042").text
+    html = client.get("/build/reviews/P-000042").text
     assert "diff-moves" not in html.split("<main", 1)[-1].split("</main>")[0] or '<ul class="diff-moves"' not in html
     assert '<details class="diff-full">' not in html and '<span class="d-add">+version: 4</span>' in html

@@ -109,7 +109,7 @@ any interest rate swap (`TRD <trade id> <GO>`) now uses your Sutra. If the file 
 and `/api/v1/sutras/problems` lists each problem with its line and column.
 
 !!! warning "Test in Studio first"
-    [Sutra Studio](../../../console/web/guides/sutra-studio.md) previews an unsaved Sutra against any entity. It is the quickest way to
+    [The workbench](../../../docs/guides/SCREEN_DESIGNER.md) previews an unsaved Sutra against any entity. It is the quickest way to
     see a mistake.
 
 Every key and option is in the [Rachana reference](../../../docs/guides/RACHANA_REFERENCE.md).

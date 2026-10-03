@@ -45,7 +45,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Export, print and share](#export-print-and-share) | CSV, JSON, PDF and links |
 | [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
 | [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
-| [Sutra Studio](#sutra-studio-changing-how-a-screen-looks) | Changing how a screen looks |
+| [The workbench](#the-workbench-changing-how-a-screen-looks) | Changing how a screen looks |
 | [Administration](#administration) | Users, roles, packs, audit, health, caches |
 
 ## The pages at a glance
@@ -61,7 +61,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Monitors | `/m` | Live watchlists |
 | Alerts | `/alerts` | Your alert rules and recent alerts |
 | Workspaces | `/w` | Several live views on one screen |
-| Studio | `/studio`, `/studio/reviews` | Edit and preview layouts (Sutras); approve proposed ones |
+| Build | `/build`, `/build/reviews` | Design and edit layouts (Sutras) in the workbench; approve proposed ones |
 | My account | `/account` | Your profile, settings and password |
 | Admin | `/admin/users`, `/admin/roles`, `/admin/packs`, `/admin/audit`, `/admin/health`, `/admin/caches` | Users, roles, packs, audit log, health and caches (admins only) |
 | Help | `/help` | Tutorials, guides and every reference |
@@ -87,8 +87,9 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
-| **Build** | Layouts | *Sutra Studio* (`/studio`), *Reviews* (`/studio/reviews`) |
-| | Learn | *Sutra guide*, *Build a pack* |
+| **Build** | Create | *New screen* (`/build/new`), *My designs* (`/build`), *Examples* |
+| | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
+| | Learn | *Screen designer guide*, *Sutra guide*, *Rachana reference*, *Build a pack* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
 | | Operations | *Packs*, *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
@@ -563,7 +564,7 @@ If your role may author Sutras, the bar has **Promote to Sutra…**. It saves yo
   comments, quoting and every other key) is kept as written;
 - a tick box, **Remove the panels I hid from the Sutra**. Unticked, hidden panels stay in the Sutra for everyone else.
 
-Write a note for the reviewer and press **Submit for review**. As with a save in Studio, the new version is a
+Write a note for the reviewer and press **Submit for review**. As with a save from the workbench, the new version is a
 **proposal**: an approver opens it in *Build → Reviews* (the review shows the diff against the version before), and it
 goes live only when approved. A panel your layout moved is listed in words, for example *moved: DV01 by tenor (USD)
 from position 3 to 1 (side → main)*, and the line diff below it holds only the real edits (a width, a height, a
@@ -670,11 +671,11 @@ Sutra says.
 
 ### Promote to Sutra
 
-If your role may author Sutras (and Studio saving is on), the toolbar has **Promote to Sutra…**. It saves your
+If your role may author Sutras (and saving is switched on), the toolbar has **Promote to Sutra…**. It saves your
 arrangement and opens a panel with the changes in words (*the pivot of 'trades' opens with rows currency, product (was
 product)*) and the diff of the **next version** of the Sutra: only that panel's `pivot:` changes, written as you
 arranged it; its fields and everything else in the file stay as written. Add a note and **Submit for review**: an
-approver reviews it as any Studio save ([Reviews](#reviews-approving-a-sutra)), and once approved everyone's Pivot tab
+approver reviews it as any save from the workbench ([Reviews](#reviews-approving-a-sutra)), and once approved everyone's Pivot tab
 opens that way (those who saved their own keep theirs). With review off the button reads **Publish**.
 
 ### Search results: computed on the server
@@ -1316,47 +1317,49 @@ What changes when a pack is off for you:
 account. You can choose only among the packs an administrator assigned to you, and only among packs that
 are switched on for everyone ([Admin → Packs](#admin--packs-switching-a-pack-off-for-everyone)).
 
-## Sutra Studio: changing how a screen looks
+## The workbench: changing how a screen looks
 
 A **Sutra** is a layout: one YAML file (`<name>.v<N>.sutra.yaml`) that starts with `rachana: 1`, the version of
 the layout language, followed by the layout. It may say what it is for in `description:` and carry longer notes for
-reviewers in `notes:`; neither changes the screen. **Studio** (`/studio`, *Build → Sutra Studio* in the top bar) is the editor. Designing is open to every signed-in user: Studio, its preview against a pasted document, **File → Open**, the examples and the
-Screen Builder need no special role. Only **saving and proposing** need the *author* role (and saving switched on for the
-server, `DRISHTI_STUDIO_SAVE=true`); without it Save is disabled with the note "Designing is open to everyone; saving needs the author right". Previewing
+reviewers in `notes:`; neither changes the screen. The **workbench** (*Build → New screen*, then the design's page) is
+where you change one; it replaces the old Sutra Studio page, whose addresses (`/studio`, `/studio?sutra=…`) still work and
+send you to the equivalent workbench screen. The [screen designer guide](SCREEN_DESIGNER.md) goes through it with a
+picture of every step; this is the short version.
+
+Designing is open to every signed-in user: the workbench, its preview against your files or a stored entity, **File → Open**
+and the examples need no special role. Only **saving and proposing** need the *author* role (and saving switched on for the
+server, `DRISHTI_STUDIO_SAVE=true`); without it **Save** is dimmed and says "Designing is open to everyone; saving needs the author right". Previewing
 a *stored* entity, and any panel that reads another entity with `source:`, still follow the kinds your roles open: a panel whose source you may not open shows
 "no access to <kind>" instead of its data.
 
-To start from your own JSON files instead of a blank Sutra, use **Build → New screen**: it keeps your files, schema or stored entities as a *design* of yours (see **Build → My designs**), drafts a first screen with auto-design, and opens in Studio with **Open in Studio**; every example opens there as your own copy. See the Screen Builder guide (`/help/screen-builder`).
+A design is yours and is kept by the server (**Build → My designs**). To start one:
 
-The Studio page has:
+- **Build → New screen**: bring JSON files, a schema or stored entities, and let auto-design draft a first screen;
+- **Build → Examples**: each example opens as your own copy;
+- an existing Sutra: *New screen → an existing Sutra* (the design then edits a copy, with that Sutra as its base).
 
-- a **Sutra** picker (every loaded Sutra, `irs-fixfloat v1 · trade`, or *New Sutra…*);
-- **Kind** and **Id** of the entity to preview against;
-- **Preview** (or `Ctrl+Enter`), **Start from inference**, and **Save** (or **Submit for review**);
-- a **YAML editor** that completes as you type: keys, panel kinds and the options each kind takes, formats, tones,
-  entity kinds and expression functions, all taken from the server's schema of the language
-  (`GET /api/v1/rachana/schema`);
-- **live checking**: problems are listed by line number while you type, before you preview or save;
-- a **Summary** of the layout (what it matches, the strip, the panels and their keys), read from the YAML;
-- the **Preview**, and **Sample JSON** (paste your own document and preview against it);
-- **test entities** kept for each Sutra, so you can preview against several entities in turn.
+The workbench has:
 
-Plain `/studio` opens on the first example entity of your packs (the first example on `/t`) with a Sutra of its
-kind; when none of your packs names an example, it opens empty and the status line says what to type.
+- the **Data** pane: the design's samples (add files, or stored entities), the shape found in them, and the palette of panel kinds;
+- the **screen** in the middle, as **Design** (the real preview you drag panels and fields onto), **YAML** (the editor, which completes as you type: keys, panel kinds and the options each kind takes, formats, tones, entity kinds and expression functions, all from the server's schema of the language, `GET /api/v1/rachana/schema`) and **Summary** (the layout read back as a page);
+- the **Inspector**, **Problems** (by line, while you type), **Tests** (every sample against the design) and **Versions** (the design against its base or an earlier version, with restore);
+- **File** (open a `.yaml` or `.json` from your computer, or an example), **Save** or **Submit for review**, **Commands** (Ctrl+K), and Undo and Redo.
+
+The keys Studio had are still there: `Ctrl+S` saves (or says why not), `Ctrl+Enter` previews. `Ctrl+K` opens a command palette.
+Plain `/studio` opens a scratch design on the showcase example; use **Build → New screen** for your own data.
 
 Worked example: add a one-day P&L figure to the swap's strip.
 
-1. Open `/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001`. The editor shows the Sutra; the preview
-   shows `MX-20000001`.
+1. Open `/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001` (or choose *irs-fixfloat@1* under *New screen → an existing Sutra* and add
+   `MX-20000001` as a stored entity). The YAML tab shows the Sutra; the preview shows `MX-20000001`. The entities you had kept as that Sutra's test entities in
+   Studio are already among the samples.
 2. Near the top, under `rachana: 1` and `sutra: irs-fixfloat`, change `version: 1` to `version: 2`.
 3. Under `strip:`, after the `MTM (USD)` line, add the line shown below this list
    (same indentation as the other strip lines).
-4. Press `Ctrl+Enter`. The preview's strip now has **P&L 1D (USD)**, and the status line says
-   `Preview in … ms. Not saved.`
-5. Make a mistake on purpose, such as `bind: $.pnl1d +`, and preview again: the problems list names the
-   line and the error. Undo it.
-6. Type a note in *What changed? (for the reviewer)*, such as `Adds 1-day P&L to the strip`, and click **Submit for review** (or **Save** when review is off).
-   You should see `Submitted irs-fixfloat v2 for review as …. It goes live when an approver approves it (Reviews).`
+4. Press `Ctrl+Enter`. The preview's strip now has **P&L 1D (USD)**.
+5. Make a mistake on purpose, such as `bind: $.pnl1d +`: the Problems tab names the line and the error. Undo it (Ctrl+Z).
+6. Open **Versions** and compare with the base: you see the two lines you changed. Type a note in *What changed? (for the reviewer)*, such as `Adds 1-day P&L to the strip`, and click **Submit for review** (or **Save** when review is off).
+   You should see `Submitted for review as …. An approver makes it live.`
 
 The line to add in step 3:
 
@@ -1367,18 +1370,18 @@ The line to add in step 3:
 Bump the version whenever you change a Sutra that is already live. The saved file goes into the site
 Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.yaml`), and views use the highest version.
 
-**Start from inference** turns what Drishti infers for the entity into an editable Sutra: a quick
-start for a kind that has no Sutra.
+**Auto-design** (instead of Studio's *Start from inference*) drafts a complete Sutra from the design's samples, with a reason for every choice; it is a new
+revision, and Undo brings the old text back.
 
-The [Sutra Studio tutorial](../../console/web/guides/sutra-studio.md) and the
+The [screen designer guide](SCREEN_DESIGNER.md) (every pane, with pictures) and the
 [Sutra guide](../../console/web/guides/sutra-guide.md) go much further.
 
 ### Reviews: approving a Sutra
 
-With review on (the default), a Studio save is a **proposal**. Nothing changes for anyone until an
+With review on (the default), a save from the workbench is a **proposal**. Nothing changes for anyone until an
 approver approves it.
 
-1. Open **Reviews** in Studio (`/studio/reviews`). *Pending* proposals are listed with their Sutra,
+1. Open **Build → Govern → Reviews** (`/build/reviews`; the menu shows how many wait). *Pending* proposals are listed with their Sutra,
    note, author and time.
 2. Click one. You see *Changes against the live Sutra* (or *New version: the whole Sutra*) as a diff.
 3. Add a **Comment** and click **Approve and publish**: the Sutra goes live, and the next view uses it.
@@ -1410,7 +1413,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | Power | Lets its holders |
 |---|---|
 | raw JSON | see every field: nothing is masked for them, in the raw JSON (`F9`, **JSON**) or anywhere else ([Masked fields](#masked-fields)) |
-| author Sutras | save and propose Sutras from Sutra Studio (designing and previewing in Studio is open to everyone) |
+| author Sutras | save and propose Sutras from the workbench (designing and previewing there is open to everyone) |
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
 | Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([PYTHON_CALC.md](PYTHON_CALC.md#9-roles-who-may-use-calc)) |
@@ -1537,4 +1540,4 @@ full-screen at the terminal.
   only); the command line and the business date share the second, and **Live** shows as its dot.
 - **Help:** screenshots fit the screen; tap one to open it full size.
 - **Live values** keep ticking.
-- **Studio** is left out on phones; everything else, including help and administration, works.
+- The **workbench** is left out on phones; everything else, including help and administration, works.
