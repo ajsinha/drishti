@@ -121,6 +121,9 @@ public final class Binder {
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
                     explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data), p.span().orElse(null), p.height().orElse(null));
+        } catch (SourceDeniedException e) {
+            return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer(), explanation, null, null, true,
+                    p.span().orElse(null), p.height().orElse(null), "no access to " + e.kind());
         } catch (RuntimeException | StackOverflowError e) {
             // one panel whose data does not fit its Sutra must never take the view down; nor one whose expressions
             // are too deep to evaluate (bounded at load by drishti.rachana.max-expression-depth, so only if lifted)
@@ -367,11 +370,15 @@ public final class Binder {
         if (src.isEmpty()) {
             return c;
         }
+        if (c.denied().contains(src.get())) {
+            throw new SourceDeniedException(src.get());
+        }
         EntityDocument d = c.linked().get(src.get());
         if (d == null) {
             throw new IllegalStateException(c.pending().contains(src.get()) ? "waiting for " + src.get().id() : src.get().id() + " unavailable");
         }
-        return new BindContext(c.doc(), c.layout(), c.fingerprint(), EvalContext.of(d.data(), formats), c.links(), c.linked(), c.pending());
+        return new BindContext(c.doc(), c.layout(), c.fingerprint(), EvalContext.of(d.data(), formats), c.links(), c.linked(), c.pending(),
+                c.denied());
     }
 
     /** The linked entity a panel reads its data from, when it names one with {@code source}. */
@@ -385,6 +392,9 @@ public final class Binder {
         LinkView source = null;
         Optional<EntityRef> src = chartSource(p, c.eval());
         if (src.isPresent()) {
+            if (c.denied().contains(src.get())) {
+                throw new SourceDeniedException(src.get());
+            }
             EntityDocument d = c.linked().get(src.get());
             if (d == null) {
                 throw new IllegalStateException(c.pending().contains(src.get()) ? "waiting for " + src.get().id() : src.get().id() + " unavailable");

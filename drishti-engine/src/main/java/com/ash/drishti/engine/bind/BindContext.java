@@ -34,6 +34,7 @@ import java.util.Map;
  * @param links references discovered in the document
  * @param linked linked documents fetched within the budget (absent ones are pending or missing)
  * @param pending linked entities not fetched in time
+ * @param denied sourced entities the caller may not open: never fetched, their panels show "no access"
  */
 public record BindContext(
         EntityDocument doc,
@@ -42,4 +43,11 @@ public record BindContext(
         EvalContext eval,
         List<LinkRef> links,
         Map<EntityRef, EntityDocument> linked,
-        java.util.Set<EntityRef> pending) {}
+        java.util.Set<EntityRef> pending,
+        java.util.Set<EntityRef> denied) {
+
+    public BindContext(EntityDocument doc, EffectiveLayout layout, Fingerprint fingerprint, EvalContext eval, List<LinkRef> links,
+            Map<EntityRef, EntityDocument> linked, java.util.Set<EntityRef> pending) {
+        this(doc, layout, fingerprint, eval, links, linked, pending, java.util.Set.of());
+    }
+}

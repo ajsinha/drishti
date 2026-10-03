@@ -26,7 +26,7 @@ You have a folder of JSON documents (trades, shipments, patients, sensor reading
 | 3. Auto-design | **Draft a screen**: a complete Sutra from the shape and the samples, with a reason for every choice. | Works: `POST /api/v1/builder/design` and `/suggest` |
 | 4 to 7 | Visual designer, check against every sample, save and export. | Planned |
 
-You need the **author** power, as for Sutra Studio. Nothing you upload is written to any store.
+Everyone who is signed in may use it: designing is open to all, and only saving or proposing a Sutra needs the **author** power. Nothing you upload is written to any store.
 
 ## What a shape is
 

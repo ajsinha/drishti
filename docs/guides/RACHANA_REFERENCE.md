@@ -434,7 +434,7 @@ What each part does when the view is built:
 | `match` | The engine takes the `trade` Sutras, highest `priority` first, and uses the first whose `where` holds for `MX-20000001`. |
 | `title`, `strip` | Evaluated once per document: each expression gives a value, which `fmt` formats and `tone` colours. |
 | `rows`, `each` | Evaluated to a list; the panel's columns are evaluated once per element with `@` set to it. |
-| `source` | Follows the link and reads the other entity (the curve) through the same sources and business date; any panel kind that reads data takes it. |
+| `source` | Follows the link and reads the other entity (the curve) through the same sources and business date; any panel kind that reads data takes it. A source the viewer may not open shows "no access". |
 | `key`, `keys` | Become the function-key bar; a panel key scrolls to the panel, a link key opens the entity. |
 | Missing data | A path that is absent evaluates to nothing: the cell is empty, and a panel with no data says so. |
 
@@ -638,7 +638,7 @@ author may promote such a layout to the Sutra's next version, written with these
 | `area` | | `main` | `main` or `right` (any case; anything else is `DRS-2027`). |
 | `span` | | `12` | Width in columns of the 12-column grid of its column: a whole number from 1 to 12 (`DRS-2030` otherwise). `span: 8` and `span: 4` share a row. On a phone every panel is full width. |
 | `height` | | content | Height in grid rows of 2.5 rem: a whole number from 1 to 24 (`DRS-2030` otherwise). The panel scrolls inside; printing ignores it. Not on a `tabs` body, which takes the size of its panel (`DRS-2030`). |
-| `source` | | | Expression giving a `link(id, kind)`: the panel reads that linked entity's document instead of this one (same sources, business date and field masks), so `$` in its options is the other entity. Every kind but `links`, `provenance` and `markdown` takes it; the title still reads this entity. Example: `{ kind: candlestick, source: "link('CMD-BRENT', 'commodity')", rows: $.ohlc }`. A `line` with a source also refreshes live when that entity changes; other kinds refresh with the view. |
+| `source` | | | Expression giving a `link(id, kind)`: the panel reads that linked entity's document instead of this one (same sources, business date and field masks), so `$` in its options is the other entity. Every kind but `links`, `provenance` and `markdown` takes it; the title still reads this entity. Example: `{ kind: candlestick, source: "link('CMD-BRENT', 'commodity')", rows: $.ohlc }`. A `line` with a source also refreshes live when that entity changes; other kinds refresh with the view. A source of a kind the viewer may not open is never fetched: the panel shows "no access to <kind>" and none of that entity's values. |
 | `infer` | | `false` | Marks the panel as completed by inference (an *inferred* tag in its header). Inference fills a panel's columns whenever it states none, with or without this flag; see [Inference](../architecture/INFERENCE.md#sutra-and-inference-together). |
 | `columns` | | empty | The columns or fields; see below. Used by `kv`, `table`, `ladder`, `tabs` (in the body) and `surface`. |
 | `body` | `tabs` only | | The panel drawn once per tab. On any other kind, `DRS-2023 only 'tabs' panels take a 'body'`. |

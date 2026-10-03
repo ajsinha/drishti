@@ -107,13 +107,16 @@ public class StudioController {
         if (!pasted && (req.id() == null || req.id().isBlank())) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "'id' is required: the entity to preview against (or a pasted 'document')");
         }
-        entitlements.requireOpen(principal, req.kind());
         Sutra s = sutras.check(req.yaml());
+        java.util.function.Predicate<String> mayOpen = k -> entitlements.mayOpen(principal, k);
         if (pasted) {
+            // designing is open to every signed-in user: the kind of a pasted document is a label, not a permission
             return entitlements.restrict(principal, pipeline.preview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document()),
-                    entitlements.redactor(principal)));
+                    entitlements.redactor(principal), mayOpen));
         }
-        return entitlements.restrict(principal, pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf, entitlements.redactor(principal)));
+        entitlements.requireOpen(principal, req.kind());   // a stored entity is data, not design
+        return entitlements.restrict(principal,
+                pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf, entitlements.redactor(principal), mayOpen));
     }
 
     @GetMapping(path = "/studio/inferred/{kind}/{id}", produces = "text/yaml")
@@ -127,7 +130,6 @@ public class StudioController {
 
     @PostMapping(path = "/studio/inferred", produces = "text/yaml")
     public String inferredFromSample(@RequestBody InferRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        entitlements.requireOpen(principal, req.kind());
         String n = req.name() == null || req.name().isBlank() ? req.kind() + "-custom" : req.name();
         return "# Started from what inference makes of a pasted " + req.kind() + " document. Edit freely.\n"
                 + writer.write(pipeline.inferred(pasted(req.kind(), req.id(), req.document())), n, 1);

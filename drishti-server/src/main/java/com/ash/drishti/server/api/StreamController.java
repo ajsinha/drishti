@@ -94,7 +94,7 @@ public class StreamController {
         var redact = entitlements.redactor(principal);           // the first view and every rebuild: as the caller may see it
         ViewModel initial;
         try {
-            initial = pipeline.view(ref, asOf, redact);
+            initial = pipeline.view(ref, asOf, redact, k -> entitlements.mayOpen(principal, k));
         } catch (RuntimeException e) {
             slot.release();
             throw e;
@@ -121,7 +121,7 @@ public class StreamController {
                     recents.forget(ref);              // the command line stops offering a deleted entity as recent
                 }
                 box.offer(f);
-            }, redact);
+            }, redact, k -> entitlements.mayOpen(principal, k));
         } catch (RuntimeException e) {
             slot.release();
             throw e;

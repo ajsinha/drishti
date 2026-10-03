@@ -191,7 +191,7 @@ A layout has to work for every entity it matches, not just the one on screen. Ke
 Saving needs two things:
 
 - the server started with `DRISHTI_STUDIO_SAVE=true` (it is off by default, and **Save** is then disabled with
-  the hint *Saving is off here, or you are not an author*);
+  the note *Designing is open to everyone; saving needs the author right*);
 - a role that may author: `author`, `approver` or `admin`.
 
 What the button does depends on review, which is **on** by default:

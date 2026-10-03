@@ -100,9 +100,6 @@ public class BuilderController {
      */
     @PostMapping(path = "/shape", consumes = MediaType.APPLICATION_JSON_VALUE)
     public Shape shape(HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) throws IOException {
-        if (!entitlements.mayAuthor(principal)) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, principal.user() + " is not a Sutra author");
-        }
         byte[] body = read(request);
         List<Sample> samples = parse(body).samples();
         if (samples.isEmpty()) {
@@ -117,18 +114,16 @@ public class BuilderController {
      * ({@code yaml}), a {@code reasons} entry for every decision, runner-up {@code alternatives} per panel, what was
      * {@code pruned} because the samples could not fill it, and a {@code preview} of the first sample. With samples the draft is
      * previewed against each of them and panels empty or failing for more than {@code drishti.builder.prune-share} of them
-     * are dropped or demoted. Authors only; writes nothing.
+     * are dropped or demoted. Open to every signed-in user (designing is not saving); writes nothing.
      */
     @PostMapping(path = "/design", consumes = MediaType.APPLICATION_JSON_VALUE)
     public Design design(HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) throws IOException {
-        author(principal);
         byte[] body = read(request);
         Request req = parse(body);
         if (req.samples().isEmpty() && req.shape() == null) {
             throw bad("send 'samples' (a list of {name, document}) or a 'shape' ({schema, roles})");
         }
         String kind = req.kind() == null || req.kind().isBlank() ? "sample" : req.kind();
-        entitlements.requireOpen(principal, kind);
         Shape shape = req.shape() != null ? req.shape() : shapes.infer(req.samples());
         LOG.info("builder design: {} sample(s), {} bytes", req.samples().size(), body.length);
         return designer.design(shape, req.samples(), kind, previewer(principal));
@@ -142,7 +137,6 @@ public class BuilderController {
     @PostMapping(path = "/suggest", consumes = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> suggest(HttpServletRequest request, @RequestAttribute(Principal.ATTRIBUTE) Principal principal)
             throws IOException {
-        author(principal);
         Request req = parse(read(request));
         if (req.path() == null || req.path().isBlank()) {
             throw bad("'path' is required: the field to suggest panels for, for example \"$.profile\"");
@@ -161,12 +155,6 @@ public class BuilderController {
         return out;
     }
 
-    private void author(Principal principal) {
-        if (!entitlements.mayAuthor(principal)) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, principal.user() + " is not a Sutra author");
-        }
-    }
-
     /** Studio's preview path: the Sutra text against a pasted document, links masked and restricted for the caller. */
     private DesignPreviewer previewer(Principal principal) {
         Object[] last = new Object[2];
@@ -178,7 +166,7 @@ public class BuilderController {
             EntityDocument doc = new EntityDocument(EntityRef.of(kind, "SAMPLE"), codec.read(document.toString()),
                     new com.ash.drishti.api.Provenance("auto-design sample JSON", 0, java.time.Instant.now(), false));
             return entitlements.restrict(principal,
-                    pipeline.preview(Optional.of((Sutra) last[1]), doc, entitlements.redactor(principal)));
+                    pipeline.preview(Optional.of((Sutra) last[1]), doc, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k)));
         };
     }
 

@@ -247,3 +247,24 @@ def test_the_registry_on_the_packs_page(client, backend):
     assert "From the registry" in page and "packs.example" in page and "Install this version" in page and "Roll back" in page
     assert "not trusted" in page and page.count('data-registry="install"') == 1        # only the trusted, not-installed version
     assert out["replaced"] == "1.0.0" and ("POST", "/registry/widgets/1.1.0/install") in calls
+
+
+def test_a_non_author_designs_freely_but_cannot_save_or_propose(client, backend, monkeypatch):
+    """Designing is open to every signed-in user: Studio and the Screen Builder work; Save/Propose are disabled with a note."""
+    async def settings(ident=None):
+        return {"save": False, "review": True, "approve": False}
+    monkeypatch.setattr(backend, "studio_settings", settings)
+    page = client.get("/studio")
+    assert page.status_code == 200 and "data-studio" in page.text and 'data-can-save="false"' in page.text
+    assert "data-design-note" in page.text and "Designing is open to everyone; saving needs the author right." in page.text
+    assert "data-save disabled" in page.text
+    assert client.get("/build/shape").status_code == 200
+    ok = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "sample", "id": "P-1", "document": {"tradeId": "P-1", "mtm": 5}})
+    assert ok.status_code == 200 and "P-1" in ok.text
+
+
+def test_a_panel_whose_source_the_viewer_may_not_open_says_so_without_an_error(client):
+    env = client.app.state.templates.env
+    html = env.from_string("{% from '_macros/panels.html' import no_data %}{{ no_data(p) }}").render(
+        p={"id": "x", "kind": "table", "denied": "no access to curve", "error": None, "data": None, "empty": True})
+    assert "data-denied" in html and "No access to curve" in html and "did not have the shape" not in html

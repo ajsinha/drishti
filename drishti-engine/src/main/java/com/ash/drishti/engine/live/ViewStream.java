@@ -56,6 +56,7 @@ public final class ViewStream implements AutoCloseable {
     private final LiveMetrics metrics;
     private final Consumer<Frame> sink;
     private final UnaryOperator<DataNode> redact;
+    private final java.util.function.Predicate<String> mayOpen;
     private final List<Subscription> subscriptions = new ArrayList<>();
     private final AtomicReference<ViewModel> shown = new AtomicReference<>();
     private final AtomicReference<EntityDocument> latestMain = new AtomicReference<>();
@@ -73,6 +74,14 @@ public final class ViewStream implements AutoCloseable {
     /** A live view rebuilt as the client may see it: {@code redact} masks what the client's role may not see. */
     public ViewStream(EntityRef ref, ViewModel initial, List<EntityRef> sources, TopicHub hub, ViewPipeline pipeline,
             ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink, UnaryOperator<DataNode> redact) {
+        this(ref, initial, sources, hub, pipeline, executor, metrics, sink, redact, k -> true);
+    }
+
+    /** As above; every rebuild also leaves out the sourced entities of kinds {@code mayOpen} refuses (their panels show "no access"). */
+    public ViewStream(EntityRef ref, ViewModel initial, List<EntityRef> sources, TopicHub hub, ViewPipeline pipeline,
+            ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink, UnaryOperator<DataNode> redact,
+            java.util.function.Predicate<String> mayOpen) {
+        this.mayOpen = mayOpen;
         this.ref = ref;
         this.redact = redact;
         this.pipeline = pipeline;
@@ -122,8 +131,8 @@ public final class ViewStream implements AutoCloseable {
                     }
                     continue;
                 }
-                ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime(), redact)
-                        : pipeline.view(ref, com.ash.drishti.api.AsOf.LATEST, redact);
+                ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime(), redact, mayOpen)
+                        : pipeline.view(ref, com.ash.drishti.api.AsOf.LATEST, redact, mayOpen);
                 ViewModel before = shown.getAndSet(next);
                 List<Patch> patches = differ.diff(before, next);
                 if (gone) {

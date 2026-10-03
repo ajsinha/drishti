@@ -110,7 +110,7 @@ A role says two things:
    | Power | Lets the holder |
    |---|---|
    | `raw` | see every field, in raw JSON (F9) and everywhere else; others see the fields in `drishti.security.redact` as `•••` wherever their value could be seen or inferred: views, search, Impact, type-ahead, alerts ([CONFIGURATION.md](CONFIGURATION.md#field-masks)) |
-   | `author` | write and preview Sutras in Studio, and propose them (where Studio saving is on) |
+   | `author` | save Sutras from Studio and propose them (where Studio saving is on). **Designing is open to everyone**: any signed-in user may use Studio and the Screen Builder and preview against a pasted document; saving, proposing, approving and deleting need the right, and previewing a stored entity needs the right to its kind |
    | `approve` | approve or reject proposed Sutras, but never their own (four eyes) |
    | `admin` | everything in this guide: users, roles, caches, health, audit |
    | `calc` | use Calc (`Alt+C`): Python run in their own browser on the views a pack offers it, reading only what their roles open ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)) |

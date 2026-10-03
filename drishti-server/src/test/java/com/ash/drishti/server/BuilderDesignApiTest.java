@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 /**
  * {@code POST /api/v1/builder/design} and {@code /suggest}: the ten documented examples draw a Sutra that previews with no
- * panel errors, with reasons and alternatives; panels the samples cannot fill are pruned; authors only; limits enforced.
+ * panel errors, with reasons and alternatives; panels the samples cannot fill are pruned; open to every signed-in user; limits enforced.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
@@ -215,13 +215,13 @@ class BuilderDesignApiTest {
     }
 
     @Test
-    void onlyAuthorsMayDesignOrSuggest() throws Exception {
+    void everySignedInUserMayDesignOrSuggest() throws Exception {
         String viewer = "Bearer " + tokens.mint("vic", List.of("viewer"), 300);
         ObjectNode req = body("trade", example("pnl-explain"));
         req.put("path", "$.pnlExplain");
         for (String url : new String[] {"/api/v1/builder/design", "/api/v1/builder/suggest"}) {
             mvc.perform(post(url).header("Authorization", viewer).contentType(MediaType.APPLICATION_JSON).content(req.toString()))
-                    .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-5002"));
+                    .andExpect(status().isOk());
             mvc.perform(post(url).contentType(MediaType.APPLICATION_JSON).content(req.toString())).andExpect(status().isUnauthorized());
         }
     }

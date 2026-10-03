@@ -1320,8 +1320,11 @@ are switched on for everyone ([Admin → Packs](#admin--packs-switching-a-pack-o
 
 A **Sutra** is a layout: one YAML file (`<name>.v<N>.sutra.yaml`) that starts with `rachana: 1`, the version of
 the layout language, followed by the layout. It may say what it is for in `description:` and carry longer notes for
-reviewers in `notes:`; neither changes the screen. **Studio** (`/studio`, *Build → Sutra Studio* in the top bar) is the editor. You need the *author* role; saving must be
-switched on for the server (`DRISHTI_STUDIO_SAVE=true`).
+reviewers in `notes:`; neither changes the screen. **Studio** (`/studio`, *Build → Sutra Studio* in the top bar) is the editor. Designing is open to every signed-in user: Studio, its preview against a pasted document, **File → Open**, the examples and the
+Screen Builder need no special role. Only **saving and proposing** need the *author* role (and saving switched on for the
+server, `DRISHTI_STUDIO_SAVE=true`); without it Save is disabled with the note "Designing is open to everyone; saving needs the author right". Previewing
+a *stored* entity, and any panel that reads another entity with `source:`, still follow the kinds your roles open: a panel whose source you may not open shows
+"no access to <kind>" instead of its data.
 
 The Studio page has:
 
@@ -1405,7 +1408,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | Power | Lets its holders |
 |---|---|
 | raw JSON | see every field: nothing is masked for them, in the raw JSON (`F9`, **JSON**) or anywhere else ([Masked fields](#masked-fields)) |
-| author Sutras | use Sutra Studio |
+| author Sutras | save and propose Sutras from Sutra Studio (designing and previewing in Studio is open to everyone) |
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
 | Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([PYTHON_CALC.md](PYTHON_CALC.md#9-roles-who-may-use-calc)) |

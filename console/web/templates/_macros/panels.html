@@ -250,9 +250,11 @@
 
 {# A panel whose document lacks what its Sutra asks for (or whose data could not be read) says so, calmly. #}
 {% macro no_data(p) -%}
-<p class="pnl-empty" role="status"{% if p.error %} title="{{ p.error }}"{% endif %}>
+{% if p.denied %}<p class="pnl-empty pnl-denied" role="status" data-denied><i class="bi bi-lock" aria-hidden="true"></i> {{ p.denied | capitalize }}
+  <span class="pnl-empty-why">This panel reads another kind of entity that your roles do not allow you to open.</span></p>
+{% else %}<p class="pnl-empty" role="status"{% if p.error %} title="{{ p.error }}"{% endif %}>
   <i class="bi bi-inbox" aria-hidden="true"></i> {{ 'No linked entities' if p.kind == 'links' else 'No data available' }}
-  {% if p.error %}<span class="pnl-empty-why">The data did not have the shape this panel expects.</span>{% endif %}</p>
+  {% if p.error %}<span class="pnl-empty-why">The data did not have the shape this panel expects.</span>{% endif %}</p>{% endif %}
 {%- endmacro %}
 
 {% macro panel(p) -%}

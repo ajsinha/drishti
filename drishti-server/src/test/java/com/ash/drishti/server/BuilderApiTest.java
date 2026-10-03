@@ -67,10 +67,10 @@ class BuilderApiTest {
     }
 
     @Test
-    void someoneWhoIsNotAnAuthorIsRefused() throws Exception {
+    void designingIsOpenToEverySignedInUserButNotToAnonymousCallers() throws Exception {
         mvc.perform(post("/api/v1/builder/shape").header("Authorization", as("vic", "viewer")).contentType(MediaType.APPLICATION_JSON)
                         .content(samples(1)))
-                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-5002"));
+                .andExpect(status().isOk());
         mvc.perform(post("/api/v1/builder/shape").contentType(MediaType.APPLICATION_JSON).content(samples(1)))
                 .andExpect(status().isUnauthorized());
     }

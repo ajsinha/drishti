@@ -281,7 +281,7 @@ on the same file.
 
 ## Server API
 
-All under `/api/v1/builder`, all requiring the `author` power (as Studio), none writing to stores.
+All under `/api/v1/builder`, open to every signed-in user (designing is not saving: the `author` power is needed only to save or propose a Sutra), none writing to stores.
 
 | Endpoint | Does |
 |---|---|
@@ -305,6 +305,11 @@ no new framework.
 
 ## Security, limits and accessibility
 
+- **Who may use it**: every signed-in user may shape, design, suggest and preview; the kind a pasted document is labelled with
+  (`sample`) is a label, not a permission. Saving, proposing, approving and deleting stay with the `author`, `approve` and
+  admin powers. Data access is not design: a preview against a stored entity needs the right to its kind, and any panel
+  with `source: link(id, kind)` is bound only when the caller may open `kind` (otherwise the panel shows "no access to kind", with none of
+  that entity's values), in views, previews (stored and pasted), the Pivot tab's records, live streams and the builder's previews.
 - **Limits** (all settings): 50 samples, 5 MB per file, 25 MB per set, nesting depth 64 (JSON parsing reuses the
   connectors' hardened reader: bad lines counted and skipped, NaN as no value). Sample sets expire after 24 hours
   unless saved; saved sets count against a per-user quota.

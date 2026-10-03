@@ -61,6 +61,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
@@ -97,6 +98,9 @@ public final class ViewPipeline {
             return System.identityHashCode(sutra);
         }
     }
+
+    /** Callers that are not users (tests, internal jobs) may open everything; every user-facing path passes its own right. */
+    private static final Predicate<String> ANY = k -> true;
 
     record GenKey(EntityRef ref, long generation, java.time.LocalDate businessDate) {}
 
@@ -146,9 +150,14 @@ public final class ViewPipeline {
 
     /** A view of a stored entity with an unsaved Sutra, as the caller may see it. */
     public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact) {
+        return preview(sutra, ref, asOf, redact, ANY);
+    }
+
+    /** As above, and a panel whose {@code source} is of a kind {@code mayOpen} refuses shows "no access" instead of that entity's data. */
+    public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return build(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact);
+        return build(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact, mayOpen);
     }
 
     /** A view of a document supplied by the caller (Studio sample JSON), with a given or matched Sutra. */
@@ -158,8 +167,14 @@ public final class ViewPipeline {
 
     /** A view of a supplied document; linked entities read from the sources are masked for the caller. */
     public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact) {
+        return preview(sutra, doc, redact, ANY);
+    }
+
+    /** A supplied document, as the caller may see it; sourced panels of kinds {@code mayOpen} refuses show "no access". */
+    public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         long t0 = System.nanoTime();
-        return build(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact);
+        return build(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact,
+                mayOpen);
     }
 
     /** The layout inference alone would give {@code ref}, in Sutra form (Studio "start from inference"). */
@@ -188,9 +203,14 @@ public final class ViewPipeline {
 
     /** The view of {@code ref} as the caller may see it: {@code redact} masks what the caller's role may not see. */
     public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact) {
+        return view(ref, asOf, redact, ANY);
+    }
+
+    /** The view as the caller may see it: linked and sourced entities of kinds {@code mayOpen} refuses are never fetched or bound. */
+    public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return build(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact);
+        return build(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen);
     }
 
     /**
@@ -205,6 +225,16 @@ public final class ViewPipeline {
 
     /** A panel's rows as the caller may see them: masked fields read {@link DataNode#MASK}. */
     public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, UnaryOperator<DataNode> redact) {
+        return records(ref, asOf, panelId, redact, ANY);
+    }
+
+    /**
+     * A panel's rows for a caller who may open only the kinds {@code mayOpen} accepts.
+     *
+     * @throws DrishtiException {@code DRS-5002} when the panel's source is of a kind the caller may not open
+     */
+    public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, UnaryOperator<DataNode> redact,
+            Predicate<String> mayOpen) {
         EntityDocument doc = fetch(ref, asOf);
         Optional<Sutra> sutra = matcher.match(ref.kind(), doc.data());
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
@@ -217,8 +247,13 @@ public final class ViewPipeline {
         EntityDocument seen = seen(doc, redact);
         EvalContext eval = EvalContext.of(seen.data(), formats);
         Map<EntityRef, EntityDocument> linked = new LinkedHashMap<>();
-        binder.chartSource(panel, eval).ifPresent(src -> router.fetchAll(Set.of(src), graph.linkBudget(),
-                asOf.businessDate() == null ? dates.resolve(asOf) : asOf).forEach((r, d) -> linked.put(r, seen(d, redact))));
+        binder.chartSource(panel, eval).ifPresent(src -> {
+            if (!mayOpen.test(src.kind())) {
+                throw new DrishtiException(ErrorCode.FORBIDDEN, "no access to " + src.kind());
+            }
+            router.fetchAll(Set.of(src), graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf)
+                    .forEach((r, d) -> linked.put(r, seen(d, redact)));
+        });
         BindContext ctx = new BindContext(seen, layout, fp, eval, List.of(), linked, Set.of());
         return binder.records(panel, ctx);
     }
@@ -230,7 +265,12 @@ public final class ViewPipeline {
 
     /** Builds a view from a document already in hand, as the caller may see it. */
     public ViewModel build(EntityDocument doc, long t0, long tFetched, UnaryOperator<DataNode> redact) {
-        return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact);
+        return build(doc, t0, tFetched, redact, ANY);
+    }
+
+    /** Builds a view from a document already in hand (live rebuilds), for a caller who may open only what {@code mayOpen} accepts. */
+    public ViewModel build(EntityDocument doc, long t0, long tFetched, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+        return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact, mayOpen);
     }
 
     /**
@@ -254,7 +294,7 @@ public final class ViewPipeline {
     }
 
     private ViewModel build(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf,
-            UnaryOperator<DataNode> redact) {
+            UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         EntityRef ref = doc.ref();
         boolean current = dates.isCurrent(asOf);
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
@@ -268,12 +308,24 @@ public final class ViewPipeline {
         EvalContext eval = EvalContext.of(seen.data(), formats);
         List<LinkRef> links = catalog.discover(seen.data(), ref);
         Set<EntityRef> wanted = new LinkedHashSet<>();
-        links.forEach(l -> wanted.add(l.target()));
+        Set<EntityRef> denied = new HashSet<>();
+        links.forEach(l -> {
+            if (mayOpen.test(l.target().kind())) {
+                wanted.add(l.target());
+            }
+        });
         for (Panel p : layout.sutra().panels()) {
             if (p.kind().readsData()) {
-                binder.chartSource(p, eval).ifPresent(wanted::add);
+                binder.chartSource(p, eval).ifPresent(src -> {
+                    if (mayOpen.test(src.kind())) {
+                        wanted.add(src);
+                    } else {
+                        denied.add(src);          // never fetched: the panel says "no access" and holds none of its values
+                    }
+                });
             }
         }
+        denied.removeAll(wanted);
         Map<EntityRef, EntityDocument> linked = wanted.isEmpty() ? Map.of() : router.fetchAll(wanted, graph.linkBudget(), asOf.businessDate() == null ? dates.resolve(asOf) : asOf);
         if (!linked.isEmpty()) {
             Map<EntityRef, EntityDocument> masked = new LinkedHashMap<>();
@@ -284,7 +336,7 @@ public final class ViewPipeline {
         pending.removeAll(linked.keySet());
         long tLinks = System.nanoTime();
 
-        BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending);
+        BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
             futures.add(CompletableFuture.supplyAsync(() -> binder.bind(p, ctx), bindPool));

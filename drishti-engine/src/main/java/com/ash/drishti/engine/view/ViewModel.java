@@ -132,7 +132,13 @@ public record ViewModel(
      */
     public record PanelView(
             String id, String kind, String title, String code, String key, String area, boolean inferred,
-            String explanation, PanelData data, String error, boolean empty, Integer span, Integer height) {
+            String explanation, PanelData data, String error, boolean empty, Integer span, Integer height, String denied) {
+
+        /** {@code denied} is set when the panel's {@code source} is an entity the caller may not open (no data, no error). */
+        public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
+                String explanation, PanelData data, String error, boolean empty, Integer span, Integer height) {
+            this(id, kind, title, code, key, area, inferred, explanation, data, error, empty, span, height, null);
+        }
 
         public PanelView(String id, String kind, String title, String code, String key, String area, boolean inferred,
                 String explanation, PanelData data, String error, boolean empty) {

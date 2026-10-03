@@ -54,7 +54,7 @@ public class ViewController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
         EntityRef ref = EntityRef.of(kind, id);
-        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal))));
+        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k))));
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
                 + (v.title().with() == null ? "" : " · " + v.title().with().text());
         recents.touch(principal.user(), new EntityHit(ref, v.title().id(), subtitle));
@@ -71,6 +71,6 @@ public class ViewController {
     public com.ash.drishti.engine.bind.PivotBinder.Records records(@PathVariable String kind, @PathVariable String id, @PathVariable String panel,
             AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
-        return pipeline.records(EntityRef.of(kind, id), asOf, panel, entitlements.redactor(principal));
+        return pipeline.records(EntityRef.of(kind, id), asOf, panel, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k));
     }
 }
