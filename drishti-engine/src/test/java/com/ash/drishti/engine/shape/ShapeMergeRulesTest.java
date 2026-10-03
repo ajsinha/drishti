@@ -82,6 +82,32 @@ class ShapeMergeRulesTest {
     }
 
     @Test
+    void sparseOptionalSectionsStayARecordNotAMap() {
+        Shape s = infer("{\"rates\":{\"dv01\":1}}", "{\"fx\":{\"delta\":2}}", "{\"credit\":{\"cs01\":3}}", "{\"equity\":{\"beta\":4}}");
+        assertThat(at(s, "/x-drishti/map").isMissingNode()).isTrue();
+        assertThat(at(s, "/properties/rates/properties/dv01/type").asText()).isEqualTo("integer");
+        assertThat(at(s, "/properties/equity/properties/beta/type").asText()).isEqualTo("integer");
+        Shape months = infer("{\"jan\":1,\"feb\":2}", "{\"mar\":3,\"apr\":4}");
+        assertThat(at(months, "/properties/jan/type").asText()).isEqualTo("integer");
+    }
+
+    @Test
+    void datesAsKeysAreAMap() {
+        Shape s = infer("{\"m\":{\"2026-01-01\":1,\"2026-01-02\":2,\"2026-01-03\":3,\"2026-01-04\":4}}");
+        assertThat(at(s, "/properties/m/x-drishti/map").asBoolean()).isTrue();
+    }
+
+    @Test
+    void integersBeyondTwoToThe53AreWrittenExactlyAndNonFiniteNumbersAreOmitted() {
+        Shape big = infer("{\"n\":12345678901234567890123}", "{\"n\":9223372036854775807}");
+        assertThat(at(big, "/properties/n/minimum").bigIntegerValue()).isEqualTo(new java.math.BigInteger("9223372036854775807"));
+        assertThat(at(big, "/properties/n/maximum").bigIntegerValue()).isEqualTo(new java.math.BigInteger("12345678901234567890123"));
+        Shape inf = infer("{\"n\":1e999999}", "{\"n\":2}");
+        assertThat(at(inf, "/properties/n/maximum").asDouble()).isEqualTo(2.0);
+        assertThat(at(inf, "/properties/n/$comment").asText()).contains("infinite");
+    }
+
+    @Test
     void idLikeKeysInOneDocumentAreAMapButFixedFieldNamesAreARecord() {
         Shape map = infer("{\"m\":{\"TRD-1\":{\"q\":1},\"TRD-2\":{\"q\":2},\"TRD-3\":{\"q\":3},\"TRD-4\":{\"q\":4},\"TRD-5\":{\"q\":5}}}");
         assertThat(at(map, "/properties/m/additionalProperties/properties/q/type").asText()).isEqualTo("integer");

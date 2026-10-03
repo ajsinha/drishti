@@ -169,21 +169,28 @@ final class SchemaWriter {
             case "string" -> string(f, out);
             case "integer", "number" -> {
                 out.put("type", type);
-                if (f.min <= f.max) {
-                    number(out, "minimum", f.min, "integer".equals(type));
-                    number(out, "maximum", f.max, "integer".equals(type));
+                if (f.minExact != null) {
+                    number(out, "minimum", f.minExact, "integer".equals(type));
+                    number(out, "maximum", f.maxExact, "integer".equals(type));
+                }
+                if (f.nonFinite) {
+                    out.put("$comment", "a sample held NaN or an infinite number: no bound is written for it");
                 }
             }
             default -> out.put("type", type);
         }
     }
 
-    private static void number(ObjectNode out, String key, double v, boolean integral) {
-        if (integral && Math.abs(v) < 9e15) {
-            out.put(key, (long) v);
+    private static void number(ObjectNode out, String key, java.math.BigDecimal v, boolean integral) {
+        if (isWhole(v, integral)) {
+            out.put(key, v.toBigIntegerExact());
         } else {
             out.put(key, v);
         }
+    }
+
+    private static boolean isWhole(java.math.BigDecimal v, boolean integral) {
+        return integral && (v.scale() <= 0 || v.stripTrailingZeros().scale() <= 0);
     }
 
     private void string(Facts f, ObjectNode out) {

@@ -64,6 +64,11 @@ final class Facts {
     int arrays;
     double min = Double.POSITIVE_INFINITY;
     double max = Double.NEGATIVE_INFINITY;
+    /** Exact bounds (integers beyond 2^53 and wide decimals lose digits in a double). */
+    java.math.BigDecimal minExact;
+    java.math.BigDecimal maxExact;
+    /** A sample held a NaN or an infinite number: no bound is written for it. */
+    boolean nonFinite;
     final Set<Double> numbers = new LinkedHashSet<>();
     final Map<String, Integer> distinct = new LinkedHashMap<>();
     boolean overflow;
@@ -133,8 +138,15 @@ final class Facts {
             } else {
                 floats++;
             }
-            min = Math.min(min, d);
-            max = Math.max(max, d);
+            if (Double.isNaN(d) || Double.isInfinite(d)) {
+                nonFinite = true;
+            } else {
+                java.math.BigDecimal exact = v.decimalValue();
+                minExact = minExact == null || exact.compareTo(minExact) < 0 ? exact : minExact;
+                maxExact = maxExact == null || exact.compareTo(maxExact) > 0 ? exact : maxExact;
+                min = Math.min(min, d);
+                max = Math.max(max, d);
+            }
             if (numbers.size() < DISTINCT_CAP) {
                 numbers.add(d);
             }
@@ -251,6 +263,11 @@ final class Facts {
         arrays += o.arrays;
         min = Math.min(min, o.min);
         max = Math.max(max, o.max);
+        nonFinite |= o.nonFinite;
+        if (o.minExact != null) {
+            minExact = minExact == null || o.minExact.compareTo(minExact) < 0 ? o.minExact : minExact;
+            maxExact = maxExact == null || o.maxExact.compareTo(maxExact) > 0 ? o.maxExact : maxExact;
+        }
         for (Double n : o.numbers) {
             if (numbers.size() < DISTINCT_CAP) {
                 numbers.add(n);
