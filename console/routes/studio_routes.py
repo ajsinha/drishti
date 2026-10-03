@@ -129,7 +129,7 @@ async def review(request: Request, id_: str):
         p = await request.app.state.backend.proposal(id_, ident(request))
     except BackendError as e:
         return render(request, "studio/reviews.html", status_code=e.status, proposals=[], status="pending", error=e)
-    return render(request, "studio/review.html", p=p, diff=sutra_diff.review(_against(p), p.get("text") or ""), error=None)
+    return render(request, "studio/review.html", p=p, diff=sutra_diff.review(await _compared(request, p), p.get("text") or ""), error=None)
 
 
 @router.post("/reviews/{id_}/{action}")
@@ -141,8 +141,25 @@ async def decide(request: Request, id_: str, action: str):
         await request.app.state.backend.decide(id_, action, ident(request), comment=form.get("comment", [""])[0][:500])
     except BackendError as e:
         p = await request.app.state.backend.proposal(id_, ident(request))
-        return render(request, "studio/review.html", status_code=e.status, p=p, diff=sutra_diff.review(_against(p), p.get("text") or ""), error=e)
+        return render(request, "studio/review.html", status_code=e.status, p=p, diff=sutra_diff.review(await _compared(request, p), p.get("text") or ""), error=e)
     return RedirectResponse(f"/studio/reviews/{id_}", status_code=303)
+
+
+async def _compared(request: Request, p: dict) -> str:
+    """What the review page shows a proposal against. Once approved, the live text IS the proposal, so a diff against it
+    is empty (UX-15): an approved change to a live version is shown against the text it was proposed on, and an approved
+    new version against the latest version before it."""
+    if p.get("status") != "approved":
+        return _against(p)
+    if p.get("baseText"):
+        return p["baseText"]
+    backend, who = request.app.state.backend, ident(request)
+    try:
+        known = next((x for x in await backend.sutras(who) if x.get("name") == p.get("name")), None)
+        earlier = max([v for v in (known or {}).get("versions", []) if v < int(p.get("version", 0))], default=None)
+        return await backend.sutra_source(p["name"], earlier, who) if earlier is not None else ""
+    except BackendError:
+        return ""
 
 
 def _against(p: dict) -> str:

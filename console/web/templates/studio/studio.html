@@ -20,6 +20,7 @@
 {% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
+<h1 class="visually-hidden">Sutra Studio</h1>
 <div class="studio" data-studio data-can-save="{{ 'true' if can_save else 'false' }}">
   <section class="studio-left">
     <header class="studio-bar">
