@@ -59,7 +59,7 @@ WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 # all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
@@ -160,7 +160,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core.servers import Servers, Switch
 
     catalogue = Servers(settings)
-    from routes import (admin_routes, api_routes, asof_routes, auth_routes, calc_routes, export_routes, help_routes, home_routes,
+    from routes import (admin_routes, api_routes, asof_routes, auth_routes, build_routes, calc_routes, export_routes, help_routes, home_routes,
                         layout_routes, monitor_routes, pivot_routes, report_routes, server_routes, studio_routes, terminal_routes,
                         workspace_routes)
 
@@ -220,6 +220,10 @@ def create_app(settings: Settings) -> FastAPI:
     examples_dir = Path(settings.get("studio.examples_dir", "../docs/guides/examples"))
     app.state.examples = Examples(examples_dir if examples_dir.is_absolute() else (console_dir / examples_dir).resolve(),
                                   str(settings.get("ui.studio_example", "") or ""))
+    from core import builder as screen_builder
+
+    app.state.builder_limits = screen_builder.Limits.from_settings(settings)
+    app.state.sample_sets = screen_builder.SampleSets(float(settings.get("builder.ttl_hours", 24)) * 3600)
     from core.asof import BusinessDates
 
     app.state.business_dates = BusinessDates()
@@ -249,6 +253,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(api_routes.router)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
+    app.include_router(build_routes.router)
     app.include_router(admin_routes.router)
     app.include_router(help_routes.router)
     app.include_router(workspace_routes.router)

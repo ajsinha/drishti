@@ -117,6 +117,23 @@ class FakeBackend:
     async def studio_settings(self, ident=None):
         return {"save": False}
 
+    builder_allowed = True
+    shaped = []                                   # the samples each builder_shape call was sent
+
+    async def builder_shape(self, samples, ident=None):
+        """The Screen Builder's shape of the samples: every top-level key of the first document, annotated."""
+        if not self.builder_allowed:
+            raise BackendError(403, "DRS-5002", f"{ident.user} is not a Sutra author")
+        self.shaped.append(samples)
+        keys = list(samples[0]["document"]) if isinstance(samples[0]["document"], dict) else []
+        props = {k: {"type": "string", "x-drishti": {"role": "id" if k.endswith("Id") else "dimension", "reason": "test"}} for k in keys}
+        paths = [{"path": "$." + k, "type": "string", "role": "id" if k.endswith("Id") else "dimension", "reason": "test", "presence": 1.0,
+                  "examples": [str(samples[0]["document"][k])], "files": [s["name"] for s in samples], "conflict": False, "masked": False} for k in keys]
+        return {"schema": {"$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "properties": props,
+                           "x-drishti": {"samples": len(samples)}},
+                "roles": {"$." + k: {"role": p["x-drishti"]["role"], "reason": "test", "kind": None} for k, p in props.items()},
+                "report": {"samples": len(samples), "files": [s["name"] for s in samples], "conflicts": [], "rare": [], "paths": paths}}
+
     async def inferred_from(self, kind, id_, name, document, ident=None):
         return f"sutra: {name}\nversion: 1\n# fields: {','.join(sorted(document))}\n"
 

@@ -16,6 +16,7 @@
 schema, preview against any entity or pasted JSON, read the Summary, start from inference, save (authors)."""
 from __future__ import annotations
 
+import json
 from urllib.parse import parse_qs
 
 from fastapi import APIRouter, Request
@@ -66,7 +67,7 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("")
-async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = ""):
+async def studio(request: Request, sutra: str | None = None, kind: str = "", id: str = "", example: str = "", build: str = ""):
     """Opens on the entity asked for, else on the first example entity of the user's packs (with a Sutra of its kind,
     unless a Sutra, or ``sutra=`` for a new one, is asked for), else empty with a hint: never on a sample of a pack that
     may not be installed (UX-05). ``example=`` opens a named example (its Sutra and its JSON, previewed against that JSON);
@@ -74,8 +75,14 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
     backend, me = request.app.state.backend, ident(request)
     sutras = await backend.sutras(me)
     examples = request.app.state.examples
-    ex = examples.get(example or (examples.default if not id.strip() and sutra is None and not kind else ""))
-    if ex:
+    ex = examples.get(example or (examples.default if not id.strip() and sutra is None and not kind and not build else ""))
+    kept = request.app.state.sample_sets.get(me.user) if build and not ex else None     # Screen Builder: its first sample, pasted
+    pasted = ""
+    first = kept.samples[0] if kept and kept.samples else None
+    if first:
+        kind, id = kind or str(request.app.state.settings.get("builder.studio_kind", "sample") or "sample"), first["name"]
+        pasted = json.dumps(first["document"], indent=2, ensure_ascii=False)
+    elif ex:
         kind, id = ex.kind, ex.name
     elif not id.strip():
         current = await packs(request)
@@ -100,7 +107,7 @@ async def studio(request: Request, sutra: str | None = None, kind: str = "", id:
         except BackendError:
             pending = 0
     return render(request, "studio/studio.html", sutras=sutras, source=source, picked=picked, ref_kind=kind, ref_id=id,
-                  sample_json=ex.json if ex else "", use_json=bool(ex), example_names=examples.names(),
+                  sample_json=ex.json if ex else pasted if first else "", use_json=bool(ex or first), example_names=examples.names(),
                   can_save=bool(settings.get("save")), review=bool(settings.get("review")), pending=pending)
 
 

@@ -1359,6 +1359,11 @@ read by both programs, so one set of variables configures both halves.
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that Studio (`/studio?example=<name>`, File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
 | `ui.studio_example` | `all-panels-showcase` | The example Studio opens on when no entity or Sutra is asked for. Blank, or a name that is not there: Studio opens on the first example entity of the user's packs, as before. |
+| `builder.max_samples` | `50` | Screen Builder shape extractor (`/build/shape`): files in one upload, and samples in all (a `.jsonl` line is one). Over it, the whole upload is refused (`413 DRS-5005`). Keep it at or under the server's `drishti.builder.max-samples`. |
+| `builder.max_file_mb` | `5` | Largest single file; a larger one is left out and reported, the rest are shaped. |
+| `builder.max_total_mb` | `25` | All files together; over it the upload is refused. |
+| `builder.ttl_hours` | `24` | How long a user's last uploaded set is kept, in the console's memory only, so a reload keeps it. Nothing is written to a store or a log. |
+| `builder.studio_kind` | `sample` | The kind **Open in Studio** previews the first sample as (a pasted document has no kind of its own). |
 
 `config/workspaces.yaml` holds the console's own starter workspaces (`templates`, none by default; packs add theirs)
 and `blank`, what a new workspace starts as (*New workspace* on `/w`): a `layout` (`2col`, `3col`, `2x2`, `1+2`) and one

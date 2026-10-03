@@ -1,0 +1,48 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Screen Builder pages (/build/...). Uses the console's tokens; nothing here sets a colour of its own. */
+.bs .pnl { margin-bottom: 1rem; }
+.bs-drop { display: flex; flex-direction: column; align-items: center; gap: .3rem; padding: 1.6rem 1rem; text-align: center; cursor: pointer;
+  border: 2px dashed var(--d-border); border-radius: var(--d-radius); color: var(--d-ink); }
+.bs-drop .bi { font-size: 1.8rem; color: var(--d-accent); }
+.bs-drop:hover, .bs-drop.over, .bs-drop:focus-within { border-color: var(--d-accent); background: var(--d-accent-tint); }
+.bs-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.bs-status { margin-top: .6rem; min-height: 1.3rem; color: var(--d-ink); }
+.bs-status.bad { color: var(--d-neg); }
+.bs-files { list-style: none; margin: .4rem 0 0; padding: 0; font-size: .85rem; }
+.bs-files li { padding: .15rem 0; }
+.bs-files .prob { color: var(--d-warn); }
+.bs-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.bs-h { font-size: 1rem; font-weight: 700; margin: 0 0 .5rem; }
+.bs-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: .4rem; }
+.bs-bar input { min-width: 16rem; }
+.bs-keys { font-size: .78rem; margin: 0 0 .4rem; }
+.bs-list { margin: 0 0 .8rem; padding-left: 1.1rem; font-size: .86rem; }
+.bs-tree, .bs-tree ul { list-style: none; margin: 0; padding: 0; }
+.bs-tree ul { margin-left: 1.15rem; border-left: 1px solid var(--d-border); }
+.bs-tree [role="treeitem"] { outline: none; }
+.bs-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem; padding: .22rem .4rem; border-radius: 4px; cursor: default; }
+.bs-tree [role="treeitem"]:focus > .bs-row { outline: 2px solid var(--d-accent); outline-offset: -2px; background: var(--d-highlight); }
+.bs-row:hover { background: var(--d-highlight); }
+.bs-twist { display: inline-block; width: 1rem; color: var(--d-muted); font-size: .75rem; }
+.bs-name { font-weight: 600; }
+.bs-type, .bs-pres, .bs-ex { color: var(--d-muted); font-size: .8rem; }
+.bs-ex { max-width: 40ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bs-pres.rare { color: var(--d-warn); }
+.bs-role { display: inline-block; border: 1px solid var(--d-border); border-radius: 999px; padding: 0 .5rem; font-size: .72rem; font-weight: 600; color: var(--d-accent); border-color: var(--d-accent); }
+.bs-role.conflict { color: var(--d-neg); border-color: var(--d-neg); }
+.bs-detail { margin: 0 0 .3rem 1.6rem; padding: .3rem .6rem; font-size: .82rem; border-left: 3px solid var(--d-accent); background: var(--d-surface); color: var(--d-ink); }
+.bs-detail div { margin: .1rem 0; }

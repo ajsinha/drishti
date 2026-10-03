@@ -1,0 +1,74 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+# Screen Builder · JSON files to a shape
+
+You have a folder of JSON documents (trades, shipments, patients, sensor readings) and want a screen for them. The
+**Screen Builder** gets you there in steps. This guide covers what works today, steps 1 and 2; the whole plan is in
+[the Screen Builder design](../../../docs/architecture/SCREEN_BUILDER.md).
+
+| Step | What it does | State |
+|---|---|---|
+| 1. Samples to shape | Merges up to 50 documents into one JSON Schema that says what every field *is*. | Works: `POST /api/v1/builder/shape` |
+| 2. Shape extractor page | The page for it: **Build → Screen Builder → Shape extractor** (`/build/shape`). | Works |
+| 3. Auto-design | A drafted Sutra from the shape. | Not yet: **Open in Studio** opens your first sample, and you write the Sutra |
+| 4 to 7 | Visual designer, check against every sample, save and export. | Planned |
+
+You need the **author** power, as for Sutra Studio. Nothing you upload is written to any store.
+
+## What a shape is
+
+A shape is a JSON Schema (draft 2020-12) of the whole set, plus Drishti's notes under `x-drishti`:
+
+- **Type and presence.** A field in every file is `required`; one in some files shows the share of files that have it
+  (`rare` below half). A field with different types in different files is a **conflict**.
+- **Role.** What the field is for, and the reason it was chosen: `id`, `link`, `measure`, `dimension`, `status`, `date`,
+  `series`, `ohlc`, `distribution`, `grid`, `steps`, `graph`, `tree`, `events`, `text`. The roles come from the same
+  rules that lay out a view with no Sutra, so they are explainable. Hover a role badge, or press Enter on a field, to
+  read why.
+
+## Walkthrough: three trades
+
+The examples under `docs/guides/examples/` are ready-made documents.
+
+1. Open **Build → Screen Builder → Shape extractor**.
+2. Choose `all-panels-showcase.json`, `pnl-explain.json` and `tree-table.json` (or drop them on the box). Each `.json`
+   file is one sample. A `.jsonl` file counts one sample per line.
+3. The line under the box says how many samples, paths, conflicts and rare fields there are. A file that is not valid
+   JSON, or is too big, is listed with its problem and the rest are used.
+4. **Look at these first** lists the conflicts and rare fields. Here most fields are rare: the three files are different
+   kinds of document, so a field is in one file out of three (33%). With files of one kind you would see few.
+5. In the **Schema** tree, use the arrow keys, or click, to open `sensitivities[]`: `bucket` is a `dimension`, `dv01` a
+   `measure`. `children` under `units[]` is a `tree`. Type `pnl` into the filter to narrow the tree.
+6. Take the result with you: **shape.json** (the schema with `x-drishti`), **JSON Schema** (annotations removed, for any
+   other tool), or **Copy schema**.
+7. **Open in Studio** opens Studio with your first file pasted as the sample document and *Preview against this JSON*
+   on. Press **Start from inference** for a first Sutra.
+
+## Limits and what is kept
+
+| Limit | Default | Setting |
+|---|---|---|
+| Samples in one upload (files, and lines of `.jsonl`) | 50 | `builder.max_samples` |
+| One file | 5 MB | `builder.max_file_mb` |
+| All files together | 25 MB | `builder.max_total_mb` |
+
+An upload over the first or last limit is refused as a whole, with the limit named; a file over the middle one is left
+out and reported. The server refuses the same sizes (`drishti.builder.*`, `413` `DRS-5005`).
+
+Your last set is kept in the console's memory for `builder.ttl_hours` (default 24), so a reload shows it again, and is
+then forgotten. **Forget files** clears it at once. It is never written to a store or a log; the console logs only counts.
+
+Everything above can be set by an administrator: see [Configuration](../../../docs/admin/CONFIGURATION.md).

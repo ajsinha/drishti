@@ -179,6 +179,10 @@ class BackendClient:
         where, q = entity_path(kind, id_)
         return await self._get(f"/studio/inferred/{where}", ident, name=name, **q)
 
+    async def builder_shape(self, samples: list, ident=None) -> dict:
+        """Screen Builder: the shape (schema, roles, report) of sample documents, ``[{name, document}]``."""
+        return await self._send("POST", "/builder/shape", ident, json={"samples": samples})
+
     async def rachana_schema(self, ident=None) -> dict:
         """The Rachana JSON Schema, generated from the grammar with this server's kinds, formats and functions."""
         return await self._get("/rachana/schema", ident)

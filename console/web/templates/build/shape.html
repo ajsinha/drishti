@@ -1,0 +1,73 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Shape extractor · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm bs" data-shape data-max-samples="{{ limits.maxSamples }}" data-max-file-mb="{{ limits.maxFileMb }}" data-max-total-mb="{{ limits.maxTotalMb }}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/studio">Sutra Studio</a> · <a href="/help/screen-builder">Screen Builder guide</a></nav>
+  <h1>Shape extractor</h1>
+  <p class="text-muted-d">Drop JSON files and see their <b>shape</b>: one JSON Schema that describes every file, with what each field
+    <i>is</i> (an id, a link, a measure, a series, a tree...), how often it appears and where the files disagree. Nothing is stored:
+    the files are held in this console for {{ '%g' % ttl_hours }} hours so a reload keeps them, then forgotten.</p>
+
+  <section class="pnl"><div class="pnl-b">
+    <label class="bs-drop" for="bsFiles" data-drop>
+      <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+      <span><b>Choose files</b> or drop them here</span>
+      <span class="text-muted-d">.json (one document) or .jsonl (one document per line) · up to {{ limits.maxSamples }} samples ·
+        {{ '%g' % limits.maxFileMb }} MB per file · {{ '%g' % limits.maxTotalMb }} MB in all</span>
+      <input id="bsFiles" class="bs-file" type="file" multiple accept=".json,.jsonl,application/json" data-files>
+    </label>
+    <div class="bs-status" role="status" aria-live="polite" data-status></div>
+    <ul class="bs-files" aria-label="Files" data-file-list hidden></ul>
+  </div></section>
+
+  <div data-result hidden>
+    <section class="pnl" aria-labelledby="bsActions"><div class="pnl-b bs-actions">
+      <h2 id="bsActions" class="visually-hidden">Actions</h2>
+      <a class="btn-pill btn-accent" href="/studio?build=1" data-studio-link title="Open the first sample as the document in Studio"><i class="bi bi-braces" aria-hidden="true"></i> Open in Studio</a>
+      <a class="btn-pill btn-ghost" href="/build/shape/download?kind=shape" download="shape.json" title="The schema with Drishti's x-drishti roles"><i class="bi bi-download" aria-hidden="true"></i> shape.json</a>
+      <a class="btn-pill btn-ghost" href="/build/shape/download?kind=schema" download="schema.json" title="Plain JSON Schema, annotations removed"><i class="bi bi-download" aria-hidden="true"></i> JSON Schema</a>
+      <button type="button" class="btn-pill btn-ghost" data-copy title="Copy the plain JSON Schema"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy schema</button>
+      <button type="button" class="btn-pill btn-ghost" data-forget title="Forget the uploaded files now"><i class="bi bi-trash" aria-hidden="true"></i> Forget files</button>
+    </div></section>
+
+    <section class="pnl" aria-labelledby="bsAttention" data-attention hidden><div class="pnl-b">
+      <h2 id="bsAttention" class="bs-h">Look at these first</h2>
+      <div data-conflicts></div>
+      <div data-rare></div>
+    </div></section>
+
+    <section class="pnl" aria-labelledby="bsTree"><div class="pnl-b">
+      <h2 id="bsTree" class="bs-h">Schema</h2>
+      <div class="bs-bar">
+        <label for="bsFilter" class="visually-hidden">Filter paths</label>
+        <input id="bsFilter" class="studio-in mono" type="search" placeholder="Filter paths, roles, types..." data-filter autocomplete="off">
+        <span class="text-muted-d" data-counts aria-live="polite"></span>
+        <button type="button" class="btn-pill btn-ghost" data-expand-all>Expand all</button>
+        <button type="button" class="btn-pill btn-ghost" data-collapse-all>Collapse all</button>
+      </div>
+      <p class="text-muted-d bs-keys">Arrow keys move, Right and Left open and close, Enter shows a field's reason, files and examples.</p>
+      <ul class="bs-tree" role="tree" aria-labelledby="bsTree" data-tree></ul>
+    </div></section>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/build-shape.js?v={{ ASSET_V }}"></script>{% endblock %}
