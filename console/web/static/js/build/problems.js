@@ -36,10 +36,12 @@
       var out = [];
       WB.model(store.state.yaml).panels.forEach(function (p) {
         var rows = typeof p.values.rows === 'string' ? p.values.rows.replace(/\[\]$/, '') : '';
-        (function walk(v) {
+        // `children:` names the list a tree row nests under itself: it is rare by nature (leaves have none), so it is not a finding
+        (function walk(v, key) {
+          if (key === 'children') { return; }
           if (typeof v === 'string') {
             (v.match(/[$@]\.[\w.\[\]'-]+/g) || []).forEach(function (m) { out.push({ panel: p.id, expr: m, path: m[0] === '@' ? (rows ? rows + '[].' + m.slice(2) : null) : m }); });
-          } else if (Array.isArray(v)) { v.forEach(walk); } else if (v && typeof v === 'object') { Object.keys(v).forEach(function (k) { walk(v[k]); }); }
+          } else if (Array.isArray(v)) { v.forEach(walk); } else if (v && typeof v === 'object') { Object.keys(v).forEach(function (k) { walk(v[k], k); }); }
         })(p.values);
       });
       return out;
