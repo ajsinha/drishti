@@ -116,6 +116,13 @@ class StrictSutraTest {
     }
 
     @Test
+    void aMarkdownPanelMayNameASourceButLinksAndProvenanceMayNot() {
+        assertThat(parser.parse(panel("{ id: a, kind: markdown, text: \"${$.x}\", source: \"link($.desk, 'desk')\" }"), "qa.sutra.yaml", "qa").panels())
+                .hasSize(1);
+        assertThat(problems(panel("{ id: a, kind: links, source: \"link($.desk, 'desk')\" }"))).isNotEmpty();
+    }
+
+    @Test
     void anOutOfRangeVersionIsAVersionProblemNotYamlSyntax() {
         for (String v : List.of("99999999999999999999", "3000000000")) {
             assertThat(problems(HEAD.replace("version: 1", "version: " + v) + "panels: []\n")).singleElement().satisfies(p -> {

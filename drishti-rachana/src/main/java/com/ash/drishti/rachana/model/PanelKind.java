@@ -80,11 +80,11 @@ public enum PanelKind {
 
     /**
      * Whether panels of this kind read the entity's data, and so may read a linked entity's instead ({@code source}):
-     * every kind but {@code links} and {@code provenance} (which describe the view) and {@code markdown} (whose text
-     * reads the view's own entity).
+     * every kind but {@code links} and {@code provenance} (which describe the view). A markdown panel reads data through
+     * the {@code ${...}} parts of its text, so it may name a source too.
      */
     public boolean readsData() {
-        return this != LINKS && this != PROVENANCE && this != MARKDOWN;
+        return this != LINKS && this != PROVENANCE;
     }
 
     public String id() {
