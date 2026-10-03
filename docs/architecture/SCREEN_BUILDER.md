@@ -96,7 +96,8 @@ Each document is walked once; the walks are merged into one tree of *path → ob
 | Present in some | optional, with `x-drishti.presence` = share of documents (0.25 = one in four) |
 | `null` in some | `type: [..., "null"]` |
 | Different types (number in some, text in others) | `oneOf` the types seen, flagged as a **conflict** in the report |
-| Object whose keys differ from document to document (ids as keys) | a map: `additionalProperties` with the merged value schema, not a record |
+| Integers beyond 2^53, huge decimals, NaN, infinities | `minimum`/`maximum` are written exactly (JSON integers of any size); a sample with a non-finite number carries no bound for it and the schema says so in `$comment` |
+| Object whose keys differ from document to document (ids as keys) | a map: `additionalProperties` with the merged value schema, not a record. Needs evidence that the keys are data: ids with a number in them (5 or more), dates or months (`2026-01-01`, `2026-01`), or 8 or more distinct keys that no document repeats, and values of one shape. Sparse optional sections (`rates`, `fx`, `credit`, each with its own fields) stay a record. It is a heuristic: a record of five keys `q1..q5` in one document is read as a map. |
 | Array | `items` = merge of every element of every document; `minItems`/`maxItems` seen |
 | Array of objects that contain an array of the same shape (`children`, `nodes`...) | a recursive `$ref` (a tree) |
 | Text with few distinct values (≤ 12, seen ≥ 3 times) | `enum` |
