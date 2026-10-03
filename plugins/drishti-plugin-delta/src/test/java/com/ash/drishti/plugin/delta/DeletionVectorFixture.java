@@ -23,7 +23,9 @@ import io.delta.kernel.data.Row;
 import io.delta.kernel.engine.Engine;
 import io.delta.kernel.engine.FileReadResult;
 import io.delta.kernel.internal.InternalScanFileUtils;
+import io.delta.kernel.internal.actions.DeletionVectorDescriptor;
 import io.delta.kernel.internal.deletionvectors.Base85Codec;
+import io.delta.kernel.internal.deletionvectors.DeletionVectorUtils;
 import io.delta.kernel.internal.util.Utils;
 import io.delta.kernel.types.StringType;
 import io.delta.kernel.types.StructType;
@@ -67,7 +69,14 @@ final class DeletionVectorFixture {
                         FileStatus fs = InternalScanFileUtils.getAddFileStatus(file);
                         long row = rowOf(engine, fs, id);
                         if (row >= 0) {
-                            return write(table, snapshot.getVersion() + 1, fs, date, row);
+                            DeletionVectorDescriptor old = InternalScanFileUtils.getDeletionVectorDescriptorFromRow(file);
+                            RoaringBitmap deleted = RoaringBitmap.bitmapOf((int) row);
+                            if (old != null) {                 // rows an earlier delete removed stay removed
+                                for (long r : DeletionVectorUtils.loadNewDvAndBitmap(engine, table.toString(), old)._2.toArray()) {
+                                    deleted.add((int) r);
+                                }
+                            }
+                            return write(table, snapshot.getVersion() + 1, fs, date, deleted, old);
                         }
                     }
                 }
@@ -92,8 +101,13 @@ final class DeletionVectorFixture {
         return -1;
     }
 
-    private static long write(Path table, long version, FileStatus file, String date, long row) throws Exception {
-        RoaringBitmap bitmap = RoaringBitmap.bitmapOf((int) row);
+    /**
+     * Commits {@code bitmap} as the file's deletion vector. The {@code remove} names the file's current vector
+     * ({@code old}, null when it has none): readers key a file by its path and vector, so a remove without it would
+     * leave the earlier (path, vector) live beside the new one and the file's rows would be read twice.
+     */
+    private static long write(Path table, long version, FileStatus file, String date, RoaringBitmap bitmap,
+            DeletionVectorDescriptor old) throws Exception {
         ByteBuffer data = ByteBuffer.allocate(4 + 8 + 4 + bitmap.serializedSizeInBytes()).order(ByteOrder.LITTLE_ENDIAN);
         data.putInt(1681511377).putLong(1).putInt(0);              // portable format: magic, one bitmap, its key
         bitmap.serialize(data);
@@ -117,11 +131,21 @@ final class DeletionVectorFixture {
                 "{\"protocol\":{\"minReaderVersion\":3,\"minWriterVersion\":7,\"readerFeatures\":[\"deletionVectors\"],"
                         + "\"writerFeatures\":[\"deletionVectors\"]}}",
                 "{\"remove\":{\"path\":\"" + rel + "\",\"deletionTimestamp\":" + now + ",\"dataChange\":true,\"extendedFileMetadata\":true,"
-                        + "\"partitionValues\":" + pv + ",\"size\":" + file.getSize() + "}}",
+                        + "\"partitionValues\":" + pv + ",\"size\":" + file.getSize() + vector(old) + "}}",
                 "{\"add\":{\"path\":\"" + rel + "\",\"partitionValues\":" + pv + ",\"size\":" + file.getSize() + ",\"modificationTime\":" + now
                         + ",\"dataChange\":true,\"deletionVector\":{\"storageType\":\"u\",\"pathOrInlineDv\":\"" + Base85Codec.encodeUUID(uuid)
-                        + "\",\"offset\":1,\"sizeInBytes\":" + bytes.length + ",\"cardinality\":1}}}") + "\n";
+                        + "\",\"offset\":1,\"sizeInBytes\":" + bytes.length + ",\"cardinality\":" + bitmap.getLongCardinality() + "}}}") + "\n";
         Files.writeString(table.resolve("_delta_log").resolve("%020d.json".formatted(version)), commit, StandardCharsets.UTF_8);
         return version;
+    }
+
+    /** The {@code deletionVector} field naming {@code dv} in an action, or nothing when there is none. */
+    private static String vector(DeletionVectorDescriptor dv) {
+        if (dv == null) {
+            return "";
+        }
+        return ",\"deletionVector\":{\"storageType\":\"" + dv.getStorageType() + "\",\"pathOrInlineDv\":\"" + dv.getPathOrInlineDv() + "\""
+                + dv.getOffset().map(o -> ",\"offset\":" + o).orElse("") + ",\"sizeInBytes\":" + dv.getSizeInBytes()
+                + ",\"cardinality\":" + dv.getCardinality() + "}";
     }
 }

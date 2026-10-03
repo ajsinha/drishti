@@ -304,7 +304,9 @@ the file); see [section 12](#12-limits-and-trade-offs).
 For each business day it is asked about, the connector builds an **id map**: every id of the day, sorted, each with the
 index of the file it is in. It reads only the `id` column of the day's files (a narrow column of short strings), never a
 document. A million ids take about 75 MB and well under a second to read. Id maps are kept by memory (`id-map-mb`,
-1024), so about a dozen recent days stay; an older day is read again when asked for.
+1024), so about a dozen recent days stay; an older day is read again when asked for. A file that carries a deletion
+vector is read through Kernel, which applies it: rows deleted in place are not in the id map, so type-ahead does not
+offer them.
 
 ### 6.3 Opening one entity
 
@@ -537,7 +539,8 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 - **Only promoted fields are fast.** A search on any other field reads documents, is limited to 20,000 of them and says
   `partial`. Promote what people search by.
 - **Deletion vectors switch columns off for a table.** A table whose files carry deletion vectors (rows deleted in place
-  by Databricks or Spark) is still read correctly for single entities, but searches and reverse lookups read documents.
+  by Databricks or Spark) is still read correctly for single entities and type-ahead, but searches and reverse lookups
+  read documents.
   Compaction (`OPTIMIZE`, or `maintain.py`) rewrites the files without them.
 - **Effective-mode tables** (a row only when an entity changes, used for reference data) are not read as columns: each
   entity's latest row on or before a date would have to be resolved across days. They are small, so documents serve.

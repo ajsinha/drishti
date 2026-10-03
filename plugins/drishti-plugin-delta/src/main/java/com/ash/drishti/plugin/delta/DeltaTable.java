@@ -55,9 +55,10 @@ final class DeltaTable {
      *
      * @param schema the table's columns (promoted ones beside id and doc)
      * @param deletionVectors true when a file carries a deletion vector (column reads then go through documents)
+     * @param idScanState the scan state for reading the id column alone, with deletion vectors applied
      */
     record Layout(long version, long timestamp, Row scanState, NavigableMap<LocalDate, List<Row>> files, StructType schema,
-            boolean deletionVectors) {}
+            boolean deletionVectors, Row idScanState) {}
 
     /** One business date's ids, sorted, each with the index of the file that holds it (in the date's file list). */
     record IdMap(String[] ids, int[] files) {
@@ -142,10 +143,15 @@ final class DeltaTable {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return Optional.of(new Layout(s.getVersion(), s.getTimestamp(engine), scan.getScanState(engine), byDate, s.getSchema(), dvs));
+        Row idScanState = s.getScanBuilder().withReadSchema(new StructType().add(idColumn, StringType.STRING)).build().getScanState(engine);
+        return Optional.of(new Layout(s.getVersion(), s.getTimestamp(engine), scan.getScanState(engine), byDate, s.getSchema(), dvs,
+                idScanState));
     }
 
-    /** The date's ids, read from the id column alone (no document is read), sorted, with the file each is in. */
+    /**
+     * The date's ids, read from the id column alone (no document is read), sorted, with the file each is in. A file
+     * with a deletion vector is read through Kernel so its deleted rows are left out (type-ahead must not offer them).
+     */
     IdMap ids(Layout layout, LocalDate date) {
         List<Row> files = layout.files().getOrDefault(date, List.of());
         List<String> ids = new ArrayList<>();
@@ -153,15 +159,23 @@ final class DeltaTable {
         StructType schema = new StructType().add(idColumn, StringType.STRING);
         for (int f = 0; f < files.size(); f++) {
             int file = f;
-            raw(files.get(f), schema, Optional.empty(), batch -> {
-                io.delta.kernel.data.ColumnVector v = batch.getColumnVector(0);
-                for (int r = 0; r < batch.getSize(); r++) {
-                    if (!v.isNullAt(r)) {
+            java.util.function.Consumer<FilteredColumnarBatch> sink = batch -> {
+                io.delta.kernel.data.ColumnVector v = batch.getData().getColumnVector(batch.getData().getSchema().indexOf(idColumn));
+                Optional<io.delta.kernel.data.ColumnVector> selected = batch.getSelectionVector();
+                for (int r = 0; r < batch.getData().getSize(); r++) {
+                    boolean live = selected.isEmpty() || (!selected.get().isNullAt(r) && selected.get().getBoolean(r));
+                    if (live && !v.isNullAt(r)) {
                         ids.add(v.getString(r));
                         fileOf.add(file);
                     }
                 }
-            });
+            };
+            Row fileRow = files.get(f);
+            if (InternalScanFileUtils.getDeletionVectorDescriptorFromRow(fileRow) == null) {
+                raw(fileRow, schema, Optional.empty(), batch -> sink.accept(new FilteredColumnarBatch(batch, Optional.empty())));
+            } else {
+                live(layout.idScanState(), fileRow, sink);
+            }
         }
         Integer[] order = new Integer[ids.size()];
         for (int i = 0; i < order.length; i++) {
@@ -287,6 +301,22 @@ final class DeltaTable {
         try (CloseableIterator<FileReadResult> raw = engine.getParquetHandler().readParquetFiles(Utils.singletonCloseableIterator(fs), schema, filter)) {
             while (raw.hasNext()) {
                 sink.accept(raw.next().getData());
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /** Reads a file's rows as the table holds them ({@code scanState}'s columns, deletion vectors applied). */
+    private void live(Row scanState, Row fileRow, java.util.function.Consumer<FilteredColumnarBatch> sink) {
+        StructType physical = ScanStateRow.getPhysicalDataReadSchema(scanState);
+        FileStatus fs = InternalScanFileUtils.getAddFileStatus(fileRow);
+        try (CloseableIterator<FileReadResult> raw = engine.getParquetHandler()
+                .readParquetFiles(Utils.singletonCloseableIterator(fs), physical, Optional.empty());
+             CloseableIterator<FilteredColumnarBatch> data = Scan.transformPhysicalData(engine, scanState, fileRow,
+                     raw.map(FileReadResult::getData))) {
+            while (data.hasNext()) {
+                sink.accept(data.next());
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
