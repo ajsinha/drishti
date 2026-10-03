@@ -63,10 +63,22 @@
   }
 
   // ---- waterfall: each step a bar from the running total before it to the one after; totals stand on zero --------------
-  function waterfall(d, t) {
+  // How the value labels fit: 'flat' when every label fits its step's column, 'up' (turned to read upward, with room made above
+  // the bars) when the columns are narrow but wide enough for a line of text, 'none' when not even that fits. Labels never overlap.
+  var CHAR_W = 6.4, LINE_H = 12, GRID_LEFT = 52, GRID_RIGHT = 12;
+  function labelFit(steps, size) {
+    var width = (size && size.width) || 800, height = (size && size.height) || 360;
+    var band = Math.max(1, (width - GRID_LEFT - GRID_RIGHT) / Math.max(1, steps.length));
+    var longest = steps.reduce(function (m, s) { return Math.max(m, String(s.text == null ? '' : s.text).length); }, 0) * CHAR_W;
+    if (band >= longest + 6) { return { mode: 'flat', top: 18 }; }
+    if (band >= LINE_H + 2 && longest + 10 <= height * 0.4) { return { mode: 'up', top: Math.ceil(longest) + 12 }; }
+    return { mode: 'none', top: 18 };
+  }
+
+  function waterfall(d, t, size) {
     var steps = d.steps || [], labels = steps.map(function (s) { return s.label; }), A = axis(t);
     var data = steps.map(function (s, i) { return { value: [i, s.from, s.to], step: s }; });
-    var many = steps.length > 6, range = {};
+    var many = steps.length > 6, range = {}, fit = labelFit(steps, size);
     // big totals beside small steps (yesterday's MTM, today's moves): start the axis near the steps, not at zero, and
     // let the totals run off the bottom (their labels carry the full figure)
     var ends = [];
@@ -75,7 +87,7 @@
     if (lo > 0 && hi - lo < 0.5 * hi) { range.min = Math.max(0, lo - (hi - lo) * 0.6); }
     else if (hi < 0 && hi - lo < 0.5 * -lo) { range.max = Math.min(0, hi + (hi - lo) * 0.6); }
     return {
-      animationDuration: 400, grid: { left: 52, right: 12, top: 18, bottom: many ? 58 : 26 },
+      animationDuration: 400, grid: { left: GRID_LEFT, right: GRID_RIGHT, top: fit.top, bottom: many ? 58 : 26 },
       tooltip: tooltip(t, { formatter: function (p) {
         var s = p.data && p.data.step;
         return s ? esc(s.label) + ': <b>' + esc(s.text) + '</b>' + (s.total ? '' : '<br>running total ' + esc(compact(s.to))) : '';
@@ -93,9 +105,12 @@
           var fill = s.tone ? tone(t, s.tone) : s.total ? t.muted : s.value < 0 ? t.bad : t.ok;
           var kids = [{ type: 'rect', shape: { x: a[0] - w / 2, y: top, width: w, height: Math.max(1, Math.abs(b[1] - a[1])) },
             style: { fill: fill } }];
-          if (steps.length <= 12) {
+          if (fit.mode === 'flat') {
             kids.push({ type: 'text', style: { text: s.text, x: a[0], y: top - 3, textAlign: 'center', textVerticalAlign: 'bottom',
               fill: t.muted, font: '10px ' + t.mono } });
+          } else if (fit.mode === 'up') {
+            kids.push({ type: 'text', x: a[0], y: top - 3, rotation: -Math.PI / 2, style: { text: s.text, x: 0, y: 0, textAlign: 'left',
+              textVerticalAlign: 'middle', fill: t.muted, font: '10px ' + t.mono } });
           }
           return { type: 'group', children: kids };
         } }]
@@ -277,6 +292,7 @@
   window.addEventListener('resize', function () {
     charts = charts.filter(function (c) { return !c.isDisposed(); });
     charts.forEach(function (c) { c.resize(); });
+    draw(document);                              // labels are fitted to the width: lay them out again
   });
-  window.drishtiCharts = { draw: draw, options: BUILD };   // options: the builders, for tests and tools
+  window.drishtiCharts = { draw: draw, options: BUILD, labelFit: labelFit };   // options: the builders, for tests and tools
 })();

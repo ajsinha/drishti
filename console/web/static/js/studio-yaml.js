@@ -99,6 +99,19 @@
     return out;
   }
 
+  /** How many flow collections ({ or [) a line leaves open, outside quotes (0 when balanced). */
+  function flowDepth(s) {
+    var d = 0, q = null;
+    for (var i = 0; i < s.length; i++) {
+      var c = s[i];
+      if (q) { if (c === '\\' && q === '"') { i++; } else if (c === q) { q = null; } continue; }
+      if ((c === '"' || c === "'") && (i === 0 || /[\s,[{:]/.test(s[i - 1]))) { q = c; }
+      else if ((c === '{' || c === '[') && (i === 0 || /[\s,[{:-]/.test(s[i - 1]))) { d++; }
+      else if ((c === '}' || c === ']') && d > 0) { d--; }
+    }
+    return d;
+  }
+
   // ---- the block structure, by indentation ---------------------------------------------------------------
   function parse(text) {
     var src = text.split('\n'), lines = [], tabs = [];
@@ -106,7 +119,18 @@
       var body = stripComment(src[n]).replace(/\s+$/, '');
       if (!body.trim() || /^(---|\.\.\.)\s*$/.test(body)) { continue; }
       if (/^[ ]*\t/.test(body)) { tabs.push(n); }              // YAML indents with spaces only: said as such, not as a missing colon
-      lines.push({ n: n, ind: body.length - body.replace(/^ +/, '').length, text: body });
+      var first = n, ind0 = body.length - body.replace(/^ +/, '').length;
+      // a flow collection that runs over several lines ({ id: x, kind: y,\n  rows: z }) is read as if it were on one: its
+      // continuation lines are joined to the line that opened it (their keys then report that line)
+      var open = flowDepth(body);
+      while (open > 0 && n + 1 < src.length) {
+        var nx = src[n + 1];
+        if (nx.trim() && nx.length - nx.replace(/^ +/, '').length <= ind0) { break; }   // half-typed: the next line is not a continuation
+        n++;
+        var more = stripComment(src[n]).replace(/\s+$/, '').trim();
+        if (more) { body += ' ' + more; open = flowDepth(body); }
+      }
+      lines.push({ n: first, ind: ind0, text: body });
     }
     var p = 0;
     function inlineValue(s, line, ch) {

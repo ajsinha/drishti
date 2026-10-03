@@ -204,4 +204,13 @@ class DesignOpenAccessTest {
         assertThat(mvc.perform(get(path).header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse()
                 .getContentAsString()).contains("3.93");
     }
+
+    @Test
+    void aSourceLinkToAnEntityNoStoreHoldsSaysNotFoundNotWaiting() throws Exception {
+        String missing = SOURCED.replace("USD-SOFR", "NOPE-1").replace("ns-sourced", "ns-missing");
+        JsonNode view = json(mvc.perform(post("/api/v1/studio/preview").header("Authorization", as("rita", "risk"))
+                .contentType(MediaType.APPLICATION_JSON).content(preview(missing, "sample", "{\"nettingSetId\":\"X-1\",\"trades\":2}")))
+                .andExpect(status().isOk()));
+        assertThat(view.toString()).contains("NOPE-1 not found").doesNotContain("waiting for");
+    }
 }

@@ -37,6 +37,7 @@ sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (
 
 TABS = 8                          # more than the six connections a browser allows a site over HTTP/1.1
 PANES = 4                         # a two-by-two workspace of live panes
+SETTLE_S = 20.0                   # how long a live condition (an election, a first frame) may take on a loaded machine
 PAGE_LOAD_S = 5.0                 # "promptly": a page load never waits for a live connection
 
 
@@ -142,12 +143,23 @@ def _open_channels(console_url) -> set | None:
 def _all_tick(targets, waiter) -> list[str]:
     """The tabs and panes that received no live update within a few seconds."""
     before = {name: _ticks(t) for name, t in targets}
-    deadline = time.monotonic() + 8
+    deadline = time.monotonic() + SETTLE_S
     stale = list(before)
     while stale and time.monotonic() < deadline:
-        waiter.wait_for_timeout(500)
+        waiter.wait_for_timeout(250)
         stale = [name for name, t in targets if _ticks(t) <= before[name]]
     return stale
+
+
+def _eventually(check, waiter, what: str):
+    """Polls ``check()`` until it returns a truthy value (returned), for up to SETTLE_S: waits on the condition, never on a guess."""
+    deadline = time.monotonic() + SETTLE_S
+    got = check()
+    while not got and time.monotonic() < deadline:
+        waiter.wait_for_timeout(100)
+        got = check()
+    assert got, f"timed out after {SETTLE_S:.0f} s waiting for {what}"
+    return got
 
 
 # Chromium has a SharedWorker; without one (Chrome on Android, say) the tabs elect a leader that holds the connection.
@@ -195,10 +207,13 @@ def test_many_live_tabs_and_a_live_workspace_leave_the_browser_free_and_all_keep
         assert stale == [], f"no live updates reached: {stale}"
 
         # over one live connection for the whole browser
-        kinds = {t.evaluate("() => window.DrishtiChannel.transport()") for t in tabs + [desk]} | {p.evaluate("() => window.DrishtiChannel.transport()") for p in panes}
-        assert kinds == ({"shared-worker"} if hub == "shared-worker" else {"leader", "follower"})
+        every = tabs + [desk] + panes
+        want = {"shared-worker"} if hub == "shared-worker" else {"leader", "follower"}
+        kinds = _eventually(lambda: (k := {t.evaluate("() => window.DrishtiChannel.transport()") for t in every}) == want and k, extra,
+                            f"the transports to settle as {sorted(want)}")
+        assert kinds == want
         if channels_before is not None:
-            assert len(_open_channels(console_url) - channels_before) == 1
+            _eventually(lambda: len(_open_channels(console_url) - channels_before) == 1, extra, "exactly one new live connection")
 
         if hub == "leader":
             # the tab holding the connection closes: another takes over, and the others keep ticking
@@ -208,7 +223,8 @@ def test_many_live_tabs_and_a_live_workspace_leave_the_browser_free_and_all_keep
             targets = [(n, t) for n, t in targets if t is not leader]
             stale = _all_tick(targets, extra)
             assert stale == [], f"no live updates after the leader closed: {stale}"
-            assert "leader" in {t.evaluate("() => window.DrishtiChannel.transport()") for t in tabs + [desk, extra]}
+            _eventually(lambda: "leader" in {t.evaluate("() => window.DrishtiChannel.transport()") for t in tabs + [desk, extra]}, extra,
+                        "another tab to take over as leader")
         desk.evaluate("() => fetch('/w/api/live-tabs-test/delete', {method: 'POST'})")
     finally:
         ctx.close()

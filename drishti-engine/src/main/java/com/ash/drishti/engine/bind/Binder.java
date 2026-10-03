@@ -375,7 +375,7 @@ public final class Binder {
         }
         EntityDocument d = c.linked().get(src.get());
         if (d == null) {
-            throw new IllegalStateException(c.pending().contains(src.get()) ? "waiting for " + src.get().id() : src.get().id() + " unavailable");
+            throw new IllegalStateException(c.pending().contains(src.get()) ? "waiting for " + src.get().id() : src.get().id() + " not found");
         }
         return new BindContext(c.doc(), c.layout(), c.fingerprint(), EvalContext.of(d.data(), formats), c.links(), c.linked(), c.pending(),
                 c.denied());
@@ -397,7 +397,7 @@ public final class Binder {
             }
             EntityDocument d = c.linked().get(src.get());
             if (d == null) {
-                throw new IllegalStateException(c.pending().contains(src.get()) ? "waiting for " + src.get().id() : src.get().id() + " unavailable");
+                throw new IllegalStateException(c.pending().contains(src.get()) ? "waiting for " + src.get().id() : src.get().id() + " not found");
             }
             data = EvalContext.of(d.data(), formats);
             source = linkView(src.get().kind(), src.get().id());

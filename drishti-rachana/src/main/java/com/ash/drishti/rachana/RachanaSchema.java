@@ -161,7 +161,10 @@ public final class RachanaSchema {
                     "description", "How many bins (default: the square root of the count, 5 to 40)");
         }
         if (k == PanelKind.TABLE && o.equals("limit")) {
-            return Map.of("type", "integer", "minimum", 1, "description", "Rows shown; the rest are counted in the more line");
+            // one schema serves every kind that has a "limit": a table's is a count, an area's an expression, so no type here
+            // (the table's rule, a whole number from 1, is kept by PanelOptions)
+            return Map.of("description", "Table: rows shown (a whole number from 1; the rest are counted in the more line). Area: a path or expression"
+                    + " for the limit line");
         }
         if ((k == PanelKind.KV || k == PanelKind.STATUS) && o.equals("fields") || k == PanelKind.AREA && o.equals("series")) {
             return Map.of("type", "array", "description", o.equals("series") ? "The series: { label, value, tone }" : "The fields: { label, bind, fmt, tone }");

@@ -209,6 +209,15 @@ public final class SourceRouter {
      * that failed or timed out are added to {@code failures} with why.
      */
     public Map<EntityRef, EntityDocument> fetchAll(Collection<EntityRef> refs, Duration budget, AsOf asOf, SourceFailures failures) {
+        return fetchAll(refs, budget, asOf, failures, new java.util.HashSet<>());
+    }
+
+    /**
+     * As above, and the refs that no source holds (as opposed to a source that failed or timed out) are added to
+     * {@code missing}, so a caller can say "not found" rather than "waiting for".
+     */
+    public Map<EntityRef, EntityDocument> fetchAll(Collection<EntityRef> refs, Duration budget, AsOf asOf, SourceFailures failures,
+            java.util.Set<EntityRef> missing) {
         Map<EntityRef, CompletableFuture<EntityDocument>> futures = new LinkedHashMap<>();
         refs.forEach(r -> futures.put(r, fetch(r, budget, asOf)));
         Map<EntityRef, EntityDocument> out = new LinkedHashMap<>();
@@ -220,6 +229,8 @@ public final class SourceRouter {
                 Throwable t = e instanceof CompletionException && e.getCause() != null ? e.getCause() : e;
                 if (t instanceof SourceFailure sf) {
                     failures.add(sf.source(), sf.reason());
+                } else if (t instanceof DrishtiException de && de.errorCode() == ErrorCode.ENTITY_NOT_FOUND) {
+                    missing.add(r);
                 }
             }
         });
