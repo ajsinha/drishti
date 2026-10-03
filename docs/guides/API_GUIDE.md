@@ -1276,7 +1276,6 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
 | DRS-5006 | 404 | design not found | no Build design with that id, or it belongs to someone else |
 | DRS-5007 | 409 | stale revision | an edit built on an older `rev` of a design than the server holds, or an undo or redo with nothing to move to |
-| DRS-5020–5024 | 200 (in `problems`) | operation refused | one operation of an edit could not be applied (malformed, no such panel, option not accepted, bad value, text not editable in place) |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
