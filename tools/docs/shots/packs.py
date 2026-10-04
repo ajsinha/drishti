@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # Project Drishti · Any data. Any domain. One grammar.
 #
 # Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
@@ -13,94 +12,57 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Screenshots of the pack developer guide (docs/guides/PACK_DEVELOPER_GUIDE.md) into docs/guides/img/packs/.
+"""The pictures of the pack developer guide (docs/guides/PACK_DEVELOPER_GUIDE.md), written to docs/guides/img/packs/.
 
-The guide's worked example is the help-desk pack, docs/guides/examples/pack/helpdesk. The pictures need a scratch server (:18996) and console
-(:17996) that load the QUICKSTART packs but NOT helpdesk, and that trust a registry holding a signed helpdesk-0.1.0.zip, so that the install
-picture is a real install:
+The worked example is the help-desk pack, docs/guides/examples/pack/helpdesk. The pictures need a scratch server and console that load the
+QUICKSTART packs but NOT helpdesk, and that trust a registry holding a signed helpdesk-0.1.0.zip, so that the install picture is a real
+install (the shared scratch server of tools/docs/screenshots.py has no registry). This module prepares and stops that setup itself:
 
-    tools/docs/shots/packs.py --serve        # builds that scratch setup in a temp folder, runs the pictures, stops what it started
-    tools/docs/shots/packs.py --base http://127.0.0.1:17996 --only 04   # against a setup you prepared yourself
-    tools/docs/shots/packs.py --list
+    console/.venv/bin/python tools/docs/shots/packs.py            # starts it on :18996/:17996, runs the pictures, stops it
+    console/.venv/bin/python tools/docs/screenshots.py --guide packs --base http://127.0.0.1:17996   # against a setup you prepared
 
-It never touches :18480 / :17480 (it refuses them). Playwright and the console venv are needed (console/.venv)."""
+It never touches :18480 / :17480. Installing changes the server, so run the pictures on a fresh setup (the first run does)."""
 from __future__ import annotations
 
-import argparse
-import json
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from shotlib import Ctx, listening, out_dir, register  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[3]
-OUT = ROOT / "docs" / "guides" / "img" / "packs"
 PACK = ROOT / "docs" / "guides" / "examples" / "pack" / "helpdesk"
 QUICKSTART = ["banking-core", "market-data", "trading", "market-risk", "counterparty-risk", "liquidity-risk", "climate-risk",
               "operational-risk", "retail-banking", "genomics", "politics-society", "economics"]
 LISTED = "market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics"
 SERVER_PORT, CONSOLE_PORT = 18996, 17996
-FORBIDDEN = {18480, 17480}
-SHOTS: list = []
-
-
-def shot(name: str):
-    def reg(fn):
-        SHOTS.append((name, fn))
-        return fn
-    return reg
-
-
-class Ctx:
-    def __init__(self, page, base):
-        self.page, self.base = page, base
-
-    def save(self, name, locator=None, clip=None):
-        OUT.mkdir(parents=True, exist_ok=True)
-        path = OUT / name
-        if locator is not None:
-            self.page.locator(locator).first.screenshot(path=str(path), type="jpeg", quality=84)
-        else:
-            self.page.screenshot(path=str(path), clip=clip, type="jpeg", quality=84)
-        print("  wrote", path.relative_to(ROOT))
-
-    def api(self, path, body):
-        r = self.page.request.post(self.base + path, data=json.dumps(body), headers={"Content-Type": "application/json"})
-        return r.json()
-
-    def until(self, js, seconds=90):
-        for _ in range(seconds * 10):
-            if self.page.evaluate(js):
-                return
-            self.page.wait_for_timeout(100)
-        raise TimeoutError("still false: " + js)
+shot = register("packs")
 
 
 def registry_section(c: Ctx, name: str):
     """The table under 'From the registry' (it is far below the fold, and wider than a phone)."""
     c.page.set_viewport_size({"width": 2600, "height": 900})     # wide enough for every column
+    c.page.evaluate("document.querySelectorAll('#registry ~ .tbl-wrap td').forEach(function (td) { td.style.whiteSpace = 'normal'; })")
     c.page.wait_for_timeout(500)
-    c.page.locator("#registry ~ .tbl-wrap").first.screenshot(path=str(OUT / name), type="jpeg", quality=84)
-    c.page.set_viewport_size({"width": 1700, "height": 900})
-    print("  wrote", (OUT / name).relative_to(ROOT))
+    c.page.locator("#registry ~ .tbl-wrap").first.screenshot(path=str(out_dir("packs") / name), type="jpeg", quality=84)
+    c.page.set_viewport_size({"width": 1440, "height": 900})
+    print("  wrote", (out_dir("packs") / name).relative_to(ROOT))
 
 
 @shot("01-admin-packs-registry.jpg")
 def admin_packs(c: Ctx):
-    OUT.mkdir(parents=True, exist_ok=True)
     c.page.goto(c.base + "/admin/packs")
     c.page.locator('[data-registry="install"]').first.wait_for(timeout=30000)
     registry_section(c, "01-admin-packs-registry.jpg")
 
 
-@shot("02-registry-installed.jpg")
+@shot("02-registry-installed.jpg", also=("02b-helpdesk-pack-row.jpg",))
 def registry_install(c: Ctx):
-    OUT.mkdir(parents=True, exist_ok=True)
     c.page.on("dialog", lambda d: d.accept())                   # "Install helpdesk 0.1.0? The server restarts in place"
     c.page.goto(c.base + "/admin/packs")
     c.page.locator('[data-registry="install"]').first.click()
@@ -116,15 +78,15 @@ def registry_install(c: Ctx):
     registry_section(c, "02-registry-installed.jpg")
     row = c.page.locator('tr[data-pack="helpdesk"]').first
     row.scroll_into_view_if_needed()
-    row.screenshot(path=str(OUT / "02b-helpdesk-pack-row.jpg"), type="jpeg", quality=84)
-    print("  wrote", (OUT / "02b-helpdesk-pack-row.jpg").relative_to(ROOT))
+    row.screenshot(path=str(out_dir("packs") / "02b-helpdesk-pack-row.jpg"), type="jpeg", quality=84)
+    print("  wrote", (out_dir("packs") / "02b-helpdesk-pack-row.jpg").relative_to(ROOT))
 
 
 @shot("03-pack-help-guide.jpg")
 def help_guide(c: Ctx):
     c.page.goto(c.base + "/help/helpdesk-pack")
     c.page.wait_for_timeout(800)
-    c.save("03-pack-help-guide.jpg", clip={"x": 0, "y": 0, "width": 1700, "height": 760})
+    c.save("03-pack-help-guide.jpg", clip={"x": 0, "y": 0, "width": 1440, "height": 760})
 
 
 @shot("04-ticket-view.jpg")
@@ -132,7 +94,7 @@ def ticket_view(c: Ctx):
     c.page.goto(c.base + "/v/ticket/TKT-1001")
     c.page.locator("[data-panel]").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(4000)                               # the links panel resolves its badges a moment later
-    c.save("04-ticket-view.jpg", clip={"x": 0, "y": 0, "width": 1700, "height": 620})
+    c.save("04-ticket-view.jpg", clip={"x": 0, "y": 0, "width": 1440, "height": 620})
 
 
 @shot("05-derived-load.jpg")
@@ -140,11 +102,12 @@ def derived_view(c: Ctx):
     c.page.goto(c.base + "/v/agent-load/AGT-07")
     c.page.locator("[data-panel]").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(1200)
-    c.save("05-derived-load.jpg", clip={"x": 0, "y": 0, "width": 1700, "height": 520})
+    c.save("05-derived-load.jpg", clip={"x": 0, "y": 0, "width": 1440, "height": 520})
 
 
 @shot("06-workbench-export.jpg")
 def workbench_export(c: Ctx):
+    c.page.set_viewport_size({"width": 1700, "height": 900})     # the Ship menu opens at the right edge
     sutra = (PACK / "sutras" / "ticket.v1.sutra.yaml").read_text(encoding="utf-8")
     d = c.api("/build/designs", {"name": "Ticket view", "kind": "ticket", "sutra": sutra})
     files = [{"name": p.name, "text": p.read_text(encoding="utf-8")} for p in sorted((PACK / "tests" / "ticket").glob("*.json"))]
@@ -157,16 +120,6 @@ def workbench_export(c: Ctx):
     c.save("06-workbench-export.jpg", clip={"x": 0, "y": 60, "width": 1700, "height": 470})
     c.page.keyboard.press("Escape")
     c.page.request.delete(f"{c.base}/build/designs/{d['id']}")
-
-
-def listening(port: int) -> bool:
-    try:
-        urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=2)
-        return True
-    except urllib.error.HTTPError:
-        return True
-    except OSError:
-        return False
 
 
 def serve(work: Path) -> list:
@@ -211,39 +164,12 @@ def serve(work: Path) -> list:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--base", default=f"http://127.0.0.1:{CONSOLE_PORT}")
-    ap.add_argument("--only", default="")
-    ap.add_argument("--list", action="store_true")
-    ap.add_argument("--serve", action="store_true", help="start the scratch server and console, and stop them afterwards")
-    a = ap.parse_args()
-    if a.list:
-        print("\n".join(n for n, _ in SHOTS))
-        return 0
-    if int(a.base.rsplit(":", 1)[-1]) in FORBIDDEN:
-        sys.exit(f"refusing {a.base}: pictures are made on the scratch console (:{CONSOLE_PORT}), never on the usual one")
-    from playwright.sync_api import sync_playwright
-
-    started, work = [], Path(tempfile.mkdtemp(prefix="drishti-packshots-"))
+    work = Path(tempfile.mkdtemp(prefix="drishti-packshots-"))
+    started = []
     try:
-        if a.serve:
-            started = serve(work)
-        failed = []
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            c = Ctx(browser.new_page(viewport={"width": 1700, "height": 900}), a.base)
-            for name, fn in SHOTS:
-                if a.only and not any(o and o in name for o in a.only.split(",")):
-                    continue
-                print(name)
-                try:
-                    fn(c)
-                except Exception as e:  # noqa: BLE001 - report every failed picture, keep going
-                    print("  failed:", str(e).splitlines()[0][:200])
-                    failed.append(name)
-            browser.close()
-        print("failed:", failed if failed else "none")
-        return 1 if failed else 0
+        started = serve(work)
+        return subprocess.call([sys.executable, str(ROOT / "tools" / "docs" / "screenshots.py"), "--guide", "packs",
+                                "--base", f"http://127.0.0.1:{CONSOLE_PORT}"])
     finally:
         for proc in started:
             proc.terminate()
