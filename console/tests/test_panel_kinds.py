@@ -101,7 +101,7 @@ def test_the_developer_guide_walks_through_metric_with_the_real_code():
         "drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java": "case METRIC -> metric(p, c);",
         "console/core/export.py": "if isinstance(d.get(\"value\"), dict):",
         "console/web/static/js/build/palette.js": "['metric', 'hash',",
-        "console/web/static/css/terminal.css": ".metric-v { font-size: 2.2rem;",
+        "console/web/static/css/terminal.css": ".metric-v { font-size: clamp(1.1rem, 16cqi, 2.2rem);",
         "drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java": '"sum", "delta");',
     }
     for path, snippet in sources.items():

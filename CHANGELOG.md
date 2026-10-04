@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Docs:** [PANEL_DEVELOPER_GUIDE.md](docs/guides/PANEL_DEVELOPER_GUIDE.md) (adding a panel kind end to end, worked through the real `metric` tile, with an ordered checklist and the guard tests) and [PANEL_KINDS.md](docs/guides/PANEL_KINDS.md) (the catalogue of all twenty-one kinds, where F1 lands) replace PANELS.md, the in-app panel-kinds guide and DEVELOPER_GUIDE §5.4; screenshots are generated per guide by `tools/docs/screenshots.py --guide <name>` (the unreproducible `static/img/guide/kind-*.png` are gone).
 - **Added:** `metric`, the 21st panel kind: a big-number KPI tile with one large formatted, toned figure (`value`, `label`, `fmt`, `tone`), an optional change beside it (`delta` with `deltaFmt` and `deltaTone`), a `unit` and a `caption`, and `source` like any panel; masked values show the mask, empty ones say so, it updates live, downloads as CSV, has an accessible name (`role=group`), a workbench palette entry (facts), inspector editors, an auto-design draft for a document's one headline measure and a suggestion for a single measure, and a `metric` example plus a tile in the all-panels showcase.
 
 ## 1.14.1 — LZ4 Delta tables, clean 413 for oversized requests, masking of copied values (2026-10-03)

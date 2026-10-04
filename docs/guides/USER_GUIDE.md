@@ -433,7 +433,7 @@ Panel kinds you will meet:
 | `links` | linked entities with badges | *Linked entities* everywhere |
 | `provenance` | how the view was built | *How this view was built* |
 
-The [panel kinds guide](../../console/web/guides/panel-kinds.md) shows each one in detail.
+The [panel kinds catalogue](PANEL_KINDS.md) shows each one in detail.
 
 **No data available.** A panel whose data is missing, or not in the expected shape, says *No data
 available*. The rest of the view still renders. Real feeds are often incomplete; this is normal.

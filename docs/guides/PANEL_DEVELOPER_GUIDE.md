@@ -439,14 +439,19 @@ Rules for a macro branch:
 `console/web/static/css/terminal.css`, next to `.gauge`:
 
 ```css
-.metric { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.metric { display: flex; flex-direction: column; gap: .15rem; min-width: 0; container-type: inline-size; }
 .metric-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .6rem; }
-.metric-v { font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: var(--d-ink); overflow-wrap: anywhere; }
+.metric-v { font-size: clamp(1.1rem, 16cqi, 2.2rem); font-weight: 600; line-height: 1.1; color: var(--d-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .metric-u { color: var(--d-muted); font-size: .9rem; }
 .metric-d { font-size: .9rem; color: var(--d-muted); }
 .metric-l, .metric-c { color: var(--d-muted); font-size: .8rem; }
-@media (max-width: 640px) { .metric-v { font-size: 1.8rem; } }
+@media (max-width: 640px) { .metric-v { font-size: clamp(1.1rem, 16cqi, 1.8rem); } }
 ```
+
+**A figure must never break inside.** The first version used `overflow-wrap: anywhere`, and a six-digit figure in a
+narrow workbench tile wrapped digit by digit. Now the tile is a size container (`container-type: inline-size`) and the
+figure keeps to one line (`white-space: nowrap`) while its size follows the tile's width (`16cqi`) between a readable
+minimum and the full size. `tabular-nums` keeps digits aligned when a live value ticks.
 
 Colours are **theme variables only** (`--d-ink`, `--d-muted`, `--d-pos`, ...): the themes carry the contrast, and
 `test_contrast.py` checks every theme's tokens. A hard-coded `#hex` in a kind's CSS is a bug in every theme but one.
