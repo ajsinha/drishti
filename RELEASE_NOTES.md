@@ -13,7 +13,27 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.14.0 — release notes
+# Drishti 1.14.1 — release notes
+
+*2026-10-03.* **LZ4 Delta tables, clean errors for oversized requests, and masking of copied values.**
+
+- **Delta Lake tables compressed with LZ4 or LZ4_RAW are read** by both engines (tables written by pyarrow, pandas,
+  delta-rs, Spark and Hadoop). The native engine decodes them; the Hadoop engine routes LZ4 files through the same
+  decoder (`lz4-via-native`, on by default). A corrupt page names its codec, table and file. See
+  [DELTA_CONNECTOR §16](docs/connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop).
+- **Oversized requests get a clear `413 DRS-5005`** naming the size and the limit (before, a very large upload ended in
+  a broken connection). Limits per path in `drishti.http.request-limits`; the console says "This file is too large: X MB;
+  the limit is Y MB".
+- **Masking of copied values (opt-in):** with `drishti.security.mask-copies: true`, a masked field's value is also hidden
+  where it is copied into other text of the same document ("Captured by •••"). Best effort: exact copies only; mask
+  free-text fields that carry sensitive values too (dotted `redact` paths), and keep sensitive values out of free text at
+  the source. The shipped configuration masks `lifecycle.timeline.description` along with the trader.
+- Passing builds no longer print an alarming LZ4 stack trace from a test that refuses an unsupported codec on purpose.
+
+**Upgrade notes:** none required. New settings: `drishti.http.request-limits.*`, `server.tomcat.max-swallow-size`
+(`DRISHTI_MAX_SWALLOW`), `drishti.security.mask-copies*`, Delta `lz4-decoder` and `lz4-via-native`.
+
+# Previous release: Drishti 1.14.0 — release notes
 
 *2026-10-03.* **The Build workbench: from JSON files to a working, reviewed screen in minutes; two rounds of adversarial QA closed.**
 
@@ -57,7 +77,7 @@
 - New settings are listed in [CONFIGURATION.md](docs/admin/CONFIGURATION.md) (`drishti.builder.*`, `drishti.panels.*`,
   `drishti.security.token-read-posts`, console `auth.*`, `live.*`, `ui.*`, `builder.*`).
 
-# Previous release: Drishti 1.13.0 — release notes
+# Older release: Drishti 1.13.0 — release notes
 
 *2026-10-01.* **A million trades a day, eight stores, Calc, pivots, twenty panel kinds and JDK 25.**
 

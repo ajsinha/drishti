@@ -16,6 +16,8 @@
 # Changelog
 
 ## Unreleased
+
+## 1.14.1 — LZ4 Delta tables, clean 413 for oversized requests, masking of copied values (2026-10-03)
 - **Added:** Delta: LZ4 and LZ4_RAW Parquet pages are read by both engines. The native engine decodes LZ4_RAW (one block) and the deprecated LZ4 codec the way Arrow does (Hadoop framing when the lengths add up exactly, else one raw block) with lz4-java's safe decoder (`lz4-decoder: fast` for the fastest available); the `hadoop` engine reads LZ4 files, which parquet-java's Hadoop codec cannot when Arrow or pyarrow wrote them, through the native decoder (a per-file footer check; `lz4-via-native: false` turns it off). An LZ4 table is `UP` and lists and searches normally; only BROTLI, LZO and pages that do not decode are `DEGRADED`, naming the table, file and codec. Tests use real delta-rs/pyarrow fixtures (`plugins/drishti-plugin-delta/src/test/resources/lake-codecs`) compared value by value with the uncompressed copy on both engines. Supersedes the DATA-13 advice to rewrite LZ4 dates.
 
 - Oversized builder requests get a clean `413` `DRS-5005` naming the size and the limit (declared or chunked, before the body is read; Tomcat drains a bounded remainder so there is no reset), the console says "This file is too large: X MB; the limit is Y MB"; new opt-in `drishti.security.mask-copies` scrubs exact copies of masked values inside other text of the same document, dotted `redact` entries mask by path, and the shipped setting also masks `lifecycle.timeline.description` (QA S2-08, S2-11).
