@@ -19,7 +19,7 @@ All twenty-one panel kinds on one screen, reading one self-contained bond trade.
 
 **Panel kinds:** `kv`, `status`, `waterfall`, `line`, `hbar`, `gauge`, `ladder`, `timeline`, `table`, `tabs`, `graph`, `area`, `pivot` (nested `by` list), `scatter`, `histogram`, `candlestick`, `surface`, `provenance`, `markdown`, `links`.
 
-**Open it:** in Studio choose **File → Open** and pick `all-panels-showcase.sutra.yaml` then `all-panels-showcase.json`, or open `/studio?example=all-panels-showcase`. Studio opens on this example when you start it.
+**Open it:** in the workbench, **Build → New → Examples** and pick `all-panels-showcase`: it opens as a copy (this Sutra, the JSON as samples, this note as notes) and a new scratch design opens on it by default. Or **File → Open** in the workbench with `all-panels-showcase.sutra.yaml` and `all-panels-showcase.json`.
 
 **What to look for:** the number in each panel title is its place in the list; the kind is named after it. The `links` panel resolves ids it finds in the document against the live reference catalogue, so it shows entries only where your packs know them.
 
