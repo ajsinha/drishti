@@ -8,7 +8,7 @@
 
 *Revision 1.1 · 2026-09-30 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
 
-**Where things stand.** Every wave in this plan is done. The current release is **1.14.1**
+**Where things stand.** Every wave in this plan is done. The current release is **1.15.0**
 ([CHANGELOG.md](../../CHANGELOG.md), [RELEASE_NOTES.md](../../RELEASE_NOTES.md)). The table below maps each release to
 the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) lists the work done since
 the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are
@@ -202,7 +202,7 @@ Work done after the last numbered wave, grouped by theme. Each item is in [CHANG
 
 ## Since 1.10
 
-Work after 1.14.1, in [CHANGELOG.md](../../CHANGELOG.md) under *Unreleased*.
+Work after 1.15.0, in [CHANGELOG.md](../../CHANGELOG.md) under *Unreleased*.
 
 | Theme | Delivered | Where to read |
 |---|---|---|
@@ -226,7 +226,7 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Roadmap
 
-Everything planned up to 1.14.1 is built (see the changelog). Next, in order:
+Everything planned up to 1.15.0 is built (see the changelog). Next, in order:
 
 | # | Item | What it delivers | Design |
 |---|---|---|---|

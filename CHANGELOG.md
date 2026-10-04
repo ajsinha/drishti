@@ -16,6 +16,8 @@
 # Changelog
 
 ## Unreleased
+
+## 1.15.0 — The metric KPI tile, five developer guides, documentation harmonised (2026-10-04)
 - **Docs:** [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md) replaces `RACHANA_GUIDE.md`, `SUTRA_CLI.md` and the in-app `sutra-guide.md`: anatomy, matching and priority, labels, paths, source, row groups, inference, testing and CI, the workbench, a checklist and the common mistakes with their codes; the old help addresses redirect.
 - **Docs:** [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) replaces `PLUGIN_GUIDE.md` and `CONNECTOR_GUIDE.md`: which connector, the `SourcePlugin` SPI, testing with the testkit contracts, a worked teaching plugin (`docs/guides/examples/connector/`, built and contract-tested, not shipped) and one short section per connector; each connector's walk-through and worked examples moved into its own `*_CONNECTOR.md`, de-duplicated.
 - **Docs:** [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) (build a pack end to end, with a help-desk pack) takes the developer half of `PACKS.md` and the in-app `build-a-pack` tutorial; `PACKS.md` keeps the user and admin content.

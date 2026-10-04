@@ -32,7 +32,7 @@ from core.backend import drs_advice, drs_message
 from core.config import Settings
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.14.1"
+ASSET_VERSION = "1.15.0"
 
 
 def asset_fingerprint() -> str:

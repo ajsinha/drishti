@@ -600,7 +600,7 @@ drishti:
     max-streams: 5000
 ```
 
-Or for one run: `java -jar drishti-server-1.14.1-exec.jar --drishti.live.frame=100ms`.
+Or for one run: `java -jar drishti-server-1.15.0-exec.jar --drishti.live.frame=100ms`.
 
 The console has one live setting, in `console/config/application.yaml`:
 
