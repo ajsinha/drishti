@@ -40,7 +40,7 @@ public record Bind(String panel, String path, String role) implements Op {
 
     /** Options that hold a path or field of the data (the others hold formats, labels and switches). */
     private static final Set<String> BINDABLE = Set.of("rows", "x", "y", "value", "label", "size", "group", "open", "high", "low", "close",
-            "volume", "date", "detail", "status", "tone", "by", "across", "nodes", "edges", "source", "each", "max", "total", "sum");
+            "volume", "date", "detail", "status", "tone", "by", "across", "nodes", "edges", "source", "each", "max", "total", "sum", "delta");
 
     @Override
     public String name() {

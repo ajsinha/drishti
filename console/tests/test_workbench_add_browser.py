@@ -87,10 +87,10 @@ def test_the_header_button_and_the_palette_add_from_the_yaml_tab(live_console, p
     assert settled_selection(page, "timeline")
 
 
-def test_the_palette_is_a_filterable_grid_of_all_twenty_kinds(live_console, page):
+def test_the_palette_is_a_filterable_grid_of_all_twenty_one_kinds(live_console, page):
     open_design(page, live_console, "palette", sutra=SUTRA, files={"t.json": SAMPLE})
     assert page.locator("#wbPalette").inner_text() == "Add a panel"
-    assert page.locator("[data-palette] .wb-kind").count() == 20
+    assert page.locator("[data-palette] .wb-kind").count() == 21
     page.get_by_label("Filter the panel kinds").fill("candle")
     assert page.locator("[data-palette] .wb-kind:not([hidden])").count() == 1
 

@@ -133,6 +133,14 @@ body.terminal { font-size: 14px; }
 .gauge .bf { height: 18px; background: var(--d-accent); }
 .gauge .mono { position: absolute; right: .4rem; top: 0; font-size: .8rem; }
 
+.metric { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.metric-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .6rem; }
+.metric-v { font-size: 2.2rem; font-weight: 600; line-height: 1.1; color: var(--d-ink); overflow-wrap: anywhere; }
+.metric-u { color: var(--d-muted); font-size: .9rem; }
+.metric-d { font-size: .9rem; color: var(--d-muted); }
+.metric-l, .metric-c { color: var(--d-muted); font-size: .8rem; }
+@media (max-width: 640px) { .metric-v { font-size: 1.8rem; } }
+
 /* ---- tones: always paired with a sign or glyph in the text ---- */
 .t-pos { color: var(--d-pos) !important; } .t-neg { color: var(--d-neg) !important; }
 .t-ok { color: var(--d-ok) !important; } .t-warn { color: var(--d-warn) !important; } .t-bad { color: var(--d-bad) !important; }

@@ -20,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The twenty panel kinds of the grammar. Each declares which options it requires and which it accepts,
+ * The twenty-one panel kinds of the grammar. Each declares which options it requires and which it accepts,
  * so the validator can reject a Sutra before it ever meets data.
  */
 public enum PanelKind {
@@ -55,7 +55,12 @@ public enum PanelKind {
     /** Dated events in order, each with a status tone and a short description. */
     TIMELINE(Set.of("rows"), Set.of("date", "label", "detail", "status", "tone")),
     /** A two-dimensional aggregate of the rows (by one field, across another) with totals and an optional heat scale. */
-    PIVOT(Set.of("rows", "by", "across"), Set.of("value", "agg", "fmt", "tone", "heat", "totals", "expand"));
+    PIVOT(Set.of("rows", "by", "across"), Set.of("value", "agg", "fmt", "tone", "heat", "totals", "expand")),
+    /**
+     * One large formatted, toned figure (a KPI tile), with an optional small change beside it ({@code delta}, with its own
+     * format and tone), a {@code unit} and a {@code caption} under it.
+     */
+    METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption"));
 
     private final Set<String> required;
     private final Set<String> optional;

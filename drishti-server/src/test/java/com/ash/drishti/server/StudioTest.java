@@ -121,7 +121,7 @@ class StudioTest {
         org.assertj.core.api.Assertions.assertThat(schema.path("required").toString()).contains("rachana", "sutra", "version", "match");
         org.assertj.core.api.Assertions.assertThat(schema.at("/properties/rachana/const").asInt()).isEqualTo(1);
         org.assertj.core.api.Assertions.assertThat(schema.at("/properties/match/properties/kind/enum").toString()).contains("trade");
-        org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/panel/properties/kind/enum")).hasSize(20);
+        org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/panel/properties/kind/enum")).hasSize(21);
         org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/column/properties/fmt/enum").toString()).contains("signed0", "date");
         org.assertj.core.api.Assertions.assertThat(schema.at("/$defs/panel/properties/colors/enum").toString()).isEqualTo("[\"gain-loss\",\"theme\"]");
         org.assertj.core.api.Assertions.assertThat(schema.path("x-rachana-functions").has("link")).isTrue();

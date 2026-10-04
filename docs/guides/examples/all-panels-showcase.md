@@ -15,7 +15,7 @@
 -->
 # All panels showcase
 
-All twenty panel kinds on one screen, reading one self-contained bond trade.
+All twenty-one panel kinds on one screen, reading one self-contained bond trade.
 
 **Panel kinds:** `kv`, `status`, `waterfall`, `line`, `hbar`, `gauge`, `ladder`, `timeline`, `table`, `tabs`, `graph`, `area`, `pivot` (nested `by` list), `scatter`, `histogram`, `candlestick`, `surface`, `provenance`, `markdown`, `links`.
 

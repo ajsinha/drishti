@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The palette: the 20 panel kinds of Rachana with an icon and one line each (what the panel shows and what it needs). A kind is
+/* The palette: the 21 panel kinds of Rachana with an icon and one line each (what the panel shows and what it needs). A kind is
  * dragged onto the canvas (the pointer drag of drag.js) or chosen from the "Add panel..." menu / the Add button on a row: all three
  * give AddPanel at the chosen place. The list is the language's, not a pack's; the kinds the server's schema knows are checked
  * against it when the schema arrives (a kind the schema has and this list lacks is still offered, with no icon text).
@@ -25,6 +25,7 @@
   'use strict';
   var WB = window.DrishtiWB = window.DrishtiWB || {};
   var KINDS = [
+    ['metric', 'hash', 'One big headline figure, with its change and unit', 'facts'],
     ['kv', 'list-ul', 'Labelled values: the key facts of the entity, one field per row', 'facts'],
     ['status', 'check2-circle', 'Statuses and flags, each coloured by its state', 'facts'],
     ['provenance', 'clock-history', 'Where the data came from: sources, times and versions', 'facts'],

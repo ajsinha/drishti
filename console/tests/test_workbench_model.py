@@ -45,7 +45,7 @@ def test_every_panel_of_every_example_is_read_including_multi_line_flow_maps():
         assert m["title"].get("id"), sutra.name
         assert want >= len(ids)
     showcase = model((EXAMPLES / "all-panels-showcase.sutra.yaml").read_text())
-    assert len(showcase["panels"]) == 21 and {p["kind"] for p in showcase["panels"]} >= {"waterfall", "kv", "pivot", "timeline"}
+    assert len(showcase["panels"]) == 22 and {p["kind"] for p in showcase["panels"]} >= {"waterfall", "kv", "pivot", "timeline"}
 
 
 def test_a_panel_written_over_several_lines_keeps_its_options_and_the_lines_after_it_keep_their_numbers():

@@ -16,7 +16,7 @@ rachana: 1
 sutra: all-panels-showcase
 version: 1
 description: >
-  All twenty panel kinds on one screen, each reading the self-contained bond trade in all-panels-showcase.json.
+  All twenty-one panel kinds on one screen, each reading the self-contained bond trade in all-panels-showcase.json.
   Copy the panel you need; the number in each title is the kind's place in this list.
 match: { kind: trade, where: "$.productType == 'GOVT_BOND'", priority: 1 }
 title:
@@ -117,3 +117,5 @@ panels:
     area: right
     text: "A ${lower($.direction)} ${$.currency} bond. Every panel reads the document in all-panels-showcase.json."
   - { id: refs, kind: links, title: "20 · links: linked entities", code: REFS, area: right, height: 10 }
+  - { id: headline, kind: metric, title: "21 · metric: mark to market (USD)", area: right, value: $.mtm, fmt: signed0, tone: sign,
+      label: Mark to market, unit: USD, delta: $.pnl1d, deltaFmt: signed0, caption: "change over the last day" }

@@ -127,7 +127,7 @@ class ExamplePreviewTest {
                 assertThat(error).as(name + " panel " + p.path("id").asText()).isEmpty();
             }
             if ("all-panels-showcase".equals(name)) {
-                assertThat(view.path("panels")).hasSize(21);
+                assertThat(view.path("panels")).hasSize(22);   // twenty-one kinds, the table twice
             }
             call("DELETE", "/api/v1/builder/designs/" + id, who, null).andExpect(status().isNoContent());
             assertThat(example(name, ".sutra.yaml") + example(name, ".json") + example(name, ".md")).as(name + " is unchanged").isEqualTo(before);

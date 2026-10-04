@@ -386,11 +386,11 @@ def test_every_example_opens_as_a_design_copy_and_previews_and_the_example_files
     assert app_client.post("/build/examples/..%2Fetc/open").status_code in (404, 422)
 
 
-def test_the_showcase_copy_previews_all_twenty_one_panels(app_client):
+def test_the_showcase_copy_previews_all_twenty_two_panels(app_client):
     opened = app_client.post("/build/examples/all-panels-showcase/open").json()
     assert "(copy)" in app_client.get("/build").text
     html = app_client.get(f"/build/designs/{opened['id']}/preview").json()["previewHtml"]
-    assert html.count('data-panel="') == 21 and "did not have the shape" not in html
+    assert html.count('data-panel="') == 22 and "did not have the shape" not in html
 
 
 def test_a_get_to_studio_creates_nothing_and_only_the_confirmed_post_does(app_client, backend):

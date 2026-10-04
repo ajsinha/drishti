@@ -49,7 +49,7 @@ def test_every_option_of_every_kind_in_the_schema_has_a_labelled_editor(live_con
     open_design(page, live_console, "every option", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
     kinds = kinds_of(page, live_console)
     ids = {p["kind"]: p["id"] for p in yaml.safe_load(showcase_sutra())["panels"]}
-    assert set(ids) == set(kinds) and len(kinds) == 20
+    assert set(ids) == set(kinds) and len(kinds) == 21
     missing = []
     for kind, then in kinds.items():
         pick(page, ids[kind])

@@ -75,7 +75,7 @@ def test_new_examples_showcase_opens_a_design_page_with_all_21_panels(console_ur
     page.locator('[data-example="all-panels-showcase"]').click()
     page.wait_for_url("**/build/d/*")
     page.locator("[data-preview] [data-panel]").first.wait_for()
-    assert page.locator("[data-preview] [data-panel]").count() == 21
+    assert page.locator("[data-preview] [data-panel]").count() == 22
     assert "sutra: all-panels-showcase" in page.evaluate("window.drishtiWorkbench.store.state.yaml")
     assert page.locator("[data-sample]").count() == 1 and "all-panels-showcase.json" in page.locator("[data-samples]").inner_text()
     assert "(copy)" in page.locator("h1").inner_text()

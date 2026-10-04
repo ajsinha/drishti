@@ -103,7 +103,7 @@
     }
     function focusSel() { var e = regionEl(sel); if (e) { e.focus({ preventScroll: true }); } }
 
-    /** An empty design: one large way in (the chooser of the 20 kinds). */
+    /** An empty design: one large way in (the chooser of the 21 kinds). */
     function callToAction() {
       var wrap = WB.el('div', 'wb-first'), none = !WB.model(store.state.yaml).panels.length;
       if (!none) { wrap.hidden = true; return wrap; }
