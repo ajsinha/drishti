@@ -1,0 +1,16 @@
+{
+  "ticketId": "TKT-1001",
+  "subject": "Cannot sign in",
+  "status": "Open",
+  "priority": "High",
+  "assignee": "AGT-07",
+  "client": "CLI-ACME",
+  "clientName": "Acme Freight Ltd",
+  "ageHours": 30,
+  "history": [
+    { "date": "2026-09-28", "event": "Opened by client" },
+    { "date": "2026-09-29", "event": "Assigned to AGT-07" },
+    { "date": "2026-09-30", "event": "Client replied" }
+  ],
+  "_meta": { "source": "helpdesk", "generation": 1, "live": true, "walk": { "ageHours": 1 } }
+}

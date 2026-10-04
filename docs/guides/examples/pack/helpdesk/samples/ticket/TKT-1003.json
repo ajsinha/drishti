@@ -1,0 +1,12 @@
+{
+  "ticketId": "TKT-1003",
+  "subject": "Export fails on large files",
+  "status": "Closed",
+  "priority": "Low",
+  "assignee": "AGT-07",
+  "client": "CLI-ACME",
+  "clientName": "Acme Freight Ltd",
+  "ageHours": 52,
+  "history": [ { "date": "2026-09-26", "event": "Opened by client" }, { "date": "2026-09-28", "event": "Closed: fixed in 4.2" } ],
+  "_meta": { "source": "helpdesk", "generation": 1, "live": false }
+}
