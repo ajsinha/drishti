@@ -359,3 +359,168 @@ The connector's tests (`QueryModeTest`) run this shape against an in-memory data
 | type-ahead, searches, reverse | with `ids`, `columns`, `reverse` queries | built in |
 | history for years | your tables' design | monthly partitions, retention by dropping months |
 | best for | an existing database you read, kinds of up to hundreds of thousands a day | a store loaded for Drishti, a million entities a day |
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+A kind can have several queries: the entity, its parts from other tables (`query.<kind>.<part>`), its ids for
+type-ahead (`ids.<kind>`), a day's fields for searches (`columns.<kind>`) and its reverse lookups (`reverse.<kind>`).
+[JDBC_QUERIES.md](JDBC_QUERIES.md) explains each in full; this chapter starts with the first.
+
+#### The situation
+
+Your trades live in a PostgreSQL table `desk.trades`, one row per trade per business date. You want `TRD <id>` to
+read them, with history, without changing the schema.
+
+#### The data
+
+```sql
+CREATE SCHEMA IF NOT EXISTS desk;
+CREATE TABLE desk.trades (
+  trade_id      text           NOT NULL,
+  business_date date           NOT NULL,
+  product       text,
+  counterparty  text,
+  notional      numeric(18,0),
+  mtm           numeric(18,2),
+  currency      text,
+  PRIMARY KEY (trade_id, business_date)
+);
+INSERT INTO desk.trades VALUES
+  ('MX-21770001', '2026-09-29', 'IRS', 'CP-ALDERSHOT', 50000000, 412300.00, 'USD'),
+  ('MX-21770001', '2026-09-30', 'IRS', 'CP-ALDERSHOT', 50000000, 398150.00, 'USD');
+```
+
+#### Configure it
+
+You write one SQL statement per kind under `query.<kind>`. Use `:id` for the entity id and `:asOf` for the business
+date (a SQL `DATE`); each may appear several times. (A statement with a single `?` also works, bound to the id.)
+A connector whose statement uses `:asOf` is **dated**: picked dates are passed to it, and on Live it receives the
+current date.
+
+**Site form:**
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      desk-db:
+        plugin: jdbc
+        kinds: [trade]                                       # optional: the query.* kinds are what it serves anyway
+        settings:
+          url: ${DESK_DB_URL:jdbc:postgresql://db.bank.example:5432/desk}
+          user: ${DESK_DB_USER:}                             # credentials from the environment, never in the file
+          password: ${DESK_DB_PASSWORD:}
+          pool-size: 4                                       # connections, each opened on first use
+          # the newest row on or before the date asked
+          query.trade: >-
+            SELECT trade_id, business_date, product, counterparty, notional, mtm, currency
+            FROM desk.trades
+            WHERE trade_id = :id
+              AND business_date = (SELECT MAX(business_date) FROM desk.trades
+                                   WHERE trade_id = :id AND business_date <= :asOf)
+```
+
+**Pack form** (the statement on one line, or as a YAML block scalar, as above):
+
+```yaml
+connectors:
+  desk-db:
+    plugin: jdbc
+    kinds: [trade]
+    settings:
+      url: ${DESK_DB_URL:jdbc:postgresql://localhost:5432/drishti}
+      user: ${DESK_DB_USER:drishti}
+      password: ${DESK_DB_PASSWORD:drishti}
+      pool-size: 4
+      query.trade: >-
+        SELECT trade_id, business_date, product, counterparty, notional, mtm, currency FROM desk.trades
+        WHERE trade_id = :id AND business_date = (SELECT MAX(business_date) FROM desk.trades
+        WHERE trade_id = :id AND business_date <= :asOf)
+```
+
+**How rows become documents.** The first row is the document. Each column becomes a field in camel case
+(`trade_id` → `tradeId`); a `NUMERIC` value without decimals becomes an integer, others a decimal number; `DATE`
+becomes `2026-09-30`, `TIMESTAMP` an ISO instant. Three column names are special:
+
+| Column | Effect |
+|---|---|
+| `json` | its text is the whole document (`SELECT doc::text AS json FROM …`); other columns are ignored for the content |
+| `generation` (a number) | the version shown in provenance; otherwise the read time |
+| `business_date` (a `DATE`) | the date the row is for (provenance), also added as `businessDate` |
+
+**JSON inside a row.** A column of type `json` or `jsonb` becomes nested data under its field name, so a trade with
+its legs in one column reads as `legs[0].rate` in a Sutra. JSON kept in a text column needs naming:
+
+```yaml
+settings:
+  query.trade: SELECT trade_id, notional, legs, extras FROM desk.trades WHERE trade_id = :id
+  json-columns: extras            # a TEXT/VARCHAR column holding JSON; `legs` is jsonb and needs no listing
+```
+
+A cell that is not valid JSON stays as text, so one bad row never fails the view.
+
+A statement for documents already stored as JSON:
+
+```yaml
+query.counterparty: SELECT doc::text AS json FROM desk.counterparties WHERE cpty_id = ?
+```
+
+The PostgreSQL driver ships with the server. For another database (Oracle, SQL Server, …) put its driver jar on the
+class path or in the plugin folder (`DRISHTI_PLUGIN_DIR`).
+
+#### Try it
+
+```bash
+docker compose -f deploy/compose.data.yaml up -d postgres          # user, password and database: drishti
+docker compose -f deploy/compose.data.yaml exec -T postgres psql -U drishti -d drishti < desk.sql   # the SQL above
+DESK_DB_URL=jdbc:postgresql://localhost:5432/drishti DESK_DB_USER=drishti DESK_DB_PASSWORD=drishti \
+  java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+```bash
+curl -s "http://localhost:18480/api/v1/entities/trade/MX-21770001/raw?asOf=2026-09-30" | jq -c '{provenance, data}'
+```
+
+You should see (real output; the generation is the read time):
+
+```json
+{"provenance":{"source":"desk-db","generation":1790828309088,"fetchedAt":"2026-10-01T04:18:29.093601107Z","live":false,"businessDate":"2026-09-30"},
+ "data":{"tradeId":"MX-21770001","businessDate":"2026-09-30","product":"IRS","counterparty":"CP-ALDERSHOT",
+         "notional":50000000,"mtm":398150.0,"currency":"USD"}}
+```
+
+#### In the terminal
+
+`TRD MX-21770001 <GO>`. Pick 29 September: `mtm` is `412,300`. The `counterparty` value `CP-ALDERSHOT` is a link
+(Drishti recognises the id), so the counterparty opens with a click. The type-ahead does not offer `MX-21770001` (query
+mode cannot search); users type the id.
+
+#### Health, and when the database goes down
+
+`health` is `UP`, `DOWN: not started`, or `DOWN: <driver message> (reconnecting)` after a failed read. The
+connector starts even when the database is down: each pooled connection is opened on first use and reopened when
+broken. While the database is down, reads fail with `DRS-1003 desk-db failed reading trade/MX-21770001` and health reads
+(real output):
+
+```text
+DOWN: Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections. (reconnecting)
+```
+
+`reads.lastError` in admin health carries the same message with the exception's name (`PSQLException: …`). When the
+database is back, the next read reconnects and health returns to `UP`.
+
+#### Common errors
+
+| You see | Cause | Fix |
+|---|---|---|
+| the connector is missing from `/sources` (and not under `failures`); the log says `source plugin desk-db is installed but not configured (jdbc needs settings.url); it stays idle` | `url` empty (an unset variable with an empty default) | export the variable, or give a default |
+| `DRS-1003 … failed reading`, health `DOWN: <driver message> (reconnecting)`, `reads.lastError` `PSQLException: …` | SQL error, wrong credentials, unreachable host | run the statement in `psql` with the id and date substituted |
+| `No suitable driver` | the database's driver is not on the class path | put the jar in `DRISHTI_PLUGIN_DIR` |
+| a picked date shows the latest data | the statement does not use `:asOf` | add the `business_date <= :asOf` condition |
+| fields named `TRADE_ID` | — | they are converted: `TRADE_ID` and `trade_id` both become `tradeId` |

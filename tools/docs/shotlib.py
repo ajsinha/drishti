@@ -29,7 +29,8 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
 PACKS = "market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics"
-SERVER_PORT, CONSOLE_PORT = 18997, 17997
+SERVER_PORT = int(os.environ.get("DRISHTI_SHOTS_SERVER_PORT", 18997))      # the scratch ports; override when another run holds them
+CONSOLE_PORT = int(os.environ.get("DRISHTI_SHOTS_CONSOLE_PORT", 17997))
 FORBIDDEN = {18480, 17480}
 SHOTS: list = []             # (guide, file name, function, also: file names the same function writes)
 OUTDIRS: dict = {}           # guide -> output directory (default docs/guides/img/<guide>)

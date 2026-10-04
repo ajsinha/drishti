@@ -63,6 +63,7 @@
     <module>plugins/drishti-plugin-activemq</module>
     <module>plugins/drishti-plugin-rabbitmq</module>
     <module>plugins/drishti-plugin-s3</module>
+    <module>docs/guides/examples/connector</module>
     <module>drishti-server</module>
     <module>drishti-it</module>
     <module>drishti-benchmarks</module>

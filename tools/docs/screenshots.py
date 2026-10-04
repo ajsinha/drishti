@@ -71,7 +71,9 @@ def main() -> int:
     started, work = [], Path(tempfile.mkdtemp(prefix="drishti-shots-"))
     try:
         if not listening(port):
-            started = start_servers(work)
+            # a guide that needs its own scratch server (its own plugins and configuration) supplies start_servers(work)
+            own = getattr(sys.modules.get(a.guide), "start_servers", None) if a.guide else None
+            started = (own or start_servers)(work)
         failed = []
         with sync_playwright() as p:
             browser = p.chromium.launch()

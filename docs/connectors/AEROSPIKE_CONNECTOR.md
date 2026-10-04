@@ -22,7 +22,7 @@ replaced the old one, what the connector reads for each question, the loader, re
 limits.
 
 Read it if you run Drishti on Aerospike, load Aerospike for Drishti, or change the connector. For a first setup see
-[CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#9-a-key-value-store-aerospike); every setting is in
+[the walk-through at the end of this document](#walk-through-step-by-step); every setting is in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#aerospike). The same design for Delta Lake is in
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md); the two share the engine side (columns, searches, derived kinds, impact), which
 is explained there in [section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns).
@@ -454,3 +454,282 @@ On an Aerospike connector (`drishti.sources.connectors.<name>.settings`):
 4. Put a Delta Lake connector behind it for the full seven years, with the same layout.
 5. Give the server at least 8 GB of heap per million entities a day.
 6. Check Admin → Health, then measure on your data (`elapsedMs`, `scanned` and `partial` of a search).
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+#### The situation
+
+Your platform keeps entity data in Aerospike, a book of up to millions of entities a day kept for years. Each data
+domain has three sets in one namespace: a record per entity per business date, an index record per entity listing
+its dates, and a small record per kind listing the kind's dates. A dated read is two key lookups. The scaling design,
+with measured numbers, is in [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
+
+#### The data
+
+The three record types, for the trade `MX-20000001` on 30 September 2026 in the `trading` domain:
+
+```text
+namespace test · set trading · key "trade/MX-20000001/20260930"       one record per entity per business date
+  kind            = "trade"
+  id              = "MX-20000001"
+  date            = 20260930                                           yyyyMMdd, a number
+  doc             = "{\"tradeId\": \"MX-20000001\", \"sourceSystem\": \"Murex\", …, \"mtm\": 1875863, …}"
+  mtm             = 1875863.0                                          promoted fields (layout.trade.columns)
+  book            = "BOOK-RATES-3"
+  desk            = "DESK-RATES"
+  counterparty_id = "CP-MERIDIAN-RE"
+  counterpar_f5fe = "Meridian Reinsurance Ltd"                         counterparty.name: longer than 15 characters
+  nettingSet      = "NS-MERIDIAN-RE-NY"
+  risk_dv01       = -155245.0
+  …                                                                    one bin per promoted field
+
+namespace test · set trading_ix · key "trade/MX-20000001"              one index record per entity
+  kind  = "trade"
+  id    = "MX-20000001"
+  dates = [20260917, 20260918, 20260921, …, 20260929, 20260930]        sorted
+
+namespace test · set trading_kinds · key "trade"                       one record per kind
+  kind  = "trade"
+  dates = [20260917, 20260918, …, 20260930]                            the dates the kind has
+```
+
+`doc` is the day's JSON document as text. The promoted bins are the fields the pack lists under
+`layout.<kind>.columns` (the trading pack promotes 19 trade fields, from `tradeId` to `sourceSystem`): numbers are
+stored as doubles, everything else as text. Aerospike bin names are at most 15 characters, so a promoted path is
+named by its path with dots as underscores (`counterparty.id` is `counterparty_id`); a longer name is cut to its
+first 10 characters, an underscore and the first 4 hex digits of the SHA-1 of the path (`counterparty.name` is
+`counterpar_f5fe`). A field named `kind`, `id`, `date`, `doc` or `dates` gets the hashed form too. Writers and the
+connector share this rule (`AerospikeLayout.bin`); compute the name of any path with
+`python3 -c "import hashlib;print(hashlib.sha1(b'counterparty.name').hexdigest()[:4])"`.
+
+#### How it reads
+
+The connector runs at most two of these day scans at a time; a further one waits for one of them to finish.
+
+#### Configure it
+
+**Site form, through the `aerospike` profile.** `application-aerospike.yaml` points the banking packs' stores at
+Aerospike, naming only the plugin, hosts and namespace. The pack's other settings stay: its `domain` becomes the set
+and its `layout` the promoted bins:
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      trading-store:
+        plugin: aerospike                                     # replaces the pack's "delta"
+        settings:
+          hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}"  # host:port, comma-separated
+          namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}"
+          # set: not given, so the pack's domain (trading) is the set
+          # layout: the pack's layout.trade.columns are the promoted bins
+```
+
+**Pack form:**
+
+```yaml
+connectors:
+  trading-store:
+    plugin: aerospike
+    kinds: [trade]
+    settings:
+      hosts: ${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}
+      namespace: ${DRISHTI_AEROSPIKE_NAMESPACE:test}
+      set: trading                 # the domain: sets trading, trading_ix and trading_kinds
+      layout:
+        trade:
+          columns: [tradeId, mtm, book, desk, counterparty.id, counterparty.name, nettingSet, risk.dv01]
+      refresh-seconds: 60          # re-read the kinds' dates and the ids
+      scan-threads: 8              # partition ranges scanned at once for a day's promoted bins
+      columns-cache-mb: 1024       # memory for days of promoted bins
+      columns-seconds: 300         # a day's bins are read again after this
+      # user: ${AS_USER}            # security-enabled clusters
+      # password: ${AS_PASSWORD}
+routes:
+  trade: trading-store
+```
+
+| Setting | Default | What it does |
+|---|---|---|
+| `hosts` | `localhost:3000` | Seed hosts, `host:port`, comma-separated. |
+| `namespace` | `test` | The namespace. |
+| `set` | the `domain` setting, else `drishti` | The domain's set; the index and kinds sets are `<set>_ix` and `<set>_kinds`. |
+| `kinds` | what the kinds set lists | Kinds served; a read of another kind finds nothing. |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective` (above). |
+| `lookback-days` | `10` | How far back a `snapshot` kind looks for its newest date. |
+| `refresh-seconds` | `60` | How often the kinds' dates and the ids are re-read. |
+| `layout.<kind>.columns` | none | The promoted fields; must match what the loader wrote. |
+| `scan-threads` | `8` | Partition ranges scanned at once when a day's bins or documents are scanned. |
+| `columns-cache-mb` | `1024` | Memory for days of promoted bins. |
+| `columns-seconds` | `300` | A day's bins are read again after this. |
+| `reverse-index` | `true` | `false` turns reverse lookups off (the connector reports no reverse capability). |
+| `max-load-rows` | `200000` | The record limit of a reverse-lookup scan over documents (kinds without promoted bins). |
+| `connect-timeout-ms` | `3000` | Connection timeout. |
+| `user`, `password` | none | For security-enabled clusters. |
+| `source-name` | `aerospike` (a connector: its name) | The provenance source. |
+
+#### Load sample data
+
+```bash
+docker compose -f deploy/compose.data.yaml up -d aerospike
+tools/load-aerospike.sh localhost:3000 test                                 # 1,791 documents x 10 business days
+tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3       # and a book of a million trades a day
+SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=counterparty-risk,market-risk \
+  java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+`load-aerospike.sh [hosts] [namespace] [--ttl-days N] [--trades N --days D]` runs
+`make_data.py --jsonl data/banking.jsonl` (it prints `jsonl: <n> rows in data/banking.jsonl`), builds the plugin with
+`./mvnw -o` and runs `AerospikeLoader`. With `--trades N` it then streams `bulk_trades.py --trades N --days D --jsonl -`
+(`--days` defaults to 3) straight into a second loader on standard input, so no file of gigabytes is written. The
+loader reads one JSON line per entity per date:
+
+```json
+{"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-30", "doc": "{\"tradeId\": …}",
+ "columns": {"mtm": 1875863, "book": "BOOK-RATES-3", "counterparty.name": "Meridian Reinsurance Ltd", …}}
+```
+
+It writes each line's day record into the set named by `domain` and adds the date to the entity's index record,
+keeping 128 writes in flight, and records each kind's dates once at the end. A file name of `-` reads standard input.
+The loader prints `aerospike: <n> rows (<s> s)` every 100,000 rows and
+`aerospike: loaded <n> rows into namespace test in <s> s` at the end. Your own loader can write the same layout; it
+must name promoted bins by the rule above.
+
+Count what was loaded with `asinfo`, which the server image includes:
+
+```bash
+docker compose -f deploy/compose.data.yaml exec aerospike asinfo -v sets/test/trading
+# objects=7500:tombstones=0:…   after the sample load: 750 trades x 10 business days
+```
+
+`sets/test/trading_ix` counts the trades (one index record each) and `sets/test/trading_kinds` the kinds.
+
+**Retention.** `--ttl-days N` gives every record written a time to live of N days, so Aerospike expires old business
+dates itself; no maintenance job runs. Without it, records never expire. An index record's time to live restarts at
+each write, so it outlives its oldest days; a read of an expired day finds no document and the entity is *gone* that
+day.
+
+#### In the terminal
+
+`TRD MX-20000001 <GO>`, dated. Type-ahead uses the ids the last refresh read, so a record written after it is
+readable at once but offered by type-ahead after `refresh-seconds`. The first search of a day waits for its promoted
+bins unless the background read has them already; later ones read memory.
+
+#### Health, and when the cluster goes down
+
+`health` is `UP` or `DOWN: not connected to Aerospike`. The client tends the cluster in the background and does not
+fail at start if the cluster is down; reads fail (`DRS-1003`) until it reconnects, and the next refresh refills the
+catalogue. Cache figures: `kinds`, `datesIndexed`, `ids` and `columnSets` (days of promoted bins held). A purge
+(Admin → Caches) forgets the promoted bins and refreshes the dates and ids now.
+
+#### Common errors
+
+| You see | Cause | Fix |
+|---|---|---|
+| health `DOWN: not connected to Aerospike` | wrong `hosts`, port closed, cluster down | `nc -z <host> 3000` |
+| the container exits at start | too few file descriptors | `deploy/compose.data.yaml` sets `nofile` to 15000; do the same |
+| a snapshot kind shows *gone* for one entity | it has no record `kind/id/yyyyMMdd` for the kind's newest date | write every entity each date, or use `mode.<kind>: effective` |
+| searches are slow, or read documents | the fields searched are not all in `layout.<kind>.columns`, or the kind is `effective` | promote them in the pack and reload; the bins must exist in the records |
+| Aerospike error 22, `operation not allowed at this time` | too many scans at once on the cluster | the connector runs at most two scans at a time and a refused reverse-lookup scan returns no referrers; keep other scans of the namespace (other servers, tools) few |
+| the loader fails with `max connections … would be exceeded` | a loader built before the connection limit was raised | rebuild: `load-aerospike.sh` builds the plugin first; the loader allows 256 connections per node, above its 128 writes in flight |
+| memory | the promoted bins of the days read (`columns-cache-mb`) and one id per entity in the index set; it does not grow with the days kept | lower `columns-cache-mb`, or promote fewer fields; set `--ttl-days` so old entities' index records expire |
+
+### Configuration by example
+
+**What it is for.** A key-value store with sub-millisecond reads, for sites that keep their data in Aerospike, sized
+for millions of entities a day kept for years. Each data domain has a record per entity per business date, an index
+record per entity listing its dates, and a record per kind listing the kind's dates, so a dated read is two key
+lookups. The scaling design is in [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
+
+**Configuration.** The `aerospike` profile (`application-aerospike.yaml`) points the banking packs' `<domain>-store`
+connectors at Aerospike, keeping each pack's kinds, routes, modes, `domain` (which becomes the set) and `layout` (the
+promoted bins):
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      trading-store:
+        plugin: aerospike                                            # replaces the pack's "delta"
+        settings:
+          hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}"         # host:port, comma-separated
+          namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}"
+          # set: not given, so the pack's `domain: trading` is the set
+```
+
+As a pack's own connector:
+
+**Settings.**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `hosts` | `localhost:3000` | seed hosts (`host:port`, comma-separated; port 3000 when omitted) |
+| `namespace` | `test` | namespace |
+| `set` | the `domain` setting, else `drishti` | the domain's set; the index and kinds sets are `<set>_ix` and `<set>_kinds` |
+| `domain` | — | used as the set when `set` is not given |
+| `kinds` | what the kinds set lists | comma list of kinds served |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
+| `lookback-days` | `10` | snapshot kinds: how far back a picked date may fall |
+| `refresh-seconds` | `60` | how often the kinds' dates and the ids (the index set) are re-read |
+| `layout.<kind>.columns` | — | the fields promoted to bins; searches, pick lists, derived kinds, impact and reverse lookups read them |
+| `scan-threads` | `8` | partition ranges scanned at once when a day is scanned |
+| `columns-cache-mb` | `1024` | memory for days of promoted bins |
+| `columns-seconds` | `300` | a day's bins are read again after this |
+| `reverse-index` | `true` | `false` turns reverse lookups off |
+| `max-load-rows` | `200000` | record limit of a reverse-lookup scan over documents (kinds without promoted bins) |
+| `user`, `password` | — | security-enabled clusters |
+| `connect-timeout-ms` | `3000` | client connect timeout |
+| `source-name` | `aerospike` (a connector: its name) | provenance source |
+
+**The data.** Three sets per domain:
+
+```text
+namespace test · set trading · key "trade/MX-20000001/20260930"
+  kind = "trade" · id = "MX-20000001" · date = 20260930
+  doc  = "{\"tradeId\": \"MX-20000001\", …, \"mtm\": 1875863, …}"
+  mtm = 1875863.0 · book = "BOOK-RATES-3" · counterparty_id = "CP-MERIDIAN-RE"
+  counterpar_f5fe = "Meridian Reinsurance Ltd" · nettingSet = "NS-MERIDIAN-RE-NY" · …
+
+namespace test · set trading_ix · key "trade/MX-20000001"
+  kind = "trade" · id = "MX-20000001" · dates = [20260917, 20260918, …, 20260930]
+
+namespace test · set trading_kinds · key "trade"
+  kind = "trade" · dates = [20260917, 20260918, …, 20260930]
+```
+
+A read gets the index record, picks the day and gets that day's record. A snapshot kind's date is the kind's newest
+date on or before the one asked (within `lookback-days`), and an entity without a record that day is gone; an
+effective kind takes the entity's own newest date on or before it. Generation is the day record's generation.
+Type-ahead comes from the index set's `kind` and `id` bins, re-read every `refresh-seconds`. Searches, pick lists,
+derived kinds, impact and reverse lookups of a snapshot kind read one day's promoted bins with partition scans the
+server filters by `kind` and `date`, at most two at a time, kept in memory (`columns-cache-mb`, `columns-seconds`);
+the newest day is read in the background after each refresh. Reverse lookups match the target's id against the
+promoted text bins (`nettingSet`, `book`, `counterparty.id`); a kind without promoted bins, or an effective kind,
+scans documents for identifiers instead (same rule as Delta), up to `max-load-rows` records.
+
+**Try it.**
+
+```bash
+docker compose -f deploy/compose.data.yaml up -d aerospike
+tools/load-aerospike.sh localhost:3000 test        # writes data/banking.jsonl, then loads it (needs ./mvnw, offline)
+tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 30   # and a million trades a day
+SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=trading java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+`tools/load-aerospike.sh [hosts] [namespace] [--ttl-days N] [--trades N --days D]` runs
+`make_data.py --jsonl data/banking.jsonl` and then `AerospikeLoader`; with `--trades` it also streams
+`bulk_trades.py --jsonl -` into a second loader on standard input. The loader reads lines
+`{"domain", "kind", "id", "date", "doc", "columns"}` (`columns`: the promoted values by path) from a file or `-`,
+writes each day record into the set named by `domain` and adds the date to the entity's index record, 128 writes in
+flight, then records each kind's dates once. `--ttl-days N` lets Aerospike expire records after N days (retention
+without a maintenance job); without it they never expire. Your own loader can write the same layout
+(`AerospikeLayout`).
+
+**What the user sees.** `TRD MX-20000001 <GO>`, dated. Health: `UP` or `DOWN: not connected to Aerospike`; the cache
+figures show `kinds`, `datesIndexed`, `ids` and `columnSets`, and a purge forgets the promoted bins and refreshes.

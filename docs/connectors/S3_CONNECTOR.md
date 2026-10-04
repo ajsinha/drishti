@@ -22,7 +22,7 @@ loader: anything that can `PUT` an object can feed it. This document explains th
 it costs in S3 requests, how far it scales, how it fails and recovers, its security, and every setting, exactly as
 `S3SourcePlugin` (`plugins/drishti-plugin-s3`) implements them.
 
-For a first setup see [CONNECTOR_GUIDE.md, chapter 13](CONNECTOR_GUIDE.md#13-an-object-store-s3); the settings in
+For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the settings in
 brief are in [CONFIGURATION.md](../admin/CONFIGURATION.md#s3--documents-in-s3-or-an-s3-compatible-store). For a book
 of a million entities a day in object storage use Delta Lake on `s3a://` instead ([DELTA_CONNECTOR.md](DELTA_CONNECTOR.md));
 for files on local disk see [FILE_CONNECTOR.md](FILE_CONNECTOR.md).
@@ -390,7 +390,7 @@ Two cautions:
   beyond it the lake answers. A date inside the window whose folder lacks the entity is answered from an older S3
   folder, not from the lake.
 
-The general rules for combining connectors are in [CONNECTOR_GUIDE.md, chapter 16](CONNECTOR_GUIDE.md#16-combining-connectors).
+The general rules for combining connectors are in [CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors).
 
 ## 10. Failure and recovery
 
@@ -457,7 +457,7 @@ objects encrypted with a customer-provided key (SSE-C) cannot be read, as there 
 EC2 instance role. Prefer the role or web identity: nothing to store, and credentials rotate. With `access-key` set,
 the connector uses that key and `secret-key` as static credentials, with no session token, so temporary credentials
 must come through the chain. Never write a key in a YAML file; use `${S3_ACCESS_KEY}` placeholders
-([CONNECTOR_GUIDE.md, Secrets](CONNECTOR_GUIDE.md#secrets)). Health and `/api/v1/sources` never show settings.
+([CONNECTOR_DEVELOPER_GUIDE.md, Secrets](CONNECTOR_DEVELOPER_GUIDE.md#secrets)). Health and `/api/v1/sources` never show settings.
 
 **TLS.** AWS endpoints are HTTPS. With `endpoint`, the scheme you write is used: write `https://` in production
 (`http://localhost:9000` is for a local MinIO). The server's JVM trust store decides which certificates are trusted;
@@ -523,7 +523,7 @@ On an `s3` connector (`drishti.sources.connectors.<name>.settings`) or the plugi
 | `source-name` | `s3` (a named connector: its name) | the name in provenance and type-ahead subtitles |
 
 Connector keys (`plugin`, `enabled`, `kinds`) are as for every connector
-([PLUGIN_GUIDE.md](PLUGIN_GUIDE.md#configuration)). Fixed in the code, not settings: connection timeout 5 s, socket
+([CONNECTOR_DEVELOPER_GUIDE.md, Configuration binding](CONNECTOR_DEVELOPER_GUIDE.md#configuration-binding)). Fixed in the code, not settings: connection timeout 5 s, socket
 timeout 20 s.
 
 ## 15. Checklist for production
@@ -542,3 +542,83 @@ timeout 20 s.
    ([section 9](#9-s3-with-a-lake-for-history)).
 9. Check Admin → Health (`UP`, `datedFolders`, `indexed`), then open an entity Live and on a picked date and check
    `provenance.businessDate`.
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+[S3_CONNECTOR.md](S3_CONNECTOR.md) explains the connector in full: the key layout, listing and caching, credentials, cost and every setting.
+
+#### The data
+
+The `file` layout, in a bucket: `<prefix><kind>/<id>.json` (undated) and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`.
+Only `.json` objects are read.
+
+```json
+{"resultId": "STR-CLIMATE-2026Q3", "scenarioName": "Disorderly transition 2026Q3", "pnl": -41250000,
+ "limit": -60000000.0, "scenario": "SCN-NGFS-DISORDERLY", "desk": "DESK-RATES"}
+```
+
+#### Configure it
+
+**Pack form:**
+
+#### Try it
+
+```bash
+docker run -d --name minio -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address :9001
+export AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin
+aws --endpoint-url http://localhost:9000 s3 mb s3://risk-docs
+aws --endpoint-url http://localhost:9000 s3 cp STR-CLIMATE-2026Q3.json \
+    s3://risk-docs/eod/2026-09-30/stress-result/STR-CLIMATE-2026Q3.json
+# connector settings: endpoint: http://localhost:9000 (credentials from the same environment variables)
+DRISHTI_RISK_DOCS=true java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+#### In the terminal
+
+`STR STR-CLIMATE-2026Q3 <GO>`, dated by folder. The generation is the object's last-modified time.
+
+#### Health, and when the store goes down
+
+`health` is `UP`, or `DOWN: <exception>: <message> (retrying)` after a failed listing or read. A listing error is
+reported until a listing succeeds, even when reads work; a read error until a read succeeds. Each call connects
+afresh (5 s connect and 20 s socket timeouts, fixed in the code), so it recovers by itself. Cache figures: `cachedObjects`, `indexed`, `datedFolders`; a purge empties the read
+cache.
+
+### Configuration by example
+
+**What it is for.** Documents written as JSON files to Amazon S3 or an S3-compatible store (MinIO, Ceph, an
+on-premises appliance): the `file` plugin's layout, in a bucket. Optionally dated.
+
+**Configuration.**
+
+The shipped `application.yaml` also has `plugins.s3` (switched off by `DRISHTI_S3_ENABLED`); running it as itself
+takes the same settings under `drishti.sources.plugins.s3.settings`.
+
+**Settings.**
+
+**The data.**
+
+```text
+s3://risk-docs/eod/stress-result/ST-2026-Q3.json                undated
+s3://risk-docs/eod/2026-09-30/stress-result/ST-2026-Q3.json     for 30 September
+```
+
+**Try it.**
+
+```bash
+docker run -d --name minio -p 9000:9000 -p 9001:9001 minio/minio server /data --console-address :9001
+export AWS_ACCESS_KEY_ID=minioadmin AWS_SECRET_ACCESS_KEY=minioadmin
+aws --endpoint-url http://localhost:9000 s3 mb s3://risk-docs
+aws --endpoint-url http://localhost:9000 s3 cp ST-2026-Q3.json s3://risk-docs/eod/2026-09-30/stress-result/ST-2026-Q3.json
+# connector settings: endpoint: http://localhost:9000 (credentials from the same environment variables)
+```
+
+**What the user sees.** `<mnemonic> ST-2026-Q3 <GO>`, dated by folder. Health: `UP` or
+`DOWN: <exception>: <message> (retrying)` (a listing error stays until a listing succeeds, even when reads work);
+cache figures `cachedObjects`, `indexed`, `datedFolders`.
