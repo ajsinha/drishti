@@ -19,7 +19,7 @@ How entities relate: a group and its agreements as a graph, netting sets as tabs
 
 **Panel kinds:** `graph`, `tabs`, `links`.
 
-**Open it:** Studio **File → Open** with `relationships.sutra.yaml` and `relationships.json`, or `/studio?example=relationships`.
+**Open it:** in the workbench, **Build → New → Examples** and pick `relationships`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `relationships.sutra.yaml` and `relationships.json`.
 
 **What to look for:** the group at the top of the graph and the netting sets at the bottom; one tab per netting set, each a small `kv`. The `links` panel resolves ids in the document against the live reference catalogue, so it lists entries only where your packs know them.
 

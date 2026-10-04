@@ -19,7 +19,7 @@ A pivot whose `by` is a list: desks hold books, books hold product families, eac
 
 **Panel kinds:** `pivot` (three of them: a three-level `by`, a two-level one with `expand: all`, and a flat one with `heat`).
 
-**Open it:** Studio **File → Open** with `pivot-row-groups.sutra.yaml` and `pivot-row-groups.json`, or `/studio?example=pivot-row-groups`.
+**Open it:** in the workbench, **Build → New → Examples** and pick `pivot-row-groups`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `pivot-row-groups.sutra.yaml` and `pivot-row-groups.json`.
 
 **What to look for:** in the first pivot only the desks show, each with a subtotal and a triangle; click a triangle to open the books, then the families. The second opens every level at once. Heat shading shows on the flat pivot only: nested pivots are not shaded.
 

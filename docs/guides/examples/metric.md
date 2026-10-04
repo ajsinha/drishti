@@ -19,7 +19,7 @@ A desk's headline numbers as big-number tiles: one large formatted, toned figure
 
 **Panel kinds:** `metric`, `hbar`.
 
-**Open it:** Workbench **New design from an example**, then `metric`; or Studio **File → Open** with `metric.sutra.yaml` and `metric.json`.
+**Open it:** in the workbench, **Build → New → Examples** and pick `metric`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `metric.sutra.yaml` and `metric.json`.
 
 **What to look for:** the MTM tile shows a signed figure toned by its sign, with the change since yesterday in its own tone beside it; the VaR tile's change is toned `neg` whichever way it moves (a rise in risk is bad); the limit-use tile has a caption built with `${...}`; the last tile is a plain count; the bars below say where the MTM comes from.
 

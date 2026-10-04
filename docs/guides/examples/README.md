@@ -15,7 +15,7 @@
 -->
 # Examples
 
-Eleven small, working Sutras, each with a JSON document to run it against and a note on what it shows. Together they use all twenty-one panel kinds, nested pivot groups and tree rows. They are in Studio too: **File → Open**, or `/studio?example=<name>`, and under **Help → Examples**.
+Eleven small, working Sutras, each with a JSON document to run it against and a note on what it shows. Together they use all twenty-one panel kinds, nested pivot groups and tree rows. Each opens in the workbench as a copy (**Build → New → Examples**, or **File → Open** with its two files) and is listed under **Help → Examples**.
 
 Each example is `<name>.sutra.yaml` (the layout), `<name>.json` (a self-contained document, a few dozen rows at most) and `<name>.md` (what it shows, what to look for, which lines to copy).
 
