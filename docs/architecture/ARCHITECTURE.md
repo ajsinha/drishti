@@ -316,7 +316,7 @@ panels:
 
 **Panel kinds** (the `PanelKind` enum, twenty): `kv`, `table`, `tabs`, `line`, `area`, `hbar`, `ladder`, `links`,
 `status`, `provenance`, `markdown`, `gauge`, `surface`, `waterfall`, `histogram`, `scatter`, `candlestick`, `graph`, `timeline`, `pivot`. The chart and aggregate kinds are bound
-by `ChartBinder` under the `drishti.panels` limits and drawn by `static/js/charts.js`; [PANELS.md](../guides/PANELS.md)
+by `ChartBinder` under the `drishti.panels` limits and drawn by `static/js/charts.js`; [PANEL_KINDS.md](../guides/PANEL_KINDS.md)
 describes every kind in depth. The full grammar is in
 [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md). A new kind is added to the enum (with its required and allowed
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side

@@ -13,7 +13,7 @@ are, so fixing a file here fixes the help.
 
 1. **[QUICKSTART.md](guides/QUICKSTART.md)**: ten minutes from a fresh clone to your first live view, commands only.
 2. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, each with a worked example.
-3. **[PACKS.md](guides/PACKS.md)**: which industries are available, the commands each one adds, and how to build your own.
+3. **[PACKS.md](guides/PACKS.md)**: which industries are available, the commands each one adds, and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
 If the quickstart goes too fast, [GETTING_STARTED.md](guides/GETTING_STARTED.md) walks the same ground with every step
 explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md).
@@ -58,8 +58,10 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | If you want to… | Read |
 |---|---|
-| Learn the layout grammar from scratch, lesson by lesson | [RACHANA_GUIDE.md](guides/RACHANA_GUIDE.md) |
-| Learn what a Sutra is and write one | [Sutra guide](../console/web/guides/sutra-guide.md) |
+| Learn to build screens in the workbench, step by step, with a picture of each step | [BUILD_WORKBENCH_TUTORIAL.md](guides/BUILD_WORKBENCH_TUTORIAL.md) |
+| Learn what a Sutra is and write one, from the first panel to a tested screen | [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) |
+| Choose or configure a panel kind | [PANEL_KINDS.md](guides/PANEL_KINDS.md) |
+| Add a new panel kind to Drishti | [PANEL_DEVELOPER_GUIDE.md](guides/PANEL_DEVELOPER_GUIDE.md) |
 | Edit a Sutra with live preview and submit it for review | [Screen designer guide](guides/SCREEN_DESIGNER.md) |
 | Lay out nested documents (lists inside lists) | [Nested documents tutorial](../console/web/guides/nested-data.md) |
 | Choose the right panel kind | [PANEL_KINDS.md](guides/PANEL_KINDS.md) |
@@ -76,11 +78,11 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | If you want to… | Read |
 |---|---|
-| Build a pack by hand, from an empty folder to a working view | [PACKS.md › Writing a pack by hand](guides/PACKS.md#writing-a-pack-by-hand-step-by-step) |
+| Build a pack, from an empty folder to a working view | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) |
 | Load packs, switch them off and on, assign them to users | [PACKS.md](guides/PACKS.md#turning-packs-on) |
-| Generate a full pack from Python (Sutras, samples, guide, lake) | [Build a domain pack tutorial](../console/web/guides/build-a-pack.md) |
-| Connect your data, step by step (files, PostgreSQL, Delta Lake, Kafka, S3, REST, …) | [CONNECTOR_GUIDE.md](connectors/CONNECTOR_GUIDE.md) |
-| Look up every connector's settings, or write a new plugin | [PLUGIN_GUIDE.md](connectors/PLUGIN_GUIDE.md) |
+| Generate a full pack from Python (Sutras, samples, guide, lake) | [PACK_DEVELOPER_GUIDE.md › Generators](guides/PACK_DEVELOPER_GUIDE.md) |
+| Choose a connector, write a new plugin and test it | [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) |
+| Connect your data, step by step, with every setting of the connector | the per-connector docs under [connectors/](connectors/), one per store |
 | Understand live updates (SSE, frames, reconnects) | [LIVE.md](architecture/LIVE.md) |
 
 ### Run and administer it
@@ -136,17 +138,18 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [QUICKSTART.md](guides/QUICKSTART.md) | you want Drishti running in ten minutes and need only the commands |
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
 | [WINDOWS.md](guides/WINDOWS.md) | you run Drishti on Windows: JDK 25 and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
-| [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, Studio, administration |
-| [PACKS.md](guides/PACKS.md) | you load, switch, assign, change, test or build a domain pack, or need any `pack.yaml` key |
+| [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
+| [PACKS.md](guides/PACKS.md) | you load, switch, assign or change a domain pack |
+| [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) | you build a pack or need any `pack.yaml` key: kinds, links, roles, Sutras, tests, generators, signing; a worked help-desk pack |
 | [PYTHON_CALC.md](guides/PYTHON_CALC.md) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
-| [RACHANA_GUIDE.md](guides/RACHANA_GUIDE.md) | you are learning to write Sutras and want a tutorial that builds one up step by step |
+| [BUILD_WORKBENCH_TUTORIAL.md](guides/BUILD_WORKBENCH_TUTORIAL.md) | you are new to the Build workbench: four complete projects with a picture of each step |
+| [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) | you are learning to write Sutras: anatomy, matching, labels, paths, source, row groups, testing and CI, the checklist |
 | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
 | [PANEL_KINDS.md](guides/PANEL_KINDS.md) | you choose, configure or debug a panel: all twenty-one kinds, what each means, how it behaves, an example and a picture |
 | [PANEL_DEVELOPER_GUIDE.md](guides/PANEL_DEVELOPER_GUIDE.md) | you add a new panel kind to Drishti |
 | [HOW_IT_FITS.md](architecture/HOW_IT_FITS.md) | you are new and want the whole working: how connectors, packs and Sutras relate, and how a command becomes a live screen |
 | [INFERENCE.md](architecture/INFERENCE.md) | a view looks different from what you expected and *How this view was built* says `inference` |
-| [CONNECTOR_GUIDE.md](connectors/CONNECTOR_GUIDE.md) | you are connecting your own data and want a worked, step-by-step path for your store |
-| [PLUGIN_GUIDE.md](connectors/PLUGIN_GUIDE.md) | you need every setting of a connector, the data layout it expects, or you are writing a new source plugin |
+| [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) | you choose a connector, write a new source plugin, or test one with the testkit contracts; each connector's settings and walk-through are in its own `*_CONNECTOR.md` |
 | [LIVE.md](architecture/LIVE.md) | you need to know how values tick: streams, frames, coalescing, reconnects, one channel per browser, shared by its tabs |
 | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) | you create users, define roles, assign packs, reset passwords, set up single sign-on or read the audit log |
 | [CONFIGURATION.md](admin/CONFIGURATION.md) | you need a setting's name, default and environment variable |
@@ -192,10 +195,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | Guide | Read this when… |
 |---|---|
-| [sutra-guide.md](../console/web/guides/sutra-guide.md) | you write your first Sutra |
 | [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
 | [nested-data.md](../console/web/guides/nested-data.md) | your documents hold lists inside lists |
-| [build-a-pack.md](../console/web/guides/build-a-pack.md) | you generate a whole pack from Python |
 | [impact.md](../console/web/guides/impact.md) | you use or configure F8 impact |
 | [monitors-and-alerts.md](../console/web/guides/monitors-and-alerts.md) | you set up watchlists and alert rules |
 | [workspaces.md](../console/web/guides/workspaces.md) | you arrange several live views on one screen |

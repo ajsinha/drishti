@@ -143,6 +143,8 @@ class DesignGovernanceWaveTest {
         approveLatest(proposed.path("proposal").path("id").asText());
         assertThat(ok(send(get("/api/v1/builder/designs/" + e), ana, null)).path("status").asText()).isEqualTo("live(v2)");
         assertThat(text(send(get("/api/v1/sutras/book/1/source"), ana, null))).isEqualTo(original);
+        // approving its own design must not flag it: the live version is the one this design published
+        assertThat(ok(send(get("/api/v1/builder/designs/" + e), ana, null)).has("baseMoved")).isFalse();
 
         // M-2: D and D2 now say their base moved, on open and on check; rebase replays what can be replayed and reports the rest
         JsonNode moved = ok(send(get("/api/v1/builder/designs/" + d), ana, null));

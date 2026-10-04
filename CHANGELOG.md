@@ -16,6 +16,12 @@
 # Changelog
 
 ## Unreleased
+- **Docs:** [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md) replaces `RACHANA_GUIDE.md`, `SUTRA_CLI.md` and the in-app `sutra-guide.md`: anatomy, matching and priority, labels, paths, source, row groups, inference, testing and CI, the workbench, a checklist and the common mistakes with their codes; the old help addresses redirect.
+- **Docs:** [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) replaces `PLUGIN_GUIDE.md` and `CONNECTOR_GUIDE.md`: which connector, the `SourcePlugin` SPI, testing with the testkit contracts, a worked teaching plugin (`docs/guides/examples/connector/`, built and contract-tested, not shipped) and one short section per connector; each connector's walk-through and worked examples moved into its own `*_CONNECTOR.md`, de-duplicated.
+- **Docs:** [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) (build a pack end to end, with a help-desk pack) takes the developer half of `PACKS.md` and the in-app `build-a-pack` tutorial; `PACKS.md` keeps the user and admin content.
+- **Docs:** [BUILD_WORKBENCH_TUTORIAL.md](docs/guides/BUILD_WORKBENCH_TUTORIAL.md): four complete projects with a picture of every step; fixed on the way: auto-design with a top-level figure that also occurs nested, bind on a kv panel writes columns, the YAML editor follows the canvas after typed edits, a rebase clears the base-moved flag.
+- **Docs:** documentation integration: every link to a retired guide points at the new section, the help centre's `moved:` entries and Learn menu are updated, "twenty panel kinds" is twenty-one, no instruction mentions a Studio page.
+- **Fixed:** after approving your own design its header no longer shows "base moved to ..." pointing at the version the design itself published (`DesignRebase` treats a design whose status is `live(vN)` for the latest version as up to date).
 - **Docs:** [PANEL_DEVELOPER_GUIDE.md](docs/guides/PANEL_DEVELOPER_GUIDE.md) (adding a panel kind end to end, worked through the real `metric` tile, with an ordered checklist and the guard tests) and [PANEL_KINDS.md](docs/guides/PANEL_KINDS.md) (the catalogue of all twenty-one kinds, where F1 lands) replace PANELS.md, the in-app panel-kinds guide and DEVELOPER_GUIDE §5.4; screenshots are generated per guide by `tools/docs/screenshots.py --guide <name>` (the unreproducible `static/img/guide/kind-*.png` are gone).
 - **Added:** `metric`, the 21st panel kind: a big-number KPI tile with one large formatted, toned figure (`value`, `label`, `fmt`, `tone`), an optional change beside it (`delta` with `deltaFmt` and `deltaTone`), a `unit` and a `caption`, and `source` like any panel; masked values show the mask, empty ones say so, it updates live, downloads as CSV, has an accessible name (`role=group`), a workbench palette entry (facts), inspector editors, an auto-design draft for a document's one headline measure and a suggestion for a single measure, and a `metric` example plus a tile in the all-panels showcase.
 
@@ -134,7 +140,7 @@
 
 ## 1.13.0 — A million trades a day, eight stores, Calc, pivots, twenty panel kinds and JDK 25 (2026-10-01)
 - **Fixed:** an area chart's dashed limit line was not drawn when the limit was above (or below) every value, because the axis was scaled to the series only. The axis now reaches the limit, and the label sits inside the plot.
-- **Every panel kind, by example** ([RACHANA_GUIDE.md › 10](docs/guides/RACHANA_GUIDE.md#10-every-panel-kind-by-example)).
+- **Every panel kind, by example** ([RACHANA_GUIDE.md › 10](docs/guides/PANEL_KINDS.md)).
   The Rachana tutorial has a contents list and a new chapter with a complete, minimal Sutra for each of the twenty
   panel kinds, each on a sample entity that ships with the banking packs (`TRD BBG-60000001`, `NSET NS-NORTHBRIDGE-FRA`,
   `CPTY CP-NORTHBRIDGE`, `VAR VAR-COMM`, `CMDV CMDV-BRENT`, `PNL PNL-COMM-1`, `LE LE-FRA`, `CMD CMD-BRENT`,
@@ -166,7 +172,7 @@
   column, and diffs the old text with its blocks in the new order. A Sutra it cannot read as a panel list (a flow
   list, duplicate ids) gets the full diff, so nothing is hidden. `GET /api/layout/{sutra}/{kind}/promotion` adds
   `moves` and `edits` beside `diff`. The review's diff no longer shows a blank line between every two lines.
-- **Waterfalls rise green and fall red** ([PANELS.md › waterfall](docs/guides/PANELS.md#7-waterfall)). Steps now
+- **Waterfalls rise green and fall red** ([PANELS.md › waterfall](docs/guides/PANEL_KINDS.md#waterfall)). Steps now
   take the theme's good and bad colours (`--d-ok`, `--d-bad`) in every theme, light and dark, and totals are a neutral
   grey (`--d-muted`) instead of the link blue. A new option, `colors: gain-loss | theme` (default `gain-loss`), keeps
   the theme's positive and negative colours (blue and orange, which readers with red-green colour blindness tell
@@ -252,7 +258,7 @@
   - **Saved pivots** per (Sutra, panel) and per kind (`/api/v1/me/pivots`, preference namespace `pivots`); no new
     power: opening the kind is enough. **Promote to Sutra:** an author's pivot becomes the panel's `pivot:` in the
     Sutra's next version (only that key rewritten, shown as the changes and a diff), proposed through review.
-  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PACKS.md#pivot-a-pivot-tab-on-search-results)).
+  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)).
     The banking generators opt in a netting set's and a clearing account's trades (notional by product and maturity
     bucket), a book's largest trades (MTM by product and currency), a desk's new *Trades by book* table and the trading
     pack's new desk P&L Sutra (MTM by book and currency), collateral positions, a trade's cash flows (PV by type and

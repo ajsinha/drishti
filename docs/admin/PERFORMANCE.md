@@ -48,7 +48,7 @@ How the connectors achieve these figures is in [DELTA_CONNECTOR.md](../connector
 Aerospike, [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
 
 Measured 2026-10-01 on the developer workstation (24 cores, server heap 15.6 GB), the trading pack's lake laid out as
-declared ([PACKS.md](../guides/PACKS.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
+declared ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)), 1,000,000 trades a day over three business days (5.2 GB;
 `tools/samplegen/bulk_trades.py --trades 1000000 --days 3`), times over HTTP:
 
 | What | Time |

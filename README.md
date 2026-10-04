@@ -90,7 +90,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 - Delta Lake (local or S3, dated, time travel), PostgreSQL and other JDBC databases, Aerospike, Kafka, ActiveMQ,
   RabbitMQ, Amazon S3 and compatible stores, REST services, JSON and CSV files, and public market data (NY Fed
   SOFR, ECB €STR and FX, US Treasury, FRED). Connectors reconnect by themselves and report their health
-  ([CONNECTOR_GUIDE.md](docs/connectors/CONNECTOR_GUIDE.md)).
+  ([CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md)).
 
 **Run it safely**
 - Sign-in with passwords or single sign-on (OpenID Connect), roles that decide which kinds each person may open,
@@ -184,11 +184,14 @@ Start with the **[quickstart](docs/guides/QUICKSTART.md)**, then the **[user gui
 | you want it running in ten minutes | [QUICKSTART.md](docs/guides/QUICKSTART.md) |
 | you install for the first time, every step explained | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
-| you load, assign, build, publish or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
-| you learn to write a Sutra, step by step | [RACHANA_GUIDE.md](docs/guides/RACHANA_GUIDE.md) |
+| you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
+| you build a domain pack | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) |
+| you learn to build screens in the Build workbench, step by step | [BUILD_WORKBENCH_TUTORIAL.md](docs/guides/BUILD_WORKBENCH_TUTORIAL.md) |
+| you learn to write a Sutra | [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md) |
+| you choose or add a panel kind | [PANEL_KINDS.md](docs/guides/PANEL_KINDS.md), [PANEL_DEVELOPER_GUIDE.md](docs/guides/PANEL_DEVELOPER_GUIDE.md) |
 | you need an exact Sutra key, format or expression | [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |
 | a view is laid out by inference and you want to know why | [INFERENCE.md](docs/architecture/INFERENCE.md) |
-| you connect your own data | [CONNECTOR_GUIDE.md](docs/connectors/CONNECTOR_GUIDE.md), [PLUGIN_GUIDE.md](docs/connectors/PLUGIN_GUIDE.md) |
+| you connect your own data | [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector docs |
 | you need a setting's name, default and environment variable | [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
 | you manage users, roles, single sign-on, tokens or the access log | [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md) |
 | you script against it, from Python, Excel or curl | [CLIENTS.md](docs/guides/CLIENTS.md), [API_GUIDE.md](docs/guides/API_GUIDE.md) |

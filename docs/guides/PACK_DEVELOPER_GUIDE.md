@@ -26,8 +26,8 @@ Who reads what:
 |---|---|
 | a user or administrator: which packs ship, turning them on and off, who sees which | [PACKS.md](PACKS.md) |
 | writing a pack | this guide |
-| writing the Sutras of a pack | [Sutra guide](RACHANA_GUIDE.md), every key in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench in [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) |
-| connecting a pack to a database, a lake or a queue | [CONNECTOR_GUIDE.md](../connectors/CONNECTOR_GUIDE.md) and the per-connector pages it lists |
+| writing the Sutras of a pack | [Sutra guide](SUTRA_DEVELOPER_GUIDE.md), every key in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench in [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md) |
+| connecting a pack to a database, a lake or a queue | [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector pages it lists |
 
 Contents:
 
@@ -404,7 +404,7 @@ Open `TKT TKT-1001`:
 *How this view was built* now says `Sutra ticket v1 + inference`. A mistake (`kind: ladderr`) is reported with its line
 and the view keeps the last good version ([runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md)).
 
-Writing Sutras is taught in the [Sutra guide](RACHANA_GUIDE.md); every key is in
+Writing Sutras is taught in the [Sutra guide](SUTRA_DEVELOPER_GUIDE.md); every key is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). You can design the Sutra in the **Build workbench** instead of by hand:
 start from the samples, let auto-design draft it, edit on the canvas, and export the result into your pack as a
 [fragment](#pack-fragments-from-the-build-workbench) ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)).
@@ -879,7 +879,7 @@ roles:
   under the same name is an error, unless one pack extends the other (then the more specific wins).
 - **Site configuration overrides a pack.** To point the `credit` domain at PostgreSQL instead of the lake, or to
   switch a connector off, set `drishti.sources.connectors.credit-store.…` in the site configuration. See
-  [CONNECTOR_GUIDE.md](../connectors/CONNECTOR_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md).
+  [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md).
 
 ### What becomes of each key
 
@@ -1108,7 +1108,7 @@ Screens for `contextual` include `landing`, `terminal`, `view`, `studio`, `works
 Write the guide in Markdown with the copyright header comment at the top. Describe the domain (what each kind
 is, how they link, where the data comes from) rather than listing sample records, and include a **Finding
 things** section like the one above, so readers know the commands work on their own data too. Links to other help documents with a relative
-path (`[Sutra guide](RACHANA_GUIDE.md)`) open inside the help centre.
+path (`[Sutra guide](SUTRA_DEVELOPER_GUIDE.md)`) open inside the help centre.
 
 ## Roles and field masks
 
@@ -1479,7 +1479,7 @@ Any other key in `expect.yaml` is a usage error (exit `2`), so a typo cannot sil
 folder a Sutra is reported `skip (no samples)`, which is not a failure. Choose samples that differ: a ticket with one
 history entry and one with many, a closed one, one with a missing field. Exit codes: `0` ok, `1` problems, `2` usage.
 Every command and option (`--junit`, `--out` snapshots, the shape and design commands) is in
-[SUTRA_CLI.md](SUTRA_CLI.md).
+[SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
 
 ### In CI
 

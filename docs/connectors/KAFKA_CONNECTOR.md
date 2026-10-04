@@ -596,62 +596,33 @@ Moved here from the former connector guides, so that everything about this conne
 
 ### Walk-through, step by step
 
-#### The situation
+**The situation.** Your trading system publishes each trade's latest state to a Kafka topic whenever it changes. You
+want trade views to tick as messages arrive, and the full history from the lake when a user picks a date. How the
+connector reads the topic is in [section 2](#2-how-the-connector-reads-a-topic), the two message shapes in
+[section 3](#3-the-messages), memory in [section 10.1](#101-memory-per-entity), and the health texts in
+[section 9](#9-outages-and-reconnection).
 
-Your trading system publishes each trade's latest state to a Kafka topic whenever it changes. You want trade views
-to tick as messages arrive, and the full history from the lake when a user picks a date.
+1. **Configure it.** Use the pack form in [section 5.1](#51-pack-form-the-trading-packs-trading-stream) for the
+   trading stream, or the site form in [section 5.2](#52-site-form-envelopes-and-a-mapped-topic-on-a-secured-cluster)
+   for envelopes on a secured cluster. The settings are in [section 14](#14-settings).
+2. **Publish.** `stream.py` ([section 15](#15-trying-it-streampy)) publishes every sample trade once, keyed by
+   `tradeId`, then gives `--rate` random trades a second a new `mtm` and `pnl1d`; `--seconds 0` runs until Ctrl+C.
+3. **Start the server.** In another terminal:
 
-#### How the connector reads Kafka
+   ```bash
+   DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false DRISHTI_PACKS=counterparty-risk,market-risk \
+     java -jar drishti-server/target/drishti-server-*-exec.jar
+   ```
 
-- It reads **every partition from the beginning** at start (the topic *is* the state: the latest message per entity
-  wins, as with a compacted topic), then keeps reading. It uses no consumer group and commits nothing, so every
-  Drishti server reads the whole topic on its own.
-- Health is `UP (catching up)` until it has reached the end offsets seen at start, then `UP`. This is true in `ticks`
-  mode as well: it keeps nothing, but still replays the topic from the beginning at every start.
-- Memory: it keeps *where* each entity's latest message is and the id for type-ahead, about 0.4–0.5 GB of heap per
-  million entities (an estimate from the data structures: the id, the map entry and the type-ahead entry, not just
-  the position), plus a cache of recently read documents (`cache-mb`, 256). A document nobody has opened is read back
-  from Kafka by its offset when someone does.
-- Documents are **live and undated**. The generation is the message offset.
+4. **Look at it in the terminal.** `TRD MX-20000001 <GO>` on Live: the *Live* badge shows, provenance is
+   `trading-stream`, and the MTM moves every time `stream.py` touches the trade. Pick a date: the same trade comes
+   from `trading-store` (the lake), because dated connectors go first for a picked date, and the view is a static
+   snapshot. Why the demo is off is explained at the end of [section 15](#15-trying-it-streampy).
+5. **Watch Health.** `UP (catching up)` until the end offsets seen at start are reached, then `UP`. This holds in
+   `ticks` mode too: it keeps nothing but still replays the topic at every start
+   ([section 8](#8-start-catching-up-and-restarts)).
 
-#### The data: two message shapes
-
-Values are JSON text, keys are strings.
-
-#### Configure it
-
-**Site form**, an envelope topic for counterparty-risk kinds, plus one mapped topic, on a secured cluster:
-
-```yaml
-drishti:
-  sources:
-    connectors:
-      risk-stream:
-        plugin: kafka
-        kinds: [netting-set, credit-limit]                  # limit what it serves (see the warning below)
-        settings:
-          bootstrap-servers: kafka1.bank.example:9093,kafka2.bank.example:9093
-          topics: risk.envelopes,risk.limits                # comma list
-          kind.risk.limits: credit-limit                    # this topic: whole credit-limit documents (mapped)
-          id-field.risk.limits: limitId                     # its id field; risk.envelopes has no kind: envelopes
-          cache-mb: 512                                     # recently read documents in memory
-          client.security.protocol: SASL_SSL                # any Kafka consumer property: client.<property>
-          client.sasl.mechanism: SCRAM-SHA-512
-          client.sasl.jaas.config: "${KAFKA_JAAS}"          # the secret from the environment
-```
-
-#### Try it
-
-`stream.py` publishes every sample trade once, keyed by `tradeId`, prints
-`published <n> trades to drishti.trading.trades; ticking 5.0/s`, then gives five random trades a second a new
-`mtm` and `pnl1d`. `--seconds 0` runs until you press Ctrl+C. In another terminal:
-
-```bash
-DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false DRISHTI_PACKS=counterparty-risk,market-risk \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
-```
-
-Send one envelope by hand, to a connector reading `risk.envelopes` (such as the `risk-stream` site form above, with
+Send one envelope by hand, to a connector reading `risk.envelopes` (such as the `risk-stream` site form, with
 `bootstrap-servers: localhost:9092` and no `client.*` security lines). Create the topic first: on a broker that does
 not create topics by itself, the connector waits for a topic that does not exist yet. The compose broker does create
 them (Kafka's default `auto.create.topics.enable`), so a connector started first has already created its topics, and
@@ -672,57 +643,13 @@ EOF
 (the console producer sends one with `--property null.marker=NULL` and the line
 `netting-set/NS-ALDERSHOT-FRA|NULL`); the next read falls through to the lake (`credit-store`).
 
-#### In the terminal
-
-`TRD MX-20000001 <GO>` on Live: the *Live* badge shows, provenance is `trading-stream`, and the MTM moves every time
-`stream.py` touches the trade. Pick a date: the same trade comes from `trading-store` (the lake), because dated
-connectors go first for a picked date, and the view is a static snapshot.
-
-Why `DRISHTI_DEMO_ENABLED=false`? The trading pack's samples hold the same trade ids. A real stream is asked before
-the samples on Live, so Kafka answers anyway; switching the demo off also keeps the samples out of search and makes
-sure a trade Kafka does not hold falls through to the lake rather than to a random-walk sample.
-
-#### Health, and when the broker goes down
-
-| Health | Meaning |
-|---|---|
-| `DOWN: not started` | the consumer has not connected yet |
-| `UP (catching up)` | reading the topic from the beginning (at every start, in `ticks` mode too) |
-| `UP` | caught up; new messages are applied as they arrive |
-| `DOWN: no connection to the broker (reconnecting)` | the broker has been unreachable for 10 s while the connector ran; the Kafka client keeps reconnecting by itself |
-| `DOWN: IllegalStateException: topic risk.envelopes has no partitions yet (reconnecting)` | the topic does not exist (and the broker does not create topics automatically) |
-| `DOWN: <Exception>: <message> (reconnecting)` | the consumer gave up (broker down at start, fatal error) |
-| `DOWN: <message> (retrying)` | `ticks` mode only: the client rejected its configuration (an unresolvable `bootstrap-servers`, a malformed `client.*` property). In `state` mode the same error stops the start, and the connector is listed under `failedToStart` |
-
 ### Configuration by example
 
-**What it is for.** Live entities from a stream: each message is an entity's latest state, views tick as messages
-arrive. The topic is the state (compacted-topic semantics), so every server reads it from the beginning and needs no
-consumer group. Pair it with a dated store for history.
+The pack form and the secured-cluster site form are in [section 5](#5-configuration); the settings are in
+[section 14](#14-settings). The disk cache starts empty on every run (the topic is replayed anyway); it saves
+re-reading Kafka for documents not in memory.
 
-**Configuration.** `packs/trading/pack.yaml`, as shipped:
-
-**Settings.**
-
-The disk cache starts empty on every run (the topic is replayed anyway); it saves re-reading Kafka for documents
-not in memory.
-
-**The data.** Two message shapes. Values are JSON text; keys are strings.
-
-```text
-key:   MX-20000001
-value: {"tradeId": "MX-20000001", "productType": "IRS", "mtm": 1875863, "pnl1d": 4120, "notional": 242000000.0, …}
-```
-
-```text
-key:   netting-set/NS-NORTH-01
-value: {"kind": "netting-set", "id": "NS-NORTH-01", "doc": {"nettingSetId": "NS-NORTH-01", "netMtm": -1200000, …}}
-```
-
-**Try it.**
-
-`stream.py` publishes every sample trade once (keyed by `tradeId`), then gives `--rate` random trades per second a
-new `mtm` and `pnl1d`; `--seconds 0` runs until interrupted. To send one message by hand:
+To send one mapped message by hand:
 
 ```bash
 docker compose -f deploy/compose.data.yaml exec kafka /opt/kafka/bin/kafka-console-producer.sh \

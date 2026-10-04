@@ -380,14 +380,10 @@ file system entry per entity per day. When a kind has JSON-lines files they are 
 
 ## Appendix: walk-through and worked examples
 
-Moved here from the former connector guides, so that everything about this connector is in one document.
+Worked examples of the older file-per-entity layout ([section 13](#13-the-older-layout-a-file-per-entity)). For
+more than a handful of entities use JSON lines ([section 2](#2-the-layout), [section 5](#5-loading)).
 
 ### Walk-through, step by step
-
-For more than a handful of entities, keep one **JSON-lines file per kind per business day**
-(`<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, written by `tools/load-files.sh`, served by the `files` profile): the
-connector indexes each day once and serves single reads, searches and reverse lookups without reading whole files.
-[FILE_CONNECTOR.md](FILE_CONNECTOR.md) explains it in full. The rest of this chapter shows the file-per-entity layout.
 
 #### The situation
 
@@ -475,8 +471,8 @@ No route is needed: the pack routes `credit-limit` to `credit-store` (the lake),
 `LIM-HARBOURVIEW`, so the read passes on to `limits-drop`. Add `routes: { credit-limit: limits-drop }` only if the
 folder should be asked *before* the lake for every credit limit.
 
-The shipped `application.yaml` also runs the plugin as itself, serving `./data/feeds` (`DRISHTI_FEEDS`) with
-`source-name: feed-file`; leave it, or point `DRISHTI_FEEDS` at your folder for the simplest setup.
+The shipped `application.yaml` also runs the plugin as itself (see below); for the simplest setup, point
+`DRISHTI_FEEDS` at your folder.
 
 #### Try it
 
@@ -525,8 +521,8 @@ up at the next rescan.
 
 ### Configuration by example
 
-**What it is for.** End-of-day files dropped in a folder by another system: JSON documents or CSV tables, optionally
-one folder per business date. No database, no service; a rewritten file is newer data.
+End-of-day files dropped in a folder by another system: JSON documents or CSV tables, optionally one folder per
+business date. No database, no service; a rewritten file is newer data.
 
 **Configuration.** The shipped `application.yaml` runs it as itself:
 
@@ -558,14 +554,7 @@ routes:
   settlement: eod-futures                       # try this connector first for settlements
 ```
 
-**Settings.**
-
-| Key | Default | Meaning |
-|---|---|---|
-| `root` | `data/feeds` | the folder (resolved to an absolute path) |
-| `source-name` | `file` (a connector: its name) | provenance source |
-| `rescan-seconds` | `30` | re-list kinds, ids and dated folders |
-| `lookback-days` | `10` | a dated folder older than the picked date minus this is not used |
+Every setting is in [section 12](#12-settings).
 
 **The data.**
 
@@ -581,17 +570,7 @@ data/feeds/
     └── settlement/CL-DEC26.json
 ```
 
-The kind is the folder name and the id the file name without `.json` or `.csv`. A JSON file is the document as is.
-A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed:
-
-```text
-date,rate,volume_bn
-2026-09-01,3.95,1910
-```
-
-```json
-{ "rows": [ { "date": "2026-09-01", "rate": 3.95, "volume_bn": 1910 } ] }
-```
+The kind, the id, the CSV form and the dated folders are as in the walk-through above.
 
 Business dates: a read for a date takes the newest dated folder on or before it (within `lookback-days`) that has
 the file, then the undated folder; Live takes the newest dated folder that has it, then the undated one. The

@@ -29,7 +29,7 @@ This guide is for users and administrators. It explains, with examples:
 
 **Writing a pack** (the manifest key by key, links, roles, Sutras, samples, tests, inheritance, generators, the signed
 registry, exporting from the Build workbench) is in the [Pack developer guide](PACK_DEVELOPER_GUIDE.md), which builds a help-desk
-pack step by step. The [last section](#where-the-developer-topics-went) lists where each topic moved.
+pack step by step.
 
 ## What a pack is
 
@@ -362,52 +362,4 @@ pack without a restart, switch it off in *Admin → Packs* instead.
 - The `viewer`, `author`, `approver` and `admin` roles, and the powers a role can hold (`raw`, `author`, `approve`,
   `admin`, `calc`).
 - Calc's runtime and its `drishti` module; packs only switch it on and ship snippets.
-- The generic help: using the terminal, panel kinds, Studio, workspaces, and every reference.
-
-## Where the developer topics went
-
-These topics moved to the [Pack developer guide](PACK_DEVELOPER_GUIDE.md). The headings stay here so that links to them keep working.
-
-### `pack.yaml`, key by key
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key).
-
-### `columns`: the key fields of a pick list
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list).
-
-### `pivot`: a Pivot tab on search results
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results).
-
-### Large kinds: the lake layout
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout).
-
-### Derived kinds: entities computed from other kinds
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
-
-### Samples
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#samples).
-
-### Calc: Python snippets
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
-
-### A signed pack registry: publishing and installing
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing).
-
-### Inheritance
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#inheritance).
-
-### Writing a pack by hand, step by step
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#build-it-step-by-step).
-
-### How the shipped packs are generated
-
-See [the Pack developer guide](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated).
+- The generic help: using the terminal, panel kinds, the Build workbench, workspaces, and every reference.

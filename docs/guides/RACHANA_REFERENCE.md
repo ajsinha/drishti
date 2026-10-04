@@ -899,7 +899,7 @@ not compile is `DRS-2101` when the Sutra loads. The JSON Schema describes the op
 `agg`, `show` and `chart` and checks them as you type.
 
 A pack opts a kind's **search results and pick lists** into the same Pivot tab with `pivot:` beside `columns:` in
-`pack.yaml` ([PACKS.md](PACKS.md#pivot-a-pivot-tab-on-search-results)).
+`pack.yaml` ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)).
 
 #### tabs
 

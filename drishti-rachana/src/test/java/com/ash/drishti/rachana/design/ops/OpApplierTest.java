@@ -163,7 +163,7 @@ class OpApplierTest {
                 }
             }
         }
-        assertThat(seen).as("the examples together use all twenty kinds").containsExactlyInAnyOrder(PanelKind.values());
+        assertThat(seen).as("the examples together use all twenty-one kinds").containsExactlyInAnyOrder(PanelKind.values());
     }
 
     @Test

@@ -38,13 +38,13 @@ categories:
     icon: braces
     blurb: How screens are described instead of coded. Rachana is the grammar; each Sutra is one layout written in it.
     guides:
-      - { slug: rachana-guide, doc: guides/RACHANA_GUIDE.md, title: Rachana, step by step, icon: mortarboard, summary: "A tutorial from your first Sutra to a full trade view: strips, panels, tables, charts, keys, conditions, matching and review." }
-      - { slug: sutra-guide, title: The Sutra guide, icon: journal-richtext, summary: "Everything about writing Sutras: anatomy, labels and taxonomies, paths, formats, all twenty panel kinds, matching, inference, Studio." }
-      - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer · build a screen from JSON files", icon: bounding-box, summary: "The workbench step by step with screenshots: bring data, drop panels and fields on the canvas, size them on the grid, fill options in the inspector, edit the YAML, read the problems and the tests, undo, work by keyboard; a worked example per panel family." }
-      - { slug: screen-builder, title: "Screen Builder · JSON files to a shape", icon: signpost-split, summary: "Upload sample JSON files and get one JSON Schema with what each field is; then open the first in Studio. Steps 1 and 2 of the builder." }
+      - { slug: sutra-developer-guide, doc: guides/SUTRA_DEVELOPER_GUIDE.md, title: Sutra developer guide, icon: mortarboard, summary: "Writing Sutras end to end: anatomy, matching and priority, labels, paths and expressions, source, row groups, inference, testing and CI, the Build workbench, a checklist and the common mistakes with their codes." }
+      - { slug: screen-designer, doc: guides/SCREEN_DESIGNER.md, title: "Screen designer · build a screen from JSON files", icon: bounding-box, summary: "New? Start with the tutorial. The workbench step by step with screenshots: bring data, drop panels and fields on the canvas, size them on the grid, fill options in the inspector, edit the YAML, read the problems and the tests, undo, work by keyboard; a worked example per panel family." }
+      - { slug: build-workbench-tutorial, doc: guides/BUILD_WORKBENCH_TUTORIAL.md, title: "Build workbench tutorial", icon: map, summary: "Four complete projects, each with a picture of every step: from JSON files, by hand, changing a live Sutra, keyboard only." }
+      - { slug: screen-builder, title: "Screen Builder · JSON files to a shape", icon: signpost-split, summary: "Upload sample JSON files and get one JSON Schema with what each field is; then open it in the workbench. Steps 1 and 2 of the builder." }
       - { slug: panel-kinds, doc: guides/PANEL_KINDS.md, title: The twenty-one panel kinds, icon: grid-1x2, summary: "Every panel kind: meaning, when to use it, key options, behaviour when empty, masked, without access, live and on a phone, and an example with a picture." }
       - { slug: panel-developer-guide, doc: guides/PANEL_DEVELOPER_GUIDE.md, title: "Developing a panel kind", icon: tools, summary: "Add a panel kind to Drishti end to end, with the metric tile as the worked example: grammar, binder, console, workbench, export, tests." }
-      - { slug: examples, doc: guides/examples/README.md, title: Examples, icon: collection, summary: "Eleven working Sutras with their data, covering all twenty-one panel kinds, nested pivots and tree rows: read them here, open them in Studio." }
+      - { slug: examples, doc: guides/examples/README.md, title: Examples, icon: collection, summary: "Eleven working Sutras with their data, covering all twenty-one panel kinds, nested pivots and tree rows: read them here, open each as a copy in the workbench." }
       - { slug: nested-data, title: "Tutorial 4 · Nested documents", kind: tutorial, icon: diagram-2, summary: "Paths of any depth, tables over nested arrays, tabs per element, and a whole Sutra over a real trade." }
       - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key, panel option, format, tone, Rachana-EL expression and problem code." }
       - { slug: inference, doc: architecture/INFERENCE.md, title: Inference, icon: diagram-3, summary: "The rules that lay out data with no Sutra, how they are scored, and how they fill a Sutra's gaps." }
@@ -53,7 +53,6 @@ categories:
     icon: activity
     blurb: Where entities come from, how they tick, and how fast.
     guides:
-      - { slug: plugins, doc: connectors/PLUGIN_GUIDE.md, title: Sources and plugins, icon: plug, summary: "The source SPI, business dates, named connectors, routing, and the demo, file, REST, JDBC and Delta Lake plugins." }
       - { slug: live, doc: architecture/LIVE.md, title: Live updates, icon: broadcast, summary: "Topics, frames, patches, slow clients and reconnects." }
       - { slug: performance, doc: admin/PERFORMANCE.md, title: Performance, icon: speedometer2, summary: "Measured numbers and why the pipeline is fast." }
       - { slug: scale-benchmark, doc: admin/SCALE_BENCHMARK.md, title: Scale benchmark, icon: speedometer, summary: "A million trades a day in each store: how it is run, and the numbers." }
@@ -62,7 +61,7 @@ categories:
     icon: plug
     blurb: One guide per store or stream Drishti reads from, each with a worked set-up, every setting and its troubleshooting.
     guides:
-      - { slug: connectors, doc: connectors/CONNECTOR_GUIDE.md, title: Connector guide, icon: plug, summary: "Get your data in: which connector to use, a worked set-up for each, routing, reconnecting, health and troubleshooting." }
+      - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe, health, settings), testing with the testkit contracts, a worked teaching plugin, and a short summary of each of the 15 plugins; every setting lives in the per-connector docs." }
       - { slug: connector-demo, doc: connectors/DEMO_CONNECTOR.md, title: Demo, icon: play-circle, summary: "Every pack's samples, in memory, ticking." }
       - { slug: demo-data, doc: connectors/DEMO_DATA.md, title: Demo data, icon: hdd-stack, summary: "Building the demo book in each store, small to a million trades a day." }
       - { slug: connector-file, doc: connectors/FILE_CONNECTOR.md, title: File, icon: file-earmark, summary: "JSON lines on disk, from a demo to a large book." }
@@ -86,7 +85,7 @@ categories:
     blurb: The industries plugged in, what each pack holds, its data model and its example commands.
     guides:
       - { slug: packs, doc: guides/PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
-      - { slug: build-a-pack, title: "Tutorial 5 · Build a domain pack", kind: tutorial, icon: hammer, summary: "Describe kinds and documents in Python; the common pack builder checks them and writes the manifest, Sutras, samples, guide and lake." }
+      - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extends, generators, signing, hot load; worked example, a help-desk pack." }
   - id: admin
     name: Administration
     icon: shield-lock
@@ -124,6 +123,11 @@ categories:
 # F1 opens the guide for the current screen.
 moved:                      # retired guides: the address keeps working and lands on the guide that took the subject over
   panels: panel-kinds
+  sutra-guide: sutra-developer-guide
+  rachana-guide: sutra-developer-guide
+  plugins: connector-developer-guide
+  connectors: connector-developer-guide
+  build-a-pack: pack-developer-guide
   sutra-studio: screen-designer
 contextual:
   landing: using-the-terminal

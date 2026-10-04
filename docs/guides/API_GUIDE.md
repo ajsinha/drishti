@@ -944,7 +944,7 @@ You should see the draft begin with `# Started from what inference makes of trad
 `rachana: 1`, `sutra: my-swap`, `version: 1`, a `description:` line and `match: { kind: trade, priority: 1 }`;
 then the preview's title and panel ids.
 
-Propose it (with governance on, an approver then approves it in Studio → Review):
+Propose it (with governance on, an approver then approves it in **Build → Govern → Reviews**):
 
 ```bash
 curl -s -X POST "$B/sutras?note=first%20draft" -H 'Content-Type: text/yaml' --data-binary @my-swap.v1.sutra.yaml

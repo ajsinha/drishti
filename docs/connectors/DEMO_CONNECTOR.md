@@ -26,7 +26,7 @@ The code is `plugins/drishti-plugin-demo` (`DemoSourcePlugin`, `DemoTicker`). Fo
 [the walk-through at the end of this document](#walk-through-step-by-step) and [the configuration examples at the end of this document](#configuration-by-example).
 How the samples are generated, and how the same data is loaded into every real store, is in
 [DEMO_DATA.md](DEMO_DATA.md); the sample format from a pack author's side is in
-[PACKS.md](../guides/PACKS.md#samples).
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#samples).
 
 ## Contents
 
@@ -446,51 +446,25 @@ Moved here from the former connector guides, so that everything about this conne
 
 ### Walk-through, step by step
 
-[DEMO_CONNECTOR.md](DEMO_CONNECTOR.md) explains the connector in full: where samples come from, live ticks, routing, memory and every setting.
-
-The `demo` plugin serves every enabled pack's `samples/` folder, live: documents tick while someone watches (fields
-named in each sample's `_meta.walk` random-walk every `tick-ms`, 400). It is the `default-route`, serves every kind,
-and needs nothing installed. It is meant for trying Drishti, screenshots and tests, not for production data.
-
-```yaml
-# application.yaml (shipped)
-drishti:
-  sources:
-    default-route: demo
-    plugins:
-      demo:
-        enabled: ${DRISHTI_DEMO_ENABLED:true}   # DRISHTI_DEMO_ENABLED=false switches the samples off
-```
-
-**Switch it off in production** (`DRISHTI_DEMO_ENABLED=false`): otherwise an id your stores do not hold may be
-answered by a sample with the same id, on Live and for dates older than your history (see the 1 August example in
-[how a request picks a connector](CONNECTOR_DEVELOPER_GUIDE.md#how-a-request-picks-a-connector)). Its health is always `UP`; it has no cache figures.
+1. Start the server with the shipped configuration ([section 5](#5-configuration)): the demo is on and is the
+   `default-route`, so nothing needs installing or configuring.
+2. Type `TRD IRS-48213 <GO>` or `NSET NS-NORTH-01 <GO>`. Provenance shows the sample's `_meta.source` (`aero-risk`,
+   `aero-fx`, ...), live ([section 3](#3-a-sample-document), [section 7](#7-live-ticks)). Health shows `demo`, always `UP`
+   ([section 10](#10-failure-and-recovery)).
+3. For production, switch it off (`DRISHTI_DEMO_ENABLED=false`): otherwise an id your stores do not hold may be answered
+   by a sample with the same id, on Live and for dates older than your history (see the 1 August example in
+   [how a request picks a connector](CONNECTOR_DEVELOPER_GUIDE.md#how-a-request-picks-a-connector) and the
+   [checklist](#15-checklist-for-production)).
 
 ### Configuration by example
 
-**What it is for.** Sample data that works with nothing installed: each enabled pack's `samples/` folder, served
-live, ticking while someone watches. It is the `default-route`, so it answers every kind a pack has samples for,
-and it is what the screenshots and golden tests use. Not for production data.
+The packs supply the directories; the site only switches the connector on or off, and may change `ticking` and
+`tick-ms` ([section 5](#5-configuration), [section 14](#14-settings)). The documents are described in
+[section 2](#2-what-it-serves) and [section 3](#3-a-sample-document); the tick rules are in
+[section 7.3](#73-how-a-field-moves).
 
-**Configuration.** The packs supply the directories; the site only switches it on or off.
-
-The shipped file sets only `enabled`; `ticking` (`true`) and `tick-ms` (`400`) are the code's defaults. To change
-them, add for example:
-
-**Settings.**
-
-| Key | Default | Meaning |
-|---|---|---|
-| `dirs` | (from the packs) | comma-separated directories, each with `catalog.json` and `<kind>/<id>.json` |
-| `ticking` | `true` | tick live documents while subscribed |
-| `tick-ms` | `400` | tick interval in milliseconds |
-
-**The data.** `packs/<pack>/samples/catalog.json` lists the entities; each document lives in `<kind>/<id>.json`.
-An entry needs only `kind` and `id`; `title` and `subtitle` feed type-ahead. An entry whose path would lead outside
-the pack's samples folder is skipped.
-
-Every document needs `_meta` with `source` (the name shown in provenance), `generation` and `live`; `walk` is
-optional. A finance FX spot (shortened), and `packs/trading/samples/trade/MX-20000001.json` (shortened), which walks its MTM:
+Two documents as they are written, the first an FX spot with no `walk` (the built-in walk of its kind applies), the
+second a trade that walks its MTM (`packs/trading/samples/trade/MX-20000001.json`, shortened):
 
 ```json
 {
@@ -501,18 +475,7 @@ optional. A finance FX spot (shortened), and `packs/trading/samples/trade/MX-200
 
 ```json
 {
-  "tradeId": "MX-20000001", "productType": "…", "notional": 242000000.0, "mtm": 1875863, "nettingSet": "…",
+  "tradeId": "MX-20000001", "productType": "...", "notional": 242000000.0, "mtm": 1875863, "nettingSet": "...",
   "_meta": { "source": "murex-rates", "generation": 1, "live": true, "walk": { "mtm": 6172 } }
 }
 ```
-
-`_meta` is removed from the document. When `live` is true and someone subscribes, each tick moves the fields named in
-`walk` (`{"field": stepSize}`, top-level numbers) by a normal random draw whose standard deviation is the step, so a
-move is usually within the step but has no bound; a step of 1 or more rounds to whole numbers, a smaller one keeps
-its own precision (an FX spot walking by `0.0005` keeps five or more decimals). Without `walk`, the finance kinds'
-built-in walks apply (`curve`, `fx-spot`, `netting-set`, `trade`). A sample that cannot tick is skipped; the others
-go on. Reverse lookups find documents that hold the target id as a value at any depth (a trade's
-`counterparty.id` as well as its `nettingSet`), never the target itself.
-
-**What the user sees.** `TRD IRS-48213 <GO>`, `NSET NS-NORTH-01 <GO>`. Provenance shows `aero-risk`, `aero-fx`, …
-(the `_meta.source`), live. Health: `demo`, always `UP`.

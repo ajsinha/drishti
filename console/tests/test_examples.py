@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The Rachana examples (docs/guides/examples): the set covers every panel kind, a nested pivot and a tree table, each
-parses, each has its JSON and note; Studio opens them (by default, by name, from a file) and the help centre lists them."""
+parses, each has its JSON and note; the workbench opens them (by default, by name, from a file) and the help centre lists them."""
 import json
 from conftest import open_studio  # noqa: E402
 from pathlib import Path
@@ -124,7 +124,7 @@ def test_the_help_centre_lists_every_example_with_note_yaml_json_and_a_studio_li
         assert f"{name}.sutra.yaml" in page.text and f"{name}.json" in page.text, name
     assert "<details>" in page.text and "children:" in page.text and "&#34;exposure&#34;" in page.text
     assert "data-unavailable" not in page.text, "dead link in the examples page"
-    assert 'href="/help/rachana-guide"' in page.text
+    assert 'href="/help/panel-kinds"' in page.text
     assert "/help/examples" in client.get("/help").text
 
 

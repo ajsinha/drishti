@@ -285,7 +285,7 @@ The first column is the id (a link). Then come:
 
 1. the fields your command uses (`currency` and `mtm` in `TRD MX-2* currency=usd order by mtm desc`);
 2. the kind's **key fields**, which the pack declares under `columns:` in its `pack.yaml`
-   ([PACKS.md](PACKS.md#columns-the-key-fields-of-a-pick-list)). For the banking packs:
+   ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)). For the banking packs:
 
    | Kind | Key fields shown |
    |---|---|
@@ -580,7 +580,7 @@ top, *Notional* into the cells, and read the totals; click any number to see the
 
 The switch is there **only where it was asked for**: a Sutra author adds `pivot:` to a table or ladder
 ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)), or a pack adds it to a kind's
-search results ([PACKS.md](PACKS.md#pivot-a-pivot-tab-on-search-results)), and chooses which fields you may use and
+search results ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)), and chooses which fields you may use and
 how it opens. Every other table stays a table. In the banking packs, for example: a netting set's and a clearing
 account's trades (notional by product and maturity bucket), a book's largest trades and a desk's trades (MTM by
 product, or by book, and currency), a desk's P&L (`DPNL`), collateral positions, a trade's cash flows (PV by flow type
@@ -1350,7 +1350,7 @@ Plain `/studio` opens a scratch design on the showcase example; use **Build → 
 
 Worked example: add a one-day P&L figure to the swap's strip.
 
-1. Open `/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001` (or choose *irs-fixfloat@1* under *New screen → an existing Sutra* and add
+1. Choose *irs-fixfloat@1* under **Build → New screen → an existing Sutra** (or open `/studio?sutra=irs-fixfloat@1&kind=trade&id=MX-20000001`) and add
    `MX-20000001` as a stored entity). The YAML tab shows the Sutra; the preview shows `MX-20000001`. The entities you had kept as that Sutra's test entities in
    Studio are already among the samples.
 2. Near the top, under `rachana: 1` and `sutra: irs-fixfloat`, change `version: 1` to `version: 2`.
@@ -1374,7 +1374,7 @@ Sutra folder (`./sutras/…/irs-fixfloat.v2.sutra.yaml`), and views use the high
 revision, and Undo brings the old text back.
 
 The [screen designer guide](SCREEN_DESIGNER.md) (every pane, with pictures) and the
-[Sutra guide](../../console/web/guides/sutra-guide.md) go much further.
+[Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md) go much further.
 
 ### Reviews: approving a Sutra
 

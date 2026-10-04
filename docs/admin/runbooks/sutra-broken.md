@@ -167,9 +167,9 @@ cmd-forward 1 [1] $.productType == 'CMD_FORWARD'
 | `inference` only | No Sutra matches this entity: the `match.where` condition is false for it, or the Sutra was never valid. |
 | Another Sutra's name | A Sutra with higher `priority` (or a more specific `where`) matches first. |
 
-### Step 3. Find the error in Studio
+### Step 3. Find the error in the Build workbench
 
-Open the Sutra in Studio, at the entity you are fixing:
+Open the Sutra in the Build workbench, at the entity you are fixing (the old `/studio` address redirects there):
 
 ```text
 http://localhost:17480/studio?sutra=cmd-forward@1&kind=trade&id=END-1000008
@@ -197,7 +197,7 @@ to jump to it. The preview changes nothing on the server.
    {"enabled":true,"proposals":[]}
    ```
 
-   A pending proposal is listed here and at `/studio/reviews` in the console. It becomes live when an approver
+   A pending proposal is listed here and at **Build → Govern → Reviews** (`/build/reviews`) in the console. It becomes live when an approver
    approves it.
 
 ## Fixes
@@ -210,11 +210,11 @@ to jump to it. The preview changes nothing on the server.
 works at once, but the drill (`tools/drill.sh`) then fails with `… out of date`, and the next run of the
 generator undoes it. Use the in-place fix only to restore service; then make the same change in the generator (or the taxonomy
 it reads, `tools/packgen/banking/taxonomy.py`), run it, and commit both. The banking packs' Sutras come from `tools/packgen/banking/make_sutras.py`; the
-others from `tools/packgen/<area>/make.py` ([PACKS.md](../../guides/PACKS.md#how-the-shipped-packs-are-generated)).
+others from `tools/packgen/<area>/make.py` ([PACK_DEVELOPER_GUIDE.md](../../guides/PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).
 To change a generated layout for your site only, save a higher version in the site Sutra folder (Studio does
 this) instead of editing the pack.
 
-**Fix it in Studio.** Studio's **Save** is available when `drishti.rachana.studio-save` is on (environment
+**Fix it in the Build workbench.** Its **Save** is available when `drishti.rachana.studio-save` is on (environment
 `DRISHTI_STUDIO_SAVE=true`) and you have the author role. `GET /api/v1/studio/settings` tells you what you may do:
 
 ```json
@@ -228,7 +228,7 @@ Things to know:
   Sutra cannot be overwritten under the same name and version (`DRS-2028`). Raise `version` (for example to 2); the
   highest version wins, and the pack file stays as it was.
 - With review on (`drishti.governance.enabled`, default `true`), the save becomes a proposal. Someone with the
-  approver role, or an admin, approves it at `/studio/reviews`. With four-eyes on (the default when security is
+  approver role, or an admin, approves it at **Build → Govern → Reviews**. With four-eyes on (the default when security is
   on), nobody approves their own proposal.
 
 **Go back to the last good version.** Revert the file in version control and save; hot reload applies it. For

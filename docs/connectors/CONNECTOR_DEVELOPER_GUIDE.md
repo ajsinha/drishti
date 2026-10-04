@@ -207,7 +207,7 @@ alike, and are how secrets stay out of files.
 | on ActiveMQ queues or topics | [`activemq`](#activemq) | live; the connector keeps the latest document per entity on local disk | a queue delivers once: the local state store is the only copy |
 | on RabbitMQ queues | [`rabbitmq`](#rabbitmq) | as ActiveMQ, AMQP 0-9-1 | as ActiveMQ |
 | JSON objects in a bucket (S3, MinIO, Ceph) | [`s3`](#s3) | the `file` layout in object storage, dated by folder | cost of listing large buckets; reads cached `cache-seconds` |
-| a total or summary of another kind (a book's P&L from its trades) | `derived` ([PACKS.md](../guides/PACKS.md#derived-kinds-entities-computed-from-other-kinds)) | computed by the server from the other kind, through whichever connectors serve it | reads every member once per `refresh`; keep `max-scan` above the member count |
+| a total or summary of another kind (a book's P&L from its trades) | `derived` ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) | computed by the server from the other kind, through whichever connectors serve it | reads every member once per `refresh`; keep `max-scan` above the member count |
 | public rates and FX | [`feed`](#feed) | NY Fed SOFR, ECB €STR and FX, US Treasury curve, FRED; switched on by one variable each | needs internet (or a mirror); FRED needs a free key |
 
 ### What each connector can do
@@ -1011,56 +1011,16 @@ reference: [DEMO_CONNECTOR.md](DEMO_CONNECTOR.md) (the sample data itself: [DEMO
 
 **Also built in: `derived`.** Kinds computed from other kinds (members grouped by an expression, with `count`, `sum`,
 `avg`, …), read through whichever connectors serve the members. It is part of the engine, not a plugin: see
-[PACKS.md](../guides/PACKS.md#derived-kinds-entities-computed-from-other-kinds).
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
 
 ### Message queues (ActiveMQ, RabbitMQ)
 
-A queue delivers each message once and keeps no history, unlike a Kafka topic. So these connectors keep the latest
-document of every entity themselves, in a **persistent state store** per connector: RocksDB on local disk
-(`state.dir`, default `<state.root>/<source-name>`, that is `./data/state/<connector>`), which survives restarts of
-Drishti, with the recent documents in a memory cache (`cache-mb`, 128). Nothing is lost while Drishti is down: queue
-messages wait in the broker, and topics are read through durable subscriptions.
-
-A message is acknowledged only after the store has kept it, written with `state.durability`: `sync` (the default:
-the write-ahead log is synced on every write, so neither a crash nor a power loss loses an acknowledged message; one
-disk sync per message bounds a connector at typically thousands of messages a second on an SSD), `wal` (not synced:
-survives a crash of the process, a power loss can lose the last moments) or `none` (no log: fastest, a crash can lose
-up to the 32 MB write buffer). A message the store cannot keep (disk full, an I/O error) is **not** acknowledged:
-RabbitMQ requeues it and ActiveMQ redelivers it a second later, and health reads `DOWN: <reason> (messages are not
-acknowledged and come again)` until one is kept again. Unreadable messages (not JSON, not a document) are acknowledged
-and counted as `rejected`, since they would otherwise come back forever (no dead-lettering).
-
-| Message | Becomes |
-|---|---|
-| a body on a destination with `kind.<destination>` (or any destination when `kind` is set) | that kind's document; the id is the `id` header, else the field `id-field.<destination>` (else `id-field`, default `id`) |
-| a body `{"kind", "id", "doc"}` on any other destination | the envelope's entity (the envelope's `"id"` wins; the `id` header stands in for a missing `"id"`) |
-| `"doc": null` or no `"doc"` key in an envelope, a `deleted: true` header, or an empty body on a destination with a kind and an `id` header | a delete (an empty body anywhere else is counted as rejected) |
-| anything else (not JSON, no kind or id) | skipped and counted as `rejected` in the connector's cache figures |
-
-Every change is pushed to open views (a delete too: the view says the entity was deleted, and when), search
-finds everything received, and a purge (Admin → Caches) clears only the memory cache: the state store is the only
-copy, so it is never purged (clear it deliberately with `state.reset-at`, which clears only the disk store, or by
-deleting its folder with the server stopped). The store keeps only the latest value of each entity (level
-compaction), so its size follows the number of live entities, not the messages received. Each connector has its own
-budget, `state.max-gb` (10): every `state.check-seconds` (60) the store is checked, and past the budget
-`state.when-full: evict-oldest` (the default) removes the entities written longest ago until it is under 90% of the
-budget, compacts, logs each eviction at WARN and counts it in `evicted`; `warn` removes nothing and says so in health.
-Declare them as named connectors in a pack or site configuration (full examples: [activemq](#activemq),
-[rabbitmq](#rabbitmq)); everything about the store is in [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md#7-durability-and-disk-budget)
-and [RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md#6-durability-and-disk-budget):
-
-```yaml
-drishti:
-  sources:
-    connectors:
-      desk-orders:
-        plugin: rabbitmq
-        kinds: [order]
-        settings: { uri: "${RABBIT_URI}", queues: orders, kind.orders: order, id-field.orders: orderId }
-      market-quotes:
-        plugin: activemq
-        settings: { broker-url: "failover:(tcp://mq1:61616,tcp://mq2:61616)", destinations: "topic:quotes", kind.quotes: quote }
-```
+A queue delivers each message once and keeps no history, unlike a Kafka topic, so these two connectors keep the latest
+document of every entity themselves, in a persistent state store on local disk that survives restarts, and acknowledge
+a message only after the store has kept it. How a message becomes an entity, the durability modes, the disk budget and
+eviction are in [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md#7-durability-and-disk-budget) and
+[RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md#6-durability-and-disk-budget); minimal configurations are the
+[activemq](#activemq) and [rabbitmq](#rabbitmq) sections above.
 
 ---
 

@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Expandable rows (PANELS.md, Tree rows).
+/* Expandable rows (PANEL_KINDS.md, Tree rows).
    1. A table or ladder whose Sutra says children: (table.tbl-tree): the ▸/▾ button of a row opens and closes the rows under
       it, any number of levels deep; the filter box keeps the ancestors of the rows that match.
    2. A pivot by a list of fields (div.pv-tree-host): the nested rows are drawn by the Pivot tab's grid (pivot-grid.js, the

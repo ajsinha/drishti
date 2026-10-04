@@ -340,10 +340,11 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Every console feature, with examples | [USER_GUIDE.md](USER_GUIDE.md) |
 | The packs and the commands each one adds | [PACKS.md](PACKS.md) |
 | Build a screen from your own JSON files, by dragging panels and fields, no YAML needed | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), or **Build → Screen designer guide** (F1 on any Build page) |
-| Change how a screen looks (Sutras) | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) and the in-app *Sutra guide* |
+| Learn to build screens, step by step | [BUILD_WORKBENCH_TUTORIAL.md](BUILD_WORKBENCH_TUTORIAL.md) |
+| Change how a screen looks (Sutras) | [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | See every panel kind working, and copy from ten small Sutras with their data | [examples/](examples/README.md), or **File** in the workbench, or **Help → Examples** |
 | Build Drishti from source, run the tests, add an endpoint, plugin, pack or page | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
-| Connect your own data | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Connect your own data | [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Turn on sign-in and run it for others | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) and [OPERATIONS.md](../admin/OPERATIONS.md) |
 | See every document | [the documentation map](../README.md) |
 

@@ -24,7 +24,7 @@ You have a folder of JSON documents (trades, shipments, patients, sensor reading
 | 1. Samples to shape | Merges up to 50 documents into one JSON Schema that says what every field *is*. | Works: `POST /api/v1/builder/shape` |
 | 2. Auto-design | A complete Sutra from the shape and the samples, with a reason for every choice. | Works: `POST /api/v1/builder/design` and `/suggest` |
 | 3. **Designs** | Your work is kept on the server as a *design*: **New screen**, **My designs**, examples as your own copies. | Works: **Build → New screen** (`/build/new`), **Build → My designs** (`/build`) |
-| 4 to 7 | Operations and one checker, the visual workbench, Studio folded in, ship and scale. | Planned |
+| 4 to 7 | Operations and one checker, the visual workbench, Studio folded in (done), ship and scale. | Planned |
 
 Everyone who is signed in may use it: designing is open to all, and only saving or proposing a Sutra to the registry needs the
 **author** power.
@@ -75,7 +75,7 @@ middle (**Design**, **YAML**, **Summary**), and **Inspector**, **Problems** and 
 The Design tab is the real screen with an editing layer: select, move and size panels, drop panels from the palette and fields from
 the shape, edit options in the inspector. **Auto-design** drafts a Sutra from the samples as the design's next revision (after
 asking, if it would replace one; Undo brings the old one back), and lists what it left out and why.
-**Open in Studio** carries this design's Sutra and the sample chosen to Studio.
+Studio no longer has a page of its own: this is the editor, with the real preview and the YAML tab beside the canvas.
 
 The whole workbench is explained step by step, with screenshots, in [the Screen designer guide](/help/screen-designer). In the Data
 pane, **shape.json** (the schema with `x-drishti`) and **JSON Schema** (annotations removed, for any other tool) download.
@@ -99,7 +99,7 @@ A shape is a JSON Schema (draft 2020-12) of the whole set, plus Drishti's notes 
    most fields are rare: the three files are different kinds of document. With files of one kind you would see few.
 4. In the tree, open `sensitivities[]`: `bucket` is a `dimension`, `dv01` a `measure`. `children` under `units[]` is a `tree`.
 5. Read **Sutra** and the list of what auto-design left out ("empty in 2 of 3 samples"). Switch the **Sample** under
-   **Preview**. When you want to edit, **Open in Studio**.
+   **Preview**. When you want to edit, edit on the canvas or the **YAML** tab.
 
 Try it again with several copies of one example where you delete `pnlHistory` from all but one: that panel is dropped, with
 the reason.

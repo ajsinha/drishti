@@ -685,7 +685,7 @@ memory (although it still replays the topic from the beginning at start, `UP (ca
 ticks of open views while a store (Delta Lake, a database) serves the documents: such a
 view is live although its document came from the store, because a live connector declares that it pushes the kind
 (`SourcePlugin.pushes`), and it subscribes there.
-See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) for every Kafka setting.
+See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) for every Kafka setting.
 
 ## The demo source
 

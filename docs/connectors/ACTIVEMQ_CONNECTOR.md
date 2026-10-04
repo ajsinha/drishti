@@ -699,53 +699,23 @@ Moved here from the former connector guides, so that everything about this conne
 
 ### Walk-through, step by step
 
-[ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md) explains the connector in full: queues and durable topics, the state store, acknowledgement, failover and every setting.
+Your limit-management system publishes each credit limit to the ActiveMQ Classic queue `limits` whenever it changes.
+You want `LIM <id>` to show the latest version, live.
 
-#### The situation
-
-Your limit-management system publishes each credit limit to the ActiveMQ Classic queue `limits` whenever it
-changes. You want `LIM <id>` to show the latest version, live.
-
-#### How message-queue connectors keep data
-
-If the store cannot keep a message (disk full, an I/O error), the message is **not** acknowledged: ActiveMQ redelivers
-it a second later (`session.recover()`, without limit unless `max-redeliveries` sets one), RabbitMQ requeues it, and
-health reads `DOWN: <reason> (messages are not acknowledged and come again)` until one is kept again. A message the
-connector cannot read (not JSON, not a document) is acknowledged and counted in `rejected`, since it would otherwise
-come back forever: there is no dead-lettering of those.
-
-Three more properties of the store matter in production:
-
-#### The data
-
-A `TextMessage` (or `BytesMessage`, read as UTF-8) whose body is JSON, with optional **string properties**:
-
-On `limits`, configured with a kind (mapped):
-
-#### Configure it
-
-**Pack form:**
-
-**Site form**, the same under `drishti.sources.connectors` (bracket and quote a key that has characters other than
-letters, digits, `-` and `.`, for example `"[kind.desk_limits]": credit-limit`):
-
-Two Drishti servers on the same broker need different `client-id`s (ActiveMQ refuses a second connection with the
-same id); each then has its own durable subscription to each topic, named `drishti-<connector>-<topic>`. A durable
-subscription stays on the broker after its topic is removed from `destinations`, and the broker keeps queueing for
-it: remove it on the broker. With several destinations the connector polls them in turn, and each idle one costs a
-50 ms wait per loop, so a busy destination listed with idle ones is read more slowly. Two servers
-reading the same **queue** share its messages, so each would hold only part of the entities: give each server its own
-queue (or read a topic).
-
-#### Try it
+1. **Configure it.** Use the pack form in [section 5.1](#51-pack-form) (or the site form in
+   [section 5.2](#52-site-form)); the messages it accepts, with their `id` and `deleted` properties, are in
+   [section 4](#4-messages-what-the-connector-accepts). How the store keeps what arrives, and what happens when it
+   cannot, are in [section 6](#6-the-state-store) and [section 7](#7-durability-and-disk-budget). Two servers on one
+   broker need different `client-id`s ([section 3](#3-queues-topics-and-durable-subscriptions)).
+2. **Start a broker and the server.**
 
 ```bash
 docker run -d --name amq -p 61616:61616 -p 61613:61613 -p 8161:8161 apache/activemq-classic
 DRISHTI_LIMITS_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar     # with the pack form above
 ```
 
-Send a message with an `id` property, for example over STOMP (ActiveMQ turns STOMP headers into message
-properties):
+3. **Send a message** with an `id` property, for example over STOMP (ActiveMQ turns STOMP headers into message
+   properties):
 
 ```python
 # uv run --with stomp.py python send_limit.py
@@ -756,22 +726,21 @@ c.send("/queue/limits", json.dumps({"limitId": "LIM-ALDERSHOT", "limit": 3380000
 c.disconnect()
 ```
 
-or from the web console (`http://localhost:8161/admin`, Queues → `limits` → Send To) with the JSON body.
+   or from the web console (`http://localhost:8161/admin`, Queues -> `limits` -> Send To) with the JSON body.
+4. **In the terminal**: `LIM LIM-ALDERSHOT <GO>` shows provenance `limits-mq`, live; send another message and the view
+   updates. The type-ahead lists every entity received; one only the queue holds has the subtitle
+   `credit-limit · limits-mq` (an id a dated store also holds, such as `LIM-ALDERSHOT`, shows that store's subtitle).
+   Pick a date: the lake (`credit-store`) answers, since dated connectors go first ([section 12](#12-history-combining-with-a-lake)).
 
-#### In the terminal
-
-`LIM LIM-ALDERSHOT <GO>`: provenance `limits-mq`, live; send another message and the view updates. The type-ahead
-lists every entity received; one only the queue holds has the subtitle `credit-limit · limits-mq` (an id a dated store
-also holds, such as `LIM-ALDERSHOT`, shows that store's subtitle). Pick a date: the lake (`credit-store`)
-answers, since dated connectors go first.
+A message the store cannot keep is not acknowledged and comes again; one the connector cannot read is acknowledged and
+counted in `rejected` ([section 4.5](#45-rejected-messages), [section 10](#10-acknowledgement-ordering-and-delivery)).
+A topic removed from `destinations` leaves its durable subscription on the broker (remove it there), and an idle
+destination costs a 50 ms wait per loop ([section 11.1](#111-throughput)).
 
 ### Configuration by example
 
-**What it is for.** Live entities pushed by systems that publish to ActiveMQ Classic (OpenWire) queues or topics.
-The connector keeps each entity's latest document itself (see [Message queues](CONNECTOR_DEVELOPER_GUIDE.md#message-queues-activemq-rabbitmq)),
-so entities sent before a restart are still there.
-
-**Configuration.**
+Live entities pushed by systems that publish to ActiveMQ Classic (OpenWire) queues or topics, for a desk with orders
+on a queue and quotes on a topic. All keys are in [section 16](#16-settings).
 
 ```yaml
 # packs/<pack>/pack.yaml (or the same under drishti.sources.connectors in application.local.yaml)
@@ -793,10 +762,7 @@ connectors:
       state.max-gb: 20
 ```
 
-**Settings.**
-
-**The data.** A `TextMessage` (or `BytesMessage`, read as UTF-8) whose body is JSON; optional string properties
-`id` and `deleted`. On `orders` above (mapped):
+A message on `orders` above (mapped; the rules are in [section 4.2](#42-a-destination-with-a-kind)):
 
 ```text
 destination: queue://orders
@@ -804,20 +770,12 @@ property id: O-55120                       (optional; else the body's orderId)
 body:        {"orderId": "O-55120", "side": "BUY", "instrument": "EQ-NVTK", "qty": 2500, "status": "WORKING"}
 ```
 
-On a destination without a kind, the body is an envelope `{"kind": "order", "id": "O-55120", "doc": {…}}`. A
-message with property `deleted=true`, `"doc": null` or no `"doc"` key deletes (an empty body deletes only on a destination with a kind,
-with the `id` header naming the entity). Generation is a counter that rises with
-every message; documents are live and undated.
-
-**Try it.**
+To try it, start a broker, switch the connector on, start the server, and send the body from the web console
+(`http://localhost:8161/admin`, admin/admin -> Queues -> orders -> Send To):
 
 ```bash
 docker run -d --name amq -p 61616:61616 -p 8161:8161 apache/activemq-classic
-# switch the connector on, start the server, then send a message from the web console
-# (http://localhost:8161/admin, admin/admin → Queues → orders → Send To) with the JSON body above
 ```
 
-**What the user sees.** `<mnemonic for order> O-55120 <GO>`, live; the view updates on every message. Health:
-`UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <reason> (messages are not acknowledged and come
-again)` when the state store cannot write, `UP (state store over its budget: …)` past `state.max-gb`; cache figures
-`entities`, `memoryEntries`, `stateMb`, `durability`, `budgetMb`, `evicted`, `received`, `rejected`.
+`<mnemonic for order> O-55120 <GO>` then shows the order live, updating on every message. Health and cache figures are
+in [section 13](#13-failure-and-recovery).

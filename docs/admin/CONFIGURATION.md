@@ -450,7 +450,7 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 | `max-archive-mb` / `max-unpacked-mb` | `50` / `200` | Size limits for an archive and for what it unpacks to. |
 | `allow-http` | `false` | Accept plain `http:` registries. For tests only. |
 
-See [PACKS.md](../guides/PACKS.md#a-signed-pack-registry-publishing-and-installing).
+See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing).
 
 ### `drishti.rachana` — Sutras
 
@@ -718,7 +718,7 @@ Not in the bundled file; the defaults apply until you set them.
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
 | `columns.<kind>` | from packs | A kind's key fields in pick lists and searches (`columns:` in `pack.yaml`). |
-| `pivot.<kind>` | from packs | A Pivot tab on the kind's results: `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACKS.md](../guides/PACKS.md#pivot-a-pivot-tab-on-search-results)). |
+| `pivot.<kind>` | from packs | A Pivot tab on the kind's results: `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)). |
 
 ### `drishti.calc` — Python in the browser
 
@@ -733,7 +733,7 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 | `max-snippet-chars` | `50000` | A saved snippet's code, at most (never more than 60,000: a saved document is at most 64 KB). Each user keeps at most 50 snippets. |
 
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
-[PACKS.md](../guides/PACKS.md#calc-python-snippets).
+[PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
 
 ### `drishti.layouts` — personal layouts
 
@@ -770,7 +770,7 @@ There is no role power: anyone who may open a kind may pivot and save; promoting
 Not in the bundled file; the defaults apply until you set them. They bound how much of one document the
 `histogram`, `pivot`, `scatter`, `candlestick`, `waterfall`, `graph` and `timeline` panels read, so a very long list
 cannot make a view slow or a page heavy. A panel that stops short says so (*N more*, *N left out*). See
-[PANELS.md](../guides/PANELS.md#18-limits).
+[PANEL_KINDS.md](../guides/PANEL_KINDS.md#how-a-panel-behaves).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -856,7 +856,7 @@ drishti:
 These go under `drishti.sources.plugins.<plugin>.settings` (single instance) or
 `drishti.sources.connectors.<name>.settings` (named instance). Every plugin takes `source-name`, the name shown
 in provenance and health (default: the connector's name, or the plugin's name). Writing a plugin of your own is
-described in [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md).
+described in [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
 
 Every plugin also takes **`stale-after`**: a duration (`15m`, `2h`, `4d`). When the connector has received nothing new
 for longer than that, it is *stale*: Admin → Health shows it in amber and turns the overall status `DEGRADED`, and
@@ -889,7 +889,7 @@ Layout: `<root>/<domain>/<kind>/business_date=yyyy-MM-dd/` holding `(id, doc)` r
 | `id-column` / `doc-column` / `date-column` | `id` / `doc` / `business_date` | Column names. |
 | `refresh-seconds` | `10` | How often each table's latest version is checked. |
 | `cache-mb` | `512` | Whole days kept in memory, by size, for small tables that are not laid out. |
-| `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACKS.md](../guides/PACKS.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out. |
+| `layout.<kind>.columns` | none | Document paths stored as columns beside the document (see [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#large-kinds-the-lake-layout)); searches, pick lists, derived kinds and impact read them instead of documents. `layout.<kind>.sort-by`, `file-rows`, `row-group-rows` tell the writers how to lay the table out. |
 | `id-map-mb` | `1024` | Each day's ids and the file each is in, read from the id column alone, kept by size. |
 | `doc-cache-mb` | `256` | Single documents read recently. |
 | `columns-cache-mb` | `1024` | A day's promoted columns, read once and kept by size (the newest day is loaded in the background). |
@@ -1157,7 +1157,7 @@ Today and recent days in memory, with live updates; history behind it in Delta L
 
 A data domain is three sets: `<set>` (a record per entity per business date, key `kind/id/yyyyMMdd`, bins `kind`,
 `id`, `date`, `doc` and the promoted fields), `<set>_ix` (a record per entity, key `kind/id`, bin `dates`) and
-`<set>_kinds` (a record per kind, bin `dates`). See the [connector guide](../connectors/CONNECTOR_GUIDE.md#9-a-key-value-store-aerospike)
+`<set>_kinds` (a record per kind, bin `dates`). See the [connector guide](../connectors/AEROSPIKE_CONNECTOR.md#walk-through-step-by-step)
 and [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
 
 | Setting | Default | Meaning |
@@ -1217,7 +1217,7 @@ new data. Full detail: [FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md).
 | `max-scan` | `50000` | Members read at most. |
 
 In a pack the settings may be nested (`book-pnl: { from: trade, fields: { mtm: sum $.mtm } }`): nested maps become
-dotted keys. Worked example: [PACKS.md](../guides/PACKS.md#derived-kinds-entities-computed-from-other-kinds).
+dotted keys. Worked example: [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds).
 
 ### `demo` — sample data
 
@@ -1413,12 +1413,12 @@ read by both programs, so one set of variables configures both halves.
 | `packs.dir` | `../packs` (`DRISHTI_PACKS_DIR`), relative to `console/` | Where pack content (examples, guides) is read. |
 | `packs.enabled` | `finance` | Used only when the server cannot be asked which packs are enabled. |
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
-| `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that Studio (`/studio?example=<name>`, File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
+| `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that the Build workbench (**Build → New screen → Examples**, the File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
 | `ui.studio_example` | `all-panels-showcase` | The example Studio opens on when no entity or Sutra is asked for. Blank, or a name that is not there: Studio opens on the first example entity of the user's packs, as before. |
 | `builder.max_samples` | `50` | Build workbench, **New** (`/build/new`): files in one upload, and samples in all (a `.jsonl` line is one). Over it, the whole upload is refused (`413 DRS-5005`). Keep it at or under the server's `drishti.builder.max-samples`. |
 | `builder.max_file_mb` | `5` | Largest single file; a larger one is left out and reported, the rest are shaped. |
 | `builder.max_total_mb` | `25` | All files together; over it the upload is refused. |
-| `builder.studio_kind` | `sample` | The kind a new Design and **Open in Studio** preview a brought document as (a pasted document has no kind of its own). |
+| `builder.studio_kind` | `sample` | The kind a new Design and the workbench preview a brought document as (a pasted document has no kind of its own). |
 
 `config/workspaces.yaml` holds the console's own starter workspaces (`templates`, none by default; packs add theirs)
 and `blank`, what a new workspace starts as (*New workspace* on `/w`): a `layout` (`2col`, `3col`, `2x2`, `1+2`) and one

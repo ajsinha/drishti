@@ -190,7 +190,7 @@ drishti:
 ```
 
 **Fix B. Make the expensive view cheaper.** Open the Sutra named in the view's provenance
-(`"layout":"Sutra cmd-forward v1 + inference"`) in Studio (`/studio`) and reduce what it binds: fewer columns
+(`"layout":"Sutra cmd-forward v1 + inference"`) in the Build workbench (**Build → New screen → an existing Sutra**) and reduce what it binds: fewer columns
 in large tables, fewer rows, simpler expressions. See [RACHANA_REFERENCE.md](../../guides/RACHANA_REFERENCE.md).
 
 **Fix C. Add capacity or cap streams.** Run another server behind the load balancer; topics and streams are per

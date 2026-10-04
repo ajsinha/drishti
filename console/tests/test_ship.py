@@ -252,3 +252,12 @@ def test_a_design_whose_base_moved_is_flagged_and_the_rebase_is_forwarded(app_cl
     assert "/rebase" in ship and "baseMoved" in problems
     assert "data-base-name" in (CONSOLE / "web" / "templates" / "build" / "design.html").read_text()      # the header names the base, so a rebase can update it
     assert "store.state.baseMoved = null" in ship and "store.emit('basemoved')" in ship   # after a rebase the flag and the old base name go
+
+
+def test_a_design_that_published_the_live_version_carries_no_base_moved_flag(app_client, backend):
+    """After approving its own design the live version is the one it published: the server sends no flag, the page shows none."""
+    id_ = _design(app_client)
+    row = next(r for (u, i), r in backend.design_rows.items() if i == id_)["design"]
+    row["status"] = "live(v2)"
+    page = app_client.get(f"/build/d/{id_}").text
+    assert '"baseMoved": null' in page and "base moved to" not in page

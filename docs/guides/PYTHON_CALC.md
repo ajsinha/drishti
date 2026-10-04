@@ -54,7 +54,7 @@ strip, the tables, searches and columns alike.
 |---|---|
 | Re-price a trade under a rate move, recompute a VaR, interpolate a curve, pivot a desk's P&L your own way, once | **Calc** |
 | Try an idea on what is on the screen before asking for a panel | **Calc** |
-| A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra guide](../../console/web/guides/sutra-guide.md)): computed on the server, cached, live |
+| A figure everyone sees on a view, every time | a panel in the kind's Sutra ([Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md)): computed on the server, cached, live |
 | Find entities by value (`TRD where mtm > 1m`) | [search](USER_GUIDE.md#search-by-value), on the command line |
 | Be told when a figure crosses a line | an [alert](USER_GUIDE.md#alerts): the server checks it on every change |
 | The same search as a file every morning | a [scheduled report](USER_GUIDE.md#scheduled-reports) |
@@ -354,7 +354,7 @@ computes.
 The banking ones are written by `tools/packgen/banking/make_packs.py` from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
 `packs/<pack>/python/` files: change the source and run the generator, see
-[PACKS.md](PACKS.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
+[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
 # title: Key-rate DV01 by bump and reprice

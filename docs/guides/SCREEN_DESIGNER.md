@@ -78,7 +78,7 @@ Open the workbench with nothing at all and you get an unnamed **scratch design**
 
 | Where | What it holds |
 |---|---|
-| **Left: Data** | The samples (add, remove, choose the previewed one), the **palette** of the 20 panel kinds, and the **shape**: every field of your data with its role. |
+| **Left: Data** | The samples (add, remove, choose the previewed one), the **palette** of the 21 panel kinds, and the **shape**: every field of your data with its role. |
 | **Centre** | Tabs **Design** (the real screen with an editing layer), **YAML** (the Sutra text), **Summary** (the Sutra read back as a page) and **Notes** (the design's notes in markdown, with a preview; they travel to the reviewer). **Split** shows Design and YAML side by side. |
 | **Right** | Tabs **Inspector** (a form for what is selected), **Problems**, **Tests** and **Versions**. |
 | **Status bar** | `◀ sample 2/12 ▶`, Desktop or Phone width, Theme, **Preview with a file…**, the check result `✓ 12/12`, the revision, Undo and Redo. |
@@ -108,7 +108,7 @@ Everything you do is an **operation** on the design (add a panel, move it, set a
 
 Conflicts (the same field with different types in different files) and rare fields (in fewer than half of the records) are listed above the tree: a panel built on a rare field is empty for many samples. Filter by path or role; arrows move, Right and Left open and close, **Enter** shows a field's reason, examples and files. Each opened field has two buttons, **Suggest panels…** and **Bind to selected panel** (also the keys `S` and `B`), and every field can be **dragged** onto the canvas (section 6).
 
-**Palette.** The 20 panel kinds, each with an icon and a line on what it shows. Drag one onto the canvas, or press its **Add** button (section 5).
+**Palette.** The 21 panel kinds, each with an icon and a line on what it shows. Drag one onto the canvas, or press its **Add** button (section 5).
 
 ![The palette of panel kinds](img/designer/04-palette.jpg)
 
@@ -540,7 +540,7 @@ java -jar drishti-server-<version>-exec.jar sutra shape  samples/*.json --out ta
 java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind deal --out target/draft
 ```
 
-`test` uses the **same checker as the Tests tab**, with the `packs/<pack>/tests/<sutra>/*.json` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_CLI.md).
+`test` uses the **same checker as the Tests tab**, with the `packs/<pack>/tests/<sutra>/*.json` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
 
 ## 27. Binding a design to a file (development servers)
 
@@ -595,4 +595,4 @@ If you edit Sutras in an IDE and keep them in git, bind the design to a file so 
 
 The shared page has no editing keys: the *Preview with a file…*, *Preview a stored entity* and *Copy the Sutra* controls are real buttons and fields in reading order.
 
-See also: [the Sutra command](SUTRA_CLI.md), [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANELS.md).
+See also: [the Sutra command](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci), [Screen Builder design](../architecture/SCREEN_BUILDER.md), [the examples](examples/README.md), [the Rachana reference](RACHANA_REFERENCE.md), [panels in depth](PANEL_KINDS.md).

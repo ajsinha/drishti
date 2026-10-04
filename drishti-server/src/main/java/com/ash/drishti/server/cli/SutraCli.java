@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 /**
  * The headless Sutra tool, {@code java -jar drishti-server-*-exec.jar sutra lint|test|shape|design|preview <path>}: the same
  * services the Build workbench uses (the Sutra checker, {@link SampleChecker}, the shape extractor, auto-design and the view
- * pipeline) without a web server. Exit codes: 0 ok, 1 problems found, 2 usage. See docs/guides/SUTRA_CLI.md.
+ * pipeline) without a web server. Exit codes: 0 ok, 1 problems found, 2 usage. See docs/guides/SUTRA_DEVELOPER_GUIDE.md#testing.
  */
 public final class SutraCli {
 

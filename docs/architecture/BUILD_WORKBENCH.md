@@ -228,7 +228,7 @@ the console's folder as JSON; zip entries are read in memory with count and size
 `pack.yaml` stub, `sutras/<domain>/`, `tests/<sutra>/*.json` + `expect.yaml` (`noErrors`, `nonEmpty` from the matrix), `samples/<kind>/`,
 README. *CLI:* `com.ash.drishti.server.cli` (`DrishtiApplication.main` hands `sutra ...` to `CliLauncher`, a non-web Spring context with
 temporary identity, governance and design folders); `SutraCliTest` runs `sutra test` over every shipped pack's `tests/` folder and the ten
-examples; the format is in `docs/guides/SUTRA_CLI.md`. *File binding:* `drishti.builder.file-binding` (default false) in `drishti.builder.dev-dir/<user>/` (never a directory the registry loads,
+examples; the format is in `docs/guides/SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci`. *File binding:* `drishti.builder.file-binding` (default false) in `drishti.builder.dev-dir/<user>/` (never a directory the registry loads,
 so saving cannot make anything live; `DesignBinding`); the Design keeps
 `boundFile` and `boundSync` (the SHA-256 of the text last written or read); save writes through an exclusively created temporary file
 (no symbolic link followed) after `SutraRegistry.check`; a changed

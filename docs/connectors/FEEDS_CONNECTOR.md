@@ -651,13 +651,12 @@ And on the connector itself: `plugin: feed`, `enabled` (the pack uses `${DRISHTI
 
 ## Appendix: walk-through and worked examples
 
-Moved here from the former connector guides, so that everything about this connector is in one document.
+Worked output for the feeds above. The reference is in the numbered sections: the source of each feed and the
+entities it makes ([section 3](#3-what-each-feed-fetches-and-what-it-becomes)), configuration
+([section 4](#4-configuration)), history ([section 6](#6-dates-and-history)), health and failure
+([section 8](#8-failure-and-recovery)) and settings ([section 12](#12-settings)).
 
 ### Walk-through, step by step
-
-[FEEDS_CONNECTOR.md](FEEDS_CONNECTOR.md) explains each feed in full: the source it calls, the entities it makes, schedules, history, offline use and every setting.
-
-#### What you see
 
 Real output from a server with the three feeds above on:
 
@@ -674,46 +673,20 @@ curl -s "http://localhost:18480/api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?a
 ```
 
 In the terminal: `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>`. Typing
-`FX FX-EURUSD-E` offers `FX-EURUSD-ECB` with the subtitle `fx-spot · ecb-fx-feed (public feed)`.
+`FX FX-EURUSD-E` offers `FX-EURUSD-ECB` with the subtitle `fx-spot · ecb-fx-feed (public feed)`. `rate-fixing`,
+`fx-spot` and `ir-curve` are routed to `market-store`; neither the lake nor the samples hold these ids, so the read
+passes on until the feed connector answers.
 
-#### Health, and when the feed is unreachable
-
-`UP`, `DOWN: <Exception>: <message>` (for example `DOWN: IllegalStateException: HTTP 503 from markets.newyorkfed.org`,
-or `DOWN: ConnectException: …` / `DOWN: HttpTimeoutException: …` when the server cannot reach the publisher),
-`DOWN: the feed returned no data (serving the last data)` when an answer yields no series at all (in practice only
-`ecb-fx`, with no day holding a pair's two currencies), or `DOWN: the feed returned no data` when that happens and
-nothing was ever fetched. A failed fetch, or an answer with no rows (no series, or series without a single observation), **keeps the last good
-data**, so views go on working; the next refresh tries again. The first fetch runs inside the
-connector's start, so `DOWN: not fetched yet` is never seen on a running connector. The connect timeout is 10 s,
-fixed in the code; `timeout-seconds` (20) bounds each request. Cache figures (real): `{"series": 10, "observations": 640, "fetchedAt": "2026-10-01T01:35:09.770409225Z"}`
-for `ecb-fx-feed`. A purge (Admin → Caches) clears the data first and then refetches: if that fetch fails, the
-feed serves nothing until the next good refresh.
-
-`stale-after` (the packs set `4d`) does not catch a publisher that stopped publishing: every successful parse counts
-as new data, even when it brings no new observation. Watch the newest observation date (`businessDate` on Live)
-instead.
-
-In `GET /api/v1/admin/health`, a feed you have not switched on is listed under its pack's `connectorsOff`
-(`"connectorsOff": ["ecb-estr-feed", "fred-feed"]`), not as a failure.
+Health and what happens when a feed is unreachable are in [section 8](#8-failure-and-recovery); the cache figures
+are in [section 11](#11-diagnosing). In `GET /api/v1/admin/health`, a feed you have not switched on is listed under
+its pack's `connectorsOff` (`"connectorsOff": ["ecb-estr-feed", "fred-feed"]`), not as a failure.
 
 ### Configuration by example
 
-**Configuration.** `packs/market-data/pack.yaml` declares all five, each off until its variable is set:
+`packs/market-data/pack.yaml` declares all five connectors, each off until its variable is set
+([section 4.1](#41-the-pack-form-as-shipped)); every setting is in [section 12](#12-settings).
 
-**Settings.**
-
-| Key | Default | Meaning |
-|---|---|---|
-| `feed` | — (required) | `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` |
-| `refresh-minutes` | `60` | refetch interval |
-| `timeout-seconds` | `20` | HTTP request timeout (the connect timeout is 10 s, fixed in the code) |
-| `user-agent` | `public-data-feed-connector` | the `User-Agent` header sent with each request (the market-data pack sets `<product> public data feed connector`) |
-| `url` | the public URL | override; `file:` URLs are read directly; for `us-treasury` and `fred`, a comma list (one per month or series) |
-| `api-key` | empty | FRED |
-| `series` | `DGS10,DFF` | FRED series, in the same order as a `url` list |
-| `source-name` | the feed's name (a connector: its name) | provenance source |
-
-**The data.**
+The SOFR document:
 
 ```json
 { "indexId": "FIX-SOFR-NYFED", "name": "Secured Overnight Financing Rate (NY Fed)", "latest": 0.0431,
@@ -723,20 +696,5 @@ In `GET /api/v1/admin/health`, a feed you have not switched on is listed under i
 
 An `fx-spot` document has `pair`, `pairName`, `mid` (also as `bid` and `ask`), `change1d`, `spotDate`, 30 days of
 `history` and `conventions`; the `ir-curve` document has `curveId`, `tenY`, `slope2s10s` (bp), `asOf` and `points`
-(`tenor`, `maturity`, `quote`, `zeroRate`, `df`) from 1M to 30Y. The business date of a document is its latest
-observation on or before the date asked; a date before the history kept is *not held* (the next source answers). The
-history is only the last fetch's window: each successful fetch replaces it. A failed fetch, or an answer with no rows
-(no series, or series without a single observation), keeps the last good data, and health says
-`DOWN: the feed returned no data (serving the last data)`. `stale-after` does not catch a publisher that stopped publishing: every
-successful parse counts as new data.
-
-**Try it.**
-
-**What the user sees.** `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>` (the market-data
-pack's mnemonics). `rate-fixing`, `fx-spot` and `ir-curve` are routed to `market-store`; neither the lake nor
-the samples hold these ids, so the read passes on until the feed connector answers. Search lists them with the
-subtitle `<kind> · <connector> (public feed)`. Health: `UP`, `DOWN: <Exception>: <message>` (an offline server shows `ConnectException` or
-`HttpTimeoutException`), `DOWN: the feed returned no data (serving the last data)` (an answer with no series), or `DOWN: the feed
-returned no data` when nothing was ever fetched. The first fetch runs inside start, so `DOWN: not fetched yet` is not seen on a
-running connector. Cache figures `series`, `observations`, `fetchedAt`; a purge clears the data first, then
-refetches.
+(`tenor`, `maturity`, `quote`, `zeroRate`, `df`) from 1M to 30Y. Which business date a document answers, and how
+long the history is, are in [section 6](#6-dates-and-history).

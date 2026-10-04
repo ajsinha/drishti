@@ -28,7 +28,7 @@ import java.util.Map;
  * column.
  *
  * @param id the new panel's id; null makes one from the kind ({@code table}, {@code table2}, ...)
- * @param kind one of the twenty panel kinds
+ * @param kind one of the twenty-one panel kinds
  * @param at where it goes; null: the end of the main column
  * @param options option name to value, in the order they are written; may also hold {@code title}, {@code key}, {@code code}
  */

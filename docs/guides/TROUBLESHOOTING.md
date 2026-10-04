@@ -359,7 +359,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   A list means the server is fine: refresh the page (see *typing does nothing* above). An empty list means no
   enabled pack has a mnemonic starting with that text, or every source missed the 30 ms budget.
 - **Fix:** for a custom source, declare `search` in the plugin and index ids in memory with `HitIndex`
-  ([PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md)). `/api/v1/sources` shows `"search": true` for sources that can suggest.
+  ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)). `/api/v1/sources` shows `"search": true` for sources that can suggest.
 
 ### A panel says "No data available"
 
@@ -368,7 +368,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Check:** if the panel also says "The data did not have the shape this panel expects", hover over the message
   to read the exact error. Press **F9** to see the raw JSON and compare it with the panel's `rows:` path in the
   Sutra (Studio shows it).
-- **Fix:** if the data is right and the Sutra is wrong, fix the Sutra in Studio; see
+- **Fix:** if the data is right and the Sutra is wrong, fix the Sutra in the Build workbench; see
   [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
 
 ### A linked entity shows `pending` or `missing` instead of a badge
@@ -412,7 +412,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
   You should see `['$.lcrId', '$.legalEntityName', '$.lcr', '$.hqla', '$.netOutflows', '$.minimum']`
   (automatic: the liquidity pack declares no `columns:`).
-- **Fix:** add `columns:` for the kind to its pack ([PACKS.md](PACKS.md#columns-the-key-fields-of-a-pick-list)),
+- **Fix:** add `columns:` for the kind to its pack ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#columns-the-key-fields-of-a-pick-list)),
   through the generator for a generated pack, and restart the server. For one search, name the fields you
   want in the command: `LCR lcr < 1.2 order by lcr` puts *Lcr* first.
 
@@ -474,7 +474,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Cause:** only sources that keep versions (Delta Lake, Iceberg) honour it; undated sources have one version. Delta
   resolves times from the `_delta_log` files' modification times, so a lake copied without preserving times loses its
   history.
-- **Fix:** copy lakes with `cp -p` or `rsync -t`. See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md).
+- **Fix:** copy lakes with `cp -p` or `rsync -t`. See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
 
 ### "DRS-1007 <connector> keeps no earlier versions"
 
@@ -610,7 +610,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Cause:** `DRS-2007`: four eyes; nobody may approve their own proposal. `DRS-2006`: either the proposal is already
   decided, or the live Sutra changed after it was proposed ("… changed after … was proposed; reject it and propose
   again from the live version").
-- **Fix:** ask another approver; for a stale proposal, reject it, open the live Sutra in Studio, re-apply the change
+- **Fix:** ask another approver; for a stale proposal, reject it, open the live Sutra in the Build workbench, re-apply the change
   and submit anew.
 
 ## Packs
@@ -660,7 +660,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Check:** run the check that failed, for example `python3 tools/packgen/banking/make_packs.py --check`; the
   message lists the stale files, and `extra=[…]` lists files the generator did not write.
 - **Fix:** move the change into the generator, run it without `--check`, and commit both
-  ([PACKS.md](PACKS.md#how-the-shipped-packs-are-generated)). To discard a hand edit instead:
+  ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). To discard a hand edit instead:
   `git checkout -- packs/<name>/…`.
 
 ## Connectors
@@ -675,7 +675,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   overall status stays **OK**.
 - **Fix:** nothing, if you do not use it. To use it, give it its settings under
   `drishti.sources.connectors.<name>.settings` (or the plugin's own `drishti.sources.plugins.<name>.settings`),
-  and restart. See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md).
+  and restart. See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
 
 ### A connector failed to start
 

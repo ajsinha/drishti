@@ -25,4 +25,4 @@ All twenty-one panel kinds on one screen, reading one self-contained bond trade.
 
 **Lines to copy:** each panel is a block of its own. Copy one under `panels:` and change its `rows`, `bind` and field names to your document's.
 
-See [Rachana, step by step](../RACHANA_GUIDE.md) section 10 for each kind explained, and [the reference](../RACHANA_REFERENCE.md) for every option.
+See [PANEL_KINDS.md](../PANEL_KINDS.md) for what each kind means and when to use it, and [the reference](../RACHANA_REFERENCE.md) for every option.

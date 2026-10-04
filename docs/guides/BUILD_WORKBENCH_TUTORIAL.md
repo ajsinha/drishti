@@ -491,7 +491,7 @@ Back as `asha`:
 ![The design is live v3](img/tutorial/p3-10-live-v3.jpg)
 
 > **Why.** Versions are never overwritten; views use the highest approved one, and the registry keeps every earlier one. Rolling back is a new proposal of the older text.
-> **If you wonder.** The header still says *edits rates-trade@2* and *base moved to rates-trade@3*: the design remembers the version it was copied from, and the live Sutra is now your own v3. To go on changing the Sutra, open `rates-trade@3` from the registry as a new design (step 31).
+> **If you wonder.** The header still says *edits rates-trade@2*, the version the design was copied from, and shows no *base moved* flag: the live Sutra is your own v3. To go on changing the Sutra, open `rates-trade@3` from the registry as a new design (step 31).
 
 ---
 
@@ -610,7 +610,7 @@ Choose **Create a read-only link**.
 >
 > **Export as a pack fragment** downloads a zip with the Sutra, tests for every sample and a stub `pack.yaml`, to put in a pack ([section 24](SCREEN_DESIGNER.md#24-pack-fragments-export-and-import)). **Import** brings a pack or a folder of Sutras back as designs.
 >
-> The same checks run without a browser: `java -jar drishti-server-<version>-exec.jar sutra test packs/<pack>` uses the checker of the **Tests** tab, writes JUnit XML for your CI and exits `1` on a problem ([section 26](SCREEN_DESIGNER.md#26-the-command-line-and-ci), [the Sutra command guide](SUTRA_CLI.md)). A fragment you export passes it unchanged.
+> The same checks run without a browser: `java -jar drishti-server-<version>-exec.jar sutra test packs/<pack>` uses the checker of the **Tests** tab, writes JUnit XML for your CI and exits `1` on a problem ([section 26](SCREEN_DESIGNER.md#26-the-command-line-and-ci), [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci)). A fragment you export passes it unchanged.
 
 ---
 

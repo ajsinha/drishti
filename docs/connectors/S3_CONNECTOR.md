@@ -551,12 +551,11 @@ Moved here from the former connector guides, so that everything about this conne
 
 ### Walk-through, step by step
 
-[S3_CONNECTOR.md](S3_CONNECTOR.md) explains the connector in full: the key layout, listing and caching, credentials, cost and every setting.
+This walk-through puts the connector to work on a small case; the sections above are the reference.
 
 #### The data
 
-The `file` layout, in a bucket: `<prefix><kind>/<id>.json` (undated) and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`.
-Only `.json` objects are read.
+The layout is described in [The layout](#2-the-layout): `<prefix><kind>/<id>.json` (undated) and `<prefix><yyyy-MM-dd>/<kind>/<id>.json`. One object:
 
 ```json
 {"resultId": "STR-CLIMATE-2026Q3", "scenarioName": "Disorderly transition 2026Q3", "pnl": -41250000,
@@ -565,7 +564,7 @@ Only `.json` objects are read.
 
 #### Configure it
 
-**Pack form:**
+The pack form is in [4.1](#41-pack-form), the site form in [4.2](#42-site-form).
 
 #### Try it
 
@@ -585,22 +584,11 @@ DRISHTI_RISK_DOCS=true java -jar drishti-server/target/drishti-server-*-exec.jar
 
 #### Health, and when the store goes down
 
-`health` is `UP`, or `DOWN: <exception>: <message> (retrying)` after a failed listing or read. A listing error is
-reported until a listing succeeds, even when reads work; a read error until a read succeeds. Each call connects
-afresh (5 s connect and 20 s socket timeouts, fixed in the code), so it recovers by itself. Cache figures: `cachedObjects`, `indexed`, `datedFolders`; a purge empties the read
-cache.
+`health` is `UP` while the store answers and `DOWN: <exception>: <message> (retrying)` after a failed listing or read; it recovers by itself. The cache figures (`cachedObjects`, `indexed`, `datedFolders`) and the rules are in [Failure and recovery](#10-failure-and-recovery).
 
 ### Configuration by example
 
-**What it is for.** Documents written as JSON files to Amazon S3 or an S3-compatible store (MinIO, Ceph, an
-on-premises appliance): the `file` plugin's layout, in a bucket. Optionally dated.
-
-**Configuration.**
-
-The shipped `application.yaml` also has `plugins.s3` (switched off by `DRISHTI_S3_ENABLED`); running it as itself
-takes the same settings under `drishti.sources.plugins.s3.settings`.
-
-**Settings.**
+**Configuration.** See [Configuration](#4-configuration) and [Settings](#14-settings); the shipped `application.yaml` also has `plugins.s3` (switched off by `DRISHTI_S3_ENABLED`).
 
 **The data.**
 
@@ -619,6 +607,4 @@ aws --endpoint-url http://localhost:9000 s3 cp ST-2026-Q3.json s3://risk-docs/eo
 # connector settings: endpoint: http://localhost:9000 (credentials from the same environment variables)
 ```
 
-**What the user sees.** `<mnemonic> ST-2026-Q3 <GO>`, dated by folder. Health: `UP` or
-`DOWN: <exception>: <message> (retrying)` (a listing error stays until a listing succeeds, even when reads work);
-cache figures `cachedObjects`, `indexed`, `datedFolders`.
+**What the user sees.** `<mnemonic> ST-2026-Q3 <GO>`, dated by folder; health as in [Failure and recovery](#10-failure-and-recovery).

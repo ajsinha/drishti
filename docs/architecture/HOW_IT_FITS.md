@@ -319,7 +319,7 @@ panel with `fmt: pct4` applied; `keys` are the panels' `key:` fields plus the Su
 ### 3.7 How the UI is bound: panels and live updates
 
 The console does not know what a trade is. It knows panel kinds (`kv`, `table`, `ladder`, `tabs`, `line`, `hbar`,
-`waterfall`, `timeline`, `links`, ...; the full list is in [PANELS.md](../guides/PANELS.md)).
+`waterfall`, `timeline`, `links`, ...; the full list is in [PANEL_KINDS.md](../guides/PANEL_KINDS.md)).
 `_macros/panels.html:panel` picks the macro by `p.kind`; the same macro draws an `hbar` for a trade's DV01 and for
 anything else. This is why a new product needs a Sutra but no UI work.
 
@@ -496,12 +496,12 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 
 | I want to... | Change | Read |
 |---|---|---|
-| Read a new store (a database, a topic, a folder, a service) | A connector: `plugin:` and `settings:` under `connectors:` in `pack.yaml`, or `drishti.sources.connectors` in `application.yaml`; `routes:` for the kinds it serves | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Read a new store (a database, a topic, a folder, a service) | A connector: `plugin:` and `settings:` under `connectors:` in `pack.yaml`, or `drishti.sources.connectors` in `application.yaml`; `routes:` for the kinds it serves | [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Add a domain (new kinds, commands, links) | A pack folder `packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACKS.md](../guides/PACKS.md) |
 | Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
 | Change how inference reads field names | The pack's `config/semantics.yaml` | [INFERENCE.md](INFERENCE.md) |
-| Add a panel kind | The engine (`Binder` and the panel model) and a console renderer (`_macros/panels.html`) | [PANELS.md](../guides/PANELS.md), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
+| Add a panel kind | The engine (`Binder` and the panel model) and a console renderer (`_macros/panels.html`) | [PANEL_KINDS.md](../guides/PANEL_KINDS.md), [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
 | Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACKS.md |
 | Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACKS.md |
@@ -519,4 +519,4 @@ Rachana, Sutra, inference, layout, ViewModel, patch, link). Then:
 - [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md) and [SCREEN_BUILDER.md](SCREEN_BUILDER.md): how screens are made.
 - [PACKS.md](../guides/PACKS.md): every key of `pack.yaml`.
 - [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md): every key of a Sutra.
-- [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md): connectors.
+- [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md): connectors.

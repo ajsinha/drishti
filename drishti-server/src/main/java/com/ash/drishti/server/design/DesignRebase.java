@@ -82,6 +82,9 @@ public class DesignRebase {
         try {
             int from = Integer.parseInt(d.base.substring(at + 1));
             Optional<Sutra> latest = sutras.latest(d.base.substring(0, at));
+            if (latest.isPresent() && (DesignShip.LIVE + latest.get().version() + ")").equals(d.status)) {
+                return Optional.empty();                      // the live version is the one this design published: it is the new base, nothing moved
+            }
             return latest.isPresent() && latest.get().version() > from ? Optional.of(new int[] {from, latest.get().version()}) : Optional.empty();
         } catch (NumberFormatException e) {
             return Optional.empty();

@@ -121,8 +121,8 @@ def test_the_json_routes_the_workbench_still_asks_of_the_old_prefix_work(app_cli
 def test_the_build_menu_is_create_govern_learn_with_no_studio_entry(app_client):
     page = app_client.get("/build").text
     menu = page.split('class="tbar-menus"')[1].split("</nav>")[0]
-    for text in ("Create", "New screen", "My designs", "Examples", "Govern", "Reviews", "Learn", "Screen designer guide", "Sutra guide",
-                 "Rachana reference", "Build a pack"):
+    for text in ("Create", "New screen", "My designs", "Examples", "Govern", "Reviews", "Learn", "Screen designer guide", "Sutra developer guide", "Build workbench tutorial",
+                 "Rachana reference", "Pack developer guide"):
         assert text in menu, text
     assert "Sutra Studio" not in menu and 'href="/studio' not in menu and "data-review-count" in menu
     assert "Screen Builder guide" not in menu

@@ -466,5 +466,5 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Know which packs exist and what commands they offer | [PACKS.md](PACKS.md) |
 | Change how a screen looks | the in-app *Sutra guide* and *Screen designer guide*, and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
-| Connect your own data | [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Connect your own data | [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | See every document | [the documentation map](../README.md) |

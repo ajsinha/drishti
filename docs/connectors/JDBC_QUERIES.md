@@ -368,9 +368,7 @@ Moved here from the former connector guides, so that everything about this conne
 
 ### Walk-through, step by step
 
-A kind can have several queries: the entity, its parts from other tables (`query.<kind>.<part>`), its ids for
-type-ahead (`ids.<kind>`), a day's fields for searches (`columns.<kind>`) and its reverse lookups (`reverse.<kind>`).
-[JDBC_QUERIES.md](JDBC_QUERIES.md) explains each in full; this chapter starts with the first.
+This walk-through starts with the entity query ([section 4](#4-the-entity-querykind)); the other queries are in sections 5 to 8.
 
 #### The situation
 
@@ -398,10 +396,7 @@ INSERT INTO desk.trades VALUES
 
 #### Configure it
 
-You write one SQL statement per kind under `query.<kind>`. Use `:id` for the entity id and `:asOf` for the business
-date (a SQL `DATE`); each may appear several times. (A statement with a single `?` also works, bound to the id.)
-A connector whose statement uses `:asOf` is **dated**: picked dates are passed to it, and on Live it receives the
-current date.
+You write one SQL statement per kind under `query.<kind>`, using `:id` and `:asOf` ([Parameters](#3-parameters)); because it uses `:asOf`, the connector is dated.
 
 **Site form:**
 
@@ -444,26 +439,15 @@ connectors:
         WHERE trade_id = :id AND business_date <= :asOf)
 ```
 
-**How rows become documents.** The first row is the document. Each column becomes a field in camel case
-(`trade_id` → `tradeId`); a `NUMERIC` value without decimals becomes an integer, others a decimal number; `DATE`
-becomes `2026-09-30`, `TIMESTAMP` an ISO instant. Three column names are special:
+**How rows become documents.** See [section 4](#4-the-entity-querykind) and [section 9](#9-how-columns-become-fields).
 
-| Column | Effect |
-|---|---|
-| `json` | its text is the whole document (`SELECT doc::text AS json FROM …`); other columns are ignored for the content |
-| `generation` (a number) | the version shown in provenance; otherwise the read time |
-| `business_date` (a `DATE`) | the date the row is for (provenance), also added as `businessDate` |
-
-**JSON inside a row.** A column of type `json` or `jsonb` becomes nested data under its field name, so a trade with
-its legs in one column reads as `legs[0].rate` in a Sutra. JSON kept in a text column needs naming:
+**JSON inside a row.** JSON kept in a text column needs naming (a `json`/`jsonb` column needs nothing):
 
 ```yaml
 settings:
   query.trade: SELECT trade_id, notional, legs, extras FROM desk.trades WHERE trade_id = :id
   json-columns: extras            # a TEXT/VARCHAR column holding JSON; `legs` is jsonb and needs no listing
 ```
-
-A cell that is not valid JSON stays as text, so one bad row never fails the view.
 
 A statement for documents already stored as JSON:
 
@@ -503,24 +487,18 @@ mode cannot search); users type the id.
 
 #### Health, and when the database goes down
 
-`health` is `UP`, `DOWN: not started`, or `DOWN: <driver message> (reconnecting)` after a failed read. The
-connector starts even when the database is down: each pooled connection is opened on first use and reopened when
-broken. While the database is down, reads fail with `DRS-1003 desk-db failed reading trade/MX-21770001` and health reads
-(real output):
+`health` is `DOWN: <driver message> (reconnecting)` while the database is down, and reads fail with `DRS-1003 desk-db failed reading trade/MX-21770001`. Real output:
 
 ```text
 DOWN: Connection to localhost:5432 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections. (reconnecting)
 ```
 
-`reads.lastError` in admin health carries the same message with the exception's name (`PSQLException: …`). When the
-database is back, the next read reconnects and health returns to `UP`.
+The connector starts even when the database is down and recovers by itself; see [Diagnosing](#13-diagnosing).
 
 #### Common errors
 
 | You see | Cause | Fix |
 |---|---|---|
 | the connector is missing from `/sources` (and not under `failures`); the log says `source plugin desk-db is installed but not configured (jdbc needs settings.url); it stays idle` | `url` empty (an unset variable with an empty default) | export the variable, or give a default |
-| `DRS-1003 … failed reading`, health `DOWN: <driver message> (reconnecting)`, `reads.lastError` `PSQLException: …` | SQL error, wrong credentials, unreachable host | run the statement in `psql` with the id and date substituted |
 | `No suitable driver` | the database's driver is not on the class path | put the jar in `DRISHTI_PLUGIN_DIR` |
 | a picked date shows the latest data | the statement does not use `:asOf` | add the `business_date <= :asOf` condition |
-| fields named `TRADE_ID` | — | they are converted: `TRADE_ID` and `trade_id` both become `tradeId` |

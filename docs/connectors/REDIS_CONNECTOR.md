@@ -701,6 +701,5 @@ tools/load-redis.sh redis://localhost:6379 --trades 10000          # and 10,000 
 SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-Use a free host port if a Redis of yours already listens on 6379 (`-p 16379:6379`, and the URI to match). Health shows
-`UP` with the catalogue counts, or `DOWN: <reason>` while Redis is unreachable, and reads then fail at once instead of
-waiting for the timeout, until Redis answers again.
+Use a free host port if a Redis of yours already listens on 6379 (`-p 16379:6379`, and the URI to match). Health
+should show `UP` with the catalogue counts; see [Diagnosing](#11-diagnosing) otherwise.

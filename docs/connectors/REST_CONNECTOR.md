@@ -453,7 +453,7 @@ Moved here from the former connector guides, so that everything about this conne
 
 ### Walk-through, step by step
 
-[REST_CONNECTOR.md](REST_CONNECTOR.md) explains the connector in full: requests and responses, headers, generations, timeouts, failure and every setting.
+This walk-through puts the connector to work on a small case; the sections above are the reference.
 
 #### The situation
 
@@ -463,9 +463,7 @@ Your client-onboarding system has an API that returns one counterparty as JSON:
 
 #### Configure it
 
-**Site form:**
-
-**Pack form:**
+The pack form (the site form is in [4.1](#41-site-form)):
 
 ```yaml
 connectors:
@@ -498,20 +496,7 @@ You should see `"source":"crm-api"`, `"live":false`, `"businessDate":null` and t
 
 #### Health, and when the service goes down
 
-`health` is `UP` once started. A connector whose start failed (an empty `base-url`) is listed under `failedToStart`
-instead, so `DOWN: not started` is practically never seen. The plugin keeps no connection, so a
-service that is down does **not** change health; it shows as failed reads: views say
-`DRS-1003 crm-api failed reading counterparty/CP-HARBOURVIEW`, and the connector's `reads.errors` and `lastError`
-in `/api/v1/admin/health` count them. When the service is back, the next read works.
-
-#### Common errors
-
-| You see | Cause | Fix |
-|---|---|---|
-| the server log says `rest plugin needs settings.base-url`, and the connector is under `failedToStart` | `base-url` empty | set it (or `DRISHTI_REST_URL` for the plugin as itself) |
-| `DRS-1003 … failed reading` | the service answered ≥ 400 (not 404) or refused the connection | `curl -i` the URL the connector builds: `<base-url><path>` |
-| `DRS-1004 timed out reading …` | the service took longer than `fetch-timeout` (2 s) | raise `timeout-ms` *and* `drishti.sources.fetch-timeout` |
-| every view of other kinds is slow | the connector has no `kinds`, so it is asked for everything | give it `kinds:` |
+A service that is down does not change health; it shows as failed reads (`DRS-1003 crm-api failed reading counterparty/CP-HARBOURVIEW`). See [Failure and recovery](#9-failure-and-recovery) and [Diagnosing](#11-diagnosing) for the symptoms and fixes.
 
 ### Configuration by example
 
@@ -551,17 +536,12 @@ routes:
   position: positions-api
 ```
 
-**Settings.**
+**Settings.** See [Settings](#12-settings).
 
-**The data.** `GET https://positions.bank.example/api/v2/positions/POS-77` with `Accept: application/json`:
-any status below 400 except `404` is the document (`200`, also `204`, other `2xx` and `3xx`: the body is parsed as
-JSON; redirects are not followed; an empty body is an empty document and counts as found); `404` means *not held
-here* (the next source is tried); any other status of 400 or more is an error (`DRS-1003`).
+**The data.** `GET https://positions.bank.example/api/v2/positions/POS-77` with `Accept: application/json`; how each status is treated is in [Status codes](#31-status-codes).
 
 **Try it.** Any static server works: lay out `api/position/POS-77.json` and run
 `python3 -m http.server 9000` in the parent folder, with `base-url: http://localhost:9000/api` and
 `path: /{kind}/{id}.json`, and a mnemonic for `position` in a pack.
 
-**What the user sees.** `<mnemonic> POS-77 <GO>`; provenance `positions-api`, not live, no business date. Health:
-`UP` once started (the plugin keeps no connection, so a down service shows as failed reads, not in health); a failed
-start (an empty `base-url`) is listed under `failedToStart`.
+**What the user sees.** `<mnemonic> POS-77 <GO>`; provenance `positions-api`, not live, no business date. Health is described in [Failure and recovery](#9-failure-and-recovery).

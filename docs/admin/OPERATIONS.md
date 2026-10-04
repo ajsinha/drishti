@@ -460,7 +460,7 @@ Everything about users, roles and the identity database is in [USER_MANAGEMENT.m
 | `DRISHTI_REST_ENABLED` / `DRISHTI_REST_URL` | `false` / `http://localhost:9000/api` | the REST connector and its base URL (it reads `<base>/{kind}/{id}`) |
 | `DRISHTI_JDBC_ENABLED` | `false` | the single JDBC connector |
 | `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD` | empty | its connection |
-| `DRISHTI_ACTIVEMQ_ENABLED` | `false` | the ActiveMQ plugin (configure its settings in `application.local.yaml`; see [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md)) |
+| `DRISHTI_ACTIVEMQ_ENABLED` | `false` | the ActiveMQ plugin (configure its settings in `application.local.yaml`; see [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)) |
 | `DRISHTI_RABBITMQ_ENABLED` | `false` | the RabbitMQ plugin (likewise) |
 | `DRISHTI_S3_ENABLED` | `false` | the S3 document plugin (likewise) |
 
@@ -900,7 +900,7 @@ drishti:
           # hadoop.fs.s3a.connection.maximum: "200"   # any Hadoop S3A setting, prefixed hadoop.
 ```
 
-The layout is `<root>/<domain>/<kind>/business_date=YYYY-MM-DD/`. See [PLUGIN_GUIDE.md](../connectors/PLUGIN_GUIDE.md) for every
+The layout is `<root>/<domain>/<kind>/business_date=YYYY-MM-DD/`. See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) for every
 Delta setting.
 
 **Sizing.** A laid-out trade table takes about 1.7 KB per trade per business day (Parquet, compressed): 1,000,000

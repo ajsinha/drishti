@@ -452,6 +452,9 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns` and reload |
 | type-ahead misses new trades | the load finished less than `refresh-seconds` ago | wait for the next refresh |
 | loader: `… is a plain table of the old layout: load with --recreate` | a table of the earlier form | `--recreate` |
+| `not a plain SQL identifier: ...` under `failedToStart` | `table` or a column name holds anything but letters, digits, `_` and one `.` | use plain names |
+| a picked date returns nothing for a snapshot kind | the newest date on or before it is more than `lookback-days` older | load every business date, or set `mode.<kind>: effective` for data that changes rarely |
+| the connector serves no kinds after an outage at start | it reads its catalogue again after 10 s, then every `refresh-seconds` | wait, or list `kinds:` in settings |
 | a search on an older day is slow every time | `columns-cache-mb` too small for the days users move between | raise it (230 MB per million trades a day) |
 
 ## 12. Settings
@@ -525,31 +528,9 @@ Moved here from the former connector guides, so that everything about this conne
 #### The situation
 
 You load data into PostgreSQL *for* Drishti and want everything the lake gives: picked dates, search, reverse
-lookups. Table mode reads a whole data domain from one table of JSON documents.
-
-#### The data
-
-One row per entity per business date:
-
-```sql
-CREATE SCHEMA IF NOT EXISTS trading;
-CREATE TABLE trading.entities (
-  kind          text  NOT NULL,                  -- the entity's kind: trade
-  id            text  NOT NULL,                  -- its id: MX-20000001
-  business_date date  NOT NULL,                  -- the date the document is for
-  doc           jsonb NOT NULL,                  -- the document
-  PRIMARY KEY (kind, id, business_date)          -- dated reads
-);
-CREATE INDEX ON trading.entities (kind, business_date);               -- snapshot dates
-CREATE INDEX ON trading.entities USING gin (doc jsonb_path_ops);      -- reverse lookups
-INSERT INTO trading.entities VALUES
-  ('trade', 'MX-20000001', '2026-09-30',
-   '{"tradeId": "MX-20000001", "counterparty": "CP-NORTHBRIDGE", "nettingSet": "NS-NORTHBRIDGE-IRS", "mtm": 1875863, "businessDate": "2026-09-30"}');
-```
-
-The document's business date is the row's `business_date`; its version is that date's day number. Reverse lookups
-find rows whose document holds the target id anywhere (`jsonb_path_exists(doc, '$.** ? (@ == $v)')`); search matches
-ids containing the typed text.
+lookups. Table mode reads a whole data domain from one table of JSON documents, one row per entity per business
+date. The layout is in [section 2](#2-the-table-layout) and the loader in [section 4](#4-loading). The document's
+business date is the row's `business_date`; its version is that date's day number.
 
 #### Configure it
 
@@ -605,7 +586,7 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=counterparty-risk,market-risk \
 `risk`, `credit`, `collateral`) with ten business days, partitioned by month, the pack's promoted fields as columns,
 and prints `postgres: loaded 17,910 rows in 2 s`. Add `--trades 50000` (a medium demo) or `--trades 1000000 --days 3`
 (the scale test) for a larger trade book, streamed from the generator into the loader. How the layout serves a
-million trades a day is in [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md).
+million trades a day is in [section 7](#7-seven-years-sizing-and-postgresql-with-delta-lake).
 
 ```bash
 curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance
@@ -619,13 +600,3 @@ You should see `"source":"trading-store"` and `"businessDate":"2026-09-29"`.
 date: the *Netting sets* panel lists the four netting sets that mention the counterparty, and impact analysis (F8, or
 `GET /api/v1/impact/counterparty/CP-NORTHBRIDGE?asOf=2026-09-29`) lists them with its 35 trades: reverse lookups by
 SQL. (*Linked entities* shows the ids the counterparty itself refers to: its group and credit limit.)
-
-#### Common errors
-
-| You see | Cause | Fix |
-|---|---|---|
-| `not a plain SQL identifier: …` under `failedToStart` | `table` or a column name holds anything but letters, digits, `_` and one `.` | use plain names |
-| searches say `partial: true` | the table has no promoted columns (an earlier table, or written another way) | reload with `tools/load-postgres.sh`, or add the columns the pack declares |
-| `… is a plain table of the old layout: load with --recreate` | the loader found a table of the earlier form | `--recreate` (the samples' load does it) |
-| a picked date returns nothing for a snapshot kind | the newest date on or before it is more than `lookback-days` older | load every business date, or set `mode.<kind>: effective` for data that changes rarely |
-| the connector serves no kinds after an outage at start | it reads its catalogue again after 10 s, then every `refresh-seconds` | wait, or list `kinds:` in settings |
