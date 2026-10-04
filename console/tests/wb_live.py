@@ -20,6 +20,7 @@ the repackaged jar under ``drishti-server/target`` run on a free port in a scrat
 tests that need it are skipped, never failed."""
 import json
 import os
+import re
 from pathlib import Path
 import socket
 import subprocess
@@ -36,10 +37,12 @@ EXAMPLES = ROOT / "docs" / "guides" / "examples"
 
 
 def _java() -> Path:
-    """A JDK 25 (the server's class files need it): JAVA_HOME when it is one, else the usual place."""
-    for home in (os.environ.get("JAVA_HOME", ""), "/usr/lib/jvm/java-25-openjdk-amd64", "/usr/lib/jvm/java-25-openjdk-arm64"):
+    """A JDK 21 or newer (the server is Java 21 bytecode): JAVA_HOME when it is one, else the usual places, 25 first."""
+    for home in (os.environ.get("JAVA_HOME", ""), "/usr/lib/jvm/java-25-openjdk-amd64", "/usr/lib/jvm/java-25-openjdk-arm64",
+                 "/usr/lib/jvm/java-21-openjdk-amd64", "/usr/lib/jvm/java-21-openjdk-arm64"):
         rel = Path(home) / "release" if home else None
-        if rel and rel.exists() and 'JAVA_VERSION="25' in rel.read_text():
+        m = re.search(r'JAVA_VERSION="(\d+)', rel.read_text()) if rel and rel.exists() else None
+        if m and int(m.group(1)) >= 21:
             return Path(home) / "bin" / "java"
     return Path("/nonexistent/java")
 

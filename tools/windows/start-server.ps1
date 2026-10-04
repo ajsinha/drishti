@@ -30,7 +30,7 @@
   .\tools\windows\start-server.ps1 -Stop
 #>
 param(
-    # The JDK 25 folder; default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH.
+    # The JDK folder (21 or newer, 25 recommended); default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH.
     [string]$JavaHome = $(if ($env:DRISHTI_JAVA_HOME) { $env:DRISHTI_JAVA_HOME } else { $env:JAVA_HOME }),
     # The server jar; default: drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar in the folder.
     [string]$Jar = '',

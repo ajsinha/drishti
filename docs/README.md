@@ -37,6 +37,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Get it running in ten minutes | [QUICKSTART.md](guides/QUICKSTART.md) |
 | Install and start it with every step explained | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
 | Install and run it on Windows (PowerShell, no Hadoop) | [WINDOWS.md](guides/WINDOWS.md) |
+| Run and debug the server in IntelliJ IDEA and the console in PyCharm | [IDE_GUIDE.md](guides/IDE_GUIDE.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
 | Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](guides/CLIENTS.md) |
 | Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [PYTHON_CALC.md](guides/PYTHON_CALC.md) |
@@ -137,7 +138,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 |---|---|
 | [QUICKSTART.md](guides/QUICKSTART.md) | you want Drishti running in ten minutes and need only the commands |
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
-| [WINDOWS.md](guides/WINDOWS.md) | you run Drishti on Windows: JDK 25 and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
+| [IDE_GUIDE.md](guides/IDE_GUIDE.md) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
+| [WINDOWS.md](guides/WINDOWS.md) | you run Drishti on Windows: a JDK 21 or newer (25 recommended) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
 | [PACKS.md](guides/PACKS.md) | you load, switch, assign or change a domain pack |
 | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) | you build a pack or need any `pack.yaml` key: kinds, links, roles, Sutras, tests, generators, signing; a worked help-desk pack |

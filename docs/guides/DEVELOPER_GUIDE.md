@@ -134,7 +134,7 @@ drishti-benchmarks                (inference)
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime and generated data, all git-ignored: `delta/` (the sample lake, `make_data.py --lake`), `feeds/` (`make_data.py`), `banking.jsonl` (`make_data.py --jsonl`, for Aerospike), `identity/` (the SQLite database), `governance/` (Sutra proposals), `reports/` |
 | `docs/` | These documents, by audience: `guides/` (quickstart, user, developer, API, Rachana and troubleshooting guides), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance, and the runbooks under `admin/runbooks/`), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
-| `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 25 (`tools/drill.sh` also runs the tests on Java 21); `pytest` for the console on Python 3.13 |
+| `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 21 and 25 (`tools/drill.sh` runs the tests on both too); `pytest` for the console on Python 3.13 |
 
 ---
 

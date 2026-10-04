@@ -106,7 +106,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 ## Try it
 
 New to Drishti? **[QUICKSTART.md](docs/guides/QUICKSTART.md)** gets you to a live view in ten minutes;
-**[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** explains every step from a clean machine. The short version,
+**[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** explains every step from a clean machine; **[IDE_GUIDE.md](docs/guides/IDE_GUIDE.md)** runs the server in IntelliJ IDEA and the console in PyCharm. The short version,
 from the repository root (Java 21 or newer, 25 recommended; Python 3.11 or newer, [uv](https://docs.astral.sh/uv/)):
 
 ```bash
@@ -182,6 +182,7 @@ Start with the **[quickstart](docs/guides/QUICKSTART.md)**, then the **[user gui
 | Read this when… | Document |
 |---|---|
 | you want it running in ten minutes | [QUICKSTART.md](docs/guides/QUICKSTART.md) |
+| you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
 | you install for the first time, every step explained | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
 | you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |

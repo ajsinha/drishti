@@ -17,7 +17,7 @@
 
 Playwright drives the real console over a real server: a SCRATCH server on :18997 and console on :17997 with the QUICKSTART packs. It never
 touches the usual :18480 / :17480 (it refuses them). If nothing answers on the scratch ports the script starts both, in a scratch directory,
-and stops what it started; if something does, it uses it. Needs the built server jar and JAVA_HOME of JDK 25.
+and stops what it started; if something does, it uses it. Needs the built server jar and JAVA_HOME of a JDK 21 or newer.
 
     console/.venv/bin/python tools/docs/screenshots.py --guide panels            # one guide's pictures
     console/.venv/bin/python tools/docs/screenshots.py --guide designer --only 07

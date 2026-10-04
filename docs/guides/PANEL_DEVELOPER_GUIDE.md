@@ -715,7 +715,7 @@ pictures is `tools/docs/shots/panels.py` (driver: `tools/docs/screenshots.py`). 
 - add its panel id to `KIND_PANEL` (the picture `kind-<kind>.jpg` is taken from the showcase in the workbench);
 - for states, add a Sutra line to `EMPTY_PANEL` (an empty state needs a document that lacks the data) and the kind to
   `FAMILIES` when it is the representative of a family;
-- run it against **scratch ports**, never the usual ones (JDK 25 for the server):
+- run it against **scratch ports**, never the usual ones (a JDK 21 or newer for the server):
 
   ```bash
   export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
@@ -803,7 +803,7 @@ The browser tests use the **packaged** server jar, so build first, or they test 
 1-minute load below 16; one heavy job at a time.
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64            # JDK 25 only
+export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64            # or any JDK 21 or newer
 ./mvnw -o -q install -N                                         # the parent POM, once
 # the engine, grammar and your test:
 ./mvnw -o -q test -pl drishti-rachana,drishti-engine,drishti-server -am -Dtest='MetricPanelTest,StudioTest,AutoDesignerTest,OpApplierTest,ExamplePreviewTest' -Dsurefire.failIfNoSpecifiedTests=false

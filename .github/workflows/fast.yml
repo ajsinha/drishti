@@ -19,10 +19,12 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    strategy:
+      matrix: { java: ['21', '25'] }      # Java 21 bytecode: the oldest supported JDK and the recommended one
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: '25', cache: maven }
+        with: { distribution: temurin, java-version: '${{ matrix.java }}', cache: maven }
       - run: ./mvnw -B -q verify
       - run: python3 tools/license_headers.py
   console:

@@ -168,7 +168,7 @@ The [workspaces guide](../../console/web/guides/workspaces.md) walks through bot
 ## Build and run without the wrapper, or from an IDE
 
 Everything above uses `./mvnw`. This section is for a machine that has its own Maven, and for working from
-IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 25 (Java 21 or newer works).
+IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 25 (any Java 21 or newer works).
 
 ### With Maven installed on the system
 
@@ -205,48 +205,10 @@ console/.venv/bin/python console/run_drishti_web.py                # http://127.
 console/.venv/bin/python -m pytest console/tests -q                # the console's tests
 ```
 
-### IntelliJ IDEA
+### IntelliJ IDEA and PyCharm
 
-Use a release that supports your JDK (21 or newer; 25 recommended).
-
-1. **File → Open**, choose the root `pom.xml`, **Open as Project**. IDEA imports every module.
-2. **File → Project Structure → Project → SDK**: a JDK 21 or newer (add it with *Add SDK → Add JDK*); language level 21 or higher.
-   Maven's own JDK, in **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**, must be 21 or newer too.
-3. **Run → Edit Configurations → + → Spring Boot** (or *Application* in the Community edition):
-
-   | Field | Value |
-   |---|---|
-   | Main class | `com.ash.drishti.server.DrishtiApplication` |
-   | Module / classpath of | `drishti-server` |
-   | JRE | 25 |
-   | Working directory | the repository root (the default is the `drishti-server` folder, so change it: `packs/` and `data/` are relative) |
-   | VM options | `-XX:+UseCompactObjectHeaders` (JDK 25 or newer only; leave empty on 21) |
-   | Environment variables | `DRISHTI_PACKS=market-risk,counterparty-risk;DRISHTI_STUDIO_SAVE=true` (separate with `;`; the other `DRISHTI_*` variables are listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)) |
-   | Program arguments | `--spring.config.additional-location=file:/home/you/drishti-site.yaml` (optional; see [below](#supplying-a-different-application-config)) |
-
-4. Run it. The log ends with `Started DrishtiApplication`; `curl -s localhost:18480/actuator/health` answers `UP`.
-
-Tests run from the gutter icons. Clear the `DRISHTI_*` variables in the test run configuration: tests expect the
-defaults (the `finance` pack) and fail when `DRISHTI_PACKS` and its siblings are set (see [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#22-maven-commands)).
-
-### PyCharm
-
-1. **File → Open** the repository root (or only `console/`).
-2. **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing**, and pick
-   `console/.venv/bin/python` (Windows: `console\.venv\Scripts\python.exe`). Create the venv first with the commands above.
-3. **Run → Edit Configurations → + → Python**:
-
-   | Field | Value |
-   |---|---|
-   | Script | `console/run_drishti_web.py` |
-   | Parameters | optional `--server.port=17481` (any `--key=value`, e.g. `--backend.url=http://127.0.0.1:18481`) |
-   | Python interpreter | the `console/.venv` one |
-   | Working directory | the repository root (the script finds `console/config` from its own location, so any folder works; the root keeps relative paths in your own settings predictable) |
-   | Environment variables | `DRISHTI_BACKEND_URL=http://127.0.0.1:18480;DRISHTI_CONSOLE_PORT=17480` |
-
-The console reads `console/config/application.yaml`, then `console/config/application.local.yaml` if it exists, then
-`DRISHTI_CONSOLE__…` environment variables, then `--key=value` parameters. For pytest, make **Default test runner** pytest
-(*Settings → Tools → Python Integrated Tools*) and run `console/tests`.
+Running the server from IntelliJ IDEA and the console from PyCharm (run configurations, JDK and interpreter setup,
+debugging, reloading changes, tests in the IDE, common problems) has its own guide: **[IDE_GUIDE.md](IDE_GUIDE.md)**.
 
 ## Supplying a different application config
 

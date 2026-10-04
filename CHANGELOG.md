@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Docs:** [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md): running and debugging the server in IntelliJ IDEA and the console in PyCharm (JDK and interpreter set-up for any vendor, run configurations, reloading changes, tests, common problems), linked from the README; QUICKSTART's IDE section moved there. Every document now states the Java requirement as 21 or newer (25 recommended); the console's live-server tests accept a JDK 21.
 - **Changed:** Drishti now supports Java 21 and newer (25 stays recommended): the build targets Java 21 bytecode (`maven.compiler.release` 21), the enforcer rule is `[21,)` and says "Drishti needs Java 21 or newer (any vendor; 25 recommended)", `-XX:+UseCompactObjectHeaders` is used only on Java 25+ (the Docker image, the Windows start script and the docs; Java 21 refuses to start with it), and synchronized blocks that did I/O (the DuckDB file check, the Redis loader's journal and dictionary training, the Iceberg run cleanup) use a `ReentrantLock` so they do not pin virtual threads on Java 21. `NoBlockingUnderSynchronizedTest` fails if main code blocks inside `synchronized`. `tools/drill.sh` runs the tests on Java 21 as well. Load test of the connectors on both Javas: [PERFORMANCE.md](docs/admin/PERFORMANCE.md#java-21-and-virtual-thread-pinning).
 - **Changed:** the build's Java check now says it needs Java 25 of any vendor (OpenJDK, Oracle, Temurin) and names the Java version and folder Maven actually runs on; it read "builds and runs on OpenJDK 25", which looked like a vendor check.
 

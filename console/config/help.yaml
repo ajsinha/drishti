@@ -25,6 +25,7 @@ categories:
     guides:
       - { slug: quickstart, doc: guides/QUICKSTART.md, title: Quickstart, icon: lightning, summary: "Ten minutes from a fresh clone to a live view: build, start, and eight commands to try." }
       - { slug: windows, doc: guides/WINDOWS.md, title: Drishti on Windows, icon: windows, summary: "Building, starting and running Drishti on Windows: the PowerShell scripts, paths and what differs." }
+      - { slug: ide-guide, doc: guides/IDE_GUIDE.md, title: "IntelliJ IDEA and PyCharm", icon: code-square, summary: "Run and debug the server in IntelliJ IDEA and the console in PyCharm: JDK and interpreter, run configurations, reloading changes, tests, common problems." }
       - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
       - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
       - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }

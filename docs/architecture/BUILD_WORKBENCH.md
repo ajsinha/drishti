@@ -215,7 +215,7 @@ The console adds `POST /build/designs/{id}/ops|undo|redo|check|suggest|preview-f
 options from the shape (the server refuses a panel without them) and the inspector marks them to check; a dropped field binds when it
 lands inside a panel and asks for suggestions when it lands on a panel's rim, between panels or on empty space; the suggestions call the
 Design's shape then `/builder/suggest` (a design-level `/{id}/suggest` on the server was not needed). Browser tests run against the real
-server jar (`console/tests/wb_live.py`; skipped when the jar or JDK 25 is missing).
+server jar (`console/tests/wb_live.py`; skipped when the jar or a JDK 21 or newer is missing).
 
 **As built (step 8).** *Propose with evidence:* `POST /builder/designs/{id}/propose {note}` (the workbench's *Submit for review*; the console's
 `/save` route is gone) re-runs the check and calls `SutraGovernance.propose(text, note, who, evidence)`; `Proposal` has an `evidence` field

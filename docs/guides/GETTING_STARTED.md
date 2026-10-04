@@ -71,7 +71,7 @@ You need a Linux or macOS machine with the tools below. On Windows, Drishti runs
 On Ubuntu or Debian:
 
 ```bash
-sudo apt install openjdk-25-jdk python3 python3-venv git curl
+sudo apt install openjdk-25-jdk python3 python3-venv git curl   # or openjdk-21-jdk: any JDK 21 or newer
 curl -LsSf https://astral.sh/uv/install.sh | sh      # installs uv into ~/.local/bin
 ```
 

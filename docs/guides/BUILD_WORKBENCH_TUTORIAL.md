@@ -650,4 +650,4 @@ console/.venv/bin/python tools/docs/screenshots.py --guide tutorial --only p3  #
 console/.venv/bin/python tools/docs/screenshots.py --list --guide tutorial     # the file names
 ```
 
-The script needs the built server jar and JDK 25 (see the header of `tools/docs/screenshots.py`), starts a server with sign-in on, creates `asha` and `ravi`, and never touches the usual `:18480` / `:17480`. The projects build on each other (project 3 edits what project 1 published), so a full run starts from a fresh server. `console/tests/test_guide_images.py` fails if this tutorial shows a picture that is missing or leaves one that no guide shows.
+The script needs the built server jar and a JDK 21 or newer (see the header of `tools/docs/screenshots.py`), starts a server with sign-in on, creates `asha` and `ravi`, and never touches the usual `:18480` / `:17480`. The projects build on each other (project 3 edits what project 1 published), so a full run starts from a fresh server. `console/tests/test_guide_images.py` fails if this tutorial shows a picture that is missing or leaves one that no guide shows.
