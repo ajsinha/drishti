@@ -723,13 +723,13 @@ Restart, then `curl -s localhost:18480/api/v1/sources | jq -c '.sources[] | sele
 Pick 29 September in the business-date picker: the view shows an MTM of 101 (100.5 in the file); pick the 30th: 112. *How this view was built*
 names `desk-days`.
 
-![Admin → Health: desk-days (the example plugin) UP, a database and a broker that nothing answers on DOWN with the reason, and the shipped connectors](img/connectors/sources-health.png)
+![Admin → Health: desk-days (the example plugin) UP, a database and a broker that nothing answers on DOWN with the reason, and the shipped connectors](img/connectors/sources-health.jpg)
 
-![The business-date picker on a dated source](img/connectors/business-date-picker.png)
+![The business-date picker on a dated source](img/connectors/business-date-picker.jpg)
 
-![A view served by the example plugin](img/connectors/dayfolder-view.png)
+![A view served by the example plugin](img/connectors/dayfolder-view.jpg)
 
-![How this view was built: the provenance names the source](img/connectors/provenance.png)
+![How this view was built: the provenance names the source](img/connectors/provenance.jpg)
 
 **What to take from it.** Keep the scan separate from the reads; swap state atomically; never return empty for a
 failure; keep search in memory; say `DEGRADED` instead of lying; test the failure paths as well as the contract. What
