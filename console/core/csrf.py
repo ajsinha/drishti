@@ -81,17 +81,21 @@ def problem(_request, e: BodyError) -> JSONResponse:
     return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
 
 
+def _too_large(size: int, limit: int, what: str, at_least: bool = False) -> str:
+    return f"This file is too large: {'at least ' if at_least else ''}{size / 1048576:.1f} MB; the limit is {limit / 1048576:g} MB ({what})"
+
+
 async def limited_body(request, limit: int, what: str = "the request") -> bytes:
     """The request body, read in chunks and refused with 413 DRS-5005 the moment it passes ``limit`` bytes: a body sent chunked has no
     Content-Length to check first, and reading it whole before looking at its size is what QA 2026-10-03 S2-09 measured."""
     declared = request.headers.get("content-length")
     if declared and declared.isdigit() and int(declared) > limit:
-        raise BodyError(413, f"{what} is over the limit of {max(1, limit // 1048576)} MB", "DRS-5005")
+        raise BodyError(413, _too_large(int(declared), limit, what), "DRS-5005")
     chunks, size = [], 0
     async for chunk in request.stream():
         size += len(chunk)
         if size > limit:
-            raise BodyError(413, f"{what} is over the limit of {max(1, limit // 1048576)} MB", "DRS-5005")
+            raise BodyError(413, _too_large(size, limit, what, True), "DRS-5005")
         chunks.append(chunk)
     return b"".join(chunks)
 

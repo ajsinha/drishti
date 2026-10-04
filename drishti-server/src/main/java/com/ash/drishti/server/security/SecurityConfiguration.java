@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 
 /** Token verification and entitlements. */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(SecurityProperties.class)
+@EnableConfigurationProperties({SecurityProperties.class, RequestLimitProperties.class})
 public class SecurityConfiguration {
 
     @Bean
@@ -57,6 +57,16 @@ public class SecurityConfiguration {
         FilterRegistrationBean<PathGuard> r = new FilterRegistrationBean<>(new PathGuard());
         r.addUrlPatterns("/api", "/api/*", "/actuator", "/actuator/*");
         r.setOrder(-10);
+        return r;
+    }
+
+    /** Answers an oversized request body with a clean 413 DRS-5005 before the body is read (S2-08). */
+    @Bean
+    public FilterRegistrationBean<RequestSizeFilter> requestSizeFilter(RequestLimitProperties limits) {
+        FilterRegistrationBean<RequestSizeFilter> r = new FilterRegistrationBean<>(new RequestSizeFilter(limits.rules()));
+        r.addUrlPatterns("/api/*");
+        r.setEnabled(limits.enabled());
+        r.setOrder(-9);
         return r;
     }
 

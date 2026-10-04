@@ -210,6 +210,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_OIDC_ISSUER` | `drishti.security.oidc.issuer` | empty | The OIDC issuer URL. |
 | `DRISHTI_OIDC_CLIENT_ID` | `drishti.security.oidc.client-id` | empty | The OIDC client id. |
 | `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | Record who looked at what (Admin → Access). |
+| `DRISHTI_MASK_COPIES` | `drishti.security.mask-copies` | `false` | Also scrub exact copies of a masked value inside other text of the same document. |
+| `DRISHTI_MAX_SWALLOW` | `server.tomcat.max-swallow-size` | `64MB` | How much of an oversized body Tomcat drains after answering 413, so the client reads the answer. |
 | `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | Run the scheduled-reports scheduler on this server. |
 | `DRISHTI_REPORTS_DIR` | `drishti.reports.folder` | `./data/reports` | Where report files are written. |
 | `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
@@ -518,7 +520,11 @@ servers). The environment variables of this section are in the [placeholder tabl
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
 | `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). |
 | `roles.<role>.layout` | `true` | May customise layouts: layout mode (`Alt+L`) and personal layouts ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). On unless set to `false`; the bundled `viewer` sets it to `false`. |
-| `redact` | `[trader, counterpartyId, patientName]` | Field names masked for roles without `raw`, on every path that shows or reads their values ([field masks](#field-masks)). |
+| `mask-copies` | `false` | Opt-in (`DRISHTI_MASK_COPIES`): after masking, exact copies of a masked field's value inside the other text of the same document also read `•••` ("Captured by J. Smith" with `trader` masked). Exact and case-sensitive; best effort. |
+| `mask-copies-min-length` | `3` | Shortest text value scrubbed as a copy; numbers are scrubbed from four digits. |
+| `mask-copies-max-nodes` | `50000` | A document with more nodes is not scanned for copies (its masked fields are still masked). |
+| `mask-copies-max-values` | `64` | Most distinct masked values scrubbed per document. |
+| `redact` | `[trader, counterpartyId, patientName, lifecycle.timeline.description]` | Field names masked for roles without `raw`, on every path that shows or reads their values ([field masks](#field-masks)). |
 
 The bundled roles; packs add domain roles (finance: `trader`, `risk`; logistics: `ops`):
 
@@ -544,6 +550,7 @@ drishti:
 #### Field masks
 
 For a role without `raw`, every field named in `redact` reads `•••` wherever the user could see or infer its value.
+An entry with dots (`lifecycle.timeline.description`) masks a field by the end of its path; arrays are not a step.
 A name matches at any depth (`trader` masks `$.trader` and `$.confirmation.trader`), and the mask covers everything
 under the field (with `counterparty` listed, `counterparty.name` and `counterparty.id` read `•••` too). The masking is
 done once, on the server, before anything reads the document, so it is the same on every path:
@@ -627,7 +634,7 @@ with `413 DRS-5005` before it is all parsed.
 |---|---|---|
 | `max-samples` | `50` | Documents in one request. |
 | `max-file-mb` | `5` | Largest single document, in megabytes. |
-| `max-total-mb` | `25` | Largest request body, in megabytes; checked from the length before the body is read. |
+| `max-total-mb` | `25` | Largest request body, in megabytes. A body over it is answered `413` `DRS-5005` with its size and the limit before it is read (a chunked body: on overflow), by the `drishti.http.request-limits` rule `/api/v1/builder/` = this value; `server.tomcat.max-swallow-size` (`DRISHTI_MAX_SWALLOW`, 64MB) lets Tomcat drain the rest so the client reads the answer, not a reset. |
 | `max-depth` | `64` | Deepest nesting of one document. |
 | `enum-max-distinct` | `12` | Text with at most this many distinct values is an `enum` ... |
 | `enum-min-seen` | `3` | ... when it was seen at least this many times and some value repeats. |

@@ -151,7 +151,7 @@ store.state.baseMoved = init.baseMoved || null;
     var f = pf.files[0];
     pf.value = '';
     if (!f) { return; }
-    if (f.size > parseFloat(d.maxFileMb) * 1048576) { store.emit('say', f.name + ' is over the ' + d.maxFileMb + ' MB limit.', true); return; }
+    if (f.size > parseFloat(d.maxFileMb) * 1048576) { store.emit('say', 'This file is too large: ' + (f.size / 1048576).toFixed(1) + ' MB; the limit is ' + d.maxFileMb + ' MB', true); return; }
     f.text().then(function (t) {
       var doc;
       try { doc = /\.jsonl$/i.test(f.name) ? JSON.parse(t.split('\n').filter(Boolean)[0]) : JSON.parse(t); } catch (e) { store.emit('say', f.name + ' is not valid JSON: ' + e.message, true); return; }
