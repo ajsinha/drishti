@@ -107,10 +107,10 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 
 New to Drishti? **[QUICKSTART.md](docs/guides/QUICKSTART.md)** gets you to a live view in ten minutes;
 **[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** explains every step from a clean machine. The short version,
-from the repository root (OpenJDK 25, Python 3.11 or newer, [uv](https://docs.astral.sh/uv/)):
+from the repository root (Java 21 or newer, 25 recommended; Python 3.11 or newer, [uv](https://docs.astral.sh/uv/)):
 
 ```bash
-# 1. Build (OpenJDK 25, enforced; Maven comes with the repository)
+# 1. Build (Java 21 or newer, enforced; 25 recommended; Maven comes with the repository)
 export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ./mvnw -q package -DskipTests                 # or: ./mvnw -q verify  (also runs every test)
 
@@ -142,7 +142,7 @@ console reaches the server.
 
 | Layer | Technology |
 |---|---|
-| Server | One Spring Boot 3.5 application on OpenJDK 25 and virtual threads, REST under `/api/v1` (OpenAPI at `/api/docs`) |
+| Server | One Spring Boot 3.5 application on Java 21 or newer (25 recommended) and virtual threads, REST under `/api/v1` (OpenAPI at `/api/docs`) |
 | Plugins | A Spring-free SPI found by ServiceLoader; extra jars load in isolated class loaders |
 | Identity | JPA over SQLite or PostgreSQL, one schema file per database, no migrations |
 | Console | Python, FastAPI and Jinja2; vendored Bootstrap, Bootstrap Icons and ECharts; no inline script |

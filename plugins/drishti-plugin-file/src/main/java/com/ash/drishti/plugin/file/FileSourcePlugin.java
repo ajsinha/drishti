@@ -78,6 +78,7 @@ public final class FileSourcePlugin implements SourcePlugin {
     private final java.util.Map<String, List<String>> promoted = new java.util.concurrent.ConcurrentHashMap<>();
     private volatile java.util.Map<String, java.util.NavigableSet<LocalDate>> jsonl = java.util.Map.of();   // kind -> days with a file
     private com.github.benmanes.caffeine.cache.Cache<DayKey, JsonlDay> days;
+    private final com.ash.drishti.api.SingleFlight<DayKey> builds = new com.ash.drishti.api.SingleFlight<>();
     private String idField;
     private volatile Set<String> kinds = Set.of();
     private int maxLoadRows;
@@ -219,7 +220,7 @@ public final class FileSourcePlugin implements SourcePlugin {
         if (d != null && !d.current()) {
             days.asMap().remove(key, d);
         }
-        return days.get(key, k -> {
+        return builds.get(key, days::getIfPresent, k -> {            // not Cache.get(key, loader): that blocks inside synchronized (pins a virtual thread on Java 21)
             try {
                 Path file = jsonlFile(kind, day);
                 JsonlDay built = JsonlDay.index(file, day.equals(UNDATED) ? null : day, promoted.getOrDefault(kind, List.of()), idField, format);
@@ -230,7 +231,7 @@ public final class FileSourcePlugin implements SourcePlugin {
                 problems.remove(k);
                 throw new java.io.UncheckedIOException(e);
             }
-        });
+        }, days::put);
     }
 
     /** Where a day's file is, relative to the root, as health and answers name it. */

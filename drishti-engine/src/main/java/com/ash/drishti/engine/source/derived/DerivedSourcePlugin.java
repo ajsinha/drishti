@@ -157,7 +157,7 @@ public final class DerivedSourcePlugin implements SourcePlugin {
         String key = asOf.live() ? "live" : asOf.businessDate() + "@" + asOf.knownAt();
         CompletableFuture<Snapshot> f;
         boolean mine = false;
-        synchronized (cache) {
+        synchronized (cache) {   // pinning-ok: join() is only called on futures that are already done
             f = cache.get(key);
             boolean stale = f != null && f.isDone() && !f.isCompletedExceptionally()
                     && f.join().at().plus(refresh).isBefore(Instant.now());

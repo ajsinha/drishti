@@ -31,6 +31,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import org.duckdb.DuckDBConnection;
 
 /**
@@ -108,6 +109,7 @@ final class DuckDbFile {
     private volatile Generation current;
     private volatile String problem;
     private long generations;
+    private final ReentrantLock checkLock = new ReentrantLock();
 
     private DuckDbFile(Path path, Properties properties) {
         this.path = path;
@@ -184,7 +186,16 @@ final class DuckDbFile {
      * Opens the file when it is not open or has been replaced since; cheap when nothing changed (one {@code stat}).
      * A file that is missing or does not open leaves the current generation serving, and says why in {@link #problem()}.
      */
-    synchronized void check() {
+    void check() {
+        checkLock.lock();                                             // a ReentrantLock, not synchronized: stat + open + query block, which would pin a virtual thread's carrier on Java 21
+        try {
+            checkLocked();
+        } finally {
+            checkLock.unlock();
+        }
+    }
+
+    private void checkLocked() {
         Object identity;
         try {
             BasicFileAttributes a = Files.readAttributes(path, BasicFileAttributes.class);

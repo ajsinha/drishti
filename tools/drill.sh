@@ -32,6 +32,12 @@ if command -v uv >/dev/null; then                  # the lake writers and mainte
   timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py 2>&1 | grep -v '^{"at"'
 fi
 ./mvnw -q -o verify
+# Java 21 is supported too (the jar is Java 21 bytecode): the same tests again on a JDK 21, so a call that exists only on
+# 25 or a behaviour that differs on 21 (virtual-thread pinning, no compact object headers) fails the drill, not a user.
+# The whole suite is run, not a subset: about 1,800 tests, 3.5 minutes (measured), well inside the drill budget; a failure here exits the script through `set -e`.
+JAVA21_HOME="${JAVA21_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
+[[ -x "$JAVA21_HOME/bin/java" ]] || { echo "drill: no JDK 21 at $JAVA21_HOME (set JAVA21_HOME)" >&2; exit 1; }
+JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o verify
 console/.venv/bin/python -m pytest -q console/tests
 
 git push -q origin develop

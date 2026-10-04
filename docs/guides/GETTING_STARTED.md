@@ -75,8 +75,8 @@ sudo apt install openjdk-25-jdk python3 python3-venv git curl
 curl -LsSf https://astral.sh/uv/install.sh | sh      # installs uv into ~/.local/bin
 ```
 
-Drishti builds and runs on Java 25 (the current long-term release) and refuses any other. Point `JAVA_HOME` at
-it in every terminal you use for Drishti. On Ubuntu the path is:
+Drishti builds and runs on Java 21 or newer and refuses an older one; Java 25 (the current long-term release) is recommended. Point `JAVA_HOME` at
+a JDK 21 or newer (these examples use 25) in every terminal you use for Drishti. On Ubuntu the path is:
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
@@ -119,7 +119,7 @@ You should see `drishti-server/target/drishti-server-1.15.0-exec.jar`.
 > **Note:** `./mvnw -q verify` builds **and** runs every test (several minutes more). Use it when you
 > change code; for a first try, `package -DskipTests` is enough.
 
-If the build stops with `Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java …`, your `JAVA_HOME` is not Java 25. Go
+If the build stops with `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …`, your `JAVA_HOME` is older than Java 21. Go
 back to Step 1.
 
 ## Step 4 · Set up the console
@@ -449,7 +449,7 @@ stops it. Production details are in [OPERATIONS.md](../admin/OPERATIONS.md).
 
 | You see | Do this |
 |---|---|
-| `Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java …` | `export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64` and build again |
+| `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …` | `export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64` and build again |
 | `Port 18480 was already in use` | another server is running; stop it, or start this one with `DRISHTI_PORT=18481` and the console with `DRISHTI_BACKEND_URL=http://127.0.0.1:18481` |
 | The console says the backend is unreachable (`DRS-5003`) | start the server first; check `curl -s localhost:18480/actuator/health` |
 | A command gives `DRS-4001` | the mnemonic is unknown: check its pack is loaded (`/api/v1/packs`) and chosen in the pack switcher |

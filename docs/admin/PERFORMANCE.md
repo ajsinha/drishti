@@ -313,6 +313,75 @@ view 300 times to warm up and then 2,000 times while timing: fetch, match, layou
 virtual threads, parallel binding. The build fails if p99 ≥ 50 ms or if the layout cache hit rate is ≤ 99 %.
 It runs with every `./mvnw verify`, so a change that makes views slow cannot be merged unnoticed.
 
+## Java 21 and virtual-thread pinning
+
+Drishti runs on Java 21 and newer (25 recommended). The one behavioural difference that matters for a server built on
+virtual threads: **on Java 21 to 23 a virtual thread that blocks inside `synchronized` pins its carrier thread** (it
+cannot unmount), so a few such threads can stall every request; Java 24 removed that limit. A native call (JNI) pins on
+every Java. The rules the code follows:
+
+- main code that does I/O, sleeps, waits on a future or calls JDBC under a lock uses a `ReentrantLock`, never `synchronized`
+  (and never `ConcurrentHashMap.computeIfAbsent` or Caffeine's `get(key, loader)`, which run the loader inside a
+  synchronized bin: use `SingleFlight` in `drishti-api`). `NoBlockingUnderSynchronizedTest` (module `drishti-it`) scans
+  main code and fails the build on a `synchronized` body that calls `Files.`, a stream, a socket, `Thread.sleep`,
+  `.await(`, `.join()`, JDBC or the like; a justified case carries a `pinning-ok` comment.
+- JNI pins on every JDK and needs no change: DuckDB's JDBC driver, lz4 and zstd, RocksDB. They do not park, so they do
+  not show in the trace below.
+
+### Method
+
+`tools/bench/pinning.sh` (with `pinload.py`, `mqpublish.py`, `pinned_summary.py`) starts the exec jar on a scratch port
+with a small data set (10,000 trades a day for 3 days, plus the sample documents of the banking packs `market-risk` and
+`counterparty-risk`), a RabbitMQ container as a message source (2,000 entities `pin-order`, 20 updates a second while the
+load runs), and the public ECB feed switched on. `pinload.py` then drives **200 concurrent clients** for 150 seconds
+(after a 20-second warm-up) over a mix of trade views (4), raw trade documents (3), searches (2), the desk P&L (1),
+impact, the F8 reverse lookup (1) and the message entities (2). The Java 21 server runs with
+`-Djdk.tracePinnedThreads=full`; its log is grouped by `pinned_summary.py`. The same load runs on Java 25 (with
+`-XX:+UseCompactObjectHeaders`, which Java 21 does not have). Four stores: the Delta connector with the Hadoop engine,
+the Delta connector with the native engine, DuckDB and the file connector. Machine: one desktop, other work
+running; differences of up to about 10% between two runs of the same configuration are noise.
+
+```bash
+tools/bench/pinning.sh data && tools/bench/pinning.sh rabbit-up
+tools/bench/pinning.sh run delta-native 21 150     # then 25; config: delta-hadoop | delta-native | duckdb | files
+tools/bench/pinning.sh rabbit-down
+```
+
+### Pins found
+
+| Where | Kind | When | What was done |
+|---|---|---|---|
+| `FileSourcePlugin.day()`: Caffeine `get(key, loader)` indexing a day's JSON-lines file (a blocking read with a join on worker tasks) inside `ConcurrentHashMap.compute` | monitor | on every first read of a day, under load | **hot path, fixed**: `SingleFlight` (one loader per key, a `ReentrantLock`); the same pattern in the S3 connector's per-object cache was fixed too. Re-run: no pin |
+| Hadoop `Shell.runCommand` (`ProcessImpl.waitFor`) | native | once, at start (Delta, Hadoop engine) | none needed |
+| RocksDB `Environment.initIsMuslLibc` (`ProcessImpl.waitFor`) | native | once, when the first message connector opens its state store | none needed |
+| `LoginContext` via `System.loadLibrary` (Hadoop security) | monitor | once, at start | none needed |
+| DuckDB, lz4, zstd JNI | native | every query | none needed: they do not park, so no carrier is lost beyond the call |
+
+Other synchronized code that blocked, found by reading rather than by the load (connectors this run did not exercise),
+now uses a `ReentrantLock`: the DuckDB file check (`DuckDbFile.check`: stat, open, query), the Redis loader's journal
+(Redis round trips) and its dictionary training, and the Iceberg loader's run cleanup. No library needed a platform-thread
+pool: Hadoop's `FileSystem`, the RabbitMQ client and the JDBC drivers did not pin on a request path in these runs.
+
+### Java 21 against Java 25, the same load
+
+200 clients, 150 s, 0 errors in every run. Latency in milliseconds over all request types, then three of the types.
+
+| Store | Java | req/s | p50 | p95 | views p50 / p95 | impact (F8) p50 / p95 | raw document p50 / p95 |
+|---|---|---:|---:|---:|---|---|---|
+| Delta, Hadoop engine | 21 | 962 | 54.8 | 806.7 | 376 / 757 | 810 / 1,182 | 32 / 100 |
+| | 25 | 867 | 66.1 | 967.3 | 387 / 795 | 1,007 / 1,406 | 38 / 122 |
+| Delta, native engine | 21 | 963 | 57.4 | 827.0 | 364 / 743 | 843 / 1,226 | 33 / 106 |
+| | 25 | 1,023 | 58.4 | 819.9 | 313 / 696 | 844 / 1,299 | 33 / 117 |
+| DuckDB | 21 | 479 | 142.6 | 1,664.2 | 703 / 1,470 | 1,711 / 2,484 | 91 / 274 |
+| | 25 | 478 | 141.4 | 1,687.9 | 699 / 1,455 | 1,756 / 2,517 | 88 / 274 |
+| File (JSON lines) | 21 | 1,050 | 51.8 | 749.5 | 343 / 661 | 768 / 1,026 | 31 / 94 |
+| | 25 | 1,120 | 52.7 | 759.5 | 295 / 610 | 796 / 1,092 | 30 / 99 |
+
+Reading it: with the pinning fixed, Java 21 and Java 25 serve this load within noise of each other (the 200 clients
+are the bottleneck, not the JVM: p50 sits around 55 ms and the slow requests are the heavy ones, views and F8). What
+Java 25 adds is not speed under this load but memory: `-XX:+UseCompactObjectHeaders` is about 10% less heap, so on
+Java 21 give the server a little more `-Xmx`.
+
 ## Why it is fast
 
 - **Layouts are data-free and cached** by (Sutra version, kind, shape fingerprint). Inference and

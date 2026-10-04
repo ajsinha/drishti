@@ -32,6 +32,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * What a {@link RedisLoader} writes before a day's columns list it, so that a load that dies half way leaves no
@@ -60,6 +61,7 @@ final class RedisLoadJournal implements AutoCloseable {
     private final RedisClusterAsyncCommands<byte[], byte[]> redis;
     private final Duration timeout;
     private final String load = Long.toHexString(ThreadLocalRandom.current().nextLong() | Long.MIN_VALUE);
+    private final ReentrantLock guard = new ReentrantLock();
     private final Set<String> domains = ConcurrentHashMap.newKeySet();
     private final Map<String, String> entries = new ConcurrentHashMap<>();   // domain TAB kind TAB yyyyMMdd → the member in <domain>:loading
     private final ScheduledExecutorService renew = Executors.newSingleThreadScheduledExecutor(r -> Thread.ofPlatform().daemon().name("redis-loader-alive")
@@ -81,7 +83,8 @@ final class RedisLoadJournal implements AutoCloseable {
         if (domains.contains(domain)) {
             return;
         }
-        synchronized (this) {
+        guard.lock();                                                // a ReentrantLock: Redis round trips under it must not pin a virtual thread (Java 21)
+        try {
             if (domains.contains(domain)) {
                 return;
             }
@@ -91,6 +94,8 @@ final class RedisLoadJournal implements AutoCloseable {
                 System.err.printf("redis: %s: deleted %,d documents a load that did not finish had written%n", domain, cleared);
             }
             domains.add(domain);
+        } finally {
+            guard.unlock();
         }
     }
 
@@ -98,12 +103,15 @@ final class RedisLoadJournal implements AutoCloseable {
     void day(String domain, String kind, LocalDate date, String gen) throws Exception {
         String entry = domain + "\t" + kind + "\t" + RedisLayout.day(date);
         if (!entries.containsKey(entry)) {
-            synchronized (this) {
+            guard.lock();
+            try {
                 if (!entries.containsKey(entry)) {
                     String member = load + "\t" + kind + "\t" + RedisLayout.day(date) + "\t" + gen;
                     ColumnReader.await(redis.sadd(RedisLayout.bytes(RedisLayout.loads(domain)), RedisLayout.bytes(member)), timeout);
                     entries.put(entry, member);
                 }
+            } finally {
+                guard.unlock();
             }
         }
     }

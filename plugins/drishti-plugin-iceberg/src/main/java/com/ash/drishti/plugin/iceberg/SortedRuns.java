@@ -216,15 +216,17 @@ final class SortedRuns implements Closeable {
 
     @Override
     public void close() {
-        synchronized (runs) {
-            for (Run r : runs) {
-                try {
-                    Files.deleteIfExists(r.file());
-                } catch (IOException e) {
-                    // a temporary file left behind; the spill directory is the operator's to clean
-                }
-            }
+        List<Run> gone;
+        synchronized (runs) {                                         // in memory only: the file deletes happen outside it
+            gone = new ArrayList<>(runs);
             runs.clear();
+        }
+        for (Run r : gone) {
+            try {
+                Files.deleteIfExists(r.file());
+            } catch (IOException e) {
+                // a temporary file left behind; the spill directory is the operator's to clean
+            }
         }
     }
 

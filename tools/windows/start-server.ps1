@@ -14,11 +14,11 @@
 
 <#
 .SYNOPSIS
-  Starts the Drishti server on Windows: Java 25, the native Delta engine (no Hadoop, no winutils.exe).
+  Starts the Drishti server on Windows: Java 21 or newer (25 recommended), the native Delta engine (no Hadoop, no winutils.exe).
 
 .DESCRIPTION
   Runs from the Drishti folder (a clone, or a copy holding the server jar, packs\ and data\). Finds the server jar,
-  checks that Java is 25, sets the Delta engine to native and starts the server with -XX:+UseCompactObjectHeaders.
+  checks that Java is 21 or newer, sets the Delta engine to native and starts the server with -XX:+UseCompactObjectHeaders on Java 25+.
   In the foreground by default (Ctrl+C stops it); with -Background it starts in a window of its own, writes its
   process id to data\server.pid and its log to data\logs\server.log (stop it with -Stop).
 
@@ -64,15 +64,16 @@ if ($Stop) {
     exit 0
 }
 
-# Java 25
+# Java 21 or newer (25 recommended)
 $java = if ($JavaHome) { Join-Path $JavaHome 'bin\java.exe' } else { 'java' }
-if ($JavaHome -and -not (Test-Path $java)) { throw "No java.exe under $JavaHome\bin: set -JavaHome (or DRISHTI_JAVA_HOME) to a JDK 25 folder." }
+if ($JavaHome -and -not (Test-Path $java)) { throw "No java.exe under $JavaHome\bin: set -JavaHome (or DRISHTI_JAVA_HOME) to a JDK 21 or newer folder." }
 $previous = $ErrorActionPreference
 $ErrorActionPreference = 'Continue'                 # java -version writes to stderr
 $version = (& $java -version 2>&1 | Out-String)
 $ErrorActionPreference = $previous
-if ($version -notmatch 'version "25') {
-    throw "Drishti runs on Java 25; $java says:`n$version`nInstall Temurin JDK 25 and pass -JavaHome (or set DRISHTI_JAVA_HOME)."
+$major = if ($version -match 'version "(\d+)') { [int]$Matches[1] } else { 0 }
+if ($major -lt 21) {
+    throw "Drishti runs on Java 21 or newer (25 recommended); $java says:`n$version`nInstall Temurin JDK 25 and pass -JavaHome (or set DRISHTI_JAVA_HOME)."
 }
 
 # the jar
@@ -88,7 +89,9 @@ $env:DRISHTI_DELTA_ENGINE = $Engine
 $env:DRISHTI_PORT = "$Port"
 $env:DRISHTI_DELTA_ROOT = $LakeRoot
 if ($Packs) { $env:DRISHTI_PACKS = $Packs }
-$javaArgs = @('-XX:+UseCompactObjectHeaders', "-Xmx$Heap", '-jar', $Jar)
+# compact object headers exist from Java 25 (Java 21 refuses to start with the flag)
+$javaArgs = @("-Xmx$Heap", '-jar', $Jar)
+if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
 Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $LakeRoot, packs $(if ($Packs) { $Packs } else { '(default)' })"
 
 if ($Background) {

@@ -44,6 +44,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Loads JSON lines into Redis in the layout {@link RedisSourcePlugin} reads ({@link RedisLayout}). Each line is one
@@ -147,6 +148,7 @@ public final class RedisLoader {
 
     /** A kind's codec, and the documents held back while its dictionary is not yet trained. */
     private static final class KindState {
+        final ReentrantLock lock = new ReentrantLock();   // not synchronized: release() trains and does Redis round trips (a virtual thread would pin on Java 21)
         volatile DocCodec codec;
         List<Row> held = new ArrayList<>();
     }
@@ -284,7 +286,8 @@ public final class RedisLoader {
         DocCodec codec = state.codec;
         if (codec == null) {
             List<Row> ready;
-            synchronized (state) {
+            state.lock.lock();
+            try {
                 if (state.codec == null) {
                     state.held.add(row);
                     if (state.held.size() < options.dictSamples()) {
@@ -293,6 +296,8 @@ public final class RedisLoader {
                 }
                 ready = release(key, state, false);
                 codec = state.codec;
+            } finally {
+                state.lock.unlock();
             }
             for (Row r : ready) {
                 write(r, codec);
@@ -342,7 +347,8 @@ public final class RedisLoader {
 
     /** Trains the kind's dictionary on its held documents (plain zstd when they are too few), stores it, and hands them back. */
     private List<Row> release(String key, KindState state, boolean end) throws Exception {
-        synchronized (state) {
+        state.lock.lock();
+        try {
             if (state.codec != null) {
                 List<Row> held = state.held;
                 state.held = new ArrayList<>();
@@ -364,6 +370,8 @@ public final class RedisLoader {
             List<Row> held = state.held;
             state.held = new ArrayList<>();
             return held;
+        } finally {
+            state.lock.unlock();
         }
     }
 

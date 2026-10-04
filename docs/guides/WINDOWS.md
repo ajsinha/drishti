@@ -16,7 +16,7 @@
 # Drishti on Windows
 
 Drishti runs on Windows 10 and 11 (and Windows Server 2019 or later) without WSL, Docker or Hadoop. This guide covers
-the same ground as [QUICKSTART.md](QUICKSTART.md) in PowerShell: installing Java 25 and Python, building the server
+the same ground as [QUICKSTART.md](QUICKSTART.md) in PowerShell: installing Java (21 or newer, 25 recommended) and Python, building the server
 or copying a built one, loading the demo lake, starting the server and the console, what does not work on Windows,
 and what to do when something goes wrong.
 
@@ -30,7 +30,7 @@ system, and with it `winutils.exe`, is never used. See [DELTA_CONNECTOR.md › E
 
 ## Contents
 
-1. [Install Java 25 and Python](#1-install-java-25-and-python)
+1. [Install Java and Python](#1-install-java-and-python)
 2. [Get the server: build it, or copy it](#2-get-the-server-build-it-or-copy-it)
 3. [Load the demo lake](#3-load-the-demo-lake)
 4. [Start the server](#4-start-the-server)
@@ -39,20 +39,20 @@ system, and with it `winutils.exe`, is never used. See [DELTA_CONNECTOR.md › E
 7. [What does not work on Windows](#7-what-does-not-work-on-windows)
 8. [Troubleshooting](#8-troubleshooting)
 
-## 1. Install Java 25 and Python
+## 1. Install Java and Python
 
 | Tool | Version | Install with | Check with |
 |---|---|---|---|
-| JDK | **25** (Temurin or any OpenJDK 25) | `winget install EclipseAdoptium.Temurin.25.JDK`, or the MSI from adoptium.net | `java -version` shows `openjdk version "25…` |
+| JDK | **21 or newer; 25 recommended** (Temurin or any OpenJDK) | `winget install EclipseAdoptium.Temurin.25.JDK`, or the MSI from adoptium.net | `java -version` shows `openjdk version "25…` (or 21…) |
 | Python | 3.11 or newer | `winget install Python.Python.3.13`, or python.org (tick *Add python.exe to PATH*) | `python --version` |
 | uv | optional, recommended | `winget install astral-sh.uv` | `uv --version` |
 | git | to build from source | `winget install Git.Git` | `git --version` |
 
-Java 25 does not have to be the default Java. The scripts take its folder as `-JavaHome`, or from
+The Java you run Drishti with does not have to be the default Java. The scripts take its folder as `-JavaHome`, or from
 `DRISHTI_JAVA_HOME`:
 
 ```powershell
-$env:DRISHTI_JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot'   # your JDK 25 folder
+$env:DRISHTI_JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot'   # your JDK folder
 ```
 
 If PowerShell refuses to run the scripts (*running scripts is disabled on this system*), allow local scripts for your
@@ -113,12 +113,12 @@ With uv installed it fetches `deltalake`, `pyarrow` and `pyyaml` itself; without
 ```
 
 The script checks that Java is 25, sets `DRISHTI_DELTA_ENGINE=native`, and starts the jar with
-`-XX:+UseCompactObjectHeaders` (10–20% faster and 10% less heap on Java 25). It runs in the window until `Ctrl+C`.
+`-XX:+UseCompactObjectHeaders` (10–20% faster and 10% less heap on Java 25; the script leaves the flag out on Java 21, which refuses to start with it). It runs in the window until `Ctrl+C`.
 Its options:
 
 | Option | Default | Meaning |
 |---|---|---|
-| `-JavaHome` | `DRISHTI_JAVA_HOME`, then `JAVA_HOME`, then `java` on the PATH | the JDK 25 folder |
+| `-JavaHome` | `DRISHTI_JAVA_HOME`, then `JAVA_HOME`, then `java` on the PATH | the JDK folder (21 or newer) |
 | `-Packs` | `DRISHTI_PACKS`, else the server's default (`finance`) | the packs to load, e.g. `market-risk,counterparty-risk` |
 | `-Port` | `DRISHTI_PORT`, else `18480` | the server's port |
 | `-LakeRoot` | `DRISHTI_DELTA_ROOT`, else `.\data\delta` | the Delta Lake |
@@ -191,7 +191,7 @@ and work on Windows; their servers are yours to run.
 
 | You see | Cause | Do this |
 |---|---|---|
-| `Drishti runs on Java 25; … says: … version "21…` | the script found another Java | pass `-JavaHome` or set `DRISHTI_JAVA_HOME` to the JDK 25 folder |
+| `Drishti runs on Java 21 or newer (25 recommended); … says: … version "17…` | the script found an older Java | pass `-JavaHome` or set `DRISHTI_JAVA_HOME` to a JDK 21 or newer folder |
 | `running scripts is disabled on this system` | PowerShell's execution policy | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 | `HADOOP_HOME and hadoop.home.dir are unset`, `Could not locate executable winutils.exe` | a Delta connector on `engine: hadoop` | remove `engine: hadoop` and unset `DRISHTI_DELTA_ENGINE` (or set it to `native`) |
 | Health: `DOWN: cannot reach C:\…\data\delta\trading (engine: native)` | no lake there | run `load-delta.ps1`, or start with `-LakeRoot` pointing at the lake |

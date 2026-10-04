@@ -31,7 +31,7 @@ In these docs, `<GO>` means "press Enter".
 
 On Windows, follow [WINDOWS.md](WINDOWS.md) instead: the same steps in PowerShell.
 
-You do not need Maven: the repository has its own (`./mvnw`). Point `JAVA_HOME` at Java 25 in
+You do not need Maven: the repository has its own (`./mvnw`). Point `JAVA_HOME` at Java 21 or newer (25 recommended) in
 **every** terminal you use (this is the Ubuntu path; adjust it for your system):
 
 ```bash
@@ -53,7 +53,7 @@ ls drishti-server/target/*-exec.jar
 You should see `drishti-server/target/drishti-server-1.15.0-exec.jar`. The first build downloads its
 libraries and takes a few minutes.
 
-If the build stops with `Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java …`, `JAVA_HOME` is not Java 25.
+If the build stops with `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …`, `JAVA_HOME` is older than Java 21.
 
 ## 3. Set up the console
 
@@ -168,14 +168,14 @@ The [workspaces guide](../../console/web/guides/workspaces.md) walks through bot
 ## Build and run without the wrapper, or from an IDE
 
 Everything above uses `./mvnw`. This section is for a machine that has its own Maven, and for working from
-IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 25.
+IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 25 (Java 21 or newer works).
 
 ### With Maven installed on the system
 
-The poms enforce only the Java version (`[25,26)`, the rule that prints `Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java …`); they
+The poms enforce only the Java version (`[21,)`, the rule that prints `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …`); they
 set no minimum Maven version. The wrapper pins **Maven 3.9.12** (`.mvn/wrapper/maven-wrapper.properties`), which is what
 the project is built and tested with; use 3.9.x. The enforcer rule checks the JVM Maven itself runs on, so set
-`JAVA_HOME` to Java 25 (as in step 1) before `mvn`.
+`JAVA_HOME` to Java 21 or newer (as in step 1) before `mvn`.
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
@@ -189,7 +189,7 @@ ls drishti-server/target/*-exec.jar     # the application: drishti-server/target
 ```
 
 Run the server from the repository root (it finds `./packs` and `./data` relative to where you start it). It runs on
-JDK 25 only; `-XX:+UseCompactObjectHeaders` saves about 10% of the heap:
+Java 21 or newer. On Java 25 add `-XX:+UseCompactObjectHeaders`, which saves about 10% of the heap (Java 21 has no such flag and refuses to start with it, so leave it out there):
 
 ```bash
 DRISHTI_PACKS=market-risk,counterparty-risk \
@@ -207,11 +207,11 @@ console/.venv/bin/python -m pytest console/tests -q                # the console
 
 ### IntelliJ IDEA
 
-Use a release that supports JDK 25.
+Use a release that supports your JDK (21 or newer; 25 recommended).
 
 1. **File → Open**, choose the root `pom.xml`, **Open as Project**. IDEA imports every module.
-2. **File → Project Structure → Project → SDK**: a JDK 25 (add it with *Add SDK → Add JDK*); language level 25.
-   Maven's own JDK, in **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**, must be 25 too.
+2. **File → Project Structure → Project → SDK**: a JDK 21 or newer (add it with *Add SDK → Add JDK*); language level 21 or higher.
+   Maven's own JDK, in **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**, must be 21 or newer too.
 3. **Run → Edit Configurations → + → Spring Boot** (or *Application* in the Community edition):
 
    | Field | Value |
@@ -220,7 +220,7 @@ Use a release that supports JDK 25.
    | Module / classpath of | `drishti-server` |
    | JRE | 25 |
    | Working directory | the repository root (the default is the `drishti-server` folder, so change it: `packs/` and `data/` are relative) |
-   | VM options | `-XX:+UseCompactObjectHeaders` |
+   | VM options | `-XX:+UseCompactObjectHeaders` (JDK 25 or newer only; leave empty on 21) |
    | Environment variables | `DRISHTI_PACKS=market-risk,counterparty-risk;DRISHTI_STUDIO_SAVE=true` (separate with `;`; the other `DRISHTI_*` variables are listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)) |
    | Program arguments | `--spring.config.additional-location=file:/home/you/drishti-site.yaml` (optional; see [below](#supplying-a-different-application-config)) |
 

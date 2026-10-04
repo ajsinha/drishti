@@ -39,7 +39,7 @@ For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECT
 
 ## 1. The repository
 
-Drishti has two programs. The **server** is one Spring Boot 3.5 application on OpenJDK 25 (`drishti-server`),
+Drishti has two programs. The **server** is one Spring Boot 3.5 application on Java 21 or newer, 25 recommended (`drishti-server`),
 built from a Maven reactor of internal modules. The **console** is a FastAPI and Jinja2 web application in
 `console/` that renders the server's JSON. Industries are **packs** (`packs/`), which are content and
 configuration, not code.
@@ -134,7 +134,7 @@ drishti-benchmarks                (inference)
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime and generated data, all git-ignored: `delta/` (the sample lake, `make_data.py --lake`), `feeds/` (`make_data.py`), `banking.jsonl` (`make_data.py --jsonl`, for Aerospike), `identity/` (the SQLite database), `governance/` (Sutra proposals), `reports/` |
 | `docs/` | These documents, by audience: `guides/` (quickstart, user, developer, API, Rachana and troubleshooting guides), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance, and the runbooks under `admin/runbooks/`), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
-| `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 25; `pytest` for the console on Python 3.13 |
+| `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 25 (`tools/drill.sh` also runs the tests on Java 21); `pytest` for the console on Python 3.13 |
 
 ---
 
@@ -144,7 +144,7 @@ drishti-benchmarks                (inference)
 
 | Tool | Version | Notes |
 |---|---|---|
-| JDK | 25 (any vendor) | The enforcer rule in `pom.xml` (`requireJavaVersion [25,26)`) stops any other version with `Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java …` The bytecode targets 25 (`maven.compiler.release`). `.java-version` says `25`. Run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap; measured faster than JDK 21 by 10–20% in requests a second). |
+| JDK | 21 or newer (any vendor; 25 recommended) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap; measured faster than JDK 21 by 10–20% in requests a second); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [PERFORMANCE.md](../admin/PERFORMANCE.md#java-21-and-virtual-thread-pinning)). |
 | Python | 3.11 or newer | The console and the tools. CI uses 3.13. |
 | uv | any recent | Creates the console's environment, and runs the lake tools with `uv run --with …` so nothing is installed globally. |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, ActiveMQ, RabbitMQ, MinIO) and `deploy/compose.yaml`. |

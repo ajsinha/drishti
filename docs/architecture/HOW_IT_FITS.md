@@ -50,7 +50,7 @@ product. Packs and Sutras are configuration read when the server starts (Sutras 
     |      console/web/templates (_macros/panels.html) + console/web/static/js (command.js, live.js, ...)
     |  REST + SSE under /api/v1, ViewModel JSON
     v
- SERVER    drishti-server/  (Java 25, Spring Boot, port 18480)
+ SERVER    drishti-server/  (Java 21+, Spring Boot, port 18480)
     |      controllers: CommandController, ViewController, StreamController, DesignController, ...
     v
  ENGINE    drishti-engine/ ViewPipeline

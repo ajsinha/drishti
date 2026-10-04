@@ -84,6 +84,7 @@ public final class S3SourcePlugin implements SourcePlugin {
     /** Why the last listing failed (a successful read does not clear it: only the next good listing does). */
     private volatile String listingError;
     private Cache<String, Optional<EntityDocument>> cache;
+    private final com.ash.drishti.api.SingleFlight<String> reads = new com.ash.drishti.api.SingleFlight<>();
 
     @Override
     public PluginManifest manifest() {
@@ -185,7 +186,7 @@ public final class S3SourcePlugin implements SourcePlugin {
 
     private Optional<EntityDocument> read(EntityRef ref, String base, LocalDate date) {
         String key = base + ref.kind() + "/" + ref.id() + ".json";
-        return cache.get(key, k -> {
+        return reads.get(key, cache::getIfPresent, k -> {          // not Cache.get(key, loader): that blocks inside synchronized (pins a virtual thread on Java 21)
             try (ResponseInputStream<GetObjectResponse> in = s3.getObject(GetObjectRequest.builder().bucket(bucket).key(k).build())) {
                 Instant modified = in.response().lastModified();
                 EntityDocument d = new EntityDocument(ref, context.parseJson((InputStream) in),
@@ -200,7 +201,7 @@ public final class S3SourcePlugin implements SourcePlugin {
                 lastError = e.getClass().getSimpleName() + ": " + e.getMessage();
                 throw e;
             }
-        });
+        }, cache::put);
     }
 
     private static boolean safe(String part) {

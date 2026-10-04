@@ -57,7 +57,7 @@ Drishti is two processes. Users only ever talk to the console; the console talks
 
 | Process | Default port | Health check | Metrics | Started by |
 |---|---|---|---|---|
-| `drishti-server` (Spring Boot, OpenJDK 25) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -jar drishti-server-<version>-exec.jar` |
+| `drishti-server` (Spring Boot, Java 21 or newer, 25 recommended) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -jar drishti-server-<version>-exec.jar` |
 | `console` (FastAPI on uvicorn, Python) | 17480 | `/healthz` | none | `python console/run_drishti_web.py` |
 
 Things worth knowing before you plan an installation:
@@ -159,7 +159,7 @@ Open two terminals. In the first:
 ```bash
 cd /opt/drishti
 sudo -u drishti env JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64 DRISHTI_PACKS=finance \
-  /usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar drishti-server.jar
+  /usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar drishti-server.jar   # the flag is for Java 25 and newer: leave it out on Java 21, which refuses to start with it
 ```
 
 You should see, after a few seconds, a line ending `Started DrishtiApplication in … seconds`, and on the very first

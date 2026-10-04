@@ -69,7 +69,7 @@ default):
                                                 │ REST + SSE under /api/v1 (JSON ViewModel, frames of patches)
                                                 │ Authorization: Bearer <HS256 token minted per call>
                                    ┌────────────▼────────────┐
-                                   │  drishti-server         │  Java 25 · Spring Boot 3.5
+                                   │  drishti-server         │  Java 21+ · Spring Boot 3.5
                                    │  (port 18480)           │  virtual threads
                                    │  ┌───────────────────┐  │
                                    │  │ drishti-engine    │  │  fetch → match → fingerprint
@@ -516,7 +516,7 @@ connectors, starter workspaces, help guides and sample data.
 
 ## 13. Module layout (Java)
 
-Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.drishti`, Java 25, packages
+Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.drishti`, Java 21 or newer (25 recommended), packages
 `com.ash.drishti.<module>…`, `package-info.java` everywhere.
 
 | Module | Responsibility | Contributes |

@@ -90,32 +90,32 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 ## Building and starting
 
-### The build fails with "Drishti needs Java 25"
+### The build fails with "Drishti needs Java 21 or newer"
 
-The rule checks only the version, not the vendor: Oracle JDK 25, Temurin 25 and OpenJDK 25 all pass. The message
+The rule checks only the version, not the vendor: Oracle JDK, Temurin and OpenJDK of version 21 or newer all pass. The message
 names the Java version and folder Maven actually found (older builds printed "Drishti builds and runs on OpenJDK 25"
-instead). When you have a JDK 25 installed and still see it, Maven is running on another Java: usually `JAVA_HOME`
+instead). When you have a JDK 21 or newer installed and still see it, Maven is running on another Java: usually `JAVA_HOME`
 points at an older JDK, or an IDE uses its own JDK setting.
 
 
-- **Check:** `./mvnw -v` prints the Java version Maven uses: it must be 25, and a JDK, not only a JRE (the build
+- **Check:** `./mvnw -v` prints the Java version Maven uses: it must be 21 or newer, and a JDK, not only a JRE (the build
   needs `javac`; on Ubuntu `sudo apt install openjdk-25-jdk-headless`).
-- **Fix:** point Maven at JDK 25 and build again:
+- **Fix:** point Maven at a JDK 21 or newer (25 recommended) and build again:
 
   ```bash
   export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64      # Oracle JDK on Linux: e.g. /usr/lib/jvm/jdk-25-oracle-x64
-  ./mvnw -v                                                 # must show Java version: 25 and that folder
+  ./mvnw -v                                                 # must show Java version: 21 or newer and that folder
   ./mvnw -q verify
   ```
 
-- **IntelliJ IDEA:** File → Project Structure → SDK = the JDK 25, and Settings → Build Tools → Maven → Runner → JRE =
+- **IntelliJ IDEA:** File → Project Structure → SDK = a JDK 21 or newer, and Settings → Build Tools → Maven → Runner → JRE =
   "Use Project JDK" (Maven run from the IDE uses that setting, not your shell's `JAVA_HOME`).
 
-### The server stops at once with `UnsupportedClassVersionError … class file version 69.0`
+### The server stops at once with `UnsupportedClassVersionError … class file version 65.0` (or higher)
 
-- **Cause:** `java` on your `PATH` is older than 25.
+- **Cause:** `java` on your `PATH` is older than 21.
 - **Check:** `java -version`.
-- **Fix:** run the jar with Java 25: `/usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar …`,
+- **Fix:** run the jar with Java 21 or newer: `/usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar …` (the flag is for Java 25 and newer; on 21 leave it out),
   or put that JDK first on your `PATH`.
 
 ### On Windows: `HADOOP_HOME and hadoop.home.dir are unset` or `Could not locate executable winutils.exe`
