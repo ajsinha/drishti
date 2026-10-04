@@ -13,14 +13,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Regenerates the screenshots of the Sutra developer guide (docs/guides/SUTRA_DEVELOPER_GUIDE.md) into docs/guides/img/sutras/.
-
-It reuses the shared screenshot driver (tools/docs/screenshots.py): the same scratch server :18997 and console :17997, never the usual
-:18480 / :17480.
-
-    console/.venv/bin/python tools/docs/shots/sutras.py            # all of them
-    console/.venv/bin/python tools/docs/shots/sutras.py --only s04 # the ones whose file name contains "s04"
-    console/.venv/bin/python tools/docs/shots/sutras.py --list"""
+"""The pictures of the Sutra developer guide (docs/guides/SUTRA_DEVELOPER_GUIDE.md), written to docs/guides/img/sutras/. Run through
+tools/docs/screenshots.py --guide sutras."""
 from __future__ import annotations
 
 import base64
@@ -29,13 +23,10 @@ from pathlib import Path
 import sys
 import tempfile
 
-HERE = Path(__file__).resolve()
-sys.path.insert(0, str(HERE.parents[1]))
-import screenshots as S  # noqa: E402  the shared driver: Ctx, servers, main()
+from shotlib import ROOT, Ctx, register, showcase  # noqa: E402,F401
 
-S.OUT = S.ROOT / "docs" / "guides" / "img" / "sutras"
-S.SHOTS.clear()
-shot = S.shot
+S_OUT = ROOT / "docs" / "guides" / "img" / "sutras"
+shot = register("sutras")
 
 SHORT = """rachana: 1
 sutra: bond-short
@@ -56,10 +47,6 @@ panels:
       - { label: Clean price, bind: $.terms.cleanPrice, fmt: price2 }
       - { label: Yield, bind: $.terms.yield, fmt: pct4 }
 """
-
-
-def showcase():
-    return (S.EXAMPLES / "all-panels-showcase.json").read_text(), (S.EXAMPLES / "all-panels-showcase.sutra.yaml").read_text()
 
 
 @shot("s01-yaml-problems.jpg")
@@ -141,11 +128,7 @@ def inference_vs_sutra(c):
     page.set_viewport_size({"width": 1440, "height": 700})
     page.set_content(html)
     page.wait_for_timeout(1500)
-    out = S.OUT / "s05-inference-vs-sutra.jpg"
+    out = S_OUT / "s05-inference-vs-sutra.jpg"
     page.screenshot(path=str(out), type="jpeg", quality=84)
     page.set_viewport_size({"width": 1440, "height": 900})
-    print("  wrote", out.relative_to(S.ROOT))
-
-
-if __name__ == "__main__":
-    sys.exit(S.main())
+    print("  wrote", out.relative_to(ROOT))
