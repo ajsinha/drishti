@@ -21,7 +21,7 @@ lookup, and searches over every trade of a day in 100–250 ms, and how the same
 manageable. It covers the table layout, the loader, each read path, retention, sizing, measurements and limits.
 
 Read it if you run Drishti on PostgreSQL, load PostgreSQL for Drishti, or change the connector. For a first setup see
-[CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#7-a-database-loaded-for-drishti-jdbc-table-mode); every setting is in
+[the walk-through at the end of this document](#walk-through-step-by-step); every setting is in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#jdbc--a-database). The same design for the other stores is in
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) (whose [section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns)
 explains how the engine uses a day's columns) and [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md). To build demo data
@@ -512,4 +512,120 @@ connectors:
 A kind has one main query (`query.<kind>`) and may add parts from other tables (`query.<kind>.<part>`); a connector
 serves as many kinds as it has main queries. Query mode reads one entity at a time: it has no type-ahead, searches,
 columns or reverse lookups unless you add `ids.<kind>`, `columns.<kind>` and `reverse.<kind>` queries ([JDBC_QUERIES.md](JDBC_QUERIES.md)); a
-kind of millions a day kept for years belongs in table mode. See [CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#6-a-database-your-own-schema-jdbc-query-mode).
+kind of millions a day kept for years belongs in table mode. See [JDBC_QUERIES.md](JDBC_QUERIES.md#walk-through-step-by-step).
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+#### The situation
+
+You load data into PostgreSQL *for* Drishti and want everything the lake gives: picked dates, search, reverse
+lookups. Table mode reads a whole data domain from one table of JSON documents.
+
+#### The data
+
+One row per entity per business date:
+
+```sql
+CREATE SCHEMA IF NOT EXISTS trading;
+CREATE TABLE trading.entities (
+  kind          text  NOT NULL,                  -- the entity's kind: trade
+  id            text  NOT NULL,                  -- its id: MX-20000001
+  business_date date  NOT NULL,                  -- the date the document is for
+  doc           jsonb NOT NULL,                  -- the document
+  PRIMARY KEY (kind, id, business_date)          -- dated reads
+);
+CREATE INDEX ON trading.entities (kind, business_date);               -- snapshot dates
+CREATE INDEX ON trading.entities USING gin (doc jsonb_path_ops);      -- reverse lookups
+INSERT INTO trading.entities VALUES
+  ('trade', 'MX-20000001', '2026-09-30',
+   '{"tradeId": "MX-20000001", "counterparty": "CP-NORTHBRIDGE", "nettingSet": "NS-NORTHBRIDGE-IRS", "mtm": 1875863, "businessDate": "2026-09-30"}');
+```
+
+The document's business date is the row's `business_date`; its version is that date's day number. Reverse lookups
+find rows whose document holds the target id anywhere (`jsonb_path_exists(doc, '$.** ? (@ == $v)')`); search matches
+ids containing the typed text.
+
+#### Configure it
+
+**Site form, replacing a pack's lake with PostgreSQL.** The banking packs declare `<domain>-store` connectors on
+Delta Lake. The `postgres` profile (`application-postgres.yaml`) switches six of them to PostgreSQL by naming only
+`plugin` and `settings`; the pack's `kinds`, route and `mode.<kind>` settings stay. Your site can do the same for
+one connector:
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      trading-store:                                 # the trading pack's connector, by name
+        plugin: jdbc                                 # replaces the pack's "delta"; kinds and route stay
+        settings:
+          url: ${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}
+          user: ${DRISHTI_PG_USER:drishti}
+          password: ${DRISHTI_PG_PASSWORD:drishti}
+          table: trading.entities                    # setting table turns table mode on
+          pool-size: 8
+          # the pack's root and domain stay too; jdbc ignores them
+```
+
+**Pack form, a pack that owns its PostgreSQL store:**
+
+```yaml
+connectors:
+  trading-store:
+    plugin: jdbc
+    kinds: [trade]
+    settings:
+      url: ${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}
+      user: ${DRISHTI_PG_USER:drishti}
+      password: ${DRISHTI_PG_PASSWORD:drishti}
+      table: trading.entities                        # schema.table; plain SQL names only
+      mode.trade: snapshot                           # the default; effective for reference data
+      lookback-days: 10                              # snapshot kinds: how far back a picked date may fall
+      # kinds: trade                                 # optional; otherwise the kinds the table holds
+routes:
+  trade: trading-store
+```
+
+#### Try it
+
+```bash
+docker compose -f deploy/compose.data.yaml up -d postgres
+tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti
+SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=counterparty-risk,market-risk \
+  java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+`tools/load-postgres.sh` (re)creates one `<schema>.entities` table per domain (`reference`, `market`, `trading`,
+`risk`, `credit`, `collateral`) with ten business days, partitioned by month, the pack's promoted fields as columns,
+and prints `postgres: loaded 17,910 rows in 2 s`. Add `--trades 50000` (a medium demo) or `--trades 1000000 --days 3`
+(the scale test) for a larger trade book, streamed from the generator into the loader. How the layout serves a
+million trades a day is in [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md).
+
+```bash
+curl -s "http://localhost:18480/api/v1/entities/trade/MX-20000001/raw?asOf=2026-09-29" | jq -c .provenance
+```
+
+You should see `"source":"trading-store"` and `"businessDate":"2026-09-29"`.
+
+#### In the terminal
+
+`TRD MX-20000001 <GO>`, then pick an earlier date: the trade's numbers change. `CPTY CP-NORTHBRIDGE <GO>` on a picked
+date: the *Netting sets* panel lists the four netting sets that mention the counterparty, and impact analysis (F8, or
+`GET /api/v1/impact/counterparty/CP-NORTHBRIDGE?asOf=2026-09-29`) lists them with its 35 trades: reverse lookups by
+SQL. (*Linked entities* shows the ids the counterparty itself refers to: its group and credit limit.)
+
+#### Common errors
+
+| You see | Cause | Fix |
+|---|---|---|
+| `not a plain SQL identifier: …` under `failedToStart` | `table` or a column name holds anything but letters, digits, `_` and one `.` | use plain names |
+| searches say `partial: true` | the table has no promoted columns (an earlier table, or written another way) | reload with `tools/load-postgres.sh`, or add the columns the pack declares |
+| `… is a plain table of the old layout: load with --recreate` | the loader found a table of the earlier form | `--recreate` (the samples' load does it) |
+| a picked date returns nothing for a snapshot kind | the newest date on or before it is more than `lookback-days` older | load every business date, or set `mode.<kind>: effective` for data that changes rarely |
+| the connector serves no kinds after an outage at start | it reads its catalogue again after 10 s, then every `refresh-seconds` | wait, or list `kinds:` in settings |

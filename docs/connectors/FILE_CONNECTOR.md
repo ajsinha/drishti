@@ -375,3 +375,231 @@ The connector still reads one file per entity, `<root>/<kind>/<id>.json` (or `.c
 `<root>/<yyyy-MM-dd>/<kind>/<id>.json`, as the public-data feeds use (`data/feeds/fixing/SOFR-HISTORY.csv`). It suits
 a handful of documents; for more than a few thousand entities a day use JSON lines, since a file per entity means a
 file system entry per entity per day. When a kind has JSON-lines files they are read first.
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+For more than a handful of entities, keep one **JSON-lines file per kind per business day**
+(`<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, written by `tools/load-files.sh`, served by the `files` profile): the
+connector indexes each day once and serves single reads, searches and reverse lookups without reading whole files.
+[FILE_CONNECTOR.md](FILE_CONNECTOR.md) explains it in full. The rest of this chapter shows the file-per-entity layout.
+
+#### The situation
+
+Your credit system writes one JSON file per credit limit every evening into a shared folder,
+`/srv/drops/limits`. You want them in Drishti as `credit-limit` entities (mnemonic `LIM`, from the
+`counterparty-risk` pack), with history by date.
+
+#### The data
+
+The kind is the folder name, the id is the file name without `.json` (or `.csv`). A folder named
+`yyyy-MM-dd` holds that business date's files; files outside a date folder are undated.
+
+```text
+/srv/drops/limits/
+├── credit-limit/
+│   └── LIM-HARBOURVIEW.json          undated: served when no dated file is found
+├── 2026-09-29/
+│   └── credit-limit/
+│       └── LIM-HARBOURVIEW.json      the limit as at 29 September
+└── 2026-09-30/
+    └── credit-limit/
+        └── LIM-HARBOURVIEW.json      the limit as at 30 September
+```
+
+`2026-09-30/credit-limit/LIM-HARBOURVIEW.json`:
+
+```json
+{
+  "limitId": "LIM-HARBOURVIEW",
+  "counterpartyName": "Harbourview Capital LLP",
+  "counterparty": "CP-HARBOURVIEW",
+  "measure": "PFE 95 peak",
+  "limit": 250000000.0,
+  "used": 187500000,
+  "utilisation": 0.75,
+  "status": "Within limit",
+  "approvedBy": "Credit Risk Committee",
+  "reviewDue": "2027-03-31"
+}
+```
+
+A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed. `make_data.py` writes one
+(nothing under `data/` is in git): `data/feeds/fixing/SOFR-HISTORY.csv` starts
+
+```text
+date,rate,volume_bn
+2026-09-01,3.95,1910
+2026-09-02,3.95,1879
+```
+
+and is served as `{"rows": [{"date": "2026-09-01", "rate": 3.95, "volume_bn": 1910}, …]}`.
+
+#### Configure it
+
+**Site form** (`application.local.yaml`):
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      limits-drop:                         # the connector's name: health, provenance and routes use it
+        plugin: file                       # the file plugin
+        kinds: [credit-limit]              # serve only credit limits from this folder
+        settings:
+          root: ${LIMITS_DROP_DIR:/srv/drops/limits}   # the folder; an environment variable can move it
+          rescan-seconds: 30               # how often new date folders and new ids (for search) are listed
+          lookback-days: 5                 # a picked date may fall back at most 5 days to an older date folder
+```
+
+**Pack form** (`packs/<your-pack>/pack.yaml`), the same connector shipped with a pack:
+
+```yaml
+connectors:
+  limits-drop:                             # one entry per connector
+    plugin: file
+    kinds:
+    - credit-limit                         # a list: a site `kinds:` would replace it whole
+    settings:
+      root: ${LIMITS_DROP_DIR:/srv/drops/limits}
+      rescan-seconds: 30
+      lookback-days: 5
+```
+
+No route is needed: the pack routes `credit-limit` to `credit-store` (the lake), and the lake simply does not hold
+`LIM-HARBOURVIEW`, so the read passes on to `limits-drop`. Add `routes: { credit-limit: limits-drop }` only if the
+folder should be asked *before* the lake for every credit limit.
+
+The shipped `application.yaml` also runs the plugin as itself, serving `./data/feeds` (`DRISHTI_FEEDS`) with
+`source-name: feed-file`; leave it, or point `DRISHTI_FEEDS` at your folder for the simplest setup.
+
+#### Try it
+
+```bash
+mkdir -p /tmp/limits/credit-limit /tmp/limits/2026-09-30/credit-limit
+cat > /tmp/limits/2026-09-30/credit-limit/LIM-HARBOURVIEW.json <<'EOF'
+{"limitId": "LIM-HARBOURVIEW", "counterpartyName": "Harbourview Capital LLP", "counterparty": "CP-HARBOURVIEW",
+ "measure": "PFE 95 peak", "limit": 250000000.0, "used": 187500000, "utilisation": 0.75, "status": "Within limit"}
+EOF
+LIMITS_DROP_DIR=/tmp/limits java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+```bash
+curl -s "http://localhost:18480/api/v1/entities/credit-limit/LIM-HARBOURVIEW/raw?asOf=2026-09-30" | jq -c .provenance
+```
+
+You should see `"source":"limits-drop"`, `"live":false` and `"businessDate":"2026-09-30"`; `generation` is the
+file's modification time in milliseconds.
+
+#### In the terminal
+
+Type `LIM LIM-HARB`: the type-ahead offers `LIM-HARBOURVIEW` with the subtitle `credit-limit · limits-drop`. Press
+Enter (or type `LIM LIM-HARBOURVIEW <GO>`). *How this view was built* names `limits-drop`. With the full layout above,
+pick 29 September in the top bar and the 29 September file answers. Had the 30 September folder lacked the file, a
+read for 30 September would take 29 September's, and the view would say *Latest data on or before 2026-09-30 is from
+2026-09-29.* For a date with no date folder on or before it within `lookback-days`, the undated `credit-limit/`
+folder answers (if it has the file), and the view says *No data held for …: the current data of
+limits-drop, a source that keeps no dates*, because that document has no business date.
+
+#### Health, and when the folder goes away
+
+`health` is `UP`, or `DOWN: no directory /srv/drops/limits` when the folder is missing (an unmounted share). There is
+no connection to lose: each read opens the file afresh. While the folder is missing, reads find nothing
+(`DRS-1001 no source holds credit-limit/LIM-HARBOURVIEW`); when it comes back, reads work at once and search catches
+up at the next rescan.
+
+#### Common errors
+
+| You see | Cause | Fix |
+|---|---|---|
+| `DRS-1001 no source holds credit-limit/LIM-X` | the file is not at `<root>/<kind>/<id>.json` or `<root>/<date>/<kind>/<id>.json` | check the kind folder spelling (`credit-limit`, not `credit_limit` or `limits`) |
+| a new date folder is ignored for a few seconds | date folders are listed every `rescan-seconds` | wait, or lower `rescan-seconds` |
+| the type-ahead does not offer a new file | search is rebuilt every `rescan-seconds` | wait; the read itself works at once |
+| an old date shows undated data | the picked date is more than `lookback-days` after the newest date folder holding the file | raise `lookback-days`, or keep a file per date |
+| an id with `/` or `..` is not found | ids that would leave the root are refused | use plain ids |
+
+### Configuration by example
+
+**What it is for.** End-of-day files dropped in a folder by another system: JSON documents or CSV tables, optionally
+one folder per business date. No database, no service; a rewritten file is newer data.
+
+**Configuration.** The shipped `application.yaml` runs it as itself:
+
+```yaml
+drishti:
+  sources:
+    plugins:
+      file:
+        enabled: true
+        settings:
+          root: ${DRISHTI_FEEDS:./data/feeds}   # the folder to serve
+          source-name: feed-file                # shown in provenance (the route name stays `file`)
+          rescan-seconds: 30                    # how often the search index and the dated folders are re-listed
+          lookback-days: 10                     # how far back a picked date may fall to an older dated folder
+```
+
+A pack (or a site) can run more folders as named connectors:
+
+```yaml
+# packs/<pack>/pack.yaml
+connectors:
+  eod-futures:
+    plugin: file
+    kinds: [settlement]                         # only this kind is read from the folder
+    settings:
+      root: ${EOD_FUTURES_DIR:/data/eod/futures}
+      lookback-days: 5
+routes:
+  settlement: eod-futures                       # try this connector first for settlements
+```
+
+**Settings.**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `root` | `data/feeds` | the folder (resolved to an absolute path) |
+| `source-name` | `file` (a connector: its name) | provenance source |
+| `rescan-seconds` | `30` | re-list kinds, ids and dated folders |
+| `lookback-days` | `10` | a dated folder older than the picked date minus this is not used |
+
+**The data.**
+
+```text
+data/feeds/
+├── fixing/
+│   └── SOFR-HISTORY.csv            undated: kind "fixing", id "SOFR-HISTORY"
+├── settlement/
+│   └── CL-DEC26.json               undated: kind "settlement", id "CL-DEC26"
+├── 2026-09-29/
+│   └── settlement/CL-DEC26.json    dated: the settlement for 29 September
+└── 2026-09-30/
+    └── settlement/CL-DEC26.json
+```
+
+The kind is the folder name and the id the file name without `.json` or `.csv`. A JSON file is the document as is.
+A CSV file needs a header row and becomes `{"rows": [...]}`, numbers and booleans typed:
+
+```text
+date,rate,volume_bn
+2026-09-01,3.95,1910
+```
+
+```json
+{ "rows": [ { "date": "2026-09-01", "rate": 3.95, "volume_bn": 1910 } ] }
+```
+
+Business dates: a read for a date takes the newest dated folder on or before it (within `lookback-days`) that has
+the file, then the undated folder; Live takes the newest dated folder that has it, then the undated one. The
+document's business date is its folder's date (none for the undated folder). Generation is the file's modification
+time. An id containing `..` or a path separator that would leave the root is refused.
+
+**Try it.** `data/feeds/fixing/SOFR-HISTORY.csv` ships with the repository; add your own files and wait for the
+next rescan (search only; reads find new files at once).
+
+**What the user sees.** `FIX SOFR-HISTORY <GO>` with the finance pack (its `FIX` mnemonic is kind `fixing`); laid
+out by inference. Health: `UP`, or `DOWN: no directory <root>`.

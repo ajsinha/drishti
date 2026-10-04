@@ -22,8 +22,8 @@ its recent history, and served for Live and for picked business dates. This docu
 what it turns the response into, how reads are answered, what happens when the internet or the publisher is
 unavailable, how to run the feeds behind a proxy or without internet, and every setting.
 
-For a first setup see [CONNECTOR_GUIDE.md, chapter 14](CONNECTOR_GUIDE.md#14-public-market-data-feed); the short
-reference is [PLUGIN_GUIDE.md](PLUGIN_GUIDE.md#feed) and
+For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the short
+reference is [the configuration examples at the end of this document](#configuration-by-example) and
 [CONFIGURATION.md](../admin/CONFIGURATION.md#feed--public-data-feeds). For long history next to the feeds see
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
 
@@ -293,7 +293,7 @@ DRISHTI_FEED_FRED=true FRED_API_KEY=… DRISHTI_FRED_SERIES=DGS10,DFF,SOFR \
 ### 4.2 The site form
 
 A site entry under `drishti.sources.connectors` overrides the pack key by key
-([CONNECTOR_GUIDE.md, chapter 16](CONNECTOR_GUIDE.md#16-combining-connectors)):
+([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors)):
 
 ```yaml
 # application.local.yaml
@@ -517,7 +517,7 @@ returning the same old data is not reported stale. To watch for that, compare `b
 expected date.
 
 There is nothing to reconnect: each refresh opens new HTTP connections (the client is shared and reuses them), and
-recovery needs no restart ([PLUGIN_GUIDE.md, Reconnecting](PLUGIN_GUIDE.md#reconnecting)).
+recovery needs no restart ([CONNECTOR_DEVELOPER_GUIDE.md, Reconnecting and failures](CONNECTOR_DEVELOPER_GUIDE.md#reconnecting-and-failures)).
 
 ## 9. Running without internet: mirrors
 
@@ -646,3 +646,97 @@ And on the connector itself: `plugin: feed`, `enabled` (the pack uses `${DRISHTI
    and decide which connector is asked first ([section 7.3](#73-longer-history-from-a-lake)).
 9. Remember what the data is: ECB FX are reference rates (`bid` = `ask` = `mid`), the Treasury curve's `zeroRate` is
    the par yield, and FRED series are all shown as percent rates.
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+[FEEDS_CONNECTOR.md](FEEDS_CONNECTOR.md) explains each feed in full: the source it calls, the entities it makes, schedules, history, offline use and every setting.
+
+#### What you see
+
+Real output from a server with the three feeds above on:
+
+```bash
+curl -s http://localhost:18480/api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw | jq -c .provenance
+curl -s "http://localhost:18480/api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=2026-09-15" \
+  | jq -c '{provenance, latest: .data.latest, first: .data.fixings[0]}'
+```
+
+```json
+{"source":"nyfed-sofr-feed","generation":1790818508749,"fetchedAt":"2026-10-01T01:35:08.749439520Z","live":false,"businessDate":"2026-09-29"}
+{"provenance":{"source":"nyfed-sofr-feed","generation":1790818508749,"fetchedAt":"2026-10-01T01:35:08.749439520Z","live":false,"businessDate":"2026-09-15"},
+ "latest":0.0364,"first":{"date":"2026-09-15","rate":0.0364,"ratePct":3.64,"volumeBn":2952.0}}
+```
+
+In the terminal: `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>`. Typing
+`FX FX-EURUSD-E` offers `FX-EURUSD-ECB` with the subtitle `fx-spot · ecb-fx-feed (public feed)`.
+
+#### Health, and when the feed is unreachable
+
+`UP`, `DOWN: <Exception>: <message>` (for example `DOWN: IllegalStateException: HTTP 503 from markets.newyorkfed.org`,
+or `DOWN: ConnectException: …` / `DOWN: HttpTimeoutException: …` when the server cannot reach the publisher),
+`DOWN: the feed returned no data (serving the last data)` when an answer yields no series at all (in practice only
+`ecb-fx`, with no day holding a pair's two currencies), or `DOWN: the feed returned no data` when that happens and
+nothing was ever fetched. A failed fetch, or an answer with no rows (no series, or series without a single observation), **keeps the last good
+data**, so views go on working; the next refresh tries again. The first fetch runs inside the
+connector's start, so `DOWN: not fetched yet` is never seen on a running connector. The connect timeout is 10 s,
+fixed in the code; `timeout-seconds` (20) bounds each request. Cache figures (real): `{"series": 10, "observations": 640, "fetchedAt": "2026-10-01T01:35:09.770409225Z"}`
+for `ecb-fx-feed`. A purge (Admin → Caches) clears the data first and then refetches: if that fetch fails, the
+feed serves nothing until the next good refresh.
+
+`stale-after` (the packs set `4d`) does not catch a publisher that stopped publishing: every successful parse counts
+as new data, even when it brings no new observation. Watch the newest observation date (`businessDate` on Live)
+instead.
+
+In `GET /api/v1/admin/health`, a feed you have not switched on is listed under its pack's `connectorsOff`
+(`"connectorsOff": ["ecb-estr-feed", "fred-feed"]`), not as a failure.
+
+### Configuration by example
+
+**Configuration.** `packs/market-data/pack.yaml` declares all five, each off until its variable is set:
+
+**Settings.**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `feed` | — (required) | `nyfed-sofr`, `ecb-estr`, `ecb-fx`, `us-treasury`, `fred` |
+| `refresh-minutes` | `60` | refetch interval |
+| `timeout-seconds` | `20` | HTTP request timeout (the connect timeout is 10 s, fixed in the code) |
+| `user-agent` | `public-data-feed-connector` | the `User-Agent` header sent with each request (the market-data pack sets `<product> public data feed connector`) |
+| `url` | the public URL | override; `file:` URLs are read directly; for `us-treasury` and `fred`, a comma list (one per month or series) |
+| `api-key` | empty | FRED |
+| `series` | `DGS10,DFF` | FRED series, in the same order as a `url` list |
+| `source-name` | the feed's name (a connector: its name) | provenance source |
+
+**The data.**
+
+```json
+{ "indexId": "FIX-SOFR-NYFED", "name": "Secured Overnight Financing Rate (NY Fed)", "latest": 0.0431,
+  "administrator": "Federal Reserve Bank of New York", "tenor": "Overnight", "currency": "USD",
+  "fixings": [ { "date": "2026-09-29", "rate": 0.0431, "ratePct": 4.31, "volumeBn": 2512.0 }, … ] }
+```
+
+An `fx-spot` document has `pair`, `pairName`, `mid` (also as `bid` and `ask`), `change1d`, `spotDate`, 30 days of
+`history` and `conventions`; the `ir-curve` document has `curveId`, `tenY`, `slope2s10s` (bp), `asOf` and `points`
+(`tenor`, `maturity`, `quote`, `zeroRate`, `df`) from 1M to 30Y. The business date of a document is its latest
+observation on or before the date asked; a date before the history kept is *not held* (the next source answers). The
+history is only the last fetch's window: each successful fetch replaces it. A failed fetch, or an answer with no rows
+(no series, or series without a single observation), keeps the last good data, and health says
+`DOWN: the feed returned no data (serving the last data)`. `stale-after` does not catch a publisher that stopped publishing: every
+successful parse counts as new data.
+
+**Try it.**
+
+**What the user sees.** `FIX FIX-SOFR-NYFED <GO>`, `FX FX-EURUSD-ECB <GO>`, `CRV CRV-USD-UST <GO>` (the market-data
+pack's mnemonics). `rate-fixing`, `fx-spot` and `ir-curve` are routed to `market-store`; neither the lake nor
+the samples hold these ids, so the read passes on until the feed connector answers. Search lists them with the
+subtitle `<kind> · <connector> (public feed)`. Health: `UP`, `DOWN: <Exception>: <message>` (an offline server shows `ConnectException` or
+`HttpTimeoutException`), `DOWN: the feed returned no data (serving the last data)` (an answer with no series), or `DOWN: the feed
+returned no data` when nothing was ever fetched. The first fetch runs inside start, so `DOWN: not fetched yet` is not seen on a
+running connector. Cache figures `series`, `observations`, `fetchedAt`; a purge clears the data first, then
+refetches.

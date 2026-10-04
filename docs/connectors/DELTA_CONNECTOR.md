@@ -23,7 +23,7 @@ written and kept in shape, how much memory the server needs, what was measured, 
 
 Read it if you run Drishti over a large lake, if you load such a lake (your ETL writes what is described here), or if
 you change the connector. For setting the connector up the first time, start with
-[CONNECTOR_GUIDE.md](CONNECTOR_GUIDE.md#8-a-data-lake-delta); every setting is in
+[the walk-through at the end of this document](#walk-through-step-by-step); every setting is in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake). The Aerospike connector follows the same design with its own
 storage: [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
 
@@ -711,3 +711,338 @@ keeps the ids it listed before, and **Admin → Health** shows the connector `DE
 an LZ4 table is `UP` and lists and searches like any other.
 **Iceberg** is not part of this: its
 connector reads through Hadoop, so it is not supported on Windows (it is off unless the `iceberg` profile is used).
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+#### The situation
+
+Your batch jobs (Spark, Databricks, Python `deltalake`) write the end-of-day data of each domain to Delta Lake
+tables: years of business dates. This is Drishti's default store: every banking pack reads one domain of
+`./data/delta`.
+
+#### The data
+
+One table per kind, under `<root>/<domain>/<kind>/`, partitioned by `business_date` (a `DATE`), with two columns:
+`id STRING` (the entity id) and `doc STRING` (the JSON document).
+
+```text
+data/delta/
+└── trading/                                  the domain (settings.domain)
+    └── trade/                                the kind (one table)
+        ├── _delta_log/00000000000000000000.json …
+        ├── business_date=2026-09-29/part-00000-….parquet
+        └── business_date=2026-09-30/part-00000-….parquet
+```
+
+A row:
+
+| id | doc | business_date |
+|---|---|---|
+| `MX-20000001` | `{"tradeId": "MX-20000001", "productType": "IRS_FIXFLOAT", "counterparty": "CP-NORTHBRIDGE", "mtm": 1875863, "businessDate": "2026-09-30", …}` | `2026-09-30` |
+
+Writing a day from Python (the same calls `tools/samplegen/lake.py` uses): append a new date, or replace one date
+that was restated:
+
+```python
+import json, datetime, pyarrow as pa
+from deltalake import write_deltalake
+
+day = datetime.date(2026, 9, 30)
+docs = {"MX-20000001": {"tradeId": "MX-20000001", "mtm": 1875863, "businessDate": day.isoformat()}}
+table = pa.table({"id": pa.array(list(docs), pa.string()),
+                  "doc": pa.array([json.dumps(d) for d in docs.values()], pa.string()),
+                  "business_date": pa.array([day] * len(docs), pa.date32())})
+write_deltalake("data/delta/trading/trade", table, mode="overwrite",
+                partition_by=["business_date"], predicate=f"business_date = '{day.isoformat()}'")
+```
+
+The `predicate` replaces only that date, so the table keeps its history, and the replaced version stays readable
+through *known at* until it is vacuumed.
+
+#### Configure it
+
+**Pack form**, as shipped in `packs/trading/pack.yaml`:
+
+```yaml
+connectors:
+  trading-store:                          # routes, health and provenance use this name
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true} # one switch for every pack's lake
+    kinds:
+    - trade                               # serve only trades from this domain
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:./data/delta}   # one variable moves every pack's lake
+      domain: trading                     # tables live under <root>/trading/<kind>/
+routes:
+  trade: trading-store                    # trades are asked of the lake first
+```
+
+Reference data that changes rarely is `effective` (from `packs/banking-core/pack.yaml`):
+
+```yaml
+connectors:
+  reference-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [counterparty, counterparty-group, issuer, agreement, ccp, legal-entity, book, desk, trader, calendar, csa, clearing-account]
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      domain: reference
+      mode.counterparty: effective        # a row only when the counterparty changes
+      mode.book: effective
+      # … one mode.<kind> line per kind
+```
+
+**Site form**, your own domain:
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      treasury-lake:
+        plugin: delta
+        kinds: [funding-source, hqla-holding]    # what this connector serves
+        settings:
+          root: /srv/lake                        # local folder (or s3a://bucket/path, below)
+          domain: treasury                       # /srv/lake/treasury/<kind>/
+          mode.funding-source: effective
+          lookback-days: 10                      # snapshot kinds
+          refresh-seconds: 10                    # how long a table's latest version is cached
+          cache-mb: 512                          # partitions kept in memory, by size
+```
+
+**The lake in S3 or an S3-compatible store** (MinIO, Ceph). A site moves a pack's lake without touching the pack:
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      trading-store:
+        settings:
+          root: s3a://risk-lake/banking            # read through Hadoop's S3A
+          s3.region: us-east-1
+          # credentials: the AWS chain (environment, profile, instance role), or
+          # s3.access-key: ${LAKE_ACCESS_KEY}
+          # s3.secret-key: ${LAKE_SECRET_KEY}
+          # an S3-compatible store:
+          # s3.endpoint: https://minio.bank.example # path-style; TLS when https
+          # hadoop.fs.s3a.connection.maximum: "200" # any Hadoop setting, prefixed hadoop.
+```
+
+`DRISHTI_DELTA_ROOT=s3a://risk-lake/banking` moves every pack's lake at once.
+
+#### Load sample data
+
+```bash
+# every banking domain (reference, market, trading, risk, credit, collateral), ten business days
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta --days 10
+# or one pack's samples into one domain
+uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
+    --samples packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--calendar USNY]
+DRISHTI_PACKS=counterparty-risk,market-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+`lake.py` prints `<table>: <n> entities x 10 business days` per table. It writes the newest date twice (the second
+commit restates one document per kind), so *known at* before that commit shows the original.
+
+#### In the terminal
+
+`TRD MX-20000001 <GO>`; pick 29 September in the top bar and the numbers change; *Raw JSON* (F9) shows `businessDate`.
+`CPTY CP-NORTHBRIDGE <GO>` on a picked date lists its netting sets (*Netting sets* panel) and F8 (impact) its trades:
+reverse lookups, for which the lake indexes every value that looks like an identifier (capital letters and digits with
+at least one dash, such as `CP-NORTHBRIDGE` or `NS-NORTH-01`).
+
+#### Millions of entities a day: the layout
+
+The full design, with every read path, memory figures, maintenance and measurements, is in
+[DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
+
+Without a layout everything still works, but a day is read whole, and a large day exceeds the read deadline.
+
+#### Keep the lake bounded: `tools/lake/maintain.py`
+
+Drishti only reads the lake. A scheduled job keeps it from growing for ever: it deletes business dates older than
+the history window, compacts small files, writes checkpoints and vacuums files no longer referenced. The settings are
+in `deploy/lake-maintenance.yaml`:
+
+```yaml
+schedule:
+  at: "02:30"                    # after the nightly load, before the day starts
+  zone: America/New_York
+lakes:
+  - root: ./data/delta           # a local lake: every domain, every table
+    domains: ["*"]
+    keep-business-days: 520      # about two years; older partitions are deleted (null keeps all)
+    max-drop-share: 0.5          # a run that would delete more of a table deletes nothing (--force-drop overrides)
+    compact: true                # merge each day's small files
+    target-file-mb: 128
+    checkpoint: true             # readers replay a short log
+    vacuum-hours: 168            # files unreferenced for 7 days are removed; "known at" reaches back 7 days
+  # - root: s3://risk-lake/banking
+  #   storage-options: { AWS_REGION: us-east-1 }
+```
+
+See what it would do, changing nothing:
+
+```bash
+uv run --with deltalake --with pyarrow --with pyyaml python tools/lake/maintain.py \
+    --config deploy/lake-maintenance.yaml --once --dry-run
+```
+
+You should see one line of JSON per table (real output):
+
+```json
+{"at": "2026-09-30T21:57:32-04:00", "event": "maintained", "dry_run": true, "table": "data/delta/civic/bill", "before": {"files": 10, "mb": 0.03}, "retention": {"cutoff": "2024-10-02", "would_remove_files": 0}, "vacuum": {"files": 0, "dry_run": true}, "after": {"files": 10, "mb": 0.03}}
+```
+
+For a laid-out table, `compact` re-sorts only the business days that drifted from the layout (an intraday load
+appended a small file, so ids overlap) and keeps file statistics on the id, the date and the promoted columns only,
+so the log stays small over years of daily files. For seven years of history set `keep-business-days: 1800`.
+`maintain.py relayout --root data/delta --domain trading` lays out a table written another way.
+
+Run it for real with `--once` (from cron), or keep it running with `--daemon` (every day at `schedule.at`). A table
+that fails is logged as `"event": "failed"` and the rest go on. Note that the maintenance job uses `s3://` URIs
+(Python), while the server reads `s3a://` (Hadoop).
+
+#### Health, and when the store goes down
+
+`health` is `UP`, `DOWN: cannot reach <root>/<domain>` (the folder or bucket is not reachable), or
+`DOWN: no Delta tables under <root>/<domain>` (reachable, but nothing with a `_delta_log`). There is nothing
+long-lived to lose: each read goes to storage afresh, so reads recover as soon as the storage does. While an
+`s3a://` store is unreachable, a read that is not cached ends with `DRS-1004 timed out reading …` (S3A retries for
+longer than `fetch-timeout`) or `DRS-1003`. Cache figures:
+`tables`, `partitions` (in memory) and `timeTravel` (*known at* versions held).
+
+The connector lists the domain's tables when it starts and again at every reindex (every six `refresh-seconds`, a
+minute by default), unless `kinds` is given in its *settings*. A table added to the lake while the server runs is
+served from the next reindex, with no restart: check with `curl -s $B/sources | jq '.sources[] | select(.name=="trading-store").kinds'`.
+
+#### Common errors
+
+| You see | Cause | Fix |
+|---|---|---|
+| views say *No data available*; health `DOWN: no Delta tables under ./data/delta/trading` | the lake was not built, or `DRISHTI_DELTA_ROOT` points elsewhere | build it (above), or set `DRISHTI_DELTA_ROOT` and restart; tables built while the server runs are found within a minute |
+| `domain escapes the Delta root` under `failedToStart` | `domain` contains `..` or starts with `/` | a plain folder name |
+| an old picked date falls back to the samples | the date is more than `lookback-days` past the newest partition on or before it | load that date, or raise `lookback-days` |
+| *known at* shows the latest data | the lake was copied without keeping file times (Delta resolves instants against `_delta_log` modification times) | copy with `cp -p` / `rsync -t`; for S3, times are upload times |
+| S3: `DOWN: cannot reach s3a://…` | credentials, region or endpoint | try `aws s3 ls s3://<bucket>/<path>/` with the same credentials |
+
+### Configuration by example
+
+**What it is for.** History. A Delta Lake holds every business date of a data domain, written by your batch jobs
+(Spark, `deltalake`, Databricks); Drishti reads it with Delta Kernel, without Spark. It is the default store of
+every banking pack, and gives picked dates, *known at* time travel, reverse lookups and search.
+
+**Configuration (local disk).** `packs/trading/pack.yaml`, as shipped:
+
+`packs/banking-core/pack.yaml` declares reference data, which changes rarely, as `effective`:
+
+```yaml
+connectors:
+  reference-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [counterparty, counterparty-group, issuer, agreement, ccp, legal-entity, book, desk, trader, calendar, csa, clearing-account]
+    settings:
+      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      domain: reference
+      mode.counterparty: effective        # a row only when the counterparty changes
+      mode.book: effective
+      # … one mode.<kind> line per kind
+```
+
+`packs/finance/pack.yaml` declares its lake without `kinds`, so it serves every table it finds:
+`finance-lake: { plugin: delta, enabled: ${DRISHTI_LAKE_ENABLED:true}, settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: finance, lookback-days: 10 } }`.
+
+**Configuration (S3 or an S3-compatible store).** A site moves a pack's lake to object storage without touching the
+pack:
+
+```yaml
+# application.local.yaml
+drishti:
+  sources:
+    connectors:
+      trading-store:
+        settings:
+          root: s3a://risk-lake/banking              # a scheme: read through Hadoop's S3A file system
+          s3.region: us-east-1
+          # credentials: the AWS chain (environment, profile, instance role), or:
+          # s3.access-key: ${LAKE_ACCESS_KEY}
+          # s3.secret-key: ${LAKE_SECRET_KEY}
+          # an S3-compatible store (MinIO, Ceph):
+          # s3.endpoint: https://minio.bank.example   # path-style addressing; TLS when https
+          # s3.path-style: "false"                    # only with an endpoint; default true
+          # hadoop.fs.s3a.connection.maximum: "200"   # any Hadoop setting, prefixed hadoop.
+```
+
+`domain` and `kinds` still come from the pack; the tables are read at `s3a://risk-lake/banking/trading/<kind>`.
+Setting `DRISHTI_DELTA_ROOT=s3a://risk-lake/banking` moves every pack's lake at once.
+
+**Settings.**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `root` | `./data/delta` | a local folder (`file:` allowed), or a URI with a scheme (`s3a://bucket/path`) |
+| `domain` | empty | sub-folder of `root`; may not contain `..` or start with `/` |
+| `kinds` | every table under the domain (a folder with `_delta_log`) | comma list of tables to read |
+| `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
+| `lookback-days` | `10` | snapshot kinds: how far back a picked date may fall |
+| `id-column`, `doc-column`, `date-column` | `id`, `doc`, `business_date` | column names; the date column is the partition column |
+| `refresh-seconds` | `10` | how long a table's latest version is cached; the search index is rebuilt every 6 × this |
+| `cache-mb` | `512` | partitions kept in memory, by size |
+| `source-name` | `delta` (a connector: its name) | provenance source |
+| `s3.region` | — | `fs.s3a.endpoint.region` |
+| `s3.endpoint` | — | `fs.s3a.endpoint`; also sets path-style access and TLS by scheme |
+| `s3.path-style` | `true` | `fs.s3a.path.style.access`, only with `s3.endpoint` |
+| `s3.access-key`, `s3.secret-key` | — | static credentials; otherwise the AWS chain |
+| `hadoop.<key>` | — | passed to Hadoop as `<key>` |
+
+**The data.**
+
+```text
+data/delta/trading/trade/
+├── _delta_log/00000000000000000000.json …
+├── business_date=2026-09-29/part-00000-….parquet
+└── business_date=2026-09-30/part-00000-….parquet
+```
+
+One table per kind, partitioned by `business_date` (`DATE`), with columns `id STRING` (the entity id) and
+`doc STRING` (the JSON document). A `doc` value:
+
+```json
+{ "tradeId": "MX-20000001", "productType": "IRS", "counterparty": "CP-NORTHBRIDGE", "nettingSet": "NS-…", "mtm": 1875863,
+  "notional": 242000000.0, "businessDate": "2026-09-30" }
+```
+
+The kind is the table's folder name, the id the `id` column. The business date is the partition's date (a table
+without the partition column serves its rows undated). The generation is the table's Delta version. A Live read
+takes the newest partition (snapshot) or each entity's newest row (effective). *Known at* reads the table version
+current at that instant: a correction committed later is not seen. Reverse lookups index every string value in a
+document that looks like an identifier (capital letters and digits with at least one dash, such as `CP-NORTHBRIDGE`
+or `NS-NORTH-01`, up to 64 characters).
+
+**Try it.**
+
+```bash
+# every banking domain (reference, market, trading, risk, credit, collateral), ten business days
+uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta [--days 10]
+# or one pack's samples into one domain (as the finance pack expects)
+uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \
+    --samples packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--calendar USNY]
+DRISHTI_PACKS=trading java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+`lake.py` writes the newest date twice (the second commit restates one document per kind), so *known at* before
+that commit shows the original. It writes to local disk only; for S3 build locally and copy the folders up
+(`aws s3 sync data/delta/trading s3://risk-lake/banking/trading`), bearing in mind that time travel then resolves
+against the upload times. Keep a lake bounded with `tools/lake/maintain.py --config deploy/lake-maintenance.yaml
+--once` (see OPERATIONS).
+
+**What the user sees.** `TRD MX-20000001 <GO>`, then a date in the top bar; *Raw JSON* shows `businessDate`.
+Provenance `trading-store`. Health: `UP`, `DOWN: cannot reach <root>/<domain>`, or `DOWN: no Delta tables under …`.

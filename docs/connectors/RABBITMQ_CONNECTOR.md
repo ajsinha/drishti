@@ -29,7 +29,7 @@ health) on top of `MessageStateSource` (module `drishti-messaging`: message pars
 type-ahead and live fan-out), which the ActiveMQ connector shares ([ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md)). The
 state store is `DiskCache` (module `drishti-diskcache`), also used by the Kafka connector's disk cache
 ([KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md)). For a first setup see
-[CONNECTOR_GUIDE.md, chapter 12](CONNECTOR_GUIDE.md#12-a-message-queue-rabbitmq); every setting is also listed in
+[the walk-through at the end of this document](#walk-through-step-by-step); every setting is also listed in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#activemq-and-rabbitmq--message-queues).
 
 ## Contents
@@ -467,7 +467,7 @@ that change.
 
 ## 10. History: RabbitMQ with a lake
 
-The router orders candidates by the date asked ([CONNECTOR_GUIDE.md, section 1](CONNECTOR_GUIDE.md#how-a-request-picks-a-connector)):
+The router orders candidates by the date asked ([CONNECTOR_DEVELOPER_GUIDE.md, concepts](CONNECTOR_DEVELOPER_GUIDE.md#how-a-request-picks-a-connector)):
 
 | The user asks for | Order tried | Who answers |
 |---|---|---|
@@ -650,3 +650,116 @@ seen or been configured with).
 9. Keep history in a dated store for the same kinds ([section 10](#10-history-rabbitmq-with-a-lake)).
 10. Check Admin → Health: `UP`, `received` growing, `rejected` flat, `stateMb` well under `budgetMb`, `evicted` flat;
     open an entity Live and watch it tick. Alert on a health ending `(messages are not acknowledged and come again)`.
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+[RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md) explains the connector in full: queues and bindings, prefetch and acknowledgement, the state store, recovery and every setting.
+
+#### The situation
+
+Your collateral system publishes margin calls to the RabbitMQ exchange `collateral` with routing keys like
+`margin.call.new`. You want them as `margin-call` entities (`MC`), live.
+
+#### The data
+
+The body is JSON (UTF-8). On a queue with a kind, the id is the `id` **header**, else the message's `message_id`
+property, else the body's id field; in an envelope the envelope's `"id"` wins over the header. A `deleted` header of
+`true` deletes. Envelopes, the rejected cases, and the state store (acknowledged only once kept, `state.durability`
+`sync` by default, the per-connector budget with `state.when-full`, deletes not pushed) are as for
+[ActiveMQ](ACTIVEMQ_CONNECTOR.md#walk-through-step-by-step); a message the store cannot keep is requeued (`basicNack` with requeue, a
+second later). All queues share one channel.
+
+```text
+exchange:    collateral          routing key: margin.call.new
+queue:       drishti.margin-calls
+headers:     {"id": "MC-ALDERSHOT-FRA-2"}          (optional)
+body:        {"callId": "MC-ALDERSHOT-FRA-2", "callDate": "2026-09-30", "marginType": "Variation",
+              "direction": "They call", "amount": 250000.0, "status": "Issued", "nettingSet": "NS-ALDERSHOT-FRA",
+              "csa": "CSA-ALDERSHOT", "currency": "USD"}
+```
+
+#### Configure it
+
+**Pack form:**
+
+**Site form:** the same block under `drishti.sources.connectors`, with the secret from the environment:
+
+#### Try it
+
+```bash
+docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:management
+curl -u guest:guest -X PUT -H 'content-type: application/json' \
+  http://localhost:15672/api/exchanges/%2f/collateral -d '{"type":"topic","durable":true}'
+DRISHTI_MARGIN_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar    # it declares and binds the queue
+curl -u guest:guest -H 'content-type: application/json' -X POST \
+  http://localhost:15672/api/exchanges/%2f/collateral/publish \
+  -d '{"routing_key":"margin.call.new","properties":{"headers":{"id":"MC-ALDERSHOT-FRA-2"}},"payload_encoding":"string",
+       "payload":"{\"callId\":\"MC-ALDERSHOT-FRA-2\",\"amount\":250000.0,\"status\":\"Issued\",\"nettingSet\":\"NS-ALDERSHOT-FRA\"}"}'
+```
+
+The publish answers `{"routed":true}` when the binding matched.
+
+#### In the terminal
+
+`MC MC-ALDERSHOT-FRA-2 <GO>`: provenance `margin-mq`, live. Publish again with `"status":"Agreed"` and the view
+updates.
+
+#### Health, and when the broker goes down
+
+Stored documents keep answering reads while the broker is away. An empty `queues` setting reports `UP` and consumes
+nothing.
+
+### Configuration by example
+
+**What it is for.** The same as ActiveMQ, for RabbitMQ (AMQP 0-9-1) queues, optionally declared and bound to an
+exchange by Drishti.
+
+**Configuration.**
+
+```yaml
+connectors:
+  desk-orders:
+    plugin: rabbitmq
+    kinds: [order]
+    settings:
+      uri: ${RABBIT_URI:amqp://guest:guest@localhost:5672/%2f}
+      queues: drishti.orders                               # comma list
+      declare: true                                        # declare each queue durable (and bind it)
+      bind.drishti.orders: orders.exchange:orders.#        # exchange:routing.key
+      kind.drishti.orders: order
+      id-field.drishti.orders: orderId
+      prefetch: 100
+```
+
+**Settings.**
+
+**The data.** The body is JSON (UTF-8). On a queue with a kind, the id is the `id` header, else the message's
+`message_id` property, else the `id-field`; in an envelope the envelope's `"id"` wins over the header. A `deleted`
+header of `true` deletes. All queues are consumed on one channel.
+
+```text
+queue:    drishti.orders
+headers:  {"id": "O-55120"}                 (optional)
+body:     {"orderId": "O-55120", "side": "BUY", "instrument": "EQ-NVTK", "qty": 2500, "status": "WORKING"}
+```
+
+**Try it.**
+
+```bash
+docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:management
+# start the server with the connector (it declares drishti.orders), then publish through the management API:
+curl -u guest:guest -H 'content-type: application/json' -X POST \
+  http://localhost:15672/api/exchanges/%2f/amq.default/publish \
+  -d '{"routing_key":"drishti.orders","properties":{"headers":{"id":"O-55120"}},"payload_encoding":"string",
+       "payload":"{\"orderId\":\"O-55120\",\"side\":\"BUY\",\"qty\":2500,\"status\":\"WORKING\"}"}'
+```
+
+**What the user sees.** As ActiveMQ. Health: `UP`, `DOWN: connection lost (recovering)`, or
+`DOWN: consumer cancelled on <queue>` (for example, the queue was deleted), which stays until the server restarts;
+the state store's texts are as for ActiveMQ. An empty `queues` reports `UP` and consumes nothing.

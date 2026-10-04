@@ -28,7 +28,7 @@ ActiveMQ-specific (message shapes, the state store, the memory cache, search, li
 `MessageStateSource` in `drishti-messaging`, which the RabbitMQ connector uses too
 ([RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md)). For a Kafka topic, which keeps its own history, see
 [KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md). A first walk-through is in
-[CONNECTOR_GUIDE.md, chapter 11](CONNECTOR_GUIDE.md#11-a-message-queue-activemq); the settings summary is in
+[the walk-through at the end of this document](#walk-through-step-by-step); the settings summary is in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#activemq-and-rabbitmq--message-queues).
 
 ## Contents
@@ -254,7 +254,7 @@ drishti:
 ```
 
 A site entry overrides a pack's connector key by key, so a site can change only `broker-url` and `client-id` and keep
-the pack's kinds and mappings ([CONNECTOR_GUIDE.md, chapter 16](CONNECTOR_GUIDE.md#16-combining-connectors)).
+the pack's kinds and mappings ([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors)).
 
 ### 5.3 Which kinds it serves
 
@@ -534,7 +534,7 @@ routes:
 
 The same holds for any dated store (PostgreSQL, Aerospike, files, S3). The broker covers today as it happens; the
 nightly load into the dated store covers history. See
-[CONNECTOR_GUIDE.md, chapter 16](CONNECTOR_GUIDE.md#16-combining-connectors).
+[CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors).
 
 ## 13. Failure and recovery
 
@@ -690,3 +690,134 @@ The plugin is built against `activemq-client` 6.3.2 (Jakarta JMS) and tested aga
     that ends `(messages are not acknowledged and come again)`.
 11. Keep `max-redeliveries` at `-1` (the default) so messages the store could not keep are retried through a disk
     outage rather than dead-lettered.
+
+---
+
+## Appendix: walk-through and worked examples
+
+Moved here from the former connector guides, so that everything about this connector is in one document.
+
+### Walk-through, step by step
+
+[ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md) explains the connector in full: queues and durable topics, the state store, acknowledgement, failover and every setting.
+
+#### The situation
+
+Your limit-management system publishes each credit limit to the ActiveMQ Classic queue `limits` whenever it
+changes. You want `LIM <id>` to show the latest version, live.
+
+#### How message-queue connectors keep data
+
+If the store cannot keep a message (disk full, an I/O error), the message is **not** acknowledged: ActiveMQ redelivers
+it a second later (`session.recover()`, without limit unless `max-redeliveries` sets one), RabbitMQ requeues it, and
+health reads `DOWN: <reason> (messages are not acknowledged and come again)` until one is kept again. A message the
+connector cannot read (not JSON, not a document) is acknowledged and counted in `rejected`, since it would otherwise
+come back forever: there is no dead-lettering of those.
+
+Three more properties of the store matter in production:
+
+#### The data
+
+A `TextMessage` (or `BytesMessage`, read as UTF-8) whose body is JSON, with optional **string properties**:
+
+On `limits`, configured with a kind (mapped):
+
+#### Configure it
+
+**Pack form:**
+
+**Site form**, the same under `drishti.sources.connectors` (bracket and quote a key that has characters other than
+letters, digits, `-` and `.`, for example `"[kind.desk_limits]": credit-limit`):
+
+Two Drishti servers on the same broker need different `client-id`s (ActiveMQ refuses a second connection with the
+same id); each then has its own durable subscription to each topic, named `drishti-<connector>-<topic>`. A durable
+subscription stays on the broker after its topic is removed from `destinations`, and the broker keeps queueing for
+it: remove it on the broker. With several destinations the connector polls them in turn, and each idle one costs a
+50 ms wait per loop, so a busy destination listed with idle ones is read more slowly. Two servers
+reading the same **queue** share its messages, so each would hold only part of the entities: give each server its own
+queue (or read a topic).
+
+#### Try it
+
+```bash
+docker run -d --name amq -p 61616:61616 -p 61613:61613 -p 8161:8161 apache/activemq-classic
+DRISHTI_LIMITS_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar     # with the pack form above
+```
+
+Send a message with an `id` property, for example over STOMP (ActiveMQ turns STOMP headers into message
+properties):
+
+```python
+# uv run --with stomp.py python send_limit.py
+import json, stomp
+c = stomp.Connection([("localhost", 61613)]); c.connect("admin", "admin", wait=True)
+c.send("/queue/limits", json.dumps({"limitId": "LIM-ALDERSHOT", "limit": 338000000.0, "used": 241900000,
+                                    "utilisation": 0.7157, "status": "Within limit"}), headers={"id": "LIM-ALDERSHOT"})
+c.disconnect()
+```
+
+or from the web console (`http://localhost:8161/admin`, Queues → `limits` → Send To) with the JSON body.
+
+#### In the terminal
+
+`LIM LIM-ALDERSHOT <GO>`: provenance `limits-mq`, live; send another message and the view updates. The type-ahead
+lists every entity received; one only the queue holds has the subtitle `credit-limit · limits-mq` (an id a dated store
+also holds, such as `LIM-ALDERSHOT`, shows that store's subtitle). Pick a date: the lake (`credit-store`)
+answers, since dated connectors go first.
+
+### Configuration by example
+
+**What it is for.** Live entities pushed by systems that publish to ActiveMQ Classic (OpenWire) queues or topics.
+The connector keeps each entity's latest document itself (see [Message queues](CONNECTOR_DEVELOPER_GUIDE.md#message-queues-activemq-rabbitmq)),
+so entities sent before a restart are still there.
+
+**Configuration.**
+
+```yaml
+# packs/<pack>/pack.yaml (or the same under drishti.sources.connectors in application.local.yaml)
+connectors:
+  desk-orders:
+    plugin: activemq
+    enabled: ${DRISHTI_ORDERS_ENABLED:false}
+    kinds: [order, quote]
+    settings:
+      broker-url: ${AMQ_URL:failover:(tcp://localhost:61616)}   # failover reconnects by itself
+      user: ${AMQ_USER:}
+      password: ${AMQ_PASSWORD:}
+      destinations: queue:orders,topic:quotes                    # a bare name is a queue
+      kind.orders: order                                         # destination name without queue:/topic:
+      id-field.orders: orderId
+      kind.quotes: quote
+      id-field.quotes: quoteId
+      client-id: drishti-prod-1-desk-orders                      # unique per server: durable topic subscriptions use it
+      state.max-gb: 20
+```
+
+**Settings.**
+
+**The data.** A `TextMessage` (or `BytesMessage`, read as UTF-8) whose body is JSON; optional string properties
+`id` and `deleted`. On `orders` above (mapped):
+
+```text
+destination: queue://orders
+property id: O-55120                       (optional; else the body's orderId)
+body:        {"orderId": "O-55120", "side": "BUY", "instrument": "EQ-NVTK", "qty": 2500, "status": "WORKING"}
+```
+
+On a destination without a kind, the body is an envelope `{"kind": "order", "id": "O-55120", "doc": {…}}`. A
+message with property `deleted=true`, `"doc": null` or no `"doc"` key deletes (an empty body deletes only on a destination with a kind,
+with the `id` header naming the entity). Generation is a counter that rises with
+every message; documents are live and undated.
+
+**Try it.**
+
+```bash
+docker run -d --name amq -p 61616:61616 -p 8161:8161 apache/activemq-classic
+# switch the connector on, start the server, then send a message from the web console
+# (http://localhost:8161/admin, admin/admin → Queues → orders → Send To) with the JSON body above
+```
+
+**What the user sees.** `<mnemonic for order> O-55120 <GO>`, live; the view updates on every message. Health:
+`UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <reason> (messages are not acknowledged and come
+again)` when the state store cannot write, `UP (state store over its budget: …)` past `state.max-gb`; cache figures
+`entities`, `memoryEntries`, `stateMb`, `durability`, `budgetMb`, `evicted`, `received`, `rejected`.
