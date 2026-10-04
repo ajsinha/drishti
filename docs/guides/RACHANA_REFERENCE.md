@@ -37,7 +37,7 @@ This page is the authoritative reference. Everything in it was checked against t
 | get completion and checking in your editor | [Completion and checking in your editor](#completion-and-checking-in-your-editor) |
 | look up a function or an operator | [Rachana-EL](#rachana-el-expressions) |
 | understand an error such as `DRS-2023` | [Problem codes](#problem-codes) |
-| know what happens when you save a file or press Save in Studio | [Hot reload, Studio and governance](#hot-reload-studio-and-governance) |
+| know what happens when you save a file or press Save in the workbench | [Hot reload, the workbench and governance](#hot-reload-the-workbench-and-governance) |
 
 ## How a Sutra becomes a view
 
@@ -102,7 +102,7 @@ The prose has a place of its own, inside the file, as plain text:
 | `description` | any panel | One or two sentences on what the panel shows. |
 
 They are plain text: nothing in them is evaluated, and the engine does not use them to build the view (they are
-not part of the ViewModel). They travel with the file, so they are in Studio, in a code review diff and in
+not part of the ViewModel). They travel with the file, so they are in the workbench, in a code review diff and in
 `GET /api/v1/sutras/{name}/{version}/source`, and nothing has to be kept in step with them.
 `description` and `notes` must be text (`DRS-2012 'notes' is plain text` otherwise).
 
@@ -130,9 +130,9 @@ Rules that follow from this:
 
 - Problem locations are the file's own line and column, so an error at line 14 is at line 14 in your editor.
 - The file name is a convention, not a rule: the name and version come from `sutra:` and `version:`, and the
-  parser does not compare them with the file name. Keep them in step anyway; Studio saves to
+  parser does not compare them with the file name. Keep them in step anyway; the workbench saves to
   `<domain>/<name>.v<N>.sutra.yaml`.
-- `#` comments are kept in the file (Studio and `GET /api/v1/sutras/{name}/{version}/source` return the text
+- `#` comments are kept in the file (the workbench and `GET /api/v1/sutras/{name}/{version}/source` return the text
   exactly as written) but mean nothing to the engine. Use `notes` for anything a reviewer should read.
 - Keep other YAML files out of Sutra directories; they are reported as `DRS-2004`.
 - A Sutra from before Drishti 1.11 (`*.sutra.md`, a Markdown document with one ```` ```sutra ```` block)
@@ -174,7 +174,7 @@ Rachana Sutra, language 1
 ['description', 'domain', 'keys', 'match', 'notes', 'panels', 'rachana', 'strip', 'sutra', 'title', 'version']
 ```
 
-Sutra Studio uses it for completion and live checking. Any editor that reads JSON Schema can too; for
+The workbench's YAML tab uses it for completion and live checking. Any editor that reads JSON Schema can too; for
 example, with the YAML language server (VS Code's YAML extension, and others) put this comment on the first
 line of a Sutra:
 
@@ -234,7 +234,7 @@ rachana: 1
 sutra: swap-annotated            # the name: lower-case kebab, 2-64 characters
 version: 1                       # name@version is unique; old versions stay loadable, so saved views reproduce
 description: A vanilla fixed/float swap, every line explained.
-domain: rates                    # grouping in Studio and the catalogue (defaults to the folder the file is in)
+domain: rates                    # grouping in the workbench and the catalogue (defaults to the folder the file is in)
 
 # ---- Which documents this layout is for -------------------------------------------------------------------
 # kind picks the entity family. where is a Rachana-EL predicate over the document; when several Sutras
@@ -438,7 +438,7 @@ What each part does when the view is built:
 | `key`, `keys` | Become the function-key bar; a panel key scrolls to the panel, a link key opens the entity. |
 | Missing data | A path that is absent evaluates to nothing: the cell is empty, and a panel with no data says so. |
 
-You should see, previewing this block against `MX-20000001` in Studio:
+You should see, previewing this block against `MX-20000001` in the workbench:
 
 | Where | Shows |
 |---|---|
@@ -459,7 +459,7 @@ You should see, previewing this block against `MX-20000001` in Studio:
 | `version` | yes | integer ≥ 1 | | `name@version` is unique across all directories (`DRS-2028`). `version: "3"` (quoted) is text and is refused (`DRS-2020`). |
 | `description` | | text | | One paragraph for people: what the layout shows and for which entities. Not used to build the view. |
 | `notes` | | text | | Longer plain-text notes for authors and reviewers (`notes: \|` for several lines). Not used to build the view. |
-| `domain` | | text | the parent folder's name | Grouping in Studio and the catalogue, and the folder Studio saves into. |
+| `domain` | | text | the parent folder's name | Grouping in the workbench and the catalogue, and the folder it saves into. |
 | `match` | yes | mapping | | `{kind, where?, priority?}`: `kind` and `where` are text, `priority` a whole number (`DRS-2012` otherwise, as for `kind: 42` or `priority: high`); see [Matching](#matching-choosing-a-sutra-for-a-document). |
 | `title` | | mapping | `{id: $.id}` | `{pill?, id, with?}`: a title written out names its `id` (`DRS-2010` otherwise); see [Title](#title). |
 | `strip` | | list | empty | Up to **8** header figures; see [Strip](#strip). |
@@ -471,11 +471,11 @@ view then shows the title and strip only.
 
 ## Names, versions and domains
 
-- A Sutra is identified by `name@version`, for example `irs-fixfloat@1`. Studio, the API
+- A Sutra is identified by `name@version`, for example `irs-fixfloat@1`. The workbench, the API
   (`GET /api/v1/sutras/irs-fixfloat/1`) and the governance log all use this pair.
 - **Several versions of one name can be loaded at once** (`irs-vanilla.v2.sutra.yaml` and
   `irs-vanilla.v3.sutra.yaml`). Only the **latest** version of each name takes part in matching; older versions
-  stay available by `name@version` (Studio, `GET /api/v1/sutras/{name}/{version}`), so a reference to an
+  stay available by `name@version` (the workbench, `GET /api/v1/sutras/{name}/{version}`), so a reference to an
   older layout can still be reproduced. To roll back, delete or rename the newer file, or publish a higher
   version with the old content.
 - `GET /api/v1/sutras` lists the latest version of every name with all its versions:
@@ -532,7 +532,7 @@ Recommended priorities, as the shipped packs use them:
 
 | Priority | Use |
 |---|---|
-| 0–1 | catch-alls (no `where`), and drafts started from inference (Studio writes `priority: 1`) |
+| 0–1 | catch-alls (no `where`), and drafts started from inference (the workbench's inference draft writes `priority: 1`) |
 | 10 | the normal product Sutras of a pack (`where: "$.productType == 'IRS_FIXFLOAT'"`) |
 | 20–50 | special cases that must beat the normal Sutra (a desk's own variant, a matured-trade layout) |
 
@@ -631,7 +631,7 @@ author may promote such a layout to the Sutra's next version, written with these
 | Key | Required | Default | Meaning |
 |---|---|---|---|
 | `id` | yes (except a `tabs` body) | | Unique within the Sutra (`DRS-2024`). Used by function keys, live patches and CSV export. Any text; keep it short and kebab or camel case. |
-| `kind` | yes | | One of the 20 [panel kinds](#panel-kinds) (`DRS-2021` otherwise). |
+| `kind` | yes | | One of the 21 [panel kinds](#panel-kinds) (`DRS-2021` otherwise). |
 | `title` | | none | A template: `"Cashflows · ${$.legs[0].label}"`. If it cannot be rendered for a document it is shown as written. |
 | `key` | | none | A function key `F1`–`F12`, unique across panels and `keys` (`DRS-2025`). Pressing it scrolls to the panel and flashes it. Avoid `F1`, which the console uses for help. |
 | `code` | | none | A short tag shown at the right of the panel header (`CRV`, `SENS`). |
@@ -669,8 +669,8 @@ Any other key in a column is `DRS-2011 unknown key 'x' in column`.
 
 ### Panel kinds
 
-There are 20 kinds (`PanelKind`). Required and accepted options, at a glance (each kind in depth, with how the
-server computes it and how the console draws it: [PANELS.md](PANELS.md)):
+There are 21 kinds (`PanelKind`). Required and accepted options, at a glance (each kind in depth, with when to use it,
+what it does when empty, masked or live, and a screenshot: [PANEL_KINDS.md](PANEL_KINDS.md)):
 
 | Kind | Required options | Optional options | Renders | Uses `columns` |
 |---|---|---|---|---|
@@ -694,6 +694,7 @@ server computes it and how the console draws it: [PANELS.md](PANELS.md)):
 | [`graph`](#graph) | `nodes` | `edges`, `label`, `group`, `layout` | nodes and edges, nodes open their entity | no |
 | [`timeline`](#timeline) | `rows` | `date`, `label`, `detail`, `status`, `tone` | dated events with toned status | no |
 | [`pivot`](#pivot) | `rows`, `by`, `across` | `value`, `agg`, `fmt`, `tone`, `heat`, `totals`, `expand` | aggregate table with totals and heat | no |
+| [`metric`](#metric) | `value` | `label`, `fmt`, `tone`, `delta`, `deltaFmt`, `deltaTone`, `unit`, `caption` | a big-number KPI tile with its change | no |
 
 Which option values are expressions, which are field names, and which are plain text matters: only
 expressions and templates are compiled at load time.
@@ -718,6 +719,7 @@ expressions and templates are compiled at load time.
 | `graph` | `nodes`, `edges` | `label`, `group` (of each node) | `layout` (`tree` or `force`) |
 | `timeline` | `rows` | `date`, `label`, `detail`, `status` | `tone` |
 | `pivot` | `rows` | `by` (one field or a list), `across`, `value` | `agg` (`sum`, `count`, `avg`, `min`, `max`), `heat`, `totals` (`true`/`false`), `expand` (whole number or `all`), `fmt`, `tone` |
+| `metric` | `value`, `delta`, `caption` (a template) | | `label`, `fmt`, `tone`, `deltaFmt`, `deltaTone`, `unit` |
 
 For the seven kinds from `waterfall` on, a field name may also be a dotted path (`counterparty.name`) or an
 expression over the row when it starts with `@` or `$` (`y: "@.pnl / 1000"`). Values outside the allowed set
@@ -813,6 +815,10 @@ the "more trades" line. The data is
 
 #### `pivot`: a Pivot tab on a table or ladder
 
+> This is the **`pivot:` option**, which gives a `table` or `ladder` an interactive Pivot tab the user drives. It is not the
+> **`pivot` panel kind** (a fixed aggregate grid the Sutra defines: [`kind: pivot`](#pivot)). To choose between them, see the
+> [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#12-expandable-row-groups-pivot-by-lists-and-tree-tables).
+
 A table or ladder may offer its rows as an interactive, Excel-style pivot: a **Table | Pivot** switch in the panel,
 where a user drags fields into rows, columns, values and filters, with subtotals, totals, a chart, a drill-down to the
 rows under any cell, and export ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). It is **opt-in**:
@@ -889,7 +895,7 @@ carries the offer: `"pivot": {"fields": [{"name": "product", "label": "Product",
 Mistakes are `DRS-2031` with the reason (*pivot rows name 'desk', which is not one of its fields (currency, mtm,
 product)*, *pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'*, *a pivot has at most 4
 row fields and 4 column fields*); `pivot` on any kind but `table` and `ladder` is `DRS-2023`; a field's `bind` that does
-not compile is `DRS-2101` when the Sutra loads. The JSON Schema describes the option, so Studio completes its keys,
+not compile is `DRS-2101` when the Sutra loads. The JSON Schema describes the option, so the workbench completes its keys,
 `agg`, `show` and `chart` and checks them as you type.
 
 A pack opts a kind's **search results and pick lists** into the same Pivot tab with `pivot:` beside `columns:` in
@@ -1327,6 +1333,9 @@ You should see (trading pack, `TRD MX-20000001`) seven events from *Booked* on 2
 
 #### pivot
 
+> This is the **`pivot` panel kind**: a fixed grid the Sutra defines, written `kind: pivot`. For a table that lets the user
+> pivot its own rows, see the [`pivot:` option](#pivot-a-pivot-tab-on-a-table-or-ladder) of `table` and `ladder`.
+
 The rows aggregated by one field (down the side) across another (along the top), with row and column totals.
 Totals are aggregates of the underlying rows (an `avg` total is the average of all its rows, not of the cells).
 
@@ -1351,6 +1360,34 @@ You should see (banking-core pack, `DESK DESK-RATES`) three books across seven c
 
 A list `by` nests the rows: `by: [desk, book]` gives a row for each desk, with its subtotal, and under it a row for each of its
 books. Heat shading is not drawn on nested pivots.
+
+#### metric
+
+A big-number KPI tile: one large, formatted and toned figure, with an optional change beside it, a unit and a caption.
+Use several in a row (`span: 3` each) for a desk's headline numbers; for one number against a maximum use
+[`gauge`](#gauge).
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `value` | yes | | Expression for the figure. A missing value shows a dash, never an error; a masked one shows the mask. |
+| `label` | | | Plain text shown with the figure (what it is). |
+| `fmt`, `tone` | | | Format and tone of the figure (see [Formats](#formats), [Tones](#tones)). |
+| `delta` | | | Expression for the change (for example `$.mtm - $.mtmYesterday`). Without it, or when it is empty, no change is drawn. |
+| `deltaFmt` | | the format of `value` | How the change is formatted. |
+| `deltaTone` | | `sign` | Tone of the change: `sign` (positive and negative colours), `status`, or a fixed tone such as `neg`, `warn` or `accent`. |
+| `unit` | | | Short text shown small beside the figure (`USD`, `bp`). |
+| `caption` | | | Small text under the figure; a template, so it may hold `${...}` parts. |
+
+`value`, `delta` and every other option are one value written as text, never a list or a mapping (`DRS-2029`); `source`
+works as for any panel.
+
+```yaml
+  - { id: mtm, kind: metric, title: Mark to market, span: 3, value: $.mtm, fmt: signed0, tone: sign, label: Net MTM,
+      unit: USD, delta: "$.mtm - $.mtmYesterday", deltaFmt: signed0, caption: "versus yesterday's close" }
+```
+
+The runnable version is the [metric example](examples/metric.md); its catalogue entry is
+[PANEL_KINDS.md](PANEL_KINDS.md#metric).
 
 ## Function keys
 
@@ -1700,7 +1737,7 @@ primary  = number | string | "true" | "false" | "null" | "$" | "@" | "#index"
 
 Parsing and evaluation are recursive, so an expression's size is bounded; within the bounds both are safe on any
 thread, and beyond them the expression does not compile (`DRS-2101`, with the position where the bound was passed).
-The same bounds hold wherever Rachana-EL is read: Sutras (at load and in Studio preview), alert rules, search
+The same bounds hold wherever Rachana-EL is read: Sutras (at load and in a workbench preview), alert rules, search
 conditions (`TRD where …`), history paths and derived kinds.
 
 | Bound | Default | Setting | Message |
@@ -1717,7 +1754,7 @@ better written with `sum(list, 'field')`. A template's `${…}` parts are bounde
 
 | Code | When | Example message |
 |---|---|---|
-| `DRS-2101` | an expression or template does not compile (at load, in Studio preview, or when saving an alert rule), including one beyond the [size limits](#size-limits) | `expression '$.legs[0': DRS-2101 expected ']' but the expression ends at 8` |
+| `DRS-2101` | an expression or template does not compile (at load, in a workbench preview, or when saving an alert rule), including one beyond the [size limits](#size-limits) | `expression '$.legs[0': DRS-2101 expected ']' but the expression ends at 8` |
 | `DRS-2102` | evaluation error | evaluation is total, so a well-formed expression within the size limits never raises it; if one does (the limits raised far beyond the default), the panel shows `DRS-2102 an expression of this panel is nested too deeply to evaluate …` and the rest of the view renders |
 
 The problem's message is `expression '<source>': DRS-2101 <reason> at <offset>` (or `template '<source>': …`),
@@ -1740,7 +1777,7 @@ where the offset is the 0-based character position inside the expression. Common
 ## Problem codes
 
 A Sutra file that fails any check is not loaded (or keeps its last good version, see
-[Hot reload](#hot-reload-studio-and-governance)), and each problem is reported as
+[Hot reload](#hot-reload-the-workbench-and-governance)), and each problem is reported as
 `<file>:<line>:<column> <code> <message>`. All problems of a file are reported at once.
 
 | Code | Message (exact form) | Cause | Fix |
@@ -1752,7 +1789,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2011` | `unknown key 'pannels' in top level` (also `in match`, `in title`, `in strip item`, `in column`) | a misspelt or unsupported key | fix the spelling; panel options are reported as `DRS-2023` instead |
 | `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text`, `'notes' is plain text`, `'kind' in match is an entity kind written as text (such as trade), not '42'`, `'priority' in match must be a whole number (higher is tried first), not 'high'` | a value of the wrong shape | write the shape shown in the message |
 | `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer up to 2147483647, not '0'` | bad name or version (also a version too large for any number, which is not reported as YAML syntax) | `irs-vanilla`; `version: 3` unquoted |
-| `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot` | a kind that does not exist | use one of the 20 kinds |
+| `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric` | a kind that does not exist | use one of the 21 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
 | `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
 | `DRS-2024` | `duplicate panel id 'legs'` | two panels with one id | rename one |
@@ -1796,7 +1833,7 @@ You should see `{}` when every file is valid, otherwise a map from file to its p
    "location": {"file": "swap-x.v1.sutra.yaml", "line": 31, "column": 12}}]}
 ```
 
-The same list appears in the server log (`sutra problem …`), on the server health page, and in Studio when you
+The same list appears in the server log (`sutra problem …`), on the server health page, and in the workbench when you
 preview or save.
 
 ## Recipes
@@ -1918,7 +1955,7 @@ strip:
 You should see `Notional AUD 242,000,000`, `MTM (USD) +1,875,863` highlighted, `DV01 (USD) −155,245`,
 `Status Live` in the `ok` colour and `Next pay 2026-12-30`.
 
-## Hot reload, Studio and governance
+## Hot reload, the workbench and governance
 
 ### Editing files on disk
 
@@ -1939,25 +1976,22 @@ You should see `Notional AUD 242,000,000`, `MTM (USD) +1,875,863` highlighted, `
   unexpectedly and edits are not picked up until a restart.
 - Formats and semantic hints are read at start-up only; Sutras are the only thing that hot-reloads.
 
-### Studio
+### The workbench
 
-Studio (`/studio` in the console) is a YAML editor for Sutras with a live preview. It completes keys, panel
-kinds, options, formats, tones and this server's entity kinds from the
-[schema](#completion-and-checking-in-your-editor), and checks the text as you type, showing each problem at
-its line. Alongside the editor it summarises the Sutra you are writing and previews it against test entities.
+Sutras are written and previewed in the **Build workbench** (Build → New screen in the console). Its use is the
+[Screen designer guide](SCREEN_DESIGNER.md) (the YAML tab is the editor, with completion from the
+[schema](#completion-and-checking-in-your-editor) and a check as you type; the Design, Summary, Problems, Tests and
+Versions tabs read the same Sutra back; saving and proposing are [section 22](SCREEN_DESIGNER.md#22-saving-and-proposing)).
+The old `/studio` page no longer exists; its addresses redirect into the workbench
+([where things went](SCREEN_DESIGNER.md#19-studio-users-where-things-went)). The HTTP facts that remain, for scripts:
 
-1. Pick a Sutra to start from, or start from inference: Studio loads
-   `GET /api/v1/studio/inferred/{kind}/{id}?name=…` (or `POST /api/v1/studio/inferred` with pasted sample JSON),
-   which returns a new YAML Sutra (`rachana: 1`, a `description`, `priority: 1`) holding what inference made of
-   that entity.
-2. Choose the entity to preview against (kind and id), or paste sample JSON.
-3. Preview. The console sends the text to `POST /api/v1/studio/preview`, which parses and checks it
-   (`SutraRegistry.check`, problems located in `studio.sutra.yaml`) and builds the view with the unsaved Sutra,
-   bypassing the layout cache and the matcher: the preview always uses your Sutra, whatever its `match` says.
-   Nothing is written.
-4. Save. This needs `drishti.rachana.studio-save: true` (off by default) and a role that may author Sutras. The
-   text is sent as YAML (`POST /api/v1/sutras`, `Content-Type: text/yaml`) and, with governance on, becomes a
-   proposal for review.
+- `GET /api/v1/studio/inferred/{kind}/{id}?name=...` (or `POST /api/v1/studio/inferred` with sample JSON) returns a new
+  YAML Sutra (`rachana: 1`, a `description`, `priority: 1`) holding what inference made of that entity.
+- `POST /api/v1/studio/preview` parses and checks the text (`SutraRegistry.check`, problems located in
+  `studio.sutra.yaml`) and builds the view with the unsaved Sutra, bypassing the layout cache and the matcher: **a preview
+  always uses your Sutra, whatever its `match` says**. Nothing is written.
+- Saving needs `drishti.rachana.studio-save: true` (off by default) and a role that may author Sutras. The text is sent as
+  YAML (`POST /api/v1/sutras`, `Content-Type: text/yaml`) and, with governance on, becomes a proposal for review.
 
 ### Governance
 
@@ -1966,7 +2000,7 @@ With `drishti.governance.enabled: true` (the default), Save does not publish: it
 | Step | Who | What happens |
 |---|---|---|
 | Propose | an author | the Sutra is checked as it stands (it must be publishable) and stored with the live text it is based on (`202 Accepted`, `{"proposal": {"id", "name", "version", "status": "pending"}}`). Proposing exactly the live text is refused. |
-| Review | an approver | `/studio/reviews` lists proposals; each shows a diff against the live version (or, for a new version, the latest earlier one): panel blocks that moved are said in words (`moved: <title> from position a to b (main → side)`, positions counted within the column), the other edits as a line diff, and the full line diff behind a toggle |
+| Review | an approver | **Build → Govern → Reviews** (`/build/reviews`) lists proposals; each shows a diff against the live version (or, for a new version, the latest earlier one): panel blocks that moved are said in words (`moved: <title> from position a to b (main → side)`, positions counted within the column), the other edits as a line diff, and the full line diff behind a toggle |
 | Approve | an approver | with `drishti.governance.four-eyes: true` (default) and security on, the author cannot approve their own proposal (`DRS-2007`). If the live text changed since the proposal, approval is refused (`DRS-2006`). Otherwise the file is written and goes live. |
 | Reject | an approver | needs a comment saying why |
 | Withdraw | the author or an admin | |
@@ -1976,7 +2010,7 @@ Sutra's proposals. With governance off, Save writes at once.
 
 Where a save (or an approval) writes: `<first directory of drishti.rachana.dirs>/<domain>/<name>.v<N>.sutra.yaml`,
 exactly the text you wrote, comments included; then it reloads. A `name@version` already defined by another file (for example by a pack) is
-refused with `DRS-2028`: to change a pack's Sutra from Studio, save it as a **new version**; the latest version
+refused with `DRS-2028`: to change a pack's Sutra from the workbench, save it as a **new version**; the latest version
 wins matching.
 
 ## The reference Sutras
@@ -1991,5 +2025,5 @@ wins matching.
 | `packs/finance/sutras/commodities/listed-future.v1.sutra.yaml` | `TRD CFT-77120` | finance pack |
 | `packs/finance/sutras/credit/netting-set.v1.sutra.yaml` | `NSET NS-NORTH-01` | `link: true` columns, kv with inferred fields |
 
-For a guided, step-by-step introduction, see [RACHANA_GUIDE.md](RACHANA_GUIDE.md). For how inference fills
+For a guided, step-by-step introduction, see [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md). For how inference fills
 what a Sutra leaves out, see [INFERENCE.md](../architecture/INFERENCE.md).
