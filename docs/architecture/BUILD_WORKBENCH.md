@@ -93,7 +93,7 @@ Design { id, name, owner, kind, base: "trade-blotter@7" | null,
 ```
 
 - **Data** (left): the samples (add files, a folder, store references, examples; switch the previewed one), the shape
-  tree with roles (today's extractor), and the palette of the 20 panel kinds.
+  tree with roles (today's extractor), and the palette of the 21 panel kinds.
 - **Design** (centre): the visual canvas, drawn by the same renderer users see, with handles to select, move and resize
   on the grid; fields dropped from the shape become panels or columns (suggestions from `/builder/suggest`).
 - **YAML**: the Sutra text (today's Studio editor). Typing is an operation like any other, so undo and the revision
@@ -120,7 +120,7 @@ page. Studio's keys (Ctrl+S, Ctrl+Enter), its File menu and its tabs stay inside
 
 ### Examples stay, and open as your own copy
 
-The ten examples in `docs/guides/examples/` (including the big all-panels showcase: all 20 panel kinds with its data)
+The eleven examples in `docs/guides/examples/` (including the big all-panels showcase: all 21 panel kinds with its data)
 are kept and remain the reference set. In the workbench every example opens as a **new Design that is a copy**: its
 Sutra, its JSON as samples and its README as notes, ready to view, tweak, check and even propose; the files in
 `docs/guides/examples/` are never changed by the workbench. The all-panels showcase is what a scratch Design opens on
