@@ -1,0 +1,12 @@
+{
+  "ticketId": "TKT-1002",
+  "subject": "Invoice missing",
+  "status": "Waiting on client",
+  "priority": "Normal",
+  "assignee": "AGT-07",
+  "client": "CLI-GLOBEX",
+  "clientName": "Globex Retail plc",
+  "ageHours": 6,
+  "history": [ { "date": "2026-09-30", "event": "Opened by client" } ],
+  "_meta": { "source": "helpdesk", "generation": 1, "live": false }
+}
