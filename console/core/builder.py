@@ -36,6 +36,11 @@ _DATA = ("enum", "const", "default", "examples")
 _MB = 1024 * 1024
 
 
+def too_large(size: float, limit: float, at_least: bool = False) -> str:
+    """The one wording of an oversize refusal, for a file or a body: sizes in MB with one decimal, the limit as it is configured."""
+    return f"This file is too large: {'at least ' if at_least else ''}{size / _MB:.1f} MB; the limit is {limit / _MB:g} MB"
+
+
 class TooBig(Exception):
     """An upload over a whole-request limit (files, samples or total size): refused as a whole."""
 
@@ -75,7 +80,7 @@ def read_files(files: Any, limits: Limits) -> tuple[list[dict], list[dict]]:
             claimed = f.get("size") if isinstance(f, dict) else None        # a browser leaves a file over the limit unsent
             if isinstance(claimed, (int, float)) and claimed > limits.max_file_bytes:
                 entry["size"] = int(claimed)
-                entry["problems"].append(f"{claimed / _MB:.1f} MB, over the limit of {limits.max_file_bytes / _MB:g} MB per file (builder.max_file_mb)")
+                entry["problems"].append(too_large(claimed, limits.max_file_bytes) + " (builder.max_file_mb)")
             else:
                 entry["problems"].append("no text: the file could not be read")
             continue
@@ -84,7 +89,7 @@ def read_files(files: Any, limits: Limits) -> tuple[list[dict], list[dict]]:
         if total > limits.max_total_bytes:
             raise TooBig(f"the files total over the limit of {limits.max_total_bytes / _MB:g} MB (builder.max_total_mb)")
         if size > limits.max_file_bytes:
-            entry["problems"].append(f"{size / _MB:.1f} MB, over the limit of {limits.max_file_bytes / _MB:g} MB per file (builder.max_file_mb)")
+            entry["problems"].append(too_large(size, limits.max_file_bytes) + " (builder.max_file_mb)")
             continue
         found = _documents(name, text, entry["problems"])
         entry["samples"] = len(found)

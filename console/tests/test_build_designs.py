@@ -206,7 +206,7 @@ def test_a_file_over_the_size_limit_is_left_out(app_client):
                                                                            {"name": "huge.json", "size": 9_000_000}]})
     body = r.json()
     assert r.status_code == 200 and len(body["samples"]) == 1
-    assert "builder.max_file_mb" in body["files"][0]["problems"][0] and "over the limit" in body["files"][2]["problems"][0]
+    assert "builder.max_file_mb" in body["files"][0]["problems"][0] and "too large" in body["files"][2]["problems"][0]
 
 
 @pytest.mark.parametrize("app_client", [{"max_samples": 3}], indirect=True)
@@ -428,3 +428,12 @@ def test_a_chunked_body_is_refused_while_it_streams(app_client):
     assert r.status_code == 413 and r.json()["code"] == "DRS-5005"
     z = app_client.post("/build/import", content=gen(), headers={"Content-Type": "application/zip"})
     assert z.status_code == 413 and z.json()["code"] == "DRS-5005"
+    assert z.json()["detail"].startswith("This file is too large: at least ") and "MB; the limit is" in z.json()["detail"]
+
+
+def test_a_declared_oversize_body_is_refused_with_its_size(app_client):
+    """S2-08: the declared length is checked before the body is read; the answer names the size and the limit, the code stays in `code`."""
+    d = _new(app_client, "Wording")
+    r = app_client.post(f"/build/designs/{d['id']}/files", content=b"x" * (60 * 1024 * 1024), headers={"Content-Type": "application/json"})
+    assert r.status_code == 413 and r.json()["code"] == "DRS-5005"
+    assert "This file is too large: 60.0 MB; the limit is" in r.json()["detail"] and "DRS-5005" not in r.json()["detail"]

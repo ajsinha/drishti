@@ -261,7 +261,7 @@ script may open (roles are defined under `drishti.security.roles`; see
 ### Field masks
 
 For a caller without `raw`, every field named in `drishti.security.redact` (at any depth, and everything under it)
-reads `•••` in every answer that shows or is computed from its value (*limit: masking is by field name and by value of that field. Free text in **another** field, for example a timeline description that spells the value out, or a note a person typed, is data of that other field and is not rewritten; keep identifying values out of free-text fields, or put those fields under `redact` too*): `/entities/…/raw`, `/search` (rows, CSV,
+reads `•••` in every answer that shows or is computed from its value (masking is by field; see *Copies of a masked value* below for text in other fields): `/entities/…/raw`, `/search` (rows, CSV,
 compare), `/history`, `/search/columns`, the search pivot endpoints, `/views/{kind}/{id}` (strip, title, every panel,
 table totals, keys and links, values a Sutra computes from the field), `/views/…/panels/…/records`, the view and
 monitor streams, `/me/monitors/{name}`, `/studio/preview`, `/impact/{kind}/{id}`, `/command/suggest` and `/phrase`;
@@ -269,6 +269,19 @@ alert rules are evaluated on the document as their owner may see it. The server 
 (`Entitlements.redactor`) before anything reads them, so nothing about a masked field can be probed: a condition on
 it is never true, ordering by it does not order, the type-ahead does not match it, Impact does not list entities
 tied to the analysed one only through it, and a total over it reads `•••`.
+
+A `redact` entry with dots names a field by the end of its path (arrays are not a step): `lifecycle.timeline.description` masks
+every `description` under `lifecycle.timeline`, and no other `description`. The shipped setting masks it, because the trading
+data's timeline spells the trader out ("Captured in Murex by TRDR-ASHAH").
+
+**Copies of a masked value (`drishti.security.mask-copies`, default `false`).** Masking works on fields. With the setting on, after
+masking, the server also replaces every exact occurrence of a masked field's original value inside the *other* text of the same
+document with `•••`: with `trader` masked, "Captured by J. Smith" reads "Captured by •••". It runs in the same place as the masks
+(`Entitlements.redactor`), so it holds on every path above, including Calc columns and the builder's previews, checks and evidence.
+Best effort, bounded and exact: text values of at least `mask-copies-min-length` characters (3), numbers of four digits or more
+rendered as text; case, spacing and spelling variants ("j. smith", "SMITH, J.") are **not** matched; a document with more than
+`mask-copies-max-nodes` nodes (50 000) is not scanned (its masked fields are still masked) and at most `mask-copies-max-values` (64)
+distinct values are scrubbed per document. Mask the text fields that carry sensitive values, and fix the source so they do not.
 
 ## Which day: the business date
 
@@ -1284,7 +1297,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where), names a field the kind does not have, or has a `limit` outside 1 to 1000 |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
-| DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |
+| DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; any `/api/v1/builder/**` request body over `max-total-mb` (answered before the body is read: `detail` gives the size and the limit, the connection is not reset; `drishti.http.request-limits`, `server.tomcat.max-swallow-size`); designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |
 | DRS-5004 | 404 | cache not found | no cache by that name (cache purge) |
 | DRS-5006 | 404 | design not found | no Build design with that id, or it belongs to someone else |
 | DRS-5007 | 409 | stale revision | an edit built on an older `rev` of a design than the server holds, or an undo or redo with nothing to move to |

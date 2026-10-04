@@ -30,11 +30,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param roles role name to what it may see and do
  * @param tokenReadPosts POST paths (ant patterns) that only read, so a personal API token may call them; every other non-GET
  *     request stays refused for a token (SEC-15)
- * @param redact field names masked for roles without {@code raw}, on every path that shows or reads a value (Entitlements)
+ * @param redact field names masked for roles without {@code raw}, on every path that shows or reads a value (Entitlements). An
+ *     entry with dots ({@code lifecycle.timeline.description}) names a field by the end of its path (arrays are not a step)
+ * @param maskCopies also replace, in the other text of the same document, exact copies of a masked field's value (default false)
+ * @param maskCopiesMinLength shortest text value scrubbed as a copy; numbers need at least four digits
+ * @param maskCopiesMaxNodes documents with more nodes than this are not scanned for copies (their masked fields are still masked)
+ * @param maskCopiesMaxValues most distinct masked values scrubbed per document
  */
 @ConfigurationProperties("drishti.security")
 public record SecurityProperties(Boolean enabled, String secret, Duration clockSkew, Map<String, Role> roles, List<String> redact,
-        List<String> tokenReadPosts) {
+        List<String> tokenReadPosts, Boolean maskCopies, Integer maskCopiesMinLength, Integer maskCopiesMaxNodes, Integer maskCopiesMaxValues) {
 
     public SecurityProperties {
         enabled = enabled != null && enabled;
@@ -42,6 +47,10 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
         roles = roles == null ? Map.of() : Map.copyOf(roles);
         redact = redact == null ? List.of() : List.copyOf(redact);
         tokenReadPosts = tokenReadPosts == null ? List.of() : List.copyOf(tokenReadPosts);
+        maskCopies = maskCopies != null && maskCopies;
+        maskCopiesMinLength = maskCopiesMinLength == null ? 3 : Math.max(1, maskCopiesMinLength);
+        maskCopiesMaxNodes = maskCopiesMaxNodes == null ? 50_000 : maskCopiesMaxNodes;
+        maskCopiesMaxValues = maskCopiesMaxValues == null ? 64 : maskCopiesMaxValues;
     }
 
     /** Whether a personal API token may POST to the path: it is on the {@code token-read-posts} allow-list. */

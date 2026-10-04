@@ -152,16 +152,93 @@ public final class Entitlements {
         return masks(p) ? this::mask : UnaryOperator.identity();
     }
 
-    private DataNode mask(DataNode n) {
+    private DataNode mask(DataNode doc) {
+        List<String> secrets = props.maskCopies() ? copies(doc) : List.of();
+        return mask(doc, "", secrets);
+    }
+
+    private DataNode mask(DataNode n, String path, List<String> secrets) {
         if (n instanceof DataNode.Obj o) {
             Map<String, DataNode> out = new LinkedHashMap<>();
-            o.fields().forEach((k, v) -> out.put(k, props.redact().contains(k) ? DataNode.masked() : mask(v)));
+            o.fields().forEach((k, v) -> {
+                String at = path.isEmpty() ? k : path + "." + k;
+                out.put(k, masked(k, at) ? DataNode.masked() : mask(v, at, secrets));
+            });
             return new DataNode.Obj(out);
         }
         if (n instanceof DataNode.Arr a) {
-            return new DataNode.Arr(a.elements().stream().map(this::mask).toList());
+            return new DataNode.Arr(a.elements().stream().map(e -> mask(e, path, secrets)).toList());
+        }
+        if (!secrets.isEmpty() && n instanceof DataNode.Val v && v.value() instanceof String text) {
+            String out = text;
+            for (String secret : secrets) {
+                out = out.replace(secret, DataNode.MASK);
+            }
+            return out.equals(text) ? n : new DataNode.Val(out);
         }
         return n;
+    }
+
+    /** A field is masked by its name, or by the end of its path when a {@code redact} entry has dots. */
+    private boolean masked(String name, String path) {
+        if (props.redact().contains(name)) {
+            return true;
+        }
+        for (String entry : props.redact()) {
+            if (entry.indexOf('.') > 0 && (path.equals(entry) || path.endsWith("." + entry))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The values of the masked fields of one document that may be copied into its other text (S2-11, {@code mask-copies}): text
+     * of at least {@code mask-copies-min-length} characters, numbers of four digits or more as text, longest first; none when the
+     * document has more than {@code mask-copies-max-nodes} nodes. At most {@code mask-copies-max-values} are kept.
+     */
+    private List<String> copies(DataNode doc) {
+        java.util.Set<String> found = new java.util.TreeSet<>();
+        int[] budget = {props.maskCopiesMaxNodes()};
+        if (!collect(doc, "", false, found, budget)) {
+            return List.of();
+        }
+        return found.stream().sorted(java.util.Comparator.comparingInt(String::length).reversed().thenComparing(java.util.Comparator.naturalOrder()))
+                .limit(props.maskCopiesMaxValues()).toList();
+    }
+
+    /** False when the node budget ran out: the document is too big to scan. */
+    private boolean collect(DataNode n, String path, boolean underMask, java.util.Set<String> found, int[] budget) {
+        if (--budget[0] < 0) {
+            return false;
+        }
+        if (n instanceof DataNode.Obj o) {
+            for (Map.Entry<String, DataNode> e : o.fields().entrySet()) {
+                String at = path.isEmpty() ? e.getKey() : path + "." + e.getKey();
+                if (!collect(e.getValue(), at, underMask || masked(e.getKey(), at), found, budget)) {
+                    return false;
+                }
+            }
+        } else if (n instanceof DataNode.Arr a) {
+            for (DataNode e : a.elements()) {
+                if (!collect(e, path, underMask, found, budget)) {
+                    return false;
+                }
+            }
+        } else if (underMask && n instanceof DataNode.Val v && v.value() != null) {
+            Object x = v.value();
+            if (x instanceof String t) {
+                if (t.length() >= props.maskCopiesMinLength() && !DataNode.MASK.equals(t)) {
+                    found.add(t);
+                }
+            } else if (x instanceof Number num) {
+                String t = num instanceof Double || num instanceof Float ? new java.math.BigDecimal(num.toString()).stripTrailingZeros().toPlainString() : num.toString();
+                if (t.chars().filter(Character::isDigit).count() >= 4) {
+                    found.add(t);
+                }
+            }
+        }
+        return true;
     }
 
     public List<Suggestion> filter(Principal p, List<Suggestion> in) {

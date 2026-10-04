@@ -41,6 +41,9 @@ logging:
 server:
   port: ${DRISHTI_PORT:18480}
   shutdown: graceful
+  tomcat:
+    # After a 413 for an oversized body, Tomcat drains up to this much of the rest so the client reads the answer, not a reset.
+    max-swallow-size: ${DRISHTI_MAX_SWALLOW:64MB}
   compression:
     enabled: true
     mime-types: application/json,text/event-stream
@@ -152,7 +155,16 @@ drishti:
       default-roles: []                # roles when no group maps; empty refuses such users
       roles-from-provider: true        # the provider's groups replace the roles at every sign-in
       algorithms: [RS256, ES256]
-    redact: [trader, counterpartyId, patientName]   # fields masked (•••) for roles without raw: raw JSON, views, search, Impact, type-ahead, alerts
+    # Fields masked (•••) for roles without raw: raw JSON, views, search, Impact, type-ahead, alerts. A name masks that field at any
+    # depth; an entry with dots masks by the end of the path. lifecycle.timeline.description is free text that carries the trader
+    # ("Captured in Murex by TRDR-ASHAH") in the shipped trading data, so it is masked with the trader it names.
+    redact: [trader, counterpartyId, patientName, lifecycle.timeline.description]
+    # Opt-in: also replace exact copies of a masked field's value found in the OTHER text of the same document (best effort: exact,
+    # case-sensitive; text of at least min-length characters, numbers of 4+ digits). Documents over max-nodes are not scanned.
+    mask-copies: ${DRISHTI_MASK_COPIES:false}
+    mask-copies-min-length: 3
+    mask-copies-max-nodes: 50000
+    mask-copies-max-values: 64
   alerts:
     keep: 1000                       # fired alerts kept per user, in the identity database (they survive restarts)
   access-log:                        # who looked at what: views, raw, history, searches, CSV (Admin → Access)
@@ -231,6 +243,11 @@ drishti:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
     fingerprint-cache-size: 100000  # one per (entity, generation)
     bind-parallelism: 0             # 0 = one binding thread per core
+  http:
+    request-limits:                 # oversized bodies are answered 413 DRS-5005 before they are read (declared or chunked)
+      enabled: true
+      rules:
+        - { prefix: /api/v1/builder/, max-mb: "${drishti.builder.max-total-mb}" }   # also design import and uploads
   builder:
     # Screen Builder: the shape extractor (POST /api/v1/builder/shape). Over-limit input is refused with DRS-5003.
     max-samples: 50                 # documents per request

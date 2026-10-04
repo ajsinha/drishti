@@ -74,7 +74,7 @@ in all seven themes.
 
 ## Fix status
 
-Wave 1 (governance and safety) is fixed in 89121ae7: S2-01 to S2-14, M-1, M-2, L-7 (with the CLI `--kind` escape) and UX-05. Each row in the area FINDINGS.md names its test.
+Wave 1 (governance and safety) is fixed in 89121ae7: S2-01 to S2-14, M-1, M-2, L-7 (with the CLI `--kind` escape) and UX-05. Each row in the area FINDINGS.md names its test. S2-08 (clean 413 for oversized requests) and S2-11 (opt-in `mask-copies`, dotted masks, pack defaults) are **Fixed** in 1.14.1.
 
 ## Proposed fix order
 
