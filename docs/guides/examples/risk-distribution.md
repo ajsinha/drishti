@@ -19,7 +19,7 @@ How risk is spread: scenario P&L as a histogram with VaR lines, books as points,
 
 **Panel kinds:** `histogram`, `scatter`, `gauge`.
 
-**Open it:** Studio **File → Open** with `risk-distribution.sutra.yaml` and `risk-distribution.json`, or `/studio?example=risk-distribution`.
+**Open it:** in the workbench, **Build → New → Examples** and pick `risk-distribution`: it opens as a copy (this Sutra, the JSON as samples, this note as notes). Or **File → Open** in the workbench with `risk-distribution.sutra.yaml` and `risk-distribution.json`.
 
 **What to look for:** dashed marker lines for VaR 99%, ES 97.5% and the mean on the histogram; one labelled point per book on the scatter; the gauge reading usage against the limit.
 

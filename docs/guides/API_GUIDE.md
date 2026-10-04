@@ -896,7 +896,7 @@ curl -s $B/rachana/schema | jq -c '{title, required, kinds: (.properties.match.p
 ```
 
 You should see `"title":"Rachana Sutra, language 1"`, `"required":["rachana","sutra","version","match"]`, the
-number of entity kinds the enabled packs serve, the twenty panel kinds (`kv`, `table`, … `pivot`) and the first
+number of entity kinds the enabled packs serve, the twenty-one panel kinds (`kv`, `table`, … `metric`) and the first
 functions (`abs`, `coalesce`, …). Any editor that reads JSON Schema can use it: in VS Code with the YAML
 extension, save it next to your Sutras and add `# yaml-language-server: $schema=rachana.schema.json` as the first
 line of a Sutra to get completion and checking as you type. Sutra Studio uses the same schema.
@@ -1002,7 +1002,7 @@ The operations (`{"op": ..., ...}`, fields not listed are refused with the opera
 
 | `op` | Fields | Does |
 |---|---|---|
-| `addPanel` | `kind`, `id?`, `at?: {area, before \| after, span, height}`, `options?` | adds a panel of one of the 20 kinds; a kind's required options (such as `rows`) must be in `options`; without `at` it goes at the end of the main column; no `id` makes one from the kind |
+| `addPanel` | `kind`, `id?`, `at?: {area, before \| after, span, height}`, `options?` | adds a panel of one of the 21 kinds; a kind's required options (such as `rows`) must be in `options`; without `at` it goes at the end of the main column; no `id` makes one from the kind |
 | `move` | `panel`, `area?`, `before? \| after?`, `span?`, `height?` | moves (and resizes) a panel through the layout editor; `span: 12` is the whole column, `height: 0` as tall as the content; omitted sizes stay |
 | `setOption` | `panel`, `option`, `value` | sets one option or panel key (`title`, `key`, `code`, `area`, `span`, `height`, `columns`, the kind's options); `null` removes it; checked against the kind's options and their allowed values |
 | `bind` | `panel`, `path`, `role?` | binds a path or field in a role the kind takes: its options (`rows`, `x`, `y`, `value`, `by`, `across`...) or `column` (table, ladder), `field` (kv, status), `series` (area), which append; no role: the kind's next unfilled one |
