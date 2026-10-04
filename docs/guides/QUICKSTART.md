@@ -53,7 +53,7 @@ ls drishti-server/target/*-exec.jar
 You should see `drishti-server/target/drishti-server-1.15.0-exec.jar`. The first build downloads its
 libraries and takes a few minutes.
 
-If the build stops with `Drishti builds and runs on OpenJDK 25.`, `JAVA_HOME` is not Java 25.
+If the build stops with `Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java …`, `JAVA_HOME` is not Java 25.
 
 ## 3. Set up the console
 
@@ -172,7 +172,7 @@ IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and Ope
 
 ### With Maven installed on the system
 
-The poms enforce only the Java version (`[25,26)`, the rule that prints `Drishti builds and runs on OpenJDK 25.`); they
+The poms enforce only the Java version (`[25,26)`, the rule that prints `Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java …`); they
 set no minimum Maven version. The wrapper pins **Maven 3.9.12** (`.mvn/wrapper/maven-wrapper.properties`), which is what
 the project is built and tested with; use 3.9.x. The enforcer rule checks the JVM Maven itself runs on, so set
 `JAVA_HOME` to Java 25 (as in step 1) before `mvn`.

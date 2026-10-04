@@ -90,16 +90,26 @@ Docker Compose, use `docker compose -f deploy/compose.yaml logs -f server` (or `
 
 ## Building and starting
 
-### The build fails with "Drishti builds and runs on OpenJDK 25"
+### The build fails with "Drishti needs Java 25"
+
+The rule checks only the version, not the vendor: Oracle JDK 25, Temurin 25 and OpenJDK 25 all pass. The message
+names the Java version and folder Maven actually found (older builds printed "Drishti builds and runs on OpenJDK 25"
+instead). When you have a JDK 25 installed and still see it, Maven is running on another Java: usually `JAVA_HOME`
+points at an older JDK, or an IDE uses its own JDK setting.
+
 
 - **Check:** `./mvnw -v` prints the Java version Maven uses: it must be 25, and a JDK, not only a JRE (the build
   needs `javac`; on Ubuntu `sudo apt install openjdk-25-jdk-headless`).
 - **Fix:** point Maven at JDK 25 and build again:
 
   ```bash
-  export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+  export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64      # Oracle JDK on Linux: e.g. /usr/lib/jvm/jdk-25-oracle-x64
+  ./mvnw -v                                                 # must show Java version: 25 and that folder
   ./mvnw -q verify
   ```
+
+- **IntelliJ IDEA:** File → Project Structure → SDK = the JDK 25, and Settings → Build Tools → Maven → Runner → JRE =
+  "Use Project JDK" (Maven run from the IDE uses that setting, not your shell's `JAVA_HOME`).
 
 ### The server stops at once with `UnsupportedClassVersionError … class file version 69.0`
 

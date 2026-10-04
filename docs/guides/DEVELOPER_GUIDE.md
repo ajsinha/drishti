@@ -144,7 +144,7 @@ drishti-benchmarks                (inference)
 
 | Tool | Version | Notes |
 |---|---|---|
-| OpenJDK | 25 | The enforcer rule in `pom.xml` (`requireJavaVersion [25,26)`) stops any other version with `Drishti builds and runs on OpenJDK 25.` The bytecode targets 25 (`maven.compiler.release`). `.java-version` says `25`. Run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap; measured faster than JDK 21 by 10–20% in requests a second). |
+| JDK | 25 (any vendor) | The enforcer rule in `pom.xml` (`requireJavaVersion [25,26)`) stops any other version with `Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java …` The bytecode targets 25 (`maven.compiler.release`). `.java-version` says `25`. Run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap; measured faster than JDK 21 by 10–20% in requests a second). |
 | Python | 3.11 or newer | The console and the tools. CI uses 3.13. |
 | uv | any recent | Creates the console's environment, and runs the lake tools with `uv run --with …` so nothing is installed globally. |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, ActiveMQ, RabbitMQ, MinIO) and `deploy/compose.yaml`. |

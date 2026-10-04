@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Changed:** the build's Java check now says it needs Java 25 of any vendor (OpenJDK, Oracle, Temurin) and names the Java version and folder Maven actually runs on; it read "builds and runs on OpenJDK 25", which looked like a vendor check.
 
 ## 1.15.0 — The metric KPI tile, five developer guides, documentation harmonised (2026-10-04)
 - **Docs:** [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md) replaces `RACHANA_GUIDE.md`, `SUTRA_CLI.md` and the in-app `sutra-guide.md`: anatomy, matching and priority, labels, paths, source, row groups, inference, testing and CI, the workbench, a checklist and the common mistakes with their codes; the old help addresses redirect.

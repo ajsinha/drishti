@@ -160,7 +160,7 @@
           <execution>
             <id>enforce-java</id>
             <goals><goal>enforce</goal></goals>
-            <configuration><rules><requireJavaVersion><version>[25,26)</version><message>Drishti builds and runs on OpenJDK 25.</message></requireJavaVersion></rules></configuration>
+            <configuration><rules><requireJavaVersion><version>[25,26)</version><message>Drishti needs Java 25 (any vendor: OpenJDK, Oracle, Temurin). Maven is running on Java ${java.specification.version} from ${java.home}: set JAVA_HOME to a JDK 25 and check with ./mvnw -v.</message></requireJavaVersion></rules></configuration>
           </execution>
         </executions>
       </plugin>
