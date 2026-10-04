@@ -360,8 +360,9 @@ public final class AutoDesigner {
                 Role r = chooser.roleOf(s.f());
                 boolean status = s.f().is("status");
                 String label = Semantics.humanize(s.f().name());
-                if (names.get(s.f().name()) > 1) {
-                    String parent = s.f().path().substring(2, s.f().path().lastIndexOf('.'));
+                int dot = s.f().path().lastIndexOf('.');
+                if (names.get(s.f().name()) > 1 && dot > 2) {          // a top-level field ($.name) has no parent to tell it apart: it keeps its own label
+                    String parent = s.f().path().substring(2, dot);
                     label = Semantics.humanize(parent.substring(parent.lastIndexOf('.') + 1)) + " " + label.toLowerCase(Locale.ROOT);
                 }
                 boolean e = s == emph;

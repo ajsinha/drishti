@@ -1,0 +1,245 @@
+{
+  "deskId": "DESK-CREDIT",
+  "name": "Credit",
+  "reportDate": "2026-09-30",
+  "headOfDesk": "Tomas Weber",
+  "currency": "USD",
+  "region": "EMEA",
+  "mtm": -312000,
+  "mtmYesterday": -180000,
+  "var99": 1960000,
+  "var99Yesterday": 2010000,
+  "limit": 3000000,
+  "limitUse": 0.653,
+  "openTrades": 842,
+  "pnlHistory": [
+    {
+      "date": "2026-09-08",
+      "pnl": 105300
+    },
+    {
+      "date": "2026-09-09",
+      "pnl": 143200
+    },
+    {
+      "date": "2026-09-10",
+      "pnl": 142800
+    },
+    {
+      "date": "2026-09-11",
+      "pnl": 116900
+    },
+    {
+      "date": "2026-09-12",
+      "pnl": 152100
+    },
+    {
+      "date": "2026-09-13",
+      "pnl": 166200
+    },
+    {
+      "date": "2026-09-14",
+      "pnl": 208800
+    },
+    {
+      "date": "2026-09-15",
+      "pnl": 257000
+    },
+    {
+      "date": "2026-09-16",
+      "pnl": 336000
+    },
+    {
+      "date": "2026-09-17",
+      "pnl": 324600
+    },
+    {
+      "date": "2026-09-18",
+      "pnl": 312500
+    },
+    {
+      "date": "2026-09-19",
+      "pnl": 301900
+    },
+    {
+      "date": "2026-09-20",
+      "pnl": 409400
+    },
+    {
+      "date": "2026-09-21",
+      "pnl": 331900
+    },
+    {
+      "date": "2026-09-22",
+      "pnl": 396100
+    },
+    {
+      "date": "2026-09-23",
+      "pnl": 336500
+    },
+    {
+      "date": "2026-09-24",
+      "pnl": 281700
+    },
+    {
+      "date": "2026-09-25",
+      "pnl": 228600
+    },
+    {
+      "date": "2026-09-26",
+      "pnl": 305200
+    },
+    {
+      "date": "2026-09-27",
+      "pnl": 393100
+    }
+  ],
+  "positions": [
+    {
+      "desk": "Cash bonds",
+      "book": "CREDIT-CAS-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": 384548,
+      "trades": 27
+    },
+    {
+      "desk": "Cash bonds",
+      "book": "CREDIT-CAS-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": 64989,
+      "trades": 13
+    },
+    {
+      "desk": "Cash bonds",
+      "book": "CREDIT-CAS-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": -214837,
+      "trades": 24
+    },
+    {
+      "desk": "Cash bonds",
+      "book": "CREDIT-CAS-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": -25520,
+      "trades": 11
+    },
+    {
+      "desk": "CDS",
+      "book": "CREDIT-CDS-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": 235521,
+      "trades": 29
+    },
+    {
+      "desk": "CDS",
+      "book": "CREDIT-CDS-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": -336783,
+      "trades": 38
+    },
+    {
+      "desk": "CDS",
+      "book": "CREDIT-CDS-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": 312630,
+      "trades": 21
+    },
+    {
+      "desk": "CDS",
+      "book": "CREDIT-CDS-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": -256616,
+      "trades": 21
+    },
+    {
+      "desk": "Loans",
+      "book": "CREDIT-LOA-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": 491973,
+      "trades": 30
+    },
+    {
+      "desk": "Loans",
+      "book": "CREDIT-LOA-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": -284629,
+      "trades": 37
+    },
+    {
+      "desk": "Loans",
+      "book": "CREDIT-LOA-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": 114341,
+      "trades": 6
+    },
+    {
+      "desk": "Loans",
+      "book": "CREDIT-LOA-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": 214694,
+      "trades": 2
+    }
+  ],
+  "units": [
+    {
+      "name": "Credit",
+      "exposure": 10000000,
+      "children": [
+        {
+          "name": "Cash bonds",
+          "exposure": 3000000,
+          "children": [
+            {
+              "name": "Cash bonds / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "Cash bonds / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        },
+        {
+          "name": "CDS",
+          "exposure": 2600000,
+          "children": [
+            {
+              "name": "CDS / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "CDS / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        },
+        {
+          "name": "Loans",
+          "exposure": 2200000,
+          "children": [
+            {
+              "name": "Loans / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "Loans / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

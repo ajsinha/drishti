@@ -36,7 +36,7 @@
   <div class="wb-head">
     <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/screen-designer">Screen designer guide</a></nav>
     <h1 class="wb-title">{% if design.name %}{{ design.name }}{% else %}<i>Untitled design</i>{% endif %}</h1>
-    <span class="text-muted-d wb-meta">kind <span class="mono">{{ design.kind }}</span>{% if design.base %} · edits <span class="mono">{{ design.base }}</span>{% endif %}
+    <span class="text-muted-d wb-meta">kind <span class="mono">{{ design.kind }}</span>{% if design.base %} · edits <span class="mono" data-base-name>{{ design.base }}</span>{% endif %}
       {% if design.scratch %} · <b>unnamed: forgotten after a day</b>, <a class="lnk" href="/build">name it in My designs</a>{% endif %}
       {% if design.expiryWarning %} · <b>expires soon</b>{% endif %}
       · <span class="bs-role wb-state" data-status-chip>{{ design.status }}</span> <span class="bs-role" data-bound-chip hidden></span> <span class="bs-role conflict" data-base-chip hidden></span></span>

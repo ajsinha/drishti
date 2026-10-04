@@ -163,7 +163,8 @@ def listening(port: int) -> bool:
         return False
 
 
-def start_servers(work: Path) -> list:
+def start_servers(work: Path, extra_env: dict | None = None) -> list:
+    """Starts the scratch server and console; `extra_env` (a guide's SERVER_ENV) is added to the environment of both."""
     jars = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
     if not jars:
         sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-server -am")
@@ -173,11 +174,11 @@ def start_servers(work: Path) -> list:
             (work / name).symlink_to(ROOT / name)
     (work / "sutras").mkdir(exist_ok=True)
     env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=PACKS, DRISHTI_STUDIO_SAVE="true", DRISHTI_BUILDER_FILE_BINDING="true",
-               DRISHTI_SUTRAS=str(work / "sutras"))
+               DRISHTI_SUTRAS=str(work / "sutras"), **(extra_env or {}))
     server = subprocess.Popen([java, "-jar", str(jars[-1])], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "console" / ".venv" / "bin" / "python"
     py = py if py.exists() else Path(sys.executable)
-    cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT))
+    cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), **(extra_env or {}))
     console = subprocess.Popen([str(py), str(ROOT / "console" / "run_drishti_web.py")], cwd=ROOT, env=cenv, stdout=(work / "console.log").open("w"), stderr=subprocess.STDOUT)
     for _ in range(240):
         if listening(SERVER_PORT) and listening(CONSOLE_PORT):

@@ -1,0 +1,245 @@
+{
+  "deskId": "DESK-FX",
+  "name": "FX",
+  "reportDate": "2026-09-30",
+  "headOfDesk": "Mei Lin",
+  "currency": "USD",
+  "region": "APAC",
+  "mtm": 455000,
+  "mtmYesterday": 390000,
+  "var99": 1120000,
+  "var99Yesterday": 1090000,
+  "limit": 2000000,
+  "limitUse": 0.56,
+  "openTrades": 2310,
+  "pnlHistory": [
+    {
+      "date": "2026-09-08",
+      "pnl": 9700
+    },
+    {
+      "date": "2026-09-09",
+      "pnl": -40700
+    },
+    {
+      "date": "2026-09-10",
+      "pnl": 62800
+    },
+    {
+      "date": "2026-09-11",
+      "pnl": -7600
+    },
+    {
+      "date": "2026-09-12",
+      "pnl": 84800
+    },
+    {
+      "date": "2026-09-13",
+      "pnl": 182800
+    },
+    {
+      "date": "2026-09-14",
+      "pnl": 206800
+    },
+    {
+      "date": "2026-09-15",
+      "pnl": 237400
+    },
+    {
+      "date": "2026-09-16",
+      "pnl": 250200
+    },
+    {
+      "date": "2026-09-17",
+      "pnl": 312700
+    },
+    {
+      "date": "2026-09-18",
+      "pnl": 321700
+    },
+    {
+      "date": "2026-09-19",
+      "pnl": 236300
+    },
+    {
+      "date": "2026-09-20",
+      "pnl": 237800
+    },
+    {
+      "date": "2026-09-21",
+      "pnl": 330700
+    },
+    {
+      "date": "2026-09-22",
+      "pnl": 405100
+    },
+    {
+      "date": "2026-09-23",
+      "pnl": 388800
+    },
+    {
+      "date": "2026-09-24",
+      "pnl": 471100
+    },
+    {
+      "date": "2026-09-25",
+      "pnl": 572400
+    },
+    {
+      "date": "2026-09-26",
+      "pnl": 629200
+    },
+    {
+      "date": "2026-09-27",
+      "pnl": 644200
+    }
+  ],
+  "positions": [
+    {
+      "desk": "Spot",
+      "book": "FX-SPO-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": 16242,
+      "trades": 8
+    },
+    {
+      "desk": "Spot",
+      "book": "FX-SPO-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": -388525,
+      "trades": 2
+    },
+    {
+      "desk": "Spot",
+      "book": "FX-SPO-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": -394255,
+      "trades": 3
+    },
+    {
+      "desk": "Spot",
+      "book": "FX-SPO-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": 265803,
+      "trades": 35
+    },
+    {
+      "desk": "Forwards",
+      "book": "FX-FOR-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": -81730,
+      "trades": 15
+    },
+    {
+      "desk": "Forwards",
+      "book": "FX-FOR-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": 138839,
+      "trades": 8
+    },
+    {
+      "desk": "Forwards",
+      "book": "FX-FOR-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": 403679,
+      "trades": 14
+    },
+    {
+      "desk": "Forwards",
+      "book": "FX-FOR-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": -76558,
+      "trades": 14
+    },
+    {
+      "desk": "Options",
+      "book": "FX-OPT-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": -154579,
+      "trades": 23
+    },
+    {
+      "desk": "Options",
+      "book": "FX-OPT-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": 492146,
+      "trades": 23
+    },
+    {
+      "desk": "Options",
+      "book": "FX-OPT-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": 104851,
+      "trades": 23
+    },
+    {
+      "desk": "Options",
+      "book": "FX-OPT-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": 396709,
+      "trades": 8
+    }
+  ],
+  "units": [
+    {
+      "name": "FX",
+      "exposure": 11000000,
+      "children": [
+        {
+          "name": "Spot",
+          "exposure": 3000000,
+          "children": [
+            {
+              "name": "Spot / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "Spot / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        },
+        {
+          "name": "Forwards",
+          "exposure": 2600000,
+          "children": [
+            {
+              "name": "Forwards / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "Forwards / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        },
+        {
+          "name": "Options",
+          "exposure": 2200000,
+          "children": [
+            {
+              "name": "Options / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "Options / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

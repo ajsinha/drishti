@@ -69,6 +69,11 @@
       return hooks.yaml.flush().then(function () { return WB.call('POST', base + '/rebase', { baseRev: store.state.rev }); }).then(function (r) {
         if (!r.ok) { say(WB.why(r), true); return; }
         var n = (r.body.problems || []).length;
+        store.state.baseMoved = null;                              // the design now stands on the newer version: no flag, no second rebase
+        paintBase();
+        var nm = $('[data-base-name]');
+        if (nm) { nm.textContent = m.latest; }
+        store.emit('basemoved');
         return reload('Rebased onto ' + m.latest + ': ' + (r.body.replayed || 0) + ' step(s) replayed' + (n ? ', ' + n + ' could not be: ' + r.body.problems[0].message : '') + '. Undo does not go back past a rebase.');
       });
     }

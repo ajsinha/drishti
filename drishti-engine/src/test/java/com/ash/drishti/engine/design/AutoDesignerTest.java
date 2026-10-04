@@ -276,6 +276,21 @@ class AutoDesignerTest {
     }
 
     @Test
+    void aTopLevelFigureWhoseNameAlsoOccursNestedDoesNotBreakTheDraft() {
+        List<Sample> samples = new ArrayList<>();
+        for (int i = 0; i < 4; i++) {
+            ObjectNode o = JSON.createObjectNode();
+            o.put("tradeId", "T-" + i);
+            o.put("notional", 1000000 * (i + 1));
+            o.putObject("terms").put("notional", 2000000 * (i + 1));
+            samples.add(new Sample("s" + i + ".json", o));
+        }
+        Design d = design(samples, null);
+        assertThat(d.yaml()).contains("$.notional").contains("$.terms.notional");
+        assertThat(d.reasons()).containsKey("strip");
+    }
+
+    @Test
     void aFieldInFewSamplesIsLeftOutOfTheStrip() {
         List<Sample> samples = new ArrayList<>(varied(5, false));
         ObjectNode o = ((ObjectNode) samples.get(0).document()).deepCopy();

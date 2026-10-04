@@ -275,13 +275,15 @@ class OpApplierTest {
     void bindsPathsInTheRolesAKindTakes() {
         String text = String.join("\n", "rachana: 1", "sutra: bind-test", "version: 1", "match: { kind: trade }", "title: { pill: T, id: $.id }", "panels:",
                 "  # the legs", "  - id: legs", "    kind: table", "    rows: $.legs", "    columns:", "      - { label: A, bind: \"@.a\" }",
-                "  - { id: kvs, kind: kv }", "  - { id: g, kind: pivot, rows: $.legs, by: x, across: y }", "");
-        OpResult r = applier.apply(text, List.of(new Bind("legs", "notional", null), new Bind("kvs", "tradeId", null), new Bind("g", "book", "by"),
+                "  - { id: kvs, kind: kv }", "  - { id: g, kind: pivot, rows: $.legs, by: x, across: y }", "  - { id: st, kind: status }", "");
+        OpResult r = applier.apply(text, List.of(new Bind("legs", "notional", null), new Bind("kvs", "tradeId", null), new Bind("st", "state", null), new Bind("g", "book", "by"),
                 new Bind("g", "desk", "by"), new Bind("g", "ccy", "across"), new Bind("g", "pv", "value")));
         assertThat(r.problems()).isEmpty();
         Sutra s = parse(r.yaml());
         assertThat(s.panels().get(0).columns()).extracting(c -> c.bind()).containsExactly("@.a", "@.notional");
-        assertThat(s.panels().get(1).options().get("fields")).isNotNull();
+        assertThat(s.panels().get(1).columns()).extracting(c -> c.bind()).containsExactly("$.tradeId");      // a kv reads columns, not fields
+        assertThat(s.panels().get(1).options()).doesNotContainKey("fields");
+        assertThat(s.panels().get(3).options().get("fields")).isNotNull();                                      // a status reads fields
         assertThat(s.panels().get(2).options()).containsEntry("by", List.of("x", "book", "desk")).containsEntry("across", "ccy").containsEntry("value", "pv");
         assertThat(r.yaml()).contains("# the legs");
         assertThat(Bind.roles(PanelKind.TABLE)).contains("rows", "column");

@@ -250,3 +250,5 @@ def test_a_design_whose_base_moved_is_flagged_and_the_rebase_is_forwarded(app_cl
     ship = (JS / "build" / "ship.js").read_text()
     problems = (JS / "build" / "problems.js").read_text()
     assert "/rebase" in ship and "baseMoved" in problems
+    assert "data-base-name" in (CONSOLE / "web" / "templates" / "build" / "design.html").read_text()      # the header names the base, so a rebase can update it
+    assert "store.state.baseMoved = null" in ship and "store.emit('basemoved')" in ship   # after a rebase the flag and the old base name go
