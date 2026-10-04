@@ -60,6 +60,11 @@ def main() -> int:
     if a.guide and a.guide not in guides:
         sys.exit(f"unknown guide {a.guide}; known: {', '.join(guides)}")
     chosen = [s for s in SHOTS if not a.guide or s[0] == a.guide]
+    # a guide that needs its own server settings (the tutorial: sign-in on) declares SERVER_ENV and runs only on its own, with --guide
+    needs_env = {g for g in guides if getattr(sys.modules[g], "SERVER_ENV", None)}
+    if not a.guide:
+        chosen = [s for s in chosen if s[0] not in needs_env]
+    server_env = dict(getattr(sys.modules[a.guide], "SERVER_ENV", {})) if a.guide else {}
     if a.list:
         print("\n".join(x for s in chosen for x in (s[1],) + s[3]))
         return 0
@@ -71,7 +76,7 @@ def main() -> int:
     started, work = [], Path(tempfile.mkdtemp(prefix="drishti-shots-"))
     try:
         if not listening(port):
-            started = start_servers(work)
+            started = start_servers(work, server_env)
         failed = []
         with sync_playwright() as p:
             browser = p.chromium.launch()
@@ -90,7 +95,7 @@ def main() -> int:
                         fn(c)
                         break
                     except Exception as e:  # noqa: BLE001 - report every failed picture, keep going
-                        print("  attempt", attempt, "failed:", str(e).splitlines()[0][:200])
+                        print("  attempt", attempt, "failed:", " | ".join(str(e).splitlines()[:5])[:500])
                         c.showcase_open = False
                         if attempt == 2:
                             failed.append(name)

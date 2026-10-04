@@ -218,6 +218,25 @@ def test_moving_and_sizing_a_panel_changes_the_yaml_and_keeps_the_comments(live_
     assert "span:" in page.evaluate("document.querySelector('.CodeMirror').CodeMirror.getValue()")
 
 
+def test_the_yaml_editor_follows_the_canvas_after_a_typed_edit_and_a_save_does_not_send_it_stale(live_console, page):
+    """Typing in the YAML tab, then changing the screen on the canvas, then saving: the editor must have followed the canvas (a fired
+    pause timer once stayed 'pending', so the editor kept its old text and the save sent that over the newer design)."""
+    id_ = open_design(page, live_console, "typed-then-canvas", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
+    page.get_by_role("tab", name="YAML").click()
+    rev = state(page, "rev")
+    page.evaluate("document.querySelector('.CodeMirror').CodeMirror.replaceRange('# typed in the tab\\n', {line: 0, ch: 0})")
+    wait(page, "window.drishtiWorkbench.store.state.yaml.indexOf('# typed in the tab') >= 0")
+    settle(page, rev)
+    rev = state(page, "rev")
+    page.evaluate("window.drishtiWorkbench.store.send([{op: 'setMatch', match: {kind: 'trade', priority: 777}}])")
+    settle(page, rev)
+    wait(page, "document.querySelector('.CodeMirror').CodeMirror.getValue().indexOf('priority: 777') >= 0")      # the editor followed
+    assert "# typed in the tab" in page.evaluate("document.querySelector('.CodeMirror').CodeMirror.getValue()")
+    page.keyboard.press("Control+Enter")                       # preview: flushes the editor, which must not send its old text over the design
+    page.wait_for_timeout(1500)
+    assert "priority: 777" in state(page, "yaml") and not page.errors
+
+
 def test_a_stale_revision_is_reloaded_and_said(live_console, page):
     id_ = open_design(page, live_console, "stale", sutra=showcase_sutra(), files={"showcase.json": showcase_json()})
     rev = state(page, "rev")

@@ -73,10 +73,10 @@
       editor.on('change', function (cm, ch) {
         if (applying || ch.origin === 'setValue') { return; }
         clearTimeout(timer);
-        timer = setTimeout(send, PAUSE);
+        timer = setTimeout(function () { timer = 0; send(); }, PAUSE);     // a fired timer is no longer pending: else the editor stops following the canvas and a save sends it stale
       });
       editor.on('blur', function () { if (timer) { clearTimeout(timer); timer = 0; send(); } });
-    } else { ta.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(send, PAUSE); }); }
+    } else { ta.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { timer = 0; send(); }, PAUSE); }); }
 
     store.on('doc', function (d) {
       if (sending && d.source === 'ops') { return; }          // our own text: kept as typed, even when the server refused it (Problems says where)

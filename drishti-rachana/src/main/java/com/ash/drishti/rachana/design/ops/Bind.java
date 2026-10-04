@@ -87,7 +87,13 @@ public record Bind(String panel, String path, String role) implements Op {
         String bare = path.strip();
         switch (r) {
             case "column" -> doc.setPanelKey(panel, "columns", append(columns(p), entry("label", label(bare), "bind", rowPath(bare))));
-            case "field" -> doc.setPanelKey(panel, "fields", append(list(p, "fields"), entry("label", label(bare), "bind", docPath(bare))));
+            case "field" -> {
+                if (p.kind() == PanelKind.KV) {                       // a kv panel reads its labelled values from columns; only status reads fields
+                    doc.setPanelKey(panel, "columns", append(columns(p), entry("label", label(bare), "bind", docPath(bare))));
+                } else {
+                    doc.setPanelKey(panel, "fields", append(list(p, "fields"), entry("label", label(bare), "bind", docPath(bare))));
+                }
+            }
             case "series" -> doc.setPanelKey(panel, "series", append(list(p, "series"), entry("label", label(bare), "value", rowPath(bare))));
             case "by" -> doc.setPanelKey(panel, "by", by(p, bare));
             default -> {

@@ -1,0 +1,245 @@
+{
+  "deskId": "DESK-RATES",
+  "name": "Rates",
+  "reportDate": "2026-09-30",
+  "headOfDesk": "Priya Raman",
+  "currency": "USD",
+  "region": "Americas",
+  "mtm": 1209000,
+  "mtmYesterday": 1250000,
+  "var99": 2840000,
+  "var99Yesterday": 2650000,
+  "limit": 5000000,
+  "limitUse": 0.568,
+  "openTrades": 1284,
+  "pnlHistory": [
+    {
+      "date": "2026-09-08",
+      "pnl": -60700
+    },
+    {
+      "date": "2026-09-09",
+      "pnl": -36200
+    },
+    {
+      "date": "2026-09-10",
+      "pnl": -24200
+    },
+    {
+      "date": "2026-09-11",
+      "pnl": 14900
+    },
+    {
+      "date": "2026-09-12",
+      "pnl": 51100
+    },
+    {
+      "date": "2026-09-13",
+      "pnl": 98600
+    },
+    {
+      "date": "2026-09-14",
+      "pnl": 67000
+    },
+    {
+      "date": "2026-09-15",
+      "pnl": 130400
+    },
+    {
+      "date": "2026-09-16",
+      "pnl": 119500
+    },
+    {
+      "date": "2026-09-17",
+      "pnl": 207100
+    },
+    {
+      "date": "2026-09-18",
+      "pnl": 203200
+    },
+    {
+      "date": "2026-09-19",
+      "pnl": 144400
+    },
+    {
+      "date": "2026-09-20",
+      "pnl": 178800
+    },
+    {
+      "date": "2026-09-21",
+      "pnl": 212100
+    },
+    {
+      "date": "2026-09-22",
+      "pnl": 241900
+    },
+    {
+      "date": "2026-09-23",
+      "pnl": 327300
+    },
+    {
+      "date": "2026-09-24",
+      "pnl": 294000
+    },
+    {
+      "date": "2026-09-25",
+      "pnl": 250200
+    },
+    {
+      "date": "2026-09-26",
+      "pnl": 206400
+    },
+    {
+      "date": "2026-09-27",
+      "pnl": 274100
+    }
+  ],
+  "positions": [
+    {
+      "desk": "Govies",
+      "book": "RATES-GOV-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": -15192,
+      "trades": 28
+    },
+    {
+      "desk": "Govies",
+      "book": "RATES-GOV-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": 52684,
+      "trades": 15
+    },
+    {
+      "desk": "Govies",
+      "book": "RATES-GOV-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": 294740,
+      "trades": 26
+    },
+    {
+      "desk": "Govies",
+      "book": "RATES-GOV-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": -201939,
+      "trades": 5
+    },
+    {
+      "desk": "Swaps",
+      "book": "RATES-SWA-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": 342484,
+      "trades": 27
+    },
+    {
+      "desk": "Swaps",
+      "book": "RATES-SWA-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": 152611,
+      "trades": 32
+    },
+    {
+      "desk": "Swaps",
+      "book": "RATES-SWA-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": -95548,
+      "trades": 29
+    },
+    {
+      "desk": "Swaps",
+      "book": "RATES-SWA-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": 85301,
+      "trades": 38
+    },
+    {
+      "desk": "Repo",
+      "book": "RATES-REP-LIN",
+      "family": "linear",
+      "currency": "USD",
+      "mtm": 388053,
+      "trades": 5
+    },
+    {
+      "desk": "Repo",
+      "book": "RATES-REP-LIN",
+      "family": "linear",
+      "currency": "EUR",
+      "mtm": 359746,
+      "trades": 25
+    },
+    {
+      "desk": "Repo",
+      "book": "RATES-REP-OPT",
+      "family": "optional",
+      "currency": "USD",
+      "mtm": 237843,
+      "trades": 22
+    },
+    {
+      "desk": "Repo",
+      "book": "RATES-REP-OPT",
+      "family": "optional",
+      "currency": "EUR",
+      "mtm": -372742,
+      "trades": 39
+    }
+  ],
+  "units": [
+    {
+      "name": "Rates",
+      "exposure": 9000000,
+      "children": [
+        {
+          "name": "Govies",
+          "exposure": 3000000,
+          "children": [
+            {
+              "name": "Govies / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "Govies / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        },
+        {
+          "name": "Swaps",
+          "exposure": 2600000,
+          "children": [
+            {
+              "name": "Swaps / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "Swaps / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        },
+        {
+          "name": "Repo",
+          "exposure": 2200000,
+          "children": [
+            {
+              "name": "Repo / 0-1Y",
+              "exposure": 1000000
+            },
+            {
+              "name": "Repo / 1-5Y",
+              "exposure": 850000
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

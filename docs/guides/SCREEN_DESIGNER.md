@@ -13,6 +13,8 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+New to the workbench? Follow [the step-by-step tutorial](BUILD_WORKBENCH_TUTORIAL.md): four complete projects, a picture of almost every step.
+
 # Screen designer: from JSON files to a screen, without writing YAML
 
 You have JSON documents (trades, shipments, patients, sensor readings) and you want a screen for them. The **workbench** (*Build → New screen*, then the design's page) is where you make it: bring your files, let Drishti draft a first screen, then **drag panels and fields onto the real screen**, size them on the grid, fill their options in a form, and watch every sample of your data against it while you work. The result is an ordinary Sutra (the layout file Drishti reads), and the YAML is one tab away when you want it.
