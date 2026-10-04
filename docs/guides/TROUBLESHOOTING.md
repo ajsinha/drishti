@@ -546,7 +546,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   rebuilt), while the search ran. The banner names each source and why; the API answer has `"partial": true` and
   `"failed": [{"source", "reason"}]`. Entities that source holds are missing from the results, so "0 of 0" is not
   "nothing matched".
-- **Fix:** follow the reason (an LZ4 table: [DELTA_CONNECTOR.md §16](../connectors/DELTA_CONNECTOR.md)); otherwise
+- **Fix:** follow the reason (a Delta table in BROTLI or LZO pages: [DELTA_CONNECTOR.md §16](../connectors/DELTA_CONNECTOR.md); LZ4 tables read normally); otherwise
   **Admin → Health** shows the source's `lastError` ([source-down runbook](../admin/runbooks/source-down.md)).
 
 ## Studio and Sutras

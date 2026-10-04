@@ -43,6 +43,7 @@
     <dependency><groupId>org.apache.hadoop</groupId><artifactId>hadoop-client-runtime</artifactId><version>${hadoop.version}</version></dependency>
     <dependency><groupId>org.xerial.snappy</groupId><artifactId>snappy-java</artifactId><version>${snappy-java.version}</version></dependency>
     <dependency><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId></dependency>
+    <dependency><groupId>at.yawk.lz4</groupId><artifactId>lz4-java</artifactId><version>${lz4-java.version}</version></dependency>
     <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>software.amazon.awssdk</groupId><artifactId>apache5-client</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>

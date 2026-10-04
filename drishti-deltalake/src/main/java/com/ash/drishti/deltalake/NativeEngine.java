@@ -21,8 +21,12 @@ import io.delta.kernel.engine.ExpressionHandler;
 import io.delta.kernel.engine.FileSystemClient;
 import io.delta.kernel.engine.JsonHandler;
 import io.delta.kernel.engine.ParquetHandler;
+import io.delta.kernel.utils.FileStatus;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 
 /**
  * A Delta Kernel {@link Engine} that never touches Hadoop's file systems: local disk through {@code java.nio}
@@ -40,7 +44,10 @@ import java.util.Map;
  */
 public final class NativeEngine implements Engine, AutoCloseable {
 
+    private static final int LZ4_FILES_REMEMBERED = 20_000;
+
     private final NativeFileIO io;
+    private final Map<String, Boolean> lz4Files = new ConcurrentHashMap<>();
     private final FileSystemClient fileSystem;
     private final JsonHandler json;
     private final ParquetHandler parquet;
@@ -67,6 +74,10 @@ public final class NativeEngine implements Engine, AutoCloseable {
                 conf.put(k.substring(7), v);                     // kernel.* wins over hadoop.* for the same key
             }
         });
+        String lz4 = settings.get("lz4-decoder");               // safe (pure Java, the default) or fast (JNI when present)
+        if (lz4 != null) {
+            conf.put(NativeCodecs.LZ4_DECODER, lz4);
+        }
         return new NativeEngine(new NativeFileIO(S3Settings.from(settings), conf));
     }
 
@@ -78,6 +89,30 @@ public final class NativeEngine implements Engine, AutoCloseable {
     /** Whether this engine reads {@code path}: local paths and {@code file:}, {@code s3:}, {@code s3a:}, {@code s3n:} URIs. */
     public static boolean supports(String path) {
         return NativeFileIO.supports(path);
+    }
+
+    /**
+     * Whether any column chunk of the Parquet file is compressed with the deprecated {@code LZ4} codec (read from its
+     * footer, remembered per file: Parquet files are immutable). False when the footer cannot be read: the caller's own
+     * read then reports the real problem.
+     */
+    public boolean usesLz4(FileStatus file) {
+        String key = file.getPath() + "@" + file.getSize();
+        Boolean known = lz4Files.get(key);
+        if (known != null) {
+            return known;
+        }
+        boolean uses;
+        try {
+            uses = ParquetBatches.codecs(io, file).contains(CompressionCodecName.LZ4);
+        } catch (IOException | RuntimeException e) {
+            return false;                                          // not remembered: the next read tries again
+        }
+        if (lz4Files.size() >= LZ4_FILES_REMEMBERED) {
+            lz4Files.clear();                                      // bounded: forget everything, footers are cheap to read again
+        }
+        lz4Files.put(key, uses);
+        return uses;
     }
 
     /** Listing and reading for {@code path} (the connector lists a lake's tables with it). */

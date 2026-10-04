@@ -16,8 +16,7 @@
 package com.ash.drishti.deltalake;
 
 /**
- * A Parquet file whose pages use a compression codec the native engine does not decompress (LZ4, LZ4_RAW, Brotli,
- * LZO). Its message names the codec and what to do; readers that recognise this type show it to whoever asked rather
+ * A Parquet file whose pages use a compression codec the native engine does not decompress (Brotli, LZO). Its message names the codec and what to do; readers that recognise this type show it to whoever asked rather
  * than only logging it.
  */
 public final class UnsupportedCodec extends UnsupportedOperationException {
@@ -27,13 +26,22 @@ public final class UnsupportedCodec extends UnsupportedOperationException {
     private final String codec;
 
     UnsupportedCodec(String codec) {
-        super("the native Delta engine does not decompress " + codec + " Parquet pages (it reads Snappy, ZSTD, GZIP and uncompressed);"
-                + " rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)"
-                + ("LZ4_RAW".equals(codec) ? " or set engine: hadoop, which reads LZ4_RAW" : ""));
+        super("the native Delta engine does not decompress " + codec + " Parquet pages (it reads Snappy, ZSTD, GZIP, LZ4, LZ4_RAW and uncompressed);"
+                + " rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)");
         this.codec = codec;
     }
 
-    /** The codec's Parquet name ({@code LZ4}, {@code BROTLI} …). */
+    private UnsupportedCodec(UnsupportedCodec e, String file) {
+        super(e.getMessage() + " [file " + file + "]");
+        this.codec = e.codec;
+    }
+
+    /** The same failure naming the Parquet file it was read from. */
+    UnsupportedCodec inFile(String file) {
+        return new UnsupportedCodec(this, file);
+    }
+
+    /** The codec's Parquet name ({@code BROTLI}, {@code LZO}). */
     public String codec() {
         return codec;
     }

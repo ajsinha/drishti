@@ -44,6 +44,7 @@ public final class NativeFileIO implements FileIO {
     private final Map<String, String> conf;
     private final ReentrantLock s3Lock = new ReentrantLock();
     private volatile S3Storage s3;
+    private final NativeCodecs codecs;
 
     /**
      * @param s3Settings how to reach S3 when a path asks for it
@@ -57,6 +58,12 @@ public final class NativeFileIO implements FileIO {
         this.local = local;
         this.s3Settings = s3Settings;
         this.conf = Map.copyOf(conf);
+        this.codecs = NativeCodecs.of(this.conf.get(NativeCodecs.LZ4_DECODER));
+    }
+
+    /** The Parquet page decompressors this engine reads with (the LZ4 decoder follows the {@code lz4-decoder} setting). */
+    NativeCodecs codecs() {
+        return codecs;
     }
 
     /** Whether the native engine can read paths of this scheme ({@code file}, {@code s3}, {@code s3a}, {@code s3n}). */

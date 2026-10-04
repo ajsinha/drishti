@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.delta;
 
+import com.ash.drishti.deltalake.Lz4RoutingEngine;
+import com.ash.drishti.deltalake.NativeEngine;
 import io.delta.kernel.defaults.engine.DefaultEngine;
 import io.delta.kernel.engine.Engine;
 import java.io.IOException;
@@ -47,6 +49,9 @@ final class HadoopLake {
         });
         s3(conf, settings);
         Engine engine = DefaultEngine.create(conf);
+        if (Boolean.parseBoolean(settings.getOrDefault("lz4-via-native", "true")) && NativeEngine.supports(root)) {
+            engine = new Lz4RoutingEngine(engine, NativeEngine.create(settings));   // raw-block LZ4 (Arrow, pyarrow): see its comment
+        }
         if (LakeStore.isRemote(root)) {
             String base = root.replaceAll("/+$", "") + (domain.isBlank() ? "" : "/" + domain);
             return new Remote(base, conf, engine);
@@ -103,6 +108,13 @@ final class HadoopLake {
         public String engineName() {
             return EngineKind.HADOOP.label();
         }
+
+        @Override
+        public void close() {
+            if (engine instanceof Lz4RoutingEngine e) {
+                e.close();
+            }
+        }
     }
 
     /** A lake behind a Hadoop file system: S3 ({@code s3a://}), Azure ({@code abfs://}), Google Cloud Storage, HDFS. */
@@ -146,6 +158,13 @@ final class HadoopLake {
         @Override
         public String engineName() {
             return EngineKind.HADOOP.label();
+        }
+
+        @Override
+        public void close() {
+            if (engine instanceof Lz4RoutingEngine e) {
+                e.close();
+            }
         }
     }
 }

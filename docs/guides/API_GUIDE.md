@@ -542,7 +542,7 @@ looks like "nothing matched":
 
 ```json
 "scanned":0,"matched":0,"partial":true,
-"failed":[{"source":"trading-store","reason":"trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4 Parquet pages (it reads Snappy, ZSTD, GZIP and uncompressed); rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)"}]
+"failed":[{"source":"trading-store","reason":"trade 2026-09-30 cannot be read: the native Delta engine does not decompress BROTLI Parquet pages (it reads Snappy, ZSTD, GZIP, LZ4, LZ4_RAW and uncompressed); rewrite the date with Snappy or ZSTD (tools/lake/maintain.py relayout --force --dates <date>)"}]
 ```
 
 The reason is the connector's own when it says what to do (an unsupported codec, a day with unreadable lines);
@@ -1119,7 +1119,7 @@ curl -s $B/admin/status | jq -c .
 `status` is `OK`, `DEGRADED` (a source is down or degraded, a plugin failed to start, a pack has broken Sutras or a
 down connector, or the Sutra watcher has stopped) or `DOWN` (no source is up). A source's `status` is `UP`,
 `DEGRADED` (it serves, but some of its data cannot be read: `health` names the table and date and why, e.g.
-`DEGRADED: cannot read trade 2026-09-30: … LZ4 …`) or `DOWN`; down sources are listed first, then degraded ones.
+`DEGRADED: cannot read trade 2026-09-30: … BROTLI …`) or `DOWN`; down sources are listed first, then degraded ones.
 `summary.sourcesDegraded` counts them. `sutras` is `{"hotReload": "WATCHING" | "OFF" | "STOPPED: <reason>",
 "problemFiles": <n>}`.
 
@@ -1264,7 +1264,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 |---|---|---|---|
 | DRS-1001 | 404 | entity not found | no source holds the entity; also a missing workspace, monitor or alert rule. A store that holds the date and does not list the entity is named (`DRS-1001 recent-files holds trade for 2026-09-29 and does not list trade/MX-30000006`): the stores behind it are not asked |
 | DRS-1002 | 404 | no source for kind | no source serves the kind |
-| DRS-1003 | 502 | source failed | the source answered with an error, could not be reached, or holds the data but cannot read it; `detail` names the connector (`DRS-1003 trading-store failed reading trade/MX-1`) and, when the connector says what to do, why (`…: trade 2026-09-30 cannot be read: the native Delta engine does not decompress LZ4 Parquet pages …`). The next connector is not asked: another store's data is never shown in place of a failing store's |
+| DRS-1003 | 502 | source failed | the source answered with an error, could not be reached, or holds the data but cannot read it; `detail` names the connector (`DRS-1003 trading-store failed reading trade/MX-1`) and, when the connector says what to do, why (`…: trade 2026-09-30 cannot be read: the native Delta engine does not decompress BROTLI Parquet pages …`). The next connector is not asked: another store's data is never shown in place of a failing store's |
 | DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 2 s) |
 | DRS-1005 | 422 | invalid json | a document (e.g. sample JSON pasted into Studio) is not valid JSON or not an object |
 | DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |

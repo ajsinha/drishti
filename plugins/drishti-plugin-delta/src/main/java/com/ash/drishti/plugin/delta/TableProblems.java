@@ -16,6 +16,7 @@
 package com.ash.drishti.plugin.delta;
 
 import com.ash.drishti.api.UnreadableData;
+import com.ash.drishti.deltalake.PageDecodeException;
 import com.ash.drishti.deltalake.UnsupportedCodec;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -146,17 +147,11 @@ final class TableProblems {
         return advice(e).<RuntimeException>map(a -> new UnreadableData(at + " cannot be read: " + a, e)).orElse(e);
     }
 
-    /** What the reader can do about {@code e}, when it is a cause they can act on (an unsupported codec, either engine). */
+    /** What the reader can do about {@code e}, when it is a cause they can act on (an unsupported codec, a page that does not decode). */
     private static Optional<String> advice(Throwable e) {
         for (Throwable c = e; c != null; c = c.getCause() == c ? null : c.getCause()) {
-            if (c instanceof UnsupportedCodec u) {
-                return Optional.of(u.getMessage());
-            }
-            if ("LZ4Exception".equals(c.getClass().getSimpleName())) {       // lz4-java's, shaded or not (no compile dependency)
-                // parquet-java reads Hadoop-framed LZ4; delta-rs and Arrow write LZ4 pages framed otherwise (LZ4_RAW it reads)
-                return Optional.of("its Parquet pages are LZ4 as delta-rs and Arrow write it, which the hadoop engine does not decompress"
-                        + " (it reads Hadoop-framed LZ4 and LZ4_RAW); rewrite the date with Snappy or ZSTD"
-                        + " (tools/lake/maintain.py relayout --force --dates <date>)");
+            if (c instanceof UnsupportedCodec || c instanceof PageDecodeException) {
+                return Optional.of(c.getMessage());
             }
         }
         return Optional.empty();

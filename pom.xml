@@ -95,6 +95,8 @@
     <parquet.version>1.16.0</parquet.version>
     <!-- the Snappy that hadoop-client-api brings: Parquet pages written by delta-rs are Snappy by default -->
     <snappy-java.version>1.1.10.4</snappy-java.version>
+    <!-- LZ4 Parquet pages (delta-rs and Arrow write them): the maintained lz4-java fork, safe pure-Java and JNI decoders -->
+    <lz4-java.version>1.10.2</lz4-java.version>
     <duckdb.version>1.5.6.0</duckdb.version>
   </properties>
 

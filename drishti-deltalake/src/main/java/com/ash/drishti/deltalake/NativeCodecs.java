@@ -19,10 +19,7 @@ import com.github.luben.zstd.Zstd;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.zip.GZIPInputStream;
-import org.apache.parquet.bytes.BytesInput;
 import org.apache.parquet.compression.CompressionCodecFactory;
 import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import org.xerial.snappy.Snappy;
@@ -30,13 +27,34 @@ import org.xerial.snappy.Snappy;
 /**
  * Parquet page decompression without Hadoop's codec classes (Parquet's own factory builds a Hadoop
  * {@code Configuration} and loads codecs through Hadoop's {@code ReflectionUtils}): Snappy (delta-rs's default),
- * ZSTD, GZIP and uncompressed pages. Stateless and shared; it never compresses (the engine only reads).
+ * ZSTD, GZIP, LZ4 / LZ4_RAW ({@link Lz4Pages}) and uncompressed pages. Stateless and shared; it never compresses (the engine only reads).
  */
 final class NativeCodecs implements CompressionCodecFactory {
 
-    static final NativeCodecs INSTANCE = new NativeCodecs();
+    /** The default: the safe (pure Java) LZ4 decoder. */
+    static final NativeCodecs INSTANCE = new NativeCodecs(false);
 
-    private NativeCodecs() {}
+    /** The connector setting that picks the LZ4 decoder: {@code safe} (the default) or {@code fast}. */
+    static final String LZ4_DECODER = "drishti.lz4.decoder";
+
+    private final Lz4Pages lz4;
+    private final Lz4Pages lz4Raw;
+
+    private NativeCodecs(boolean fastestLz4) {
+        this.lz4 = new Lz4Pages(fastestLz4, true);
+        this.lz4Raw = new Lz4Pages(fastestLz4, false);
+    }
+
+    /** From the {@link #LZ4_DECODER} value ({@code safe}, {@code fast}, null = safe). */
+    static NativeCodecs of(String decoder) {
+        if (decoder == null || decoder.isBlank() || "safe".equalsIgnoreCase(decoder.trim())) {
+            return INSTANCE;
+        }
+        if ("fast".equalsIgnoreCase(decoder.trim())) {
+            return new NativeCodecs(true);
+        }
+        throw new IllegalArgumentException("unknown lz4-decoder '" + decoder + "': use safe or fast");
+    }
 
     @Override
     public BytesInputCompressor getCompressor(CompressionCodecName codecName) {
@@ -50,6 +68,8 @@ final class NativeCodecs implements CompressionCodecFactory {
             case SNAPPY -> Codec.SNAPPY;
             case ZSTD -> Codec.ZSTD;
             case GZIP -> Codec.GZIP;
+            case LZ4 -> lz4;
+            case LZ4_RAW -> lz4Raw;
             default -> throw new UnsupportedCodec(codecName.name());
         };
     }
@@ -60,10 +80,10 @@ final class NativeCodecs implements CompressionCodecFactory {
     }
 
     /** One codec: whole pages in, whole pages out. */
-    private enum Codec implements BytesInputDecompressor {
+    private enum Codec implements PageCodec {
         NONE {
             @Override
-            byte[] decompress(byte[] in, int off, int len, int size) {
+            public byte[] decompress(byte[] in, int off, int len, int size) {
                 byte[] out = new byte[size];
                 System.arraycopy(in, off, out, 0, Math.min(len, size));
                 return out;
@@ -71,7 +91,7 @@ final class NativeCodecs implements CompressionCodecFactory {
         },
         SNAPPY {
             @Override
-            byte[] decompress(byte[] in, int off, int len, int size) throws IOException {
+            public byte[] decompress(byte[] in, int off, int len, int size) throws IOException {
                 byte[] out = new byte[size];
                 int n = Snappy.uncompress(in, off, len, out, 0);
                 return check(n, size, out);
@@ -79,7 +99,7 @@ final class NativeCodecs implements CompressionCodecFactory {
         },
         ZSTD {
             @Override
-            byte[] decompress(byte[] in, int off, int len, int size) throws IOException {
+            public byte[] decompress(byte[] in, int off, int len, int size) throws IOException {
                 byte[] out = new byte[size];
                 long n = Zstd.decompressByteArray(out, 0, size, in, off, len);
                 if (Zstd.isError(n)) {
@@ -90,7 +110,7 @@ final class NativeCodecs implements CompressionCodecFactory {
         },
         GZIP {
             @Override
-            byte[] decompress(byte[] in, int off, int len, int size) throws IOException {
+            public byte[] decompress(byte[] in, int off, int len, int size) throws IOException {
                 byte[] out = new byte[size];
                 try (InputStream z = new GZIPInputStream(new ByteArrayInputStream(in, off, len))) {
                     int at = 0;
@@ -106,45 +126,14 @@ final class NativeCodecs implements CompressionCodecFactory {
             }
         };
 
-        abstract byte[] decompress(byte[] in, int off, int len, int size) throws IOException;
+        @Override
+        public abstract byte[] decompress(byte[] in, int off, int len, int size) throws IOException;
 
         private static byte[] check(int n, int size, byte[] out) throws IOException {
             if (n != size) {
                 throw new IOException("a Parquet page decompressed to " + n + " bytes, not the " + size + " its header says");
             }
             return out;
-        }
-
-        @Override
-        public BytesInput decompress(BytesInput bytes, int uncompressedSize) throws IOException {
-            byte[] in = new byte[Math.toIntExact(bytes.size())];
-            bytes.writeAllTo(new OutputStream() {                // one copy, into the array
-                private int at;
-
-                @Override
-                public void write(int b) {
-                    in[at++] = (byte) b;
-                }
-
-                @Override
-                public void write(byte[] b, int off, int len) {
-                    System.arraycopy(b, off, in, at, len);
-                    at += len;
-                }
-            });
-            return BytesInput.from(decompress(in, 0, in.length, uncompressedSize));
-        }
-
-        @Override
-        public void decompress(ByteBuffer input, int compressedSize, ByteBuffer output, int uncompressedSize) throws IOException {
-            byte[] in = new byte[compressedSize];
-            input.duplicate().get(in);
-            output.put(decompress(in, 0, compressedSize, uncompressedSize));
-        }
-
-        @Override
-        public void release() {
-            // stateless
         }
     }
 }

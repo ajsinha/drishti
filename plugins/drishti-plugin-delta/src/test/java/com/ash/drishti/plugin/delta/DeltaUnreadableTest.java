@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * DATA-01, DATA-13, DATA-18: a Delta table that cannot be read says so. Parquet pages in a codec the engine does not
- * decompress (the fixture's footers are rewritten to say LZ4), a truncated Parquet file and a log missing its first
+ * decompress (the fixture's footers are rewritten to say BROTLI; LZ4 itself is read, see DeltaLz4Test), a truncated Parquet file and a log missing its first
  * commit each make reads fail (not "not held"), with the codec and what to do in the error when the reader can act on
  * it; health turns DEGRADED naming the table and date, and back to UP once the table reads again; type-ahead keeps the
  * ids it listed before a failed reindex and searches are told the listing is incomplete. Native engine (the default).
@@ -49,6 +49,36 @@ class DeltaUnreadableTest {
 
     private static final LocalDate D29 = LocalDate.of(2026, 9, 29);
     private static final LocalDate D30 = LocalDate.of(2026, 9, 30);
+
+    /** Caffeine logs a failed async load with its stack trace; these tests fail loads on purpose, so keep that out of the build output. */
+    private static final java.util.logging.Logger CAFFEINE = java.util.logging.Logger.getLogger("com.github.benmanes.caffeine");
+    private final java.util.List<java.util.logging.LogRecord> logged = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final java.util.logging.Handler capture = new java.util.logging.Handler() {
+        @Override
+        public void publish(java.util.logging.LogRecord r) {
+            logged.add(r);
+        }
+
+        @Override
+        public void flush() {}
+
+        @Override
+        public void close() {}
+    };
+    private boolean parentHandlers;
+
+    @org.junit.jupiter.api.BeforeEach
+    void captureCaffeineLog() {
+        parentHandlers = CAFFEINE.getUseParentHandlers();
+        CAFFEINE.setUseParentHandlers(false);
+        CAFFEINE.addHandler(capture);
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void restoreCaffeineLog() {
+        CAFFEINE.removeHandler(capture);
+        CAFFEINE.setUseParentHandlers(parentHandlers);
+    }
 
     /** A fresh copy of the laid-out fixture lake (40 trades on each of two dates). */
     private static Path lake() throws Exception {
@@ -103,21 +133,21 @@ class DeltaUnreadableTest {
     }
 
     @Test
-    void lz4PagesFailTheReadWithTheCodecAndWhatToDoAndHealthNamesTheDate() throws Exception {
+    void aCodecNoEngineDecompressesFailsTheReadWithTheCodecAndWhatToDoAndHealthNamesTheDate() throws Exception {
         Path root = lake();
         for (Path f : parquet(date(root, D30))) {
-            recodec(f, CompressionCodec.LZ4);
+            recodec(f, CompressionCodec.BROTLI);
         }
         DeltaSourcePlugin p = plugin(root);
         assertThatThrownBy(() -> p.fetch(EntityRef.of("trade", "T-001"), AsOf.of(D30))).isInstanceOf(UnreadableData.class)
-                .hasMessageContaining("trade 2026-09-30 cannot be read").hasMessageContaining("does not decompress LZ4")
+                .hasMessageContaining("trade 2026-09-30 cannot be read").hasMessageContaining("does not decompress BROTLI")
                 .hasMessageContaining("relayout --force");
         assertThatThrownBy(() -> p.columns("trade", List.of("mtm"), AsOf.of(D30))).isInstanceOf(UnreadableData.class);
         assertThat(p.fetch(EntityRef.of("trade", "T-001"), AsOf.of(D29))).isPresent();      // the other date reads
-        assertThat(p.health()).startsWith("DEGRADED: cannot read trade 2026-09-30: ").contains("LZ4");
+        assertThat(p.health()).startsWith("DEGRADED: cannot read trade 2026-09-30: ").contains("BROTLI");
         // the newest date's ids could not be listed at start: type-ahead has none, and searches are told so
         assertThat(p.search("trade", "", 100)).isEmpty();
-        assertThat(p.listingProblem("trade")).hasValueSatisfying(why -> assertThat(why).contains("LZ4").contains("it lists none"));
+        assertThat(p.listingProblem("trade")).hasValueSatisfying(why -> assertThat(why).contains("BROTLI").contains("it lists none"));
     }
 
     @Test
@@ -153,21 +183,14 @@ class DeltaUnreadableTest {
     }
 
     @Test
-    void lz4FromArrowUnderTheHadoopEngineSaysWhatToDo() {
-        // parquet-java's LZ4 codec throws this for the LZ4 framing delta-rs and Arrow write
-        RuntimeException e = new RuntimeException("reading failed", new LZ4Exception("Malformed input at 12"));
-        RuntimeException thrown = TableProblems.classify("trade", "2026-09-30", e);
-        assertThat(thrown).isInstanceOf(UnreadableData.class).hasMessageContaining("hadoop engine does not decompress")
-                .hasMessageContaining("relayout --force");
-        assertThat(TableProblems.classify("trade", "2026-09-30", new IllegalStateException("x"))).isNotInstanceOf(UnreadableData.class);
-    }
-
-    /** Stands in for lz4-java's exception (matched by its simple name, shaded or not). */
-    static final class LZ4Exception extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-
-        LZ4Exception(String message) {
-            super(message);
-        }
+    void aCorruptLz4PageSaysWhichTableFileAndCodec() throws Exception {
+        Path root = lake();
+        Path f = parquet(date(root, D30)).get(0);
+        recodec(f, CompressionCodec.LZ4);                                       // an LZ4 footer over Snappy pages: not LZ4
+        DeltaSourcePlugin p = plugin(root);
+        assertThatThrownBy(() -> p.fetch(EntityRef.of("trade", "T-001"), AsOf.of(D30))).isInstanceOf(UnreadableData.class)
+                .hasMessageContaining("trade 2026-09-30 cannot be read").hasMessageContaining("LZ4 Parquet page cannot be decoded")
+                .hasMessageContaining(f.getFileName().toString());
+        assertThat(p.health()).startsWith("DEGRADED: cannot read trade 2026-09-30: ").contains("LZ4");
     }
 }

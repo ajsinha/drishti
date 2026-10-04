@@ -27,6 +27,9 @@ import io.delta.kernel.types.StructType;
 import io.delta.kernel.utils.CloseableIterator;
 import io.delta.kernel.utils.FileStatus;
 import java.io.IOException;
+import java.util.EnumSet;
+import java.util.Set;
+import org.apache.parquet.hadoop.metadata.CompressionCodecName;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -85,11 +88,22 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
         this.rowIndex = schema.contains(MetadataColumnSpec.ROW_INDEX);
     }
 
-    private static ParquetReadOptions.Builder options() {
+    private ParquetReadOptions.Builder options() {
         // row groups are pruned by statistics only, as Kernel's own reader does: no per-record filtering (Kernel
         // filters rows itself), no dictionary, bloom or page-index reads (extra I/O for a sorted table)
-        return ParquetReadOptions.builder(PLAIN).withCodecFactory(NativeCodecs.INSTANCE).useStatsFilter(true).useDictionaryFilter(false)
+        return ParquetReadOptions.builder(PLAIN).withCodecFactory(io.codecs()).useStatsFilter(true).useDictionaryFilter(false)
                 .useBloomFilter(false).useColumnIndexFilter(false).withUseHadoopVectoredIo(false);
+    }
+
+    /** The codecs of every column chunk of {@code file}, from its footer. */
+    static Set<CompressionCodecName> codecs(NativeFileIO io, FileStatus file) throws IOException {
+        InputFile in = io.newParquetFile(file.getPath(), file.getSize());
+        try (SeekableInputStream stream = in.newStream()) {
+            ParquetMetadata footer = ParquetFileReader.readFooter(in, ParquetReadOptions.builder(PLAIN).build(), stream);
+            Set<CompressionCodecName> found = EnumSet.noneOf(CompressionCodecName.class);
+            footer.getBlocks().forEach(b -> b.getColumns().forEach(c -> found.add(c.getCodec())));
+            return found;
+        }
     }
 
     private void open() throws IOException {
@@ -146,6 +160,10 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
             return false;
         } catch (IOException e) {
             throw new KernelEngineException("Error reading Parquet file: " + file.getPath(), e);
+        } catch (UnsupportedCodec e) {
+            throw e.inFile(file.getPath());
+        } catch (PageDecodeException e) {
+            throw e.inFile(file.getPath());
         }
     }
 
@@ -165,6 +183,10 @@ final class ParquetBatches implements CloseableIterator<ColumnarBatch> {
             }
         } catch (IOException e) {
             throw new KernelEngineException("Error reading Parquet file: " + file.getPath(), e);
+        } catch (UnsupportedCodec e) {
+            throw e.inFile(file.getPath());
+        } catch (PageDecodeException e) {
+            throw e.inFile(file.getPath());
         }
         return collector.getDataAsColumnarBatch(rows);
     }
