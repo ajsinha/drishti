@@ -118,6 +118,13 @@ points at an older JDK, or an IDE uses its own JDK setting.
 - **Fix:** run the jar with Java 21 or newer: `/usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar …` (the flag is for Java 25 and newer; on 21 leave it out),
   or put that JDK first on your `PATH`.
 
+### Tests on Java 21 fail with "has been compiled by a more recent version of the Java Runtime (class file version 69.0)"
+
+- **Cause:** class files in `target/` were compiled for Java 25 by a build from before Java 21 support (when Drishti
+  targeted Java 25 only). Maven's incremental build does not recompile them when only the target version changes, so Java 21
+  finds Java 25 classes.
+- **Fix:** once, after pulling: `./mvnw clean` (or IntelliJ IDEA: Build → Rebuild Project), then build again.
+
 ### On Windows: `HADOOP_HOME and hadoop.home.dir are unset` or `Could not locate executable winutils.exe`
 
 A Delta connector is running on Hadoop's engine, which needs Hadoop's `winutils.exe` on Windows. Use the native
