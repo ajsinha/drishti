@@ -21,9 +21,13 @@ several levels deep. Rachana reads any depth with the same short paths.
 
 Every example below runs against the trading pack's interest rate swap **`MX-20000001`**. To follow along:
 
-1. Open **Studio** (`/studio`).
-2. Type `trade` and `MX-20000001` in the two boxes at the top.
-3. Open the **Sample JSON** tab and press **Load entity JSON**, so you can see the document while you write paths.
+1. Open **Build → New screen**, bring the stored entity `trade` `MX-20000001`, and start from *an empty Sutra*.
+2. Open the **YAML** tab to write, and the **Design** tab to see the result; the left pane's *shape* lists every path of
+   the document while you write them.
+
+The path, filter and function basics (`$`, `@`, `[?...]`, `size`, `first`) are taught in
+[Rachana-EL step by step](/help/sutra-developer-guide#3-rachana-el-step-by-step); this tutorial is about how they behave
+**deep in a tree**.
 
 ## 1. The shape of the document
 
@@ -71,7 +75,7 @@ A path starts at `$` (the document), walks into objects with `.name` and into ar
 | `size($.legs[1].cashflows)` | *28* (how many periods the floating leg has) |
 | `first($.regulatory.reportingRegimes)` | *CFTC Part 43/45* |
 
-Try one: add this to the strip and press **Ctrl+Enter**.
+Try one: add this to the strip in the YAML tab and press **Ctrl+Enter**.
 
 ```yaml
   - { label: Last change, bind: "$.lifecycle.events[-1].reason + ' by ' + $.lifecycle.events[-1].by" }
@@ -86,13 +90,12 @@ You should see *Last change: Notional corrected by mo.ops*.
 
 ## 3. Pick elements by content with filters
 
-Positions change from document to document; content does not. A filter `[?condition]` keeps the elements for
-which the condition holds, with `@` standing for each element:
+Positions change from document to document; content does not. The filter `[?condition]` (taught in
+[the guide](/help/sutra-developer-guide#filters)) is what makes a path into a tree robust. Where a position would break:
 
 | Expression | Reads |
 |---|---|
-| `$.legs[?@.type == 'FLOAT']` | the floating leg, wherever it sits |
-| `$.legs[?@.type == 'FLOAT'][0].index` | *AONIA* |
+| `$.legs[?@.type == 'FLOAT'][0].index` | *AONIA*: the floating leg, wherever it sits |
 | `$.legs[?@.payer][0].label` | *Pay AONIA compounded* (the first leg we pay) |
 | `size($.legs[0].cashflows[?@.status == 'Projected'])` | *5* (fixed-leg periods not yet fixed) |
 
@@ -150,8 +153,7 @@ You should see two columns. *Leg 1 · Receive fixed 4.0829%*: Index *Fixed*, Per
 ## 6. A whole Sutra over a nested trade
 
 This Sutra is an operations view of any trade: who, where, what the regulator sees, where cash settles,
-and every version of the trade. In Studio, start a new Sutra, replace the editor's text with the YAML below, keep
-`trade` / `MX-20000001` as the entity to preview against, and preview it. `description` and `notes` at the top and
+and every version of the trade. In the workbench, paste the YAML below into the YAML tab of the design you started above and preview it. `description` and `notes` at the top and
 bottom are plain text for the people who maintain the layout; they do not change the view.
 
 ```yaml
@@ -234,7 +236,7 @@ it the default where operations staff work, give it a higher priority in that in
 
 ## 7. When inference meets a tree
 
-With no Sutra at all, inference also walks the tree. Press **Start from inference** for `trade` / `MX-20000001` and
+With no Sutra at all, inference also walks the tree. Open `trade` / `MX-20000001` with *auto-design* as the start and
 you get, among others:
 
 | Part of the document | Inferred panel |
@@ -245,8 +247,8 @@ you get, among others:
 | `execution`, `clearing`, `terms`, `lifecycle` (objects) | `kv` panels |
 | `sensitivities` (rows keyed by tenor) | `line` *Sensitivities* |
 
-Keep what is useful, delete the rest, and add labels and keys. See [Inference](inference) for the rules.
+Keep what is useful, delete the rest, and add labels and keys. See [Inference](/help/inference) for the rules.
 
 !!! tip "Finding the path"
-    Press **F9** on any view to see its raw JSON. In Studio, the *Sample JSON* tab shows the document the Sutra
+    Press **F9** on any view to see its raw JSON. In the workbench, the **shape** in the left pane lists the document the Sutra
     reads. A path is exactly the keys you see there, joined with dots, with `[n]` for list positions.

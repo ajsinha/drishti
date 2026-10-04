@@ -100,13 +100,12 @@ Suppose a new source sends this document for the kind `warehouse`, and nobody ha
 
 To try it without a data source:
 
-1. Open **Studio** (`/studio` in the console).
-2. In the top bar, type `warehouse` in the kind box and `WH-ROTTERDAM-2` in the id box.
-3. Open the **Sample JSON** tab on the right, paste the document, and tick **Preview against this JSON**.
-4. Press **Start from inference**.
+1. Open **Build → New screen** in the console.
+2. Save the document above as `WH-ROTTERDAM-2.json` and drop it on the page (it becomes a sample), and keep
+   *auto-design* as the start ([SCREEN_DESIGNER §1](../guides/SCREEN_DESIGNER.md#1-start-bring-data)).
 
-You should see the editor fill with a new Sutra named `warehouse-wh-rotterdam-2` (the inferred layout, written
-out), and the **Preview** tab render it. Edit anything and press **Ctrl+Enter** to preview again.
+You should see the workbench open on a new Sutra (the inferred layout, written out, with the reason for each panel) and
+the **Design** tab render it. Open the **YAML** tab, edit anything and press **Ctrl+Enter** to preview again.
 
 Here is what inference makes of it, step by step.
 
@@ -434,7 +433,7 @@ The finance pack's hints make inference itself closer: its roles make `mtm`, `pv
 
 The usual way to write a Sutra for a new kind is to start from inference and correct it.
 
-1. **Get the draft.** In Studio, enter the kind and id and press **Start from inference**, or fetch it:
+1. **Get the draft.** In the workbench, bring the entity and start from *auto-design* ([SCREEN_DESIGNER §7](../guides/SCREEN_DESIGNER.md#7-auto-design-and-its-alternatives)), or fetch the draft:
 
    ```bash
    curl -s "http://localhost:18480/api/v1/studio/inferred/key-risk-indicator/KRI-COMM-1?name=kri-mine" > kri-mine.v1.sutra.yaml
@@ -516,8 +515,8 @@ Sutra counterparty v1 + inference
 kyc kv - ColumnInference: 5 fields from $.kyc
 ```
 
-**In Studio.** Type an entity (kind and id) and press **Start from inference** to load the inferred layout as a
-Sutra you can edit; see the *Sutra Studio* tutorial in help.
+**In the workbench.** Bring an entity and start from *auto-design* to load the inferred layout as a Sutra you can edit
+([SCREEN_DESIGNER](../guides/SCREEN_DESIGNER.md)); the Design tab marks each panel's reason.
 
 ## Sutra and inference together
 
@@ -550,7 +549,8 @@ listed. To take control of a panel, list its columns yourself; to let inference 
 out. `infer: true` only marks a panel with the *inferred* tag; it does not make inference add columns to a panel
 that has some. Panels of other kinds (`status`, `hbar`, charts) are never filled. To lay out a whole kind by hand,
 write a Sutra whose `match` names the kind; see the [Rachana reference](../guides/RACHANA_REFERENCE.md) and the
-[Rachana guide](../guides/RACHANA_GUIDE.md).
+[Sutra developer guide](../guides/SUTRA_DEVELOPER_GUIDE.md#14-sutra-and-inference-together) (which summarises this
+section and links back to it).
 
 ## The rules
 
@@ -679,7 +679,7 @@ Restart the server after changing a semantics file: hints are read once at start
    ```bash
    java -jar drishti-server/target/drishti-server-1.14.1-exec.jar --drishti.inference.semantics-file=/etc/drishti/semantics.yaml
    ```
-3. Restart the server, then check a view with no Sutra (or Studio's **Start from inference**).
+3. Restart the server, then check a view with no Sutra (or the workbench's auto-design).
 
 Pack hints are still tried before the site file. If the path is not a readable file, the server silently uses
 the bundled hints, so check the path when your change seems to have no effect.
