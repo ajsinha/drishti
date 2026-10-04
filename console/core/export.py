@@ -26,7 +26,7 @@ import zipfile
 # a number as a view shows it: sign (ASCII or Unicode minus), digits with thousands separators, decimals, maybe %
 _SHOWN_NUMBER = re.compile(r"^([+\-−]?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(%?)$")
 EXPORTABLE = {"table", "ladder", "kv", "status", "tabs", "line", "area", "hbar", "surface", "links", "gauge",
-              "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot"}
+              "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot", "metric"}
 
 
 def plain(text):
@@ -71,6 +71,10 @@ def panel_rows(panel: dict) -> tuple[list[str], list[list]]:
     if "links" in d:
         return ["Link", "Entity", "Kind", "Summary"], [[i.get("label", ""), i.get("text", ""), (i.get("link") or {}).get("kind", ""), i.get("badge") or ""]
                                                        for i in d["links"]]
+    if isinstance(d.get("value"), dict):                                 # metric: the figure, its change, unit and caption
+        v, ch = d["value"], d.get("delta") or {}
+        return ["Label", "Value", "Change", "Unit", "Caption"], [[v.get("label") or "", plain(v.get("text")), plain(ch.get("text")),
+                                                                   d.get("unit") or "", d.get("caption") or ""]]
     if "value" in d and "max" in d:                                      # gauge
         return ["Label", "Value", "Limit"], [[d.get("label") or "", d.get("value"), d.get("max")]]
     return [], []

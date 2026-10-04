@@ -533,6 +533,17 @@ final class PanelChooser {
                 if (r.fmt() != null && !"date".equals(r.fmt())) {
                     o.put("fmt", r.fmt());
                 }
+                Map<String, Object> big = new LinkedHashMap<>();
+                big.put("value", f.path());
+                if (o.containsKey("fmt")) {
+                    big.put("fmt", o.get("fmt"));
+                }
+                if (r.tone() != null) {
+                    big.put("tone", r.tone());
+                }
+                boolean gaugeFirst = limit != null || isFraction(f);
+                out.add(choice("metric", gaugeFirst ? 0.55 : 0.7, gaugeFirst ? "or the figure on its own, as a big number"
+                        : "one headline measure: shown as a big number", Area.RIGHT, title(f), big, List.of()));
                 if (limit == null && isFraction(f)) {
                     o.put("max", "1");
                     out.add(choice("gauge", 0.8, "a share between 0 and 1 (named '" + f.name() + "'): how full the whole is", Area.RIGHT, title(f), o, List.of()));

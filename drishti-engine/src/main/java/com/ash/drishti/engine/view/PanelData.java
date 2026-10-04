@@ -125,6 +125,16 @@ public sealed interface PanelData {
     record Surface(List<String> x, List<String> y, List<List<Double>> z, Double min, Double max, String fmt, String unit, String view)
             implements PanelData {}
 
+    /**
+     * {@code metric}: one headline figure.
+     *
+     * @param value the figure (its label is the panel's {@code label})
+     * @param delta the change against a previous value, or null
+     * @param unit a short unit, or null
+     * @param caption small text under the figure, or null
+     */
+    record Metric(Cell value, Cell delta, String unit, String caption) implements PanelData {}
+
     /** {@code gauge}. */
     record Gauge(double value, double max, String text, String label) implements PanelData {}
 

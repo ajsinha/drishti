@@ -57,7 +57,7 @@
       req.forEach(function (n) {
         if (n === 'rows' || n === 'each' || n === 'nodes') { out[n] = rows; }
         else if (n === 'text') { out[n] = 'Write a note here.'; }
-        else if (kind === 'gauge' && n === 'value') { out[n] = top ? top.path : '$.value'; }
+        else if ((kind === 'gauge' || kind === 'metric') && n === 'value') { out[n] = top ? top.path : '$.value'; }
         else if (n === 'by' || n === 'across') { out[n] = rel(txt, '@.name'); }
         else { out[n] = rel(num, '@.value'); }
       });

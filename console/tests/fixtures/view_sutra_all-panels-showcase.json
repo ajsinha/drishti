@@ -2180,6 +2180,30 @@
    },
    "empty": false,
    "height": 10
+  },
+  {
+   "id": "headline",
+   "kind": "metric",
+   "title": "21 \u00b7 metric: mark to market (USD)",
+   "area": "right",
+   "inferred": false,
+   "data": {
+    "value": {
+     "label": "Mark to market",
+     "text": "+1,209,000",
+     "tone": "pos",
+     "emphasis": true,
+     "path": "$.mtm"
+    },
+    "delta": {
+     "text": "\u221241,000",
+     "tone": "neg",
+     "path": "$.pnl1d"
+    },
+    "unit": "USD",
+    "caption": "change over the last day"
+   },
+   "empty": false
   }
  ],
  "keys": [],

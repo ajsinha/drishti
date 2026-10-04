@@ -15,13 +15,14 @@
 -->
 # Examples
 
-Ten small, working Sutras, each with a JSON document to run it against and a note on what it shows. Together they use all twenty panel kinds, nested pivot groups and tree rows. They are in Studio too: **File → Open**, or `/studio?example=<name>`, and under **Help → Examples**.
+Eleven small, working Sutras, each with a JSON document to run it against and a note on what it shows. Together they use all twenty-one panel kinds, nested pivot groups and tree rows. They are in Studio too: **File → Open**, or `/studio?example=<name>`, and under **Help → Examples**.
 
 Each example is `<name>.sutra.yaml` (the layout), `<name>.json` (a self-contained document, a few dozen rows at most) and `<name>.md` (what it shows, what to look for, which lines to copy).
 
 | Example | Shows | Panel kinds |
 |---|---|---|
-| [all-panels-showcase](all-panels-showcase.md) | Every panel kind on one screen | all twenty |
+| [all-panels-showcase](all-panels-showcase.md) | Every panel kind on one screen | all twenty-one |
+| [metric](metric.md) | Big-number tiles: a toned figure, its change, unit and caption | `metric` |
 | [pivot-row-groups](pivot-row-groups.md) | Nested row groups with subtotals and expand | `pivot` |
 | [tree-table](tree-table.md) | Rows that hold child rows | `table`, `ladder` |
 | [market-charts](market-charts.md) | Prices, closes and a volatility surface | `candlestick`, `line`, `surface` |
@@ -32,4 +33,4 @@ Each example is `<name>.sutra.yaml` (the layout), `<name>.json` (a self-containe
 | [exposure-profile](exposure-profile.md) | Exposure over tenor against a limit | `area` |
 | [linked-sources](linked-sources.md) | Panels that read other entities with `source` (needs the live demo packs) | `tabs`, `area`, `pivot` |
 
-A test (`RachanaExamplesTest` in the console tests) checks every example parses, that together they cover all twenty kinds, and that they include a nested pivot and a tree table, so the set cannot rot.
+A test (`RachanaExamplesTest` in the console tests) checks every example parses, that together they cover all twenty-one kinds, and that they include a nested pivot and a tree table, so the set cannot rot.

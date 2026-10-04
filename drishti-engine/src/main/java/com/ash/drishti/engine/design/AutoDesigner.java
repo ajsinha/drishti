@@ -234,7 +234,14 @@ public final class AutoDesigner {
                 add(p.path(), chooser.choose(p), null);
             } else if (p.is("measure") && (chooser.limitOf(p) != null && !isLimit(p) || chooser.isFraction(p))) {
                 add(p.path(), chooser.choose(p), null);
+            } else if (p.is("measure") && depth == 1 && !isLimit(p) && onlyMeasure(p)) {
+                add(p.path(), chooser.choose(p), null);     // the document's one headline measure: a big number
             }
+        }
+
+        /** Whether {@code p} is the only top-level measure of the document (a headline figure rather than one of several). */
+        private boolean onlyMeasure(FieldNode p) {
+            return model.root().props().values().stream().filter(q -> q.scalar() && q.is("measure")).count() == 1;
         }
 
         private boolean isLimit(FieldNode p) {

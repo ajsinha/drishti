@@ -89,6 +89,9 @@ public final class PanelOptions {
         if (kind == PanelKind.PIVOT && option.equals("by") && !byFields(value)) {
             return Optional.of(what + " must be a field name or a list of 1 to " + MAX_BY + " field names, not '" + value + "'");
         }
+        if (kind == PanelKind.METRIC && (value instanceof List<?> || value instanceof Map<?, ?>)) {
+            return Optional.of(what + " is one value written as text (an expression for value and delta), not a list or a mapping");
+        }
         String items = LISTS.getOrDefault(kind, Map.of()).get(option);
         if (items != null && !(value instanceof List<?>)) {
             return Optional.of(what + " must be a list of " + items + ", not '" + value + "'");

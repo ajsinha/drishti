@@ -265,7 +265,7 @@
   <header class="pnl-h"><h3 id="h-{{ p.id }}">{{ p.title or '' }}</h3>
     <span class="pnl-code">{% if p.code %}{{ p.code }}{% endif %}{% if p.code and p.key %} · {% endif %}{% if p.key %}{{ p.key }}{% endif %}
       {% if p.inferred %}<span class="inf" title="{{ p.explanation or 'completed by inference' }}">inferred</span>{% endif %}
-      {% if p.kind in ('table', 'ladder', 'kv', 'status', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'gauge', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'pivot') and not p.empty %}<a class="pnl-help" data-export-panel="{{ p.id }}" hidden title="Download as CSV" aria-label="Download {{ p.title or p.id }} as CSV"><i class="bi bi-download" aria-hidden="true"></i></a>{% endif %}
+      {% if p.kind in ('table', 'ladder', 'kv', 'status', 'tabs', 'line', 'area', 'hbar', 'surface', 'links', 'gauge', 'waterfall', 'histogram', 'scatter', 'candlestick', 'graph', 'timeline', 'pivot', 'metric') and not p.empty %}<a class="pnl-help" data-export-panel="{{ p.id }}" hidden title="Download as CSV" aria-label="Download {{ p.title or p.id }} as CSV"><i class="bi bi-download" aria-hidden="true"></i></a>{% endif %}
       <a class="pnl-help" href="/help/panel-kinds#{{ p.kind }}" title="What a {{ p.kind }} panel shows" aria-label="Help on {{ p.kind }} panels"><i class="bi bi-question-circle" aria-hidden="true"></i></a></span></header>
   <div class="pnl-b">
   {% if p.empty or (p.data is none and p.kind != 'provenance') %}{{ no_data(p) }}
@@ -285,6 +285,7 @@
   {% elif p.kind == 'graph' %}{{ graph(p) }}
   {% elif p.kind == 'timeline' %}{{ timeline(p.data) }}
   {% elif p.kind == 'pivot' %}{{ pivot(p.data) }}
+  {% elif p.kind == 'metric' %}{% set m = p.data.value if p.data.value is mapping else {} %}{% set d = p.data.delta if p.data.delta is mapping else none %}<div class="metric" role="group" aria-label="{{ p.title or p.id }}: {{ m.text }}{% if p.data.unit %} {{ p.data.unit }}{% endif %}{% if d %}, change {{ d.text }}{% endif %}">{% if m.label %}<span class="metric-l">{{ m.label }}</span>{% endif %}<div class="metric-row"><span class="metric-v mono{{ tone(m) }}"{% if m.path %} data-path="{{ m.path }}"{% endif %}>{{ cell_text(m) }}</span>{% if p.data.unit %}<span class="metric-u">{{ p.data.unit }}</span>{% endif %}{% if d %}<span class="metric-d mono{{ tone(d) }}"{% if d.path %} data-path="{{ d.path }}"{% endif %}>{{ d.text }}</span>{% endif %}</div>{% if p.data.caption %}<span class="metric-c">{{ p.data.caption }}</span>{% endif %}</div>
   {% elif p.kind == 'gauge' %}{% set gv, gm = p.data.value, p.data.max %}<div class="gauge"><span class="bf" data-w="{{ ((gv / (gm or 1)) * 100) | round(1) if gv is number and (gm is number or gm is none) else 0 }}"></span><span class="mono">{{ p.data.text }}</span></div>
   {% endif %}
   </div>

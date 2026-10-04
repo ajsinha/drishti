@@ -118,6 +118,7 @@ public final class Binder {
                 case GRAPH -> charts.graph(p, c);
                 case TIMELINE -> charts.timeline(p, c);
                 case PIVOT -> charts.pivot(p, c);
+                case METRIC -> metric(p, c);
             };
             return new PanelView(p.id(), p.kind().id(), title, p.code(), p.key(), area(p), p.infer() || explanation != null,
                     explanation, data, null, com.ash.drishti.engine.view.Emptiness.of(data), p.span().orElse(null), p.height().orElse(null));
@@ -489,6 +490,40 @@ public final class Binder {
                 Cell.of("Layout", c.layout().label()),
                 Cell.of("Fingerprint", c.fingerprint().shortForm()),
                 Cell.of("Source", pv.source() + ", gen " + pv.generation())));
+    }
+
+    private PanelData metric(Panel p, BindContext c) {
+        String expr = p.option("value").orElseThrow();
+        Object v = evalOrNull(expr, c);
+        String fmt = p.option("fmt").orElse(null);
+        Cell value = cell(p.option("label").orElse(null), v, fmt, p.option("tone").orElse(null), true, pathOf(expr));
+        Cell delta = null;
+        Optional<String> dExpr = p.option("delta");
+        if (dExpr.isPresent()) {
+            Object d = evalOrNull(dExpr.get(), c);
+            if (!Values.isNull(d) || Values.masked(d)) {
+                delta = cell(null, d, p.option("deltaFmt").orElse(fmt), p.option("deltaTone").orElse("sign"), false, pathOf(dExpr.get()));
+            }
+        }
+        String caption = p.option("caption").map(t -> {
+            try {
+                return el.template(t).render(c.eval());
+            } catch (RuntimeException e) {
+                return t;
+            }
+        }).orElse(null);
+        return new PanelData.Metric(value, delta, p.option("unit").orElse(null), caption);
+    }
+
+    /** A value a document may lack: it shows as a dash, never as an error. */
+    private Object evalOrNull(String expr, BindContext c) {
+        try {
+            return eval(expr, c.eval());
+        } catch (SourceDeniedException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            return null;
+        }
     }
 
     private PanelData gauge(Panel p, BindContext c) {

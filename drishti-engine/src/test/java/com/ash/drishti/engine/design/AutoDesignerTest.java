@@ -288,6 +288,26 @@ class AutoDesignerTest {
 
     // ---------------------------------------------------------------------------------------------------- suggest
 
+    @Test
+    void aSingleMeasureIsOfferedAsAMetricWithItsFormatAndAGaugeAsTheRunnerUp() throws IOException {
+        List<Sample> samples = example("all-panels-showcase");
+        BuilderProperties props = BuilderProperties.defaults();
+        List<PanelChoice> s = new AutoDesigner(props, SEMANTICS).suggest(shapes(props).infer(samples), samples, "$.mtm", null);
+        assertThat(s.get(0).kind()).isEqualTo("metric");
+        assertThat(s.get(0).options()).containsEntry("value", "$.mtm").containsKey("fmt");
+        assertThat(s.get(0).reason()).contains("big number");
+        assertThat(s.stream().map(PanelChoice::kind)).contains("gauge", "kv");
+    }
+
+    @Test
+    void aDocumentsOneHeadlineMeasureIsDraftedAsAMetricWithAlternatives() {
+        List<Sample> samples = List.of(new Sample("one.json", doc("{\"tradeId\":\"T-1\",\"desk\":\"RATES\",\"mtm\":1250000.5,"
+                + "\"legs\":[{\"leg\":\"A\",\"pv\":10},{\"leg\":\"B\",\"pv\":-4}]}")));
+        Design d = design(samples, null);
+        assertThat(kindById(d).values()).contains("metric");
+        assertThat(d.yaml()).contains("kind: metric").contains("value: \"$.mtm\"");
+    }
+
     private static String first(String example, String path) throws IOException {
         List<Sample> samples = example(example);
         BuilderProperties props = BuilderProperties.defaults();
@@ -311,7 +331,7 @@ class AutoDesignerTest {
         assertThat(first("all-panels-showcase", "$.bookTree")).isEqualTo("table");
         assertThat(first("all-panels-showcase", "$.confirmation.status")).isEqualTo("status");
         assertThat(first("all-panels-showcase", "$.counterparty")).isEqualTo("links");
-        assertThat(first("all-panels-showcase", "$.mtm")).isEqualTo("gauge");
+        assertThat(first("all-panels-showcase", "$.mtm")).isEqualTo("metric");           // a lone measure: a big number first, the dial as the runner-up
         assertThat(first("all-panels-showcase", "$.terms")).isEqualTo("kv");
         assertThat(first("all-panels-showcase", "$.profile")).isEqualTo("area");
         assertThat(first("all-panels-showcase", "$.positions")).isEqualTo("pivot");

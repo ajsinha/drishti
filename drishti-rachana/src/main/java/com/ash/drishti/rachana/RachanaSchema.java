@@ -169,6 +169,14 @@ public final class RachanaSchema {
         if ((k == PanelKind.KV || k == PanelKind.STATUS) && o.equals("fields") || k == PanelKind.AREA && o.equals("series")) {
             return Map.of("type", "array", "description", o.equals("series") ? "The series: { label, value, tone }" : "The fields: { label, bind, fmt, tone }");
         }
+        if (k == PanelKind.METRIC && (o.equals("deltaFmt") || o.equals("deltaTone"))) {
+            return Map.of("type", "string", "description", o.equals("deltaFmt") ? "How the change is formatted (default: the format of value)"
+                    : "The change's tone: sign (default: positive green, negative red), status, or a fixed tone such as neg, warn or accent");
+        }
+        if (k == PanelKind.METRIC && (o.equals("unit") || o.equals("caption"))) {
+            return Map.of("type", "string", "description", o.equals("unit") ? "A short unit shown small beside the figure (USD, bp)"
+                    : "Small text under the figure (may hold ${…})");
+        }
         if (k == PanelKind.HISTOGRAM && o.equals("markers")) {
             return Map.of("type", "array", "description", "Vertical marker lines: { label, value: <expression>, tone }");
         }

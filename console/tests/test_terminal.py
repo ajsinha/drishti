@@ -160,7 +160,7 @@ def test_backend_calls_carry_the_business_date_header():
 
 
 KINDS = ["kv", "status", "provenance", "table", "ladder", "tabs", "line", "area", "hbar", "links", "markdown", "gauge", "surface",
-         "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot"]
+         "waterfall", "histogram", "scatter", "candlestick", "graph", "timeline", "pivot", "metric"]
 BROKEN = [None, {}, {"fields": None, "rows": None, "tabs": None, "x": None, "series": None, "bars": None, "links": None},
           {"columns": ["A"], "numeric": [], "rows": [{"cells": None}], "x": ["1Y"], "series": [{"label": "s", "values": [None]}],
            "bars": [{"label": "a", "value": None, "text": "—"}], "tabs": [{"title": "t", "fields": None}], "value": None, "max": None},

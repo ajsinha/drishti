@@ -1,0 +1,16 @@
+{
+  "deskId": "DESK-RATES",
+  "name": "Rates",
+  "mtm": 1209000,
+  "mtmYesterday": 1250000,
+  "var99": 2840000,
+  "var99Yesterday": 2650000,
+  "limit": 5000000,
+  "limitUse": 0.568,
+  "openTrades": 1284,
+  "books": [
+    { "book": "Govies", "mtm": 720000 },
+    { "book": "Swaps", "mtm": 410000 },
+    { "book": "Repo", "mtm": 79000 }
+  ]
+}

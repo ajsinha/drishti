@@ -39,6 +39,7 @@ public final class Emptiness {
             case PanelData.Bars b -> b.bars() == null || b.bars().isEmpty();
             case PanelData.Links l -> l.links() == null || l.links().isEmpty();
             case PanelData.Text t -> t.text() == null || t.text().isBlank();
+            case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));
             case PanelData.Gauge g -> !Double.isFinite(g.value());
             case PanelData.Surface s -> s.z() == null || s.z().stream().allMatch(r -> r == null || r.stream().noneMatch(Emptiness::finite));
             case PanelData.Waterfall w -> w.steps() == null || w.steps().isEmpty();
