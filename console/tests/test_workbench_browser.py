@@ -52,7 +52,7 @@ def page(browser):
     pg.close()
 
 
-def wait(page, js, seconds=20):
+def wait(page, js, seconds=45):   # generous: the full suite runs beside Maven builds
     """Polls a JavaScript expression until it is truthy (Playwright's own wait_for_function evaluates a string, which the console's CSP forbids)."""
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
