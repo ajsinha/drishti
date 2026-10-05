@@ -90,6 +90,7 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--name", required=True, help="pack name (letters, digits, '-')")
     p.add_argument("--title", help="pack title (default: the name)")
     p.add_argument("--description", help="pack description")
+    p.add_argument("--version", default="1.0.0", help="pack version written to pack.yaml (default 1.0.0)")
     p.add_argument("--mnemonic", help="kind=MNEMONIC,kind2=M2 (default: initials of the kind, upper case)")
     p.add_argument("--out", type=pathlib.Path, help="default packs/<name>")
     p.add_argument("--force", action="store_true", help="overwrite an existing --out folder")
@@ -143,7 +144,7 @@ def run(opts) -> int:
     for k in dates:
         extra = [f for f in SG.for_kind(k, match_d, match_k) if f != dates[k]]
         lake_cols[k] = list(dict.fromkeys(extra + columns[k]))
-    manifest: dict = {"pack": opts.name, "version": "1.0.0", "code": pack_code(opts.name), "title": opts.title or opts.name,
+    manifest: dict = {"pack": opts.name, "version": getattr(opts, "version", None) or "1.0.0", "code": pack_code(opts.name), "title": opts.title or opts.name,
                       "description": opts.description or f"Generated from {', '.join(p.name for p in opts.inputs)} by tools/packgen/pack_from_jsonl.py.",
                       "kinds": sorted(kinds), "sutras": "sutras", "samples": "samples", "mnemonics": mnemonics, "columns": columns}
     if dates:

@@ -35,6 +35,7 @@ the operator's path from "it works on my laptop" to "it runs in production, and 
 13. [Docker and Kubernetes](#13-docker-and-kubernetes)
 14. [Windows](#14-windows)
 15. [Troubleshooting](#15-troubleshooting)
+16. [`pack make`: one folder to deploy](#16-pack-make-one-folder-to-deploy)
 
 The commands are those of `tools/drishti.py` ([CLI_GUIDE.md](CLI_GUIDE.md)). You need Python 3.10+ and PyYAML
 (`uv run --with pyyaml python tools/drishti.py ...`) on the machine that builds and verifies. The **target** machine
@@ -435,3 +436,19 @@ More in [WINDOWS.md](WINDOWS.md).
 
 See also: [CLI_GUIDE.md](CLI_GUIDE.md) (every command), [PACKS.md](PACKS.md) (turning packs on, Load, the registry),
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) (building a pack), [OPERATIONS.md](../admin/OPERATIONS.md) (install, services, backups).
+
+## 16. `pack make`: one folder to deploy
+
+Sections 3 to 9 build the artifacts one command at a time. When you start from JSON Lines, **one command makes them all** and puts
+them in a single folder, so that what you carry to a server is that folder:
+
+```bash
+uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pack make data/jsonl \
+    --kind trade --match productType --name my-bank
+```
+
+The folder (`build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`, section 5: copy it into the packs folder), the data
+(`data/delta/`, section 8: copy to the lake root or point `DRISHTI_DELTA_ROOT` at it), the bundle (`bundle/`, section 3 and 4,
+already verified), a ready configuration overlay, `run-server.sh` and `.ps1`, a `MANIFEST.json`, and a `README.txt` with the deploy,
+verify, "lift the data from Delta", update and rollback steps filled in with your kind, ids and dates. Options and the folder tree:
+[CLI_GUIDE.md, Quickest path](CLI_GUIDE.md#quickest-path-pack-make).

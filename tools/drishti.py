@@ -17,7 +17,7 @@
 
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
+Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
 data (ingest your own JSON Lines, load the demo data), server (health, packs), design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
@@ -241,6 +241,14 @@ def cmd_pack_new(a, extra) -> int:
         print(f"drishti: --load: the server reads packs from its own packs folder (drishti.packs.dir) or installed-dir; {out} is elsewhere, "
               f"so the server only finds it if that folder is its pack folder.", file=sys.stderr)
     return server_pack_change(a, "load", a.name)
+
+
+def cmd_pack_make(a, extra) -> int:
+    PM = load_module("packmake", "packmake.py")
+    try:
+        return PM.make(a, sys.modules[__name__])
+    except PM.MakeError as e:
+        raise CliError(str(e), e.code) from None
 
 
 def check_ingest_block(pack: pathlib.Path) -> list[str]:
@@ -797,6 +805,10 @@ def build_parser() -> argparse.ArgumentParser:
              "examples:\n  drishti.py pack new data/jsonl --name my-bank --key trade=tradeId --date trade=businessDate --lake data/delta\n"
              "  drishti.py pack new data/jsonl --name my-bank --date businessDate --store files --files-root data/files "
              "--load --server http://localhost:18977")
+    pm = add(k, "make", cmd_pack_make, "pack make: ONE folder to deploy from JSON Lines: pack, Delta data, bundle, server config, run scripts and README.txt (tools/packmake.py)", [],
+             "example:\n  drishti.py pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank\n"
+             "Chooses --key and --date itself when you do not (and says why), then runs pack check and pack verify.")
+    load_module("packmake", "packmake.py").add_arguments(pm)
     pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; the server restarts in place)")
     pc = add(k, "check", cmd_pack_check, "pack check: sutra lint + sutra test (with help coverage) on packs, for CI", [jvm, js],
              "examples:\n  drishti.py pack check packs/my-bank --strict --junit build/reports\n  drishti.py pack check packs/a packs/b --json\n"

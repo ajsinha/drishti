@@ -184,10 +184,10 @@ it includes.
 
 ### 4.6 The command-line tools from PyCharm
 
-The pack and Sutra tools (`tools/drishti.py`: `pack new`, `pack check`, `sutra lint`, `data ingest`, the REST commands) run from PyCharm
+The pack and Sutra tools (`tools/drishti.py`: `pack make` (JSON Lines to one deployable folder), `pack new`, `pack check`, `sutra lint`, `data ingest`, the REST commands) run from PyCharm
 the same way, and the Java `sutra` tool runs from IntelliJ IDEA: run configurations, the interpreter with PyYAML (and `deltalake`,
 `pyarrow`), `DRISHTI_TOKEN` and the working directory are in
-[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij).
+[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij), which also covers debugging them and sharing run configurations through `.run/` (two samples are committed: `pack make` and `sutra gen`).
 
 ## 5. Running the tests from the IDEs
 

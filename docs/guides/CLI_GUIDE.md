@@ -21,11 +21,12 @@ pack, check a pack in CI, load data, load the pack into a running server, and dr
 its options, real examples and real output**, and ends with recipes, the JSON formats, exit codes, a troubleshooting table
 and how to run it all from PyCharm.
 
+- [Quickest path: `pack make`](#quickest-path-pack-make)
 - [1. What it is](#1-what-it-is)
 - [2. Install and prerequisites](#2-install-and-prerequisites)
 - [3. Connecting to a server: URL, tokens and permissions](#3-connecting-to-a-server-url-tokens-and-permissions)
 - [4. `sutra`: shape, design, gen, lint, test, preview](#4-sutra-shape-design-gen-lint-test-preview)
-- [5. `pack`: new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-new-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
+- [5. `pack`: make, new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
 - [6. `data`: ingest and load](#6-data-ingest-and-load)
 - [7. `server`: health and packs](#7-server-health-and-packs)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
@@ -35,6 +36,50 @@ and how to run it all from PyCharm.
 - [12. Exit codes](#12-exit-codes)
 - [13. Troubleshooting](#13-troubleshooting)
 - [14. Running the tools from PyCharm (and the Java `sutra` from IntelliJ)](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)
+
+## Quickest path: `pack make`
+
+You have a folder of JSON Lines (or one file). **One command** turns it into **one folder you take and deploy**: the pack with its
+Sutras, the data in a Delta lake partitioned by business date, a checksummed bundle, a server configuration, start scripts and a
+`README.txt` with your real values filled in.
+
+```bash
+uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py pack make data/jsonl \
+    --kind trade --match productType --name my-bank
+```
+
+| Option | Meaning |
+|---|---|
+| `INPUT...` | folder(s) of `*.jsonl` and/or file(s) (required) |
+| `--kind KIND` | the kind of every document, e.g. `trade` (required) |
+| `--match COL[,COL]` | the column(s) whose values split the kind: **one Sutra per value** (required) |
+| `--name NAME` | the pack name, lower case, digits and `-` (required) |
+| `--key FIELD` | the id field. Default: **detected**: a field present and unique in every document, `<kind>Id` / `id` first; it prints what it chose and why, and **refuses** (naming `--key`) when none is unique |
+| `--date FIELD` | the business-date field. Default: **detected**: a date-valued field (`businessDate`, `asOf`, `date`, ...) present in at least 95% of the documents; none found: no data folder, the pack serves its samples |
+| `--title`, `--version` | the pack title; the version (default `1.0.0`) |
+| `--store delta\|files` | the dated store: `delta` (default) or the File connector's files |
+| `--out DIR` | the folder to create (default `build/<name>-<version>`); `--force` replaces it |
+| `--fallback` / `--no-fallback` | a catch-all Sutra for documents matching no group (default on) |
+
+What it makes (everything the server needs is in this one folder):
+
+```text
+build/my-bank-1.0.0/
+├── README.txt                  step by step: what is inside, deploy, verify, LIFT DATA FROM DELTA, update, roll back, troubleshooting
+├── pack/my-bank/               pack.yaml, sutras/, tests/, samples/, config/about.yaml, README.md
+├── data/delta/my-bank/trade/   the documents, one Delta table, partitioned by business_date=YYYY-MM-DD   (data/files/ with --store files)
+├── bundle/                     my-bank-1.0.0.tar.gz  +  .sha256     (the pack alone, for `pack deploy`)
+├── config/drishti-site.yaml    a server configuration overlay (packs on; the data root explained)
+├── run-server.sh               start a server on this folder alone: DRISHTI_JAR=... DRISHTI_PORT=18480 ./run-server.sh
+├── run-server.ps1              the same for Windows
+└── MANIFEST.json               counts per date, the chosen key and date, tool versions, checksums
+```
+
+It ends by running `pack check` and `pack verify` on what it made and prints a summary and the next command. Open `README.txt`:
+deploying is "copy `pack/my-bank` into the server's packs folder (or `drishti.packs.installed-dir`), copy `data/delta` to its lake
+root or set `DRISHTI_DELTA_ROOT`, switch the pack on with `DRISHTI_PACKS`". New days later:
+`data ingest --from new-days --pack build/my-bank-1.0.0/pack/my-bank --lake <the lake>`. The details are in
+[section 5](#pack-make-everything-in-one-folder) and [OPERATIONALISING.md](OPERATIONALISING.md#16-pack-make-one-folder-to-deploy).
 
 ## 1. What it is
 
@@ -458,7 +503,34 @@ skeleton, optionally a Delta lake or files) instead of Sutra files only, use `pa
 
 It needs the built server jar (`./mvnw package -DskipTests`) and a JDK 21: all groups are designed in one Java run.
 
-## 5. `pack`: new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
+## 5. `pack`: make, new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
+
+### `pack make`: everything in one folder
+
+`pack make` is `pack new` + `data ingest` + `pack check` + `pack bundle` + `pack verify` in one run, writing a single
+folder (the tree and the options are in [Quickest path](#quickest-path-pack-make) at the top). It adds no logic of its own to
+those tools (`tools/packmake.py` only chooses the key and the date, lays the folder out and writes `README.txt`,
+`config/drishti-site.yaml`, `run-server.sh`, `run-server.ps1` and `MANIFEST.json`).
+
+```text
+$ python3 tools/drishti.py pack make data/jsonl --kind trade --match productType --name my-bank
+read 750 trade document(s)
+key:   tradeId  (named <kind>Id, present and unique in all 750 documents)
+date:  businessDate  (date-valued, named like a business date, 1 distinct date(s))
+...
+== pack verify
+  checksums ok / schema ok / server ok / sutra ok
+verified
+
+pack make: /work/build/my-bank-1.0.0
+  126 Sutra group(s) for 750 trade document(s), 1 date(s) in data/delta; pack check passed, pack verify passed
+next: read /work/build/my-bank-1.0.0/README.txt, then  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 /work/build/my-bank-1.0.0/run-server.sh
+```
+
+Try it without touching anything of yours: `DRISHTI_JAR=... DRISHTI_PORT=18974 build/my-bank-1.0.0/run-server.sh`, then
+`curl 'http://localhost:18974/api/v1/views/trade/<an id>?asOf=<a date>'`. Documents of another day are added with `data ingest`
+(default mode `overwrite-dates`) into the same `data/delta`. Exit codes: 0 made and both checks passed, 1 made but a check failed
+(the folder is still written), 2 usage (no unique key, a missing field, `--out` exists without `--force`).
 
 ### `pack new`: a complete pack from JSON Lines
 
@@ -1561,55 +1633,105 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 ## 14. Running the tools from PyCharm (and the Java `sutra` from IntelliJ)
 
-The scripts are ordinary Python files, so PyCharm runs and debugs them like any other. The same applies to the Java `sutra`
-tool in IntelliJ IDEA. (For the server and the console themselves see [IDE_GUIDE.md](IDE_GUIDE.md).)
+The tools are ordinary Python scripts, so PyCharm runs and debugs them like any other, and the Java `sutra` tool runs from IntelliJ
+IDEA. (For the server and the console themselves see [IDE_GUIDE.md](IDE_GUIDE.md).) This section is the whole path, from an
+empty PyCharm to a run configuration for each common task.
 
-### 14.1 An interpreter that has what the tools need
+### 14.1 Create the interpreter
 
-Create a virtual environment with `uv` (any virtual environment works), in the repository:
+1. Open the repository root as the project (**File → Open**, the folder that holds `tools/`, `packs/`, `pom.xml`).
+2. Make a virtual environment with `uv` (any virtual environment works), in a terminal at the repository root:
 
-```bash
-uv venv .venv-tools
-uv pip install --python .venv-tools/bin/python pyyaml            # enough for everything except Delta lakes
-uv pip install --python .venv-tools/bin/python deltalake pyarrow   # only if you write Delta lakes (--lake, --store delta)
-```
+   ```bash
+   uv venv .venv-tools
+   uv pip install --python .venv-tools/bin/python pyyaml deltalake pyarrow
+   ```
 
-In PyCharm: **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing**, and pick
-`.venv-tools/bin/python` (on Windows `.venv-tools\Scripts\python.exe`). Keep it separate from the console's
-`drishti-console/.venv`.
+   `pyyaml` is enough for everything except Delta lakes; `deltalake` and `pyarrow` are for `--store delta` (the default of
+   `pack make`) and `data ingest --lake`. On Windows the interpreter is `.venv-tools\Scripts\python.exe`.
+3. **Settings (Ctrl+Alt+S) → Project → Python Interpreter → Add Interpreter → Add Local Interpreter → Existing**, pick
+   `.venv-tools/bin/python`, **OK**. Keep it separate from the console's `drishti-console/.venv`.
+4. Optional: **Settings → Project → Project Structure**: mark `tools` as *Sources* so PyCharm resolves `import sutragen` and
+   `import ingest_jsonl` when you click through code.
 
-### 14.2 A run configuration for the command line
+### 14.2 A run configuration for each task
 
-**Run → Edit Configurations → + → Python**:
+**Run → Edit Configurations → + → Python**. The fields are the same for every task; only **Name** and **Parameters** change:
 
 | Field | Value |
 |---|---|
-| Name | `drishti pack check` (one configuration per command you use) |
-| Run target: **Script path** | `<repo>/tools/drishti.py` |
-| **Parameters** | `pack check packs/my-bank --strict --junit build/reports` |
-| Python interpreter | the `.venv-tools` interpreter from 14.1 |
-| **Working directory** | **the repository root** (so `packs/my-bank` resolves) |
-| Environment variables | `DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-1.16.0-exec.jar;JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` and, for the server commands, `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=...` |
+| **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
+| **Python interpreter** | the `.venv-tools` interpreter from 14.1 |
+| **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-1.16.0-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
-Press Run: the output appears in the Run window and a non-zero exit code shows as a failed run. To debug, press Debug and set
-breakpoints in `tools/drishti.py` (or in `tools/ingest_jsonl.py`, `tools/packgen/pack_from_jsonl.py`, which it imports).
-Some useful configurations:
+Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
+`DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.
 
-| Name | Parameters |
+| Name | **Parameters** |
 |---|---|
+| `drishti pack make` | `pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank --force` |
+| `drishti sutra gen` | `sutra gen data/jsonl --kind trade --match productType --out build/sutras` |
+| `drishti data ingest` | `data ingest --from data/new --pack build/my-bank/pack/my-bank --lake build/my-bank/data/delta --dry-run` (remove `--dry-run` to write) |
+| `drishti pack check` | `pack check build/my-bank/pack/my-bank --strict --junit build/reports` |
+| `drishti server packs load` | `server packs load my-bank --server http://localhost:18480` with `DRISHTI_TOKEN` set |
 | `drishti sutra lint` | `sutra lint packs/my-bank` |
-| `drishti pack new` | `pack new data/jsonl --name my-bank --date businessDate --store files --files-root data/files` |
-| `drishti data ingest (dry run)` | `data ingest --from data/new --pack packs/my-bank --store files --root data/files --dry-run` |
-| `drishti server packs list` | `server packs list` |
-| `drishti design check` | `design check <id>` |
+| `drishti server health` | `server health` |
 
-Keep secrets out of the shared project: put `DRISHTI_TOKEN` in the configuration's **Environment variables** (stored in
-`.idea/workspace.xml`, which is not committed) or use `--token-file ~/.drishti-token` in **Parameters**. To run the tests of
-the tool itself: a **Python tests → Unittest** configuration on `tools/test_drishti_cli.py`, working directory the repository root.
+Press **Run** (Shift+F10): the output is in the Run window, and a non-zero exit code shows as a failed run (exit 1 = a check
+failed, 2 = usage; see [section 12](#12-exit-codes)). If the Run window says `no drishti-server-*-exec.jar`, build it once
+(`./mvnw -q -DskipTests package`) or set `DRISHTI_JAR`.
 
-If the Run window shows `no drishti-server-*-exec.jar`, build it once (`./mvnw -q -DskipTests package`) or set `DRISHTI_JAR`.
+**Templates.** **Run → Edit Configurations → Edit configuration templates... → Python** sets the defaults for every *new* Python
+configuration: put the interpreter, the working directory (`$PROJECT_DIR$`), and the environment variables there once, and each new
+configuration (**+ → Python**) then only needs a **Name**, the **Script path** and the **Parameters**. Duplicate an existing
+configuration (Ctrl+D in the dialog) to make a variant.
 
-### 14.3 The Java `sutra` tool from IntelliJ IDEA
+**Secrets.** `DRISHTI_TOKEN` goes in the configuration's **Environment variables** (kept in `.idea/workspace.xml`, which is not committed),
+or use `--token-file ~/.drishti-token` in **Parameters**. Never put a token in a shared configuration.
+
+### 14.3 Debug a tool
+
+The tools are plain Python, so debugging is PyCharm's normal debugging: open `tools/drishti.py` (or `tools/packmake.py`,
+`tools/sutragen.py`, `tools/ingest_jsonl.py`, `tools/packgen/pack_from_jsonl.py`, `tools/packbundle.py`), click the gutter left of a
+line to set a breakpoint, and press **Debug** (Shift+F9) on the run configuration instead of Run. Good first breakpoints:
+
+- `pack make`: `detect_key` and `detect_date` in `tools/packmake.py` (why a field was chosen), and `make` (the whole flow);
+- `sutra gen`: `generate` in `tools/sutragen.py` (the groups, one per `--match` value);
+- `data ingest`: `ingest` in `tools/ingest_jsonl.py` (the dates and rows it will write).
+
+The Java `sutra` command that `pack check` and `pack make` start is a separate process: breakpoints in Python do not stop it
+(use 14.5 for that). **Variables** shows the parsed options (`a`), and **Evaluate expression** (Alt+F8) works on them.
+To stop on an error, tick **Run → View Breakpoints → Python Exception Breakpoints → Any exception**.
+
+### 14.4 Share the configurations with the team: `.run/`
+
+By default a configuration lives in `.idea/workspace.xml` (personal, not committed). To share it, open it in **Edit
+Configurations** and tick **Store as project file**: PyCharm writes it to `.run/<name>.run.xml` in the project, which can be
+committed. This repository ships two to start from, `.run/drishti pack make.run.xml` and `.run/drishti sutra gen.run.xml`; PyCharm
+lists them under **Python** as soon as the project opens (reload with **File → Reload All from Disk** if it was open already).
+The format is one `<configuration>` element in a `ProjectRunConfigurationManager` component:
+
+```xml
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="drishti pack make" type="PythonConfigurationType" factoryName="Python">
+    <module name="drishti" />
+    <envs><env name="PYTHONUNBUFFERED" value="1" /></envs>
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="IS_MODULE_SDK" value="true" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tools/drishti.py" />
+    <option name="PARAMETERS" value="pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank --force" />
+    <method v="2" />
+  </configuration>
+</component>
+```
+
+(the real files list every option PyCharm writes). `$PROJECT_DIR$` is the repository root on every machine; `IS_MODULE_SDK` makes
+the configuration use the project's interpreter, so nobody's local path is in the file; the `module` name is the project
+folder name (`drishti`; PyCharm asks you to pick one if yours differs). Put only what is shared in them: no tokens, no home-directory
+paths. Edit **Parameters** for your own input folder, or duplicate the configuration for each data set.
+
+### 14.5 The Java `sutra` tool from IntelliJ IDEA
 
 `sutra lint|test|preview|shape|design` is the server's own jar started with `sutra` as its first argument, so IntelliJ can run
 it without the command-line program, and debug the engine while it lints:
@@ -1628,7 +1750,13 @@ it without the command-line program, and debug the engine while it lints:
 prints and ends with the exit code; breakpoints in `drishti-rachana` or `drishti-server/.../cli/SutraCli.java` stop as usual.
 Paths in the arguments are relative to the working directory here, unlike in `drishti.py` (which makes them absolute for you).
 
-### 14.4 Where next
+### 14.6 Run the tools' own tests
+
+**Run → Edit Configurations → + → Python tests → Unittest**: *Target* `Script path`, the file `tools/test_packmake.py` (or
+`test_drishti_cli.py`, `test_sutragen.py`, `test_ingest_jsonl.py`, `test_pack_bundle.py`), working directory the repository root,
+environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped without a jar).
+
+### 14.7 Where next
 
 [IDE_GUIDE.md](IDE_GUIDE.md) runs the server and the console; [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md) are the references for what these commands produce and check.
