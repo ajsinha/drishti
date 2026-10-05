@@ -49,12 +49,14 @@ public class CacheController {
 
     private final SourceRegistry sources;
     private final ViewPipeline pipeline;
+    private final com.ash.drishti.engine.explain.ExplainService explain;
     private final Entitlements entitlements;
     private final UserService users;
 
-    public CacheController(SourceRegistry sources, ViewPipeline pipeline, Entitlements entitlements, UserService users) {
+    public CacheController(SourceRegistry sources, ViewPipeline pipeline, com.ash.drishti.engine.explain.ExplainService explain, Entitlements entitlements, UserService users) {
         this.sources = sources;
         this.pipeline = pipeline;
+        this.explain = explain;
         this.entitlements = entitlements;
         this.users = users;
     }
@@ -81,6 +83,7 @@ public class CacheController {
         long t0 = System.nanoTime();
         if (name.equals(ENGINE) || name.equals("all")) {
             pipeline.purgeCaches();
+            explain.purge();
             purged.add(ENGINE);
         }
         for (SourcePlugin s : sources.plugins()) {

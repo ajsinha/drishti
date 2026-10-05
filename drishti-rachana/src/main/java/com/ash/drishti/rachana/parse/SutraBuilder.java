@@ -140,7 +140,8 @@ final class SutraBuilder {
         if (!problems.isEmpty()) {
             return null;
         }
-        return new Sutra(name, version, text(m.get("domain"), domain), match, title, strip, panels, keyMap, loc(root));
+        return new Sutra(name, version, text(m.get("domain"), domain), match, title, strip, panels, keyMap, loc(root),
+                text(m.get("description"), null));
     }
 
     private Match match(PNode n, PNode root) {

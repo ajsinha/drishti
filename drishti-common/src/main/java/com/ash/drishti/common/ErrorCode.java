@@ -41,6 +41,8 @@ public enum ErrorCode {
     VIEW_FAILED("DRS-4002", 500),
     BAD_BUSINESS_DATE("DRS-4003", 400),
     BAD_SEARCH("DRS-4004", 400),
+    /** {@code ?panel=} of an explain call names no panel of the view. */
+    EXPLAIN_NO_PANEL("DRS-4006", 404),
     BAD_REQUEST("DRS-5001", 400),
     CACHE_NOT_FOUND("DRS-5004", 404),
     FORBIDDEN("DRS-5002", 403),

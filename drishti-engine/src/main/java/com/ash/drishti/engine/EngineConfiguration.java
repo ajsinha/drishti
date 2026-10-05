@@ -57,7 +57,7 @@ import org.springframework.context.annotation.Import;
 @EnableConfigurationProperties({SourcesProperties.class, EngineProperties.class, CommandsProperties.class, LiveProperties.class,
         com.ash.drishti.engine.time.BusinessDateProperties.class, com.ash.drishti.engine.search.SearchProperties.class,
         com.ash.drishti.engine.bind.PanelLimits.class, com.ash.drishti.engine.pivot.PivotProperties.class,
-        com.ash.drishti.engine.shape.BuilderProperties.class})
+        com.ash.drishti.engine.shape.BuilderProperties.class, com.ash.drishti.engine.explain.ExplainProperties.class})
 public class EngineConfiguration {
 
     /**
@@ -144,6 +144,14 @@ public class EngineConfiguration {
             com.ash.drishti.engine.time.BusinessDates businessDates) {
         return new ViewPipeline(router, matcher, registry, merger, fingerprinter, catalog, graph, binder, el, formats, mnemonics,
                 drishtiBindPool, props, businessDates);
+    }
+
+    /** About this page: the explanation of a view (layers 3 and 4), derived on request. */
+    @Bean
+    public com.ash.drishti.engine.explain.ExplainService explainService(ViewPipeline pipeline, SutraMatcher matcher,
+            SourceRouter router, ElCompiler el, com.ash.drishti.engine.explain.ExplainProperties props,
+            io.micrometer.core.instrument.MeterRegistry meters) {
+        return new com.ash.drishti.engine.explain.ExplainService(pipeline, matcher, router, el, props, meters);
     }
 
     /** Frame timer for live topics: two platform threads only schedule; delivery work is tiny. */

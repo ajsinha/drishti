@@ -158,7 +158,7 @@ public final class ViewPipeline {
     public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return build(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact, mayOpen);
+        return assemble(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact, mayOpen).view();
     }
 
     /** A view of a document supplied by the caller (Studio sample JSON), with a given or matched Sutra. */
@@ -174,8 +174,8 @@ public final class ViewPipeline {
     /** A supplied document, as the caller may see it; sourced panels of kinds {@code mayOpen} refuses show "no access". */
     public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         long t0 = System.nanoTime();
-        return build(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact,
-                mayOpen);
+        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact,
+                mayOpen).view();
     }
 
     /** The layout inference alone would give {@code ref}, in Sutra form (Studio "start from inference"). */
@@ -211,8 +211,38 @@ public final class ViewPipeline {
     public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return build(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen);
+        return assemble(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen).view();
     }
+
+    /**
+     * What {@code view} built, with what the explanation of it needs: the document as stored, the Sutra chosen and the linked
+     * entities' counts. Built by one pass of the same code as the view, so the two never disagree.
+     *
+     * @param view the view as the caller may see it
+     * @param doc the document as stored (never sent out; the explanation derives verdicts from it, never values)
+     * @param seen the document as the caller may see it
+     * @param sutra the Sutra chosen for the document, empty when the layout is inferred
+     * @param layout the layout the view was built from (panels with their options, and why inference added what it did)
+     * @param current whether the business date is the current one
+     * @param linked how many linked entities were fetched, are still pending, or are refused to the caller
+     */
+    public record Built(ViewModel view, EntityDocument doc, EntityDocument seen, Optional<Sutra> sutra, EffectiveLayout layout, boolean current,
+            LinkCounts linked) {}
+
+    /** Linked entities of a view: fetched in time, pending past the budget, denied to the caller; and the budget in milliseconds. */
+    public record LinkCounts(int fetched, int pending, int denied, long budgetMs) {}
+
+    /** The stored document of {@code ref} as of {@code asOf} (the source's cache serves repeats). */
+    public EntityDocument document(EntityRef ref, AsOf asOf) {
+        return fetch(ref, asOf);
+    }
+
+    /** The view of an already fetched document, with what explaining it needs; as {@link #view(EntityRef, AsOf, UnaryOperator, Predicate)}. */
+    public Built built(EntityDocument doc, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+        long t0 = System.nanoTime();
+        return assemble(doc, t0, t0, matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen);
+    }
+
 
     /**
      * The rows of one table or ladder of {@code ref}'s view, as raw values of its pivot's fields (the Pivot tab): the same
@@ -271,7 +301,7 @@ public final class ViewPipeline {
 
     /** Builds a view from a document already in hand (live rebuilds), for a caller who may open only what {@code mayOpen} accepts. */
     public ViewModel build(EntityDocument doc, long t0, long tFetched, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
-        return build(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact, mayOpen);
+        return assemble(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact, mayOpen).view();
     }
 
     /**
@@ -294,7 +324,7 @@ public final class ViewPipeline {
         return data == doc.data() ? doc : new EntityDocument(doc.ref(), data, doc.provenance(), doc.deleted());
     }
 
-    private ViewModel build(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf,
+    private Built assemble(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf,
             UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
         EntityRef ref = doc.ref();
         boolean current = dates.isCurrent(asOf);
@@ -368,13 +398,15 @@ public final class ViewPipeline {
         timings.put("total", ms(tBind - t0));
         var pv = doc.provenance();
         var fresh = router.freshness(ref.kind(), pv.source());
-        return new ViewModel(new ViewModel.Ref(ref.kind(), ref.id()), mnemonics.codeFor(ref.kind()), title, strip, panels,
+        ViewModel view = new ViewModel(new ViewModel.Ref(ref.kind(), ref.id()), mnemonics.codeFor(ref.kind()), title, strip, panels,
                 keys(s, panels, eval), new ViewModel.Provenance(layout.label(), fp.shortForm(), pv.source(), pv.generation(),
                         pv.fetchedAt().toString(), (pv.live() || router.pushes(ref)) && current,   // a ticks-only stream makes a stored entity live
                         pv.businessDate() == null ? null : pv.businessDate().toString(),
                         fresh.lastUpdate() == null ? null : fresh.lastUpdate().toString(),
                         fresh.staleAfter() == null ? null : fresh.staleAfter().toString(), fresh.stale() && current,
                         s.version() > 0 ? s.name() : null), timings);
+        return new Built(view, doc, seen, sutra, layout, current,
+                new LinkCounts(linked.size(), pending.size(), denied.size(), graph.linkBudget().toMillis()));
     }
 
     private EntityDocument fetch(EntityRef ref, AsOf asOf) {

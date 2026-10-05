@@ -63,7 +63,7 @@ public final class LayoutMerger {
         List<StripItem> strip = s.strip().stream().map(i -> i.label() != null ? i
                 : new StripItem(labelOf(i.bind()), i.bind(), i.fmt(), i.tone(), i.emphasis(), i.location())).toList();
         boolean inferred = !why.isEmpty() || panels.stream().anyMatch(p -> p.kind() == PanelKind.LINKS);
-        Sutra effective = new Sutra(s.name(), s.version(), s.domain(), s.match(), s.title(), strip, panels, s.keys(), s.location());
+        Sutra effective = new Sutra(s.name(), s.version(), s.domain(), s.match(), s.title(), strip, panels, s.keys(), s.location(), s.description());
         return new EffectiveLayout(effective, "Sutra " + s.name() + " v" + s.version() + (inferred ? " + inference" : ""), inferred, why);
     }
 

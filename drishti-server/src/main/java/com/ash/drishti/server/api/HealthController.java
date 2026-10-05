@@ -88,7 +88,7 @@ public class HealthController {
             Map<String, Object> row = new LinkedHashMap<>();
             String health = safeHealth(s);
             // "UP …"; "DEGRADED: …" (it serves, but some of its data cannot be read: the tables it names); else down
-            String status = health.startsWith("UP") ? "UP" : health.startsWith("DEGRADED") ? "DEGRADED" : "DOWN";
+            String status = com.ash.drishti.engine.source.SourceHealth.of(health).name();
             down += "DOWN".equals(status) ? 1 : 0;
             degraded += "DEGRADED".equals(status) ? 1 : 0;
             row.put("name", m.name());

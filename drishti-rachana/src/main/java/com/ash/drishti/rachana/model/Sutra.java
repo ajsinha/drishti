@@ -30,6 +30,7 @@ import java.util.Map;
  * @param panels the panels in declaration order
  * @param keys function key to action ({@code link(...)}, {@code raw}, {@code impact}, or a panel id)
  * @param location the file it came from
+ * @param description the author's one-paragraph plain text (never evaluated), or null
  */
 public record Sutra(
         String name,
@@ -40,9 +41,16 @@ public record Sutra(
         List<StripItem> strip,
         List<Panel> panels,
         Map<String, String> keys,
-        SourceLocation location) {
+        SourceLocation location,
+        String description) {
 
     public static final int MAX_STRIP = 8;
+
+    /** A Sutra without a description. */
+    public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,
+            Map<String, String> keys, SourceLocation location) {
+        this(name, version, domain, match, title, strip, panels, keys, location, null);
+    }
 
     public Sutra {
         strip = List.copyOf(strip);

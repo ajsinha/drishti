@@ -185,6 +185,9 @@ drishti:
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
+  explain:                           # About this page (docs/architecture/CONTEXT_HELP.md): GET /api/v1/views/{kind}/{id}/explain
+    cache-size: 2000                 # answers kept; per user, page, business date and generation (masks and rights are per user)
+    cache-ttl: 60s                   # how long an answer is served before it is derived again
   pivot:                             # the Pivot tab (USER_GUIDE.md, The Pivot tab): only where a Sutra (pivot: on a table or
                                      # ladder) or a pack (pivot: beside a kind's columns:) opts in
     enabled: ${DRISHTI_PIVOT_ENABLED:true}     # false hides every Pivot tab, whatever Sutras and packs say

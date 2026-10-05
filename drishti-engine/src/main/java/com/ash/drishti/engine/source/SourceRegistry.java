@@ -186,6 +186,11 @@ public final class SourceRegistry implements AutoCloseable {
         return new Freshness(source, last, after, stale);
     }
 
+    /** The connector a document's {@code provenance.source} names: a connector's own name or the system-of-record name it serves. */
+    public Optional<SourcePlugin> connector(String source) {
+        return source == null ? Optional.empty() : Optional.ofNullable(bySource.get(source));
+    }
+
     public Optional<SourcePlugin> plugin(String name) {
         return Optional.ofNullable(plugins.get(name));
     }

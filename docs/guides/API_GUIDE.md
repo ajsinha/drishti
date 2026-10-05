@@ -263,7 +263,7 @@ script may open (roles are defined under `drishti.security.roles`; see
 For a caller without `raw`, every field named in `drishti.security.redact` (at any depth, and everything under it)
 reads `•••` in every answer that shows or is computed from its value (masking is by field; see *Copies of a masked value* below for text in other fields): `/entities/…/raw`, `/search` (rows, CSV,
 compare), `/history`, `/search/columns`, the search pivot endpoints, `/views/{kind}/{id}` (strip, title, every panel,
-table totals, keys and links, values a Sutra computes from the field), `/views/…/panels/…/records`, the view and
+table totals, keys and links, values a Sutra computes from the field), `/views/…/panels/…/records`, `/views/{kind}/{id}/explain`, the view and
 monitor streams, `/me/monitors/{name}`, `/studio/preview`, `/impact/{kind}/{id}`, `/command/suggest` and `/phrase`;
 alert rules are evaluated on the document as their owner may see it. The server masks the documents in one place
 (`Entitlements.redactor`) before anything reads them, so nothing about a masked field can be probed: a condition on
@@ -422,6 +422,7 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 |---|---|---|
 | `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`, with the caller's [field masks](#field-masks) (`"text":"•••"`); `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
 | `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. Every row of a table or ladder whose Sutra says `pivot:`, as raw values of its pivot's fields (masked fields `"•••"`), for the [Pivot tab](#the-pivot-tab-panel-rows-search-pivots-saved-pivots); `404 DRS-1001` when the view has no such panel or the panel offers no pivot |
+| `GET` | `/views/{kind}/{id}/explain` | as-of. About this page, layers 3 and 4 ([design](../architecture/CONTEXT_HELP.md)): where the data came from and why the page looks as it does, for exactly what the caller sees. Query `panel` (narrows to a panel of the view, else `404 DRS-4006`) and `generation` (the generation your page shows; a newer one on the server adds `"newer":true`). Same rules as the view: `403 DRS-5002`, `404 DRS-1001`, `400 DRS-4003`. See [Explaining a view](#explaining-a-view) |
 
 Opening a view also records it in the caller's recent list. A view is formatted for display: every value
 comes as text with a tone, so all clients show `−1,403,091` the same way.
@@ -460,6 +461,32 @@ curl -s $B/views/trade/MX-20000001 | jq -c '.panels[] | {id, kind, title, key, a
 ```
 
 The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
+
+### Explaining a view
+
+`GET /views/{kind}/{id}/explain` answers *can I trust this page, and why does it look like this* (the first two layers of the
+[About this page](../architecture/CONTEXT_HELP.md) design). It rebuilds the view for the caller, with the same field masks, the
+same right to open kinds and the same restricted links, and derives the answer from that, so it tells nothing the view does not:
+a masked field's value is in no part of it, and a panel the caller may not open is named only by its title and the kind of
+entity it names. Every block is omitted when empty; answers are cached per user, page and generation for
+`drishti.explain.cache-ttl` (60 s; `/admin/caches` purges them). Nothing is computed while a view is built.
+
+```bash
+curl -s $B/views/trade/IRS-48213/explain | jq -c '{data, layout: (.layout | {label, sutra, candidates, noData, masked, noAccess})}'
+```
+
+| Block | Fields |
+|---|---|
+| `ref`, `mnemonic`, `locale`, `generation`, `newer` | the page; `newer` is present (true) only when the server holds a newer generation than `?generation=` |
+| `data` | `source`, `generation`, `fetchedAt`, `businessDate`, `current`, `live`, `updatedAt`, `staleAfter`, `stale`, `health` (`up`, `degraded` or `down`, as the admin health page reduces it) and `linked` (`fetched`, `pending`, `denied`, `budgetMs`) |
+| `layout.sutra` | the Sutra chosen: `name`, `version`, `priority`, `where` (its source text), `description` (the author's plain text) |
+| `layout.candidates` | the other Sutras of the kind in priority order, each with its `where` and `result`: `true`, `false`, `error`, or `masked` (the answer depends on a field the caller may not see, so it is not told) |
+| `layout.label`, `fingerprint`, `inferred`, `inferredPanels` | how the layout was built, and the panels inference added |
+| `layout.noData`, `errors` | panels with nothing to show (`why`: `missing`, `null`, `empty list`, `masked`, `no values`, `no data`; and the `path` looked at) and panels that failed |
+| `layout.masked` | fields shown as `•••` for the caller: `key` (document path), `label`, `panels` |
+| `layout.noAccess` | panels the caller may not open: `title` and `kind` only |
+| `next` | `keys` (the view's function keys, links restricted) and `panelKinds` (kinds of the panels the caller can see) |
+| `timings` | `view` and `explain`, milliseconds |
 
 ### Raw documents, history and impact
 
@@ -1295,6 +1322,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4002 | 500 | view failed | building the view failed unexpectedly |
 | DRS-4003 | 400 | bad business date | unreadable, in the future, or before the history window |
 | DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where), names a field the kind does not have, or has a `limit` outside 1 to 1000 |
+| DRS-4006 | 404 | no such panel | `?panel=` of `/views/{kind}/{id}/explain` names no panel of the view |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
 | DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; any `/api/v1/builder/**` request body over `max-total-mb` (answered before the body is read: `detail` gives the size and the limit, the connection is not reset; `drishti.http.request-limits`, `server.tomcat.max-swallow-size`); designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |

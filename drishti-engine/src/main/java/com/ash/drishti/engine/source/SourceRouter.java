@@ -429,6 +429,17 @@ public final class SourceRouter {
         return routed.isEmpty() ? named : registry.freshness(routed.get(0).manifest().name());
     }
 
+    /** The connector behind a document of this kind from this source: the one the source names, else the kind's first route. */
+    public Optional<SourcePlugin> connectorOf(String kind, String source) {
+        Optional<SourcePlugin> named = registry.connector(source);
+        if (named.isPresent()) {
+            return named;
+        }
+        List<SourcePlugin> routed = candidates(kind);
+        liveFirst(routed);
+        return routed.stream().findFirst();
+    }
+
     /** Live: sources that stream first, so the view ticks; among them a real stream (Kafka) before the default route. */
     private void liveFirst(List<SourcePlugin> candidates) {
         String fallback = props.defaultRoute();
