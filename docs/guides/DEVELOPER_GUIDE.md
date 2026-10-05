@@ -289,7 +289,9 @@ What it does, in order (it stops at the first failure, `set -euo pipefail`):
    processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a
    `spawn` pool.)
 6. `./mvnw -q -o verify`: the whole Java build, every test and every rule, offline; then the same on Java 21
-   (`JAVA21_HOME`, default `/usr/lib/jvm/java-21-openjdk-amd64`), since the jar is Java 21 bytecode.
+   (`JAVA21_HOME`, default `/usr/lib/jvm/java-21-openjdk-amd64`), since the jar is Java 21 bytecode. That second run
+   hides Docker from itself, so the container tests (PostgreSQL, Kafka, S3 … through Testcontainers, already run on 25)
+   are skipped there: what differs between the JDKs is the JVM, not the brokers.
 7. `console/.venv/bin/python -m pytest -q console/tests`. If it fails, the failed tests (and only those) run once more:
    a test that passes the second time is printed as `FLAKY` and appended to `target/drill-flakes.log` with the commit;
    a test that fails twice, or a run that failed without a failed test to re-run (a collection error), stops the

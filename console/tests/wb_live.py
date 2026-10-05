@@ -76,7 +76,7 @@ def jar() -> Path | None:
     return found[-1] if found else None
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")          # one server and console for every browser file that needs no special set-up
 def live_console(tmp_path_factory):
     """The console's URL, with a real server behind it."""
     yield from _stack(tmp_path_factory, {})

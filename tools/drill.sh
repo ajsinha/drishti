@@ -34,10 +34,11 @@ fi
 ./mvnw -q -o verify
 # Java 21 is supported too (the jar is Java 21 bytecode): the same tests again on a JDK 21, so a call that exists only on
 # 25 or a behaviour that differs on 21 (virtual-thread pinning, no compact object headers) fails the drill, not a user.
-# The whole suite is run, not a subset: about 1,800 tests, 3.5 minutes (measured), well inside the drill budget; a failure here exits the script through `set -e`.
 JAVA21_HOME="${JAVA21_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 [[ -x "$JAVA21_HOME/bin/java" ]] || { echo "drill: no JDK 21 at $JAVA21_HOME (set JAVA21_HOME)" >&2; exit 1; }
-JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o verify
+# On 21 the container tests (PostgreSQL, Kafka, S3, ... through Testcontainers, which already ran on 25) are skipped by hiding
+# Docker from this run (they are disabledWithoutDocker): what differs between JDKs is the JVM, not the brokers.
+DOCKER_HOST=unix:///nonexistent/drill-java21 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o verify
 # The console suite. A browser test that fails is run once more on its own: about one run in 700 a workbench page has
 # loaded without its script starting (diagnosed in console/tests/test_workbench_browser.py: wait() reports the page state,
 # failed requests and bad responses). A test that passes the second time is a flake: printed and kept in
