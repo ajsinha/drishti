@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import RedirectResponse
 
-from core import about_index, asof
+from core import about_index, asof, collab as collab_core
 from core.backend import BackendError
 from routes.common import ident, packs, render
 
@@ -209,7 +209,8 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0):
 
 
 @router.get("/v/{kind}/{id_:path}")
-async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0):
+async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0, share: str = ""):
+    sid = collab_core.set_share(share)              # a view opened through a share's link tells the server so (its access log)
     pin = None                                      # how a pinned link (?asOf=&knownAt=&gen=) was honoured, for the banner
     try:
         try:
@@ -231,9 +232,15 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     if getattr(request.state, "pinned", False):
         now = (vm.get("provenance") or {}).get("generation")
         pin = pin or ("changed" if gen and now is not None and int(now) != gen else "asit")
+    shared = None
+    if sid and not embed:                           # who sent it, when, and their note, for the banner (the server renders the note for this reader)
+        try:
+            shared = await (getattr(request.app.state, "collab", None) or collab_core.Collab(request.app.state.backend)).share(sid, ident(request))
+        except BackendError:
+            shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation")),
-                  pin=pin, pin_gen=gen or None, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
+                  pin=pin, pin_gen=gen or None, shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
 
 
 def share_url(request: Request, kind: str, id_: str, generation=None) -> str:

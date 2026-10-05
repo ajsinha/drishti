@@ -25,6 +25,13 @@
      data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
      data-sutra="{{ layout.sutra }}" data-min-span="{{ layout.min_span }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
   {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
+  {% if shared and shared.access and not embed %}
+  {# Opened through a share's link: who sent it, when, and their note (masked values read as the reader may see them) #}
+  <section class="share-banner" role="note" aria-label="Shared with you" data-share-banner="{{ shared.id }}"><i class="bi bi-send-check" aria-hidden="true"></i>
+    <div><b>Shared by {{ shared.senderName or shared.sender }}</b> <span class="mono">{{ (shared.createdAt or '')[:16] | replace('T', ' ') }} UTC</span>
+      {% if shared.panel %}<span class="share-panel">panel {{ shared.panel }}</span>{% endif %}
+      {% if shared.note %}<blockquote class="share-note" data-share-note>{{ shared.note }}</blockquote>{% endif %}</div></section>
+  {% endif %}
   {% if pin and not embed %}
   {# A pinned link (?asOf=&knownAt=&gen=): shown for this request only, the reader's own saved date is untouched #}
   {% set known_text = known_local(known_at, (business_date or {}).zone) | replace('T', ' ') if known_at else '' %}
@@ -61,7 +68,7 @@
       <span class="vhead-tools">
         {% set pinned_here = (settings.pinned or []) | selectattr('kind', 'equalto', vm.ref.kind) | selectattr('id', 'equalto', vm.ref.id) | list %}
         <form method="post" action="/pin/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" class="d-inline"><button type="submit" class="tbar-link vhead-alert{% if pinned_here %} pin-on{% endif %}" title="{{ 'Unpin from' if pinned_here else 'Pin to' }} your terminal home"><i class="bi bi-pin-angle{% if pinned_here %}-fill{% endif %}" aria-hidden="true"></i> {{ 'Pinned' if pinned_here else 'Pin' }}</button></form>
-        <button type="button" class="tbar-link vhead-alert" data-share="{{ share_url }}" title="Copy a link that opens this view as you see it{% if asof != 'live' %} ({{ asof }}{% if known_at %}, known at {{ known_local(known_at, (business_date or {}).zone) | replace('T', ' ') }}{% endif %}){% endif %}"><i class="bi bi-link-45deg" aria-hidden="true"></i> <span data-share-label>Share</span></button>
+        <button type="button" class="tbar-link vhead-alert" data-share="{{ share_url }}" data-share-title="{{ vm.title.id }}" data-share-asof="{{ asof }}" data-share-known="{{ known_at or '' }}" data-share-known-text="{{ known_local(known_at, (business_date or {}).zone) | replace('T', ' ') if known_at else '' }}" aria-keyshortcuts="Alt+S" title="Share this view: send it to people with a note, or copy a link that opens it as you see it{% if asof != 'live' %} ({{ asof }}{% if known_at %}, known at {{ known_local(known_at, (business_date or {}).zone) | replace('T', ' ') }}{% endif %}){% endif %}"><i class="bi bi-link-45deg" aria-hidden="true"></i> <span data-share-label>Share</span></button>
         <a class="tbar-link vhead-alert" href="/export/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}.json" title="Download the document as JSON (as your role may see it)"><i class="bi bi-filetype-json" aria-hidden="true"></i> JSON</a>
         <button type="button" class="tbar-link vhead-alert" data-print title="Print, or save as PDF"><i class="bi bi-printer" aria-hidden="true"></i> Print</button>
         {% if me and me.is_admin %}<a class="tbar-link vhead-alert" href="/admin/access?kind={{ vm.ref.kind | urlencode }}&id={{ vm.ref.id | urlencode }}" title="Who looked at {{ vm.title.id }} (administrators)"><i class="bi bi-eye" aria-hidden="true"></i> Viewed by</a>{% endif %}
@@ -80,6 +87,7 @@
     <aside class="vright" aria-label="Context">{% for p in right %}{{ panel(p) }}{% endfor %}</aside>
   </div>
 </div>
+{% if not embed %}{% include "terminal/_share.html" %}{% endif %}
 <aside class="raw notes-drawer" id="notesDrawer" aria-label="Notes" hidden>
   <header><strong>Notes</strong> <span class="mono">{{ vm.title.id }}</span><button type="button" class="raw-x" data-notes-close aria-label="Close">×</button></header>
   <div class="notes-body">
@@ -126,6 +134,8 @@
 <script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/history.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/notes.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/people.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/share.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/about.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/about-hints.js?v={{ ASSET_V }}"></script>
 {% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>

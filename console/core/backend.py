@@ -22,7 +22,7 @@ from urllib.parse import quote
 
 import httpx
 
-from core import asof
+from core import asof, collab
 
 
 def drs_message(code: str, detail: str, sep: str = ": ") -> str:
@@ -84,6 +84,7 @@ class BackendClient:
     async def _send(self, method: str, path: str, ident, **kw: Any) -> Any:
         headers = dict(ident.headers()) if ident is not None else {}
         headers.update(asof.headers())
+        headers.update(collab.headers())
         headers.update(kw.pop("headers", {}))
         raw = kw.pop("raw", False)
         try:
