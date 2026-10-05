@@ -198,6 +198,16 @@ async def compare(request: Request, kind: str, id_: str, from_: str = Query("", 
                   from_known=fromKnownAt)
 
 
+@router.get("/v/{kind}/{id_:path}/about")
+async def about(request: Request, kind: str, id_: str, generation: int = 0):
+    """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view."""
+    try:
+        ex = await request.app.state.backend.explain(kind, id_, ident(request), generation or None)
+    except BackendError as e:
+        return render(request, "terminal/_about.html", status_code=e.page_status, ex=None, error=e, kind=kind, id=id_)
+    return render(request, "terminal/_about.html", ex=ex, error=None, kind=kind, id=id_)
+
+
 @router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0):
     try:

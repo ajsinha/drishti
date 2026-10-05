@@ -1,0 +1,72 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# About this page: the layers of the drawer (docs/architecture/CONTEXT_HELP.md). Each macro draws nothing when it has nothing to say.
+   Everything shown is text from the server's explain answer, escaped by Jinja; no value is looked up here. #}
+{% set WHY = {'missing': 'is missing in this document', 'null': 'is null in this document', 'empty list': 'is an empty list', 'masked': 'is hidden for your role',
+              'no values': 'has no values', 'no data': 'has no data'} %}
+{% set VERDICT = {'true': 'its condition held', 'false': 'its condition was false', 'error': 'its condition could not be evaluated', 'masked': 'its condition depends on a hidden field'} %}
+
+{% macro layer_about(ex, open_) %}{% set s = (ex.layout or {}).sutra %}{% if s and s.description %}
+<details class="about-layer" data-layer="about" id="about-l1"{% if open_ %} open{% endif %}>
+  <summary><h3>What you are looking at</h3></summary>
+  <p class="about-text">{{ s.description }}</p>
+</details>{% endif %}{% endmacro %}
+
+{% macro layer_data(ex, open_) %}{% set d = ex.data %}{% if d %}
+<details class="about-layer" data-layer="data" id="about-l3"{% if open_ %} open{% endif %}>
+  <summary><h3>Where the data came from</h3></summary>
+  <dl class="about-dl">
+    <dt>Source</dt><dd class="mono">{{ d.source }}</dd>
+    {% if d.health %}<dt>Source health</dt><dd><span class="about-health about-{{ d.health | lower }}">{{ d.health | lower }}</span></dd>{% endif %}
+    <dt>Generation</dt><dd class="mono">{{ d.generation }}</dd>
+    {% if d.businessDate %}<dt>Business date</dt><dd class="mono">{{ d.businessDate }}{% if not d.current %} <span class="about-note">(not the latest)</span>{% endif %}</dd>{% endif %}
+    {% if d.updatedAt %}<dt>Updated</dt><dd class="mono">{{ d.updatedAt[:19] | replace('T', ' ') }}</dd>{% endif %}
+    {% if d.fetchedAt %}<dt>Fetched</dt><dd class="mono">{{ d.fetchedAt[:19] | replace('T', ' ') }}</dd>{% endif %}
+    <dt>Freshness</dt><dd>{% if d.stale %}<b class="t-warn">behind</b>{% if d.staleAfter %}: it expects new data within {{ d.staleAfter | replace('PT', '') | lower }}{% endif %}{% else %}fresh{% if d.staleAfter %} (expected within {{ d.staleAfter | replace('PT', '') | lower }}){% endif %}{% endif %}</dd>
+    <dt>Mode</dt><dd>{{ 'live, updating as the source changes' if d.live else 'a snapshot' }}</dd>
+    {% if d.linked %}<dt>Linked entities</dt><dd>{{ d.linked.fetched }} fetched{% if d.linked.pending %}, {{ d.linked.pending }} pending{% endif %}{% if d.linked.denied %}, {{ d.linked.denied }} not open to you{% endif %}</dd>{% endif %}
+  </dl>
+</details>{% endif %}{% endmacro %}
+
+{% macro layer_layout(ex, open_) %}{% set l = ex.layout %}{% if l %}
+<details class="about-layer" data-layer="layout" id="about-l4"{% if open_ %} open{% endif %}>
+  <summary><h3>Why the page looks like this</h3></summary>
+  <ul class="about-list">
+    {% if l.sutra %}<li>Layout: Sutra <b class="mono">{{ l.sutra.name }} v{{ l.sutra.version }}</b>{% if l.sutra.where %}, chosen because <code>{{ l.sutra.where }}</code> held{% else %}, the one that applies to this kind{% endif %}, priority {{ l.sutra.priority }}.</li>
+    {% else %}<li>Layout: inferred from the shape of the document; no Sutra applies.</li>{% endif %}
+    {% for c in l.candidates or [] %}<li>Not chosen: <span class="mono">{{ c.name }} v{{ c.version }}</span> (priority {{ c.priority }}){% if c.where %}, <code>{{ c.where }}</code>{% endif %}: {{ VERDICT.get(c.result, c.result) }}.</li>{% endfor %}
+    {% for p in l.inferredPanels or [] %}<li>Added by inference: <b>{{ p.title or p.id }}</b>{% if p.reason %} ({{ p.reason }}){% endif %}.</li>{% endfor %}
+    {% for n in l.noData or [] %}<li class="about-warn"><b>{{ n.title or n.id }}</b> shows no data{% if n.path %}: <code>{{ n.path }}</code> {{ WHY.get(n.why, n.why or 'has nothing to show') }}{% elif n.why %}: {{ WHY.get(n.why, n.why) }}{% endif %}.</li>{% endfor %}
+    {% for e in l.errors or [] %}<li class="about-warn"><b>{{ e.title or e.id }}</b> could not be drawn: {{ e.message }}</li>{% endfor %}
+    {% if l.masked %}<li>{{ l.masked | length }} field{{ '' if (l.masked | length) == 1 else 's' }} hidden for your role: {% for m in l.masked %}<b>{{ m.label or m.key }}</b>{% if m.panels %} <span class="about-note">(in {{ m.panels | join(', ') }})</span>{% endif %}{{ ', ' if not loop.last }}{% endfor %}.</li>{% endif %}
+    {% for a in l.noAccess or [] %}<li><b>{{ a.title or a.kind }}</b> is not shown: your roles do not open {% if a.kind %}<span class="mono">{{ a.kind }}</span>{% else %}it{% endif %}.</li>{% endfor %}
+  </ul>
+</details>{% endif %}{% endmacro %}
+
+{% macro layer_next(ex, open_) %}{% set n = ex.next or {} %}
+<details class="about-layer" data-layer="next" id="about-l5"{% if open_ %} open{% endif %}>
+  <summary><h3>Where next</h3></summary>
+  <ul class="about-list">
+    {% for k in (n.get('keys') or []) %}{% if k.link %}<li><kbd>{{ k.key }}</kbd> <a href="/v/{{ k.link.kind | urlencode }}/{{ k.link.id | urlencode }}">{{ k.label }}</a>{% if k.link.mnemonic %} <span class="about-note mono">{{ k.link.mnemonic }}</span>{% endif %}</li>
+      {% elif k.action == 'denied' %}<li><kbd>{{ k.key }}</kbd> {{ k.label }} <span class="about-note">(no access)</span></li>
+      {% elif k.action == 'impact' %}<li><kbd>{{ k.key }}</kbd> <a href="/impact/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}">{{ k.label }}</a></li>{% endif %}{% endfor %}
+    {% for pk in n.panelKinds or [] %}<li>The <a href="/help/panel-kinds#{{ pk }}">{{ pk }} panel</a>: what it shows and how to read it</li>{% endfor %}
+    {% if n.guide %}<li><a href="/help/{{ n.guide.slug }}{{ ('#' ~ n.guide.anchor) if n.guide.anchor }}">{{ n.guide.title or n.guide.slug }}</a></li>{% endif %}
+    {% if n.edit %}<li><a href="{{ n.edit.href }}">Edit in the Build workbench</a></li>{% endif %}
+    <li><a href="/help/context/view">The full guide to this screen</a> <span class="about-note">(F1 again)</span></li>
+  </ul>
+</details>
+{% endmacro %}

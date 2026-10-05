@@ -48,6 +48,16 @@ class FakeBackend:
             prov["sutra"] = prov["layout"].split()[1]
         return vm
 
+    async def explain(self, kind, id_, user, generation=None):
+        self.calls.append(("explain", kind, id_, generation))
+        f = FIXTURES / f"explain_{kind}_{id_}.json"
+        if not f.exists():
+            raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")
+        ex = json.loads(f.read_text())
+        if generation and generation < ex["generation"]:
+            ex["newer"] = True
+        return ex
+
     # personal layouts: kept per user and Sutra, validated against the Sutra's panels as the server does
     layout_allowed = True
     layout_promote = True

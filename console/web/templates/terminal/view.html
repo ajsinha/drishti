@@ -18,10 +18,10 @@
 {% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}view{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/about.css?v={{ ASSET_V }}">{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=(vm.provenance.live and asof == 'live'), built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
-<div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
+<div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-generation="{{ vm.provenance.generation }}" data-label="{{ vm.title.id }}"
      data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
      data-sutra="{{ layout.sutra }}" data-min-span="{{ layout.min_span }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
   {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
@@ -55,6 +55,7 @@
         <a class="tbar-link vhead-alert" href="/export/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}.json" title="Download the document as JSON (as your role may see it)"><i class="bi bi-filetype-json" aria-hidden="true"></i> JSON</a>
         <button type="button" class="tbar-link vhead-alert" data-print title="Print, or save as PDF"><i class="bi bi-printer" aria-hidden="true"></i> Print</button>
         {% if me and me.is_admin %}<a class="tbar-link vhead-alert" href="/admin/access?kind={{ vm.ref.kind | urlencode }}&id={{ vm.ref.id | urlencode }}" title="Who looked at {{ vm.title.id }} (administrators)"><i class="bi bi-eye" aria-hidden="true"></i> Viewed by</a>{% endif %}
+        <button type="button" class="tbar-link vhead-alert" data-about-open aria-controls="aboutDrawer" aria-expanded="false" title="About this page: where the data came from and why it looks like this (?)"><i class="bi bi-info-circle" aria-hidden="true"></i> About</button>
         <button type="button" class="tbar-link vhead-alert" data-notes-open title="Notes on {{ vm.title.id }} and its fields"><i class="bi bi-sticky" aria-hidden="true"></i> Notes <span class="tool-count" data-notes-count hidden>0</span></button>
       </span>
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
@@ -80,6 +81,12 @@
       <span class="adm-msg" data-notes-msg role="status" aria-live="polite"></span>
     </form>
   </div>
+</aside>
+<aside class="about" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-about-url="/v/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}/about">
+  <div class="about-grip" aria-hidden="true"></div>
+  <header><h2 id="aboutTitle" tabindex="-1">About this page</h2><button type="button" class="raw-x" data-about-close aria-label="Close About this page">×</button></header>
+  <div class="about-body" data-about-body aria-live="polite"><p class="about-wait">Loading…</p></div>
+  <p class="about-live" role="status" data-about-status></p>
 </aside>
 <aside class="raw" id="rawDrawer" aria-label="Raw JSON" hidden>
   <header><strong>Raw JSON</strong> <span class="mono" data-raw-meta></span><button type="button" class="raw-x" data-raw-close aria-label="Close">×</button></header>
@@ -109,6 +116,7 @@
 <script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/history.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/notes.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/about.js?v={{ ASSET_V }}"></script>
 {% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
 <script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}
