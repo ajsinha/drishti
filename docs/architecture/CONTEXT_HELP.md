@@ -68,6 +68,9 @@ text, in five layers, each hidden when it has nothing to say. Layers 3 and 4 nee
 `?` (anywhere on a view where focus is not in a text field) or `F1` on a view opens the drawer on the right. `F1` pressed
 again inside the drawer, or the *Full guide* link, goes to the screen guide exactly as today.
 
+The drawer is shared with Discussion ([COLLABORATION.md](COLLABORATION.md), step 6): it has two tabs, *About* and *Discussion*. `?` and `F1`
+always open (or switch to) *About*; `Alt+N` opens *Discussion*. `F1` again is the guide only when *About* is the tab showing.
+
 ```
 ┌ VAR VAR-COMM · Market risk · VaR / expected shortfall ────────────┬ About this page ─────────────── ✕ ┐
 │ VaR 99% 1D 10.96M  ES 97.5% 12.38M  Stressed VaR 20.82M  Limit …  │ ▾ What you are looking at          │

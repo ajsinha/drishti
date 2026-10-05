@@ -1329,17 +1329,40 @@ Open one of your saved workspaces and press **Share…**. Tick **Everyone**, or 
 kinds a reader may not open stay hidden from that reader. A reader who wants to change it presses **Save a copy…**,
 which makes it their own. **Stop sharing** (or deleting the workspace) takes it away from everyone.
 
-## Notes
+## Discussion
 
-Anyone who may open an entity can leave a note on it, for the next reader: *Restated on 28 Sep after the SOFR
-fixing correction*, *Novation pending legal sign-off*. Press **Notes** in the view's header. The drawer lists the
-notes, oldest first, with their author and time; **About** chooses the whole entity or one of its fields. A field
-with a note shows a small amber dot. From the history window of a number (click the number), **Add a note** writes
-about that field.
+Anyone who may open an entity can start a discussion on it: a comment thread on the whole view, on one panel or on one
+field, for the next reader or for a colleague. Press **Discussion** in the view's header (or **Alt+N**). It opens in the
+same side drawer as **About this page**, as a second tab: **?** and **F1** still open About, **Alt+N** opens
+Discussion, the arrow keys move between the two tabs, and **Esc** closes the drawer and puts the focus back where it was.
+On a phone the drawer is a sheet from the bottom edge.
 
-Only a note's author can edit it. Its author or an administrator can delete it. Every note, edit and deletion is
-in the audit log (Admin → Audit). Notes are kept in the server's identity database, so everyone on that server sees
-the same notes; another server has its own.
+- **Write.** The box at the bottom starts a new thread: choose what it is about (the view, a panel or a field), write,
+  and press **Post** or **Ctrl+Enter**. Each thread has its own reply box. The panel's header carries a small comment
+  icon beside its **?** with the number of comments; pressing it opens the drawer on that panel. A field with a
+  discussion shows a small amber dot; in the history window of a number, **Discuss** writes about that field.
+- **Mention people.** Type **@** and a few letters: the list offers colleagues and roles (`@risk` tells everyone with
+  that role who may open the view). Arrow keys move, **Enter** picks. People you mention get a notice on their bell, and
+  an email when your administrator has set one up (each person can switch the email off on the *Account* page, under
+  *Email me when*; the bell always shows it). After you post, the drawer says how many people were told and, by name,
+  who was not (for example a colleague whose role may not open this kind of view).
+- **Quote a value.** Type **{** (or press **Quote a value**) and pick a field: the comment holds `{$.mtm}` and every reader
+  sees the number *as they may see it*: a reader who may not see the field sees ••• instead. A number you type out by
+  hand is checked too: if it copies a value that is hidden from some readers, those readers see ••• and you get a warning.
+- **What the comment saw.** Every comment shows the data it was written against ("gen 1702 · 29 Sep"). When the page now
+  shows other data, **Open as it was** opens the view at that date and time, as the writer saw it.
+- **Edit, retract.** You can edit your comment for a short while after posting (15 minutes unless your administrator
+  changed it); "(edited)" opens the earlier versions. After that you can only **Retract** it (press twice to confirm): it
+  then reads "Retracted by the author". Nothing is deleted.
+- **Resolve, follow, mute.** Anyone in the thread can **Resolve** and **Reopen** it. You follow threads you write in; **Follow**
+  and **Mute** control whether you are told of replies. A reply on a thread you follow shows on your bell and a line is
+  announced in the drawer ("1 new comment on VaR contribution").
+- **Moderation.** Administrators see **Hide** (with a reason; readers see "Hidden by a moderator: <reason>") and **Lock**
+  (no new comments). Hidden comments are kept in the record.
+
+Notes written before discussions existed appear as one-comment threads. Every comment, edit, retraction and hide is in
+the audit log. Discussions are kept in the server's identity database, so everyone on that server sees the same ones;
+another server has its own.
 
 ## Working with several servers
 

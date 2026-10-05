@@ -53,6 +53,15 @@
       <label for="sLimit">Search results</label>
       <input id="sLimit" name="searchLimit" type="number" min="10" max="1000" value="{{ settings.searchLimit or 100 }}">
     </div>
+    <fieldset class="set-notify" id="notify">
+      <legend>Email me when</legend>
+      <input type="hidden" name="notifyForm" value="1">
+      {% set mail = (settings.notify or {}).get('email') or {} %}
+      <label class="set-check"><input type="checkbox" name="notify_email_share"{% if mail.get('share') is not false %} checked{% endif %}> someone shares a view with me</label>
+      <label class="set-check"><input type="checkbox" name="notify_email_mention"{% if mail.get('mention') is not false %} checked{% endif %}> someone mentions me or one of my roles in a comment</label>
+      <label class="set-check"><input type="checkbox" name="notify_email_reply"{% if mail.get('reply') is not false %} checked{% endif %}> someone replies in a discussion I follow</label>
+      <p class="text-muted-d adm-hint">These switch off the email only; the bell and your inbox always show everything sent to you. Email is sent only when your administrator has set up a mail server and you have an address on your account.</p>
+    </fieldset>
     <p class="text-muted-d adm-hint">Pin entities from their view (<i class="bi bi-pin-angle" aria-hidden="true"></i> Pin); they appear on the terminal home.</p>
     <button type="submit" class="btn-pill btn-accent">Save settings</button>
   </form>
