@@ -133,6 +133,12 @@ public final class DerivedSourcePlugin implements SourcePlugin {
                 .map(id -> new EntityHit(EntityRef.of(kind, id), id, kind + " · from " + k.from())).toList();
     }
 
+    /** What this plugin's own definition says a field of one of its derived kinds means, or empty (not its kind, or not a field of it). */
+    @Override
+    public Optional<FieldNote> describeField(String kind, String field) {
+        return kinds.stream().filter(d -> d.kind().equals(kind)).findFirst().flatMap(d -> d.describe(field));
+    }
+
     @Override
     public Map<String, Object> cacheStats() {
         synchronized (cache) {

@@ -55,11 +55,38 @@ public final class AboutCatalog {
     private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
     private final AtomicLong revision = new AtomicLong();
     private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of());
+    /** The generic words every domain shares ({@value #CORE_RESOURCE}); the lowest priority of all vocabularies. */
+    private final Map<String, GlossaryEntry> core;
 
     public AboutCatalog(AboutProperties props, ElCompiler el) {
         this.props = props;
         this.parser = new AboutParser(el, props.maxText());
+        this.core = loadCore();
         reload();
+    }
+
+    /** Where the shared core vocabulary lives, on the classpath. */
+    public static final String CORE_RESOURCE = "about/vocabulary.yaml";
+
+    private Map<String, GlossaryEntry> loadCore() {
+        try (java.io.InputStream in = AboutCatalog.class.getClassLoader().getResourceAsStream(CORE_RESOURCE)) {
+            if (in == null) {
+                return Map.of();
+            }
+            AboutParser.Parsed p = parser.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8), "core/vocabulary.yaml", Set.of());
+            p.problems().forEach(x -> LOG.warn("core vocabulary problem {}", x));
+            Map<String, GlossaryEntry> out = new LinkedHashMap<>();
+            p.vocabulary().forEach((n, e) -> out.put(n, e.from("core:vocabulary." + n)));
+            return Map.copyOf(out);
+        } catch (IOException | RuntimeException e) {
+            LOG.warn("core vocabulary not loaded: {}", e.toString());
+            return Map.of();
+        }
+    }
+
+    /** The core vocabulary's entry for a field name, or empty. */
+    public Optional<GlossaryEntry> core(String name) {
+        return Optional.ofNullable(core.get(name));
     }
 
     /** Reads every pack's about file again. */
@@ -178,7 +205,7 @@ public final class AboutCatalog {
         return out;
     }
 
-    private static GlossaryEntry visible(AboutProperties.PackSource pack, Map<String, Loaded> byPack, String name) {
+    private GlossaryEntry visible(AboutProperties.PackSource pack, Map<String, Loaded> byPack, String name) {
         for (String n : pack.lineage()) {
             Loaded l = byPack.get(n);
             GlossaryEntry e = l == null ? null : l.parsed().vocabulary().get(name);
@@ -186,7 +213,7 @@ public final class AboutCatalog {
                 return e.from(n + ":vocabulary." + name);
             }
         }
-        return null;
+        return core.get(name);
     }
 
     private Map<String, AboutText> merge(List<Loaded> loaded) {
@@ -222,7 +249,7 @@ public final class AboutCatalog {
                     aboutFrom = l;
                 }
                 k.glossary().forEach((path, e) -> {
-                    GlossaryEntry v = e.use() == null ? null : vocabulary.get(e.use());
+                    GlossaryEntry v = e.use() == null ? null : vocabulary.getOrDefault(e.use(), core.get(e.use()));
                     if (e.use() == null || v != null) {
                         glossary.putIfAbsent(path, v == null ? e : e.resolvedFrom(v));
                     }

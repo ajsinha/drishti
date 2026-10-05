@@ -49,6 +49,8 @@ def test_question_mark_opens_the_drawer_with_its_layers_and_escape_closes_it(liv
     text = drawer_text(page)
     for layer in ("Where the data came from", "Why the page looks like this", "Where next"):
         assert layer in text, text
+    if page.locator("#aboutDrawer [data-layer=\"data\"]").get_attribute("open") is None:      # layers 1 and 2 are open first; the data layer opens on a click
+        page.locator("#aboutDrawer [data-layer=\"data\"] summary").click()
     assert page.locator("#aboutDrawer [data-layer=\"data\"] .about-health").inner_text() in ("up", "degraded", "down")
     assert page.locator("#aboutDrawer a[href^='/help/panel-kinds#']").count() >= 1
     assert drawer.get_attribute("role") == "dialog" and drawer.get_attribute("aria-modal") == "false"

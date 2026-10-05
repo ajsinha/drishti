@@ -1,0 +1,109 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The core vocabulary (docs/architecture/CONTEXT_HELP.md, Decision 2): generic words that mean the same in every domain, so an
+# inferred view of an unknown kind still explains its common fields. The lowest priority: a pack's own vocabulary, and a kind's
+# own glossary, win. Keep it small (40 entries at most) and free of domain words.
+about: 1
+vocabulary:
+  id:
+    term: "Identifier"
+    means: "The value that names this record uniquely within its kind."
+  name:
+    term: "Name"
+    means: "What the record is called, for people to read."
+  title:
+    term: "Title"
+    means: "A short heading for the record."
+  description:
+    term: "Description"
+    means: "Free text saying what the record is."
+  status:
+    term: "Status"
+    means: "Where the record is in its life, such as open, closed or pending."
+  type:
+    term: "Type"
+    means: "The class of thing the record is, within its kind."
+  category:
+    term: "Category"
+    means: "The group the record is filed under."
+  currency:
+    term: "Currency"
+    means: "The currency an amount is expressed in, as a three-letter ISO 4217 code."
+    unit: "ISO 4217 code"
+  amount:
+    term: "Amount"
+    means: "A quantity of money, in the currency named beside it."
+  price:
+    term: "Price"
+    means: "The cost of one unit, in the currency named beside it."
+  quantity:
+    term: "Quantity"
+    means: "How many units there are."
+  count:
+    term: "Count"
+    means: "How many items were counted."
+    unit: "items"
+  total:
+    term: "Total"
+    means: "The sum of the values it adds up."
+  rate:
+    term: "Rate"
+    means: "A proportion or a price per period; see the unit shown with it."
+  weight:
+    term: "Weight"
+    means: "The share this item has of the whole, usually between 0 and 1."
+    unit: "fraction (0-1)"
+  score:
+    term: "Score"
+    means: "A number that ranks the record; higher is stronger unless the page says otherwise."
+  date:
+    term: "Date"
+    means: "A calendar day, written year-month-day."
+    unit: "yyyy-mm-dd"
+  asOf:
+    term: "As of"
+    means: "The business date the figures are for, which can be earlier than the day they were stored."
+    unit: "yyyy-mm-dd"
+  createdAt:
+    term: "Created"
+    means: "When the record was first written."
+  updatedAt:
+    term: "Updated"
+    means: "When the record last changed."
+  startDate:
+    term: "Start date"
+    means: "The first day the record applies."
+  endDate:
+    term: "End date"
+    means: "The last day the record applies."
+  owner:
+    term: "Owner"
+    means: "The person or team responsible for the record."
+  country:
+    term: "Country"
+    means: "The country, as a two-letter ISO 3166 code where the data holds one."
+    unit: "ISO 3166 code"
+  region:
+    term: "Region"
+    means: "The area of the world or of the organisation the record belongs to."
+  source:
+    term: "Source"
+    means: "The system the value came from."
+  version:
+    term: "Version"
+    means: "Which revision of the record this is; a larger number is newer."
+  notes:
+    term: "Notes"
+    means: "Free text added by a person."
