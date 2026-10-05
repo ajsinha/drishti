@@ -107,6 +107,9 @@ public class DesignRebase {
         int step = 0;
         for (JsonNode entry : d.ops.subList(0, Math.min(d.opsAt, d.ops.size()))) {
             step++;
+            if (DesignService.ABOUT_PART.equals(entry.path("part").asText())) {
+                continue;                               // About text is not part of the base Sutra: nothing to replay, it stays as written
+            }
             JsonNode ops = entry.path("ops");
             if (ops.size() == 1 && "text".equals(ops.get(0).path("op").asText())) {
                 problems.add(new OpProblem(-1, "text", "DRS-5025", "step " + step + " was a hand-typed text edit (or an auto-design, or a file sync): it cannot"

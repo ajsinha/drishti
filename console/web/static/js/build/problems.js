@@ -13,11 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Problems tab: three kinds, one list, each with a jump to where it is.
+/* The Problems tab: four kinds, one list, each with a jump to where it is.
  *   YAML        the editor's light check (line and column) and what the server refused in the last Text operation
  *   operations  what the server refused of the last operations (DRS-502x), with the operation and the panel
  *   bindings    a field the Sutra reads that the samples rarely have, or that has two types (from the shape report)
  *   check       a panel that fails on a sample (from the tests matrix)
+ *   help        the About tab's lint, DRS-2045 to DRS-2047 (a field shown without a glossary entry...) and DRS-2040 to DRS-2044 (the text), click opens the About tab
  * A YAML or operation problem with a line opens the YAML tab at that line; a panel one selects the panel on the canvas.
  *
  *   new WB.Problems(box, countEl, store, hooks) -> {update()}        hooks: {gotoLine(line, col), gotoPanel(id)}                        */
@@ -27,7 +28,7 @@
   var RARE = 0.5;
 
   WB.Problems = function (box, countEl, store, hooks) {
-    var shape = null, matrix = null, yamlLive = [];
+    var shape = null, matrix = null, yamlLive = [], helpLint = [];
     var list = WB.el('ul', 'bs-list wb-problems', null, { 'aria-label': 'Problems' });
     box.appendChild(list);
 
@@ -73,6 +74,7 @@
       }
       yamlLive.forEach(function (p) { out.push({ kind: 'yaml', code: 'check', text: p.message, line: p.location.line, col: p.location.column }); });
       bindings().forEach(function (b) { out.push(b); });
+      helpLint.forEach(function (p) { out.push({ kind: 'help', code: p.code, text: p.message, aboutLine: p.line || 0 }); });
       if (matrix) {
         matrix.panels.forEach(function (row) {
           row.cells.forEach(function (c, i) {
@@ -89,10 +91,10 @@
       list.textContent = '';
       items.forEach(function (p) {
         var li = WB.el('li', 'wb-problem pr-' + p.kind), b = WB.el('button', 'wb-problem-b', null, { type: 'button' });
-        b.appendChild(WB.el('span', 'bs-role', p.kind === 'operation' ? (p.code || 'operation') : p.kind));
+        b.appendChild(WB.el('span', 'bs-role', p.kind === 'operation' || p.kind === 'help' ? (p.code || p.kind) : p.kind));
         b.appendChild(document.createTextNode(' ' + (p.line ? 'line ' + p.line + ': ' : '') + p.text));
         b.addEventListener('click', function () {
-          if (p.line && hooks.gotoLine) { hooks.gotoLine(p.line, p.col); } else if (p.panel && hooks.gotoPanel) { if (p.sample) { store.setSample(p.sample); } hooks.gotoPanel(p.panel); }
+          if (p.kind === 'help' && hooks.gotoAbout) { hooks.gotoAbout(p.aboutLine); } else if (p.line && hooks.gotoLine) { hooks.gotoLine(p.line, p.col); } else if (p.panel && hooks.gotoPanel) { if (p.sample) { store.setSample(p.sample); } hooks.gotoPanel(p.panel); }
         });
         li.appendChild(b); list.appendChild(li);
       });
@@ -106,6 +108,7 @@
     store.on('basemoved', update);
     store.on('yamlcheck', function (ps) { yamlLive = ps; update(); });
     store.on('shape', function (r) { shape = r; update(); });
+    store.on('aboutlint', function (ps) { helpLint = ps; update(); });
     store.on('checked', function (c) { matrix = c ? c.matrix : null; update(); });
     update();
     return { update: update, items: all };

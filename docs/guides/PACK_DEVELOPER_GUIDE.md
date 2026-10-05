@@ -1210,7 +1210,7 @@ generated file.
   fields a Sutra shows that have no glossary entry; and `expect.yaml` will take `help: { coverage: 0.9, about: true }`,
   the share of shown fields with an entry and that `about` renders without an error. Both are the lint-and-coverage
   stage of the design and are **not available until it is merged**; see [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md).
-- The Build workbench will get an *About* tab to write and preview this text (stage 7 of the design; not yet).
+- The Build workbench has an **About** tab to write and preview this text over your samples: the card of the previewed entity, the problems with their lines and the lint warnings, kept with the design and exported as `config/about.yaml` in the pack fragment ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md#the-about-tab)). It is a draft until you put the file in the pack: approving the design's Sutra does not make the About text live.
 
 ## Guides and help
 
@@ -2015,6 +2015,8 @@ ticket-view/samples/ticket/TKT-1001.json
 ticket-view/samples/ticket/TKT-1002.json
 ticket-view/README.md
 ```
+
+A design that has About text (the workbench's About tab) also writes `ticket-view/config/about.yaml` and an `about: config/about.yaml` line in the `pack.yaml`.
 
 The generated `pack.yaml` is a **stub** (abridged here: its comments, the description and `extends: []` are left out) (the kind, a mnemonic suggestion, an id pattern from the id field of your
 samples), and `expect.yaml` records what `sutra test` found on your samples:

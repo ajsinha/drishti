@@ -23,7 +23,7 @@
   if (!root) { return; }
   var WB = window.DrishtiWB, $ = function (s, r) { return (r || root).querySelector(s); }, $$ = function (s, r) { return Array.prototype.slice.call((r || root).querySelectorAll(s)); };
   var d = root.dataset, init = JSON.parse(d.init || '{}');
-  var store = WB.Store({ id: d.id, kind: d.kind, rev: parseInt(d.rev, 10), yaml: $('[data-yaml-src]').value, samples: init.samples.map(function (s) { return s.name; }), opsAt: init.opsAt, opsCount: init.opsCount, status: init.status });
+  var store = WB.Store({ id: d.id, kind: d.kind, rev: parseInt(d.rev, 10), yaml: $('[data-yaml-src]').value, about: init.about || '', samples: init.samples.map(function (s) { return s.name; }), opsAt: init.opsAt, opsCount: init.opsCount, status: init.status });
   store.state.sampleInfo = init.samples;
 store.state.baseMoved = init.baseMoved || null;
   var live = $('[data-live]'), status = $('[data-say]'), stale = 0;
@@ -58,7 +58,7 @@ store.state.baseMoved = init.baseMoved || null;
     if (name === 'yaml' || split) { yaml.refresh(); }
     if (name === 'summary') { summarise(); }
   });
-  var right = tabs($('[data-right-tabs]'), function (name) { if (name === 'versions' && versions) { versions.refresh(); } });
+  var right = tabs($('[data-right-tabs]'), function (name) { if (name === 'versions' && versions) { versions.refresh(); } if (name === 'about' && about) { about.show(); } });
   $('[data-split]').addEventListener('click', function (e) {
     split = !split; e.currentTarget.setAttribute('aria-pressed', split ? 'true' : 'false'); $('[data-centre]').classList.toggle('wb-split', split);
     centre.show(centre.current()); yaml.refresh();
@@ -70,7 +70,7 @@ store.state.baseMoved = init.baseMoved || null;
   store.on('doc', function (x) { if (x.changed && centre.current() === 'summary') { summarise(); } });
 
   // ---- the parts ---------------------------------------------------------------------------------------------------------------
-  var canvas, inspector, actions, data, versions;
+  var canvas, inspector, actions, data, versions, about;
   var schemaP = fetch('/studio/schema').then(function (r) { return r.json(); });
   var toastTimer = 0;
   function toast(text, label, run) {
@@ -98,7 +98,8 @@ store.state.baseMoved = init.baseMoved || null;
   var yaml = WB.YamlTab($('[data-yaml-src]'), $('[data-field-help]'), store);
   function gotoLine(line, col) { centre.show('yaml'); yaml.goto(line, col); }
   function gotoPanel(id) { centre.show('design'); canvas.select({ type: 'panel', id: id }); canvas.focus(); }
-  WB.Problems($('[data-problems]'), $('[data-problem-count]'), store, { gotoLine: gotoLine, gotoPanel: gotoPanel });
+  WB.Problems($('[data-problems]'), $('[data-problem-count]'), store, { gotoLine: gotoLine, gotoPanel: gotoPanel, gotoAbout: function (line) { right.show('about'); about.goto(line); } });
+  about = WB.About($('[data-about]'), store);
   var tests = WB.Tests($('[data-tests]'), store, { gotoPanel: gotoPanel });
   versions = WB.Versions($('[data-versions]'), store, init.base || '');
   var ship = WB.Ship(root, store, { yaml: yaml });
@@ -193,14 +194,14 @@ store.state.baseMoved = init.baseMoved || null;
   });
   // an edit still waiting for its pause is sent before F1 or a link takes the page away (UX-22); Escape in the inspector goes back to the panel (UX-10)
   function held() {
-    var p = [yaml.flush(), inspector.flush(), notes.flush()];
+    var p = [yaml.flush(), inspector.flush(), notes.flush(), about.flush()];
     return Promise.all(p);
   }
   window.drishtiBeforeLeave = held;
   document.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a[href]');
     if (!a || a.target === '_blank' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey || /^#|^javascript:/.test(a.getAttribute('href'))) { return; }
-    if (!inspector.pending() && !yaml.pending() && !notes.pending()) { return; }
+    if (!inspector.pending() && !yaml.pending() && !notes.pending() && !about.pending()) { return; }
     e.preventDefault(); var href = a.href; held().then(function () { window.location.href = href; }, function () { window.location.href = href; });
   }, true);
   $('[data-inspector]').addEventListener('keydown', function (e) {
@@ -210,6 +211,6 @@ store.state.baseMoved = init.baseMoved || null;
   if (init.sample && store.state.samples.indexOf(init.sample) >= 0) { store.state.sample = init.sample; }
   if (init.tab === 'split') { $('[data-split]').click(); centre.show('design'); } else if (init.tab) { centre.show(init.tab); }
   data.paint(); paintBar();
-  store.refresh().then(function () { tests.later(); if (init.notice) { store.emit('say', init.notice, true); } });
-  window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, saving: saving, ship: ship, commands: commands };
+  store.refresh().then(function () { tests.later(); about.later(); if (init.notice) { store.emit('say', init.notice, true); } });
+  window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, about: about, saving: saving, ship: ship, commands: commands };
 })();

@@ -17,12 +17,12 @@ package com.ash.drishti.rachana.about;
 
 import java.util.Optional;
 
-/** A {@link GlossaryLookup} over an {@link AboutCatalog}. A field in a row is known by its last name, so a key matches by suffix. */
+/** A {@link GlossaryLookup} over an {@link AboutSource}. A field in a row is known by its last name, so a key matches by suffix. */
 public final class CatalogGlossaryLookup implements GlossaryLookup {
 
-    private final AboutCatalog catalog;
+    private final AboutSource catalog;
 
-    public CatalogGlossaryLookup(AboutCatalog catalog) {
+    public CatalogGlossaryLookup(AboutSource catalog) {
         this.catalog = catalog;
     }
 

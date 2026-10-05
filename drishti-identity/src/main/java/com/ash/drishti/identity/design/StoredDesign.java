@@ -64,6 +64,11 @@ public final class StoredDesign {
     /** How many log entries are applied: the entries from here on are what redo brings back. */
     public int opsAt;
     public String notes = "";
+    /**
+     * The About text of the Design: the pack's {@code config/about.yaml} (page text, panel text, glossary) as the author is writing
+     * it, kept beside the Sutra and exported with the pack fragment. Counted in the quotas like the notes. Empty when none.
+     */
+    public String about = "";
     public String status = "draft";
     /** A file under a Sutra directory this Design is bound to (development servers only), relative to that directory, or null. */
     public String boundFile;
@@ -92,6 +97,7 @@ public final class StoredDesign {
         c.ops = new ArrayList<>(ops);
         c.opsAt = opsAt;
         c.notes = notes;
+        c.about = about;
         c.status = status;
         c.boundFile = boundFile;
         c.boundSync = boundSync;
@@ -112,7 +118,11 @@ public final class StoredDesign {
 
     /** The bytes of the Sutra, the notes and the tests (what a Design holds besides its samples). */
     public long textBytes() {
-        return textBytes(sutra, notes, tests);
+        return textBytes(sutra, notes, tests) + aboutBytes(about);
+    }
+
+    public static long aboutBytes(String about) {
+        return about == null ? 0 : about.getBytes(java.nio.charset.StandardCharsets.UTF_8).length;
     }
 
     public static long textBytes(String sutra, String notes, List<JsonNode> tests) {

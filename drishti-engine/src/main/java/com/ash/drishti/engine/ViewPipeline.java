@@ -232,6 +232,15 @@ public final class ViewPipeline {
     /** Linked entities of a view: fetched in time, pending past the budget, denied to the caller; and the budget in milliseconds. */
     public record LinkCounts(int fetched, int pending, int denied, long budgetMs) {}
 
+    /**
+     * The view of a document supplied by the caller (a Design's sample) with a given Sutra, with what explaining it needs; as
+     * {@link #preview(Optional, EntityDocument, UnaryOperator, Predicate)}: nothing is cached, because the Sutra is a draft.
+     */
+    public Built builtPreview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+        long t0 = System.nanoTime();
+        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact, mayOpen);
+    }
+
     /** The stored document of {@code ref} as of {@code asOf} (the source's cache serves repeats). */
     public EntityDocument document(EntityRef ref, AsOf asOf) {
         return fetch(ref, asOf);

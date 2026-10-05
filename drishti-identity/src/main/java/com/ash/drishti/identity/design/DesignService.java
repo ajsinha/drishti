@@ -300,7 +300,11 @@ public final class DesignService {
                 throw new DrishtiException(ErrorCode.STALE_REVISION, "nothing to " + (direction < 0 ? "undo" : "redo"));
             }
             JsonNode entry = d.ops.get(direction < 0 ? d.opsAt - 1 : d.opsAt);
-            d.sutra = entry.path(direction < 0 ? "before" : "after").asText("");
+            if (ABOUT_PART.equals(entry.path("part").asText())) {
+                d.about = entry.path(direction < 0 ? "aboutBefore" : "aboutAfter").asText("");
+            } else {
+                d.sutra = entry.path(direction < 0 ? "before" : "after").asText("");
+            }
             d.opsAt += direction;
             d.rev++;
             d.status = "draft";
@@ -378,6 +382,72 @@ public final class DesignService {
         });
     }
 
+    /** The marker of a log step that changed the About text, not the Sutra (its {@code before} and {@code after} are the unchanged Sutra). */
+    public static final String ABOUT_PART = "about";
+
+    /**
+     * Replaces the Design's About text (the pack's about.yaml) as a step of the log, so undo, redo and revisions cover it like a Sutra
+     * edit; a text that changes nothing is not a step. {@code baseRev} must be the revision the caller built on ({@code 409 DRS-5007}).
+     * The text counts in the quotas like the notes, with their cap ({@code max-notes-kb}).
+     */
+    public StoredDesign setAbout(String user, String id, int baseRev, String text) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            stale(d, baseRev);
+            String next = text == null ? "" : text;
+            if (next.equals(d.about)) {
+                return d;
+            }
+            requireAbout(user, d, next);
+            ObjectNode e = JSON.createObjectNode();
+            e.set("ops", JSON.createArrayNode().add(JSON.createObjectNode().put("op", ABOUT_PART)));
+            e.put("part", ABOUT_PART).put("before", d.sutra).put("after", d.sutra).put("aboutBefore", d.about).put("aboutAfter", next)
+                    .put("at", clock.getAsLong());
+            d.ops = new ArrayList<>(d.ops.subList(0, Math.min(d.opsAt, d.ops.size())));
+            d.ops.add(e);
+            while (d.ops.size() > props.maxOps()) {
+                d.ops.remove(0);
+            }
+            d.opsAt = d.ops.size();
+            d.about = next;
+            d.rev++;
+            d.status = "draft";
+            d.updated = clock.getAsLong();
+            store.save(d);
+            return d;
+        });
+    }
+
+    /** Sets the About text without a step (a design just made by an import). */
+    public StoredDesign adoptAbout(String user, String id, String text) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            String next = text == null ? "" : text;
+            requireAbout(user, d, next);
+            d.about = next;
+            d.updated = clock.getAsLong();
+            store.save(d);
+            return d;
+        });
+    }
+
+    private void requireAbout(String user, StoredDesign current, String about) {
+        long bytes = StoredDesign.aboutBytes(about);
+        long was = StoredDesign.aboutBytes(current.about);
+        if (bytes > props.maxNotesKb() * 1024L && bytes > was) {
+            throw tooMany("the About text is over " + props.maxNotesKb() + " KB (drishti.builder.designs.max-notes-kb)");
+        }
+        if (bytes <= was) {
+            return;
+        }
+        if (current.sampleBytes() + current.textBytes() - was + bytes > props.maxBytes()) {
+            throw tooMany("the design would hold over " + props.maxMb() + " MB with its About text (drishti.builder.designs.max-mb)");
+        }
+        if (userBytes(user) - was + bytes > props.maxUserBytes()) {
+            throw tooMany("your designs would hold over " + props.maxUserMb() + " MB with the About text (drishti.builder.designs.max-user-mb)");
+        }
+    }
+
     private static void stale(StoredDesign d, int baseRev) {
         if (baseRev != d.rev) {
             throw new DrishtiException(ErrorCode.STALE_REVISION,
@@ -423,6 +493,7 @@ public final class DesignService {
             }
             String copyName = name == null || name.isBlank() ? (from.name.isEmpty() ? "Untitled" : from.name) + " copy" : name;
             StoredDesign c = create0(user, copyName, from.kind, from.base, from.sutra, from.notes);
+            c.about = from.about;
             c.tests = new ArrayList<>(from.tests);
             c.samples = new ArrayList<>(from.samples);
             for (SampleInfo s : from.samples) {

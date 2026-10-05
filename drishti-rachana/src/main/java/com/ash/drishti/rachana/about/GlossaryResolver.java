@@ -40,9 +40,9 @@ public final class GlossaryResolver {
     private static final Pattern STEP = Pattern.compile("\\[[^\\]]*\\]");
     private static final Pattern PLAIN = Pattern.compile("^\\s*[$@]\\.([A-Za-z_][A-Za-z0-9_]*(?:(?:\\[[^\\]]*\\])*\\.[A-Za-z_][A-Za-z0-9_]*)*(?:\\[[^\\]]*\\])*)\\s*$");
 
-    private final AboutCatalog catalog;
+    private final AboutSource catalog;
 
-    public GlossaryResolver(AboutCatalog catalog) {
+    public GlossaryResolver(AboutSource catalog) {
         this.catalog = catalog;
     }
 

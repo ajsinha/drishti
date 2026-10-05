@@ -65,14 +65,15 @@
   WB.Store = function (init) {
     var bus = new Bus(), base = '/build/designs/' + encodeURIComponent(init.id);
     var st = { id: init.id, kind: init.kind, rev: init.rev, yaml: init.yaml || '', problems: [], checkProblems: [], opsAt: init.opsAt || 0, opsCount: init.opsCount || 0,
-               samples: init.samples || [], sample: (init.samples && init.samples[0]) || '', file: null, status: init.status || 'draft' };
+               about: init.about || '', samples: init.samples || [], sample: (init.samples && init.samples[0]) || '', file: null, status: init.status || 'draft' };
     var queue = Promise.resolve();
 
     function adopt(b, source) {
       var changed = b.yaml !== st.yaml;
       st.rev = b.rev; st.yaml = b.yaml; st.status = b.status || st.status;
       st.opsAt = b.opsAt || 0; st.opsCount = b.opsCount || 0; st.problems = b.problems || []; st.checkProblems = b.checkProblems || [];
-      bus.emit('doc', { yaml: st.yaml, rev: st.rev, problems: st.problems, checkProblems: st.checkProblems, applied: b.applied, changed: changed, source: source });
+      if (typeof b.about === 'string') { st.about = b.about; }
+      bus.emit('doc', { about: st.about, yaml: st.yaml, rev: st.rev, problems: st.problems, checkProblems: st.checkProblems, applied: b.applied, changed: changed, source: source });
       if (b.previewHtml !== undefined && !st.file) { bus.emit('preview', { html: b.previewHtml, name: st.sample, dropped: b.dropped, failed: st.checkProblems.length > 0 }); }
       else if (st.file) { previewFile(st.file); }
       if (st.checkProblems.length) { bus.emit('say', WB.sutraFailure(st.checkProblems), true); }
@@ -80,7 +81,7 @@
     }
     function conflict() {
       return WB.call('GET', base).then(function (r) {
-        if (r.ok) { adopt({ rev: r.body.rev, yaml: r.body.sutra || '', status: r.body.status, opsAt: r.body.opsAt, opsCount: r.body.opsCount !== undefined ? r.body.opsCount : (r.body.ops || []).length, problems: [] }, 'reload'); refresh(); }
+        if (r.ok) { adopt({ rev: r.body.rev, yaml: r.body.sutra || '', about: r.body.about || '', status: r.body.status, opsAt: r.body.opsAt, opsCount: r.body.opsCount !== undefined ? r.body.opsCount : (r.body.ops || []).length, problems: [] }, 'reload'); refresh(); }
         bus.emit('conflict');
         bus.emit('say', 'The design changed somewhere else (another tab?), so your last change was not applied. It has been reloaded at revision ' + st.rev + '; make the change again.', true);
       });
@@ -118,6 +119,14 @@
       return p;
     }
 
+    /** Runs fn after the operations already waiting and before any that come later (the About tab's save shares the revision with them). */
+    function exclusive(fn) { var p = queue.then(fn, fn); queue = p.then(function () {}, function () {}); return p; }
+    /** The server kept new About text (a step of the log): its revision, status and log position, without a Sutra change. */
+    function adoptAbout(b) {
+      st.rev = b.rev; st.status = b.status || st.status; st.opsAt = b.opsAt || 0; st.opsCount = b.opsCount || 0; st.about = b.about;
+      bus.emit('doc', { about: st.about, yaml: st.yaml, rev: st.rev, problems: st.problems, checkProblems: st.checkProblems, changed: false, source: 'about' });
+    }
+
     function previewFile(f) {
       st.file = f;
       return WB.call('POST', base + '/preview-file', { document: f.document }).then(function (r) {
@@ -148,6 +157,6 @@
     }
 
     return { state: st, on: bus.on.bind(bus), emit: bus.emit.bind(bus), send: send, undo: function () { return step('undo'); }, redo: function () { return step('redo'); },
-             refresh: refresh, setSample: setSample, previewFile: previewFile, clearFile: clearFile, setSamples: setSamples, base: base, adopt: adopt };
+             refresh: refresh, exclusive: exclusive, adoptAbout: adoptAbout, reload: conflict, setSample: setSample, previewFile: previewFile, clearFile: clearFile, setSamples: setSamples, base: base, adopt: adopt };
   };
 })();

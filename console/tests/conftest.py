@@ -185,6 +185,7 @@ class FakeBackend:
     file_writes: list = []
     file_edit = None
     imported: list = []
+    about_calls: list = []
 
     async def designs_raw(self, method, path, ident, content=None, content_type=None):
         """Bytes in and out: the fragment export is a tiny zip, an import is recorded and answered with one design."""
@@ -242,6 +243,17 @@ class FakeBackend:
         row = self._own(ident, parts[0])
         d = row["design"]
         rest = parts[1:]
+        if rest[:1] == ["about"]:                                       # the About tab: the text is a part of the Design, a PUT is a new revision
+            self.about_calls.append((method, "/".join(rest), body, params))
+            if method == "PUT":
+                if body["baseRev"] != d["rev"]:
+                    raise BackendError(409, "DRS-5007", f"this design is at revision {d['rev']}, not {body['baseRev']}")
+                d["about"], d["rev"] = body["text"], d["rev"] + 1
+            text = body["text"] if rest == ["about", "preview"] else d.get("about", "")
+            return {"rev": d["rev"], "about": text, "kind": d["kind"], "status": d["status"], "opsAt": 1, "opsCount": 1,
+                    "card": {"about": {"text": f"card of {len(text)} characters", "panels": []}, "glossary": [], "errors": 0},
+                    "problems": [], "lint": [{"code": "DRS-2047", "severity": "warning", "message": "field 'x' is shown but has no glossary entry"}],
+                    "coverage": {"shown": 1, "covered": 0, "missing": ["x"], "text": "help coverage 0/1 (0%)"}, "panels": [], "sample": params.get("sample")}
         if rest == ["propose"] and method == "POST":
             out = await self.save_sutra(d["sutra"], ident, note=(body or {}).get("note", ""))
             self.proposed.append({"id": d["id"], "note": (body or {}).get("note", "")})
