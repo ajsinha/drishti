@@ -625,6 +625,28 @@ Users, passwords, lockout, the audit log and the identity database are configure
 Raise the cache sizes when many distinct entities are viewed and the cache hit rates in **Admin → Health** are
 low. See [PERFORMANCE.md](PERFORMANCE.md).
 
+### `drishti.explain` — About this page
+
+`GET /api/v1/views/{kind}/{id}/explain` answers the page's **?** and F1 drawer: where the data came from, why the page
+looks the way it does, and the pack's text about it ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md)). It is derived
+only when asked, by the same code as the view, for the caller (so masks and rights hold), and kept a short while.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `cache-size` | `2000` | Answers kept, one per user, page, business date and generation. |
+| `cache-ttl` | `60s` | How long an answer is served before it is derived again. **Admin → Health → purge** of the `engine` caches clears it too. |
+
+### `drishti.about` — the packs' About text
+
+Each pack may carry `config/about.yaml`: what a kind means, and notes per panel, written with Sutra expressions over
+the page's own values ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#pack-schema-additions)).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-text` | `600` | Longest About text a pack may write for one entry, in characters; a longer one is a load problem (`DRS-204x`). |
+| `max-rendered` | `1000` | Longest text after its expressions are filled in; the rest is cut with `…`. |
+| `packs` | set by the server | The packs' About files and their `extends` lineage, written by the pack loader. Do not set it. |
+
 ### `drishti.builder` — the Screen Builder's shape extractor
 
 `POST /api/v1/builder/shape` merges sample JSON documents into one JSON Schema with roles. Input over a limit is refused

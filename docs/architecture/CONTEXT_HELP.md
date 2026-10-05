@@ -557,7 +557,7 @@ drishti:
 | [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) | the workbench *About* tab |
 | [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.explain.*`, `drishti.about.*` |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | error-code table rows; "the About drawer says a field has no explanation" |
-| [HOW_IT_FITS.md](HOW_IT_FITS.md) | one line in §7 *Where to change what* |
+| [HOW_IT_FITS.md](HOW_IT_FITS.md) | a full section, not a line: *About this page, end to end*, worked on the same trade MX-20000001 as example A (the `?` press → `GET …/explain` → the view re-run for the caller → `MatchTrace`, emptiness reasons, provenance and health → `about.yaml` from the pack (with `extends`) rendered over the redacted document → the glossary → the drawer), the same for the genomics variant in example B in a few lines, `about.yaml` added to §1's picture and §2's pieces, and §7 *Where to change what* rows (about text, glossary, drawer, explain) |
 
 ## Build plan
 
