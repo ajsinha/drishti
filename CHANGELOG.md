@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Added:** `sutra design --each <dir>` (one draft per subfolder of samples in one JVM), `tools/sutragen.py` (Sutras from JSONL, one per match-field value, `--date`, samples across dates), `tools/packgen/pack_from_jsonl.py` (a complete dated pack from JSONL, linted and tested) and `tools/ingest_jsonl.py` (JSONL into a Delta lake or the File connector's files, idempotent per business date); inputs are folders or single files. See PACK_DEVELOPER_GUIDE "Generating a pack from JSON Lines".
 - **Changed:** the console module is `drishti-console/` (was `console/`), named like the other modules. Recreate its virtual environment once: `rm -rf drishti-console/.venv` and follow QUICKSTART step 3; point IDE run configurations at `drishti-console/run_drishti_web.py` and `drishti-console/.venv`.
 
 ## 1.16.0 — Java 21 for production, About this page, Share and Discussion (2026-10-05)

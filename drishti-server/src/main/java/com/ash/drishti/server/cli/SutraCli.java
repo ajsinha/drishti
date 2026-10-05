@@ -81,6 +81,8 @@ public final class SutraCli {
               preview <pack-dir | sutra-file>      render samples; --out writes HTML snapshots
               shape   <samples.json | dir>         infer the shape (JSON Schema) of the samples
               design  <samples.json | dir>         draft a Sutra from the samples (--kind names it)
+              design --each <dir>                  one Sutra per subfolder of .json samples, in one run: <out>/<subfolder>.sutra.yaml;
+                                                   the kind is --kind, else the subfolder's one-line 'kind' file, else the folder name
             options: --junit file   JUnit XML report     --out dir   write results here
                      --strict       lint: help warnings (DRS-2045 to 2047) fail the run
                      --samples path JSON samples to use instead of the pack's tests/ folder or the Sutra's sibling .json
@@ -404,9 +406,47 @@ public final class SutraCli {
     }
 
     private int design(CliArgs a) throws IOException {
+        if (a.each()) {
+            return designEach(a);
+        }
         List<Sample> samples = jsonSamples(a.paths());
-        Shape shape = s.shapes().infer(samples);
         String kind = a.kind() == null || a.kind().isBlank() ? "sample" : a.kind();
+        return emit(a, kind + ".sutra.yaml", draft(samples, kind));
+    }
+
+    /** {@code design --each <dir>}: every immediate subfolder holding .json samples gets its own draft, in this one JVM. */
+    private int designEach(CliArgs a) throws IOException {
+        int drafted = 0;
+        for (Path root : a.paths()) {
+            if (!Files.isDirectory(root)) {
+                throw new CliArgs.UsageException(root + " is not a directory");
+            }
+            List<Path> subs;
+            try (Stream<Path> list = Files.list(root)) {
+                subs = list.filter(Files::isDirectory).sorted().toList();
+            }
+            for (Path sub : subs) {
+                if (jsonFiles(List.of(sub), false).isEmpty()) {
+                    continue;
+                }
+                String name = sub.getFileName().toString();
+                String kind = a.kind() != null && !a.kind().isBlank() ? a.kind() : name;
+                Path kindFile = sub.resolve("kind");
+                if ((a.kind() == null || a.kind().isBlank()) && Files.isRegularFile(kindFile)) {
+                    kind = Files.readString(kindFile).strip();
+                }
+                emit(a, name + ".sutra.yaml", draft(jsonSamples(List.of(sub)), kind));
+                drafted++;
+            }
+        }
+        if (drafted == 0) {
+            throw new CliArgs.UsageException("no subfolder with .json samples under " + a.paths());
+        }
+        return OK;
+    }
+
+    private String draft(List<Sample> samples, String kind) {
+        Shape shape = s.shapes().infer(samples);
         Object[] last = new Object[2];
         Design d = s.designer().design(shape, samples, kind, (yaml, k, document) -> {
             if (!yaml.equals(last[0])) {
@@ -415,7 +455,7 @@ public final class SutraCli {
             }
             return render((Sutra) last[1], k, document);
         });
-        return emit(a, kind + ".sutra.yaml", d.yaml());
+        return d.yaml();
     }
 
     private int emit(CliArgs a, String fileName, String text) throws IOException {

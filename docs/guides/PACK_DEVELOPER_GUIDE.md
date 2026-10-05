@@ -1978,6 +1978,54 @@ If an admin assigns packs per user, add `library` to your user under **Admin →
   every example command is checked to open with no empty panel and no missing link.
 - `tools/drill.sh` runs every generator with `--check`, so a pack that drifts from its script fails the build.
 
+## Generating a pack from JSON Lines
+
+Three scripts turn existing data (one JSON document per line, or the loader envelope `{"kind","id","doc"}`) into a pack
+without writing a generator by hand. Input is a folder of `*.jsonl` (`-r` for subfolders) and/or single `.jsonl` files; the
+kind is the file stem unless `--kind` is given (an envelope file may hold several kinds). Run them with
+`uv run --with pyyaml` (add `--with deltalake --with pyarrow` for a Delta lake). Build the server first: they use the
+`sutra design --each` command of its exec jar (JDK 21, `--jar`/`--java` to choose).
+
+| Script | Does |
+|---|---|
+| `tools/sutragen.py` | drafts Sutras: one per kind, or one per distinct value combination of `--match` fields, with samples under `tests/` |
+| `tools/packgen/pack_from_jsonl.py` | a complete pack: `pack.yaml`, `samples/`, Sutras, `tests/`, `config/about.yaml` skeleton, `README.md`; then `sutra lint` and `sutra test` |
+| `tools/ingest_jsonl.py` | loads the documents into a Delta lake (`--store delta`) or the File connector's files (`--store files`) |
+
+Worked example: 750 trades (`tradeId`, `productType`, `businessDate`) and 18 counterparties.
+
+```bash
+# Sutras only: one per productType, titled by tradeId, 3 samples each, plus a catch-all trade-default
+uv run --with pyyaml python tools/sutragen.py data/jsonl \
+    --key trade=tradeId,counterparty=counterpartyId --match trade=productType --samples 3 --fallback --out /tmp/sutras
+
+# a whole dated pack, with its lake (the business-date picker works because every document has businessDate)
+uv run --with pyyaml --with deltalake --with pyarrow python tools/packgen/pack_from_jsonl.py data/jsonl \
+    --name my-bank --title "My bank" --key trade=tradeId,counterparty=counterpartyId \
+    --match trade=productType --date trade=businessDate --lake /tmp/lake
+DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
+
+# later: new days from a single file, only those dates are replaced (idempotent)
+uv run --with pyyaml --with deltalake --with pyarrow python tools/ingest_jsonl.py \
+    --from data/new/trade.jsonl --pack packs/my-bank --lake /tmp/lake
+uv run --with pyyaml python tools/ingest_jsonl.py --from data/new --pack packs/my-bank --store files --root /tmp/files  # no Delta needed
+```
+
+- **`--key`, `--date`, `--match`** are dotted paths, one value for every kind (`--key id`) or per kind (`--key trade=tradeId,cp=cpId`;
+  `--match trade=productType,assetClass;cp=type`). A match value is quoted by type in the generated `where`
+  (`$.productType == 'IRS'`, `$.size == 3`, `$.live == true`; a quote in a value is escaped); a document lacking a match field
+  forms a `$.f == null` group (`--skip-missing` leaves it out). `--min-docs`, `--priority` (default 10), `--fallback` (adds
+  `<kind>-default`, priority 1), `--name-prefix` and `--samples N` (deterministic; with `--date` spread across dates, newest first).
+- **`--date`** names the business-date field: it is kept out of the match; the pack gets a Delta (or File) connector, `routes` and an
+  `ingest:` block (`{kind: {key, date}}`, read by `ingest_jsonl.py --pack`); the lake is partitioned by `business_date`.
+  Documents without the date are reported and left out of the lake and files; kinds without `--date` are served from `samples/`.
+- **`pack_from_jsonl.py`** refuses to overwrite `--out` (default `packs/<name>`) without `--force`; `--mnemonic kind=ABC` overrides
+  the initials; `--store files --files-root DIR` writes the File layout (`DIR/<pack>/<date>/<kind>.jsonl`, serve with
+  `DRISHTI_FILES_ROOT=DIR`) instead of a lake. `config/about.yaml` holds `TODO` glossary entries for every field the Sutras show.
+- **`ingest_jsonl.py`** `--mode overwrite-dates` (default) replaces only the dates in the input, `append` adds, `replace`
+  rewrites the table; `--dry-run` prints counts per kind and date; the summary lists skipped documents and bad lines (file:line).
+  A running server picks the new data up at its next refresh (Delta: 10 s, files: `rescan-seconds`).
+
 ## Versioning a pack
 
 **The pack's `version`** (`version: 1.2.0`) is a label: it is shown on About, *Admin → Health* and *Admin → Packs*, and the

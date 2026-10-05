@@ -1209,6 +1209,7 @@ java -jar drishti-server-<version>-exec.jar sutra <command> <path>... [options]
 | `preview` | the same | renders the samples; with `--out dir` writes one HTML snapshot per Sutra and sample |
 | `shape` | JSON sample files or a folder | infers the JSON Schema with roles (to the console, or `--out dir/shape.json`) |
 | `design` | JSON sample files or a folder | drafts a Sutra with auto-design (`--kind deal` names it; `--out dir` writes `deal.sutra.yaml`) |
+| `design --each` | a folder of subfolders of samples | one draft per subfolder in one run (`<out>/<subfolder>.sutra.yaml`; kind: `--kind`, else the subfolder's `kind` file, else its name) |
 
 Options: `--junit file` writes a JUnit XML report (on every path, including a usage error, so a CI report step always
 finds the file); `--out dir`; `--samples path` (repeatable) to use those JSON files instead of the Sutra's own samples;
@@ -1257,6 +1258,23 @@ samples:                  # optional: more expectations for one sample file
 Any other key is a usage error (exit 2), so a typo cannot silently pass. The workbench's *pack fragment export* writes this
 layout, so an exported fragment passes `sutra test` unchanged. Choose samples like a tester: a rich document, a thin one
 that lacks the optional parts, and one with an empty list; `nonEmpty` then names the panels that must never silently vanish.
+
+### Drafting many Sutras from JSON Lines
+
+`sutra design --each <dir>` drafts one Sutra per immediate subfolder of `<dir>` that holds `.json` samples, in one JVM
+(a JVM start costs about 5 s): `<out>/<subfolder>.sutra.yaml`. The kind is `--kind` if given, else the subfolder's one-line
+`kind` file, else the folder name. `tools/sutragen.py` builds on it: it splits JSONL files into groups by field values, writes
+each group's samples, calls `design --each` once, edits the name, description, `match` line and title id, writes
+`tests/<sutra>/sample-*.json`, and runs `sutra lint`:
+
+```bash
+uv run --with pyyaml python tools/sutragen.py data/jsonl --key trade=tradeId --match trade=productType \
+    --date trade=businessDate --fallback --out packs/my-pack/sutras --tests-dir packs/my-pack/tests
+java -jar drishti-server-<version>-exec.jar sutra test packs/my-pack
+```
+
+The whole workflow, including a complete pack and loading the data, is in
+[Generating a pack from JSON Lines](PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines).
 
 ### In CI
 

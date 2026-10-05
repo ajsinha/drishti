@@ -26,6 +26,8 @@ python3 tools/license_headers.py
 for gen in $(grep -l -- "--check" packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do python3 "$gen" --check; done   # generated pack content is current
 python3 -m unittest -q tools/samplegen/test_samplegen.py
 python3 -m unittest -q tools/packreg/test_packreg.py
+python3 -m unittest -q tools/test_sutragen.py
+python3 -m unittest -q tools/test_ingest_jsonl.py
 if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
   # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
   timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py

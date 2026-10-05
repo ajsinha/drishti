@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 /** The parsed command line of {@code sutra <command> <path>... [--junit file] [--out dir] [--kind k] [--samples path] [--strict]}. */
-record CliArgs(String command, List<Path> paths, Path junit, Path out, String kind, List<Path> samples, boolean strict) {
+record CliArgs(String command, List<Path> paths, Path junit, Path out, String kind, List<Path> samples, boolean strict, boolean each) {
 
     static final Set<String> COMMANDS = Set.of("lint", "test", "shape", "design", "preview");
 
@@ -40,12 +40,14 @@ record CliArgs(String command, List<Path> paths, Path junit, Path out, String ki
         Path out = null;
         String kind = null;
         boolean strict = false;
+        boolean each = false;
         for (int i = 1; i < args.size(); i++) {
             String a = args.get(i);
             switch (a) {
                 case "--junit" -> junit = Path.of(value(args, ++i, a));
                 case "--out" -> out = Path.of(value(args, ++i, a));
                 case "--strict" -> strict = true;
+                case "--each" -> each = true;
                 case "--kind" -> kind = value(args, ++i, a);
                 case "--samples" -> samples.add(Path.of(value(args, ++i, a)));
                 default -> {
@@ -59,7 +61,7 @@ record CliArgs(String command, List<Path> paths, Path junit, Path out, String ki
         if (paths.isEmpty()) {
             throw new UsageException(command + " needs a path");
         }
-        return new CliArgs(command, paths, junit, out, kind, samples, strict);
+        return new CliArgs(command, paths, junit, out, kind, samples, strict, each);
     }
 
     private static String value(List<String> args, int i, String option) {

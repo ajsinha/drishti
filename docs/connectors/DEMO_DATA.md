@@ -143,6 +143,24 @@ SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -j
 
 One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](FILE_CONNECTOR.md).
 
+## Your own JSONL
+
+`tools/ingest_jsonl.py` loads any JSON Lines (plain documents or loader envelopes; a folder or single files) into either store,
+using the layout the connectors read. A pack made by `tools/packgen/pack_from_jsonl.py` carries the id and date fields it needs.
+
+```bash
+# Delta lake (default): <root>/<domain>/<kind>/business_date=...; serve with DRISHTI_DELTA_ROOT
+uv run --with pyyaml --with deltalake --with pyarrow python tools/ingest_jsonl.py --from data/trade.jsonl --pack packs/my-bank --lake /tmp/lake
+DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
+# JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
+uv run --with pyyaml python tools/ingest_jsonl.py --from data/jsonl --domain my-bank --key trade=tradeId --date trade=businessDate \
+    --store files --root /tmp/files --dry-run
+```
+
+`--mode overwrite-dates` (default) replaces only the business dates present, so a re-run is idempotent; `append`; `replace`.
+Without `--pack`, give `--domain`, `--key`, `--date` per kind. Documents without the date are reported and skipped.
+See [Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines).
+
 ## The samples
 
 The banking packs' samples in `packs/<pack>/samples/` are what the `demo` source serves live; they are written by

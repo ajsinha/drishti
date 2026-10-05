@@ -211,6 +211,24 @@ class SutraCliTest {
         assertThat(Files.exists(out.resolve("../../evil.sutra.yaml"))).isFalse();
     }
 
+    @Test
+    void designEachDraftsOneSutraPerSubfolder() throws IOException {
+        Path root = Files.createDirectories(tmp.resolve("groups"));
+        Files.writeString(Files.createDirectories(root.resolve("fx-a")).resolve("1.json"), "{\"id\":\"T1\",\"notional\":100}");
+        Files.writeString(Files.createDirectories(root.resolve("fx-b")).resolve("1.json"), "{\"id\":\"T2\",\"notional\":5}");
+        Files.writeString(root.resolve("fx-b").resolve("kind"), "swap\n");
+        Files.createDirectories(root.resolve("empty"));
+        Path out = tmp.resolve("each-out");
+        Run r = run("design", "--each", root.toString(), "--out", out.toString());
+        assertThat(r.code()).isZero();
+        assertThat(Files.readString(out.resolve("fx-a.sutra.yaml"))).contains("kind: fx-a");
+        assertThat(Files.readString(out.resolve("fx-b.sutra.yaml"))).contains("kind: swap");
+        assertThat(Files.exists(out.resolve("empty.sutra.yaml"))).isFalse();
+        assertThat(run("design", "--each", root.toString(), "--kind", "deal", "--out", out.toString()).code()).isZero();
+        assertThat(Files.readString(out.resolve("fx-a.sutra.yaml"))).contains("kind: deal");
+        assertThat(run("design", "--each", tmp.resolve("empty-none").toString()).code()).isEqualTo(2);
+    }
+
     /** S2-12: the CLI keeps the server's input limit, says what failed in one line, and looks for samples only inside what it was given. */
     @Test
     void theCliRefusesOversizeInputInOneLineAndStaysInsideItsInput() throws IOException {

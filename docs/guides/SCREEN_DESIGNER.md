@@ -554,6 +554,7 @@ java -jar drishti-server-<version>-exec.jar sutra test  packs/my-pack --junit ta
 java -jar drishti-server-<version>-exec.jar sutra preview packs/my-pack --out target/snapshots
 java -jar drishti-server-<version>-exec.jar sutra shape  samples/*.json --out target/shape
 java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind deal --out target/draft
+java -jar drishti-server-<version>-exec.jar sutra design --each samples-by-kind --out target/drafts   # one draft per subfolder
 ```
 
 `test` uses the **same checker as the Tests tab**, with the `packs/<pack>/tests/<sutra>/*.json` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
