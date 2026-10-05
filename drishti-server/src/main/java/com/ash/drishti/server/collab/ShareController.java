@@ -17,13 +17,17 @@ package com.ash.drishti.server.collab;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.identity.collab.CollabProperties;
+import com.ash.drishti.server.collab.snapshot.SnapshotService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,19 +49,22 @@ public class ShareController {
     private final ShareService shares;
     private final CollabProperties props;
     private final Entitlements entitlements;
+    private final SnapshotService snapshots;
     private final boolean accessLog;
 
-    public ShareController(ShareService shares, CollabProperties props, Entitlements entitlements,
+    public ShareController(ShareService shares, CollabProperties props, Entitlements entitlements, SnapshotService snapshots,
             @Value("${drishti.access-log.enabled:true}") boolean accessLog) {
         this.shares = shares;
         this.props = props;
         this.entitlements = entitlements;
+        this.snapshots = snapshots;
         this.accessLog = accessLog;
     }
 
     /** What the console needs to draw the share dialog: whether collaboration is on, the limits, and what the caller may do. */
     @GetMapping("/collab")
-    public Map<String, Object> config(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> config(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestParam(required = false) String kind,
+            @RequestParam(required = false) String gateKind) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("enabled", props.enabled());
         m.put("store", props.store());
@@ -68,6 +75,7 @@ public class ShareController {
         m.put("onMaskedCopy", props.text().onMaskedCopy());
         m.put("postToThread", props.share().postToThread());
         m.put("minQuery", props.directory().minQuery());
+        m.put("snapshots", kind != null && !kind.isBlank() && snapshots.allowed(kind.trim(), gateKind == null || gateKind.isBlank() ? null : gateKind.trim()));
         m.put("collaborate", props.enabled() && entitlements.mayCollaborate(p));
         m.put("compliance", entitlements.mayCompliance(p));
         return m;
@@ -77,6 +85,23 @@ public class ShareController {
     @ResponseStatus(HttpStatus.CREATED)
     public ShareService.Result send(@RequestBody ShareService.Request body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         return shares.share(p, body, asOf, accessLog);
+    }
+
+    /** The picture a share with these recipients would carry (the dialog's preview). Nothing is sent. */
+    @PostMapping("/shares/preview-picture")
+    public ResponseEntity<byte[]> preview(@RequestBody ShareService.Request body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return png(shares.previewPicture(p, body, asOf));
+    }
+
+    /** The watermarked picture of a share, for its sender, its recipients and compliance. */
+    @GetMapping(value = "/shares/{id}/picture", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> picture(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return png(shares.picture(p, id));
+    }
+
+    private static ResponseEntity<byte[]> png(SnapshotService.Image img) {
+        return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).cacheControl(CacheControl.noStore()).header("X-Content-Type-Options", "nosniff")
+                .header("X-Drishti-Snapshot-Masked", Boolean.toString(img.masked())).body(img.png());
     }
 
     @GetMapping("/shares/{id}")

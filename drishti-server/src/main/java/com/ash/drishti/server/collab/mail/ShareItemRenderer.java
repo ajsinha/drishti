@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.collab.mail;
 
+import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.identity.collab.Share;
@@ -22,6 +23,7 @@ import com.ash.drishti.identity.collab.ShareStore;
 import com.ash.drishti.server.collab.NoteText;
 import com.ash.drishti.server.collab.PanelTitles;
 import com.ash.drishti.server.collab.Principals;
+import com.ash.drishti.server.collab.snapshot.SnapshotService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 
@@ -33,6 +35,8 @@ import com.ash.drishti.server.security.Principal;
  */
 public final class ShareItemRenderer implements ItemRenderer {
 
+    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(ShareItemRenderer.class);
+
     private final ShareStore shares;
     private final Principals principals;
     private final Entitlements entitlements;
@@ -40,9 +44,16 @@ public final class ShareItemRenderer implements ItemRenderer {
     private final NotifyPrefs prefs;
     private final String consoleUrl;
     private final PanelTitles titles;
+    private final SnapshotService snapshots;
 
     public ShareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy, NotifyPrefs prefs,
             String consoleUrl, PanelTitles titles) {
+        this(shares, principals, entitlements, policy, prefs, consoleUrl, titles, null);
+    }
+
+    public ShareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy, NotifyPrefs prefs,
+            String consoleUrl, PanelTitles titles, SnapshotService snapshots) {
+        this.snapshots = snapshots;
         this.shares = shares;
         this.principals = principals;
         this.entitlements = entitlements;
@@ -72,7 +83,21 @@ public final class ShareItemRenderer implements ItemRenderer {
         String note = MailContentPolicy.COMMENT.equals(mode) ? NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(who)) : null;
         String when = linkOnly ? null : s.pin().live() || s.pin().businessDate() == null ? "live when shared" : s.pin().businessDate().toString();
         return new MailRenderer.Content("share", sender + " shared a view with you", linkOnly ? null : label(s.kind()),
-                linkOnly ? null : s.entityId(), linkOnly ? null : titles.title(s.kind(), s.entityId(), s.panelId(), who), when, note, link(s.id()));
+                linkOnly ? null : s.entityId(), linkOnly ? null : titles.title(s.kind(), s.entityId(), s.panelId(), who), when, note, link(s.id()),
+                MailContentPolicy.COMMENT.equals(mode) ? picture(s) : null);
+    }
+
+    /** The share's watermarked picture, only under {@code email.content: comment}; a picture that cannot be made never holds the mail back. */
+    private byte[] picture(Share s) {
+        if (snapshots == null || !s.picture() || !snapshots.allowed(s.kind(), s.gateKind())) {
+            return null;
+        }
+        try {
+            return snapshots.forShare(s, s.sender()).png();
+        } catch (DrishtiException e) {
+            LOG.info("share {} goes without its picture: {}", s.id(), e.getMessage());
+            return null;
+        }
     }
 
     private String link(String id) {

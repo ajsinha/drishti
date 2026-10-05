@@ -68,7 +68,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
         exportKeep = exportKeep == null ? Duration.ofHours(24) : exportKeep;
         packs = packs == null ? Map.of() : Map.copyOf(packs);
         bridges = bridges == null ? new Bridges(null, null, null, null, null, null, null) : bridges;
-        snapshots = snapshots == null ? new Snapshots(null) : snapshots;
+        snapshots = snapshots == null ? new Snapshots(null, null, null, null, null, null, null, null, null, null) : snapshots;
     }
 
     public boolean jpa() {
@@ -302,10 +302,38 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
         }
     }
 
-    /** @param enabled watermarked snapshots (phase 2) */
-    public record Snapshots(Boolean enabled) {
+    /**
+     * Watermarked snapshots: a server-drawn PNG of a view that a share can carry. Off by default; a pack can override {@code enabled}
+     * ({@code packs.<pack>.snapshots.enabled}), so a pack whose pictures must never leave the application can forbid them.
+     *
+     * @param enabled whether a share may include a picture
+     * @param width pixels wide
+     * @param maxHeight most pixels tall (the rest of the view is left out, with a line saying so)
+     * @param maxPanels most panels drawn
+     * @param maxRows most rows drawn in a table, list or timeline
+     * @param maxBytes largest PNG produced; a larger one is refused
+     * @param timeout longest one drawing may take
+     * @param cacheSize pictures kept, by view, generation and rights profile
+     * @param cacheTtl how long a kept picture is used
+     * @param recipients what the watermark says about the people: {@code count} (default) or {@code names}
+     */
+    public record Snapshots(Boolean enabled, Integer width, Integer maxHeight, Integer maxPanels, Integer maxRows, Integer maxBytes,
+            Duration timeout, Integer cacheSize, Duration cacheTtl, String recipients) {
         public Snapshots {
             enabled = enabled != null && enabled;
+            width = bounded(width, 480, 2400, 960);
+            maxHeight = bounded(maxHeight, 200, 8000, 1800);
+            maxPanels = bounded(maxPanels, 1, 50, 8);
+            maxRows = bounded(maxRows, 1, 200, 12);
+            maxBytes = bounded(maxBytes, 10_000, 20_000_000, 1_500_000);
+            timeout = duration(timeout, Duration.ofSeconds(5));
+            cacheSize = bounded(cacheSize, 1, 5000, 50);
+            cacheTtl = duration(cacheTtl, Duration.ofMinutes(10));
+            recipients = "names".equalsIgnoreCase(recipients) ? "names" : "count";
+        }
+
+        private static int bounded(Integer v, int min, int max, int dflt) {
+            return v == null ? dflt : Math.max(min, Math.min(max, v));
         }
     }
 }

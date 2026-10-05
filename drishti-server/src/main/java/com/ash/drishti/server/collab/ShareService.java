@@ -32,6 +32,7 @@ import com.ash.drishti.identity.collab.Recipient;
 import com.ash.drishti.identity.collab.Share;
 import com.ash.drishti.identity.collab.ShareStore;
 import com.ash.drishti.identity.collab.Ulid;
+import com.ash.drishti.server.collab.snapshot.SnapshotService;
 import com.ash.drishti.server.collab.thread.ThreadService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
@@ -81,7 +82,7 @@ public final class ShareService {
      * and {@code gateKind} name a shared panel and the kind its source names; {@code live} sends a live link instead of the date.
      */
     public record Request(String kind, String id, String panel, String gateKind, Long generation, String note, To to, Channels channels,
-            Boolean live, Boolean postToThread) {}
+            Boolean live, Boolean postToThread, Boolean picture) {}
 
     public record Skipped(String name, String reason) {}
 
@@ -95,7 +96,7 @@ public final class ShareService {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record View(String id, boolean access, String reason, String pack, String role, String sender, String senderName, Instant createdAt,
             String kind, String entityId, String panel, Pin pin, String note, List<RecipientView> recipients,
-            List<ThreadService.CommentView> replies) {}
+            List<ThreadService.CommentView> replies, Boolean picture) {}
 
     /** One line of a box (sent or received). */
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -117,12 +118,13 @@ public final class ShareService {
     private final AccessLog accessLog;
     private final RateLimits limits;
     private final ThreadService threads;
+    private final SnapshotService snapshots;
     private final List<Pattern> deny = new ArrayList<>();
 
     @SuppressWarnings("java:S107")
     public ShareService(ShareStore store, CollabTx tx, CollabProperties props, Entitlements entitlements, PackAccess packs,
             Principals principals, DirectoryService directory, UserService users, SourceRouter router, List<Notifier> notifiers,
-            InboxHub hub, AccessLog accessLog, RateLimits limits, ThreadService threads) {
+            InboxHub hub, AccessLog accessLog, RateLimits limits, ThreadService threads, SnapshotService snapshots) {
         this.store = store;
         this.tx = tx;
         this.props = props;
@@ -137,6 +139,7 @@ public final class ShareService {
         this.accessLog = accessLog;
         this.limits = limits;
         this.threads = threads;
+        this.snapshots = snapshots;
         for (String p : props.text().denyPatterns()) {
             try {
                 deny.add(Pattern.compile(p));
@@ -179,6 +182,10 @@ public final class ShareService {
         if (gate != null) {
             entitlements.requireOpen(sender, gate);
         }
+        boolean picture = Boolean.TRUE.equals(req.picture());
+        if (picture) {
+            snapshots.require(kind, gate);
+        }
         String note = cleanNote(req.note());
         List<RecipientDraft> people = resolve(sender, req.to(), kind, gate);
         EntityDocument doc = fetch(kind, entityId, asOf);
@@ -205,9 +212,12 @@ public final class ShareService {
         boolean toThread = postsToThread(req.postToThread(), props.share().postToThread());
         String threadId = toThread ? Ulid.next("th_", now.toEpochMilli()) : null;
         Share share = new Share(Ulid.next("sh_", now.toEpochMilli()), sender.user(), now, kind, entityId, panel, gate, pin, note, spans,
-                "in-app", threadId, null).signed();
+                picture ? "in-app,picture" : "in-app", threadId, null).signed();
         List<Recipient> rows = people.stream().map(d -> new Recipient(d.addressed(), d.user(), d.state(), null)).toList();
         List<Recipient> reached = rows.stream().filter(r -> Recipient.NOTIFIED.equals(r.state())).toList();
+        if (picture && !reached.isEmpty()) {            // drawn before anything is written: a picture that cannot be made refuses the share
+            snapshots.render(share, reached.stream().map(r -> principals.of(r.username())).toList(), sender.user(), false);
+        }
         List<Notice> notices = tx.run(() -> {
             store.save(share, rows);
             if (threadId != null) {
@@ -228,6 +238,53 @@ public final class ShareService {
         });
         notices.forEach(hub::publish);
         return new Result(share.id(), link(share.id()), pin, reached.size(), props.share().tell() ? skipped(sender, people, kind) : List.of(), warnings);
+    }
+
+    /**
+     * The picture a share would carry, for the people it would reach (the dialog's preview). Nothing is sent or stored; the picture is
+     * recorded in the access log like any other. {@code DRS-7015} when pictures are off for the kind or no recipient could be shown one.
+     */
+    public SnapshotService.Image previewPicture(Principal sender, Request req, AsOf asOf) {
+        requireCollaborate(sender);
+        if (req == null || blank(req.kind()) || blank(req.id())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a preview needs a kind and an id");
+        }
+        String kind = req.kind().trim();
+        String gate = blank(req.gateKind()) ? null : req.gateKind().trim();
+        requirePackSharing(kind);
+        snapshots.require(kind, gate);
+        entitlements.requireOpen(sender, kind);
+        if (gate != null) {
+            entitlements.requireOpen(sender, gate);
+        }
+        List<RecipientDraft> people = resolve(sender, req.to(), kind, gate);
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        long generation = req.generation() == null ? 0 : Math.max(0, req.generation());
+        boolean live = Boolean.TRUE.equals(req.live());
+        Pin pin = new Pin(live ? null : asOf.businessDate(), live || asOf.live(), now, generation, null);
+        Share draft = new Share("sh_preview", sender.user(), now, kind, req.id().trim(), blank(req.panel()) ? null : req.panel().trim(), gate, pin,
+                "", List.of(), "in-app,picture", null, null);
+        List<Principal> audience = people.stream().filter(d -> Recipient.NOTIFIED.equals(d.state())).map(d -> principals.of(d.user())).toList();
+        return snapshots.render(draft, audience, sender.user(), true);
+    }
+
+    /**
+     * The picture a share carries, for its sender, a notified recipient or a compliance officer who may still open the view; the picture is
+     * the one made for all the share's recipients. 404 {@code DRS-7001} for anyone else and for a share without one.
+     */
+    public SnapshotService.Image picture(Principal caller, String id) {
+        requireOn();
+        Share s = Ulid.valid(id, "sh_") ? store.find(id).orElse(null) : null;
+        List<Recipient> rs = s == null ? List.of() : store.recipients(id);
+        boolean party = s != null && (s.sender().equals(caller.user()) || entitlements.mayCompliance(caller)
+                || rs.stream().anyMatch(r -> r.username().equals(caller.user()) && Recipient.NOTIFIED.equals(r.state())));
+        if (s == null || !party || !s.picture()) {
+            throw new DrishtiException(ErrorCode.SHARE_NOT_FOUND, "no picture for share '" + (id == null ? "" : id.length() > 40 ? id.substring(0, 40) : id) + "'");
+        }
+        if (blockedReason(caller, s) != null) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, caller.user() + " may no longer open the shared " + s.kind() + " view");
+        }
+        return snapshots.forShare(s, caller.user());
     }
 
     /** The request's own choice wins; when it says nothing the configured default ({@code drishti.collab.share.post-to-thread}) applies. */
@@ -411,7 +468,7 @@ public final class ShareService {
         String blocked = blockedReason(caller, s);
         if (blocked != null) {
             return new View(s.id(), false, blocked, packs.ownerOf(s.kind()), role, s.sender(), senderName, s.createdAt(), s.kind(), null, null, null,
-                    null, null, null);
+                    null, null, null, null);
         }
         if (recipient && !sender) {
             store.markOpened(id, caller.user(), Instant.now().truncatedTo(ChronoUnit.MILLIS));
@@ -419,7 +476,7 @@ public final class ShareService {
         List<RecipientView> shown = sender || compliance
                 ? store.recipients(id).stream().map(r -> new RecipientView(r.username(), r.addressed(), r.state(), r.openedAt())).toList() : null;
         return new View(s.id(), true, null, null, role, s.sender(), senderName, s.createdAt(), s.kind(), s.entityId(), s.panelId(), s.pin(),
-                NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(caller)), shown, threads.replies(caller, s));
+                NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(caller)), shown, threads.replies(caller, s), s.picture() ? Boolean.TRUE : null);
     }
 
     /**

@@ -249,7 +249,17 @@ drishti:
       timeout: 10s
       max-note: 500                  # characters of the note a post carries
       webhooks: []                   # [{ name: risk-teams, format: teams, url-env: BRIDGE_RISK_URL, routes: [{ packs: [..], kinds: [..], events: [share, comment, mention] }] }]
-    snapshots: { enabled: false }               # phase 2
+    snapshots:                                  # a watermarked PNG of a view that a share may carry; a pack can override: packs.<pack>.snapshots.enabled
+      enabled: false                            # off: no share carries a picture
+      width: 960                                # pixels wide
+      max-height: 1800                          # pixels tall at most; the rest of the view is left out, with a line saying so
+      max-panels: 8
+      max-rows: 12                              # rows drawn of a table, list or timeline
+      max-bytes: 1500000                        # largest PNG; larger is refused
+      timeout: 5s                               # longest one drawing may take
+      cache-size: 50                            # pictures kept by view, generation and rights profile
+      cache-ttl: 10m
+      recipients: count                         # the watermark names: count | names
   reports:                           # scheduled reports: a search delivered as CSV on a schedule
     enabled: ${DRISHTI_REPORTS_ENABLED:true}   # the scheduler; run it on one server of a group (reports still run by hand)
     folder: ${DRISHTI_REPORTS_DIR:./data/reports}

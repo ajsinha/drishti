@@ -1150,7 +1150,12 @@ click plus `Enter`; the rest sends the view to people inside Drishti.
 5. **Also start a discussion on the view** (a tick under the note): the note also becomes the first comment of a thread on the view, written by
    you, so the conversation continues in the [Discussion](#discussion) tab. Whether it is ticked when the dialog opens is your administrator's
    setting (`drishti.collab.share.post-to-thread`); you can change it for each share.
-6. **Send** (`Ctrl+Enter`). The dialog says who it reached ("Sent to 2") and who it did not and why ("Not sent to dkim:
+6. **Include a picture** (a tick, shown only when your administrator allows pictures for this kind of view): the share carries a snapshot of the
+   view, or of the panel you chose, with a watermark (who sent it, to how many people, when, the data's date and generation, and the link). Tick it
+   and the dialog shows a **preview** for the people you chose. The picture shows only what *every* recipient may see: if any of them sees a hidden
+   field as `•••`, so does the picture for all, and a panel any of them may not open is left out. Charts without a simple drawing appear as a labelled
+   box that says to open the view. Recipients see it on the shared view's banner and, if email is on, as an attachment.
+7. **Send** (`Ctrl+Enter`). The dialog says who it reached ("Sent to 2") and who it did not and why ("Not sent to dkim:
    cannot open trade views"). `Esc` closes the dialog and puts the focus back where it was. On a phone the dialog is a full
    screen sheet.
 

@@ -70,8 +70,18 @@ class Collab:
     def __init__(self, backend: Any):
         self._b = backend
 
-    async def config(self, ident) -> dict:
+    async def config(self, ident, kind: str = "") -> dict:
+        """``kind`` (the view's) lets the server say whether a picture may be offered for it (``snapshots``)."""
+        if kind:
+            return await self._b._send("GET", "/collab", ident, params={"kind": kind})
         return await self._b._send("GET", "/collab", ident)
+
+    async def preview_picture(self, body: dict, ident) -> bytes:
+        """The PNG a share with these recipients would carry (nothing is sent)."""
+        return await self._b._send("POST", "/shares/preview-picture", ident, json=body, raw=True)
+
+    async def picture(self, share_id: str, ident) -> bytes:
+        return await self._b._send("GET", f"/shares/{quote(share_id, safe='')}/picture", ident, raw=True)
 
     async def directory(self, q: str, ident, limit: int = 10, kind: str = "") -> list:
         params: dict[str, Any] = {"q": q, "limit": limit}

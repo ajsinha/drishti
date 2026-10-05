@@ -15,5 +15,10 @@
  */
 package com.ash.drishti.server.collab.mail;
 
-/** A message ready to send: one recipient address, a one-line subject, a text part and an HTML part, and its {@code Message-ID}. */
-public record RenderedMail(String to, String subject, String text, String html, String messageId) {}
+/** A message ready to send: one recipient address, a one-line subject, a text part and an HTML part, its {@code Message-ID} and, for a share with a picture, the PNG to attach (null otherwise). */
+public record RenderedMail(String to, String subject, String text, String html, String messageId, byte[] image) {
+
+    public RenderedMail(String to, String subject, String text, String html, String messageId) {
+        this(to, subject, text, html, messageId, null);
+    }
+}

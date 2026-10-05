@@ -15,8 +15,8 @@
 -->
 # Collaboration: share with a note, and comment threads anchored to the data
 
-Status: **built through step 8** (share with a note, the inbox, email, comment threads, moderation, retention, legal hold and export; the
-chat bridges and watermarked snapshots, steps 9 and 10, are phase 2 and not built). The design below is as it was agreed; each step's
+Status: **built through step 10** (share with a note, the inbox, email, comment threads, moderation, retention, legal hold and export; the
+chat bridges and watermarked snapshots, steps 9 and 10, phase 2, are built too). The design below is as it was agreed; each step's
 *as built* note in the [build plan](#build-plan) lists where the code differs, and the user-facing, operating and configuration documents
 describe what was built. The whole path on one trade is worked through in
 [HOW_IT_FITS.md §3.10](HOW_IT_FITS.md#310-share-and-discussion-end-to-end). Owner: the identity module
@@ -665,7 +665,7 @@ drishti:
     export-keep: 24h
     packs: {}                         # e.g. genomics: { email: { content: link-only } }
     bridges: { enabled: false, webhooks: [] }      # phase 2
-    snapshots: { enabled: false }                  # phase 2
+    snapshots: { enabled: false }                  # step 10; more keys in CONFIGURATION.md
 
 spring:
   mail:                               # standard Spring Boot mail settings
@@ -799,7 +799,7 @@ M 2–3 days, L 4–5 days. Browser tests are Playwright against a scratch serve
 | **7. Moderation, retention, legal hold, export** (server done; see *Step 7 as built*) | hide/unhide, lock, holds, `CollabPurge`, export job and zip, verify; admin console page | `drishti-server/.../collab/compliance/*` (new), `drishti-identity/.../collab/Hold*.java` (new); console `routes/compliance_routes.py`, `core/compliance.py`, `templates/admin/collab.html`, `static/js/admin-collab.js` (new) | `CollabPurgeTest` (holds win, whole threads only), `ExportTest` (manifest, NDJSON, hashes, unscrubbed only for `compliance`), `ModerationTest`, `test_admin_collab.py` | a hold on MX-20000001 keeps its threads past retention; an export of a day verifies against the chain | M |
 | **8. End-to-end docs** (done; see *Step 8 as built*) | HOW_IT_FITS section, ARCHITECTURE paragraph, ADR-020, USER_GUIDE consolidation, the console's monitors-and-alerts guide | docs only | `test_help_links.py`, `test_docs_error_codes.py`, `test_docs_settings.py`, licence headers | every link resolves; every new code and key documented | S |
 | **9. Bridges** (phase 2) | `WebhookNotifier`, bridge bindings, render-as role | `drishti-server/.../collab/bridge/*` (new), admin page section | stub HTTP server test (allow-list, no redirects, masks) | a comment on a bound kind posts text and link only | M |
-| **10. Watermarked snapshots** (phase 2) | `SnapshotRenderer` (Java2D), most-restrictive principal, policy, attachment | `drishti-server/.../collab/snapshot/*` (new) | golden-image test, a recipient without `raw` → masked image, a gate-kind panel left out | off by default; on, an image never shows more than its least-entitled recipient may see | L |
+| **10. Watermarked snapshots** (phase 2, built: see *As-built notes: step 10*) | `SnapshotRenderer` (Java2D), most-restrictive principal, policy, attachment | `drishti-server/.../collab/snapshot/*` (new) | golden-image test, a recipient without `raw` → masked image, a gate-kind panel left out | off by default; on, an image never shows more than its least-entitled recipient may see | L |
 
 **Step 3 as built.** `core/collab.py` (client, `link_for`, the `X-Drishti-Share` contextvar `BackendClient` adds to every call while a view
 opened through a share is built), `routes/collab_routes.py` (`/api/collab`, `/api/directory`, `/api/share`, `/share/{id}`, `/inbox`,
@@ -957,6 +957,24 @@ cross-cutting sections only.
 - **Group C**, after B: step 6 (view page, drawer, discussion) ‖ step 7 (compliance: new server package, new console
   route, client and admin template).
 - **Group D**, after C: step 8 ‖ step 9; step 10 alone, last, only if the product owner keeps it.
+
+## As-built notes: step 10, watermarked snapshots (2026-10)
+
+- `collab/snapshot`: `SnapshotLayout` (a `ViewModel` to a `SnapshotModel` of text, boxes, lines and polylines; width is estimated from font size, so the layout is
+  pure and testable as data), `SnapshotPainter` (Java2D, headless, JDK logical fonts, PNG) and `SnapshotService` (policy, audience, caches, limits, access log).
+- **Policy.** `snapshots.enabled` (default off); `packs.<pack>.snapshots.enabled` overrides it either way, so a pack can forbid (`403 DRS-7015`). The share
+  request's `picture: true` is checked for the kind and a panel's gate kind; the dialog learns it from `GET /collab?kind=`.
+- **Most restrictive recipient.** The audience is the notified recipients who may open the kind (and gate kind). The view is built once with the field masks
+  if any of them lacks `raw` (masks are binary) and a gate predicate that needs every one to open a panel's kind; denied panels are not drawn, not even titled.
+  A share whose recipients cannot all be shown nothing (none may open it) gets no picture (`DRS-7015` on preview). The picture is drawn before the share is
+  written, so a size or time failure (`DRS-7016`) refuses the whole share.
+- **Not stored.** The share keeps the choice as a `picture` token in `channels` (`in-app,picture`); the PNG is drawn again when asked (page or email) and kept
+  in a cache by (view, generation, rights profile) for the view and by share for the picture, so the page and the email agree while it lives. The design's
+  "stored with the share" became "drawn from the pin", which keeps the stores and the export unchanged.
+- **Where it shows.** `GET /shares/{id}/picture` (sender, notified recipients, compliance; `no-store`), the dialog's preview `POST /shares/preview-picture`,
+  and the share email's attachment under `email.content: comment` (a digest carries none; a picture that cannot be made never holds the mail back).
+- **Audit.** Every picture produced, previews and attachments included, is an access-log `export` row.
+- Charts: line charts, bars, histograms, waterfalls and gauges are simple marks; surface, scatter, candles and graph are a labelled placeholder.
 
 ## As-built notes: server polish (2026-10)
 

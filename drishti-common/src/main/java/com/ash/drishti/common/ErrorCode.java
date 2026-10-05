@@ -92,7 +92,11 @@ public enum ErrorCode {
     /** A bridge test, or a post, failed or the bridge is not usable: bridges off, its URL variable unset or not allowed, or the endpoint refused. */
     BRIDGE_UNAVAILABLE("DRS-7013", 503),
     /** No bridge with that name in {@code drishti.collab.bridges.webhooks}. */
-    BRIDGE_NOT_FOUND("DRS-7014", 404);
+    BRIDGE_NOT_FOUND("DRS-7014", 404),
+    /** A picture was asked for where snapshots are off (the server's policy or the kind's pack), or no recipient could be shown one. */
+    SNAPSHOT_REFUSED("DRS-7015", 403),
+    /** The picture could not be drawn: it took longer than the timeout, is larger than the byte limit, or the renderer failed. */
+    SNAPSHOT_FAILED("DRS-7016", 503);
 
     private final String code;
     private final int httpStatus;

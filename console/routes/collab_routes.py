@@ -20,7 +20,7 @@ from __future__ import annotations
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from core import asof, collab as collab_core
 from core.backend import BackendError
@@ -43,10 +43,10 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("/api/collab")
-async def config(request: Request):
-    """Whether collaboration is on and what the caller may do (the share dialog reads this once)."""
+async def config(request: Request, kind: str = ""):
+    """Whether collaboration is on and what the caller may do (the share dialog reads this once; ``kind`` adds whether a picture may be offered)."""
     try:
-        return await collab(request).config(ident(request))
+        return await (collab(request).config(ident(request), kind[:80]) if kind else collab(request).config(ident(request)))
     except BackendError as e:
         if e.status in (404, 503):                       # an older server, or none: the share button stays a copy-link button
             return {"enabled": False, "collaborate": False}
@@ -70,6 +70,35 @@ async def share(request: Request):
     asof.set_known(known if asof.current() != "live" else None)
     try:
         return JSONResponse(await collab(request).send(body, ident(request)), status_code=201)
+    except BackendError as e:
+        return _problem(e)
+
+
+def _png(data: bytes) -> Response:
+    return Response(data, media_type="image/png", headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
+
+
+@router.post("/api/share/preview-picture")
+async def share_preview_picture(request: Request):
+    """The picture a share would carry for the chosen people (the dialog's preview): the PNG, or the server's refusal as JSON."""
+    body = await json_body(request)
+    as_of, known = body.pop("asOf", None), body.pop("knownAt", None)
+    asof.set_current(as_of)
+    asof.set_known(known if asof.current() != "live" else None)
+    try:
+        return _png(await collab(request).preview_picture(body, ident(request)))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/share/{share_id}/picture")
+async def share_picture(request: Request, share_id: str):
+    """The watermarked picture of a share, for its sender, recipients and compliance (the server checks)."""
+    sid = collab_core.clean_share(share_id)
+    if sid is None:
+        return JSONResponse({"code": "DRS-7001", "detail": "no such share"}, status_code=404)
+    try:
+        return _png(await collab(request).picture(sid, ident(request)))
     except BackendError as e:
         return _problem(e)
 

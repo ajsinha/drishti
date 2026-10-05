@@ -883,3 +883,5 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-7012` | email was asked for but is off or unreachable (HTTP 503); the share can still be sent in Drishti only |
 | `DRS-7013` | a bridge test failed, or the bridge cannot post (HTTP 503): bridges off, its `url-env` variable unset, the URL not under `bridges.allow`, or the endpoint answered an error; the message says which |
 | `DRS-7014` | no bridge with that name in `drishti.collab.bridges.webhooks` (HTTP 404) |
+| `DRS-7015` | a share asked for a picture where snapshots are off: `drishti.collab.snapshots.enabled` is `false`, or `drishti.collab.packs.<pack>.snapshots.enabled: false` for that kind's pack, or no recipient may open the view (HTTP 403) |
+| `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |

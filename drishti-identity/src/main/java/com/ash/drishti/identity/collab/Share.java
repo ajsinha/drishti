@@ -36,7 +36,7 @@ import java.util.List;
  * @param pin which data it is about
  * @param body the note
  * @param maskedSpans ranges of {@code body} to scrub for readers without raw
- * @param channels {@code in-app} or {@code in-app,email}
+ * @param channels {@code in-app}, with {@code email} and {@code picture} when asked for (comma-separated)
  * @param threadId the discussion thread it was also posted to, or null
  * @param hash SHA-256 over the fields above, so a stored row can be checked
  */
@@ -49,6 +49,11 @@ public record Share(String id, String sender, Instant createdAt, String kind, St
     public Share {
         maskedSpans = maskedSpans == null ? List.of() : List.copyOf(maskedSpans);
         channels = channels == null ? "in-app" : channels;
+    }
+
+    /** True when the sender asked for a watermarked picture ({@code picture} among the channels). */
+    public boolean picture() {
+        return java.util.Arrays.asList(channels.split(",")).contains("picture");
     }
 
     /** This share with its hash computed. */

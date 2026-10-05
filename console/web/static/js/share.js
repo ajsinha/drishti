@@ -33,7 +33,7 @@
   function config() {
     if (conf) { return Promise.resolve(conf); }
     if (!confAsked) {
-      confAsked = fetch('/api/collab', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+      confAsked = fetch('/api/collab' + (view && view.getAttribute('data-kind') ? '?kind=' + encodeURIComponent(view.getAttribute('data-kind')) : ''), { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
         .then(function (r) { return r.ok ? r.json() : { enabled: false }; })
         .catch(function () { return { enabled: false }; })
         .then(function (c) { conf = c || { enabled: false }; return conf; });
@@ -76,6 +76,28 @@
 
   function say(text, bad) { result.textContent = text || ''; result.classList.toggle('bad', !!bad); }
 
+  // ---- the picture (a watermarked snapshot, only where the server allows it) -------------------------------------
+  var picRow = $('[data-shr-picture-row]'), picBox = $('[data-shr-picture]'), picBtn = $('[data-shr-preview]'), picImg = $('[data-shr-preview-img]'),
+      picMsg = $('[data-shr-picture-msg]');
+  function picSay(t, bad) { picMsg.textContent = t || ''; picMsg.classList.toggle('bad', !!bad); }
+  function picReset() { picBox.checked = false; picBtn.hidden = true; picImg.hidden = true; picImg.removeAttribute('src'); picSay(''); picRow.hidden = !(conf && conf.snapshots); }
+  function preview() {
+    if (!picked.length) { picSay('Choose who to send to first: the picture is made for them.', true); return; }
+    picSay('Drawing the preview…'); picImg.hidden = true;
+    fetch('/api/share/preview-picture', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'image/png' }, credentials: 'same-origin', body: JSON.stringify(body()) })
+      .then(function (r) {
+        if (!r.ok) { return r.json().catch(function () { return {}; }).then(function (j) { picSay((j.code ? j.code + ': ' : '') + (j.detail || 'no preview'), true); }); }
+        return r.blob().then(function (b) {
+          var fr = new FileReader();                                  // a data: URL, the page's img-src allows 'self' and data:
+          fr.onload = function () { picImg.src = fr.result; picImg.hidden = false; picSay('This is what the people you chose will get.'); };
+          fr.readAsDataURL(b);
+        });
+      })
+      .catch(function () { picSay('The console could not be reached. Try again.', true); });
+  }
+  picBox.addEventListener('change', function () { picBtn.hidden = !picBox.checked; if (picBox.checked) { preview(); } else { picImg.hidden = true; picSay(''); } });
+  picBtn.addEventListener('click', preview);
+
   function pinText(live) {
     var asof = main.getAttribute('data-share-asof') || 'live', known = main.getAttribute('data-share-known-text');
     if (live || asof === 'live') { return 'live: whoever opens it sees the data as it is then'; }
@@ -87,6 +109,7 @@
   function reset() {
     picked = []; drawChips(); noteBox.value = ''; counter(); say(''); warn.hidden = true; sent = false; sending = false;
     send.disabled = false; send.firstChild.textContent = 'Send '; $('[data-shr-copy-label]').textContent = 'Copy link'; to.value = '';
+    picReset();
   }
 
   function show(forPanel, from) {
@@ -136,7 +159,7 @@
     var b = {
       kind: view.getAttribute('data-kind'), id: view.getAttribute('data-id'), note: noteBox.value.trim(),
       generation: parseInt(view.getAttribute('data-generation') || '0', 10) || 0,
-      to: { users: users, roles: roles }, channels: { inApp: true }, live: !!live, postToThread: !!form.elements.postToThread.checked,
+      to: { users: users, roles: roles }, channels: { inApp: true }, live: !!live, picture: !!(picBox.checked && conf && conf.snapshots), postToThread: !!form.elements.postToThread.checked,
       asOf: main.getAttribute('data-share-asof') || 'live', knownAt: main.getAttribute('data-share-known') || ''
     };
     if (what === 'panel' && panel) {

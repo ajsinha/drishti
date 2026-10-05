@@ -55,6 +55,16 @@
         <span class="shr-lbl"></span>
         <label class="shr-thread"><input type="checkbox" name="postToThread" data-shr-thread> Also start a discussion on the view</label>
       </div>
+      <div class="shr-row" data-shr-picture-row hidden>
+        <span class="shr-lbl"></span>
+        <div class="shr-picture">
+          <label><input type="checkbox" name="picture" data-shr-picture> Include a picture</label>
+          <button type="button" class="btn-pill btn-sm-pill" data-shr-preview hidden>Preview</button>
+          <p class="shr-hint">A watermarked snapshot that shows only what every recipient may see.</p>
+          <p class="shr-picture-msg" data-shr-picture-msg role="status" aria-live="polite"></p>
+          <img class="shr-preview" data-shr-preview-img alt="Preview of the picture that will be sent" hidden>
+        </div>
+      </div>
       <p class="shr-warn" data-shr-warn role="status" hidden></p>
       <p class="shr-result" data-shr-result role="status" aria-live="polite"></p>
       <footer class="shr-f">

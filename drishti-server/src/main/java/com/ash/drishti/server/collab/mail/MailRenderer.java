@@ -26,7 +26,13 @@ import java.util.Map;
 public final class MailRenderer {
 
     /** What a message says, before it is poured into a template. {@code note} is already scrubbed for the recipient; null = none. */
-    public record Content(String template, String headline, String kind, String entityId, String panel, String when, String note, String link) {}
+    public record Content(String template, String headline, String kind, String entityId, String panel, String when, String note, String link,
+            byte[] image) {
+
+        public Content(String template, String headline, String kind, String entityId, String panel, String when, String note, String link) {
+            this(template, headline, kind, entityId, panel, when, note, link, null);
+        }
+    }
 
     private final MailTemplates templates;
     private final String product;
@@ -43,7 +49,7 @@ public final class MailRenderer {
         Map<String, String> html = vars(c, true);
         String subject = oneLine(MailTemplates.fill(templates.load(c.template(), "subject"), text));
         return new RenderedMail(oneLine(to), subject, MailTemplates.fill(templates.load(c.template(), "txt"), text),
-                MailTemplates.fill(templates.load(c.template(), "html"), html), "<" + seq + "." + safeId(ref) + "@" + host + ">");
+                MailTemplates.fill(templates.load(c.template(), "html"), html), "<" + seq + "." + safeId(ref) + "@" + host + ">", c.image());
     }
 
     /** One message for several notices to the same person: each notice's headline, details and link under the {@code digest} template. */
@@ -87,6 +93,7 @@ public final class MailRenderer {
         line(b, "View", label(c), false);
         line(b, "Panel", c.panel(), false);
         line(b, "As of", c.when(), false);
+        line(b, "Picture", c.image() == null ? null : "attached: a watermarked snapshot showing only what every recipient may see", false);
         if (c.note() != null && !c.note().isBlank()) {
             b.append("\nNote:\n").append(clean(c.note())).append('\n');
         }
@@ -98,6 +105,7 @@ public final class MailRenderer {
         line(b, "View", label(c), true);
         line(b, "Panel", c.panel(), true);
         line(b, "As of", c.when(), true);
+        line(b, "Picture", c.image() == null ? null : "attached: a watermarked snapshot showing only what every recipient may see", true);
         if (c.note() != null && !c.note().isBlank()) {
             b.append("<blockquote style=\"margin:12px 0;padding:8px 12px;border-left:3px solid #999;\">")
                     .append(esc(clean(c.note()), true).replace("\n", "<br>")).append("</blockquote>");

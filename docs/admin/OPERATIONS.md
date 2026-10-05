@@ -32,7 +32,7 @@ when other people will use the installation.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
+9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches)
@@ -905,6 +905,29 @@ names the revision that was changed or no longer follows the one before it.
 database, so the backup of that database is the backup of the record, and it is the only copy of what the hash chains protect. With
 `drishti.collab.store: file` (one server) the same records are the JSON-lines files under `drishti.collab.dir`; copy that folder, except
 `exports/`, which holds only what is waiting to be downloaded. A restored database needs no repair: the chains verify against the manifest you kept.
+
+## 9a-3b. Watermarked snapshots (privacy note)
+
+`drishti.collab.snapshots.enabled` (default `false`) lets a sender tick **Include a picture** on a share: the server draws a PNG of the view (or the shared
+panel) and attaches it to the share's page and, when `email.content` is `comment`, to its email. Read this before turning it on.
+
+- **An image leaves the application's controls.** A masked field is `•••` in the picture, but an attachment can be forwarded, kept in a mailbox and read
+  by anyone, with no rights check at the time it is read. That is why it is off by default, per pack switchable and an administrator's choice.
+  A pack whose figures must never leave Drishti sets `drishti.collab.packs.<pack>.snapshots.enabled: false` (for instance a genomics pack); a share of
+  such a kind asking for a picture is refused with `403 DRS-7015` and the dialog does not offer the option.
+- **Least privilege.** One picture serves every recipient of a share, so it is drawn for the most restrictive of them: if any recipient lacks `raw`, the
+  fields named in `drishti.security.redact` are `•••` for everyone; a panel any recipient may not open is not drawn at all. A recipient who may not open
+  the kind never receives the share, so never the picture. Choose recipients with this in mind: one picture for a trader and a risk officer is the
+  trader's.
+- **Watermark.** Every picture carries the sender, the recipients (a count, or names with `snapshots.recipients: names`), the time, the data's business
+  date or "live", its generation, and the link, in a band and tiled diagonally, so a leaked picture says whose it was.
+- **Audit.** Each picture produced, including a preview in the dialog and each time one is served or attached, writes an access-log row with action
+  `export` (kind, entity, and `snapshot sh_… for N recipients, masked|unmasked, bytes`).
+- **Resources.** Drawing is headless (`java.awt.headless=true` is set by the renderer), uses the JDK's logical fonts (a server needs a JDK with its font
+  libraries, as the standard images have; nothing is downloaded), is bounded by `snapshots.timeout`, `max-bytes`, `width` and `max-height`, runs two at a
+  time, and is cached for `cache-ttl`. A picture is not stored: after the cache expires it is drawn again from the data as pinned.
+- A picture that cannot be made (`503 DRS-7016`: timeout, too large, renderer failure) refuses the share; an email whose picture cannot be made later is
+  sent without it. A digest email (several notices in one) carries no picture.
 
 ## 9a-4. Chat bridges (Teams, Slack, webhooks)
 

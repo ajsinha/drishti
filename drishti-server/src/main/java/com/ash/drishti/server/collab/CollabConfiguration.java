@@ -42,6 +42,7 @@ import com.ash.drishti.server.collab.thread.CommentRenderer;
 import com.ash.drishti.identity.collab.ThreadStore;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.server.collab.mail.ShareItemRenderer;
+import com.ash.drishti.server.collab.snapshot.SnapshotService;
 import com.ash.drishti.server.security.SecurityProperties;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
@@ -89,9 +90,16 @@ public class CollabConfiguration {
     @Bean
     public ShareService shareService(ShareStore store, CollabTx tx, CollabProperties props, Entitlements entitlements, PackAccess packs,
             Principals principals, DirectoryService directory, UserService users, SourceRouter router, List<Notifier> notifiers,
-            InboxHub hub, ObjectProvider<AccessLog> accessLog, RateLimits limits, ThreadService threads) {
+            InboxHub hub, ObjectProvider<AccessLog> accessLog, RateLimits limits, ThreadService threads, SnapshotService snapshots) {
         return new ShareService(store, tx, props, entitlements, packs, principals, directory, users, router, notifiers, hub,
-                accessLog.getIfAvailable(), limits, threads);
+                accessLog.getIfAvailable(), limits, threads, snapshots);
+    }
+
+    /** Watermarked snapshots: drawn only when {@code drishti.collab.snapshots.enabled} (or the kind's pack) says so. */
+    @Bean(destroyMethod = "close")
+    public SnapshotService snapshotService(CollabProperties props, ViewPipeline pipeline, Entitlements entitlements, Principals principals,
+            PackAccess packs, ShareStore shares, ObjectProvider<AccessLog> accessLog) {
+        return new SnapshotService(props, pipeline, entitlements, principals, packs, shares, accessLog.getIfAvailable());
     }
 
     @Bean
@@ -128,8 +136,8 @@ public class CollabConfiguration {
 
     @Bean
     public ShareItemRenderer shareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy,
-            NotifyPrefs prefs, CollabProperties props, PanelTitles titles) {
-        return new ShareItemRenderer(shares, principals, entitlements, policy, prefs, props.consoleUrl(), titles);
+            NotifyPrefs prefs, CollabProperties props, PanelTitles titles, SnapshotService snapshots) {
+        return new ShareItemRenderer(shares, principals, entitlements, policy, prefs, props.consoleUrl(), titles, snapshots);
     }
 
     @Bean
