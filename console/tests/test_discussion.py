@@ -107,7 +107,7 @@ def test_the_view_has_one_side_drawer_with_two_tabs_and_no_notes_drawer():
     for js in ("discussion-compose.js", "discussion-view.js", "discussion.js"):
         assert f"/static/js/{js}" in page
     assert page.index("/static/js/about.js") < page.index("/static/js/discussion.js")        # the host first
-    assert 'data-asof="live"' in page                                                      # the page's own date, for a post's pin
+    assert 'data-page-asof="live"' in page                                                      # the page's own date, for a post's pin
 
 
 def test_a_comments_pinned_link_opens_the_page_as_it_was():

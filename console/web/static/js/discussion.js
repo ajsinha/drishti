@@ -33,7 +33,7 @@
 
   function ctx() {
     return { me: view.getAttribute('data-me'), admin: view.hasAttribute('data-admin'), pageGen: view.getAttribute('data-generation'),
-      pageAsOf: view.getAttribute('data-asof') || 'live', canWrite: conf.collaborate, maxText: conf.maxText };
+      pageAsOf: view.getAttribute('data-page-asof') || 'live', canWrite: conf.collaborate, maxText: conf.maxText };
   }
   function api(method, url, body) {
     var o = { method: method, credentials: 'same-origin', headers: { Accept: 'application/json' } };
@@ -42,7 +42,7 @@
   }
   function say(node, text, bad) { node.textContent = text; node.classList.toggle('bad', !!bad); }
   function problem(r) { return (r.b && (r.b.detail || r.b.code)) || ('The server answered ' + r.status); }
-  function page() { return { asOf: view.getAttribute('data-asof') || 'live', knownAt: view.getAttribute('data-known') || null, generation: Number(view.getAttribute('data-generation')) || 0 }; }
+  function page() { return { asOf: view.getAttribute('data-page-asof') || 'live', knownAt: view.getAttribute('data-known') || null, generation: Number(view.getAttribute('data-generation')) || 0 }; }
   function announce(t) { live.textContent = ''; setTimeout(function () { live.textContent = t; }, 50); }
 
   // the places one can write about: the view, each panel, each labelled field (the strip and key-value panels)

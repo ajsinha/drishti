@@ -44,9 +44,11 @@ window.drsMessage = function (p, fallback) {
 
   // Business date: picking a date shows that day's data as a static snapshot. Weekends and holidays roll back to
   // the previous business day on the server; the box says so before it submits.
-  var asof = document.querySelector('[data-asof]');
-  if (asof) {
-    var box = asof.querySelector('input[type="date"]');
+  // the top bar's form only (an embedded pane has none): one exception here would stop the rest of this file, the
+  // workspace's pane keys included
+  var asof = document.querySelector('form[data-asof]');
+  var box = asof ? asof.querySelector('input[type="date"]') : null;
+  if (asof && box) {
     var holidays = (box.getAttribute('data-holidays') || '').split(',');
     box.addEventListener('change', function () {
       if (!box.value) { return; }

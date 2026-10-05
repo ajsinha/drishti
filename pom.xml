@@ -164,7 +164,26 @@
             <goals><goal>enforce</goal></goals>
             <configuration><rules><requireJavaVersion><version>[21,)</version><message>Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java ${java.specification.version} from ${java.home}: set JAVA_HOME to a JDK 21 or newer and check with ./mvnw -v.</message></requireJavaVersion></rules></configuration>
           </execution>
+          <!-- production runs on Java 21: no class file in the product, ours or a library's, may need a newer JVM.
+               the compiler release setting (21) covers our code; this covers every runtime dependency, so `mvn package` fails instead of
+               producing a jar that stops on Java 21 with UnsupportedClassVersionError. -->
+          <execution>
+            <id>enforce-bytecode-21</id>
+            <goals><goal>enforce</goal></goals>
+            <configuration>
+              <rules>
+                <enforceBytecodeVersion>
+                  <maxJdkVersion>21</maxJdkVersion>
+                  <ignoredScopes><ignoredScope>test</ignoredScope></ignoredScopes>
+                  <message>A dependency needs a JVM newer than Java 21, which production runs. Pin an older version of it.</message>
+                </enforceBytecodeVersion>
+              </rules>
+            </configuration>
+          </execution>
         </executions>
+        <dependencies>
+          <dependency><groupId>org.codehaus.mojo</groupId><artifactId>extra-enforcer-rules</artifactId><version>1.10.0</version></dependency>
+        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
