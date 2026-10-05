@@ -146,4 +146,5 @@ def test_table_headers_with_an_entry_get_hints(live_console, page):
     th.focus()
     tip = page.locator("#aboutTip")
     tip.wait_for()
-    assert "ClinVar review status" in tip.inner_text() and "Unit: stars" in tip.inner_text()
+    text = tip.inner_text()          # the wording is the genomics pack's (about.yaml); the test checks the entry, not its prose
+    assert "Review stars" in text and "review status" in text and "Unit: stars" in text
