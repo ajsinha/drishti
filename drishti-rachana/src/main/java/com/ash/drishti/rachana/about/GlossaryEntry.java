@@ -39,6 +39,11 @@ public record GlossaryEntry(String term, String means, String unit, String sign,
         values = values == null ? Map.of() : Map.copyOf(values);
     }
 
+    /** What a kind's own definition says of a field (a derived kind's formula), as an entry. */
+    public static GlossaryEntry derived(String key, String means, String formula, String origin) {
+        return new GlossaryEntry(key, means, null, null, null, formula, Map.of(), null, origin, null);
+    }
+
     /** This entry taking the content of a vocabulary entry it names with {@code use}. */
     GlossaryEntry resolvedFrom(GlossaryEntry vocabulary) {
         return new GlossaryEntry(vocabulary.term, vocabulary.means, vocabulary.unit, vocabulary.sign, vocabulary.note, vocabulary.formula,

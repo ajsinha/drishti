@@ -28,6 +28,10 @@ backend:
 #   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
 #   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }
 ui:
+  # About this page: fetch the page's explanation once the page is idle, so labels with a glossary entry are underlined before
+  # the drawer opens. Costs the server one explain (a re-run of the view, cached for drishti.explain.cache-ttl) per page view;
+  # set false on a busy installation and the labels are underlined when the drawer is first opened.
+  about_prefetch: ${DRISHTI_ABOUT_PREFETCH:true}
   # What an error page advises, by the DRS code the server answered with ({kind} and {id} fill in); "default" for any other
   error_advice:
     DRS-1001: Check the identifier, or type part of it in the command line to see what exists.

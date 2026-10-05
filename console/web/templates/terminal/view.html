@@ -82,7 +82,7 @@
     </form>
   </div>
 </aside>
-<aside class="about" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-about-url="/v/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}/about">
+<aside class="about" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-about-url="/v/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}/about"{% if ABOUT_PREFETCH %} data-about-prefetch{% endif %}>
   <div class="about-grip" aria-hidden="true"></div>
   <header><h2 id="aboutTitle" tabindex="-1">About this page</h2><button type="button" class="raw-x" data-about-close aria-label="Close About this page">×</button></header>
   <div class="about-body" data-about-body aria-live="polite"><p class="about-wait">Loading…</p></div>

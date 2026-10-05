@@ -65,7 +65,7 @@ public final class CliLauncher {
                 .run()) {
             SutraCli.Services s = new SutraCli.Services(ctx.getBean(SutraRegistry.class), ctx.getBean(ViewPipeline.class),
                     ctx.getBean(ShapeService.class), ctx.getBean(AutoDesigner.class), ctx.getBean(JsonCodec.class),
-                    new HelpChecks(ctx.getBean(com.ash.drishti.rachana.about.AboutCatalog.class), null,
+                    new HelpChecks(ctx.getBean(com.ash.drishti.rachana.about.AboutCatalog.class), glossaryLookup(ctx),
                             ctx.getBean(com.ash.drishti.rachana.format.Formats.class), ctx.getBean(JsonCodec.class)));
             return new SutraCli(s, out, err).run(rest);
         } catch (RuntimeException | OutOfMemoryError e) {
@@ -83,5 +83,17 @@ public final class CliLauncher {
                 // a scratch directory left in the temp folder is harmless
             }
         }
+    }
+
+    /**
+     * The lint's "does this field have an explanation" question, answered by the same resolver as the About drawer: the kind's
+     * glossary, the pack's vocabulary, a derived kind's formula, then the core vocabulary.
+     */
+    private static com.ash.drishti.rachana.about.GlossaryLookup glossaryLookup(ConfigurableApplicationContext ctx) {
+        var resolver = new com.ash.drishti.rachana.about.GlossaryResolver(ctx.getBean(com.ash.drishti.rachana.about.AboutCatalog.class));
+        var router = ctx.getBean(com.ash.drishti.engine.source.SourceRouter.class);
+        return (kind, field) -> resolver.resolve(kind, field, key -> key.indexOf('.') >= 0 ? java.util.Optional.empty()
+                : router.connectorOf(kind, null).flatMap(d -> d.describeField(kind, key))
+                        .map(n -> com.ash.drishti.rachana.about.GlossaryEntry.derived(key, n.means(), n.formula(), n.origin()))).isPresent();
     }
 }

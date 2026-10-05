@@ -221,5 +221,9 @@
   });
   document.addEventListener('drishti:about', function (e) { decorate(e.detail); });
   // The labels need the answer, so it is fetched once the page is idle (the drawer and the popovers share it).
-  (window.requestIdleCallback || function (f) { return setTimeout(f, 200); })(function () { api.ensure(); });
+  // ui.about_prefetch (on by default) costs one extra explain per page view; off, the labels are underlined once the drawer opens.
+  var drawerEl = document.getElementById('aboutDrawer');
+  if (drawerEl && drawerEl.hasAttribute('data-about-prefetch')) {
+    (window.requestIdleCallback || function (f) { return setTimeout(f, 200); })(function () { api.ensure(); });
+  }
 })();

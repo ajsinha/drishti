@@ -194,6 +194,7 @@ def create_app(settings: Settings) -> FastAPI:
         CLOCK_TZ=settings.get("ui.clock_tz", "America/New_York"),
         CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
         COPYRIGHT=settings.get("ui.copyright", ""),
+        ABOUT_PREFETCH=str(settings.get("ui.about_prefetch", True)).lower() not in ("false", "0", "no", "off"),
     )
     from core.asof import to_local
 

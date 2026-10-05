@@ -109,3 +109,14 @@ def test_the_packs_own_text_leads_layer_one_and_a_masked_value_stays_masked(clie
     assert "Value-at-risk result" in h and "••• of its ••• limit" in h and "data-about-pack-text" in h
     assert h.index("14.7m USD") < h.index("Historical VaR and ES"), "the pack's text comes before the Sutra description"
     assert "Scenario P&amp;L distribution" in h and "Written by the Market risk pack." in h
+
+
+def test_the_idle_prefetch_follows_the_setting(client, monkeypatch):
+    # ui.about_prefetch (default on) marks the drawer so about-hints.js fetches the explanation once the page is idle; off,
+    # nothing is fetched until the drawer opens (one explain per page view saved on a busy installation)
+    from core import app as app_module
+    assert "data-about-prefetch" in client.get("/v/trade/IRS-48213").text
+    js = (app_module.WEB / "static" / "js" / "about-hints.js").read_text()
+    assert "hasAttribute('data-about-prefetch')" in js, "the idle fetch must depend on the setting"
+    monkeypatch.setitem(client.app.state.templates.env.globals, "ABOUT_PREFETCH", False)
+    assert "data-about-prefetch" not in client.get("/v/trade/IRS-48213").text

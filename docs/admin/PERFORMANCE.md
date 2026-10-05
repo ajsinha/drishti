@@ -488,3 +488,18 @@ sessions and users live in the identity database, so servers behind one load bal
 streams stay on the server that opened them, and the browser's reconnect may land on another server, which
 simply starts with a fresh `view` event. The console keeps each tab's live channel in its own memory, so
 when you run several console processes, make sessions sticky (see [LIVE.md](../architecture/LIVE.md#one-connection-per-browser)).
+
+## About this page and its cost
+
+*About this page* (`GET /api/v1/views/{kind}/{id}/explain`) derives the view again for the caller, so masks and rights hold,
+and keeps the answer per user, page, business date and generation for `drishti.explain.cache-ttl` (60 s;
+[CONFIGURATION.md](CONFIGURATION.md#drishtiexplain--about-this-page)). Two ways it is asked for:
+
+| When | Cost | Setting |
+|---|---|---|
+| The user opens the drawer (`?`, `F1`, **About**) or a panel's `?` | one explain, then cached | always on |
+| Every view, once the page is idle, so glossary labels are underlined before the drawer opens | **one explain per page view**: about the cost of the view itself again (its layout, fingerprint and source caches are warm, so usually less) | console `ui.about_prefetch` (`DRISHTI_ABOUT_PREFETCH`), default `true` |
+
+On an installation where view latency or server CPU matters more than the underlined labels, set
+`DRISHTI_ABOUT_PREFETCH=false`: the labels are then underlined the first time the drawer is opened on that page.
+

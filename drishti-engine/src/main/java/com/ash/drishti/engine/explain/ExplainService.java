@@ -202,7 +202,7 @@ public final class ExplainService {
         String source = view.provenance().source();
         Function<String, Optional<GlossaryEntry>> derived = key -> key.indexOf('.') >= 0 ? Optional.empty()
                 : router.connectorOf(kind, source).flatMap(d -> d.describeField(kind, key))
-                        .map(n -> new GlossaryEntry(key, n.means(), null, null, null, n.formula(), Map.of(), null, n.origin(), null));
+                        .map(n -> GlossaryEntry.derived(key, n.means(), n.formula(), n.origin()));
         return new GlossaryBuilder(glossary, kind, defined, derived).build(view);
     }
 
