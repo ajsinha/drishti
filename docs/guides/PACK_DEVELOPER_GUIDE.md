@@ -1984,7 +1984,7 @@ If an admin assigns packs per user, add `library` to your user under **Admin →
 Three scripts turn existing data (one JSON document per line, or the loader envelope `{"kind","id","doc"}`) into a pack
 without writing a generator by hand. Input is a folder of `*.jsonl` (`-r` for subfolders) and/or single `.jsonl` files; the
 kind is the file stem unless `--kind` is given (an envelope file may hold several kinds). The one command line that wraps them all (and adds `pack check`, `pack about-check`, `data ingest`, loading into a running server and
-the Screen Designer's workflow) is `tools/drishti.py`: see [CLI_GUIDE.md](CLI_GUIDE.md). Run them with
+the Screen Designer's workflow) is `tools/drishti.py`: see [CLI_GUIDE.md](CLI_GUIDE.md). To ship a finished pack by copying a versioned, checksummed bundle (`pack bundle`, `verify`, `deploy`, `rollback`), see [OPERATIONALISING.md](OPERATIONALISING.md). Run them with
 `uv run --with pyyaml` (add `--with deltalake --with pyarrow` for a Delta lake). Build the server first: they use the
 `sutra design --each` command of its exec jar (JDK 21, `--jar`/`--java` to choose).
 

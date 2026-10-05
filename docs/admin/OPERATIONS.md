@@ -1003,6 +1003,10 @@ you configure, so decide what may leave the server:
   `log-answers: true`. An endpoint that you do not control sees every question and the material around it.
 - The key is read from `DRISHTI_ASK_KEY` only. If the endpoint is down the drawer says so (`DRS-4008`) and everything else in it works.
 
+## 9c-0. Shipping packs, Sutras and data by copying
+
+Packs, Sutras, about files and data are plain files: deploy them by copying a versioned, checksummed bundle, with an atomic swap and a backup, and no server API. Step by step, with CI, permissions, Docker/Kubernetes, rollback and troubleshooting: [OPERATIONALISING.md](../guides/OPERATIONALISING.md).
+
 ## 9c. Pack registry keys
 
 The private key that signs packs (`tools/packreg/packreg.py keygen`) is the one secret of the registry: keep it
