@@ -168,6 +168,11 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     help_yaml = yaml.safe_dump({"guides": [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
                                             "file": f"guides/{spec.name}.md", "summary": spec.description}]}, sort_keys=False, allow_unicode=True)
     out[base / "config" / "help.yaml"] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n{help_yaml}"
+    about = ROOT / spec.generator
+    about = about.parent / "about.yaml"                       # hand-written about text: see docs/architecture/CONTEXT_HELP.md
+    if about.exists():
+        out[base / "config" / "about.yaml"] = (f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# About this page: what the pack's kinds mean.\n"
+                                               + about.read_text(encoding="utf-8"))
     return out
 
 

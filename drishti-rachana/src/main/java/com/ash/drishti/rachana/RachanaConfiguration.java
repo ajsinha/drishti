@@ -23,12 +23,18 @@ import org.springframework.context.annotation.Configuration;
 
 /** Beans contributed by {@code drishti-rachana}. */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(RachanaProperties.class)
+@EnableConfigurationProperties({RachanaProperties.class, com.ash.drishti.rachana.about.AboutProperties.class})
 public class RachanaConfiguration {
 
     @Bean
     public ElCompiler elCompiler(RachanaProperties props) {
         return new ElCompiler(props.expressionCacheSize(), props.expressionLimits());
+    }
+
+    /** The packs' about text (About this page, layer 1). */
+    @Bean
+    public com.ash.drishti.rachana.about.AboutCatalog aboutCatalog(com.ash.drishti.rachana.about.AboutProperties props, ElCompiler elCompiler) {
+        return new com.ash.drishti.rachana.about.AboutCatalog(props, elCompiler);
     }
 
     @Bean

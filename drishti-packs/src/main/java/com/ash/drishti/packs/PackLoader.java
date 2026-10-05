@@ -252,6 +252,7 @@ public final class PackLoader {
         indexed(p, "drishti.rachana.pack-dirs", sutraDirs);
         indexed(p, "drishti.rachana.pack-formats-files", formats);
         indexed(p, "drishti.inference.pack-semantics-files", semantics);
+        aboutSources(p, packs, lineage, order);
         indexed(p, "drishti.packs.overrides", overrides);
         if (!samples.isEmpty()) {
             p.put("drishti.sources.plugins.demo.settings.dirs", String.join(",", samples));
@@ -313,6 +314,35 @@ public final class PackLoader {
         Path path = pack.resolve(String.valueOf(rel));
         if (Files.exists(path)) {
             into.add(path.toString());
+        }
+    }
+
+    /**
+     * The about catalogue's view of the packs, most specific first: name, title, the about file (default {@code
+     * config/about.yaml}) when it exists, the Sutra directory, the kinds the pack owns and the pack's lineage. A child's file
+     * is read before its parents', so its entries win.
+     */
+    @SuppressWarnings("unchecked")
+    private static void aboutSources(Map<String, Object> p, List<Pack> packs, PackLineage lineage, List<String> order) {
+        List<Pack> specific = packs.stream().sorted(java.util.Comparator.comparingInt(x -> order.indexOf(x.name()))).toList();
+        for (int i = 0; i < specific.size(); i++) {
+            Pack pack = specific.get(i);
+            String base = "drishti.about.packs[" + i + "].";
+            p.put(base + "name", pack.name());
+            if (pack.title() != null) {
+                p.put(base + "title", pack.title());
+            }
+            Path file = pack.resolve(String.valueOf(pack.manifest().getOrDefault("about", "config/about.yaml")));
+            if (Files.exists(file)) {
+                p.put(base + "file", file.toString());
+            }
+            Path sutras = pack.resolve(String.valueOf(pack.manifest().getOrDefault("sutras", "sutras")));
+            if (Files.exists(sutras)) {
+                p.put(base + "sutra-dir", sutras.toString());
+            }
+            List<Object> owned = (List<Object>) pack.manifest().getOrDefault("kinds", List.of());
+            indexed(p, base + "kinds", owned.stream().map(String::valueOf).toList());
+            indexed(p, base + "lineage", lineage.linearisation(pack.name()));
         }
     }
 

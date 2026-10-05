@@ -47,6 +47,7 @@ public class CatalogController {
     private final SourceRouter router;
     private final SourceRegistry sources;
     private final SutraRegistry sutras;
+    private final com.ash.drishti.rachana.about.AboutCatalog about;
     private final Entitlements entitlements;
     private final java.util.Optional<org.springframework.boot.info.BuildProperties> build;
     private final com.ash.drishti.server.security.SecurityProperties security;
@@ -57,7 +58,9 @@ public class CatalogController {
     public CatalogController(SourceRouter router, SourceRegistry sources, SutraRegistry sutras, Entitlements entitlements,
             org.springframework.beans.factory.ObjectProvider<org.springframework.boot.info.BuildProperties> build,
             com.ash.drishti.server.security.SecurityProperties security, com.ash.drishti.packs.PackRegistry packRegistry,
-            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.common.Branding branding) {
+            com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.common.Branding branding,
+            com.ash.drishti.rachana.about.AboutCatalog about) {
+        this.about = about;
         this.branding = branding;
         this.packAccess = packAccess;
         this.packRegistry = packRegistry;
@@ -160,6 +163,7 @@ public class CatalogController {
     public Map<String, List<SutraProblem>> problems() {
         Map<String, List<SutraProblem>> out = new java.util.LinkedHashMap<>();
         sutras.problems().forEach((file, ps) -> out.put(sutras.relative(file), sutras.relative(ps)));      // SEC-11: no server paths
+        out.putAll(about.problems());                                  // packs' about files (DRS-2040 to 2044), named pack/file
         return out;
     }
 }

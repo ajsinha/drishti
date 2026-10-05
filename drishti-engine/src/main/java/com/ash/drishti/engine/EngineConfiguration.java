@@ -149,9 +149,10 @@ public class EngineConfiguration {
     /** About this page: the explanation of a view (layers 3 and 4), derived on request. */
     @Bean
     public com.ash.drishti.engine.explain.ExplainService explainService(ViewPipeline pipeline, SutraMatcher matcher,
-            SourceRouter router, ElCompiler el, com.ash.drishti.engine.explain.ExplainProperties props,
+            SourceRouter router, ElCompiler el, SutraRegistry registry, com.ash.drishti.rachana.about.AboutCatalog about, Formats formats,
+            com.ash.drishti.engine.explain.ExplainProperties props,
             io.micrometer.core.instrument.MeterRegistry meters) {
-        return new com.ash.drishti.engine.explain.ExplainService(pipeline, matcher, router, el, props, meters);
+        return new com.ash.drishti.engine.explain.ExplainService(pipeline, matcher, router, el, registry, about, formats, props, meters);
     }
 
     /** Frame timer for live topics: two platform threads only schedule; delivery work is tiny. */

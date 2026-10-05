@@ -77,6 +77,31 @@ public final class Template {
         return sb.toString();
     }
 
+    /** What {@link #renderLenient} produced: the text and how many expressions failed (each shown as the placeholder). */
+    public record Lenient(String text, int errors) {}
+
+    /**
+     * Like {@link #render} but an expression that fails to evaluate is written as {@code placeholder} and counted instead of
+     * throwing, so one bad part never costs the rest of the text.
+     */
+    public Lenient renderLenient(EvalContext c, String placeholder) {
+        StringBuilder sb = new StringBuilder();
+        int errors = 0;
+        for (Object p : parts) {
+            if (p instanceof Expr e) {
+                try {
+                    sb.append(Values.text(e.eval(c)));
+                } catch (RuntimeException ex) {
+                    sb.append(placeholder);
+                    errors++;
+                }
+            } else {
+                sb.append(p);
+            }
+        }
+        return new Lenient(sb.toString(), errors);
+    }
+
     public void paths(Consumer<String> sink) {
         parts.stream().filter(Expr.class::isInstance).map(Expr.class::cast).forEach(e -> e.paths(sink));
     }

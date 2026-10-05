@@ -50,6 +50,22 @@ class PackLoaderTest {
     }
 
     @Test
+    void theAboutCatalogueSeesEachPackMostSpecificFirstWithItsKindsLineageAndFile(@TempDir Path dir) throws Exception {
+        Files.createDirectories(dir.resolve("base").resolve("config"));
+        Files.createDirectories(dir.resolve("child"));
+        Files.writeString(dir.resolve("base").resolve("pack.yaml"), "pack: base\ntitle: Base pack\nkinds: [thing]\n");
+        Files.writeString(dir.resolve("base").resolve("config").resolve("about.yaml"), "about: 1\n");
+        Files.writeString(dir.resolve("child").resolve("pack.yaml"), "pack: child\nextends: [base]\nkinds: [other]\n");
+        PackLoader l = new PackLoader();
+        Map<String, Object> p = l.properties(l.load(dir, List.of("child")));
+        assertThat(p).containsEntry("drishti.about.packs[0].name", "child").containsEntry("drishti.about.packs[1].name", "base")
+                .containsEntry("drishti.about.packs[1].title", "Base pack").containsEntry("drishti.about.packs[0].kinds[0]", "other")
+                .containsEntry("drishti.about.packs[0].lineage[0]", "child").containsEntry("drishti.about.packs[0].lineage[1]", "base")
+                .doesNotContainKey("drishti.about.packs[0].file");
+        assertThat(p.get("drishti.about.packs[1].file").toString()).endsWith("base/config/about.yaml");
+    }
+
+    @Test
     void aPivotIsTrueFalseOrAMapping(@TempDir Path dir) throws Exception {
         Files.createDirectories(dir.resolve("a"));
         Files.writeString(dir.resolve("a").resolve("pack.yaml"), "pack: a\nkinds: [thing]\npivot:\n  thing: true\n");

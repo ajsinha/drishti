@@ -79,6 +79,7 @@ def test_troubleshooting_covers_every_error_code():
 def test_rachana_reference_lists_every_problem_code_the_parser_reports():
     documented = _first_column_codes(_section(_read("docs/guides/RACHANA_REFERENCE.md"), "## Problem codes"))
     assert _parser_codes() - documented == set(), "parser problem codes missing from RACHANA_REFERENCE"
-    grammar = sorted(c for c in _parser_codes() if c not in ("DRS-2001", "DRS-2004", "DRS-2009", "DRS-2032", "DRS-2033"))
+    grammar = sorted(c for c in _parser_codes() if c not in ("DRS-2001", "DRS-2004", "DRS-2009", "DRS-2032", "DRS-2033")
+                     and not "DRS-2040" <= c <= "DRS-2049")      # the pack about-file family has its own rows
     assert f"`{grammar[0]}` to `{grammar[-1]}`" in _read("docs/guides/RACHANA_REFERENCE.md"), \
         "the grammar problem-code range in RACHANA_REFERENCE is out of date"

@@ -776,12 +776,14 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-2004`, `DRS-2009`–`DRS-2031` | a Sutra file failed a check: each code is explained in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
 | `DRS-2032` | a Sutra file could not be read at all (the log has the stack trace); the rest load |
 | `DRS-2033` | a Sutra's YAML has a key written twice, a second document or a tag |
+| `DRS-2040`–`DRS-2044` | a pack's `config/about.yaml` has a problem (unknown key or bad version, kind not in the pack's lineage, a template that does not compile, `use` with no vocabulary entry, a text over the cap); listed by `GET /api/v1/sutras/problems` as `<pack>/about.yaml`; the entry is left out and the page is unaffected; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
 | `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
 | `DRS-3001` | reserved; nothing raises it in this release |
 | `DRS-4001` | command not understood |
 | `DRS-4002` | building a view failed unexpectedly (the server log has the stack trace) |
 | `DRS-4003` | bad business date |
 | `DRS-4004` | bad search |
+| `DRS-4006` | `?panel=` of the explain endpoint names no panel of the view |
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |

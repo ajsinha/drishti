@@ -30,14 +30,34 @@ import java.util.Map;
  * @param locale the language of the text (English only for now)
  * @param generation the source generation explained
  * @param newer true when the server holds a newer generation than the one the caller said it shows
+ * @param about what the page is, from the pack's authored text (layer 1)
  * @param data where the data came from and how fresh it is
  * @param layout why the page looks like this
  * @param next where to go from here
  * @param timings milliseconds spent
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, long generation, Boolean newer, Data data, Layout layout,
+public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, long generation, Boolean newer, About about, Data data, Layout layout,
         Next next, Map<String, Double> timings) {
+
+    /**
+     * Layer 1: what the page is. {@code text} is the pack's template for the kind rendered over the document as the caller may
+     * see it, so a field hidden for the caller reads as the mask in it.
+     *
+     * @param pack the pack the text is from
+     * @param kindTitle the kind's plain title
+     * @param text the rendered text
+     * @param sutraDescription the chosen Sutra's description, as written
+     * @param panels authored text for panels on this page
+     */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public record About(Pack pack, String kindTitle, String text, String sutraDescription, List<PanelAbout> panels) {}
+
+    /** The pack that wrote the text. */
+    public record Pack(String name, String title) {}
+
+    /** Authored text for one panel of the page. */
+    public record PanelAbout(String id, String title, String description) {}
 
     /** Provenance, freshness and the connector's health as one word. */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -66,7 +86,7 @@ public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, lon
 
     /** The Sutra the page is built from: its {@code where} (source text) and priority explain the choice. */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public record Chosen(String name, int version, int priority, String where, String description) {}
+    public record Chosen(String name, int version, String pack, int priority, String where, String description) {}
 
     /** A Sutra of the kind that was not chosen: {@code result} is true, false, error or masked. */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)

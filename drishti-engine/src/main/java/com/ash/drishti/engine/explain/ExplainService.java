@@ -30,11 +30,17 @@ import com.ash.drishti.engine.view.ViewModel.Cell;
 import com.ash.drishti.engine.view.ViewModel.PanelView;
 import com.ash.drishti.rachana.MatchTrace;
 import com.ash.drishti.rachana.SutraMatcher;
+import com.ash.drishti.rachana.SutraRegistry;
+import com.ash.drishti.rachana.about.AboutCatalog;
+import com.ash.drishti.rachana.about.AboutText;
+import com.ash.drishti.rachana.el.EvalContext;
+import com.ash.drishti.rachana.format.Formats;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.model.Panel;
 import com.ash.drishti.rachana.model.Sutra;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.util.ArrayList;
@@ -62,7 +68,7 @@ public final class ExplainService {
     static final String LOCALE = "en";
     private static final String NO_ACCESS = "no access to ";
 
-    private record Key(String user, EntityRef ref, String businessDate, long generation, String locale) {}
+    private record Key(String user, EntityRef ref, String businessDate, long generation, String locale, long aboutRevision) {}
 
     /** What is cached: the answer and the panel ids of the page (for validating {@code ?panel=}). */
     private record Entry(PageContext context, Set<String> panels, double viewMs) {}
@@ -71,15 +77,24 @@ public final class ExplainService {
     private final SutraMatcher matcher;
     private final SourceRouter router;
     private final ElCompiler el;
+    private final SutraRegistry registry;
+    private final AboutCatalog about;
+    private final Formats formats;
+    private final Counter templateErrors;
     private final Cache<Key, Entry> cache;
     private final Timer timer;
 
-    public ExplainService(ViewPipeline pipeline, SutraMatcher matcher, SourceRouter router, ElCompiler el, ExplainProperties props,
-            MeterRegistry meters) {
+    public ExplainService(ViewPipeline pipeline, SutraMatcher matcher, SourceRouter router, ElCompiler el, SutraRegistry registry, AboutCatalog about,
+            Formats formats, ExplainProperties props, MeterRegistry meters) {
         this.pipeline = pipeline;
         this.matcher = matcher;
         this.router = router;
         this.el = el;
+        this.registry = registry;
+        this.about = about;
+        this.formats = formats;
+        this.templateErrors = Counter.builder("drishti.explain.template-errors")
+                .description("About templates whose expressions failed").register(meters);
         this.cache = Caffeine.newBuilder().maximumSize(props.cacheSize()).expireAfterWrite(props.cacheTtl()).build();
         this.timer = Timer.builder("drishti.explain").description("Time to explain a page").publishPercentiles(0.5, 0.99).register(meters);
     }
@@ -99,7 +114,7 @@ public final class ExplainService {
         EntityDocument doc = pipeline.document(ref, asOf);
         long gen = doc.provenance().generation();
         String date = doc.provenance().businessDate() == null ? "" : doc.provenance().businessDate().toString();
-        Entry e = cache.get(new Key(caller.user(), ref, date, gen, LOCALE), k -> derive(doc, asOf, caller));
+        Entry e = cache.get(new Key(caller.user(), ref, date, gen, LOCALE, about.revision()), k -> derive(doc, asOf, caller));
         if (panel != null && !e.panels().contains(panel)) {
             throw new DrishtiException(ErrorCode.EXPLAIN_NO_PANEL, "the view of " + ref.id() + " has no panel '" + panel + "'");
         }
@@ -110,7 +125,7 @@ public final class ExplainService {
         timings.put("view", e.viewMs());
         timings.put("explain", explainMs);
         return new PageContext(c.ref(), c.mnemonic(), c.locale(), c.generation(), generation != null && gen > generation ? Boolean.TRUE : null,
-                c.data(), c.layout(), c.next(), timings);
+                c.about(), c.data(), c.layout(), c.next(), timings);
     }
 
     /** Forgets every answer (the admin's cache purge). */
@@ -128,9 +143,30 @@ public final class ExplainService {
         ViewModel.Provenance pv = view.provenance();
         Set<String> ids = new LinkedHashSet<>();
         view.panels().forEach(p -> ids.add(p.id()));
-        PageContext ctx = new PageContext(view.ref(), view.mnemonic(), LOCALE, pv.generation(), null, data(pv, built), layout(view, built),
+        PageContext ctx = new PageContext(view.ref(), view.mnemonic(), LOCALE, pv.generation(), null, about(view, built), data(pv, built), layout(view, built),
                 next(view), null);
         return new Entry(ctx, ids, view.timings().getOrDefault("total", 0.0));
+    }
+
+    /**
+     * Layer 1. The page's text is rendered over {@code built.seen()}, the document after the caller's field masks, and only
+     * that: a template cannot read what the view does not show this caller. Only panels the caller may open get text.
+     */
+    private PageContext.About about(ViewModel view, ViewPipeline.Built built) {
+        String sutraDescription = built.sutra().map(Sutra::description).orElse(null);
+        AboutText t = about.forKind(view.ref().kind()).orElse(null);
+        if (t == null) {
+            return sutraDescription == null ? null : new PageContext.About(null, null, null, sutraDescription, null);
+        }
+        Map<String, String> titles = new LinkedHashMap<>();
+        view.panels().stream().filter(p -> p.denied() == null).forEach(p -> titles.put(p.id(), p.title()));
+        AboutText.Rendered r = t.render(EvalContext.of(built.seen().data(), formats), titles.keySet(), about.maxRendered());
+        if (r.errors() > 0) {
+            templateErrors.increment(r.errors());
+        }
+        List<PageContext.PanelAbout> panels = new ArrayList<>();
+        r.panels().forEach((id, text) -> panels.add(new PageContext.PanelAbout(id, titles.get(id), text)));
+        return new PageContext.About(new PageContext.Pack(t.pack(), t.packTitle()), t.title(), r.text(), sutraDescription, panels);
     }
 
     private PageContext.Data data(ViewModel.Provenance pv, ViewPipeline.Built built) {
@@ -144,7 +180,7 @@ public final class ExplainService {
         ViewModel.Provenance pv = view.provenance();
         String kind = view.ref().kind();
         MatchTrace trace = matcher.explain(kind, built.doc().data(), built.seen().data());
-        PageContext.Chosen chosen = built.sutra().map(s -> new PageContext.Chosen(s.name(), s.version(), s.match().priority(), s.match().where(),
+        PageContext.Chosen chosen = built.sutra().map(s -> new PageContext.Chosen(s.name(), s.version(), registry.fileOf(s.id()).flatMap(f -> about.packOfSutra(f.toString())).map(p -> p.name()).orElse(null), s.match().priority(), s.match().where(),
                 s.description())).orElse(null);
         List<PageContext.Candidate> candidates = new ArrayList<>();
         for (MatchTrace.Candidate c : trace.candidates()) {
