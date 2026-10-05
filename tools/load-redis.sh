@@ -30,7 +30,7 @@
 # rediss:// for TLS) or DRISHTI_REDIS_USER / DRISHTI_REDIS_PASSWORD.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 URI="redis://localhost:6379"; OPTS=(); TRADES=""; DAYS="1"
 [[ $# -gt 0 && "$1" != --* ]] && { URI="$1"; shift; }
 while [[ $# -gt 0 ]]; do

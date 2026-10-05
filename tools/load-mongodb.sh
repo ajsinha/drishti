@@ -23,7 +23,7 @@
 # --ttl-days N lets MongoDB delete each day's documents N days after their business date (a TTL index on expireAt).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 URI="mongodb://localhost:27017"; DB="drishti"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { URI="$1"; shift; }
 [[ $# -gt 0 && "$1" != --* ]] && { DB="$1"; shift; }

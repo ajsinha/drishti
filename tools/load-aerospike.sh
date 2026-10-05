@@ -20,7 +20,7 @@
 # --ttl-days N lets Aerospike expire each day's documents after N days (history retention without a maintenance job).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
+export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 HOSTS="localhost:3000"; NS="test"; TTL=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { HOSTS="$1"; shift; }
 [[ $# -gt 0 && "$1" != --* ]] && { NS="$1"; shift; }

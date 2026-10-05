@@ -38,9 +38,9 @@ EXAMPLES = ROOT / "docs" / "guides" / "examples"
 
 
 def _java() -> Path:
-    """A JDK 21 or newer (the server is Java 21 bytecode): JAVA_HOME when it is one, else the usual places, 25 first."""
-    for home in (os.environ.get("JAVA_HOME", ""), "/usr/lib/jvm/java-25-openjdk-amd64", "/usr/lib/jvm/java-25-openjdk-arm64",
-                 "/usr/lib/jvm/java-21-openjdk-amd64", "/usr/lib/jvm/java-21-openjdk-arm64"):
+    """A JDK 21 or newer (the server is Java 21 bytecode): JAVA_HOME when it is one, else the usual places, 21 (production) first."""
+    for home in (os.environ.get("JAVA_HOME", ""), "/usr/lib/jvm/java-21-openjdk-amd64", "/usr/lib/jvm/java-21-openjdk-arm64",
+                 "/usr/lib/jvm/java-25-openjdk-amd64", "/usr/lib/jvm/java-25-openjdk-arm64"):
         rel = Path(home) / "release" if home else None
         m = re.search(r'JAVA_VERSION="(\d+)', rel.read_text()) if rel and rel.exists() else None
         if m and int(m.group(1)) >= 21:
