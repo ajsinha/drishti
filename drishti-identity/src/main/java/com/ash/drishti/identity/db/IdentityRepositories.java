@@ -161,4 +161,41 @@ public final class IdentityRepositories {
 
         void deleteByKeyUsername(String username);
     }
+
+    public interface Threads extends JpaRepository<ThreadEntities.Thread, String> {
+        List<ThreadEntities.Thread> findByKindAndEntityIdOrderByLastAtDesc(String kind, String entityId);
+    }
+
+    public interface Comments extends JpaRepository<ThreadEntities.Comment, String> {
+        List<ThreadEntities.Comment> findByThreadIdOrderByCreatedAtAscIdAsc(String threadId);
+    }
+
+    public interface Revisions extends JpaRepository<ThreadEntities.Revision, ThreadEntities.RevisionKey> {
+        List<ThreadEntities.Revision> findByKeyCommentIdOrderByKeyRevisionAsc(String commentId);
+
+        @org.springframework.data.jpa.repository.Query("select r from CollabRevision r where r.key.commentId in "
+                + "(select c.id from CollabComment c where c.threadId = :thread) order by r.at asc")
+        List<ThreadEntities.Revision> chain(@org.springframework.data.repository.query.Param("thread") String thread);
+
+        @org.springframework.data.jpa.repository.Query("select r from CollabRevision r where r.key.commentId in "
+                + "(select c.id from CollabComment c where c.threadId = :thread) order by r.at desc")
+        List<ThreadEntities.Revision> latest(@org.springframework.data.repository.query.Param("thread") String thread, Pageable page);
+    }
+
+    public interface Mentions extends JpaRepository<ThreadEntities.Mention, ThreadEntities.MentionKey> {
+        List<ThreadEntities.Mention> findByKeyCommentId(String commentId);
+
+        List<ThreadEntities.Mention> findByKeyTargetInOrderByKeyCommentIdDesc(java.util.Collection<String> targets, Pageable page);
+
+        List<ThreadEntities.Mention> findByKeyTargetInAndKeyCommentIdLessThanOrderByKeyCommentIdDesc(java.util.Collection<String> targets,
+                String before, Pageable page);
+    }
+
+    public interface Follows extends JpaRepository<ThreadEntities.Follow, ThreadEntities.FollowKey> {
+        List<ThreadEntities.Follow> findByKeyThreadId(String threadId);
+    }
+
+    public interface NoteLinks extends JpaRepository<ThreadEntities.NoteLink, Long> {
+        java.util.Optional<ThreadEntities.NoteLink> findByCommentId(String commentId);
+    }
 }

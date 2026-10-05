@@ -268,6 +268,12 @@ CREATE TABLE IF NOT EXISTS drishti_mention (
 );
 CREATE INDEX IF NOT EXISTS drishti_mention_target ON drishti_mention (target, created_at);
 
+-- A legacy note and the comment it became (the import, and the deprecated /notes facade): note_id is drishti_note.id.
+CREATE TABLE IF NOT EXISTS drishti_note_link (
+    note_id INTEGER PRIMARY KEY,
+    comment_id VARCHAR(30) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS drishti_follow (
     thread_id VARCHAR(30) NOT NULL,
     username VARCHAR(64) NOT NULL,

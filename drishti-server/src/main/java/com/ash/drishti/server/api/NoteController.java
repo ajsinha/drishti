@@ -15,8 +15,9 @@
  */
 package com.ash.drishti.server.api;
 
+import com.ash.drishti.api.AsOf;
 import com.ash.drishti.identity.NoteStore;
-import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.server.collab.thread.NoteFacade;
 import com.ash.drishti.server.security.Principal;
 import java.util.List;
 import java.util.Map;
@@ -33,46 +34,41 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Notes on entities and their fields. Whoever may open the kind reads and adds notes; the author edits; the author or
- * an administrator deletes.
+ * Notes on entities and their fields: <strong>deprecated</strong>, kept for one release as a facade over comment threads
+ * ({@code /threads}; see COLLABORATION.md, Decision 1). The shape is unchanged; text is now scrubbed for readers without
+ * {@code raw}, an edit stops after the edit window, and a delete retracts (the author) or hides (an administrator).
  */
 @RestController
 @RequestMapping("/api/v1/notes")
 public class NoteController {
 
-    private final NoteStore notes;
-    private final Entitlements entitlements;
+    private final NoteFacade notes;
 
-    public NoteController(NoteStore notes, Entitlements entitlements) {
+    public NoteController(NoteFacade notes) {
         this.notes = notes;
-        this.entitlements = entitlements;
     }
 
     @GetMapping("/{kind}/{id}")
     public List<NoteStore.Note> of(@PathVariable String kind, @PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireOpen(p, kind);
-        return notes.of(kind, id);
+        return notes.of(p, kind, id);
     }
 
-    /** Body: {@code {"body": "…", "path": "$.mtm"}} ({@code path} optional: a note on the whole entity). */
+    /** Body: {@code {"body": "...", "path": "$.mtm"}} ({@code path} optional: a note on the whole entity). */
     @PostMapping("/{kind}/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public NoteStore.Note add(@PathVariable String kind, @PathVariable String id, @RequestBody Map<String, String> body,
+    public NoteStore.Note add(@PathVariable String kind, @PathVariable String id, @RequestBody Map<String, String> body, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireOpen(p, kind);
-        return notes.add(kind, id, body.get("path"), p.user(), body.get("body"));
+        return notes.add(p, kind, id, body.get("path"), body.get("body"), asOf);
     }
 
     @PutMapping("/{noteId}")
     public NoteStore.Note edit(@PathVariable long noteId, @RequestBody Map<String, String> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireOpen(p, notes.get(noteId).kind());
-        return notes.edit(noteId, p.user(), body.get("body"));
+        return notes.edit(p, noteId, body.get("body"));
     }
 
     @DeleteMapping("/{noteId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable long noteId, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireOpen(p, notes.get(noteId).kind());
-        notes.delete(noteId, p.user(), entitlements.isAdmin(p));
+        notes.delete(p, noteId);
     }
 }

@@ -850,13 +850,13 @@ build steps). Who may share is the role power `roles.<role>.collaborate`; who ma
 | `share.max-expanded` | `200` | People once roles are expanded. |
 | `share.max-text` | `2000` | Longest note, in characters. |
 | `share.undeliverable` | `tell` | `tell`: the sender learns who was not notified and why (they learn a colleague lacks a right, never data); `silent`: they do not. |
-| `share.post-to-thread` | `false` | The dialog's default for also posting to the discussion (comment threads, build step 5). |
-| `threads.max-text`, `threads.max-per-entity`, `threads.edit-window`, `threads.page-size` | `4000`, `500`, `15m`, `50` | Comment thread limits (build step 5). |
+| `share.post-to-thread` | `false` | The dialog's default for also posting the note to the discussion: a thread on the panel (or the whole view) with the note as its first comment, by the sender. |
+| `threads.max-text`, `threads.max-per-entity`, `threads.edit-window`, `threads.page-size` | `4000`, `500`, `15m`, `50` | Comment thread limits: longest comment (characters), threads per entity, how long after writing the author may edit (after it, retract only; every revision is kept), and comments per page. |
 | `text.on-masked-copy` | `warn` | A masked field's value typed into a note: `warn` tells the sender, `reject` refuses it (`DRS-7011`), `allow` says nothing. Whatever is chosen, the value reads `•••` for every reader without `raw`. Only the document's own masked values are found (exact, as `mask-copies`); use `text.deny-patterns` for values known from elsewhere. |
-| `text.deny-patterns` | `[]` | Regular expressions refused in notes (for example a medical record number format). |
+| `text.deny-patterns` | `[]` | Regular expressions refused in notes and comments (for example a medical record number format). |
 | `limits.shares-per-minute` | `5` | Shares one user sends a minute (`429 DRS-7003`, with `Retry-After`). |
 | `limits.shares-per-day` | `100` | Shares one user sends in 24 hours (counted in the store, so it survives restarts and holds across servers). |
-| `limits.comments-per-minute` | `10` | Comments one user writes a minute (build step 5). |
+| `limits.comments-per-minute` | `10` | Comments (and share replies) one user writes a minute (`429 DRS-7003`). |
 | `limits.directory-per-minute` | `60` | Directory searches one user makes a minute. |
 | `limits.mails-per-recipient-per-hour` | `30` | Emails queued for one recipient in an hour; more are not queued (the bell still rings) and a warning is logged. |
 | `inbox.keep` | `1000` | Newest inbox rows kept per user. |

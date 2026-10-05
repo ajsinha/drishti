@@ -1355,13 +1355,13 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-7002 | 422 | bad recipients | no recipient, an unknown user (or one outside your packs), a role that may not be addressed, or over `share.max-recipients`, `share.max-expanded` or `max-group-size` |
 | DRS-7003 | 429 | collab rate limited | over `limits.shares-per-minute`, `shares-per-day` or `directory-per-minute`; `Retry-After` says when to try again |
 | DRS-7004 | 403 | sharing off | collaboration (`drishti.collab.enabled`), or sharing for the kind's pack (`packs.<pack>.share-enabled`), is switched off |
-| DRS-7005 | 404 | thread not found | (comment threads, a later build step) no thread, or not visible to you |
-| DRS-7006 | 404 | comment not found | (comment threads) no comment, or not visible to you |
-| DRS-7007 | 409 | thread locked | (comment threads) a comment on a locked thread |
-| DRS-7008 | 403 | not editable | (comment threads) not the author, or the edit window has passed |
-| DRS-7009 | 409 | stale comment | (comment threads) an edit built on an older revision |
+| DRS-7005 | 404 | thread not found | no thread, or not visible to you (the thread follows the right to open its entity, and a panel's gate kind) |
+| DRS-7006 | 404 | comment not found | no comment, or not visible to you |
+| DRS-7007 | 409 | thread locked | a comment on a locked thread |
+| DRS-7008 | 403 | not editable | not the author, or the edit window (`threads.edit-window`) has passed, or the comment is retracted or hidden |
+| DRS-7009 | 409 | stale comment | an edit built on an older revision |
 | DRS-7010 | 423 | on hold | (compliance) a purge or removal of something under a legal hold |
-| DRS-7011 | 422 | text refused | an empty or too long note, a `text.deny-patterns` match, a masked value with `text.on-masked-copy: reject`, or a bad pin (a generation newer than the server holds) |
+| DRS-7011 | 422 | text refused | an empty or too long note or comment, a `text.deny-patterns` match, a masked value with `text.on-masked-copy: reject`, or a bad pin (a generation newer than the server holds) |
 | DRS-7012 | 503 | mail unavailable | email was asked for explicitly while it is off, or SMTP failed at once |
 
 `DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
@@ -1455,7 +1455,13 @@ tell), `staleAfter` (the source's `stale-after` as an ISO-8601 duration, or null
 arrived within `staleAfter`; always false on a picked business date). Admin health carries the same per connector as
 `lastUpdate`, `staleAfter` and `stale`.
 
-## Notes
+## Notes (deprecated)
+
+**Deprecated.** Notes are now comment threads ([below](#comment-threads)); `/notes` stays for one release as a facade with the old shape and
+numbers. Existing notes were imported once as single-comment threads (on the whole view, or on the field of `path`; no business date,
+generation 0). Differences: the text is scrubbed for readers without `raw`, an edit stops after `threads.edit-window` (`403 DRS-7008`),
+and a `DELETE` retracts (the author) or hides (an administrator) instead of erasing: the text stays in the thread's revisions. Writes need
+`collaborate` and `drishti.collab.enabled`. Only notes made here or imported are listed; notes made through `/threads` are not.
 
 | Method | Path | What it does |
 |---|---|---|
@@ -1477,8 +1483,9 @@ what a person receives is computed for that person, when they look, from what th
 |---|---|---|
 | `GET` | `/collab` | what the console needs to draw the dialog: `{enabled, store, email, maxText, maxRecipients, undeliverable, onMaskedCopy, postToThread, minQuery, collaborate, compliance}`. Answers even when collaboration is off (`enabled: false`) |
 | `GET` | `/directory?q=ra&limit=10&kind=trade` | the people picker: `[{type: "user", name, displayName, desk, email: true}, {type: "role", name, size}]`. `q` needs `directory.min-query` characters (`400` otherwise). Only enabled users; with `directory.scope: shared-packs` (default) only users who share at least one assigned pack with you, and roles by the number of those people they hold (`admin` and `service` are never offered). `email` says whether an address exists, never the address. With `kind` and `share.undeliverable: tell`, each user also has `reach: true/false`: may they open that kind. Limited to `limits.directory-per-minute` |
-| `POST` | `/shares` | sends a share. Body `{"kind": "trade", "id": "MX-20000001", "panel": "cashflows", "gateKind": "trade", "generation": 1674, "note": "…", "to": {"users": ["ravi"], "roles": ["risk"]}, "channels": {"inApp": true, "email": false}, "live": false}`; the as-of headers (or `asOf`/`knownAt`) say which date the page showed. `201 {id, link, pin, delivered, skipped: [{name, reason}], warnings: []}`. See below |
+| `POST` | `/shares` | sends a share. Body `{"kind": "trade", "id": "MX-20000001", "panel": "cashflows", "gateKind": "trade", "generation": 1674, "note": "…", "to": {"users": ["ravi"], "roles": ["risk"]}, "channels": {"inApp": true, "email": false}, "live": false, "postToThread": false}`; the as-of headers (or `asOf`/`knownAt`) say which date the page showed. `201 {id, link, pin, delivered, skipped: [{name, reason}], warnings: []}`. See below |
 | `GET` | `/shares/{id}` | opens a share, for its sender, a recipient it reached, or a role with `compliance`; anyone else `404 DRS-7001` (the same as no such share). See below |
+| `POST` | `/shares/{id}/replies` | a reply from the sender or a recipient it reached: `{"note": "…"}`; `201` with the comment. The other party is told (inbox `reply`). Anyone else, `404 DRS-7001`; you must still be able to open the shared view. Same text rules as a comment; replies are private to the share's parties (they appear in `GET /shares/{id}` as `replies`, never in the entity's discussion) |
 | `GET` | `/me/shares?box=received\|sent&limit=50&before=` | your shares, newest first: `[{id, createdAt, sender, senderName, kind, entityId, panel, pin, excerpt, access, recipients}]` (`recipients` for the sent box; `entityId`, `pin` and `excerpt` are left out when you may no longer open the kind) |
 | `GET` | `/me/inbox?type=&unread=false&limit=50&before=` | your notices, newest first, rendered now for your rights: `[{seq, at, type, actor, actorName, kind, id, panel, shareId, threadId, commentId, read, access, title, excerpt}]`. When you can no longer open the kind, `access` is `false`, `id`, `panel` and `excerpt` are `null` and `title` reads `(no access) Ann shared a trade view` |
 | `GET` | `/me/inbox/count` | `{unread}`, for the bell at page load |
@@ -1507,6 +1514,52 @@ may not open it (their roles stopped opening the kind, or the pack is off) it an
 "no-pack" | "pack-off", pack, sender, senderName, createdAt, kind}` and nothing about the entity: no id, no title, no note, no pin.
 The link opens the view with `asOf` and `knownAt` taken from `pin` as request parameters (never the recipient's saved date) and the
 header `X-Drishti-Share: sh_…`, which the access log records as `share:sh_…` on the `view` row.
+
+## Comment threads
+
+Design: [COLLABORATION.md](../architecture/COLLABORATION.md). A thread is a conversation about an entity: on the whole view
+(`anchor: entity`), on a panel (`panel`, with the `gateKind` of the panel's source) or on a field (`field`, with a `path` such as
+`$.mtm`). **Who sees a thread is who may open the entity**: its kind and its pack, and for a panel the gate kind too (otherwise the
+thread is not listed, not counted and `404 DRS-7005`). Every comment is stored as written, with a **pin** (business date, "known at",
+generation, source) and the ranges that copy a masked field's value; each reader gets the text computed for them. Reads take the
+as-of headers; writes need `collaborate` and `drishti.collab.enabled` (`403 DRS-7004`); personal API tokens read only.
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/threads/{kind}/{id}?anchor=&panel=&path=&state=&limit=&before=` | the threads you may see, most recent activity first, each with its first page of comments (`threads.page-size`): `[{id, anchor, panel, path, label, state, createdBy, createdByName, comments, following, muted, items: [comment], more}]`. `before` is the last thread id of the previous page |
+| `GET` | `/threads/{kind}/{id}/counts` | `{entity: n, panels: {panelId: n}, fields: {path: n}}` for the badges, from the threads you may see |
+| `POST` | `/threads/{kind}/{id}` | a new thread with its first comment: `{"anchor": "panel", "panel": "cashflows", "gateKind": "trade", "path": "$.mtm", "label": "Cashflows", "generation": 1674, "body": "…"}`; `201 {threadId, comment, notified, skipped: [{name, reason}], warnings: []}` |
+| `POST` | `/threads/{tid}/comments` | a reply: `{"generation": 1674, "body": "…"}`; `201` as above; `409 DRS-7007` when the thread is locked |
+| `PATCH` | `/comments/{cid}` | edit: `{"body": "…", "revision": 1}`. The author only, within `threads.edit-window` (`403 DRS-7008`), on the current revision (`409 DRS-7009`) |
+| `POST` | `/comments/{cid}/retract` | the author withdraws a comment at any time: readers see "retracted", the text stays in the record |
+| `GET` | `/comments/{cid}/revisions` | the history `[{revision, at, actor, action, body, reason}]`; `action` is `created`, `edited`, `retracted`, `hidden` or `unhidden`. Bodies are given for a live comment (scrubbed for you) and to administrators and `compliance`, never for a retracted or hidden one |
+| `POST` | `/threads/{tid}/state` | `{"state": "open" \| "resolved" \| "locked"}`: the thread's participants and administrators resolve and reopen; `locked` and unlocking are for administrators |
+| `PUT` · `DELETE` | `/threads/{tid}/follow` | follow (`{"muted": false}`; `true` keeps the thread but stops reply notices) or stop. Commenting follows automatically |
+| `GET` | `/me/mentions?limit=&before=` | live comments that mention you or one of your roles, where you may open the entity: `[{commentId, threadId, kind, entityId, panel, author, authorName, at, excerpt}]` |
+| `POST` | `/admin/collab/comments/{cid}/hide` · `/unhide` | administrators only: `{"reason": "client name"}` (required, at most 400 characters); readers see "Hidden by a moderator: client name" and no text |
+
+A **comment** as you read it: `{id, threadId, author, authorName, createdAt, editedAt, revision, pin, state, stateReason, body, parts,
+edited, mine, editable}`. `state` is `live`, `retracted` or `hidden`; `body` and `parts` are left out for a reader who may not see the
+text. `parts` is the text as structured pieces so a console never builds markup: `{t: "text", v}`, `{t: "mention", v: "@ravi", target:
+"user:ravi"}` and `{t: "quote", v: "•••", path: "$.mtm"}`.
+
+**Text.** Plain text, 1 to `threads.max-text` characters, no control characters; refused with `422 DRS-7011` when it matches
+`text.deny-patterns`, when `generation` is newer than the server holds, or (with `text.on-masked-copy: reject`) when it copies a masked
+value. Otherwise a masked value typed into the text is recorded as a range and every reader without `raw` sees `•••`, and the author
+gets a `warnings` entry. To cite a figure safely write a **quote**, `{$.mtm}`: each reader sees the value from *their own* view of the
+document at the comment's pin (`•••` when their view masks it, `—` when the path is gone). Values known only from elsewhere are not
+detectable: use `text.deny-patterns`.
+
+**Mentions.** `@ravi` is a user in your directory scope; `@risk` is a mentionable role (the roles are the groups). A name that is
+neither stays plain text. A mention notifies a person **only if they may reach the entity's kind** (their roles open it and its pack is
+assigned): someone who cannot see the entity is told nothing, not even that they were mentioned. Under `share.undeliverable: tell` the
+response's `skipped` lists who was not told and why; under `silent` it is empty. Replies notify the thread's followers who are not the
+author, not already mentioned and not muted. Each notice is an inbox row (`mention` or `reply`) rendered when read, for the reader's
+rights now. More than `limits.comments-per-minute` is `429 DRS-7003`.
+
+**The record.** Every action (`created`, `edited`, `retracted`, `hidden`, `unhidden`) is an immutable revision chained with SHA-256 per
+thread; nothing is erased. Each is also in the audit log (`collab.comment.add`, `.edit`, `.retract`, `.hide`, `.unhide`,
+`collab.thread.<state>`, `collab.share.reply`).
 
 ## Shared workspaces
 

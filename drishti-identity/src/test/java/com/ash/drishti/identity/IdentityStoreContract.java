@@ -147,6 +147,11 @@ abstract class IdentityStoreContract {
     }
 
     @Test
+    void threadsRoundTripInTheDatabase() {
+        com.ash.drishti.identity.collab.CollabStoreChecks.threads(bean(com.ash.drishti.identity.collab.ThreadStore.class));
+    }
+
+    @Test
     void recordNowWritesAnAccessRowAtOnceAndRollsBackWithItsTransaction() {
         AccessLog log = bean(AccessLog.class);
         var tx = bean(com.ash.drishti.identity.collab.CollabTx.class);

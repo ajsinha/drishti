@@ -151,4 +151,76 @@ public final class CollabStoreChecks {
         assertThat(s.purgeSent(now.plusSeconds(1))).isGreaterThanOrEqualTo(1);
         assertThat(s.find(a.seq())).isEmpty();
     }
+
+    /** Comment threads: the thread, comments, immutable revisions chained per thread, mentions, followers and the note link. */
+    public static void threads(ThreadStore s) {
+        String u = "e" + System.nanoTime();
+        Instant t0 = Instant.now().minusSeconds(60).truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        Pin pin = new Pin(LocalDate.of(2026, 9, 30), false, Instant.parse("2026-09-30T18:00:00Z"), 1674, "demo");
+        CommentThread th = new CommentThread(Ulid.next("th_", t0.toEpochMilli()), "trade", u, CommentThread.PANEL, "cashflows", null, "trade",
+                "Cashflows", CommentThread.OPEN, "ann", t0, t0, 1);
+        CommentThread other = new CommentThread(Ulid.next("th_", t0.toEpochMilli() + 5), "trade", u, CommentThread.ENTITY, null, null, null,
+                "whole view", CommentThread.OPEN, "ravi", t0.plusSeconds(5), t0.plusSeconds(5), 0);
+        s.saveThread(th);
+        s.saveThread(other);
+        assertThat(s.thread(th.id())).contains(th);
+        assertThat(s.thread("th_NOPE")).isEmpty();
+        assertThat(s.threads("trade", u)).extracting(CommentThread::id).containsExactly(other.id(), th.id());
+        assertThat(s.threads("trade", u + "x")).isEmpty();
+
+        Comment c1 = new Comment(Ulid.next("cm_", t0.toEpochMilli()), th.id(), "ann", t0, null, 1, pin, "see J. Smith @ravi @role-risk",
+                List.of(new Share.Span(4, 12)), Comment.LIVE, null);
+        Revision r1 = s.append(c1, Revision.draft(c1.id(), 1, t0, "ann", Revision.CREATED, c1.body(), null), List.of("user:ravi", "role:risk"));
+        assertThat(r1.prevHash()).isEqualTo(HashChain.genesis(th.id()));
+        assertThat(r1.hash()).hasSize(64);
+        assertThat(s.comment(c1.id())).contains(c1);
+        assertThat(s.comment(c1.id()).orElseThrow().pin()).isEqualTo(pin);
+        assertThat(s.comment(c1.id()).orElseThrow().maskedSpans()).containsExactly(new Share.Span(4, 12));
+
+        Comment c2 = new Comment(Ulid.next("cm_", t0.toEpochMilli() + 1000), th.id(), "ravi", t0.plusSeconds(1), null, 1, pin, "yes", List.of(),
+                Comment.LIVE, null);
+        Revision r2 = s.append(c2, Revision.draft(c2.id(), 1, t0.plusSeconds(1), "ravi", Revision.CREATED, "yes", null), List.of());
+        assertThat(r2.prevHash()).as("the chain runs through the thread, across comments").isEqualTo(r1.hash());
+        Comment c1b = c1.edited("see it @ravi", List.of(), t0.plusSeconds(2), 2);
+        Revision r3 = s.append(c1b, Revision.draft(c1.id(), 2, t0.plusSeconds(2), "ann", Revision.EDITED, "see it @ravi", null), List.of("user:ravi"));
+        assertThat(r3.prevHash()).isEqualTo(r2.hash());
+        Revision same = s.append(c2, Revision.draft(c2.id(), 2, t0.plusSeconds(2), "ravi", Revision.RETRACTED, null, "mistake"), List.of());
+        assertThat(same.at()).as("a step never shares its time with the one before").isAfter(r3.at());
+
+        assertThat(s.comments(th.id())).extracting(Comment::id).containsExactly(c1.id(), c2.id());
+        assertThat(s.comment(c1.id()).orElseThrow().body()).isEqualTo("see it @ravi");
+        assertThat(s.revisions(c1.id())).extracting(Revision::action).containsExactly(Revision.CREATED, Revision.EDITED);
+        assertThat(s.revisions(c1.id()).get(0).body()).as("the first text is kept").isEqualTo("see J. Smith @ravi @role-risk");
+        assertThat(s.chain(th.id())).extracting(Revision::hash).containsExactly(r1.hash(), r2.hash(), r3.hash(), same.hash());
+        assertThat(HashChain.verify(th.id(), s.chain(th.id()))).isNull();
+        List<Revision> broken = new java.util.ArrayList<>(s.chain(th.id()));
+        broken.set(1, new Revision(r2.commentId(), r2.revision(), r2.at(), r2.actor(), r2.action(), "changed", r2.reason(), r2.prevHash(), r2.hash()));
+        assertThat(HashChain.verify(th.id(), broken)).contains("was changed");
+
+        assertThat(s.mentions(c1.id())).extracting(Mention::target).containsExactlyInAnyOrder("user:ravi", "role:risk");
+        assertThat(s.mentionsOf(List.of("user:ravi"), 10, null)).extracting(Mention::commentId).containsExactly(c1.id());
+        assertThat(s.mentionsOf(List.of("user:ravi", "role:risk"), 10, c1.id())).isEmpty();
+        assertThat(s.mentionsOf(List.of(), 10, null)).isEmpty();
+
+        assertThat(s.following(th.id(), "ann")).isEmpty();
+        s.follow(new Follow(th.id(), "ann", false, t0));
+        s.follow(new Follow(th.id(), "ravi", false, t0));
+        s.follow(new Follow(th.id(), "ravi", true, t0));
+        assertThat(s.followers(th.id())).extracting(Follow::username).containsExactlyInAnyOrder("ann", "ravi");
+        assertThat(s.following(th.id(), "ravi").orElseThrow().muted()).isTrue();
+        assertThat(s.unfollow(th.id(), "ann")).isTrue();
+        assertThat(s.unfollow(th.id(), "ann")).isFalse();
+
+        CommentThread bumped = th.withActivity(t0.plusSeconds(9), 2).withState(CommentThread.RESOLVED);
+        s.saveThread(bumped);
+        assertThat(s.thread(th.id())).contains(bumped);
+        assertThat(s.threads("trade", u)).extracting(CommentThread::id).containsExactly(th.id(), other.id());
+
+        long note = System.nanoTime();
+        assertThat(s.commentOfNote(note)).isEmpty();
+        s.linkNote(note, c1.id());
+        assertThat(s.commentOfNote(note)).contains(c1.id());
+        assertThat(s.noteOfComment(c1.id())).contains(note);
+        assertThat(s.linkedNotes()).contains(note);
+    }
 }

@@ -53,6 +53,11 @@ class CollabDisabledTest {
                 .andExpect(jsonPath("$.code").value("DRS-7004"));
         mvc.perform(get("/api/v1/me/inbox").header("Authorization", admin())).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-7004"));
         mvc.perform(get("/api/v1/shares/sh_01ARZ3NDEKTSV4RRFFQ69G5FAV").header("Authorization", admin())).andExpect(status().isForbidden());
+        mvc.perform(get("/api/v1/threads/trade/IRS-48213").header("Authorization", admin())).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("DRS-7004"));
+        mvc.perform(post("/api/v1/threads/trade/IRS-48213").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"anchor\":\"entity\",\"body\":\"x\"}")).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-7004"));
+        mvc.perform(get("/api/v1/me/mentions").header("Authorization", admin())).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/collab").header("Authorization", admin())).andExpect(status().isOk()).andExpect(jsonPath("$.enabled").value(false))
                 .andExpect(jsonPath("$.collaborate").value(false));
     }

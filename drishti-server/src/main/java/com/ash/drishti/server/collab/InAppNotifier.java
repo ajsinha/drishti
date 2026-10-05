@@ -44,4 +44,13 @@ public final class InAppNotifier implements Notifier {
                 s.id(), s.threadId(), null, s.sender(), null))));
         return rows;
     }
+
+    @Override
+    public List<Notice> onComment(CommentEvent e) {
+        List<Notice> rows = new ArrayList<>();
+        Instant now = Instant.now();
+        e.recipients().forEach(user -> rows.add(inbox.add(new Notice(0, user, now, e.type(), e.thread().kind(), e.thread().entityId(),
+                e.thread().panelId(), e.shareId(), e.thread().id(), e.comment().id(), e.comment().author(), null))));
+        return rows;
+    }
 }

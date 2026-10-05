@@ -100,6 +100,15 @@ public class IdentityConfiguration {
                 : new com.ash.drishti.identity.collab.FileOutboxStore(java.nio.file.Path.of(props.dir()));
     }
 
+    @Bean
+    public com.ash.drishti.identity.collab.ThreadStore threadStore(com.ash.drishti.identity.collab.CollabProperties props,
+            IdentityRepositories.Threads threads, IdentityRepositories.Comments comments, IdentityRepositories.Revisions revisions,
+            IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows, IdentityRepositories.NoteLinks links,
+            TransactionTemplate identityTransactions) {
+        return props.jpa() ? new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows, links,
+                identityTransactions) : new com.ash.drishti.identity.collab.FileThreadStore(java.nio.file.Path.of(props.dir()));
+    }
+
     public static void requireSingleServerForFiles(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id) {
         if (!props.jpa() && !id.sqlite()) {
             throw new IllegalStateException("drishti.collab.store=file keeps shares on this server only, but drishti.identity.database-url "

@@ -32,6 +32,7 @@ import com.ash.drishti.identity.collab.Recipient;
 import com.ash.drishti.identity.collab.Share;
 import com.ash.drishti.identity.collab.ShareStore;
 import com.ash.drishti.identity.collab.Ulid;
+import com.ash.drishti.server.collab.thread.ThreadService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
 import com.ash.drishti.server.security.Principal;
@@ -93,7 +94,8 @@ public final class ShareService {
     /** A share as the caller opens it. A caller who may not open it gets {@code access: false} and nothing about the entity. */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record View(String id, boolean access, String reason, String pack, String role, String sender, String senderName, Instant createdAt,
-            String kind, String entityId, String panel, Pin pin, String note, List<RecipientView> recipients) {}
+            String kind, String entityId, String panel, Pin pin, String note, List<RecipientView> recipients,
+            List<ThreadService.CommentView> replies) {}
 
     /** One line of a box (sent or received). */
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -114,12 +116,13 @@ public final class ShareService {
     private final InboxHub hub;
     private final AccessLog accessLog;
     private final RateLimits limits;
+    private final ThreadService threads;
     private final List<Pattern> deny = new ArrayList<>();
 
     @SuppressWarnings("java:S107")
     public ShareService(ShareStore store, CollabTx tx, CollabProperties props, Entitlements entitlements, PackAccess packs,
             Principals principals, DirectoryService directory, UserService users, SourceRouter router, List<Notifier> notifiers,
-            InboxHub hub, AccessLog accessLog, RateLimits limits) {
+            InboxHub hub, AccessLog accessLog, RateLimits limits, ThreadService threads) {
         this.store = store;
         this.tx = tx;
         this.props = props;
@@ -133,6 +136,7 @@ public final class ShareService {
         this.hub = hub;
         this.accessLog = accessLog;
         this.limits = limits;
+        this.threads = threads;
         for (String p : props.text().denyPatterns()) {
             try {
                 deny.add(Pattern.compile(p));
@@ -193,20 +197,21 @@ public final class ShareService {
                 warnings.add("The note contains the value of a field hidden from some readers; people without full access will see " + com.ash.drishti.api.DataNode.MASK + ".");
             }
         }
-        if (Boolean.TRUE.equals(req.postToThread())) {
-            warnings.add("Posting to the discussion is not available yet; the share was sent without it.");
-        }
         rateLimit(sender.user());                      // after every check that can fail: a refused share costs nothing
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
         boolean live = Boolean.TRUE.equals(req.live());
         Pin pin = new Pin(live ? null : asOf.businessDate(), live || asOf.live(), asOf.knownAt() != null && !live ? asOf.knownAt() : now,
                 generation, doc.provenance().source());
+        String threadId = Boolean.TRUE.equals(req.postToThread()) ? Ulid.next("th_", now.toEpochMilli()) : null;
         Share share = new Share(Ulid.next("sh_", now.toEpochMilli()), sender.user(), now, kind, entityId, panel, gate, pin, note, spans,
-                "in-app", null, null).signed();
+                "in-app", threadId, null).signed();
         List<Recipient> rows = people.stream().map(d -> new Recipient(d.addressed(), d.user(), d.state(), null)).toList();
         List<Recipient> reached = rows.stream().filter(r -> Recipient.NOTIFIED.equals(r.state())).toList();
         List<Notice> notices = tx.run(() -> {
             store.save(share, rows);
+            if (threadId != null) {
+                threads.postShare(threadId, share, now);
+            }
             List<Notice> written = new ArrayList<>();
             Notifier.ShareEvent event = new Notifier.ShareEvent(share, reached);
             for (Notifier n : notifiers) {
@@ -356,7 +361,7 @@ public final class ShareService {
         return out;
     }
 
-    static String reason(String state, String kind) {
+    public static String reason(String state, String kind) {
         return switch (state) {
             case Recipient.NO_ACCESS -> "may not open " + kind + " views";
             case Recipient.NO_PACK -> "does not have the pack for " + kind + " views";
@@ -400,7 +405,7 @@ public final class ShareService {
         String blocked = blockedReason(caller, s);
         if (blocked != null) {
             return new View(s.id(), false, blocked, packs.ownerOf(s.kind()), role, s.sender(), senderName, s.createdAt(), s.kind(), null, null, null,
-                    null, null);
+                    null, null, null);
         }
         if (recipient && !sender) {
             store.markOpened(id, caller.user(), Instant.now().truncatedTo(ChronoUnit.MILLIS));
@@ -408,7 +413,27 @@ public final class ShareService {
         List<RecipientView> shown = sender || compliance
                 ? store.recipients(id).stream().map(r -> new RecipientView(r.username(), r.addressed(), r.state(), r.openedAt())).toList() : null;
         return new View(s.id(), true, null, null, role, s.sender(), senderName, s.createdAt(), s.kind(), s.entityId(), s.panelId(), s.pin(),
-                NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(caller)), shown);
+                NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(caller)), shown, threads.replies(caller, s));
+    }
+
+    /**
+     * A reply to a share, from its sender or a recipient it reached; the other party is told ({@code reply}). Anyone else: {@code 404
+     * DRS-7001}. The replier must still be able to open the shared view. The text follows the same rules as a comment.
+     */
+    public ThreadService.CommentView reply(Principal caller, String id, String note, AsOf asOf) {
+        requireCollaborate(caller);
+        Share s = Ulid.valid(id, "sh_") ? store.find(id).orElse(null) : null;
+        List<Recipient> rs = s == null ? List.of() : store.recipients(id);
+        boolean sender = s != null && s.sender().equals(caller.user());
+        boolean recipient = s != null && rs.stream().anyMatch(r -> r.username().equals(caller.user()) && Recipient.NOTIFIED.equals(r.state()));
+        if (s == null || !(sender || recipient)) {
+            throw new DrishtiException(ErrorCode.SHARE_NOT_FOUND, "no share '" + (id == null ? "" : id.length() > 40 ? id.substring(0, 40) : id) + "'");
+        }
+        if (blockedReason(caller, s) != null) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, caller.user() + " may no longer open the shared " + s.kind() + " view");
+        }
+        List<String> notified = rs.stream().filter(r -> Recipient.NOTIFIED.equals(r.state())).map(Recipient::username).toList();
+        return threads.replyToShare(caller, s, notified, note, asOf);
     }
 
     /** Why the caller may not open the shared view now: {@code no-access}, {@code pack-off}, or null when they may. */
