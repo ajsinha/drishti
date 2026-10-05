@@ -1,0 +1,28 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The body of the About this page drawer: an HTML fragment, fetched when the drawer first opens (GET /v/{kind}/{id}/about). #}
+{% from "_macros/about.html" import layer_about, layer_data, layer_layout, layer_next %}
+{% if error %}
+<p class="about-error" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.code }}: {{ error.detail }}</p>
+{% else %}
+<div class="about-card" data-about-generation="{{ ex.generation }}">
+  {% if ex.newer %}<p class="about-newer" role="status">This page is behind: the data is now at generation {{ ex.generation }}. <a href="" data-about-refresh>Refresh the page</a></p>{% endif %}
+  {{ layer_about(ex, true) }}
+  {{ layer_data(ex, true) }}
+  {{ layer_layout(ex, false) }}
+  {{ layer_next(ex, false) }}
+</div>
+{% endif %}

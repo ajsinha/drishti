@@ -100,6 +100,7 @@
   function applyProvenance(p) {
     var note = document.querySelector('.fk-note');
     if (note) { note.textContent = note.textContent.replace(/gen \d+/, 'gen ' + p.provenance.generation); }
+    document.dispatchEvent(new CustomEvent('drishti:frame', { detail: { generation: p.provenance.generation } }));   // About this page re-asks when it is open
   }
 
   var off = window.DrishtiChannel.subscribe('view:' + view.dataset.kind + '/' + view.dataset.id, {

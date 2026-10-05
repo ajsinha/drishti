@@ -1,0 +1,17 @@
+{
+  "ref": {"kind": "trade", "id": "IRS-48213"}, "mnemonic": "TRD", "locale": "en", "generation": 7,
+  "data": {"source": "trade-store", "generation": 7, "fetchedAt": "2026-10-03T06:12:09Z", "businessDate": "2026-10-02", "current": true,
+           "updatedAt": "2026-10-03T06:12:00Z", "staleAfter": "PT26H", "health": "up", "linked": {"fetched": 2, "pending": 0, "denied": 1, "budgetMs": 40}},
+  "layout": {"label": "Sutra irs-vanilla v1 + inference", "fingerprint": "a91f",
+             "sutra": {"name": "irs-vanilla", "version": 1, "priority": 10, "where": "$.product == 'IRS'", "description": "A vanilla interest-rate swap: legs, cashflows and risk."},
+             "inferred": true,
+             "candidates": [{"name": "irs-exotic", "version": 2, "priority": 20, "where": "$.exotic == true", "result": "false"}],
+             "inferredPanels": [{"id": "refs", "title": "References", "reason": "table-of-objects, score 0.82"}],
+             "noData": [{"id": "curve", "title": "Curve", "why": "missing", "path": "$.curve"}],
+             "masked": [{"key": "$.trader", "label": "Trader", "panels": ["legs"]}],
+             "noAccess": [{"title": "Swaption", "kind": "swaption"}]},
+  "next": {"keys": [{"key": "F7", "label": "Counterparty", "link": {"kind": "counterparty", "id": "CP-1", "mnemonic": "CPTY"}},
+                    {"key": "F8", "label": "Impact", "action": "impact"}],
+           "panelKinds": ["kv", "table"]},
+  "timings": {"view": 3.9, "explain": 0.8}
+}

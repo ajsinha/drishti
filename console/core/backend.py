@@ -111,6 +111,14 @@ class BackendClient:
         where, q = entity_path(kind, id_)
         return await self._get(f"/views/{where}", ident, **q)
 
+    async def explain(self, kind: str, id_: str, ident, generation: int | None = None) -> dict:
+        """About this page: where the data came from, why the layout is what it is, where next (the server's PageContext).
+        ``generation`` is that of the page the caller shows; a newer one comes back marked ``newer``."""
+        where, q = entity_path(kind, id_)
+        if generation:
+            q["generation"] = generation
+        return await self._get(f"/views/{where}/explain", ident, **q)
+
     async def search(self, q: str, ident=None) -> dict:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""
         return await self._get("/search", ident, q=q)

@@ -46,6 +46,16 @@ def test_contrast_all_themes():
         assert _ratio(t["accent"], t["bg"]) >= 3.0, name
 
 
+def test_the_about_drawer_text_reads_in_every_theme():
+    """About this page (about.css) draws ink, muted and link text on the surface, its headings in the accent, its health words in
+    pos / accent / neg, and ink on the key caps (surface-2): all at 4.5:1."""
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
+        t = _theme(name)
+        for fg in ("ink", "muted", "link", "accent", "pos", "neg"):
+            assert _ratio(t[fg], t["surface"]) >= 4.5, (name, fg, round(_ratio(t[fg], t["surface"]), 2))
+        assert _ratio(t["ink"], t["surface-2"]) >= 4.5, name
+
+
 def test_waterfall_bars_stand_out_in_every_theme():
     """A waterfall fills its bars with ok/bad (rises green, falls red; the default), pos/neg (colors: theme) and muted
     (totals): graphical objects need 3:1 against the panel (WCAG 1.4.11), and the two colours of a step must differ."""

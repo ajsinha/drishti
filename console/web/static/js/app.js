@@ -89,6 +89,7 @@ window.drsMessage = function (p, fallback) {
   // F1: help for the screen you are on.
   document.addEventListener('keydown', function (e) {
     if (e.key === 'F1') {
+      if (e.defaultPrevented) { return; }                  // About this page took it (a view: the drawer opens)
       e.preventDefault();
       var go = function () { window.location.href = '/help/context/' + encodeURIComponent(document.body.getAttribute('data-screen') || 'landing'); };
       var held = window.drishtiBeforeLeave ? window.drishtiBeforeLeave() : null;      // a page with an edit waiting sends it first (UX-22)
