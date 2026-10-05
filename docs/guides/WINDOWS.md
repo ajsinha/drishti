@@ -74,7 +74,7 @@ $env:JAVA_HOME = $env:DRISHTI_JAVA_HOME
 dir drishti-server\target\*-exec.jar
 ```
 
-You should see `drishti-server-1.16.0-exec.jar`. To also run the tests of the Delta engine and connector:
+You should see `drishti-server-1.17.0-exec.jar`. To also run the tests of the Delta engine and connector:
 `.\mvnw.cmd -q verify -pl drishti-deltalake,plugins/drishti-plugin-delta -am` (tests that need Docker skip themselves).
 
 **Or copy** a server built elsewhere (on Linux, or by CI): Java bytecode is the same on every system. Make a folder,
@@ -82,7 +82,7 @@ for example `C:\drishti`, holding:
 
 | Copy | From | Why |
 |---|---|---|
-| `drishti-server-1.16.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
+| `drishti-server-1.17.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
 | `packs\` | the repository root | the domain packs (Sutras, mnemonics, samples) |
 | `console\` | the repository root | only if you will run the console on this machine |
 | `tools\windows\`, `tools\packgen\`, `tools\samplegen\` | the repository's `tools\` | the scripts, and the lake generator if you will build the demo lake here |
@@ -141,7 +141,7 @@ To run the jar by hand instead:
 
 ```powershell
 $env:DRISHTI_PACKS = 'market-risk'
-& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-1.16.0-exec.jar
+& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-1.17.0-exec.jar
 ```
 
 The native Delta engine is the default, so nothing else is needed.

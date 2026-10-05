@@ -13,7 +13,39 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.16.0 — release notes
+# Drishti 1.17.0 — release notes
+
+*2026-10-05.* **From a folder of JSON Lines to a deployed pack, by command line or by the admin page.**
+
+- **`drishti.py`, one command line for every build activity** (docs/guides/CLI_GUIDE.md, with real output for every
+  command and a PyCharm section):
+  - `pack make`: a folder or file of JSON Lines, a kind, a match column and a name give ONE folder to deploy: the pack
+    (Sutras per group, tests, About skeleton), the data as a Delta lake or files partitioned by business date, a signed-
+    ready bundle, a README.txt written for that pack (deploy, verify, lift data from Delta, add days, roll back), a
+    server overlay and run scripts. Key and date fields are detected; the reasons are printed.
+  - `sutra gen`, `data profile` (suggests key, date and match columns), `data ingest` (Delta or files, idempotent by
+    date, `--watch` for drop folders), `pack regenerate` (a three-way merge that keeps your edits), `pack diff`
+    (breaking changes flagged), `pack check`, `catalogue`, `i18n`, `bundle`, `verify`, `deploy`, `rollback`,
+    `server smoke`, `doctor`, `view get|explain`, design commands over the API, and shell completion.
+- **Admin → Packs → Deploy archive:** upload a bundle; the server verifies it (checksums, paths, server version,
+  Sutra tests, optional signature), previews what changes with breaking changes highlighted, deploys with the previous
+  version kept and an automatic rollback, and keeps a history with Roll back. A **Data source** panel per pack edits,
+  tests (dates and row counts) and resets where the data comes from; changes live in an admin override file, so a
+  redeploy never loses them. Archives carry the pack only, never data.
+- **Operationalising by copying** (docs/guides/OPERATIONALISING.md): promote the same checksummed bundle from dev to
+  test to prod; Docker and Kubernetes recipes.
+- **Personal API tokens can write** when created with a scope (`design:write`, `design:approve`, `packs:admin`), always
+  within the user's own roles, expiring, audited; existing tokens stay read-only.
+- **The console module is `drishti-console/`** (was `console/`).
+- Fixed: pack checks from the command line see the pack's own About text; server tests no longer leave a `data` folder.
+
+**Upgrade notes:**
+- Recreate the console's virtual environment once: `rm -rf drishti-console/.venv`, then QUICKSTART step 3; point IDE run
+  configurations at `drishti-console/`.
+- New settings: `drishti.packs.deploy.*`, `drishti.security.token-scopes`, `token-write-max-days`, console
+  `packs.deploy_max_mb`. See CONFIGURATION.md.
+
+# Previous release: Drishti 1.16.0 — release notes
 
 *2026-10-05.* **Java 21 for production, About this page, and Share and Discussion.**
 
@@ -49,7 +81,7 @@
 - New settings: `drishti.explain.*`, `drishti.about.*`, `drishti.explain.ask.*`, `drishti.collab.*` (all collaboration
   email, bridges and snapshots are off until configured), console `ui.about_prefetch`. See CONFIGURATION.md.
 
-# Previous release: Drishti 1.15.0 — release notes
+# Older release: Drishti 1.15.0 — release notes
 
 *2026-10-04.* **A KPI tile, five developer guides with generated screenshots, and one source of truth per topic.**
 
@@ -78,23 +110,3 @@
 
 **Upgrade notes:** none required. Old help addresses (`/help/panels`, `/help/plugins`, `/help/connectors`,
 `/help/build-a-pack`, `/help/sutra-guide`, `/help/rachana-guide`) redirect to the new guides.
-
-# Older release: Drishti 1.14.1 — release notes
-
-*2026-10-03.* **LZ4 Delta tables, clean errors for oversized requests, and masking of copied values.**
-
-- **Delta Lake tables compressed with LZ4 or LZ4_RAW are read** by both engines (tables written by pyarrow, pandas,
-  delta-rs, Spark and Hadoop). The native engine decodes them; the Hadoop engine routes LZ4 files through the same
-  decoder (`lz4-via-native`, on by default). A corrupt page names its codec, table and file. See
-  [DELTA_CONNECTOR §16](docs/connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop).
-- **Oversized requests get a clear `413 DRS-5005`** naming the size and the limit (before, a very large upload ended in
-  a broken connection). Limits per path in `drishti.http.request-limits`; the console says "This file is too large: X MB;
-  the limit is Y MB".
-- **Masking of copied values (opt-in):** with `drishti.security.mask-copies: true`, a masked field's value is also hidden
-  where it is copied into other text of the same document ("Captured by •••"). Best effort: exact copies only; mask
-  free-text fields that carry sensitive values too (dotted `redact` paths), and keep sensitive values out of free text at
-  the source. The shipped configuration masks `lifecycle.timeline.description` along with the trader.
-- Passing builds no longer print an alarming LZ4 stack trace from a test that refuses an unsupported codec on purpose.
-
-**Upgrade notes:** none required. New settings: `drishti.http.request-limits.*`, `server.tomcat.max-swallow-size`
-(`DRISHTI_MAX_SWALLOW`), `drishti.security.mask-copies*`, Delta `lz4-decoder` and `lz4-via-native`.

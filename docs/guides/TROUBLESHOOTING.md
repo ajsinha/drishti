@@ -138,7 +138,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -jar drishti-server/target/drishti-server-1.16.0-exec.jar
+  DRISHTI_PORT=18481 java -jar drishti-server/target/drishti-server-1.17.0-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -156,7 +156,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -jar drishti-server/target/drishti-server-1.16.0-exec.jar
+    java -jar drishti-server/target/drishti-server-1.17.0-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `banking-core` and `market-data`. Other
@@ -177,7 +177,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-1.16.0-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-1.17.0-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -206,7 +206,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -jar drishti-server/target/drishti-server-1.16.0-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -jar drishti-server/target/drishti-server-1.17.0-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
