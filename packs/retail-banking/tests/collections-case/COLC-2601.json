@@ -1,0 +1,32 @@
+{
+ "caseId": "COLC-2601",
+ "customerName": "Priya Sharma",
+ "arrears": 529.43,
+ "daysPastDue": 47,
+ "stage": "Early (30-59)",
+ "strategy": "Payment plan",
+ "status": "Open",
+ "contacts": [
+  {
+   "date": "2026-08-14",
+   "channel": "SMS",
+   "outcome": "Delivered"
+  },
+  {
+   "date": "2026-08-19",
+   "channel": "Call",
+   "outcome": "No answer"
+  },
+  {
+   "date": "2026-08-24",
+   "channel": "Call",
+   "outcome": "Promise to pay"
+  }
+ ],
+ "customer": "CUST-100231",
+ "card": "CARD-100231",
+ "_meta": {
+  "source": "collections",
+  "generation": 1
+ }
+}

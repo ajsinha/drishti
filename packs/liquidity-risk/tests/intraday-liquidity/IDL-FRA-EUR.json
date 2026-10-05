@@ -1,0 +1,110 @@
+{
+ "reportId": "IDL-FRA-EUR",
+ "legalEntityName": "Drishti Bank Europe AG",
+ "currency": "EUR",
+ "peakUsage": 1172000000.0,
+ "available": 2350000000.0,
+ "usagePct": 0.4987,
+ "usage": [
+  {
+   "time": "07:00",
+   "used": 123012671
+  },
+  {
+   "time": "08:00",
+   "used": 315262363
+  },
+  {
+   "time": "09:00",
+   "used": 459703333
+  },
+  {
+   "time": "10:00",
+   "used": 383539791
+  },
+  {
+   "time": "11:00",
+   "used": 600572107
+  },
+  {
+   "time": "12:00",
+   "used": 810064648
+  },
+  {
+   "time": "13:00",
+   "used": 1026627250
+  },
+  {
+   "time": "14:00",
+   "used": 1048661695
+  },
+  {
+   "time": "15:00",
+   "used": 1055550586
+  },
+  {
+   "time": "16:00",
+   "used": 1172000000
+  },
+  {
+   "time": "17:00",
+   "used": 1172000000
+  },
+  {
+   "time": "18:00",
+   "used": 1172000000
+  }
+ ],
+ "largePayments": [
+  {
+   "time": "09:14",
+   "counterparty": "Halcyon Shipping plc",
+   "amount": 171200000.0
+  },
+  {
+   "time": "10:24",
+   "counterparty": "Rheintal Landesbank",
+   "amount": 512000000.0
+  },
+  {
+   "time": "12:26",
+   "counterparty": "Bramble Asset Management",
+   "amount": 241500000.0
+  },
+  {
+   "time": "14:56",
+   "counterparty": "Verdant Agri Holdings",
+   "amount": 401600000.0
+  },
+  {
+   "time": "16:57",
+   "counterparty": "Halcyon Shipping plc",
+   "amount": -714200000.0
+  },
+  {
+   "time": "16:59",
+   "counterparty": "Cascadia Airlines Inc.",
+   "amount": -331600000.0
+  },
+  {
+   "time": "17:43",
+   "counterparty": "Rheintal Landesbank",
+   "amount": -740800000.0
+  },
+  {
+   "time": "18:49",
+   "counterparty": "Tokai Mutual Trust Bank",
+   "amount": 233100000.0
+  }
+ ],
+ "paymentSystem": "TARGET2",
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "payments-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "peakUsage": 250000
+  }
+ }
+}

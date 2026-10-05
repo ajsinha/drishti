@@ -1,0 +1,36 @@
+{
+ "balanceId": "COLL-MERIDIAN-FRA",
+ "held": 79025,
+ "posted": 0,
+ "net": 79025,
+ "asOf": "2026-09-30",
+ "positions": [
+  {
+   "asset": "Halcyon Shipping plc 2031",
+   "direction": "Held",
+   "marketValue": 26342,
+   "haircut": 0.02,
+   "value": 25815
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2031",
+   "direction": "Held",
+   "marketValue": 26342,
+   "haircut": 0.01,
+   "value": 26079
+  },
+  {
+   "asset": "Meridian Financial Group 2036",
+   "direction": "Held",
+   "marketValue": 26342,
+   "haircut": 0.005,
+   "value": 26210
+  }
+ ],
+ "csa": "CSA-MERIDIAN",
+ "nettingSet": "NS-MERIDIAN-FRA",
+ "_meta": {
+  "source": "collateral-system",
+  "generation": 1
+ }
+}

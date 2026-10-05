@@ -58,6 +58,8 @@ class SettingsTest {
                 .andExpect(jsonPath("$.theme").isEmpty()).andExpect(jsonPath("$.clockZone").value("Europe/London"));
         mvc.perform(get("/api/v1/me/settings").header("Authorization", "Bearer " + tokens.mint(bea, List.of("viewer"), 60)))
                 .andExpect(jsonPath("$.density").value("comfortable"));                      // another user's settings are their own
+        patchAs(ana, "{\"locale\":\"fr-CA\"}").andExpect(jsonPath("$.locale").value("fr-CA"));      // the language of the pack's help text
+        patchAs(ana, "{\"locale\":\"not a tag\"}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"theme\":\"neon\"}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"clockZone\":\"Mars/Olympus\"}").andExpect(status().isBadRequest());
         patchAs(ana, "{\"landing\":\"https://evil.example\"}").andExpect(status().isBadRequest());

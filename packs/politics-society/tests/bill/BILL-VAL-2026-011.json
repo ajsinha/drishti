@@ -1,0 +1,42 @@
+{
+ "billId": "BILL-VAL-2026-011",
+ "title": "Clean Energy Transition Act",
+ "sponsorName": "Victor Petrov",
+ "stage": "Committee",
+ "introduced": "2026-05-25",
+ "costM": 4200,
+ "stages": [
+  {
+   "date": "2026-05-25",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-06-12",
+   "stage": "Second reading",
+   "for": 124,
+   "against": 106,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2026-07-31",
+   "stage": "Committee",
+   "for": 139,
+   "against": 91,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Clean Energy Transition",
+  "type": "Government bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-VAL-001",
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

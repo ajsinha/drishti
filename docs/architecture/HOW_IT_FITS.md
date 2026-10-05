@@ -380,7 +380,7 @@ caller, and writes down what that run decided. Press `?` on the trade view and f
 | 6 | **Why a panel is empty.** A panel with nothing to draw is named with the reason | engine | `EmptinessReason`: `missing`, `null`, `empty list`, `masked`, `no values` or `no data`, with the document path it looked at |
 | 7 | **Provenance and health.** Source, generation, business date, fetch and update times, freshness, and one word of health | engine | `ViewModel.Provenance`, the `SourceRouter` freshness, `SourceHealth` (`up`, `degraded`, `down`: the same reduction `HealthController` uses) |
 | 8 | **The pack's words.** The `about.yaml` entry for the kind is found and its template rendered over the document **after** your redaction | rachana | `AboutCatalog.forKind("trade")`, `AboutText.render` (`Template.renderLenient`: a failing `${...}` reads `—` and counts in `drishti.explain.template-errors`) |
-| 9 | **The glossary.** The entries for exactly the fields on the page: the "What each number means" layer and the hover hints | rachana | design: `GlossaryResolver` (step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md); **not merged at the time of writing**, so the answer has no `glossary` block and the drawer no such layer yet) |
+| 9 | **The glossary.** The entries for exactly the fields on the page: the "What each number means" layer and the hover hints. A field's entry is the kind's `glossary` by path, else a pack `vocabulary` entry by name, else a derived kind's own formula, else the core vocabulary | rachana, engine | `GlossaryResolver`, `GlossaryBuilder` (step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md)); the answer's `glossary` block |
 | 10 | The answer is a `PageContext`, cached 60 s per (user, entity, business date, generation, locale, about revision) | engine | `PageContext`, `drishti.explain.*` |
 | 11 | The console turns it into the drawer, one `<details>` per layer, and moves focus to its heading | console | `_about.html`, `about.js`, `about.css` |
 
@@ -390,7 +390,14 @@ caller, and writes down what that run decided. Press `?` on the trade view and f
 ```
 GET /api/v1/views/trade/MX-20000001/explain
 { "ref": {"kind":"trade","id":"MX-20000001"}, "mnemonic": "TRD", "locale": "en", "generation": 1,
-  "about":  { "sutraDescription": "Exchanges fixed for floating RFR-compounded payments." },
+  "about":  { "pack": {"name":"trading","title":"Trading"}, "kindTitle": "Trade",
+              "text": "MX-20000001: Interest rate swap (fixed/float) (Rates) with Meridian Reinsurance Ltd, booked as \"Receive fixed\": 242.0m AUD notional, maturing 2032-06-25. It is marked at +1,875,863 USD and its status is Live.",
+              "sutraDescription": "Exchanges fixed for floating RFR-compounded payments." },
+  "glossary": [ {"key":"mtm","label":"MTM (USD)","shownIn":["strip"],"term":"Mark to market","unit":"USD","sign":"Positive is an asset of the bank.",
+                 "means":"The trade's current fair value, from the bank's side. A positive number is an amount the bank is owed; a negative one is an amount it owes.",
+                 "origin":"trading:glossary.mtm"},
+                {"key":"terms.fixedRate","label":"Fixed rate","shownIn":["terms"],"term":"Fixed rate","unit":"% a year",
+                 "means":"The interest rate fixed in the contract, paid on its day-count basis.","origin":"trading:vocabulary.fixedRate"}, … 18 more ],
   "data":   { "source": "murex-rates", "generation": 1, "fetchedAt": "2026-10-05T01:56:58Z", "current": true, "live": true,
               "updatedAt": "2026-10-05T01:56:58Z", "stale": false, "health": "up",
               "linked": {"fetched": 9, "pending": 0, "denied": 0, "budgetMs": 40} },
@@ -411,20 +418,46 @@ you may open. Blocks that would be empty are left out: this page has no `noData`
 block because nothing on it is empty, hidden or denied. (`layout.inferred` is true because the pipeline's inference
 completes the Sutra, as `layout` in 3.6 says: "Sutra irs-fixfloat v1 + inference".)
 
-**The pack's words (steps 8 and 9), and `extends`.** The `about` block above holds only the Sutra's own description,
-because no shipped pack has a `trade` entry yet (content for the other QUICKSTART packs is step 5 of the plan). Writing
-one is one file in the lowest pack that owns the kind, and it reaches `market-risk` through `extends`:
+**The pack's words (steps 8 and 9), and `extends`.** The `about` and `glossary` blocks above are the `trading` pack's: writing
+them is one file in the lowest pack that owns the kind, and it reaches `market-risk` and `counterparty-risk` through
+`extends`. This is the real file, shortened (it is generated, from `tools/packgen/banking/about/trading.yaml`; the
+vocabulary has about 190 terms, one per product field, and the `trade` entry the page-specific ones):
 
 ```yaml
-# packs/trading/config/about.yaml      (illustrative: this entry is not shipped)
+# packs/trading/config/about.yaml
 about: 1
+vocabulary:                        # a word defined once, reused by every kind and every pack that extends trading
+  fixedRate:
+    term: Fixed rate
+    means: The interest rate fixed in the contract, paid on its day-count basis.
+    unit: "% a year"
+  dayCount:
+    term: Day-count convention
+    means: How the days of a period are counted to turn an annual rate into an amount, for example Actual/360 or 30/360.
 kinds:
   trade:
     title: Trade
     about: >-
-      ${$.tradeId} is a ${$.productName} with ${$.counterparty.name}, booked by ${$.trader}:
-      MTM ${fmt($.mtm, 'compact')} ${$.mtmCurrency}.
+      ${$.tradeId}: ${$.productName} (${$.assetClass}) with ${coalesce($.counterparty.name, 'no named counterparty')}, booked as "${$.direction}":
+      ${fmt($.notional, 'compact')} ${$.currency} notional, maturing ${$.maturityDate}. It is marked at ${fmt($.mtm, 'signed0')} ${$.mtmCurrency}
+      and its status is ${$.status}.
+    guide: trading
+    glossary:
+      mtm:
+        term: Mark to market
+        means: The trade's current fair value, from the bank's side. A positive number is an amount the bank is owed; a negative one is an amount it owes.
+        unit: USD
+        sign: Positive is an asset of the bank.
+      risk.dv01:
+        term: DV01
+        means: The change in value of the trade for a one basis point (0.01%) rise in interest rates.
+        unit: USD per bp
+        sign: Negative loses when rates rise.
 ```
+
+The page text above is that template rendered over the trade: no number is written in the file, only `${...}` over the
+document, so it cannot go stale. A trade's table columns are keyed by their path (`schedule.pv`, `terms.fixedRate`);
+the ones that are plain field names and mean the same everywhere are vocabulary entries, found by the field's last name.
 
 `AboutCatalog` is built from every loaded pack's file, most specific pack first, using the lineage `PackLineage`
 computes for `extends` (child first, parents right to left: the order `semantics.yaml` already uses). A child pack may
@@ -432,8 +465,8 @@ replace any entry by its key; it cannot delete one. `AboutParser` is strict (`DR
 kind outside the lineage, a template that does not compile, a `use:` naming no vocabulary entry, text over the cap); a
 broken entry is left out and listed with the Sutra problems (`GET /api/v1/sutras/problems`, keyed `<pack>/<file>`), and
 never fails the view. **Redaction comes first.** The template is rendered over the document your redactor produced, so
-for a viewer the `trader` above (named in `drishti.security.redact`) reads `•••` in the sentence, and the glossary never
-sees a value at all. That is the one rule of the whole feature: *the explanation is derived from your view, never from
+for a viewer whose role may not see `mtm` (if it were named in `drishti.security.redact`) the sentence above would read
+"…It is marked at ••• USD…", and the glossary never sees a value at all. That is the one rule of the whole feature: *the explanation is derived from your view, never from
 the stored document.* The text that ships today is the VaR page (`packs/market-risk/config/about.yaml`, kind `var`):
 
 ```
@@ -462,7 +495,7 @@ source.
 
 | | Trade (A) | Variant (B) |
 |---|---|---|
-| About file | none yet: the Sutra description is shown | `packs/genomics/config/about.yaml`, `kinds.variant` |
+| About file | `packs/trading/config/about.yaml`, `kinds.trade` | `packs/genomics/config/about.yaml`, `kinds.variant` |
 | Candidates in the `MatchTrace` | 124 other Sutras of kind `trade` | none |
 | Source and health | `murex-rates`, `up` | `reference-genome`, `up` |
 | **Unchanged** | `ExplainController`, `ExplainService`, `PageContext`, the drawer and its keys | the same |

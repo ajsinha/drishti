@@ -1,0 +1,156 @@
+{
+ "indicatorId": "MACRO-BR-CPI",
+ "name": "Brazil · Consumer price inflation",
+ "latest": 5.53,
+ "unit": "% y/y",
+ "previous": 5.73,
+ "nextRelease": "2026-10-15",
+ "history": [
+  {
+   "period": "2024-09",
+   "value": 5.56
+  },
+  {
+   "period": "2024-10",
+   "value": 5.59
+  },
+  {
+   "period": "2024-11",
+   "value": 5.57
+  },
+  {
+   "period": "2024-12",
+   "value": 5.4
+  },
+  {
+   "period": "2025-01",
+   "value": 5.07
+  },
+  {
+   "period": "2025-02",
+   "value": 4.89
+  },
+  {
+   "period": "2025-03",
+   "value": 4.25
+  },
+  {
+   "period": "2025-04",
+   "value": 4.31
+  },
+  {
+   "period": "2025-05",
+   "value": 4.17
+  },
+  {
+   "period": "2025-06",
+   "value": 4.23
+  },
+  {
+   "period": "2025-07",
+   "value": 4.14
+  },
+  {
+   "period": "2025-08",
+   "value": 4.26
+  },
+  {
+   "period": "2025-09",
+   "value": 4.46
+  },
+  {
+   "period": "2025-10",
+   "value": 4.39
+  },
+  {
+   "period": "2025-11",
+   "value": 4.95
+  },
+  {
+   "period": "2025-12",
+   "value": 5.02
+  },
+  {
+   "period": "2026-01",
+   "value": 4.96
+  },
+  {
+   "period": "2026-02",
+   "value": 4.76
+  },
+  {
+   "period": "2026-03",
+   "value": 5.04
+  },
+  {
+   "period": "2026-04",
+   "value": 5.08
+  },
+  {
+   "period": "2026-05",
+   "value": 5.29
+  },
+  {
+   "period": "2026-06",
+   "value": 5.55
+  },
+  {
+   "period": "2026-07",
+   "value": 5.73
+  },
+  {
+   "period": "2026-08",
+   "value": 5.53
+  }
+ ],
+ "releases": [
+  {
+   "date": "2026-09-14",
+   "period": "2026-08",
+   "actual": 5.53,
+   "consensus": 5.76,
+   "surprise": -0.23
+  },
+  {
+   "date": "2026-08-14",
+   "period": "2026-07",
+   "actual": 5.73,
+   "consensus": 5.78,
+   "surprise": -0.05
+  },
+  {
+   "date": "2026-07-14",
+   "period": "2026-06",
+   "actual": 5.55,
+   "consensus": 5.59,
+   "surprise": -0.04
+  },
+  {
+   "date": "2026-06-14",
+   "period": "2026-05",
+   "actual": 5.29,
+   "consensus": 5.36,
+   "surprise": -0.07
+  },
+  {
+   "date": "2026-05-14",
+   "period": "2026-04",
+   "actual": 5.08,
+   "consensus": 5.09,
+   "surprise": -0.01
+  },
+  {
+   "date": "2026-04-14",
+   "period": "2026-03",
+   "actual": 5.04,
+   "consensus": 5.11,
+   "surprise": -0.07
+  }
+ ],
+ "economy": "ECON-BR",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

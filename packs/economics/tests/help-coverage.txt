@@ -1,0 +1,9 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+central-bank-decision=1
+economic-forecast=1
+economy=1
+fiscal-position=1
+labour-market=1
+macro-indicator=1
+price-basket=1
+trade-flow=1

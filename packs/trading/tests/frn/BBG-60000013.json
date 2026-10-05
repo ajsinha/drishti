@@ -1,0 +1,361 @@
+{
+ "tradeId": "BBG-60000013",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000013",
+ "productType": "FRN",
+ "productName": "Floating rate note",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2024-07-18",
+ "effectiveDate": "2024-07-22",
+ "maturityDate": "2028-06-08",
+ "currency": "CAD",
+ "notional": 88000000.0,
+ "mtm": 1050186,
+ "mtmCurrency": "USD",
+ "pnl1d": 26586,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-BADEYEMI",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-CASCADIA",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "underlyingBond": "BND-CACASC059511",
+ "creditCurve": "CDS-CASCADIA",
+ "terms": {
+  "quotedMargin": 156.3,
+  "faceAmount": 33518483.0,
+  "cleanPrice": 100.694
+ },
+ "risk": {
+  "cs01": 31539,
+  "dv01": 26195
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 3154,
+   "dv01": 2620
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 6308,
+   "dv01": 5239
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 9462,
+   "dv01": 7858
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 12616,
+   "dv01": 10478
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-01-22",
+   "rate": 0.057593,
+   "amount": 1760000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2025-07-22",
+   "rate": 0.052722,
+   "amount": 1760000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-01-22",
+   "rate": 0.029328,
+   "amount": 1760000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2026-07-22",
+   "rate": 0.057692,
+   "amount": 1760000.0,
+   "status": "Paid"
+  },
+  {
+   "date": "2027-01-22",
+   "rate": 0.032967,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2027-07-22",
+   "rate": 0.041625,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-01-22",
+   "rate": 0.054661,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  },
+  {
+   "date": "2028-06-08",
+   "rate": 0.05942,
+   "amount": 1760000.0,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -39198
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -27046
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 28792
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 21175
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 32903
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -6467
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -33306
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -71893
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -67170
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 51863
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 27681
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 15443
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -18848
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -38213
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 6697
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -51069
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -23024
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 11412
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -41796
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 36246
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-07-18",
+  "executionTimestamp": "2024-07-18T10:31:03.514Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "B. Adeyemi",
+  "salesperson": null,
+  "orderId": "ORD-C7E5D1925A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-07-18T09:22:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-07-18T09:22:00Z",
+  "lastModifiedAt": "2024-07-18T09:22:00Z",
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-07-18",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-BADEYEMI: long Floating rate note"
+   },
+   {
+    "date": "2024-07-18",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT200449259)"
+   },
+   {
+    "date": "2024-07-19",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-07-22",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "CAD payment settled",
+    "amount": 1760000.0
+   },
+   {
+    "date": "2027-01-22",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-06-08",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT200449259",
+  "matched": "2024-07-18 11:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH1820906504",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096C7E5D1925AA15593E459",
+  "upi": "QZQBE9VHRFMT",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-CAD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1050186,
+  "cleanPv": 1050186.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-CAD-PROJ",
+   "BND-CACASC059511",
+   "CDS-CASCADIA"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1023600,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 12169
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2666
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 14765
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1447
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 1345
+  },
+  {
+   "step": "Theta",
+   "pnl": 519
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -993
+  }
+ ],
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2980
+  }
+ }
+}

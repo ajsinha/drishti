@@ -21,7 +21,7 @@ from __future__ import annotations
 import time
 from core.servers import scoped
 
-DEFAULTS = {"theme": None, "landing": "/t", "clockZone": None, "density": "comfortable", "flash": True, "searchLimit": 100, "pinned": []}
+DEFAULTS = {"theme": None, "landing": "/t", "clockZone": None, "locale": None, "density": "comfortable", "flash": True, "searchLimit": 100, "pinned": []}
 
 
 class UserSettings:

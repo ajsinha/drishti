@@ -1,0 +1,308 @@
+{
+ "tradeId": "BBG-60000097",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000097",
+ "productType": "BUY_SELL_BACK",
+ "productName": "Buy / sell-back",
+ "assetClass": "Securities financing",
+ "family": "sft",
+ "status": "Live",
+ "direction": "Reverse repo",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2027-01-13",
+ "currency": "USD",
+ "notional": 88000000.0,
+ "mtm": 119432,
+ "mtmCurrency": "USD",
+ "pnl1d": -6164,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-FRA",
+ "book": "BOOK-SFT-3",
+ "trader": "TRDR-NFAROUK",
+ "desk": "DESK-SFT",
+ "legalEntity": "LE-FRA",
+ "issuer": "ISS-SOLARIS",
+ "repoCurve": "REPO-USD",
+ "underlyingBond": "BND-USSOLA119789",
+ "terms": {
+  "repoRate": 0.032866,
+  "haircut": 0.040682
+ },
+ "risk": {
+  "dv01": -3250,
+  "exposure": 2580583
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1083,
+   "exposure": 860194
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2167,
+   "exposure": 1720389
+  }
+ ],
+ "schedule": [
+  {
+   "asset": "United States Treasury 2031",
+   "isin": "US0UST030079",
+   "quantity": 30039556,
+   "marketValue": 30039556,
+   "haircut": 0.005,
+   "value": 29889358
+  },
+  {
+   "asset": "Kaizen Motors Corp. 2036",
+   "isin": "JPKAIZ129190",
+   "quantity": 25232081,
+   "marketValue": 27910214,
+   "haircut": 0.005,
+   "value": 27770663
+  },
+  {
+   "asset": "Solaris Energy Corp. 2031",
+   "isin": "USSOLA031372",
+   "quantity": 28647650,
+   "marketValue": 28124257,
+   "haircut": 0.04,
+   "value": 26999287
+  }
+ ],
+ "nextIndex": -1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 1456
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -4691
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -177
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2012
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -683
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 102
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -1493
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -484
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -4545
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4144
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1981
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 961
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 36
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 395
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -4683
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1686
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -2508
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2603
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -630
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -8267
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T11:57:25.210Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "N. Farouk",
+  "salesperson": null,
+  "orderId": "ORD-A6047434BF"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T12:51:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-07-31T12:51:00Z",
+  "lastModifiedAt": "2026-07-31T12:51:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-NFAROUK: reverse repo Buy / sell-back"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT343327147)"
+   },
+   {
+    "date": "2026-09-04",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 10%, unwind fee settled",
+    "amount": 8800000
+   },
+   {
+    "date": "2027-01-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT343327147",
+  "matched": "2026-07-31 11:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z9DXU4T18OK744A6047434BF240C986C52",
+  "upi": "QZPTCH50MAHI",
+  "reportingRegimes": [
+   "EU EMIR",
+   "EU MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "NORTUS33XXX",
+  "ssiId": "SSI-USD-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 119432,
+  "cleanPv": 119432.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "REPO-USD",
+   "BND-USSOLA119789"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 125596,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1457
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 636
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4433
+  },
+  {
+   "step": "FX delta",
+   "pnl": -862
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 43
+  },
+  {
+   "step": "Theta",
+   "pnl": 255
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -346
+  }
+ ],
+ "_meta": {
+  "source": "globalone-sft",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1119
+  }
+ }
+}

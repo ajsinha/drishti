@@ -1,0 +1,35 @@
+{
+ "proteinId": "PROT-P00533",
+ "name": "Epidermal growth factor receptor",
+ "accession": "P00533",
+ "length": 1210,
+ "massKda": 133.1,
+ "subcellular": "Cell membrane",
+ "domains": [
+  {
+   "name": "Extracellular",
+   "start": 25,
+   "end": 645
+  },
+  {
+   "name": "Transmembrane",
+   "start": 646,
+   "end": 668
+  },
+  {
+   "name": "Protein kinase",
+   "start": 712,
+   "end": 979
+  }
+ ],
+ "function": {
+  "summary": "Epidermal growth factor receptor (UniProt P00533)",
+  "gene": "EGFR",
+  "reviewed": "Swiss-Prot"
+ },
+ "gene": "GENE-EGFR",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

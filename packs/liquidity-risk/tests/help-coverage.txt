@@ -1,0 +1,8 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+funding-source=1
+hqla-holding=1
+intraday-liquidity=1
+lcr=1
+liquidity-stress=1
+maturity-ladder=1
+nsfr=1

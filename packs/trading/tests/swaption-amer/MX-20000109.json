@@ -1,0 +1,287 @@
+{
+ "tradeId": "MX-20000109",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000109",
+ "productType": "SWAPTION_AMER",
+ "productName": "American swaption",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2025-02-14",
+ "effectiveDate": "2025-02-18",
+ "maturityDate": "2026-10-07",
+ "currency": "CAD",
+ "notional": 153000000.0,
+ "mtm": -88123,
+ "mtmCurrency": "USD",
+ "pnl1d": -386,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-CAD-OIS",
+ "forwardCurve": "CRV-CAD-PROJ",
+ "swaptionVolCube": "IRV-CAD",
+ "terms": {
+  "payerReceiver": "Payer",
+  "strike": 0.027183,
+  "expiryDate": "2028-01-01"
+ },
+ "risk": {
+  "dv01": 7756,
+  "vega": 216759
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 1293,
+   "vega": 36126
+  },
+  {
+   "bucket": "6M",
+   "dv01": 2585,
+   "vega": 72253
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 3878,
+   "vega": 108380
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3675
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -6727
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1031
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4421
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3312
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -1348
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -3067
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 1660
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -243
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 79
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1138
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5161
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -4688
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 1315
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 425
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -1781
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 401
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 3356
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1259
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2933
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-14",
+  "executionTimestamp": "2025-02-14T10:57:41.360Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-FF114D46F5"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-14T10:16:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-02-14T10:16:00Z",
+  "lastModifiedAt": "2025-02-14T10:16:00Z",
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-02-14",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: buy American swaption"
+   },
+   {
+    "date": "2025-02-14",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA932521125)"
+   },
+   {
+    "date": "2025-10-17",
+    "event": "Partially terminated",
+    "status": "Done",
+    "description": "Notional reduced by 40%, unwind fee settled",
+    "amount": 61200000
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA932521125",
+  "matched": "2025-02-14 12:06",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096FF114D46F5D915E92F76",
+  "upi": "QZL040OWCYA5",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTGB33XXX",
+  "ssiId": "SSI-CAD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -88123,
+  "cleanPv": -88123.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-CAD-OIS",
+   "CRV-CAD-PROJ",
+   "IRV-CAD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -87737,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -251
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 8
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -187
+  },
+  {
+   "step": "FX delta",
+   "pnl": -32
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 179
+  },
+  {
+   "step": "Theta",
+   "pnl": -101
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2
+  }
+ ],
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1706
+  }
+ }
+}

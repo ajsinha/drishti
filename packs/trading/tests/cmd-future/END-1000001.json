@@ -1,0 +1,291 @@
+{
+ "tradeId": "END-1000001",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000001",
+ "productType": "CMD_FUTURE",
+ "productName": "Commodity future",
+ "assetClass": "Commodity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-07",
+ "effectiveDate": "2026-08-10",
+ "maturityDate": "2027-08-02",
+ "currency": "USD",
+ "notional": 144000000.0,
+ "mtm": -1071563,
+ "mtmCurrency": "USD",
+ "pnl1d": 56977,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "commodityCurve": "CMDC-BRENT",
+ "terms": {
+  "contract": "C Z6",
+  "lots": 1462,
+  "tradePrice": 999.4
+ },
+ "risk": {
+  "delta": -757383
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -50492
+  },
+  {
+   "bucket": "1M",
+   "delta": -100984
+  },
+  {
+   "bucket": "3M",
+   "delta": -151477
+  },
+  {
+   "bucket": "6M",
+   "delta": -201969
+  },
+  {
+   "bucket": "1Y",
+   "delta": -252461
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3715
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 12456
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -65332
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -42094
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 19534
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 34763
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 23866
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -233
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -33180
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 13776
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 16194
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -23752
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 29425
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 12330
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 14536
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -19831
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 17563
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 36438
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 48875
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -30962
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-07",
+  "executionTimestamp": "2026-08-07T15:32:24.740Z",
+  "venue": "ICE",
+  "venueMic": "IFEU",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-3F038B4F06"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-07T09:01:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-08-07T09:01:00Z",
+  "lastModifiedAt": "2026-08-07T09:01:00Z",
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-08-07",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: short Commodity future"
+   },
+   {
+    "date": "2026-08-07",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT537375795)"
+   },
+   {
+    "date": "2026-08-10",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-08-02",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT537375795",
+  "matched": "2026-08-07 17:58",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH4350182148",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20963F038B4F060D5F319CF3",
+  "upi": "QZWX3GE3U1NB",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1071563,
+  "cleanPv": -1071563.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-BRENT"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1128540,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -9847
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1600
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 60794
+  },
+  {
+   "step": "FX delta",
+   "pnl": 12926
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -599
+  },
+  {
+   "step": "Theta",
+   "pnl": -1849
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2848
+  }
+ ],
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3583
+  }
+ }
+}

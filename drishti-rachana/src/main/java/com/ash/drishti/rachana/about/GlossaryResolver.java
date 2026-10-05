@@ -41,9 +41,20 @@ public final class GlossaryResolver {
     private static final Pattern PLAIN = Pattern.compile("^\\s*[$@]\\.([A-Za-z_][A-Za-z0-9_]*(?:(?:\\[[^\\]]*\\])*\\.[A-Za-z_][A-Za-z0-9_]*)*(?:\\[[^\\]]*\\])*)\\s*$");
 
     private final AboutCatalog catalog;
+    private final String locale;
 
     public GlossaryResolver(AboutCatalog catalog) {
+        this(catalog, AboutCatalog.DEFAULT_LOCALE);
+    }
+
+    private GlossaryResolver(AboutCatalog catalog, String locale) {
         this.catalog = catalog;
+        this.locale = locale;
+    }
+
+    /** The same resolver answering in {@code locale} (a value {@link AboutCatalog#localeFor} returned); untranslated entries stay English. */
+    public GlossaryResolver forLocale(String locale) {
+        return new GlossaryResolver(catalog, locale == null ? AboutCatalog.DEFAULT_LOCALE : locale);
     }
 
     /**
@@ -55,7 +66,7 @@ public final class GlossaryResolver {
         if (key == null || key.isBlank()) {
             return Optional.empty();
         }
-        AboutText t = catalog.forKind(kind).orElse(null);
+        AboutText t = catalog.forKind(kind, locale).orElse(null);
         String last = key.substring(key.lastIndexOf('.') + 1);
         if (t != null) {
             GlossaryEntry g = t.glossary().get(key);

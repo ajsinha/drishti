@@ -1,0 +1,89 @@
+{
+ "indicatorId": "SOCI-KES-HCO",
+ "name": "Housing cost overburden",
+ "latest": 14.28,
+ "unit": "% of households",
+ "change5y": -1.16,
+ "sourceName": "National statistics office (fictional)",
+ "series": [
+  {
+   "year": "2012",
+   "value": 16.31
+  },
+  {
+   "year": "2013",
+   "value": 15.75
+  },
+  {
+   "year": "2014",
+   "value": 15.52
+  },
+  {
+   "year": "2015",
+   "value": 15.13
+  },
+  {
+   "year": "2016",
+   "value": 16.09
+  },
+  {
+   "year": "2017",
+   "value": 16.5
+  },
+  {
+   "year": "2018",
+   "value": 16.48
+  },
+  {
+   "year": "2019",
+   "value": 16.07
+  },
+  {
+   "year": "2020",
+   "value": 15.44
+  },
+  {
+   "year": "2021",
+   "value": 15.82
+  },
+  {
+   "year": "2022",
+   "value": 16.09
+  },
+  {
+   "year": "2023",
+   "value": 15.6
+  },
+  {
+   "year": "2024",
+   "value": 14.73
+  },
+  {
+   "year": "2025",
+   "value": 14.28
+  }
+ ],
+ "byRegion": [
+  {
+   "region": "Highlands",
+   "value": 14.78
+  },
+  {
+   "region": "Riverlands",
+   "value": 13.29
+  },
+  {
+   "region": "Metropolitan",
+   "value": 14.19
+  },
+  {
+   "region": "Isles",
+   "value": 14.75
+  }
+ ],
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "statistics-office",
+  "generation": 1
+ }
+}

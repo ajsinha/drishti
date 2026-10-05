@@ -1,0 +1,26 @@
+{
+ "resultId": "STR-OIL-SHOCK-COMM",
+ "scenarioName": "Oil supply shock",
+ "pnl": -37893427,
+ "limit": -75800000.0,
+ "byBook": [
+  {
+   "book": "BOOK-COMM-1",
+   "pnl": -9869484
+  },
+  {
+   "book": "BOOK-COMM-2",
+   "pnl": -18425147
+  },
+  {
+   "book": "BOOK-COMM-3",
+   "pnl": -9598796
+  }
+ ],
+ "scenario": "SCN-OIL-SHOCK",
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

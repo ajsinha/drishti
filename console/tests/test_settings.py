@@ -53,7 +53,7 @@ def test_saving_settings_pinning_and_the_search_default(client, backend, monkeyp
     r = client.post("/account/settings", data={"theme": "light", "clockZone": "Asia/Tokyo", "density": "comfortable", "flash": "on",
                                                 "landing": "/t", "searchLimit": "40"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/account?saved=1#settings"
-    assert patched[-1] == {"theme": "light", "clockZone": "Asia/Tokyo", "density": "comfortable", "flash": True, "landing": "/t", "searchLimit": 40}
+    assert patched[-1] == {"theme": "light", "clockZone": "Asia/Tokyo", "locale": None, "density": "comfortable", "flash": True, "landing": "/t", "searchLimit": 40}
     r = client.post("/pin/trade/IRS-48213", follow_redirects=False)
     assert r.headers["location"] == "/v/trade/IRS-48213" and patched[-1] == {"pinned": [{"kind": "trade", "id": "IRS-48213"}]}
     client.post("/pin/trade/IRS-48213")
@@ -63,7 +63,7 @@ def test_saving_settings_pinning_and_the_search_default(client, backend, monkeyp
     async def search(q, ident=None):
         asked["q"] = q
         return {"kind": "trade", "columns": [], "labels": {}, "rows": [], "scanned": 0, "matched": 0}
-    monkeypatch.setattr(backend, "search", search)
+    monkeypatch.setattr(backend, "search", search, raising=False)
     client.app.state.user_settings.forget("ash")
     client.get("/s", params={"q": "TRD where mtm > 0"})
     assert asked["q"] == "TRD where mtm > 0 limit 40"

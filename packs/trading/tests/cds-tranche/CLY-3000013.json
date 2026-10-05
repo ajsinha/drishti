@@ -1,0 +1,387 @@
+{
+ "tradeId": "CLY-3000013",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000013",
+ "productType": "CDS_TRANCHE",
+ "productName": "Index tranche",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Sell protection",
+ "tradeDate": "2025-12-31",
+ "effectiveDate": "2026-01-02",
+ "maturityDate": "2034-02-14",
+ "currency": "CAD",
+ "notional": 242000000.0,
+ "mtm": 3988071,
+ "mtmCurrency": "USD",
+ "pnl1d": -19097,
+ "counterparty": {
+  "id": "CP-MERIDIAN-RE",
+  "name": "Meridian Reinsurance Ltd"
+ },
+ "nettingSet": "NS-MERIDIAN-RE-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-ORBITAL",
+ "creditCurve": "CDS-ORBITAL",
+ "discountCurve": "CRV-CAD-OIS",
+ "correlation": "CORR-EU-EQ",
+ "terms": {
+  "index": "CDX.NA.IG S47",
+  "attachment": "0.03",
+  "detachment": "0.03",
+  "protection": "Sold"
+ },
+ "risk": {
+  "cs01": -158112,
+  "jtd": -145200000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -7529,
+   "jtd": -6914286
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -15058,
+   "jtd": -13828571
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -22587,
+   "jtd": -20742857
+  },
+  {
+   "bucket": "3Y",
+   "cs01": -30117,
+   "jtd": -27657143
+  },
+  {
+   "bucket": "5Y",
+   "cs01": -37646,
+   "jtd": -34571429
+  },
+  {
+   "bucket": "7Y",
+   "cs01": -45175,
+   "jtd": -41485714
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2027-01-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -694847.37,
+   "pv": -674001.95,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-01-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -532307.45,
+   "pv": -516338.23,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-01-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -571392.33,
+   "pv": -554250.56,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-01-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -623715.61,
+   "pv": -605004.14,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-01-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -586343.0,
+   "pv": -568752.71,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-01-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -547199.75,
+   "pv": -530783.76,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-01-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -593294.96,
+   "pv": -575496.11,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-01-02",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -646608.93,
+   "pv": -627210.66,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-02-14",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -512703.43,
+   "pv": -497322.33,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 49937
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 93797
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 63005
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 44905
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 88795
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 57093
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4731
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -174569
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -58980
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 257444
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -97581
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -7446
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -34531
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 107825
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -64962
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -100938
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -89808
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -77437
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -170235
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -136119
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-31",
+  "executionTimestamp": "2025-12-31T09:55:31.776Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-E72D990C72"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-31T10:51:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-12-31T10:51:00Z",
+  "lastModifiedAt": "2025-12-31T10:51:00Z",
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-12-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: sell protection Index tranche"
+   },
+   {
+    "date": "2025-12-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA593659012)"
+   },
+   {
+    "date": "2027-01-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2034-02-14",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA593659012",
+  "matched": "2025-12-31 13:11",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096E72D990C72365C77B2D9",
+  "upi": "QZDTBHN24KLI",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIGB33XXX",
+  "ssiId": "SSI-CAD-9DC4EA",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 3988071,
+  "cleanPv": 3988071.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-ORBITAL",
+   "CRV-CAD-OIS",
+   "CORR-EU-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 4007168,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1606
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -1984
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -19269
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1645
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 277
+  },
+  {
+   "step": "Theta",
+   "pnl": 1551
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 289
+  }
+ ],
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 10396
+  }
+ }
+}

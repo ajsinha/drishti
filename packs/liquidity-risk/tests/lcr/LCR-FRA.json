@@ -1,0 +1,221 @@
+{
+ "lcrId": "LCR-FRA",
+ "legalEntityName": "Drishti Bank Europe AG",
+ "lcr": 2.1085,
+ "hqla": 6623015000,
+ "netOutflows": 3141150000,
+ "minimum": 1.0,
+ "buffer": 3481865000,
+ "asOf": "2026-09-30",
+ "hqlaByLevel": [
+  {
+   "level": "Level 1",
+   "value": 3007000000
+  },
+  {
+   "level": "Level 1 (central bank reserves)",
+   "value": 3043000000.0
+  },
+  {
+   "level": "Level 2A",
+   "value": 431715000
+  },
+  {
+   "level": "Level 2B",
+   "value": 141300000
+  }
+ ],
+ "flows": [
+  {
+   "category": "Retail deposits, stable",
+   "balance": 8541000000.0,
+   "rate": 0.05,
+   "flow": -427050000
+  },
+  {
+   "category": "Retail deposits, less stable",
+   "balance": 4711000000.0,
+   "rate": 0.1,
+   "flow": -471100000
+  },
+  {
+   "category": "Operational deposits",
+   "balance": 6694000000.0,
+   "rate": 0.25,
+   "flow": -1673500000
+  },
+  {
+   "category": "Non-operational wholesale",
+   "balance": 4013000000.0,
+   "rate": 0.4,
+   "flow": -1605200000
+  },
+  {
+   "category": "Secured funding (non-level-1 collateral)",
+   "balance": 2822000000.0,
+   "rate": 0.25,
+   "flow": -705500000
+  },
+  {
+   "category": "Derivative outflows",
+   "balance": 870000000.0,
+   "rate": 1.0,
+   "flow": -870000000
+  },
+  {
+   "category": "Committed credit facilities",
+   "balance": 2198000000.0,
+   "rate": 0.1,
+   "flow": -219800000
+  },
+  {
+   "category": "Performing loans maturing",
+   "balance": 2682000000.0,
+   "rate": 0.5,
+   "flow": 1341000000
+  },
+  {
+   "category": "Reverse repo (non-level-1)",
+   "balance": 1694000000.0,
+   "rate": 0.5,
+   "flow": 847000000
+  },
+  {
+   "category": "Derivative inflows",
+   "balance": 643000000.0,
+   "rate": 1.0,
+   "flow": 643000000
+  }
+ ],
+ "trend": [
+  {
+   "date": "2026-08-20",
+   "lcr": 1.9862
+  },
+  {
+   "date": "2026-08-21",
+   "lcr": 2.0111
+  },
+  {
+   "date": "2026-08-24",
+   "lcr": 2.0337
+  },
+  {
+   "date": "2026-08-25",
+   "lcr": 2.0521
+  },
+  {
+   "date": "2026-08-26",
+   "lcr": 2.0645
+  },
+  {
+   "date": "2026-08-27",
+   "lcr": 2.0702
+  },
+  {
+   "date": "2026-08-28",
+   "lcr": 2.069
+  },
+  {
+   "date": "2026-08-31",
+   "lcr": 2.0614
+  },
+  {
+   "date": "2026-09-01",
+   "lcr": 2.0488
+  },
+  {
+   "date": "2026-09-02",
+   "lcr": 2.0331
+  },
+  {
+   "date": "2026-09-03",
+   "lcr": 2.0163
+  },
+  {
+   "date": "2026-09-04",
+   "lcr": 2.0009
+  },
+  {
+   "date": "2026-09-07",
+   "lcr": 1.9889
+  },
+  {
+   "date": "2026-09-08",
+   "lcr": 1.9822
+  },
+  {
+   "date": "2026-09-09",
+   "lcr": 1.982
+  },
+  {
+   "date": "2026-09-10",
+   "lcr": 1.9888
+  },
+  {
+   "date": "2026-09-11",
+   "lcr": 2.0022
+  },
+  {
+   "date": "2026-09-14",
+   "lcr": 2.0213
+  },
+  {
+   "date": "2026-09-15",
+   "lcr": 2.0444
+  },
+  {
+   "date": "2026-09-16",
+   "lcr": 2.0695
+  },
+  {
+   "date": "2026-09-17",
+   "lcr": 2.0942
+  },
+  {
+   "date": "2026-09-18",
+   "lcr": 2.1163
+  },
+  {
+   "date": "2026-09-21",
+   "lcr": 2.1338
+  },
+  {
+   "date": "2026-09-22",
+   "lcr": 2.1453
+  },
+  {
+   "date": "2026-09-23",
+   "lcr": 2.15
+  },
+  {
+   "date": "2026-09-24",
+   "lcr": 2.1477
+  },
+  {
+   "date": "2026-09-25",
+   "lcr": 2.1393
+  },
+  {
+   "date": "2026-09-28",
+   "lcr": 2.1261
+  },
+  {
+   "date": "2026-09-29",
+   "lcr": 2.11
+  },
+  {
+   "date": "2026-09-30",
+   "lcr": 2.1085
+  }
+ ],
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "lcr": 0.004
+  }
+ }
+}

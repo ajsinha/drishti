@@ -1,0 +1,89 @@
+{
+ "nsfrId": "NSFR-FRA",
+ "legalEntityName": "Drishti Bank Europe AG",
+ "nsfr": 2.6261,
+ "asfTotal": 33975000000,
+ "rsfTotal": 12937500000,
+ "minimum": 1.0,
+ "asf": [
+  {
+   "category": "Regulatory capital",
+   "amount": 8100000000,
+   "factor": 1.0,
+   "weighted": 8100000000
+  },
+  {
+   "category": "Retail deposits, stable",
+   "amount": 9900000000,
+   "factor": 0.95,
+   "weighted": 9405000000
+  },
+  {
+   "category": "Retail deposits, less stable",
+   "amount": 4050000000,
+   "factor": 0.9,
+   "weighted": 3645000000
+  },
+  {
+   "category": "Wholesale funding > 1 year",
+   "amount": 7200000000,
+   "factor": 1.0,
+   "weighted": 7200000000
+  },
+  {
+   "category": "Operational deposits",
+   "amount": 6300000000,
+   "factor": 0.5,
+   "weighted": 3150000000
+  },
+  {
+   "category": "Wholesale funding < 1 year",
+   "amount": 4950000000,
+   "factor": 0.5,
+   "weighted": 2475000000
+  }
+ ],
+ "rsf": [
+  {
+   "category": "Level 1 assets",
+   "amount": 5400000000,
+   "factor": 0.0,
+   "weighted": 0
+  },
+  {
+   "category": "Level 2A assets",
+   "amount": 1350000000,
+   "factor": 0.15,
+   "weighted": 202500000
+  },
+  {
+   "category": "Loans to non-financials > 1 year",
+   "amount": 13500000000,
+   "factor": 0.65,
+   "weighted": 8775000000
+  },
+  {
+   "category": "Loans to financials < 6 months",
+   "amount": 3600000000,
+   "factor": 0.1,
+   "weighted": 360000000
+  },
+  {
+   "category": "Derivative assets net",
+   "amount": 900000000,
+   "factor": 1.0,
+   "weighted": 900000000
+  },
+  {
+   "category": "Other assets",
+   "amount": 2700000000,
+   "factor": 1.0,
+   "weighted": 2700000000
+  }
+ ],
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

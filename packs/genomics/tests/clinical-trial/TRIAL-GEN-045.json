@@ -1,0 +1,127 @@
+{
+ "trialId": "TRIAL-GEN-045",
+ "title": "Sickle cell disease: gene editing of BCL11A enhancer",
+ "phase": "Phase II",
+ "status": "Recruiting",
+ "enrolled": 46,
+ "target": 60,
+ "biomarkerName": "HBB p.Glu7Val",
+ "enrolment": [
+  {
+   "month": "2024-10",
+   "patients": 1
+  },
+  {
+   "month": "2024-11",
+   "patients": 1
+  },
+  {
+   "month": "2024-12",
+   "patients": 3
+  },
+  {
+   "month": "2025-01",
+   "patients": 4
+  },
+  {
+   "month": "2025-02",
+   "patients": 5
+  },
+  {
+   "month": "2025-03",
+   "patients": 7
+  },
+  {
+   "month": "2025-04",
+   "patients": 8
+  },
+  {
+   "month": "2025-05",
+   "patients": 10
+  },
+  {
+   "month": "2025-06",
+   "patients": 12
+  },
+  {
+   "month": "2025-07",
+   "patients": 14
+  },
+  {
+   "month": "2025-08",
+   "patients": 15
+  },
+  {
+   "month": "2025-09",
+   "patients": 17
+  },
+  {
+   "month": "2025-10",
+   "patients": 19
+  },
+  {
+   "month": "2025-11",
+   "patients": 22
+  },
+  {
+   "month": "2025-12",
+   "patients": 24
+  },
+  {
+   "month": "2026-01",
+   "patients": 26
+  },
+  {
+   "month": "2026-02",
+   "patients": 28
+  },
+  {
+   "month": "2026-03",
+   "patients": 31
+  },
+  {
+   "month": "2026-04",
+   "patients": 33
+  },
+  {
+   "month": "2026-05",
+   "patients": 36
+  },
+  {
+   "month": "2026-06",
+   "patients": 38
+  },
+  {
+   "month": "2026-07",
+   "patients": 41
+  },
+  {
+   "month": "2026-08",
+   "patients": 43
+  },
+  {
+   "month": "2026-09",
+   "patients": 46
+  }
+ ],
+ "arms": [
+  {
+   "arm": "Experimental",
+   "intervention": "DRS-4471",
+   "patients": 23,
+   "orr": 0.56
+  },
+  {
+   "arm": "Control",
+   "intervention": "Standard of care",
+   "patients": 23,
+   "orr": 0.18
+  }
+ ],
+ "gene": "GENE-HBB",
+ "biomarker": "VRNT-HBB-E6V",
+ "_meta": {
+  "source": "trial-registry",
+  "generation": 1
+ }
+}

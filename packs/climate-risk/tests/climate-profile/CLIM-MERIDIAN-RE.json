@@ -1,0 +1,65 @@
+{
+ "profileId": "CLIM-MERIDIAN-RE",
+ "counterpartyName": "Meridian Reinsurance Ltd",
+ "sector": "Insurance",
+ "scope12": 41031,
+ "intensity": 5,
+ "transitionScore": 30,
+ "physicalScore": 53,
+ "netZeroTarget": "2050",
+ "scopes": [
+  {
+   "scope": "Scope 1",
+   "tco2e": 28722
+  },
+  {
+   "scope": "Scope 2",
+   "tco2e": 12309
+  },
+  {
+   "scope": "Scope 3",
+   "tco2e": 318606
+  }
+ ],
+ "history": [
+  {
+   "year": "2019",
+   "tco2e": 53222
+  },
+  {
+   "year": "2020",
+   "tco2e": 46786
+  },
+  {
+   "year": "2021",
+   "tco2e": 47649
+  },
+  {
+   "year": "2022",
+   "tco2e": 44165
+  },
+  {
+   "year": "2023",
+   "tco2e": 45669
+  },
+  {
+   "year": "2024",
+   "tco2e": 44429
+  },
+  {
+   "year": "2025",
+   "tco2e": 42743
+  }
+ ],
+ "targets": {
+  "reduction2030": "30% vs 2019",
+  "disclosure": "None",
+  "revenueUsdM": 8818,
+  "reportingYear": 2025
+ },
+ "counterparty": "CP-MERIDIAN-RE",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

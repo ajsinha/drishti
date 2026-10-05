@@ -1,0 +1,9 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+clinical-trial=1
+expression-study=1
+gene=1
+pathway=1
+protein=1
+sample=1
+sequencing-run=1
+variant=1

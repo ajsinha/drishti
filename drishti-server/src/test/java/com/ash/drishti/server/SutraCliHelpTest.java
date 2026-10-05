@@ -93,9 +93,13 @@ class SutraCliHelpTest {
     private record Run(int code, String out, String err) {}
 
     private Run run(AboutCatalog catalog, String... args) {
+        return run(catalog, null, args);
+    }
+
+    private Run run(AboutCatalog catalog, com.ash.drishti.rachana.about.GlossaryLookup lookup, String... args) {
         ByteArrayOutputStream o = new ByteArrayOutputStream();
         ByteArrayOutputStream e = new ByteArrayOutputStream();
-        HelpChecks help = new HelpChecks(catalog, null, formats, codec);
+        HelpChecks help = new HelpChecks(catalog, lookup, formats, codec);
         int code = new SutraCli(new SutraCli.Services(sutras, pipeline, shapes, designer, codec, help),
                 new PrintStream(o, true, StandardCharsets.UTF_8), new PrintStream(e, true, StandardCharsets.UTF_8)).run(List.of(args));
         return new Run(code, o.toString(StandardCharsets.UTF_8), e.toString(StandardCharsets.UTF_8));
@@ -125,6 +129,23 @@ class SutraCliHelpTest {
         assertThat(r.code()).isZero();
         assertThat(r.err()).contains("warning DRS-2045").contains("warning DRS-2046").contains("'ghost'")
                 .contains("warning DRS-2047").contains("'colour'").doesNotContain("field 'size'");
+    }
+
+    @Test
+    void aTableColumnIsKeyedLikeTheDrawerRowsDotColumn() throws IOException {
+        String sutra = SUTRA.replace("keys:\n  F1: raw\n", "")
+                .replace("  - { label: Colour, bind: $.colour }\n", "  - { label: Colour, bind: $.colour }\n  - { label: Qty, bind: '@.qty' }\n")
+                .replace("kind: kv", "kind: table\n    rows: $.items");
+        String about = "about: 1\nkinds:\n  widget:\n    glossary:\n      size: { term: Size, means: Big. }\n"
+                + "      colour: { term: Colour, means: Paint. }\n      items.qty: { term: Quantity, means: Units ordered. }\n";
+        Path file = Files.writeString(tmp.resolve("rows.yaml"), about);
+        AboutCatalog c = new AboutCatalog(new AboutProperties(List.of(new AboutProperties.PackSource("p", "P", file.toString(), null,
+                List.of("widget"), List.of("p"))), null, null), el);
+        com.ash.drishti.rachana.about.GlossaryResolver resolver = new com.ash.drishti.rachana.about.GlossaryResolver(c);
+        Path dir = pack(sutra, null);
+        Files.writeString(dir.resolve("tests/widget/a.json"), "{\"id\":\"A\",\"size\":3,\"colour\":\"red\",\"items\":[{\"qty\":2}]}");
+        Run r = run(c, (kind, field) -> resolver.resolve(kind, field, null).isPresent(), "lint", dir.toString());
+        assertThat(r.err()).doesNotContain("DRS-2047");
     }
 
     @Test

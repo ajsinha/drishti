@@ -1,0 +1,89 @@
+{
+ "nsfrId": "NSFR-NY",
+ "legalEntityName": "Drishti Bank Securities Inc.",
+ "nsfr": 2.6261,
+ "asfTotal": 75500000000,
+ "rsfTotal": 28750000000,
+ "minimum": 1.0,
+ "asf": [
+  {
+   "category": "Regulatory capital",
+   "amount": 18000000000,
+   "factor": 1.0,
+   "weighted": 18000000000
+  },
+  {
+   "category": "Retail deposits, stable",
+   "amount": 22000000000,
+   "factor": 0.95,
+   "weighted": 20900000000
+  },
+  {
+   "category": "Retail deposits, less stable",
+   "amount": 9000000000,
+   "factor": 0.9,
+   "weighted": 8100000000
+  },
+  {
+   "category": "Wholesale funding > 1 year",
+   "amount": 16000000000,
+   "factor": 1.0,
+   "weighted": 16000000000
+  },
+  {
+   "category": "Operational deposits",
+   "amount": 14000000000,
+   "factor": 0.5,
+   "weighted": 7000000000
+  },
+  {
+   "category": "Wholesale funding < 1 year",
+   "amount": 11000000000,
+   "factor": 0.5,
+   "weighted": 5500000000
+  }
+ ],
+ "rsf": [
+  {
+   "category": "Level 1 assets",
+   "amount": 12000000000,
+   "factor": 0.0,
+   "weighted": 0
+  },
+  {
+   "category": "Level 2A assets",
+   "amount": 3000000000,
+   "factor": 0.15,
+   "weighted": 450000000
+  },
+  {
+   "category": "Loans to non-financials > 1 year",
+   "amount": 30000000000,
+   "factor": 0.65,
+   "weighted": 19500000000
+  },
+  {
+   "category": "Loans to financials < 6 months",
+   "amount": 8000000000,
+   "factor": 0.1,
+   "weighted": 800000000
+  },
+  {
+   "category": "Derivative assets net",
+   "amount": 2000000000,
+   "factor": 1.0,
+   "weighted": 2000000000
+  },
+  {
+   "category": "Other assets",
+   "amount": 6000000000,
+   "factor": 1.0,
+   "weighted": 6000000000
+  }
+ ],
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

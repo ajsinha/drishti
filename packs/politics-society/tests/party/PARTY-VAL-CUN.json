@@ -1,0 +1,98 @@
+{
+ "partyId": "PARTY-VAL-CUN",
+ "name": "Civic Union",
+ "position": "Centre-right",
+ "leaderName": "Oskar Sorensen",
+ "seats": 72,
+ "polling": 0.306,
+ "members": 61000,
+ "trend": [
+  {
+   "month": "2026-01-12",
+   "share": 0.284
+  },
+  {
+   "month": "2026-01-26",
+   "share": 0.283
+  },
+  {
+   "month": "2026-02-09",
+   "share": 0.291
+  },
+  {
+   "month": "2026-02-23",
+   "share": 0.275
+  },
+  {
+   "month": "2026-03-09",
+   "share": 0.266
+  },
+  {
+   "month": "2026-03-23",
+   "share": 0.277
+  },
+  {
+   "month": "2026-04-06",
+   "share": 0.275
+  },
+  {
+   "month": "2026-04-20",
+   "share": 0.278
+  },
+  {
+   "month": "2026-05-04",
+   "share": 0.274
+  },
+  {
+   "month": "2026-05-18",
+   "share": 0.281
+  },
+  {
+   "month": "2026-06-01",
+   "share": 0.29
+  },
+  {
+   "month": "2026-06-15",
+   "share": 0.286
+  },
+  {
+   "month": "2026-06-29",
+   "share": 0.287
+  },
+  {
+   "month": "2026-07-13",
+   "share": 0.301
+  },
+  {
+   "month": "2026-07-27",
+   "share": 0.307
+  },
+  {
+   "month": "2026-08-10",
+   "share": 0.299
+  },
+  {
+   "month": "2026-08-24",
+   "share": 0.296
+  },
+  {
+   "month": "2026-09-07",
+   "share": 0.296
+  },
+  {
+   "month": "2026-09-21",
+   "share": 0.306
+  }
+ ],
+ "platform": {
+  "economy": "Lower taxes, balanced budget",
+  "founded": 1948,
+  "europeanGroup": "ECR"
+ },
+ "jurisdiction": "JUR-VAL",
+ "leader": "CAND-VAL-003",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

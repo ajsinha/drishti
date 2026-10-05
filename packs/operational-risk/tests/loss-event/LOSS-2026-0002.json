@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2026-0002",
+ "eventType": "External fraud",
+ "deskName": "G10 and EM FX",
+ "grossLoss": 256800.0,
+ "recoveries": 0.0,
+ "netLoss": 256800.0,
+ "status": "Closed",
+ "occurred": "2025-05-29",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Vendor outage",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2025-05-29",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2025-07-15",
+   "step": "Discovered",
+   "by": "A. Novak"
+  },
+  {
+   "date": "2025-08-10",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "rootCauseControl": "RCSA-FX-4",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

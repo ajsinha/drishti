@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100231",
+ "holderName": "Priya Sharma",
+ "product": "Cashback Mastercard",
+ "balance": 8823.89,
+ "limit": 15000,
+ "utilisation": 0.588,
+ "apr": 0.1892,
+ "status": "Delinquent",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 719.12
+  },
+  {
+   "category": "Travel",
+   "amount": 367.16
+  },
+  {
+   "category": "Dining",
+   "amount": 1116.66
+  },
+  {
+   "category": "Fuel",
+   "amount": 781.35
+  },
+  {
+   "category": "Online retail",
+   "amount": 351.92
+  },
+  {
+   "category": "Utilities",
+   "amount": 153.52
+  },
+  {
+   "category": "Entertainment",
+   "amount": 51.07
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 6996.14,
+   "minimum": 264.72,
+   "paid": 8823.89
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 5695.12,
+   "minimum": 264.72,
+   "paid": 264.72
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 8608.73,
+   "minimum": 264.72,
+   "paid": 264.72
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 9632.24,
+   "minimum": 264.72,
+   "paid": 4411.94
+  }
+ ],
+ "customer": "CUST-100231",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

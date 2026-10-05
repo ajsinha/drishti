@@ -1,0 +1,52 @@
+{
+ "loanId": "PLN-100350",
+ "borrowerName": "James Kowalski",
+ "purpose": "Debt consolidation",
+ "balance": 3815.86,
+ "instalment": 146.51,
+ "rate": 0.1125,
+ "daysPastDue": 0,
+ "schedule": [
+  {
+   "due": "2026-10-06",
+   "principal": 110.74,
+   "interest": 35.77,
+   "balance": 3705.12
+  },
+  {
+   "due": "2026-11-06",
+   "principal": 111.78,
+   "interest": 34.74,
+   "balance": 3593.35
+  },
+  {
+   "due": "2026-12-07",
+   "principal": 112.82,
+   "interest": 33.69,
+   "balance": 3480.52
+  },
+  {
+   "due": "2027-01-07",
+   "principal": 113.88,
+   "interest": 32.63,
+   "balance": 3366.64
+  },
+  {
+   "due": "2027-02-07",
+   "principal": 114.95,
+   "interest": 31.56,
+   "balance": 3251.7
+  },
+  {
+   "due": "2027-03-10",
+   "principal": 116.03,
+   "interest": 30.48,
+   "balance": 3135.67
+  }
+ ],
+ "customer": "CUST-100350",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

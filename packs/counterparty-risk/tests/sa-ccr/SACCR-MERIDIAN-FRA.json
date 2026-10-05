@@ -1,0 +1,28 @@
+{
+ "calcId": "SACCR-MERIDIAN-FRA",
+ "replacementCost": 43664,
+ "addOn": 95479,
+ "multiplier": 1.0,
+ "ead": 194801,
+ "rwa": 97400,
+ "addOns": [
+  {
+   "assetClass": "Interest rate",
+   "addOn": 95479
+  }
+ ],
+ "hedgingSets": [
+  {
+   "assetClass": "Interest rate",
+   "hedgingSet": "USD",
+   "effectiveNotional": -19095890,
+   "sf": 0.005
+  }
+ ],
+ "nettingSet": "NS-MERIDIAN-FRA",
+ "alpha": 1.4,
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

@@ -1,0 +1,57 @@
+{
+ "variantId": "VRNT-EGFR-L858R",
+ "geneSymbol": "EGFR",
+ "proteinChange": "p.Leu858Arg",
+ "hgvsC": "c.2573T>G",
+ "genomic": "chr7:55191822 T>G",
+ "consequence": "Missense",
+ "significance": "Drug response",
+ "rsid": "rs121434568",
+ "condition": "Non-small cell lung cancer (EGFR TKI sensitive)",
+ "frequencies": [
+  {
+   "population": "African",
+   "af": 0.000218
+  },
+  {
+   "population": "East Asian",
+   "af": 5.4e-05
+  },
+  {
+   "population": "European (non-Finnish)",
+   "af": 2.5e-05
+  },
+  {
+   "population": "Latino/Admixed American",
+   "af": 6.7e-05
+  },
+  {
+   "population": "South Asian",
+   "af": 0.000358
+  }
+ ],
+ "evidence": [
+  {
+   "source": "ClinVar",
+   "assertion": "Drug response",
+   "stars": 3,
+   "date": "2025-07-25"
+  },
+  {
+   "source": "ClinGen",
+   "assertion": "Drug response",
+   "stars": 4,
+   "date": "2022-11-24"
+  }
+ ],
+ "annotation": {
+  "genomicGrch38": "chr7:55191822 T>G",
+  "condition": "Non-small cell lung cancer (EGFR TKI sensitive)",
+  "origin": "Germline"
+ },
+ "gene": "GENE-EGFR",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

@@ -1,0 +1,146 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+about: 1
+vocabulary:
+  economyName: { term: "Economy", means: "The country or currency area the figures describe." }
+  inflation: { term: "Inflation", means: "The yearly rise in consumer prices, as the percentage change of the price index against the same period a year earlier.", unit: "% a year" }
+  unemployment: { term: "Unemployment rate", means: "The share of the labour force, people in work or looking for work, who are without a job and actively seeking one.", unit: "% of labour force" }
+kinds:
+  economy:
+    title: "Economy"
+    about: >-
+      ${$.name} produces about ${fmt($.gdpUsdTn, 'price2')} trillion USD a year; real GDP grew ${fmt($.growth, 'pct2')}, inflation is ${fmt($.inflation, 'pct2')}, unemployment is
+      ${fmt($.unemployment, 'pct2')} and the central bank's policy rate is ${fmt($.policyRate, 'pct2')}.
+    guide: economics
+    glossary:
+      gdpUsdTn: { term: "Gross domestic product", means: "The value of all goods and services produced in the economy in a year, converted to US dollars at market exchange rates.", unit: "USD trillions" }
+      growth: { term: "Real GDP growth", means: "The yearly change of GDP after removing inflation, so it measures the growth of output rather than of prices.", unit: "% a year", sign: "Negative is a contraction." }
+      inflation: { use: "inflation" }
+      unemployment: { use: "unemployment" }
+      policyRate: { term: "Policy rate", means: "The interest rate the central bank sets to steer short-term borrowing costs, raised to cool inflation and lowered to support activity.", unit: "% a year" }
+      debtToGdp: { term: "Government debt to GDP", means: "The central government's gross debt as a share of a year's GDP, the usual measure of how heavy the public debt is.", unit: "% of GDP" }
+      growthPath.growth: { term: "Quarterly growth", means: "The real GDP growth of the quarter against the same quarter a year earlier.", unit: "% a year" }
+      sectors.sector: { term: "Sector", means: "A part of the economy: services, industry or agriculture." }
+      sectors.share: { term: "Share of output", means: "The sector's share of the economy's value added.", unit: "% of GDP" }
+  macro-indicator:
+    title: "Macro indicator"
+    about: >-
+      ${$.name} last stood at ${fmt($.latest, 'price2')} (${$.unit}), against ${fmt($.previous, 'price2')} before; the next release is due ${$.nextRelease}.
+    guide: economics
+    glossary:
+      latest: { term: "Latest release", means: "The most recent published value of the statistic, in the unit shown." }
+      unit: { term: "Unit", means: "What the value measures: a rate, an index level or a percentage change against a year earlier." }
+      previous: { term: "Previous release", means: "The value of the release before the latest. Statistical offices revise earlier figures, so it can differ from what was first published." }
+      nextRelease: { term: "Next release", means: "The scheduled date of the next publication of the statistic." }
+      releases.date: { term: "Release date", means: "The day the figure was published." }
+      releases.period: { term: "Reference period", means: "The month or quarter the figure describes, which is earlier than the release date." }
+      releases.actual: { term: "Actual", means: "The value that was published.", unit: "indicator unit" }
+      releases.consensus: { term: "Consensus", means: "The median forecast of economists surveyed before the release.", unit: "indicator unit" }
+      releases.surprise: { term: "Surprise", means: "The actual value minus the consensus. A large surprise moves markets, because it shows that expectations were wrong.", unit: "indicator unit", sign: "Positive is above expectations." }
+  central-bank-decision:
+    title: "Central-bank decision"
+    about: >-
+      On ${$.date} ${$.bank} decided: ${lower($.decision)}. The policy rate is now ${fmt($.rate, 'pct2')}; the vote was ${$.vote}.
+    guide: economics
+    glossary:
+      bank: { term: "Central bank", means: "The monetary authority that sets the policy rate." }
+      decision: { term: "Decision", means: "The change to the policy rate, in basis points (one basis point is 0.01 percentage point), or a hold." }
+      rate: { term: "Policy rate after the decision", means: "The policy rate that applies from the decision.", unit: "% a year" }
+      vote: { term: "Vote", means: "The number of committee members for the decision and against it; dissent is a signal about the next move." }
+      path.date: { term: "Meeting date", means: "The day of the earlier decision." }
+      path.decision: { term: "Decision", means: "What the committee decided at the meeting." }
+      path.rate: { term: "Policy rate", means: "The policy rate after that meeting.", unit: "% a year" }
+  economic-forecast:
+    title: "Economic forecast"
+    about: >-
+      The ${$.vintage} forecast for ${$.economyName} has growth of ${fmt($.growth2027, 'pct2')} and inflation of ${fmt($.inflation2027, 'pct2')} in 2027, with a
+      ${fmt($.recessionProbability, 'pct0')} probability of recession.
+    guide: economics
+    glossary:
+      economyName: { use: "economyName" }
+      vintage: { term: "Vintage", means: "The forecast round, which is when the forecast was made. Forecasts are revised each round as new data arrive." }
+      growth2027: { term: "Real GDP growth in 2027", means: "The baseline forecast of the yearly growth of real GDP in 2027.", unit: "% a year" }
+      inflation2027: { term: "Inflation in 2027", means: "The baseline forecast of consumer price inflation in 2027.", unit: "% a year" }
+      recessionProbability: { term: "Recession probability", means: "The forecaster's estimate of the chance that output contracts over the next year.", unit: "probability" }
+      scenarios.scenario: { term: "Scenario", means: "A set of assumptions about the economy: the baseline is the central view; upside and downside scenarios change a key driver." }
+      scenarios.weight: { term: "Scenario weight", means: "The probability the forecaster gives the scenario. The weights of all scenarios add up to one.", unit: "probability" }
+      scenarios.growth2026: { term: "Growth in 2026", means: "Real GDP growth in 2026 under the scenario.", unit: "% a year" }
+      scenarios.growth2027: { term: "Growth in 2027", means: "Real GDP growth in 2027 under the scenario.", unit: "% a year" }
+      scenarios.inflation2027: { term: "Inflation in 2027", means: "Consumer price inflation in 2027 under the scenario.", unit: "% a year" }
+      scenarios.unemployment2027: { term: "Unemployment in 2027", means: "The unemployment rate in 2027 under the scenario.", unit: "% of labour force" }
+      path.growth: { term: "Quarterly growth", means: "The forecast of real GDP growth against the same quarter a year earlier.", unit: "% a year" }
+  trade-flow:
+    title: "Bilateral trade flow"
+    about: >-
+      ${$.reporterName} exports ${fmt($.exports, 'amount0')} billion USD to ${$.partnerName} and imports ${fmt($.imports, 'amount0')}, a balance of ${fmt($.balance, 'signed0')} billion;
+      the average tariff is ${fmt($.tariff, 'pct2')}.
+    guide: economics
+    glossary:
+      reporterName: { term: "Reporting economy", means: "The economy whose customs records the trade is taken from." }
+      partnerName: { term: "Partner", means: "The trading partner on the other side of the flows." }
+      exports: { term: "Exports", means: "The value of goods sold to the partner in the year.", unit: "USD billions" }
+      imports: { term: "Imports", means: "The value of goods bought from the partner in the year.", unit: "USD billions" }
+      balance: { term: "Trade balance", means: "Exports minus imports.", unit: "USD billions", sign: "Negative is a deficit with the partner." }
+      tariff: { term: "Average tariff", means: "The average customs duty on goods from the partner as a share of their value.", unit: "% of value" }
+      products.product: { term: "Product group", means: "A broad category of traded goods." }
+      products.value: { term: "Value", means: "The value of the product group's flow.", unit: "USD billions" }
+  labour-market:
+    title: "Labour market"
+    about: >-
+      In ${$.economyName} unemployment is ${fmt($.unemployment, 'pct2')}, ${fmt($.participation, 'pct2')} of working-age people are in the labour force, wages grow ${fmt($.wageGrowth, 'pct2')} a year
+      and there are ${fmt($.vacancyRatio, 'price2')} vacancies for each unemployed person.
+    guide: economics
+    glossary:
+      economyName: { use: "economyName" }
+      unemployment: { use: "unemployment" }
+      participation: { term: "Participation rate", means: "The share of the working-age population that is employed or looking for work.", unit: "% of working-age population" }
+      wageGrowth: { term: "Wage growth", means: "The yearly rise in average earnings, before inflation.", unit: "% a year" }
+      vacancyRatio: { term: "Vacancies per unemployed", means: "The number of open jobs for each person who is unemployed. A ratio above one means employers struggle to fill jobs and wages tend to rise.", unit: "ratio" }
+      bySector.sector: { term: "Sector", means: "An industry group of employment." }
+      bySector.jobsM: { term: "Jobs", means: "The number of people employed in the sector.", unit: "millions" }
+      bySector.change: { term: "Change in jobs", means: "The change in the sector's employment over the year.", unit: "% a year", sign: "Negative is a loss of jobs." }
+      unemploymentPath.rate: { use: "unemployment" }
+  fiscal-position:
+    title: "Fiscal position"
+    about: >-
+      ${$.economyName}'s government raises ${fmt($.revenue, 'pct0')} of GDP and spends ${fmt($.spending, 'pct0')}, a balance of ${fmt($.balance, 'pct2')}; its debt is ${fmt($.debt, 'pct0')} of GDP and
+      interest takes ${fmt($.interestBurden, 'pct2')} of revenue.
+    guide: economics
+    glossary:
+      economyName: { use: "economyName" }
+      revenue: { term: "Government revenue", means: "Taxes and other income of the general government.", unit: "% of GDP" }
+      spending: { term: "Government spending", means: "Total expenditure of the general government, including interest.", unit: "% of GDP" }
+      balance: { term: "Fiscal balance", means: "Revenue minus spending: the deficit that has to be borrowed or the surplus that can repay debt.", unit: "% of GDP", sign: "Negative is a deficit." }
+      debt: { term: "Government debt", means: "Gross general-government debt.", unit: "% of GDP" }
+      interestBurden: { term: "Interest burden", means: "Interest paid on the debt as a share of government revenue; it shows how much of each unit of revenue is lost to servicing the debt.", unit: "% of revenue" }
+      functions.function: { term: "Function of spending", means: "What the money is spent on, in the standard classification of the functions of government, such as health or social protection." }
+      functions.share: { term: "Share of GDP", means: "Spending on the function as a share of GDP.", unit: "% of GDP" }
+      debtPath.debt: { term: "Government debt", means: "Gross general-government debt in the year.", unit: "% of GDP" }
+  price-basket:
+    title: "Consumer-price basket"
+    about: >-
+      Headline inflation in ${$.economyName} is ${fmt($.headline, 'pct2')} and core inflation, which leaves out food and energy, is ${fmt($.core, 'pct2')}; services prices rise
+      ${fmt($.services, 'pct2')} and goods prices ${fmt($.goods, 'pct2')}.
+    guide: economics
+    glossary:
+      economyName: { use: "economyName" }
+      headline: { term: "Headline inflation", means: "The yearly rise in the price of the whole consumer basket.", unit: "% a year" }
+      core: { term: "Core inflation", means: "The yearly rise in consumer prices excluding the volatile items, food and energy. Central banks watch it as a guide to the underlying trend.", unit: "% a year" }
+      services: { term: "Services inflation", means: "The yearly rise in the prices of services such as rent and haircuts, which follow wages closely.", unit: "% a year" }
+      goods: { term: "Goods inflation", means: "The yearly rise in the prices of physical goods.", unit: "% a year" }
+      components.component: { term: "Component", means: "A group of items in the consumer basket, such as housing or food." }
+      components.weight: { term: "Weight", means: "The component's share of the basket, from household spending.", unit: "% of basket" }
+      components.inflation: { use: "inflation" }
+      components.contribution: { term: "Contribution to headline", means: "The component's weight multiplied by its inflation: the number of percentage points it adds to headline inflation. The contributions of all components add up to the headline rate.", unit: "percentage points", sign: "Negative pulls inflation down." }

@@ -1,0 +1,37 @@
+{
+ "scenarioId": "OPSCN-03",
+ "name": "Ransomware on the settlement platform",
+ "eventType": "External fraud",
+ "returnPeriod": 25,
+ "p50": 31900000.0,
+ "p999": 373900000.0,
+ "percentiles": [
+  {
+   "percentile": "p50",
+   "loss": 31900000.0
+  },
+  {
+   "percentile": "p90",
+   "loss": 102100000.0
+  },
+  {
+   "percentile": "p99",
+   "loss": 239200000.0
+  },
+  {
+   "percentile": "p99.9",
+   "loss": 478500000.0
+  }
+ ],
+ "context": {
+  "narrative": "Ransomware on the settlement platform: estimated in a workshop with first-line experts, calibrated to external loss data.",
+  "workshop": "Rates",
+  "lastReviewed": "2026-08-31",
+  "externalData": "ORX consortium (illustrative)"
+ },
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

@@ -1,0 +1,41 @@
+{
+ "candidateId": "CAND-KES-001",
+ "name": "Victor Petrov",
+ "partyName": "Kestrian Labour",
+ "constituency": "Highlands East",
+ "role": "Party leader",
+ "voteShare": 0.451,
+ "since": "2024-08-01",
+ "record": [
+  {
+   "bill": "Clean Energy Transition Act",
+   "vote": "For",
+   "date": "2025-10-08"
+  },
+  {
+   "bill": "Affordable Housing Act",
+   "vote": "Against",
+   "date": "2026-05-15"
+  },
+  {
+   "bill": "Digital Services Tax Act",
+   "vote": "Against",
+   "date": "2025-12-01"
+  },
+  {
+   "bill": "Public Health Workforce Act",
+   "vote": "For",
+   "date": "2026-01-23"
+  }
+ ],
+ "profile": {
+  "born": 1976,
+  "profession": "Economist",
+  "committees": "Environment"
+ },
+ "party": "PARTY-KES-LAB",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

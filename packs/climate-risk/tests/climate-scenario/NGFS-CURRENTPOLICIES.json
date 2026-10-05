@@ -1,0 +1,69 @@
+{
+ "scenarioId": "NGFS-CURRENTPOLICIES",
+ "name": "Current policies",
+ "category": "Hot house world",
+ "warming": 2.9,
+ "carbon2030": 22,
+ "carbon2050": 35,
+ "carbonPath": [
+  {
+   "year": "2025",
+   "price": 20
+  },
+  {
+   "year": "2030",
+   "price": 22
+  },
+  {
+   "year": "2035",
+   "price": 25
+  },
+  {
+   "year": "2040",
+   "price": 28
+  },
+  {
+   "year": "2050",
+   "price": 35
+  }
+ ],
+ "shocks": [
+  {
+   "sector": "Utilities",
+   "shock": -0.0162
+  },
+  {
+   "sector": "Airlines",
+   "shock": -0.0177
+  },
+  {
+   "sector": "Shipping",
+   "shock": -0.0196
+  },
+  {
+   "sector": "Materials",
+   "shock": -0.0108
+  },
+  {
+   "sector": "Autos",
+   "shock": -0.0139
+  },
+  {
+   "sector": "Agriculture",
+   "shock": -0.0137
+  },
+  {
+   "sector": "Technology",
+   "shock": -0.0033
+  },
+  {
+   "sector": "Banking",
+   "shock": -0.0041
+  }
+ ],
+ "source": "NGFS Phase V (illustrative calibration)",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

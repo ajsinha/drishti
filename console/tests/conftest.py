@@ -48,8 +48,10 @@ class FakeBackend:
             prov["sutra"] = prov["layout"].split()[1]
         return vm
 
-    async def explain(self, kind, id_, user, generation=None):
+    async def explain(self, kind, id_, user, generation=None, locale=None, accept_language=None):
         self.calls.append(("explain", kind, id_, generation))
+        if locale or accept_language:
+            self.calls.append(("explain-language", locale, accept_language))
         f = FIXTURES / f"explain_{kind}_{id_}.json"
         if not f.exists():
             raise BackendError(404, "DRS-1001", f"no source holds {kind}/{id_}")

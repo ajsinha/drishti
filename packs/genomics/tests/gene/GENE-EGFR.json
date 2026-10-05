@@ -1,0 +1,65 @@
+{
+ "geneId": "GENE-EGFR",
+ "symbol": "EGFR",
+ "name": "epidermal growth factor receptor",
+ "location": "chr7:55,019,017-55,211,628",
+ "chromosome": "7",
+ "start": 55019017,
+ "end": 55211628,
+ "length": 192612,
+ "strand": "+",
+ "transcripts": 16,
+ "expression": [
+  {
+   "tissue": "Brain",
+   "tpm": 9.43
+  },
+  {
+   "tissue": "Lung",
+   "tpm": 21.1
+  },
+  {
+   "tissue": "Liver",
+   "tpm": 2.62
+  },
+  {
+   "tissue": "Colon",
+   "tpm": 9.12
+  },
+  {
+   "tissue": "Breast",
+   "tpm": 3.84
+  },
+  {
+   "tissue": "Skin",
+   "tpm": 36.14
+  },
+  {
+   "tissue": "Blood",
+   "tpm": 1.72
+  },
+  {
+   "tissue": "Pancreas",
+   "tpm": 2.28
+  }
+ ],
+ "variants": [
+  {
+   "id": "VRNT-EGFR-L858R",
+   "protein": "p.Leu858Arg",
+   "significance": "Drug response"
+  }
+ ],
+ "identifiers": {
+  "assembly": "GRCh38.p14",
+  "hgncSymbol": "EGFR",
+  "uniprot": "P00533",
+  "biotype": "protein coding"
+ },
+ "protein": "PROT-P00533",
+ "pathway": "PWY-MAPK",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

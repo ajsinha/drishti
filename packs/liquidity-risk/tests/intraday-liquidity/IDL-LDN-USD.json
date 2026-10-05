@@ -1,0 +1,110 @@
+{
+ "reportId": "IDL-LDN-USD",
+ "legalEntityName": "Drishti Bank plc",
+ "currency": "USD",
+ "peakUsage": 1970000000.0,
+ "available": 5319000000.0,
+ "usagePct": 0.3704,
+ "usage": [
+  {
+   "time": "07:00",
+   "used": 544567973
+  },
+  {
+   "time": "08:00",
+   "used": 619357754
+  },
+  {
+   "time": "09:00",
+   "used": 1157022819
+  },
+  {
+   "time": "10:00",
+   "used": 1633259697
+  },
+  {
+   "time": "11:00",
+   "used": 1970000000
+  },
+  {
+   "time": "12:00",
+   "used": 1970000000
+  },
+  {
+   "time": "13:00",
+   "used": 1970000000
+  },
+  {
+   "time": "14:00",
+   "used": 1970000000
+  },
+  {
+   "time": "15:00",
+   "used": 1970000000
+  },
+  {
+   "time": "16:00",
+   "used": 1970000000
+  },
+  {
+   "time": "17:00",
+   "used": 1970000000
+  },
+  {
+   "time": "18:00",
+   "used": 1970000000
+  }
+ ],
+ "largePayments": [
+  {
+   "time": "07:56",
+   "counterparty": "Summit Clearing LLC",
+   "amount": 736700000.0
+  },
+  {
+   "time": "10:56",
+   "counterparty": "Northbridge Capital LLP",
+   "amount": 170800000.0
+  },
+  {
+   "time": "12:52",
+   "counterparty": "Summit Clearing LLC",
+   "amount": 315800000.0
+  },
+  {
+   "time": "13:02",
+   "counterparty": "Solaris Energy Corp.",
+   "amount": -783800000.0
+  },
+  {
+   "time": "13:29",
+   "counterparty": "Meridian Reinsurance Ltd",
+   "amount": 687300000.0
+  },
+  {
+   "time": "14:42",
+   "counterparty": "Northbridge Capital LLP",
+   "amount": -283200000.0
+  },
+  {
+   "time": "18:00",
+   "counterparty": "Kestrel Global Macro Fund",
+   "amount": -886300000.0
+  },
+  {
+   "time": "18:03",
+   "counterparty": "Rheintal Landesbank",
+   "amount": 102500000.0
+  }
+ ],
+ "paymentSystem": "Fedwire",
+ "legalEntity": "LE-LDN",
+ "_meta": {
+  "source": "payments-hub",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "peakUsage": 250000
+  }
+ }
+}

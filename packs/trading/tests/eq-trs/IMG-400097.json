@@ -1,0 +1,385 @@
+{
+ "tradeId": "IMG-400097",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400097",
+ "productType": "EQ_TRS",
+ "productName": "Equity total return swap",
+ "assetClass": "Equity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2024-05-24",
+ "effectiveDate": "2024-05-28",
+ "maturityDate": "2028-11-24",
+ "currency": "USD",
+ "notional": 243000000.0,
+ "mtm": -5455747,
+ "mtmCurrency": "USD",
+ "pnl1d": 85254,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-JWEISS",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-SLRS",
+ "dividendCurve": "DIV-SLRS",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "fundingSpread": 92.8,
+  "resetFrequency": "Monthly",
+  "quantity": 761678
+ },
+ "risk": {
+  "delta": -546348,
+  "dv01": -88468
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -26017,
+   "dv01": -4213
+  },
+  {
+   "bucket": "1M",
+   "delta": -52033,
+   "dv01": -8426
+  },
+  {
+   "bucket": "3M",
+   "delta": -78050,
+   "dv01": -12638
+  },
+  {
+   "bucket": "6M",
+   "delta": -104066,
+   "dv01": -16851
+  },
+  {
+   "bucket": "1Y",
+   "delta": -130083,
+   "dv01": -21064
+  },
+  {
+   "bucket": "2Y",
+   "delta": -156099,
+   "dv01": -25277
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "SLRS",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 243000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 243000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-05-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -714500.5,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-05-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -590459.07,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2027-05-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -535462.01,
+   "pv": -519398.15,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-05-28",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -709763.85,
+   "pv": -688470.93,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-11-24",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -652688.09,
+   "pv": -633107.45,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -320648
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -77128
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 124096
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -30736
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 105944
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -35756
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -67935
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 154463
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -209850
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 145104
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 105652
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -71875
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -404708
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 92752
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -207442
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 213555
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -247161
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 55803
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -190193
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 143809
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-05-24",
+  "executionTimestamp": "2024-05-24T09:42:24.660Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "J. Weiss",
+  "salesperson": null,
+  "orderId": "ORD-C649A0FD80"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-05-24T10:33:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-05-24T10:33:00Z",
+  "lastModifiedAt": "2024-05-24T10:33:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-05-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-JWEISS: receive fixed Equity total return swap"
+   },
+   {
+    "date": "2024-05-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT789159427)"
+   },
+   {
+    "date": "2026-05-28",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": -590459.07
+   },
+   {
+    "date": "2027-05-28",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-11-24",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT789159427",
+  "matched": "2024-05-24 10:51",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83C649A0FD80CE01B5C3BE",
+  "upi": "QZAXHNUNR27G",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEUS33XXX",
+  "ssiId": "SSI-USD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -5455747,
+  "cleanPv": -5455747.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "EQ-SLRS",
+   "DIV-SLRS",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -5541001,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 8907
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 6600
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 69607
+  },
+  {
+   "step": "FX delta",
+   "pnl": 878
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1404
+  },
+  {
+   "step": "Theta",
+   "pnl": 3224
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -2558
+  }
+ ],
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 13341
+  }
+ }
+}

@@ -1,0 +1,34 @@
+{
+ "incidentId": "CYBER-004",
+ "title": "Misconfigured storage bucket",
+ "severity": "Sev 3",
+ "detectHours": 51.1,
+ "containHours": 114.9,
+ "recordsAffected": 4500,
+ "status": "Closed",
+ "timeline": [
+  {
+   "at": "2026-01-21 09:12",
+   "step": "First alert (SOC)"
+  },
+  {
+   "at": "2026-01-21 +51.1h",
+   "step": "Confirmed"
+  },
+  {
+   "at": "2026-01-21 +114.9h",
+   "step": "Contained"
+  }
+ ],
+ "systems": {
+  "affected": "Client portal",
+  "ownerTeam": "Cyber defence",
+  "externalReported": false
+ },
+ "legalEntity": "LE-NY",
+ "relatedLoss": "LOSS-2026-0018",
+ "_meta": {
+  "source": "soc",
+  "generation": 1
+ }
+}

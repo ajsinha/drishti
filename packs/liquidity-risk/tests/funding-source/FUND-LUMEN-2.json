@@ -1,0 +1,21 @@
+{
+ "fundingId": "FUND-LUMEN-2",
+ "counterpartyName": "Lumen Semiconductor AG",
+ "type": "Wholesale time deposit",
+ "amount": 521200000.0,
+ "currency": "JPY",
+ "maturity": "2027-05-23",
+ "runOffRate": 0.4,
+ "terms": {
+  "rate": 0.0463,
+  "startDate": "2026-07-15",
+  "collateral": "Unsecured",
+  "withdrawable": false
+ },
+ "counterparty": "CP-LUMEN",
+ "legalEntity": "LE-TKY",
+ "_meta": {
+  "source": "treasury-alm",
+  "generation": 1
+ }
+}

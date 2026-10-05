@@ -1,0 +1,42 @@
+{
+ "billId": "BILL-KES-2026-011",
+ "title": "Clean Energy Transition Act",
+ "sponsorName": "Victor Petrov",
+ "stage": "Committee",
+ "introduced": "2025-08-26",
+ "costM": 4200,
+ "stages": [
+  {
+   "date": "2025-08-26",
+   "stage": "First reading",
+   "for": null,
+   "against": null,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2025-10-08",
+   "stage": "Second reading",
+   "for": 101,
+   "against": 74,
+   "outcome": "Passed"
+  },
+  {
+   "date": "2025-11-14",
+   "stage": "Committee",
+   "for": 131,
+   "against": 42,
+   "outcome": "Passed"
+  }
+ ],
+ "summary": {
+  "policyArea": "Clean Energy Transition",
+  "type": "Private member's bill",
+  "impactAssessment": "Published"
+ },
+ "sponsor": "CAND-KES-001",
+ "jurisdiction": "JUR-KES",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

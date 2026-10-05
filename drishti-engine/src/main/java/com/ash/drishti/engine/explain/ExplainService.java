@@ -68,8 +68,6 @@ import java.util.function.UnaryOperator;
  */
 public final class ExplainService {
 
-    /** Only English text exists; the key is ready for the locale overlay of a later step. */
-    static final String LOCALE = "en";
     private static final String NO_ACCESS = "no access to ";
 
     private record Key(String user, EntityRef ref, String businessDate, long generation, String locale, long aboutRevision) {}
@@ -113,14 +111,17 @@ public final class ExplainService {
      *
      * @param panel narrows the answer to one panel of the page when not null
      * @param generation the generation the caller's page shows, or null; a newer one on the server is said in the answer
+     * @param locales the caller's languages, best first ({@code ?locale=}, then the user's preference, then Accept-Language); the
+     *     first with an about overlay is used, else English; the answer says which
      * @throws DrishtiException {@code DRS-4006} when {@code panel} names no panel of the page; the source's own errors as for the view
      */
-    public PageContext explain(EntityRef ref, AsOf asOf, Caller caller, String panel, Long generation) {
+    public PageContext explain(EntityRef ref, AsOf asOf, Caller caller, String panel, Long generation, List<String> locales) {
         long t0 = System.nanoTime();
         EntityDocument doc = pipeline.document(ref, asOf);
         long gen = doc.provenance().generation();
         String date = doc.provenance().businessDate() == null ? "" : doc.provenance().businessDate().toString();
-        Entry e = cache.get(new Key(caller.user(), ref, date, gen, LOCALE, about.revision()), k -> derive(doc, asOf, caller));
+        String locale = about.localeFor(locales);
+        Entry e = cache.get(new Key(caller.user(), ref, date, gen, locale, about.revision()), k -> derive(doc, asOf, caller, locale));
         if (panel != null && !e.panels().contains(panel)) {
             throw new DrishtiException(ErrorCode.EXPLAIN_NO_PANEL, "the view of " + ref.id() + " has no panel '" + panel + "'");
         }
@@ -159,13 +160,13 @@ public final class ExplainService {
         return cache.estimatedSize();
     }
 
-    private Entry derive(EntityDocument doc, AsOf asOf, Caller caller) {
+    private Entry derive(EntityDocument doc, AsOf asOf, Caller caller, String locale) {
         ViewPipeline.Built built = pipeline.built(doc, asOf, caller.redact(), caller.mayOpen());
         ViewModel view = caller.restrict().apply(built.view());
         ViewModel.Provenance pv = view.provenance();
         Set<String> ids = new LinkedHashSet<>();
         view.panels().forEach(p -> ids.add(p.id()));
-        PageContext ctx = new PageContext(view.ref(), view.mnemonic(), LOCALE, pv.generation(), null, about(view, built), glossary(view, built), data(pv, built), layout(view, built),
+        PageContext ctx = new PageContext(view.ref(), view.mnemonic(), locale, pv.generation(), null, about(view, built, locale), glossary(view, built, locale), data(pv, built), layout(view, built),
                 next(view), null);
         return new Entry(ctx, ids, view.timings().getOrDefault("total", 0.0));
     }
@@ -174,9 +175,9 @@ public final class ExplainService {
      * Layer 1. The page's text is rendered over {@code built.seen()}, the document after the caller's field masks, and only
      * that: a template cannot read what the view does not show this caller. Only panels the caller may open get text.
      */
-    private PageContext.About about(ViewModel view, ViewPipeline.Built built) {
+    private PageContext.About about(ViewModel view, ViewPipeline.Built built, String locale) {
         String sutraDescription = built.sutra().map(Sutra::description).orElse(null);
-        AboutText t = about.forKind(view.ref().kind()).orElse(null);
+        AboutText t = about.forKind(view.ref().kind(), locale).orElse(null);
         if (t == null) {
             return sutraDescription == null ? null : new PageContext.About(null, null, null, sutraDescription, null);
         }
@@ -195,7 +196,7 @@ public final class ExplainService {
      * Layer 2: what each field the page shows means. Taken from the view the caller got, so a field the page does not show has
      * no entry, a panel the caller may not open adds none, and a hidden field's definition is given without the meaning of its values.
      */
-    private List<PageContext.Term> glossary(ViewModel view, ViewPipeline.Built built) {
+    private List<PageContext.Term> glossary(ViewModel view, ViewPipeline.Built built, String locale) {
         String kind = view.ref().kind();
         Map<String, Panel> defined = new LinkedHashMap<>();
         built.layout().sutra().panels().forEach(p -> defined.put(p.id(), p));
@@ -203,7 +204,7 @@ public final class ExplainService {
         Function<String, Optional<GlossaryEntry>> derived = key -> key.indexOf('.') >= 0 ? Optional.empty()
                 : router.connectorOf(kind, source).flatMap(d -> d.describeField(kind, key))
                         .map(n -> GlossaryEntry.derived(key, n.means(), n.formula(), n.origin()));
-        return new GlossaryBuilder(glossary, kind, defined, derived).build(view);
+        return new GlossaryBuilder(glossary.forLocale(locale), kind, defined, derived).build(view);
     }
 
     private PageContext.Data data(ViewModel.Provenance pv, ViewPipeline.Built built) {

@@ -1,0 +1,38 @@
+{
+ "sampleId": "SMPL-104120",
+ "tissue": "Skin",
+ "diagnosis": "Melanoma",
+ "purity": 0.78,
+ "variantCount": 2,
+ "meanCoverage": 816,
+ "collected": "2026-07-30",
+ "calls": [
+  {
+   "variant": "VRNT-BRAF-V600E",
+   "gene": "BRAF",
+   "vaf": 0.232,
+   "depth": 745,
+   "filter": "PASS"
+  },
+  {
+   "variant": "VRNT-TP53-R175H",
+   "gene": "TP53",
+   "vaf": 0.058,
+   "depth": 707,
+   "filter": "PASS"
+  }
+ ],
+ "qc": {
+  "readsMillions": 262.5,
+  "duplicationRate": "7.3%",
+  "onTarget": "76.2%",
+  "contamination": "1.16%",
+  "panel": "Solid tumour 523-gene panel"
+ },
+ "sequencingRun": "SEQ-2026-0903-A",
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ },
+ "trial": "TRIAL-ONC-101"
+}

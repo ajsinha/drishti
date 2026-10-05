@@ -1,0 +1,317 @@
+{
+ "tradeId": "MX-20000121",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000121",
+ "productType": "CMS_SPREAD_OPT",
+ "productName": "CMS spread option",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-03-02",
+ "effectiveDate": "2026-03-04",
+ "maturityDate": "2026-10-07",
+ "currency": "JPY",
+ "notional": 13000000.0,
+ "mtm": 34663,
+ "mtmCurrency": "USD",
+ "pnl1d": 502,
+ "counterparty": {
+  "id": "CP-PINNACLE",
+  "name": "Pinnacle Credit Partners"
+ },
+ "nettingSet": "NS-PINNACLE-NY",
+ "book": "BOOK-RATES-3",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-JPY-OIS",
+ "forwardCurve": "CRV-JPY-PROJ",
+ "swaptionVolCube": "IRV-JPY",
+ "correlation": "CORR-G10FX",
+ "terms": {
+  "longTenor": "10Y",
+  "shortTenor": "5Y",
+  "strike": 6.8
+ },
+ "risk": {
+  "dv01": 498,
+  "vega": 14564
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 166,
+   "vega": 4855
+  },
+  {
+   "bucket": "6M",
+   "dv01": 332,
+   "vega": 9709
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-06-04",
+   "period": "2026-06-04..2026-09-04",
+   "index": "TONA",
+   "rate": 0.037414,
+   "payoff": 7845.5,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-04",
+   "period": "2026-09-04..2026-12-04",
+   "index": "TONA",
+   "rate": 0.020214,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-07",
+   "period": "2026-10-07..2027-01-07",
+   "index": "TONA",
+   "rate": 0.026751,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -3608
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -919
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 2429
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -2911
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1543
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2027
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4008
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -6170
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -1472
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1781
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -104
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -1554
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -2527
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 3003
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -6864
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 4242
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -865
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 1128
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -1846
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1800
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-03-02",
+  "executionTimestamp": "2026-03-02T10:41:35.895Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-B61F562CAE"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-03-02T09:45:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-03-02T09:45:00Z",
+  "lastModifiedAt": "2026-03-02T09:45:00Z",
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-03-02",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: buy CMS spread option"
+   },
+   {
+    "date": "2026-03-02",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA223406022)"
+   },
+   {
+    "date": "2026-09-04",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "JPY payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA223406022",
+  "matched": "2026-03-02 17:12",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096B61F562CAE0C83D8FB23",
+  "upi": "QZ0UZCACP7AB",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "PINNGB33XXX",
+  "ssiId": "SSI-JPY-F2BB52",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 34663,
+  "cleanPv": 34663.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-JPY-OIS",
+   "CRV-JPY-PROJ",
+   "IRV-JPY",
+   "CORR-G10FX"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 34161,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 272
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 45
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 880
+  },
+  {
+   "step": "FX delta",
+   "pnl": -77
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -91
+  },
+  {
+   "step": "Theta",
+   "pnl": -511
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -16
+  }
+ ],
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

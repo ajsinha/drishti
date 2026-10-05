@@ -1,0 +1,32 @@
+{
+ "jurisdictionId": "JUR-KES",
+ "name": "Kingdom of Kestria",
+ "capital": "Brennmoor",
+ "populationM": 12.6,
+ "system": "First past the post",
+ "seats": 180,
+ "government": "Constitutional Party",
+ "legislature": [
+  {
+   "party": "Constitutional Party",
+   "seats": 102
+  },
+  {
+   "party": "Kestrian Labour",
+   "seats": 78
+  }
+ ],
+ "indicators": {
+  "giniCoefficient": 0.304,
+  "trustInGovernment": "41%",
+  "medianAge": 40.0,
+  "urbanPopulation": "80%",
+  "fictional": true
+ },
+ "lastElection": "ELEC-KES-2025",
+ "latestPoll": "POLL-KES-019",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

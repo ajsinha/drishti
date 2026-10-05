@@ -1,0 +1,279 @@
+{
+ "tradeId": "CLY-3000019",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000019",
+ "productType": "CDS_SWAPTION",
+ "productName": "CDS index option",
+ "assetClass": "Credit",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2024-12-05",
+ "effectiveDate": "2024-12-09",
+ "maturityDate": "2026-12-28",
+ "currency": "AUD",
+ "notional": 77000000.0,
+ "mtm": -244202,
+ "mtmCurrency": "USD",
+ "pnl1d": -10779,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-CREDIT-3",
+ "trader": "TRDR-DWHITFIELD",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-HALCYON",
+ "creditCurve": "CDS-HALCYON",
+ "discountCurve": "CRV-AUD-OIS",
+ "terms": {
+  "payerReceiver": "Receiver",
+  "strikeSpread": 67.9,
+  "expiryDate": "2026-12-04"
+ },
+ "risk": {
+  "cs01": -13096,
+  "vega": -293604
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": -2183,
+   "vega": -48934
+  },
+  {
+   "bucket": "1Y",
+   "cs01": -4365,
+   "vega": -97868
+  },
+  {
+   "bucket": "2Y",
+   "cs01": -6548,
+   "vega": -146802
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -2473
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -6201
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 793
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4346
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1215
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5857
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4316
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 2491
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -3411
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1879
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1282
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -9529
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -122
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 6132
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -4859
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 3990
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -4253
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 3518
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 10640
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2665
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-05",
+  "executionTimestamp": "2024-12-05T11:14:59.578Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "D. Whitfield",
+  "salesperson": null,
+  "orderId": "ORD-5232CD2FE3"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-05T11:54:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2024-12-05T11:54:00Z",
+  "lastModifiedAt": "2024-12-05T11:54:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2024-12-05",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-DWHITFIELD: sell CDS index option"
+   },
+   {
+    "date": "2024-12-05",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA696496024)"
+   },
+   {
+    "date": "2026-12-28",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA696496024",
+  "matched": "2024-12-05 14:38",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20965232CD2FE33D3547A79E",
+  "upi": "QZ061ZSFXE5X",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCGB33XXX",
+  "ssiId": "SSI-AUD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -244202,
+  "cleanPv": -244202.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CDS-HALCYON",
+   "CRV-AUD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -233423,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -959
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2734
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -10401
+  },
+  {
+   "step": "FX delta",
+   "pnl": 981
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 4964
+  },
+  {
+   "step": "Theta",
+   "pnl": -2748
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 118
+  }
+ ],
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1258
+  }
+ }
+}

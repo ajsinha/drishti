@@ -1,0 +1,115 @@
+{
+ "loanId": "MTG-100231",
+ "borrowerName": "Priya Sharma",
+ "balance": 551894.11,
+ "rate": 0.0354,
+ "ltv": 0.755,
+ "remainingYears": 21,
+ "daysPastDue": 0,
+ "originalAmount": 618000.0,
+ "monthlyPayment": 3107.13,
+ "amortisation": [
+  {
+   "year": "2022",
+   "balance": 618000
+  },
+  {
+   "year": "2024",
+   "balance": 586115
+  },
+  {
+   "year": "2026",
+   "balance": 551894
+  },
+  {
+   "year": "2028",
+   "balance": 515166
+  },
+  {
+   "year": "2030",
+   "balance": 475748
+  },
+  {
+   "year": "2032",
+   "balance": 433443
+  },
+  {
+   "year": "2034",
+   "balance": 388038
+  },
+  {
+   "year": "2036",
+   "balance": 339307
+  },
+  {
+   "year": "2038",
+   "balance": 287006
+  },
+  {
+   "year": "2040",
+   "balance": 230875
+  },
+  {
+   "year": "2042",
+   "balance": 170631
+  },
+  {
+   "year": "2044",
+   "balance": 105974
+  },
+  {
+   "year": "2046",
+   "balance": 36580
+  }
+ ],
+ "property": {
+  "type": "Terraced house",
+  "city": "New York",
+  "valuation": 731000.0,
+  "valuedOn": "2025-10-29",
+  "rateType": "5y fixed"
+ },
+ "payments": [
+  {
+   "due": "2026-09-01",
+   "amount": 3107.13,
+   "paid": "2026-09-02",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-08-02",
+   "amount": 3107.13,
+   "paid": "2026-08-03",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-07-03",
+   "amount": 3107.13,
+   "paid": "2026-07-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-06-03",
+   "amount": 3107.13,
+   "paid": "2026-06-04",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-05-04",
+   "amount": 3107.13,
+   "paid": "2026-05-05",
+   "status": "Paid"
+  },
+  {
+   "due": "2026-04-04",
+   "amount": 3107.13,
+   "paid": "2026-04-05",
+   "status": "Paid"
+  }
+ ],
+ "customer": "CUST-100231",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

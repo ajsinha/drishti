@@ -1,0 +1,294 @@
+{
+ "tradeId": "IMG-400019",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400019",
+ "productType": "EQ_INDEX_FUTURE",
+ "productName": "Equity index future",
+ "assetClass": "Equity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-08-21",
+ "effectiveDate": "2026-08-24",
+ "maturityDate": "2027-03-04",
+ "currency": "JPY",
+ "notional": 16000000.0,
+ "mtm": 198569,
+ "mtmCurrency": "USD",
+ "pnl1d": -12273,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "clearingAccount": "CLR-EUREX-1",
+ "underlyingIndex": "EQX-NKY",
+ "dividendCurve": "DIV-NKY",
+ "terms": {
+  "contract": "NQ Z6",
+  "lots": 1569,
+  "tradePrice": 4932.08
+ },
+ "risk": {
+  "delta": -86598
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -5773
+  },
+  {
+   "bucket": "1M",
+   "delta": -11546
+  },
+  {
+   "bucket": "3M",
+   "delta": -17320
+  },
+  {
+   "bucket": "6M",
+   "delta": -23093
+  },
+  {
+   "bucket": "1Y",
+   "delta": -28866
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 13518
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 7875
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -7587
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4765
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -4968
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 8791
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 1947
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -2089
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -5412
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 687
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 4566
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4643
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2243
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 883
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2179
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 7011
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -2834
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2415
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -2366
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -1992
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-21",
+  "executionTimestamp": "2026-08-21T16:43:41.799Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-5582EB5EC7"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-21T12:43:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-08-21T12:43:00Z",
+  "lastModifiedAt": "2026-08-21T12:43:00Z",
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-08-21",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: short Equity index future"
+   },
+   {
+    "date": "2026-08-21",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT634413231)"
+   },
+   {
+    "date": "2026-08-24",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2027-03-04",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT634413231",
+  "matched": "2026-08-21 16:55",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH2213158556",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q835582EB5EC7DF4F4CA07C",
+  "upi": "QZFJBTQOAIHS",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 198569,
+  "cleanPv": 198569.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQX-NKY",
+   "DIV-NKY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 210842,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -4289
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 452
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -8252
+  },
+  {
+   "step": "FX delta",
+   "pnl": 134
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 72
+  },
+  {
+   "step": "Theta",
+   "pnl": -375
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -15
+  }
+ ],
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 557
+  }
+ }
+}

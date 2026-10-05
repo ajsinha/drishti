@@ -1,0 +1,25 @@
+{
+ "scenarioId": "SCN-OIL-SHOCK",
+ "name": "Oil supply shock",
+ "type": "Hypothetical",
+ "severity": "Moderate",
+ "shocks": [
+  {
+   "factor": "Oil",
+   "shock": 0.6
+  },
+  {
+   "factor": "Natural gas",
+   "shock": 0.45
+  },
+  {
+   "factor": "Equities",
+   "shock": -0.08
+  }
+ ],
+ "horizon": "10 days",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

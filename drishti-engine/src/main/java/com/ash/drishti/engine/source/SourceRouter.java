@@ -440,6 +440,20 @@ public final class SourceRouter {
         return routed.stream().findFirst();
     }
 
+    /**
+     * What some source that serves {@code kind} says of its field (a derived kind's formula), for callers that know no
+     * provenance (pack lint): the first source in routing order that has a note.
+     */
+    public Optional<SourcePlugin.FieldNote> describeField(String kind, String field) {
+        for (SourcePlugin p : candidates(kind)) {
+            Optional<SourcePlugin.FieldNote> n = p.describeField(kind, field);
+            if (n.isPresent()) {
+                return n;
+            }
+        }
+        return Optional.empty();
+    }
+
     /** Live: sources that stream first, so the view ticks; among them a real stream (Kafka) before the default route. */
     private void liveFirst(List<SourcePlugin> candidates) {
         String fallback = props.defaultRoute();
