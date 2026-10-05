@@ -850,6 +850,20 @@ behind (the database is down), events queue in memory (`drishti.access-log.queue
 dropped and counted; Admin → Access shows the count. To keep it longer, export it on a schedule
 (`GET /api/v1/admin/access?from=…&limit=5000`) before it is pruned.
 
+### Ask about this page and your data
+
+*Ask about this page* ([CONFIGURATION.md](CONFIGURATION.md)) is off by default. Turning it on sends text to the model endpoint
+you configure, so decide what may leave the server:
+
+- With `values: labels-only` (the default) the prompt holds the page's labels, the glossary, the pack's guide text and the user's
+  question; no value of any entity. With `values: shown` it also holds the page's rendered sentence, with the figures the asking
+  user may see. A field masked for that user is never in it, in either mode.
+- The model gets no tools and cannot fetch anything. Document values and pack text are put in the prompt as marked, untrusted
+  data; the fixed instructions tell the model not to follow them, which reduces but cannot remove the chance of a wrong answer.
+- The question text is written to the access log (action `ask`) unless `log-questions: false`; answers are not stored unless
+  `log-answers: true`. An endpoint that you do not control sees every question and the material around it.
+- The key is read from `DRISHTI_ASK_KEY` only. If the endpoint is down the drawer says so (`DRS-4008`) and everything else in it works.
+
 ## 9c. Pack registry keys
 
 The private key that signs packs (`tools/packreg/packreg.py keygen`) is the one secret of the registry: keep it

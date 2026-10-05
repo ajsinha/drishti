@@ -125,6 +125,14 @@ class BackendClient:
         headers = {"Accept-Language": accept_language} if accept_language else {}
         return await self._send("GET", f"/views/{where}/explain", ident, params=q, headers=headers)
 
+    async def ask(self, kind: str, id_: str, ident, question: str, locale: str | None = None, accept_language: str | None = None) -> dict:
+        """Ask about this page (the server's optional LLM layer, off by default): ``{answer, sources}``, or a BackendError with
+        DRS-4007 (off), DRS-4008 (the model endpoint failed) or DRS-4009 (over the rate)."""
+        where, q = entity_path(kind, id_)
+        body = {"question": question, **({"locale": locale} if locale else {})}
+        headers = {"Accept-Language": accept_language} if accept_language else {}
+        return await self._send("POST", f"/views/{where}/ask", ident, params=q, json=body, headers=headers)
+
     async def search(self, q: str, ident=None) -> dict:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""
         return await self._get("/search", ident, q=q)

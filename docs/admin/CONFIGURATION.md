@@ -221,6 +221,10 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
+| `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
+| `DRISHTI_ASK_ENDPOINT` | `drishti.explain.ask.endpoint` | empty | The model endpoint URL for Ask. |
+| `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | The model name sent for Ask. |
+| `DRISHTI_ASK_KEY` | `drishti.explain.ask.api-key` | empty | The model endpoint credential (environment only; never logged). |
 | `DRISHTI_IDENTITY_DB_URL` | `drishti.identity.database-url` | `jdbc:sqlite:./data/identity/drishti.db` | The identity database (users, roles, workspaces, audit); SQLite by default, or `jdbc:postgresql://…`. |
 | `DRISHTI_IDENTITY_DB_USER` | `drishti.identity.database-user` | empty | Its user. |
 | `DRISHTI_IDENTITY_DB_PASSWORD` | `drishti.identity.database-password` | empty | Its password. |
@@ -642,6 +646,31 @@ only when asked, by the same code as the view, for the caller (so masks and righ
 |---|---|---|
 | `cache-size` | `2000` | Answers kept, one per user, page, business date and generation. |
 | `cache-ttl` | `60s` | How long an answer is served before it is derived again. **Admin → Health → purge** of the `engine` caches clears it too. |
+
+#### `drishti.explain.ask` — Ask about this page (optional, off by default)
+
+A question box in the drawer that answers from the page's own explanation with a language model you run or rent. **Nothing is sent
+anywhere unless you turn it on**, and then only for the packs you list. The server makes the call (the console is a proxy), the key
+comes from the environment only, and the model gets no tools. See [the privacy note](OPERATIONS.md#ask-about-this-page-and-your-data).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `false` (`DRISHTI_ASK_ENABLED`) | The global switch. While `false` no network call is ever attempted and `POST …/ask` answers `404 DRS-4007`. |
+| `packs` | `[]` | The packs where the box is drawn (per-pack opt-in); empty means none. `DRISHTI_EXPLAIN_ASK_PACKS=market-risk,genomics`. |
+| `endpoint` | empty (`DRISHTI_ASK_ENDPOINT`) | The model's URL: an OpenAI-compatible chat completions URL, or an Anthropic Messages URL. |
+| `api` | `openai` | `openai` or `anthropic`: the request and response shape. |
+| `model` | empty (`DRISHTI_ASK_MODEL`) | The model name sent to the endpoint. |
+| `api-key` | empty (`DRISHTI_ASK_KEY`) | Sent as `Authorization: Bearer` (`openai`) or `x-api-key` (`anthropic`). Environment only; never logged or returned. |
+| `values` | `labels-only` | `labels-only` sends labels, definitions and structure, never a rendered value of the page. `shown` also sends the page's rendered sentence (its figures, as the asking user may see them). A value masked for the user is never sent in either mode. |
+| `max-question-chars` | `500` | Longer questions are refused (`400`). |
+| `max-prompt-kb` | `24` | The whole prompt; the pack guide text is cut first, then glossary entries. |
+| `max-guide-chars` | `6000` | The most of the pack's guide section put in the prompt. |
+| `max-answer-tokens` / `max-answer-chars` | `400` / `2000` | The model's output cap and the cut applied to what comes back. |
+| `timeout` | `15s` | Slower than this is `504 DRS-4008`. |
+| `per-user-per-minute` / `per-user-per-day` | `6` / `100` | Over either is `429 DRS-4009`. |
+| `log-questions` | `true` | The question text goes to the [access log](OPERATIONS.md#9b-the-access-log) (action `ask`, with the outcome). `false` records only its length. The answer is never stored. |
+| `anthropic-version` | `2023-06-01` | The `anthropic-version` header sent when `api: anthropic`. |
+| `log-answers` | `false` | `true` also writes the answer text to the server log (`drishti.ask`). |
 
 ### `drishti.about` — the packs' About text
 

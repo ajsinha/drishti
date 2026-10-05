@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# The body of the About this page drawer: an HTML fragment, fetched when the drawer first opens (GET /v/{kind}/{id}/about). #}
-{% from "_macros/about.html" import layer_about, layer_glossary, layer_data, layer_layout, layer_next %}
+{% from "_macros/about.html" import layer_about, layer_glossary, layer_data, layer_layout, layer_next, layer_ask %}
 {% if error %}
 <p class="about-error" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> {{ error.code }}: {{ error.detail }}</p>
 {% else %}
@@ -25,5 +25,6 @@
   {{ layer_data(ex, not ex.glossary) }}
   {{ layer_layout(ex, false) }}
   {{ layer_next(ex, false) }}
+  {{ layer_ask(ex) }}
 </div>
 {% endif %}
