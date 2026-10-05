@@ -31,11 +31,11 @@ In these docs, `<GO>` means "press Enter".
 
 On Windows, follow [WINDOWS.md](WINDOWS.md) instead: the same steps in PowerShell.
 
-You do not need Maven: the repository has its own (`./mvnw`). Point `JAVA_HOME` at Java 21 or newer (25 recommended) in
+You do not need Maven: the repository has its own (`./mvnw`). Point `JAVA_HOME` at Java 21 or newer (production runs 21; 25 also supported) in
 **every** terminal you use (this is the Ubuntu path; adjust it for your system):
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$PATH"
 ```
 
@@ -53,7 +53,7 @@ ls drishti-server/target/*-exec.jar
 You should see `drishti-server/target/drishti-server-1.15.0-exec.jar`. The first build downloads its
 libraries and takes a few minutes.
 
-If the build stops with `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …`, `JAVA_HOME` is older than Java 21.
+If the build stops with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …`, `JAVA_HOME` is older than Java 21.
 
 ## 3. Set up the console
 
@@ -88,7 +88,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/bankin
 Terminal 1, from the repository root:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
 java -jar drishti-server/target/drishti-server-1.15.0-exec.jar
 ```
@@ -168,17 +168,17 @@ The [workspaces guide](../../console/web/guides/workspaces.md) walks through bot
 ## Build and run without the wrapper, or from an IDE
 
 Everything above uses `./mvnw`. This section is for a machine that has its own Maven, and for working from
-IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 25 (any Java 21 or newer works).
+IntelliJ IDEA and PyCharm. Commands were run on Ubuntu with Maven 3.9.12 and OpenJDK 21 (any Java 21 or newer works).
 
 ### With Maven installed on the system
 
-The poms enforce only the Java version (`[21,)`, the rule that prints `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …`); they
+The poms enforce only the Java version (`[21,)`, the rule that prints `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …`); they
 set no minimum Maven version. The wrapper pins **Maven 3.9.12** (`.mvn/wrapper/maven-wrapper.properties`), which is what
 the project is built and tested with; use 3.9.x. The enforcer rule checks the JVM Maven itself runs on, so set
 `JAVA_HOME` to Java 21 or newer (as in step 1) before `mvn`.
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$PATH"
 mvn -v                                  # "Apache Maven 3.9.…" and "Java version: 25.…"
 
@@ -189,11 +189,11 @@ ls drishti-server/target/*-exec.jar     # the application: drishti-server/target
 ```
 
 Run the server from the repository root (it finds `./packs` and `./data` relative to where you start it). It runs on
-Java 21 or newer. On Java 25 add `-XX:+UseCompactObjectHeaders`, which saves about 10% of the heap (Java 21 has no such flag and refuses to start with it, so leave it out there):
+Java 21 (the production target) or any newer JDK. Java-25-only note: `-XX:+UseCompactObjectHeaders` saves about 10% of the heap there, and Java 21 refuses to start with it, so leave it out on 21:
 
 ```bash
 DRISHTI_PACKS=market-risk,counterparty-risk \
-  java -XX:+UseCompactObjectHeaders -jar drishti-server/target/drishti-server-1.15.0-exec.jar
+  java -jar drishti-server/target/drishti-server-1.15.0-exec.jar
 ```
 
 Run the console in a Python virtual environment (Python 3.11 or newer). With uv, as in step 3; without it:

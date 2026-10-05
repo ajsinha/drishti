@@ -39,7 +39,7 @@ For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECT
 
 ## 1. The repository
 
-Drishti has two programs. The **server** is one Spring Boot 3.5 application on Java 21 or newer, 25 recommended (`drishti-server`),
+Drishti has two programs. The **server** is one Spring Boot 3.5 application on Java 21 or newer, production runs 21 (`drishti-server`),
 built from a Maven reactor of internal modules. The **console** is a FastAPI and Jinja2 web application in
 `console/` that renders the server's JSON. Industries are **packs** (`packs/`), which are content and
 configuration, not code.
@@ -144,7 +144,7 @@ drishti-benchmarks                (inference)
 
 | Tool | Version | Notes |
 |---|---|---|
-| JDK | 21 or newer (any vendor; 25 recommended) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap; measured faster than JDK 21 by 10–20% in requests a second); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [PERFORMANCE.md](../admin/PERFORMANCE.md#java-21-and-virtual-thread-pinning)). |
+| JDK | 21 or newer (any vendor; Java 21 is the production target) | The enforcer rule in `pom.xml` (`requireJavaVersion [21,)`) stops an older Java with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` The bytecode targets 21 (`maven.compiler.release`), so one jar runs on 21 and 25; `.java-version` says `25`, the version to develop on. On Java 25 run the server with `-XX:+UseCompactObjectHeaders` (about 10% less heap; measured faster than JDK 21 by 10–20% in requests a second); Java 21 has no such flag and refuses to start with it. Java 21 pins a virtual thread's carrier while it blocks inside `synchronized`, so main code uses a `ReentrantLock` for anything that does I/O (`NoBlockingUnderSynchronizedTest` enforces it; see [PERFORMANCE.md](../admin/PERFORMANCE.md#java-21-and-virtual-thread-pinning)). |
 | Python | 3.11 or newer | The console and the tools. CI uses 3.13. |
 | uv | any recent | Creates the console's environment, and runs the lake tools with `uv run --with …` so nothing is installed globally. |
 | Docker | optional | Only for the Testcontainers tests (PostgreSQL, Aerospike, ActiveMQ, RabbitMQ, MinIO) and `deploy/compose.yaml`. |
@@ -152,7 +152,7 @@ drishti-benchmarks                (inference)
 Set `JAVA_HOME` in every terminal:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$PATH"
 ./mvnw -v
 ```
@@ -300,7 +300,7 @@ What it does, in order (it stops at the first failure, `set -euo pipefail`):
 8. Pushes `develop`, fast-forwards `main` to `develop` (`git merge --ff-only`), pushes `main`, and returns to
    `develop`. It prints `drilled: <the last commit>`.
 
-`JAVA_HOME` defaults to `/usr/lib/jvm/java-25-openjdk-amd64` inside the script when it is not set.
+`JAVA_HOME` defaults to `/usr/lib/jvm/java-21-openjdk-amd64` inside the script when it is not set.
 
 ### 2.7 One config, several instances of the same connector
 
@@ -409,7 +409,7 @@ connector of the same name is overridden by this file):
 
 ```bash
 DRISHTI_PACKS=market-risk PG_PASSWORD=… LAKE_ACCESS_KEY=… LAKE_SECRET_KEY=… \
-  java -XX:+UseCompactObjectHeaders -jar drishti-server/target/drishti-server-1.15.0-exec.jar \
+  java -jar drishti-server/target/drishti-server-1.15.0-exec.jar \
   --spring.config.additional-location=file:/etc/drishti/connectors.yaml
 ```
 

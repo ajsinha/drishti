@@ -143,7 +143,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [QUICKSTART.md](guides/QUICKSTART.md) | you want Drishti running in ten minutes and need only the commands |
 | [GETTING_STARTED.md](guides/GETTING_STARTED.md) | you are installing for the first time and want each step explained, with what you should see |
 | [IDE_GUIDE.md](guides/IDE_GUIDE.md) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
-| [WINDOWS.md](guides/WINDOWS.md) | you run Drishti on Windows: a JDK 21 or newer (25 recommended) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
+| [WINDOWS.md](guides/WINDOWS.md) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
 | [PACKS.md](guides/PACKS.md) | you load, switch, assign or change a domain pack |
 | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) | you build a pack or need any `pack.yaml` key: kinds, links, roles, Sutras, tests, generators, signing; a worked help-desk pack |

@@ -14,7 +14,7 @@
 
 <#
 .SYNOPSIS
-  Starts the Drishti server on Windows: Java 21 or newer (25 recommended), the native Delta engine (no Hadoop, no winutils.exe).
+  Starts the Drishti server on Windows: Java 21 or newer (production runs 21; 25 also supported), the native Delta engine (no Hadoop, no winutils.exe).
 
 .DESCRIPTION
   Runs from the Drishti folder (a clone, or a copy holding the server jar, packs\ and data\). Finds the server jar,
@@ -25,12 +25,12 @@
 .EXAMPLE
   .\tools\windows\start-server.ps1
 .EXAMPLE
-  .\tools\windows\start-server.ps1 -JavaHome 'C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot' -Packs market-risk -Background
+  .\tools\windows\start-server.ps1 -JavaHome 'C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot' -Packs market-risk -Background
 .EXAMPLE
   .\tools\windows\start-server.ps1 -Stop
 #>
 param(
-    # The JDK folder (21 or newer, 25 recommended); default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH.
+    # The JDK folder (21 or newer, production runs 21); default: DRISHTI_JAVA_HOME, then JAVA_HOME, then java on the PATH.
     [string]$JavaHome = $(if ($env:DRISHTI_JAVA_HOME) { $env:DRISHTI_JAVA_HOME } else { $env:JAVA_HOME }),
     # The server jar; default: drishti-server\target\drishti-server-*-exec.jar, then drishti-server*.jar in the folder.
     [string]$Jar = '',
@@ -64,7 +64,7 @@ if ($Stop) {
     exit 0
 }
 
-# Java 21 or newer (25 recommended)
+# Java 21 or newer (production runs 21; 25 also supported)
 $java = if ($JavaHome) { Join-Path $JavaHome 'bin\java.exe' } else { 'java' }
 if ($JavaHome -and -not (Test-Path $java)) { throw "No java.exe under $JavaHome\bin: set -JavaHome (or DRISHTI_JAVA_HOME) to a JDK 21 or newer folder." }
 $previous = $ErrorActionPreference
@@ -73,7 +73,7 @@ $version = (& $java -version 2>&1 | Out-String)
 $ErrorActionPreference = $previous
 $major = if ($version -match 'version "(\d+)') { [int]$Matches[1] } else { 0 }
 if ($major -lt 21) {
-    throw "Drishti runs on Java 21 or newer (25 recommended); $java says:`n$version`nInstall Temurin JDK 25 and pass -JavaHome (or set DRISHTI_JAVA_HOME)."
+    throw "Drishti runs on Java 21 or newer (production runs 21; 25 also supported); $java says:`n$version`nInstall Temurin JDK 21 and pass -JavaHome (or set DRISHTI_JAVA_HOME)."
 }
 
 # the jar

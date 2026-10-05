@@ -162,7 +162,7 @@
           <execution>
             <id>enforce-java</id>
             <goals><goal>enforce</goal></goals>
-            <configuration><rules><requireJavaVersion><version>[21,)</version><message>Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java ${java.specification.version} from ${java.home}: set JAVA_HOME to a JDK 21 or newer and check with ./mvnw -v.</message></requireJavaVersion></rules></configuration>
+            <configuration><rules><requireJavaVersion><version>[21,)</version><message>Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java ${java.specification.version} from ${java.home}: set JAVA_HOME to a JDK 21 or newer and check with ./mvnw -v.</message></requireJavaVersion></rules></configuration>
           </execution>
           <!-- production runs on Java 21: no class file in the product, ours or a library's, may need a newer JVM.
                the compiler release setting (21) covers our code; this covers every runtime dependency, so `mvn package` fails instead of

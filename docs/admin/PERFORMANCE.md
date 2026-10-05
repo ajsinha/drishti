@@ -315,7 +315,7 @@ It runs with every `./mvnw verify`, so a change that makes views slow cannot be 
 
 ## Java 21 and virtual-thread pinning
 
-Drishti runs on Java 21 and newer (25 recommended). The one behavioural difference that matters for a server built on
+Drishti runs on Java 21 and newer (21 is the production target; 25 is also tested). The one behavioural difference that matters for a server built on
 virtual threads: **on Java 21 to 23 a virtual thread that blocks inside `synchronized` pins its carrier thread** (it
 cannot unmount), so a few such threads can stall every request; Java 24 removed that limit. A native call (JNI) pins on
 every Java. The rules the code follows:
@@ -377,7 +377,7 @@ pool: Hadoop's `FileSystem`, the RabbitMQ client and the JDBC drivers did not pi
 | File (JSON lines) | 21 | 1,050 | 51.8 | 749.5 | 343 / 661 | 768 / 1,026 | 31 / 94 |
 | | 25 | 1,120 | 52.7 | 759.5 | 295 / 610 | 796 / 1,092 | 30 / 99 |
 
-Reading it: with the pinning fixed, Java 21 and Java 25 serve this load within noise of each other (the 200 clients
+Java 21 is the production target; the table shows what Java 25 would change. Reading it: with the pinning fixed, Java 21 and Java 25 serve this load within noise of each other (the 200 clients
 are the bottleneck, not the JVM: p50 sits around 55 ms and the slow requests are the heavy ones, views and F8). What
 Java 25 adds is not speed under this load but memory: `-XX:+UseCompactObjectHeaders` is about 10% less heap, so on
 Java 21 give the server a little more `-Xmx`.
