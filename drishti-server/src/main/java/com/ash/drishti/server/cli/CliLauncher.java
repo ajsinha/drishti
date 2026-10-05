@@ -57,6 +57,9 @@ public final class CliLauncher {
             err.println("sutra: cannot make a scratch directory: " + e.getMessage());
             return SutraCli.PROBLEMS;
         }
+        // the packs the command line names are loaded, whatever DRISHTI_PACKS says: a pack is checked with its own About text
+        java.util.Map<String, String> was = new java.util.HashMap<>();
+        packProperties(rest).forEach((k, v) -> { was.put(k, System.getProperty(k)); System.setProperty(k, v); });
         try (ConfigurableApplicationContext ctx = new SpringApplicationBuilder(DrishtiApplication.class)
                 .web(WebApplicationType.NONE).bannerMode(Banner.Mode.OFF).logStartupInfo(false)
                 .properties("logging.level.root=WARN", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
@@ -77,6 +80,7 @@ public final class CliLauncher {
                     + (root instanceof OutOfMemoryError ? " (the input is too large)" : "; check DRISHTI_PACKS_DIR and DRISHTI_PACKS"));
             return SutraCli.PROBLEMS;
         } finally {
+            was.forEach((k, v) -> { if (v == null) { System.clearProperty(k); } else { System.setProperty(k, v); } });
             try (java.util.stream.Stream<java.nio.file.Path> walk = java.nio.file.Files.walk(scratch)) {
                 walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
             } catch (java.io.IOException ignored) {
@@ -95,5 +99,65 @@ public final class CliLauncher {
         return (kind, field) -> resolver.resolve(kind, field, key -> key.indexOf('.') >= 0 ? java.util.Optional.empty()
                 : router.describeField(kind, key)
                         .map(n -> com.ash.drishti.rachana.about.GlossaryEntry.derived(key, n.means(), n.formula(), n.origin()))).isPresent();
+    }
+
+    /**
+     * The packs behind the paths of a command line (a pack folder, or a Sutra file inside one: the nearest folder holding a
+     * {@code pack.yaml}), added to the enabled packs, so {@code sutra lint|test packs/market-risk} checks market-risk with its
+     * About text and glossary even when DRISHTI_PACKS names other packs. A pack outside the packs folder is read from its
+     * parent folder (as an installed pack). Empty when no path is in a pack.
+     */
+    static java.util.Map<String, String> packProperties(List<String> rest) {
+        java.util.Set<String> names = new java.util.LinkedHashSet<>();
+        java.nio.file.Path outside = null;
+        java.nio.file.Path packsDir = java.nio.file.Path.of(System.getProperty("drishti.packs.dir",
+                java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS_DIR"), "./packs"))).toAbsolutePath().normalize();
+        for (String arg : rest) {
+            if (arg.startsWith("-")) {
+                continue;
+            }
+            java.nio.file.Path p = java.nio.file.Path.of(arg).toAbsolutePath().normalize();
+            for (java.nio.file.Path d = java.nio.file.Files.isDirectory(p) ? p : p.getParent(); d != null; d = d.getParent()) {
+                java.nio.file.Path yaml = d.resolve("pack.yaml");
+                if (java.nio.file.Files.isRegularFile(yaml)) {
+                    names.add(packName(yaml, d.getFileName().toString()));
+                    if (!packsDir.equals(d.getParent()) && outside == null) {
+                        outside = d.getParent();
+                    }
+                    break;
+                }
+            }
+        }
+        if (names.isEmpty()) {
+            return java.util.Map.of();
+        }
+        String already = System.getProperty("drishti.packs.enabled", java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS"), ""));
+        java.util.Set<String> all = new java.util.LinkedHashSet<>();
+        for (String n : already.split(",")) {
+            if (!n.isBlank()) {
+                all.add(n.strip());
+            }
+        }
+        all.addAll(names);
+        java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
+        out.put("drishti.packs.enabled", String.join(",", all));
+        if (outside != null) {
+            out.put("drishti.packs.installed-dir", outside.toString());
+        }
+        return out;
+    }
+
+    private static String packName(java.nio.file.Path yaml, String folder) {
+        try {
+            for (String line : java.nio.file.Files.readAllLines(yaml)) {
+                if (line.startsWith("name:")) {
+                    String n = line.substring(5).strip().replace("\"", "").replace("'", "");
+                    return n.isEmpty() ? folder : n;
+                }
+            }
+        } catch (java.io.IOException ignored) {
+            // the folder's name stands in
+        }
+        return folder;
     }
 }
