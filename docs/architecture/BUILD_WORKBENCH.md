@@ -195,7 +195,7 @@ them, with no logic of its own: `/api/v1/builder/designs` (list, create, read, u
 - **Checking cost.** Checks run with a per-user concurrency cap and a time budget, cancel when superseded, and skip
   panels whose inputs did not change.
 
-**Console.** Routes in `console/routes/build/` (pages and a thin proxy). JavaScript in `static/js/build/` as plain
+**Console.** Routes in `drishti-console/routes/build/` (pages and a thin proxy). JavaScript in `static/js/build/` as plain
 modules, each under about 400 lines: `editor.js` (from Studio's), `preview.js`, `canvas.js`, `grid-keys.js` (taken out
 of `layout.js` and shared with layout mode), `inspector.js`, `samples.js`, `problems.js`, `tests.js`, `ops.js`,
 `palette.js`, `workbench.js`. Vendored only.
@@ -215,7 +215,7 @@ The console adds `POST /build/designs/{id}/ops|undo|redo|check|suggest|preview-f
 options from the shape (the server refuses a panel without them) and the inspector marks them to check; a dropped field binds when it
 lands inside a panel and asks for suggestions when it lands on a panel's rim, between panels or on empty space; the suggestions call the
 Design's shape then `/builder/suggest` (a design-level `/{id}/suggest` on the server was not needed). Browser tests run against the real
-server jar (`console/tests/wb_live.py`; skipped when the jar or a JDK 21 or newer is missing).
+server jar (`drishti-console/tests/wb_live.py`; skipped when the jar or a JDK 21 or newer is missing).
 
 **As built (step 8).** *Propose with evidence:* `POST /builder/designs/{id}/propose {note}` (the workbench's *Submit for review*; the console's
 `/save` route is gone) re-runs the check and calls `SutraGovernance.propose(text, note, who, evidence)`; `Proposal` has an `evidence` field

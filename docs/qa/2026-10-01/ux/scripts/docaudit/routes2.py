@@ -47,7 +47,7 @@ def api_paths(d, line):
         if m and not m.group(2).startswith('/api/v1') and not m.group(2).startswith('/actuator') and not m.group(2).startswith('/public'):
             out.append(m.group(2))
     return out
-for d in list((root / 'docs').rglob('*.md')) + list((root / 'console/web/guides').rglob('*.md')) + [root / 'README.md']:
+for d in list((root / 'docs').rglob('*.md')) + list((root / 'drishti-console/web/guides').rglob('*.md')) + [root / 'README.md']:
     for i, line in enumerate(d.read_text().splitlines(), 1):
         for p in api_paths(d, line):
             p = p.split('?')[0].rstrip('.,:)`*/…')

@@ -41,7 +41,7 @@ For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECT
 
 Drishti has two programs. The **server** is one Spring Boot 3.5 application on Java 21 or newer, production runs 21 (`drishti-server`),
 built from a Maven reactor of internal modules. The **console** is a FastAPI and Jinja2 web application in
-`console/` that renders the server's JSON. Industries are **packs** (`packs/`), which are content and
+`drishti-console/` that renders the server's JSON. Industries are **packs** (`packs/`), which are content and
 configuration, not code.
 
 ### 1.1 Java modules
@@ -121,7 +121,7 @@ drishti-benchmarks                (inference)
 
 | Folder | What is in it |
 |---|---|
-| `console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`, `competitive.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`) |
+| `drishti-console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`, `competitive.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`) |
 | `packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/`, `config/` (formats, semantics, help, workspaces), `guides/`, and `python/` (Calc snippets). Fourteen ship. |
 | `tools/packgen/` | Pack generators: `banking/` (five banking packs from one taxonomy, with their Calc snippets from `snippets/<pack>/*.py`), `common/packbuild.py` (the shared builder), and one `make.py` per other generated pack (`climate`, `economics`, `genomics`, `liquidity`, `oprisk`, `politics`, `retail`) |
 | `tools/load-delta.sh`, `tools/load-postgres.sh`, `tools/load-aerospike.sh` | Build or load the demo data in each store, small (the samples) to a million trades a day (`--trades N --days D`); see [DEMO_DATA.md](../connectors/DEMO_DATA.md) |
@@ -129,7 +129,7 @@ drishti-benchmarks                (inference)
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>` (one store, one size: container, load, server, measure, clean up), `measure.py` (the HTTP measurements, one JSON line per measure), `report.py` (Markdown tables, linear fits, labelled extrapolations); `results/` keeps each run's raw JSON lines; see [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
 | `tools/lake/` | `maintain.py`: Delta Lake retention, compaction (layout-preserving for laid-out tables), checkpoints, vacuum and `relayout`; `test_maintain.py` |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
-| `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `console/web/static/vendor/pyodide/`), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
+| `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime and generated data, all git-ignored: `delta/` (the sample lake, `make_data.py --lake`), `feeds/` (`make_data.py`), `banking.jsonl` (`make_data.py --jsonl`, for Aerospike), `identity/` (the SQLite database), `governance/` (Sutra proposals), `reports/` |
@@ -215,27 +215,27 @@ tests on a machine with Docker before you merge a schema change ([§5.6](#56-add
 ### 2.4 The console from source
 
 ```bash
-uv venv console/.venv
-uv pip install --python console/.venv/bin/python -r console/requirements-test.txt   # requirements.txt, plus numpy and scipy for the quant tests
-console/.venv/bin/python console/run_drishti_web.py
+uv venv drishti-console/.venv
+uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements-test.txt   # requirements.txt, plus numpy and scipy for the quant tests
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
-You should see `Uvicorn running on http://127.0.0.1:17480`. `console/requirements.txt` holds FastAPI, Uvicorn,
-Jinja2, httpx, PyYAML, Markdown and pytest. Without uv, `python3 -m venv console/.venv` and
-`console/.venv/bin/pip install -r console/requirements.txt` do the same.
+You should see `Uvicorn running on http://127.0.0.1:17480`. `drishti-console/requirements.txt` holds FastAPI, Uvicorn,
+Jinja2, httpx, PyYAML, Markdown and pytest. Without uv, `python3 -m venv drishti-console/.venv` and
+`drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same.
 
 For Calc (Python on a view, `Alt+C`), install its runtime once: `tools/fetch-pyodide.sh` (about 340 MB downloaded to
 `~/.cache/drishti/`, 53 MB kept; see [PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)). Without it the
 console runs as before and the Calc panel says how to install it.
 
-The console reads `console/config/application.yaml`, then `console/config/application.local.yaml` if present
+The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if present
 (git-ignored), then environment variables, then `--key=value` arguments:
 
 ```bash
 # three ways to move the console to port 17481
-DRISHTI_CONSOLE_PORT=17481 console/.venv/bin/python console/run_drishti_web.py
-DRISHTI_CONSOLE__SERVER__PORT=17481 console/.venv/bin/python console/run_drishti_web.py
-console/.venv/bin/python console/run_drishti_web.py --server.port=17481
+DRISHTI_CONSOLE_PORT=17481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+DRISHTI_CONSOLE__SERVER__PORT=17481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17481
 ```
 
 `DRISHTI_CONSOLE__A__B` sets any key `a.b` (the prefix is `DRISHTI_CONSOLE__`, double underscores separate the
@@ -265,7 +265,7 @@ The development loop that works best:
 | Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl drishti-server -am package -DskipTests`), restart the server |
 | `pack.yaml` | Restart the server (packs become properties at start-up) |
 | A console template | Reload the page |
-| Console Python, or anything under `console/web/static/` | Restart the console (the asset fingerprint is computed at start-up; see [§8](#8-common-pitfalls)) |
+| Console Python, or anything under `drishti-console/web/static/` | Restart the console (the asset fingerprint is computed at start-up; see [§8](#8-common-pitfalls)) |
 
 ### 2.6 The drill: `tools/drill.sh`
 
@@ -293,7 +293,7 @@ What it does, in order (it stops at the first failure, `set -euo pipefail`):
    (`JAVA25_HOME`; skipped with a message when that JDK is absent) with Docker hidden from the run, so the container tests
    (PostgreSQL, Kafka, S3 … through Testcontainers, already run on 21) are skipped there: the second run checks that
    nothing breaks on a newer JVM. The pom keeps every dependency at Java 21 bytecode (`enforceBytecodeVersion`).
-7. `console/.venv/bin/python -m pytest -q console/tests`. If it fails, the failed tests (and only those) run once more:
+7. `drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`. If it fails, the failed tests (and only those) run once more:
    a test that passes the second time is printed as `FLAKY` and appended to `target/drill-flakes.log` with the commit;
    a test that fails twice, or a run that failed without a failed test to re-run (a collection error), stops the
    drill. The retry exists for a rare workbench page that loads without its script starting under load; a timed-out
@@ -481,9 +481,9 @@ conventions that reviews hold to. Both kinds are listed here.
 | Rule | Enforced by |
 |---|---|
 | Every source file carries the copyright header | `LicenseHeaderTest`, `tools/license_headers.py` (drill, CI) |
-| No non-UI source file over 1500 lines | `SourceFileSizeTest`; `console/tests/test_assets_policy.py` for console Python |
+| No non-UI source file over 1500 lines | `SourceFileSizeTest`; `drishti-console/tests/test_assets_policy.py` for console Python |
 | One-way module dependencies, a Spring-free SPI, controllers only in `server`, no field injection, no `Serializable` | `ArchitectureRulesTest` |
-| Front end vendored: no CDN, no external URL, no inline script, handler or style | `console/tests/test_assets_policy.py`, the console's Content Security Policy |
+| Front end vendored: no CDN, no external URL, no inline script, handler or style | `drishti-console/tests/test_assets_policy.py`, the console's Content Security Policy |
 | Generated files match their generators | `--check` in the drill |
 | Sutras shown in docs and pack guides are valid | `DocumentedSutrasTest` |
 | Every pack Sutra loads without problems | `PackSutrasTest` |
@@ -512,8 +512,8 @@ starts like this one.
 
 ### 3.2 File size
 
-`SourceFileSizeTest` fails when any `.java`, `.py`, `.yaml`, `.yml` or `.xml` file outside `console/web/` has more
-than 1500 lines (`MAX_LINES = 1500`). UI templates, styles and scripts under `console/web/` are exempt. When a class
+`SourceFileSizeTest` fails when any `.java`, `.py`, `.yaml`, `.yml` or `.xml` file outside `drishti-console/web/` has more
+than 1500 lines (`MAX_LINES = 1500`). UI templates, styles and scripts under `drishti-console/web/` are exempt. When a class
 approaches the limit, split it by responsibility (the banking generator, for example, is a dozen focused modules
 under `tools/packgen/banking/`).
 
@@ -590,8 +590,8 @@ The identity database (`drishti-identity`) is reached only through Spring Data J
 ### 3.6 The front end is vendored
 
 The console uses Bootstrap, Bootstrap Icons, ECharts (and ECharts GL) and CodeMirror (with its Python mode), copied
-under `console/web/static/vendor/`. There is no npm, no build step and no CDN (ADR-006). The Content Security Policy
-in `console/core/app.py` is:
+under `drishti-console/web/static/vendor/`. There is no npm, no build step and no CDN (ADR-006). The Content Security Policy
+in `drishti-console/core/app.py` is:
 
 ```text
 default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; font-src 'self';
@@ -601,11 +601,11 @@ connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'
 One file has its own policy: Calc's worker, `/static/js/calc-worker.js`, is served with
 `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/`, so it alone may compile WebAssembly
 (Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's session). Pyodide itself is the one vendored component **not in git** (53 MB): `tools/fetch-pyodide.sh` downloads a
-pinned release, checks its SHA-256 and unpacks what Calc needs into `console/web/static/vendor/pyodide/`
+pinned release, checks its SHA-256 and unpacks what Calc needs into `drishti-console/web/static/vendor/pyodide/`
 (git-ignored); the console serves it at `/pyodide/<version>/` ([PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)).
 
 So templates may not contain inline `<script>` blocks, `on…=` handlers or `style=` attributes, and nothing may load
-from another origin. `console/tests/test_assets_policy.py` checks all of this. Behaviour goes in a file under
+from another origin. `drishti-console/tests/test_assets_policy.py` checks all of this. Behaviour goes in a file under
 `web/static/js/`, wired by `data-*` attributes; widths and colours come from classes and `data-*` values that a
 script applies (bars and gauges use `data-w`, see `view.js`).
 
@@ -625,9 +625,9 @@ This section follows `TRD MX-20000001 <GO>` from the keyboard to the screen, the
 
 | Step | Where | What happens |
 |---|---|---|
-| 1 | `console/web/templates/terminal/_topbar.html`, `web/static/js/command.js` | The command line is a plain form (`action="/go"`). `command.js` adds the dropdown: it calls the console's `GET /api/suggest`, which calls the server's `GET /api/v1/command/suggest` (`CommandController.suggest` → `SuggestionService`), filtered by `Entitlements.filter`. |
-| 2 | `console/routes/terminal_routes.py` `go()` | Text that looks like a search (`<MN> where …`, `order by`, `limit`) is redirected to `/s`. Otherwise `BackendClient.command()` posts `{"text": "TRD MX-20000001"}` to `POST /api/v1/command`. |
-| 3 | `console/core/backend.py` `BackendClient._send` | Every call carries the caller (`X-Drishti-User`, and `Authorization: Bearer …` when sign-in is on) and the business date (`X-Drishti-As-Of`, from `core/asof.py`, which `AuthGate` in `core/app.py` sets from the `drishti_asof` cookie). An unreachable server becomes `BackendError(503, "DRS-5003", …)`. |
+| 1 | `drishti-console/web/templates/terminal/_topbar.html`, `web/static/js/command.js` | The command line is a plain form (`action="/go"`). `command.js` adds the dropdown: it calls the console's `GET /api/suggest`, which calls the server's `GET /api/v1/command/suggest` (`CommandController.suggest` → `SuggestionService`), filtered by `Entitlements.filter`. |
+| 2 | `drishti-console/routes/terminal_routes.py` `go()` | Text that looks like a search (`<MN> where …`, `order by`, `limit`) is redirected to `/s`. Otherwise `BackendClient.command()` posts `{"text": "TRD MX-20000001"}` to `POST /api/v1/command`. |
+| 3 | `drishti-console/core/backend.py` `BackendClient._send` | Every call carries the caller (`X-Drishti-User`, and `Authorization: Bearer …` when sign-in is on) and the business date (`X-Drishti-As-Of`, from `core/asof.py`, which `AuthGate` in `core/app.py` sets from the `drishti_asof` cookie). An unreachable server becomes `BackendError(503, "DRS-5003", …)`. |
 | 4 | `server.security.PathGuard`, `server.security.TokenFilter` | `PathGuard` first refuses a request line under `/api` or `/actuator` that does not spell its path plainly (`;`, a needless `%`-escape, a dot or empty segment: `400 DRS-5001`); filters decide on `RequestPaths.routed`, the decoded path that is served, never the raw URI. For every `/api/v1/**` request: with security off, the caller is `Principal.anonymous(X-Drishti-User)` with every role; with it on, the bearer token is verified (`TokenVerifier`) or the answer is `401 DRS-5010`. The principal is a request attribute (`Principal.ATTRIBUTE`). |
 | 5 | `server.api.AsOfResolver` | Gives any controller parameter of type `AsOf` the request's business date: `X-Drishti-As-Of`, else `?asOf=`, else the current business date (`BusinessDates.parse`). |
 | 6 | `server.api.CommandController.command` | `CommandParser.parse` turns the text into an `EntityRef` (`trade/MX-20000001`). `Entitlements.requireOpen` checks the caller's roles and active packs (`403 DRS-5002`). If the entity exists (`SourceRouter.fetchAll`), the answer is its ref; otherwise the text becomes a pick list (`SearchQuery.pick` + `StructuredSearch.run`), and exactly one match opens directly. An unreadable command is `400 DRS-4001`. |
@@ -669,7 +669,7 @@ bind". In code:
 |---|---|---|
 | 1 | `terminal/view.html` | `live.js` is loaded only when `vm.provenance.live` is true. A picked business date is a static snapshot: no stream. |
 | 2 | `web/static/js/live.js`, `web/static/js/channel.js`, `web/static/js/live-hub.js` | `live.js` subscribes `view:trade/MX-20000001` on `window.DrishtiChannel`. `channel.js` hands every tab's subscriptions to one hub per browser (`live-hub.js`, in a SharedWorker, or in a tab elected with a Web Lock that relays over a BroadcastChannel), which keeps **one** `EventSource` for the whole browser, to the console's `GET /api/channel?s=…`, and adds or removes subscriptions with `POST /api/channel/{cid}` instead of reconnecting. Workspace panes (iframes) share their parent's subscriptions. Browsers allow six HTTP/1.1 connections per site; a stream per view, and later a channel per tab, used to exhaust them and freeze the next page (UX-01). Tests: `tests/test_live_hub.py` (the protocol, in Node), `tests/test_live_tabs_browser.py` (Chromium, skipped without Playwright). |
-| 3 | `console/routes/api_routes.py` `channel()` | For each subscription it opens an upstream stream (`BackendClient.stream` → `GET /api/v1/views/{kind}/{id}/stream`; `alerts` and `monitor:<name>` go to their own server streams), in **detached** tasks, and multiplexes everything into one SSE response as `{"ch": "<subscription>", "d": …}`. Frames are rewritten by `_view_event`: each patched panel is rendered to HTML with the same `panels.html` macro as first paint (charts stay data). A watchdog ends a channel nobody has read for five seconds; a comment every ~15s keeps proxies from closing it. |
+| 3 | `drishti-console/routes/api_routes.py` `channel()` | For each subscription it opens an upstream stream (`BackendClient.stream` → `GET /api/v1/views/{kind}/{id}/stream`; `alerts` and `monitor:<name>` go to their own server streams), in **detached** tasks, and multiplexes everything into one SSE response as `{"ch": "<subscription>", "d": …}`. Frames are rewritten by `_view_event`: each patched panel is rendered to HTML with the same `panels.html` macro as first paint (charts stay data). A watchdog ends a channel nobody has read for five seconds; a comment every ~15s keeps proxies from closing it. |
 | 4 | `server.api.StreamController.stream` | Takes a slot from `LiveStreamSlots` (cap `drishti.live.max-streams`), builds the initial view, and creates a `ViewStream`. A writer on a virtual thread sends a `view` event, then a `frame` event per frame, or a heartbeat comment (`drishti.live.heartbeat`, 15s). Each client has its own latest-wins `FrameMailbox`, so a slow client never slows others. |
 | 5 | `engine.live.TopicHub` | One topic per live entity, shared by every view of it, holding a single source subscription (`SourceRouter.subscribe` → the plugin's `subscribe`). Ticks land in a latest-wins slot and are delivered at most once per frame (`drishti.live.frame`, 50ms). The subscription closes with the last listener. |
 | 6 | `engine.live.ViewStream`, `PatchDiffer` | On a tick, the view is rebuilt (`ViewPipeline.build`) and `PatchDiffer.diff(before, after)` produces `Patch`es; they travel as a `Frame`. A deletion (`EntityDocument.deleted()`) is sent as one `deleted` patch instead, and nothing is rebuilt until the entity comes back (`restored`). |
@@ -817,9 +817,9 @@ class MnemonicApiTest {
 to the code table in [TROUBLESHOOTING.md](TROUBLESHOOTING.md). The OpenAPI document at `/api/docs` picks the
 endpoint up by itself.
 
-**5. Call it from the console** (if a page needs it): add a method to `BackendClient` in `console/core/backend.py`,
+**5. Call it from the console** (if a page needs it): add a method to `BackendClient` in `drishti-console/core/backend.py`,
 following its pattern (`return await self._get("/mnemonics", ident)`), and a matching method to `FakeBackend`
-in `console/tests/conftest.py`.
+in `drishti-console/tests/conftest.py`.
 
 ### 5.2 Add a source plugin
 
@@ -1167,7 +1167,7 @@ fits) and a test beside `noticesRoundTripOnEveryDatabase`:
 Then run `./mvnw -o -pl drishti-identity -am install` and `./mvnw -o test -pl drishti-server` (the server starts
 with the new property bound).
 
-**In the console** the pattern is the same YAML: add the key to `console/config/application.yaml` as
+**In the console** the pattern is the same YAML: add the key to `drishti-console/config/application.yaml` as
 `${DRISHTI_SOMETHING:default}` and read it with `settings.get("section.key", default)`. Every console key can also be
 set as `DRISHTI_CONSOLE__SECTION__KEY` without a named variable.
 
@@ -1175,7 +1175,7 @@ set as `DRISHTI_CONSOLE__SECTION__KEY` without a named variable.
 
 **Goal:** `/sources`, a page listing the connectors the server runs, their kinds and health.
 
-**1. The route**, `console/routes/source_routes.py`. Pages call the server through `request.app.state.backend` with
+**1. The route**, `drishti-console/routes/source_routes.py`. Pages call the server through `request.app.state.backend` with
 `ident(request)`, turn a `BackendError` into a message, and render with `render`, which adds the signed-in user,
 packs, business date and settings to the template context:
 
@@ -1201,7 +1201,7 @@ async def sources(request: Request):
                   error=error, screen="sources")
 ```
 
-**2. Register it** in `create_app` in `console/core/app.py`:
+**2. Register it** in `create_app` in `drishti-console/core/app.py`:
 
 ```python
     from routes import (admin_routes, api_routes, asof_routes, auth_routes, export_routes, help_routes, home_routes, monitor_routes,
@@ -1213,7 +1213,7 @@ async def sources(request: Request):
 and add `"/sources"` to the `PROTECTED` tuple in the same file. **A path that is not in `PROTECTED` is public** when
 sign-in is on. To list it in the top bar, add an entry to the menus in `web/templates/terminal/_topbar.html`.
 
-**3. The template**, `console/web/templates/sources.html`, extends `base.html` like the other terminal pages (the
+**3. The template**, `drishti-console/web/templates/sources.html`, extends `base.html` like the other terminal pages (the
 admin and workspace templates are good models):
 
 ```jinja
@@ -1242,7 +1242,7 @@ admin and workspace templates are good models):
 Jinja autoescapes, so values from the server are safe to print. `ASSET_V` is the asset version plus a fingerprint of
 `static/js` and `static/css`: always add `?v={{ ASSET_V }}` to your own script and style URLs.
 
-**4. The script**, `console/web/static/js/sources.js`. No inline script: the page wires behaviour by `data-*`
+**4. The script**, `drishti-console/web/static/js/sources.js`. No inline script: the page wires behaviour by `data-*`
 attributes, and the script is an IIFE in strict mode like the others:
 
 ```js
@@ -1259,7 +1259,7 @@ attributes, and the script is an IIFE in strict mode like the others:
 })();
 ```
 
-**5. The test.** The `client` fixture in `console/tests/conftest.py` builds the real app with a `FakeBackend` in place
+**5. The test.** The `client` fixture in `drishti-console/tests/conftest.py` builds the real app with a `FakeBackend` in place
 of the server. Add the method your page calls to `FakeBackend`:
 
 ```python
@@ -1271,7 +1271,7 @@ of the server. Add the method your page calls to `FakeBackend`:
                 "failures": {}}
 ```
 
-and a test file, `console/tests/test_sources.py`:
+and a test file, `drishti-console/tests/test_sources.py`:
 
 ```python
 """The sources page lists connectors and their kinds, under the CSP."""
@@ -1288,8 +1288,8 @@ def test_sources_page_lists_connectors(client):
 Run the console tests:
 
 ```bash
-console/.venv/bin/python -m pytest -q console/tests
-console/.venv/bin/python -m pytest -q console/tests/test_sources.py -k connectors
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests
+drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_sources.py -k connectors
 ```
 
 `test_assets_policy.py` will fail if the template gains an inline script, handler or style, or an external URL.
@@ -1308,13 +1308,13 @@ console/.venv/bin/python -m pytest -q console/tests/test_sources.py -k connector
 | Whole pipeline | `drishti-server` | `ViewPipeline` from the context, real packs | `ViewPipelineTest` (the four mockups, value by value), `BankingPacksTest`, `DomainPacksTest`, `ImperfectDataTest`, `BusinessDateTest` |
 | Real services | plugins, identity | Testcontainers, skipped without Docker ([§2.3](#23-tests-that-need-docker)) | `PostgresIdentityStoreTest`, `AerospikeSourcePluginTest`, `RabbitMqOutageTest` |
 | Repository rules | `drishti-it` | ArchUnit and file walks | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest` |
-| Documentation | rachana, server | the docs are parsed as code | `DocumentedSutrasTest` (every complete Sutra, a ```` ```yaml ```` block starting `rachana:`, in `docs/`, `console/web/guides/` and pack guides), `RachanaReferenceExampleTest` (the annotated example in `RACHANA_REFERENCE.md` previews as described), `PackSutrasTest` |
+| Documentation | rachana, server | the docs are parsed as code | `DocumentedSutrasTest` (every complete Sutra, a ```` ```yaml ```` block starting `rachana:`, in `docs/`, `drishti-console/web/guides/` and pack guides), `RachanaReferenceExampleTest` (the annotated example in `RACHANA_REFERENCE.md` previews as described), `PackSutrasTest` |
 | Performance gate | `drishti-server` | timed in the test | `ViewPipelineTest.warmViewsStayWellUnderFiftyMillisecondsAtP99`: 300 warm-up views, then 2000 timed; p99 must be under 50ms and the layout cache hit rate above 0.99 |
 | Micro-benchmarks | `drishti-benchmarks` | JMH, run by hand | `HotPathBenchmark` ([PERFORMANCE.md](../admin/PERFORMANCE.md) has the commands) |
-| Console | `console/tests` | pytest with `FakeBackend`; fixtures in `tests/fixtures/` are ViewModels captured from the real server | `test_terminal.py` (every panel kind with broken data), `test_assets_policy.py` (no CDN, no inline code, Python size), `test_contrast.py` (theme contrast: every text colour on every ground), `test_help.py` (every catalogued guide renders), `test_page_widths_browser.py` (Chromium: every page at 390, 1600 and 2560 px, no sideways scroll, images fit; skipped without Playwright) |
+| Console | `drishti-console/tests` | pytest with `FakeBackend`; fixtures in `tests/fixtures/` are ViewModels captured from the real server | `test_terminal.py` (every panel kind with broken data), `test_assets_policy.py` (no CDN, no inline code, Python size), `test_contrast.py` (theme contrast: every text colour on every ground), `test_help.py` (every catalogued guide renders), `test_page_widths_browser.py` (Chromium: every page at 390, 1600 and 2560 px, no sideways scroll, images fit; skipped without Playwright) |
 | Python tools | `tools/` | `unittest` | `tools/samplegen/test_samplegen.py`, `tools/lake/test_maintain.py` |
 | Generated content | `tools/packgen`, pack tools | `--check` | run by the drill |
-| In the browser | your machine (`console/tests/*_browser.py`) | Playwright with Chromium; skipped when not installed | `test_live_tabs_browser.py` (one live connection for many tabs and panes), `test_page_widths_browser.py` (no sideways scroll at 390, 1600 and 2560 px; images fit), `test_workspace_keys_browser.py` (Alt keys from inside panes), `test_calc_browsers.py`. Install with `pip install -r console/requirements-test.txt` and `playwright install chromium`. They do not replace a look by hand: after a UI change, open the page in the running console in at least one dark and one light theme, use the keys (F-keys, `/`, `Alt+←`, table keys), watch a live view tick, and check the browser console for CSP violations. |
+| In the browser | your machine (`drishti-console/tests/*_browser.py`) | Playwright with Chromium; skipped when not installed | `test_live_tabs_browser.py` (one live connection for many tabs and panes), `test_page_widths_browser.py` (no sideways scroll at 390, 1600 and 2560 px; images fit), `test_workspace_keys_browser.py` (Alt keys from inside panes), `test_calc_browsers.py`. Install with `pip install -r drishti-console/requirements-test.txt` and `playwright install chromium`. They do not replace a look by hand: after a UI change, open the page in the running console in at least one dark and one light theme, use the keys (F-keys, `/`, `Alt+←`, table keys), watch a live view tick, and check the browser console for CSP violations. |
 
 Habits that keep the suite fast and reliable:
 
@@ -1380,14 +1380,14 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
 
 ## 8. Common pitfalls
 
-1. **Starlette cancel scopes in streaming responses.** In `console/routes/api_routes.py`, upstream work for
+1. **Starlette cancel scopes in streaming responses.** In `drishti-console/routes/api_routes.py`, upstream work for
    `/api/channel` runs in tasks created with a **fresh** `contextvars.Context` (`detached()`), carrying only the
    business date and "known at". A task started from the request's context inherits Starlette's (anyio's) cancel
    scope, which, once the request has ended, cancels every `await` in it for good: clean-up never completed, the
    console's connections to the server stayed open, the pool ran out, and the UI froze. End streams by **closing the
    upstream response**, never by cancelling a task that is reading it. Follow the same pattern in any new streaming
    route.
-2. **Stale scripts after a change.** `ASSET_V` (in `console/core/app.py`) is `ASSET_VERSION` plus a hash of the names,
+2. **Stale scripts after a change.** `ASSET_V` (in `drishti-console/core/app.py`) is `ASSET_VERSION` plus a hash of the names,
    sizes and modification times of `web/static/js/*` and `web/static/css/*`, computed **once at start-up**. Restart
    the console after editing scripts or styles, or browsers keep the cached file. Files you add elsewhere (images,
    vendor upgrades) are not fingerprinted; change their name or bump `ASSET_VERSION`.
@@ -1396,11 +1396,11 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
    header from lines 2–14 of `docs/guides/RACHANA_REFERENCE.md` (`make_packs.py`), so editing that document's header makes
    them stale too.
 4. **Sutras in documentation are compiled.** `DocumentedSutrasTest` parses every ```` ```yaml ```` block whose first
-   line after any comments is `rachana:` in `docs/`, `console/web/guides/` and pack guides, and compiles its
+   line after any comments is `rachana:` in `docs/`, `drishti-console/web/guides/` and pack guides, and compiles its
    expressions. Such a block must be a complete, valid Sutra. A fragment (a panel, a strip) is a `yaml` block without
    `rachana:`; a block that is deliberately abridged contains `…` and is skipped.
 5. **Environment variables leak into tests.** See [§2.2](#22-maven-commands): unset `DRISHTI_*` before running Maven.
-6. **A page that is public by accident.** New console paths must be added to `PROTECTED` in `console/core/app.py`.
+6. **A page that is public by accident.** New console paths must be added to `PROTECTED` in `drishti-console/core/app.py`.
    `/t` and `/s` are matched exactly (they are prefixes of public paths such as `/static`); the rest by prefix.
 7. **Inline code under the CSP.** `onclick=`, `<script>…</script>` and `style="…"` are blocked by the browser and
    rejected by `test_assets_policy.py`. Use a script file and `data-*` attributes.
@@ -1430,13 +1430,13 @@ The release commit for 1.9.0 (`Release 1.9.0`) shows every file a bump touches.
 2. **Bump the version** everywhere it is written. Find the old version first:
 
    ```bash
-   git grep -n -F '1.16.0' -- '*pom.xml' console/core/app.py deploy README.md docs
+   git grep -n -F '1.16.0' -- '*pom.xml' drishti-console/core/app.py deploy README.md docs
    ```
 
    | File | What changes |
    |---|---|
    | `pom.xml` and every module's `pom.xml` (including `plugins/*/pom.xml`) | the project `<version>` and each module's `<parent><version>` |
-   | `console/core/app.py` | `ASSET_VERSION`, so browsers fetch the new scripts |
+   | `drishti-console/core/app.py` | `ASSET_VERSION`, so browsers fetch the new scripts |
    | `deploy/compose.yaml`, `deploy/server.Dockerfile`, `deploy/console.Dockerfile` | image tags `drishti-server:<version>`, `drishti-console:<version>` |
    | `README.md`, `docs/*.md` | the jar name `drishti-server-<version>-exec.jar` and versions in examples |
 

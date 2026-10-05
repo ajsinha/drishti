@@ -158,7 +158,7 @@ default `./packs`, relative to the directory you start the server in).
 4. Open the terminal (`/t`) and type a command from the new pack, for example `SHP SHP-10042 <GO>`.
 
 The console needs no setting: it asks the server which packs are on. (`packs.enabled` in
-`console/config/application.yaml` is only a fallback for when the server cannot be reached.) If you moved the
+`drishti-console/config/application.yaml` is only a fallback for when the server cannot be reached.) If you moved the
 packs folder, set `DRISHTI_PACKS_DIR` for both processes.
 
 What happens at start-up:

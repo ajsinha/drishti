@@ -19,7 +19,7 @@ a connector over its sample folder, and two connectors pointed at ports nothing 
 (reconnecting) side by side. start_servers() below replaces the shared one for this guide.
 
     ./mvnw -o -q package -DskipTests -pl docs/guides/examples/connector -am
-    console/.venv/bin/python tools/docs/screenshots.py --guide connectors [--only provenance]
+    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide connectors [--only provenance]
     (DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT move it off :18997 / :17997 when another run holds them;
      DRISHTI_SHOTS_SERVER_JAR names a built server jar)"""
 from __future__ import annotations
@@ -79,10 +79,10 @@ def start_servers(work: Path) -> list:
     env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="counterparty-risk",
                DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="false")
     server = subprocess.Popen([java, "-jar", str(jar)], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
-    py = ROOT / "console" / ".venv" / "bin" / "python"
+    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
     py = py if py.exists() else Path(sys.executable)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT))
-    console = subprocess.Popen([str(py), str(ROOT / "console" / "run_drishti_web.py")], cwd=ROOT, env=cenv,
+    console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT, env=cenv,
                                stdout=(work / "console.log").open("w"), stderr=subprocess.STDOUT)
     for _ in range(240):
         if listening(SERVER_PORT) and listening(CONSOLE_PORT):

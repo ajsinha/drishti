@@ -1,6 +1,6 @@
-/home/ashutosh/IdeaProjects/drishti/.claude/worktrees/agent-a3a597410e145c292/console/web/static/calc/quant.py:468: RuntimeWarning: invalid value encountered in scalar divide
+/home/ashutosh/IdeaProjects/drishti/.claude/worktrees/agent-a3a597410e145c292/drishti-console/web/static/calc/quant.py:468: RuntimeWarning: invalid value encountered in scalar divide
   d1 = (np.log(F / K) + 0.5 * sd * sd) / sd
-/home/ashutosh/IdeaProjects/drishti/.claude/worktrees/agent-a3a597410e145c292/console/web/static/calc/quant.py:468: RuntimeWarning: divide by zero encountered in scalar divide
+/home/ashutosh/IdeaProjects/drishti/.claude/worktrees/agent-a3a597410e145c292/drishti-console/web/static/calc/quant.py:468: RuntimeWarning: divide by zero encountered in scalar divide
   d1 = (np.log(F / K) + 0.5 * sd * sd) / sd
 PASS norm_cdf(-38): got 2.88542835e-316 expected np.float64(0.0)
 PASS norm_cdf(-10): got 7.619853024160595e-24 expected np.float64(7.61985302416047e-24)

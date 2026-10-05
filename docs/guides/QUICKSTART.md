@@ -58,8 +58,8 @@ If the build stops with `Drishti needs Java 21 or newer (any vendor; production 
 ## 3. Set up the console
 
 ```bash
-uv venv console/.venv
-uv pip install --python console/.venv/bin/python -r console/requirements.txt
+uv venv drishti-console/.venv
+uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ```
 
 You should see uv list what it installed (FastAPI, Uvicorn, Jinja2, httpx, PyYAML, Markdown, pytest).
@@ -114,7 +114,7 @@ You should see `{"status":"UP","groups":["liveness","readiness"]}`, then twelve 
 Terminal 2, from the repository root:
 
 ```bash
-console/.venv/bin/python console/run_drishti_web.py
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 You should see `Uvicorn running on http://127.0.0.1:17480`. The console finds the server at
@@ -163,7 +163,7 @@ another. With the packs above there are no starter workspaces (*Starters* says s
 **New workspace**, press **Create**, then type `TRD MX-20000001` in the first pane's box and `CPTY CP-NORTHBRIDGE` in
 the second, and press **Save**. `Alt+1` and `Alt+2` move between the panes, `Alt+0` back to the bar. The starters
 come from the `finance` and `logistics` packs (restart the server with `DRISHTI_PACKS=finance` to try **Credit desk**).
-The [workspaces guide](../../console/web/guides/workspaces.md) walks through both.
+The [workspaces guide](../../drishti-console/web/guides/workspaces.md) walks through both.
 
 ## Build and run without the wrapper, or from an IDE
 
@@ -199,10 +199,10 @@ DRISHTI_PACKS=market-risk,counterparty-risk \
 Run the console in a Python virtual environment (Python 3.11 or newer). With uv, as in step 3; without it:
 
 ```bash
-python3 -m venv console/.venv           # Debian and Ubuntu: sudo apt install python3-venv first
-console/.venv/bin/pip install -r console/requirements.txt          # add -r console/requirements-test.txt for pytest's extras
-console/.venv/bin/python console/run_drishti_web.py                # http://127.0.0.1:17480
-console/.venv/bin/python -m pytest console/tests -q                # the console's tests
+python3 -m venv drishti-console/.venv           # Debian and Ubuntu: sudo apt install python3-venv first
+drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt          # add -r drishti-console/requirements-test.txt for pytest's extras
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py                # http://127.0.0.1:17480
+drishti-console/.venv/bin/python -m pytest drishti-console/tests -q                # the console's tests
 ```
 
 ### IntelliJ IDEA and PyCharm
@@ -251,29 +251,29 @@ drishti:
 ### The console
 
 The console has **no flag or variable that points at another config file**: it reads `config/application.yaml`
-beside `run_drishti_web.py` (`console/config/`) and `console/config/application.local.yaml` if present
-(`console/core/config.py`). Override it in one of three ways:
+beside `run_drishti_web.py` (`drishti-console/config/`) and `drishti-console/config/application.local.yaml` if present
+(`drishti-console/core/config.py`). Override it in one of three ways:
 
 ```bash
 # 1. a local file (git-ignored): the same keys as application.yaml, only what you change
-cat > console/config/application.local.yaml <<'YAML'
+cat > drishti-console/config/application.local.yaml <<'YAML'
 server:
   port: 17481
 backend:
   url: http://127.0.0.1:18481
 YAML
-console/.venv/bin/python console/run_drishti_web.py
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 
 # 2. environment variables: DRISHTI_CONSOLE__<KEY>__<SUBKEY>, or the named variables the YAML uses
 DRISHTI_CONSOLE__BACKEND__URL=http://127.0.0.1:18481 DRISHTI_CONSOLE_PORT=17481 \
-  console/.venv/bin/python console/run_drishti_web.py
+  drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 
 # 3. arguments: --key.subkey=value
-console/.venv/bin/python console/run_drishti_web.py --server.port=17481 --backend.url=http://127.0.0.1:18481
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py --server.port=17481 --backend.url=http://127.0.0.1:18481
 ```
 
 Later wins: the YAML, the local file, the environment, the arguments. To keep several configurations, keep several local
-files and copy the one you want to `console/config/application.local.yaml`, or set the environment per shell.
+files and copy the one you want to `drishti-console/config/application.local.yaml`, or set the environment per shell.
 
 ### What the `${DRISHTI_PACKS:finance}` in the files means
 

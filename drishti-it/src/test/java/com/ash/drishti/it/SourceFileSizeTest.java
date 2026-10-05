@@ -36,7 +36,7 @@ class SourceFileSizeTest {
         Path root = RepositoryFiles.root();
         for (Path p : RepositoryFiles.withSuffixes(Set.of(".java", ".py", ".yaml", ".yml", ".xml"))) {
             String rel = root.relativize(p).toString().replace('\\', '/');
-            if (rel.startsWith("console/web/")) {
+            if (rel.startsWith("drishti-console/web/")) {
                 continue;
             }
             long lines;

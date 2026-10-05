@@ -127,8 +127,8 @@ back to Step 1.
 Create a private Python environment for the console and install its libraries into it:
 
 ```bash
-uv venv console/.venv
-uv pip install --python console/.venv/bin/python -r console/requirements.txt
+uv venv drishti-console/.venv
+uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ```
 
 You should see uv report the packages it installed (FastAPI, Uvicorn, Jinja2 and a few more).
@@ -140,8 +140,8 @@ If you will use **Calc** (Python in the browser), install its runtime once with 
 Without uv, plain Python works too:
 
 ```bash
-python3 -m venv console/.venv
-console/.venv/bin/pip install -r console/requirements.txt
+python3 -m venv drishti-console/.venv
+drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt
 ```
 
 ## Step 5 · (Recommended) Build the sample history
@@ -222,7 +222,7 @@ You should see the twelve names, starting with `banking-core`, `market-data`, `t
 Open another terminal in the `drishti` folder:
 
 ```bash
-console/.venv/bin/python console/run_drishti_web.py
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 You should see:
@@ -379,7 +379,7 @@ Console terminal:
 export DRISHTI_AUTH_ENABLED=true
 export DRISHTI_SESSION_SECRET=another-long-random-string-0123456789abcd
 export DRISHTI_SECURE_COOKIE=false        # only for plain http on your own machine
-console/.venv/bin/python console/run_drishti_web.py
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 (`openssl rand -hex 32` prints a good random secret.)

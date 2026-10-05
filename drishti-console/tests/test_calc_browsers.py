@@ -26,7 +26,7 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-MODULE = ROOT / "console" / "web" / "static" / "calc" / "drishti.py"
+MODULE = ROOT / "drishti-console" / "web" / "static" / "calc" / "drishti.py"
 
 
 @pytest.fixture()
@@ -99,5 +99,5 @@ def test_every_starter_snippet_reads_with_await_so_it_runs_in_every_browser():
 def test_the_panel_says_how_to_read_before_a_run_fails(client):
     js = client.get("/static/js/calc.js").text
     assert "data-calc-nosync" in js and "write await drishti.get_async" in js
-    template = (ROOT / "console" / "web" / "templates" / "terminal" / "_calc.html").read_text()
+    template = (ROOT / "drishti-console" / "web" / "templates" / "terminal" / "_calc.html").read_text()
     assert "<span data-calc-nosync hidden>" in template and "await drishti.search_async(…)" in template

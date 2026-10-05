@@ -74,7 +74,7 @@ management:
 drishti:
   branding:
     # The product's name and legal notices, wherever people see them (pages, the About answer, messages). Change them
-    # here, not in code; the console has the same keys under ui: in console/config/application.yaml.
+    # here, not in code; the console has the same keys under ui: in drishti-console/config/application.yaml.
     product: ${DRISHTI_PRODUCT:Drishti}
     tagline: Any data. Any domain. One grammar.
     owner: Ashutosh Sinha

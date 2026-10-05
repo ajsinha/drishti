@@ -47,7 +47,7 @@ You need a server and a console, and two people on them: an **author** who desig
 Make them as the development admin (**Admin → Users → New user**, steps in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)), or start the same scratch stack the pictures were made on:
 
 ```sh
-console/.venv/bin/python tools/docs/screenshots.py --guide tutorial     # starts :18997 + :17997 with sign-in on, makes both people, does all four projects
+drishti-console/.venv/bin/python tools/docs/screenshots.py --guide tutorial     # starts :18997 + :17997 with sign-in on, makes both people, does all four projects
 ```
 
 On your own server the settings behind it are `DRISHTI_STUDIO_SAVE=true` (saving from the workbench is on), review on (the default, `DRISHTI_SUTRA_REVIEW`), four eyes on (the default), `DRISHTI_SECURITY_ENABLED=true` with a `DRISHTI_TOKEN_SECRET` shared with the console, and on the console `DRISHTI_AUTH_ENABLED=true` with a `DRISHTI_SESSION_SECRET`. With sign-in off everybody is one development user and there is nobody to approve for you; steps 1 to 12 still work and your design waits in **My designs**.
@@ -645,9 +645,9 @@ More tables of this kind are in [the guide's troubleshooting](SCREEN_DESIGNER.md
 ## Regenerating the pictures
 
 ```sh
-console/.venv/bin/python tools/docs/screenshots.py --guide tutorial            # all four projects, on a scratch server :18997 and console :17997
-console/.venv/bin/python tools/docs/screenshots.py --guide tutorial --only p3  # one project
-console/.venv/bin/python tools/docs/screenshots.py --list --guide tutorial     # the file names
+drishti-console/.venv/bin/python tools/docs/screenshots.py --guide tutorial            # all four projects, on a scratch server :18997 and console :17997
+drishti-console/.venv/bin/python tools/docs/screenshots.py --guide tutorial --only p3  # one project
+drishti-console/.venv/bin/python tools/docs/screenshots.py --list --guide tutorial     # the file names
 ```
 
-The script needs the built server jar and a JDK 21 or newer (see the header of `tools/docs/screenshots.py`), starts a server with sign-in on, creates `asha` and `ravi`, and never touches the usual `:18480` / `:17480`. The projects build on each other (project 3 edits what project 1 published), so a full run starts from a fresh server. `console/tests/test_guide_images.py` fails if this tutorial shows a picture that is missing or leaves one that no guide shows.
+The script needs the built server jar and a JDK 21 or newer (see the header of `tools/docs/screenshots.py`), starts a server with sign-in on, creates `asha` and `ravi`, and never touches the usual `:18480` / `:17480`. The projects build on each other (project 3 edits what project 1 published), so a full run starts from a fresh server. `drishti-console/tests/test_guide_images.py` fails if this tutorial shows a picture that is missing or leaves one that no guide shows.

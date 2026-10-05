@@ -116,7 +116,7 @@ ports of their own, so that nothing of yours is touched: the QUICKSTART packs, p
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics,helpdesk \
   java -jar drishti-server/target/drishti-server-1.16.0-exec.jar
-DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 console/.venv/bin/python console/run_drishti_web.py
+DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 The commands below use `B=http://localhost:18996/api/v1` for the server's API. **Packs load when the server starts:**
@@ -281,7 +281,7 @@ level 2  client  CLI-ACME, CLI-GLOBEX                         via "client"
 Tickets depend on the agent directly (they name her in `assignee`), with their ages summed; the clients roll up
 through the tickets' `client` field. That answers *which clients are affected if Priya is off sick?* Impact finds
 dependents through the sources' reverse lookups; the demo source has them, as do the lake and database connectors.
-See the [Impact guide](../../console/web/guides/impact.md).
+See the [Impact guide](../../drishti-console/web/guides/impact.md).
 
 ### Step 8. Pick-list columns and a Pivot tab
 
@@ -652,7 +652,7 @@ this guide.
 
 Below is the complete `packs/logistics/pack.yaml`, annotated. Then the keys only larger packs use, from
 `packs/counterparty-risk/pack.yaml`. Every key here is read either by the server's pack loader
-(`drishti-packs/…/PackLoader.java`) or by the console (`console/core/packs.py`); keys not listed are ignored.
+(`drishti-packs/…/PackLoader.java`) or by the console (`drishti-console/core/packs.py`); keys not listed are ignored.
 
 **Every key at a glance.** Only `pack` is required; a pack with nothing else loads and does nothing.
 
@@ -1242,7 +1242,7 @@ contextual:                     # optional: which guide F1 opens on a screen
 | Key | Meaning |
 |---|---|
 | `slug` | the guide's address: `/help/logistics-pack`. Must be unique across all packs. |
-| `category` | where the card goes: `start`, `layouts`, `data`, `packs`, … (the categories in `console/config/help.yaml`) |
+| `category` | where the card goes: `start`, `layouts`, `data`, `packs`, … (the categories in `drishti-console/config/help.yaml`) |
 | `title`, `summary`, `icon` | the card. `icon` is a Bootstrap Icons name without the `bi-` prefix. |
 | `kind` | `guide` or `tutorial`: the badge shown beside the title |
 | `file` | the Markdown file, relative to the pack folder |
@@ -1834,7 +1834,7 @@ KINDS = [
 ]
 ```
 
-Every generated Sutra ends with *How this view was built* and binds **F8** (../../console/web/guides/impact.md) and **F9** (raw JSON). A kind
+Every generated Sutra ends with *How this view was built* and binds **F8** (../../drishti-console/web/guides/impact.md) and **F9** (raw JSON). A kind
 with `links` also gets a *Linked entities* panel and **F7** to its first link; a kind with no links gets neither.
 
 #### Generator step 3. Write the documents
@@ -1892,7 +1892,7 @@ if __name__ == "__main__":
 | `domains` | Data domain → kinds. Each domain becomes a Delta Lake connector `<domain>-store`. |
 | `examples` | Commands shown on the landing page and in the pack's guide. |
 | `roles` | Roles the pack adds: which kinds they may open, and whether they see raw JSON. |
-| `impact=` | Optional F8 configuration (`follow`, `measures`, `formats`); see [F8 · Impact](../../console/web/guides/impact.md). |
+| `impact=` | Optional F8 configuration (`follow`, `measures`, `formats`); see [F8 · Impact](../../drishti-console/web/guides/impact.md). |
 | `external_ids=` | Ids that live in a required pack, so links to them pass the check. |
 | `overview=` | Extra prose for the generated guide. |
 

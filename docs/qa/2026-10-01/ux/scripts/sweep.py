@@ -31,7 +31,7 @@ PAGES = ["/", "/t", "/v/trade/MX-20000001", "/v/trade/MX-20000002", "/v/trade/BB
          "/history", "/m", "/alerts", "/w", "/studio", "/studio/reviews", "/reports", "/servers", "/account",
          "/admin/users", "/admin/audit", "/admin/health", "/admin/caches", "/admin/packs", "/admin/roles", "/admin/tokens",
          "/admin/access", "/help", "/help/search?q=pivot", "/about", "/about/competitive", "/login", "/nonexistent-page"]
-helpcfg = yaml.safe_load(open(HERE + "/fresh/console/config/help.yaml"))
+helpcfg = yaml.safe_load(open(HERE + "/fresh/drishti-console/config/help.yaml"))
 for cat in helpcfg.get("categories", helpcfg if isinstance(helpcfg, list) else []):
     for g in cat.get("guides", []):
         PAGES.append("/help/" + g["slug"])

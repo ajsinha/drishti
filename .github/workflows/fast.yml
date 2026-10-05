@@ -33,4 +33,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.13' }
-      - run: pip install -r console/requirements-test.txt && python -m pytest -q console/tests
+      - run: pip install -r drishti-console/requirements-test.txt && python -m pytest -q drishti-console/tests

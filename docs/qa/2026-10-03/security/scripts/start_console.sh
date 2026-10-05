@@ -16,5 +16,5 @@
 # starts the scratch console :17961 with sign-in ON (DRISHTI_AUTH_ENABLED=true) against the server :18961
 W=$(cat "$(dirname "$0")/.workdir"); cd $W
 export DRISHTI_BACKEND_URL=${BACKEND:-http://127.0.0.1:18961} DRISHTI_CONSOLE_PORT=${PORT:-17961} DRISHTI_TOKEN_SECRET=$(cat secret) DRISHTI_SESSION_SECRET=$(cat sess) DRISHTI_SECURE_COOKIE=false DRISHTI_AUTH_ENABLED=true
-nohup /home/ashutosh/IdeaProjects/drishti/console/.venv/bin/python /home/ashutosh/IdeaProjects/drishti/console/run_drishti_web.py > console.log 2>&1 &
+nohup /home/ashutosh/IdeaProjects/drishti/drishti-console/.venv/bin/python /home/ashutosh/IdeaProjects/drishti/drishti-console/run_drishti_web.py > console.log 2>&1 &
 echo $! > console.pid

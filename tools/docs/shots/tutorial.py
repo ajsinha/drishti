@@ -17,7 +17,7 @@
 The tutorial does four real projects, so this module does them too, on a scratch server with sign-in ON and two people: `asha` (an author)
 and `ravi` (an approver), which is what makes "propose, then approve as somebody else" true. Run it on its own, which starts that server:
 
-    console/.venv/bin/python tools/docs/screenshots.py --guide tutorial
+    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide tutorial
 
 Each project is one function (a project's steps build on each other); `p1-` .. `p4-` name the project in a picture's file name."""
 from __future__ import annotations

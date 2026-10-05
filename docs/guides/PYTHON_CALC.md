@@ -448,7 +448,7 @@ You should see:
 downloading https://github.com/pyodide/pyodide/releases/download/314.0.7/pyodide-314.0.7.tar.bz2 (about 340 MB, once)
 verified /home/you/.cache/drishti/pyodide-314.0.7.tar.bz2 (SHA-256 192b5864e6e6d30a…)
 packages: contourpy, cycler, fonttools, kiwisolver, matplotlib, numpy, packaging, pandas, patsy, pillow, pyparsing, python-dateutil, pytz, scipy, six, statsmodels
-installed Pyodide 314.0.7 in …/console/web/static/vendor/pyodide: 51M on disk, 23 files
+installed Pyodide 314.0.7 in …/drishti-console/web/static/vendor/pyodide: 51M on disk, 23 files
 ```
 
 What it does:
@@ -578,7 +578,7 @@ DRS-5002`), and the runtime under `/pyodide/<version>/`.
 
 ## 17. The `drishti.quant` module
 
-`drishti.quant` is the pricing and risk maths the snippets share, in one file (`console/web/static/calc/quant.py`, about
+`drishti.quant` is the pricing and risk maths the snippets share, in one file (`drishti-console/web/static/calc/quant.py`, about
 740 lines of Python and numpy, no scipy, so it loads in a blink). The worker fetches it from the console the first time a
 cell names `quant`; outside Calc it is an ordinary module.
 
@@ -651,7 +651,7 @@ scalars or numpy arrays (broadcast) and return the same shape.
 | `frtb_bucket_charge(ws, rho)` | K_b = sqrt(max(0, sum WS^2 + sum rho WS_k WS_l)) |
 | `frtb_across_buckets(kb, sb, gamma)` | sqrt(sum K_b^2 + sum gamma S_b S_c), with the capped S_b when negative |
 
-**Tests.** `console/tests/test_quant.py` checks it against textbook values: Black-Scholes 10.4506 and 5.5735 (S = K
+**Tests.** `drishti-console/tests/test_quant.py` checks it against textbook values: Black-Scholes 10.4506 and 5.5735 (S = K
 = 100, one year, 5%, 20% vol) and Hull's 4.76 and 0.81, put-call parity with a yield, every Greek against finite
 differences, Hull's Black-76 put (1.12) and Garman-Kohlhagen call (0.0430), Bachelier at the money and its parity,
 implied vol round trips, a 25-delta strike's delta, curves reproducing their pillars (the natural spline against
@@ -662,7 +662,7 @@ against the chi-squared distribution, survival, CVA and the FRTB formulas. The c
 console needs no numpy); run it with numpy and scipy installed:
 
 ```bash
-python -m pytest console/tests/test_quant.py        # 29 passed
+python -m pytest drishti-console/tests/test_quant.py        # 29 passed
 ```
 
 ## 18. Snippet catalogue

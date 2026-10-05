@@ -54,4 +54,4 @@ def test_server_placeholders_are_documented():
 
 
 def test_console_placeholders_are_documented():
-    _check(ROOT / "console/config/application.yaml", "### Every placeholder in the console's")
+    _check(ROOT / "drishti-console/config/application.yaml", "### Every placeholder in the console's")

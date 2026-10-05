@@ -119,7 +119,7 @@ class ImperfectDataTest {
     /** Tutorial 4's Sutra, over a real, deeply nested trade from the trading pack: every panel has data. */
     @Test
     void theNestedDocumentsTutorialWorksOnARealTrade() throws Exception {
-        String guide = Files.readString(Path.of("../console/web/guides/nested-data.md"));
+        String guide = Files.readString(Path.of("../drishti-console/web/guides/nested-data.md"));
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
         Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "nested-data.md", "docs");

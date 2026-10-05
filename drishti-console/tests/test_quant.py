@@ -12,10 +12,10 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""drishti.quant, Calc's shared pricing and risk maths (console/web/static/calc/quant.py), against textbook values.
+"""drishti.quant, Calc's shared pricing and risk maths (drishti-console/web/static/calc/quant.py), against textbook values.
 
 It needs numpy (scipy, when present, is a second opinion), which the console itself does not: without numpy these
-tests are skipped. Run them with numpy and scipy installed: ``python -m pytest console/tests/test_quant.py``."""
+tests are skipped. Run them with numpy and scipy installed: ``python -m pytest drishti-console/tests/test_quant.py``."""
 from __future__ import annotations
 
 import importlib.util
@@ -28,7 +28,7 @@ import pytest
 np = pytest.importorskip("numpy")
 
 ROOT = Path(__file__).resolve().parents[2]
-_spec = importlib.util.spec_from_file_location("quant", ROOT / "console/web/static/calc/quant.py")
+_spec = importlib.util.spec_from_file_location("quant", ROOT / "drishti-console/web/static/calc/quant.py")
 q = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(q)
 

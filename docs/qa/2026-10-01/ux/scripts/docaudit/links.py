@@ -15,8 +15,8 @@
 import re, sys, pathlib, unicodedata, yaml
 root = pathlib.Path(sys.argv[1])
 docs = root / 'docs'
-gdir = root / 'console/web/guides'
-help_ = yaml.safe_load((root / 'console/config/help.yaml').read_text())
+gdir = root / 'drishti-console/web/guides'
+help_ = yaml.safe_load((root / 'drishti-console/config/help.yaml').read_text())
 slug2path = {}
 problems = []
 for c in help_['categories']:
@@ -108,7 +108,7 @@ for f in files:
             t = m.group(1)
             stats['checked'] += 1
             if t.startswith('/static/'):
-                if not (root / 'console/web' / t.lstrip('/')).exists():
+                if not (root / 'drishti-console/web' / t.lstrip('/')).exists():
                     problems.append(f"{f.relative_to(root)}:{i}: image {t} missing")
             elif not re.match(r'https?:', t):
                 if not (f.parent / t).resolve().exists():

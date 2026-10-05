@@ -91,7 +91,7 @@ permissions, and masks are not applied on every path.
 | DOC-02 | Calc is dead after the quickstart: installing the Python runtime (`tools/fetch-pyodide.sh`) is not mentioned. **Fixed** (QUICKSTART and GETTING_STARTED step: tools/fetch-pyodide.sh, Git Bash or WSL on Windows) |
 | DOC-03 | DEMO_DATA's `--trades N` replaces the whole trade table, not "the days it covers". **Fixed** (DEMO_DATA and GETTING_STARTED step 11 say --trades replaces the whole trade table for --days days) |
 | DOC-08 | API_GUIDE gives the wrong code for Notes' forbidden error. **Fixed** (API_GUIDE Notes says DRS-5002) |
-| DOC-09 | API_GUIDE's "complete" code list misses two codes. **Fixed** (API_GUIDE table has every ErrorCode; console/tests/test_docs_error_codes.py) |
+| DOC-09 | API_GUIDE's "complete" code list misses two codes. **Fixed** (API_GUIDE table has every ErrorCode; drishti-console/tests/test_docs_error_codes.py) |
 | DOC-13 | DEVELOPER_GUIDE and README list 11 plugins; there are 15. **Fixed** (DEVELOPER_GUIDE and README list all 15; test_docs_plugins.py) |
 | DOC-16 | Several settings read by the code are documented nowhere. **Fixed** (CONFIGURATION: branding, identity, ui, backend.name, layouts.min_span, warm-dates; test_docs_settings.py) |
 | DOC-18 | About 88 in-app help links go nowhere. **Fixed** (test_help_links.py). |

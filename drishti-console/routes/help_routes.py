@@ -92,7 +92,7 @@ async def help_guide(request: Request, slug: str):
 async def competitive(request: Request):
     import yaml
 
-    data = yaml.safe_load((ROOT / "console" / "config" / "competitive.yaml").read_text(encoding="utf-8"))
+    data = yaml.safe_load((ROOT / "drishti-console" / "config" / "competitive.yaml").read_text(encoding="utf-8"))
     return render(request, "help/competitive.html", c=data, screen="about")
 
 

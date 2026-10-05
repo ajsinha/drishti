@@ -120,12 +120,12 @@ def test_the_moved_sutra_guides_are_stubs_and_the_old_in_app_copy_is_gone():
     for old in ("RACHANA_GUIDE.md", "SUTRA_CLI.md"):
         stub = (docs / old).read_text()
         assert "SUTRA_DEVELOPER_GUIDE.md" in stub and len(stub.split("-->")[-1].strip().splitlines()) <= 6, old
-    assert not (SUTRA_GUIDE.parents[2] / "console" / "web" / "guides" / "sutra-guide.md").exists()
+    assert not (SUTRA_GUIDE.parents[2] / "drishti-console" / "web" / "guides" / "sutra-guide.md").exists()
 
 
 def test_no_sutra_guide_tells_the_reader_to_open_studio():
     root = SUTRA_GUIDE.parents[2]
-    for f in (SUTRA_GUIDE, root / "docs" / "guides" / "RACHANA_REFERENCE.md", root / "console" / "web" / "guides" / "nested-data.md"):
+    for f in (SUTRA_GUIDE, root / "docs" / "guides" / "RACHANA_REFERENCE.md", root / "drishti-console" / "web" / "guides" / "nested-data.md"):
         text = f.read_text()
         assert "Open Studio" not in text and "(`/studio`)" not in text and "twenty panel" not in text, f.name
 

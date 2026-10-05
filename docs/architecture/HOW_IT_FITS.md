@@ -45,9 +45,9 @@ product. Packs and Sutras are configuration read when the server starts (Sutras 
  BROWSER   typing "TRD MX-20000001 <GO>"; draws panels; receives live patches
     |  HTML pages + one SSE channel per browser
     v
- CONSOLE   console/  (Python, FastAPI + Jinja2, port 17480)
-    |      console/routes/terminal_routes.py (/go, /v/...), console/core/backend.py (a thin client)
-    |      console/web/templates (_macros/panels.html) + console/web/static/js (command.js, live.js, ...)
+ CONSOLE   drishti-console/  (Python, FastAPI + Jinja2, port 17480)
+    |      drishti-console/routes/terminal_routes.py (/go, /v/...), drishti-console/core/backend.py (a thin client)
+    |      drishti-console/web/templates (_macros/panels.html) + drishti-console/web/static/js (command.js, live.js, ...)
     |  REST + SSE under /api/v1, ViewModel JSON
     v
  SERVER    drishti-server/  (Java 21+, Spring Boot, port 18480)
@@ -93,7 +93,7 @@ one share and one comment end to end.
 The Maven modules: `drishti-api` (the plugin interface and shared types), `drishti-engine` (pipeline, router, binder),
 `drishti-rachana` (the grammar, parser, matcher, registry), `drishti-inference` (layouts from the shape of data),
 `drishti-packs` (pack loading), `drishti-server` (HTTP, security, governance), `plugins/*` (one connector each).
-The UI is the separate Python project in `console/`. The full module list is in
+The UI is the separate Python project in `drishti-console/`. The full module list is in
 [ARCHITECTURE.md §13](ARCHITECTURE.md#13-module-layout-java).
 
 ---
@@ -294,19 +294,19 @@ Step by step, with the code to open:
 
 | # | What happens | Where |
 |---|---|---|
-| 1 | The command box submits the line to the console. | `console/web/static/js/command.js` |
-| 2 | A line that is a search (`TRD where ...`) goes to `/s`; otherwise the console asks the server what the line means. | `console/routes/terminal_routes.py:go` |
+| 1 | The command box submits the line to the console. | `drishti-console/web/static/js/command.js` |
+| 2 | A line that is a search (`TRD where ...`) goes to `/s`; otherwise the console asks the server what the line means. | `drishti-console/routes/terminal_routes.py:go` |
 | 3 | The server splits mnemonic and id, finds the kind, checks the caller may open it, and checks the entity exists. Answer: `{"ref":{"kind":"trade","id":"MX-20000001"},"mnemonic":"TRD","list":null,"matched":null,"pack":null}`. | `drishti-server/.../api/CommandController.java:command`, `resolve`; `drishti-engine/.../command/CommandParser.java:parse` |
 | 4 | The console redirects to the view URL. | `terminal_routes.py:go` |
-| 5 | The view page asks the server for the ViewModel. | `terminal_routes.py:view`, `console/core/backend.py:view` |
+| 5 | The view page asks the server for the ViewModel. | `terminal_routes.py:view`, `drishti-console/core/backend.py:view` |
 | 6 | The server applies the caller's roles and field masks and calls the pipeline. | `drishti-server/.../api/ViewController.java:view` |
 | 7 | **Fetch.** The router picks the store (section 3.2) and returns the document with its provenance. | `SourceRouter.java:fetch`, `readFirst` |
 | 8 | **Match.** The first Sutra of kind `trade` whose `where` is true: `irs-fixfloat v1`. If none, inference alone builds the layout (section 5). | `drishti-rachana/.../SutraMatcher.java:match` |
 | 9 | **Layout.** The document's shape is fingerprinted (keys and types, not values). The layout is the Sutra's panels plus inference for what the Sutra left out ("Sutra irs-fixfloat v1 + inference"). It is cached per `(Sutra version, kind, fingerprint)`, so this runs once per shape. | `drishti-engine/.../ViewPipeline.java:build` (the `layouts` cache), `drishti-inference/.../LayoutMerger.java:merge`, `InferenceEngine.java:infer` |
 | 10 | **Links.** Entities the layout refers to (a panel's `source:`, the badges of linked entities) are fetched in parallel within a time budget (`drishti.graph.link-budget`, 40 ms). One that is slower shows as pending. | `ViewPipeline.java:build` calling `SourceRouter.fetchAll` |
 | 11 | **Bind.** Each panel evaluates its `$.paths` against the document, applies the format (`fmt: pct4` turns `0.040829` into `4.0829%`) and produces cells, rows and series. Panels bind in parallel. A field the document lacks shows a dash, not an error. | `drishti-engine/.../bind/Binder.java:bind`, `cell`; expressions in `drishti-rachana/.../el/` |
-| 12 | The console draws each panel with a Jinja macro. | `console/web/templates/terminal/view.html`, `console/web/templates/_macros/panels.html:panel` |
-| 13 | Live updates (section 3.7). | `console/web/static/js/live.js`, `StreamController.java` |
+| 12 | The console draws each panel with a Jinja macro. | `drishti-console/web/templates/terminal/view.html`, `drishti-console/web/templates/_macros/panels.html:panel` |
+| 13 | Live updates (section 3.7). | `drishti-console/web/static/js/live.js`, `StreamController.java` |
 
 ### 3.6 The ViewModel (what the server answers)
 
@@ -343,7 +343,7 @@ The console does not know what a trade is. It knows panel kinds (`kv`, `table`, 
 anything else. This is why a new product needs a Sutra but no UI work.
 
 Live: after the page loads, `live.js` subscribes the page to `view:trade/MX-20000001` on the browser's one live channel
-(`/api/channel`, `console/routes/api_routes.py`). The server side is `StreamController.java`
+(`/api/channel`, `drishti-console/routes/api_routes.py`). The server side is `StreamController.java`
 (`GET /api/v1/views/{kind}/{id}/stream`): `ViewStream` rebuilds the view when the source pushes a new document, and
 `PatchDiffer` sends only the difference. The first message is the whole view, then frames follow. Real output
 (`curl -N -H 'Accept: text/event-stream' http://localhost:18480/api/v1/views/trade/MX-20000001/stream`, cut):
@@ -828,14 +828,14 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACKS.md |
 | Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
 | Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
-| Change how the drawer looks or behaves | `console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](CONTEXT_HELP.md) |
+| Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](CONTEXT_HELP.md) |
 | Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Decide who may share, comment or be mentioned | the role power `roles.<role>.collaborate` (on unless removed); `drishti.collab.packs.<pack>.share-enabled`; `mentionable-roles`, `directory.scope`, `share.max-recipients`, `limits.*` under `drishti.collab` | [CONFIGURATION.md](../admin/CONFIGURATION.md), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Change what a note or comment may contain, or what is masked in it | `drishti.security.redact` (the fields), `drishti.collab.text.on-masked-copy` and `deny-patterns`; the logic is `NoteText`, `Entitlements.maskedValues`, `CommentRenderer` | CONFIGURATION.md, §3.10 |
 | Switch on email, or change what it says | `spring.mail.*`, `drishti.collab.console-url`, `email.enabled`; per pack `packs.<pack>.email.content` (`comment`, `title`, `link-only`); templates in `drishti.collab.email.templates-dir`; the code is `EmailNotifier`, `OutboxDispatcher`, `MailRenderer` | [OPERATIONS.md](../admin/OPERATIONS.md#9a-2-collaboration-email-and-the-outbox) |
 | Add another channel (a chat bridge) | one more `Notifier` bean: `ShareService` and `ThreadService` hand every bean the audience, so neither service changes | [COLLABORATION.md](COLLABORATION.md) (phase 2) |
 | Keep, hold or export what people wrote | `drishti.collab.retention.*` and `packs.<pack>.retention-days`; legal holds and the export through `/api/v1/admin/collab` (`CollabPurge`, `HoldService`, `ExportService`, `ChainVerifier`) | [OPERATIONS.md](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) |
-| Change how the Share dialog, the inbox or the Discussion tab look or behave | `console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/share.js`, `inbox.js`, `alerts.js`, `discussion*.js`; `static/css/collab.css` | [COLLABORATION.md](COLLABORATION.md) (console design) |
+| Change how the Share dialog, the inbox or the Discussion tab look or behave | `drishti-console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/share.js`, `inbox.js`, `alerts.js`, `discussion*.js`; `static/css/collab.css` | [COLLABORATION.md](COLLABORATION.md) (console design) |
 
 ---
 

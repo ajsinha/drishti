@@ -40,7 +40,7 @@ for r in routes:
     rx = re.sub(r'\\\{[^}]*\\\}', r'[^/]+', rx)
     pats.append((r, re.compile('^' + rx + '/?$')))
 seen = {}
-for d in list((root / 'docs').rglob('*.md')) + list((root / 'console/web/guides').rglob('*.md')) + [root / 'README.md']:
+for d in list((root / 'docs').rglob('*.md')) + list((root / 'drishti-console/web/guides').rglob('*.md')) + [root / 'README.md']:
     for i, line in enumerate(d.read_text().splitlines(), 1):
         for p in re.findall(r'/api/v1(/[A-Za-z0-9_{}<>.\-/…*:]*)', line):
             p = p.split('?')[0].rstrip('.,:)`*/…')

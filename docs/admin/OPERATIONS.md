@@ -58,7 +58,7 @@ Drishti is two processes. Users only ever talk to the console; the console talks
 | Process | Default port | Health check | Metrics | Started by |
 |---|---|---|---|---|
 | `drishti-server` (Spring Boot, Java 21 or newer, production runs 21) | 18480 | `/actuator/health/liveness`, `/actuator/health/readiness` | `/actuator/prometheus` | `java -jar drishti-server-<version>-exec.jar` |
-| `console` (FastAPI on uvicorn, Python) | 17480 | `/healthz` | none | `python console/run_drishti_web.py` |
+| `console` (FastAPI on uvicorn, Python) | 17480 | `/healthz` | none | `python drishti-console/run_drishti_web.py` |
 
 Things worth knowing before you plan an installation:
 
@@ -68,8 +68,8 @@ Things worth knowing before you plan an installation:
 - **The server's working directory matters.** Every relative path in its configuration (`./packs`, `./sutras`,
   `./data/...`, `./application.local.yaml`) is resolved from the directory you start it in. Start it from the
   installation directory, or set the paths to absolute values.
-- **The console finds its files relative to itself.** It reads `console/config/application.yaml`, and its default
-  `packs.dir` (`../packs`) and `help.docs_dir` (`../docs`) are relative to the `console/` directory, not to the
+- **The console finds its files relative to itself.** It reads `drishti-console/config/application.yaml`, and its default
+  `packs.dir` (`../packs`) and `help.docs_dir` (`../docs`) are relative to the `drishti-console/` directory, not to the
   directory you start it in.
 - **The server's `/api/v1/...` endpoints trust the caller completely when security is off.** With
   `drishti.security.enabled: false` (the development default) anyone who can reach port 18480 is an administrator.
@@ -136,7 +136,7 @@ The result:
 ├── sutras/                      your own Sutras (drishti.rachana.dirs, default ./sutras)
 ├── data/                        everything the server writes: users, governance, caches (section 10)
 ├── docs/                        rendered by the console's help centre
-└── console/
+└── drishti-console/
     ├── run_drishti_web.py
     ├── config/application.yaml  console settings; put overrides in config/application.local.yaml
     └── .venv/                   created in the next step
@@ -146,11 +146,11 @@ The result:
 
 ```bash
 cd /opt/drishti
-sudo -u drishti uv venv console/.venv
-sudo -u drishti uv pip install --python console/.venv/bin/python -r console/requirements.txt
+sudo -u drishti uv venv drishti-console/.venv
+sudo -u drishti uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ```
 
-Without `uv`: `python3.13 -m venv console/.venv && console/.venv/bin/pip install -r console/requirements.txt`.
+Without `uv`: `python3.13 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt`.
 
 ### 3.4 First start (by hand)
 
@@ -173,7 +173,7 @@ In the second terminal:
 
 ```bash
 cd /opt/drishti
-sudo -u drishti console/.venv/bin/python console/run_drishti_web.py
+sudo -u drishti drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 You should see `Uvicorn running on http://127.0.0.1:17480`.
@@ -428,7 +428,7 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | `DRISHTI_CALENDAR` | `USNY` | `drishti.business-date.calendar` | holiday calendar for the default business date: `USNY`, `GBLO`, `EUTA`, `JPTO`, or joint such as `USNY+GBLO` |
 | `DRISHTI_PACKS` | `finance` | `drishti.packs.enabled` | comma-separated packs to enable |
 | `DRISHTI_PACKS_OVERLAY` | `./data/packs/added.yaml` | `drishti.packs.overlay` | packs loaded from Admin → Packs (written by the server, read at every start); back it up with `data/` |
-| `DRISHTI_PACKS_DIR` | `./packs` | `drishti.packs.dir` | where the packs are. The console reads the same variable, but resolves a relative value from `console/`; use an absolute path if you set it |
+| `DRISHTI_PACKS_DIR` | `./packs` | `drishti.packs.dir` | where the packs are. The console reads the same variable, but resolves a relative value from `drishti-console/`; use an absolute path if you set it |
 | `DRISHTI_DEFAULT_PACKS` | empty (every installed pack) | `drishti.packs.default-for-users` | packs new users get until an admin changes them |
 | `DRISHTI_SUTRAS` | `./sutras` | `drishti.rachana.dirs` | your own Sutra directories, scanned recursively, in addition to the packs' Sutras |
 | `DRISHTI_STUDIO_SAVE` | `false` | `drishti.rachana.studio-save` | let Sutra Studio save files (into the first Sutra directory); only in authoring environments |
@@ -497,7 +497,7 @@ With `SPRING_PROFILES_ACTIVE=postgres` or `aerospike` (section 5.2):
 
 ### 6.6 Console
 
-Defined in `console/config/application.yaml`.
+Defined in `drishti-console/config/application.yaml`.
 
 | Variable | Default | Setting | What it does |
 |---|---|---|---|
@@ -513,7 +513,7 @@ Defined in `console/config/application.yaml`.
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | `false`, empty, empty | `auth.oidc.*` | single sign-on; the same values as the server's |
 | `DRISHTI_OIDC_CLIENT_SECRET` | empty | `auth.oidc.client_secret` | the client secret (empty for a public client using PKCE alone) |
 | `DRISHTI_OIDC_REDIRECT_URI` | empty (`<console>/auth/oidc/callback`) | `auth.oidc.redirect_uri` | set it to the public HTTPS URL when the console is behind a proxy |
-| `DRISHTI_PACKS_DIR` | `../packs` (relative to `console/`) | `packs.dir` | the packs (for guides and examples) |
+| `DRISHTI_PACKS_DIR` | `../packs` (relative to `drishti-console/`) | `packs.dir` | the packs (for guides and examples) |
 | `DRISHTI_USER` | `ash` | `ui.user` | the acting user when sign-in is off (development only) |
 
 ### 6.7 Docker Compose only
@@ -611,7 +611,7 @@ Wants=drishti-server.service
 User=drishti
 WorkingDirectory=/opt/drishti/console
 EnvironmentFile=/etc/drishti/drishti.env
-ExecStart=/opt/drishti/console/.venv/bin/python /opt/drishti/console/run_drishti_web.py
+ExecStart=/opt/drishti/drishti-console/.venv/bin/python /opt/drishti/drishti-console/run_drishti_web.py
 Restart=on-failure
 RestartSec=5
 
@@ -706,7 +706,7 @@ You should see `HTTP/2 200`.
   the console itself (`403 DRS-5002`), and refuses JSON not sent as `application/json` (`415`). It compares the origin
   with the request's `Host` header, so keep `proxy_set_header Host $host;` (as in 8.3); if your proxy changes the host,
   list the public origin in `auth.allowed_origins` (for example `[https://drishti.bank.example]`) in
-  `console/config/application.local.yaml`.
+  `drishti-console/config/application.local.yaml`.
 - **Content security policy** is strict and set by the console (`script-src 'self'`, no inline scripts or styles).
   Do not add or loosen a CSP at the proxy. Every asset is vendored, so the console works with no internet access.
 - **Single sign-on**: set `DRISHTI_OIDC_REDIRECT_URI=https://drishti.bank.example/auth/oidc/callback` and register
@@ -1021,7 +1021,7 @@ working directory unless you changed them.
 | `data/identity/` | users, password hashes, the audit log, each user's settings, workspaces, monitors and pins. In 1.9: `users.json`, `audit.jsonl`, `preferences/`. From 1.10: the SQLite database `drishti.db` (`DRISHTI_IDENTITY_DB_URL`), which also holds roles defined in Admin → Roles | **yes, daily** | 1.9: copy the directory (files are written atomically). 1.10 with SQLite: `sqlite3 data/identity/drishti.db ".backup '/backup/drishti/identity.db'"`, safe while running. With PostgreSQL: `pg_dump` the database |
 | `data/governance/` (`DRISHTI_GOVERNANCE_DIR`) | Sutra proposals, approvals and their history | **yes, daily** | copy the directory |
 | `sutras/` (`DRISHTI_SUTRAS`) | your own Sutras, and what Studio saves | **yes**, preferably in version control | git, or copy |
-| `application.local.yaml`, `console/config/application.local.yaml`, `/etc/drishti/drishti.env` | your configuration and secrets | **yes**, securely | copy |
+| `application.local.yaml`, `drishti-console/config/application.local.yaml`, `/etc/drishti/drishti.env` | your configuration and secrets | **yes**, securely | copy |
 | `data/state/<connector>/` | ActiveMQ and RabbitMQ connectors' latest document of each entity received (RocksDB, with its write-ahead log). A queue does not send a message twice, so this is the only copy Drishti has | yes, if you use those connectors | stop the server, copy the whole folder (the write-ahead log with the table files), start; or rely on the source system to re-send. A copy taken while the server runs is not consistent |
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
 | `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
@@ -1396,9 +1396,9 @@ User actions (sign-ins, user changes, cache purges, Sutra approvals) are not in 
 2. **Back up** (section 10.1), and keep the old jar: `cp drishti-server.jar drishti-server-$(date +%F).jar`.
 3. **Build or fetch** the new release: `./mvnw -q clean package -DskipTests`.
 4. **Stop** the console and the server: `sudo systemctl stop drishti-console drishti-server`.
-5. **Replace** the jar, `packs/`, `console/` and `docs/` (keep `console/.venv` and your
-   `console/config/application.local.yaml`). Re-run `uv pip install --python console/.venv/bin/python -r
-   console/requirements.txt` in case the console's libraries changed.
+5. **Replace** the jar, `packs/`, `drishti-console/` and `docs/` (keep `drishti-console/.venv` and your
+   `drishti-console/config/application.local.yaml`). Re-run `uv pip install --python drishti-console/.venv/bin/python -r
+   drishti-console/requirements.txt` in case the console's libraries changed.
 6. **Start** the server, then the console.
 7. **Verify**:
    ```bash

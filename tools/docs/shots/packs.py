@@ -18,8 +18,8 @@ The worked example is the help-desk pack, docs/guides/examples/pack/helpdesk. Th
 QUICKSTART packs but NOT helpdesk, and that trust a registry holding a signed helpdesk-0.1.0.zip, so that the install picture is a real
 install (the shared scratch server of tools/docs/screenshots.py has no registry). This module prepares and stops that setup itself:
 
-    console/.venv/bin/python tools/docs/shots/packs.py            # starts it on :18996/:17996, runs the pictures, stops it
-    console/.venv/bin/python tools/docs/screenshots.py --guide packs --base http://127.0.0.1:17996   # against a setup you prepared
+    drishti-console/.venv/bin/python tools/docs/shots/packs.py            # starts it on :18996/:17996, runs the pictures, stops it
+    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide packs --base http://127.0.0.1:17996   # against a setup you prepared
 
 It never touches :18480 / :17480. Installing changes the server, so run the pictures on a fresh setup (the first run does)."""
 from __future__ import annotations
@@ -137,7 +137,7 @@ def serve(work: Path) -> list:
         (packs / name).symlink_to(ROOT / "packs" / name)
     reg = work / "reg"
     reg.mkdir()
-    py = ROOT / "console" / ".venv" / "bin" / "python"
+    py = ROOT / "drishti-console" / ".venv" / "bin" / "python"
     py = py if py.exists() else Path(sys.executable)
     key = work / "acme"
     out = subprocess.run([sys.executable, str(ROOT / "tools" / "packreg" / "packreg.py"), "keygen", "--out", str(key)],
@@ -152,7 +152,7 @@ def serve(work: Path) -> list:
     (work / "sutras").mkdir()
     server = subprocess.Popen([java, "-jar", str(jars[-1])], cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     cenv = dict(os.environ, DRISHTI_BACKEND_URL=f"http://127.0.0.1:{SERVER_PORT}", DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs))
-    console = subprocess.Popen([str(py), str(ROOT / "console" / "run_drishti_web.py")], cwd=ROOT / "console", env=cenv,
+    console = subprocess.Popen([str(py), str(ROOT / "drishti-console" / "run_drishti_web.py")], cwd=ROOT / "drishti-console", env=cenv,
                                stdout=(work / "console.log").open("w"), stderr=subprocess.STDOUT)
     for _ in range(240):
         if listening(SERVER_PORT) and listening(CONSOLE_PORT):

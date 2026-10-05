@@ -38,7 +38,7 @@ class DocumentedSutrasTest {
     @Test
     void sutraExamplesInDocsAndTutorialsAreValid() throws Exception {
         List<Path> files = new ArrayList<>();
-        for (String dir : List.of("../docs", "../console/web/guides", "../packs")) {
+        for (String dir : List.of("../docs", "../drishti-console/web/guides", "../packs")) {
             try (Stream<Path> s = Files.walk(Path.of(dir))) {
                 s.filter(p -> p.toString().endsWith(".md") && !p.toString().contains("/sutras/"))
                         .forEach(files::add);

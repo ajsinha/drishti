@@ -16,7 +16,7 @@
 # Installs the Python runtime of Calc (PYTHON_CALC.md): Pyodide, CPython compiled to WebAssembly, which the console
 # serves from its own origin (never a CDN). Downloads the pinned release once, checks its SHA-256, and unpacks only
 # the core runtime and numpy, pandas, scipy, statsmodels and matplotlib with what they depend on into
-# console/web/static/vendor/pyodide/ (git-ignored). Run it again and it does nothing unless the pin changed.
+# drishti-console/web/static/vendor/pyodide/ (git-ignored). Run it again and it does nothing unless the pin changed.
 #
 #   tools/fetch-pyodide.sh                        download (cached in ~/.cache/drishti), verify, unpack
 #   tools/fetch-pyodide.sh --tarball FILE         an already downloaded pyodide-<version>.tar.bz2 (offline machines)
@@ -32,7 +32,7 @@ URL="https://github.com/pyodide/pyodide/releases/download/${VERSION}/pyodide-${V
 PACKAGES="numpy pandas scipy statsmodels matplotlib"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEST="${ROOT}/console/web/static/vendor/pyodide"
+DEST="${ROOT}/drishti-console/web/static/vendor/pyodide"
 CACHE="${XDG_CACHE_HOME:-${HOME:-/tmp}/.cache}/drishti"
 TARBALL=""
 FORCE=0

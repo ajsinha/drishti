@@ -199,7 +199,7 @@ seconds since the epoch). A refusal is a `401` answered by the filter itself:
 
 ### How the console does it
 
-The console never forwards the user's password or a long-lived credential. In `console/core/auth.py`:
+The console never forwards the user's password or a long-lived credential. In `drishti-console/core/auth.py`:
 
 1. The user signs in on the console. The console verifies the password by calling `POST /api/v1/auth/login`
    with its own **service** identity (user `console`, role `service`) — the only identity allowed to call

@@ -13,13 +13,13 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Independent checks of console/web/static/calc/quant.py against scipy and textbook values (Hull, Options, Futures and
+"""Independent checks of drishti-console/web/static/calc/quant.py against scipy and textbook values (Hull, Options, Futures and
 Other Derivatives; Basel; Kupiec 1995). Prints PASS/FAIL per check with the numbers."""
 import math, sys, datetime as dt
 import numpy as np
 from scipy import stats, optimize, integrate
 
-sys.path.insert(0, "/home/ashutosh/IdeaProjects/drishti/.claude/worktrees/agent-a3a597410e145c292/console/web/static/calc")
+sys.path.insert(0, "/home/ashutosh/IdeaProjects/drishti/.claude/worktrees/agent-a3a597410e145c292/drishti-console/web/static/calc")
 import quant as q  # noqa
 
 fails = 0

@@ -99,9 +99,9 @@ def test_the_developer_guide_walks_through_metric_with_the_real_code():
         "drishti-engine/src/main/java/com/ash/drishti/engine/view/PanelData.java": "record Metric(Cell value, Cell delta, String unit, String caption) implements PanelData {}",
         "drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java": "case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));",
         "drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java": "case METRIC -> metric(p, c);",
-        "console/core/export.py": "if isinstance(d.get(\"value\"), dict):",
-        "console/web/static/js/build/palette.js": "['metric', 'hash',",
-        "console/web/static/css/terminal.css": ".metric-v { font-size: clamp(1.1rem, 16cqi, 2.2rem);",
+        "drishti-console/core/export.py": "if isinstance(d.get(\"value\"), dict):",
+        "drishti-console/web/static/js/build/palette.js": "['metric', 'hash',",
+        "drishti-console/web/static/css/terminal.css": ".metric-v { font-size: clamp(1.1rem, 16cqi, 2.2rem);",
         "drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java": '"sum", "delta");',
     }
     for path, snippet in sources.items():
@@ -112,7 +112,7 @@ def test_the_developer_guide_walks_through_metric_with_the_real_code():
                  "SampleChecker", "test_terminal.py", "StudioTest", "test_examples.py", "test_workbench_options_browser.py", "CHANGELOG.md"):
         assert step in text, step
     for guard in ("test_guide_images.py", "test_panel_kinds.py", "MetricPanelTest.java", "test_metric.py", "test_workbench_metric_browser.py"):
-        assert (ROOT / "console" / "tests" / guard).exists() or list(ROOT.rglob(guard)), guard
+        assert (ROOT / "drishti-console" / "tests" / guard).exists() or list(ROOT.rglob(guard)), guard
     for pic in re.findall(r"\]\((img/panels/[^)\s]+)\)", text):
         assert (DOCS / pic).is_file(), pic
 

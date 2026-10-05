@@ -20,7 +20,7 @@ Drishti has two programs, and each has an IDE that suits it:
 | Program | Language | IDE | Starts | Listens on |
 |---|---|---|---|---|
 | **Server** (`drishti-server`) | Java 21 or newer (production runs 21; 25 also supported), Spring Boot 3.5 | IntelliJ IDEA (Community or Ultimate) | `com.ash.drishti.server.DrishtiApplication` | `http://127.0.0.1:18480` |
-| **Console** (the UX, `console/`) | Python 3.11 or newer, FastAPI | PyCharm (Community or Professional) | `console/run_drishti_web.py` | `http://127.0.0.1:17480` |
+| **Console** (the UX, `drishti-console/`) | Python 3.11 or newer, FastAPI | PyCharm (Community or Professional) | `drishti-console/run_drishti_web.py` | `http://127.0.0.1:17480` |
 
 Start the server first, then the console: the console calls the server for everything it shows. You can use one IDE for
 both (IntelliJ IDEA Ultimate with the Python plugin runs the console too); the settings below are the same.
@@ -34,15 +34,15 @@ For the command-line way to build and run, see [QUICKSTART.md](QUICKSTART.md). F
 |---|---|---|
 | A JDK (not only a JRE) | **21 or newer**, any vendor: OpenJDK, Oracle, Temurin, Corretto…; Java 21 is the production target | `java -version` and `javac -version` |
 | Python | 3.11 or newer | `python3 --version` |
-| The console's virtual environment | `console/.venv` | `ls console/.venv/bin/python` |
+| The console's virtual environment | `drishti-console/.venv` | `ls drishti-console/.venv/bin/python` |
 | Docker (only for some tests) | any recent | `docker --version` |
 
 Create the console's virtual environment once, from the repository root (PyCharm can also create it, see §4.2):
 
 ```bash
-uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt -r console/requirements-test.txt
+uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt -r drishti-console/requirements-test.txt
 # without uv:
-python3 -m venv console/.venv && console/.venv/bin/pip install -r console/requirements.txt -r console/requirements-test.txt
+python3 -m venv drishti-console/.venv && drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt -r drishti-console/requirements-test.txt
 ```
 
 **Which Java version.** Drishti compiles to Java 21 bytecode, so the same build runs on Java 21, 25 and anything newer.
@@ -141,15 +141,15 @@ it must not share `./data`. Point a console at it with `DRISHTI_BACKEND_URL=http
 
 ### 4.1 Open the project
 
-**File → Open** the repository root (or only `console/`; the root lets you read the docs and packs beside the code).
+**File → Open** the repository root (or only `drishti-console/`; the root lets you read the docs and packs beside the code).
 
 ### 4.2 The interpreter
 
 **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter**:
 
-- **Existing**: pick `console/.venv/bin/python` (Windows: `console\.venv\Scripts\python.exe`), created in §1; or
-- **Virtualenv → New**: location `console/.venv`, base interpreter Python 3.11 or newer; then in PyCharm's terminal
-  `pip install -r console/requirements.txt -r console/requirements-test.txt`.
+- **Existing**: pick `drishti-console/.venv/bin/python` (Windows: `console\.venv\Scripts\python.exe`), created in §1; or
+- **Virtualenv → New**: location `drishti-console/.venv`, base interpreter Python 3.11 or newer; then in PyCharm's terminal
+  `pip install -r drishti-console/requirements.txt -r drishti-console/requirements-test.txt`.
 
 ### 4.3 The run configuration
 
@@ -158,13 +158,13 @@ it must not share `./data`. Point a console at it with `DRISHTI_BACKEND_URL=http
 | Field | Value |
 |---|---|
 | Name | `Drishti console` |
-| Script path | `console/run_drishti_web.py` |
+| Script path | `drishti-console/run_drishti_web.py` |
 | Parameters | optional `--key=value` settings, e.g. `--server.port=17481 --backend.url=http://127.0.0.1:18481` |
-| Python interpreter | the `console/.venv` one |
-| Working directory | the repository root (the script finds `console/config` from its own location, so any folder works; the root keeps relative paths in your own settings predictable) |
+| Python interpreter | the `drishti-console/.venv` one |
+| Working directory | the repository root (the script finds `drishti-console/config` from its own location, so any folder works; the root keeps relative paths in your own settings predictable) |
 | Environment variables | `DRISHTI_BACKEND_URL=http://127.0.0.1:18480;DRISHTI_CONSOLE_PORT=17480` (these are the defaults; set them to point elsewhere) |
 
-The console reads `console/config/application.yaml`, then `console/config/application.local.yaml` if it exists, then
+The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if it exists, then
 `DRISHTI_CONSOLE__…` environment variables, then `--key=value` parameters; later wins
 ([QUICKSTART.md](QUICKSTART.md#the-console)).
 
@@ -175,12 +175,12 @@ server is not running or `DRISHTI_BACKEND_URL` points at the wrong port.
 
 ### 4.5 Debug it and change code
 
-**Debug** works as usual; good first breakpoints are the route functions in `console/core/app.py` and the page routes
+**Debug** works as usual; good first breakpoints are the route functions in `drishti-console/core/app.py` and the page routes
 it includes.
 
-- **Templates** (`console/web/templates/**`) and **static files** (`console/web/static/**`: CSS, JavaScript): reload
+- **Templates** (`drishti-console/web/templates/**`) and **static files** (`drishti-console/web/static/**`: CSS, JavaScript): reload
   the browser page; no restart.
-- **Python code** (`console/core/**`): restart the run configuration (Ctrl+F5).
+- **Python code** (`drishti-console/core/**`): restart the run configuration (Ctrl+F5).
 
 ## 5. Running the tests from the IDEs
 
@@ -199,11 +199,11 @@ from the Maven tool window (**drishti → Lifecycle → verify**: builds, runs e
 
 ### 5.2 Python tests in PyCharm
 
-**Settings → Tools → Python Integrated Tools → Default test runner: pytest**, then right-click `console/tests` → **Run
+**Settings → Tools → Python Integrated Tools → Default test runner: pytest**, then right-click `drishti-console/tests` → **Run
 'pytest in tests'**. The browser tests (`*_browser.py`) need Playwright's Chromium once:
 
 ```bash
-console/.venv/bin/python -m playwright install chromium
+drishti-console/.venv/bin/python -m playwright install chromium
 ```
 
 Without it they are skipped. Some console tests start the built server jar on a free port; build it first (§2) or
@@ -219,7 +219,7 @@ they are skipped.
 | The server starts but every view is empty, or packs are missing | The **Working directory** is `drishti-server/`, not the repository root (§3.1). |
 | `Port 18480 was already in use` | Another server is running (from a terminal or another run configuration). Stop it, or use `DRISHTI_PORT=18481` (§3.5). |
 | Tests pass in the terminal but fail in IDEA | `DRISHTI_*` variables are set in the test configuration (§5.1). |
-| PyCharm: `ModuleNotFoundError: No module named 'fastapi'` | The run configuration uses another interpreter: choose `console/.venv` (§4.2). |
+| PyCharm: `ModuleNotFoundError: No module named 'fastapi'` | The run configuration uses another interpreter: choose `drishti-console/.venv` (§4.2). |
 | `DRS-5003 backend unreachable` in the console | Start the server first; check `DRISHTI_BACKEND_URL` (§4.4). |
 
 More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).

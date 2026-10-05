@@ -75,7 +75,7 @@ def test_every_picture_any_guide_shows_exists_and_is_a_real_image():
         for rel in pictures_of(doc):
             f = doc.parent / rel
             count += 1
-            assert f.is_file(), f"{doc.relative_to(ROOT)} shows {rel}, which is missing: console/.venv/bin/python tools/docs/screenshots.py --guide <guide>"
+            assert f.is_file(), f"{doc.relative_to(ROOT)} shows {rel}, which is missing: drishti-console/.venv/bin/python tools/docs/screenshots.py --guide <guide>"
             head = f.read_bytes()[:4]
             assert (head[:3] == b"\xff\xd8\xff" or head == b"\x89PNG") and f.stat().st_size > 2000, rel
     assert count >= 25
@@ -140,7 +140,7 @@ def test_help_files_serves_pictures_from_docs_and_nothing_else(client):
     assert client.get("/help/files/guides/SCREEN_DESIGNER.md").status_code == 404                     # not a picture
     assert client.get("/help/files/guides/img/designer/nope.png").status_code == 404
     assert client.get("/help/files/../README.md").status_code == 404
-    assert client.get("/help/files/guides/img/%2e%2e/%2e%2e/%2e%2e/console/web/static/img/guide/layout-mode.png").status_code == 404
+    assert client.get("/help/files/guides/img/%2e%2e/%2e%2e/%2e%2e/drishti-console/web/static/img/guide/layout-mode.png").status_code == 404
 
 
 def test_f1_on_every_build_page_opens_the_guide(client):

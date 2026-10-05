@@ -64,7 +64,7 @@ def test_every_key_of_the_server_application_yaml_is_documented():
 
 
 def test_every_key_of_the_console_application_yaml_is_documented():
-    missing = [k for k in _yaml_keys("console/config/application.yaml") if not _documented(k)]
+    missing = [k for k in _yaml_keys("drishti-console/config/application.yaml") if not _documented(k)]
     assert not missing, f"not in CONFIGURATION.md: {missing}"
 
 
@@ -88,7 +88,7 @@ def test_every_property_a_configuration_properties_class_binds_is_documented():
 
 def test_every_setting_the_console_code_reads_by_name_is_documented():
     read = set()
-    for path in (ROOT / "console").rglob("*.py"):
+    for path in (ROOT / "drishti-console").rglob("*.py"):
         if "tests" in path.parts or ".venv" in path.parts:
             continue
         read |= set(re.findall(r"settings\.get\(\s*\"([a-z_]+\.[a-z_.]+)\"", path.read_text(encoding="utf-8")))

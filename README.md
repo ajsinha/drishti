@@ -122,8 +122,8 @@ DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
   java -jar drishti-server/target/drishti-server-1.16.0-exec.jar
 
 # 4. In a second terminal: the console on http://localhost:17480
-uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt
-console/.venv/bin/python console/run_drishti_web.py
+uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 Open http://localhost:17480/t, type `TRD MX-20000001` and press Enter. Then try `DPNL DESK-RATES`, a past date in the
@@ -165,7 +165,7 @@ drishti/
 ├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks
 ├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, kafka, activemq, rabbitmq, s3
-├── console/                     the web console (routes/, core/, web/templates, web/static, tests/)
+├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
 ├── packs/<name>/                the 14 domain packs: pack.yaml, Sutras, vocabulary, samples, guides
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
@@ -209,7 +209,7 @@ Start with the **[quickstart](docs/guides/QUICKSTART.md)**, then the **[user gui
 - Work on `develop`. `tools/drill.sh` runs every check, pushes `develop` and fast-forwards `main`; releases are
   tagged on `main` after it.
 - Every build runs Error Prone and Spotless; `./mvnw -q verify` must pass, as must the console tests
-  (`console/.venv/bin/python -m pytest -q console/tests`).
+  (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`).
 - No source file over 1,500 lines (UX templates excepted), and every file carries the copyright header
   (`python3 tools/license_headers.py --fix`). Both are enforced by tests.
 - Modules depend in one direction only, controllers live only in the server, and the plugin SPI is Spring-free

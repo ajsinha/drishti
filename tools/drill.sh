@@ -45,15 +45,15 @@ else
   echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2
 fi
 # The console suite. A browser test that fails is run once more on its own: about one run in 700 a workbench page has
-# loaded without its script starting (diagnosed in console/tests/test_workbench_browser.py: wait() reports the page state,
+# loaded without its script starting (diagnosed in drishti-console/tests/test_workbench_browser.py: wait() reports the page state,
 # failed requests and bad responses). A test that passes the second time is a flake: printed and kept in
 # target/drill-flakes.log so it is looked at, not hidden; a test that fails twice fails the drill.
-if ! console/.venv/bin/python -m pytest -q console/tests; then
+if ! drishti-console/.venv/bin/python -m pytest -q drishti-console/tests; then
   mkdir -p target
-  failed=$(console/.venv/bin/python -m pytest -q --co --last-failed console/tests 2>/dev/null | grep '::' || true)
+  failed=$(drishti-console/.venv/bin/python -m pytest -q --co --last-failed drishti-console/tests 2>/dev/null | grep '::' || true)
   [[ -n "$failed" ]] || { echo "drill: the console suite failed with no failed test to re-run (a collection error?)" >&2; exit 1; }
   echo "drill: re-running the failed console tests once:" >&2; echo "$failed" >&2
-  console/.venv/bin/python -m pytest -q --last-failed --last-failed-no-failures none console/tests
+  drishti-console/.venv/bin/python -m pytest -q --last-failed --last-failed-no-failures none drishti-console/tests
   { echo "$(date -Iseconds) $(git log --oneline -1)"; echo "$failed"; } >> target/drill-flakes.log
   echo "drill: FLAKY (failed once, passed again), kept in target/drill-flakes.log" >&2
 fi

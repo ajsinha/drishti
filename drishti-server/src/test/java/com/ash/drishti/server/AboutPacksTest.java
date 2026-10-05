@@ -134,7 +134,7 @@ class AboutPacksTest {
     @Test
     void everyGuideTheTextPointsToExistsInTheHelpCentre() throws IOException {
         Set<String> slugs = new HashSet<>();
-        List<Path> helpFiles = new ArrayList<>(List.of(Path.of("..", "console", "config", "help.yaml")));
+        List<Path> helpFiles = new ArrayList<>(List.of(Path.of("..", "drishti-console", "config", "help.yaml")));
         try (Stream<Path> packs = Files.list(PACKS_DIR)) {
             packs.map(p -> p.resolve("config").resolve("help.yaml")).filter(Files::isRegularFile).forEach(helpFiles::add);
         }

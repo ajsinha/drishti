@@ -139,7 +139,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PORT=18481 java -jar drishti-server/target/drishti-server-1.16.0-exec.jar
-  DRISHTI_BACKEND_URL=http://127.0.0.1:18481 console/.venv/bin/python console/run_drishti_web.py
+  DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
   The console's own port works the same way: `[Errno 98] address already in use` → `DRISHTI_CONSOLE_PORT=17481`.
@@ -185,14 +185,14 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:**
 
   ```bash
-  uv venv console/.venv && uv pip install --python console/.venv/bin/python -r console/requirements.txt
-  console/.venv/bin/python console/run_drishti_web.py
+  uv venv drishti-console/.venv && uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
+  drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
 ### The console starts but cannot be opened from another machine
 
 - **Cause:** it listens on `127.0.0.1` only, by default.
-- **Fix:** `DRISHTI_CONSOLE_HOST=0.0.0.0 console/.venv/bin/python console/run_drishti_web.py`, and, for anything
+- **Fix:** `DRISHTI_CONSOLE_HOST=0.0.0.0 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py`, and, for anything
   beyond a trial, turn security on first (see [OPERATIONS.md](../admin/OPERATIONS.md)).
 
 ## Signing in
@@ -208,7 +208,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
   DRISHTI_SECURITY_ENABLED=true java -jar drishti-server/target/drishti-server-1.16.0-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
-    console/.venv/bin/python console/run_drishti_web.py
+    drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
   Then sign in at `http://localhost:17480/login` as **`drishti-dev-admin`** / **`drishti-dev-admin123`** and

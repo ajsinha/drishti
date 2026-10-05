@@ -89,9 +89,9 @@ Sutra YAML ──parse──▶ Panel(kind, options) ──compile EL──▶ b
 | Schema | `drishti-rachana/.../RachanaSchema.java` | the JSON Schema served at `GET /api/v1/rachana/schema`: completion, the YAML editor and the workbench inspector all read it |
 | Bind | `drishti-engine/.../bind/Binder.java`, `ChartBinder.java` | evaluates the options against the document into a `PanelData` record; masks and `source` are handled around it |
 | View model | `drishti-engine/.../view/PanelData.java`, `Emptiness.java` | the record, and when it counts as empty |
-| Draw | `console/web/templates/_macros/panels.html`, `static/css/terminal.css`, `static/js/charts.js` | first paint from the macro; ECharts kinds then enhanced by `charts.js` |
-| Live | `console/routes/api_routes.py` (`_view_event`) | a changed panel is re-rendered by the same macro |
-| Export | `console/core/export.py` | the CSV of the panel |
+| Draw | `drishti-console/web/templates/_macros/panels.html`, `static/css/terminal.css`, `static/js/charts.js` | first paint from the macro; ECharts kinds then enhanced by `charts.js` |
+| Live | `drishti-console/routes/api_routes.py` (`_view_event`) | a changed panel is re-rendered by the same macro |
+| Export | `drishti-console/core/export.py` | the CSV of the panel |
 | Workbench | `static/js/build/palette.js`, `actions.js`; `design/ops/Bind.java`; `design/PanelChooser.java`, `AutoDesigner.java`; `design/SampleChecker.java` | the palette, a new panel's seeding, which fields can be dropped, what is suggested and drafted, how a design is checked on samples |
 
 The engine **knows nothing of HTML**. The console **knows nothing of the grammar**: it draws the view model it is
@@ -152,18 +152,18 @@ means nothing fails and a human has to look, which is why those steps say what t
 | 5 | `drishti-engine/.../view/PanelData.java` | a record, when [3.1](#31-reuse-a-paneldata-record-or-add-a-new-one) says so | the view model | compiler |
 | 6 | `drishti-engine/.../view/Emptiness.java` | a `case` for the record | when the panel says *No data available*; the `SampleChecker` and auto-design pruning read it | compiler (sealed `switch`); `MetricPanelTest.aMissingFigureIsAnEmptyPanelNotAnError` |
 | 7 | `drishti-engine/.../bind/Binder.java` (or `ChartBinder.java`) | a `case` in the `switch` in `bind`, and the method | the data | compiler; `MetricPanelTest` |
-| 8 | `console/web/templates/_macros/panels.html` | a branch in `panel(p)`, with an accessible name and `data-path` | first paint, and every live patch | `test_metric.py` (yours); `test_terminal.py::test_every_panel_kind_renders_imperfect_data_without_failing` after step 17 |
-| 9 | `console/web/static/css/terminal.css` | the styles, theme variables only, a phone rule | no inline styles (CSP) | `test_metric.py` stylesheet test (yours); `test_contrast.py` |
-| 10 | `console/web/static/js/charts.js` | ECharts kinds only: a builder in `BUILD` | the drawing | a browser test of yours |
-| 11 | `console/core/export.py` | `EXPORTABLE` and a `panel_rows` branch | the CSV | `test_metric.py` CSV test (yours) |
-| 12 | `console/web/templates/_macros/panels.html` | the kind in the tuple that shows the download link | the ↓ in the heading | `test_metric.py` (`data-export-panel`) |
+| 8 | `drishti-console/web/templates/_macros/panels.html` | a branch in `panel(p)`, with an accessible name and `data-path` | first paint, and every live patch | `test_metric.py` (yours); `test_terminal.py::test_every_panel_kind_renders_imperfect_data_without_failing` after step 17 |
+| 9 | `drishti-console/web/static/css/terminal.css` | the styles, theme variables only, a phone rule | no inline styles (CSP) | `test_metric.py` stylesheet test (yours); `test_contrast.py` |
+| 10 | `drishti-console/web/static/js/charts.js` | ECharts kinds only: a builder in `BUILD` | the drawing | a browser test of yours |
+| 11 | `drishti-console/core/export.py` | `EXPORTABLE` and a `panel_rows` branch | the CSV | `test_metric.py` CSV test (yours) |
+| 12 | `drishti-console/web/templates/_macros/panels.html` | the kind in the tuple that shows the download link | the ↓ in the heading | `test_metric.py` (`data-export-panel`) |
 | 13 | `drishti-rachana/.../design/ops/Bind.java` | new bindable option names into `BINDABLE` | a field dropped on the panel can fill them | **no guard**: add a test beside the `Bind` op tests |
 | 14 | `drishti-engine/.../design/PanelChooser.java` | `scalarChoices` (or the list/object choices) | what the field-drop menu and the alternatives offer | `AutoDesignerTest.suggestReturnsTheExpectedFirstChoicePerRole` (changed by yours) |
 | 15 | `drishti-engine/.../design/AutoDesigner.java` | `Collector.scalar` (or the list branch) | what the first draft contains | `AutoDesignerTest` |
-| 16 | `console/web/static/js/build/palette.js`, `actions.js` | a `KINDS` row; seeding in `actions.js` | the kind in the palette and the Add-panel chooser; a new panel starts with a sensible `value` | `test_workbench_add_browser.py` (21 kinds), `test_workbench_metric_browser.py` (yours) |
-| 17 | `console/tests/test_terminal.py` | the kind in `KINDS` | the macro against broken data | itself |
+| 16 | `drishti-console/web/static/js/build/palette.js`, `actions.js` | a `KINDS` row; seeding in `actions.js` | the kind in the palette and the Add-panel chooser; a new panel starts with a sensible `value` | `test_workbench_add_browser.py` (21 kinds), `test_workbench_metric_browser.py` (yours) |
+| 17 | `drishti-console/tests/test_terminal.py` | the kind in `KINDS` | the macro against broken data | itself |
 | 18 | `docs/guides/examples/` | the kind in the showcase **and** an example of its own; the examples README | the examples are the source of the docs and the tests | `test_examples.py`, `ExamplePreviewTest`, `test_build_designs.py` |
-| 19 | `console/tests/fixtures/view_sutra_all-panels-showcase.json` | the panel, by hand, as the server returns it | the fake backend's showcase | `test_build_designs*.py`, `test_workbench_model.py` |
+| 19 | `drishti-console/tests/fixtures/view_sutra_all-panels-showcase.json` | the panel, by hand, as the server returns it | the fake backend's showcase | `test_build_designs*.py`, `test_workbench_model.py` |
 | 20 | the counts | see [14.3](#143-the-counts) | every "twenty" in code, tests and prose | `StudioTest`, `test_workbench_options_browser.py`, `test_examples.py`, the docs tests; `grep -rni "twenty"` for the prose |
 | 21 | docs and screenshots | the catalogue section, the reference section, `tools/docs/shots/panels.py`, the help entry | users find it; the image test passes | `test_guide_images.py`, `test_panel_kinds.py` |
 | 22 | tests of your own | server, macro, live, CSV, CSS, browser | [section 15](#15-tests-yours-and-the-guard-tests) | (these are the tests) |
@@ -413,7 +413,7 @@ The three states side by side (a masked tile, one with no access, an empty one):
 
 ### 9.1 The macro
 
-`console/web/templates/_macros/panels.html` has one `panel(p)` macro with an `elif` per kind. The metric branch:
+`drishti-console/web/templates/_macros/panels.html` has one `panel(p)` macro with an `elif` per kind. The metric branch:
 
 ```jinja
   {% elif p.kind == 'metric' %}{% set m = p.data.value if p.data.value is mapping else {} %}{% set d = p.data.delta if p.data.delta is mapping else none %}<div class="metric" role="group" aria-label="{{ p.title or p.id }}: {{ m.text }}{% if p.data.unit %} {{ p.data.unit }}{% endif %}{% if d %}, change {{ d.text }}{% endif %}">{% if m.label %}<span class="metric-l">{{ m.label }}</span>{% endif %}<div class="metric-row"><span class="metric-v mono{{ tone(m) }}"{% if m.path %} data-path="{{ m.path }}"{% endif %}>{{ cell_text(m) }}</span>{% if p.data.unit %}<span class="metric-u">{{ p.data.unit }}</span>{% endif %}{% if d %}<span class="metric-d mono{{ tone(d) }}"{% if d.path %} data-path="{{ d.path }}"{% endif %}>{{ d.text }}</span>{% endif %}</div>{% if p.data.caption %}<span class="metric-c">{{ p.data.caption }}</span>{% endif %}</div>
@@ -436,7 +436,7 @@ Rules for a macro branch:
 
 ### 9.2 The styles
 
-`console/web/static/css/terminal.css`, next to `.gauge`:
+`drishti-console/web/static/css/terminal.css`, next to `.gauge`:
 
 ```css
 .metric { display: flex; flex-direction: column; gap: .15rem; min-width: 0; container-type: inline-size; }
@@ -464,7 +464,7 @@ wrapping, `overflow-wrap`, and a phone rule at 640 px, the breakpoint `layout.cs
 
 ### 9.3 Where the checks for 9.1 and 9.2 live
 
-`console/tests/test_metric.py` renders the macro with a hand-written panel and asserts the structure, the accessible
+`drishti-console/tests/test_metric.py` renders the macro with a hand-written panel and asserts the structure, the accessible
 name, the tone classes, `data-path`, the absence of `style=`, the help link and the download link; and it reads the
 stylesheet and asserts every part is styled with theme variables only and a phone rule. Copy it for your kind: it is
 ~80 lines. `test_terminal.py::test_every_panel_kind_renders_imperfect_data_without_failing` then renders **every** kind
@@ -490,7 +490,7 @@ An ECharts kind adds three things to the HTML ones:
    role="img" aria-label="...">`; `data_table` writes a collapsed **Data** section: the accessible, printable and
    no-JavaScript version of the picture. The label should say what the chart shows with a number in it (*9 steps, ending
    at +1,875,863*), not "chart".
-2. **A builder** in `console/web/static/js/charts.js`: a pure function `(data, tokens, size) -> ECharts option`, added to
+2. **A builder** in `drishti-console/web/static/js/charts.js`: a pure function `(data, tokens, size) -> ECharts option`, added to
    `BUILD`:
 
    ```js
@@ -511,7 +511,7 @@ fall back to a 2D drawing when WebGL is missing. All JavaScript and CSS is vendo
 ## 10. Live updates
 
 You write nothing for live updates, but know what happens. A live view sends *patches*: a changed panel arrives whole.
-`console/routes/api_routes.py`:
+`drishti-console/routes/api_routes.py`:
 
 ```python
 CHART_KINDS = {"line", "area"}
@@ -539,7 +539,7 @@ new HTML and the panel's id and kind.
 
 The ↓ in a panel's heading downloads `/export/{kind}/{id}/{panel}.csv`. Three places, and the old recipe named one:
 
-1. `console/core/export.py`, `EXPORTABLE`: the set of kinds that can download:
+1. `drishti-console/core/export.py`, `EXPORTABLE`: the set of kinds that can download:
 
    ```python
    EXPORTABLE = {"table", "ladder", "kv", "status", "tabs", "line", "area", "hbar", "surface", "links", "gauge",
@@ -557,7 +557,7 @@ The ↓ in a panel's heading downloads `/export/{kind}/{id}/{panel}.csv`. Three 
 
    `plain(text)` turns a shown number (`−1,250`, `4.25%`) back into a number, so a spreadsheet gets numbers, not
    strings. The panel's `empty` flag yields no rows.
-3. `console/web/templates/_macros/panels.html`: the tuple in the `pnl-help` download link line, which decides whether the
+3. `drishti-console/web/templates/_macros/panels.html`: the tuple in the `pnl-help` download link line, which decides whether the
    heading shows the ↓ (`data-export-panel`):
 
    ```jinja
@@ -574,7 +574,7 @@ six separate rows. None is automatic.
 
 ### 12.1 The palette and the Add-panel chooser: `palette.js`
 
-`console/web/static/js/build/palette.js`: `[kind, icon, one line, family]`. Without a row the kind cannot be added from
+`drishti-console/web/static/js/build/palette.js`: `[kind, icon, one line, family]`. Without a row the kind cannot be added from
 the workbench (the schema's kinds are *also* checked against this list, and one the list lacks is offered with no icon
 text, but you want the row).
 
@@ -589,7 +589,7 @@ it with similar kinds. The same list feeds the **Add panel** chooser and the *Ad
 
 ### 12.2 What a new panel starts with: `actions.js`
 
-`console/web/static/js/build/actions.js` seeds the required options of a panel just added from the palette from the
+`drishti-console/web/static/js/build/actions.js` seeds the required options of a panel just added from the palette from the
 shape of the samples. A required `value` otherwise falls back to a number field (`@.value`, a field *of each row*),
 which is wrong for a kind that reads one document-level figure. `gauge` and `metric` are named so their `value` becomes
 the first number of the samples (`$.mtm`):
@@ -700,11 +700,11 @@ A kind is not done until each of these holds; each has a test or a screenshot yo
    `metric.md` (what it shows, kinds used, how to open, what to look for, what to copy), indexed in the examples README.
    The example must give the auto-designer something to chew on: `AutoDesignerTest`'s example-wide test requires every
    example to produce at least one alternative, so the JSON needs a list as well as scalars (`metric.json` has `books`).
-3. **The canned view** `console/tests/fixtures/view_sutra_all-panels-showcase.json` (the fake backend's showcase) is
+3. **The canned view** `drishti-console/tests/fixtures/view_sutra_all-panels-showcase.json` (the fake backend's showcase) is
    written by hand in the shape the server returns: add the panel to it.
 
-`console/tests/test_examples.py` (`KINDS`), `ExamplePreviewTest` (every example previews on the server, panel counts),
-`console/tests/test_build_designs.py`, `test_build_designs_browser.py` and `test_workbench_model.py` (the copy of the
+`drishti-console/tests/test_examples.py` (`KINDS`), `ExamplePreviewTest` (every example previews on the server, panel counts),
+`drishti-console/tests/test_build_designs.py`, `test_build_designs_browser.py` and `test_workbench_model.py` (the copy of the
 showcase has N panels) all move when the showcase gains a panel: update the counts, with the reason in the commit.
 
 ### 14.2 Screenshots
@@ -720,12 +720,12 @@ pictures is `tools/docs/shots/panels.py` (driver: `tools/docs/screenshots.py`). 
   ```bash
   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
   ./mvnw -o -q package -DskipTests -pl drishti-server -am          # the driver starts the packaged server on :18997 and the console on :17997
-  console/.venv/bin/python tools/docs/screenshots.py --guide panels --only metric
-  console/.venv/bin/python tools/docs/screenshots.py --list --guide panels
+  drishti-console/.venv/bin/python tools/docs/screenshots.py --guide panels --only metric
+  drishti-console/.venv/bin/python tools/docs/screenshots.py --list --guide panels
   ```
 
   The driver refuses `:18480` and `:17480`, starts and stops what it started, and writes
-  `docs/guides/img/panels/`. `console/tests/test_guide_images.py` fails if a guide shows a picture that is missing, if a
+  `docs/guides/img/panels/`. `drishti-console/tests/test_guide_images.py` fails if a guide shows a picture that is missing, if a
   picture exists that no guide shows, or if the script cannot make a picture a guide shows.
 
 The states that cannot be produced in a design preview (masked, an error) are the console's own macro drawing the view
@@ -754,7 +754,7 @@ placeholder), `landing.html` (the statistic and the tooltip that lists the kinds
 |---|---|
 | [PANEL_KINDS.md](PANEL_KINDS.md) | a `### <kind>` section: meaning, when to use and not, key options (linked, not copied), behaviour, a YAML example **cut from an example file**, a screenshot. The heading must be exactly the kind (`### metric`): the `?` icon in every panel, the inspector's *About metric* and F1 open `/help/panel-kinds#metric`. `test_panel_kinds.py` asserts all 21 anchors, that the YAML is a verbatim excerpt of an example and that the pictures exist. |
 | [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#panels) | the kind's full option table: the one place every option is listed |
-| `console/config/help.yaml` | the help centre's entries and counts (shared file: one owner at a time) |
+| `drishti-console/config/help.yaml` | the help centre's entries and counts (shared file: one owner at a time) |
 | `CHANGELOG.md` | one bullet under *Unreleased* |
 
 ## 15. Tests: yours and the guard tests
@@ -764,9 +764,9 @@ placeholder), `landing.html` (the statistic and the tooltip that lists the kinds
 | Test | File | What it proves |
 |---|---|---|
 | server: the figure, change, unit and caption; the optional parts; empty; masked; no access; the grammar | `drishti-server/src/test/java/com/ash/drishti/server/MetricPanelTest.java` | binding through the real pipeline with a Sutra and a document the test supplies (`pipeline.preview(Optional.of(sutra), doc)`; the 4-argument overload takes a redactor and a `mayOpen` predicate for masks and no access) |
-| console: macro, live, CSV, CSS | `console/tests/test_metric.py` | structure, accessible name, tones, `data-path`, no inline style, a live frame, the CSV, theme-only colours and the phone rule |
-| browser: palette, add, seeding, inspector, rendering | `console/tests/test_workbench_metric_browser.py` | the kind can be added from the palette and edited in the inspector, and the tile draws |
-| docs: anchors, images, YAML | `console/tests/test_panel_kinds.py`, `test_guide_images.py` | the catalogue |
+| console: macro, live, CSV, CSS | `drishti-console/tests/test_metric.py` | structure, accessible name, tones, `data-path`, no inline style, a live frame, the CSV, theme-only colours and the phone rule |
+| browser: palette, add, seeding, inspector, rendering | `drishti-console/tests/test_workbench_metric_browser.py` | the kind can be added from the palette and edited in the inspector, and the tile draws |
+| docs: anchors, images, YAML | `drishti-console/tests/test_panel_kinds.py`, `test_guide_images.py` | the catalogue |
 
 Use a pack that exists in this repository in a server test (`drishti.packs.enabled=trading,counterparty-risk`, and
 `drishti.sources.plugins.demo.settings.ticking=false` so the data does not move under you): there is no `finance` pack.
@@ -777,17 +777,17 @@ Always write the Sutra with `rachana: 1` first (`DRS-2009` otherwise) and a lowe
 | Guard | File | Fails when |
 |---|---|---|
 | the schema counts the kinds | `StudioTest` (`/$defs/panel/properties/kind/enum` `hasSize(21)`) | the constant is missing, or the number was not updated |
-| every example together covers every kind | `console/tests/test_examples.py` (`KINDS`) | a kind is in no example, or the showcase lacks it |
+| every example together covers every kind | `drishti-console/tests/test_examples.py` (`KINDS`) | a kind is in no example, or the showcase lacks it |
 | every example previews on the server | `ExamplePreviewTest` | an example's Sutra does not bind; the panel count is stale |
-| every option of every kind has a labelled editor | `console/tests/test_workbench_options_browser.py` (reads the showcase; `len(kinds) == 21`) | an option has no editor; the kind is not in the showcase |
-| the palette offers all kinds | `console/tests/test_workbench_add_browser.py` (a filterable grid of all twenty-one kinds) | `palette.js` lacks the row |
-| the macro survives broken data | `console/tests/test_terminal.py` (`KINDS`) | the macro cannot render null, empty or mistyped data |
-| the showcase copy previews | `console/tests/test_build_designs.py`, `test_build_designs_browser.py`, `test_workbench_model.py` | the panel count of the showcase changed |
+| every option of every kind has a labelled editor | `drishti-console/tests/test_workbench_options_browser.py` (reads the showcase; `len(kinds) == 21`) | an option has no editor; the kind is not in the showcase |
+| the palette offers all kinds | `drishti-console/tests/test_workbench_add_browser.py` (a filterable grid of all twenty-one kinds) | `palette.js` lacks the row |
+| the macro survives broken data | `drishti-console/tests/test_terminal.py` (`KINDS`) | the macro cannot render null, empty or mistyped data |
+| the showcase copy previews | `drishti-console/tests/test_build_designs.py`, `test_build_designs_browser.py`, `test_workbench_model.py` | the panel count of the showcase changed |
 | the suggest/first-choice contract | `AutoDesignerTest` (`suggestReturnsTheExpectedFirstChoicePerRole`, `everyExampleDrawsATitleAStripAndPanelsWithReasonsAndAlternatives`) | a new scalar choice changes a first choice; an example gives no alternatives |
 | operations over every kind | `OpApplierTest` (uses `PanelKind.values()`) | an op cannot add or bind a kind |
-| every picture exists and is used | `console/tests/test_guide_images.py` | the guide shows a missing picture; an unused picture; a picture the script cannot make |
-| the catalogue has all 21 anchors | `console/tests/test_panel_kinds.py` | a heading is missing, renamed, or not the first of its slug |
-| contrast | `console/tests/test_contrast.py` | a theme's tokens fall below the ratios |
+| every picture exists and is used | `drishti-console/tests/test_guide_images.py` | the guide shows a missing picture; an unused picture; a picture the script cannot make |
+| the catalogue has all 21 anchors | `drishti-console/tests/test_panel_kinds.py` | a heading is missing, renamed, or not the first of its slug |
+| contrast | `drishti-console/tests/test_contrast.py` | a theme's tokens fall below the ratios |
 | pack Sutras against mangled documents | `ImperfectDataTest` | a pack's panels error on a mangled document |
 | file size, headers, no CDN | `tools/license_headers.py --fix`; the 1,500-line cap | a new file lacks the header; a Java file is too long |
 
@@ -811,9 +811,9 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64            # or any JDK 21 o
 ./mvnw spotless:apply                                           # formatting (Java)
 python3 tools/license_headers.py --fix                          # the copyright header on new files
 # the console, from the repository root:
-console/.venv/bin/python -m pytest console/tests/test_metric.py console/tests/test_examples.py console/tests/test_terminal.py \
-  console/tests/test_workbench_options_browser.py console/tests/test_workbench_add_browser.py console/tests/test_workbench_metric_browser.py \
-  console/tests/test_guide_images.py console/tests/test_panel_kinds.py console/tests/test_help.py console/tests/test_help_links.py -q
+drishti-console/.venv/bin/python -m pytest drishti-console/tests/test_metric.py drishti-console/tests/test_examples.py drishti-console/tests/test_terminal.py \
+  drishti-console/tests/test_workbench_options_browser.py drishti-console/tests/test_workbench_add_browser.py drishti-console/tests/test_workbench_metric_browser.py \
+  drishti-console/tests/test_guide_images.py drishti-console/tests/test_panel_kinds.py drishti-console/tests/test_help.py drishti-console/tests/test_help_links.py -q
 ./mvnw -q -o verify                                             # everything, once, at the end
 ```
 

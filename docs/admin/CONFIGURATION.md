@@ -44,7 +44,7 @@ Drishti has two programs and each has its own configuration:
 | Program | Bundled file | Local override (git-ignored) | Env-var form | Argument form |
 |---|---|---|---|---|
 | Server (Java, port 18480) | `drishti-server/src/main/resources/application.yaml` (inside the jar) | `./application.local.yaml` in the server's **working directory** | `DRISHTI_SOURCES_FETCHTIMEOUT=3s` | `--drishti.sources.fetch-timeout=3s` |
-| Console (Python, port 17480) | `console/config/application.yaml` | `console/config/application.local.yaml` | `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=10` | `--backend.timeout_seconds=10` |
+| Console (Python, port 17480) | `drishti-console/config/application.yaml` | `drishti-console/config/application.local.yaml` | `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=10` | `--backend.timeout_seconds=10` |
 
 Secrets never go in a tracked file. Put them in environment variables (or in the git-ignored local file on a
 developer machine).
@@ -171,17 +171,17 @@ Each row was tried against a scratch server. Points to know:
   The bundled file nests none.
 * **Your own files** can use the syntax anywhere (`password: ${TRADES_DB_PASSWORD}`).
 
-**The console (Python).** `console/core/config.py` reads the same syntax, with differences: `NAME` is an
+**The console (Python).** `drishti-console/core/config.py` reads the same syntax, with differences: `NAME` is an
 **environment variable only** (no system properties, no other config keys); the default after the colon is text up to
 the first `}` (no nesting); a missing variable with no default is empty; and the result is typed (`true`/`false`
-become booleans, digits numbers). Precedence, lowest first: `console/config/application.yaml`, `console/config/application.local.yaml`,
+become booleans, digits numbers). Precedence, lowest first: `drishti-console/config/application.yaml`, `drishti-console/config/application.local.yaml`,
 then `DRISHTI_CONSOLE__A__B` environment variables, then `--a.b=value` arguments. The console has no flag
 for choosing another config *directory*; see [QUICKSTART](../guides/QUICKSTART.md#build-and-run-without-the-wrapper-or-from-an-ide).
 
 ### Every placeholder in the server's `application.yaml`
 
 Generated from `drishti-server/src/main/resources/application.yaml` (and checked against it by
-`console/tests/test_docs_placeholders.py`, so the table cannot drift). "Sets" is the key the placeholder fills. Profile
+`drishti-console/tests/test_docs_placeholders.py`, so the table cannot drift). "Sets" is the key the placeholder fills. Profile
 files (`application-files.yaml`, `application-postgres.yaml`, …) and packs have placeholders of their own, listed in
 [Environment variables used by the packs and profiles](#environment-variables-used-by-the-packs-and-profiles).
 
@@ -251,7 +251,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 
 ### Every placeholder in the console's `application.yaml`
 
-From `console/config/application.yaml`, resolved from environment variables only.
+From `drishti-console/config/application.yaml`, resolved from environment variables only.
 
 | Variable | Sets | Default | What it does |
 |---|---|---|---|
@@ -274,7 +274,7 @@ From `console/config/application.yaml`, resolved from environment variables only
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | Live subscriptions one browser may hold. |
 | `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
-| `DRISHTI_PACKS_DIR` | `packs.dir` | `../packs` | The packs directory (a relative path resolves from `console/`). |
+| `DRISHTI_PACKS_DIR` | `packs.dir` | `../packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 
 ---
 
@@ -440,7 +440,7 @@ drishti:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `dir` | `./packs` (`DRISHTI_PACKS_DIR`) | The folder holding one sub-folder per pack. Relative to the server's working directory. The console reads the same variable (its default `../packs` is relative to `console/`), so use an absolute path when you set it. |
+| `dir` | `./packs` (`DRISHTI_PACKS_DIR`) | The folder holding one sub-folder per pack. Relative to the server's working directory. The console reads the same variable (its default `../packs` is relative to `drishti-console/`), so use an absolute path when you set it. |
 | `enabled` | `finance` (`DRISHTI_PACKS`) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
 | `default-for-users` | empty = every installed pack (`DRISHTI_DEFAULT_PACKS`) | The packs a user sees until an admin assigns packs to them. |
 
@@ -1450,16 +1450,16 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 
 ## Console reference
 
-File: `console/config/application.yaml`. Local override: `console/config/application.local.yaml`.
+File: `drishti-console/config/application.yaml`. Local override: `drishti-console/config/application.local.yaml`.
 Precedence (low to high): the file, the local file, `DRISHTI_CONSOLE__…` variables, `--key=value` arguments.
 `${VAR:default}` placeholders in the files are resolved from the environment.
 
 The environment form is `DRISHTI_CONSOLE__` followed by the key with `.` written as `__`, in any case:
 
 ```bash
-DRISHTI_CONSOLE__SERVER__PORT=17481 python console/run_drishti_web.py
+DRISHTI_CONSOLE__SERVER__PORT=17481 python drishti-console/run_drishti_web.py
 # same as
-python console/run_drishti_web.py --server.port=17481
+python drishti-console/run_drishti_web.py --server.port=17481
 ```
 
 You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
@@ -1557,7 +1557,7 @@ read by both programs, so one set of variables configures both halves.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `packs.dir` | `../packs` (`DRISHTI_PACKS_DIR`), relative to `console/` | Where pack content (examples, guides) is read. |
+| `packs.dir` | `../packs` (`DRISHTI_PACKS_DIR`), relative to `drishti-console/` | Where pack content (examples, guides) is read. |
 | `packs.enabled` | `finance` | Used only when the server cannot be asked which packs are enabled. |
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that the Build workbench (**Build → New screen → Examples**, the File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |
@@ -1593,7 +1593,7 @@ is decided by the server (`drishti.rachana.studio-save`).
 |---|---|---|
 | `live.max_subscriptions` | `32` (`DRISHTI_LIVE_MAX_SUBSCRIPTIONS`) | Live subscriptions one browser's channel carries at most: views across all its tabs and workspace panes, the alerts bell, monitors (a view open in several tabs counts once). Each holds one stream to the server from `backend.pool_size`, so keep it well below that. One over the limit is answered with `gone`, `DRS-5003`, and the view shows `Static` ([LIVE.md](../architecture/LIVE.md#one-connection-per-browser)). |
 
-The Python runtime is a folder, not a setting: `console/web/static/vendor/pyodide/`, installed by
+The Python runtime is a folder, not a setting: `drishti-console/web/static/vendor/pyodide/`, installed by
 `tools/fetch-pyodide.sh` and served at `/pyodide/<version>/` when present
 ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#12-installing-the-python-runtime)).
 

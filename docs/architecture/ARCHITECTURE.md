@@ -575,7 +575,7 @@ secrets in tracked files. The full key reference is [CONFIGURATION.md](../admin/
 | `drishti-rachana/src/main/resources/formats.yaml` (+ `drishti.rachana.formats-file`) | core named number/date formats |
 | `drishti-inference/src/main/resources/inference/semantics.yaml` | core semantic hints and density limits |
 | `./sutras/**` (`drishti.rachana.dirs`) | site Sutras, in addition to the packs' |
-| `console/config/application.yaml` | console host and port, server URL, default theme, sign-in and OIDC, help docs folder |
+| `drishti-console/config/application.yaml` | console host and port, server URL, default theme, sign-in and OIDC, help docs folder |
 
 ---
 
@@ -622,10 +622,10 @@ Python 3.12, FastAPI + Jinja2: `core/` (app, settings, auth, backend client, bus
 `data-theme` on `<html>`: `terminal` (default, the navy/amber of the mockups), `light` (parchment), `wallstreet`
 (Bloomberg Terminal colours: black ground, amber data, yellow commands, green/red ticks, blue highlight — colours
 only, not fonts), `blue`, `green`, `crimson` and `crimson-dark`. The choice is saved to the user's account and
-mirrored in `localStorage['drishti.theme']` for first paint. Contrast is checked by `console/tests/test_contrast.py`
+mirrored in `localStorage['drishti.theme']` for first paint. Contrast is checked by `drishti-console/tests/test_contrast.py`
 (≥ 4.5:1 for every token used as text — ink, muted, faint, link, accent, accent-strong, pos, neg, ok, warn, bad — on
 bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:1 non-text). Layout is checked at 390,
-1600 and 2560 px by `console/tests/test_page_widths_browser.py` (no page scrolls sideways; images fit their column).
+1600 and 2560 px by `drishti-console/tests/test_page_widths_browser.py` (no page scrolls sideways; images fit their column).
 
 **Pages**
 
@@ -715,7 +715,7 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 ## 20. Quality rules
 
 - **Every source file ≤ 1500 lines** (UX templates, styles and scripts excepted) — enforced by `SourceFileSizeTest`
-  (`drishti-it`) and `console/tests/test_assets_policy.py`.
+  (`drishti-it`) and `drishti-console/tests/test_assets_policy.py`.
 - **Copyright header on every file** — enforced by `LicenseHeaderTest` (`drishti-it`); `tools/license_headers.py`
   adds missing ones.
 - **ArchUnit** (`ArchitectureRulesTest`): `drishti-api` is free of Spring and of every internal module; `common`,

@@ -45,7 +45,7 @@ docaudit/). Totals: 3 high, 19 medium, 23 low, 5 info.
 | DOC-02 | Calc is dead after the QUICKSTART/GETTING_STARTED walkthrough: neither mentions tools/fetch-pyodide.sh; no Windows way to install the Python runtime. **Fixed** (QUICKSTART and GETTING_STARTED step: tools/fetch-pyodide.sh, Git Bash or WSL on Windows) |
 | DOC-03 | DEMO_DATA:29 says `--trades N` "replaces the trade days it covers"; it replaces the whole trade table, losing seven sample days and breaking GETTING_STARTED step 11 on earlier dates. **Fixed** (DEMO_DATA and GETTING_STARTED step 11 say --trades replaces the whole trade table for --days days) |
 | DOC-08 | API_GUIDE:1187 gives Notes' forbidden code as DRS-5003; the code throws DRS-5002. **Fixed** (API_GUIDE Notes says DRS-5002) |
-| DOC-09 | API_GUIDE's "complete list" of error codes misses DRS-6008 and DRS-6009. **Fixed** (API_GUIDE table has every ErrorCode; console/tests/test_docs_error_codes.py) |
+| DOC-09 | API_GUIDE's "complete list" of error codes misses DRS-6008 and DRS-6009. **Fixed** (API_GUIDE table has every ErrorCode; drishti-console/tests/test_docs_error_codes.py) |
 | DOC-13 | DEVELOPER_GUIDE and README list 11 plugins; pom.xml has 15 (redis, mongodb, iceberg, duckdb missing). **Fixed** (DEVELOPER_GUIDE and README list all 15; test_docs_plugins.py) |
 | DOC-16 | Settings read by the code but documented nowhere: drishti.branding.*, DRISHTI_PRODUCT, console ui.*, backend.name, identity seed-display-name / preferences-dir. **Fixed** (CONFIGURATION: branding, identity, ui, backend.name, layouts.min_span, warm-dates; test_docs_settings.py) |
 | DOC-18 | About 88 in-app help links go nowhere (/help/connectors 17 dead, /help/plugins 11, /help/configuration 17). **Fixed** (test_help_links.py). |

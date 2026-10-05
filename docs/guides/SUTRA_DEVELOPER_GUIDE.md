@@ -1154,7 +1154,7 @@ Which to use: a pivot **aggregates** rows by fields you name (the data is flat a
 kind** with the **`pivot:` option** that gives a table a user-driven Pivot tab ([the option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
 
 For documents that are trees all the way down (legs holding cashflows holding fixings), the
-[nested documents tutorial](../../console/web/guides/nested-data.md) shows how paths, tables and tabs go as deep as the data.
+[nested documents tutorial](../../drishti-console/web/guides/nested-data.md) shows how paths, tables and tabs go as deep as the data.
 
 ## 13. Dates, live data and imperfect data
 

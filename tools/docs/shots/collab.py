@@ -19,7 +19,7 @@ Sign-in is ON with two people on the trade MX-20000001: `asha` (role `author`, r
 business date, with a note, and writes a comment that mentions `vera` and holds the trader's name (typed and quoted); `vera` (role `viewer`,
 no raw: the fields named in `drishti.security.redact` read as the mask) is the recipient. Run it on its own, which starts the scratch server:
 
-    console/.venv/bin/python tools/docs/screenshots.py --guide collab
+    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide collab
 """
 from __future__ import annotations
 

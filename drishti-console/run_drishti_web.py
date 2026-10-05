@@ -14,7 +14,7 @@
 
 """Drishti console entry point.
 
-    python console/run_drishti_web.py [--server.port=17480] [--backend.url=http://...]
+    python drishti-console/run_drishti_web.py [--server.port=17480] [--backend.url=http://...]
 """
 from __future__ import annotations
 

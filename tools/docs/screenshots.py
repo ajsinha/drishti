@@ -19,12 +19,12 @@ Playwright drives the real console over a real server: a SCRATCH server on :1899
 touches the usual :18480 / :17480 (it refuses them). If nothing answers on the scratch ports the script starts both, in a scratch directory,
 and stops what it started; if something does, it uses it. Needs the built server jar and JAVA_HOME of a JDK 21 or newer.
 
-    console/.venv/bin/python tools/docs/screenshots.py --guide panels            # one guide's pictures
-    console/.venv/bin/python tools/docs/screenshots.py --guide designer --only 07
-    console/.venv/bin/python tools/docs/screenshots.py --list [--guide panels]   # the file names, one per line
+    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide panels            # one guide's pictures
+    drishti-console/.venv/bin/python tools/docs/screenshots.py --guide designer --only 07
+    drishti-console/.venv/bin/python tools/docs/screenshots.py --list [--guide panels]   # the file names, one per line
 
 Each guide is a module tools/docs/shots/<guide>.py that registers its pictures with `shot = register("<guide>")` (see shotlib.py). Every
-picture is a step of a guide; when the UI changes, run this and commit the new files. console/tests/test_guide_images.py fails if a guide
+picture is a step of a guide; when the UI changes, run this and commit the new files. drishti-console/tests/test_guide_images.py fails if a guide
 shows a picture that is not there, or a picture file no guide shows."""
 from __future__ import annotations
 

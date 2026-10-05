@@ -297,7 +297,7 @@ share their page's subscriptions. Subscriptions that arrive later are added to t
 (`POST /api/channel/{id}`) instead of reconnecting. Five of the six connections are always left for pages,
 searches and suggestions, however many tabs are open.
 
-The channel is held by a **hub**, `console/web/static/js/live-hub.js`:
+The channel is held by a **hub**, `drishti-console/web/static/js/live-hub.js`:
 
 1. In a **SharedWorker** that can hold an `EventSource` (Chrome, Edge and Firefox on the desktop): one worker per
    console origin and browser profile, started by the first tab and ended by the browser when the last tab closes.
@@ -331,7 +331,7 @@ Upstream, the console reads the server's streams through its pooled HTTP client 
 seconds of the browser going away, busy or quiet: it closes the HTTP response itself from a task outside the
 request's cancel scope, because Starlette's scope cancels every clean-up await of a finished request. A test
 guards that no page opens its own `EventSource` (only `live-hub.js` does), and
-`console/tests/test_live_tabs_browser.py` opens eight live tabs and a four-pane workspace in Chromium and checks
+`drishti-console/tests/test_live_tabs_browser.py` opens eight live tabs and a four-pane workspace in Chromium and checks
 that the next page loads at once and every tab and pane keeps ticking.
 
 #### Hub protocol
@@ -355,7 +355,7 @@ Tabs talk to the hub with small messages (over the worker's port, or the `Broadc
 
 #### In the browser: `channel.js`
 
-`console/web/static/js/channel.js` gives every script on the page one object, `window.DrishtiChannel`, with a
+`drishti-console/web/static/js/channel.js` gives every script on the page one object, `window.DrishtiChannel`, with a
 single call, `subscribe(key, handlers)`, which returns a function that unsubscribes:
 
 ```js
@@ -602,7 +602,7 @@ drishti:
 
 Or for one run: `java -jar drishti-server-1.16.0-exec.jar --drishti.live.frame=100ms`.
 
-The console has one live setting, in `console/config/application.yaml`:
+The console has one live setting, in `drishti-console/config/application.yaml`:
 
 | Key | Default | Effect |
 |---|---|---|

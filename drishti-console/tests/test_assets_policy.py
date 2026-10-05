@@ -91,7 +91,7 @@ def test_the_runtime_is_fetched_pinned_and_verified_and_never_committed():
     assert re.search(r'^SHA256="[0-9a-f]{64}"$', script, re.M)
     assert 'URL="https://github.com/pyodide/pyodide/releases/download/${VERSION}/pyodide-${VERSION}.tar.bz2"' in script
     assert "refusing it" in script                                   # a tarball with another hash is not unpacked
-    assert "console/web/static/vendor/pyodide/" in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines()
+    assert "drishti-console/web/static/vendor/pyodide/" in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines()
     docker = (REPO / "deploy/console.Dockerfile").read_text(encoding="utf-8")
     assert "tools/fetch-pyodide.sh" in docker                        # the image carries it: no internet at run time
 

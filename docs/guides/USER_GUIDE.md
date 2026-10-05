@@ -871,7 +871,7 @@ You should see *Impact of MX-20000001*:
 
 Each group has a total. Click any id to open it. With [masked fields](#masked-fields), Impact lists only what you
 could find yourself, and a masked measure and its total read `•••`. See the
-[Impact guide](../../console/web/guides/impact.md).
+[Impact guide](../../drishti-console/web/guides/impact.md).
 
 ## Live updates
 
@@ -1292,7 +1292,7 @@ on the Alerts page and fill the form when clicked.
 
 Rules are kept with your account, and so are the alerts they fire: the newest 1,000 per user
 (`drishti.alerts.keep`) are kept in the identity database, so they are still there after a server restart. More in the
-[Monitors and alerts guide](../../console/web/guides/monitors-and-alerts.md).
+[Monitors and alerts guide](../../drishti-console/web/guides/monitors-and-alerts.md).
 
 ## Workspaces
 
@@ -1301,11 +1301,11 @@ in the followed pane opens in the following pane.
 
 *Views → Workspaces* in the top bar (`/w`) lists yours and the starters. Starters come from packs that
 define them (`finance`: *Credit desk*, *Rates*, *Cross-asset*; `logistics`: one more) and from
-`console/config/workspaces.yaml`.
+`drishti-console/config/workspaces.yaml`.
 
 With any packs, start a blank workspace: type a name under **New workspace** on `/w` and press **Create** (or open
 `/w/<name>` for a name you have not used and click **Create it**). It opens with two empty panes (the `blank` entry of
-`console/config/workspaces.yaml`); type a command in each pane's box, then **Save**. When your packs bring no
+`drishti-console/config/workspaces.yaml`); type a command in each pane's box, then **Save**. When your packs bring no
 starters, *Starters* says so.
 
 Worked example (with the `finance` pack):
@@ -1335,7 +1335,7 @@ Workspaces are saved to your account (up to 50 each).
 
 **If no starters are listed** (the banking packs ship none: *Starters* then says so), start a blank workspace as above,
 or an administrator can add one for everybody
-to `console/config/workspaces.yaml`; it appears after the console restarts:
+to `drishti-console/config/workspaces.yaml`; it appears after the console restarts:
 
 ```yaml
 templates:
@@ -1348,7 +1348,7 @@ templates:
       - { ref: { kind: ir-curve, id: CRV-USD-OIS }, title: Discount curve }
 ```
 
-`follows: 0` means "follow the first pane". See the [Workspaces guide](../../console/web/guides/workspaces.md).
+`follows: 0` means "follow the first pane". See the [Workspaces guide](../../drishti-console/web/guides/workspaces.md).
 
 ### Sharing a workspace
 

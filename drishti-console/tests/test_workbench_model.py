@@ -22,7 +22,7 @@ import subprocess
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-JS = ROOT / "console" / "web" / "static" / "js"
+JS = ROOT / "drishti-console" / "web" / "static" / "js"
 EXAMPLES = ROOT / "docs" / "guides" / "examples"
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(NODE is None, reason="needs node")

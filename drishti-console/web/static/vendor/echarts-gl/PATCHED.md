@@ -9,4 +9,4 @@
 post-processing size expressions (`expr(width * 1.0 / 2)`, `expr([width * 1.0 / 4, height / 4])`) with
 `new Function`, which Drishti's content security policy forbids (no `unsafe-eval`). The replacement parses exactly
 that grammar (`width`, `height` or `dpr`, then any `* n` or `/ n`, alone or in a two-element array) into the same
-functions, without eval. `console/tests/test_assets_policy.py` checks the patch is present.
+functions, without eval. `drishti-console/tests/test_assets_policy.py` checks the patch is present.

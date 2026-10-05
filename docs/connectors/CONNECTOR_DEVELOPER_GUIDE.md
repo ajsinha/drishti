@@ -280,7 +280,7 @@ drishti:
 
 ```bash
 java -jar drishti-server/target/drishti-server-*-exec.jar
-console/.venv/bin/python console/run_drishti_web.py
+drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 The server listens on `http://localhost:18480`, the console on `http://localhost:17480`. Configuration is read at

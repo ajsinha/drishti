@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Changed:** the console module is `drishti-console/` (was `console/`), named like the other modules. Recreate its virtual environment once: `rm -rf drishti-console/.venv` and follow QUICKSTART step 3; point IDE run configurations at `drishti-console/run_drishti_web.py` and `drishti-console/.venv`.
 
 ## 1.16.0 — Java 21 for production, About this page, Share and Discussion (2026-10-05)
 
@@ -115,12 +116,12 @@
 - **Fixed (SEC-11):** Sutra problems name their files relative to the Sutra root (`/api/v1/sutras/problems` and save/preview errors); the absolute paths stay in the server log.
 - **Fixed (UX-13):** a console endpoint that reads JSON answers a body that is not JSON, or JSON that is not an object, with a 400 or 415 problem, never a plain 500 (`json_body` checks the shape; `test_json_bodies.py` covers every such route).
 - **Fixed (UX-10):** a DRS code appears once in a message: one shared helper (`drs_message` in Python, `drsMessage` in the browser) does not prefix a message that already starts with the code and drops repeats inside it; the missing-entity page, the alerts page and the other pages use it.
-- **Fixed (DOC-18):** in-app help links open: repository documents not in the catalogue open at a slug made from their path, anchors are made the way GitHub makes them (`delta--delta-lake`, headings with `<kind>` in them), and `console/tests/test_help_links.py` finds no dead internal help link.
+- **Fixed (DOC-18):** in-app help links open: repository documents not in the catalogue open at a slug made from their path, anchors are made the way GitHub makes them (`delta--delta-lake`, headings with `<kind>` in them), and `drishti-console/tests/test_help_links.py` finds no dead internal help link.
 - **Added:** expandable row groups in Sutra panels. A `pivot` panel's `by` may be a list (`by: [desk, book, productType]`): the rows nest, each group row shows its subtotal and a ▸/▾ toggle, `expand` (a whole number, default 1, or `all`) sets the levels open at first; a single `by` is unchanged. `table` and `ladder` take `children` (an expression per row, such as `"@.children"`) and `expand`: rows with children expand in place, indented, to any depth; columns read each child with `@`, `total: true` sums the leaf rows only, and the filter keeps the ancestors of a match. Bad option types are located `DRS-2029` problems; `drishti.panels.tree-depth` and `tree-rows` bound a tree. The console draws nested pivots with the Pivot tab's grid (`pivot-grid.js`, via the new `tree-rows.js`), keyboard accessible; CSV export lists every row. Tests: `ChartPanelsTest`, `StrictSutraTest`, `test_tree_rows.py` (headless Chromium, skipped without one). Docs: RACHANA_REFERENCE, PANELS, RACHANA_GUIDE, panel-kinds guide, CONFIGURATION.
 - **Added (examples):** `docs/guides/examples/`: ten small working Sutras (`all-panels-showcase`, `pivot-row-groups`, `tree-table`, `market-charts`, `risk-distribution`, `pnl-explain`, `relationships`, `operations-status`, `exposure-profile`, `linked-sources`), each with a self-contained JSON document and a note (the last reads live linked entities with `source`), together using all twenty panel kinds, nested pivot groups and tree rows. Studio opens on `all-panels-showcase` (`ui.studio_example`; falls back to the old behaviour), has **File → Open** (`.yaml`/`.yml` and/or `.json`, read in the browser, then previewed) and `/studio?example=<name>`, served by `/studio/example/<name>` from `studio.examples_dir` for names of complete sets only; **Help → Examples** lists each with its note, YAML, JSON and an *Open in Studio* link. Tests: `test_examples.py` (the set covers all twenty kinds, a nested pivot and a tree table; names cannot traverse paths). Docs: QUICKSTART, RACHANA_GUIDE, CONFIGURATION.
-- **Docs:** QUICKSTART builds and runs with a system `mvn`, from IntelliJ IDEA and PyCharm, and with a different config (`--spring.config.additional-location`, profiles, the console's local file, env vars, arguments); CONFIGURATION explains the `${NAME:default}` placeholders (precedence, relaxed names, nesting) with a table of every one in both `application.yaml` files, kept in step by `console/tests/test_docs_placeholders.py`; the developer guide has a tried example config with two file, two Delta, two JDBC and one Kafka connector and how kinds route across them.
+- **Docs:** QUICKSTART builds and runs with a system `mvn`, from IntelliJ IDEA and PyCharm, and with a different config (`--spring.config.additional-location`, profiles, the console's local file, env vars, arguments); CONFIGURATION explains the `${NAME:default}` placeholders (precedence, relaxed names, nesting) with a table of every one in both `application.yaml` files, kept in step by `drishti-console/tests/test_docs_placeholders.py`; the developer guide has a tried example config with two file, two Delta, two JDBC and one Kafka connector and how kinds route across them.
 - **Fixed (UX-05):** example entities come from the packs switched on, not the finance pack. Plain `/studio` previewed `trade/IRS-48213` with `irs-vanilla@3` and opened on a red `DRS-1001` with any other packs; it now opens on the first example entity of the user's packs (their `console.examples`, as on `/t`) with a Sutra of its kind, or, when no pack names one, empty with a hint (no preview, no error). The new-Sutra template binds no pack's fields. The landing page's hero commands and *Keyboard first* card use the packs' examples (`ui.landing_examples`, 4), a showcase caption names its command only when that pack is installed (`ui.showcase`, now configuration), and the server's `DRS-4001` names the mnemonics it has loaded instead of `TRD IRS-48213`. Tests: `test_samples.py`, `CommandParserTest`. Docs: USER_GUIDE, sutra-studio guide, CONFIGURATION, TROUBLESHOOTING.
-- **Fixed (UX-06):** workspaces can be made with any packs. `/w` has **New workspace** (a name, then **Create**: a blank workspace from `blank` in `console/config/workspaces.yaml`, two empty panes), says so when the packs bring no starters, and `/w/<name>` for a name not yet used offers **Create it** (`?new=1`). Tests: `test_workspaces.py`. Docs: workspaces guide, USER_GUIDE, QUICKSTART, CONFIGURATION.
+- **Fixed (UX-06):** workspaces can be made with any packs. `/w` has **New workspace** (a name, then **Create**: a blank workspace from `blank` in `drishti-console/config/workspaces.yaml`, two empty panes), says so when the packs bring no starters, and `/w/<name>` for a name not yet used offers **Create it** (`?new=1`). Tests: `test_workspaces.py`. Docs: workspaces guide, USER_GUIDE, QUICKSTART, CONFIGURATION.
 - **Fixed (UX-07):** `Alt+1`…`Alt+4` move between workspace panes wherever the focus is: a pane (an embedded view, or its error page) hands `Alt+0`…`Alt+4` to the workspace by a same-origin message, and the workspace acts only on messages from its own panes. `Alt+0` returns from a pane to the workspace's bar, so keyboard users are never stuck in a pane; an empty pane takes the focus in its command box. Test: `test_workspace_keys_browser.py` (Chromium; skipped without Playwright). Docs: workspaces guide, USER_GUIDE, PYTHON_CALC, QUICKSTART.
 - **Fixed (UX-08):** a picked date that no dated store holds no longer passes current data off as that date. The view said *murex-rates is not a dated source* (the kind has a dated store; it lacked the date) and, in the top bar and in workspace panes, *Live*. It now says *No data held for <date>: no dated store has <id> for that date*, names the undated source whose current data is shown instead, as a still snapshot (no live updates in a page or pane, the top bar says *Static*), with *Back to live*. Tests: `test_terminal.py`. Docs: USER_GUIDE, GETTING_STARTED, QUICKSTART, TROUBLESHOOTING, the connector guides, ADR-012.
 - **Fixed (UX-09):** pivot groups of numbers read `4.240872601E7` on a search pivot. Numbers as group keys are written plainly, to at most 15 significant digits (`42408726.01`, `0.3`, never an exponent), the same by the server (`PivotCube.key`) and the client engine (`pivot-engine.js`), so a panel's pivot and a search's agree. Tests: `PivotCubeTest`, `test_pivot.py`. Docs: USER_GUIDE, pivot-tab guide.
@@ -205,7 +206,7 @@
   A layout promotion (Sutra version N against N+1) used to show a moved panel block as a deleted block and an added one,
   hiding the one real edit in it. The review page and the promote drawer now list each moved panel in words, *moved:
   DV01 by tenor (USD) from position 3 to 1 (side → main)* (positions within the column), and show only the real edits
-  as a line diff; **Full line diff** keeps the plain diff one click away. `console/core/sutra_diff.py` matches panel
+  as a line diff; **Full line diff** keeps the plain diff one click away. `drishti-console/core/sutra_diff.py` matches panel
   blocks by id (with the comments above them), finds the ones out of order with a longest common subsequence per
   column, and diffs the old text with its blocks in the new order. A Sutra it cannot read as a panel list (a flow
   list, duplicate ids) gets the full diff, so nothing is hidden. `GET /api/layout/{sutra}/{kind}/promotion` adds
@@ -264,12 +265,12 @@
   MTA and MPoR, netting, wrong-way flags, HHI, limit heatmap, SA-CCR rebuilt, SIMM, margin calls, haircut stress) and
   desks, books, traders, groups and issuers (top movers, Sharpe, maturity ladders, par-swap hedges, IRB capital).
   Each reads with the `_async` forms, so it runs in every browser, and was run in headless Chrome against the samples.
-  - **`drishti.quant`** (`console/web/static/calc/quant.py`, numpy only): tenors and day counts, Brent and Newton,
+  - **`drishti.quant`** (`drishti-console/web/static/calc/quant.py`, numpy only): tenors and day counts, Brent and Newton,
     the normal distribution, `ZeroCurve` (log-linear, linear, natural cubic; scenarios and key-rate bumps), par rates,
     annuities, swap PVs, a bootstrap, bond price/yield/duration/convexity/Z-spread, Black-Scholes, Black-76,
     Garman-Kohlhagen and Bachelier with Greeks, implied vol, FX delta strikes, SVI, realised-vol estimators, VaR, ES,
     Kupiec, drawdown, Sharpe, HHI, hazard rates, survival, CVA and the FRTB aggregation formulas. The worker fetches it
-    the first time a cell names `quant` (`from drishti import quant as q`); `console/tests/test_quant.py` checks it
+    the first time a cell names `quant` (`from drishti import quant as q`); `drishti-console/tests/test_quant.py` checks it
     against textbook values (it needs numpy, so the console's own run skips it).
   - **Generator:** snippet sources are files, `tools/packgen/banking/snippets/<pack>/*.py` with `title`,
     `description`, `kinds` and `example` lines; `make_packs.py` refuses one over 60 lines and `--check` also fails on a
@@ -348,7 +349,7 @@
     Admin → Roles has a tick box (*Customise layouts*, ticked for a new role); kept as a `no-layout` row in
     `drishti_role_power` so existing roles keep the default. Without it the key is greyed with the reason and the
     endpoints answer `403`. `drishti.layouts.enabled` / `layouts.enabled` (`DRISHTI_LAYOUTS_ENABLED`) switch it off.
-- **Workspaces: drag and drop, and dividers** ([workspaces guide](console/web/guides/workspaces.md)). Drag a suggestion
+- **Workspaces: drag and drop, and dividers** ([workspaces guide](drishti-console/web/guides/workspaces.md)). Drag a suggestion
   (or a recent view) from the command line onto a pane, or a pane's number onto another pane, to show that view there;
   drag the dividers between columns and rows (or move them with the arrow keys) to resize the panes. Workspaces keep
   their `sizes` (`{"cols": [...], "rows": [...]}`, validated per layout).
@@ -790,13 +791,13 @@
 - **Workspaces** (`/w`): 2–4 live views on one screen, in layouts of two or three columns, two by two, or one large with two stacked.
   - Each pane is a same-origin embedded view with its own live stream and keys.
   - A pane can **follow** another: a link clicked in the followed pane opens there (postMessage, origin-checked). `Alt+1…4` moves between panes.
-  - Starters (*Credit desk*, *Rates*, *Cross-asset*) are config (`console/config/workspaces.yaml`).
+  - Starters (*Credit desk*, *Rates*, *Cross-asset*) are config (`drishti-console/config/workspaces.yaml`).
 - **Saved per user** on the server: `GET/PUT/DELETE /api/v1/me/workspaces[/{name}]`, validated (known layout, 1–4 panes, entitled entities, no follow cycles). They are stored in a new per-user `PreferenceStore` (atomic JSON, 64 KB per document, 50 per namespace), which is removed with the user.
 - Views have an embed mode (`?embed=1`: no chrome, no breadcrumbs). The CSP allows same-origin frames only (`frame-ancestors 'self'`, `X-Frame-Options: SAMEORIGIN`).
 - Docs: a Workspaces guide in help; updated user guide, API guide and architecture.
 
 ## 1.3.0 — Wave 12b: competitive landscape and mobile (2026-09-30)
-- **Competitive landscape** (`/about/competitive`), in Maya's form. It compares categories, not vendors (market data terminals, trading and risk platform screens, low-code tools, BI), with a Yes/Partial/No matrix over twelve capabilities and, for each, the problem and how Drishti does it. It says plainly where Drishti is weaker (no market data content or analytics, no ecosystem or support). The rows are config (`console/config/competitive.yaml`).
+- **Competitive landscape** (`/about/competitive`), in Maya's form. It compares categories, not vendors (market data terminals, trading and risk platform screens, low-code tools, BI), with a Yes/Partial/No matrix over twelve capabilities and, for each, the problem and how Drishti does it. It says plainly where Drishti is weaker (no market data content or analytics, no ecosystem or support). The rows are config (`drishti-console/config/competitive.yaml`).
 - **Mobile.** Every page works on iPhone (~390 px) and Android (~412 px): stacked layouts; a swipeable F-key bar of tap targets; 16 px inputs (no iOS zoom on focus); safe-area insets; tables that scroll inside their panel; Studio hidden on phones. A web-app manifest and touch icon allow *Add to Home Screen*, which opens at the terminal. Checked with CDP mobile emulation: no page scrolls sideways at 390 px.
 
 ## 1.2.0 — Wave 12: help centre and About (2026-09-30)
@@ -908,7 +909,7 @@
 - Docs: `PLUGIN_GUIDE.md`; ARCHITECTURE §7a (command suggestions).
 
 ## Wave 2: console shell & landing
-- FastAPI + Jinja2 console (`console/`) with a layered config (YAML → local → env → CLI), a strict CSP and security headers.
+- FastAPI + Jinja2 console (`drishti-console/`) with a layered config (YAML → local → env → CLI), a strict CSP and security headers.
 - Five themes, tokens only in `tokens.css`: terminal (default), parchment, **wallstreet** (Bloomberg Terminal colour scheme), blue, green.
 - Landing page: a canvas hero (JSON → `{◉}` → assembled, ticking panels) with replay, reduced motion and pause-when-hidden; stats strip; Sutra example; animated pipeline; capabilities; the four reference views.
 - Every front-end asset is vendored (Bootstrap, Bootstrap Icons, ECharts). Tests fail on any external URL, inline script or inline handler.

@@ -47,12 +47,12 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Understand what a view is showing you | [USER_GUIDE.md › Reading a view](guides/USER_GUIDE.md#reading-a-view) |
 | Find entities by value (`TRD where mtm > 1m …`) | [USER_GUIDE.md › Search by value](guides/USER_GUIDE.md#search-by-value) |
 | Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](guides/USER_GUIDE.md#compare-what-changed) |
-| See what depends on an entity (F8) | [Impact guide](../console/web/guides/impact.md) |
+| See what depends on an entity (F8) | [Impact guide](../drishti-console/web/guides/impact.md) |
 | Download CSV or JSON, print, or share a link | [USER_GUIDE.md › Export, print and share](guides/USER_GUIDE.md#export-print-and-share) |
 | Send a view to a colleague with a note, read your inbox, discuss a number | [USER_GUIDE.md › Share a view with a note](guides/USER_GUIDE.md#share-a-view-with-a-note), [Your inbox](guides/USER_GUIDE.md#your-inbox), [Discussion](guides/USER_GUIDE.md#discussion) |
 | Follow a share and a comment end to end (rights, masks, audit, retention) | [HOW_IT_FITS.md §3.10](architecture/HOW_IT_FITS.md#310-share-and-discussion-end-to-end) |
-| Watch a list live, or be alerted when a figure crosses a line | [Monitors and alerts guide](../console/web/guides/monitors-and-alerts.md) |
-| Put several views on one screen | [Workspaces guide](../console/web/guides/workspaces.md) |
+| Watch a list live, or be alerted when a figure crosses a line | [Monitors and alerts guide](../drishti-console/web/guides/monitors-and-alerts.md) |
+| Put several views on one screen | [Workspaces guide](../drishti-console/web/guides/workspaces.md) |
 | Change your theme, landing page or password | [USER_GUIDE.md › Your settings](guides/USER_GUIDE.md#your-settings) |
 | Choose which packs you see | [USER_GUIDE.md › Domain packs](guides/USER_GUIDE.md#domain-packs-choosing-what-you-see) |
 | Find the commands for a pack | [PACKS.md › The packs that ship](guides/PACKS.md#the-packs-that-ship), and the pack's own guide under *Help → Domain packs* |
@@ -66,7 +66,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Choose or configure a panel kind | [PANEL_KINDS.md](guides/PANEL_KINDS.md) |
 | Add a new panel kind to Drishti | [PANEL_DEVELOPER_GUIDE.md](guides/PANEL_DEVELOPER_GUIDE.md) |
 | Edit a Sutra with live preview and submit it for review | [Screen designer guide](guides/SCREEN_DESIGNER.md) |
-| Lay out nested documents (lists inside lists) | [Nested documents tutorial](../console/web/guides/nested-data.md) |
+| Lay out nested documents (lists inside lists) | [Nested documents tutorial](../drishti-console/web/guides/nested-data.md) |
 | Choose the right panel kind | [PANEL_KINDS.md](guides/PANEL_KINDS.md) |
 | Build a new panel kind, end to end (grammar, engine, console, workbench, tests) | [PANEL_DEVELOPER_GUIDE.md](guides/PANEL_DEVELOPER_GUIDE.md) |
 | Look up a key, format, expression or problem code | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) |
@@ -199,15 +199,15 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [live-latency-high.md](admin/runbooks/live-latency-high.md) | live views are slow, late or frozen, or the live dot stays amber |
 | [sign-in.md](admin/runbooks/sign-in.md) | users cannot sign in, are locked out, or are refused (`DRS-5010`, `DRS-5002`) |
 
-### In-app guides (`../console/web/guides/`, also under *Help*)
+### In-app guides (`../drishti-console/web/guides/`, also under *Help*)
 
 | Guide | Read this when… |
 |---|---|
 | [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
-| [nested-data.md](../console/web/guides/nested-data.md) | your documents hold lists inside lists |
-| [impact.md](../console/web/guides/impact.md) | you use or configure F8 impact |
-| [monitors-and-alerts.md](../console/web/guides/monitors-and-alerts.md) | you set up watchlists and alert rules |
-| [workspaces.md](../console/web/guides/workspaces.md) | you arrange several live views on one screen |
+| [nested-data.md](../drishti-console/web/guides/nested-data.md) | your documents hold lists inside lists |
+| [impact.md](../drishti-console/web/guides/impact.md) | you use or configure F8 impact |
+| [monitors-and-alerts.md](../drishti-console/web/guides/monitors-and-alerts.md) | you set up watchlists and alert rules |
+| [workspaces.md](../drishti-console/web/guides/workspaces.md) | you arrange several live views on one screen |
 
 ### Records
 

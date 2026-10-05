@@ -24,7 +24,7 @@ Tester: QA agent. Repo HEAD 778bac1 (develop). Scratch server :18985, console :1
 - `git ls-remote https://github.com/ajsinha/drishti.git` -> HEAD 778bac1 (same as local). Cloned (from the local repo, same commit) into qa-ux/fresh.
 - Prereqs: `java -version` -> openjdk 25.0.4.1; uv 0.12.17; python3 3.14.4. GETTING_STARTED Step 1 says the java line "starts with `openjdk version "21.`" (DOC: wrong, and contradicts "25 exactly").
 - `./mvnw -q package -DskipTests` (JAVA_HOME=25): rc 0, 49 s (warm ~/.m2), produced drishti-server-1.13.0-exec.jar (matches doc).
-- `uv venv console/.venv` + `uv pip install ... -r console/requirements.txt`: 26 packages incl. FastAPI, Uvicorn, Jinja2, httpx, PyYAML, Markdown, pytest (matches QUICKSTART list). uv chose CPython 3.13.
+- `uv venv drishti-console/.venv` + `uv pip install ... -r drishti-console/requirements.txt`: 26 packages incl. FastAPI, Uvicorn, Jinja2, httpx, PyYAML, Markdown, pytest (matches QUICKSTART list). uv chose CPython 3.13.
 - Step 4 `make_data.py --lake data/delta`: rc 0, "lake: 17910 rows under data/delta (reference, market, trading, risk, credit, collateral)" + data/feeds/fixing/SOFR-HISTORY.csv: matches.
 - GETTING_STARTED Step 5 other generators (liquidity..economics) all rc 0; `ls data/delta` lists the 13 domains the doc names: matches.
 - `tools/load-delta.sh data/delta --trades 10000`: 7.3 s, 69 MB; 10,000 trades x 3 days (2026-09-28..30). (Progress lines are \r-joined in a log; cosmetic.)
@@ -90,7 +90,7 @@ Tester: QA agent. Repo HEAD 778bac1 (develop). Scratch server :18985, console :1
 - --d-faint used for real text fails WCAG 4.5:1 in every theme except wallstreet: light 2.83 (#8a93a6 on #f7f5f0), crimson 2.82, terminal 3.32 (2.94 on surfaces: "No data available"), blue 3.94, green 4.36, crimson-dark 4.17. Used by footer copyright, .fk-note, .pnl-empty, .help-foot, separators, input placeholders (2.6 in light/crimson).
 - light theme accent #b86e0c used as TEXT (example commands on /t, inline code in help, kickers, CodeMirror keywords): 3.35-3.98:1.
 - bootstrap btn-outline-secondary (#6c757d) 3.8-3.9:1 in dark themes.
-- The repository test (console/tests/test_contrast.py, passes) only checks ink/muted/link/neg/pos and accent-vs-bg at 3:1 — it never checks --d-faint or accent as body text.
+- The repository test (drishti-console/tests/test_contrast.py, passes) only checks ink/muted/link/neg/pos and accent-vs-bg at 3:1 — it never checks --d-faint or accent as body text.
 
 ## 21:00 Calc (Alt+C) — calc0.py, calc.py, calc.out, shots/calc_*.png
 - Fresh clone without Pyodide: drawer says "Python runtime not installed: run tools/fetch-pyodide.sh", Run disabled (graceful). QUICKSTART/GETTING_STARTED never mention fetch-pyodide.sh, so Alt+C (advertised in the bottom bar) is dead after the walkthrough.
