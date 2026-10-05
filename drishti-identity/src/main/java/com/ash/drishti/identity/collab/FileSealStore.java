@@ -24,6 +24,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 /** Seals appended to {@code <dir>/seals.log} (one {@code key TAB count TAB hash} line each, the last wins), read once at start. */
 public final class FileSealStore implements Seal.Store {
@@ -52,15 +53,21 @@ public final class FileSealStore implements Seal.Store {
         return Optional.ofNullable(seals.get(key));
     }
 
+    /** Serialises appends: a ReentrantLock, not synchronized, since the append is file I/O (Java 21 would pin a virtual thread). */
+    private final ReentrantLock appending = new ReentrantLock();
+
     @Override
-    public synchronized void put(String key, Seal seal) {
+    public void put(String key, Seal seal) {
+        appending.lock();
         try {
             Files.createDirectories(file.getParent());
             Files.writeString(file, key + '\t' + seal.count() + '\t' + seal.hash() + '\n', StandardCharsets.UTF_8, StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND);
+            seals.put(key, seal);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        } finally {
+            appending.unlock();
         }
-        seals.put(key, seal);
     }
 }
