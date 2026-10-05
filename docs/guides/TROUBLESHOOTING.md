@@ -329,6 +329,36 @@ A share reached the bell but not the mailbox. Work down the list; each row is on
 | The mail is in spam | Missing sender authentication | Use a From address your mail server may send for (SPF/DKIM): `drishti.collab.email.from`. |
 | The message has no id or note | The pack is `link-only` | `drishti.collab.packs.<pack>.email.content`, or `email.content: link-only`. |
 
+### A shared link opened different data, or a comment shows other numbers
+
+A share and a comment each **pin** the date you were looking at. What a reader gets depends on the source (the pin is evidence, never an address):
+
+| What the reader sees | Cause | What to do |
+|---|---|---|
+| Banner "You are seeing 29 Sep as known at ..., as it was shared" | Working as designed: a source that keeps versions (Delta Lake, Iceberg) | Nothing. **Go live** drops the pin for that page only |
+| Banner "the latest data for 29 Sep: this source keeps no earlier versions" | The dated store has the day but not versions (`DRS-1007`) | By design; the figures are the latest for that date |
+| Banner "You are seeing ... live; the data has changed since it was shared (generation 3 to 5)", with **What changed** | The source is undated or live: the page is today's | By design; **What changed** compares with the moment it was shared |
+| "No data held for 2026-09-30: no dated store has MX-20000001 for that date" | No store holds that day (the demo trade's source keeps no dates) | The sender picked a date the data never had; see the *DRS-4003* entry below for the history window |
+| A comment's **Open as it was** is missing | The page already shows the comment's date and generation | By design |
+
+### Someone was not notified, or cannot open the share
+
+The dialog (and the reply to `POST /api/v1/shares`) lists who was skipped and why. The same reasons apply to a mention in a comment.
+
+| Reason shown | Cause | What to do |
+|---|---|---|
+| "may not open trade views" | Their role does not open that kind | Give the role the kind (`roles:` in the pack, or the role under Admin). Meanwhile they get nothing, not even "someone mentioned you" |
+| "does not have the pack for trade views" | The pack is not assigned to them | Assign it under Admin → Users. A pack that is assigned but switched off is delivered: the page offers **Switch on** |
+| "account is disabled" | The person is disabled | Enable them, or share with someone else |
+| "some members may not open ... views" | A role was addressed and some members cannot open the kind | Expected; the others were told. Under `share.undeliverable: silent` the sender is not told |
+| No such name in the picker, or `DRS-7002` | The directory lists only people who share a pack with the sender, from two letters | Ask an administrator, or set `drishti.collab.directory.scope: all` |
+| "A shared view you cannot open" | The recipient lost the right after the share was sent | By design: a plain page with the sender and the date, nothing about the data; the inbox row stays |
+| `404` on `/share/sh_...` | The link is not for that person, or was cut in copying | Ask the sender to share it again (a stranger cannot learn that a share exists) |
+| `429 DRS-7003` on a share, reply or search | Too many in a minute | Wait the `Retry-After` seconds; the limits are `drishti.collab.limits.*` |
+
+Email is a separate channel: [The email never arrived](#the-email-never-arrived). A thread you cannot see is `DRS-7005` (a thread follows the right to
+open its entity); a comment past its edit window is `DRS-7008`; the whole list is under [Error codes](#error-codes).
+
 ## Commands and views
 
 ### "DRS-4001 cannot read command '…'; type <MNEMONIC> <ID> <GO> with a mnemonic such as …"

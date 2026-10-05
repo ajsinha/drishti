@@ -26,7 +26,7 @@ differ when you try it.
 
 1. [The one-page picture](#1-the-one-page-picture)
 2. [The pieces and how they refer to each other](#2-the-pieces-and-how-they-refer-to-each-other)
-3. [Worked example A: a trade, end to end](#3-worked-example-a-a-trade-end-to-end) (3.9: [About this page, end to end](#39-about-this-page-end-to-end))
+3. [Worked example A: a trade, end to end](#3-worked-example-a-a-trade-end-to-end) (3.9: [About this page, end to end](#39-about-this-page-end-to-end); 3.10: [Share and Discussion, end to end](#310-share-and-discussion-end-to-end))
 4. [Worked example B: a gene variant, another domain](#4-worked-example-b-a-gene-variant-another-domain)
 5. [What happens without a Sutra](#5-what-happens-without-a-sutra)
 6. [How a new screen gets made today](#6-how-a-new-screen-gets-made-today)
@@ -52,6 +52,7 @@ product. Packs and Sutras are configuration read when the server starts (Sutras 
     v
  SERVER    drishti-server/  (Java 21+, Spring Boot, port 18480)
     |      controllers: CommandController, ViewController, ExplainController, StreamController, DesignController, ...
+    |                   ShareController, InboxController, ThreadController (collaboration: below)
     v
  ENGINE    drishti-engine/ ViewPipeline            (and ExplainService: the same pipeline asked "why", for About this page)
     |       command -> fetch -> match -> fingerprint -> layout -> link -> bind
@@ -76,10 +77,18 @@ product. Packs and Sutras are configuration read when the server starts (Sutras 
     |     packs/<name>/config/about.yaml   what each kind and field means (About this page)
     |     drishti-server/src/main/resources/application.yaml   drishti.sources, drishti.rachana, ...
     |
+ COLLAB    people talking about a view: drishti-server/.../collab  ShareService, ThreadService, InboxService, Audience, NoteText,
+           CommentRenderer, Notifier (InAppNotifier, EmailNotifier -> OutboxDispatcher), CollabPurge, ExportService; the
+           records are in drishti-identity/.../collab (ShareStore, InboxStore, OutboxStore, ThreadStore, HoldStore, HashChain),
+           in the identity database. The console draws the Share dialog, the bell and inbox, and the Discussion tab.
  BUILD     the Build workbench (console /build, server DesignController / GovernanceController)
            makes new Sutras and proposes them; an approved Sutra is saved into the registry
            (SutraRegistry) and the next view uses it.
 ```
+
+**Collaboration** sits beside the pipeline, not in it: a share or a comment stores a person's words and a *pin* (which data they were looking at),
+and everything a reader is shown is computed for that reader, when they look, by the same `Entitlements` and the same view pipeline. Section 3.10 follows
+one share and one comment end to end.
 
 The Maven modules: `drishti-api` (the plugin interface and shared types), `drishti-engine` (pipeline, router, binder),
 `drishti-rachana` (the grammar, parser, matcher, registry), `drishti-inference` (layouts from the shape of data),
@@ -103,6 +112,11 @@ The UI is the separate Python project in `console/`. The full module list is in
 | **Link** | A field that names another entity, so it opens that entity's own view. | `graph.fields` in `pack.yaml`; `link(...)` in a Sutra |
 | **Role / mask** | Who may open which kinds, and which fields read `•••`. | `pack.yaml` `roles:`; `drishti.security.redact` |
 | **About text** | The pack's own words for a kind (one sentence about this entity) and for its fields (term, meaning, unit, sign), shown in the About drawer. | `packs/<name>/config/about.yaml` (`pack.yaml` key `about:`) |
+| **Share** | A person's note about a view or a panel, sent to people and roles, with a pin. Not a copy of data: a link plus words. | `drishti_share`, `ShareService`; opened at `/share/sh_…` |
+| **Pin** | Which data a share or comment was about: business date, "known at", generation, source. Evidence, never an address; the view opens at the date and "known at" as request parameters. | `Pin`; the link's `asOf`, `knownAt`, `gen` |
+| **Notice** | One row in a person's inbox (share, mention, reply), pushed to the bell. Titles and excerpts are rendered for the reader each time. | `InboxStore`, `InboxService`, `InboxHub`, SSE event `notice` |
+| **Thread, comment** | A conversation anchored to a view, a panel or a field; each edit is a hash-chained revision. | `CommentThread`, `Comment`, `Revision`, `ThreadService`, `HashChain` |
+| **Hold** | A legal hold: a scope (entity, kind, user, thread, all) that retention may not purge. | `Hold`, `HoldService`, `CollabPurge` |
 
 How they point at each other:
 
@@ -120,6 +134,8 @@ How they point at each other:
 | A chart panel | another entity's data | `source: "link($.discountCurve, 'ir-curve')"` fetches that entity and plots its rows |
 | A caller | what they may see | `roles:` (`kinds:`, `raw:`) and `drishti.security.redact` (field names) |
 | A kind | the words that explain it | `kinds.<kind>` of an `about.yaml` in the pack or a pack it `extends:` (most specific wins); the glossary is keyed by field path |
+| A share or a comment | the data it is about | its `Pin`: `asOf`, `knownAt`, generation (opened as request parameters, never the reader's saved date) |
+| A recipient or reader | what they are shown of it | `Entitlements.mayReach` at delivery, the reader's masks at every read (`NoteText.render`, `CommentRenderer`), `maskedValues` at write |
 | A Sutra | its pack | the folder (`sutras: sutras` in `pack.yaml`); extra site Sutras in `drishti.rachana.dirs` |
 
 Two rules hold the whole thing together. A **kind** is the only thing a store, a Sutra and a command have in common:
@@ -504,6 +520,168 @@ Where each part is changed is section 7; the design, the open decisions and the 
 [CONTEXT_HELP.md](CONTEXT_HELP.md); how to write the text is in the
 [pack developer guide](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
 
+### 3.10 Share and Discussion, end to end
+
+*Two people, one trade.* `asha` (role `author`, sees every field) is looking at `TRD MX-20000001` on the business date 2026-09-30 and wants `vera`
+(role `viewer`, no `raw`: the trader and counterparty fields read `•••` for her) to check something. Then they talk about it in the open. The code
+lives in `drishti-server/.../collab` (services and controllers), `drishti-identity/.../collab` (records and stores) and the console
+(`routes/collab_routes.py`, `routes/thread_routes.py`, `core/collab.py`, `core/threads.py`, `share.js`, `discussion*.js`, `inbox.js`, `alerts.js`).
+The design and its reasons are in [COLLABORATION.md](COLLABORATION.md) and [ADR-020](adr/020-collaboration-records-live-in-the-identity-database.md); the
+pictures below are made by `tools/docs/shots/collab.py` on a server started with the QUICKSTART packs and sign-in on.
+
+**The rule that explains every step:** what a person receives is **computed for that person, when they look, from what they may see now**. A share
+or a comment stores the author's words and a *pin* (which data they were looking at), never a copy of the data. So there is nothing to leak
+later, and nothing to update when someone's role changes.
+
+#### Part 1: Asha shares the view
+
+![The Share dialog on MX-20000001](../guides/img/collab/01-share-dialog.jpg)
+
+Asha presses `Alt+S` (`share.js`), picks `Vera Lim` from the people picker and writes the note: *"Please check the fixed leg before the 16:00 sign-off.
+The trader on this one is A. Shah."* The yellow warning is the server's answer to the second sentence, explained in step 6.
+
+| # | What happens | Where | Code |
+|---|---|---|---|
+| 1 | The picker asks for people and roles: only users who share a pack with Asha, from two letters, rate limited; a role shows its size, never its members | console to server | `people.js`, `GET /api/directory` then `GET /api/v1/directory`, `DirectoryController`, `DirectoryService` (`drishti.collab.directory.*`) |
+| 2 | The dialog posts the page's own `asOf` and `knownAt` in the body (a pinned link sets no cookie); the console turns them into the as-of headers of that one call | console | `collab_routes.py` `share`, `BackendClient` (`X-Drishti-As-Of`, `X-Drishti-Known-At`) |
+| 3 | Asha must hold the `collaborate` power, the kind's pack must allow sharing (`drishti.collab.packs.<pack>.share-enabled`, else `403 DRS-7004`), and she must herself be able to open `trade` | server | `ShareService.share`, `requireCollaborate`, `requirePackSharing`, `Entitlements.requireOpen` |
+| 4 | **Recipients are resolved.** Names and roles become people: a role expands to its members (at most `max-group-size`; `admin` and `service` are never addressable); each person must be in Asha's directory scope. Each is then checked **at delivery**: their role opens `trade` *and* the pack that owns `trade` is assigned to them (`Entitlements.mayReach`; a pack they switched off still delivers, and the page offers *Switch on*). The result per person is a state: `notified`, `no-access`, `no-pack`, `disabled` or `over-limit` | server | `ShareService.resolve`, `DirectoryService`, `Principals` (a principal for any user, cached a minute), `Entitlements.mayReach`, `reachState`, `Recipient` |
+| 5 | The document is read **as Asha saw it** (`asOf`, `knownAt`), only to pin the share: its generation must not exceed what the server holds (`422 DRS-7011`) | server | `SourceRouter.fetch`, `Pin` |
+| 6 | **The note is scanned for masked values.** `Entitlements.maskedValues(doc)` lists the values of every field in `drishti.security.redact` (here the trader, `A. Shah`); `NoteText.spans` records where they occur in the note. The stored text is untouched: the *spans* are stored, and every reader without `raw` is shown `•••` there. Asha gets the warning (`text.on-masked-copy: warn`; `reject` refuses with `DRS-7011`) | server | `NoteText.spans`, `NoteText.render`, `Share.Span`, `drishti.collab.text.*` |
+| 7 | Rate limits (shares a minute, a day) are applied last, so a refused share costs nothing | server | `RateLimits`, `ShareStore.countSentSince` |
+| 8 | **One transaction** writes the share (with a SHA-256 of its fields, `Share.signed()`), one row per recipient, the in-app notices (inbox rows), the email rows if email is on, and the access-log row `share` (written synchronously, never queued) | server, identity | `CollabTx`, `ShareStore`, `InboxStore`, `OutboxStore`, `Notifier` beans (`InAppNotifier`, `EmailNotifier`), `AccessLog.recordNow` |
+| 9 | After the commit each notice is pushed: `InboxHub` sends it to the recipient's open stream as a `notice` event, and polls the shared table every `inbox.poll` while a stream is open, so a notice written on another server arrives too | server | `InboxHub.publish`, `listen`; the event rides `GET /api/v1/me/alerts/stream` (`AlertController`) |
+| 10 | The answer to Asha: the id, the link, the pin, how many were notified, who was skipped and why (by name only for people in her directory scope), and the warnings | server | `ShareService.Result`: `{"id":"sh_…","link":"https://…/share/sh_…","delivered":1,"skipped":[],"warnings":["The note contains the value of a field hidden from some readers; people without full access will see •••."]}` |
+
+![After Send: Sent to 1 person](../guides/img/collab/02-share-sent.jpg)
+
+#### Part 2: the notice and the email
+
+Vera is on another page. Within a second `alerts.js` receives the `notice` event, raises the bell's count and shows a toast (the count at page load
+comes from `GET /api/v1/me/inbox/count`). The bell is the inbox's door:
+
+![Vera's top bar: the bell shows 1](../guides/img/collab/03-recipient-bell.jpg)
+
+![Vera's inbox: one unread Share row](../guides/img/collab/04-inbox.jpg)
+
+The row is not stored as text. `InboxStore` keeps who, what kind, which share; `InboxService.render` builds the **title and the excerpt for the
+reader each time the inbox is read**: Vera sees *"Asha Rao shared trade MX-20000001"* and the note with `A. Shah` replaced by `•••`. Had her role lost
+`trade` since, she would see *"(no access) Asha Rao shared a trade view"* and no excerpt. A notice carries no data value.
+
+If email is on (`drishti.collab.email.enabled`, `spring.mail.host`, `console-url`, sign-in on) and Vera has an address and has not switched share mail
+off (`notify.email.share`), `EmailNotifier` wrote one more row in step 8, in the same transaction. Mail is **not** sent in the request:
+
+| # | What happens | Code |
+|---|---|---|
+| 1 | The `OutboxDispatcher` on any server claims due rows under a lease, so two servers never send one twice | `OutboxStore.claim`, `drishti.collab.outbox.*` |
+| 2 | **The message is rendered now, for Vera's current rights**: if she can no longer reach the kind the row is *cancelled*; otherwise `ShareItemRenderer` scrubs the note and `MailContentPolicy` decides what else goes in (`comment`: the kind and id, the panel, the date, the note; `link-only`, for a pack whose ids are sensitive: just "Asha Rao shared a view with you") | `ShareItemRenderer`, `MailRenderer`, `MailTemplates`, `MailContentPolicy` (`packs.<pack>.email.content`) |
+| 3 | Send through Spring's mail client. A failure retries with doubling backoff; a permanent refusal or the last attempt makes a **dead letter**, visible and retryable in the admin API. A mail-server outage needs no action: rows wait | `MailTransport`, `OutboxAdminController`; metrics `drishti.collab.mail`, `drishti.collab.outbox` |
+
+Email never carries a figure: the id and the note are all that leaves the firm's controls, and mail already sent cannot be recalled, which is why
+it holds nothing worth recalling. [OPERATIONS.md](../admin/OPERATIONS.md#9a-2-collaboration-email-and-the-outbox) is the runbook.
+
+#### Part 3: Vera opens `/share/sh_…` with her own rights
+
+Vera clicks the row (or the link in the mail). The link is the console's, never the API's.
+
+| # | What happens | Where | Code |
+|---|---|---|---|
+| 1 | `/share/{id}` asks the server for the share **as Vera**. A stranger, or an id that does not exist, gets the same `404` page (it does not say a share exists); the sender, a notified recipient and `compliance` may read it | console, server | `collab_routes.py` `open_share`, `ShareController`, `ShareService.open` (`DRS-7001`) |
+| 2 | If Vera may not open the view now (role, pack) the answer is `access:false` with a reason, and the console draws a plain page with the sender and the date and nothing about the entity: no id, title, note or pin | console | `terminal/share_denied.html`, `Entitlements.reachState` |
+| 3 | Otherwise the console redirects (`303`) to the view with the pin as **request parameters**: `/v/trade/MX-20000001?asOf=2026-09-30&knownAt=…Z&gen=1&share=sh_…`. Her own saved date and her other tabs are untouched | console | `core/collab.py` `link_for` |
+| 4 | The view is built for Vera: the console sends the as-of headers taken from the parameters and `X-Drishti-Share: sh_…` on every call of that page; the server applies **Vera's** roles and masks exactly as for any view | server | `ViewController`, `Entitlements.redactor`, `AccessRecorder` (`SHARE_HEADER`) |
+| 5 | The access log gets the `view` row with `detail = share:sh_…`, and Vera's `opened_at` on the share is set: that is how "who opened which share" is answered | server | `AccessRecorder`, `ShareService.opened` |
+| 6 | The page shows the banner *Shared by Asha Rao*, the note **rendered for Vera** (`A. Shah` is `•••`) and the usual *Pinned* banner: *"You are seeing 2026-09-30 as known at …, as it was shared"* with **Go live** | console | `terminal/view.html` (`share-banner`, `pin-banner`) |
+
+![Vera's view: the share banner, the note with the trader masked, and the pin banner](../guides/img/collab/05-shared-view.jpg)
+
+What "as it was" means depends on the source (the pin is evidence, never an address): a Delta Lake or Iceberg source returns the data as it was;
+a dated store without versions returns the latest for that date (`DRS-1007`; the banner says so); an undated or live source returns today's data and the
+banner says that, with a link to *What changed*. In the picture the demo trade's source (`murex-rates`) keeps no dates, so the second banner says
+the page shows the current data; the share, the pin and the rights work the same. On a phone the page is the same page:
+
+![The same share on a phone](../guides/img/collab/06-shared-phone.jpg)
+
+A reply to the share itself (`POST /api/v1/shares/{id}/replies`, `ShareService.reply`) is a comment in a *private* thread between the sender and the
+recipients it reached, anchored to the share, with the same rules as any comment. The console does not draw a reply box for it yet; in the console the
+conversation continues in the Discussion tab, below.
+
+#### Part 4: a comment in the discussion, an @mention
+
+Asha writes in the open. She presses `Alt+N`: the side drawer of *About this page* has a second tab, **Discussion** (`about.js` hosts it,
+`discussion.js` is the controller). Her comment mentions `@vera`, repeats the trader's name by hand (`A. Shah`) and quotes two fields, `{$.trader}`
+and `{$.mtm}`:
+
+![Asha's Discussion tab: @vera, A. Shah, the quoted trader and MTM](../guides/img/collab/07-discussion-author.jpg)
+
+| # | What happens | Code |
+|---|---|---|
+| 1 | The `@` and `{` pickers (`discussion-compose.js`, one ARIA combobox) fill the box. The browser posts the text, the anchor (whole view, a panel or a field), the generation and the page's `asOf` and `knownAt` to the console, which sends them as the as-of headers. The comment is pinned to the date Asha was looking at | `thread_routes.py`, `core/threads.py`, `ThreadController` `POST /threads/{kind}/{id}` |
+| 2 | Asha must hold `collaborate` and be able to open the kind (and a panel's gate kind). The text is cleaned (plain text, length, `text.deny-patterns`) | `ThreadService.start`, `Entitlements.requireOpen` |
+| 3 | **The typed `A. Shah` is found in the stored document at the pin**, as in Part 1 step 6, and its span stored. A quote `{$.trader}` is stored as a *path*, not a value | `ThreadService.draft`, `PinnedDocs`, `NoteText.spans` |
+| 4 | **The @mention is resolved.** `@vera` and `@risk` become users and roles; roles expand (`mentionable-roles`, `max-group-size`); each person is checked with `mayReach` like a share recipient, so a mention never reaches someone who may not open this kind of view: they get **nothing**, not even "someone mentioned you". The author learns who was left out (`undeliverable: tell`) | `Audience.resolve`, `Audience.Mentioned` (`reached`, `skipped`) |
+| 5 | One transaction: the thread, the comment, **revision 1**, the mention rows, the author's follow and the notices (`InAppNotifier`: a `mention` row for Vera, `reply` rows for the followers of later replies; `EmailNotifier`: several notices to one person within `inbox.coalesce` become one mail); then the push after the commit | `ThreadService.write`, `CollabTx`, `Notifier.onComment`, `ThreadStore` |
+| 6 | The drawer says *"1 person notified"* and, by name, anyone skipped, plus the warning about the typed value | `ThreadService.Posted`, `discussion-view.js` |
+
+#### Part 5: per-reader scrubbing
+
+Every read of a thread goes through `ThreadService.view`, which calls `CommentRenderer.parts(kind, id, pin, body, spans, targets, reader)` **for the
+reader**. The stored spans become `•••` for a reader whose role lacks `raw` (`NoteText.render` with `Entitlements.masks(reader)`); an `@name` that
+resolved is a *mention* part and one that did not is plain text; a `{$.path}` token is a *quote* part, evaluated against the document **at the comment's
+pin** (`PinnedDocs.at`, cached a minute) **as the reader**: the value, `•••` if the reader's mask hides that field, `—` if the path is gone. The server
+returns structured parts, the browser sets them with `textContent`, and the unscrubbed document is never sent. What Vera sees:
+
+![Vera's Discussion tab: A. Shah and the quoted trader are •••, the quoted MTM shows its value](../guides/img/collab/08-discussion-viewer.jpg)
+
+The typed name and the quoted trader are `•••`; the quoted MTM stays because Vera may see the MTM. Her bell showed the mention without a reload, and
+**Open as it was** is offered because her (live) page differs from the comment's date; it opens `/v/trade/MX-20000001?asOf=2026-09-30…` through the same
+pin mechanism as a share. The author may edit within `threads.edit-window` (15 minutes), which re-scans the text and adds revision 2; **Retract**, and an
+administrator's **Hide**, change what readers see but never the record.
+
+![The Discussion sheet on a phone](../guides/img/collab/09-discussion-phone.jpg)
+
+#### Part 6: the audit trail and the hash chain
+
+| Record | What it holds | Code |
+|---|---|---|
+| Access log | `share` (the sender; `detail` = `sh_… to 1 (user:vera)`), written in the share's transaction; `view` with `share:sh_…` for each opening | `AccessLog.recordNow`, `AccessRecorder` |
+| Audit log | `collab.comment.add`, `.edit`, `.retract`, `.hide`, `.unhide`, `collab.thread.*`, holds, exports, purges | `ThreadService`, `HoldService`, `ExportService`, `CollabPurge` |
+| Revisions | **Every** version of every comment, as written (unscrubbed), with author, time, action, reason and a hash; nothing is overwritten | `Revision`, `ThreadStore` |
+| The chain | `HashChain.seal`: each revision's SHA-256 covers the previous hash (the first chains from the thread id, `HashChain.genesis`), so changing, removing or reordering one makes `HashChain.verify` fail at that revision. A share carries its own hash (`Share.signed()`) | `HashChain`, `ChainVerifier` |
+
+The chain is evidence of tampering, not prevention: someone who can rewrite the whole database can rewrite the chain. The defence is to **keep the
+manifest of an export** (the first and last hash of every thread) in the firm's archive: a later export that disagrees proves history was rewritten.
+
+#### Part 7: retention, legal hold and export
+
+Nothing is destroyed by default (`retention.keep-days: 0`). The compliance officer's levers are all under `/api/v1/admin/collab` (`ComplianceController`);
+they are API calls, there is no console page for them yet, and the runbooks are in
+[OPERATIONS.md](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export).
+
+| # | What happens | Code |
+|---|---|---|
+| 1 | Retention is set per kind, then per pack, then globally (`retention.kinds.<kind>`, `packs.<pack>.retention-days`, `retention.keep-days`). A daily `CollabPurge` removes **whole threads** by last activity and shares by creation, writes an audit event per thread with its final hash, and **skips anything a hold covers** | `CollabPurge`, `HoldMatcher`, `CollabProperties` |
+| 2 | A **legal hold** (power `compliance`; an administrator is not enough) has a scope (`entity`, `kind`, `user`, `thread`, `all`), an optional date range and a reason. A hold on `trade MX-20000001` for September keeps its threads and shares past any retention; an administrator's permanent removal of such a thread is `423 DRS-7010` | `HoldService`, `Hold`, `HoldStore`, `ComplianceController` |
+| 3 | An **export** is a job: ask, poll, download once. The zip holds `shares.ndjson`, `threads.ndjson` (every revision, **unscrubbed**: this is the record, and only `compliance` may take it), `chains.ndjson`, `holds.ndjson`, `README.txt` and a `manifest.json` with the SHA-256 of every file. Starting, finishing and downloading are audited (`collab.export.*`) | `ExportService`, `ComplianceController` |
+| 4 | **Verify** recomputes one thread's chain, or every thread and share, and names the revision that no longer follows the one before it | `ChainVerifier`, `GET /admin/collab/verify` |
+
+Inbox rows are capped by `inbox.keep` and removed with their user; `inbox.keep-days` is configured but not enforced yet (COLLABORATION.md, step 7).
+
+#### The same flow for the gene variant (example B)
+
+Nothing in the code names `trade`, `genomics` or an id: kinds, packs, roles and masks come from the packs and configuration. `VRNT VRNT-BRAF-V600E`
+takes the same seven parts with other inputs:
+
+| | Trade (A) | Variant (B) |
+|---|---|---|
+| Who may be addressed | users who share a pack with the sender (`market-risk` and what it extends) and whose roles open `trade` | users who share `genomics` and whose roles open `variant` |
+| Sharing switched off per pack | `drishti.collab.packs.<pack>.share-enabled: false` (unset: on) | the same key under `genomics` gives `403 DRS-7004` |
+| What the mail says | `comment`: kind, id, date, the note as the reader may read it | a pack whose ids are sensitive sets `packs.genomics.email.content: link-only`: "shared a view with you", no id, no note |
+| Masked by | `drishti.security.redact`: `trader`, `counterpartyId` | `patientName` (the same list): a patient's name typed in a note is `•••` to a reader without `raw` |
+| **Unchanged** | `ShareService`, `ThreadService`, `Entitlements`, `NoteText`, `HashChain`, the stores, the drawer and its keys | the same |
+
+Where each part is changed is section 7.
+
 ---
 
 ## 4. Worked example B: a gene variant, another domain
@@ -652,6 +830,12 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
 | Change how the drawer looks or behaves | `console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](CONTEXT_HELP.md) |
 | Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Decide who may share, comment or be mentioned | the role power `roles.<role>.collaborate` (on unless removed); `drishti.collab.packs.<pack>.share-enabled`; `mentionable-roles`, `directory.scope`, `share.max-recipients`, `limits.*` under `drishti.collab` | [CONFIGURATION.md](../admin/CONFIGURATION.md), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
+| Change what a note or comment may contain, or what is masked in it | `drishti.security.redact` (the fields), `drishti.collab.text.on-masked-copy` and `deny-patterns`; the logic is `NoteText`, `Entitlements.maskedValues`, `CommentRenderer` | CONFIGURATION.md, §3.10 |
+| Switch on email, or change what it says | `spring.mail.*`, `drishti.collab.console-url`, `email.enabled`; per pack `packs.<pack>.email.content` (`comment`, `title`, `link-only`); templates in `drishti.collab.email.templates-dir`; the code is `EmailNotifier`, `OutboxDispatcher`, `MailRenderer` | [OPERATIONS.md](../admin/OPERATIONS.md#9a-2-collaboration-email-and-the-outbox) |
+| Add another channel (a chat bridge) | one more `Notifier` bean: `ShareService` and `ThreadService` hand every bean the audience, so neither service changes | [COLLABORATION.md](COLLABORATION.md) (phase 2) |
+| Keep, hold or export what people wrote | `drishti.collab.retention.*` and `packs.<pack>.retention-days`; legal holds and the export through `/api/v1/admin/collab` (`CollabPurge`, `HoldService`, `ExportService`, `ChainVerifier`) | [OPERATIONS.md](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) |
+| Change how the Share dialog, the inbox or the Discussion tab look or behave | `console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/share.js`, `inbox.js`, `alerts.js`, `discussion*.js`; `static/css/collab.css` | [COLLABORATION.md](COLLABORATION.md) (console design) |
 
 ---
 

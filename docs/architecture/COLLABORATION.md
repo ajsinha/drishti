@@ -15,8 +15,11 @@
 -->
 # Collaboration: share with a note, and comment threads anchored to the data
 
-Status: proposed architecture (both features agreed with the product owner; build *share with a note* first, then
-*comment threads*; the decisions marked **Decision** are open, each with a recommendation). Owner: the identity module
+Status: **built through step 8** (share with a note, the inbox, email, comment threads, moderation, retention, legal hold and export; the
+chat bridges and watermarked snapshots, steps 9 and 10, are phase 2 and not built). The design below is as it was agreed; each step's
+*as built* note in the [build plan](#build-plan) lists where the code differs, and the user-facing, operating and configuration documents
+describe what was built. The whole path on one trade is worked through in
+[HOW_IT_FITS.md §3.10](HOW_IT_FITS.md#310-share-and-discussion-end-to-end). Owner: the identity module
 (stores), the server's API and security layer, the console's view page, top bar and admin pages.
 
 ## Contents
@@ -511,7 +514,7 @@ bean then uses it). Two checks:
 | Email to a wrong address | addresses come only from `User.email` set by an administrator or the provider; users cannot type addresses; changing a user's email is audited (existing) | — |
 | Injection: HTML or script in notes and comments | plain text only; the console escapes (Jinja autoescape, `textContent` in JS); mention and quote tokens are parsed on the server into structured parts, the console renders parts, never HTML; email HTML is built by escaping every inserted value | console test with `<script>`, `javascript:` and `{{` |
 | Injection: header injection in email | subjects are built from escaped parts with CR/LF removed; recipients are single validated addresses | mail test |
-| Injection: template expressions | email templates are fixed files using Rachana-EL `template` with a closed variable map (no document access), compiled at start; user text is a variable, never a template | template test with `${…}` in a note |
+| Injection: template expressions | email templates are fixed files filled by a one-pass `${name}` substitution over a closed variable map (no document access; as built, not Rachana-EL, see *Step 4 as built*); user text is a value, never a template | template test with `${…}` in a note |
 | Share id guessing | ULID randomness plus the party check; a wrong id is `404 DRS-7001` whether it exists or not | — |
 | Abuse: spam, mass mail | per-user rate limits (shares, comments, directory), `max-recipients`, `max-expanded`; outbox caps per recipient per hour | `RateLimitTest` |
 | CSRF on console posts | the console's existing CSRF guard (`core/csrf.py`) covers the new `POST` routes | existing CSRF test pattern |
@@ -772,7 +775,7 @@ what their reader needs.
 | [OPERATIONS.md](../admin/OPERATIONS.md) | the outbox (dead letters, retry, mail test), several servers (lease, `outbox.enabled`), retention purge, backups of the collab tables |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | "the email never arrived", "the shared link opened today's data", "someone was not notified"; error rows |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | the collab package in the module list and security section (one paragraph, link here) |
-| [HOW_IT_FITS.md](HOW_IT_FITS.md) | a full section, *Sharing and discussing a view, end to end*: worked on trade MX-20000001 — the dialog → `POST /shares` with the as-of headers → pin, `mayReach` per recipient, masked spans → one transaction (share, inbox, outbox, access log) → the `notice` SSE event on the channel → the bell → `/share/sh_…` → the view built for the recipient with `asOf`/`knownAt` per request → the banner; then a comment with `@risk` on the VaR contribution panel and *Open as it was*; the genomics variant in a few lines (`link-only` email); collab added to §1's picture and §2's pieces; §7 rows (who may share, email, retention) |
+| [HOW_IT_FITS.md](HOW_IT_FITS.md) | a full section, *Share and Discussion, end to end* (§3.10, done in step 8): worked on trade MX-20000001 — the dialog → `POST /shares` with the as-of headers → pin, `mayReach` per recipient, masked spans → one transaction (share, inbox, outbox, access log) → the `notice` SSE event on the channel → the bell → `/share/sh_…` → the view built for the recipient with `asOf`/`knownAt` per request → the banner; then a comment with `@risk` on the VaR contribution panel and *Open as it was*; the genomics variant in a few lines (`link-only` email); collab added to §1's picture and §2's pieces; §7 rows (who may share, email, retention) |
 | `adr/020-collaboration-records-live-in-the-identity-database.md` | why the identity database, a transactional outbox, and links instead of data |
 | `console/web/guides/monitors-and-alerts.md` | the bell becomes the inbox (notices beside alerts); `help.yaml` `contextual:` gains `inbox` |
 | [docs/README.md](../README.md) | this document in the architecture list (done with this design) |
@@ -792,7 +795,7 @@ M 2–3 days, L 4–5 days. Browser tests are Playwright against a scratch serve
 | **5. Threads: server** (done) | `ThreadStore` (JPA + file), `ThreadService` (anchors, gate kinds, pins, mentions, followers, edit window, retract, resolve, revisions with the hash chain, spans, quotes), `ThreadController`, `/me/mentions`, `NoteImport`, `/notes` facade | `drishti-identity/.../collab/Thread*.java`, `Comment*.java`, `NoteImport.java` (new); `drishti-server/.../collab/thread/*` (new), `api/NoteController.java` (facade) | `ThreadServiceTest`, `ThreadStoreContractTest` (both stores), `ThreadVisibilityTest` (kind, pack, gate kind), `HashChainTest`, `NoteImportTest` (idempotent), `NoteControllerTest` (facade, unchanged shape) | a comment on the VaR contribution panel with `@risk` reaches `risk` members who may open `var`, not a genomics-only member; editing after 15 min is `403 DRS-7008`; the chain verifies | L |
 | **6. Threads: console** (done; see *Step 6 as built*) | shared side drawer (About and Discussion tabs), threads, reply, edit, retract, resolve, follow, `@` and `{` pickers, panel badges, field markers, *Open as it was*, live new-comment notices; Notes drawer and `notes.js` removed | `templates/terminal/{view,_discussion}.html`, `_macros/collab.html`, `static/js/discussion.js` (new), `static/js/about.js` (host only), `static/css/{about,collab}.css`, `routes/collab_routes.py` (discussion routes), `core/threads.py` (new); `static/js/notes.js` deleted | `test_discussion.py`, `test_discussion_browser.py` (keyboard-only thread, `Alt+N` / `?` switching tabs, phone sheet, `•••` in a quote for a viewer, *Open as it was*), `test_about_browser.py` still green, `test_fkeys.py` | on VAR-COMM a user opens a panel thread from its badge, mentions a colleague, and the colleague's *Open as it was* shows the comment's date | L |
 | **7. Moderation, retention, legal hold, export** (server done; see *Step 7 as built*) | hide/unhide, lock, holds, `CollabPurge`, export job and zip, verify; admin console page | `drishti-server/.../collab/compliance/*` (new), `drishti-identity/.../collab/Hold*.java` (new); console `routes/compliance_routes.py`, `core/compliance.py`, `templates/admin/collab.html`, `static/js/admin-collab.js` (new) | `CollabPurgeTest` (holds win, whole threads only), `ExportTest` (manifest, NDJSON, hashes, unscrubbed only for `compliance`), `ModerationTest`, `test_admin_collab.py` | a hold on MX-20000001 keeps its threads past retention; an export of a day verifies against the chain | M |
-| **8. End-to-end docs** | HOW_IT_FITS section, ARCHITECTURE paragraph, ADR-020, USER_GUIDE consolidation, the console's monitors-and-alerts guide | docs only | `test_help_links.py`, `test_docs_error_codes.py`, `test_docs_settings.py`, licence headers | every link resolves; every new code and key documented | S |
+| **8. End-to-end docs** (done; see *Step 8 as built*) | HOW_IT_FITS section, ARCHITECTURE paragraph, ADR-020, USER_GUIDE consolidation, the console's monitors-and-alerts guide | docs only | `test_help_links.py`, `test_docs_error_codes.py`, `test_docs_settings.py`, licence headers | every link resolves; every new code and key documented | S |
 | **9. Bridges** (phase 2) | `WebhookNotifier`, bridge bindings, render-as role | `drishti-server/.../collab/bridge/*` (new), admin page section | stub HTTP server test (allow-list, no redirects, masks) | a comment on a bound kind posts text and link only | M |
 | **10. Watermarked snapshots** (phase 2) | `SnapshotRenderer` (Java2D), most-restrictive principal, policy, attachment | `drishti-server/.../collab/snapshot/*` (new) | golden-image test, a recipient without `raw` → masked image, a gate-kind panel left out | off by default; on, an image never shows more than its least-entitled recipient may see | L |
 
@@ -890,6 +893,15 @@ they open the tab); (6) the panel's comment icon is added by `discussion.js` bes
 dot reuses `.has-note`; (7) the account page's `notify.email.{share,mention,reply}` toggles (left from step 4) are built, saved through `/me/settings`.
 Tests: `test_discussion.py`, `test_discussion_browser.py` (two users, mention and bell, masked value and quote, edit, retract, hide, open as it was,
 keyboard-only, phone).
+
+**Step 8 as built.** `HOW_IT_FITS.md` §3.10 (one worked example, A, on MX-20000001), the collaboration pieces in §1 and §2 and rows in §7;
+`ARCHITECTURE.md` (module row and a security paragraph); ADR-020; `USER_MANAGEMENT.md` (moderation, the compliance power, what the directory
+reveals); `OPERATIONS.md` (backups); `TROUBLESHOOTING.md` (the shared link and the missing notice); the console guide *Sharing and
+discussion* and `help.yaml` (`contextual: inbox`); pictures from `tools/docs/shots/collab.py` in `docs/guides/img/collab/`. Deviations: (1) the
+genomics example in a few lines is folded into §3.10's table rather than a second walk (example B is the same code with `link-only` mail);
+(2) **there is still no admin console page for moderation, holds and export** (step 7's deviation 1 stands: they are API calls, documented
+in OPERATIONS.md); (3) the console has no reply box on a shared view, and the share dialog has no *also post to the discussion* tick: replies to
+a share and `postToThread` are API only (`POST /shares/{id}/replies`, `postToThread` in the body); (4) the bell opens the inbox page, not a tray.
 
 Each step's own docs are part of it (USER_GUIDE, API_GUIDE, CONFIGURATION rows for what it adds); step 8 writes the
 cross-cutting sections only.
