@@ -59,7 +59,14 @@ def wait(page, js, seconds=BROWSER_WAIT_MS / 1000):   # generous: the full suite
         if page.evaluate(js):
             return
         page.wait_for_timeout(100)
-    raise AssertionError(f"still false after {seconds}s: {js}")
+    # say what the page was doing: a timeout on its own cannot tell a slow machine from a page that failed to start
+    try:
+        state = page.evaluate("({url: location.href, title: document.title, ready: document.readyState,"
+                              " wb: typeof window.drishtiWorkbench, text: (document.body ? document.body.innerText : '').slice(0, 400)})")
+    except Exception as e:                                   # the page itself is gone
+        state = {"evaluate": repr(e)}
+    errors = getattr(page, "errors", None)
+    raise AssertionError(f"still false after {seconds}s: {js}\n  page: {state}\n  page errors: {errors}")
 
 
 def open_design(page, base, name, **kw):
