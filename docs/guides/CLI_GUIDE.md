@@ -419,6 +419,45 @@ Each Sutra is `build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where
 `build/sutras/tests/<sutra>/sample-*.json` holds samples drawn across the dates. The generator is described in
 [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md); `--fallback` also writes a `<kind>-default` Sutra for documents no group matches.
 
+
+#### Many product types in many files: one command, one Sutra per product type
+
+A common case: a folder of JSON Lines files where every line is a trade with a unique `tradeId` and a product type, with
+the products mixed across files in any way. **One run does it all**: `sutra gen` reads every file, groups the trades by
+the `--match` field across all of them, and writes **one Sutra per distinct product type**. There is no need to split the
+files by product or to run the command once per product.
+
+```bash
+python3 tools/drishti.py sutra gen data/jsonl --kind trade --key tradeId --match product_type --out build/sutras
+```
+
+Two things decide whether it does what you expect:
+
+1. **The kind comes from the file name** unless you say otherwise. `trade.jsonl` is kind `trade`; a file named
+   `trades_2026-10-01.jsonl` or `book1.jsonl` would be its own kind, and the per-kind form `--key trade=tradeId` would not
+   apply to it. When every line is a trade, pass **`--kind trade`**; then the plain forms `--key tradeId` and
+   `--match product_type` are enough. (Loader envelope lines carry their own `kind` and need no `--kind`.)
+2. **Use the field name exactly as it is in the data** (`product_type` and `productType` are different fields). A
+   misspelt match field puts every trade in one group without the field, so you would get a single Sutra; add
+   `--skip-missing` to leave out documents that lack a match field instead.
+
+What comes out, for 40 product types:
+
+| Output | Where |
+|---|---|
+| 40 Sutras, each with `match: { kind: trade, where: "$.product_type == 'IRS'", priority: 10 }` and the title id `$.tradeId` | `build/sutras/trade/trade-<product>.v1.sutra.yaml` |
+| up to 5 sample trades per Sutra (`--samples N`; chosen deterministically, across dates with `--date`) | `build/sutras/tests/<sutra>/sample-*.json` |
+| a lint of everything written | exit code 1 if any Sutra has a problem |
+
+Options that help here: `--fallback` adds a low-priority `trade-default` Sutra so a product type that appears later still
+gets a designed screen (rather than an inferred one); `--min-docs N` skips product types with fewer documents;
+`--date businessDate` picks samples across business dates, newest first; several match fields
+(`--match product_type,currency`) give one Sutra per combination. To get a whole pack (kinds, mnemonics, tests, About
+skeleton, optionally a Delta lake or files) instead of Sutra files only, use `pack new` with the same options
+([below](#pack-new-a-complete-pack-from-json-lines)).
+
+It needs the built server jar (`./mvnw package -DskipTests`) and a JDK 21: all groups are designed in one Java run.
+
 ## 5. `pack`: new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
 
 ### `pack new`: a complete pack from JSON Lines
