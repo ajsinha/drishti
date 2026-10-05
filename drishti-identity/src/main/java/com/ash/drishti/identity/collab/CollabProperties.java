@@ -62,7 +62,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
         text = text == null ? new Text(null, null) : text;
         limits = limits == null ? new Limits(null, null, null, null, null) : limits;
         inbox = inbox == null ? new Inbox(null, null, null, null) : inbox;
-        email = email == null ? new Email(null, null, null, null) : email;
+        email = email == null ? new Email(null, null, null, null, null) : email;
         outbox = outbox == null ? new Outbox(null, null, null, null, null, null, null, null) : outbox;
         retention = retention == null ? new Retention(null, null, null) : retention;
         exportKeep = exportKeep == null ? Duration.ofHours(24) : exportKeep;
@@ -193,13 +193,20 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
      * @param content {@code link-only}, {@code title} or {@code comment} (default)
      * @param from the From address
      * @param templatesDir overrides for the email templates
+     * @param coalesceWindow notices for one recipient this close together are sent as one digest email (default 2m; zero = every
+     *     notice is its own email, sent at once)
      */
-    public record Email(Boolean enabled, String content, String from, String templatesDir) {
+    public record Email(Boolean enabled, String content, String from, String templatesDir, Duration coalesceWindow) {
         public Email {
             enabled = enabled != null && enabled;
             content = "link-only".equals(content) || "title".equals(content) ? content : "comment";
             from = from == null || from.isBlank() ? "drishti@localhost" : from;
             templatesDir = templatesDir == null ? "" : templatesDir;
+            coalesceWindow = coalesceWindow == null || coalesceWindow.isNegative() ? Duration.ofMinutes(2) : coalesceWindow;
+        }
+
+        public boolean coalesces() {
+            return !coalesceWindow.isZero();
         }
     }
 

@@ -130,6 +130,8 @@ public final class IdentityRepositories {
 
         List<OutboxEntity> findAllByOrderBySeqDesc(Pageable page);
 
+        List<OutboxEntity> findBySeqGreaterThanOrderBySeq(long seq, Pageable page);
+
         long countByState(String state);
 
         long countByRecipientAndCreatedAtGreaterThanEqual(String recipient, java.time.Instant since);

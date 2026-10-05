@@ -202,7 +202,8 @@ public final class ShareService {
         boolean live = Boolean.TRUE.equals(req.live());
         Pin pin = new Pin(live ? null : asOf.businessDate(), live || asOf.live(), asOf.knownAt() != null && !live ? asOf.knownAt() : now,
                 generation, doc.provenance().source());
-        String threadId = Boolean.TRUE.equals(req.postToThread()) ? Ulid.next("th_", now.toEpochMilli()) : null;
+        boolean toThread = postsToThread(req.postToThread(), props.share().postToThread());
+        String threadId = toThread ? Ulid.next("th_", now.toEpochMilli()) : null;
         Share share = new Share(Ulid.next("sh_", now.toEpochMilli()), sender.user(), now, kind, entityId, panel, gate, pin, note, spans,
                 "in-app", threadId, null).signed();
         List<Recipient> rows = people.stream().map(d -> new Recipient(d.addressed(), d.user(), d.state(), null)).toList();
@@ -227,6 +228,11 @@ public final class ShareService {
         });
         notices.forEach(hub::publish);
         return new Result(share.id(), link(share.id()), pin, reached.size(), props.share().tell() ? skipped(sender, people, kind) : List.of(), warnings);
+    }
+
+    /** The request's own choice wins; when it says nothing the configured default ({@code drishti.collab.share.post-to-thread}) applies. */
+    static boolean postsToThread(Boolean requested, boolean configuredDefault) {
+        return requested != null ? requested : configuredDefault;
     }
 
     private boolean wantsEmail(Request req) {

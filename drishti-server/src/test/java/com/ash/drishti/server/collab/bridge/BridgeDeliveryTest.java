@@ -189,7 +189,7 @@ class BridgeDeliveryTest {
     void linkOnlyPacksSendNoIdNoPanelAndNoNote() throws Exception {
         BridgeHarness h = harness("json", everything());
         h.props = new CollabProperties(true, null, null, "https://drishti.example", null, null, null, null, null, null, null, null,
-                new CollabProperties.Email(false, "link-only", null, null), null, null, null, null, h.props.bridges(), null);
+                new CollabProperties.Email(false, "link-only", null, null, java.time.Duration.ZERO), null, null, null, null, h.props.bridges(), null);
         BridgeItemRenderer r = new BridgeItemRenderer(h.shares, h.threads, h.principals, h.entitlements,
                 new com.ash.drishti.server.collab.mail.MailContentPolicy(h.props, h.packs),
                 new com.ash.drishti.server.collab.PanelTitles((k, i, w) -> java.util.Map.of(), h.entitlements),

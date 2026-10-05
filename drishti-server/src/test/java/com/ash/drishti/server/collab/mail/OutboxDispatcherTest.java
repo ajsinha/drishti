@@ -226,4 +226,77 @@ class OutboxDispatcherTest {
         assertThat(dispatcher.tick()).isEqualTo(1);
         assertThat(store.find(i.seq()).orElseThrow().state()).isEqualTo(OutboxItem.SENT);
     }
+
+    private OutboxDispatcher withWindow(Duration window) {
+        ItemRenderer renderer = new ItemRenderer() {
+            @Override
+            public String template() {
+                return "share";
+            }
+
+            @Override
+            public MailRenderer.Content content(OutboxItem item, Principal who) {
+                if (item.refId().equals("sh_gone")) {
+                    throw new Skip("the share no longer exists");
+                }
+                return new MailRenderer.Content("share", "Ann shared " + item.refId(), "trade", item.refId(), null, null, null, "https://x/share/" + item.refId());
+            }
+        };
+        CollabProperties props = new CollabProperties(null, null, null, "https://x", null, null, null, null, null, null, null, null,
+                new CollabProperties.Email(true, null, null, null, window),
+                new CollabProperties.Outbox(true, Duration.ofSeconds(1), 10, 3, Duration.ofSeconds(30), Duration.ofSeconds(100), Duration.ofSeconds(60), 30),
+                null, null, null, null, null);
+        return new OutboxDispatcher(store, props, principals, List.of(renderer), new MailRenderer(new MailTemplates(""), "Drishti", "x"),
+                (m, from) -> {
+                    sends.incrementAndGet();
+                    last.set(m);
+                }, meters, clock);
+    }
+
+    @Test
+    void severalNoticesDueTogetherForOnePersonAreOneDigestThatSkipsWhatShouldNotGo() {
+        OutboxItem a = enqueue("sh_1");
+        OutboxItem gone = enqueue("sh_gone");
+        OutboxItem b = enqueue("sh_2");
+        withWindow(Duration.ofMinutes(2)).tick();
+        assertThat(sends).hasValue(1);
+        assertThat(last.get().text()).contains("sh_1").contains("sh_2").doesNotContain("sh_gone");
+        assertThat(last.get().subject()).contains("2 new notifications");
+        assertThat(store.find(a.seq()).orElseThrow().state()).isEqualTo(OutboxItem.SENT);
+        assertThat(store.find(b.seq()).orElseThrow().state()).isEqualTo(OutboxItem.SENT);
+        assertThat(store.find(gone.seq()).orElseThrow().state()).isEqualTo(OutboxItem.CANCELLED);
+    }
+
+    @Test
+    void aWindowOfZeroSendsEachNoticeOnItsOwn() {
+        enqueue("sh_1");
+        enqueue("sh_2");
+        withWindow(Duration.ZERO).tick();
+        assertThat(sends).hasValue(2);
+    }
+
+    @Test
+    void theNotifierGivesNoticesInsideTheWindowOneSendTime() {
+        User ann = mock(User.class);
+        when(ann.email()).thenReturn("ann@desk.test");
+        Principals ps = mock(Principals.class);
+        when(ps.user("ann")).thenReturn(Optional.of(ann));
+        NotifyPrefs prefs = mock(NotifyPrefs.class);
+        when(prefs.emailOn("ann", "share")).thenReturn(true);
+        CollabProperties props = new CollabProperties(null, null, null, "https://x", null, null, null, null, null, null, null, null,
+                new CollabProperties.Email(true, null, null, null, Duration.ofMinutes(2)), null, null, null, null, null, null);
+        EmailNotifier n = new EmailNotifier(props, store, ps, prefs, true);
+        java.lang.reflect.Method m;
+        try {
+            m = EmailNotifier.class.getDeclaredMethod("queue", String.class, String.class, String.class);
+            m.setAccessible(true);
+            m.invoke(n, "ann", "share", "sh_1");
+            m.invoke(n, "ann", "share", "sh_2");
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
+        List<OutboxItem> rows = store.list("pending", 10);
+        assertThat(rows).hasSize(2);
+        assertThat(rows.get(0).nextAt()).isEqualTo(rows.get(1).nextAt()).isAfter(Instant.now().plusSeconds(60));
+    }
 }

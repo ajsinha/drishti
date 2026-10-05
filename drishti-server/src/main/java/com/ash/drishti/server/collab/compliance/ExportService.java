@@ -24,6 +24,10 @@ import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.identity.collab.Comment;
 import com.ash.drishti.identity.collab.CommentThread;
 import com.ash.drishti.identity.collab.Hold;
+import com.ash.drishti.identity.collab.InboxStore;
+import com.ash.drishti.identity.collab.Notice;
+import com.ash.drishti.identity.collab.OutboxItem;
+import com.ash.drishti.identity.collab.OutboxStore;
 import com.ash.drishti.identity.collab.Mention;
 import com.ash.drishti.identity.collab.Pin;
 import com.ash.drishti.identity.collab.Recipient;
@@ -129,6 +133,8 @@ public final class ExportService implements AutoCloseable {
     private final ChainVerifier verifier;
     private final Clock clock;
     private final String version;
+    private final InboxStore inbox;
+    private final OutboxStore outbox;
     private final Path dir;
     private final ObjectMapper json = new ObjectMapper().registerModule(new JavaTimeModule()).disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     private final Map<String, Job> jobs = new ConcurrentHashMap<>();
@@ -141,7 +147,10 @@ public final class ExportService implements AutoCloseable {
 
     @SuppressWarnings("java:S107")
     public ExportService(CollabProperties props, ThreadStore threads, ShareStore shares, HoldServiceView holds, UserService users,
-            Entitlements entitlements, AuditLog audit, ChainVerifier verifier, Clock clock, String version) {
+            Entitlements entitlements, AuditLog audit, ChainVerifier verifier, Clock clock, String version,
+            InboxStore inbox, OutboxStore outbox) {
+        this.inbox = inbox;
+        this.outbox = outbox;
         this.props = props;
         this.threads = threads;
         this.shares = shares;
@@ -286,7 +295,15 @@ public final class ExportService implements AutoCloseable {
                     holdCount++;
                 }
                 files.add(hs.close());
+                Sink ib = new Sink(out, "inbox.ndjson");
+                exportInbox(ib, f, names);
+                files.add(ib.close());
+                Sink ob = new Sink(out, "outbox.ndjson");
+                exportOutbox(ob, f, names);
+                files.add(ob.close());
                 counts.put("shares", sh.lines);
+                counts.put("inboxNotices", ib.lines);
+                counts.put("outboxDeliveries", ob.lines);
                 counts.put("threads", th.lines);
                 counts.put("comments", tallies[0]);
                 counts.put("revisions", tallies[1]);
@@ -355,6 +372,92 @@ public final class ExportService implements AutoCloseable {
                 out.line(json.writeValueAsString(n));
             }
         }
+    }
+
+    /** Inbox notices (pointers only: who, what kind, which entity, when, read or not) for the filtered scope. */
+    private void exportInbox(Sink out, Filter f, Function<String, String> names) throws IOException {
+        for (long after = 0; ; ) {
+            List<Notice> page = inbox.after(after, PAGE);
+            if (page.isEmpty()) {
+                return;
+            }
+            for (Notice n : page) {
+                after = n.seq();
+                boolean share = "share".equals(n.type());
+                if ((share ? !f.shares() : !f.threads()) || (f.kind() != null && !f.kind().equals(n.kind())) || (f.id() != null && !f.id().equals(n.entityId()))
+                        || (f.from() != null && n.at().isBefore(f.from())) || (f.to() != null && n.at().isAfter(f.to()))
+                        || (f.user() != null && !f.user().equals(n.username()) && !f.user().equals(n.actor()))) {
+                    continue;
+                }
+                ObjectNode o = json.createObjectNode();
+                o.put("type", "notice");
+                o.put("seq", n.seq());
+                person(o, "recipient", n.username(), names);
+                o.put("at", n.at().toString());
+                o.put("noticeType", n.type());
+                o.put("kind", n.kind());
+                o.put("entityId", n.entityId());
+                o.put("panelId", n.panelId());
+                o.put("shareId", n.shareId());
+                o.put("threadId", n.threadId());
+                o.put("commentId", n.commentId());
+                person(o, "actor", n.actor(), names);
+                o.put("readAt", n.readAt() == null ? null : n.readAt().toString());
+                out.line(json.writeValueAsString(o));
+            }
+        }
+    }
+
+    /** Outbox delivery rows: channel, state, attempts and times; never the message (it is built at send time and never stored). */
+    private void exportOutbox(Sink out, Filter f, Function<String, String> names) throws IOException {
+        for (long after = 0; ; ) {
+            List<OutboxItem> page = outbox.after(after, PAGE);
+            if (page.isEmpty()) {
+                return;
+            }
+            for (OutboxItem i : page) {
+                after = i.seq();
+                boolean share = "share".equals(i.template());
+                if ((share ? !f.shares() : !f.threads()) || (f.from() != null && i.createdAt().isBefore(f.from()))
+                        || (f.to() != null && i.createdAt().isAfter(f.to())) || (f.user() != null && !f.user().equals(i.recipient()))
+                        || !deliveryInScope(i, f)) {
+                    continue;
+                }
+                ObjectNode o = json.createObjectNode();
+                o.put("type", "delivery");
+                o.put("seq", i.seq());
+                o.put("channel", i.channel());
+                o.put("recipient", i.recipient());
+                o.put("template", i.template());
+                o.put("refId", i.refId());
+                o.put("state", i.state());
+                o.put("attempts", i.attempts());
+                o.put("createdAt", i.createdAt().toString());
+                o.put("sentAt", i.sentAt() == null ? null : i.sentAt().toString());
+                out.line(json.writeValueAsString(o));
+            }
+        }
+    }
+
+    /** With a kind or entity filter, a delivery is in scope when the share or comment it points at is about that entity. */
+    private boolean deliveryInScope(OutboxItem i, Filter f) {
+        if (f.kind() == null && f.id() == null) {
+            return true;
+        }
+        String kind = null;
+        String entity = null;
+        Share s = shares.find(i.refId()).orElse(null);
+        if (s != null) {
+            kind = s.kind();
+            entity = s.entityId();
+        } else {
+            CommentThread t = threads.comment(i.refId()).flatMap(c -> threads.thread(c.threadId())).orElse(null);
+            if (t != null) {
+                kind = t.kind();
+                entity = t.entityId();
+            }
+        }
+        return kind != null && (f.kind() == null || f.kind().equals(kind)) && (f.id() == null || f.id().equals(entity));
     }
 
     private static boolean shareMatches(Share s, Filter f) {
@@ -586,6 +689,8 @@ public final class ExportService implements AutoCloseable {
                 chains.ndjson   one line per thread: first and last hash and the verification result, for the archive to compare with
                                 a later export.
                 holds.ndjson    every legal hold, active or released.
+                inbox.ndjson    each inbox notice in scope: recipient, type, entity, actor, when and when it was read (pointers, no text).
+                outbox.ndjson   each email or bridge delivery row in scope: channel, state, attempts, times (never a message body).
                 manifest.json   the filters, who and when, counts, the software version, and the SHA-256, size and line count of
                                 every file above (written last).
 

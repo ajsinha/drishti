@@ -91,11 +91,40 @@ public final class FileInboxStore implements InboxStore {
                     }
                 }
             }
+            seq.accumulateAndGet(readHighWater(), Math::max);
             loaded = true;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } finally {
             loading.unlock();
+        }
+    }
+
+    private Path highWaterFile() {
+        return root.resolve("high-water");
+    }
+
+    private long readHighWater() throws IOException {
+        Path f = highWaterFile();
+        if (!Files.isRegularFile(f)) {
+            return 0;
+        }
+        try {
+            return Long.parseLong(Files.readString(f, StandardCharsets.UTF_8).trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /** Records the highest number ever issued before rows are removed, so a number is never reused after a restart. */
+    private void persistHighWater() {
+        try {
+            Files.createDirectories(root);
+            Path tmp = root.resolve("high-water.tmp");
+            Files.writeString(tmp, Long.toString(seq.get()), StandardCharsets.UTF_8);
+            Files.move(tmp, highWaterFile(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -145,6 +174,9 @@ public final class FileInboxStore implements InboxStore {
             append(n.username(), line);
             List<Notice> list = rows.computeIfAbsent(n.username(), u -> new ArrayList<>());
             list.add(n);
+            if (list.size() > keep) {
+                persistHighWater();
+            }
             while (list.size() > keep) {
                 list.remove(0);
             }
@@ -247,6 +279,9 @@ public final class FileInboxStore implements InboxStore {
         l.lock();
         try {
             List<Notice> list = rows.get(username);
+            if (list != null && list.size() > Math.max(1, keepRows)) {
+                persistHighWater();
+            }
             while (list != null && list.size() > Math.max(1, keepRows)) {
                 list.remove(0);
             }
@@ -268,6 +303,7 @@ public final class FileInboxStore implements InboxStore {
                     continue;
                 }
                 int was = list.size();
+                persistHighWater();
                 list.removeIf(n -> n.at().isBefore(before));
                 removed += was - list.size();
                 StringBuilder b = new StringBuilder();
@@ -299,6 +335,7 @@ public final class FileInboxStore implements InboxStore {
         ReentrantLock l = lock(username);
         l.lock();
         try {
+            persistHighWater();
             rows.remove(username);
             Files.deleteIfExists(file(username));
         } catch (IOException e) {

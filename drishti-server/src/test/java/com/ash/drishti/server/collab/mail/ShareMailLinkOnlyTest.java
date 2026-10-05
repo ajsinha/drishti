@@ -33,7 +33,7 @@ import org.springframework.test.context.DynamicPropertySource;
 /** A pack whose identifiers are sensitive sets {@code email.content: link-only}: the message carries neither the id nor the note. */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
-        "drishti.collab.limits.shares-per-minute=1000", "drishti.collab.email.enabled=true", "drishti.collab.console-url=https://drishti.test",
+        "drishti.collab.limits.shares-per-minute=1000", "drishti.collab.email.enabled=true", "drishti.collab.email.coalesce-window=0", "drishti.collab.console-url=https://drishti.test",
         "drishti.collab.outbox.tick=100ms", "spring.mail.host=127.0.0.1", "drishti.collab.packs.finance.email.content=link-only",
         "drishti.identity.database-url=jdbc:sqlite:target/sharemail-lo-${random.uuid}/identity.db",
         "drishti.packs.overlay=target/sharemail-lo-overlay/added.yaml"})

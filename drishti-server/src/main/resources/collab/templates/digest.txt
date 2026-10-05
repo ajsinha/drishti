@@ -1,0 +1,5 @@
+${headline} in ${product}:
+
+${detail}
+These notices carry no figures: sign in to see what you are entitled to see.
+Change what you are emailed about under Settings, Notifications.

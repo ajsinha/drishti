@@ -17,6 +17,7 @@ package com.ash.drishti.server.collab.bridge;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.identity.AccessLog;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.identity.collab.OutboxItem;
@@ -46,10 +47,19 @@ public final class BridgeSender implements OutboxChannel {
     private final AuditLog audit;
     private final Clock clock;
     private final String product;
+    private final AccessLog accessLog;
 
     @SuppressWarnings("java:S107")
     public BridgeSender(BridgeRegistry registry, BridgeItemRenderer renderer, BridgeClient client, RateLimits limits, CollabProperties props,
             AuditLog audit, Clock clock, String product) {
+        this(registry, renderer, client, limits, props, audit, null, clock, product);
+    }
+
+    /** {@code accessLog} may be null (access logging off): a post then writes the audit row only. */
+    @SuppressWarnings("java:S107")
+    public BridgeSender(BridgeRegistry registry, BridgeItemRenderer renderer, BridgeClient client, RateLimits limits, CollabProperties props,
+            AuditLog audit, AccessLog accessLog, Clock clock, String product) {
+        this.accessLog = accessLog;
         this.registry = registry;
         this.renderer = renderer;
         this.client = client;
@@ -86,6 +96,11 @@ public final class BridgeSender implements OutboxChannel {
 
     @Override
     public void delivered(OutboxItem item) {
+        if (accessLog != null) {
+            // who (the bridge's audience, posted by the system), what (template and share or comment id), where (the bridge)
+            accessLog.record(new AccessLog.Event(clock.instant(), "system", "bridge-post", item.template(), item.refId(),
+                    "bridge " + item.recipient() + " (delivery " + item.seq() + ")", null));
+        }
         audit.record("system", "collab.bridge.post", item.recipient(), item.template() + " " + item.refId() + " (delivery " + item.seq() + ")");
     }
 

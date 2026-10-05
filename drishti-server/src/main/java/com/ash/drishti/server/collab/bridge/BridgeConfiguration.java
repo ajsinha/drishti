@@ -62,7 +62,9 @@ public class BridgeConfiguration {
 
     @Bean
     public BridgeSender bridgeSender(BridgeRegistry registry, BridgeItemRenderer renderer, RateLimits limits, CollabProperties props, AuditLog audit,
+            ObjectProvider<com.ash.drishti.identity.AccessLog> accessLog, @Value("${drishti.access-log.enabled:true}") boolean accessLogOn,
             @Value("${drishti.branding.product:Drishti}") String product) {
-        return new BridgeSender(registry, renderer, new BridgeClient(props.bridges().timeout()), limits, props, audit, Clock.systemUTC(), product);
+        return new BridgeSender(registry, renderer, new BridgeClient(props.bridges().timeout()), limits, props, audit,
+                accessLogOn ? accessLog.getIfAvailable() : null, Clock.systemUTC(), product);
     }
 }

@@ -944,6 +944,22 @@ cross-cutting sections only.
   route, client and admin template).
 - **Group D**, after C: step 8 ‖ step 9; step 10 alone, last, only if the product owner keeps it.
 
+## As-built notes: server polish (2026-10)
+
+- **Sequence numbers.** `FileInboxStore` keeps `inbox/high-water` and `FileOutboxStore` `outbox/high-water`, written before any row is removed (purge,
+  prune, trimming, forget); on load the counter starts at the larger of the highest row and the mark, so a number is never reused after a restart.
+  The JPA stores use database identities.
+- **Access log.** `BridgeSender.delivered` writes an access-log row (`bridge-post`, user `system`, kind = template, entity = share or comment id,
+  detail = bridge name and delivery number) beside the audit row; not written when `drishti.access-log.enabled=false`.
+- **Email digest.** `email.coalesce-window` (default 2m, `0` = off). `EmailNotifier` gives a notice the send time of the recipient's pending email
+  rows, or now plus the window if there is none; the dispatcher groups mail claimed in one tick by recipient and, for two or more, renders each with
+  its own renderer (opt-out, rights, masking, skips decided per notice) and sends one `digest` message (`MailRenderer.renderDigest`, templates
+  `digest.subject|txt|html`). One notice is sent as the ordinary message.
+- **Export.** `inbox.ndjson` (notices: recipient, type, entity, actor, times) and `outbox.ndjson` (channel, state, attempts, times; no body, no error
+  text) are written for the filtered scope (share-type rows follow `includeShares`, the rest `includeThreads`; a kind or id filter resolves the
+  row's share or comment) and listed in the manifest with SHA-256, size and line count. `OutboxStore.after(seq, limit)` pages the outbox.
+- **Share default.** `ShareService.postsToThread(requested, configured)`: the request wins; `share.post-to-thread` applies when it is absent.
+
 ## Decisions for the product owner
 
 | # | Decision | Recommendation |

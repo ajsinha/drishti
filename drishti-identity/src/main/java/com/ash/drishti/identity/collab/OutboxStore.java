@@ -51,6 +51,9 @@ public interface OutboxStore {
     /** Newest first, {@code state} null = all. */
     List<OutboxItem> list(String state, int limit);
 
+    /** Deliveries with a sequence number above {@code afterSeq}, oldest first, at most {@code limit} (for the compliance export). */
+    List<OutboxItem> after(long afterSeq, int limit);
+
     /** Deliveries per state. */
     Map<String, Long> counts();
 

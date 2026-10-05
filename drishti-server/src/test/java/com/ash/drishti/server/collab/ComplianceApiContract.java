@@ -396,7 +396,7 @@ abstract class ComplianceApiContract {
         JsonNode status = runExport("carol", "auditor", filters, z);
         Map<String, byte[]> zip = z[0];
         assertThat(zip.keySet()).containsExactlyInAnyOrder("README.txt", "shares.ndjson", "threads.ndjson", "chains.ndjson", "holds.ndjson",
-                "manifest.json");
+                "manifest.json", "inbox.ndjson", "outbox.ndjson");
         assertThat(status.get("counts").get("threads").asLong()).isGreaterThanOrEqualTo(1);
 
         JsonNode manifest = json.readTree(zip.get("manifest.json"));
@@ -441,6 +441,9 @@ abstract class ComplianceApiContract {
         assertThat(share.get("body").asText()).contains(secret);
         assertThat(share.get("hashOk").asBoolean()).isTrue();
         assertThat(share.get("recipients").get(0).get("user").asText()).isEqualTo("ravi");
+        assertThat(lines(zip.get("inbox.ndjson")).stream().map(n -> n.path("shareId").asText())).as("the share's inbox notices are in the export").contains(s);
+        assertThat(new String(zip.get("inbox.ndjson"), java.nio.charset.StandardCharsets.UTF_8)).doesNotContain(secret);
+        assertThat(new String(zip.get("outbox.ndjson"), java.nio.charset.StandardCharsets.UTF_8)).doesNotContain(secret);
         assertThat(lines(zip.get("holds.ndjson")).stream().map(n -> n.get("id").asLong())).contains(hold);
 
         assertThat(audited("collab.export.start", "kind=trade")).isTrue();

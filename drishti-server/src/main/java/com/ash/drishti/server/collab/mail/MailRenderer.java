@@ -46,6 +46,33 @@ public final class MailRenderer {
                 MailTemplates.fill(templates.load(c.template(), "html"), html), "<" + seq + "." + safeId(ref) + "@" + host + ">");
     }
 
+    /** One message for several notices to the same person: each notice's headline, details and link under the {@code digest} template. */
+    public RenderedMail renderDigest(java.util.List<Content> items, String to, long seq, String ref) {
+        Map<String, String> text = digestVars(items, false);
+        Map<String, String> html = digestVars(items, true);
+        String subject = oneLine(MailTemplates.fill(templates.load("digest", "subject"), text));
+        return new RenderedMail(oneLine(to), subject, MailTemplates.fill(templates.load("digest", "txt"), text),
+                MailTemplates.fill(templates.load("digest", "html"), html), "<" + seq + "." + safeId(ref) + "@" + host + ">");
+    }
+
+    private Map<String, String> digestVars(java.util.List<Content> items, boolean html) {
+        Map<String, String> v = new LinkedHashMap<>();
+        v.put("product", esc(product, html));
+        v.put("headline", esc(items.size() + " new notifications", html));
+        v.put("count", Integer.toString(items.size()));
+        StringBuilder b = new StringBuilder();
+        for (Content c : items) {
+            if (html) {
+                b.append("<div style=\"margin:0 0 16px 0;\"><b>").append(esc(oneLine(c.headline()), true)).append("</b>").append(detailHtml(c))
+                        .append("<p style=\"margin:4px 0;\"><a href=\"").append(esc(c.link(), true)).append("\">Open it</a></p></div>");
+            } else {
+                b.append("* ").append(oneLine(c.headline())).append('\n').append(detailText(c)).append("  ").append(c.link()).append("\n\n");
+            }
+        }
+        v.put("detail", b.toString());
+        return v;
+    }
+
     private Map<String, String> vars(Content c, boolean html) {
         Map<String, String> v = new LinkedHashMap<>();
         v.put("product", esc(product, html));

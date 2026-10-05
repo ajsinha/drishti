@@ -122,9 +122,15 @@ public final class OutboxDispatcher implements AutoCloseable {
     public int tick() {
         Instant now = clock.instant();
         List<OutboxItem> batch = store.claim(now, props.outbox().batch(), now.plus(props.outbox().lease()), serverId);
+        Map<String, List<OutboxItem>> mail = new java.util.LinkedHashMap<>();
         for (OutboxItem item : batch) {
-            handle(item);
+            if (channels.containsKey(item.channel()) || !props.email().coalesces()) {
+                handle(item);
+            } else {
+                mail.computeIfAbsent(item.recipient(), r -> new java.util.ArrayList<>()).add(item);
+            }
         }
+        mail.values().forEach(this::handleMail);
         refreshGauges();
         if (Duration.between(lastPurge, now).compareTo(Duration.ofHours(1)) >= 0) {
             lastPurge = now;
@@ -137,6 +143,59 @@ public final class OutboxDispatcher implements AutoCloseable {
         Map<String, Long> c = store.counts();
         pendingGauge.set(c.getOrDefault(OutboxItem.PENDING, 0L) + c.getOrDefault(OutboxItem.SENDING, 0L));
         deadGauge.set(c.getOrDefault(OutboxItem.DEAD, 0L));
+    }
+
+    /** Mail due together for one recipient: one email when there is one notice, a digest when there are several. */
+    private void handleMail(List<OutboxItem> items) {
+        if (items.size() == 1) {
+            handle(items.get(0));
+            return;
+        }
+        OutboxItem first = items.get(0);
+        try {
+            User user = principals.user(first.recipient()).filter(User::enabled).orElse(null);
+            if (user == null || user.email() == null || !ADDRESS.matcher(user.email().strip()).matches()) {
+                items.forEach(i -> skip(i, user == null ? "the recipient is unknown or disabled" : "the recipient has no valid address"));
+                return;
+            }
+            Principal who = principals.of(first.recipient());
+            List<OutboxItem> ready = new java.util.ArrayList<>();
+            List<MailRenderer.Content> contents = new java.util.ArrayList<>();
+            for (OutboxItem i : items) {
+                ItemRenderer r = renderers.get(i.template());
+                if (r == null) {
+                    giveUp(i, "no renderer for template '" + i.template() + "'");
+                    continue;
+                }
+                try {
+                    contents.add(r.content(i, who));          // opt-outs, rights and masking are decided per notice, for this recipient
+                    ready.add(i);
+                } catch (ItemRenderer.Skip s) {
+                    skip(i, s.getMessage());
+                } catch (RuntimeException e) {
+                    fail(i, e);
+                }
+            }
+            if (ready.isEmpty()) {
+                return;
+            }
+            OutboxItem lead = ready.get(0);
+            try {
+                RenderedMail mail = ready.size() == 1 ? renderer.render(contents.get(0), user.email().strip(), lead.seq(), lead.refId())
+                        : renderer.renderDigest(contents, user.email().strip(), lead.seq(), lead.refId());
+                transport.send(mail, props.email().from());
+            } catch (RuntimeException e) {
+                ready.forEach(i -> fail(i, e));
+                return;
+            }
+            Instant at = clock.instant();
+            for (OutboxItem i : ready) {
+                store.sent(i.seq(), at);
+                sent.increment();
+            }
+        } catch (RuntimeException e) {
+            items.forEach(i -> fail(i, e));
+        }
     }
 
     private void handle(OutboxItem item) {

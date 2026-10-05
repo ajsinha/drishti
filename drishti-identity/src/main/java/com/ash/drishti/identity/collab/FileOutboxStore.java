@@ -83,6 +83,14 @@ public final class FileOutboxStore implements OutboxStore {
                     }
                 }
             }
+            Path hw = root.resolve("high-water");
+            if (Files.isRegularFile(hw)) {
+                try {
+                    seq = Math.max(seq, Long.parseLong(Files.readString(hw).trim()));
+                } catch (NumberFormatException ignored) {
+                    // an unreadable mark is ignored; the files still give the floor
+                }
+            }
             loaded = true;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -199,6 +207,11 @@ public final class FileOutboxStore implements OutboxStore {
     }
 
     @Override
+    public List<OutboxItem> after(long afterSeq, int limit) {
+        return locked(() -> items.tailMap(afterSeq, false).values().stream().limit(Math.max(1, limit)).toList());
+    }
+
+    @Override
     public Map<String, Long> counts() {
         return locked(() -> {
             Map<String, Long> out = new LinkedHashMap<>();
@@ -220,6 +233,12 @@ public final class FileOutboxStore implements OutboxStore {
             List<OutboxItem> gone = items.values().stream()
                     .filter(i -> OutboxItem.SENT.equals(i.state()) && i.sentAt() != null && i.sentAt().isBefore(before)).toList();
             try {
+                if (!gone.isEmpty()) {
+                    Files.createDirectories(root);
+                    Path tmp = root.resolve("high-water.tmp");
+                    Files.writeString(tmp, Long.toString(seq));
+                    Files.move(tmp, root.resolve("high-water"), StandardCopyOption.REPLACE_EXISTING);
+                }
                 for (OutboxItem i : gone) {
                     Files.deleteIfExists(file(i));
                     items.remove(i.seq());

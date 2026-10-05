@@ -200,7 +200,7 @@ drishti:
       max-expanded: 200              # people after roles are expanded
       max-text: 2000                 # longest note, in characters
       undeliverable: tell            # tell: the sender learns who was not notified and why | silent
-      post-to-thread: false          # the dialog's default for also posting to the discussion
+      post-to-thread: false          # the default when a share request does not say (the dialog's tick, the server)
     threads:                         # comment threads (build step 5)
       max-text: 4000
       max-per-entity: 500
@@ -225,6 +225,7 @@ drishti:
       content: comment               # link-only | title | comment
       from: ${DRISHTI_MAIL_FROM:drishti@localhost}
       templates-dir: ""
+      coalesce-window: 2m            # notices for one person inside this are one digest email; 0 = off
     outbox:                          # build step 4
       enabled: true
       tick: 2s

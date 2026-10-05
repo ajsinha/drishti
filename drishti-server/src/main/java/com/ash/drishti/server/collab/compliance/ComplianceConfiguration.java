@@ -53,9 +53,10 @@ public class ComplianceConfiguration {
 
     @Bean(destroyMethod = "close")
     public ExportService exportService(CollabProperties props, ThreadStore threads, ShareStore shares, HoldStore holds, UserService users,
-            Entitlements entitlements, AuditLog audit, ChainVerifier verifier, ObjectProvider<BuildProperties> build) {
+            Entitlements entitlements, AuditLog audit, ChainVerifier verifier, ObjectProvider<BuildProperties> build,
+            com.ash.drishti.identity.collab.InboxStore inbox, com.ash.drishti.identity.collab.OutboxStore outbox) {
         BuildProperties b = build.getIfAvailable();
         return new ExportService(props, threads, shares, () -> holds.list(false), users, entitlements, audit, verifier, Clock.systemUTC(),
-                b == null ? null : b.getVersion());
+                b == null ? null : b.getVersion(), inbox, outbox);
     }
 }

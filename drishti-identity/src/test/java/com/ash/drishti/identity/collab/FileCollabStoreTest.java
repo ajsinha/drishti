@@ -120,4 +120,30 @@ class FileCollabStoreTest {
         assertThatThrownBy(() -> com.ash.drishti.identity.IdentityConfiguration.requireSingleServerForFiles(file, postgres))
                 .isInstanceOf(IllegalStateException.class).hasMessageContaining("shared database");
     }
+
+    @Test
+    void inboxNeverReusesASequenceNumberAfterPurgingTheNewestRows() throws Exception {
+        Path dir = Files.createTempDirectory("collab-inbox-hw");
+        FileInboxStore store = new FileInboxStore(dir, 1000);
+        Instant old = Instant.now().minus(java.time.Duration.ofDays(90));
+        long last = 0;
+        for (int i = 0; i < 3; i++) {
+            last = store.add(new Notice(0, "u", old, "share", "trade", "MX-" + i, null, null, null, null, "ann", null)).seq();
+        }
+        assertThat(store.purgeBefore(Instant.now())).isEqualTo(3);
+        FileInboxStore again = new FileInboxStore(dir, 1000);
+        Notice n = again.add(new Notice(0, "u", Instant.now(), "share", "trade", "MX-9", null, null, null, null, "ann", null));
+        assertThat(n.seq()).isGreaterThan(last);
+    }
+
+    @Test
+    void outboxNeverReusesASequenceNumberAfterPurgingSentRows() throws Exception {
+        Path dir = Files.createTempDirectory("collab-outbox-hw");
+        FileOutboxStore store = new FileOutboxStore(dir);
+        OutboxItem a = store.add(OutboxItem.pending("email", "ravi", "share", "sh_1", Instant.now()));
+        store.sent(a.seq(), Instant.now().minusSeconds(100));
+        assertThat(store.purgeSent(Instant.now())).isEqualTo(1);
+        OutboxItem b = new FileOutboxStore(dir).add(OutboxItem.pending("email", "ravi", "share", "sh_2", Instant.now()));
+        assertThat(b.seq()).isGreaterThan(a.seq());
+    }
 }

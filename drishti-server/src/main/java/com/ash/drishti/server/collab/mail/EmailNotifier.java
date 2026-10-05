@@ -91,6 +91,12 @@ public final class EmailNotifier implements Notifier {
             LOG.warn("mail to {} not queued: {} a hour reached (drishti.collab.limits.mails-per-recipient-per-hour)", who, cap);
             return;
         }
-        outbox.add(OutboxItem.pending("email", who, event, ref, now));
+        Instant due = now;
+        if (props.email().coalesces()) {
+            // notices inside the window share one send time, so the dispatcher finds them together and sends one digest
+            due = outbox.list(OutboxItem.PENDING, 500).stream().filter(i -> "email".equals(i.channel()) && who.equals(i.recipient())
+                    && i.nextAt().isAfter(now)).map(OutboxItem::nextAt).min(Instant::compareTo).orElse(now.plus(props.email().coalesceWindow()));
+        }
+        outbox.add(OutboxItem.pending("email", who, event, ref, now).with(OutboxItem.PENDING, 0, due, null, null, null, null));
     }
 }

@@ -79,7 +79,7 @@ class CommentMailTest {
     @BeforeEach
     void setUp() {
         props = new CollabProperties(true, null, null, "https://drishti.example", null, null, null, null, null, null, null, null,
-                new CollabProperties.Email(true, null, null, null), null, null, null, null, null, null);
+                new CollabProperties.Email(true, null, null, null, java.time.Duration.ZERO), null, null, null, null, null, null);
         when(entitlements.mayReach(any(), any())).thenReturn(true);
         when(entitlements.masks(any())).thenReturn(true);
         when(prefs.emailOn(any(), any())).thenReturn(true);
@@ -166,7 +166,7 @@ class CommentMailTest {
     @Test
     void linkOnlyPacksSendNeitherIdNorPanelNorNote() {
         CollabProperties linkOnly = new CollabProperties(true, null, null, "https://drishti.example", null, null, null, null, null, null, null, null,
-                new CollabProperties.Email(true, "link-only", null, null), null, null, null, null, null, null);
+                new CollabProperties.Email(true, "link-only", null, null, java.time.Duration.ZERO), null, null, null, null, null, null);
         CommentItemRenderer r = new CommentItemRenderer("mention", threads, principals, entitlements, new CommentRenderer(entitlements, docs),
                 new MailContentPolicy(linkOnly, packs), prefs, titles, links);
         MailRenderer.Content c = r.content(item("mention"), ravi);

@@ -27,7 +27,7 @@ import org.springframework.test.context.DynamicPropertySource;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
         "drishti.collab.limits.shares-per-minute=1000", "drishti.collab.inbox.poll=100ms",
-        "drishti.collab.email.enabled=true", "drishti.collab.console-url=https://drishti.test", "drishti.collab.email.from=drishti@localhost",
+        "drishti.collab.email.enabled=true", "drishti.collab.email.coalesce-window=0", "drishti.collab.console-url=https://drishti.test", "drishti.collab.email.from=drishti@localhost",
         "drishti.collab.outbox.tick=100ms", "drishti.collab.outbox.backoff=300ms", "drishti.collab.outbox.max-backoff=1s",
         "drishti.collab.outbox.max-attempts=50", "spring.mail.host=127.0.0.1",
         "spring.mail.properties.mail.smtp.connectiontimeout=2000", "spring.mail.properties.mail.smtp.timeout=2000",

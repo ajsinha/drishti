@@ -821,7 +821,8 @@ Then send yourself a test: `POST /api/v1/admin/collab/mail-test` mails the signe
 **What is sent.** For each person a share reaches who has an address (`User.email`, set by an administrator or the identity provider; people cannot
 type addresses) and has not turned share mail off, one message: the sender's name, the kind and id, the panel and date, the note as that person
 may read it (masked values `•••`) and the link. A pack whose identifiers are sensitive sets `drishti.collab.packs.<pack>.email.content: link-only`.
-The message is built when it is sent, so a person whose role was removed since gets nothing (the row is *cancelled*). People are not emailed about
+The message is built when it is sent, so a person whose role was removed since gets nothing (the row is *cancelled*). Several notices for the same person inside `email.coalesce-window` (default 2 minutes; `0` = off) go out as one digest email, each notice
+still checked for opt-outs, rights and masking; so mail is sent up to that long after the event. People are not emailed about
 their own shares, and no more than `limits.mails-per-recipient-per-hour` an hour.
 
 **The outbox.** The row is written in the share's own transaction; a worker on each server (`outbox.enabled`) claims due rows under a lease, so
@@ -882,7 +883,8 @@ curl -s -H "Authorization: Bearer $COMPLIANCE" -o export.zip http://localhost:18
 
 Filters (all optional): `from`/`to` (a day, or an instant), `kind`, `id`, `user` (a thread they wrote in; a share they sent or received),
 `includeShares`, `includeThreads`. The zip holds `shares.ndjson`, `threads.ndjson` (every comment with every revision, **unscrubbed**: this is the
-record), `chains.ndjson` (each thread's first and last hash and whether its chain verified), `holds.ndjson`, `README.txt` (field meanings and
+record), `chains.ndjson` (each thread's first and last hash and whether its chain verified), `holds.ndjson`, `inbox.ndjson` (the in-scope inbox notices: who, type, entity, actor, when, read) and `outbox.ndjson` (the in-scope email and bridge
+delivery rows: channel, state, attempts, times, never a message body), `README.txt` (field meanings and
 how to recompute a hash) and `manifest.json` (filters, who and when, counts, software version, and the SHA-256, size and line count of every
 other file). It is written line by line, so memory stays bounded; one export runs at a time per server (a queue of 8). Only the person who asked
 may download it, once; it is deleted then, or after `export-keep`. Starting, finishing and downloading are audited (`collab.export.*`); the file

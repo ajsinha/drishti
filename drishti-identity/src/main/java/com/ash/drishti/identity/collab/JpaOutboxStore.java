@@ -149,6 +149,12 @@ public final class JpaOutboxStore implements OutboxStore {
     }
 
     @Override
+    public List<OutboxItem> after(long afterSeq, int limit) {
+        return tx.execute(t -> repo.findBySeqGreaterThanOrderBySeq(afterSeq, PageRequest.of(0, Math.max(1, limit))).stream()
+                .map(JpaOutboxStore::item).toList());
+    }
+
+    @Override
     public Map<String, Long> counts() {
         Map<String, Long> out = new LinkedHashMap<>();
         for (String s : List.of(OutboxItem.PENDING, OutboxItem.SENDING, OutboxItem.SENT, OutboxItem.DEAD, OutboxItem.CANCELLED)) {

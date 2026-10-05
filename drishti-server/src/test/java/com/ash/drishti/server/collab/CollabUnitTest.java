@@ -70,4 +70,12 @@ class CollabUnitTest {
         assertThat(Ulid.valid("sh_lowercase0000000000000000", "sh_")).isFalse();
         assertThat(Ulid.timeOf(a, "sh_").toEpochMilli()).isEqualTo(t);
     }
+
+    @Test
+    void aShareRequestThatDoesNotSayFollowsTheConfiguredPostToThreadDefaultAndTheRequestStillWins() {
+        assertThat(ShareService.postsToThread(null, true)).isTrue();
+        assertThat(ShareService.postsToThread(null, false)).isFalse();
+        assertThat(ShareService.postsToThread(false, true)).isFalse();
+        assertThat(ShareService.postsToThread(true, false)).isTrue();
+    }
 }
