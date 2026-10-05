@@ -131,4 +131,18 @@ class NoteImportTest {
         mvc.perform(delete("/api/v1/notes/" + id2).header("Authorization", as("tess", "trader"))).andExpect(status().isNoContent());
         assertThat(threads.comment(threads.commentOfNote(id2).orElseThrow()).orElseThrow().state()).isEqualTo("retracted");
     }
+
+    @Test
+    void aMaskedValueTypedIntoAnOldNoteStaysMaskedAfterTheImport() throws Exception {
+        // the old Notes were never checked for masked values; an imported one is checked when it is read, against the entity
+        String entity = "IRS-48213";                                   // its trader, A. Shah, is masked for roles without raw
+        notes.add("trade", entity, null, "tess", "Booked by A. Shah after the call");
+        NoteImport.run(notes, threads, tx, audit);
+        String asTrader = mvc.perform(get("/api/v1/threads/trade/" + entity).header("Authorization", as("tom", "trader")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(asTrader).as("a reader without raw").contains("Booked by").doesNotContain("A. Shah").contains(com.ash.drishti.api.DataNode.MASK);
+        String asRisk = mvc.perform(get("/api/v1/threads/trade/" + entity).header("Authorization", as("rita", "risk")))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(asRisk).as("a reader with raw").contains("Booked by A. Shah after the call");
+    }
 }

@@ -549,7 +549,7 @@ public final class ThreadService {
                 }
                 Set<String> have = new LinkedHashSet<>();
                 store.mentions(c.id()).forEach(x -> have.add(x.target()));
-                String text = CommentRenderer.text(renderer.parts(t.kind(), t.entityId(), c.pin(), c.body(), c.maskedSpans(), have, p));
+                String text = CommentRenderer.text(renderer.parts(t.kind(), t.entityId(), c.pin(), c.body(), spans(t, c), have, p));
                 out.add(new MentionRow(c.id(), t.id(), t.kind(), t.entityId(), t.panelId(), c.author(), displayName(c.author()), c.createdAt(),
                         NoteText.excerpt(text, EXCERPT)));
             }
@@ -581,7 +581,7 @@ public final class ThreadService {
             if (c.body().indexOf('@') >= 0) {
                 store.mentions(c.id()).forEach(m -> targets.add(m.target()));
             }
-            parts = renderer.parts(t.kind(), t.entityId(), c.pin(), c.body(), c.maskedSpans(), targets, reader);
+            parts = renderer.parts(t.kind(), t.entityId(), c.pin(), c.body(), spans(t, c), targets, reader);
             body = CommentRenderer.text(parts);
         }
         boolean mine = c.author().equals(reader.user());
@@ -595,6 +595,25 @@ public final class ThreadService {
     }
 
     // ---- text, pin, scrub ----------------------------------------------------------------------------------------------
+
+    /**
+     * The ranges of a comment's text that copy a masked value. A comment written here carries them from when it was written; a
+     * note imported from the old Notes was never checked, so its text is checked now against the entity as it is (an old note
+     * may hold a trader's name that a reader without raw must not see). When the entity cannot be read the whole text counts as
+     * masked: a reader who sees masks then sees none of it rather than a value.
+     */
+    private List<Share.Span> spans(CommentThread t, Comment c) {
+        boolean imported = c.pin() == null || c.pin().generation() == 0 && c.pin().businessDate() == null;
+        if (!imported || !c.maskedSpans().isEmpty() || c.body() == null || c.body().isEmpty()) {
+            return c.maskedSpans();
+        }
+        try {
+            EntityDocument doc = fetch(t.kind(), t.entityId(), AsOf.LATEST, true);
+            return doc == null ? List.of() : NoteText.spans(c.body(), entitlements.maskedValues(doc.data()));
+        } catch (RuntimeException e) {
+            return List.of(new Share.Span(0, c.body().length()));
+        }
+    }
 
     private String clean(String raw) {
         String text = raw == null ? "" : raw.strip();
@@ -775,7 +794,7 @@ public final class ThreadService {
             return new NoticeText(true, null);
         }
         return new NoticeText(true, NoteText.excerpt(CommentRenderer.text(renderer.parts(t.kind(), t.entityId(), c.pin(), c.body(),
-                c.maskedSpans(), mentionTargets(c), reader)), EXCERPT));
+                spans(t, c), mentionTargets(c), reader)), EXCERPT));
     }
 
     private Set<String> mentionTargets(Comment c) {
