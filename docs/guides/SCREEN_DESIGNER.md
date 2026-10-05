@@ -213,7 +213,20 @@ The YAML tab is Studio's editor on the design's Sutra: completion of keys and va
 
 **Summary** reads the Sutra back as a page: what it applies to, the strip, each panel with its columns.
 
-**About text.** The Sutra's `description` and each panel's `description` (YAML tab) are what the *About this page* drawer says about your screen, so write them for the person who will press `?`. A design preview already has the drawer's data; the sentence with the entity's own numbers is written in the pack's `config/about.yaml` ([About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)). An **About** tab in the workbench, to write that file beside the Sutra, preview it over your samples and export it with the pack fragment, is stage 7 of the design ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#build-workbench-integration)) and is not in the workbench yet.
+**About text.** The Sutra's `description` and each panel's `description` (YAML tab) are what the *About this page* drawer says about your screen, so write them for the person who will press `?`. The sentence with the entity's own numbers, the panels' text and the glossary are the pack's `config/about.yaml` ([About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); the **About** tab, described next, writes that file beside the Sutra and shows the card it makes.
+
+### The About tab
+
+The **About** tab (right pane, after Versions) is the pack's `config/about.yaml` for this design: the text of the page, the text of each panel and the glossary that says what each field means. It is kept **with the design** (counted in the quotas like the notes, with the cap `max-notes-kb`) and travels with the pack fragment ([§24](#24-pack-fragments-export-and-import)); it is not a Sutra edit and does not change the screen.
+
+- **Write it.** Type in the box (YAML; line numbers, wrapped lines). *Starter* writes a skeleton for the design's kind: a title, a page sentence to fill in, one entry under `panels:` for each panel of the Sutra and one under `glossary:` for each field the preview shows that has no entry yet. The format, the keys and `${...}` expressions are the pack guide's; a `${...}` reads the **sample being previewed** (as the viewer may see it), so changing the sample in the status bar changes the card.
+- **See it.** Under the box is the **About card** for the previewed sample, drawn by the server's own About code (the same that fills the drawer): the kind's title, the page text with your numbers in it, the Sutra's description, the text of each panel, and the glossary of the fields the preview shows (term, meaning, unit, sign, formula). It updates a moment after you stop typing (600 ms) and when you change the Sutra or the sample. A `${...}` that fails reads as a dash and is counted ("2 expressions failed"). What the packs already say about the same kind is underneath yours: an entry you write wins, the pack's fills the rest, and the card says where the page text came from.
+- **Keep it, undo it.** After a longer pause (1.5 s) or when you leave the box, the text is kept as **a step of the design's log**: it gets a revision, the status bar's rev moves, and **Undo / Redo (Ctrl+Z, outside the box) and Versions** cover it like a Sutra edit. A stale revision (the design changed in another tab) is the same *409* as for operations: the design is reloaded and you write again. A rebase of the Sutra onto a newer base leaves the About text as it is.
+- **Problems.** What is wrong with the text itself (`DRS-2040` to `DRS-2044`: an unknown key, a kind that is not this design's, a `${...}` that does not compile, a `use:` naming no vocabulary entry, a text over the cap) is listed under the box with its **line**; click one to put the cursor there. The lint warnings (`DRS-2045` the Sutra binds F1, `DRS-2046` panel text for a panel the Sutra does not have, `DRS-2047` a field shown by the preview has no glossary entry) are listed with them. Once the box has text they are also in the **Problems** tab, so "field 'carrier' is shown but has no glossary entry" is not hidden on a tab you did not open (a design with no About text yet lists none there, apart from the F1 warning, so it is not told about every field). The line under the starter button reads the coverage ("help coverage 2/5 (40%)", for the previewed sample).
+- **Export and import.** *Ship → Export as a pack fragment* adds `config/about.yaml` and `about: config/about.yaml` in the `pack.yaml`; importing a fragment (or a pack folder) puts that file back in the design's About tab.
+- **Keyboard.** The tab is reached like the others (arrow keys between tabs, Enter or Space opens it); the box does **not** trap Tab, so Tab leaves it.
+
+**Not live.** About text authored here is evidence and a draft: *Submit for review* and approval make the **Sutra** live, not the About text, because packs are loaded by administrators. To make the text live, put the exported `config/about.yaml` in the pack ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); until then the drawer on a live view shows what the pack says. The preview in the tab shows yours over the pack's.
 
 ## 10. Problems
 
@@ -509,12 +522,13 @@ my-view/
   tests/my-view/<sample>.json       every kept sample (up to 20) ...
   tests/my-view/expect.yaml         ... and what `sutra test` checks: noErrors, and the panels that were fine on every sample
   samples/<kind>/<sample>.json      three samples to try the view on
+  config/about.yaml                 the About text (only when the design has one), named by `about:` in pack.yaml
   README.md                         what is in it and how to load it
 ```
 
 Stored-entity samples are references, not data, so they are not exported; synthetic ones are, and are labelled as such by their names. Put the folder under the server's `packs/`, list it in `DRISHTI_PACKS` (or load it from **Admin → Packs**), and change the stub's title, version and mnemonic first. The exported tests pass `sutra test` unchanged (section 26).
 
-**Import** (*New screen → Or import a pack*) takes a **zip** or a **folder**. Each `*.sutra.yaml` becomes a design of its own, named after the Sutra, with the documents of `tests/<sutra>/` and `samples/<kind>/` as its samples and the README as its notes. A Sutra that does not check yet is imported anyway, with a note, so you can fix it in the workbench. Nothing is loaded into the server; this only makes designs, so it is open to everyone.
+**Import** (*New screen → Or import a pack*) takes a **zip** or a **folder**. Each `*.sutra.yaml` becomes a design of its own, named after the Sutra, with the documents of `tests/<sutra>/` and `samples/<kind>/` as its samples, the README as its notes and `config/about.yaml` (if there is one) as its About text. A Sutra that does not check yet is imported anyway, with a note, so you can fix it in the workbench. Nothing is loaded into the server; this only makes designs, so it is open to everyone.
 
 ![The import section of the New page](img/designer/44-export-import.jpg)
 

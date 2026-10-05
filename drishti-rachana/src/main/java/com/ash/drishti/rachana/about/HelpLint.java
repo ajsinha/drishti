@@ -77,7 +77,7 @@ public final class HelpLint {
     }
 
     /** {@code DRS-2046} for each panel id the kind's about text names that none of {@code panelIds} is. */
-    public List<SutraProblem> unknownPanels(String kind, Set<String> panelIds, AboutCatalog catalog) {
+    public List<SutraProblem> unknownPanels(String kind, Set<String> panelIds, AboutSource catalog) {
         List<SutraProblem> out = new ArrayList<>();
         catalog.forKind(kind).ifPresent(t -> t.panels().keySet().stream().sorted().filter(id -> !panelIds.contains(id))
                 .forEach(id -> out.add(new SutraProblem(UNKNOWN_PANEL, "about text for panel '" + id + "' of kind '" + kind

@@ -114,7 +114,7 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
             "bindDir": binding.get("dir") or "", "baseMoved": design.get("baseMoved") or None, "id": design["id"], "samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
             "status": design.get("status", "draft"),
             "tab": tab if tab in ("design", "yaml", "summary", "notes", "split") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
-            "notice": notice[:300], "base": design.get("base") or "", "notes": design.get("notes") or ""}
+            "notice": notice[:300], "base": design.get("base") or "", "notes": design.get("notes") or "", "about": design.get("about") or ""}
     return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict(),
                   examples=request.app.state.examples.names(), pending=pending)
 
@@ -436,6 +436,37 @@ async def sample_document(request: Request, id_: str, name: str = ""):
     """One brought sample's JSON (the YAML editor completes fields from it); a stored entity keeps no document."""
     try:
         return await request.app.state.backend.designs("GET", f"/{id_}/samples/document", ident(request), name=name)
+    except BackendError as e:
+        return _error(e)
+
+
+# ---- the About tab ---------------------------------------------------------------------------------------------------------
+
+@router.get("/designs/{id_}/about")
+async def about_read(request: Request, id_: str, sample: str = ""):
+    """The Design's saved About text and its card (page text, panel text, glossary, lint) over a sample."""
+    try:
+        return await request.app.state.backend.designs("GET", f"/{id_}/about", ident(request), sample=sample or None)
+    except BackendError as e:
+        return _error(e)
+
+
+@router.post("/designs/{id_}/about/preview")
+async def about_preview(request: Request, id_: str):
+    """Body ``{text, sample?}``: the card for the text in the editor; nothing is saved."""
+    body = await _body(request)
+    try:
+        return await request.app.state.backend.designs("POST", f"/{id_}/about/preview", ident(request), {k: body[k] for k in ("text", "sample") if k in body})
+    except BackendError as e:
+        return _error(e)
+
+
+@router.put("/designs/{id_}/about")
+async def about_save(request: Request, id_: str):
+    """Body ``{baseRev, text, sample?}``: keeps the text as a step of the Design's log (undo and revisions cover it). A stale revision is 409."""
+    body = await _body(request)
+    try:
+        return await request.app.state.backend.designs("PUT", f"/{id_}/about", ident(request), {k: body[k] for k in ("baseRev", "text", "sample") if k in body})
     except BackendError as e:
         return _error(e)
 

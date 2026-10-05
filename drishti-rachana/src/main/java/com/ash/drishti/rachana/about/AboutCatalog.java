@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * <p>Immutable once built; {@link #reload()} swaps in a whole new state, so readers always see a consistent catalogue.
  * Thread-safe.
  */
-public final class AboutCatalog {
+public final class AboutCatalog implements AboutSource {
 
     private static final Logger LOG = LoggerFactory.getLogger(AboutCatalog.class);
 
@@ -85,6 +85,7 @@ public final class AboutCatalog {
     }
 
     /** The core vocabulary's entry for a field name, or empty. */
+    @Override
     public Optional<GlossaryEntry> core(String name) {
         return Optional.ofNullable(core.get(name));
     }
@@ -131,6 +132,7 @@ public final class AboutCatalog {
     }
 
     /** What the packs say about {@code kind}, merged through {@code extends}, or empty when no pack says anything. */
+    @Override
     public Optional<AboutText> forKind(String kind) {
         return Optional.ofNullable(snapshot.byKind().get(kind));
     }
@@ -169,6 +171,11 @@ public final class AboutCatalog {
     /** Changes whenever the catalogue is reloaded; part of the explain cache's key. */
     public long revision() {
         return revision.get();
+    }
+
+    /** The longest any one plain text of an entry may be. */
+    public int maxText() {
+        return props.maxText();
     }
 
     /** The longest a rendered template may be. */

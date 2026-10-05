@@ -155,6 +155,12 @@ public class EngineConfiguration {
         return new com.ash.drishti.engine.explain.ExplainService(pipeline, matcher, router, el, registry, about, formats, props, meters);
     }
 
+    /** About this page in the Build workbench: the About card of a Design's preview. */
+    @Bean
+    public com.ash.drishti.engine.explain.AboutPreview aboutPreview(SourceRouter router, Formats formats) {
+        return new com.ash.drishti.engine.explain.AboutPreview(router, formats);
+    }
+
     /** Frame timer for live topics: two platform threads only schedule; delivery work is tiny. */
     @Bean(destroyMethod = "shutdownNow")
     public ScheduledExecutorService drishtiFrameScheduler() {

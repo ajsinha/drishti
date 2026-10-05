@@ -135,12 +135,23 @@
         <button type="button" role="tab" id="wbTabProb" data-tab="problems" aria-controls="wbPaneProb" aria-selected="false" tabindex="-1">Problems <span class="wb-count" data-problem-count hidden></span></button>
         <button type="button" role="tab" id="wbTabTests" data-tab="tests" aria-controls="wbPaneTests" aria-selected="false" tabindex="-1">Tests</button>
         <button type="button" role="tab" id="wbTabVer" data-tab="versions" aria-controls="wbPaneVer" aria-selected="false" tabindex="-1">Versions</button>
+        <button type="button" role="tab" id="wbTabAbout" data-tab="about" aria-controls="wbPaneAbout" aria-selected="false" tabindex="-1" title="The text the About this page drawer shows: written here, previewed on the sample">About</button>
       </div>
       <div class="wb-panes">
         <div class="wb-pane" id="wbPaneIns" role="tabpanel" aria-labelledby="wbTabIns" data-inspector></div>
         <div class="wb-pane" id="wbPaneProb" role="tabpanel" aria-labelledby="wbTabProb" hidden data-problems></div>
         <div class="wb-pane" id="wbPaneTests" role="tabpanel" aria-labelledby="wbTabTests" hidden data-tests></div>
         <div class="wb-pane" id="wbPaneVer" role="tabpanel" aria-labelledby="wbTabVer" hidden data-versions></div>
+        <div class="wb-pane wb-about" id="wbPaneAbout" role="tabpanel" aria-labelledby="wbTabAbout" hidden data-about>
+          <p class="text-muted-d wb-about-intro">What the <strong>About this page</strong> drawer says: the page's text, each panel's text and what each field means. It is the pack's <code>config/about.yaml</code>, kept with this design and exported with the pack fragment.
+            <a href="/help/screen-designer#the-about-tab" class="lnk">How to write it</a></p>
+          <div class="wb-about-bar"><button type="button" class="btn-pill btn-ghost" data-about-starter title="Write a skeleton for this kind, its panels and the fields shown without an entry"><i class="bi bi-magic" aria-hidden="true"></i> Starter</button>
+            <span class="text-muted-d" data-about-status role="status"></span></div>
+          <label for="wbAboutSrc" class="visually-hidden">About text (about.yaml)</label>
+          <textarea id="wbAboutSrc" data-about-src spellcheck="false" placeholder="about: 1&#10;kinds:&#10;  {{ design.kind }}:&#10;    about: &quot;Say what this page is.&quot;"></textarea>
+          <div data-about-lint aria-live="polite"></div>
+          <section class="wb-about-card" data-about-card aria-label="About card preview"></section>
+        </div>
       </div>
     </aside>
   </div>
@@ -180,7 +191,7 @@
 <script src="/static/js/layout-rules.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-files.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-shape-tree.js?v={{ ASSET_V }}"></script>
-{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
+{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "about", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
 <script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>
 {% endfor %}
 {% endblock %}

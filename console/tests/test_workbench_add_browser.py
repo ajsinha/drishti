@@ -35,7 +35,7 @@ def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_a
     wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
     page.locator("[data-preview] [data-panel]").first.wait_for()
     assert "tab=split" in page.url
-    assert page.locator("[data-preview]").is_visible() and page.locator(".CodeMirror").is_visible()          # the canvas is in sight
+    assert page.locator("[data-preview]").is_visible() and page.locator("#wbPaneYaml .CodeMirror").is_visible()          # the canvas is in sight
     before = state(page, "yaml")
     comments = [ln for ln in before.splitlines() if ln.lstrip().startswith("#")]
     rev = state(page, "rev")

@@ -473,7 +473,7 @@ public class DesignController {
 
     private ObjectNode outcome(StoredDesign d, OpResult r, String sample, Principal who) {
         ObjectNode out = mapper.createObjectNode();
-        out.put("rev", d.rev).put("yaml", d.sutra).put("status", d.status).put("opsAt", d.opsAt).put("opsCount", d.ops.size());
+        out.put("rev", d.rev).put("yaml", d.sutra).put("about", d.about).put("status", d.status).put("opsAt", d.opsAt).put("opsCount", d.ops.size());
         out.set("problems", mapper.valueToTree(r == null ? List.of() : r.problems()));
         out.put("applied", r == null ? 0 : r.applied());
         if (!d.samples.isEmpty() && !d.sutra.isBlank()) {
@@ -585,7 +585,7 @@ public class DesignController {
             if (moved != null) {
                 o.set("baseMoved", moved);
             }
-            o.put("sutra", d.sutra).put("notes", d.notes);
+            o.put("sutra", d.sutra).put("notes", d.notes).put("about", d.about);
             o.set("tests", mapper.valueToTree(d.tests));
             o.put("opsAt", d.opsAt);
             ArrayNode log = o.putArray("ops");                // the steps, without the Sutra texts they hold

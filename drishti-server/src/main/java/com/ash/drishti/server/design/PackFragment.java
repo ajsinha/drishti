@@ -158,6 +158,9 @@ public class PackFragment {
                 put(zip, pack + "/samples/" + kind + "/" + unique(usedSamples, docs.get(i).getKey()),
                         JSON.writerWithDefaultPrettyPrinter().writeValueAsString(docs.get(i).getValue()));
             }
+            if (hasAbout(d)) {
+                put(zip, pack + "/" + ABOUT_FILE, d.about);
+            }
             if (d.notes != null && !d.notes.isBlank()) {
                 put(zip, pack + "/" + NOTES_FILE, d.notes);
             }
@@ -198,6 +201,9 @@ public class PackFragment {
         b.append("extends: []\n");
         b.append("kinds:\n- ").append(kind).append('\n');
         b.append("sutras: sutras\n");
+        if (hasAbout(d)) {
+            b.append("about: ").append(ABOUT_FILE).append('\n');
+        }
         b.append("# Suggestions: the mnemonic is what users type in the command bar; the id pattern lets the graph recognise the ids.\n");
         b.append("# The documents' id field in the samples is '").append(idField).append("': ids look like <MNEMONIC>-<value>, change the pattern if yours do not.\n");
         b.append("mnemonics:\n  ").append(mnemonic).append(":\n    kind: ").append(kind).append("\n    label: ").append(q(kind)).append('\n');
@@ -228,6 +234,13 @@ public class PackFragment {
         return b.toString();
     }
 
+    /** Where the About text goes in a pack: the file the pack's {@code about:} key names (the default). */
+    static final String ABOUT_FILE = "config/about.yaml";
+
+    private static boolean hasAbout(StoredDesign d) {
+        return d.about != null && !d.about.isBlank();
+    }
+
     /** The design's notes, kept apart from the generated README so that export then import does not grow them. */
     static final String NOTES_FILE = "NOTES.md";
     /** A line only the generated README holds: a README with it is ours and is not imported as notes. */
@@ -240,7 +253,9 @@ public class PackFragment {
                 + "- `sutras/`: the Sutra `" + sutra + "`.\n"
                 + "- `tests/" + sutra + "/`: " + tests + " sample document(s) and `expect.yaml`; run them with\n"
                 + "  `java -jar drishti-server-*-exec.jar sutra test " + pack + "`.\n"
-                + "- `samples/" + kind + "/`: up to three documents to try the view on.\n\n"
+                + "- `samples/" + kind + "/`: up to three documents to try the view on.\n"
+                + (hasAbout(d) ? "- `" + ABOUT_FILE + "`: the About text (page text, panel text, glossary) written in the workbench's About tab.\n" : "")
+                + "\n"
                 + "To use it: put this folder under the server's `packs/` directory and load it from Admin -> Packs (or list it in `DRISHTI_PACKS`).\n"
                 + (d.notes == null || d.notes.isBlank() ? "" : "\nThe design's notes are in `" + NOTES_FILE + "`.\n");
     }
@@ -258,7 +273,7 @@ public class PackFragment {
 
     /**
      * Reads a zip of a pack folder into Designs for {@code user}: one Design per Sutra file, its samples being the documents of
-     * {@code tests/<sutra>/} and {@code samples/<kind>/}, its notes the README.
+     * {@code tests/<sutra>/} and {@code samples/<kind>/}, its notes the README and its About text {@code config/about.yaml}.
      *
      * @param maxBytes the most the unpacked files may add up to
      */
@@ -300,6 +315,8 @@ public class PackFragment {
                 .map(Item::text).findFirst().orElseGet(() -> items.stream()
                         .filter(i -> i.path().toLowerCase(Locale.ROOT).endsWith("readme.md") && depth(i.path()) <= 2)
                         .map(Item::text).filter(t -> !t.contains(README_MARK)).findFirst().orElse(""));
+        String about = items.stream().filter(i -> i.path().equals(ABOUT_FILE) || i.path().endsWith("/" + ABOUT_FILE) && depth(i.path()) <= 3)
+                .map(Item::text).findFirst().orElse("");
         List<StoredDesign> made = new ArrayList<>();
         for (Item sutraFile : items) {
             if (!isSutra(sutraFile.path())) {
@@ -338,6 +355,9 @@ public class PackFragment {
             }
             if (!add.isEmpty()) {
                 d = designs.addSamples(user, d.id, add);
+            }
+            if (!about.isBlank()) {
+                d = designs.adoptAbout(user, d.id, about);
             }
             made.add(d);
         }

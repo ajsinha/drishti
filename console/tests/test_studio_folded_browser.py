@@ -43,10 +43,10 @@ def test_an_old_studio_address_lands_on_the_split_view_of_a_new_design(live_cons
     page.locator("[data-start-go]").click()                  # opening the address only asks; the button starts the design
     page.locator("[data-workbench]").wait_for()
     assert re.search(r"/build/d/\w+\?tab=split", page.url)
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.tabs.centre.current() === 'design' && document.querySelector('.CodeMirror').offsetParent !== null")
+    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.tabs.centre.current() === 'design' && document.querySelector('#wbPaneYaml .CodeMirror').offsetParent !== null")
     assert "sutra: all-panels-showcase" in state(page, "yaml")
     assert page.locator("#wbPaneYaml").is_visible() and page.locator("#wbPaneDesign").is_visible()          # side by side: the canvas is in sight
-    assert page.locator(".CodeMirror").is_visible()
+    assert page.locator("#wbPaneYaml .CodeMirror").is_visible()
 
 
 def test_the_command_palette_works_by_keyboard_and_is_labelled(live_console, page):
@@ -128,7 +128,7 @@ def test_ctrl_s_says_why_it_cannot_save_and_ctrl_enter_previews(live_console, pa
     wait(page, "document.querySelector('[data-say]').textContent.includes('Previewed')")
     # typing in the YAML tab and pressing Ctrl+Enter sends the text first
     page.locator("#wbTabYaml").click()
-    page.locator(".CodeMirror").click()
+    page.locator("#wbPaneYaml .CodeMirror").click()
     page.keyboard.press("Control+End")
     rev = state(page, "rev")
     page.keyboard.type("\n# a note from the keyboard\n")

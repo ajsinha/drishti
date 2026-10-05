@@ -239,3 +239,25 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 @media (max-width: 700px) {
   .wb-bar { position: sticky; bottom: 0; z-index: 20; background: var(--d-bg); border-top: 1px solid var(--d-border); }
 }
+
+/* The About tab: the text box, its problems and the card it makes */
+.wb-about { overflow: auto; padding: .5rem .6rem; flex-direction: column; gap: .4rem; }
+.wb-right .wb-panes .wb-about:not([hidden]) { display: flex; }
+.wb-about-intro { margin: 0; font-size: .82rem; }
+.wb-about-bar { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; font-size: .82rem; }
+.wb-about .CodeMirror { height: 14rem; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-bg-2); color: var(--d-ink); font: .8rem/1.45 var(--d-font-mono); }
+.wb-about .CodeMirror-gutters { background: var(--d-bg); border-right: 1px solid var(--d-border); }
+.wb-about .CodeMirror-linenumber { color: var(--d-faint); }
+.wb-about .CodeMirror-focused { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.wb-about-card { border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-surface); padding: .5rem .7rem; font-size: .88rem; }
+.wb-about-h { font-size: 1rem; margin: 0 0 .2rem; }
+.wb-about-h2 { font-size: .9rem; margin: .6rem 0 .2rem; }
+.wb-about-text { margin: .2rem 0; }
+.wb-about-from { margin: 0; font-size: .78rem; }
+.wb-about-warn { color: var(--d-warn); margin: .2rem 0; }
+.wb-about-list { margin: 0; padding-left: 1.1rem; }
+.wb-about-gloss dt { font-weight: 600; margin-top: .35rem; }
+.wb-about-gloss dd { margin: 0 0 0 .6rem; }
+.wb-about-formula { display: block; margin-top: .1rem; }
+.wb-about-key { font-size: .75rem; font-family: var(--d-font-mono); }
+.wb-right .wb-tabs { flex-wrap: wrap; }
