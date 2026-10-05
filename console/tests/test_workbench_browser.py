@@ -25,7 +25,7 @@ import time
 import pytest
 
 from conftest import CONSOLE
-from wb_live import live_console, new_design, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
+from wb_live import BROWSER_WAIT_MS, live_console, new_design, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 ALL_KINDS = ["kv", "status", "provenance", "markdown", "table", "ladder", "pivot", "tabs", "line", "area", "candlestick", "surface", "histogram",
@@ -52,7 +52,7 @@ def page(browser):
     pg.close()
 
 
-def wait(page, js, seconds=45):   # generous: the full suite runs beside Maven builds
+def wait(page, js, seconds=BROWSER_WAIT_MS / 1000):   # generous: the full suite runs beside Maven builds
     """Polls a JavaScript expression until it is truthy (Playwright's own wait_for_function evaluates a string, which the console's CSP forbids)."""
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
@@ -66,7 +66,7 @@ def open_design(page, base, name, **kw):
     id_ = new_design(page, base, name, **kw)
     page.goto(f"{base}/build/d/{id_}")
     wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
-    page.locator("[data-preview] [data-panel]").first.wait_for(timeout=20000)
+    page.locator("[data-preview] [data-panel]").first.wait_for(timeout=BROWSER_WAIT_MS)
     return id_
 
 
@@ -305,7 +305,7 @@ def test_the_tests_matrix_follows_the_design_as_it_changes(live_console, page):
     thin.pop("coupons", None)
     open_design(page, live_console, "matrix", sutra=showcase_sutra(), files={"full.json": showcase_json(), "thin.json": json.dumps(thin)})
     page.get_by_role("tab", name="Tests").click()
-    page.locator(".wb-matrix").wait_for(timeout=20000)
+    page.locator(".wb-matrix").wait_for(timeout=BROWSER_WAIT_MS)
     assert page.locator(".wb-matrix thead th").count() == 3                 # Panel + two samples
     rows = page.locator(".wb-matrix tbody tr").count()
     page.get_by_role("tab", name="Design").click()

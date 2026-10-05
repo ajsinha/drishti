@@ -19,7 +19,7 @@ import time
 import pytest
 
 from conftest import CONSOLE
-from wb_live import live_console, post  # noqa: F401 - the fixture
+from wb_live import BROWSER_WAIT_MS, live_console, post  # noqa: F401 - the fixture
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 EXAMPLES = sorted(p.name[: -len(".sutra.yaml")] for p in (CONSOLE.parent / "docs" / "guides" / "examples").glob("*.sutra.yaml"))
@@ -50,7 +50,7 @@ def test_an_example_opens_as_a_copy_with_no_problems(browser, live_console, exam
         deadline = time.monotonic() + 25
         while time.monotonic() < deadline and not page.evaluate("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id"):
             page.wait_for_timeout(100)
-        page.locator("[data-preview] [data-panel]").first.wait_for(timeout=20000)
+        page.locator("[data-preview] [data-panel]").first.wait_for(timeout=BROWSER_WAIT_MS)
         page.wait_for_timeout(2500)                          # the check runs on idle: give its matrix time to arrive
         items = page.evaluate("[...document.querySelectorAll('[data-problems] .wb-problem-b')].map(b => b.textContent)")
         if example != SHOWCASE:                              # the others match kinds of the banking packs and link to their entities: not on this plain server

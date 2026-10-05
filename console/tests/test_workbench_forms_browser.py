@@ -18,7 +18,7 @@ take back. Fixtures and helpers are test_workbench_browser.py's."""
 import json
 
 from test_workbench_browser import browser, drag, kinds, open_design, page, settle, state, wait  # noqa: F401 - fixtures and helpers
-from wb_live import live_console, showcase_json, showcase_sutra  # noqa: F401 - the fixture
+from wb_live import BROWSER_WAIT_MS, live_console, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
 
 def test_the_inspector_edits_options_the_title_and_lists_and_completes_expressions(live_console, page):
@@ -140,7 +140,7 @@ def test_clicking_the_canvas_shows_the_inspector_but_a_matrix_cell_does_not_leav
     page.locator('[data-preview] [data-panel="terms"] .pnl-h').click()
     assert page.get_by_role("tab", name="Inspector").get_attribute("aria-selected") == "true"
     page.get_by_role("tab", name="Tests").click()
-    page.locator(".wb-matrix").wait_for(timeout=20000)
+    page.locator(".wb-matrix").wait_for(timeout=BROWSER_WAIT_MS)
     page.locator('.wb-matrix tbody tr:nth-child(2) button').first.click()
     assert page.get_by_role("tab", name="Tests").get_attribute("aria-selected") == "true"
     assert page.evaluate("window.drishtiWorkbench.canvas.selected().id") == "ops"

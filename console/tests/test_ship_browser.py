@@ -21,7 +21,7 @@ import re
 import pytest
 
 from test_workbench_browser import browser, page, wait  # noqa: F401 - fixtures
-from wb_live import live_ship_console, new_design  # noqa: F401 - the fixture
+from wb_live import BROWSER_WAIT_MS, live_ship_console, new_design  # noqa: F401 - the fixture
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
@@ -42,7 +42,7 @@ def _open(page, base, name, sutra=SUTRA):
     id_ = new_design(page, base, name, sutra=sutra, files={"a.json": '{"tradeId": "T-1", "book": "CONFIDENTIAL-BOOK"}', "b.json": '{"tradeId": "T-2", "book": "rates"}'})
     page.goto(f"{base}/build/d/{id_}")
     wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
-    page.locator("[data-preview] [data-panel]").first.wait_for(timeout=20000)
+    page.locator("[data-preview] [data-panel]").first.wait_for(timeout=BROWSER_WAIT_MS)
     return id_
 
 

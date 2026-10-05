@@ -25,6 +25,7 @@ import pytest
 import yaml
 
 from conftest import CONSOLE
+from wb_live import BROWSER_WAIT_MS
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
@@ -100,7 +101,7 @@ def test_no_page_scrolls_sideways_and_images_fit(browser, console_url, width):
     problems = []
     try:
         for url in _pages():
-            page.goto(console_url + url, wait_until="load", timeout=20000)
+            page.goto(console_url + url, wait_until="load", timeout=BROWSER_WAIT_MS)
             page.wait_for_timeout(250)                       # let the page's own scripts lay it out
             page.evaluate(DECODED)
             problems += [f"{url} @ {width} px: {p}" for p in page.evaluate(AUDIT)]

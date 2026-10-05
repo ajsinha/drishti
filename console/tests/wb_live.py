@@ -49,6 +49,10 @@ def _java() -> Path:
 
 
 JAVA = _java()
+
+# How long a browser test waits for the workbench to draw (milliseconds). Generous on purpose: the drill and the builders run
+# the browser suite beside Maven builds, and a loaded machine once took over 20 s to draw a preview that takes 1 s alone.
+BROWSER_WAIT_MS = int(os.environ.get("DRISHTI_BROWSER_WAIT_MS", "45000"))
 TOKEN_SECRET = "browser-test-token-secret-0123456789abcdef"
 
 
