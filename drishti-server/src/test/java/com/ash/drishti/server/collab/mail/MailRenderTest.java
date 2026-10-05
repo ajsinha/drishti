@@ -37,7 +37,8 @@ class MailRenderTest {
         RenderedMail m = renderer.render(share("please look at the fixing", false), "ravi@desk.test", 7, "sh_1");
         assertThat(m.subject()).isEqualTo("Drishti: Ann shared a view with you");
         assertThat(m.text()).contains("Trade IRS-48213", "Panel: cashflows", "As of: 2026-09-30", "please look at the fixing",
-                "https://drishti.example/share/sh_1", "no figures");
+                "https://drishti.example/share/sh_1");
+        assertThat(m.text()).as("emails may carry values (decision 2026-10-05): no 'no figures' claim").doesNotContain("no figures");
         assertThat(m.html()).contains("Trade IRS-48213", "please look at the fixing", "href=\"https://drishti.example/share/sh_1\"")
                 .doesNotContain("<img", "<script", "http://", "src=");
         assertThat(m.messageId()).isEqualTo("<7.sh_1@bank.example>");

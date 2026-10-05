@@ -51,7 +51,7 @@ class CollabUnitTest {
         assertThat(spans).containsExactly(new Span(0, 8), new Span(13, 24), new Span(33, 41));
         assertThat(NoteText.render(text, spans, true)).isEqualTo("••• and ••• agreed; ••• left");
         assertThat(NoteText.render(text, spans, false)).isEqualTo(text);
-        assertThat(NoteText.spans("j. smith", List.of("J. Smith"))).as("exact: a case variant is not found").isEmpty();
+        assertThat(NoteText.spans("j. smith", List.of("J. Smith"))).as("a case variant is a copy too (QA S3-07)").containsExactly(new Span(0, 8));
         assertThat(NoteText.spans("abc", List.of())).isEmpty();
         assertThat(NoteText.render("ab", List.of(new Span(0, 99)), true)).as("a span past the end is clipped").isEqualTo("•••");
         assertThat(NoteText.excerpt("x".repeat(200), 10)).hasSize(10).endsWith("…");
