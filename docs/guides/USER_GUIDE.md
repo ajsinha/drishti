@@ -1115,8 +1115,12 @@ example `/export/trade/MX-20000001/schedule.csv` (`schedule` is the panel's id) 
 **Share** links:
 
 - in Live, the link is the view's address, such as `http://localhost:17480/v/trade/MX-20000001`;
-- with a date picked, the link opens that date (`/asof?d=2026-09-29&next=…`), and with a *known at*
-  time, that exact moment. A colleague sees what you see, within their own permissions.
+- with a date picked, the link carries it (`/v/trade/MX-20000001?asOf=2026-09-29&knownAt=…&gen=…`): the date, the
+  *known at* moment if you set one, and the generation you saw. A colleague sees what you see, within their own
+  permissions. If they are signed out, the sign-in page keeps the whole link and brings them back to it. The date applies
+  to that page only: a *Pinned* banner says "You are seeing 29 Sep as known at …, as it was shared" (or that the source
+  keeps no earlier versions so they see the latest for the date, or that the data has changed since, with *What changed*),
+  and **Go live** drops it. Their own saved date, and their other tabs, are not changed.
 
 ## Monitors
 

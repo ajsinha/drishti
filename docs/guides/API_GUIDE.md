@@ -294,7 +294,9 @@ business date. You choose it with a header or a query parameter:
 | `X-Drishti-As-Of` | `asOf` | `2026-09-29` | that date, as a static snapshot |
 | `X-Drishti-Known-At` | `knownAt` | `2026-09-29T21:00:00Z` (ISO instant) | the data as it was known at that instant (Delta Lake and Iceberg time travel) |
 
-The header wins when both are given. Rules:
+The header wins when both are given. (On the console's own pages the same two values are the query parameters `asOf` and
+`knownAt` of `/v/{kind}/{id}`, read for that request only and never saved: that is how a copied *Share* link pins a
+date; `gen` is the generation seen, shown as evidence in the page banner and never used to read data.) Rules:
 
 - A weekend or holiday rolls back to the previous business day of the calendar.
 - `knownAt` is answered only by stores that keep versions (Delta Lake, Iceberg). A dated store without them that may

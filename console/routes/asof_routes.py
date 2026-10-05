@@ -23,6 +23,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 
 from core import asof
+from core.nextpath import safe_next
 
 router = APIRouter(include_in_schema=False)
 
@@ -49,7 +50,7 @@ async def choose(request: Request, d: str = "live", next: str = "/t", k: str | N
     """Sets the business date (d) and, with a picked date, what was known at a time (k, local time in the business
     zone; blank clears it). Live clears both. A date that is not a real date, is in the future or is older than the
     server keeps is not stored (it would break every page until it expired): the page comes back saying so."""
-    target = next if next.startswith("/") and not next.startswith("//") else "/t"
+    target = safe_next(next)
     asked = (d or "").strip()
     live = asked.lower() in ("", "live")
     value = "live" if live else asof.clean(asked)

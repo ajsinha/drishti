@@ -29,13 +29,14 @@ from core.oidc import COOKIE as OIDC_COOKIE
 from core.oidc import TTL as OIDC_TTL
 from core.oidc import OidcError
 from core.csrf import json_body
+from core.nextpath import safe_next
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
 
 
 def _safe_next(target: str | None) -> str:
-    return target if target and target.startswith("/") and not target.startswith("//") else "/t"
+    return safe_next(target)
 
 
 @router.get("/login")

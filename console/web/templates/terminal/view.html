@@ -25,6 +25,16 @@
      data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
      data-sutra="{{ layout.sutra }}" data-min-span="{{ layout.min_span }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
   {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
+  {% if pin and not embed %}
+  {# A pinned link (?asOf=&knownAt=&gen=): shown for this request only, the reader's own saved date is untouched #}
+  {% set known_text = known_local(known_at, (business_date or {}).zone) | replace('T', ' ') if known_at else '' %}
+  <p class="asof-banner pin-banner" role="status" data-pin="{{ pin }}"><i class="bi bi-pin-angle" aria-hidden="true"></i>
+    {% if pin == 'retry' %}You are seeing the latest data for <b class="mono">{{ asof }}</b>: this source keeps no earlier versions, so the exact time it was shared cannot be shown.
+    {% elif pin == 'changed' %}You are seeing <b class="mono">{{ asof }}</b> live; the data has changed since it was shared (generation {{ pin_gen }} &rarr; {{ vm.provenance.generation }}).
+    {% else %}You are seeing <b class="mono">{{ asof }}</b>{% if known_text %} as known at <b class="mono">{{ known_text }}</b>{% endif %}, as it was shared.{% endif %}
+    <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}">Go live</a>
+    {% if pin == 'changed' and known_text %}<a href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id }}?fromKnownAt={{ known_text | replace(' ', 'T') | urlencode }}">What changed</a>{% endif %}</p>
+  {% endif %}
   {% if asof != 'live' and not vm.provenance.businessDate %}
   {# The router asks dated stores first and an undated source only when none holds the entity for the date (UX-08) #}
   {% set picked = (business_date or {}).selected or asof %}

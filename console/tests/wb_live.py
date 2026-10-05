@@ -26,6 +26,7 @@ import socket
 import subprocess
 import threading
 import time
+import urllib.error
 import urllib.request
 
 import pytest
@@ -48,6 +49,7 @@ def _java() -> Path:
 
 
 JAVA = _java()
+TOKEN_SECRET = "browser-test-token-secret-0123456789abcdef"
 
 
 class Stack(str):
@@ -83,7 +85,13 @@ def live_ship_console(tmp_path_factory):
     yield from _stack(tmp_path_factory, {"DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true", "DRISHTI_SUTRAS": str(work / "sutras"), "DRISHTI_BUILDER_DEV_DIR": str(work / "dev-sutras")}, work)
 
 
-def _stack(tmp_path_factory, extra_env, work=None):
+@pytest.fixture(scope="module")
+def live_auth_console(tmp_path_factory):
+    """As :func:`live_console` with sign-in on at the server and the console (the development administrator: drishti-dev-admin / drishti-dev-admin123)."""
+    yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, auth=True)
+
+
+def _stack(tmp_path_factory, extra_env, work=None, auth=False):
     if jar() is None or not JAVA.exists():
         pytest.skip("needs the built server jar (./mvnw -o package -DskipTests -pl drishti-server -am) and JDK 25")
     import uvicorn
@@ -106,12 +114,16 @@ def _stack(tmp_path_factory, extra_env, work=None):
             try:
                 urllib.request.urlopen(f"http://127.0.0.1:{port}/api/v1/rachana/schema", timeout=2).read(10)
                 break
+            except urllib.error.HTTPError:           # sign-in on: a 401 is the server answering
+                break
             except OSError:
                 time.sleep(0.5)
         else:
             pytest.skip("the server did not start in time")
         data = load_settings(CONSOLE / "config").as_dict()
         data.setdefault("backend", {})["url"] = f"http://127.0.0.1:{port}"
+        if auth:
+            data["auth"] = {**data.get("auth", {}), "enabled": True, "session_secret": "s" * 40, "token_secret": TOKEN_SECRET, "secure_cookie": False}
         app = create_app(Settings(data))
         cport = free_port()
         server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=cport, log_level="warning", timeout_graceful_shutdown=2))
