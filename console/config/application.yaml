@@ -22,6 +22,10 @@ backend:
   url: ${DRISHTI_BACKEND_URL:http://127.0.0.1:18480}
   timeout_seconds: 5
   pool_size: 64
+collab:
+  # Admin > Collaboration, bridge Test: how long the console waits for the server, which waits for the bridge's own timeout
+  # (drishti.collab.bridges.timeout, default 10 s). Keep it longer than that.
+  bridge_test_timeout_seconds: 30
 # Several servers (ADR-016): list them and people pick one, then sign in to it. Without this list, backend.url is the
 # one server. See docs/admin/CONFIGURATION.md, "servers".
 # servers:

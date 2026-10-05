@@ -158,6 +158,28 @@ abstract class ComplianceApiContract {
         return audit.recent(500, null).stream().anyMatch(e -> e.action().equals(action) && e.detail() != null && e.detail().contains(contains));
     }
 
+    @Test
+    void hiddenCommentsAreListedForAdminsAndCompliance() throws Exception {
+        String t = thread("ann", "risk", "a thread with a hidden comment");
+        String c = reply(t, "ravi", "trader", "to be hidden");
+        mvc.perform(post("/api/v1/admin/collab/comments/" + c + "/hide").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"reason\":\"off topic\"}")).andExpect(status().isOk());
+        for (String who : new String[] {admin(), as("carol", "auditor")}) {
+            JsonNode items = body(mvc.perform(get("/api/v1/admin/collab/threads/hidden").header("Authorization", who)).andExpect(status().isOk())).get("items");
+            JsonNode mine = null;
+            for (JsonNode i : items) {
+                if (i.get("commentId").asText().equals(c)) {
+                    mine = i;
+                }
+            }
+            assertThat(mine).isNotNull();
+            assertThat(mine.get("threadId").asText()).isEqualTo(t);
+            assertThat(mine.get("reason").asText()).isEqualTo("off topic");
+            assertThat(mine.has("body")).isFalse();
+        }
+        mvc.perform(get("/api/v1/admin/collab/threads/hidden").header("Authorization", as("ann", "risk"))).andExpect(status().isForbidden());
+    }
+
     // ---- authorization -------------------------------------------------------------------------------------------------
 
     @Test

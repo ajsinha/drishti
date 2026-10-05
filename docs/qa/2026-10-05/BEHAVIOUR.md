@@ -45,6 +45,28 @@ scratch server only: `comments-per-minute`, `max-per-entity`, `snapshots.cache-t
 | B3-16 | Info | Discussion compose, `@` and `{` | Alt+N, type `hi @vi`, Down, Enter. | As documented. | Works (listbox, `aria-activedescendant`, quote becomes `{$.es975}`), but the textarea has no `aria-label`; its accessible name is its placeholder only. |
 | B3-17 | Info | Setup | Start the documented scratch ports. | n/a | Collision note, not a product fault: :18970 to :18973 were already used by another tester's processes, so I used 18981-18983 / 17981. |
 
+## Resolution (behaviour fixes, 2026-10-05)
+
+| ID | Status | Note |
+|---|---|---|
+| B3-01 | Not mine | Owned by the data-safety fixes (snapshot, thread and mail content). |
+| B3-02 | Fixed | `localise` also handles the plain `at` key; revision rows read in the same zone and label. |
+| B3-03 | Addressed | The picture's watermark and footer are drawn in the business-date zone with its city label; it cannot know a person's own clock zone (documented in USER_GUIDE and COLLABORATION). |
+| B3-04 | Fixed | Admin > Collaboration has a Mail outbox section (tries, next try, last error, dead letters, send again, test mail); bridge rows show tries and last error; a share asking for email while mail is failing answers with a warning that the dialog shows. |
+| B3-05 | Fixed | The bridge Test waits `collab.bridge_test_timeout_seconds` (30 s) and, if it runs out, answers `DRS-7013` naming `drishti.collab.bridges.timeout`. |
+| B3-06 | Fixed | `BackendError.detail` drops a code the server already put first, so the line carries it once. |
+| B3-07 | Fixed | `Retry-After` is passed through the console's JSON problem responses. |
+| B3-08 | Fixed | `/collab` carries `editWindowSeconds`; the Edit button goes when the window closes; the message reads "the 15-minute edit window has passed". |
+| B3-09 | Fixed | The Discussion form is a `minmax(0, 1fr)` grid and its textarea is border-box. |
+| B3-10 | Fixed | One rule: the person's Clock time zone, else the business zone, else the clock's; documented. |
+| B3-11 | Fixed | `email.coalesce-window` defaults to 10 s: a lone notice goes after a short first-send delay; only notices arriving meanwhile join it. |
+| B3-12 | Fixed | The console streams the export from the server to the browser. |
+| B3-13 | Fixed | `GET /admin/collab/threads/hidden` and a "List hidden comments" button on the admin page. |
+| B3-14 | Addressed | Kept: a compliance reader cannot reply, and the code does not reveal which part failed; the page hides the reply box. |
+| B3-15 | Addressed | Documented: failed Ask calls count against the per-minute allowance. |
+| B3-16 | Fixed | The comment box has an `aria-label`. |
+| B3-17 | n/a | Setup note. |
+
 ## Tested and held
 
 - **Keyboard**: `?` opens and closes the drawer, `F1` opens it on About with the heading focused, `Esc` closes it and puts focus back where it was, `Alt+N` lands in the Discussion textarea, `Alt+S` focuses the "To" box of the share dialog, `Alt+I` goes to the inbox. The share dialog traps Tab (40 of 40 Tabs stayed inside), `Esc` closes it and returns focus to the Share button, also after clicking inside the dialog. Panel `?` popover closes on `Esc`. The drawer is `aria-modal=false` on desktop and traps Tab as a bottom sheet on phone (by design).

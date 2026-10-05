@@ -152,9 +152,10 @@ body.shr-open { overflow: hidden; }
 .disc-b { font-size: .75rem; padding: .1rem .5rem; text-decoration: none; }
 .disc-b[aria-pressed="true"] { border-color: var(--d-accent); color: var(--d-accent); }
 .disc-box { position: relative; }
-.disc-box textarea, .disc-inline textarea { width: 100%; resize: vertical; }
+.disc-box textarea, .disc-inline textarea { width: 100%; box-sizing: border-box; max-width: 100%; resize: vertical; }
+.disc-box, .disc-l { min-width: 0; }
 .disc-reply, .disc-inline { display: grid; gap: .3rem; margin-top: .3rem; }
-.disc-form { display: grid; gap: .4rem; padding: .6rem .9rem .8rem; border-top: 1px solid var(--d-border); background: var(--d-surface); }
+.disc-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: .4rem; padding: .6rem .9rem .8rem; border-top: 1px solid var(--d-border); background: var(--d-surface); }
 .disc-h { font-size: .85rem; font-weight: 700; margin: 0; color: var(--d-accent); }
 .disc-l { display: flex; gap: .5rem; align-items: center; color: var(--d-muted); }
 .disc-l select { flex: 1; min-width: 0; }

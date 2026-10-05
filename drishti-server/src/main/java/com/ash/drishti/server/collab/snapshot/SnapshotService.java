@@ -36,7 +36,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +66,7 @@ import org.slf4j.LoggerFactory;
 public final class SnapshotService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SnapshotService.class);
-    private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'").withZone(ZoneOffset.UTC);
+    private static final DateTimeFormatter WHEN = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     /** A picture and what it was made for. */
     public record Image(byte[] png, int width, int height, boolean cached, boolean masked, int recipients) {}
@@ -236,7 +235,14 @@ public final class SnapshotService {
         long generation = pv != null ? pv.generation() : share.pin() == null ? 0 : share.pin().generation();
         String base = props.consoleUrl() == null ? "" : props.consoleUrl().replaceAll("/+$", "");
         String link = shareRef == null ? "(the link is added when the share is sent)" : base + "/share/" + shareRef;
-        return new SnapshotLayout.Watermark(sender, who, WHEN.format(share.createdAt() == null ? Instant.now() : share.createdAt()), asOf, generation, link);
+        return new SnapshotLayout.Watermark(sender, who, when(share.createdAt() == null ? Instant.now() : share.createdAt()), asOf, generation, link);
+    }
+
+    /** A time as the console shows times to people: in the business-date zone, with its short name ({@code 2026-10-05 05:30 New York}). */
+    private String when(Instant at) {
+        java.time.ZoneId zone = pipeline.businessZone();
+        String id = zone.getId();
+        return WHEN.format(at.atZone(zone)) + " " + id.substring(id.lastIndexOf('/') + 1).replace('_', ' ');
     }
 
     /** The view's identity, its generation and the rights profile: what the cached view is a function of. */

@@ -39,6 +39,11 @@
       <label>To <input class="studio-in" name="to" type="date"></label>
       <button type="submit" class="btn-pill btn-accent btn-sm-pill">Search</button>
     </form>
+    <p><button type="button" class="fk" data-acol-hidden-list>List hidden comments</button></p>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-acol-hidden aria-label="Hidden comments" hidden>
+      <thead><tr><th>Entity</th><th>Written by</th><th>Written</th><th>Why hidden</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody></tbody></table></div>
+    <p><button type="button" class="fk" data-acol-hidden-more hidden>More hidden comments</button></p>
     <div class="tbl-wrap"><table class="tbl adm-tbl" data-acol-threads aria-label="Threads found" hidden>
       <thead><tr><th>Entity</th><th>State</th><th>Comments</th><th>Started by</th><th>Last activity</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
       <tbody></tbody></table></div>
@@ -113,7 +118,17 @@
     <p class="muted">Where notices are also posted (chat, webhooks). Test posts one message to the bridge now.</p>
     <p class="acol-br-head" data-acol-br-head></p>
     <div class="tbl-wrap"><table class="tbl adm-tbl" data-acol-bridges aria-label="Bridges">
-      <thead><tr><th>Name</th><th>Format</th><th>Host</th><th>Status</th><th>Queue</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+      <thead><tr><th>Name</th><th>Format</th><th>Host</th><th>Status</th><th>Queue</th><th>Last problem</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
+  <section class="acol-sec" aria-labelledby="acolOut">
+    <h2 id="acolOut">Mail outbox</h2>
+    <p class="muted">Share and comment emails waiting to go, with how often each was tried and why it failed; a dead letter (given up) can be sent again. Messages are never shown, only who and which template.</p>
+    <p class="acol-out-head" data-acol-out-head role="status" aria-live="polite"></p>
+    <p><button type="button" class="fk" data-acol-out-refresh>Refresh</button> <button type="button" class="fk" data-acol-mail-test>Send me a test mail</button></p>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-acol-outbox aria-label="Mail outbox">
+      <thead><tr><th>#</th><th>To</th><th>Template</th><th>State</th><th>Tries</th><th>Next try</th><th>Last error</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
       <tbody></tbody></table></div>
   </section>
   {% endif %}

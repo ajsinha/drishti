@@ -297,7 +297,10 @@ abstract class ThreadApiContract {
         // after the window: no edit (403 DRS-7008), only retract
         Thread.sleep(3300);
         mvc.perform(patch("/api/v1/comments/" + cid).header("Authorization", as("ann", "risk")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"body\":\"too late\",\"revision\":2}")).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-7008"));
+                .content("{\"body\":\"too late\",\"revision\":2}")).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-7008"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("the 3-second edit window has passed")))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("PT"))));
+        mvc.perform(get("/api/v1/collab").header("Authorization", as("ann", "risk"))).andExpect(jsonPath("$.editWindowSeconds").value(3));
         JsonNode view = body(listFor("ann", "risk", "?state=open")).findValues("items").stream().flatMap(a -> java.util.stream.StreamSupport.stream(a.spliterator(), false))
                 .filter(c -> c.get("id").asText().equals(cid)).findFirst().orElseThrow();
         assertThat(view.get("editable").asBoolean()).isFalse();

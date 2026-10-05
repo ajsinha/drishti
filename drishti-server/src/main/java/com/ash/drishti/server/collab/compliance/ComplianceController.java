@@ -183,6 +183,53 @@ public class ComplianceController {
         return out;
     }
 
+    /**
+     * The hidden comments, in the scan order of {@code /threads}: who wrote them, in which thread and why they were hidden
+     * (never the text). {@code admin} or {@code compliance}; {@code next} is the thread to continue after. The admin page lists them without
+     * opening every thread.
+     */
+    @GetMapping("/threads/hidden")
+    public Map<String, Object> hiddenComments(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(required = false) String after) {
+        requireSearch(p);
+        int max = Math.min(Math.max(1, limit), SEARCH_MAX);
+        List<Map<String, Object>> items = new ArrayList<>();
+        String cursor = after;
+        boolean more = false;
+        scan:
+        while (true) {
+            List<CommentThread> page = threads.page(cursor, SEARCH_MAX);
+            if (page.isEmpty()) {
+                break;
+            }
+            for (CommentThread th : page) {
+                cursor = th.id();
+                for (Comment c : threads.comments(th.id())) {
+                    if (!Comment.HIDDEN.equals(c.state())) {
+                        continue;
+                    }
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("commentId", c.id());
+                    m.put("threadId", th.id());
+                    m.put("kind", th.kind());
+                    m.put("entityId", th.entityId());
+                    m.put("author", c.author());
+                    m.put("createdAt", c.createdAt());
+                    m.put("reason", c.stateReason());
+                    items.add(m);
+                }
+                if (items.size() >= max) {
+                    more = true;
+                    break scan;
+                }
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("items", items);
+        out.put("next", more ? cursor : null);
+        return out;
+    }
+
     /** One thread as the record has it: hidden and retracted comments, every revision, unscrubbed. {@code compliance} only; audited. */
     @GetMapping("/threads/{tid}")
     public Map<String, Object> thread(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String tid) {

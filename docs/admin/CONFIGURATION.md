@@ -667,7 +667,7 @@ comes from the environment only, and the model gets no tools. See [the privacy n
 | `max-guide-chars` | `6000` | The most of the pack's guide section put in the prompt. |
 | `max-answer-tokens` / `max-answer-chars` | `400` / `2000` | The model's output cap and the cut applied to what comes back. |
 | `timeout` | `15s` | Slower than this is `504 DRS-4008`. |
-| `per-user-per-minute` / `per-user-per-day` | `6` / `100` | Over either is `429 DRS-4009`. |
+| `per-user-per-minute` / `per-user-per-day` | `6` / `100` | Over either is `429 DRS-4009`. A call that fails (the model errors or times out) still uses one of the allowance. |
 | `log-questions` | `true` | The question text goes to the [access log](OPERATIONS.md#9b-the-access-log) (action `ask`, with the outcome). `false` records only its length. The answer is never stored. |
 | `anthropic-version` | `2023-06-01` | The `anthropic-version` header sent when `api: anthropic`. |
 | `log-answers` | `false` | `true` also writes the answer text to the server log (`drishti.ask`). |
@@ -895,7 +895,7 @@ and follow tables, `drishti_collab_hold`; back them up with the rest of the iden
 | `email.enabled` | `false` | The email channel; also needs `spring.mail.host`, `console-url` and `drishti.security.enabled` (with sign-in off the server refuses to start with this on: identities are not real). Asking for email while it is off is `503 DRS-7012`. See [Email](#email-springmail-and-the-outbox). |
 | `email.content` | `comment` | `comment`: the product, the sender, the kind and id, the panel, the date and the note as that recipient may read it (masked values `•••`), and the link. `title`: the same without the note. `link-only`: the sender's name and the link only. Never a data value. Per pack: `packs.<pack>.email.content`. |
 | `email.from` | `drishti@localhost` (`DRISHTI_MAIL_FROM`) | The From address. |
-| `email.coalesce-window` | `2m` | Notices for one recipient inside this window are sent as one **digest** email (template `digest.*`), each notice still checked against the person's opt-outs, rights and masking when it is sent. `0` turns it off: every notice is its own email, sent at once. A notice is held up to this long before it is sent. |
+| `email.coalesce-window` | `10s` | Notices for one recipient inside this window are sent as one **digest** email (template `digest.*`), each notice still checked against the person's opt-outs, rights and masking when it is sent. `0` turns it off: every notice is its own email, sent at once. A lone notice goes out after this short delay (a first-send delay); only notices that arrive for the same person meanwhile join it, so one notice is never held for minutes. |
 | `email.templates-dir` | empty | A folder with `share.subject`, `share.txt`, `share.html` (and `mention.*`, `reply.*`, `digest.*`, `test.*`) that replace the built-in ones, file by file. Variables: `${product}`, `${headline}`, `${detail}`, `${link}`; nothing else, and a note is never read as a template. |
 | `outbox.enabled` | `true` | This server sends the email outbox; turn it off on servers of a group that should not (the rows are still written, any dispatching server sends them). |
 | `outbox.tick`, `outbox.batch`, `outbox.max-attempts`, `outbox.backoff`, `outbox.max-backoff`, `outbox.lease`, `outbox.keep-sent-days` | `2s`, `50`, `8`, `30s`, `1h`, `60s`, `30` | The dispatcher: how often it looks, rows per tick, attempts before a row is dead, the retry delay (doubling to the maximum), how long a claimed row is held, and days a sent row is kept. |
@@ -1473,6 +1473,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 | `backend.timeout_seconds` | `5` | Per call to the server. |
 | `backend.name` | the product name (`ui.product`) | The name of the single server when `servers` is not set; the picker and the top bar show it. |
 | `backend.pool_size` | `64` | Pooled HTTP connections to the server (per server, when there are several). |
+| `collab.bridge_test_timeout_seconds` | `30` | How long Admin > Collaboration waits for a bridge **Test** (the server waits for the bridge's own `drishti.collab.bridges.timeout`, default 10 s, so keep this longer). When it runs out the page says `DRS-7013` and names `drishti.collab.bridges.timeout`. |
 
 ### `servers` — one console, many servers
 

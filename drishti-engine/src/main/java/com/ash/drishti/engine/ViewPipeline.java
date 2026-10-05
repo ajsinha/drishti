@@ -120,6 +120,11 @@ public final class ViewPipeline {
     private final Cache<GenKey, Fingerprint> fingerprints;
     private final BusinessDates dates;
 
+    /** The zone business dates and "known at" times are read in (what the console's top bar shows times in). */
+    public java.time.ZoneId businessZone() {
+        return dates.zone();
+    }
+
     public ViewPipeline(SourceRouter router, SutraMatcher matcher, SutraRegistry registry, LayoutMerger merger,
             ShapeFingerprinter fingerprinter, ReferenceCatalog catalog, GraphProperties graph, Binder binder, ElCompiler el,
             Formats formats, Mnemonics mnemonics, ExecutorService bindPool, EngineProperties props, BusinessDates dates) {

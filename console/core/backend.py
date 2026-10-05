@@ -15,6 +15,7 @@
 """Async client for the Drishti server REST API: one pooled HTTP client per console process."""
 from __future__ import annotations
 
+import json
 import re
 from typing import Any
 
@@ -42,6 +43,19 @@ def drs_advice(table: dict | None, code: str, kind: str = "", id_: str = "") -> 
     return text.replace("{kind}", str(kind)).replace("{id}", str(id_))
 
 
+def _error(r: httpx.Response, text: str) -> "BackendError":
+    """The server's problem answer (status, ``code``, ``detail``, ``problems``, ``Retry-After``) as a :class:`BackendError`."""
+    try:
+        body = json.loads(text)
+        body = body if isinstance(body, dict) else {}
+    except ValueError:
+        body = {}
+    err = BackendError(r.status_code, body.get("code", f"HTTP-{r.status_code}"), body.get("detail", text[:200]))
+    err.problems = body.get("problems", [])
+    err.retry_after = r.headers.get("retry-after")
+    return err
+
+
 class BackendError(Exception):
     """The server answered with a problem (RFC 7807) or could not be reached."""
 
@@ -49,7 +63,10 @@ class BackendError(Exception):
         super().__init__(drs_message(code, detail, " "))
         self.status = status
         self.code = code
-        self.detail = detail
+        code_text = str(code or "").strip()
+        # the code is told once: the server's detail often starts with it ("DRS-7003 too many shares"), and callers put the code in front
+        self.detail = re.sub(rf"^{re.escape(code_text)}[:\s]*", "", str(detail or "")).strip() or detail if code_text else detail
+        self.retry_after: str | None = None            # the server's Retry-After (seconds), passed on to the browser by the JSON routes
 
     @property
     def page_status(self) -> int:
@@ -95,18 +112,29 @@ class BackendClient:
         except httpx.HTTPError as e:
             raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
         if r.status_code >= 400:
-            try:
-                body = r.json()
-            except ValueError:
-                body = {}
-            err = BackendError(r.status_code, body.get("code", f"HTTP-{r.status_code}"), body.get("detail", r.text[:200]))
-            err.problems = body.get("problems", [])
-            raise err
+            raise _error(r, r.text)
         if r.status_code == 204:
             return None
         if raw:
             return r.content
         return r.json() if "json" in r.headers.get("content-type", "") else r.text
+
+    async def open_download(self, path: str, ident) -> httpx.Response:
+        """A large answer opened for streaming (the compliance export's zip): the server's refusal is raised before a byte is read; the caller
+        iterates ``aiter_bytes()`` and closes the response, so the body is never held whole in the console."""
+        headers = dict(ident.headers()) if ident is not None else {}
+        headers.update(asof.headers())
+        try:
+            r = await self._client.send(self._client.build_request("GET", "/api/v1" + path, headers=headers), stream=True)
+        except httpx.TimeoutException as e:
+            raise BackendError(504, "DRS-1004", f"the server did not answer in time ({type(e).__name__})") from e
+        except httpx.HTTPError as e:
+            raise BackendError(503, "DRS-5003", f"backend unreachable: {e}") from e
+        if r.status_code >= 400:
+            text = (await r.aread()).decode("utf-8", "replace")
+            await r.aclose()
+            raise _error(r, text)
+        return r
 
     async def view(self, kind: str, id_: str, ident) -> dict:
         where, q = entity_path(kind, id_)
@@ -473,9 +501,12 @@ class BackendClient:
     async def change_password(self, current: str, new: str, ident) -> dict:
         return await self._send("POST", "/auth/password", ident, json={"current": current, "next": new})
 
-    async def admin(self, method: str, path: str, ident, body: dict | None = None, **params):
-        """Admin endpoints (``/admin/...``); the server enforces the admin role."""
+    async def admin(self, method: str, path: str, ident, body: dict | None = None, timeout: float | None = None, **params):
+        """Admin endpoints (``/admin/...``); the server enforces the admin role. ``timeout`` (seconds) overrides the console's
+        own wait for a call that may legitimately take longer (a bridge test waits for the bridge's own timeout)."""
         kw = {"params": params} if params else {}
+        if timeout:
+            kw["timeout"] = timeout
         if body is not None:
             kw["json"] = body
         return await self._send(method, "/admin" + path, ident, **kw)

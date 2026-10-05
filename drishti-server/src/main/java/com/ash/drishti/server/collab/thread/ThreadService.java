@@ -340,7 +340,7 @@ public final class ThreadService {
         }
         Instant now = now();
         if (Duration.between(c.createdAt(), now).compareTo(props.threads().editWindow()) > 0) {
-            throw new DrishtiException(ErrorCode.NOT_EDITABLE, "the edit window (" + props.threads().editWindow() + ") has passed: retract the comment and write another");
+            throw new DrishtiException(ErrorCode.NOT_EDITABLE, "the " + com.ash.drishti.server.collab.HumanDuration.of(props.threads().editWindow()) + " edit window has passed: retract the comment and write another");
         }
         String text = clean(body);
         List<Share.Span> spans = spansAt(thread, c.pin(), text);

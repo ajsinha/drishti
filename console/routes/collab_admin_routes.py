@@ -21,14 +21,15 @@ from __future__ import annotations
 import re
 from urllib.parse import quote
 
-from fastapi import APIRouter, Request, Response
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse, StreamingResponse
+from starlette.background import BackgroundTask
 
 from core import threads as threads_core
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.collab_routes import collab
-from routes.common import ident, local_zone, localise, render
+from routes.common import ident, local_zone, localise, problem, render
 
 router = APIRouter(prefix="/admin/collab", include_in_schema=False)
 
@@ -37,7 +38,7 @@ _SEARCH = ("user", "kind", "id", "from", "to", "limit", "after")
 
 
 def _problem(e: BackendError) -> JSONResponse:
-    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+    return problem(e)
 
 
 def _bad(what: str) -> JSONResponse:
@@ -123,11 +124,11 @@ async def export_download(request: Request, export_id: str):
     if not _NAME.match(export_id):
         return _bad("export id")
     try:
-        data = await request.app.state.backend._send("GET", f"/admin/collab/exports/{quote(export_id, safe='')}/download", ident(request), raw=True)
+        upstream = await request.app.state.backend.open_download(f"/admin/collab/exports/{quote(export_id, safe='')}/download", ident(request))
     except BackendError as e:
         return _problem(e)
-    return Response(data, media_type="application/zip", headers={"Content-Disposition": f'attachment; filename="drishti-collab-export-{export_id}.zip"',
-                                                                  "Cache-Control": "no-store"})
+    return StreamingResponse(upstream.aiter_bytes(), media_type="application/zip", background=BackgroundTask(upstream.aclose),
+                             headers={"Content-Disposition": f'attachment; filename="drishti-collab-export-{export_id}.zip"', "Cache-Control": "no-store"})
 
 
 # ---- chain verification (compliance), retention dry run and bridges (admin) -------------------------------------------------------
@@ -156,4 +157,39 @@ async def bridges(request: Request):
 async def bridge_test(request: Request, name: str):
     if not _NAME.match(name):
         return _bad("bridge name")
-    return await _call(request, "POST", f"/bridges/{quote(name, safe='')}/test")
+    # the test waits for the bridge's own timeout (drishti.collab.bridges.timeout), so the console waits longer than it
+    wait = float(request.app.state.settings.get("collab.bridge_test_timeout_seconds", 30))
+    try:
+        out = await request.app.state.backend.admin("POST", f"/collab/bridges/{quote(name, safe='')}/test", ident(request), timeout=wait)
+    except BackendError as e:
+        if e.code == "DRS-1004":                      # the console gave up first: say which wait ran out, not the sources' fetch timeout
+            return JSONResponse({"code": "DRS-7013", "detail": f"bridge '{name}' did not answer within {wait:g} s; raise "
+                                 "drishti.collab.bridges.timeout on the server (and collab.bridge_test_timeout_seconds in the console) or check the endpoint"},
+                                status_code=504)
+        return _problem(e)
+    return JSONResponse(localise(out, *local_zone(request)))
+
+
+@router.get("/api/outbox")
+async def outbox(request: Request, state: str = "", limit: int = 100):
+    """The mail outbox (pending with attempts and last error, dead letters): the server's ``GET /admin/collab/outbox`` (administrators)."""
+    return await _call(request, "GET", "/outbox", state=state if _NAME.match(state or "x") else "", limit=max(1, min(limit, 500)))
+
+
+@router.post("/api/outbox/{seq}/retry")
+async def outbox_retry(request: Request, seq: int):
+    return await _call(request, "POST", f"/outbox/{int(seq)}/retry")
+
+
+@router.get("/api/hidden")
+async def hidden(request: Request, after: str = "", limit: int = 50):
+    """The hidden comments across threads (administrators and compliance), without opening each thread."""
+    if after and not threads_core.clean_id(after):
+        return _bad("thread id")
+    return await _call(request, "GET", "/threads/hidden", after=after, limit=max(1, min(limit, 200)))
+
+
+@router.post("/api/mail-test")
+async def mail_test(request: Request):
+    """A test mail to the signed-in administrator's own address (the server says why when email is off or fails)."""
+    return await _call(request, "POST", "/mail-test")

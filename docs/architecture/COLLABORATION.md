@@ -465,7 +465,7 @@ A new first digit: **7, collaboration** (`ErrorCode` documents 1–6 today; 7 is
 |---|---|---|---|
 | DRS-7001 | 404 | share not found | no share with that id, or the caller is not its sender, a recipient or `compliance` |
 | DRS-7002 | 422 | bad recipients | no recipient, an unknown user or role, a role not mentionable, or over `max-recipients` / `max-expanded` |
-| DRS-7003 | 429 | too many | over a collaboration rate limit; `Retry-After` set |
+| DRS-7003 | 429 | too many | over a collaboration rate limit; `Retry-After` set (the console passes it on) |
 | DRS-7004 | 403 | sharing off | collaboration, the channel, or sharing for the kind's pack is off by policy |
 | DRS-7005 | 404 | thread not found | no thread, or not visible to the caller |
 | DRS-7006 | 404 | comment not found | no comment, or not visible to the caller |
@@ -983,7 +983,7 @@ cross-cutting sections only.
   The JPA stores use database identities.
 - **Access log.** `BridgeSender.delivered` writes an access-log row (`bridge-post`, user `system`, kind = template, entity = share or comment id,
   detail = bridge name and delivery number) beside the audit row; not written when `drishti.access-log.enabled=false`.
-- **Email digest.** `email.coalesce-window` (default 2m, `0` = off). `EmailNotifier` gives a notice the send time of the recipient's pending email
+- **Email digest.** `email.coalesce-window` (default 10s, a first-send delay; `0` = off). `EmailNotifier` gives a notice the send time of the recipient's pending email
   rows, or now plus the window if there is none; the dispatcher groups mail claimed in one tick by recipient and, for two or more, renders each with
   its own renderer (opt-out, rights, masking, skips decided per notice) and sends one `digest` message (`MailRenderer.renderDigest`, templates
   `digest.subject|txt|html`). One notice is sent as the ordinary message.
@@ -1009,3 +1009,12 @@ cross-cutting sections only.
 | 11 | Snapshot renderer (phase 2) | server-side Java2D of strip and tables, no headless browser; off by default; only if the product owner keeps phase 2 |
 | 12 | Groups | roles are the groups (single sign-on already maps directory groups to roles); no separate group store in this design; revisit if firms need mailing-list-style groups that grant no rights |
 | 13 | Error code range | a new first digit, 7 for collaboration (`DRS-7001`–`7012`), documented in `ErrorCode`'s header |
+
+## As-built notes: behaviour pass (2026-10-05, B3)
+
+- **Zones.** One rule for collaboration times in the console: the person's own *Clock time zone* (Account), else the business-date zone the top bar's "known at" uses, else the console clock's; the label is the zone's city name. Revision rows (`at`) are localised like `...At` fields. A share picture and its footer are drawn on the server, in the business-date zone with its label (`2026-10-05 05:30 New York`); it does not know a person's own clock zone.
+- **Edit window.** `GET /collab` carries `editWindowSeconds`; the drawer removes the Edit button when the window closes, and `DRS-7008` says "the 15-minute edit window has passed" (`HumanDuration`, never `PT15M`).
+- **Mail trouble.** A share that asks for email while the outbox holds a failing delivery answers with a warning naming the last error (`Notifier.trouble()`); the dialog shows warnings. The Admin > Collaboration page has a *Mail outbox* section (pending with tries, next try and last error; dead letters with *Send again*; a test mail) over `GET /admin/collab/outbox`, and each bridge row shows tries, last error and next try.
+- **Digest.** `email.coalesce-window` now defaults to 10 s: a lone notice goes out after that short delay; only notices arriving for the same person meanwhile join it.
+- **Hidden comments.** `GET /admin/collab/threads/hidden` (administrators and compliance) lists them (thread, author, reason; never the text).
+- **Export.** The console streams the zip from the server to the browser (`backend.open_download`), never holding it whole. Errors keep the code once, and `Retry-After` is passed through the console's JSON routes.

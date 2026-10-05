@@ -56,16 +56,20 @@ public class BridgeAdminController {
     public Map<String, Object> list(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         Map<String, Map<String, Long>> byBridge = new LinkedHashMap<>();
+        Map<String, OutboxItem> failing = new LinkedHashMap<>();             // the newest delivery still failing, per bridge (the list is newest first)
         for (OutboxItem i : outbox.list(null, 500)) {
             if (BridgeSender.CHANNEL.equals(i.channel())) {
                 byBridge.computeIfAbsent(i.recipient(), k -> new LinkedHashMap<>()).merge(i.state(), 1L, Long::sum);
+                if (i.lastError() != null && (OutboxItem.PENDING.equals(i.state()) || OutboxItem.DEAD.equals(i.state()))) {
+                    failing.putIfAbsent(i.recipient(), i);
+                }
             }
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("enabled", props.bridges().enabled());
         out.put("renderAs", props.bridges().renderAs());
         out.put("perMinute", props.bridges().perMinute());
-        out.put("bridges", registry.all().stream().map(b -> row(b, byBridge.getOrDefault(b.name(), Map.of()))).toList());
+        out.put("bridges", registry.all().stream().map(b -> row(b, byBridge.getOrDefault(b.name(), Map.of()), failing.get(b.name()))).toList());
         return out;
     }
 
@@ -77,7 +81,7 @@ public class BridgeAdminController {
         return Map.of("sent", true, "bridge", name, "status", status);
     }
 
-    private static Map<String, Object> row(BridgeRegistry.Bridge b, Map<String, Long> queue) {
+    private static Map<String, Object> row(BridgeRegistry.Bridge b, Map<String, Long> queue, OutboxItem failing) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("name", b.name());
         m.put("format", b.format());
@@ -86,6 +90,11 @@ public class BridgeAdminController {
         m.put("host", b.host());
         m.put("routes", b.routes().stream().map(r -> Map.of("packs", r.packs(), "kinds", r.kinds(), "events", r.events())).toList());
         m.put("outbox", queue);
+        if (failing != null) {                                                // why a delivery is not going through, and when it is tried next
+            m.put("attempts", failing.attempts());
+            m.put("lastError", failing.lastError());
+            m.put("nextAt", OutboxItem.PENDING.equals(failing.state()) ? failing.nextAt() : null);
+        }
         return m;
     }
 }

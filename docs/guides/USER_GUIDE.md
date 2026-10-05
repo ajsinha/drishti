@@ -1428,7 +1428,7 @@ any browser.
 |---|---|---|
 | Theme | *This browser's choice* or one of the seven themes | `Wallstreet` |
 | After signing in, open | Any console address | `/t`, `/w/Rates`, `/m/High utilisation`, `/v/trade/MX-20000001` |
-| Clock time zone | Default (NY) or a listed zone | `Europe/London` |
+| Clock time zone | Default (NY) or a listed zone. Also the zone of every time in comments, shares, the inbox and revision history (labelled with the zone's city, e.g. `Kolkata`); a picture of a share is drawn on the server, in the business-date zone | `Europe/London` |
 | Density | *Comfortable* or *Compact* (more on screen) | `Compact` |
 | Flash changed values | On or off | off for a calmer screen |
 | Search results | 10 to 1000 | `50` |

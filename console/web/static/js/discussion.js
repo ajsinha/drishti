@@ -33,7 +33,7 @@
 
   function ctx() {
     return { me: view.getAttribute('data-me'), admin: view.hasAttribute('data-admin'), pageGen: view.getAttribute('data-generation'),
-      pageAsOf: view.getAttribute('data-page-asof') || 'live', canWrite: conf.collaborate, maxText: conf.maxText };
+      pageAsOf: view.getAttribute('data-page-asof') || 'live', canWrite: conf.collaborate, maxText: conf.maxText, editWindow: conf.editWindowSeconds };
   }
   function api(method, url, body) {
     var o = { method: method, credentials: 'same-origin', headers: { Accept: 'application/json' } };
@@ -228,7 +228,7 @@
 
   fillAnchors();
   api('GET', '/api/collab').then(function (r) {
-    if (r.ok && r.b) { conf = { enabled: r.b.enabled !== false, collaborate: !!r.b.collaborate, maxText: r.b.maxText || 2000, minQuery: r.b.minQuery || 2 }; }
+    if (r.ok && r.b) { conf = { enabled: r.b.enabled !== false, collaborate: !!r.b.collaborate, maxText: r.b.maxText || 2000, minQuery: r.b.minQuery || 2, editWindowSeconds: r.b.editWindowSeconds || 0 }; }
     if (!conf.enabled) { document.querySelectorAll('[data-discussion-open], [data-disc-tab]').forEach(function (b) { b.hidden = true; }); return; }
     form.hidden = !conf.collaborate;
     if (!conf.collaborate) { say(msg, 'You can read this discussion; writing needs the collaborate right.', false); }

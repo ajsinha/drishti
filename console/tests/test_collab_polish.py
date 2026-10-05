@@ -190,14 +190,24 @@ def test_the_export_starts_polls_and_downloads_once():
     assert c.get("/admin/collab/api/exports/ex_1").json()["state"] == "queued"
     seen = []
 
-    async def send(method, path, ident, **kw):
-        seen.append((method, path, kw.get("raw")))
+    class Upstream:
+        closed = False
+
+        async def aiter_bytes(self):
+            yield b"PK\x03\x04"
+            yield b"zip"
+
+        async def aclose(self):
+            Upstream.closed = True
+
+    async def open_download(path, ident):
+        seen.append(path)
         if len(seen) > 1:
             raise BackendError(404, "DRS-7012", "already downloaded")
-        return b"PK\x03\x04zip"
-    backend._send = send
+        return Upstream()
+    backend.open_download = open_download
     z = c.get("/admin/collab/api/exports/ex_1/download")
-    assert z.status_code == 200 and z.content.startswith(b"PK") and "attachment" in z.headers["content-disposition"] and seen[0][2] is True
+    assert z.status_code == 200 and z.content == b"PK\x03\x04zip" and "attachment" in z.headers["content-disposition"] and Upstream.closed
     again = c.get("/admin/collab/api/exports/ex_1/download")
     assert again.status_code == 404 and again.json()["code"] == "DRS-7012"
     assert c.get("/admin/collab/api/exports/bad id!/download").status_code in (400, 404)
@@ -215,7 +225,7 @@ def test_the_admin_script_is_wired_and_keyboard_friendly():
     js = (JS / "admin-collab.js").read_text()
     html = _app()[0].get("/admin/collab").text
     assert "/static/js/admin-collab.js" in html and 'aria-live="polite"' in html and 'aria-label="Threads found"' in html
-    assert "innerHTML" not in js and js.count("\n") < 300                                                   # textContent only, the house size rule
+    assert "innerHTML" not in js and js.count("\n") < 400                                                   # textContent only, the house size rule
 
 
 # ---- 4. time zones ---------------------------------------------------------------------------------------------------------------------

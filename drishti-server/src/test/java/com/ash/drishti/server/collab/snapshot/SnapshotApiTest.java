@@ -129,7 +129,7 @@ class SnapshotApiTest {
     @Test
     void theWatermarkNamesSenderRecipientsTimeDataDateGenerationAndLink() {
         String text = snapshots.model(draft("ann"), List.of(p("rng"), p("ravi"))).allText();
-        assertThat(text).contains("Shared by ANN Person").contains("2 recipients").contains("2026-10-05 09:30 UTC").contains("generation")
+        assertThat(text).contains("Shared by ANN Person").contains("2 recipients").contains("2026-10-05 05:30 New York").contains("generation")
                 .contains("https://drishti.test/share/sh_draftdraftdraft01").contains("Data as of");
     }
 

@@ -299,4 +299,22 @@ class OutboxDispatcherTest {
         assertThat(rows).hasSize(2);
         assertThat(rows.get(0).nextAt()).isEqualTo(rows.get(1).nextAt()).isAfter(Instant.now().plusSeconds(60));
     }
+
+    @Test
+    void aLoneNoticeWaitsOnlyAShortFirstSendDelayByDefault() {
+        CollabProperties props = new CollabProperties(null, null, null, "https://x", null, null, null, null, null, null, null, null,
+                new CollabProperties.Email(true, null, null, null, null), null, null, null, null, null, null);
+        assertThat(props.email().coalesceWindow()).isEqualTo(Duration.ofSeconds(10));
+    }
+
+    @Test
+    void theNotifierReportsTheLastErrorOfAMailStillBeingRetried() {
+        CollabProperties props = new CollabProperties(null, null, null, "https://x", null, null, null, null, null, null, null, null,
+                new CollabProperties.Email(true, null, null, null, Duration.ZERO), null, null, null, null, null, null);
+        EmailNotifier n = new EmailNotifier(props, store, mock(Principals.class), mock(NotifyPrefs.class), true);
+        assertThat(n.trouble()).isNull();
+        OutboxItem i = store.add(OutboxItem.pending("email", "ann", "share", "sh_9", Instant.now()));
+        store.retry(i.seq(), 1, Instant.now().plusSeconds(30), "Could not connect to SMTP host: mail.invalid");
+        assertThat(n.trouble()).contains("Could not connect");
+    }
 }

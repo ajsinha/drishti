@@ -63,6 +63,16 @@ public final class EmailNotifier implements Notifier {
         return props.email().enabled() && transportPresent && !props.consoleUrl().isBlank();
     }
 
+    /** The newest delivery that failed and is still being retried (or gave up): its last error, so a sender is told the mail may not arrive. */
+    @Override
+    public String trouble() {
+        if (!available()) {
+            return null;
+        }
+        return outbox.list(null, 50).stream().filter(i -> "email".equals(i.channel()) && i.lastError() != null && !i.lastError().isBlank()
+                && (OutboxItem.PENDING.equals(i.state()) || OutboxItem.DEAD.equals(i.state()))).map(OutboxItem::lastError).findFirst().orElse(null);
+    }
+
     @Override
     public List<Notice> onShare(ShareEvent e) {
         for (Recipient r : e.reached()) {

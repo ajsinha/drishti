@@ -25,7 +25,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response
 from core import asof, collab as collab_core
 from core.backend import BackendError
 from core.csrf import json_body
-from routes.common import ident, local_zone, localise, render
+from routes.common import ident, local_zone, localise, problem, render
 
 router = APIRouter(include_in_schema=False)
 
@@ -39,7 +39,7 @@ def collab(request: Request):
 
 
 def _problem(e: BackendError) -> JSONResponse:
-    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+    return problem(e)
 
 
 @router.get("/api/collab")

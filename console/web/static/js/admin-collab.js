@@ -142,6 +142,10 @@
       });
     } else if (act === 'release') {
       api('DELETE', '/admin/collab/api/holds/' + encodeURIComponent(b.getAttribute('data-hold'))).then(function (r) { if (r.ok) { say('Hold released.'); } else { say(problem(r), true); } holds(); });
+    } else if (act === 'outbox-retry') {
+      api('POST', '/admin/collab/api/outbox/' + encodeURIComponent(b.getAttribute('data-seq')) + '/retry').then(function (r) {
+        say(r.ok ? 'Queued to be sent again.' : problem(r), !r.ok); outbox();
+      });
     } else if (act === 'bridge-test') {
       var name = b.getAttribute('data-name'); say('Testing ' + name + '…');
       api('POST', '/admin/collab/api/bridges/' + encodeURIComponent(name) + '/test').then(function (r) {
@@ -256,10 +260,57 @@
       (r.j.bridges || []).forEach(function (b) {
         var tr = el('tr'); cell(tr, b.name, 'mono'); cell(tr, b.format); cell(tr, b.host, 'mono'); cell(tr, b.usable ? b.status : 'not usable: ' + b.status);
         cell(tr, Object.keys(b.outbox || {}).map(function (k) { return k + ' ' + b.outbox[k]; }).join(', ') || 'empty');
+        cell(tr, b.lastError ? 'tried ' + b.attempts + (b.attempts === 1 ? ' time' : ' times') + ': ' + b.lastError + (b.nextAtLocal ? ' (next try ' + b.nextAtLocal + ')' : ' (gave up)') : '');
         var a = cell(tr, '', 'adm-actions'); a.appendChild(btn('Test', 'bridge-test', { 'data-name': b.name })); tb.appendChild(tr);
       });
-      if (!tb.children.length) { var tr2 = el('tr'); var td = cell(tr2, 'No bridges are configured.'); td.colSpan = 6; tb.appendChild(tr2); }
+      if (!tb.children.length) { var tr2 = el('tr'); var td = cell(tr2, 'No bridges are configured.'); td.colSpan = 7; tb.appendChild(tr2); }
     });
   }
   bridges();
+
+  // ---- the mail outbox (admin) -------------------------------------------------------------------------------------------------
+  function outbox() {
+    var t = $('[data-acol-outbox]'); if (!t) { return; }
+    api('GET', '/admin/collab/api/outbox').then(function (r) {
+      var tb = t.querySelector('tbody'); clear(tb);
+      if (!r.ok) { say(problem(r), true); return; }
+      var c = r.j.counts || {}, head = (r.j.enabled ? (r.j.available ? 'Email is on.' : 'Email is on but cannot send (no mail server or console-url).') : 'Email is off.') +
+        ' ' + (Object.keys(c).map(function (k) { return k + ' ' + c[k]; }).join(', ') || 'The outbox is empty.');
+      $('[data-acol-out-head]').textContent = head;
+      (r.j.items || []).forEach(function (i) {
+        var tr = el('tr'); cell(tr, i.seq, 'num'); cell(tr, i.recipient, 'mono'); cell(tr, i.template); cell(tr, i.state); cell(tr, i.attempts, 'num');
+        cell(tr, i.state === 'pending' ? (i.nextAtLocal || '') : '', 'mono'); cell(tr, i.lastError || '');
+        var a = cell(tr, '', 'adm-actions');
+        if (i.state === 'dead' || i.state === 'cancelled') { a.appendChild(btn('Send again', 'outbox-retry', { 'data-seq': i.seq })); }
+        tb.appendChild(tr);
+      });
+      if (!tb.children.length) { var tr2 = el('tr'); var td = cell(tr2, 'Nothing in the outbox.'); td.colSpan = 8; tb.appendChild(tr2); }
+    });
+  }
+  var outRefresh = $('[data-acol-out-refresh]'), mailTest = $('[data-acol-mail-test]');
+  if (outRefresh) { outRefresh.addEventListener('click', outbox); }
+  if (mailTest) {
+    mailTest.addEventListener('click', function () {
+      say('Sending a test mail…');
+      api('POST', '/admin/collab/api/mail-test').then(function (r) { say(r.ok ? 'Test mail sent to ' + r.j.to + '.' : problem(r), !r.ok); outbox(); });
+    });
+  }
+  outbox();
+
+  // ---- hidden comments across threads -------------------------------------------------------------------------------------------
+  var hList = $('[data-acol-hidden-list]'), hTable = $('[data-acol-hidden]'), hMore = $('[data-acol-hidden-more]'), hNext = null;
+  function hiddenRows(append) {
+    var q = { limit: 50 }; if (append && hNext) { q.after = hNext; }
+    api('GET', '/admin/collab/api/hidden?' + query(q)).then(function (r) {
+      if (!r.ok) { say(problem(r), true); return; }
+      var tb = hTable.querySelector('tbody'); if (!append) { clear(tb); }
+      (r.j.items || []).forEach(function (h) {
+        var tr = el('tr'); cell(tr, h.kind + ' ' + h.entityId, 'mono'); cell(tr, h.author, 'mono'); cell(tr, h.createdAtLocal || h.createdAt, 'mono'); cell(tr, h.reason || '');
+        var a = cell(tr, '', 'adm-actions'); a.appendChild(btn('Comments', 'open', { 'data-kind': h.kind, 'data-eid': h.entityId, 'data-tid': h.threadId })); tb.appendChild(tr);
+      });
+      hTable.hidden = false; hNext = r.j.next || null; hMore.hidden = !hNext;
+      say(tb.children.length ? '' : 'No hidden comments.');
+    });
+  }
+  if (hList) { hList.addEventListener('click', function () { hiddenRows(false); }); hMore.addEventListener('click', function () { hiddenRows(true); }); }
 })();

@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import Request
+from fastapi.responses import JSONResponse
 
 
 def live_who(request: Request) -> str:
@@ -74,11 +75,19 @@ async def library(request: Request):
 
 
 def local_zone(request: Request) -> tuple[str, str]:
-    """The zone and label collaboration times are shown in: the business zone the top bar's "known at" uses, else the clock's."""
+    """The zone and label collaboration times are shown in. One rule: the person's own "Clock time zone" (Account), if they chose
+    one; else the business zone the top bar's "known at" uses; else the console's clock zone. The label is the zone's city name."""
     from core.asof import zone_label
 
-    zone = (getattr(request.state, "business_date", None) or {}).get("zone") or request.app.state.templates.env.globals.get("CLOCK_TZ") or "America/New_York"
+    chosen = (getattr(request.state, "settings", None) or {}).get("clockZone")
+    zone = chosen or (getattr(request.state, "business_date", None) or {}).get("zone") or request.app.state.templates.env.globals.get("CLOCK_TZ") or "America/New_York"
     return zone, zone_label(zone)
+
+
+def problem(e) -> JSONResponse:
+    """A server problem as the JSON the collaboration pages read (``code``, ``detail``), with the server's ``Retry-After`` passed on."""
+    headers = {"Retry-After": str(e.retry_after)} if getattr(e, "retry_after", None) else None
+    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status, headers=headers)
 
 
 def localise(value: Any, zone: str, label: str) -> Any:
@@ -91,7 +100,7 @@ def localise(value: Any, zone: str, label: str) -> Any:
             localise(v, zone, label)
     elif isinstance(value, dict):
         for k, v in list(value.items()):
-            if k.endswith("At") and isinstance(v, str):
+            if (k.endswith("At") or k == "at") and isinstance(v, str):
                 value[k + "Local"] = local_when(v, zone, label)
             else:
                 localise(v, zone, label)

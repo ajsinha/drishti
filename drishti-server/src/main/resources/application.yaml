@@ -225,7 +225,7 @@ drishti:
       content: comment               # link-only | title | comment
       from: ${DRISHTI_MAIL_FROM:drishti@localhost}
       templates-dir: ""
-      coalesce-window: 2m            # notices for one person inside this are one digest email; 0 = off
+      coalesce-window: 10s           # a lone notice goes after this short delay; notices for one person arriving meanwhile join it as one digest; 0 = every notice at once
     outbox:                          # build step 4
       enabled: true
       tick: 2s

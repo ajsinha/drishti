@@ -193,7 +193,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
      * @param content {@code link-only}, {@code title} or {@code comment} (default)
      * @param from the From address
      * @param templatesDir overrides for the email templates
-     * @param coalesceWindow notices for one recipient this close together are sent as one digest email (default 2m; zero = every
+     * @param coalesceWindow notices for one recipient this close together are sent as one digest email (default 10s, the first-send delay of a lone notice; zero = every
      *     notice is its own email, sent at once)
      */
     public record Email(Boolean enabled, String content, String from, String templatesDir, Duration coalesceWindow) {
@@ -202,7 +202,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
             content = "link-only".equals(content) || "title".equals(content) ? content : "comment";
             from = from == null || from.isBlank() ? "drishti@localhost" : from;
             templatesDir = templatesDir == null ? "" : templatesDir;
-            coalesceWindow = coalesceWindow == null || coalesceWindow.isNegative() ? Duration.ofMinutes(2) : coalesceWindow;
+            coalesceWindow = coalesceWindow == null || coalesceWindow.isNegative() ? Duration.ofSeconds(10) : coalesceWindow;
         }
 
         public boolean coalesces() {

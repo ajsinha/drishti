@@ -821,7 +821,7 @@ Then send yourself a test: `POST /api/v1/admin/collab/mail-test` mails the signe
 **What is sent.** For each person a share reaches who has an address (`User.email`, set by an administrator or the identity provider; people cannot
 type addresses) and has not turned share mail off, one message: the sender's name, the kind and id, the panel and date, the note as that person
 may read it (masked values `•••`) and the link. A pack whose identifiers are sensitive sets `drishti.collab.packs.<pack>.email.content: link-only`.
-The message is built when it is sent, so a person whose role was removed since gets nothing (the row is *cancelled*). Several notices for the same person inside `email.coalesce-window` (default 2 minutes; `0` = off) go out as one digest email, each notice
+The message is built when it is sent, so a person whose role was removed since gets nothing (the row is *cancelled*). Several notices for the same person inside `email.coalesce-window` (default 10 seconds, a short first-send delay for a lone notice; `0` = off) go out as one digest email, each notice
 still checked for opt-outs, rights and masking; so mail is sent up to that long after the event. People are not emailed about
 their own shares, and no more than `limits.mails-per-recipient-per-hour` an hour.
 
@@ -859,7 +859,7 @@ curl -s -X POST -H "Authorization: Bearer $ADMIN" 'http://localhost:18480/api/v1
 # {"dryRun":true,"threadsPurged":12,"sharesPurged":30,"threadsHeld":2,"sharesHeld":1}   "held" = past retention but kept by a hold
 ```
 
-Everything in this section can also be done in the console, on **Admin > Collaboration** (`/admin/collab`): holds (place, list, release), the export
+Everything in this section can also be done in the console, on **Admin > Collaboration** (`/admin/collab`; the *Mail outbox* section lists pending mail with tries, next try and last error, dead letters with *Send again*, and sends a test mail; a share that asks for email while mail is failing says so): holds (place, list, release), the export
 (start, wait, download once), verify and the retention dry run (the page only ever asks for the dry run; real runs stay the server's schedule). The
 calls below are what the page makes.
 

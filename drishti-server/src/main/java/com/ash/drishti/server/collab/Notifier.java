@@ -52,6 +52,11 @@ public interface Notifier {
         return true;
     }
 
+    /** Why the channel is struggling right now (email: the last error of a delivery still being retried, or a dead letter), else null. */
+    default String trouble() {
+        return null;
+    }
+
     /** Delivers; returns the inbox rows written, which the caller pushes to open streams after the commit. */
     List<Notice> onShare(ShareEvent event);
 

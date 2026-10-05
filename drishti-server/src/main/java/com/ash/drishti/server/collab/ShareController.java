@@ -76,6 +76,7 @@ public class ShareController {
         m.put("postToThread", props.share().postToThread());
         m.put("minQuery", props.directory().minQuery());
         m.put("snapshots", kind != null && !kind.isBlank() && snapshots.allowed(kind.trim(), gateKind == null || gateKind.isBlank() ? null : gateKind.trim()));
+        m.put("editWindowSeconds", props.threads().editWindow().toSeconds());
         m.put("collaborate", props.enabled() && entitlements.mayCollaborate(p));
         m.put("compliance", entitlements.mayCompliance(p));
         return m;

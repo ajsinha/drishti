@@ -113,7 +113,13 @@
       a.title = 'Open this page as the writer saw it (' + pinText(c.pin) + ')';
       tools.appendChild(a);
     }
-    if (c.editable) { tools.appendChild(btn('Edit', 'edit')); }
+    if (c.editable) {                                  // the server says "editable" when the page is drawn; the window may close while it stays open
+      var left = ctx.editWindow && c.createdAt ? Date.parse(c.createdAt) + ctx.editWindow * 1000 - Date.now() : Infinity;
+      if (left > 0) {
+        var eb = btn('Edit', 'edit'); tools.appendChild(eb);
+        if (left < 2147483647) { setTimeout(function () { if (eb.parentNode) { eb.parentNode.removeChild(eb); } }, left); }
+      }
+    }
     if (c.mine && live) { tools.appendChild(btn('Retract', 'retract')); }
     if (ctx.admin && live) { tools.appendChild(btn('Hide', 'hide', { title: 'Hide this comment from readers (moderator)' })); }
     if (ctx.admin && c.state === 'hidden') { tools.appendChild(btn('Unhide', 'unhide')); }
