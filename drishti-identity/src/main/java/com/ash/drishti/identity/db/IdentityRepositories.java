@@ -163,6 +163,10 @@ public final class IdentityRepositories {
 
         void deleteByUsernameAndSeqLessThan(String username, long seq);
 
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.data.jpa.repository.Query("delete from InboxEntity i where i.at < :before")
+        int deleteOlderThan(@org.springframework.data.repository.query.Param("before") java.time.Instant before);
+
         void deleteByUsername(String username);
     }
 

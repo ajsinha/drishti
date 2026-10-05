@@ -32,7 +32,7 @@ when other people will use the installation.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
+9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches)
@@ -899,6 +899,57 @@ names the revision that was changed or no longer follows the one before it.
 database, so the backup of that database is the backup of the record, and it is the only copy of what the hash chains protect. With
 `drishti.collab.store: file` (one server) the same records are the JSON-lines files under `drishti.collab.dir`; copy that folder, except
 `exports/`, which holds only what is waiting to be downloaded. A restored database needs no repair: the chains verify against the manifest you kept.
+
+## 9a-4. Chat bridges (Teams, Slack, webhooks)
+
+A bridge posts a share, a comment or a mention to a chat channel as **a sentence and a link**: "Ann Shah commented on a view", the kind and id, the
+panel's title, the pinned date, the note, and the link. Never a data value: the note is written as a person holding only the role `bridges.render-as`
+(the bundled `viewer`, no `raw`) would read it, so a value copied from a masked field reads `•••`, and a `{$.mtm}` quote reads `$.mtm`. People who click
+the link sign in and see what *they* may see. A pack whose ids are sensitive sets `packs.<pack>.email.content: link-only` and its posts carry no id, panel or
+note either. Posts go through the same outbox as email (retries with backoff, dead letters, `outbox.max-attempts`), so a chat outage delays them and
+never loses one.
+
+**Set one up** (Teams: add a *Workflows* "post to a channel when a webhook request is received", or a classic incoming webhook; Slack: create an app with
+an incoming webhook; generic: any HTTPS endpoint that checks the signature):
+
+```bash
+export BRIDGE_RISK_DESK_URL='https://...the webhook URL...'      # a credential: environment only, never in a file
+export BRIDGE_AUDIT_URL=https://hooks.example/drishti BRIDGE_AUDIT_SECRET=...   # a json bridge also needs a signing secret
+```
+
+```yaml
+drishti.collab:
+  console-url: https://drishti.example.com
+  bridges:
+    enabled: true
+    allow: [https://prod-00.westus.logic.azure.com/, https://hooks.example/]   # the URL must start with one of these; empty = nothing posts
+    webhooks:
+      - name: risk-desk
+        format: teams                      # or slack
+        url-env: BRIDGE_RISK_DESK_URL
+        routes:
+          - { packs: [market-risk], events: [share, comment] }
+      - name: audit
+        format: json
+        url-env: BRIDGE_AUDIT_URL
+        secret-env: BRIDGE_AUDIT_SECRET
+        routes: [{ kinds: [trade], events: [mention] }]
+```
+
+Then `GET /api/v1/admin/collab/bridges` (each bridge: `usable`, or the `status` that says which variable is unset or that the URL is not under `allow`) and
+`POST /api/v1/admin/collab/bridges/risk-desk/test` (posts a data-free test message; `503 DRS-7013` says why it failed). A share is private to its recipients:
+route `share` to a channel only when everyone in it may know that a share happened and read its note (the note is scrubbed, but its words are the sender's).
+
+**The signed webhook (`format: json`).** `POST` with `Content-Type: application/json`, a body of `{schema: "drishti.bridge/1", event, id, product,
+headline, kind, entityId, panel, asOf, note, link, at}` and the headers `X-Drishti-Event`, `X-Drishti-Delivery` (the outbox number: use it to drop a repeat),
+`X-Drishti-Timestamp` (epoch seconds) and `X-Drishti-Signature: sha256=<hex>`, the HMAC-SHA256, with the secret, of `<timestamp>.<raw body>`. The receiver
+recomputes it over the exact bytes, compares in constant time and rejects a timestamp older than a few minutes.
+
+**Limits and safety.** `bridges.per-minute` posts per bridge (the rest wait a minute; no attempt is lost), `bridges.timeout`, redirects are never followed
+(a `3xx` is a dead letter: use the final URL), the answer's body is never read, and neither the URL nor the secret appears in a log line, an audit entry,
+a dead letter or the admin listing (which shows the host only). Every post is in the audit log as `collab.bridge.post`, every dead letter as
+`collab.bridge.dead`, every test as `collab.bridge.test`. A dead letter is sent again with `POST /api/v1/admin/collab/outbox/{seq}/retry` once the cause is fixed.
+Changing a bridge's URL or secret needs a restart (the variables are read at start). Not supported: replies from chat into Drishti.
 
 ## 9b. The access log
 

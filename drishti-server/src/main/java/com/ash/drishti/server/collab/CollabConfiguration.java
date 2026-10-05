@@ -34,7 +34,13 @@ import com.ash.drishti.server.collab.mail.MailRenderer;
 import com.ash.drishti.server.collab.mail.MailTemplates;
 import com.ash.drishti.server.collab.mail.MailTransport;
 import com.ash.drishti.server.collab.mail.NotifyPrefs;
+import com.ash.drishti.server.collab.mail.CommentItemRenderer;
+import com.ash.drishti.server.collab.mail.OutboxChannel;
 import com.ash.drishti.server.collab.mail.OutboxDispatcher;
+import com.ash.drishti.server.collab.bridge.BridgeNotifier;
+import com.ash.drishti.server.collab.thread.CommentRenderer;
+import com.ash.drishti.identity.collab.ThreadStore;
+import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.server.collab.mail.ShareItemRenderer;
 import com.ash.drishti.server.security.SecurityProperties;
 import java.util.List;
@@ -110,24 +116,53 @@ public class CollabConfiguration {
     }
 
     @Bean
+    public LinkBuilder linkBuilder(CollabProperties props) {
+        return new LinkBuilder(props.consoleUrl());
+    }
+
+    /** Panel titles for emails and bridge posts, read from the view as the reader would get it. */
+    @Bean
+    public PanelTitles panelTitles(ViewPipeline pipeline, Entitlements entitlements) {
+        return new PanelTitles(PanelTitles.fromPipeline(pipeline, entitlements), entitlements);
+    }
+
+    @Bean
     public ShareItemRenderer shareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy,
-            NotifyPrefs prefs, CollabProperties props) {
-        return new ShareItemRenderer(shares, principals, entitlements, policy, prefs, props.consoleUrl());
+            NotifyPrefs prefs, CollabProperties props, PanelTitles titles) {
+        return new ShareItemRenderer(shares, principals, entitlements, policy, prefs, props.consoleUrl(), titles);
+    }
+
+    @Bean
+    public CommentItemRenderer mentionItemRenderer(ThreadStore threads, Principals principals, Entitlements entitlements, CommentRenderer comments,
+            MailContentPolicy policy, NotifyPrefs prefs, PanelTitles titles, LinkBuilder links) {
+        return new CommentItemRenderer("mention", threads, principals, entitlements, comments, policy, prefs, titles, links);
+    }
+
+    @Bean
+    public CommentItemRenderer replyItemRenderer(ThreadStore threads, Principals principals, Entitlements entitlements, CommentRenderer comments,
+            MailContentPolicy policy, NotifyPrefs prefs, PanelTitles titles, LinkBuilder links) {
+        return new CommentItemRenderer("reply", threads, principals, entitlements, comments, policy, prefs, titles, links);
+    }
+
+    /** Removes inbox rows older than {@code inbox.keep-days}. */
+    @Bean(destroyMethod = "close", initMethod = "start")
+    public InboxPurge inboxPurge(InboxStore store, CollabProperties props) {
+        return new InboxPurge(store, props, java.time.Clock.systemUTC());
     }
 
     @Bean(destroyMethod = "close")
     public OutboxDispatcher outboxDispatcher(OutboxStore outbox, CollabProperties props, Principals principals, List<ItemRenderer> renderers,
             ObjectProvider<JavaMailSender> sender, io.micrometer.core.instrument.MeterRegistry meters, EmailNotifier email,
-            @Value("${drishti.branding.product:Drishti}") String product) {
+            List<OutboxChannel> channels, BridgeNotifier bridges, @Value("${drishti.branding.product:Drishti}") String product) {
         String from = props.email().from();
         String host = from.contains("@") ? from.substring(from.indexOf('@') + 1) : "localhost";
         JavaMailSender smtp = sender.getIfAvailable();
         MailTransport transport = smtp != null ? MailTransport.smtp(smtp) : (m, f) -> {
             throw new IllegalStateException("no SMTP host: set spring.mail.host");
         };
-        OutboxDispatcher d = new OutboxDispatcher(outbox, props, principals, renderers,
+        OutboxDispatcher d = new OutboxDispatcher(outbox, props, principals, renderers, channels,
                 new MailRenderer(new MailTemplates(props.email().templatesDir()), product, host), transport, meters, java.time.Clock.systemUTC());
-        if (email.available()) {
+        if (email.available() || bridges.available()) {
             d.start();
         }
         return d;

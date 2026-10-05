@@ -318,6 +318,10 @@ A share reached the bell but not the mailbox. Work down the list; each row is on
 | Symptom | Cause | Check and fix |
 |---|---|---|
 | The share answers `503 DRS-7012`, or the dialog offers no email | Email is off | It needs `drishti.collab.email.enabled`, `spring.mail.host` and `drishti.collab.console-url`, and sign-in on. `GET /api/v1/admin/collab/outbox` shows `available`. |
+| A Teams, Slack or webhook channel gets nothing | The bridge is not usable, the route does not match, or the post is waiting or dead | `GET /api/v1/admin/collab/bridges`: `status` is `ok` or says which variable is unset or that the URL is not under `bridges.allow`; check the route's `packs`, `kinds` and `events`; `GET /api/v1/admin/collab/outbox` lists the bridge's rows (recipient = the bridge name) with the reason. Fix it, then `POST .../outbox/{seq}/retry`. |
+| The bridge post says `the endpoint refused the post: HTTP 4xx` | The URL is wrong or revoked (a Slack app removed, a Teams workflow turned off) | Make a new incoming webhook, set the variable, restart; the row is a dead letter and is sent again with retry. |
+| A post says `HTTP 3xx (a redirect)` | Redirects are never followed (the URL's secret would go to the new host) | Use the final URL in the variable. |
+| The chat message shows `•••` or a path like `$.mtm` where I typed a value | The post is written for the least-privileged reader (`bridges.render-as`), and quotes are never filled in | Intended. Link people to the view; they see their own values. |
 | The server stops at start with "drishti.collab.email.enabled needs drishti.security.enabled" | Sign-in is off | User names are not verified, so mail is refused. Turn security on, or email off. |
 | The dialog said "2 of 8 have no address" | The person has no email in their account | An administrator sets it under Admin → Users. People cannot add their own. |
 | One person never gets mail | They turned it off, or are at the hourly cap | `GET /api/v1/me/settings` shows `notify.email.share`; the cap is `limits.mails-per-recipient-per-hour` (the server log says "not queued"). |
@@ -877,3 +881,5 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | a comment shows `•••` where I typed a value | the value is a masked field's; readers without `raw` see the mask. Quote it with `{$.path}` instead: each reader sees their own view of it |
 | `DRS-7011` | the note or comment was refused: empty, over `share.max-text`, matches `text.deny-patterns`, holds the value of a masked field under `on-masked-copy: reject`, or the page's generation is newer than the server's (HTTP 422). Reload the page and send again |
 | `DRS-7012` | email was asked for but is off or unreachable (HTTP 503); the share can still be sent in Drishti only |
+| `DRS-7013` | a bridge test failed, or the bridge cannot post (HTTP 503): bridges off, its `url-env` variable unset, the URL not under `bridges.allow`, or the endpoint answered an error; the message says which |
+| `DRS-7014` | no bridge with that name in `drishti.collab.bridges.webhooks` (HTTP 404) |

@@ -56,6 +56,7 @@ public final class OutboxDispatcher implements AutoCloseable {
     private final CollabProperties props;
     private final Principals principals;
     private final Map<String, ItemRenderer> renderers;
+    private final Map<String, OutboxChannel> channels;
     private final MailRenderer renderer;
     private final MailTransport transport;
     private final Clock clock;
@@ -71,6 +72,13 @@ public final class OutboxDispatcher implements AutoCloseable {
 
     public OutboxDispatcher(OutboxStore store, CollabProperties props, Principals principals, List<ItemRenderer> renderers, MailRenderer renderer,
             MailTransport transport, MeterRegistry meters, Clock clock) {
+        this(store, props, principals, renderers, List.of(), renderer, transport, meters, clock);
+    }
+
+    @SuppressWarnings("java:S107")
+    public OutboxDispatcher(OutboxStore store, CollabProperties props, Principals principals, List<ItemRenderer> renderers,
+            List<OutboxChannel> channels, MailRenderer renderer, MailTransport transport, MeterRegistry meters, Clock clock) {
+        this.channels = channels.stream().collect(java.util.stream.Collectors.toMap(OutboxChannel::channel, c -> c));
         this.store = store;
         this.props = props;
         this.principals = principals;
@@ -132,6 +140,11 @@ public final class OutboxDispatcher implements AutoCloseable {
     }
 
     private void handle(OutboxItem item) {
+        OutboxChannel channel = channels.get(item.channel());
+        if (channel != null) {
+            handleChannel(channel, item);
+            return;
+        }
         try {
             ItemRenderer r = renderers.get(item.template());
             if (r == null) {
@@ -156,6 +169,33 @@ public final class OutboxDispatcher implements AutoCloseable {
             skip(item, s.getMessage());
         } catch (RuntimeException e) {
             fail(item, e);
+        }
+    }
+
+    private void handleChannel(OutboxChannel channel, OutboxItem item) {
+        try {
+            channel.deliver(item);
+            store.sent(item.seq(), clock.instant());
+            sent.increment();
+            channel.delivered(item);
+        } catch (ItemRenderer.Skip s) {
+            skip(item, s.getMessage());
+        } catch (OutboxChannel.Permanent p) {
+            giveUp(item, p.getMessage());
+            channel.gaveUp(item, p.getMessage());
+        } catch (OutboxChannel.Deferred d) {
+            store.retry(item.seq(), item.attempts(), clock.instant().plus(d.delay()), d.getMessage());
+        } catch (RuntimeException e) {
+            int attempts = item.attempts() + 1;
+            String why = MailFailures.describe(e);
+            if (attempts >= props.outbox().maxAttempts()) {
+                giveUp(item, attempts, why);
+                channel.gaveUp(item, why);
+                return;
+            }
+            store.retry(item.seq(), attempts, clock.instant().plus(backoff(attempts)), why);
+            retried.increment();
+            LOG.info("{} {} to {} will be tried again (attempt {}): {}", item.channel(), item.seq(), item.recipient(), attempts, why);
         }
     }
 

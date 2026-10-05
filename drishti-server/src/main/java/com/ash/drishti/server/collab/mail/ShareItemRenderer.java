@@ -20,6 +20,7 @@ import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.identity.collab.Share;
 import com.ash.drishti.identity.collab.ShareStore;
 import com.ash.drishti.server.collab.NoteText;
+import com.ash.drishti.server.collab.PanelTitles;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
@@ -38,15 +39,17 @@ public final class ShareItemRenderer implements ItemRenderer {
     private final MailContentPolicy policy;
     private final NotifyPrefs prefs;
     private final String consoleUrl;
+    private final PanelTitles titles;
 
     public ShareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy, NotifyPrefs prefs,
-            String consoleUrl) {
+            String consoleUrl, PanelTitles titles) {
         this.shares = shares;
         this.principals = principals;
         this.entitlements = entitlements;
         this.policy = policy;
         this.prefs = prefs;
         this.consoleUrl = consoleUrl;
+        this.titles = titles;
     }
 
     @Override
@@ -69,7 +72,7 @@ public final class ShareItemRenderer implements ItemRenderer {
         String note = MailContentPolicy.COMMENT.equals(mode) ? NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(who)) : null;
         String when = linkOnly ? null : s.pin().live() || s.pin().businessDate() == null ? "live when shared" : s.pin().businessDate().toString();
         return new MailRenderer.Content("share", sender + " shared a view with you", linkOnly ? null : label(s.kind()),
-                linkOnly ? null : s.entityId(), linkOnly ? null : s.panelId(), when, note, link(s.id()));
+                linkOnly ? null : s.entityId(), linkOnly ? null : titles.title(s.kind(), s.entityId(), s.panelId(), who), when, note, link(s.id()));
     }
 
     private String link(String id) {

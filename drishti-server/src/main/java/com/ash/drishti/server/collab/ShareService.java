@@ -215,7 +215,7 @@ public final class ShareService {
             List<Notice> written = new ArrayList<>();
             Notifier.ShareEvent event = new Notifier.ShareEvent(share, reached);
             for (Notifier n : notifiers) {
-                if (n.available() && ("in-app".equals(n.channel()) || wantsEmail(req))) {
+                if (n.available() && (!"email".equals(n.channel()) || wantsEmail(req))) {
                     written.addAll(n.onShare(event));
                 }
             }

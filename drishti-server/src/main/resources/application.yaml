@@ -240,7 +240,14 @@ drishti:
       interval: 24h                  # how often the purge runs; it only runs when some retention above 0 is set (a pack: packs.<pack>.retention-days)
     export-keep: 24h
     packs: {}                        # per-pack overrides, by pack name: genomics: { share-enabled: false }
-    bridges: { enabled: false, webhooks: [] }   # phase 2
+    bridges:                         # build step 9: post "comment + link" (never a value) to Teams, Slack or a signed webhook
+      enabled: false
+      render-as: viewer              # the role whose masks the posted text follows (the default has no raw)
+      allow: []                      # URL prefixes a bridge URL must start with; empty: no bridge can post
+      per-minute: 30                 # posts per bridge per minute; the rest wait in the outbox
+      timeout: 10s
+      max-note: 500                  # characters of the note a post carries
+      webhooks: []                   # [{ name: risk-teams, format: teams, url-env: BRIDGE_RISK_URL, routes: [{ packs: [..], kinds: [..], events: [share, comment, mention] }] }]
     snapshots: { enabled: false }               # phase 2
   reports:                           # scheduled reports: a search delivered as CSV on a schedule
     enabled: ${DRISHTI_REPORTS_ENABLED:true}   # the scheduler; run it on one server of a group (reports still run by hand)

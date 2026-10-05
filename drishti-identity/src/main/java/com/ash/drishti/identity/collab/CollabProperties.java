@@ -67,7 +67,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
         retention = retention == null ? new Retention(null, null, null) : retention;
         exportKeep = exportKeep == null ? Duration.ofHours(24) : exportKeep;
         packs = packs == null ? Map.of() : Map.copyOf(packs);
-        bridges = bridges == null ? new Bridges(null, null) : bridges;
+        bridges = bridges == null ? new Bridges(null, null, null, null, null, null, null) : bridges;
         snapshots = snapshots == null ? new Snapshots(null) : snapshots;
     }
 
@@ -241,13 +241,57 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
     }
 
     /**
-     * @param enabled bridges to chat tools (phase 2)
-     * @param webhooks the allowed bridges
+     * @param enabled bridges to chat tools are on (a bridge also needs its URL in the environment)
+     * @param renderAs the role whose view of masked values the posted text follows; the posted text never holds a data value whatever
+     *     this role is (default {@code viewer}, which has no {@code raw})
+     * @param allow URL prefixes a bridge URL must start with (empty: no bridge may be used, so configuration alone cannot reach any host)
+     * @param perMinute most posts per bridge per minute; the rest wait in the outbox
+     * @param timeout connect and response time allowed for one post
+     * @param maxNote most characters of a note or comment a post carries (cut with an ellipsis)
+     * @param webhooks the bridges
      */
-    public record Bridges(Boolean enabled, List<Map<String, Object>> webhooks) {
+    public record Bridges(Boolean enabled, String renderAs, List<String> allow, Integer perMinute, Duration timeout, Integer maxNote,
+            List<Webhook> webhooks) {
         public Bridges {
             enabled = enabled != null && enabled;
+            renderAs = renderAs == null || renderAs.isBlank() ? "viewer" : renderAs.strip();
+            allow = allow == null ? List.of() : List.copyOf(allow);
+            perMinute = positive(perMinute, 30);
+            timeout = duration(timeout, Duration.ofSeconds(10));
+            maxNote = positive(maxNote, 500);
             webhooks = webhooks == null ? List.of() : List.copyOf(webhooks);
+        }
+    }
+
+    /**
+     * One bridge. The URL and the signing secret are read from the environment variables named here, never from configuration.
+     *
+     * @param name the bridge's name (letters, digits, dash, underscore); it is the outbox recipient and appears in logs
+     * @param format {@code json} (signed generic webhook), {@code teams} (incoming webhook or Workflows) or {@code slack}
+     * @param urlEnv the environment variable holding the URL
+     * @param secretEnv the environment variable holding the HMAC secret ({@code json} only)
+     * @param routes which events go to it; none means nothing is posted
+     */
+    public record Webhook(String name, String format, String urlEnv, String secretEnv, List<Route> routes) {
+        public Webhook {
+            name = name == null ? "" : name.strip();
+            format = format == null ? "json" : format.strip().toLowerCase(java.util.Locale.ROOT);
+            urlEnv = urlEnv == null ? "" : urlEnv.strip();
+            secretEnv = secretEnv == null ? "" : secretEnv.strip();
+            routes = routes == null ? List.of() : List.copyOf(routes);
+        }
+    }
+
+    /**
+     * @param packs the packs (empty: any) whose kinds this route covers
+     * @param kinds the entity kinds (empty: any)
+     * @param events {@code share}, {@code comment}, {@code mention} (empty: none)
+     */
+    public record Route(List<String> packs, List<String> kinds, List<String> events) {
+        public Route {
+            packs = packs == null ? List.of() : List.copyOf(packs);
+            kinds = kinds == null ? List.of() : List.copyOf(kinds);
+            events = events == null ? List.of() : List.copyOf(events);
         }
     }
 

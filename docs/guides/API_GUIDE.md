@@ -789,6 +789,8 @@ It is kept on the server, so it follows the user to any browser.
 | `GET` | `/admin/collab/verify?thread=` or `?kind=&id=&maxProblems=` | `compliance`: one chain `{ok, steps, firstHash, lastHash, problem}`, or every thread and share `{threads, threadsOk, shares, sharesOk, ok, problems[], truncated}` |
 | `GET` | `/admin/collab/outbox?state=&limit=` | `admin`: `{enabled, available, dispatching, counts, items[]}`; rows name recipient, template, share, attempts, next attempt and last error, never the message |
 | `POST` | `/admin/collab/outbox/{seq}/retry` | `admin`: send a dead or cancelled delivery again (`400` for any other state) |
+| `GET` | `/admin/collab/bridges` | `admin`: `{enabled, renderAs, perMinute, bridges[]}`; each bridge `{name, format, usable, status, host, routes[], outbox{state: count}}`; never the URL path or the secret |
+| `POST` | `/admin/collab/bridges/{name}/test` | `admin`: post a data-free test message to the bridge now; `{sent, bridge, status}`, `503 DRS-7013` with the reason when it fails, `404 DRS-7014` for an unknown name |
 | `POST` | `/admin/collab/mail-test` | `admin`: mail a test message to your own address now; `503 DRS-7012` with the SMTP reason when it fails |
 | `GET` | `/me/packs` | `{assigned, active}` |
 | `PUT` | `/me/packs` | body `{"active": [...]}`; must be a non-empty subset of `assigned` (`403 DRS-5002` otherwise) |
@@ -1385,6 +1387,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-7010 | 423 | on hold | `DELETE /admin/collab/threads/{id}` for a thread a legal hold covers (retention skips held items without an error) |
 | DRS-7011 | 422 | text refused | an empty or too long note or comment, a `text.deny-patterns` match, a masked value with `text.on-masked-copy: reject`, or a bad pin (a generation newer than the server holds) |
 | DRS-7012 | 503 | mail unavailable | email was asked for explicitly while it is off, or SMTP failed at once |
+| DRS-7013 | 503 | bridge unavailable | a bridge test while bridges are off, the bridge cannot post, or the endpoint refused |
+| DRS-7014 | 404 | no such bridge | the bridge name is not in `drishti.collab.bridges.webhooks` |
 
 `DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or

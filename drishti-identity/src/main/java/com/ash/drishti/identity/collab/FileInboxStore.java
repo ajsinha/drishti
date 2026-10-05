@@ -256,6 +256,44 @@ public final class FileInboxStore implements InboxStore {
     }
 
     @Override
+    public int purgeBefore(Instant before) {
+        load();
+        int removed = 0;
+        for (String user : List.copyOf(rows.keySet())) {
+            ReentrantLock l = lock(user);
+            l.lock();
+            try {
+                List<Notice> list = rows.get(user);
+                if (list == null || list.stream().noneMatch(n -> n.at().isBefore(before))) {
+                    continue;
+                }
+                int was = list.size();
+                list.removeIf(n -> n.at().isBefore(before));
+                removed += was - list.size();
+                StringBuilder b = new StringBuilder();
+                for (Notice n : list) {
+                    ObjectNode line = json.createObjectNode();
+                    line.set("n", json.valueToTree(n));
+                    b.append(json.writeValueAsString(line)).append('\n');
+                }
+                Path f = file(user);
+                if (list.isEmpty()) {
+                    Files.deleteIfExists(f);
+                } else {
+                    Path tmp = f.resolveSibling(f.getFileName() + ".tmp");
+                    Files.writeString(tmp, b.toString(), StandardCharsets.UTF_8);
+                    Files.move(tmp, f, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            } finally {
+                l.unlock();
+            }
+        }
+        return removed;
+    }
+
+    @Override
     public void forget(String username) {
         load();
         ReentrantLock l = lock(username);

@@ -65,22 +65,32 @@ public final class EmailNotifier implements Notifier {
 
     @Override
     public List<Notice> onShare(ShareEvent e) {
-        Instant now = Instant.now();
-        int cap = props.limits().mailsPerRecipientPerHour();
         for (Recipient r : e.reached()) {
-            String who = r.username();
-            if (principals.user(who).map(User::email).filter(a -> a != null && !a.isBlank()).isEmpty()) {
-                continue;
-            }
-            if (!prefs.emailOn(who, "share")) {
-                continue;
-            }
-            if (outbox.countSince(who, now.minus(Duration.ofHours(1))) >= cap) {
-                LOG.warn("mail to {} not queued: {} a hour reached (drishti.collab.limits.mails-per-recipient-per-hour)", who, cap);
-                continue;
-            }
-            outbox.add(OutboxItem.pending("email", who, "share", e.share().id(), now));
+            queue(r.username(), "share", e.share().id());
         }
         return List.of();
+    }
+
+    /** A mention or a reply ({@code CommentEvent.type}) becomes one email per person, if they want it. */
+    @Override
+    public List<Notice> onComment(CommentEvent e) {
+        for (String who : e.recipients()) {
+            queue(who, e.type(), e.comment().id());
+        }
+        return List.of();
+    }
+
+    /** One pending email for the person: skipped for no address, the event turned off, or the hourly cap. */
+    private void queue(String who, String event, String ref) {
+        Instant now = Instant.now();
+        int cap = props.limits().mailsPerRecipientPerHour();
+        if (principals.user(who).map(User::email).filter(a -> a != null && !a.isBlank()).isEmpty() || !prefs.emailOn(who, event)) {
+            return;
+        }
+        if (outbox.countSince(who, now.minus(Duration.ofHours(1))) >= cap) {
+            LOG.warn("mail to {} not queued: {} a hour reached (drishti.collab.limits.mails-per-recipient-per-hour)", who, cap);
+            return;
+        }
+        outbox.add(OutboxItem.pending("email", who, event, ref, now));
     }
 }

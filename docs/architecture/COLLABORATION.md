@@ -475,6 +475,8 @@ A new first digit: **7, collaboration** (`ErrorCode` documents 1–6 today; 7 is
 | DRS-7010 | 423 | on hold | a purge or permanent removal of something under a legal hold |
 | DRS-7011 | 422 | text refused | empty, too long, a `deny-patterns` match, a masked copy with `on-masked-copy: reject`, or a bad pin |
 | DRS-7012 | 503 | mail unavailable | `mail-test`, or `channels.email` asked explicitly, while email is off or SMTP fails at once |
+| DRS-7013 | 503 | bridge unavailable | a bridge test while bridges are off, the bridge cannot post (variable unset, URL not allowed) or the endpoint failed |
+| DRS-7014 | 404 | no such bridge | `POST /admin/collab/bridges/{name}/test` for a name not configured |
 
 `DRS-5002` keeps meaning "may not open the kind"; it is never used for a share id (that is `DRS-7001`, so share ids
 are not an oracle). The console's `ui.error_advice` gains advice for each code (`drs_advice` in `core/backend.py`).
@@ -862,6 +864,30 @@ ones). Notes made through `/threads` are not listed by `/notes`. (5) Imported no
 not known at import); they read as written. (6) Thread and comment counts count comments written, retracted ones included. (7) A comment
 that cannot be checked against its document (the source is down) refuses an edit rather than skip the scrub, except for imported notes
 (generation 0). (8) `GET /threads` pages threads by `before` = a thread id; each thread returns its first `page-size` comments and `more`.
+
+**Step 9 as built, and where it differs from the design above.** `drishti-server/.../collab/bridge`: `BridgeRegistry` (the configured bridges, URL and
+secret read from the environment variables named in configuration, the `bridges.allow` prefixes, the routing table), `BridgeNotifier` (a `Notifier` of
+channel `bridge`: one outbox row per matching bridge, written in the share's or comment's transaction), `BridgeItemRenderer`, `BridgeFormat` (`json`, `teams`,
+`slack`), `BridgeClient` (no redirects, no response body kept), `BridgeSender` (the `OutboxChannel` the dispatcher serves), `BridgeAdminController`
+(`GET /admin/collab/bridges`, `POST /admin/collab/bridges/{name}/test`). Deviations from the design: (1) the bridge's URL and signing secret come from
+**environment variables** named by `url-env` and `secret-env` (Teams and Slack URLs are credentials), not from a configured URL prefix list; `bridges.allow`
+is the prefix list the resolved URL must start with, and it is empty (nothing may post) until an administrator fills it; (2) routing is per bridge,
+`routes: [{packs, kinds, events}]` with events `share`, `comment` and `mention`, instead of binding a thread: a bridge posts every comment on the kinds it covers
+(replies inside a share's private thread are never posted); a comment that mentions someone and matches both a `comment` and a `mention` route is one post, as a
+mention; (3) the rendering reader is a synthetic principal holding only the role `bridges.render-as` (default `viewer`), so masked ranges read `•••`; a value quote
+`{$.path}` is **never** filled in, even for a role with `raw` (it reads as its path); the pack's `email.content` (`link-only`, `title`, `comment`) applies to
+bridges too; (4) the dispatcher gained `OutboxChannel`: a channel throws `Skip` (cancel), `Permanent` (dead letter at once: 4xx, a redirect, a bridge that cannot
+post) or `Deferred` (over `bridges.per-minute`: pending again, no attempt counted), anything else is retried with the outbox backoff; the dispatcher runs when email
+or any bridge is available; (5) every post is an audit-log entry `collab.bridge.post` (subject = the bridge, detail = event, id, delivery), every dead letter
+`collab.bridge.dead`, every test `collab.bridge.test`; no access-log row is added, because the share's own `share` row already records the disclosure
+decision; (6) `GET /admin/collab/bridges` shows each bridge's host, status (`ok`, or why not, naming the variables) and its outbox counts, never the URL path or the
+secret; (7) no secret is ever logged: failures are described by status or exception class only; (8) problem codes `DRS-7013` (bridge unavailable: off, not usable, or the
+test post failed) and `DRS-7014` (no such bridge). Follow-ups built with it: **mention and reply emails** (`CommentItemRenderer`, templates `mention` and `reply`,
+`EmailNotifier.onComment`; coalescing of several notices into one email is still not built, each mention or reply is one email), **panel titles instead of ids** in
+every email and bridge post (`PanelTitles`, read from the view as the recipient gets it, the id when it cannot be built), and the **inbox purge** by
+`inbox.keep-days` (`InboxPurge`, every `retention.interval`; this closes deviation (7) of step 7). Tests: `BridgeDeliveryTest` (payload shapes against an in-process
+fake endpoint, HMAC, masked values never sent, routing, retry, dead letter, rate limit, redirect, secrets), `BridgeRegistryTest`, `CommentMailTest`,
+`InboxPurgeTest`, the inbox purge in the store contract.
 
 **Step 7 as built, and where it differs from the design above.** `Hold`, `HoldStore` (JPA and `holds.json`), `drishti.collab.retention` (`keep-days`,
 `kinds`, `interval`; `packs.<pack>.retention-days`), `CollabPurge` (daily, only when some retention is above 0; holds win; whole threads; audited with the
