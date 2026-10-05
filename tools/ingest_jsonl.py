@@ -216,9 +216,9 @@ def ingest(args, say=print) -> Report:
     return report
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
-                                epilog=__doc__.split("\n\n", 1)[1])
+                                epilog=__doc__.split("\n\n", 1)[1], add_help=add_help)
     p.add_argument("--from", dest="src", type=pathlib.Path, action="append", required=True, help="a folder of *.jsonl or one .jsonl file; repeatable")
     p.add_argument("-r", "--recursive", action="store_true")
     p.add_argument("--pack", type=pathlib.Path, help="pack folder: domain, layouts, key and date fields come from its pack.yaml")

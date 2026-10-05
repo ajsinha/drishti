@@ -36,8 +36,10 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 |---|---|
 | Get it running in ten minutes | [QUICKSTART.md](guides/QUICKSTART.md) |
 | Install and start it with every step explained | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
-| Install and run it on Windows (PowerShell, no Hadoop) | [WINDOWS.md](guides/WINDOWS.md) |
+| Install and run it on Windows (PowerShell, no Hadoop) | [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes, running it from PyCharm |
+| [WINDOWS.md](guides/WINDOWS.md) |
 | Run and debug the server in IntelliJ IDEA and the console in PyCharm | [IDE_GUIDE.md](guides/IDE_GUIDE.md) |
+| Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_GUIDE.md](guides/CLI_GUIDE.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
 | Read Drishti from a script, a notebook or Excel with a personal API token | [CLIENTS.md](guides/CLIENTS.md) |
 | Run Python on the view you are looking at (`Alt+C`): re-price, recompute, pivot, chart | [PYTHON_CALC.md](guides/PYTHON_CALC.md) |

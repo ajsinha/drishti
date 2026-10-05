@@ -182,6 +182,13 @@ it includes.
   the browser page; no restart.
 - **Python code** (`drishti-console/core/**`): restart the run configuration (Ctrl+F5).
 
+### 4.6 The command-line tools from PyCharm
+
+The pack and Sutra tools (`tools/drishti.py`: `pack new`, `pack check`, `sutra lint`, `data ingest`, the REST commands) run from PyCharm
+the same way, and the Java `sutra` tool runs from IntelliJ IDEA: run configurations, the interpreter with PyYAML (and `deltalake`,
+`pyarrow`), `DRISHTI_TOKEN` and the working directory are in
+[CLI_GUIDE.md](CLI_GUIDE.md#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij).
+
 ## 5. Running the tests from the IDEs
 
 ### 5.1 Java tests in IntelliJ

@@ -82,11 +82,10 @@ def shown_fields(groups) -> dict[str, list[str]]:
     return out
 
 
-def main(argv=None) -> int:
-    import yaml  # PyYAML
-
+def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
+    """The command line; tools/drishti.py (`pack new`) embeds it as a parent parser."""
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
-                                epilog=__doc__.split("\n\n", 1)[1])
+                                epilog=__doc__.split("\n\n", 1)[1], add_help=add_help)
     p.add_argument("inputs", type=pathlib.Path, nargs="+", help="folders of *.jsonl and/or single .jsonl files")
     p.add_argument("--name", required=True, help="pack name (letters, digits, '-')")
     p.add_argument("--title", help="pack title (default: the name)")
@@ -99,7 +98,17 @@ def main(argv=None) -> int:
     p.add_argument("--store", choices=("delta", "files"), default="delta", help="the dated store the pack reads: delta (default) or the File connector's files")
     p.add_argument("--files-root", type=pathlib.Path, help="with --store files: also write the documents as <root>/<pack>/<date>/<kind>.jsonl")
     SG.add_arguments(p)
-    opts = p.parse_args(argv)
+    return p
+
+
+def main(argv=None) -> int:
+    return run(build_parser().parse_args(argv))
+
+
+def run(opts) -> int:
+    """Generates the pack described by the parsed options; 0 when its lint and test pass."""
+    import yaml  # PyYAML
+
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", opts.name):
         raise SystemExit("pack_from_jsonl: --name is lower-case letters, digits and '-'")
     out = (opts.out or ROOT / "packs" / opts.name).resolve()

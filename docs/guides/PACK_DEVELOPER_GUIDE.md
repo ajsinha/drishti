@@ -675,6 +675,7 @@ Below is the complete `packs/logistics/pack.yaml`, annotated. Then the keys only
 | `python` | server | `python: { enabled: true }` | Calc (Python in the browser, `Alt+C`) on this pack's kinds, and starter snippets (also `python/*.py`) | [Calc](#calc-python-snippets) |
 | `connectors` | server | `helpdesk-store: { plugin: file, … }` | Named data sources | [below](#keys-for-packs-that-inherit-and-read-real-data) |
 | `routes` | server | `ticket: helpdesk-store` | Which connector answers a kind | [below](#keys-for-packs-that-inherit-and-read-real-data) |
+| `ingest` | tooling | `trade: { key: tradeId, date: businessDate }` | Which field is each kind's id and which its business date, for `tools/ingest_jsonl.py --pack` and `drishti.py pack check`. **Optional and ignored by the server** (a pack loads the same without it); written by `pack new` when you give `--date` | [below](#generating-a-pack-from-json-lines) |
 | `alerts` | server | `- { kind: ticket, name: …, when: "$.ageHours > 24" }` | Suggested alert rules | below |
 | `sutras`, `formats`, `semantics`, `samples` | server | `sutras: sutras` | Where the pack's folders and files are | below |
 | `console.examples` | console | `- ["TKT TKT-1001", "An open ticket"]` | Example commands on `/t` and the landing page | below |
@@ -1982,7 +1983,8 @@ If an admin assigns packs per user, add `library` to your user under **Admin →
 
 Three scripts turn existing data (one JSON document per line, or the loader envelope `{"kind","id","doc"}`) into a pack
 without writing a generator by hand. Input is a folder of `*.jsonl` (`-r` for subfolders) and/or single `.jsonl` files; the
-kind is the file stem unless `--kind` is given (an envelope file may hold several kinds). Run them with
+kind is the file stem unless `--kind` is given (an envelope file may hold several kinds). The one command line that wraps them all (and adds `pack check`, `pack about-check`, `data ingest`, loading into a running server and
+the Screen Designer's workflow) is `tools/drishti.py`: see [CLI_GUIDE.md](CLI_GUIDE.md). Run them with
 `uv run --with pyyaml` (add `--with deltalake --with pyarrow` for a Delta lake). Build the server first: they use the
 `sutra design --each` command of its exec jar (JDK 21, `--jar`/`--java` to choose).
 
@@ -2017,7 +2019,7 @@ uv run --with pyyaml python tools/ingest_jsonl.py --from data/new --pack packs/m
   forms a `$.f == null` group (`--skip-missing` leaves it out). `--min-docs`, `--priority` (default 10), `--fallback` (adds
   `<kind>-default`, priority 1), `--name-prefix` and `--samples N` (deterministic; with `--date` spread across dates, newest first).
 - **`--date`** names the business-date field: it is kept out of the match; the pack gets a Delta (or File) connector, `routes` and an
-  `ingest:` block (`{kind: {key, date}}`, read by `ingest_jsonl.py --pack`); the lake is partitioned by `business_date`.
+  `ingest:` block (`{kind: {key, date}}`, an optional tooling key read by `ingest_jsonl.py --pack` and ignored by the server); the lake is partitioned by `business_date`.
   Documents without the date are reported and left out of the lake and files; kinds without `--date` are served from `samples/`.
 - **`pack_from_jsonl.py`** refuses to overwrite `--out` (default `packs/<name>`) without `--force`; `--mnemonic kind=ABC` overrides
   the initials; `--store files --files-root DIR` writes the File layout (`DIR/<pack>/<date>/<kind>.jsonl`, serve with
