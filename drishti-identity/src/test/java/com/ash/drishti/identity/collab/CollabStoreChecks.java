@@ -69,6 +69,21 @@ public final class CollabStoreChecks {
         assertThat(tampered.intact()).isFalse();
     }
 
+    /** Rows older than the cut-off go, whoever's they are; newer rows and read marks stay. */
+    public static void inboxPurge(InboxStore s) {
+        String u = "purge" + System.nanoTime();
+        Instant now = Instant.now();
+        s.add(new Notice(0, u, now.minus(java.time.Duration.ofDays(100)), "share", "trade", "MX-1", null, "sh_1", null, null, "ann", null));
+        s.add(new Notice(0, u, now.minus(java.time.Duration.ofDays(60)), "share", "trade", "MX-2", null, "sh_2", null, null, "ann", null));
+        Notice recent = s.add(new Notice(0, u, now.minus(java.time.Duration.ofDays(1)), "share", "trade", "MX-3", null, "sh_3", null, null, "ann", null));
+        s.markRead(u, java.util.List.of(recent.seq()), now);
+        assertThat(s.purgeBefore(now.minus(java.time.Duration.ofDays(50)))).isGreaterThanOrEqualTo(2);
+        java.util.List<Notice> left = s.list(u, null, false, 10, 0);
+        assertThat(left).extracting(Notice::entityId).containsExactly("MX-3");
+        assertThat(left.get(0).readAt()).isNotNull();
+        assertThat(s.purgeBefore(now.minus(java.time.Duration.ofDays(50)))).isZero();
+    }
+
     public static void inbox(InboxStore s) {
         String u = "inb" + System.nanoTime();
         Instant now = Instant.now();

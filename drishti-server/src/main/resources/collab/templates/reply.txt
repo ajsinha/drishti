@@ -1,0 +1,8 @@
+${headline}
+
+${detail}
+Open it in ${product}:
+${link}
+
+You are receiving this because you follow a discussion in ${product}. The comment is shown as you may see it; sign in for the rest.
+Change what you are emailed about under Settings, Notifications.

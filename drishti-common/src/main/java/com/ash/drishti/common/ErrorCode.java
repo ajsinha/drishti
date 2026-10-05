@@ -88,7 +88,11 @@ public enum ErrorCode {
     ON_HOLD("DRS-7010", 423),
     /** Empty or too long text, a deny-pattern match, a masked copy with {@code on-masked-copy: reject}, or a bad pin. */
     TEXT_REFUSED("DRS-7011", 422),
-    MAIL_UNAVAILABLE("DRS-7012", 503);
+    MAIL_UNAVAILABLE("DRS-7012", 503),
+    /** A bridge test, or a post, failed or the bridge is not usable: bridges off, its URL variable unset or not allowed, or the endpoint refused. */
+    BRIDGE_UNAVAILABLE("DRS-7013", 503),
+    /** No bridge with that name in {@code drishti.collab.bridges.webhooks}. */
+    BRIDGE_NOT_FOUND("DRS-7014", 404);
 
     private final String code;
     private final int httpStatus;

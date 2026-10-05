@@ -303,6 +303,10 @@ public final class ThreadService {
             }
         }
         List<Notice> out = new ArrayList<>();
+        if (!CommentThread.SHARE.equals(thread.anchor())) {
+            Notifier.CommentPosted posted = new Notifier.CommentPosted(thread, c, !told.isEmpty());
+            notifiers.stream().filter(Notifier::available).forEach(n -> n.onCommentPosted(posted));
+        }
         deliver(out, "mention", thread, c, null, new ArrayList<>(told));
         deliver(out, "reply", thread, c, null, repliers);
         return out;

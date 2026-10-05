@@ -472,6 +472,8 @@ A new first digit: **7, collaboration** (`ErrorCode` documents 1–6 today; 7 is
 | DRS-7010 | 423 | on hold | a purge or permanent removal of something under a legal hold |
 | DRS-7011 | 422 | text refused | empty, too long, a `deny-patterns` match, a masked copy with `on-masked-copy: reject`, or a bad pin |
 | DRS-7012 | 503 | mail unavailable | `mail-test`, or `channels.email` asked explicitly, while email is off or SMTP fails at once |
+| DRS-7013 | 503 | bridge unavailable | a bridge test while bridges are off, the bridge cannot post (variable unset, URL not allowed) or the endpoint failed |
+| DRS-7014 | 404 | no such bridge | `POST /admin/collab/bridges/{name}/test` for a name not configured |
 
 `DRS-5002` keeps meaning "may not open the kind"; it is never used for a share id (that is `DRS-7001`, so share ids
 are not an oracle). The console's `ui.error_advice` gains advice for each code (`drs_advice` in `core/backend.py`).
@@ -793,7 +795,7 @@ M 2–3 days, L 4–5 days. Browser tests are Playwright against a scratch serve
 | **6. Threads: console** (done; see *Step 6 as built*) | shared side drawer (About and Discussion tabs), threads, reply, edit, retract, resolve, follow, `@` and `{` pickers, panel badges, field markers, *Open as it was*, live new-comment notices; Notes drawer and `notes.js` removed | `templates/terminal/{view,_discussion}.html`, `_macros/collab.html`, `static/js/discussion.js` (new), `static/js/about.js` (host only), `static/css/{about,collab}.css`, `routes/collab_routes.py` (discussion routes), `core/threads.py` (new); `static/js/notes.js` deleted | `test_discussion.py`, `test_discussion_browser.py` (keyboard-only thread, `Alt+N` / `?` switching tabs, phone sheet, `•••` in a quote for a viewer, *Open as it was*), `test_about_browser.py` still green, `test_fkeys.py` | on VAR-COMM a user opens a panel thread from its badge, mentions a colleague, and the colleague's *Open as it was* shows the comment's date | L |
 | **7. Moderation, retention, legal hold, export** (server done; see *Step 7 as built*) | hide/unhide, lock, holds, `CollabPurge`, export job and zip, verify; admin console page | `drishti-server/.../collab/compliance/*` (new), `drishti-identity/.../collab/Hold*.java` (new); console `routes/compliance_routes.py`, `core/compliance.py`, `templates/admin/collab.html`, `static/js/admin-collab.js` (new) | `CollabPurgeTest` (holds win, whole threads only), `ExportTest` (manifest, NDJSON, hashes, unscrubbed only for `compliance`), `ModerationTest`, `test_admin_collab.py` | a hold on MX-20000001 keeps its threads past retention; an export of a day verifies against the chain | M |
 | **8. End-to-end docs** | HOW_IT_FITS section, ARCHITECTURE paragraph, ADR-020, USER_GUIDE consolidation, the console's monitors-and-alerts guide | docs only | `test_help_links.py`, `test_docs_error_codes.py`, `test_docs_settings.py`, licence headers | every link resolves; every new code and key documented | S |
-| **9. Bridges** (phase 2) | `WebhookNotifier`, bridge bindings, render-as role | `drishti-server/.../collab/bridge/*` (new), admin page section | stub HTTP server test (allow-list, no redirects, masks) | a comment on a bound kind posts text and link only | M |
+| **9. Bridges** (phase 2; done, see *Step 9 as built*) | `WebhookNotifier`, bridge bindings, render-as role | `drishti-server/.../collab/bridge/*` (new), admin page section | stub HTTP server test (allow-list, no redirects, masks) | a comment on a bound kind posts text and link only | M |
 | **10. Watermarked snapshots** (phase 2) | `SnapshotRenderer` (Java2D), most-restrictive principal, policy, attachment | `drishti-server/.../collab/snapshot/*` (new) | golden-image test, a recipient without `raw` → masked image, a gate-kind panel left out | off by default; on, an image never shows more than its least-entitled recipient may see | L |
 
 **Step 3 as built.** `core/collab.py` (client, `link_for`, the `X-Drishti-Share` contextvar `BackendClient` adds to every call while a view
@@ -859,6 +861,30 @@ ones). Notes made through `/threads` are not listed by `/notes`. (5) Imported no
 not known at import); they read as written. (6) Thread and comment counts count comments written, retracted ones included. (7) A comment
 that cannot be checked against its document (the source is down) refuses an edit rather than skip the scrub, except for imported notes
 (generation 0). (8) `GET /threads` pages threads by `before` = a thread id; each thread returns its first `page-size` comments and `more`.
+
+**Step 9 as built, and where it differs from the design above.** `drishti-server/.../collab/bridge`: `BridgeRegistry` (the configured bridges, URL and
+secret read from the environment variables named in configuration, the `bridges.allow` prefixes, the routing table), `BridgeNotifier` (a `Notifier` of
+channel `bridge`: one outbox row per matching bridge, written in the share's or comment's transaction), `BridgeItemRenderer`, `BridgeFormat` (`json`, `teams`,
+`slack`), `BridgeClient` (no redirects, no response body kept), `BridgeSender` (the `OutboxChannel` the dispatcher serves), `BridgeAdminController`
+(`GET /admin/collab/bridges`, `POST /admin/collab/bridges/{name}/test`). Deviations from the design: (1) the bridge's URL and signing secret come from
+**environment variables** named by `url-env` and `secret-env` (Teams and Slack URLs are credentials), not from a configured URL prefix list; `bridges.allow`
+is the prefix list the resolved URL must start with, and it is empty (nothing may post) until an administrator fills it; (2) routing is per bridge,
+`routes: [{packs, kinds, events}]` with events `share`, `comment` and `mention`, instead of binding a thread: a bridge posts every comment on the kinds it covers
+(replies inside a share's private thread are never posted); a comment that mentions someone and matches both a `comment` and a `mention` route is one post, as a
+mention; (3) the rendering reader is a synthetic principal holding only the role `bridges.render-as` (default `viewer`), so masked ranges read `•••`; a value quote
+`{$.path}` is **never** filled in, even for a role with `raw` (it reads as its path); the pack's `email.content` (`link-only`, `title`, `comment`) applies to
+bridges too; (4) the dispatcher gained `OutboxChannel`: a channel throws `Skip` (cancel), `Permanent` (dead letter at once: 4xx, a redirect, a bridge that cannot
+post) or `Deferred` (over `bridges.per-minute`: pending again, no attempt counted), anything else is retried with the outbox backoff; the dispatcher runs when email
+or any bridge is available; (5) every post is an audit-log entry `collab.bridge.post` (subject = the bridge, detail = event, id, delivery), every dead letter
+`collab.bridge.dead`, every test `collab.bridge.test`; no access-log row is added, because the share's own `share` row already records the disclosure
+decision; (6) `GET /admin/collab/bridges` shows each bridge's host, status (`ok`, or why not, naming the variables) and its outbox counts, never the URL path or the
+secret; (7) no secret is ever logged: failures are described by status or exception class only; (8) problem codes `DRS-7013` (bridge unavailable: off, not usable, or the
+test post failed) and `DRS-7014` (no such bridge). Follow-ups built with it: **mention and reply emails** (`CommentItemRenderer`, templates `mention` and `reply`,
+`EmailNotifier.onComment`; coalescing of several notices into one email is still not built, each mention or reply is one email), **panel titles instead of ids** in
+every email and bridge post (`PanelTitles`, read from the view as the recipient gets it, the id when it cannot be built), and the **inbox purge** by
+`inbox.keep-days` (`InboxPurge`, every `retention.interval`; this closes deviation (7) of step 7). Tests: `BridgeDeliveryTest` (payload shapes against an in-process
+fake endpoint, HMAC, masked values never sent, routing, retry, dead letter, rate limit, redirect, secrets), `BridgeRegistryTest`, `CommentMailTest`,
+`InboxPurgeTest`, the inbox purge in the store contract.
 
 **Step 7 as built, and where it differs from the design above.** `Hold`, `HoldStore` (JPA and `holds.json`), `drishti.collab.retention` (`keep-days`,
 `kinds`, `interval`; `packs.<pack>.retention-days`), `CollabPurge` (daily, only when some retention is above 0; holds win; whole threads; audited with the

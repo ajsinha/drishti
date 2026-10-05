@@ -41,6 +41,17 @@ class FileCollabStoreTest {
     }
 
     @Test
+    void inboxPurgeFollowsTheContractAndSurvivesARestart() throws Exception {
+        Path dir = Files.createTempDirectory("collab-inbox-purge");
+        FileInboxStore store = new FileInboxStore(dir, 1000);
+        CollabStoreChecks.inboxPurge(store);
+        store.add(new Notice(0, "keeper", Instant.now().minus(java.time.Duration.ofDays(90)), "share", "trade", "MX-9", null, null, null, null, "ann", null));
+        assertThat(store.purgeBefore(Instant.now().minus(java.time.Duration.ofDays(30)))).isEqualTo(1);
+        FileInboxStore again = new FileInboxStore(dir, 1000);
+        assertThat(again.list("keeper", null, false, 10, 0)).isEmpty();
+    }
+
+    @Test
     void outboxFollowsTheContractAndSurvivesARestart() throws Exception {
         Path dir = Files.createTempDirectory("collab-outbox");
         CollabStoreChecks.outbox(new FileOutboxStore(dir));

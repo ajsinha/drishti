@@ -117,6 +117,12 @@ public final class JpaInboxStore implements InboxStore {
     }
 
     @Override
+    public int purgeBefore(Instant before) {
+        Integer n = tx.execute(t -> inbox.deleteOlderThan(before));
+        return n == null ? 0 : n;
+    }
+
+    @Override
     public void forget(String username) {
         tx.executeWithoutResult(t -> inbox.deleteByUsername(username));
     }

@@ -139,6 +139,7 @@ abstract class IdentityStoreContract {
     void sharesAndInboxRoundTripInTheDatabase() {
         com.ash.drishti.identity.collab.CollabStoreChecks.shares(bean(com.ash.drishti.identity.collab.ShareStore.class));
         com.ash.drishti.identity.collab.CollabStoreChecks.inbox(bean(com.ash.drishti.identity.collab.InboxStore.class));
+        com.ash.drishti.identity.collab.CollabStoreChecks.inboxPurge(bean(com.ash.drishti.identity.collab.InboxStore.class));
     }
 
     @Test

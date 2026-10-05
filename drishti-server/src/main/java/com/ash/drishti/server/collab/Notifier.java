@@ -38,7 +38,13 @@ public interface Notifier {
      */
     record CommentEvent(String type, CommentThread thread, Comment comment, String shareId, List<String> recipients) {}
 
-    /** The channel's name: {@code in-app}, {@code email}. A share may ask for {@code email} only when a notifier of that channel is on. */
+    /**
+     * A comment as it was posted, whoever is in its audience: {@code mentions} says it addressed someone. For channels that carry
+     * the activity itself (bridges); never called for a reply inside a share's private thread. Runs in the comment's transaction.
+     */
+    record CommentPosted(CommentThread thread, Comment comment, boolean mentions) {}
+
+    /** The channel's name: {@code in-app}, {@code email}, {@code bridge}. A share may ask for {@code email} only when a notifier of that channel is on. */
     String channel();
 
     /** True when the channel can deliver now (email: configured and enabled). */
@@ -53,4 +59,7 @@ public interface Notifier {
     default List<Notice> onComment(CommentEvent event) {
         return List.of();
     }
+
+    /** Called once for every comment posted to a discussion thread, with or without an audience; channels that route by event use it. */
+    default void onCommentPosted(CommentPosted event) {}
 }

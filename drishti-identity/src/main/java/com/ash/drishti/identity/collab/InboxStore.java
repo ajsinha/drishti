@@ -45,6 +45,9 @@ public interface InboxStore {
     /** Keeps only the user's newest {@code keep} rows. */
     void prune(String username, int keep);
 
+    /** Removes every user's rows older than the instant (inbox.keep-days); returns how many. */
+    int purgeBefore(Instant before);
+
     /** Removes a user's rows (the user was deleted). */
     void forget(String username);
 }
