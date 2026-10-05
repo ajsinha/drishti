@@ -241,6 +241,7 @@ def create_app(settings: Settings) -> FastAPI:
     from core import builder as screen_builder
 
     app.state.builder_limits = screen_builder.Limits.from_settings(settings)
+    app.state.pack_upload_limit = int(settings.get("packs.deploy_max_mb", 50)) * 1048576       # Admin → Packs → Deploy archive; the server refuses the same way
     from core.asof import BusinessDates
 
     app.state.business_dates = BusinessDates()

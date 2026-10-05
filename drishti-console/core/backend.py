@@ -515,6 +515,10 @@ class BackendClient:
             kw["json"] = body
         return await self._send(method, "/admin" + path, ident, **kw)
 
+    async def admin_upload(self, path: str, ident, data: bytes, headers: dict, timeout: float = 120.0):
+        """Sends raw bytes to an admin endpoint (a pack archive); ``headers`` carry its file name, checksum and signature."""
+        return await self._send("POST", "/admin" + path, ident, content=data, headers={"Content-Type": "application/octet-stream", **headers}, timeout=timeout)
+
     async def stream(self, kind: str, id_: str, ident=None, opened: list | None = None):
         """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends (see ``sse`` for ``opened``)."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}

@@ -15,6 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Packs · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -28,7 +29,9 @@
     what it builds on. The choice is kept across restarts and recorded in the <a href="/admin/audit">audit log</a>.
     <b>Load</b> brings in a pack that is on disk but not loaded: it is checked with the loaded packs first, then the server restarts
     in its own process (a few seconds; signed-in users stay signed in and live views reconnect). <b>Unload</b> takes back a pack
-    loaded here.</p>
+    loaded here. <b>Deploy an archive</b> (below) brings a new version of a pack from a file: it is checked, you see what it changes,
+    and only then is it deployed; the version it replaces is kept so you can <b>Roll back</b>. <b>Data source</b> shows where a
+    loaded pack reads its data and lets you change it without touching the pack's files.</p>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <div class="tbl-wrap"><table class="tbl adm-tbl">
     <thead><tr><th>Pack</th><th>What it brings</th><th>Builds on</th><th>Kinds</th><th>Connectors</th><th>Status</th><th>Changed</th><th></th></tr></thead>
@@ -41,17 +44,76 @@
         <td class="mono">{% if p.loaded %}{{ (p.kinds or []) | length }}{% if p.mnemonics %} <span class="text-muted-d">({{ p.mnemonics[:4] | join(' ') }}{{ ' …' if p.mnemonics | length > 4 }})</span>{% endif %}{% else %}—{% endif %}</td>
         <td class="mono">{{ (p.connectors or []) | join(', ') or '—' }}</td>
         <td>{% if not p.loaded %}<span class="st" title="On disk; Load it from here, or name it in drishti.packs.enabled (DRISHTI_PACKS)">not loaded</span>
-            {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}</td>
+            {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
+            {% if p.dataSourceOverridden %}<span class="st st-warn" title="An administrator override changes this pack's data source (Data source)">data source overridden</span>{% endif %}</td>
         <td class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if p.loaded %}
           <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
             {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
+          <button type="button" class="fk" data-datasource title="Where this pack reads its data: see it, test it, change it">Data source</button>
           {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from this page: unload it (the server restarts in place)">Unload</button>{% endif %}
         {% else %}<button type="button" class="fk" data-load="load" title="Check the pack, then restart the server in place to load it">Load</button>{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
   </table></div>
+  <h2 class="ws-h" id="deploy">Deploy an archive</h2>
+  <p class="text-muted-d">Choose a pack archive: a <span class="mono">.tar.gz</span> made by <span class="mono">drishti.py pack bundle</span> or
+    <span class="mono">pack make</span> (or a <span class="mono">.zip</span>). The archive carries the <b>pack only, never data</b>. The server checks it before
+    anything changes: its checksums and manifest, that no path leaves the pack folder, the server version it needs, the Sutras (lint and tests), the packs it builds
+    on, and an optional signature. Then you see what it would change from the running version, with breaking changes marked, and confirm.</p>
+  <div class="dep" data-deploy data-max-mb="{{ deploy_max_mb }}">
+    <div class="dep-drop" data-drop>
+      <label for="depFile">Pack archive <span class="text-muted-d">(up to {{ deploy_max_mb }} MB; drop a file here or choose one)</span></label>
+      <input type="file" id="depFile" data-file accept=".tar.gz,.tgz,.zip,application/gzip,application/zip">
+      <button type="button" class="btn-pill btn-accent" data-upload disabled>Upload and check</button>
+    </div>
+    <details class="dep-adv"><summary>Signed archive?</summary>
+      <label>Publisher <input class="studio-in" data-publisher autocomplete="off" placeholder="acme" aria-describedby="depSigHelp"></label>
+      <label>Signature (base64 Ed25519 of the archive) <input class="studio-in" data-signature autocomplete="off"></label>
+      <p class="adm-hint text-muted-d" id="depSigHelp">The publisher's key must be listed in <span class="mono">drishti.packs.registry.trusted-keys</span>. Unsigned archives are accepted unless the server requires signatures.</p>
+    </details>
+    <p class="adm-msg" data-dep-msg role="status" aria-live="polite"></p>
+    <div class="dep-result" data-result hidden></div>
+  </div>
+
+  <h2 class="ws-h" id="history">History and roll back</h2>
+  <p class="text-muted-d">Every deployment and rollback, newest first. The last few versions of a pack are kept so it can go back; rolling back is itself kept,
+    so it can be undone. If the server cannot start with new files it puts the old ones back by itself and the history says <i>reverted</i>.</p>
+  {% set kept = history.kept or {} %}
+  {% set any_kept = namespace(v=false) %}{% for n, ks in kept.items() %}{% if ks %}{% set any_kept.v = true %}{% endif %}{% endfor %}
+  {% if any_kept.v %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-kept>
+    <caption class="sr-only">Versions kept for a rollback</caption>
+    <thead><tr><th>Pack</th><th>Kept version</th><th>Kept at</th><th></th></tr></thead>
+    <tbody>{% for n, ks in kept.items() %}{% for k in ks %}
+      <tr data-pack="{{ n }}" data-version="{{ k.version }}"><td class="mono">{{ n }}</td>
+        <td class="mono">{% if k.version == 'shipped' %}shipped with the server ({{ k.shippedVersion }}){% else %}{{ k.version }}{% endif %}</td>
+        <td class="mono">{{ (k.keptAt or '')[:16] | replace('T', ' ') or '—' }}</td>
+        <td class="adm-actions"><button type="button" class="fk" data-rollback>Roll back to this</button></td></tr>
+    {% endfor %}{% endfor %}</tbody></table></div>
+  {% endif %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-history>
+    <caption class="sr-only">Deployments and rollbacks</caption>
+    <thead><tr><th>When (UTC)</th><th>What</th><th>Pack</th><th>Version</th><th>Replaced</th><th>By</th><th>Detail</th></tr></thead>
+    <tbody>{% for r in history.history %}
+      <tr><td class="mono">{{ r.at[:19] | replace('T', ' ') }}</td><td>{{ r.action }}</td><td class="mono">{{ r.pack }}</td><td class="mono">{{ r.version }}</td>
+        <td class="mono">{{ r.previous or '—' }}</td><td>{{ r.by }}</td><td class="cmp-path">{{ r.detail }}</td></tr>
+    {% else %}<tr><td colspan="7" class="text-muted-d">Nothing has been deployed from here yet.</td></tr>{% endfor %}</tbody></table></div>
+
+  <dialog class="adm-dialog ds-dialog" data-ds-dialog aria-labelledby="dsTitle">
+    <div class="ds-head"><h2 id="dsTitle" data-ds-title>Data source</h2>
+      <button type="button" class="btn-pill btn-ghost" data-ds-close aria-label="Close the data source panel">Close</button></div>
+    <p class="text-muted-d" data-ds-intro></p>
+    <div data-ds-body></div>
+    <p class="adm-msg" data-ds-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions">
+      <button type="button" class="btn-pill btn-ghost" data-ds-reset>Reset to the pack's defaults</button>
+      <button type="button" class="btn-pill btn-ghost" data-ds-test>Test connection</button>
+      <button type="button" class="btn-pill btn-accent" data-ds-save>Save and apply</button>
+    </div>
+  </dialog>
+
   {% if registry and registry.configured %}
   <h2 class="ws-h" id="registry">From the registry</h2>
   <p class="text-muted-d">Packs offered by <span class="mono">{{ registry.url }}</span>. Each archive is checked before anything changes:
@@ -79,4 +141,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script>{% endblock %}

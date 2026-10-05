@@ -1,0 +1,53 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin → Packs: Deploy archive, history and the Data source panel. Colours come from the theme tokens, so light and dark both work;
+   meaning is never carried by colour alone (every state has its word). */
+.dep { margin: .4rem 0 1rem; }
+.dep-drop { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; border: 2px dashed var(--d-border); border-radius: 8px; padding: .8rem 1rem; }
+.dep-drop label { flex: 1 1 100%; color: var(--d-ink); }
+.dep-drop input[type="file"] { flex: 1 1 18rem; min-width: 0; color: var(--d-ink); }
+.dep-over { border-color: var(--d-accent); background: var(--d-emph-bg); }
+.dep-adv { margin: .5rem 0; }
+.dep-adv label { display: flex; flex-direction: column; gap: .2rem; color: var(--d-muted); font-size: .85rem; margin: .4rem 0; max-width: 34rem; }
+.dep-result { border: 1px solid var(--d-border); border-radius: 8px; padding: .4rem 1rem 1rem; margin-top: .6rem; background: var(--d-surface); }
+.dep-result h3 { font-size: 1rem; margin: .8rem 0 .3rem; }
+.dep-checks { list-style: none; margin: 0; padding: 0; }
+.dep-checks li { padding: .15rem 0; }
+.dep-mark { display: inline-block; min-width: 3.2rem; font-weight: 700; font-size: .75rem; letter-spacing: .03em; }
+.dep-ok .dep-mark { color: var(--d-ok); } .dep-warn .dep-mark { color: var(--d-warn); } .dep-fail .dep-mark { color: var(--d-bad); }
+.dep-lv { margin: .6rem 0; }
+.dep-lv h4 { font-size: .9rem; margin: .2rem 0; }
+.dep-lv-breaking { border: 2px solid var(--d-bad); border-radius: 8px; padding: .3rem .8rem .6rem; background: var(--d-emph-bg); }
+.dep-lv-breaking h4 { color: var(--d-bad); }
+.dep-actions { margin-top: .8rem; }
+.ds-dialog { width: min(980px, 96vw); max-height: 92vh; overflow: auto; }
+.ds-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.ds-head h2 { margin: 0; font-size: 1.2rem; }
+.ds-conn { border: 1px solid var(--d-border); border-radius: 8px; padding: .3rem .9rem .8rem; margin: .7rem 0; }
+.ds-conn h3 { font-size: 1rem; margin: .5rem 0 .2rem; }
+.ds-tbl td { vertical-align: middle; }
+.ds-tbl input { width: 100%; min-width: 12rem; }
+.ds-add { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+.ds-add input { flex: 1 1 12rem; min-width: 0; }
+.ds-num { text-align: right; }
+.ds-test { margin-top: .5rem; }
+.ds-actions { flex-wrap: wrap; position: sticky; bottom: 0; background: var(--d-surface); padding-top: .5rem; }
+@media (max-width: 640px) {
+  .dep-drop input[type="file"] { flex-basis: 100%; }
+  .ds-dialog { padding: .8rem; }
+  .ds-tbl input { min-width: 8rem; font-size: 16px; }
+  .ds-actions .btn-pill, .dep-actions .btn-pill { flex: 1 1 100%; min-height: 44px; }
+}

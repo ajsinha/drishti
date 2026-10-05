@@ -21,7 +21,7 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from core.csrf import json_body
+from core.csrf import BodyError, json_body, limited_body
 from core.backend import BackendError
 from routes.common import ident, render
 
@@ -105,7 +105,114 @@ async def packs(request: Request):
         registry = await request.app.state.backend.admin("GET", "/registry", me)
     except BackendError as e:
         registry = {"configured": True, "error": e.detail, "packs": []}
-    return render(request, "admin/packs.html", packs=rows, registry=registry)
+    try:                                        # deployments and rollbacks, and the versions kept for a rollback
+        history = await request.app.state.backend.admin("GET", "/packs/history", me, limit=30)
+    except BackendError:
+        history = {"history": [], "kept": {}}
+    return render(request, "admin/packs.html", packs=rows, registry=registry, history=history,
+                  deploy_max_mb=request.app.state.pack_upload_limit // 1048576)
+
+
+@router.post("/api/packs/deploy")
+async def deploy_upload(request: Request):
+    """Sends a pack archive (the raw body) to the server to be verified and previewed; nothing changes until it is confirmed."""
+    me = ident(request)
+    if not me.is_admin:
+        return JSONResponse({"code": "DRS-5002", "detail": "administrators only"}, status_code=403)
+    kind = (request.headers.get("content-type") or "").split(";")[0].strip().lower()
+    if kind != "application/octet-stream":
+        raise BodyError(415, "send the archive as application/octet-stream")
+    data = await limited_body(request, request.app.state.pack_upload_limit, "the pack archive")
+    if not data:
+        raise BodyError(400, "choose an archive (.tar.gz or .zip)")
+    headers = {k: v for k, v in ((h, request.headers.get(h)) for h in ("X-Drishti-Filename", "X-Drishti-Sha256", "X-Drishti-Signature", "X-Drishti-Publisher")) if v}
+    try:
+        return await request.app.state.backend.admin_upload("/packs/deploy", me, data, headers)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/packs/deploy/{upload_id}")
+async def deploy_confirm(request: Request, upload_id: str):
+    """Deploys a verified upload; the server restarts in place to read it (and puts the old files back if it cannot start)."""
+    body = await json_body(request)
+    try:
+        out = await request.app.state.backend.admin("POST", f"/packs/deploy/{quote(upload_id)}", ident(request),
+                                                     timeout=60.0, acceptBreaking="true" if body.get("acceptBreaking") else "false")
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()
+    return out
+
+
+@router.delete("/api/packs/deploy/{upload_id}")
+async def deploy_discard(request: Request, upload_id: str):
+    try:
+        return await request.app.state.backend.admin("DELETE", f"/packs/deploy/{quote(upload_id)}", ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/packs/history")
+async def deploy_history(request: Request, pack: str = ""):
+    try:
+        return await request.app.state.backend.admin("GET", "/packs/history", ident(request), limit=100, **({"pack": pack} if pack else {}))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/packs/{name}/rollback")
+async def deploy_rollback(request: Request, name: str):
+    """Goes back to a kept version of a pack (``{version}``: one of the kept versions, or ``shipped``; none: the newest kept)."""
+    body = await json_body(request)
+    params = {"version": str(body["version"])} if body.get("version") else {}
+    try:
+        out = await request.app.state.backend.admin("POST", f"/packs/{quote(name)}/rollback", ident(request), timeout=60.0, **params)
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()
+    return out
+
+
+@router.get("/api/packs/{name}/datasource")
+async def datasource_get(request: Request, name: str):
+    try:
+        return await request.app.state.backend.admin("GET", f"/packs/{quote(name)}/datasource", ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.put("/api/packs/{name}/datasource")
+async def datasource_save(request: Request, name: str):
+    """Saves the administrator's override of the pack's data source and applies it (restart in place, undone if it cannot start)."""
+    body = await json_body(request)
+    try:
+        out = await request.app.state.backend.admin("PUT", f"/packs/{quote(name)}/datasource", ident(request), {"connectors": body.get("connectors") or {}}, timeout=60.0)
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()
+    return out
+
+
+@router.delete("/api/packs/{name}/datasource")
+async def datasource_reset(request: Request, name: str, connector: str = ""):
+    try:
+        out = await request.app.state.backend.admin("DELETE", f"/packs/{quote(name)}/datasource", ident(request), timeout=60.0, **({"connector": connector} if connector else {}))
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()
+    return out
+
+
+@router.post("/api/packs/{name}/datasource/test")
+async def datasource_test(request: Request, name: str):
+    """Tries the settings in force, or an edit not yet saved: dates and row counts per kind. Changes nothing."""
+    body = await json_body(request)
+    try:
+        return await request.app.state.backend.admin("POST", f"/packs/{quote(name)}/datasource/test", ident(request),
+                                                      {"connector": body.get("connector") or None, "connectors": body.get("connectors")}, timeout=90.0)
+    except BackendError as e:
+        return _problem(e)
 
 
 @router.post("/api/packs/{name}")

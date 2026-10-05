@@ -119,3 +119,4 @@ help:
 packs:
   dir: ${DRISHTI_PACKS_DIR:../packs}   # the same packs directory the server uses (one variable sets both)
   enabled: finance           # used only when the server cannot be asked which packs are enabled
+  deploy_max_mb: 50          # largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413)
