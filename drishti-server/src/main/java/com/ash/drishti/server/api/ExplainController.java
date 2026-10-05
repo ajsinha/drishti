@@ -24,6 +24,8 @@ import com.ash.drishti.server.security.Principal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestAttribute;
+import java.util.List;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,10 +55,42 @@ public class ExplainController {
     @GetMapping("/{kind}/{id}/explain")
     public PageContext explain(@PathVariable String kind, @PathVariable String id, AsOf asOf,
             @RequestParam(required = false) String panel, @RequestParam(required = false) Long generation,
+            @RequestParam(required = false) String locale, @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage,
             @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
         entitlements.requireOpen(principal, kind);
         ExplainService.Caller caller = new ExplainService.Caller(principal.user(), entitlements.redactor(principal),
                 k -> entitlements.mayOpen(principal, k), v -> entitlements.restrict(principal, v));
-        return explain.explain(EntityRef.of(kind, id), asOf, caller, panel, generation);
+        return explain.explain(EntityRef.of(kind, id), asOf, caller, panel, generation, languages(locale, acceptLanguage));
+    }
+
+    /** The caller's languages, best first: {@code ?locale=}, then the {@code Accept-Language} tags by quality. */
+    static List<String> languages(String locale, String acceptLanguage) {
+        List<String> out = new java.util.ArrayList<>();
+        if (locale != null && !locale.isBlank()) {
+            out.add(locale);
+        }
+        if (acceptLanguage != null) {
+            List<String[]> tags = new java.util.ArrayList<>();
+            for (String part : acceptLanguage.split(",")) {
+                String[] bits = part.strip().split(";");
+                double q = 1.0;
+                for (int i = 1; i < bits.length; i++) {
+                    String b = bits[i].strip();
+                    if (b.startsWith("q=")) {
+                        try {
+                            q = Double.parseDouble(b.substring(2));
+                        } catch (NumberFormatException ignored) {
+                            q = 0;
+                        }
+                    }
+                }
+                if (!bits[0].isBlank() && !"*".equals(bits[0].strip()) && q > 0) {
+                    tags.add(new String[] {bits[0].strip(), Double.toString(q)});
+                }
+            }
+            tags.sort((a, b) -> Double.compare(Double.parseDouble(b[1]), Double.parseDouble(a[1])));
+            tags.forEach(t -> out.add(t[0]));
+        }
+        return out;
     }
 }

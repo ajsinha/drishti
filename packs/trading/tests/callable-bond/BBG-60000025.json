@@ -1,0 +1,364 @@
+{
+ "tradeId": "BBG-60000025",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000025",
+ "productType": "CALLABLE_BOND",
+ "productName": "Callable bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-12-24",
+ "effectiveDate": "2025-12-26",
+ "maturityDate": "2031-06-16",
+ "currency": "JPY",
+ "notional": 63000000.0,
+ "mtm": -507927,
+ "mtmCurrency": "USD",
+ "pnl1d": 20735,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-JGB",
+ "benchmarkCurve": "CRV-JPY-GOVT",
+ "underlyingBond": "BND-JP0JGB019237",
+ "swaptionVolCube": "IRV-JPY",
+ "terms": {
+  "coupon": 0.01866,
+  "couponFrequency": "Quarterly",
+  "faceAmount": 77787319.0,
+  "cleanPrice": 102.757,
+  "yield": 0.0432,
+  "firstCall": "2030-02-25",
+  "callPrice": 102.91,
+  "oas": 190.6
+ },
+ "risk": {
+  "dv01": -31089,
+  "cs01": -29543,
+  "vega": -215767
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1480,
+   "cs01": -1407,
+   "vega": -10275
+  },
+  {
+   "bucket": "6M",
+   "dv01": -2961,
+   "cs01": -2814,
+   "vega": -20549
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -4441,
+   "cs01": -4220,
+   "vega": -30824
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -5922,
+   "cs01": -5627,
+   "vega": -41098
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -7402,
+   "cs01": -7034,
+   "vega": -51373
+  },
+  {
+   "bucket": "5Y",
+   "dv01": -8883,
+   "cs01": -8441,
+   "vega": -61648
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-12-26",
+   "type": "First call",
+   "strike": 0.027195,
+   "status": "Pending"
+  },
+  {
+   "date": "2027-12-26",
+   "type": "Bermudan call",
+   "strike": 0.020941,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-12-26",
+   "type": "Bermudan call",
+   "strike": 0.043124,
+   "status": "Pending"
+  },
+  {
+   "date": "2029-12-26",
+   "type": "Bermudan call",
+   "strike": 0.040911,
+   "status": "Pending"
+  },
+  {
+   "date": "2030-12-26",
+   "type": "Bermudan call",
+   "strike": 0.041254,
+   "status": "Pending"
+  },
+  {
+   "date": "2031-06-16",
+   "type": "Bermudan call",
+   "strike": 0.025649,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -4656
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 19182
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -16211
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6854
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -28298
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -10324
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 39321
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 5430
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -13836
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -10733
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 75
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 9151
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -9426
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 5784
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 23291
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -12616
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -16071
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 8111
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -26445
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -25668
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-12-24",
+  "executionTimestamp": "2025-12-24T13:07:06.753Z",
+  "venue": "Tradeweb",
+  "venueMic": "TWEM",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-121949A18D"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-12-24T10:31:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-12-24T10:31:00Z",
+  "lastModifiedAt": "2025-12-24T10:31:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-12-24",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: short Callable bond"
+   },
+   {
+    "date": "2025-12-24",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT626192304)"
+   },
+   {
+    "date": "2025-12-25",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to JSCC"
+   },
+   {
+    "date": "2026-12-26",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2031-06-16",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT626192304",
+  "matched": "2025-12-24 17:46",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "JSCC",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH5950401590",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096121949A18D7EA6FDBE10",
+  "upi": "QZHW8659J043",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-JPY-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -507927,
+  "cleanPv": -507927.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-JPY-GOVT",
+   "BND-JP0JGB019237",
+   "IRV-JPY"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -528662,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1656
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 436
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 18375
+  },
+  {
+   "step": "FX delta",
+   "pnl": 472
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 260
+  },
+  {
+   "step": "Theta",
+   "pnl": 157
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -621
+  }
+ ],
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 1646
+  }
+ }
+}

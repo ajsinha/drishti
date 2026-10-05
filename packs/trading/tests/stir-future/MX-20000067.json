@@ -1,0 +1,283 @@
+{
+ "tradeId": "MX-20000067",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000067",
+ "productType": "STIR_FUTURE",
+ "productName": "Short-term interest rate future",
+ "assetClass": "Rates",
+ "family": "future",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2026-09-01",
+ "effectiveDate": "2026-09-03",
+ "maturityDate": "2027-05-21",
+ "currency": "GBP",
+ "notional": 201000000.0,
+ "mtm": 197399,
+ "mtmCurrency": "USD",
+ "pnl1d": 2315,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-MOKAFOR",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-GBP-PROJ",
+ "terms": {
+  "contract": "SR3 Z6",
+  "lots": 1918,
+  "tradePrice": 96.061
+ },
+ "risk": {
+  "dv01": -11725
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -1954
+  },
+  {
+   "bucket": "6M",
+   "dv01": -3908
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -5862
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 8919
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -5467
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3040
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 2821
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -34
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -5644
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 2346
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 1512
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 7549
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 7379
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5399
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 6601
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1776
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -4289
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 8662
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -3453
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4356
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 6649
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -3972
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 4068
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-01",
+  "executionTimestamp": "2026-09-01T09:16:40.373Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "M. Okafor",
+  "salesperson": null,
+  "orderId": "ORD-A2B8369B88"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-01T09:13:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-01T09:13:00Z",
+  "lastModifiedAt": "2026-09-01T09:13:00Z",
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-09-01",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-MOKAFOR: short Short-term interest rate future"
+   },
+   {
+    "date": "2026-09-01",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA946469029)"
+   },
+   {
+    "date": "2026-09-02",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2027-05-21",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA946469029",
+  "matched": "2026-09-01 14:45",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH3223272557",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A2B8369B8841BF477828",
+  "upi": "QZ9ZAUQGJGYU",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-GBP-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 197399,
+  "cleanPv": 197399.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-GBP-PROJ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 195084,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -158
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -906
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 3270
+  },
+  {
+   "step": "FX delta",
+   "pnl": 57
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 6
+  },
+  {
+   "step": "Theta",
+   "pnl": 85
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -39
+  }
+ ],
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2405
+  }
+ }
+}

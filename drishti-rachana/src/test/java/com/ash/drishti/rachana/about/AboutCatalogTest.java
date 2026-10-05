@@ -149,4 +149,57 @@ class AboutCatalogTest {
         assertThat(r.text()).startsWith("a ").contains(" b abcdef");
         assertThat(t.render(ctx(Map.of("name", "abcdef")), List.of(), 8).text()).hasSize(8).endsWith("…");
     }
+
+    private static final String FR = """
+            about: 1
+            vocabulary:
+              amount: { term: Montant, means: Le sens du parent., unit: USD }
+            kinds:
+              thing:
+                title: Chose
+                about: "Chose ${$.name}."
+                glossary:
+                  qty: { term: Quantite, means: Combien. }
+            """;
+
+    @Test
+    void anOverlayTranslatesKeyByKeyAndFallsBackToEnglishForTheRest() throws Exception {
+        write("about.fr.yaml", FR);
+        write("about.fr-ca.yaml", "about: 1\nkinds:\n  thing:\n    title: Chose canadienne\n");
+        AboutCatalog c = catalog(write("about.yaml", BASE), null);
+        assertThat(c.problems()).isEmpty();
+        assertThat(c.locales()).containsExactly("fr", "fr-ca");
+        AboutText en = c.forKind("thing", "en").orElseThrow();
+        assertThat(en.title()).isEqualTo("Base thing");
+        AboutText fr = c.forKind("thing", "fr").orElseThrow();
+        assertThat(fr.title()).isEqualTo("Chose");
+        assertThat(fr.render(ctx(Map.of("name", "X")), List.of("main"), 1000).text()).isEqualTo("Chose X.");
+        assertThat(fr.render(ctx(Map.of("name", "X")), List.of("main"), 1000).panels()).containsEntry("main", "Base panel for X.");   // untranslated: English
+        assertThat(fr.glossary().get("qty").term()).isEqualTo("Quantite");
+        assertThat(fr.glossary().get("amount").term()).isEqualTo("Montant");                // use: resolves to the translated vocabulary
+        assertThat(fr.guide()).isEqualTo("base#thing");
+        AboutText ca = c.forKind("thing", "fr-ca").orElseThrow();
+        assertThat(ca.title()).isEqualTo("Chose canadienne");
+        assertThat(ca.glossary().get("qty").term()).isEqualTo("Quantite");                  // the plain language fills in before English
+        assertThat(c.forKind("thing").orElseThrow().title()).isEqualTo("Base thing");       // the English view never changes
+    }
+
+    @Test
+    void localeForPicksTheFirstTagWithAnOverlayThenItsLanguageThenEnglish() throws Exception {
+        write("about.fr.yaml", FR);
+        AboutCatalog c = catalog(write("about.yaml", BASE), null);
+        assertThat(c.localeFor(List.of("de", "fr_CA", "en"))).isEqualTo("fr");
+        assertThat(c.localeFor(List.of("FR"))).isEqualTo("fr");
+        assertThat(c.localeFor(List.of("de", "en-GB"))).isEqualTo("en");
+        assertThat(c.localeFor(null)).isEqualTo("en");
+        assertThat(c.forKind("thing", "xx").orElseThrow().title()).isEqualTo("Base thing");
+    }
+
+    @Test
+    void aBrokenOverlayIsListedUnderItsOwnNameAndEnglishStands() throws Exception {
+        write("about.fr.yaml", "about: 1\nkinds:\n  thing:\n    titel: oops\n");
+        AboutCatalog c = catalog(write("about.yaml", BASE), null);
+        assertThat(c.problems()).containsKey("base/about.fr.yaml");
+        assertThat(c.forKind("thing", "fr").orElseThrow().title()).isEqualTo("Base thing");
+    }
 }

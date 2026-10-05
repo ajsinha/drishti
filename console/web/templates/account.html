@@ -44,6 +44,8 @@
       <label for="sZone">Clock time zone</label>
       <select id="sZone" name="clockZone"><option value="">Default ({{ CLOCK_LABEL }})</option>
         {% for z in zones %}<option value="{{ z }}"{% if settings.clockZone == z %} selected{% endif %}>{{ z | replace('_', ' ') }}</option>{% endfor %}</select>
+      <label for="sLocale">Language of help text</label>
+      <input id="sLocale" name="locale" class="mono" maxlength="20" value="{{ settings.locale or '' }}" placeholder="Default (your browser's language), or a tag such as fr">
       <label for="sDensity">Density</label>
       <select id="sDensity" name="density">{% for d in ['comfortable', 'compact'] %}<option value="{{ d }}"{% if settings.density == d %} selected{% endif %}>{{ d | capitalize }}</option>{% endfor %}</select>
       <label for="sFlash">Flash changed values</label>

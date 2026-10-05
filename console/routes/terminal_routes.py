@@ -201,8 +201,15 @@ async def compare(request: Request, kind: str, id_: str, from_: str = Query("", 
 @router.get("/v/{kind}/{id_:path}/about")
 async def about(request: Request, kind: str, id_: str, generation: int = 0):
     """The body of the About this page drawer (an HTML fragment), asked for when the drawer first opens, never with the view."""
+    me = ident(request)
+    extra = {}                                       # the language of the pack's text: ?locale=, else the user's setting, else the browser's
+    loc = request.query_params.get("locale") or (await request.app.state.user_settings.get(request.app.state.backend, me)).get("locale")
+    if loc:
+        extra["locale"] = loc
+    if request.headers.get("accept-language"):
+        extra["accept_language"] = request.headers["accept-language"]
     try:
-        ex = await request.app.state.backend.explain(kind, id_, ident(request), generation or None)
+        ex = await request.app.state.backend.explain(kind, id_, me, generation or None, **extra)
     except BackendError as e:
         return render(request, "terminal/_about.html", status_code=e.page_status, ex=None, error=e, kind=kind, id=id_)
     return render(request, "terminal/_about.html", ex=ex, error=None, kind=kind, id=id_, index=about_index.build(ex))

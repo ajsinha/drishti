@@ -1,0 +1,50 @@
+{
+ "resultId": "CST-CURRENTPOLICIES-COMM",
+ "scenarioName": "Current policies",
+ "deskName": "Commodities",
+ "loss2030": -10204990,
+ "loss2050": -16327984,
+ "capitalShare": 0.00255,
+ "bySector": [
+  {
+   "sector": "Utilities",
+   "loss": -1196592
+  },
+  {
+   "sector": "Airlines",
+   "loss": -2785470
+  },
+  {
+   "sector": "Shipping",
+   "loss": -2817917
+  },
+  {
+   "sector": "Materials",
+   "loss": -1631093
+  },
+  {
+   "sector": "Autos",
+   "loss": -1773918
+  }
+ ],
+ "byHorizon": [
+  {
+   "year": "2030",
+   "loss": 10204990
+  },
+  {
+   "year": "2040",
+   "loss": 13266487
+  },
+  {
+   "year": "2050",
+   "loss": 16327984
+  }
+ ],
+ "climateScenario": "NGFS-CURRENTPOLICIES",
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "climate-stress",
+  "generation": 1
+ }
+}

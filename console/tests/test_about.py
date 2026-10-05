@@ -120,3 +120,27 @@ def test_the_idle_prefetch_follows_the_setting(client, monkeypatch):
     assert "hasAttribute('data-about-prefetch')" in js, "the idle fetch must depend on the setting"
     monkeypatch.setitem(client.app.state.templates.env.globals, "ABOUT_PREFETCH", False)
     assert "data-about-prefetch" not in client.get("/v/trade/IRS-48213").text
+
+
+def test_the_language_of_the_text_is_the_query_then_the_users_setting_then_the_browsers(client, backend, monkeypatch):
+    # docs/architecture/CONTEXT_HELP.md, step 5: the console only passes the choice on; the server picks the overlay and says which it used
+    client.get("/v/trade/IRS-48213/about?locale=fr")
+    assert ("explain-language", "fr", None) in backend.calls
+    backend.calls.clear()
+    client.get("/v/trade/IRS-48213/about", headers={"Accept-Language": "de;q=0.9, fr;q=0.8"})
+    assert ("explain-language", None, "de;q=0.9, fr;q=0.8") in backend.calls
+    backend.calls.clear()
+    client.get("/v/trade/IRS-48213/about")
+    assert not [c for c in backend.calls if c[0] == "explain-language"]                   # nothing asked for: the server answers in English
+
+
+def test_the_users_language_setting_reaches_the_server(client, backend, monkeypatch):
+    async def settings(ident):
+        return {"locale": "fr-CA"}
+    monkeypatch.setattr(backend, "settings", settings)
+    client.app.state.user_settings.forget("ash")
+    try:
+        client.get("/v/trade/IRS-48213/about")
+        assert ("explain-language", "fr-CA", None) in backend.calls
+    finally:
+        client.app.state.user_settings.forget("ash")              # the settings cache outlives the test: later tests must not see fr-CA

@@ -1,0 +1,80 @@
+{
+ "flowId": "TFLOW-JP-CN",
+ "reporterName": "Japan",
+ "partnerName": "China",
+ "exports": 224,
+ "imports": 580,
+ "balance": -356,
+ "tariff": 0.0483,
+ "products": [
+  {
+   "product": "Metals",
+   "value": 63
+  },
+  {
+   "product": "Electronics",
+   "value": 45
+  },
+  {
+   "product": "Chemicals",
+   "value": 31
+  },
+  {
+   "product": "Vehicles",
+   "value": 22
+  },
+  {
+   "product": "Pharmaceuticals",
+   "value": 16
+  }
+ ],
+ "balanceHistory": [
+  {
+   "year": "2016",
+   "balance": -283
+  },
+  {
+   "year": "2017",
+   "balance": -300
+  },
+  {
+   "year": "2018",
+   "balance": -331
+  },
+  {
+   "year": "2019",
+   "balance": -340
+  },
+  {
+   "year": "2020",
+   "balance": -273
+  },
+  {
+   "year": "2021",
+   "balance": -327
+  },
+  {
+   "year": "2022",
+   "balance": -289
+  },
+  {
+   "year": "2023",
+   "balance": -371
+  },
+  {
+   "year": "2024",
+   "balance": -357
+  },
+  {
+   "year": "2025",
+   "balance": -347
+  }
+ ],
+ "economy": "ECON-JP",
+ "partner": "ECON-CN",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -1,0 +1,82 @@
+{
+ "branchId": "BRN-FRA-MAIN",
+ "name": "Frankfurt Main",
+ "city": "Frankfurt",
+ "customers": 10569,
+ "deposits": 1485766000.0,
+ "lending": 4700999000.0,
+ "nps": 45,
+ "productMix": [
+  {
+   "product": "Mortgage",
+   "balance": 4648078000.0
+  },
+  {
+   "product": "Savings",
+   "balance": 1248657000.0
+  },
+  {
+   "product": "Current account",
+   "balance": 237109000.0
+  },
+  {
+   "product": "Credit card",
+   "balance": 52920000.0
+  }
+ ],
+ "npsHistory": [
+  {
+   "month": "2025-10",
+   "nps": 42
+  },
+  {
+   "month": "2025-11",
+   "nps": 22
+  },
+  {
+   "month": "2025-12",
+   "nps": 18
+  },
+  {
+   "month": "2026-01",
+   "nps": 19
+  },
+  {
+   "month": "2026-02",
+   "nps": 34
+  },
+  {
+   "month": "2026-03",
+   "nps": 15
+  },
+  {
+   "month": "2026-04",
+   "nps": 28
+  },
+  {
+   "month": "2026-05",
+   "nps": 46
+  },
+  {
+   "month": "2026-06",
+   "nps": 48
+  },
+  {
+   "month": "2026-07",
+   "nps": 20
+  },
+  {
+   "month": "2026-08",
+   "nps": 21
+  },
+  {
+   "month": "2026-09",
+   "nps": 15
+  }
+ ],
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

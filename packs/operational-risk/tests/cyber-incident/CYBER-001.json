@@ -1,0 +1,34 @@
+{
+ "incidentId": "CYBER-001",
+ "title": "Malware on a jump host",
+ "severity": "Sev 3",
+ "detectHours": 10.9,
+ "containHours": 95.7,
+ "recordsAffected": 120,
+ "status": "Monitoring",
+ "timeline": [
+  {
+   "at": "2026-06-03 09:12",
+   "step": "First alert (SOC)"
+  },
+  {
+   "at": "2026-06-03 +10.9h",
+   "step": "Confirmed"
+  },
+  {
+   "at": "2026-06-03 +95.7h",
+   "step": "Contained"
+  }
+ ],
+ "systems": {
+  "affected": "Settlement platform",
+  "ownerTeam": "Cyber defence",
+  "externalReported": false
+ },
+ "legalEntity": "LE-FRA",
+ "relatedLoss": "LOSS-2026-0008",
+ "_meta": {
+  "source": "soc",
+  "generation": 1
+ }
+}

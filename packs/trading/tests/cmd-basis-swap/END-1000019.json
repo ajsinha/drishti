@@ -1,0 +1,521 @@
+{
+ "tradeId": "END-1000019",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000019",
+ "productType": "CMD_BASIS_SWAP",
+ "productName": "Commodity basis swap",
+ "assetClass": "Commodity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Receive fixed",
+ "tradeDate": "2026-01-02",
+ "effectiveDate": "2026-01-05",
+ "maturityDate": "2032-10-26",
+ "currency": "USD",
+ "notional": 7000000.0,
+ "mtm": 17280,
+ "mtmCurrency": "USD",
+ "pnl1d": -73,
+ "counterparty": {
+  "id": "CP-CASCADIA",
+  "name": "Cascadia Airlines Inc."
+ },
+ "nettingSet": "NS-CASCADIA-NY",
+ "book": "BOOK-COMM-2",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-GOLD",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "spread": -7.99,
+  "location": "Henry Hub vs Waha"
+ },
+ "risk": {
+  "delta": -21825
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -1039
+  },
+  {
+   "bucket": "1M",
+   "delta": -2079
+  },
+  {
+   "bucket": "3M",
+   "delta": -3118
+  },
+  {
+   "bucket": "6M",
+   "delta": -4157
+  },
+  {
+   "bucket": "1Y",
+   "delta": -5196
+  },
+  {
+   "bucket": "2Y",
+   "delta": -6236
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Receive performance",
+   "payReceive": "Receive",
+   "rateType": "Performance",
+   "index": "GOLD",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 7000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Pay SOFR + spread",
+   "payReceive": "Pay",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 7000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "fixingDate": "2026-04-05",
+   "period": "2026-04-05..2026-07-05",
+   "index": "SOFR",
+   "rate": 0.020827,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-07-05",
+   "period": "2026-07-05..2026-10-05",
+   "index": "SOFR",
+   "rate": 0.03394,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-10-05",
+   "period": "2026-10-05..2027-01-05",
+   "index": "SOFR",
+   "rate": 0.035902,
+   "payoff": 1578.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-01-05",
+   "period": "2027-01-05..2027-04-05",
+   "index": "SOFR",
+   "rate": 0.046039,
+   "payoff": 19318.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-04-05",
+   "period": "2027-04-05..2027-07-05",
+   "index": "SOFR",
+   "rate": 0.035141,
+   "payoff": 246.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-07-05",
+   "period": "2027-07-05..2027-10-05",
+   "index": "SOFR",
+   "rate": 0.023824,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2027-10-05",
+   "period": "2027-10-05..2028-01-05",
+   "index": "SOFR",
+   "rate": 0.032658,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-01-05",
+   "period": "2028-01-05..2028-04-05",
+   "index": "SOFR",
+   "rate": 0.037098,
+   "payoff": 3671.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-04-05",
+   "period": "2028-04-05..2028-07-05",
+   "index": "SOFR",
+   "rate": 0.04407,
+   "payoff": 15872.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-07-05",
+   "period": "2028-07-05..2028-10-05",
+   "index": "SOFR",
+   "rate": 0.036572,
+   "payoff": 2751.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2028-10-05",
+   "period": "2028-10-05..2029-01-05",
+   "index": "SOFR",
+   "rate": 0.021245,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-01-05",
+   "period": "2029-01-05..2029-04-05",
+   "index": "SOFR",
+   "rate": 0.025376,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-04-05",
+   "period": "2029-04-05..2029-07-05",
+   "index": "SOFR",
+   "rate": 0.047756,
+   "payoff": 22323.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-07-05",
+   "period": "2029-07-05..2029-10-05",
+   "index": "SOFR",
+   "rate": 0.046015,
+   "payoff": 19276.25,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2029-10-05",
+   "period": "2029-10-05..2030-01-05",
+   "index": "SOFR",
+   "rate": 0.03862,
+   "payoff": 6335.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-01-05",
+   "period": "2030-01-05..2030-04-05",
+   "index": "SOFR",
+   "rate": 0.031711,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-04-05",
+   "period": "2030-04-05..2030-07-05",
+   "index": "SOFR",
+   "rate": 0.022576,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-07-05",
+   "period": "2030-07-05..2030-10-05",
+   "index": "SOFR",
+   "rate": 0.021075,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2030-10-05",
+   "period": "2030-10-05..2031-01-05",
+   "index": "SOFR",
+   "rate": 0.040264,
+   "payoff": 9212.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2031-01-05",
+   "period": "2031-01-05..2031-04-05",
+   "index": "SOFR",
+   "rate": 0.044485,
+   "payoff": 16598.75,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2031-04-05",
+   "period": "2031-04-05..2031-07-05",
+   "index": "SOFR",
+   "rate": 0.047566,
+   "payoff": 21990.5,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2031-07-05",
+   "period": "2031-07-05..2031-10-05",
+   "index": "SOFR",
+   "rate": 0.044232,
+   "payoff": 16156.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2031-10-05",
+   "period": "2031-10-05..2032-01-05",
+   "index": "SOFR",
+   "rate": 0.022651,
+   "payoff": 0.0,
+   "status": "Pending"
+  },
+  {
+   "fixingDate": "2032-01-05",
+   "period": "2032-01-05..2032-04-05",
+   "index": "SOFR",
+   "rate": 0.020301,
+   "payoff": 0.0,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 2,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -533
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -706
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4648
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 1913
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1322
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2111
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -2247
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -494
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 2985
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1370
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1689
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4008
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -390
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -3156
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1349
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 216
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1419
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 2469
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 534
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1273
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-02",
+  "executionTimestamp": "2026-01-02T11:00:43.810Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-E23EB6C7E2"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-02T10:11:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2026-01-02T10:11:00Z",
+  "lastModifiedAt": "2026-01-02T10:11:00Z",
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-01-02",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: receive fixed Commodity basis swap"
+   },
+   {
+    "date": "2026-01-02",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT349873576)"
+   },
+   {
+    "date": "2026-07-05",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": 0.0
+   },
+   {
+    "date": "2026-10-05",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2032-10-26",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT349873576",
+  "matched": "2026-01-02 11:10",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096E23EB6C7E2A39558FB54",
+  "upi": "QZ5W79F8AJFX",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "CASCUS33XXX",
+  "ssiId": "SSI-USD-BC4549",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 17280,
+  "cleanPv": 17280.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "CMDC-GOLD",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 17353,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 194
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -64
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -189
+  },
+  {
+   "step": "FX delta",
+   "pnl": 60
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -53
+  },
+  {
+   "step": "Theta",
+   "pnl": -20
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -1
+  }
+ ],
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

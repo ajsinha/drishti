@@ -76,6 +76,30 @@ class ExplainAboutTest {
     }
 
     @Test
+    void theLocaleOverlayAnswersInFrenchFromTheQueryOrAcceptLanguageAndFallsBackToEnglish() throws Exception {
+        String auth = "Bearer " + tokens.mint("u-full", List.of("full"), 300);
+        JsonNode fr = json.readTree(mvc.perform(get("/api/v1/views/var/VAR-COMM/explain?locale=fr").header("Authorization", auth))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(fr.path("locale").asText()).isEqualTo("fr");
+        assertThat(fr.path("about").path("kindTitle").asText()).isEqualTo("Résultat de valeur à risque");
+        assertThat(fr.path("about").path("text").asText()).startsWith("VAR-COMM est une VaR historique à 1 jour et 99 % pour DESK-COMM : 11.0m USD");
+        assertThat(fr.path("about").path("panels").toString()).contains("Les repères sont -VaR");
+        assertThat(fr.path("glossary").toString()).contains("Valeur à risque, 99 %, 1 jour").contains("Exceptions de backtesting");
+        JsonNode viaHeader = json.readTree(mvc.perform(get("/api/v1/views/var/VAR-COMM/explain").header("Authorization", auth)
+                .header("Accept-Language", "de;q=0.9, fr-CA;q=0.8")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(viaHeader.path("locale").asText()).isEqualTo("fr");                       // fr-CA has no overlay of its own: the language's
+        JsonNode untranslated = json.readTree(mvc.perform(get("/api/v1/views/variant/VRNT-APOE-E4/explain?locale=fr").header("Authorization", auth))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(untranslated.path("about").path("kindTitle").asText()).isEqualTo("Sequence variant");   // key by key: English where there is no translation
+        JsonNode en = explain("full", "var/VAR-COMM");
+        assertThat(en.path("locale").asText()).isEqualTo("en");
+        assertThat(en.path("about").path("kindTitle").asText()).isEqualTo("Value-at-risk result");           // the French answer did not leak into the cache
+        JsonNode unknown = json.readTree(mvc.perform(get("/api/v1/views/var/VAR-COMM/explain?locale=de").header("Authorization", auth))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(unknown.path("locale").asText()).isEqualTo("en");
+    }
+
+    @Test
     void aVariantPageIsDescribedInTheGenesTerms() throws Exception {
         String text = explain("full", "variant/VRNT-APOE-E4").path("about").path("text").asText();
         assertThat(text).isEqualTo("VRNT-APOE-E4 is a missense change in APOE (p.Cys130Arg, c.388T>C); it is classified \"Risk factor\" for Late-onset Alzheimer disease.");

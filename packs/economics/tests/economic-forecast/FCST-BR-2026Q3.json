@@ -1,0 +1,66 @@
+{
+ "forecastId": "FCST-BR-2026Q3",
+ "economyName": "Brazil",
+ "vintage": "2026 Q3",
+ "growth2027": 0.022,
+ "inflation2027": 0.047,
+ "recessionProbability": 0.18,
+ "scenarios": [
+  {
+   "scenario": "Baseline",
+   "weight": 0.6,
+   "growth2026": 0.021,
+   "growth2027": 0.022,
+   "inflation2027": 0.047,
+   "unemployment2027": 0.062
+  },
+  {
+   "scenario": "Upside: productivity boom",
+   "weight": 0.15,
+   "growth2026": 0.025,
+   "growth2027": 0.03,
+   "inflation2027": 0.044,
+   "unemployment2027": 0.058
+  },
+  {
+   "scenario": "Downside: tariff escalation",
+   "weight": 0.25,
+   "growth2026": 0.013,
+   "growth2027": 0.006,
+   "inflation2027": 0.054,
+   "unemployment2027": 0.073
+  }
+ ],
+ "path": [
+  {
+   "quarter": "2026Q4",
+   "growth": 0.0229
+  },
+  {
+   "quarter": "2027Q1",
+   "growth": 0.0227
+  },
+  {
+   "quarter": "2027Q2",
+   "growth": 0.0215
+  },
+  {
+   "quarter": "2027Q3",
+   "growth": 0.0247
+  },
+  {
+   "quarter": "2027Q4",
+   "growth": 0.0211
+  },
+  {
+   "quarter": "2028Q1",
+   "growth": 0.0191
+  }
+ ],
+ "economy": "ECON-BR",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

@@ -16,3 +16,4 @@ noErrors: true
 nonEmpty: [growthPath]
 samples:
   ECON-CN.json: { nonEmpty: [sectors] }
+help: { about: true }

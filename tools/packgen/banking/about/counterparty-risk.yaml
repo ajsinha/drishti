@@ -1,0 +1,202 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+about: 1
+vocabulary:
+  utilisation: { term: "Utilisation", means: "The share of the limit that is used: used divided by limit. Above 100% is a breach.", unit: "% of limit" }
+kinds:
+  netting-set:
+    title: Netting set
+    about: >-
+      ${$.nettingSetId} groups ${$.tradeCount} trades that net on close-out under one agreement: they are worth
+      ${fmt($.netMtm, 'signed0')} USD together, secured by ${fmt($.collateral, 'signed0')} of collateral, and its 95% peak
+      exposure is ${fmt($.pfePeak, 'compact')} USD, ${fmt($.utilisation, 'pct0')} of its limit.
+    guide: counterparty-risk
+    glossary:
+      tradeCount: { term: "Trades", means: "The number of trades that are netted together under the agreement." }
+      netMtm:
+        term: "Net mark to market"
+        means: "The sum of the members' mark to market, positive and negative together. Netting lets a loss on one trade cancel a gain on another if the counterparty defaults."
+        unit: "USD"
+        sign: "Positive is owed to the bank."
+      collateral:
+        term: "Collateral"
+        means: "The net collateral against the netting set: what is held less what has been posted."
+        unit: "USD"
+        sign: "Positive is held by the bank, negative is posted to the counterparty."
+      eePeak:
+        term: "Peak expected exposure"
+        means: "The highest point of the expected-exposure profile over the life of the trades, the average positive exposure on the date where it is largest."
+        unit: "USD"
+      pfePeak:
+        term: "Peak potential future exposure, 95%"
+        means: "The highest point of the 95th-percentile exposure profile; on 95 of 100 simulated paths the exposure stays below it. It is the measure credit limits are set against."
+        unit: "USD"
+      limit: { term: "Credit limit", means: "The limit on the counterparty's peak potential future exposure approved for this netting set.", unit: "USD" }
+      utilisation: { use: "utilisation" }
+      cva:
+        term: "Credit valuation adjustment"
+        means: "The reduction in the value of the trades for the risk that the counterparty defaults before they mature."
+        unit: "USD"
+        sign: "Negative is a cost."
+      trades.tradeId: { term: "Trade", means: "The member trade." }
+      trades.product: { term: "Product", means: "The kind of instrument the trade is." }
+      trades.notional: { term: "Notional", means: "The reference amount of the trade, in the trade's own currency.", unit: "trade currency" }
+      trades.maturity: { term: "Maturity", means: "The date the trade ends." }
+      trades.mtm: { term: "Mark to market", means: "The trade's current value, from the bank's side.", unit: "USD", sign: "Positive is owed to the bank." }
+    panels:
+      exposure: { about: "The curve shows how the exposure of ${$.tradeCount} trades may develop; its peak (${fmt($.pfePeak, 'compact')} USD) is the figure compared with the limit." }
+  credit-limit:
+    title: Counterparty credit limit
+    about: >-
+      ${$.counterpartyName} may be exposed up to ${fmt($.limit, 'compact')} USD on the measure "${$.measure}": it uses
+      ${fmt($.used, 'compact')}, which is ${fmt($.utilisation, 'pct0')}. Status: ${$.status}.
+    guide: counterparty-risk
+    glossary:
+      counterpartyName: { term: "Counterparty", means: "The legal entity the limit applies to." }
+      measure: { term: "Limit measure", means: "The exposure measure the limit is set on, for example the peak of the 95th-percentile potential future exposure." }
+      limit: { term: "Limit", means: "The most exposure the bank accepts to the counterparty on this measure.", unit: "USD" }
+      used: { term: "Used", means: "The exposure measured today against the limit.", unit: "USD" }
+      utilisation: { use: "utilisation" }
+      buckets.bucket: { term: "Tenor bucket", means: "The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it." }
+      buckets.limit: { term: "Bucket limit", means: "The limit that applies to this tenor bucket.", unit: "USD" }
+      buckets.used: { term: "Bucket exposure", means: "The exposure in this tenor bucket.", unit: "USD" }
+      buckets.utilisation: { use: "utilisation" }
+  exposure-profile:
+    title: Exposure profile
+    about: >-
+      ${$.profileId} is a Monte Carlo simulation of ${$.paths} paths for the netting set run on ${$.runDate}: expected positive
+      exposure ${fmt($.epe, 'compact')} USD, effective ${fmt($.eepe, 'compact')}, peak 95% potential future exposure
+      ${fmt($.pfePeak, 'compact')}.
+    guide: counterparty-risk
+    glossary:
+      epe:
+        term: "Expected positive exposure"
+        means: "The average of the expected exposure over the life of the trades (or the first year); it is the exposure the CVA and the internal-model capital are built on."
+        unit: "USD"
+      eepe:
+        term: "Effective expected positive exposure"
+        means: "The average over the first year of the effective expected exposure, which cannot fall from one date to the next. It is the exposure used for the internal-model capital."
+        unit: "USD"
+      pfePeak: { term: "Peak potential future exposure, 95%", means: "The highest value of the 95th-percentile exposure over the life of the trades.", unit: "USD" }
+      paths: { term: "Simulation paths", means: "The number of Monte Carlo scenarios of the market that were simulated. More paths means a smoother tail." }
+      runDate: { term: "Run date", means: "The date of the market data the simulation started from." }
+      buckets.tenor: { term: "Future date", means: "The point in time, counted from the run date, the exposure is measured at." }
+      buckets.ee: { term: "Expected exposure", means: "The average, over the scenarios, of the netting set's value at this date, counting only positive values (what the bank would lose).", unit: "USD" }
+      buckets.ene: { term: "Expected negative exposure", means: "The average of the netting set's value at this date counting only negative values, what the bank would owe. It is the basis of the debit valuation adjustment.", unit: "USD", sign: "Negative, an amount owed." }
+      buckets.pfe95: { term: "Potential future exposure, 95%", means: "The exposure that is exceeded on 5 of 100 scenarios at this date.", unit: "USD" }
+      buckets.pfe99: { term: "Potential future exposure, 99%", means: "The exposure that is exceeded on 1 of 100 scenarios at this date.", unit: "USD" }
+    panels:
+      profile: { about: "The area is the expected exposure; the PFE curves in the table lie above it and peak at ${fmt($.pfePeak, 'compact')} USD." }
+  cva:
+    title: Valuation adjustments
+    about: >-
+      The valuation adjustments of ${$.nettingSet} are CVA ${fmt($.cva, 'signed0')}, DVA ${fmt($.dva, 'signed0')}, FVA ${fmt($.fva, 'signed0')}
+      and KVA ${fmt($.kva, 'signed0')} USD; a one basis point rise in the counterparty's credit spread moves the CVA by
+      ${fmt($.cs01, 'signed0')}.
+    guide: counterparty-risk
+    glossary:
+      cva: { term: "Credit valuation adjustment", means: "The expected loss from the counterparty defaulting, valued at market spreads and taken off the value of the trades.", unit: "USD", sign: "Negative is a cost." }
+      dva: { term: "Debit valuation adjustment", means: "The mirror image of CVA: the gain from the bank's own possible default, which reduces what it would owe.", unit: "USD", sign: "Positive is a gain." }
+      fva: { term: "Funding valuation adjustment", means: "The cost, or benefit, of funding the collateral and the hedges of uncollateralised trades.", unit: "USD", sign: "Negative is a cost." }
+      kva: { term: "Capital valuation adjustment", means: "The cost of holding regulatory capital against the trades over their life.", unit: "USD", sign: "Negative is a cost." }
+      cs01: { term: "Counterparty CS01", means: "The change in the CVA for a one basis point rise in the counterparty's credit spread.", unit: "USD per bp" }
+      sensitivities.factor: { term: "Market factor", means: "The market input that is bumped to see how the adjustment changes." }
+      sensitivities.bump: { term: "Bump", means: "The size of the move applied to the factor." }
+      sensitivities.delta: { term: "Change in CVA", means: "The change in the adjustment for the bump.", unit: "USD" }
+  sa-ccr:
+    title: SA-CCR exposure
+    about: >-
+      The regulatory exposure at default of ${$.nettingSet} is ${fmt($.ead, 'compact')} USD: replacement cost ${fmt($.replacementCost, 'compact')}
+      plus an add-on of ${fmt($.addOn, 'compact')} scaled by a multiplier of ${fmt($.multiplier, 'price2')}; its risk-weighted assets are
+      ${fmt($.rwa, 'compact')}.
+    guide: counterparty-risk
+    glossary:
+      replacementCost:
+        term: "Replacement cost"
+        means: "The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below zero."
+        unit: "USD"
+      addOn:
+        term: "Aggregate add-on"
+        means: "The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and correlations."
+        unit: "USD"
+      multiplier:
+        term: "PFE multiplier"
+        means: "A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative."
+        unit: "factor"
+      ead:
+        term: "Exposure at default"
+        means: "The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on."
+        unit: "USD"
+      rwa: { term: "Risk-weighted assets", means: "The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it.", unit: "USD" }
+      hedgingSets.assetClass: { term: "Asset class", means: "The regulatory asset class: interest rate, FX, credit, equity or commodity." }
+      hedgingSets.hedgingSet: { term: "Hedging set", means: "The group of trades within an asset class that can offset one another, for example by currency for interest rates." }
+      hedgingSets.effectiveNotional: { term: "Effective notional", means: "The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set.", unit: "USD", sign: "Positive is net long, negative net short." }
+      hedgingSets.sf: { term: "Supervisory factor", means: "The regulatory percentage applied to the effective notional to get the add-on.", unit: "% of effective notional" }
+  collateral-balance:
+    title: Collateral balance
+    about: >-
+      Under ${coalesce($.csa, 'the CSA')} the bank holds ${fmt($.held, 'compact')} and has posted ${fmt($.posted, 'compact')} USD of collateral
+      for netting set ${$.nettingSet}, a net ${fmt($.net, 'signed0')} as of ${$.asOf}.
+    guide: counterparty-risk
+    glossary:
+      held: { term: "Collateral held", means: "The collateral the bank has received from the counterparty.", unit: "USD" }
+      posted: { term: "Collateral posted", means: "The collateral the bank has delivered to the counterparty.", unit: "USD" }
+      net: { term: "Net collateral", means: "Held minus posted.", unit: "USD", sign: "Positive means the bank holds more than it has posted." }
+      positions.asset: { term: "Collateral asset", means: "The cash or security that is held or posted." }
+      positions.direction:
+        term: "Direction"
+        means: "Whether the bank posted the asset or received it."
+        values:
+          Posted: "The bank delivered it to the counterparty."
+          Received: "The counterparty delivered it to the bank."
+      positions.marketValue: { term: "Market value", means: "The current market value of the asset before the haircut.", unit: "USD" }
+      positions.haircut: { term: "Haircut", means: "The percentage taken off the market value to allow for the price moving before the asset can be sold. The CSA sets it by asset type and maturity.", unit: "% of market value" }
+      positions.value: { term: "Collateral value", means: "The market value after the haircut, the amount that counts as collateral.", unit: "USD" }
+  margin-call:
+    title: Margin call
+    about: >-
+      ${$.callId} is a ${lower($.marginType)} margin call of ${fmt($.amount, 'amount0')} ${$.currency} dated ${$.callDate}
+      (${lower($.direction)}); its status is ${$.status}.
+    guide: counterparty-risk
+    glossary:
+      callDate: { term: "Call date", means: "The day the margin call was issued." }
+      marginType:
+        term: "Margin type"
+        means: "Variation margin settles the change in the value of the trades each day; initial margin is held against the risk of the value moving before a defaulted counterparty can be replaced."
+        values:
+          Variation: "Covers the daily change in the market value of the trades."
+          Initial: "A buffer against future price moves, calculated with a model such as SIMM."
+      direction:
+        term: "Direction"
+        means: "Who calls on whom."
+        values:
+          We call: "The bank asks the counterparty for collateral."
+          They call: "The counterparty asks the bank for collateral."
+      disputeAmount: { term: "Disputed amount", means: "The part of the call the other party does not accept. Undisputed margin is still due on time; the difference goes to dispute resolution.", unit: "call currency" }
+      events.at: { term: "Time", means: "When the step happened." }
+      events.event: { term: "Step", means: "The stage of the call, from issue to agreement and settlement." }
+      events.by: { term: "By", means: "The party or system that took the step." }
+  simm:
+    title: Initial margin (SIMM)
+    about: >-
+      ${$.calcId} is the ${$.version} initial margin for the netting set: ${fmt($.total, 'compact')} USD in total, of which the bank has
+      posted ${fmt($.posted, 'compact')} and received ${fmt($.received, 'compact')}.
+    guide: counterparty-risk
+    glossary:
+      posted: { term: "Initial margin posted", means: "The initial margin the bank has delivered to the counterparty or a custodian.", unit: "USD" }
+      received: { term: "Initial margin received", means: "The initial margin the counterparty has delivered to the bank.", unit: "USD" }
+      total: { term: "Total initial margin", means: "The margin the ISDA SIMM model requires, built from the sensitivities of the trades by risk class and product class.", unit: "USD" }
+      version: { term: "SIMM version", means: "The version of the ISDA Standard Initial Margin Model the calculation used; the model is recalibrated each year." }
+      riskClasses.im: { term: "Margin of the risk class", means: "The initial margin of one SIMM risk class: interest rate, credit qualifying, credit non-qualifying, equity, commodity or FX.", unit: "USD" }

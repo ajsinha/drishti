@@ -48,6 +48,7 @@ public class SettingsController {
     static final String NS = "settings";
     static final Set<String> THEMES = Set.of("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark");
     static final Set<String> DENSITIES = Set.of("comfortable", "compact");
+    private static final Pattern LOCALE = Pattern.compile("^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8}){0,3}$");
     private static final Pattern LANDING = Pattern.compile("^/(t|w/[^/?#]{1,64}|m/[^/?#]{1,64}|v/[a-z0-9-]{1,40}/[^/?#]{1,128}|help)$");
     private static final Pattern KIND = Pattern.compile("^[a-z0-9-]{1,40}$");
     private static final int MAX_PINS = 20;
@@ -92,6 +93,12 @@ public class SettingsController {
                         throw bad("unknown time zone '" + v.asText() + "'");
                     }
                 }
+                case "locale" -> {
+                    if (!LOCALE.matcher(v.asText()).matches()) {
+                        throw bad("locale is a language tag such as en, fr or fr-CA");
+                    }
+                    next.put("locale", v.asText());
+                }
                 case "flash" -> next.put("flash", bool(v, "flash"));
                 case "searchLimit" -> {
                     if (!v.canConvertToInt() || v.asInt() < 10 || v.asInt() > 1000) {
@@ -116,6 +123,7 @@ public class SettingsController {
         out.set("theme", s.path("theme").isMissingNode() ? json.nullNode() : s.get("theme"));
         out.put("landing", s.path("landing").asText("/t"));
         out.set("clockZone", s.path("clockZone").isMissingNode() ? json.nullNode() : s.get("clockZone"));
+        out.set("locale", s.path("locale").isMissingNode() ? json.nullNode() : s.get("locale"));
         out.put("density", s.path("density").asText("comfortable"));
         out.put("flash", s.path("flash").asBoolean(true));
         out.put("searchLimit", s.path("searchLimit").asInt(100));

@@ -1,0 +1,87 @@
+{
+ "fiscalId": "FISC-BR",
+ "economyName": "Brazil",
+ "revenue": 0.435,
+ "spending": 0.477,
+ "balance": -0.042,
+ "debt": 0.78,
+ "interestBurden": 0.1614,
+ "functions": [
+  {
+   "function": "Social protection",
+   "share": 0.1383
+  },
+  {
+   "function": "Health",
+   "share": 0.0814
+  },
+  {
+   "function": "Education",
+   "share": 0.0488
+  },
+  {
+   "function": "Defence",
+   "share": 0.0203
+  },
+  {
+   "function": "Interest",
+   "share": 0.0702
+  },
+  {
+   "function": "Other",
+   "share": 0.118
+  }
+ ],
+ "debtPath": [
+  {
+   "year": "2016",
+   "debt": 0.523
+  },
+  {
+   "year": "2017",
+   "debt": 0.471
+  },
+  {
+   "year": "2018",
+   "debt": 0.528
+  },
+  {
+   "year": "2019",
+   "debt": 0.549
+  },
+  {
+   "year": "2020",
+   "debt": 0.589
+  },
+  {
+   "year": "2021",
+   "debt": 0.604
+  },
+  {
+   "year": "2022",
+   "debt": 0.649
+  },
+  {
+   "year": "2023",
+   "debt": 0.697
+  },
+  {
+   "year": "2024",
+   "debt": 0.727
+  },
+  {
+   "year": "2025",
+   "debt": 0.742
+  },
+  {
+   "year": "2026",
+   "debt": 0.78
+  }
+ ],
+ "economy": "ECON-BR",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

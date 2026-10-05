@@ -1,0 +1,61 @@
+{
+ "studyId": "EXPR-002",
+ "title": "Hypoxia response in lung epithelial cells",
+ "comparison": "1% O2 vs normoxia",
+ "sampleCount": 48,
+ "significant": 2155,
+ "results": [
+  {
+   "gene": "VEGFA",
+   "log2fc": 4.71,
+   "baseMean": 4212,
+   "padj": "3.3e-11"
+  },
+  {
+   "gene": "CA9",
+   "log2fc": 4.17,
+   "baseMean": 367,
+   "padj": "8.1e-40"
+  },
+  {
+   "gene": "SLC2A1",
+   "log2fc": 3.33,
+   "baseMean": 153,
+   "padj": "8.5e-30"
+  },
+  {
+   "gene": "EGLN3",
+   "log2fc": 2.45,
+   "baseMean": 133,
+   "padj": "2.7e-18"
+  },
+  {
+   "gene": "ANKRD37",
+   "log2fc": -0.31,
+   "baseMean": 87,
+   "padj": "5.7e-11"
+  },
+  {
+   "gene": "BNIP3",
+   "log2fc": -1.24,
+   "baseMean": 423,
+   "padj": "1.4e-32"
+  },
+  {
+   "gene": "PGK1",
+   "log2fc": -2.59,
+   "baseMean": 372,
+   "padj": "5.7e-14"
+  },
+  {
+   "gene": "LDHA",
+   "log2fc": -3.07,
+   "baseMean": 1855,
+   "padj": "6.4e-37"
+  }
+ ],
+ "_meta": {
+  "source": "analysis-pipeline",
+  "generation": 1
+ }
+}

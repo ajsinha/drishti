@@ -1,0 +1,38 @@
+{
+ "reportId": "GAR-FRA",
+ "legalEntityName": "Drishti Bank Europe AG",
+ "gar": 0.1277,
+ "eligible": 0.5,
+ "covered": 47084000000.0,
+ "objectives": [
+  {
+   "objective": "Climate change mitigation",
+   "aligned": 943166774
+  },
+  {
+   "objective": "Climate change adaptation",
+   "aligned": 770491206
+  },
+  {
+   "objective": "Water and marine",
+   "aligned": 1190130862
+  },
+  {
+   "objective": "Circular economy",
+   "aligned": 1262637819
+  },
+  {
+   "objective": "Pollution prevention",
+   "aligned": 1158327191
+  },
+  {
+   "objective": "Biodiversity",
+   "aligned": 686445327
+  }
+ ],
+ "legalEntity": "LE-FRA",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

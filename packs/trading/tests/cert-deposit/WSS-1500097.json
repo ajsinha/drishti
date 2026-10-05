@@ -1,0 +1,271 @@
+{
+ "tradeId": "WSS-1500097",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500097",
+ "productType": "CERT_DEPOSIT",
+ "productName": "Certificate of deposit",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-09-22",
+ "effectiveDate": "2026-09-24",
+ "maturityDate": "2027-04-20",
+ "currency": "USD",
+ "notional": 11000000.0,
+ "mtm": 281651,
+ "mtmCurrency": "USD",
+ "pnl1d": 2003,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-SIYER",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-CASCADIA",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "rate": 0.045954
+ },
+ "risk": {
+  "dv01": 571
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 95
+  },
+  {
+   "bucket": "6M",
+   "dv01": 190
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 286
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -8344
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 73
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4523
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4666
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1175
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -23163
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -8239
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -14132
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 26468
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 2302
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -5333
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -8083
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 14003
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 3678
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 3034
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 8032
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 4015
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -11571
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -11646
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -9970
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-22",
+  "executionTimestamp": "2026-09-22T11:06:47.864Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "S. Iyer",
+  "salesperson": null,
+  "orderId": "ORD-D0DDD322C6"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-22T10:05:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-09-22T10:05:00Z",
+  "lastModifiedAt": "2026-09-22T10:05:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-22",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-SIYER: long Certificate of deposit"
+   },
+   {
+    "date": "2026-09-22",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT402659181)"
+   },
+   {
+    "date": "2027-04-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT402659181",
+  "matched": "2026-09-22 16:32",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096D0DDD322C657763923BF",
+  "upi": "QZJCTTO5ATDD",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCUS33XXX",
+  "ssiId": "SSI-USD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 281651,
+  "cleanPv": 281651.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 279648,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 304
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -303
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 1951
+  },
+  {
+   "step": "FX delta",
+   "pnl": 183
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 2
+  },
+  {
+   "step": "Theta",
+   "pnl": -141
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 7
+  }
+ ],
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 673
+  }
+ }
+}

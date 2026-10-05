@@ -1,0 +1,132 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+about: 1
+vocabulary:
+  sponsorName: { term: "Sponsor", means: "The legislator who introduced the bill and speaks for it." }
+  partyName: { term: "Party", means: "The political party the person or result belongs to." }
+  share: { term: "Share of the vote", means: "The party's votes as a share of all valid votes cast, or of the respondents who gave a voting intention.", unit: "% of votes" }
+  seats: { term: "Seats", means: "The number of seats in the legislature that the party holds or won." }
+kinds:
+  jurisdiction:
+    title: "Jurisdiction (fictional)"
+    about: >-
+      ${$.name} is a fictional jurisdiction of ${fmt($.populationM, 'price2')} million people with its capital at ${$.capital}; its ${$.seats} legislative seats are filled by
+      ${lower($.system)} and the government is the ${$.government}. All names and figures are invented.
+    guide: politics-society
+    glossary:
+      capital: { term: "Capital", means: "The seat of government." }
+      populationM: { term: "Population", means: "The number of residents.", unit: "millions" }
+      system: { term: "Electoral system", means: "The rule that turns votes into seats: first past the post gives each seat to the candidate with most votes in a constituency; proportional systems share seats among parties in line with their votes, often with a minimum vote threshold." }
+      seats: { term: "Seats in the legislature", means: "The total number of seats of the lower house. A party needs more than half of them to govern alone." }
+      government: { term: "Government", means: "The party or coalition that holds office and commands a majority in the legislature." }
+      legislature.party: { term: "Party", means: "A party with seats in the legislature." }
+      legislature.seats: { use: "seats" }
+  party:
+    title: "Political party (fictional)"
+    about: >-
+      The ${$.name} (${lower($.position)}), led by ${$.leaderName}, holds ${$.seats} seats and polls ${fmt($.polling, 'pct0')} in the latest polling average,
+      with ${fmt($.members, 'amount0')} members. The party is fictional.
+    guide: politics-society
+    glossary:
+      position: { term: "Political position", means: "Where the party sits on the left-right spectrum, or the single cause it is built around." }
+      leaderName: { term: "Leader", means: "The person who leads the party." }
+      seats: { use: "seats" }
+      polling: { term: "Polling average", means: "The party's average share of voting intention in recent polls.", unit: "% of voting intention" }
+      members: { term: "Members", means: "The number of paying members of the party." }
+      trend.share: { term: "Polling share", means: "The party's share of voting intention at the date.", unit: "% of voting intention" }
+      trend.month: { term: "Date", means: "The date the average was taken." }
+  candidate:
+    title: "Candidate or office holder (fictional)"
+    about: >-
+      ${$.name} is the ${lower($.role)} of the ${$.partyName} for ${$.constituency}, in office since ${$.since}; the vote share was ${fmt($.voteShare, 'pct0')}. The person is fictional.
+    guide: politics-society
+    glossary:
+      partyName: { use: "partyName" }
+      constituency: { term: "Constituency", means: "The area whose voters elect the representative." }
+      role: { term: "Role", means: "The office or function the person holds." }
+      voteShare: { term: "Vote share", means: "The share of the votes in the constituency that the person won at the last election.", unit: "% of votes" }
+      since: { term: "In office since", means: "The date the person took the role." }
+      record.bill: { term: "Bill", means: "The bill that was voted on." }
+      record.vote: { term: "Vote", means: "How the person voted: for, against or abstained." }
+      record.date: { term: "Vote date", means: "The day of the vote." }
+  election:
+    title: "Election (fictional)"
+    about: >-
+      ${$.title} was held on ${$.date} with ${fmt($.turnout, 'pct0')} turnout under ${lower($.system)}; the ${$.winner} won most seats and the result is
+      "${$.majority}".
+    guide: politics-society
+    glossary:
+      turnout: { term: "Turnout", means: "The share of registered voters who cast a vote.", unit: "% of electorate" }
+      system: { term: "Electoral system", means: "The rule that turns votes into seats, for example first past the post or proportional representation with a threshold." }
+      winner: { term: "Largest party", means: "The party with the most seats. Without a majority it may still have to form a coalition or govern in a minority." }
+      majority: { term: "Result", means: "Whether one party won more than half of the seats (a majority) or none did (a hung legislature, which needs a coalition or minority government)." }
+      results.party: { term: "Party", means: "A party that took part in the election." }
+      results.votes: { term: "Votes", means: "The number of votes the party received." }
+      results.share: { use: "share" }
+      results.seats: { use: "seats" }
+      results.change: { term: "Seat change", means: "The number of seats the party gained or lost against the previous election.", sign: "Positive is a gain." }
+  poll:
+    title: "Opinion poll (fictional)"
+    about: >-
+      ${$.pollster} asked ${fmt($.sample, 'amount0')} people by ${lower($.method)} between ${$.fieldwork}; the result is: ${$.lead}, within a margin of error of ${fmt($.moe, 'pct0')}.
+    guide: politics-society
+    glossary:
+      pollster: { term: "Pollster", means: "The organisation that ran the poll." }
+      fieldwork: { term: "Fieldwork dates", means: "The days on which the interviews were done." }
+      sample: { term: "Sample size", means: "The number of respondents. A larger sample gives a smaller margin of error.", unit: "respondents" }
+      method: { term: "Method", means: "How respondents were reached, such as by telephone or online panel, which affects who answers." }
+      lead: { term: "Lead", means: "The gap between the first and second party, in percentage points." }
+      moe: { term: "Margin of error", means: "The range, up and down, within which the true share is expected to lie in 19 of 20 polls, for a simple random sample.", unit: "percentage points" }
+      shares.party: { use: "partyName" }
+      shares.share: { use: "share" }
+      shares.low: { term: "Lower bound", means: "The share minus the margin of error.", unit: "% of voting intention" }
+      shares.high: { term: "Upper bound", means: "The share plus the margin of error.", unit: "% of voting intention" }
+      shares.change: { term: "Change", means: "The change in the share since the pollster's previous poll.", unit: "percentage points", sign: "Positive is a rise." }
+  bill:
+    title: "Bill (fictional)"
+    about: >-
+      "${$.title}" was introduced on ${$.introduced} by ${$.sponsorName} and is at the ${lower($.stage)} stage; it is estimated to cost ${fmt($.costM, 'amount0')} million over five years.
+    guide: politics-society
+    glossary:
+      sponsorName: { use: "sponsorName" }
+      stage: { term: "Stage", means: "Where the bill is in the legislative process: first reading, committee, second and third reading, then royal assent.", values: { "First reading": "The bill is formally introduced.", "Second reading": "Members debate the principle of the bill.", "Committee": "A committee examines the bill clause by clause.", "Third reading": "The final vote on the amended bill.", "Royal assent": "The head of state signs the bill into law." } }
+      introduced: { term: "Date introduced", means: "The day the bill was first put before the legislature." }
+      costM: { term: "Fiscal cost over five years", means: "The estimated net cost to public finances over five years.", unit: "millions" }
+      stages.date: { term: "Date", means: "The day of the stage." }
+      stages.stage: { term: "Stage", means: "The step of the legislative process." }
+      stages.for: { term: "Votes for", means: "The number of members who voted for the bill at the stage." }
+      stages.against: { term: "Votes against", means: "The number of members who voted against the bill at the stage." }
+      stages.outcome: { term: "Outcome", means: "Whether the bill passed the stage." }
+  region:
+    title: "Region (fictional)"
+    about: >-
+      ${$.name} has ${fmt($.populationM, 'price2')} million people, a median income of ${fmt($.medianIncome, 'amount0')}, unemployment of ${fmt($.unemployment, 'pct2')} and a life expectancy
+      of ${fmt($.lifeExpectancy, 'price2')} years. The region is fictional.
+    guide: politics-society
+    glossary:
+      populationM: { term: "Population", means: "The number of residents.", unit: "millions" }
+      medianIncome: { term: "Median income", means: "The income of the household in the middle of the distribution: half earn more, half less.", unit: "currency a year" }
+      unemployment: { term: "Unemployment rate", means: "The share of people in the labour force who are without work and looking for it.", unit: "% of labour force" }
+      lifeExpectancy: { term: "Life expectancy", means: "The average number of years a newborn is expected to live at current death rates.", unit: "years" }
+  social-indicator:
+    title: "Social indicator (fictional)"
+    about: >-
+      ${$.name}: the latest national value is ${fmt($.latest, 'price2')} (${$.unit}), a change of ${fmt($.change5y, 'signed2')} over five years. The data is fictional.
+    guide: politics-society
+    glossary:
+      latest: { term: "Latest value", means: "The most recent national figure for the indicator, in the unit shown." }
+      unit: { term: "Unit", means: "What the value measures, for example a share of households." }
+      change5y: { term: "Change over five years", means: "The latest value minus the value five years earlier, in the same unit as the indicator.", sign: "Positive means the value rose." }
+      sourceName: { term: "Source", means: "The statistical office or survey the series comes from." }

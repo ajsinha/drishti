@@ -1,0 +1,480 @@
+{
+ "tradeId": "IMG-400145",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400145",
+ "productType": "HYBRID_FX_RATES",
+ "productName": "FX-rates hybrid (PRDC)",
+ "assetClass": "Structured",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-06-30",
+ "effectiveDate": "2025-07-02",
+ "maturityDate": "2036-08-18",
+ "currency": "USD",
+ "notional": 216000000.0,
+ "mtm": 4057279,
+ "mtmCurrency": "USD",
+ "pnl1d": -3353,
+ "counterparty": {
+  "id": "CP-SOLARIS",
+  "name": "Solaris Energy Corp."
+ },
+ "nettingSet": "NS-SOLARIS-TKY",
+ "book": "BOOK-STRUCT-3",
+ "trader": "TRDR-VRAO",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "fxSpot": "FX-AUDUSD",
+ "fxVolSurface": "FXV-AUDUSD",
+ "discountCurve": "CRV-USD-OIS",
+ "correlation": "CORR-US-EQ",
+ "terms": {
+  "couponFormula": "max(0",
+  "callable": "Yes"
+ },
+ "risk": {
+  "fxDelta": -2160000,
+  "dv01": -195500,
+  "vega": -1542590
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -102857,
+   "dv01": -9310,
+   "vega": -73457
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -205714,
+   "dv01": -18619,
+   "vega": -146913
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -308571,
+   "dv01": -27929,
+   "vega": -220370
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -411429,
+   "dv01": -37238,
+   "vega": -293827
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -514286,
+   "dv01": -46548,
+   "vega": -367283
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -617143,
+   "dv01": -55857,
+   "vega": -440740
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-10-02",
+   "level": 93.8,
+   "trigger": 100.0,
+   "performance": -0.062,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-01-02",
+   "level": 95.92,
+   "trigger": 100.0,
+   "performance": -0.0408,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-04-02",
+   "level": 93.36,
+   "trigger": 100.0,
+   "performance": -0.0664,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-07-02",
+   "level": 90.5,
+   "trigger": 100.0,
+   "performance": -0.095,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-10-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-01-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-04-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2031-07-02",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 4,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 245183
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 137226
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 207573
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -192071
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -104559
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 127530
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 4860
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -175655
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -74070
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -57291
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 122263
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 24046
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -113365
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 120946
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 132932
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 75770
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 129244
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6665
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 20568
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -153061
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-06-30",
+  "executionTimestamp": "2025-06-30T15:24:19.653Z",
+  "venue": "NYSE",
+  "venueMic": "XNYS",
+  "executionType": "Electronic",
+  "trader": "V. Rao",
+  "salesperson": null,
+  "orderId": "ORD-858D2D8C69"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-06-30T09:56:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-06-30T09:56:00Z",
+  "lastModifiedAt": "2025-06-30T09:56:00Z",
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-06-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-VRAO: sell FX-rates hybrid (PRDC)"
+   },
+   {
+    "date": "2025-06-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT576058095)"
+   },
+   {
+    "date": "2026-10-02",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2036-08-18",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT576058095",
+  "matched": "2025-06-30 15:44",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F474858D2D8C69EF70C6EF76",
+  "upi": "QZ5DTN3MFLKN",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SOLAUS33XXX",
+  "ssiId": "SSI-USD-269904",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 4057279,
+  "cleanPv": 4057279.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "FX-AUDUSD",
+   "FXV-AUDUSD",
+   "CRV-USD-OIS",
+   "CORR-US-EQ"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 4060632,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -1704
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -396
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -344
+  },
+  {
+   "step": "FX delta",
+   "pnl": 222
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -532
+  },
+  {
+   "step": "Theta",
+   "pnl": -773
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 174
+  }
+ ],
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 10275
+  }
+ }
+}

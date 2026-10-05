@@ -1,0 +1,40 @@
+{
+ "eventId": "LOSS-2025-0001",
+ "eventType": "Execution, delivery and process management",
+ "deskName": "Rates · Swaps and options",
+ "grossLoss": 172900.0,
+ "recoveries": 17300.0,
+ "netLoss": 155600.0,
+ "status": "Open",
+ "occurred": "2024-11-22",
+ "details": {
+  "businessLine": "Trading and sales",
+  "rootCause": "Phishing",
+  "boundaryWithCreditRisk": false,
+  "reportedToRegulator": false
+ },
+ "timeline": [
+  {
+   "date": "2024-11-22",
+   "step": "Occurred",
+   "by": "—"
+  },
+  {
+   "date": "2024-12-05",
+   "step": "Discovered",
+   "by": "A. Novak"
+  },
+  {
+   "date": "2024-12-12",
+   "step": "Booked to loss ledger",
+   "by": "Finance"
+  }
+ ],
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "rootCauseControl": "RCSA-RATES-3",
+ "_meta": {
+  "source": "loss-database",
+  "generation": 1
+ }
+}

@@ -1,0 +1,437 @@
+{
+ "tradeId": "END-1000055",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000055",
+ "productType": "CMD_INDEX_SWAP",
+ "productName": "Commodity index swap",
+ "assetClass": "Commodity",
+ "family": "swap",
+ "status": "Live",
+ "direction": "Pay fixed",
+ "tradeDate": "2024-10-07",
+ "effectiveDate": "2024-10-09",
+ "maturityDate": "2035-11-20",
+ "currency": "USD",
+ "notional": 123000000.0,
+ "mtm": -1935705,
+ "mtmCurrency": "USD",
+ "pnl1d": -29185,
+ "counterparty": {
+  "id": "CP-MERIDIAN",
+  "name": "Meridian Life Assurance"
+ },
+ "nettingSet": "NS-MERIDIAN-NY",
+ "book": "BOOK-COMM-3",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-BRENT",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "index": "S&P GSCI TR",
+  "fundingSpread": 44.6
+ },
+ "risk": {
+  "delta": 787079
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 37480
+  },
+  {
+   "bucket": "1M",
+   "delta": 74960
+  },
+  {
+   "bucket": "3M",
+   "delta": 112440
+  },
+  {
+   "bucket": "6M",
+   "delta": 149920
+  },
+  {
+   "bucket": "1Y",
+   "delta": 187400
+  },
+  {
+   "bucket": "2Y",
+   "delta": 224880
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay performance",
+   "payReceive": "Pay",
+   "rateType": "Performance",
+   "index": "BRENT",
+   "rate": null,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 123000000.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive SOFR + spread",
+   "payReceive": "Receive",
+   "rateType": "Float",
+   "index": "SOFR",
+   "rate": 0.036215,
+   "spread": 0.0,
+   "frequency": "Quarterly",
+   "dayCount": "ACT/360",
+   "currency": "USD",
+   "notional": 123000000.0
+  }
+ ],
+ "schedule": [
+  {
+   "payDate": "2025-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -304206.15,
+   "pv": 0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -351703.51,
+   "pv": -341152.4,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2027-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -313952.97,
+   "pv": -304534.38,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2028-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -355864.48,
+   "pv": -345188.55,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2029-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -319469.75,
+   "pv": -309885.66,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2030-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -326916.98,
+   "pv": -317109.47,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2031-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -286420.56,
+   "pv": -277827.94,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2032-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -316317.99,
+   "pv": -306828.45,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2033-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -363657.54,
+   "pv": -352747.81,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2034-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -296331.43,
+   "pv": -287441.49,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-10-09",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -260092.38,
+   "pv": -252289.61,
+   "status": "Scheduled"
+  },
+  {
+   "payDate": "2035-11-20",
+   "leg": 1,
+   "type": "Premium",
+   "rate": 0.01,
+   "amount": -331679.04,
+   "pv": -321728.67,
+   "status": "Scheduled"
+  }
+ ],
+ "nextIndex": 1,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 60870
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -73796
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -25864
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -24505
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -11193
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 14575
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -97816
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 21769
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 61013
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 91098
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 18271
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -43549
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 21327
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 49433
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -72775
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -5494
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -16176
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 8859
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 77029
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 7694
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-10-07",
+  "executionTimestamp": "2024-10-07T08:11:27.950Z",
+  "venue": "CME Globex",
+  "venueMic": "XCME",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-E93A7EA2D1"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-10-07T11:08:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2024-10-07T11:08:00Z",
+  "lastModifiedAt": "2024-10-07T11:08:00Z",
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2024-10-07",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: pay fixed Commodity index swap"
+   },
+   {
+    "date": "2024-10-07",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT743899186)"
+   },
+   {
+    "date": "2025-10-09",
+    "event": "Cash settled",
+    "status": "Settled",
+    "description": "USD payment settled",
+    "amount": -304206.15
+   },
+   {
+    "date": "2026-10-09",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2035-11-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT743899186",
+  "matched": "2024-10-07 10:40",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096E93A7EA2D1657C8AC629",
+  "upi": "QZINSLYHNQDP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "MERIUS33XXX",
+  "ssiId": "SSI-USD-4D91C0",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -1935705,
+  "cleanPv": -1935705.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Multi-curve OIS discounting",
+  "curves": [
+   "CMDC-BRENT",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -1906520,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 6759
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 3817
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -45567
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1027
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 123
+  },
+  {
+   "step": "Theta",
+   "pnl": 3071
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 1585
+  }
+ ],
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 5101
+  }
+ }
+}

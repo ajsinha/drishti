@@ -1,0 +1,319 @@
+{
+ "tradeId": "WSS-1500025",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500025",
+ "productType": "FX_OPTION",
+ "productName": "FX vanilla option",
+ "assetClass": "FX",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2025-09-30",
+ "effectiveDate": "2025-10-02",
+ "maturityDate": "2028-06-07",
+ "currency": "USD",
+ "notional": 50000000.0,
+ "mtm": -355449,
+ "mtmCurrency": "USD",
+ "pnl1d": 13743,
+ "counterparty": {
+  "id": "CP-AURORA",
+  "name": "Aurora Sovereign Wealth Fund"
+ },
+ "nettingSet": "NS-AURORA-LDN",
+ "book": "BOOK-FX-2",
+ "trader": "TRDR-ENOVAK",
+ "desk": "DESK-FX",
+ "legalEntity": "LE-LDN",
+ "fxSpot": "FX-USDCNH",
+ "fxForwardCurve": "FXF-USDCNH",
+ "fxVolSurface": "FXV-USDCNH",
+ "terms": {
+  "optionType": "Call",
+  "exerciseStyle": "European",
+  "expiryDate": "2028-08-20",
+  "premium": 119840.0,
+  "strike": 158.79394,
+  "deltaAtTrade": 0.1888
+ },
+ "risk": {
+  "fxDelta": -500000,
+  "vega": -155499,
+  "gamma": 886
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "fxDelta": -23810,
+   "vega": -7405,
+   "gamma": 42
+  },
+  {
+   "bucket": "1M",
+   "fxDelta": -47619,
+   "vega": -14809,
+   "gamma": 84
+  },
+  {
+   "bucket": "3M",
+   "fxDelta": -71429,
+   "vega": -22214,
+   "gamma": 127
+  },
+  {
+   "bucket": "6M",
+   "fxDelta": -95238,
+   "vega": -29619,
+   "gamma": 169
+  },
+  {
+   "bucket": "1Y",
+   "fxDelta": -119048,
+   "vega": -37024,
+   "gamma": 211
+  },
+  {
+   "bucket": "2Y",
+   "fxDelta": -142857,
+   "vega": -44428,
+   "gamma": 253
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 11921
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3626
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -6181
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 4267
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 3847
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -8436
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -208
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 12306
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 4764
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 4500
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 10940
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -2875
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 11651
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 22780
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 18847
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 4318
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 10164
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -4420
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -6721
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -8262
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-09-30",
+  "executionTimestamp": "2025-09-30T08:49:36.477Z",
+  "venue": "FXall",
+  "venueMic": "FXAL",
+  "executionType": "Electronic",
+  "trader": "E. Novak",
+  "salesperson": null,
+  "orderId": "ORD-ED1E2C422B"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-09-30T10:54:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-11-05T10:54:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Endur",
+  "createdAt": "2025-09-30T10:54:00Z",
+  "lastModifiedAt": "2025-11-05T10:54:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-09-30",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-ENOVAK: sell FX vanilla option"
+   },
+   {
+    "date": "2025-09-30",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT943529420)"
+   },
+   {
+    "date": "2025-11-05",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.amend)"
+   },
+   {
+    "date": "2028-06-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT943529420",
+  "matched": "2025-09-30 10:21",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83ED1E2C422B4F65C9928C",
+  "upi": "QZFYX06PUULJ",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Foreign exchange"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "AUROUS33XXX",
+  "ssiId": "SSI-USD-79DAAE",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -355449,
+  "cleanPv": -355449.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "FX-USDCNH",
+   "FXF-USDCNH",
+   "FXV-USDCNH"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -369192,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 539
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 2432
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 19215
+  },
+  {
+   "step": "FX delta",
+   "pnl": -2820
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 191
+  },
+  {
+   "step": "Theta",
+   "pnl": -6154
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 340
+  }
+ ],
+ "_meta": {
+  "source": "calypso-fx",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 1211
+  }
+ }
+}

@@ -1,0 +1,9 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+cyber-incident=1
+issue=1
+key-risk-indicator=1
+loss-event=1
+oprisk-capital=1
+oprisk-scenario=1
+risk-control=1
+third-party=1

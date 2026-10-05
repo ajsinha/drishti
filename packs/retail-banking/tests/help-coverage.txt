@@ -1,0 +1,9 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+branch=1
+card-account=1
+collections-case=1
+customer=1
+deposit-account=1
+mortgage=1
+personal-loan=1
+retail-portfolio=1

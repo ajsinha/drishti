@@ -1,0 +1,9 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+collateral-balance=1
+margin-call=1
+simm=1
+credit-limit=1
+cva=1
+exposure-profile=1
+netting-set=1
+sa-ccr=1

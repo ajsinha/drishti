@@ -1,0 +1,101 @@
+{
+ "nettingSetId": "NS-MERIDIAN-FRA",
+ "tradeCount": 1,
+ "netMtm": 122689,
+ "collateral": 79025,
+ "eePeak": 59940,
+ "pfePeak": 139305,
+ "limit": 5000000.0,
+ "utilisation": 0.0279,
+ "cva": -41,
+ "profile": [
+  {
+   "tenor": "0",
+   "ee": 51915,
+   "pfe": 121651
+  },
+  {
+   "tenor": "1M",
+   "ee": 59940,
+   "pfe": 139305
+  },
+  {
+   "tenor": "3M",
+   "ee": 41019,
+   "pfe": 90241
+  },
+  {
+   "tenor": "6M",
+   "ee": 38533,
+   "pfe": 84773
+  },
+  {
+   "tenor": "1Y",
+   "ee": 34006,
+   "pfe": 74812
+  },
+  {
+   "tenor": "2Y",
+   "ee": 26484,
+   "pfe": 58264
+  },
+  {
+   "tenor": "3Y",
+   "ee": 20625,
+   "pfe": 45376
+  },
+  {
+   "tenor": "5Y",
+   "ee": 12510,
+   "pfe": 27522
+  },
+  {
+   "tenor": "7Y",
+   "ee": 7588,
+   "pfe": 16693
+  },
+  {
+   "tenor": "10Y",
+   "ee": 3584,
+   "pfe": 7885
+  }
+ ],
+ "trades": [
+  {
+   "tradeId": "BBG-60000080",
+   "product": "Repurchase agreement",
+   "assetClass": "Securities financing",
+   "currency": "USD",
+   "book": "BOOK-SFT-2",
+   "notional": 85000000.0,
+   "maturity": "2026-12-21",
+   "maturityBucket": "0-1Y",
+   "mtm": 122689
+  }
+ ],
+ "byAsset": [
+  {
+   "asset": "Securities financing",
+   "mtm": 122689
+  }
+ ],
+ "counterparty": "CP-MERIDIAN",
+ "agreement": "AGR-MERIDIAN-ISDA",
+ "csa": "CSA-MERIDIAN",
+ "creditLimit": "LIM-MERIDIAN",
+ "exposureProfile": "EXP-MERIDIAN-FRA",
+ "cvaResult": "CVA-MERIDIAN-FRA",
+ "saccr": "SACCR-MERIDIAN-FRA",
+ "simm": "SIMM-MERIDIAN",
+ "collateralBalance": "COLL-MERIDIAN-FRA",
+ "legalEntity": "LE-FRA",
+ "nettingEnforceable": true,
+ "_meta": {
+  "source": "xva-engine",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "netMtm": 1000
+  }
+ }
+}

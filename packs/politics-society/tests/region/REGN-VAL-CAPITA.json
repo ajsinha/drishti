@@ -1,0 +1,81 @@
+{
+ "regionId": "REGN-VAL-CAPITA",
+ "name": "Capital District",
+ "populationM": 6.74,
+ "medianIncome": 35500.0,
+ "unemployment": 0.0441,
+ "lifeExpectancy": 79.6,
+ "vote": [
+  {
+   "party": "People's Progressive Alliance",
+   "share": 0.357
+  },
+  {
+   "party": "Civic Union",
+   "share": 0.31
+  },
+  {
+   "party": "National Revival",
+   "share": 0.139
+  },
+  {
+   "party": "Liberal Forum",
+   "share": 0.088
+  },
+  {
+   "party": "Green Future",
+   "share": 0.07
+  },
+  {
+   "party": "Others",
+   "share": 0.035
+  }
+ ],
+ "unemploymentTrend": [
+  {
+   "year": "2016",
+   "rate": 0.1089
+  },
+  {
+   "year": "2017",
+   "rate": 0.0509
+  },
+  {
+   "year": "2018",
+   "rate": 0.0545
+  },
+  {
+   "year": "2019",
+   "rate": 0.1043
+  },
+  {
+   "year": "2020",
+   "rate": 0.1067
+  },
+  {
+   "year": "2021",
+   "rate": 0.1077
+  },
+  {
+   "year": "2022",
+   "rate": 0.0827
+  },
+  {
+   "year": "2023",
+   "rate": 0.0772
+  },
+  {
+   "year": "2024",
+   "rate": 0.0629
+  },
+  {
+   "year": "2025",
+   "rate": 0.0813
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

@@ -1,0 +1,119 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+about: 1
+vocabulary:
+  tco2e: { term: "Tonnes of CO2 equivalent", means: "A greenhouse-gas quantity expressed as the mass of carbon dioxide that would warm the climate by the same amount over a standard period (usually 100 years).", unit: "tCO2e" }
+kinds:
+  climate-profile:
+    title: Climate profile of a counterparty
+    about: >-
+      ${$.counterpartyName} (${$.sector}) emits ${fmt($.scope12, 'compact')} tCO2e from its own operations and purchased energy, an intensity of
+      ${fmt($.intensity, 'amount0')} tCO2e per USD million of revenue. Its transition-risk score is ${$.transitionScore} and its physical-risk
+      score ${$.physicalScore}, both out of 100. Net-zero target: ${$.netZeroTarget}.
+    guide: climate-risk
+    glossary:
+      counterpartyName: { term: "Counterparty", means: "The borrower or issuer whose climate profile this is." }
+      sector: { term: "Sector", means: "The industry the counterparty belongs to; sectors differ widely in how exposed they are to the shift away from fossil fuels." }
+      scope12: { term: "Scope 1 and 2 emissions", means: "The greenhouse gases the company emits itself (scope 1) plus those from the electricity, heat and steam it buys (scope 2), in one year.", unit: "tCO2e a year" }
+      intensity: { term: "Emission intensity", means: "Scope 1 and 2 emissions per million USD of revenue. It compares companies of different sizes within a sector.", unit: "tCO2e per USD million of revenue" }
+      transitionScore: { term: "Transition-risk score", means: "How exposed the counterparty's business is to policy, technology and market changes in the move to a low-carbon economy, from 0 (low) to 100 (high).", unit: "score 0-100" }
+      physicalScore: { term: "Physical-risk score", means: "How exposed the counterparty's operations are to climate hazards such as floods, heat and storms, from 0 (low) to 100 (high).", unit: "score 0-100" }
+      netZeroTarget: { term: "Net-zero target", means: "The year by which the counterparty has committed to balance its emissions with removals, or none if it has not." }
+      scopes.scope: { term: "Emission scope", means: "Scope 1 is direct emissions, scope 2 is emissions from purchased energy, and scope 3 (not included here) is everything else in the value chain." }
+      scopes.tco2e: { use: "tco2e" }
+      history.year: { term: "Year", means: "The reporting year of the emissions figure." }
+      history.tco2e: { use: "tco2e" }
+  climate-scenario:
+    title: Climate scenario
+    about: >-
+      ${$.name} is a ${$.category} scenario with ${fmt($.warming, 'price2')} degrees of warming by 2100 and a carbon price of
+      ${fmt($.carbon2030, 'amount0')} USD per tonne in 2030 rising to ${fmt($.carbon2050, 'amount0')} in 2050.
+    guide: climate-risk
+    glossary:
+      category:
+        term: "Scenario family"
+        means: "The way the NGFS scenarios group the pathways: orderly (early, smooth action), disorderly (late or uneven action) or hot house (little action)."
+        values:
+          "Orderly": "Climate policy starts early and tightens gradually, so transition risks stay low and physical risks are limited."
+          "Disorderly": "Action is late or divergent, so transition risks are high."
+          "Hot house world": "Little action is taken, so temperatures rise and physical risks are severe."
+      warming: { term: "Warming by 2100", means: "The expected rise in global mean temperature above pre-industrial levels at the end of the century in this scenario.", unit: "degrees Celsius" }
+      carbon2030: { term: "Carbon price in 2030", means: "The price per tonne of CO2 that the scenario assumes in 2030.", unit: "USD per tCO2" }
+      carbon2050: { term: "Carbon price in 2050", means: "The price per tonne of CO2 that the scenario assumes in 2050.", unit: "USD per tCO2" }
+      carbonPath.price: { term: "Carbon price", means: "The scenario's price per tonne of CO2 in the year.", unit: "USD per tCO2" }
+      shocks.sector: { term: "Sector", means: "The industry the shock is applied to." }
+      shocks.shock: { term: "Valuation shock", means: "The proportional change in the value of the sector's assets under the scenario.", unit: "fraction of value", sign: "Negative is a fall in value." }
+      source: { term: "Source", means: "The scenario family the parameters were taken from." }
+  climate-stress:
+    title: Climate stress result
+    about: >-
+      Under "${$.scenarioName}" the ${$.deskName} book loses ${fmt(abs($.loss2030), 'compact')} USD by 2030 and ${fmt(abs($.loss2050), 'compact')} by 2050,
+      ${fmt($.capitalShare, 'pct2')} of the capital base the stress is measured against.
+    guide: climate-risk
+    glossary:
+      scenarioName: { term: "Climate scenario", means: "The pathway of policy, carbon prices and temperature the portfolio was revalued under." }
+      deskName: { term: "Desk", means: "The trading desk whose positions were stressed." }
+      loss2030: { term: "Loss by 2030", means: "The change in the value of the portfolio at the 2030 horizon under the scenario.", unit: "USD", sign: "Negative is a loss." }
+      loss2050: { term: "Loss by 2050", means: "The change in the value of the portfolio at the 2050 horizon under the scenario.", unit: "USD", sign: "Negative is a loss." }
+      capitalShare: { term: "Share of capital", means: "The 2030 loss as a share of the capital base the stress is measured against.", unit: "% of capital" }
+      bySector.sector: { term: "Sector", means: "The industry the loss is attributed to." }
+      bySector.loss: { term: "Sector loss", means: "The part of the 2030 loss that comes from the sector.", unit: "USD", sign: "Negative is a loss." }
+      byHorizon.year: { term: "Horizon", means: "The year of the loss estimate." }
+      byHorizon.loss: { term: "Loss at the horizon", means: "The size of the loss at that year.", unit: "USD", sign: "A positive number is a loss." }
+  financed-emissions:
+    title: Financed emissions
+    about: >-
+      ${$.book} finances ${fmt($.financed, 'amount0')} tCO2e on ${fmt($.exposure, 'compact')} USD of exposure, an intensity of
+      ${fmt($.intensity, 'amount0')} tCO2e per USD million, with an average PCAF data-quality score of ${fmt($.dataQuality, 'price2')}.
+    guide: climate-risk
+    glossary:
+      book: { term: "Book", means: "The portfolio of loans and investments the emissions are attributed to." }
+      financed: { term: "Financed emissions", means: "The share of the borrowers' emissions that belongs to the bank: each borrower's emissions multiplied by the bank's attribution factor, summed.", unit: "tCO2e" }
+      exposure: { term: "Exposure", means: "The amount lent or invested.", unit: "USD" }
+      intensity: { term: "Financed intensity", means: "Financed emissions per million USD of exposure; it allows portfolios of different sizes to be compared.", unit: "tCO2e per USD million" }
+      dataQuality: { term: "PCAF data-quality score", means: "How reliable the emissions data behind the figure is, from 1 (verified emissions reported by the company) to 5 (estimates from sector averages). Lower is better.", unit: "score 1-5" }
+      byCounterparty.counterparty: { term: "Counterparty", means: "The borrower the emissions are attributed to." }
+      byCounterparty.exposure: { term: "Exposure", means: "The amount lent to the counterparty.", unit: "USD" }
+      byCounterparty.attribution: { term: "Attribution factor", means: "The bank's share of the counterparty's emissions: the exposure divided by the counterparty's enterprise value including cash (EVIC).", unit: "fraction (0-1)" }
+      byCounterparty.financed: { term: "Financed emissions", means: "The counterparty's emissions multiplied by the attribution factor.", unit: "tCO2e" }
+      byCounterparty.dataQuality: { term: "Data-quality score", means: "The PCAF score of the counterparty's emissions data, from 1 (best) to 5.", unit: "score 1-5" }
+      bySector.financed: { term: "Financed emissions", means: "The financed emissions of the sector.", unit: "tCO2e" }
+      bySector.sector: { term: "Sector", means: "The industry of the borrowers." }
+  physical-asset:
+    title: Physical-risk asset
+    about: >-
+      ${$.name} in ${$.country}, worth ${fmt($.value, 'compact')} USD and owned or financed through ${$.counterpartyName}, is most exposed to
+      ${$.worstHazard}; ${fmt($.insured, 'pct0')} of its value is insured.
+    guide: climate-risk
+    glossary:
+      counterpartyName: { term: "Counterparty", means: "The borrower or owner of the asset." }
+      value: { term: "Asset value", means: "The current value of the asset.", unit: "USD" }
+      worstHazard: { term: "Worst hazard", means: "The climate hazard with the highest score for this location, with its score from 0 to 100." }
+      insured: { term: "Insured share", means: "The part of the asset value covered by insurance; the rest is exposed to loss.", unit: "% of value" }
+      hazards.hazard: { term: "Hazard", means: "A climate-related peril such as river or coastal flood, extreme heat, tropical storm, wildfire or drought." }
+      hazards.score: { term: "Hazard score", means: "The location's exposure to the hazard in 2050 under a moderate emissions pathway (RCP 4.5), from 0 (none) to 100 (extreme).", unit: "score 0-100" }
+  taxonomy-alignment:
+    title: Green asset ratio
+    about: >-
+      ${$.legalEntityName}'s green asset ratio is ${fmt($.gar, 'pct2')}: that share of its ${fmt($.covered, 'compact')} USD of covered assets
+      is aligned with the EU taxonomy, while ${fmt($.eligible, 'pct0')} is eligible.
+    guide: climate-risk
+    glossary:
+      legalEntityName: { term: "Legal entity", means: "The legal entity the report covers." }
+      gar: { term: "Green asset ratio", means: "Taxonomy-aligned assets divided by covered assets. An asset is aligned if it funds an activity that substantially contributes to an environmental objective, does no significant harm to the others and meets minimum safeguards.", unit: "% of covered assets" }
+      eligible: { term: "Taxonomy-eligible share", means: "The share of covered assets in activities the taxonomy describes, whether or not they meet its criteria. Alignment is a subset of eligibility.", unit: "% of covered assets" }
+      covered: { term: "Covered assets", means: "The assets in scope of the ratio, which excludes sovereign exposures and the trading book.", unit: "USD" }
+      objectives.objective: { term: "Environmental objective", means: "One of the taxonomy's objectives, such as climate change mitigation or adaptation." }
+      objectives.aligned: { term: "Aligned assets", means: "The assets aligned with the objective.", unit: "USD" }

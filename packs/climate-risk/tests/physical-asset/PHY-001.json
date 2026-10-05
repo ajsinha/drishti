@@ -1,0 +1,46 @@
+{
+ "assetId": "PHY-001",
+ "name": "Rotterdam port terminal",
+ "counterpartyName": "Northbridge Capital LLP",
+ "country": "NL",
+ "value": 1303800000.0,
+ "worstHazard": "Extreme heat (90)",
+ "insured": 0.87,
+ "hazards": [
+  {
+   "hazard": "River flood",
+   "score": 89
+  },
+  {
+   "hazard": "Coastal flood",
+   "score": 10
+  },
+  {
+   "hazard": "Extreme heat",
+   "score": 90
+  },
+  {
+   "hazard": "Tropical storm",
+   "score": 20
+  },
+  {
+   "hazard": "Wildfire",
+   "score": 13
+  },
+  {
+   "hazard": "Drought",
+   "score": 35
+  }
+ ],
+ "location": {
+  "latitude": 51.95,
+  "longitude": 4.14,
+  "elevationM": 275,
+  "distanceToCoastKm": 209.0
+ },
+ "counterparty": "CP-NORTHBRIDGE",
+ "_meta": {
+  "source": "climate-data",
+  "generation": 1
+ }
+}

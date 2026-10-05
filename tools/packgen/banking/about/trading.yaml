@@ -1,0 +1,259 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+about: 1
+vocabulary:
+  tradeDate: { term: "Trade date", means: "The day the trade was agreed. Prices and the first risk are those of this day." }
+  effectiveDate: { term: "Effective date", means: "The day the trade starts to accrue interest or to take effect; it can be after the trade date." }
+  maturityDate: { term: "Maturity date", means: "The day the last payment or delivery is due and the trade ends." }
+  expiryDate: { term: "Expiry date", means: "The last day on which an option can be exercised." }
+  settlementDate: { term: "Settlement date", means: "The day cash and the instrument actually change hands." }
+  valueDate: { term: "Value date", means: "The day the currencies of an FX deal are exchanged." }
+  fixingDate: { term: "Fixing date", means: "The day the floating rate or reference price is observed and fixed for a period." }
+  fixingSource: { term: "Fixing source", means: "The published benchmark or screen the reference price is read from." }
+  payDate: { term: "Pay date", means: "The day the cash flow is paid." }
+  forwardStart: { term: "Forward start", means: "The date from which the trade or option starts, later than the trade date." }
+  pv: { term: "Present value", means: "The cash flow or leg discounted back to today at the curve of its currency.", unit: "trade currency", sign: "Positive is received, negative is paid." }
+  notional: { term: "Notional", means: "The reference amount on which interest or payoff is calculated. For a derivative it is usually not exchanged.", unit: "trade currency" }
+  faceAmount: { term: "Face amount", means: "The principal amount of a bond that is repaid at maturity (its par value).", unit: "trade currency" }
+  principal: { term: "Principal", means: "The part of a payment that repays the amount borrowed rather than interest.", unit: "trade currency" }
+  interest: { term: "Interest", means: "The part of a payment that is interest on the outstanding principal.", unit: "trade currency" }
+  opening: { term: "Opening notional", means: "The notional at the start of the period; it changes when the notional amortises or accretes.", unit: "trade currency" }
+  closing: { term: "Closing notional", means: "The notional at the end of the period.", unit: "trade currency" }
+  direction:
+    term: "Direction"
+    means: "Which side of the trade the bank is on: long or short, buy or sell, or pay or receive the fixed leg, depending on the product."
+    values:
+      Long: "The bank bought the instrument or receives its payoff."
+      Short: "The bank sold the instrument or pays its payoff."
+  payReceive: { term: "Pay or receive", means: "Whether the bank pays or receives the leg's cash flows." }
+  payerReceiver: { term: "Payer or receiver", means: "Whether the bank pays or receives the fixed or option leg of the swap or swaption." }
+  rateType: { term: "Rate type", means: "Whether the leg's rate is fixed for the life of the trade or floats with an index." }
+  fixedRate: { term: "Fixed rate", means: "The interest rate fixed in the contract, paid on its day-count basis.", unit: "% a year" }
+  fixedPrice: { term: "Fixed price", means: "The price agreed in the contract for a commodity swap or forward, against which the floating price settles." }
+  index: { term: "Index", means: "The benchmark the floating rate or price is read from, such as an overnight rate (SOFR, SONIA, ESTR), a term rate or a commodity price." }
+  index1: { term: "Index of leg 1", means: "The benchmark paid or received on the first leg of a basis or spread trade." }
+  index2: { term: "Index of leg 2", means: "The benchmark paid or received on the second leg of a basis or spread trade." }
+  baseIndex: { term: "Base index", means: "The reference level of the inflation index at the start; the index ratio divides today's index by it." }
+  indexRatio: { term: "Index ratio", means: "The accrued inflation uplift of an index-linked bond, the current reference index divided by the base index." }
+  indexLag: { term: "Index lag", means: "The delay between the inflation index month and the payment month it is applied to." }
+  spread: { term: "Spread", means: "The margin added to the reference rate or price, or the credit spread quoted for protection.", unit: "bp or %, as quoted" }
+  spreadType: { term: "Spread type", means: "Which spread is quoted: over a reference curve, over a swap rate or between two prices." }
+  quotedMargin: { term: "Quoted margin", means: "The spread over the reference rate that a floating-rate note pays.", unit: "% a year" }
+  discountMargin: { term: "Discount margin", means: "The spread over the reference rate that makes a floating-rate note's discounted cash flows equal its price." }
+  zSpread: { term: "Z-spread", means: "The constant spread added to every point of the zero curve that makes a bond's discounted cash flows equal its price." }
+  assetSwapSpread: { term: "Asset-swap spread", means: "The spread over the floating rate at which the bond's cash flows can be swapped into floating-rate payments at par." }
+  oas: { term: "Option-adjusted spread", means: "The spread over the curve that remains after the value of the bond's embedded option is removed." }
+  fundingSpread: { term: "Funding spread", means: "The spread over the reference rate at which the position is financed." }
+  xccyBasis: { term: "Cross-currency basis", means: "The spread added to one currency's floating leg of a cross-currency swap so the two legs have equal value; it prices the demand for the other currency." }
+  strikeSpread: { term: "Strike spread", means: "The difference between the strikes of the two options of a spread option or spread trade." }
+  dayCount: { term: "Day-count convention", means: "How the days of a period are counted to turn an annual rate into an amount, for example Actual/360 or 30/360." }
+  frequency: { term: "Payment frequency", means: "How often the leg pays or resets, for example quarterly or semi-annual." }
+  couponFrequency: { term: "Coupon frequency", means: "How many times a year the bond pays its coupon." }
+  payFrequency: { term: "Pay frequency", means: "How often the leg's payments are made." }
+  resetFrequency: { term: "Reset frequency", means: "How often the floating rate or the notional is reset." }
+  capFrequency: { term: "Caplet frequency", means: "The period of the individual options (caplets) the cap is made of." }
+  floorFrequency: { term: "Floorlet frequency", means: "The period of the individual options (floorlets) the floor is made of." }
+  exerciseFrequency: { term: "Exercise frequency", means: "How often a Bermudan option can be exercised." }
+  businessDay: { term: "Business-day convention", means: "How a date that falls on a holiday is moved, for example to the following or modified-following business day." }
+  compounding: { term: "Compounding", means: "How the interest on the floating leg builds up within a period, for example by compounding the daily overnight rate." }
+  coupon: { term: "Coupon", means: "The interest rate the bond pays on its face amount.", unit: "% a year" }
+  couponRate: { term: "Coupon rate", means: "The annual interest rate of the instrument applied to its face amount.", unit: "% a year" }
+  couponFormula: { term: "Coupon formula", means: "The rule that sets a structured note's coupon, for example a fixed rate or a rate that depends on an index." }
+  initialCoupon: { term: "Initial coupon", means: "The coupon of the first period before the floating or formula rate takes over." }
+  memory: { term: "Memory coupon", means: "Whether coupons missed because the condition was not met are paid later once it is met." }
+  snowballSpread: { term: "Snowball spread", means: "The spread by which a snowball coupon steps from one period to the next." }
+  accretionRate: { term: "Accretion rate", means: "The rate at which the principal of an accreting note or the notional of an accreting swap grows.", unit: "% a year" }
+  accrualRate: { term: "Accrual rate", means: "The rate that accrues on each day the accrual condition of a range-accrual note is met.", unit: "% a year" }
+  amortisation: { term: "Amortisation", means: "The schedule on which the principal or notional is repaid before maturity." }
+  cleanPrice: { term: "Clean price", means: "The quoted price of a bond without accrued interest, as a percentage of face amount.", unit: "% of face" }
+  issuePrice: { term: "Issue price", means: "The price at which the instrument was first sold, as a percentage of face." }
+  tradePrice: { term: "Trade price", means: "The price at which the trade was done." }
+  openPrice: { term: "Open price", means: "The price at which the position was opened." }
+  averagePrice: { term: "Average price", means: "The average of the observed prices over the averaging period, used by an Asian option or average-price swap." }
+  forwardPrice: { term: "Forward price", means: "The agreed price for delivery at a future date." }
+  callPrice: { term: "Call price", means: "The price at which the issuer can redeem the bond early, as a percentage of face." }
+  putPrice: { term: "Put price", means: "The price at which the holder can sell the bond back to the issuer, as a percentage of face." }
+  conversionPrice: { term: "Conversion price", means: "The price per share at which a convertible bond can be exchanged into shares." }
+  conversionRatio: { term: "Conversion ratio", means: "The number of shares received for each convertible bond." }
+  conversionFactor: { term: "Conversion factor", means: "The factor that makes a deliverable bond comparable with the futures contract's notional bond; the delivery price is the futures price times this factor." }
+  ctd: { term: "Cheapest to deliver", means: "The deliverable bond that costs the seller least to deliver against the futures contract." }
+  yield: { term: "Yield", means: "The annual return if the bond is held to maturity at its current price.", unit: "% a year" }
+  wal: { term: "Weighted average life", means: "The average time until principal is repaid, weighted by the amount repaid.", unit: "years" }
+  averageLife: { term: "Average life", means: "The weighted average time until the principal is repaid, which is shorter than the maturity when principal amortises.", unit: "years" }
+  wac: { term: "Weighted average coupon", means: "The average coupon of the loans in the pool, weighted by their balances.", unit: "% a year" }
+  cpr: { term: "Constant prepayment rate", means: "The annualised share of the pool's outstanding principal assumed to be repaid early.", unit: "% a year" }
+  zeroRate: { term: "Zero rate", means: "The rate of return for a single payment at one future date, used to discount it." }
+  discountRate: { term: "Discount rate", means: "The rate used to bring a future amount back to its value today." }
+  fraRate: { term: "FRA rate", means: "The fixed rate agreed in a forward rate agreement for a future interest period." }
+  repoRate: { term: "Repo rate", means: "The interest rate of the repurchase agreement, as the difference between the sale and repurchase prices over the term." }
+  nearRate: { term: "Near-leg rate", means: "The exchange rate or price of the earlier leg of an FX swap or calendar spread." }
+  farRate: { term: "Far-leg rate", means: "The exchange rate or price of the later leg of an FX swap or calendar spread." }
+  nearMonth: { term: "Near month", means: "The earlier contract month of a calendar spread." }
+  farMonth: { term: "Far month", means: "The later contract month of a calendar spread." }
+  swapPoints: { term: "Swap points", means: "The difference between the forward and the spot rate of an FX swap, in pips of the currency pair." }
+  forwardPoints: { term: "Forward points", means: "The amount added to the spot rate to get the forward rate; it reflects the interest-rate difference of the two currencies." }
+  fxRateAtStart: { term: "FX rate at start", means: "The exchange rate fixed at the start of a cross-currency or FX-linked trade, used to size the notional." }
+  quantoRate: { term: "Quanto rate", means: "The fixed exchange rate at which the payoff of a quanto trade is converted into the payment currency." }
+  otherCurrency: { term: "Other currency", means: "The second currency of the pair or of the cross-currency leg." }
+  optionType: { term: "Option type", means: "Whether the option is a call (right to buy) or a put (right to sell)." }
+  exerciseStyle: { term: "Exercise style", means: "When the option can be exercised: only at expiry (European), at any time until expiry (American) or on a set of dates (Bermudan)." }
+  strike: { term: "Strike", means: "The price, rate or level at which the option can be exercised or at which the payoff starts." }
+  capStrike: { term: "Cap strike", means: "The rate above which the cap pays the difference." }
+  floorStrike: { term: "Floor strike", means: "The rate below which the floor pays the difference." }
+  dividendStrike: { term: "Dividend strike", means: "The fixed dividend level of a dividend swap, against which the realised dividends settle." }
+  varianceStrike: { term: "Variance strike", means: "The volatility, in volatility points, at which the variance swap is struck; it pays on realised variance minus the strike squared.", unit: "volatility points" }
+  volStrike: { term: "Volatility strike", means: "The volatility level at which the volatility swap is struck.", unit: "volatility points" }
+  premium: { term: "Premium", means: "The price paid by the buyer of the option or protection.", unit: "trade currency" }
+  premiumTicks: { term: "Premium in ticks", means: "The option premium expressed in ticks of the exchange contract." }
+  upfront: { term: "Upfront payment", means: "A payment made at the start to bring a fixed coupon to the contract's fair value." }
+  rebate: { term: "Rebate", means: "The amount paid to the holder when a barrier option is knocked out." }
+  rebateRate: { term: "Rebate rate", means: "The rate at which the rebate is calculated." }
+  cap: { term: "Cap", means: "The highest value of the rate or return that the holder receives." }
+  capFloor: { term: "Cap or floor", means: "Whether the option strip pays when the rate is above the strike (cap) or below it (floor)." }
+  localCap: { term: "Local cap", means: "The most that each period's return can contribute to the payoff." }
+  localFloor: { term: "Local floor", means: "The least that each period's return can contribute to the payoff." }
+  globalFloor: { term: "Global floor", means: "The least that the total payoff can be, however the periods perform." }
+  lpiCap: { term: "LPI cap", means: "The maximum annual inflation increase of a limited-price-indexation payment." }
+  lpiFloor: { term: "LPI floor", means: "The minimum annual inflation increase of a limited-price-indexation payment." }
+  barrier: { term: "Barrier", means: "The level which, when the underlying touches or crosses it, switches the option on or off." }
+  barrierType: { term: "Barrier type", means: "Whether crossing the barrier activates the option (knock-in) or cancels it (knock-out), and from which direction." }
+  knockInBarrier: { term: "Knock-in barrier", means: "The level that, once breached, exposes the holder of the note to loss of the underlying." }
+  knockOut: { term: "Knock-out", means: "The level at which the product ends early when the underlying reaches it." }
+  upperBarrier: { term: "Upper barrier", means: "The top of the range of a double-barrier or range product." }
+  lowerBarrier: { term: "Lower barrier", means: "The bottom of the range of a double-barrier or range product." }
+  upperBound: { term: "Upper bound", means: "The top of the range the payoff or accrual condition is tested against." }
+  lowerBound: { term: "Lower bound", means: "The bottom of the range the payoff or accrual condition is tested against." }
+  touchType: { term: "Touch type", means: "Whether the digital pays when the barrier is touched at any time (one-touch) or not (no-touch)." }
+  autocallTrigger: { term: "Autocall trigger", means: "The level of the underlying at or above which the note is redeemed early on an observation date." }
+  trigger: { term: "Trigger", means: "The level of the underlying that activates an event, such as a barrier, early redemption or coupon.", unit: "level of the underlying" }
+  protection: { term: "Capital protection", means: "The share of the invested amount that is repaid at maturity whatever the underlying does.", unit: "% of face" }
+  participation: { term: "Participation", means: "The share of the underlying's gain that the holder receives.", unit: "% of the move" }
+  leverage: { term: "Leverage", means: "The multiple of the underlying's move that the payoff follows." }
+  payoff: { term: "Payoff", means: "The amount the structure pays at the observation or maturity date, given the underlying's level." }
+  payout: { term: "Payout", means: "The fixed amount a digital option pays when its condition is met.", unit: "trade currency" }
+  outcome: { term: "Outcome", means: "What happened on an observation date: whether the coupon was paid, the barrier hit or the note called." }
+  performance: { term: "Performance", means: "The return of the underlying since the start date or the previous observation.", unit: "%" }
+  basket: { term: "Basket", means: "The securities, names or collateral grouped together in the trade." }
+  basketSize: { term: "Basket size", means: "The number of names or stocks in the basket." }
+  constituents: { term: "Constituents", means: "The number of components of the index or basket." }
+  nth: { term: "Nth to default", means: "In an nth-to-default basket swap, the number of defaults that triggers the payment (1 for first-to-default)." }
+  attachment: { term: "Attachment point", means: "The portfolio loss, as a share of notional, at which the tranche starts to absorb losses.", unit: "% of portfolio" }
+  detachment: { term: "Detachment point", means: "The portfolio loss, as a share of notional, above which the tranche has no more to lose.", unit: "% of portfolio" }
+  tranche: { term: "Tranche", means: "The slice of a credit portfolio's losses and cash flows that the trade is exposed to, defined by its attachment and detachment points." }
+  trancheType: { term: "Tranche type", means: "Where the slice sits in the capital structure, such as equity, mezzanine or senior." }
+  seniority: { term: "Seniority", means: "The rank of the claim in a default; senior claims are paid before subordinated ones." }
+  docClause: { term: "Documentation clause", means: "The restructuring clause of the credit derivative (for example no restructuring or modified-modified restructuring), which says which credit events trigger payment." }
+  rating: { term: "Rating", means: "The credit rating of the issuer or the instrument given by a rating agency." }
+  sector: { term: "Sector", means: "The industry of the issuer or reference entity." }
+  agency: { term: "Agency", means: "The government-related agency that issued or guarantees the bond." }
+  agent: { term: "Agent", means: "The bank that administers the loan or facility for the lenders." }
+  isin: { term: "ISIN", means: "The 12-character International Securities Identification Number of the security." }
+  coverPool: { term: "Cover pool", means: "The assets that back a covered bond and that the investor can claim against first." }
+  facilityType: { term: "Facility type", means: "The kind of loan facility, such as a term loan or a revolving credit line." }
+  commitment: { term: "Commitment", means: "The total amount the lender has agreed to make available.", unit: "trade currency" }
+  drawn: { term: "Drawn amount", means: "The part of the commitment that the borrower has borrowed so far.", unit: "trade currency" }
+  commitmentFee: { term: "Commitment fee", means: "The fee the borrower pays on the part of the facility not drawn.", unit: "% a year" }
+  ltv: { term: "Loan to value", means: "The loan as a share of the value of the collateral. A higher figure means a thinner cushion.", unit: "% of collateral value" }
+  collateralType: { term: "Collateral type", means: "The kind of asset pledged, such as cash, government bonds or equities." }
+  haircut: { term: "Haircut", means: "The discount applied to the market value of a security when it is used as collateral, to cover price moves.", unit: "% of market value" }
+  marketValue: { term: "Market value", means: "The current price of the position before any haircut.", unit: "trade currency" }
+  maintenanceMargin: { term: "Maintenance margin", means: "The minimum margin the account must hold; below it the clearing member calls for more.", unit: "trade currency" }
+  placedTaken: { term: "Placed or taken", means: "Whether the bank placed the funds or took them, in a money-market deposit or loan." }
+  taxStatus: { term: "Tax status", means: "How the interest of the instrument is taxed, such as taxable or tax-exempt." }
+  term: { term: "Term", means: "The length of the trade or deposit." }
+  settlement: { term: "Settlement", means: "Whether the trade settles by delivering the underlying or in cash." }
+  noticeDays: { term: "Notice days", means: "The number of days of notice required before the trade can be terminated or exercised.", unit: "days" }
+  callable: { term: "Callable", means: "Whether, and by whom, the trade can be terminated early on the call dates." }
+  firstCall: { term: "First call date", means: "The first date on which the issuer can redeem the bond early." }
+  firstPut: { term: "First put date", means: "The first date on which the holder can sell the bond back." }
+  firstExercise: { term: "First exercise date", means: "The first date on which the option can be exercised." }
+  averaging: { term: "Averaging", means: "How the observed prices are averaged for the payoff, for example arithmetically over daily fixings." }
+  averagingPeriod: { term: "Averaging period", means: "The dates over which the reference price is averaged." }
+  startPeriod: { term: "Start period", means: "The period in which the forward-starting trade or option begins." }
+  lots: { term: "Lots", means: "The number of exchange contract lots traded." }
+  contracts: { term: "Contracts", means: "The number of exchange contracts." }
+  contract: { term: "Contract", means: "The exchange-listed contract the trade is in." }
+  deliveryMonth: { term: "Delivery month", means: "The month in which the futures contract's underlying is delivered or the swap settles." }
+  hub: { term: "Hub", means: "The physical or notional trading point for the commodity, such as a gas hub." }
+  location: { term: "Location", means: "The delivery location or locations of the commodity." }
+  route: { term: "Route", means: "The shipping route a freight trade is priced on." }
+  station: { term: "Station", means: "The weather station whose temperature settles a weather derivative." }
+  shape: { term: "Shape", means: "The delivery profile of a power trade within the day, such as baseload (all hours) or peak hours." }
+  mwh: { term: "Volume in MWh", means: "The energy volume of the power trade.", unit: "MWh" }
+  dailyAmount: { term: "Daily amount", means: "The quantity delivered or settled each day.", unit: "units per day" }
+  minDaily: { term: "Minimum daily quantity", means: "The least that must be taken each day under a swing or take-or-pay contract.", unit: "MMBtu" }
+  maxDaily: { term: "Maximum daily quantity", means: "The most that may be taken each day under a swing contract.", unit: "MMBtu" }
+  quantityPerPeriod: { term: "Quantity per period", means: "The commodity quantity settled in each pricing period." }
+  vegaNotional: { term: "Vega notional", means: "The amount paid per volatility point in a variance or volatility swap", unit: "currency per vol point" }
+  deltaAtTrade: { term: "Delta at trade", means: "The option's delta when the trade was done, used to size the hedge." }
+  weight: { term: "Weight", means: "The share of the basket or portfolio the component makes up." }
+  cs01: { term: "CS01", means: "The change in value for a one basis point widening of the credit spread.", unit: "USD per bp", sign: "Negative loses when spreads widen." }
+  ie01: { term: "IE01", means: "The change in value for a one basis point rise in the inflation (breakeven) rate.", unit: "USD per bp", sign: "Negative loses when inflation expectations rise." }
+  jtd: { term: "Jump to default", means: "The loss or gain if the reference entity defaulted immediately, at the assumed recovery.", unit: "USD", sign: "Negative is a loss." }
+  fxDelta: { term: "FX delta", means: "The change in value for a small move in the exchange rate against the reporting currency.", unit: "USD" }
+  gamma: { term: "Gamma", means: "How much the option's delta changes for a move in the underlying; it measures the curvature of the value.", unit: "USD" }
+  vega: { term: "Vega", means: "The change in value for a one-point rise in implied volatility.", unit: "USD per vol point" }
+kinds:
+  trade:
+    title: Trade
+    about: >-
+      ${$.tradeId}: ${$.productName} (${$.assetClass}) with ${coalesce($.counterparty.name, 'no named counterparty')}, booked as "${$.direction}":
+      ${fmt($.notional, 'compact')} ${$.currency} notional, maturing ${$.maturityDate}. It is marked at ${fmt($.mtm, 'signed0')} ${$.mtmCurrency}
+      and its status is ${$.status}.
+    guide: trading
+    glossary:
+      mtm: { term: "Mark to market", means: "The trade's current fair value, from the bank's side. A positive number is an amount the bank is owed; a negative one is an amount it owes.", unit: "USD", sign: "Positive is an asset of the bank." }
+      pnl1d: { term: "One-day P&L", means: "The change in value of the trade over the last business day, including cash flows paid and received.", unit: "USD", sign: "Positive is a gain." }
+      risk.dv01: { term: "DV01", means: "The change in value of the trade for a one basis point (0.01%) rise in interest rates.", unit: "USD per bp", sign: "Negative loses when rates rise." }
+      book: { term: "Book", means: "The trading book the trade is held in; its P&L and risk are reported there." }
+      trade: { term: "Trade", means: "The trade the line refers to." }
+      risk.delta: { term: "Delta", means: "The change in the trade's value for a small move in its underlying price.", unit: "USD" }
+      risk.exposure: { term: "Exposure", means: "The trade's net exposure to its underlying, in USD, signed by direction.", unit: "USD", sign: "Positive is long the underlying, negative short." }
+      schedule.asset: { term: "Asset", means: "The security or cash pledged or delivered on the line." }
+      terms.cmsTenor: { term: "CMS tenor", means: "The maturity of the constant-maturity swap rate the leg is indexed to, for example the 10-year swap rate." }
+      terms.longTenor: { term: "Long tenor", means: "The longer of the two swap tenors a curve-spread trade compares." }
+      terms.shortTenor: { term: "Short tenor", means: "The shorter of the two swap tenors a curve-spread trade compares." }
+      terms.underlyingTenor: { term: "Swap tenor", means: "The length of the swap that the swaption gives the right to enter." }
+      risk.vega: { use: "vega" }
+      risk.gamma: { use: "gamma" }
+      counterparty.name: { term: "Counterparty", means: "The legal entity on the other side of the trade, whose default the bank is exposed to." }
+      schedule.type: { term: "Cash-flow type", means: "What the line is: a fixed or floating coupon, a principal exchange, a fixing or another event of the trade." }
+      schedule.rate: { term: "Rate", means: "The rate applied to the period: the fixed rate, or the fixing of the floating index.", unit: "% a year" }
+      schedule.leg: { term: "Leg", means: "Which leg of the trade the line belongs to; a swap has two." }
+      schedule.level: { term: "Level", means: "The level of the index, price or spread observed or applicable for the line." }
+      schedule.period: { term: "Period", means: "The accrual or observation period of the line." }
+      schedule.value: { term: "Value after haircut", means: "The collateral's market value less its haircut.", unit: "trade currency" }
+      terms.days: { term: "Days", means: "The number of days the term of the instrument counts.", unit: "days" }
+      terms.factor: { term: "Pool factor", means: "The share of the original principal of a securitised pool that is still outstanding.", unit: "fraction (0-1)" }
+      terms.collateral: { term: "Collateral", means: "The assets pledged to secure the trade or loan." }
+      terms.version: { term: "Version", means: "The version of the trade record; it increases with each amendment or lifecycle event." }
+      terms.fee: { term: "Fee", means: "The fee charged on the trade, such as the borrow or lending fee of a securities loan.", unit: "% a year" }
+      terms.margin: { term: "Margin", means: "The initial or variation margin held against the position, or the spread margin over the reference rate." }
+      terms.period: { term: "Period", means: "The period the term covers." }
+      terms.ratio: { term: "Ratio", means: "The ratio that scales the instrument, such as the ratio of shares to bonds or the hedge ratio." }
+      terms.target: { term: "Target", means: "The target level of a target-redemption product, in pips for an FX target forward or as a cumulative coupon for a note, after which it terminates." }
+      terms.term: { use: "term" }
+      terms.tick: { term: "Tick", means: "The smallest price move of the exchange contract and its value." }
+  desk-pnl:
+    title: Desk P&L, derived from trades
+    about: >-
+      ${$.name} has ${$.tradeCount} trades marked at ${fmt($.mtm, 'signed0')} USD; their one-day P&L is ${fmt($.pnl1d, 'signed0')} USD.
+    guide: trading
+    glossary:
+      rows.trade: { term: "Trade", means: "The trade the row shows." }
+      rows.product: { term: "Product", means: "The kind of instrument the trade is." }
+      rows.book: { term: "Book", means: "The trading book the trade belongs to." }
+      rows.mtm: { term: "Mark to market", means: "The trade's current fair value, from the bank's side.", unit: "USD", sign: "Positive is an asset of the bank." }
+      rows.pnl1d: { term: "One-day P&L", means: "The change in value of the trade over the last business day, including cash flows.", unit: "USD", sign: "Positive is a gain." }

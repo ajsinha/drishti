@@ -1,0 +1,33 @@
+{
+ "scenarioId": "SCN-COVID2020",
+ "name": "COVID-19 March 2020",
+ "type": "Historical",
+ "severity": "Severe",
+ "shocks": [
+  {
+   "factor": "Equities",
+   "shock": -0.34
+  },
+  {
+   "factor": "Credit spreads (IG)",
+   "shock": 1.35
+  },
+  {
+   "factor": "USD rates",
+   "shock": -1.2
+  },
+  {
+   "factor": "Oil",
+   "shock": -0.65
+  },
+  {
+   "factor": "Equity vol",
+   "shock": 45.0
+  }
+ ],
+ "horizon": "10 days",
+ "_meta": {
+  "source": "stress-engine",
+  "generation": 1
+ }
+}

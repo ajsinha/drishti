@@ -1,0 +1,110 @@
+{
+ "portfolioId": "RPF-US-CARD",
+ "name": "US credit cards",
+ "exposure": 9638900000.0,
+ "ecl": 917405000.0,
+ "coverage": 0.0952,
+ "dpd30": 0.0267,
+ "stages": [
+  {
+   "stage": "Stage 1",
+   "exposure": 8752000000.0,
+   "pd": 0.035,
+   "lgd": 0.85,
+   "ecl": 260372000.0
+  },
+  {
+   "stage": "Stage 2",
+   "exposure": 712000000.0,
+   "pd": 0.21,
+   "lgd": 0.85,
+   "ecl": 508368000.0
+  },
+  {
+   "stage": "Stage 3",
+   "exposure": 174900000.0,
+   "pd": 1.0,
+   "lgd": 0.85,
+   "ecl": 148665000.0
+  }
+ ],
+ "delinquency": [
+  {
+   "month": "2025-04",
+   "rate": 0.0393
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0288
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0325
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.037
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.0367
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0387
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0342
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0272
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.0377
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.0313
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.0343
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0294
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0372
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.0385
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.0346
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0314
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0386
+  },
+  {
+   "month": "2026-09",
+   "rate": 0.0267
+  }
+ ],
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "impairment-engine",
+  "generation": 1
+ }
+}

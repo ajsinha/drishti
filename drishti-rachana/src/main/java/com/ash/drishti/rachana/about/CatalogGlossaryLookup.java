@@ -39,6 +39,6 @@ public final class CatalogGlossaryLookup implements GlossaryLookup {
                 return true;
             }
         }
-        return t.vocabulary().containsKey(last);
+        return t.vocabulary().containsKey(last) || catalog.core(last).isPresent();
     }
 }

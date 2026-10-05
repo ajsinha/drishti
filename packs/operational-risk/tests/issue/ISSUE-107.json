@@ -1,0 +1,32 @@
+{
+ "issueId": "ISSUE-107",
+ "title": "Privileged access not recertified",
+ "source": "Self-identified",
+ "severity": "Medium",
+ "owner": "S. Okafor",
+ "due": "2026-10-16",
+ "status": "Open",
+ "actions": [
+  {
+   "due": "2026-08-17",
+   "action": "Implement and validate",
+   "status": "Open"
+  },
+  {
+   "due": "2026-09-16",
+   "action": "Remediation design",
+   "status": "Open"
+  },
+  {
+   "due": "2026-10-16",
+   "action": "Root-cause analysis",
+   "status": "Open"
+  }
+ ],
+ "desk": "DESK-FI",
+ "relatedLoss": "LOSS-2025-0019",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1
+ }
+}

@@ -48,13 +48,13 @@ public final class AboutCatalog implements AboutSource {
 
     private record Loaded(AboutProperties.PackSource pack, AboutParser.Parsed parsed) {}
 
-    private record Snapshot(Map<String, AboutText> byKind, Map<String, List<SutraProblem>> problems) {}
+    private record Snapshot(Map<String, AboutText> byKind, Map<String, Map<String, AboutText>> byLocale, Map<String, List<SutraProblem>> problems) {}
 
     private final AboutProperties props;
     private final AboutParser parser;
     private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
     private final AtomicLong revision = new AtomicLong();
-    private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of());
+    private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of(), Map.of());
     /** The generic words every domain shares ({@value #CORE_RESOURCE}); the lowest priority of all vocabularies. */
     private final Map<String, GlossaryEntry> core;
 
@@ -123,12 +123,108 @@ public final class AboutCatalog implements AboutSource {
                         .add(new SutraProblem(AboutParser.BAD_FILE, "the file could not be read: " + e.getMessage(), new SourceLocation(display(p), 0, 0)));
             }
         }
-        List<Loaded> resolved = resolveUses(loaded, problems);
+        List<Loaded> resolved = resolveUses(loaded, loaded, problems);
         Map<String, AboutText> byKind = merge(resolved);
+        Map<String, Map<String, AboutText>> byLocale = overlays(loaded, resolved, byName, problems);
         problems.forEach((file, ps) -> ps.forEach(x -> LOG.warn("about problem {}", x)));
-        snapshot = new Snapshot(Map.copyOf(byKind), Map.copyOf(problems));
+        snapshot = new Snapshot(Map.copyOf(byKind), Map.copyOf(byLocale), Map.copyOf(problems));
         revision.incrementAndGet();
-        LOG.info("about loaded: {} kind(s), {} problem file(s)", byKind.size(), problems.size());
+        LOG.info("about loaded: {} kind(s), {} language overlay(s), {} problem file(s)", byKind.size(), byLocale.size(), problems.size());
+    }
+
+    /**
+     * The translation overlays: {@code about.<lang>.yaml} beside each pack's about file ({@code <lang>} a BCP 47 tag such as
+     * {@code fr} or {@code fr-CA}). An overlay has the same shape and the same strict parse as the English file and is
+     * merged over it key by key, so a key it does not translate falls back to English. Order inside one language: its
+     * overlays (most specific pack first), then, for a regional tag, the plain language's, then every English file.
+     */
+    private Map<String, Map<String, AboutText>> overlays(List<Loaded> base, List<Loaded> resolvedBase, Map<String, AboutProperties.PackSource> byName,
+            Map<String, List<SutraProblem>> problems) {
+        Map<String, List<Loaded>> byTag = new java.util.TreeMap<>();
+        for (AboutProperties.PackSource p : props.packs()) {
+            if (p.file() == null || !Files.isRegularFile(Path.of(p.file()))) {
+                continue;
+            }
+            Path file = Path.of(p.file());
+            String name = file.getFileName().toString();
+            String stem = name.endsWith(".yaml") ? name.substring(0, name.length() - 5) : name;
+            Set<String> own = new LinkedHashSet<>();
+            p.lineage().forEach(n -> Optional.ofNullable(byName.get(n)).ifPresent(x -> own.addAll(x.kinds())));
+            Path dir = file.toAbsolutePath().getParent();
+            List<Path> found;
+            try (java.util.stream.Stream<Path> ls = Files.list(dir)) {
+                found = ls.filter(f -> OVERLAY.matcher(f.getFileName().toString()).matches()
+                        && f.getFileName().toString().startsWith(stem + ".")).sorted().toList();
+            } catch (IOException e) {
+                continue;
+            }
+            for (Path f : found) {
+                String fn = f.getFileName().toString();
+                String tag = fn.substring(stem.length() + 1, fn.length() - 5).toLowerCase(java.util.Locale.ROOT);
+                String shown = p.name() + "/" + fn;
+                try {
+                    AboutParser.Parsed parsed = parser.parse(Files.readString(f, StandardCharsets.UTF_8), shown, own);
+                    if (!parsed.problems().isEmpty()) {
+                        problems.computeIfAbsent(shown, k -> new ArrayList<>()).addAll(parsed.problems());
+                    }
+                    byTag.computeIfAbsent(tag, k -> new ArrayList<>()).add(new Loaded(p, parsed));
+                } catch (IOException | RuntimeException e) {
+                    problems.computeIfAbsent(shown, k -> new ArrayList<>())
+                            .add(new SutraProblem(AboutParser.BAD_FILE, "the file could not be read: " + e.getMessage(), new SourceLocation(shown, 0, 0)));
+                }
+            }
+        }
+        Map<String, List<Loaded>> resolvedByTag = new java.util.TreeMap<>();
+        byTag.forEach((tag, list) -> resolvedByTag.put(tag, resolveUses(list, base, problems)));
+        Map<String, Map<String, AboutText>> out = new LinkedHashMap<>();
+        resolvedByTag.forEach((tag, list) -> {
+            List<Loaded> chain = new ArrayList<>(list);
+            int dash = tag.indexOf('-');
+            if (dash > 0 && resolvedByTag.containsKey(tag.substring(0, dash))) {
+                chain.addAll(resolvedByTag.get(tag.substring(0, dash)));
+            }
+            chain.addAll(resolvedBase);
+            out.put(tag, Map.copyOf(merge(chain)));
+        });
+        return out;
+    }
+
+    private static final java.util.regex.Pattern OVERLAY = java.util.regex.Pattern.compile("[^.]+\\.[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*\\.yaml");
+
+    /** The languages that have an overlay, lower case, sorted. English is always there and is not listed. */
+    public Set<String> locales() {
+        return new java.util.TreeSet<>(snapshot.byLocale().keySet());
+    }
+
+    /**
+     * Which language to answer in: the first requested tag that has an overlay, else its plain language's overlay, else
+     * {@code en}. Tags may be written {@code fr_CA} or {@code FR-ca}.
+     */
+    public String localeFor(List<String> requested) {
+        Map<String, Map<String, AboutText>> by = snapshot.byLocale();
+        for (String r : requested == null ? List.<String>of() : requested) {
+            if (r == null || r.isBlank()) {
+                continue;
+            }
+            String tag = r.strip().replace('_', '-').toLowerCase(java.util.Locale.ROOT);
+            if (by.containsKey(tag)) {
+                return tag;
+            }
+            int dash = tag.indexOf('-');
+            if (dash > 0 && by.containsKey(tag.substring(0, dash))) {
+                return tag.substring(0, dash);
+            }
+        }
+        return DEFAULT_LOCALE;
+    }
+
+    public static final String DEFAULT_LOCALE = "en";
+
+    /** What the packs say about {@code kind} in {@code locale} (a value {@link #localeFor} returned), English where untranslated. */
+    @Override
+    public Optional<AboutText> forKind(String kind, String locale) {
+        Map<String, AboutText> m = locale == null ? null : snapshot.byLocale().get(locale);
+        return m == null ? forKind(kind) : Optional.ofNullable(m.get(kind));
     }
 
     /** What the packs say about {@code kind}, merged through {@code extends}, or empty when no pack says anything. */
@@ -184,9 +280,9 @@ public final class AboutCatalog implements AboutSource {
     }
 
     /** Checks each {@code use} (resolved later, in {@link #merge}) against the vocabulary visible to its pack (its own file's and its parents'), most specific first. */
-    private List<Loaded> resolveUses(List<Loaded> loaded, Map<String, List<SutraProblem>> problems) {
+    private List<Loaded> resolveUses(List<Loaded> loaded, List<Loaded> context, Map<String, List<SutraProblem>> problems) {
         Map<String, Loaded> byPack = new LinkedHashMap<>();
-        loaded.forEach(l -> byPack.put(l.pack().name(), l));
+        context.forEach(l -> byPack.put(l.pack().name(), l));
         List<Loaded> out = new ArrayList<>();
         for (Loaded l : loaded) {
             Map<String, KindAbout> kinds = new LinkedHashMap<>();

@@ -1,0 +1,280 @@
+{
+ "tradeId": "WSS-1500103",
+ "sourceSystem": "Wall Street Systems",
+ "sourceTradeId": "1500103",
+ "productType": "DEPOSIT",
+ "productName": "Term deposit / placement",
+ "assetClass": "Money market",
+ "family": "money",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-07-31",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2026-10-28",
+ "currency": "AUD",
+ "notional": 131000000.0,
+ "mtm": 1944745,
+ "mtmCurrency": "USD",
+ "pnl1d": -6501,
+ "counterparty": {
+  "id": "CP-HARBORPT",
+  "name": "Harbor Point Bank"
+ },
+ "nettingSet": "NS-HARBORPT-NY",
+ "book": "BOOK-MM-1",
+ "trader": "TRDR-SIYER",
+ "desk": "DESK-MM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-AUD-OIS",
+ "terms": {
+  "rate": 0.049585,
+  "placedTaken": "Placed"
+ },
+ "risk": {
+  "dv01": 2380
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 793
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1587
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -18063
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -28862
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 77207
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 88692
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 66211
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -70296
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 14842
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 64484
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 46944
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 27960
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 70955
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -6841
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 10467
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 106580
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -15263
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 74883
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -5075
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6972
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -12679
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 5584
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-31",
+  "executionTimestamp": "2026-07-31T09:11:02.463Z",
+  "venue": "Bloomberg SEF",
+  "venueMic": "BSEF",
+  "executionType": "Electronic",
+  "trader": "S. Iyer",
+  "salesperson": null,
+  "orderId": "ORD-A701C3DD68"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-31T12:22:00Z",
+    "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-08-16T12:22:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-07-31T12:22:00Z",
+  "lastModifiedAt": "2026-08-16T12:22:00Z",
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2026-07-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Wall Street Systems by TRDR-SIYER: long Term deposit / placement"
+   },
+   {
+    "date": "2026-07-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT252323334)"
+   },
+   {
+    "date": "2026-08-16",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by stp.gateway)"
+   },
+   {
+    "date": "2026-10-28",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT252323334",
+  "matched": "2026-07-31 14:39",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II2096A701C3DD68A6E937EF2A",
+  "upi": "QZHG9ZVXFNAF",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HARBGB33XXX",
+  "ssiId": "SSI-AUD-99A301",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 1944745,
+  "cleanPv": 1944745.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-AUD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 1951246,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1960
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 143
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -9440
+  },
+  {
+   "step": "FX delta",
+   "pnl": 835
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -99
+  },
+  {
+   "step": "Theta",
+   "pnl": -136
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 236
+  }
+ ],
+ "_meta": {
+  "source": "summit-mm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 5199
+  }
+ }
+}

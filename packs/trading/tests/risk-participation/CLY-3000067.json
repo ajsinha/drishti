@@ -1,0 +1,283 @@
+{
+ "tradeId": "CLY-3000067",
+ "sourceSystem": "Calypso",
+ "sourceTradeId": "3000067",
+ "productType": "RISK_PARTICIPATION",
+ "productName": "Unfunded risk participation",
+ "assetClass": "Credit",
+ "family": "cds",
+ "status": "Live",
+ "direction": "Buy protection",
+ "tradeDate": "2025-02-10",
+ "effectiveDate": "2025-02-12",
+ "maturityDate": "2028-10-13",
+ "currency": "JPY",
+ "notional": 26000000.0,
+ "mtm": 177423,
+ "mtmCurrency": "USD",
+ "pnl1d": 12208,
+ "counterparty": {
+  "id": "CP-NORTHBRIDGE",
+  "name": "Northbridge Capital LLP"
+ },
+ "nettingSet": "NS-NORTHBRIDGE-NY",
+ "book": "BOOK-CREDIT-2",
+ "trader": "TRDR-CDUBOIS",
+ "desk": "DESK-CREDIT",
+ "legalEntity": "LE-NY",
+ "issuer": "ISS-NOVATEK",
+ "creditCurve": "CDS-NOVATEK",
+ "discountCurve": "CRV-JPY-OIS",
+ "terms": {
+  "participation": 0.440568,
+  "fee": 216.4
+ },
+ "risk": {
+  "cs01": 8813,
+  "jtd": -15600000
+ },
+ "sensitivities": [
+  {
+   "bucket": "6M",
+   "cs01": 881,
+   "jtd": -1560000
+  },
+  {
+   "bucket": "1Y",
+   "cs01": 1763,
+   "jtd": -3120000
+  },
+  {
+   "bucket": "2Y",
+   "cs01": 2644,
+   "jtd": -4680000
+  },
+  {
+   "bucket": "3Y",
+   "cs01": 3525,
+   "jtd": -6240000
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 12831
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 3622
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -2838
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -983
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -1552
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 4699
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 9963
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 3196
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 7101
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 6499
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -489
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -6986
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 6976
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 4130
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -5368
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2247
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1758
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 987
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -9406
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 4473
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-02-10",
+  "executionTimestamp": "2025-02-10T11:05:39.348Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "C. Dubois",
+  "salesperson": null,
+  "orderId": "ORD-52C6C05453"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-02-10T12:17:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2025-02-10T12:17:00Z",
+  "lastModifiedAt": "2025-02-10T12:17:00Z",
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2025-02-10",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Calypso by TRDR-CDUBOIS: buy protection Unfunded risk participation"
+   },
+   {
+    "date": "2025-02-10",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA368110710)"
+   },
+   {
+    "date": "2028-10-13",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA368110710",
+  "matched": "2025-02-10 13:25",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209652C6C05453C7B636A30D",
+  "upi": "QZIBLUZQKSL0",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "MUFG Bank, Ltd.",
+  "ourAgentBic": "BOTKJPJTXXX",
+  "theirAgentBic": "NORTGB33XXX",
+  "ssiId": "SSI-JPY-A0C7C2",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 177423,
+  "cleanPv": 177423.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CDS-NOVATEK",
+   "CRV-JPY-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 165215,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 4528
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -2100
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 9416
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1795
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -98
+  },
+  {
+   "step": "Theta",
+   "pnl": -1173
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -160
+  }
+ ],
+ "_meta": {
+  "source": "murex-credit",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 615
+  }
+ }
+}

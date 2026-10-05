@@ -1,0 +1,303 @@
+{
+ "tradeId": "END-1000073",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000073",
+ "productType": "EMISSIONS_FUTURE",
+ "productName": "Emissions allowance future",
+ "assetClass": "Commodity",
+ "family": "future",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2026-08-17",
+ "effectiveDate": "2026-08-19",
+ "maturityDate": "2027-07-08",
+ "currency": "USD",
+ "notional": 145000000.0,
+ "mtm": 895927,
+ "mtmCurrency": "USD",
+ "pnl1d": -37900,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "commodityCurve": "CMDC-SILVER",
+ "terms": {
+  "contract": "EUA Z6",
+  "lots": 363
+ },
+ "risk": {
+  "delta": 498194
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 33213
+  },
+  {
+   "bucket": "1M",
+   "delta": 66426
+  },
+  {
+   "bucket": "3M",
+   "delta": 99639
+  },
+  {
+   "bucket": "6M",
+   "delta": 132852
+  },
+  {
+   "bucket": "1Y",
+   "delta": 166065
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 6034
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 729
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -9105
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 817
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 35401
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 12295
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 5494
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -5810
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 19666
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 31437
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -9082
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -4132
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -6496
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 58141
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -161
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 19317
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 11639
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -30494
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -17110
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -25111
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-08-17",
+  "executionTimestamp": "2026-08-17T10:46:25.002Z",
+  "venue": "CME Globex",
+  "venueMic": "XCME",
+  "executionType": "Electronic",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-2062C4310A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-08-17T12:07:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-08-29T12:07:00Z",
+    "by": "mo.ops"
+   }
+  ],
+  "sourceSystem": "Summit",
+  "createdAt": "2026-08-17T12:07:00Z",
+  "lastModifiedAt": "2026-08-29T12:07:00Z",
+  "lastModifiedBy": "mo.ops",
+  "timeline": [
+   {
+    "date": "2026-08-17",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: long Emissions allowance future"
+   },
+   {
+    "date": "2026-08-17",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT708857704)"
+   },
+   {
+    "date": "2026-08-18",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2026-08-29",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.ops)"
+   },
+   {
+    "date": "2027-07-08",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT708857704",
+  "matched": "2026-08-17 13:24",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH6771407588",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20962062C4310A3932309DA2",
+  "upi": "QZS1BRN9FT2H",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 895927,
+  "cleanPv": 895927.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-SILVER"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 933827,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -12877
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -4330
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -25999
+  },
+  {
+   "step": "FX delta",
+   "pnl": 1955
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 429
+  },
+  {
+   "step": "Theta",
+   "pnl": 795
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 2127
+  }
+ ],
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 3242
+  }
+ }
+}

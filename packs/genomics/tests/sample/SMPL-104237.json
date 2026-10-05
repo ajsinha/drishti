@@ -1,0 +1,44 @@
+{
+ "sampleId": "SMPL-104237",
+ "tissue": "Colon",
+ "diagnosis": "Colorectal adenocarcinoma",
+ "purity": 0.85,
+ "variantCount": 3,
+ "meanCoverage": 679,
+ "collected": "2026-09-04",
+ "calls": [
+  {
+   "variant": "VRNT-KRAS-G12D",
+   "gene": "KRAS",
+   "vaf": 0.185,
+   "depth": 579,
+   "filter": "PASS"
+  },
+  {
+   "variant": "VRNT-TP53-R175H",
+   "gene": "TP53",
+   "vaf": 0.262,
+   "depth": 570,
+   "filter": "PASS"
+  },
+  {
+   "variant": "VRNT-APOE-E4",
+   "gene": "APOE",
+   "vaf": 0.5,
+   "depth": 272,
+   "filter": "Germline"
+  }
+ ],
+ "qc": {
+  "readsMillions": 246.8,
+  "duplicationRate": "11.9%",
+  "onTarget": "89.1%",
+  "contamination": "0.00%",
+  "panel": "Solid tumour 523-gene panel"
+ },
+ "sequencingRun": "SEQ-2026-0910-A",
+ "_meta": {
+  "source": "lims",
+  "generation": 1
+ }
+}

@@ -1,0 +1,75 @@
+{
+ "cardId": "CARD-100343",
+ "holderName": "Priya Sharma",
+ "product": "Rewards Visa",
+ "balance": 4344.76,
+ "limit": 25000,
+ "utilisation": 0.174,
+ "apr": 0.2819,
+ "status": "Active",
+ "spend": [
+  {
+   "category": "Groceries",
+   "amount": 1401.02
+  },
+  {
+   "category": "Travel",
+   "amount": 731.85
+  },
+  {
+   "category": "Dining",
+   "amount": 924.18
+  },
+  {
+   "category": "Fuel",
+   "amount": 622.74
+  },
+  {
+   "category": "Online retail",
+   "amount": 171.86
+  },
+  {
+   "category": "Utilities",
+   "amount": 785.64
+  },
+  {
+   "category": "Entertainment",
+   "amount": 348.56
+  }
+ ],
+ "statements": [
+  {
+   "closing": "2026-08-16",
+   "balance": 3193.3,
+   "minimum": 130.34,
+   "paid": 2172.38
+  },
+  {
+   "closing": "2026-07-17",
+   "balance": 5042.42,
+   "minimum": 130.34,
+   "paid": 130.34
+  },
+  {
+   "closing": "2026-06-17",
+   "balance": 4007.02,
+   "minimum": 130.34,
+   "paid": 130.34
+  },
+  {
+   "closing": "2026-05-18",
+   "balance": 4816.58,
+   "minimum": 130.34,
+   "paid": 4344.76
+  }
+ ],
+ "customer": "CUST-100343",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "balance": 12.0
+  }
+ }
+}

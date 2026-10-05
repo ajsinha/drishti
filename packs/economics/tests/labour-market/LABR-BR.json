@@ -1,0 +1,139 @@
+{
+ "labourId": "LABR-BR",
+ "economyName": "Brazil",
+ "unemployment": 0.062,
+ "participation": 0.6492,
+ "wageGrowth": 0.0608,
+ "vacancyRatio": 1.16,
+ "unemploymentPath": [
+  {
+   "month": "2024-09",
+   "rate": 0.06
+  },
+  {
+   "month": "2024-10",
+   "rate": 0.0584
+  },
+  {
+   "month": "2024-11",
+   "rate": 0.0602
+  },
+  {
+   "month": "2024-12",
+   "rate": 0.0606
+  },
+  {
+   "month": "2025-01",
+   "rate": 0.0584
+  },
+  {
+   "month": "2025-02",
+   "rate": 0.0615
+  },
+  {
+   "month": "2025-03",
+   "rate": 0.0611
+  },
+  {
+   "month": "2025-04",
+   "rate": 0.0619
+  },
+  {
+   "month": "2025-05",
+   "rate": 0.0596
+  },
+  {
+   "month": "2025-06",
+   "rate": 0.0601
+  },
+  {
+   "month": "2025-07",
+   "rate": 0.0638
+  },
+  {
+   "month": "2025-08",
+   "rate": 0.0626
+  },
+  {
+   "month": "2025-09",
+   "rate": 0.0622
+  },
+  {
+   "month": "2025-10",
+   "rate": 0.0618
+  },
+  {
+   "month": "2025-11",
+   "rate": 0.0634
+  },
+  {
+   "month": "2025-12",
+   "rate": 0.0626
+  },
+  {
+   "month": "2026-01",
+   "rate": 0.0631
+  },
+  {
+   "month": "2026-02",
+   "rate": 0.0633
+  },
+  {
+   "month": "2026-03",
+   "rate": 0.0644
+  },
+  {
+   "month": "2026-04",
+   "rate": 0.0624
+  },
+  {
+   "month": "2026-05",
+   "rate": 0.0639
+  },
+  {
+   "month": "2026-06",
+   "rate": 0.0647
+  },
+  {
+   "month": "2026-07",
+   "rate": 0.0632
+  },
+  {
+   "month": "2026-08",
+   "rate": 0.0641
+  }
+ ],
+ "bySector": [
+  {
+   "sector": "Services",
+   "jobsM": 7.84,
+   "change": 0.005
+  },
+  {
+   "sector": "Industry",
+   "jobsM": 2.78,
+   "change": 0.0356
+  },
+  {
+   "sector": "Construction",
+   "jobsM": 0.76,
+   "change": -0.0037
+  },
+  {
+   "sector": "Agriculture",
+   "jobsM": 0.51,
+   "change": 0.0022
+  },
+  {
+   "sector": "Government",
+   "jobsM": 0.76,
+   "change": 0.0024
+  }
+ ],
+ "economy": "ECON-BR",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

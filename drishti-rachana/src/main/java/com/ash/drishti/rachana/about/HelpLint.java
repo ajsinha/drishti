@@ -94,8 +94,14 @@ public final class HelpLint {
     }
 
     private static void panel(Panel p, Set<String> out) {
+        String rows = p.option("rows").orElse(null);
         for (Column c : p.columns()) {
-            fields(c.bind(), out);
+            String key = GlossaryResolver.keyOf(c.bind(), rows);   // the drawer's key: rows.column for a row field (docs: CONTEXT_HELP step 5)
+            if (key != null) {
+                out.add(key);
+            } else {
+                fields(c.bind(), out);
+            }
         }
         for (String o : new String[] {"value", "delta"}) {
             p.option(o).ifPresent(e -> fields(e, out));

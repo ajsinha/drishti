@@ -1,0 +1,40 @@
+{
+ "proteinId": "PROT-P13569",
+ "name": "Cystic fibrosis transmembrane conductance regulator",
+ "accession": "P13569",
+ "length": 1480,
+ "massKda": 162.8,
+ "subcellular": "Apical cell membrane",
+ "domains": [
+  {
+   "name": "ABC transmembrane 1",
+   "start": 81,
+   "end": 365
+  },
+  {
+   "name": "ABC transporter 1 (NBD1)",
+   "start": 423,
+   "end": 646
+  },
+  {
+   "name": "ABC transmembrane 2",
+   "start": 859,
+   "end": 1155
+  },
+  {
+   "name": "ABC transporter 2 (NBD2)",
+   "start": 1210,
+   "end": 1443
+  }
+ ],
+ "function": {
+  "summary": "Cystic fibrosis transmembrane conductance regulator (UniProt P13569)",
+  "gene": "CFTR",
+  "reviewed": "Swiss-Prot"
+ },
+ "gene": "GENE-CFTR",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

@@ -93,7 +93,7 @@ public final class CliLauncher {
         var resolver = new com.ash.drishti.rachana.about.GlossaryResolver(ctx.getBean(com.ash.drishti.rachana.about.AboutCatalog.class));
         var router = ctx.getBean(com.ash.drishti.engine.source.SourceRouter.class);
         return (kind, field) -> resolver.resolve(kind, field, key -> key.indexOf('.') >= 0 ? java.util.Optional.empty()
-                : router.connectorOf(kind, null).flatMap(d -> d.describeField(kind, key))
+                : router.describeField(kind, key)
                         .map(n -> com.ash.drishti.rachana.about.GlossaryEntry.derived(key, n.means(), n.formula(), n.origin()))).isPresent();
     }
 }

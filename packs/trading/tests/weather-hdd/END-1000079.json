@@ -1,0 +1,420 @@
+{
+ "tradeId": "END-1000079",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000079",
+ "productType": "WEATHER_HDD",
+ "productName": "Weather derivative (HDD/CDD)",
+ "assetClass": "Commodity",
+ "family": "exotic",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-07-17",
+ "effectiveDate": "2026-07-20",
+ "maturityDate": "2030-11-05",
+ "currency": "USD",
+ "notional": 6000000.0,
+ "mtm": -21313,
+ "mtmCurrency": "USD",
+ "pnl1d": 897,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-TBRENNAN",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "station": "Tokyo",
+  "index": "HDD",
+  "strike": 1875,
+  "tick": 15290.0
+ },
+ "risk": {
+  "delta": 13739
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 654
+  },
+  {
+   "bucket": "1M",
+   "delta": 1308
+  },
+  {
+   "bucket": "3M",
+   "delta": 1963
+  },
+  {
+   "bucket": "6M",
+   "delta": 2617
+  },
+  {
+   "bucket": "1Y",
+   "delta": 3271
+  },
+  {
+   "bucket": "2Y",
+   "delta": 3925
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-10-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-01-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-04-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-07-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-10-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-01-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-04-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-07-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-10-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-01-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-04-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-07-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2029-10-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-01-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-04-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-07-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-10-20",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2030-11-05",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 927
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1835
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -1869
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -1689
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -618
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 5321
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": 1758
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -1733
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 5241
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 3007
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": -1693
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 4339
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2618
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -6909
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 6112
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2484
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 3206
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -2478
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 116
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 1285
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-07-17",
+  "executionTimestamp": "2026-07-17T10:24:17.987Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "T. Brennan",
+  "salesperson": null,
+  "orderId": "ORD-4F901D35A8"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-07-17T12:22:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2026-07-17T12:22:00Z",
+  "lastModifiedAt": "2026-07-17T12:22:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-07-17",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-TBRENNAN: buy Weather derivative (HDD/CDD)"
+   },
+   {
+    "date": "2026-07-17",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT354474217)"
+   },
+   {
+    "date": "2026-10-20",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2030-11-05",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT354474217",
+  "matched": "2026-07-17 10:07",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964F901D35A83647E91E40",
+  "upi": "QZXEFK9KZGUL",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "BRAMUS33XXX",
+  "ssiId": "SSI-USD-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -21313,
+  "cleanPv": -21313.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Local-stochastic volatility Monte Carlo",
+  "curves": [
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -22210,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 203
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 11
+  },
+  {
+   "step": "Rates delta",
+   "pnl": 1226
+  },
+  {
+   "step": "FX delta",
+   "pnl": 18
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 94
+  },
+  {
+   "step": "Theta",
+   "pnl": -691
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 36
+  }
+ ],
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

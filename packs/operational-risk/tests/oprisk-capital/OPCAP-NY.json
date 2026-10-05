@@ -1,0 +1,70 @@
+{
+ "calcId": "OPCAP-NY",
+ "legalEntityName": "Drishti Bank Securities Inc.",
+ "bi": 5617000000,
+ "bic": 812550000,
+ "ilm": 0.941,
+ "capital": 764470809,
+ "rwa": 9555885112,
+ "components": [
+  {
+   "component": "Interest, leases and dividends",
+   "amount": 2232000000.0
+  },
+  {
+   "component": "Services",
+   "amount": 2503000000.0
+  },
+  {
+   "component": "Financial (trading and banking book)",
+   "amount": 882000000.0
+  }
+ ],
+ "annualLosses": [
+  {
+   "year": "2016",
+   "loss": 50200000.0
+  },
+  {
+   "year": "2017",
+   "loss": 43400000.0
+  },
+  {
+   "year": "2018",
+   "loss": 59900000.0
+  },
+  {
+   "year": "2019",
+   "loss": 24700000.0
+  },
+  {
+   "year": "2020",
+   "loss": 56300000.0
+  },
+  {
+   "year": "2021",
+   "loss": 20800000.0
+  },
+  {
+   "year": "2022",
+   "loss": 28400000.0
+  },
+  {
+   "year": "2023",
+   "loss": 56100000.0
+  },
+  {
+   "year": "2024",
+   "loss": 38300000.0
+  },
+  {
+   "year": "2025",
+   "loss": 60000000.0
+  }
+ ],
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "capital-engine",
+  "generation": 1
+ }
+}

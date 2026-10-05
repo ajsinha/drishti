@@ -1,0 +1,80 @@
+{
+ "electionId": "ELEC-VAL-2025",
+ "title": "Republic of Valdoria general election 2025",
+ "date": "2025-05-18",
+ "turnout": 0.6509,
+ "system": "Proportional (D'Hondt) · 5% threshold",
+ "winner": "People's Progressive Alliance",
+ "majority": "Hung (79 of 240, 121 needed)",
+ "results": [
+  {
+   "party": "People's Progressive Alliance",
+   "votes": 5858048,
+   "share": 0.31,
+   "seats": 79,
+   "change": 7
+  },
+  {
+   "party": "Civic Union",
+   "votes": 5291140,
+   "share": 0.28,
+   "seats": 72,
+   "change": -7
+  },
+  {
+   "party": "Green Future",
+   "votes": 2267631,
+   "share": 0.12,
+   "seats": 30,
+   "change": 14
+  },
+  {
+   "party": "National Revival",
+   "votes": 2645570,
+   "share": 0.14,
+   "seats": 36,
+   "change": 8
+  },
+  {
+   "party": "Liberal Forum",
+   "votes": 1700724,
+   "share": 0.09,
+   "seats": 23,
+   "change": 2
+  },
+  {
+   "party": "Others",
+   "votes": 1133816,
+   "share": 0.06,
+   "seats": 0,
+   "change": 0
+  }
+ ],
+ "turnoutByRegion": [
+  {
+   "region": "North Coast",
+   "turnout": 0.678
+  },
+  {
+   "region": "Central Plains",
+   "turnout": 0.659
+  },
+  {
+   "region": "Capital District",
+   "turnout": 0.628
+  },
+  {
+   "region": "Southern Hills",
+   "turnout": 0.619
+  },
+  {
+   "region": "Eastern Lakes",
+   "turnout": 0.611
+  }
+ ],
+ "jurisdiction": "JUR-VAL",
+ "_meta": {
+  "source": "elections-office",
+  "generation": 1
+ }
+}

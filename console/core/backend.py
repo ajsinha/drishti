@@ -111,13 +111,18 @@ class BackendClient:
         where, q = entity_path(kind, id_)
         return await self._get(f"/views/{where}", ident, **q)
 
-    async def explain(self, kind: str, id_: str, ident, generation: int | None = None) -> dict:
+    async def explain(self, kind: str, id_: str, ident, generation: int | None = None, locale: str | None = None,
+                      accept_language: str | None = None) -> dict:
         """About this page: where the data came from, why the layout is what it is, where next (the server's PageContext).
-        ``generation`` is that of the page the caller shows; a newer one comes back marked ``newer``."""
+        ``generation`` is that of the page the caller shows; a newer one comes back marked ``newer``. ``locale`` (the language
+        asked for) and ``accept_language`` (the browser's header) choose the language of the pack's text; the server falls back to English."""
         where, q = entity_path(kind, id_)
         if generation:
             q["generation"] = generation
-        return await self._get(f"/views/{where}/explain", ident, **q)
+        if locale:
+            q["locale"] = locale
+        headers = {"Accept-Language": accept_language} if accept_language else {}
+        return await self._send("GET", f"/views/{where}/explain", ident, params=q, headers=headers)
 
     async def search(self, q: str, ident=None) -> dict:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""

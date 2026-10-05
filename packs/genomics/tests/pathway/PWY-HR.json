@@ -1,0 +1,22 @@
+{
+ "pathwayId": "PWY-HR",
+ "name": "Homologous recombination repair",
+ "category": "DNA repair",
+ "geneCount": 2,
+ "members": [
+  {
+   "symbol": "BRCA1",
+   "role": "E3 ligase / repair scaffold",
+   "location": "chr17:43,044,295-43,125,483"
+  },
+  {
+   "symbol": "TP53",
+   "role": "Transcription factor",
+   "location": "chr17:7,668,402-7,687,550"
+  }
+ ],
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

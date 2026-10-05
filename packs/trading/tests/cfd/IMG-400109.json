@@ -1,0 +1,286 @@
+{
+ "tradeId": "IMG-400109",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400109",
+ "productType": "CFD",
+ "productName": "Contract for difference",
+ "assetClass": "Equity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-07-03",
+ "effectiveDate": "2025-07-07",
+ "maturityDate": "2027-03-08",
+ "currency": "USD",
+ "notional": 176000000.0,
+ "mtm": 6060457,
+ "mtmCurrency": "USD",
+ "pnl1d": -72495,
+ "counterparty": {
+  "id": "CP-HALCYON",
+  "name": "Halcyon Shipping plc"
+ },
+ "nettingSet": "NS-HALCYON-LDN",
+ "book": "BOOK-EQD-1",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-NVTK",
+ "dividendCurve": "DIV-NVTK",
+ "terms": {
+  "quantity": 125254,
+  "openPrice": 391.35
+ },
+ "risk": {
+  "delta": 1160648
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 55269
+  },
+  {
+   "bucket": "1M",
+   "delta": 110538
+  },
+  {
+   "bucket": "3M",
+   "delta": 165807
+  },
+  {
+   "bucket": "6M",
+   "delta": 221076
+  },
+  {
+   "bucket": "1Y",
+   "delta": 276345
+  },
+  {
+   "bucket": "2Y",
+   "delta": 331614
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 77636
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 51995
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -448641
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 324320
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 77940
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -67335
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -185143
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -505342
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -552523
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -113143
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 103434
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 272243
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 98317
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -276713
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 23372
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": -11851
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -275370
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -11858
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 107866
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 16850
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-07-03",
+  "executionTimestamp": "2025-07-03T14:01:36.355Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-D83A7F474A"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-07-03T11:53:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-07-03T11:53:00Z",
+  "lastModifiedAt": "2025-07-03T11:53:00Z",
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-07-03",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: long Contract for difference"
+   },
+   {
+    "date": "2025-07-03",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT109517260)"
+   },
+   {
+    "date": "2027-03-08",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT109517260",
+  "matched": "2025-07-03 17:45",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83D83A7F474A0F7114B92B",
+  "upi": "QZNMUPU7P0UM",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "HALCUS33XXX",
+  "ssiId": "SSI-USD-10E970",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 6060457,
+  "cleanPv": 6060457.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQ-NVTK",
+   "DIV-NVTK"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 6132952,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -15319
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 9624
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -75996
+  },
+  {
+   "step": "FX delta",
+   "pnl": 6593
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -1172
+  },
+  {
+   "step": "Theta",
+   "pnl": 91
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 3684
+  }
+ ],
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 13881
+  }
+ }
+}

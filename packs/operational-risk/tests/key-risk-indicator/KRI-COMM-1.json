@@ -1,0 +1,106 @@
+{
+ "kriId": "KRI-COMM-1",
+ "name": "Trade breaks older than 2 days",
+ "deskName": "Commodities",
+ "value": 8.83,
+ "amber": 20.0,
+ "red": 32.0,
+ "status": "Green",
+ "history": [
+  {
+   "date": "2026-09-03",
+   "value": 0
+  },
+  {
+   "date": "2026-09-04",
+   "value": 2.46
+  },
+  {
+   "date": "2026-09-07",
+   "value": 4.25
+  },
+  {
+   "date": "2026-09-08",
+   "value": 4.29
+  },
+  {
+   "date": "2026-09-09",
+   "value": 0
+  },
+  {
+   "date": "2026-09-10",
+   "value": 0
+  },
+  {
+   "date": "2026-09-11",
+   "value": 0
+  },
+  {
+   "date": "2026-09-14",
+   "value": 1.0
+  },
+  {
+   "date": "2026-09-15",
+   "value": 2.62
+  },
+  {
+   "date": "2026-09-16",
+   "value": 2.19
+  },
+  {
+   "date": "2026-09-17",
+   "value": 4.47
+  },
+  {
+   "date": "2026-09-18",
+   "value": 4.62
+  },
+  {
+   "date": "2026-09-21",
+   "value": 6.11
+  },
+  {
+   "date": "2026-09-22",
+   "value": 4.35
+  },
+  {
+   "date": "2026-09-23",
+   "value": 2.25
+  },
+  {
+   "date": "2026-09-24",
+   "value": 0
+  },
+  {
+   "date": "2026-09-25",
+   "value": 3.64
+  },
+  {
+   "date": "2026-09-28",
+   "value": 3.89
+  },
+  {
+   "date": "2026-09-29",
+   "value": 5.3
+  },
+  {
+   "date": "2026-09-30",
+   "value": 8.83
+  }
+ ],
+ "definition": {
+  "unit": "count",
+  "frequency": "Daily",
+  "owner": "S. Okafor",
+  "source": "Operations data mart"
+ },
+ "desk": "DESK-COMM",
+ "_meta": {
+  "source": "grc-platform",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "value": 0.3
+  }
+ }
+}

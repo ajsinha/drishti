@@ -1,0 +1,141 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+about: 1
+vocabulary:
+  deskName: { term: "Desk", means: "The business unit the record belongs to. Operational risk is owned by the first line, which is the business." }
+  severity: { term: "Severity", means: "How serious the event or finding is, on the scale the control function uses (for incidents Sev 1 is the most serious).", values: { "Sev 1": "A critical incident with major impact on customers, data or markets.", "Sev 2": "A serious incident with significant impact.", "Sev 3": "A moderate incident that is contained.", "Sev 4": "A minor incident.", "High": "A serious finding that needs prompt action.", "Medium": "A finding that needs action in the normal course.", "Low": "A minor finding." } }
+kinds:
+  loss-event:
+    title: Operational loss event
+    about: >-
+      ${$.eventId} is an operational loss in the Basel category "${$.eventType}" at ${$.deskName}: a gross loss of ${fmt($.grossLoss, 'compact')} USD,
+      ${fmt($.recoveries, 'compact')} recovered, ${fmt($.netLoss, 'compact')} net. It occurred on ${$.occurred} and is ${lower($.status)}.
+    guide: operational-risk
+    glossary:
+      eventType:
+        term: "Event type"
+        means: "One of the seven Basel categories of operational loss: internal fraud, external fraud, employment practices and workplace safety, clients products and business practices, damage to physical assets, business disruption and system failures, and execution delivery and process management."
+      deskName: { use: "deskName" }
+      grossLoss: { term: "Gross loss", means: "The loss before any recovery, including direct costs such as write-offs, penalties and remediation.", unit: "USD" }
+      recoveries: { term: "Recoveries", means: "Amounts regained after the event, for example from insurance or from the party at fault.", unit: "USD" }
+      netLoss: { term: "Net loss", means: "Gross loss less recoveries; the figure that enters loss data and capital.", unit: "USD" }
+      occurred: { term: "Date of occurrence", means: "The day the event happened, which can be well before it was discovered." }
+      status: { term: "Status", means: "Where the event is in its life: open while it is being investigated and remediated, closed once the loss is final and actions are done." }
+      timeline.step: { term: "Step", means: "A stage in the life of the event, such as occurrence, discovery, escalation and closure." }
+      timeline.by: { term: "By", means: "The person or team who took or recorded the step." }
+  risk-control:
+    title: Risk and control assessment
+    about: >-
+      The risk "${$.risk}" at ${$.deskName} is rated ${lower($.inherent)} before controls; its controls are ${lower($.effectiveness)},
+      which leaves a ${lower($.residual)} residual risk. The next review is due ${$.nextReview}.
+    guide: operational-risk
+    glossary:
+      risk: { term: "Risk", means: "The operational risk being assessed, described by what could go wrong." }
+      deskName: { use: "deskName" }
+      inherent: { term: "Inherent risk", means: "The rating of the risk before any control is taken into account, from its likelihood and impact.", values: { "Critical": "Almost certain or catastrophic if nothing is done.", "High": "Likely or severe if nothing is done.", "Medium": "Moderate likelihood and impact.", "Low": "Unlikely or minor." } }
+      effectiveness: { term: "Control effectiveness", means: "How well the controls, taken together, reduce the risk, judged from design and the results of testing.", values: { "Effective": "The controls work as designed and tests pass.", "Partially effective": "Some controls have gaps or failed tests.", "Ineffective": "The controls do not reduce the risk adequately." } }
+      residual: { term: "Residual risk", means: "The rating of the risk that remains once the controls are taken into account. It is what management accepts or must reduce further." }
+      nextReview: { term: "Next review", means: "The date by which the assessment has to be done again." }
+      controls.control: { term: "Control", means: "A measure that prevents the risk from happening or detects and limits it." }
+      controls.type: { term: "Control type", means: "Preventive controls stop the event; detective controls find it after the fact; corrective controls limit the damage." }
+      controls.frequency: { term: "Frequency", means: "How often the control runs or is performed." }
+      controls.lastTest: { term: "Last tested", means: "The date the control was last tested for whether it works." }
+      controls.result: { term: "Test result", means: "The outcome of the last test of the control." }
+  key-risk-indicator:
+    title: Key risk indicator
+    about: >-
+      "${$.name}" at ${$.deskName} stands at ${fmt($.value, 'price2')}, against an amber threshold of ${fmt($.amber, 'price2')} and a red
+      threshold of ${fmt($.red, 'price2')}: it is ${lower($.status)}.
+    guide: operational-risk
+    glossary:
+      deskName: { use: "deskName" }
+      value: { term: "Current value", means: "The latest reading of the indicator, in the unit of its definition." }
+      amber: { term: "Amber threshold", means: "The level at which the indicator becomes a warning: management should look at the cause.", unit: "indicator unit" }
+      red: { term: "Red threshold", means: "The level at which the indicator becomes a breach of risk appetite and has to be escalated.", unit: "indicator unit" }
+      status: { term: "Status", means: "The traffic light of the indicator, from the value against its thresholds.", values: { "Green": "Within appetite.", "Amber": "Past the warning threshold.", "Red": "Past the escalation threshold." } }
+    panels:
+      history: { about: "These are the readings of ${$.name} that the thresholds are compared with." }
+  issue:
+    title: Issue and action
+    about: >-
+      "${$.title}" is a ${lower($.severity)}-severity issue raised by ${$.source}, owned by ${$.owner} and due on ${$.due}; it is ${lower($.status)}.
+    guide: operational-risk
+    glossary:
+      severity: { use: "severity" }
+      due: { term: "Due date", means: "The date by which the issue has to be resolved. An open issue past it is overdue and is escalated." }
+      actions.due: { term: "Action due", means: "The date the action has to be finished." }
+      actions.action: { term: "Action", means: "A step of the remediation plan for the issue." }
+      actions.status: { term: "Action status", means: "Whether the step is open, in progress or done." }
+  oprisk-scenario:
+    title: Operational-risk scenario
+    about: >-
+      "${$.name}" (${lower($.eventType)}) is judged to happen about once in ${$.returnPeriod} years; if it does, the loss is ${fmt($.p50, 'compact')} USD
+      at the median and ${fmt($.p999, 'compact')} USD at the 99.9th percentile.
+    guide: operational-risk
+    glossary:
+      eventType: { term: "Event type", means: "The Basel category of operational loss the scenario belongs to." }
+      returnPeriod: { term: "Return period", means: "The expected frequency of the event: one occurrence in this many years.", unit: "years" }
+      p50: { term: "Median severity", means: "The loss that is not exceeded in half of the cases in which the event happens.", unit: "USD" }
+      p999: { term: "Severity at the 99.9th percentile", means: "The loss that is exceeded in only one in a thousand of the cases in which the event happens; the tail severity used for stress and capital discussion.", unit: "USD" }
+      percentiles.percentile: { term: "Percentile", means: "The share of cases in which the loss is not larger than the figure, such as p90 for nine in ten." }
+      percentiles.loss: { term: "Loss at the percentile", means: "The size of the loss at the percentile.", unit: "USD" }
+  third-party:
+    title: Third-party provider
+    about: >-
+      ${$.name} is a ${lower($.criticality)} service provider with ${$.serviceCount} services, ${fmt($.annualSpend, 'compact')} USD of annual spend,
+      last assessed on ${$.lastAssessed}, with ${$.slaBreaches} service-level breaches in the last year.
+    guide: operational-risk
+    glossary:
+      criticality: { term: "Criticality", means: "How much the bank depends on the provider; the regulators expect closer oversight and tested exit plans for critical providers.", values: { "Critical": "Failure would disrupt a critical or important function.", "Important": "Failure would disrupt an important process but can be worked around.", "Standard": "Failure has limited impact." } }
+      serviceCount: { term: "Services", means: "The number of services the provider supplies to the bank." }
+      annualSpend: { term: "Annual spend", means: "What the bank pays the provider in a year.", unit: "USD" }
+      lastAssessed: { term: "Last assessed", means: "The date of the last due-diligence or risk assessment of the provider." }
+      slaBreaches: { term: "SLA breaches", means: "The number of times in the last twelve months the provider failed to meet a service level in its contract." }
+      services.service: { term: "Service", means: "What the provider does for the bank." }
+      services.desk: { term: "Desk", means: "The business unit that relies on the service." }
+      services.exitPlan: { term: "Exit plan", means: "Whether there is a plan to bring the service back in-house or move it to another provider, and whether it has been tested.", values: { "Tested": "The plan exists and has been exercised.", "Documented": "The plan exists but has not been tested.", "Missing": "There is no exit plan." } }
+      incidents.date: { term: "Date", means: "The day of the incident." }
+      incidents.incident: { term: "Incident", means: "What went wrong at the provider." }
+      incidents.impact: { term: "Impact", means: "How much the incident affected the bank.", values: { "Major": "A material effect on the bank's services.", "Moderate": "A noticeable effect that was worked around.", "Minor": "A small or short effect." } }
+  cyber-incident:
+    title: Cyber incident
+    about: >-
+      "${$.title}" is a ${$.severity} incident: it was detected in ${fmt($.detectHours, 'price2')} hours and contained in ${fmt($.containHours, 'price2')},
+      with ${$.recordsAffected} records affected. Status: ${lower($.status)}.
+    guide: operational-risk
+    glossary:
+      severity: { use: "severity" }
+      detectHours: { term: "Time to detect", means: "The hours from the start of the attack, as far as it can be established, to the moment it was confirmed.", unit: "hours" }
+      containHours: { term: "Time to contain", means: "The hours from the start of the attack until it could no longer spread or cause further damage.", unit: "hours" }
+      recordsAffected: { term: "Records affected", means: "The number of data records, such as customer or account entries, that were exposed or altered. It decides whether notification duties apply." }
+      timeline.at: { term: "Time", means: "When the step happened, or the hours after the start." }
+      timeline.step: { term: "Step", means: "A stage of the response, from the first alert to confirmation, containment and recovery." }
+  oprisk-capital:
+    title: Operational-risk capital
+    about: >-
+      ${$.legalEntityName} has a business indicator of ${fmt($.bi, 'compact')}, which gives a business-indicator component of ${fmt($.bic, 'compact')};
+      scaled by an internal loss multiplier of ${fmt($.ilm, 'price2')} this is ${fmt($.capital, 'compact')} of capital, or ${fmt($.rwa, 'compact')} of risk-weighted assets.
+    guide: operational-risk
+    glossary:
+      legalEntityName: { term: "Legal entity", means: "The legal entity whose operational-risk capital this is." }
+      bi: { term: "Business indicator", means: "The measure of the size of the bank's business under the Basel III standardised approach: the average over three years of the sum of its interest, services and financial components, which stands in for operational-risk exposure.", unit: "reporting currency" }
+      bic: { term: "Business indicator component", means: "The business indicator multiplied by marginal coefficients that rise with size: 12% of the first slice, 15% of the next and 18% of the rest.", unit: "reporting currency" }
+      ilm: { term: "Internal loss multiplier", means: "A scaling factor from the bank's own loss history: above 1 if its losses are high relative to its business indicator, below 1 if they are low.", unit: "factor" }
+      capital: { term: "Operational-risk capital", means: "The minimum capital for operational risk: the business-indicator component multiplied by the internal loss multiplier.", unit: "reporting currency" }
+      rwa: { term: "Risk-weighted assets", means: "The capital multiplied by 12.5, so it can be added to the other risk-weighted assets.", unit: "reporting currency" }
+      components.component: { term: "Component", means: "A part of the business indicator: the interest, leases and dividend component, the services component or the financial component." }
+      components.amount: { term: "Amount", means: "The component's contribution to the business indicator.", unit: "reporting currency" }
+      annualLosses.year: { term: "Year", means: "The year the losses were incurred; ten years of history feed the loss multiplier." }
+      annualLosses.loss: { term: "Annual loss", means: "The operational losses recorded in the year.", unit: "reporting currency" }

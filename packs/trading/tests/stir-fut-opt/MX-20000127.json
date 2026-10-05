@@ -1,0 +1,299 @@
+{
+ "tradeId": "MX-20000127",
+ "sourceSystem": "Murex",
+ "sourceTradeId": "20000127",
+ "productType": "STIR_FUT_OPT",
+ "productName": "STIR future option",
+ "assetClass": "Rates",
+ "family": "option",
+ "status": "Live",
+ "direction": "Sell",
+ "tradeDate": "2026-01-23",
+ "effectiveDate": "2026-01-26",
+ "maturityDate": "2028-11-20",
+ "currency": "USD",
+ "notional": 18000000.0,
+ "mtm": 73162,
+ "mtmCurrency": "USD",
+ "pnl1d": -3817,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-RATES-2",
+ "trader": "TRDR-ASHAH",
+ "desk": "DESK-RATES",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-CME-1",
+ "forwardCurve": "CRV-USD-PROJ",
+ "capVolSurface": "CPV-USD",
+ "terms": {
+  "contract": "SR3 H7 P 95.75",
+  "lots": 996,
+  "premiumTicks": 20.1
+ },
+ "risk": {
+  "dv01": -4528,
+  "vega": -81496
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": -302,
+   "vega": -5433
+  },
+  {
+   "bucket": "6M",
+   "dv01": -604,
+   "vega": -10866
+  },
+  {
+   "bucket": "1Y",
+   "dv01": -906,
+   "vega": -16299
+  },
+  {
+   "bucket": "2Y",
+   "dv01": -1207,
+   "vega": -21732
+  },
+  {
+   "bucket": "3Y",
+   "dv01": -1509,
+   "vega": -27165
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 7393
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -2033
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -3076
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": 581
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -449
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -2700
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -3218
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 193
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 3400
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -1612
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1539
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 1217
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": -2380
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 2521
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2030
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2870
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 974
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -306
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 3075
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": -535
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-01-23",
+  "executionTimestamp": "2026-01-23T12:39:54.802Z",
+  "venue": "Tradeweb SEF",
+  "venueMic": "TWSF",
+  "executionType": "Electronic",
+  "trader": "A. Shah",
+  "salesperson": null,
+  "orderId": "ORD-86E687B0E0"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-01-23T12:15:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-01-23T12:15:00Z",
+  "lastModifiedAt": "2026-01-23T12:15:00Z",
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2026-01-23",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Murex by TRDR-ASHAH: sell STIR future option"
+   },
+   {
+    "date": "2026-01-23",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on MarkitWire (MA510240181)"
+   },
+   {
+    "date": "2026-01-26",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2028-11-20",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "MarkitWire",
+  "platformId": "MA510240181",
+  "matched": "2026-01-23 11:45",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH7134749058",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II209686E687B0E02B14098AD4",
+  "upi": "QZUHH6SUXVJT",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Interest rate"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "SUMMUS33XXX",
+  "ssiId": "SSI-USD-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 73162,
+  "cleanPv": 73162.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "CRV-USD-PROJ",
+   "CPV-USD"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 76979,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 17
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 715
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -8628
+  },
+  {
+   "step": "FX delta",
+   "pnl": 267
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 4667
+  },
+  {
+   "step": "Theta",
+   "pnl": -918
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 63
+  }
+ ],
+ "_meta": {
+  "source": "murex-rates",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 500
+  }
+ }
+}

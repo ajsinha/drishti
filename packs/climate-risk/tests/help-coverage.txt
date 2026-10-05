@@ -1,0 +1,7 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+climate-profile=1
+climate-scenario=1
+climate-stress=1
+financed-emissions=1
+physical-asset=1
+taxonomy-alignment=1

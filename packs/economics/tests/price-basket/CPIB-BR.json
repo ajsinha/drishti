@@ -1,0 +1,70 @@
+{
+ "basketId": "CPIB-BR",
+ "economyName": "Brazil",
+ "headline": 0.0457,
+ "core": 0.0473,
+ "services": 0.0544,
+ "goods": 0.0395,
+ "components": [
+  {
+   "component": "Housing and utilities",
+   "weight": 0.24,
+   "inflation": 0.0618,
+   "contribution": 1.48
+  },
+  {
+   "component": "Food",
+   "weight": 0.14,
+   "inflation": 0.0391,
+   "contribution": 0.55
+  },
+  {
+   "component": "Transport",
+   "weight": 0.15,
+   "inflation": 0.0343,
+   "contribution": 0.51
+  },
+  {
+   "component": "Recreation",
+   "weight": 0.09,
+   "inflation": 0.0309,
+   "contribution": 0.28
+  },
+  {
+   "component": "Health",
+   "weight": 0.07,
+   "inflation": 0.0466,
+   "contribution": 0.33
+  },
+  {
+   "component": "Clothing",
+   "weight": 0.05,
+   "inflation": 0.0503,
+   "contribution": 0.25
+  },
+  {
+   "component": "Communication",
+   "weight": 0.04,
+   "inflation": 0.0322,
+   "contribution": 0.13
+  },
+  {
+   "component": "Restaurants and hotels",
+   "weight": 0.09,
+   "inflation": 0.0617,
+   "contribution": 0.56
+  },
+  {
+   "component": "Other goods and services",
+   "weight": 0.13,
+   "inflation": 0.0371,
+   "contribution": 0.48
+  }
+ ],
+ "economy": "ECON-BR",
+ "_meta": {
+  "source": "macro-database",
+  "generation": 1,
+  "illustrative": true
+ }
+}

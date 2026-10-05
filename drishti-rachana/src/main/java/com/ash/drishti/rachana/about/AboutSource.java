@@ -27,6 +27,11 @@ public interface AboutSource {
     /** What is said about {@code kind}, merged through {@code extends}, or empty. */
     Optional<AboutText> forKind(String kind);
 
+    /** The kind's text in {@code locale}, untranslated entries in English; a source without translations answers {@link #forKind(String)}. */
+    default Optional<AboutText> forKind(String kind, String locale) {
+        return forKind(kind);
+    }
+
     /** The core vocabulary's entry for a field name, or empty. */
     Optional<GlossaryEntry> core(String name);
 }

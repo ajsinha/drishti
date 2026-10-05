@@ -1,0 +1,78 @@
+{
+ "branchId": "BRN-NY-5AVE",
+ "name": "Fifth Avenue",
+ "city": "New York",
+ "customers": 11026,
+ "deposits": 232062000.0,
+ "lending": 4946981000.0,
+ "nps": 34,
+ "productMix": [
+  {
+   "product": "Mortgage",
+   "balance": 4878730000.0
+  },
+  {
+   "product": "Current account",
+   "balance": 232062000.0
+  },
+  {
+   "product": "Credit card",
+   "balance": 68251000.0
+  }
+ ],
+ "npsHistory": [
+  {
+   "month": "2025-10",
+   "nps": 29
+  },
+  {
+   "month": "2025-11",
+   "nps": 38
+  },
+  {
+   "month": "2025-12",
+   "nps": 51
+  },
+  {
+   "month": "2026-01",
+   "nps": 53
+  },
+  {
+   "month": "2026-02",
+   "nps": 42
+  },
+  {
+   "month": "2026-03",
+   "nps": 17
+  },
+  {
+   "month": "2026-04",
+   "nps": 57
+  },
+  {
+   "month": "2026-05",
+   "nps": 43
+  },
+  {
+   "month": "2026-06",
+   "nps": 15
+  },
+  {
+   "month": "2026-07",
+   "nps": 53
+  },
+  {
+   "month": "2026-08",
+   "nps": 65
+  },
+  {
+   "month": "2026-09",
+   "nps": 65
+  }
+ ],
+ "legalEntity": "LE-NY",
+ "_meta": {
+  "source": "core-banking",
+  "generation": 1
+ }
+}

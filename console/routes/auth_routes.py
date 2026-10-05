@@ -168,7 +168,7 @@ async def save_settings(request: Request):
     """Personal settings from the account page (W21); the server validates every value."""
     me = ident(request)
     form = {k: v[0] for k, v in parse_qs((await request.body()).decode(), keep_blank_values=True).items()}
-    changes = {"theme": form.get("theme") or None, "clockZone": form.get("clockZone") or None, "density": form.get("density") or "comfortable",
+    changes = {"theme": form.get("theme") or None, "clockZone": form.get("clockZone") or None, "locale": (form.get("locale") or "").strip() or None, "density": form.get("density") or "comfortable",
                "flash": form.get("flash") == "on", "landing": form.get("landing") or "/t"}
     if form.get("searchLimit", "").isdigit():
         changes["searchLimit"] = int(form["searchLimit"])

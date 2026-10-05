@@ -1,0 +1,282 @@
+{
+ "tradeId": "END-1000007",
+ "sourceSystem": "Endur",
+ "sourceTradeId": "1000007",
+ "productType": "CMD_FORWARD",
+ "productName": "Commodity forward",
+ "assetClass": "Commodity",
+ "family": "linear",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2025-01-31",
+ "effectiveDate": "2025-02-03",
+ "maturityDate": "2026-10-07",
+ "currency": "USD",
+ "notional": 159000000.0,
+ "mtm": -308982,
+ "mtmCurrency": "USD",
+ "pnl1d": -3846,
+ "counterparty": {
+  "id": "CP-ALDERSHOT",
+  "name": "Aldershot Pension Trust"
+ },
+ "nettingSet": "NS-ALDERSHOT-NY",
+ "book": "BOOK-COMM-1",
+ "trader": "TRDR-FROSSI",
+ "desk": "DESK-COMM",
+ "legalEntity": "LE-NY",
+ "commodityCurve": "CMDC-GOLD",
+ "discountCurve": "CRV-USD-OIS",
+ "terms": {
+  "forwardPrice": 761.66,
+  "quantity": 64131,
+  "deliveryMonth": "Dec 2026"
+ },
+ "risk": {
+  "delta": -916598
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -61107
+  },
+  {
+   "bucket": "1M",
+   "delta": -122213
+  },
+  {
+   "bucket": "3M",
+   "delta": -183320
+  },
+  {
+   "bucket": "6M",
+   "delta": -244426
+  },
+  {
+   "bucket": "1Y",
+   "delta": -305533
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": -386
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -1203
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -5933
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -17170
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -22000
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -8169
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -5204
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -5875
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 9972
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": -5125
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 393
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": -19414
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 16230
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 12760
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": 2238
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 10894
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -1177
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -6302
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 1016
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2795
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-01-31",
+  "executionTimestamp": "2025-01-31T13:52:22.621Z",
+  "venue": "CME Globex",
+  "venueMic": "XCME",
+  "executionType": "Electronic",
+  "trader": "F. Rossi",
+  "salesperson": null,
+  "orderId": "ORD-4866F1574E"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-01-31T09:57:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2025-01-31T09:57:00Z",
+  "lastModifiedAt": "2025-01-31T09:57:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2025-01-31",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Endur by TRDR-FROSSI: short Commodity forward"
+   },
+   {
+    "date": "2025-01-31",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT400172250)"
+   },
+   {
+    "date": "2026-10-07",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT400172250",
+  "matched": "2025-01-31 11:02",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20964866F1574E4BAF302CF9",
+  "upi": "QZ1EEIC70TTP",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Commodity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "ALDEUS33XXX",
+  "ssiId": "SSI-USD-D06EAF",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -308982,
+  "cleanPv": -308982.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CMDC-GOLD",
+   "CRV-USD-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -305136,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": 1263
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 135
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -4654
+  },
+  {
+   "step": "FX delta",
+   "pnl": -335
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 17
+  },
+  {
+   "step": "Theta",
+   "pnl": -258
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -14
+  }
+ ],
+ "_meta": {
+  "source": "endur-comm",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2208
+  }
+ }
+}

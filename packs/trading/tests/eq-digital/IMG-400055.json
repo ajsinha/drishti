@@ -1,0 +1,292 @@
+{
+ "tradeId": "IMG-400055",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400055",
+ "productType": "EQ_DIGITAL",
+ "productName": "Equity digital option",
+ "assetClass": "Equity",
+ "family": "option",
+ "status": "Live",
+ "direction": "Buy",
+ "tradeDate": "2026-09-01",
+ "effectiveDate": "2026-09-03",
+ "maturityDate": "2028-03-02",
+ "currency": "USD",
+ "notional": 202000000.0,
+ "mtm": 473161,
+ "mtmCurrency": "USD",
+ "pnl1d": -11661,
+ "counterparty": {
+  "id": "CP-KESTREL",
+  "name": "Kestrel Global Macro Fund"
+ },
+ "nettingSet": "NS-KESTREL-LDN",
+ "book": "BOOK-EQD-3",
+ "trader": "TRDR-PLINDQVIST",
+ "desk": "DESK-EQD",
+ "legalEntity": "LE-LDN",
+ "underlyingEquity": "EQ-NVTK",
+ "equityVolSurface": "EQV-NVTK",
+ "dividendCurve": "DIV-NVTK",
+ "terms": {
+  "optionType": "Put",
+  "strike": 251.33,
+  "payout": 1891129.0,
+  "expiryDate": "2027-10-27"
+ },
+ "risk": {
+  "delta": 786125,
+  "vega": 269949
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": 52408,
+   "vega": 17997
+  },
+  {
+   "bucket": "1M",
+   "delta": 104817,
+   "vega": 35993
+  },
+  {
+   "bucket": "3M",
+   "delta": 157225,
+   "vega": 53990
+  },
+  {
+   "bucket": "6M",
+   "delta": 209633,
+   "vega": 71986
+  },
+  {
+   "bucket": "1Y",
+   "delta": 262042,
+   "vega": 89983
+  }
+ ],
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 416
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": 941
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -16056
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -6770
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 17338
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": 18831
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -12690
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -15959
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -23218
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 8265
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 6087
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 193
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 2530
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -16679
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -9194
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 28465
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 17716
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": -27730
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": 21645
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 2887
+  }
+ ],
+ "execution": {
+  "tradeDate": "2026-09-01",
+  "executionTimestamp": "2026-09-01T16:55:21.970Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "P. Lindqvist",
+  "salesperson": null,
+  "orderId": "ORD-B8E67D8519"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 1,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2026-09-01T11:27:00Z",
+    "by": "mo.amend"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-09-01T11:27:00Z",
+  "lastModifiedAt": "2026-09-01T11:27:00Z",
+  "lastModifiedBy": "mo.amend",
+  "timeline": [
+   {
+    "date": "2026-09-01",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-PLINDQVIST: buy Equity digital option"
+   },
+   {
+    "date": "2026-09-01",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT451724246)"
+   },
+   {
+    "date": "2028-03-02",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT451724246",
+  "matched": "2026-09-01 15:29",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300Z8F6KKOGHS7Q83B8E67D8519B50216BD03",
+  "upi": "QZ1KV1K3OLOL",
+  "reportingRegimes": [
+   "UK EMIR",
+   "UK MiFIR"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "Gross",
+  "ourAgent": "JPMorgan Chase Bank, N.A.",
+  "ourAgentBic": "CHASUS33XXX",
+  "theirAgentBic": "KESTUS33XXX",
+  "ssiId": "SSI-USD-69F994",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 473161,
+  "cleanPv": 473161.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Black / Bachelier",
+  "curves": [
+   "EQ-NVTK",
+   "EQV-NVTK",
+   "DIV-NVTK"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 484822,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -2940
+  },
+  {
+   "step": "Roll-down",
+   "pnl": -125
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -10499
+  },
+  {
+   "step": "FX delta",
+   "pnl": 43
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 3946
+  },
+  {
+   "step": "Theta",
+   "pnl": -1716
+  },
+  {
+   "step": "Unexplained",
+   "pnl": -370
+  }
+ ],
+ "_meta": {
+  "source": "sophis-eqd",
+  "generation": 1,
+  "live": true,
+  "walk": {
+   "mtm": 2966
+  }
+ }
+}

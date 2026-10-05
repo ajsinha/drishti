@@ -1,0 +1,57 @@
+{
+ "variantId": "VRNT-APOE-E4",
+ "geneSymbol": "APOE",
+ "proteinChange": "p.Cys130Arg",
+ "hgvsC": "c.388T>C",
+ "genomic": "chr19:44908684 T>C",
+ "consequence": "Missense",
+ "significance": "Risk factor",
+ "rsid": "rs429358",
+ "condition": "Late-onset Alzheimer disease",
+ "frequencies": [
+  {
+   "population": "African",
+   "af": 0.097455
+  },
+  {
+   "population": "East Asian",
+   "af": 0.11969
+  },
+  {
+   "population": "European (non-Finnish)",
+   "af": 0.048934
+  },
+  {
+   "population": "Latino/Admixed American",
+   "af": 0.148739
+  },
+  {
+   "population": "South Asian",
+   "af": 0.066326
+  }
+ ],
+ "evidence": [
+  {
+   "source": "ClinVar",
+   "assertion": "Risk factor",
+   "stars": 3,
+   "date": "2024-11-08"
+  },
+  {
+   "source": "ClinGen",
+   "assertion": "Risk factor",
+   "stars": 3,
+   "date": "2025-01-13"
+  }
+ ],
+ "annotation": {
+  "genomicGrch38": "chr19:44908684 T>C",
+  "condition": "Late-onset Alzheimer disease",
+  "origin": "Germline"
+ },
+ "gene": "GENE-APOE",
+ "_meta": {
+  "source": "reference-genome",
+  "generation": 1
+ }
+}

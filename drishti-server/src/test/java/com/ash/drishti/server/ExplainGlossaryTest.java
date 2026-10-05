@@ -47,6 +47,7 @@ class ExplainGlossaryTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.engine.source.SourceRouter router;
     private final ObjectMapper json = new ObjectMapper();
 
     private JsonNode explain(String role, String path) throws Exception {
@@ -136,12 +137,20 @@ class ExplainGlossaryTest {
     }
 
     @Test
+    void theRouterDescribesADerivedFieldWithoutKnowingTheSourceSoPackLintSeesIt() {
+        // pack lint asks by kind alone (no provenance): the derived source's note is found among the sources that serve the kind
+        assertThat(router.describeField("desk-pnl", "mtm")).get().satisfies(n -> assertThat(n.formula()).startsWith("sum $.mtm"));
+        assertThat(router.describeField("desk-pnl", "nothing")).isEmpty();
+        assertThat(router.describeField("var", "var99")).isEmpty();
+    }
+
+    @Test
     void panelNarrowsTheGlossaryToTheFieldsThatPanelShowsAndAnUnknownPanelIs4006() throws Exception {
         String auth = "Bearer " + tokens.mint("u-full", List.of("full"), 300);
         String url = "/api/v1/views/variant/VRNT-APOE-E4/explain";
         JsonNode narrowed = json.readTree(mvc.perform(get(url + "?panel=evidence").header("Authorization", auth)).andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
-        assertThat(narrowed.path("glossary").findValuesAsText("key")).containsExactlyInAnyOrder("evidence.source", "evidence.stars", "evidence.date");
+        assertThat(narrowed.path("glossary").findValuesAsText("key")).containsExactlyInAnyOrder("evidence.source", "evidence.assertion", "evidence.stars", "evidence.date");
         assertThat(explain("full", "variant/VRNT-APOE-E4").path("glossary").size()).isGreaterThan(narrowed.path("glossary").size());
         mvc.perform(get(url + "?panel=nope").header("Authorization", auth)).andExpect(status().isNotFound());
     }

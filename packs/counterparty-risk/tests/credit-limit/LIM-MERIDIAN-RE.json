@@ -1,0 +1,48 @@
+{
+ "limitId": "LIM-MERIDIAN-RE",
+ "counterpartyName": "Meridian Reinsurance Ltd",
+ "measure": "PFE 95 peak",
+ "limit": 307000000.0,
+ "used": 208726825,
+ "utilisation": 0.6799,
+ "status": "Within limit",
+ "buckets": [
+  {
+   "bucket": "0-1Y",
+   "limit": 307000000,
+   "used": 177417801,
+   "utilisation": 0.5779
+  },
+  {
+   "bucket": "1-3Y",
+   "limit": 307000000,
+   "used": 208726825,
+   "utilisation": 0.6799
+  },
+  {
+   "bucket": "3-5Y",
+   "limit": 245600000,
+   "used": 146108778,
+   "utilisation": 0.5949
+  },
+  {
+   "bucket": "5-10Y",
+   "limit": 184200000,
+   "used": 73054389,
+   "utilisation": 0.3966
+  },
+  {
+   "bucket": "10Y+",
+   "limit": 122800000,
+   "used": 20872682,
+   "utilisation": 0.17
+  }
+ ],
+ "counterparty": "CP-MERIDIAN-RE",
+ "approvedBy": "Credit Risk Committee",
+ "reviewDue": "2027-03-19",
+ "_meta": {
+  "source": "limits-system",
+  "generation": 1
+ }
+}

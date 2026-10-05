@@ -1,0 +1,352 @@
+{
+ "tradeId": "BBG-60000031",
+ "sourceSystem": "Bloomberg TOMS",
+ "sourceTradeId": "60000031",
+ "productType": "PUTTABLE_BOND",
+ "productName": "Puttable bond",
+ "assetClass": "Fixed income",
+ "family": "bond",
+ "status": "Live",
+ "direction": "Long",
+ "tradeDate": "2025-11-28",
+ "effectiveDate": "2025-11-28",
+ "maturityDate": "2028-11-06",
+ "currency": "EUR",
+ "notional": 47000000.0,
+ "mtm": -77849,
+ "mtmCurrency": "USD",
+ "pnl1d": -4102,
+ "counterparty": {
+  "id": "CP-SUMMIT",
+  "name": "Summit Clearing LLC"
+ },
+ "nettingSet": "NS-SUMMIT-NY",
+ "book": "BOOK-FI-2",
+ "trader": "TRDR-RCASTILLO",
+ "desk": "DESK-FI",
+ "legalEntity": "LE-NY",
+ "clearingAccount": "CLR-EUREX-1",
+ "issuer": "ISS-ORBITAL",
+ "benchmarkCurve": "CRV-EUR-GOVT",
+ "underlyingBond": "BND-FRORBI079012",
+ "swaptionVolCube": "IRV-EUR",
+ "terms": {
+  "coupon": 0.048207,
+  "couponFrequency": "Annual",
+  "faceAmount": 33596906.0,
+  "cleanPrice": 98.196,
+  "yield": 0.029428,
+  "firstPut": "2031-08-09",
+  "putPrice": 100.94
+ },
+ "risk": {
+  "dv01": 12728,
+  "cs01": 11296,
+  "vega": 205447
+ },
+ "sensitivities": [
+  {
+   "bucket": "3M",
+   "dv01": 849,
+   "cs01": 753,
+   "vega": 13696
+  },
+  {
+   "bucket": "6M",
+   "dv01": 1697,
+   "cs01": 1506,
+   "vega": 27393
+  },
+  {
+   "bucket": "1Y",
+   "dv01": 2546,
+   "cs01": 2259,
+   "vega": 41089
+  },
+  {
+   "bucket": "2Y",
+   "dv01": 3394,
+   "cs01": 3012,
+   "vega": 54786
+  },
+  {
+   "bucket": "3Y",
+   "dv01": 4243,
+   "cs01": 3765,
+   "vega": 68482
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2026-11-28",
+   "type": "First call",
+   "strike": 0.040616,
+   "status": "Pending"
+  },
+  {
+   "date": "2027-11-28",
+   "type": "Bermudan call",
+   "strike": 0.033462,
+   "status": "Pending"
+  },
+  {
+   "date": "2028-11-06",
+   "type": "Bermudan call",
+   "strike": 0.028013,
+   "status": "Pending"
+  }
+ ],
+ "nextIndex": 0,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 419
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -68
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": 586
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -4194
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": 1012
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -536
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -654
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": -2404
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": -2977
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 1593
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 4789
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 5042
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 1169
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": -1125
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -1856
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 2367
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": 1944
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 7198
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -443
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 6655
+  }
+ ],
+ "execution": {
+  "tradeDate": "2025-11-28",
+  "executionTimestamp": "2025-11-28T15:24:09.217Z",
+  "venue": "MarketAxess",
+  "venueMic": "MAEL",
+  "executionType": "Electronic",
+  "trader": "R. Castillo",
+  "salesperson": null,
+  "orderId": "ORD-3B6C08ABBF"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2025-11-28T11:12:00Z",
+    "by": "mo.ops"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-12-01T11:12:00Z",
+    "by": "stp.gateway"
+   }
+  ],
+  "sourceSystem": "Murex",
+  "createdAt": "2025-11-28T11:12:00Z",
+  "lastModifiedAt": "2025-12-01T11:12:00Z",
+  "lastModifiedBy": "stp.gateway",
+  "timeline": [
+   {
+    "date": "2025-11-28",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Bloomberg TOMS by TRDR-RCASTILLO: long Puttable bond"
+   },
+   {
+    "date": "2025-11-28",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT990562477)"
+   },
+   {
+    "date": "2025-12-01",
+    "event": "Cleared",
+    "status": "Done",
+    "description": "Novated to LCH SwapClear"
+   },
+   {
+    "date": "2025-12-01",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by stp.gateway)"
+   },
+   {
+    "date": "2026-11-28",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-11-06",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT990562477",
+  "matched": "2025-11-28 16:09",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Cleared",
+  "mandatory": true,
+  "ccp": "LCH SwapClear",
+  "clearingBroker": "Summit Clearing LLC",
+  "ccpTradeId": "LCH9711685349",
+  "account": "House",
+  "novatedAt": null
+ },
+ "regulatory": {
+  "uti": "549300O1N13GO2II20963B6C08ABBF43CBF64080",
+  "upi": "QZHR9R0LW8F9",
+  "reportingRegimes": [
+   "CFTC Part 43/45"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": true,
+  "tradingObligation": true,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Credit"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Deutsche Bank AG",
+  "ourAgentBic": "DEUTDEFFXXX",
+  "theirAgentBic": "SUMMGB33XXX",
+  "ssiId": "SSI-EUR-6A7EC8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": -77849,
+  "cleanPv": -77849.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "CRV-EUR-GOVT",
+   "BND-FRORBI079012",
+   "IRV-EUR"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": -73747,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -38
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 130
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -5180
+  },
+  {
+   "step": "FX delta",
+   "pnl": 737
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": 76
+  },
+  {
+   "step": "Theta",
+   "pnl": -56
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 229
+  }
+ ],
+ "_meta": {
+  "source": "summit-fi",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 626
+  }
+ }
+}

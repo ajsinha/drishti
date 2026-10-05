@@ -1,0 +1,443 @@
+{
+ "tradeId": "IMG-400139",
+ "sourceSystem": "Imagine",
+ "sourceTradeId": "400139",
+ "productType": "CAPITAL_PROTECTED_NOTE",
+ "productName": "Capital-protected note",
+ "assetClass": "Structured",
+ "family": "note",
+ "status": "Live",
+ "direction": "Short",
+ "tradeDate": "2024-12-04",
+ "effectiveDate": "2024-12-06",
+ "maturityDate": "2028-12-18",
+ "currency": "GBP",
+ "notional": 118000000.0,
+ "mtm": 566929,
+ "mtmCurrency": "USD",
+ "pnl1d": -32828,
+ "counterparty": {
+  "id": "CP-BRAMBLE",
+  "name": "Bramble Asset Management"
+ },
+ "nettingSet": "NS-BRAMBLE-TKY",
+ "book": "BOOK-STRUCT-1",
+ "trader": "TRDR-YTANAKA",
+ "desk": "DESK-STRUCT",
+ "legalEntity": "LE-TKY",
+ "underlyingIndex": "EQX-UKX",
+ "equityVolSurface": "EQV-UKX",
+ "discountCurve": "CRV-GBP-OIS",
+ "terms": {
+  "protection": 0.958937,
+  "participation": 0.974206,
+  "cap": 0.432131
+ },
+ "risk": {
+  "delta": -382170,
+  "vega": -445916,
+  "dv01": -39349
+ },
+ "sensitivities": [
+  {
+   "bucket": "Spot",
+   "delta": -18199,
+   "vega": -21234,
+   "dv01": -1874
+  },
+  {
+   "bucket": "1M",
+   "delta": -36397,
+   "vega": -42468,
+   "dv01": -3748
+  },
+  {
+   "bucket": "3M",
+   "delta": -54596,
+   "vega": -63702,
+   "dv01": -5621
+  },
+  {
+   "bucket": "6M",
+   "delta": -72794,
+   "vega": -84936,
+   "dv01": -7495
+  },
+  {
+   "bucket": "1Y",
+   "delta": -90993,
+   "vega": -106170,
+   "dv01": -9369
+  },
+  {
+   "bucket": "2Y",
+   "delta": -109191,
+   "vega": -127405,
+   "dv01": -11243
+  }
+ ],
+ "schedule": [
+  {
+   "date": "2025-03-06",
+   "level": 99.4,
+   "trigger": 100.0,
+   "performance": -0.006,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-06-06",
+   "level": 93.15,
+   "trigger": 100.0,
+   "performance": -0.0685,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-09-06",
+   "level": 91.48,
+   "trigger": 100.0,
+   "performance": -0.0852,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2025-12-06",
+   "level": 96.81,
+   "trigger": 100.0,
+   "performance": -0.0319,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-03-06",
+   "level": 89.51,
+   "trigger": 100.0,
+   "performance": -0.1049,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-06-06",
+   "level": 91.82,
+   "trigger": 100.0,
+   "performance": -0.0818,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-09-06",
+   "level": 82.06,
+   "trigger": 100.0,
+   "performance": -0.1794,
+   "outcome": "Coupon paid"
+  },
+  {
+   "date": "2026-12-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-03-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-06-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-09-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2027-12-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-03-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-06-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-09-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-06",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  },
+  {
+   "date": "2028-12-18",
+   "level": null,
+   "trigger": 100.0,
+   "performance": null,
+   "outcome": "Pending"
+  }
+ ],
+ "nextIndex": 7,
+ "pnlHistory": [
+  {
+   "date": "2026-09-03",
+   "pnl": 624
+  },
+  {
+   "date": "2026-09-04",
+   "pnl": -6393
+  },
+  {
+   "date": "2026-09-07",
+   "pnl": -4007
+  },
+  {
+   "date": "2026-09-08",
+   "pnl": -16884
+  },
+  {
+   "date": "2026-09-09",
+   "pnl": -22531
+  },
+  {
+   "date": "2026-09-10",
+   "pnl": -16692
+  },
+  {
+   "date": "2026-09-11",
+   "pnl": -6906
+  },
+  {
+   "date": "2026-09-14",
+   "pnl": 9981
+  },
+  {
+   "date": "2026-09-15",
+   "pnl": 11235
+  },
+  {
+   "date": "2026-09-16",
+   "pnl": 10241
+  },
+  {
+   "date": "2026-09-17",
+   "pnl": 1514
+  },
+  {
+   "date": "2026-09-18",
+   "pnl": 9319
+  },
+  {
+   "date": "2026-09-21",
+   "pnl": 53453
+  },
+  {
+   "date": "2026-09-22",
+   "pnl": 4754
+  },
+  {
+   "date": "2026-09-23",
+   "pnl": -15587
+  },
+  {
+   "date": "2026-09-24",
+   "pnl": 17528
+  },
+  {
+   "date": "2026-09-25",
+   "pnl": -15678
+  },
+  {
+   "date": "2026-09-28",
+   "pnl": 41513
+  },
+  {
+   "date": "2026-09-29",
+   "pnl": -19242
+  },
+  {
+   "date": "2026-09-30",
+   "pnl": 5581
+  }
+ ],
+ "execution": {
+  "tradeDate": "2024-12-04",
+  "executionTimestamp": "2024-12-04T13:50:41.900Z",
+  "venue": "Voice",
+  "venueMic": "XOFF",
+  "executionType": "Voice",
+  "trader": "Y. Tanaka",
+  "salesperson": null,
+  "orderId": "ORD-298C9F5099"
+ },
+ "lifecycle": {
+  "status": "Live",
+  "version": 2,
+  "events": [
+   {
+    "version": 1,
+    "event": "New",
+    "reason": "Trade captured",
+    "at": "2024-12-04T12:01:00Z",
+    "by": "stp.gateway"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-07-30T12:01:00Z",
+    "by": "fo.capture"
+   }
+  ],
+  "sourceSystem": "Calypso",
+  "createdAt": "2024-12-04T12:01:00Z",
+  "lastModifiedAt": "2025-07-30T12:01:00Z",
+  "lastModifiedBy": "fo.capture",
+  "timeline": [
+   {
+    "date": "2024-12-04",
+    "event": "Booked",
+    "status": "Done",
+    "description": "Captured in Imagine by TRDR-YTANAKA: short Capital-protected note"
+   },
+   {
+    "date": "2024-12-04",
+    "event": "Confirmed",
+    "status": "Matched",
+    "description": "Matched on DTCC CTM (DT392049556)"
+   },
+   {
+    "date": "2025-07-30",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by fo.capture)"
+   },
+   {
+    "date": "2026-12-06",
+    "event": "Next payment",
+    "status": "Pending",
+    "description": "Scheduled; settlement instructions confirmed"
+   },
+   {
+    "date": "2028-12-18",
+    "event": "Maturity",
+    "status": "Scheduled",
+    "description": "Final payment and close-out"
+   }
+  ]
+ },
+ "confirmation": {
+  "status": "Confirmed",
+  "method": "DTCC CTM",
+  "platformId": "DT392049556",
+  "matched": "2024-12-04 16:26",
+  "affirmedBy": "Counterparty ops",
+  "breaks": []
+ },
+ "clearing": {
+  "status": "Bilateral",
+  "mandatory": false,
+  "reason": "Counterparty below clearing threshold"
+ },
+ "regulatory": {
+  "uti": "549300BLAOJ55ZE6F474298C9F509943983F9854",
+  "upi": "QZIAWIJAPGTG",
+  "reportingRegimes": [
+   "JFSA"
+  ],
+  "reportingParty": "Us",
+  "reportingStatus": "Accepted",
+  "clearingObligation": false,
+  "tradingObligation": false,
+  "mifidClassification": "Professional client",
+  "volckerExempt": false,
+  "saCcrAssetClass": "Equity"
+ },
+ "settlementInstructions": {
+  "method": "CLS",
+  "ourAgent": "Barclays Bank plc",
+  "ourAgentBic": "BARCGB22XXX",
+  "theirAgentBic": "BRAMGB33XXX",
+  "ssiId": "SSI-GBP-1243C8",
+  "netting": "Payment netting by currency and value date"
+ },
+ "valuation": {
+  "asOf": "2026-09-30",
+  "currency": "USD",
+  "npv": 566929,
+  "cleanPv": 566929.0,
+  "accrued": 0.0,
+  "legPvs": [],
+  "model": "Discounted cashflows",
+  "curves": [
+   "EQX-UKX",
+   "EQV-UKX",
+   "CRV-GBP-OIS"
+  ],
+  "status": "Official EOD",
+  "runId": "EOD-20260930-01"
+ },
+ "pnlExplain": [
+  {
+   "step": "Opening MTM",
+   "pnl": 599757,
+   "total": true
+  },
+  {
+   "step": "Carry",
+   "pnl": -15742
+  },
+  {
+   "step": "Roll-down",
+   "pnl": 6193
+  },
+  {
+   "step": "Rates delta",
+   "pnl": -23747
+  },
+  {
+   "step": "FX delta",
+   "pnl": 204
+  },
+  {
+   "step": "Vol (vega)",
+   "pnl": -679
+  },
+  {
+   "step": "Theta",
+   "pnl": 406
+  },
+  {
+   "step": "Unexplained",
+   "pnl": 537
+  }
+ ],
+ "_meta": {
+  "source": "sophis-struct",
+  "generation": 1,
+  "live": false,
+  "walk": {
+   "mtm": 2314
+  }
+ }
+}

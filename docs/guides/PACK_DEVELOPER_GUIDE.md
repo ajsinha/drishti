@@ -1194,12 +1194,25 @@ ships, the drawer shows the sentence, the panel notes and the other layers, not 
 in the most specific pack, then a `vocabulary` entry with the field's last name, then, for a derived kind, the entry
 generated from its definition ("Sum of `mtm` over the trades of the desk"), then nothing: the field shows no hint.
 
+### Translations
+
+A pack can say the same things in another language: `config/about.<lang>.yaml` beside `about.yaml` (`<lang>` is a language
+tag such as `fr` or `fr-CA`). It has the same shape and the same strict parse (`DRS-2040` to `DRS-2044`, reported under
+`<pack>/about.fr.yaml`) and is laid over the English file **key by key**: whatever it does not translate stays English,
+so a first translation can be one kind, or one sentence. For a regional tag the plain language fills in before English
+(`fr-CA`, then `fr`, then `en`). The language of an answer is `?locale=` on the explain request, else the user's *Language of
+help text* on the account page, else the browser's `Accept-Language`; the first of those with an overlay wins, and the
+answer's `locale` says which was used. Numbers in a template use the pack's named formats and are not localised. The
+shipped example is `packs/market-risk/config/about.fr.yaml` (the VaR page in French).
+
 ### Generated packs
 
 The shipped packs are generated (see [How the shipped packs are generated](#how-the-shipped-packs-are-generated)).
-Their `config/about.yaml` is copied from a hand-kept source in the generator folder (`tools/packgen/banking/about/`,
-`tools/packgen/genomics/about.yaml`) by `make_packs.py` / `packbuild.py`: edit that source and regenerate, never the
-generated file.
+Their `config/about.yaml` (and any `about.<lang>.yaml`) is copied from a hand-kept source in the generator folder
+(`tools/packgen/banking/about/<pack>.yaml`, `tools/packgen/<generator>/about.yaml`) by `make_packs.py` / `packbuild.py`: edit
+that source and regenerate, never the generated file; `--check` fails when they differ. `sutra lint packs/<pack>` and
+`sutra test packs/<pack>` (with `help: { about: true }` in `expect.yaml` and a `tests/help-coverage.txt` ratchet) keep every
+shown field explained.
 
 ### Check it
 
