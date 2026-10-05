@@ -49,8 +49,10 @@ def page(browser):
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
     # a script that fails to download raises no page error, yet leaves the workbench unstarted: record failed and bad responses
-    pg.on("requestfailed", lambda r: pg.errors.append(f"request failed: {r.url} ({r.failure})"))
-    pg.on("response", lambda r: r.status >= 400 and pg.errors.append(f"HTTP {r.status}: {r.url}"))
+    # (kept apart from pg.errors, which tests assert empty: a 422 for a mistyped expression is expected, not an error)
+    pg.network = []
+    pg.on("requestfailed", lambda r: pg.network.append(f"request failed: {r.url} ({r.failure})"))
+    pg.on("response", lambda r: r.status >= 400 and pg.network.append(f"HTTP {r.status}: {r.url}"))
     yield pg
     pg.close()
 
@@ -69,7 +71,8 @@ def wait(page, js, seconds=BROWSER_WAIT_MS / 1000):   # generous: the full suite
     except Exception as e:                                   # the page itself is gone
         state = {"evaluate": repr(e)}
     errors = getattr(page, "errors", None)
-    raise AssertionError(f"still false after {seconds}s: {js}\n  page: {state}\n  page errors: {errors}")
+    network = getattr(page, "network", None)
+    raise AssertionError(f"still false after {seconds}s: {js}\n  page: {state}\n  page errors: {errors}\n  network: {network}")
 
 
 def open_design(page, base, name, **kw):
