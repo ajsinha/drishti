@@ -103,4 +103,52 @@ public final class CollabStoreChecks {
         s.forget(u);
         assertThat(s.list(u, null, false, 10, 0)).isEmpty();
     }
+
+    /** The outbox: claim under a lease (once only), retry, dead letter, requeue, cancel, counts, hourly count, purge. */
+    public static void outbox(OutboxStore s) {
+        String u = "o" + System.nanoTime();
+        Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        OutboxItem a = s.add(OutboxItem.pending("email", u, "share", "sh_1", now.minusSeconds(5)));
+        OutboxItem b = s.add(OutboxItem.pending("email", u, "share", "sh_2", now.minusSeconds(4)));
+        OutboxItem later = s.add(OutboxItem.pending("email", u, "share", "sh_3", now.plusSeconds(600)));
+        assertThat(a.seq()).isPositive();
+        assertThat(b.seq()).isGreaterThan(a.seq());
+        assertThat(s.find(a.seq())).get().extracting(OutboxItem::refId).isEqualTo("sh_1");
+        assertThat(s.countSince(u, now.minusSeconds(3600))).isEqualTo(3);
+        assertThat(s.countSince(u, now.plusSeconds(700))).isZero();
+
+        List<OutboxItem> got = s.claim(now, 10, now.plusSeconds(60), "srv-a");
+        assertThat(got).extracting(OutboxItem::seq).contains(a.seq(), b.seq()).doesNotContain(later.seq());
+        assertThat(got).allMatch(i -> OutboxItem.SENDING.equals(i.state()) && "srv-a".equals(i.leasedBy()));
+        assertThat(s.claim(now, 10, now.plusSeconds(60), "srv-b")).extracting(OutboxItem::seq).doesNotContain(a.seq(), b.seq());
+        // an expired lease is taken over
+        assertThat(s.claim(now.plusSeconds(61), 10, now.plusSeconds(120), "srv-b")).extracting(OutboxItem::seq).contains(a.seq(), b.seq());
+
+        s.sent(a.seq(), now);
+        assertThat(s.find(a.seq()).orElseThrow().state()).isEqualTo(OutboxItem.SENT);
+        s.retry(b.seq(), 1, now.plusSeconds(30), "421 busy");
+        OutboxItem retried = s.find(b.seq()).orElseThrow();
+        assertThat(retried.state()).isEqualTo(OutboxItem.PENDING);
+        assertThat(retried.attempts()).isEqualTo(1);
+        assertThat(retried.nextAt()).isEqualTo(now.plusSeconds(30));
+        assertThat(retried.lastError()).isEqualTo("421 busy");
+        assertThat(retried.leasedBy()).isNull();
+        assertThat(s.claim(now.plusSeconds(10), 10, now.plusSeconds(90), "srv-a")).extracting(OutboxItem::seq).doesNotContain(b.seq());
+
+        s.dead(b.seq(), 8, "550 no such user");
+        assertThat(s.list(OutboxItem.DEAD, 10)).extracting(OutboxItem::seq).contains(b.seq());
+        assertThat(s.counts().get(OutboxItem.DEAD)).isGreaterThanOrEqualTo(1);
+        assertThat(s.requeue(a.seq(), now)).as("a sent delivery is not requeued").isFalse();
+        assertThat(s.requeue(b.seq(), now)).isTrue();
+        OutboxItem again = s.find(b.seq()).orElseThrow();
+        assertThat(again.state()).isEqualTo(OutboxItem.PENDING);
+        assertThat(again.attempts()).isZero();
+
+        s.cancel(later.seq(), "no address");
+        assertThat(s.find(later.seq()).orElseThrow().state()).isEqualTo(OutboxItem.CANCELLED);
+        assertThat(s.list(null, 1000)).extracting(OutboxItem::seq).containsSubsequence(later.seq(), b.seq(), a.seq());
+
+        assertThat(s.purgeSent(now.plusSeconds(1))).isGreaterThanOrEqualTo(1);
+        assertThat(s.find(a.seq())).isEmpty();
+    }
 }

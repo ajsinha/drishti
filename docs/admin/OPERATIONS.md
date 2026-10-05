@@ -32,7 +32,7 @@ when other people will use the installation.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
+9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches)
@@ -797,6 +797,49 @@ People schedule searches to be delivered as CSV (User guide, *Scheduled reports*
   all but one, or each report runs once per server.
 - **What is audited.** `report.save`, `report.run` (with `ok` or `failed`) and `report.delete`. Admin → Health is
   not affected by a failing report; its owner sees the error on the Reports page.
+
+## 9a-2. Collaboration email and the outbox
+
+Shares can also be emailed ([COLLABORATION.md](../architecture/COLLABORATION.md)). It is off until you switch it on, and it never carries a
+data value.
+
+**Switch it on** (all three, or it stays off): `drishti.security.enabled: true` (the server refuses to start with email on and sign-in off),
+`drishti.collab.console-url` (where links point) and an SMTP server:
+
+```bash
+export DRISHTI_CONSOLE_URL=https://drishti.example.com
+export DRISHTI_MAIL_FROM=drishti@example.com
+export SPRING_MAIL_HOST=smtp.example.com SPRING_MAIL_PORT=587 SPRING_MAIL_USERNAME=drishti SPRING_MAIL_PASSWORD=...
+export SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED=true
+export SPRING_MAIL_PROPERTIES_MAIL_SMTP_CONNECTIONTIMEOUT=10000 SPRING_MAIL_PROPERTIES_MAIL_SMTP_TIMEOUT=10000
+export DRISHTI_COLLAB_EMAIL_ENABLED=true
+```
+
+Then send yourself a test: `POST /api/v1/admin/collab/mail-test` mails the signed-in administrator's own address and answers
+`503 DRS-7012` with the SMTP reason when it cannot.
+
+**What is sent.** For each person a share reaches who has an address (`User.email`, set by an administrator or the identity provider; people cannot
+type addresses) and has not turned share mail off, one message: the sender's name, the kind and id, the panel and date, the note as that person
+may read it (masked values `•••`) and the link. A pack whose identifiers are sensitive sets `drishti.collab.packs.<pack>.email.content: link-only`.
+The message is built when it is sent, so a person whose role was removed since gets nothing (the row is *cancelled*). People are not emailed about
+their own shares, and no more than `limits.mails-per-recipient-per-hour` an hour.
+
+**The outbox.** The row is written in the share's own transaction; a worker on each server (`outbox.enabled`) claims due rows under a lease, so
+several servers never send one twice (after a crash between sending and recording, one repeat is possible; its `Message-ID` is fixed, so mail
+clients fold it). A failure retries after `outbox.backoff`, doubling to `outbox.max-backoff`; a refusal by the server (SMTP 5xx, a malformed address)
+or the `outbox.max-attempts`th failure makes a **dead letter**. Sent rows are deleted after `outbox.keep-sent-days`.
+
+**Looking and fixing.**
+
+```bash
+curl -s -H "Authorization: Bearer $ADMIN" 'http://localhost:18480/api/v1/admin/collab/outbox?state=dead'        # counts and rows
+curl -s -X POST -H "Authorization: Bearer $ADMIN" http://localhost:18480/api/v1/admin/collab/outbox/42/retry   # send a dead letter again
+```
+
+Rows show the recipient, template, share id, attempts, next attempt and the last error, never the message. `state` is `pending`, `sending`, `sent`,
+`dead` or `cancelled`. Alert on `drishti.collab.outbox{state="dead"} > 0` and on a growing `state="pending"`. The usual causes of dead letters are in
+[TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#the-email-never-arrived). An outage of the mail server needs no action: rows stay pending and go out
+when it returns.
 
 ## 9b. The access log
 

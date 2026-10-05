@@ -24,10 +24,24 @@ import com.ash.drishti.identity.collab.InboxStore;
 import com.ash.drishti.identity.collab.ShareStore;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
+import com.ash.drishti.identity.PreferenceStore;
+import com.ash.drishti.identity.collab.OutboxStore;
+import com.ash.drishti.server.collab.mail.EmailNotifier;
+import com.ash.drishti.server.collab.mail.ItemRenderer;
+import com.ash.drishti.server.collab.mail.MailContentPolicy;
+import com.ash.drishti.server.collab.mail.MailRenderer;
+import com.ash.drishti.server.collab.mail.MailTemplates;
+import com.ash.drishti.server.collab.mail.MailTransport;
+import com.ash.drishti.server.collab.mail.NotifyPrefs;
+import com.ash.drishti.server.collab.mail.OutboxDispatcher;
+import com.ash.drishti.server.collab.mail.ShareItemRenderer;
+import com.ash.drishti.server.security.SecurityProperties;
 import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.mail.javamail.JavaMailSender;
 
 /** The collaboration services (COLLABORATION.md): sharing with a note, the directory, the inbox and its live hub. */
 @Configuration(proxyBeanMethods = false)
@@ -71,5 +85,50 @@ public class CollabConfiguration {
             InboxHub hub, ObjectProvider<AccessLog> accessLog, RateLimits limits) {
         return new ShareService(store, tx, props, entitlements, packs, principals, directory, users, router, notifiers, hub,
                 accessLog.getIfAvailable(), limits);
+    }
+
+    @Bean
+    public NotifyPrefs notifyPrefs(PreferenceStore preferences) {
+        return new NotifyPrefs(preferences);
+    }
+
+    @Bean
+    public MailContentPolicy mailContentPolicy(CollabProperties props, PackAccess packs) {
+        return new MailContentPolicy(props, packs);
+    }
+
+    /** The email channel: off until enabled, with an SMTP host and a console URL; refuses to start when sign-in is off (identities are not real). */
+    @Bean
+    public EmailNotifier emailNotifier(CollabProperties props, OutboxStore outbox, Principals principals, NotifyPrefs prefs,
+            ObjectProvider<JavaMailSender> sender, SecurityProperties security) {
+        if (props.email().enabled() && !security.enabled()) {
+            throw new IllegalStateException("drishti.collab.email.enabled needs drishti.security.enabled: with sign-in off the user names are "
+                    + "not verified, so mail must not be sent to the addresses they map to");
+        }
+        return new EmailNotifier(props, outbox, principals, prefs, sender.getIfAvailable() != null);
+    }
+
+    @Bean
+    public ShareItemRenderer shareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy,
+            NotifyPrefs prefs, CollabProperties props) {
+        return new ShareItemRenderer(shares, principals, entitlements, policy, prefs, props.consoleUrl());
+    }
+
+    @Bean(destroyMethod = "close")
+    public OutboxDispatcher outboxDispatcher(OutboxStore outbox, CollabProperties props, Principals principals, List<ItemRenderer> renderers,
+            ObjectProvider<JavaMailSender> sender, io.micrometer.core.instrument.MeterRegistry meters, EmailNotifier email,
+            @Value("${drishti.branding.product:Drishti}") String product) {
+        String from = props.email().from();
+        String host = from.contains("@") ? from.substring(from.indexOf('@') + 1) : "localhost";
+        JavaMailSender smtp = sender.getIfAvailable();
+        MailTransport transport = smtp != null ? MailTransport.smtp(smtp) : (m, f) -> {
+            throw new IllegalStateException("no SMTP host: set spring.mail.host");
+        };
+        OutboxDispatcher d = new OutboxDispatcher(outbox, props, principals, renderers,
+                new MailRenderer(new MailTemplates(props.email().templatesDir()), product, host), transport, meters, java.time.Clock.systemUTC());
+        if (email.available()) {
+            d.start();
+        }
+        return d;
     }
 }

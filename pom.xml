@@ -84,6 +84,7 @@
     <delta-kernel.version>4.4.0</delta-kernel.version>
     <hadoop.version>3.4.3</hadoop.version>
     <testcontainers.version>2.0.5</testcontainers.version>
+    <greenmail.version>2.1.5</greenmail.version>
     <activemq.version>6.3.2</activemq.version>
     <rabbitmq.version>5.36.0</rabbitmq.version>
     <awssdk.version>2.55.9</awssdk.version>
@@ -141,6 +142,7 @@
       <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId><version>${caffeine.version}</version></dependency>
       <dependency><groupId>org.jctools</groupId><artifactId>jctools-core</artifactId><version>${jctools.version}</version></dependency>
       <dependency><groupId>org.hdrhistogram</groupId><artifactId>HdrHistogram</artifactId><version>${hdrhistogram.version}</version></dependency>
+      <dependency><groupId>com.icegreen</groupId><artifactId>greenmail-junit5</artifactId><version>${greenmail.version}</version></dependency>
       <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><version>${archunit.version}</version></dependency>
       <dependency><groupId>org.springdoc</groupId><artifactId>springdoc-openapi-starter-webmvc-ui</artifactId><version>${springdoc.version}</version></dependency>
     </dependencies>

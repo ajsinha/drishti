@@ -100,6 +100,7 @@ public class SettingsController {
                     next.put("searchLimit", v.asInt());
                 }
                 case "pinned" -> next.set("pinned", pins(v));
+                case "notify" -> next.set("notify", notify(v, next.path("notify")));
                 default -> throw bad("unknown setting '" + e.getKey() + "'");
             }
         });
@@ -119,7 +120,27 @@ public class SettingsController {
         out.put("density", s.path("density").asText("comfortable"));
         out.put("flash", s.path("flash").asBoolean(true));
         out.put("searchLimit", s.path("searchLimit").asInt(100));
+        ObjectNode email = json.createObjectNode();
+        com.ash.drishti.server.collab.mail.NotifyPrefs.EVENTS.forEach(e -> email.put(e, s.path("notify").path("email").path(e).asBoolean(true)));
+        out.putObject("notify").set("email", email);
         out.set("pinned", s.path("pinned").isArray() ? s.get("pinned") : json.createArrayNode());
+        return out;
+    }
+
+    /** {@code {email: {share, mention, reply}}}: which events are emailed; a patch changes only the events it names. */
+    private ObjectNode notify(JsonNode v, JsonNode current) {
+        if (!v.isObject() || !v.path("email").isObject() || v.size() != 1) {
+            throw bad("notify is {email: {share, mention, reply}} with true or false for each");
+        }
+        ObjectNode email = current.path("email").isObject() ? ((ObjectNode) current.get("email")).deepCopy() : json.createObjectNode();
+        v.get("email").fields().forEachRemaining(e -> {
+            if (!com.ash.drishti.server.collab.mail.NotifyPrefs.EVENTS.contains(e.getKey())) {
+                throw bad("unknown notification '" + e.getKey() + "'; the events are " + com.ash.drishti.server.collab.mail.NotifyPrefs.EVENTS);
+            }
+            email.put(e.getKey(), bool(e.getValue(), "notify.email." + e.getKey()));
+        });
+        ObjectNode out = json.createObjectNode();
+        out.set("email", email);
         return out;
     }
 

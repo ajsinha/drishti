@@ -858,22 +858,42 @@ build steps). Who may share is the role power `roles.<role>.collaborate`; who ma
 | `limits.shares-per-day` | `100` | Shares one user sends in 24 hours (counted in the store, so it survives restarts and holds across servers). |
 | `limits.comments-per-minute` | `10` | Comments one user writes a minute (build step 5). |
 | `limits.directory-per-minute` | `60` | Directory searches one user makes a minute. |
-| `limits.mails-per-recipient-per-hour` | `30` | Emails one recipient is sent an hour (build step 4). |
+| `limits.mails-per-recipient-per-hour` | `30` | Emails queued for one recipient in an hour; more are not queued (the bell still rings) and a warning is logged. |
 | `inbox.keep` | `1000` | Newest inbox rows kept per user. |
 | `inbox.keep-days` | `180` | Days an inbox row is kept. |
 | `inbox.poll` | `5s` | How often a server looks for rows another server wrote to the shared database, only while a stream is open, so a notice reaches a browser on any server within seconds. |
-| `inbox.coalesce` | `60s` | Several notices to one person about one thread within this long become one email (build step 4). |
-| `email.enabled` | `false` | The email channel (build step 4); also needs `spring.mail.host`, `console-url` and security on. Asking for it while off is `503 DRS-7012`. |
-| `email.content` | `comment` | `link-only`, `title` or `comment`: how much an email says (never a data value). |
+| `inbox.coalesce` | `60s` | Several notices to one person about one thread within this long become one email. Applies to thread notices (build step 5); a share is always one email. |
+| `email.enabled` | `false` | The email channel; also needs `spring.mail.host`, `console-url` and `drishti.security.enabled` (with sign-in off the server refuses to start with this on: identities are not real). Asking for email while it is off is `503 DRS-7012`. See [Email](#email-springmail-and-the-outbox). |
+| `email.content` | `comment` | `comment`: the product, the sender, the kind and id, the panel, the date and the note as that recipient may read it (masked values `•••`), and the link. `title`: the same without the note. `link-only`: the sender's name and the link only. Never a data value. Per pack: `packs.<pack>.email.content`. |
 | `email.from` | `drishti@localhost` (`DRISHTI_MAIL_FROM`) | The From address. |
-| `email.templates-dir` | empty | A folder of email templates that override the built-in ones. |
-| `outbox.enabled` | `true` | This server dispatches the email outbox (build step 4); turn it off on servers of a group that should not. |
+| `email.templates-dir` | empty | A folder with `share.subject`, `share.txt`, `share.html` (and `test.*`) that replace the built-in ones, file by file. Variables: `${product}`, `${headline}`, `${detail}`, `${link}`; nothing else, and a note is never read as a template. |
+| `outbox.enabled` | `true` | This server sends the email outbox; turn it off on servers of a group that should not (the rows are still written, any dispatching server sends them). |
 | `outbox.tick`, `outbox.batch`, `outbox.max-attempts`, `outbox.backoff`, `outbox.max-backoff`, `outbox.lease`, `outbox.keep-sent-days` | `2s`, `50`, `8`, `30s`, `1h`, `60s`, `30` | The dispatcher: how often it looks, rows per tick, attempts before a row is dead, the retry delay (doubling to the maximum), how long a claimed row is held, and days a sent row is kept. |
 | `retention.keep-days` | `0` | Days shares and threads are kept; `0` keeps them forever, so no record is destroyed by default. |
 | `export-keep` | `24h` | How long an export file is kept (build step 7). |
-| `packs` | `{}` | Per-pack overrides by pack name, in configuration: `packs.genomics.share-enabled: false` switches sharing off for that pack's kinds (`403 DRS-7004`). |
+| `packs` | `{}` | Per-pack overrides by pack name, in configuration: `packs.genomics.share-enabled: false` switches sharing off for that pack's kinds (`403 DRS-7004`); `packs.genomics.email.content: link-only` makes email about that pack's kinds carry neither the id nor the note. |
 | `bridges.enabled`, `bridges.webhooks` | `false`, `[]` | Chat bridges (phase 2, not built). |
 | `snapshots.enabled` | `false` | Watermarked snapshots (phase 2, not built). |
+
+#### Email (`spring.mail`) and the outbox
+
+Email is off until three things are set: `drishti.collab.email.enabled: true`, an SMTP host, and `drishti.collab.console-url` (the links). The
+SMTP client is Spring Boot's: the standard `spring.mail.*` keys (or `SPRING_MAIL_HOST` and so on in the environment); no mail client exists while
+`spring.mail.host` is unset.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `spring.mail.host` | unset | The SMTP server. Setting it switches the client on. |
+| `spring.mail.port` | `25` (Spring's) | Usually `587`. |
+| `spring.mail.username`, `spring.mail.password` | unset | Sign-in to the server, when it needs one; keep the password in the environment, not the file. |
+| `spring.mail.properties.mail.smtp.starttls.required` | `false` (Jakarta Mail's) | `true` refuses to send unless the connection is upgraded to TLS. Set it on for any server reached over a network. |
+| `spring.mail.properties.mail.smtp.connectiontimeout`, `...smtp.timeout` | none (Jakarta Mail's: wait forever) | Milliseconds to connect and to wait for a reply. Set both (`10000`); otherwise a stalled server holds the dispatcher. |
+| `management.health.mail.enabled` | `false` (set by Drishti) | The mail health check is off, so an unreachable mail server never turns `/readyz` red; the outbox retries instead. |
+
+Each queued email is a row in `drishti_outbox` (or `outbox/{pending,sent,dead}/` for the file store) naming the recipient, the template and the share;
+the message itself is built when it is sent, for the recipient's rights then. Metrics: `drishti.collab.mail{outcome=sent|retry|dead|cancelled}`
+(counters) and `drishti.collab.outbox{state=pending|dead}` (gauges). Operating it: [OPERATIONS.md](OPERATIONS.md#9a-2-collaboration-email-and-the-outbox).
+A person chooses which events are emailed under `notify.email.{share,mention,reply}` in `PATCH /api/v1/me/settings` (all default to on).
 
 ### `drishti.reports` — scheduled reports
 

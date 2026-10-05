@@ -106,6 +106,29 @@ public final class IdentityRepositories {
                 String before, Pageable page);
     }
 
+    public interface Outbox extends JpaRepository<OutboxEntity, Long> {
+        @org.springframework.data.jpa.repository.Query("select o from OutboxEntity o where (o.state = 'pending' and o.nextAt <= :now) or (o.state = 'sending' and o.leaseUntil < :now) order by o.seq")
+        List<OutboxEntity> due(@org.springframework.data.repository.query.Param("now") java.time.Instant now, Pageable page);
+
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.data.jpa.repository.Query("update OutboxEntity o set o.state = 'sending', o.leaseUntil = :lease, o.leasedBy = :owner where o.seq = :seq and ((o.state = 'pending' and o.nextAt <= :now) or (o.state = 'sending' and o.leaseUntil < :now))")
+        int claim(@org.springframework.data.repository.query.Param("seq") long seq, @org.springframework.data.repository.query.Param("now") java.time.Instant now,
+                @org.springframework.data.repository.query.Param("lease") java.time.Instant lease,
+                @org.springframework.data.repository.query.Param("owner") String owner);
+
+        List<OutboxEntity> findByStateOrderBySeqDesc(String state, Pageable page);
+
+        List<OutboxEntity> findAllByOrderBySeqDesc(Pageable page);
+
+        long countByState(String state);
+
+        long countByRecipientAndCreatedAtGreaterThanEqual(String recipient, java.time.Instant since);
+
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.data.jpa.repository.Query("delete from OutboxEntity o where o.state = 'sent' and o.sentAt < :before")
+        int purgeSent(@org.springframework.data.repository.query.Param("before") java.time.Instant before);
+    }
+
     public interface Inbox extends JpaRepository<InboxEntity, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<InboxEntity> {
         long countByUsernameAndReadAtIsNull(String username);
 
