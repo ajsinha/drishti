@@ -73,6 +73,10 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 
 Every page after the landing page has the same top bar, on one row.
 
+The **Drishti name and logo** at its left end always lead to the landing page, also when you are signed in. The
+landing page then shows **← Back to …** (the view, Build, Admin or Help page you came from; `Alt+B`), so one click
+takes you back where you were; *Open the terminal* goes to the terminal instead.
+
 ```text
 ◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30] ● Live   Views ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
 ```

@@ -15,9 +15,12 @@
 """Public pages: the landing page."""
 from __future__ import annotations
 
+from urllib.parse import unquote
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from core.nextpath import safe_next
 from core.packs import samples
 from routes.common import packs, render
 
@@ -35,7 +38,22 @@ async def landing(request: Request):
     commands = [s["cmd"] + " <GO>" for s in current][: int(settings.get("ui.landing_examples", 4) or 4)] or [GENERIC]
     known = {s["cmd"].upper() for s in current}
     showcase = [{**s, "cmd": s.get("cmd") if str(s.get("cmd", "")).upper() in known else ""} for s in settings.get("ui.showcase") or []]
-    return render(request, "landing.html", showcase=showcase, commands=commands)
+    back = None
+    if getattr(request.state, "identity", None) is not None:            # signed in: offer the way back to where the logo was clicked
+        target = safe_next(request.query_params.get("from"), default="")
+        if target and target.split("?", 1)[0] not in ("/", "/login"):
+            back = {"href": target, "label": back_label(target)}
+    return render(request, "landing.html", showcase=showcase, commands=commands, back=back)
+
+
+def back_label(path: str) -> str:
+    """A short name for the page a signed-in visitor came from: the entity id of a view, else the page's first path part."""
+    parts = [p for p in path.split("?", 1)[0].split("/") if p]
+    if len(parts) >= 3 and parts[0] in ("v", "share"):
+        return unquote(parts[-1]) if parts[0] == "v" else "the shared view"
+    names = {"t": "the terminal", "build": "Build", "admin": "Admin", "help": "Help", "inbox": "your inbox", "w": "your workspace",
+             "account": "your account", "alerts": "alerts", "monitors": "monitors", "compare": "Compare"}
+    return names.get(parts[0], "where you were") if parts else "where you were"
 
 
 @router.get("/healthz")

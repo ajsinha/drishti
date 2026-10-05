@@ -16,7 +16,8 @@
 {% from "_macros/ui.html" import brand %}
 <nav class="nav-public" aria-label="Primary">
   <div class="inner">
-    {{ brand() }}
+    {% set here = request.url.path ~ ("?" ~ request.url.query if request.url.query else "") %}
+    {{ brand("/?from=" ~ (here | urlencode) if me and request.url.path not in ("/", "/login") else "/") }}
     <div class="links">
       <a class="hide-sm" href="/#grammar">Grammar</a>
       <a class="hide-sm" href="/#pipeline">Pipeline</a>

@@ -64,7 +64,7 @@
 
 <header class="tbar" role="banner">
  <div class="tbar-row1">
-  <a class="tbar-brand" href="/" aria-label="{{ PRODUCT }} home">{{ brand_mark("brand-mark") }}
+  <a class="tbar-brand" href="/{% if me %}?from={{ (request.url.path ~ ("?" ~ request.url.query if request.url.query else "")) | urlencode }}{% endif %}" aria-label="{{ PRODUCT }} home">{{ brand_mark("brand-mark") }}
     <span class="tbar-name"><span>{{ PRODUCT }}</span>{% if TAGLINE %}<small>{{ TAGLINE }}</small>{% endif %}</span></a>
 
   <div class="tbar-find">
