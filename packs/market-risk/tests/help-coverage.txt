@@ -1,0 +1,2 @@
+# Lowest share of shown fields with a glossary entry, per Sutra (a ratchet: raise it when about.yaml grows, never lower it).
+var=1.0

@@ -1807,6 +1807,9 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2042` | `the template does not compile: …` | an `about` template (a kind's or a panel's) has a `${...}` expression that does not compile | fix the expression; the line and column are those of the text in the file |
 | `DRS-2043` | `use: nope names no vocabulary entry visible to pack market-risk (its own or an extended pack's)` | a glossary entry's `use` names no `vocabulary` entry in the pack's file or its parents' | add the vocabulary entry or fix the name |
 | `DRS-2044` | `text is 700 characters; the limit is 600 (drishti.about.max-text)` | one text of an about entry (term, means, unit, sign, note, formula, a value's meaning, title) is longer than the cap | shorten it |
+| `DRS-2045` | `F1 is bound in keys: it opens About this page on a view, and this binding wins on this view (the drawer stays on '?'); bind another key to keep F1 for help` | a lint warning (`sutra lint`), not a load error: a Sutra binds `F1` | bind a key from `F2` to `F12`, or accept that `F1` runs your binding on this view |
+| `DRS-2046` | `about text for panel 'ghost' of kind 'widget' matches no panel of any Sutra for the kind` | a lint warning: `panels.<id>` in `about.yaml` names no panel | correct the id or delete the entry |
+| `DRS-2047` | `field 'colour' is shown but has no glossary entry (kinds.widget.glossary in config/about.yaml, or a vocabulary entry)` | a lint warning: a field a Sutra shows has no glossary entry; fails `sutra lint --strict` | add the entry to the kind's `glossary:` or to `vocabulary:` |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile, or is beyond the [size limits](#size-limits) | see [Expression errors](#expression-errors) |
 
 Other codes you may meet around Sutras:

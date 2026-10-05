@@ -58,7 +58,14 @@ public final class SutraCli {
     public static final int USAGE = 2;
 
     /** The engine services the commands need. */
-    public record Services(SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer, JsonCodec codec) {}
+    public record Services(SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer, JsonCodec codec,
+            HelpChecks help) {
+
+        /** Services without the help checks (no about catalogue): lint and test then skip the help warnings and assertions. */
+        public Services(SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer, JsonCodec codec) {
+            this(sutras, pipeline, shapes, designer, codec, null);
+        }
+    }
 
     /** One Sutra file to work on and where its samples are. */
     private record Unit(Path file, String text, String stem) {}
@@ -75,6 +82,7 @@ public final class SutraCli {
               shape   <samples.json | dir>         infer the shape (JSON Schema) of the samples
               design  <samples.json | dir>         draft a Sutra from the samples (--kind names it)
             options: --junit file   JUnit XML report     --out dir   write results here
+                     --strict       lint: help warnings (DRS-2045 to 2047) fail the run
                      --samples path JSON samples to use instead of the pack's tests/ folder or the Sutra's sibling .json
             exit codes: 0 ok, 1 problems, 2 usage""";
 
@@ -166,16 +174,45 @@ public final class SutraCli {
 
     private int lint(CliArgs a, List<Case> cases) throws IOException {
         boolean bad = false;
-        for (Unit u : units(a.paths())) {
+        List<Unit> units = units(a.paths());
+        List<Sutra> parsed = new ArrayList<>();
+        for (Unit u : units) {
+            if (problems(u) == null) {
+                parsed.add(s.sutras().check(u.text()));
+            }
+        }
+        for (Unit u : units) {
             String why = problems(u);
             cases.add(why == null ? Case.pass(u.stem(), "lint") : Case.fail(u.stem(), "lint", why));
             out.println((why == null ? "ok      " : "PROBLEM ") + u.file());
             if (why != null) {
                 err.println(why);
                 bad = true;
+                continue;
             }
+            bad |= helpWarnings(u, s.sutras().check(u.text()), parsed, a, cases);
         }
         return bad ? PROBLEMS : OK;
+    }
+
+    /** The help warnings (DRS-2045 to 2047) of one Sutra; true when they fail the run (only with {@code --strict}). */
+    private boolean helpWarnings(Unit u, Sutra sutra, List<Sutra> run, CliArgs a, List<Case> cases) throws IOException {
+        if (s.help() == null) {
+            return false;
+        }
+        String kind = sutra.match() == null ? null : sutra.match().kind();
+        List<com.ash.drishti.rachana.SutraProblem> warnings = new ArrayList<>(
+                s.help().warnings(sutra, run, kind == null ? List.of() : s.sutras().forKind(kind)));
+        List<JsonNode> docs = samplesOf(u, sutra, a.samples()).stream().filter(d -> d.error() == null).map(Doc::document).toList();
+        warnings.addAll(s.help().uncovered(s.help().coverage(sutra, docs), sutra));
+        for (com.ash.drishti.rachana.SutraProblem w : warnings) {
+            String line = u.file() + (w.location() == null ? "" : ":" + w.location().line()) + " warning " + w.code() + " " + w.message();
+            err.println(line);
+            if (a.strict()) {
+                cases.add(Case.fail(u.stem(), "help " + w.code(), line));
+            }
+        }
+        return a.strict() && !warnings.isEmpty();
     }
 
     private int test(CliArgs a, List<Case> cases) throws IOException {
@@ -248,10 +285,72 @@ public final class SutraCli {
                     err.println(name + ": " + String.join("; ", failures));
                 }
             }
+            failed += helpExpectations(u, sutra, expect, expectDir, readable, cases);
             out.println((failed == 0 ? "ok   " : "FAIL ") + u.file() + " (" + docs.size() + " sample" + (docs.size() == 1 ? "" : "s") + ")");
             bad |= failed > 0;
         }
         return bad ? PROBLEMS : OK;
+    }
+
+    /** The {@code help:} assertions of expect.yaml; always reports the coverage line when there is an about catalogue. Returns the failures. */
+    private int helpExpectations(Unit u, Sutra sutra, ExpectFile expect, Path expectDir, List<Doc> readable, List<Case> cases) {
+        if (s.help() == null) {
+            return 0;
+        }
+        int failed = 0;
+        com.ash.drishti.rachana.about.HelpLint.Coverage c = s.help().coverage(sutra, readable.stream().map(Doc::document).toList());
+        out.println("     " + u.stem() + ": " + c.describe());
+        Double floor = expect.helpCoverage() != null ? expect.helpCoverage() : ratchet(expectDir, u.stem(), sutra.name());
+        if (floor != null) {
+            if (c.ratio() + 1e-9 < floor) {
+                failed++;
+                String why = c.describe() + " is under the floor of " + Math.round(floor * 100) + "% (no glossary entry for: "
+                        + String.join(", ", c.missing()) + ")";
+                cases.add(Case.fail(u.stem(), "help coverage", why));
+                err.println(u.stem() + ": " + why);
+            } else {
+                cases.add(Case.pass(u.stem(), "help coverage"));
+            }
+        }
+        if (expect.helpAbout()) {
+            List<String> errors = new ArrayList<>();
+            for (Doc d : readable) {
+                String e = s.help().aboutError(sutra, d.document());
+                if (e != null) {
+                    errors.add(d.file() + ": " + e);
+                }
+            }
+            if (errors.isEmpty()) {
+                cases.add(Case.pass(u.stem(), "help about"));
+            } else {
+                failed++;
+                cases.add(Case.fail(u.stem(), "help about", String.join("\n", errors)));
+                err.println(u.stem() + ": help about: " + String.join("; ", errors));
+            }
+        }
+        return failed;
+    }
+
+    /**
+     * The recorded floor of the pack ({@code tests/help-coverage.txt}, lines {@code <sutra>=<0..1>}), which a Sutra's coverage may
+     * not fall under: a ratchet, so help text is never lost quietly. Null when there is no file or no line for the Sutra.
+     */
+    private static Double ratchet(Path expectDir, String stem, String name) {
+        Path file = expectDir == null ? null : expectDir.resolveSibling("help-coverage.txt");
+        if (file == null || !Files.isRegularFile(file)) {
+            return null;
+        }
+        try {
+            for (String line : Files.readAllLines(file)) {
+                String[] kv = line.strip().split("=", 2);
+                if (kv.length == 2 && !line.startsWith("#") && (kv[0].strip().equals(stem) || kv[0].strip().equals(name))) {
+                    return Double.parseDouble(kv[1].strip());
+                }
+            }
+        } catch (IOException | NumberFormatException e) {
+            throw new CliArgs.UsageException(file + ": cannot read (" + e.getMessage() + "); lines are <sutra>=<0..1>");
+        }
+        return null;
     }
 
     private int preview(CliArgs a, List<Case> cases) throws IOException {

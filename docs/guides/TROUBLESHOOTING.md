@@ -777,6 +777,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-2032` | a Sutra file could not be read at all (the log has the stack trace); the rest load |
 | `DRS-2033` | a Sutra's YAML has a key written twice, a second document or a tag |
 | `DRS-2040`–`DRS-2044` | a pack's `config/about.yaml` has a problem (unknown key or bad version, kind not in the pack's lineage, a template that does not compile, `use` with no vocabulary entry, a text over the cap); listed by `GET /api/v1/sutras/problems` as `<pack>/about.yaml`; the entry is left out and the page is unaffected; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
+| `DRS-2045`–`DRS-2047` | `sutra lint` help warnings (not load errors): a Sutra binds `F1`, an about `panels.<id>` matches no panel, a shown field has no glossary entry; `--strict` fails the run on them |
 | `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
 | `DRS-3001` | reserved; nothing raises it in this release |
 | `DRS-4001` | command not understood |
