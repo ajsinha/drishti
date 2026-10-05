@@ -48,6 +48,9 @@ def page(browser):
     pg = browser.new_page(viewport={"width": 1500, "height": 950})
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
+    # a script that fails to download raises no page error, yet leaves the workbench unstarted: record failed and bad responses
+    pg.on("requestfailed", lambda r: pg.errors.append(f"request failed: {r.url} ({r.failure})"))
+    pg.on("response", lambda r: r.status >= 400 and pg.errors.append(f"HTTP {r.status}: {r.url}"))
     yield pg
     pg.close()
 

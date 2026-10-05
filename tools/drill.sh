@@ -38,7 +38,19 @@ fi
 JAVA21_HOME="${JAVA21_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
 [[ -x "$JAVA21_HOME/bin/java" ]] || { echo "drill: no JDK 21 at $JAVA21_HOME (set JAVA21_HOME)" >&2; exit 1; }
 JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o verify
-console/.venv/bin/python -m pytest -q console/tests
+# The console suite. A browser test that fails is run once more on its own: about one run in 700 a workbench page has
+# loaded without its script starting (diagnosed in console/tests/test_workbench_browser.py: wait() reports the page state,
+# failed requests and bad responses). A test that passes the second time is a flake: printed and kept in
+# target/drill-flakes.log so it is looked at, not hidden; a test that fails twice fails the drill.
+if ! console/.venv/bin/python -m pytest -q console/tests; then
+  mkdir -p target
+  failed=$(console/.venv/bin/python -m pytest -q --co --last-failed console/tests 2>/dev/null | grep '::' || true)
+  [[ -n "$failed" ]] || { echo "drill: the console suite failed with no failed test to re-run (a collection error?)" >&2; exit 1; }
+  echo "drill: re-running the failed console tests once:" >&2; echo "$failed" >&2
+  console/.venv/bin/python -m pytest -q --last-failed --last-failed-no-failures none console/tests
+  { echo "$(date -Iseconds) $(git log --oneline -1)"; echo "$failed"; } >> target/drill-flakes.log
+  echo "drill: FLAKY (failed once, passed again), kept in target/drill-flakes.log" >&2
+fi
 
 git push -q origin develop
 git checkout -q main

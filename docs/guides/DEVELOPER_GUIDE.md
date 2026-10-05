@@ -288,8 +288,13 @@ What it does, in order (it stops at the first failure, `set -euo pipefail`):
    10-minute `timeout`: a hung test fails the drill (exit 124) instead of blocking it. (Tools that start worker
    processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a
    `spawn` pool.)
-6. `./mvnw -q -o verify`: the whole Java build, every test and every rule, offline.
-7. `console/.venv/bin/python -m pytest -q console/tests`.
+6. `./mvnw -q -o verify`: the whole Java build, every test and every rule, offline; then the same on Java 21
+   (`JAVA21_HOME`, default `/usr/lib/jvm/java-21-openjdk-amd64`), since the jar is Java 21 bytecode.
+7. `console/.venv/bin/python -m pytest -q console/tests`. If it fails, the failed tests (and only those) run once more:
+   a test that passes the second time is printed as `FLAKY` and appended to `target/drill-flakes.log` with the commit;
+   a test that fails twice, or a run that failed without a failed test to re-run (a collection error), stops the
+   drill. The retry exists for a rare workbench page that loads without its script starting under load; a timed-out
+   browser wait reports the page's state, failed requests and bad responses so the cause can be found.
 8. Pushes `develop`, fast-forwards `main` to `develop` (`git merge --ff-only`), pushes `main`, and returns to
    `develop`. It prints `drilled: <the last commit>`.
 
