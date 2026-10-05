@@ -154,6 +154,20 @@ public interface SourcePlugin extends AutoCloseable {
     default void purgeCaches() {
     }
 
+    /**
+     * What the plugin's own definition says a field of one of its kinds means, for About this page's glossary: a derived kind
+     * says "sum of mtm over the trades" and the formula. The default knows nothing.
+     *
+     * @param means one sentence of meaning
+     * @param formula the formula as configured
+     * @param origin where the definition is, for people to find it
+     */
+    record FieldNote(String means, String formula, String origin) {}
+
+    default Optional<FieldNote> describeField(String kind, String field) {
+        return Optional.empty();
+    }
+
     /** Human-readable health; {@code "UP"} when healthy. */
     default String health() {
         return "UP";

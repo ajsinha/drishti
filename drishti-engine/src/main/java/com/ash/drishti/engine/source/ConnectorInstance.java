@@ -132,6 +132,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public Optional<FieldNote> describeField(String kind, String field) {
+        return serves(kind) ? delegate.describeField(kind, field) : Optional.empty();
+    }
+
+    @Override
     public java.util.Map<String, Object> cacheStats() {
         return delegate.cacheStats();
     }

@@ -31,13 +31,14 @@ import java.util.Map;
  * @param generation the source generation explained
  * @param newer true when the server holds a newer generation than the one the caller said it shows
  * @param about what the page is, from the pack's authored text (layer 1)
+ * @param glossary what each field shown on the page means (layer 2), for exactly the fields with a cell on the page
  * @param data where the data came from and how fresh it is
  * @param layout why the page looks like this
  * @param next where to go from here
  * @param timings milliseconds spent
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, long generation, Boolean newer, About about, Data data, Layout layout,
+public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, long generation, Boolean newer, About about, List<Term> glossary, Data data, Layout layout,
         Next next, Map<String, Double> timings) {
 
     /**
@@ -52,6 +53,29 @@ public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, lon
      */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public record About(Pack pack, String kindTitle, String text, String sutraDescription, List<PanelAbout> panels) {}
+
+    /**
+     * What one field of the page means. Only fields the page shows have an entry. For a field hidden from the caller the
+     * definition is given (it is not a value) and {@code masked} is true; {@code values} then stays empty because the meaning
+     * of a value would name it.
+     *
+     * @param key the field's path, dots between names and no array steps
+     * @param label the label the page shows it under (the first, when it has several)
+     * @param labels every label it is shown under, when more than one
+     * @param shownIn the panels that show it ({@code strip} for the key figures)
+     * @param term the field's name in the domain
+     * @param means one sentence of meaning
+     * @param unit the unit, or null
+     * @param sign the sign convention, or null
+     * @param note anything else worth knowing, or null
+     * @param formula how it is computed, or null
+     * @param values the meaning of the values shown on the page, for an enumerated field
+     * @param origin where the entry came from, such as {@code market-risk:vocabulary.var99}
+     * @param masked true when the caller sees this field hidden
+     */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public record Term(String key, String label, List<String> labels, List<String> shownIn, String term, String means, String unit,
+            String sign, String note, String formula, Map<String, String> values, String origin, Boolean masked) {}
 
     /** The pack that wrote the text. */
     public record Pack(String name, String title) {}

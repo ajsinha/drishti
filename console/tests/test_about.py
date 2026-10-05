@@ -47,6 +47,7 @@ def test_the_partial_hides_every_layer_with_nothing_to_say(client, backend, tmp_
     ex = json.loads((FIXTURES / "explain_trade_IRS-48213.json").read_text())
     ex["layout"] = {"label": "inferred", "inferred": True}
     ex.pop("next")
+    ex.pop("glossary")
     async def explain(kind, id_, user, generation=None):
         return ex
     monkeypatch.setattr(backend, "explain", explain)

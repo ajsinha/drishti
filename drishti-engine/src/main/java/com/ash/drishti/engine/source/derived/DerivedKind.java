@@ -166,6 +166,38 @@ public final class DerivedKind {
         return groupSource;
     }
 
+    /** The formula of an aggregate field as the pack wrote it ({@code sum $.mtm}), or empty when the kind has no such field. */
+    public java.util.Optional<String> formula(String field) {
+        return fields.stream().filter(f -> f.name().equals(field)).map(Field::source).findFirst();
+    }
+
+    /**
+     * What the field means, written from its definition: "Sum of mtm over the trades grouped into this desk", with the formula.
+     * Used by the explanation of a page when no pack author wrote an entry (docs/architecture/CONTEXT_HELP.md, layer 2).
+     */
+    public java.util.Optional<com.ash.drishti.api.SourcePlugin.FieldNote> describe(String field) {
+        return fields.stream().filter(f -> f.name().equals(field)).findFirst().map(f -> {
+            String what = switch (f.op()) {
+                case COUNT -> "Number of " + from + " records";
+                case SUM -> "Sum of " + operand(f) + " over the " + from + " records";
+                case AVG -> "Average of " + operand(f) + " over the " + from + " records";
+                case MIN -> "Smallest " + operand(f) + " among the " + from + " records";
+                case MAX -> "Largest " + operand(f) + " among the " + from + " records";
+                case DISTINCT -> "The different values of " + operand(f) + " among the " + from + " records";
+                case FIRST -> operand(f) + " of the first " + from + " record";
+            };
+            String means = what + " grouped into this " + kind + (where == null ? "" : " (only those where the pack's filter holds)") + ".";
+            return new com.ash.drishti.api.SourcePlugin.FieldNote(means, f.source() + ", grouped by " + groupSource, "derived:" + kind + ".fields." + field);
+        });
+    }
+
+    private static String operand(Field f) {
+        int space = f.source().indexOf(' ');
+        String e = space < 0 ? "" : f.source().substring(space + 1).trim();
+        String p = plainPath(e);
+        return p != null ? p : e;
+    }
+
     public String from() {
         return from;
     }

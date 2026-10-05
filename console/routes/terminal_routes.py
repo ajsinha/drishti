@@ -21,7 +21,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import RedirectResponse
 
-from core import asof
+from core import about_index, asof
 from core.backend import BackendError
 from routes.common import ident, packs, render
 
@@ -205,7 +205,7 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0):
         ex = await request.app.state.backend.explain(kind, id_, ident(request), generation or None)
     except BackendError as e:
         return render(request, "terminal/_about.html", status_code=e.page_status, ex=None, error=e, kind=kind, id=id_)
-    return render(request, "terminal/_about.html", ex=ex, error=None, kind=kind, id=id_)
+    return render(request, "terminal/_about.html", ex=ex, error=None, kind=kind, id=id_, index=about_index.build(ex))
 
 
 @router.get("/v/{kind}/{id_:path}")

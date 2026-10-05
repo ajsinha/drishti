@@ -25,10 +25,24 @@
   {% if ab.kindTitle %}<p class="about-kind">{{ ab.kindTitle }}</p>{% endif %}
   {% if ab.text %}<p class="about-text" data-about-pack-text>{{ ab.text }}</p>{% endif %}
   {% if desc and desc != ab.text %}<p class="about-text about-muted">{{ desc }}</p>{% endif %}
-  {% if ab.panels %}<ul class="about-list">{% for pn in ab.panels %}<li><b>{{ pn.title or pn.id }}</b>: {{ pn.description }}</li>{% endfor %}</ul>{% endif %}
+  {% if ab.panels %}<ul class="about-list">{% for pn in ab.panels %}<li data-about-panel="{{ pn.id }}"><b>{{ pn.title or pn.id }}</b>: {{ pn.description }}</li>{% endfor %}</ul>{% endif %}
   {% if ab.pack and ab.pack.title %}<p class="about-src">Written by the {{ ab.pack.title }} pack.</p>{% endif %}
 </details>{% endif %}{% endmacro %}
 
+{% macro layer_glossary(ex, open_) %}{% if ex.glossary %}
+<details class="about-layer" data-layer="glossary" id="about-l2"{% if open_ %} open{% endif %}>
+  <summary><h3>What each number means <span class="about-note">({{ ex.glossary | length }})</span></h3></summary>
+  <dl class="about-terms">
+    {% for t in ex.glossary %}<div class="about-term" data-term="{{ t.key }}" id="term-{{ t.key | replace('.', '-') }}">
+      <dt>{{ t.label }}{% if t.term and t.term != t.label %} <span class="about-note">{{ t.term }}</span>{% endif %}{% if t.masked %} <span class="about-hidden">hidden for your role</span>{% endif %}</dt>
+      <dd>{% if t.means %}<p>{{ t.means }}</p>{% endif %}
+        {% if t.unit or t.sign %}<p class="about-unit">{% if t.unit %}<span>Unit: <b>{{ t.unit }}</b></span>{% endif %}{% if t.sign %}<span>Sign: {{ t.sign }}</span>{% endif %}</p>{% endif %}
+        {% if t.formula %}<p><span class="about-note">Formula</span> <code>{{ t.formula }}</code></p>{% endif %}
+        {% if t.note %}<p class="about-note">{{ t.note }}</p>{% endif %}
+        {% if t.get('values') %}<ul class="about-values">{% for v, m in t.get('values').items() %}<li><b>{{ v }}</b>: {{ m }}</li>{% endfor %}</ul>{% endif %}</dd>
+    </div>{% endfor %}
+  </dl>
+</details>{% endif %}{% endmacro %}
 {% macro layer_data(ex, open_) %}{% set d = ex.data %}{% if d %}
 <details class="about-layer" data-layer="data" id="about-l3"{% if open_ %} open{% endif %}>
   <summary><h3>Where the data came from</h3></summary>
@@ -64,7 +78,7 @@
 <details class="about-layer" data-layer="next" id="about-l5"{% if open_ %} open{% endif %}>
   <summary><h3>Where next</h3></summary>
   <ul class="about-list">
-    {% for k in (n.get('keys') or []) %}{% if k.link %}<li><kbd>{{ k.key }}</kbd> <a href="/v/{{ k.link.kind | urlencode }}/{{ k.link.id | urlencode }}">{{ k.label }}</a>{% if k.link.mnemonic %} <span class="about-note mono">{{ k.link.mnemonic }}</span>{% endif %}</li>
+    {% for k in (n.get('keys') or []) %}{% if k.link %}<li><kbd>{{ k.key }}</kbd> <a href="/v/{{ k.link.kind | urlencode }}/{{ k.link.id | urlencode }}">{{ k.label }}</a>{% if k.link.id and k.link.id | lower != (k.label or '') | lower %} <span class="about-note mono">{{ k.link.id }}</span>{% endif %}</li>
       {% elif k.action == 'denied' %}<li><kbd>{{ k.key }}</kbd> {{ k.label }} <span class="about-note">(no access)</span></li>
       {% elif k.action == 'impact' %}<li><kbd>{{ k.key }}</kbd> <a href="/impact/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}">{{ k.label }}</a></li>{% endif %}{% endfor %}
     {% for pk in n.panelKinds or [] %}<li>The <a href="/help/panel-kinds#{{ pk }}">{{ pk }} panel</a>: what it shows and how to read it</li>{% endfor %}

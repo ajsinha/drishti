@@ -33,6 +33,8 @@ import com.ash.drishti.rachana.SutraMatcher;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.rachana.about.AboutCatalog;
 import com.ash.drishti.rachana.about.AboutText;
+import com.ash.drishti.rachana.about.GlossaryEntry;
+import com.ash.drishti.rachana.about.GlossaryResolver;
 import com.ash.drishti.rachana.el.EvalContext;
 import com.ash.drishti.rachana.format.Formats;
 import com.ash.drishti.rachana.el.ElCompiler;
@@ -48,7 +50,9 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -80,6 +84,7 @@ public final class ExplainService {
     private final SutraRegistry registry;
     private final AboutCatalog about;
     private final Formats formats;
+    private final GlossaryResolver glossary;
     private final Counter templateErrors;
     private final Cache<Key, Entry> cache;
     private final Timer timer;
@@ -93,6 +98,7 @@ public final class ExplainService {
         this.registry = registry;
         this.about = about;
         this.formats = formats;
+        this.glossary = new GlossaryResolver(about);
         this.templateErrors = Counter.builder("drishti.explain.template-errors")
                 .description("About templates whose expressions failed").register(meters);
         this.cache = Caffeine.newBuilder().maximumSize(props.cacheSize()).expireAfterWrite(props.cacheTtl()).build();
@@ -118,14 +124,30 @@ public final class ExplainService {
         if (panel != null && !e.panels().contains(panel)) {
             throw new DrishtiException(ErrorCode.EXPLAIN_NO_PANEL, "the view of " + ref.id() + " has no panel '" + panel + "'");
         }
-        PageContext c = e.context();
+        PageContext c = narrow(e.context(), panel);
         double explainMs = Math.round((System.nanoTime() - t0) / 1e4) / 100.0;
         timer.record(System.nanoTime() - t0, java.util.concurrent.TimeUnit.NANOSECONDS);
         Map<String, Double> timings = new LinkedHashMap<>();
         timings.put("view", e.viewMs());
         timings.put("explain", explainMs);
         return new PageContext(c.ref(), c.mnemonic(), c.locale(), c.generation(), generation != null && gen > generation ? Boolean.TRUE : null,
-                c.about(), c.data(), c.layout(), c.next(), timings);
+                c.about(), c.glossary(), c.data(), c.layout(), c.next(), timings);
+    }
+
+    /**
+     * {@code ?panel=}: keeps of the glossary only the entries the panel shows, and of the authored panel text only the panel's
+     * own, to cut bytes. Everything else is as for the page.
+     */
+    private static PageContext narrow(PageContext c, String panel) {
+        if (panel == null) {
+            return c;
+        }
+        List<PageContext.Term> terms = c.glossary() == null ? null : c.glossary().stream().filter(t -> t.shownIn().contains(panel)).toList();
+        PageContext.About a = c.about();
+        if (a != null && a.panels() != null) {
+            a = new PageContext.About(a.pack(), a.kindTitle(), a.text(), a.sutraDescription(), a.panels().stream().filter(x -> x.id().equals(panel)).toList());
+        }
+        return new PageContext(c.ref(), c.mnemonic(), c.locale(), c.generation(), c.newer(), a, terms, c.data(), c.layout(), c.next(), c.timings());
     }
 
     /** Forgets every answer (the admin's cache purge). */
@@ -143,7 +165,7 @@ public final class ExplainService {
         ViewModel.Provenance pv = view.provenance();
         Set<String> ids = new LinkedHashSet<>();
         view.panels().forEach(p -> ids.add(p.id()));
-        PageContext ctx = new PageContext(view.ref(), view.mnemonic(), LOCALE, pv.generation(), null, about(view, built), data(pv, built), layout(view, built),
+        PageContext ctx = new PageContext(view.ref(), view.mnemonic(), LOCALE, pv.generation(), null, about(view, built), glossary(view, built), data(pv, built), layout(view, built),
                 next(view), null);
         return new Entry(ctx, ids, view.timings().getOrDefault("total", 0.0));
     }
@@ -167,6 +189,21 @@ public final class ExplainService {
         List<PageContext.PanelAbout> panels = new ArrayList<>();
         r.panels().forEach((id, text) -> panels.add(new PageContext.PanelAbout(id, titles.get(id), text)));
         return new PageContext.About(new PageContext.Pack(t.pack(), t.packTitle()), t.title(), r.text(), sutraDescription, panels);
+    }
+
+    /**
+     * Layer 2: what each field the page shows means. Taken from the view the caller got, so a field the page does not show has
+     * no entry, a panel the caller may not open adds none, and a hidden field's definition is given without the meaning of its values.
+     */
+    private List<PageContext.Term> glossary(ViewModel view, ViewPipeline.Built built) {
+        String kind = view.ref().kind();
+        Map<String, Panel> defined = new LinkedHashMap<>();
+        built.layout().sutra().panels().forEach(p -> defined.put(p.id(), p));
+        String source = view.provenance().source();
+        Function<String, Optional<GlossaryEntry>> derived = key -> key.indexOf('.') >= 0 ? Optional.empty()
+                : router.connectorOf(kind, source).flatMap(d -> d.describeField(kind, key))
+                        .map(n -> new GlossaryEntry(key, n.means(), null, null, null, n.formula(), Map.of(), null, n.origin(), null));
+        return new GlossaryBuilder(glossary, kind, defined, derived).build(view);
     }
 
     private PageContext.Data data(ViewModel.Provenance pv, ViewPipeline.Built built) {
