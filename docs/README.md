@@ -74,6 +74,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Understand the screens Drishti draws with no Sutra | [INFERENCE.md](architecture/INFERENCE.md) |
 | Design of the Screen Builder (JSON files → shape → visual designer → Sutra) | [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) |
 | The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) |
+| Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) |
 
 ### Add an industry or data
 
@@ -179,6 +180,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
 | [qa/2026-10-01](qa/2026-10-01/README.md) | you want the adversarial QA of 1.13.0: what was tested, every finding by severity with reproduction steps, what held up, and the proposed fix order |
 | [qa/2026-10-03](qa/2026-10-03/README.md) | you want the adversarial QA of the Build workbench (round 2, before 1.14.0): what was tested, every finding by severity, and how each was fixed |
+| [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) | you want to know how *About this page* will explain a view (what it shows, what each number means, where the data came from, why the layout, where next): the PageContext, the explain API, pack `about.yaml`, masking rules and the build plan (proposed) |
 | [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md) | you want to know how server-side pricing (QuantLib) will work with Drishti and reach the screen: the design and phases (proposed, on the roadmap) |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
 | [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
