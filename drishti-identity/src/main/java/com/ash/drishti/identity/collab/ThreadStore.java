@@ -41,6 +41,15 @@ public interface ThreadStore {
     /** The entity's threads, most recent activity first. */
     List<CommentThread> threads(String kind, String entityId);
 
+    /** Threads in id (creation) order after {@code afterId} (null = from the start), at most {@code limit}: how a scan walks them in bounded memory. */
+    List<CommentThread> page(String afterId, int limit);
+
+    /**
+     * Removes the whole thread: its comments, revisions, mentions, followers and note links. Only retention and the administrator's
+     * permanent removal call this, and neither when a legal hold covers it.
+     */
+    void deleteThread(String id);
+
     Optional<Comment> comment(String id);
 
     /** A thread's comments, oldest first. */

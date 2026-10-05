@@ -328,3 +328,5 @@ CREATE TABLE IF NOT EXISTS drishti_collab_hold (
     released_by VARCHAR(64),
     released_at TIMESTAMP WITH TIME ZONE
 );
+ALTER TABLE drishti_collab_hold ADD COLUMN IF NOT EXISTS date_from TIMESTAMP WITH TIME ZONE;
+ALTER TABLE drishti_collab_hold ADD COLUMN IF NOT EXISTS date_to TIMESTAMP WITH TIME ZONE;

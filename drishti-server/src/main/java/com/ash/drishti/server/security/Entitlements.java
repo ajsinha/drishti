@@ -99,6 +99,13 @@ public final class Entitlements {
                 : true;
     }
 
+    /** Holds, exports and verification need the {@code compliance} power: {@code 403} otherwise (an administrator is not enough). */
+    public void requireCompliance(Principal p) {
+        if (!mayCompliance(p)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " does not hold the compliance power");
+        }
+    }
+
     /** True when the principal sees every field (no masks): used to decide whether text spans are scrubbed. */
     public boolean raw(Principal p) {
         return !masks(p);

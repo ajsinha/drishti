@@ -109,6 +109,13 @@ public class IdentityConfiguration {
                 identityTransactions) : new com.ash.drishti.identity.collab.FileThreadStore(java.nio.file.Path.of(props.dir()));
     }
 
+    @Bean
+    public com.ash.drishti.identity.collab.HoldStore holdStore(com.ash.drishti.identity.collab.CollabProperties props,
+            IdentityRepositories.Holds holds, TransactionTemplate identityTransactions) {
+        return props.jpa() ? new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions)
+                : new com.ash.drishti.identity.collab.FileHoldStore(java.nio.file.Path.of(props.dir()));
+    }
+
     public static void requireSingleServerForFiles(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id) {
         if (!props.jpa() && !id.sqlite()) {
             throw new IllegalStateException("drishti.collab.store=file keeps shares on this server only, but drishti.identity.database-url "

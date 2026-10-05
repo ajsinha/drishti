@@ -106,6 +106,20 @@ public final class JpaShareStore implements ShareStore {
     }
 
     @Override
+    public List<Share> page(String afterId, int limit) {
+        return tx.execute(t -> shares.findByIdGreaterThanOrderByIdAsc(afterId == null ? "" : afterId, PageRequest.of(0, Math.max(1, limit)))
+                .stream().map(JpaShareStore::toShare).toList());
+    }
+
+    @Override
+    public void delete(String id) {
+        tx.executeWithoutResult(t -> {
+            recipients.deleteByKeyShareId(id);
+            shares.deleteById(id);
+        });
+    }
+
+    @Override
     public long countSentSince(String sender, Instant since) {
         return shares.countBySenderAndCreatedAtGreaterThanEqual(sender, since);
     }

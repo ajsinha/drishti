@@ -241,6 +241,110 @@ public final class FileThreadStore implements ThreadStore {
     }
 
     @Override
+    public List<CommentThread> page(String afterId, int limit) {
+        lock.lock();
+        try {
+            load();
+            return threads.values().stream().filter(t -> afterId == null || t.id().compareTo(afterId) > 0)
+                    .sorted(Comparator.comparing(CommentThread::id)).limit(Math.max(1, limit)).toList();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void deleteThread(String id) {
+        lock.lock();
+        try {
+            load();
+            CommentThread t = threads.remove(id);
+            if (t == null) {
+                return;
+            }
+            rewriteWithout(fileOf(t.kind(), t.entityId()), id);
+            List<String> key = byEntity.get(t.kind() + "\u0000" + t.entityId());
+            if (key != null) {
+                key.remove(id);
+            }
+            List<String> cids = commentIds.remove(id);
+            if (cids != null) {
+                for (String c : cids) {
+                    comments.remove(c);
+                    revisions.remove(c);
+                    mentionTargets.remove(c);
+                    noteLinks.values().removeIf(c::equals);
+                }
+                mentionList.removeIf(m -> cids.contains(m.commentId()));
+            }
+            chains.remove(id);
+            follows.keySet().removeIf(k -> k.startsWith(id + "\u0000"));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Rewrites the entity's log without the thread's events (to a sibling, then moved into place), or deletes it when nothing is left. */
+    private void rewriteWithout(Path file, String threadId) {
+        try {
+            if (!Files.isRegularFile(file)) {
+                return;
+            }
+            Path tmp = file.resolveSibling(file.getFileName() + ".tmp");
+            long kept = 0;
+            try (BufferedReader in = Files.newBufferedReader(file, StandardCharsets.UTF_8);
+                    java.io.BufferedWriter out = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
+                for (String line; (line = in.readLine()) != null; ) {
+                    if (line.isBlank() || threadId.equals(threadOf(json.readTree(line)))) {
+                        continue;
+                    }
+                    out.write(line);
+                    out.newLine();
+                    kept++;
+                }
+            }
+            if (kept == 0) {
+                Files.deleteIfExists(tmp);
+                Files.deleteIfExists(file);
+            } else {
+                Files.move(tmp, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static String threadOf(JsonNode e) {
+        return switch (e.path("t").asText()) {
+            case "thread" -> e.path("thread").path("id").asText();
+            case "comment" -> e.path("comment").path("threadId").asText();
+            case "follow" -> e.path("follow").path("threadId").asText();
+            case "unfollow" -> e.path("threadId").asText();
+            default -> "";
+        };
+    }
+
+    /** Re-reads every file (after the files were restored or changed from outside; the server never needs it). */
+    public void reload() {
+        lock.lock();
+        try {
+            threads.clear();
+            byEntity.clear();
+            comments.clear();
+            commentIds.clear();
+            revisions.clear();
+            chains.clear();
+            mentionTargets.clear();
+            mentionList.clear();
+            follows.clear();
+            noteLinks.clear();
+            loaded = false;
+            load();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     public Optional<Comment> comment(String id) {
         lock.lock();
         try {

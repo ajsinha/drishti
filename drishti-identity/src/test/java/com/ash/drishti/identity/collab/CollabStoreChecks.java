@@ -223,4 +223,71 @@ public final class CollabStoreChecks {
         assertThat(s.noteOfComment(c1.id())).contains(note);
         assertThat(s.linkedNotes()).contains(note);
     }
+
+    /** Paging and whole-thread / whole-share removal (what retention uses), on any store. */
+    public static void removal(ThreadStore s, ShareStore shares) {
+        String u = "rm" + System.nanoTime();
+        Instant t0 = Instant.now().minusSeconds(60).truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        Pin pin = new Pin(LocalDate.of(2026, 9, 30), false, Instant.parse("2026-09-30T18:00:00Z"), 1, "demo");
+        CommentThread a = new CommentThread(Ulid.next("th_", t0.toEpochMilli()), "trade", u, CommentThread.ENTITY, null, null, null, "view",
+                CommentThread.OPEN, "ann", t0, t0, 1);
+        CommentThread b = new CommentThread(Ulid.next("th_", t0.toEpochMilli() + 5), "trade", u, CommentThread.ENTITY, null, null, null, "view",
+                CommentThread.OPEN, "ravi", t0, t0, 1);
+        s.saveThread(a);
+        s.saveThread(b);
+        Comment ca = new Comment(Ulid.next("cm_", t0.toEpochMilli()), a.id(), "ann", t0, null, 1, pin, "to go @ravi", List.of(), Comment.LIVE, null);
+        s.append(ca, Revision.draft(ca.id(), 1, t0, "ann", Revision.CREATED, ca.body(), null), List.of("user:ravi"));
+        Comment cb = new Comment(Ulid.next("cm_", t0.toEpochMilli() + 5), b.id(), "ravi", t0, null, 1, pin, "stays", List.of(), Comment.LIVE, null);
+        Revision rb = s.append(cb, Revision.draft(cb.id(), 1, t0, "ravi", Revision.CREATED, cb.body(), null), List.of());
+        s.follow(new Follow(a.id(), "ravi", false, t0));
+        s.linkNote(System.nanoTime(), ca.id());
+
+        assertThat(s.page(null, 100_000)).extracting(CommentThread::id).contains(a.id(), b.id());
+        assertThat(s.page(a.id(), 100_000)).extracting(CommentThread::id).contains(b.id()).doesNotContain(a.id());
+        assertThat(s.page(null, 1)).hasSize(1);
+
+        s.deleteThread(a.id());
+        assertThat(s.thread(a.id())).isEmpty();
+        assertThat(s.comment(ca.id())).isEmpty();
+        assertThat(s.revisions(ca.id())).isEmpty();
+        assertThat(s.chain(a.id())).isEmpty();
+        assertThat(s.mentions(ca.id())).isEmpty();
+        assertThat(s.followers(a.id())).isEmpty();
+        assertThat(s.noteOfComment(ca.id())).isEmpty();
+        assertThat(s.threads("trade", u)).extracting(CommentThread::id).containsExactly(b.id());
+        assertThat(s.chain(b.id())).extracting(Revision::hash).containsExactly(rb.hash());
+        s.deleteThread("th_NOPE");
+
+        Share one = share(u, "trade", "MX-1", t0, "one");
+        Share two = share(u, "trade", "MX-2", t0.plusSeconds(1), "two");
+        shares.save(one, List.of(new Recipient("user:ravi", "ravi-" + u, Recipient.NOTIFIED, null)));
+        shares.save(two, List.of(new Recipient("user:ravi", "ravi-" + u, Recipient.NOTIFIED, null)));
+        assertThat(shares.page(null, 100_000)).extracting(Share::id).contains(one.id(), two.id());
+        assertThat(shares.page(one.id(), 100_000)).extracting(Share::id).contains(two.id()).doesNotContain(one.id());
+        shares.delete(one.id());
+        assertThat(shares.find(one.id())).isEmpty();
+        assertThat(shares.recipients(one.id())).isEmpty();
+        assertThat(shares.find(two.id())).isPresent();
+        assertThat(shares.recipients(two.id())).hasSize(1);
+    }
+
+    /** Legal holds: place, find, list, release once. */
+    public static void holds(HoldStore s) {
+        Instant now = Instant.now().truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        Hold placed = s.place(new Hold(0, Hold.ENTITY, "trade", "MX-1", null, null, now.minusSeconds(100), now.plusSeconds(100), "case 12", "carol", now,
+                null, null));
+        Hold all = s.place(new Hold(0, Hold.ALL, null, null, null, null, null, null, "everything", "carol", now, null, null));
+        assertThat(placed.id()).isPositive();
+        assertThat(all.id()).isGreaterThan(placed.id());
+        assertThat(s.find(placed.id())).contains(placed);
+        assertThat(s.find(placed.id()).orElseThrow().from()).isEqualTo(now.minusSeconds(100));
+        assertThat(s.find(999_999)).isEmpty();
+        assertThat(s.list(true)).extracting(Hold::id).contains(placed.id(), all.id());
+        assertThat(s.release(placed.id(), "dave", now.plusSeconds(1))).isTrue();
+        assertThat(s.release(placed.id(), "dave", now.plusSeconds(2))).as("released once").isFalse();
+        assertThat(s.release(999_999, "dave", now)).isFalse();
+        assertThat(s.find(placed.id()).orElseThrow().releasedBy()).isEqualTo("dave");
+        assertThat(s.list(true)).extracting(Hold::id).contains(all.id()).doesNotContain(placed.id());
+        assertThat(s.list(false)).extracting(Hold::id).contains(placed.id(), all.id());
+    }
 }

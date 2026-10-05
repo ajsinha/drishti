@@ -768,6 +768,14 @@ It is kept on the server, so it follows the user to any browser.
 |---|---|---|
 | `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned, notify: {email: {share, mention, reply}}}` with defaults filled in (the notify events are emailed when true) |
 | `PATCH` | `/me/settings` | change only the fields named; `null` resets one; unknown field or bad value → `400 DRS-5001` |
+| `GET` | `/admin/collab/shares?user=&kind=&id=&from=&to=&limit=&after=` · `/admin/collab/threads?…` | `admin` or `compliance`: search, metadata only (no note text), `{items[], next}` paged by id (`after` = the last id); `user` matches a sender or recipient, or a thread's writers |
+| `GET` | `/admin/collab/threads/{tid}` | `compliance`: the thread as the record has it (hidden and retracted comments, every revision, unscrubbed) with the chain result; audited |
+| `DELETE` | `/admin/collab/threads/{tid}` | `admin`: remove a whole thread for good; `423 DRS-7010` while a legal hold covers it; audited |
+| `GET` · `POST` | `/admin/collab/holds[?active=true]` | `compliance`: list; place `{scope: entity\|kind\|user\|thread\|all, kind?, id?, user?, thread?, from?, to?, reason}` → `201` (`400` for a missing field, `DRS-7011` without a reason, `DRS-7005` for an unknown thread) |
+| `DELETE` | `/admin/collab/holds/{id}` | `compliance`: release (`400` if already released); the hold stays in the list |
+| `POST` | `/admin/collab/retention/run?dryRun=` | `admin`: run retention now; `{dryRun, threadsPurged, sharesPurged, threadsHeld, sharesHeld}` |
+| `POST` | `/admin/collab/exports` `{from?, to?, kind?, id?, user?, includeShares?, includeThreads?}` | `compliance`: `202` with the job `{id, state, counts, error}`; `GET /admin/collab/exports/{id}` polls it; `GET /admin/collab/exports/{id}/download` is the zip, once, for the requester only ([OPERATIONS](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export)) |
+| `GET` | `/admin/collab/verify?thread=` or `?kind=&id=&maxProblems=` | `compliance`: one chain `{ok, steps, firstHash, lastHash, problem}`, or every thread and share `{threads, threadsOk, shares, sharesOk, ok, problems[], truncated}` |
 | `GET` | `/admin/collab/outbox?state=&limit=` | `admin`: `{enabled, available, dispatching, counts, items[]}`; rows name recipient, template, share, attempts, next attempt and last error, never the message |
 | `POST` | `/admin/collab/outbox/{seq}/retry` | `admin`: send a dead or cancelled delivery again (`400` for any other state) |
 | `POST` | `/admin/collab/mail-test` | `admin`: mail a test message to your own address now; `503 DRS-7012` with the SMTP reason when it fails |
@@ -1360,7 +1368,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-7007 | 409 | thread locked | a comment on a locked thread |
 | DRS-7008 | 403 | not editable | not the author, or the edit window (`threads.edit-window`) has passed, or the comment is retracted or hidden |
 | DRS-7009 | 409 | stale comment | an edit built on an older revision |
-| DRS-7010 | 423 | on hold | (compliance) a purge or removal of something under a legal hold |
+| DRS-7010 | 423 | on hold | `DELETE /admin/collab/threads/{id}` for a thread a legal hold covers (retention skips held items without an error) |
 | DRS-7011 | 422 | text refused | an empty or too long note or comment, a `text.deny-patterns` match, a masked value with `text.on-masked-copy: reject`, or a bad pin (a generation newer than the server holds) |
 | DRS-7012 | 503 | mail unavailable | email was asked for explicitly while it is off, or SMTP failed at once |
 
