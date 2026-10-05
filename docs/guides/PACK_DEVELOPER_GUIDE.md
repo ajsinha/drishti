@@ -58,6 +58,7 @@ helpdesk/
 ├── config/
 │   ├── semantics.yaml           field-name hints and labels for inference
 │   ├── formats.yaml             a number format of the pack ("30 h")
+│   ├── about.yaml               what a ticket is and what its fields mean (About this page)
 │   ├── workspaces.yaml          a starter workspace
 │   └── help.yaml                the pack's card in the help centre
 ├── guides/
@@ -99,6 +100,7 @@ The finished pack is in the repository. Open it beside this guide:
 | manifest | [pack.yaml](examples/pack/helpdesk/pack.yaml) |
 | Sutra and its tests | [ticket.v1.sutra.yaml](examples/pack/helpdesk/sutras/ticket.v1.sutra.yaml), [tests/ticket/](examples/pack/helpdesk/tests/ticket/expect.yaml) |
 | vocabulary | [semantics.yaml](examples/pack/helpdesk/config/semantics.yaml), [formats.yaml](examples/pack/helpdesk/config/formats.yaml) |
+| About this page | [about.yaml](examples/pack/helpdesk/config/about.yaml) |
 | samples | [catalog.json](examples/pack/helpdesk/samples/catalog.json) |
 | guide and starters | [helpdesk.md](examples/pack/helpdesk/guides/helpdesk.md), [help.yaml](examples/pack/helpdesk/config/help.yaml), [workspaces.yaml](examples/pack/helpdesk/config/workspaces.yaml) |
 
@@ -351,6 +353,33 @@ idFields: ["ticketId", "agentId", "clientId"]
 
 Restart. The age reads `30 h` and the pick list column is headed *Age (h)*. The format file and the hints are
 explained in [Vocabulary](#vocabulary-labels-formats-and-inference-hints).
+
+### Step 10b. About this page: say what a ticket is
+
+Every view has an *About this page* drawer (`?`). It already says where the data came from and why the page looks as it
+does; the sentence at the top and the meaning of each field are yours to write, in one more file,
+`config/about.yaml`:
+
+```yaml
+# config/about.yaml
+about: 1
+kinds:
+  ticket:
+    title: Support ticket
+    about: >-
+      ${$.ticketId} ("${$.subject}") is a ${lower($.priority)}-priority ticket for ${$.clientName}, ${lower($.status)} for
+      ${$.ageHours} hours and assigned to ${$.assignee}.
+    glossary:
+      ageHours:
+        term: Age
+        means: Hours since the ticket was opened. It keeps counting while the ticket is open.
+        unit: hours
+```
+
+Restart and press `?` on `TKT TKT-1001`: the drawer's first section reads *TKT-1001 ("Cannot sign in") is a high-priority
+ticket for Acme Freight Ltd, open for 30 hours and assigned to AGT-07.* The sentence is a template over the ticket, so
+it changes when the ticket does. The keys, the rules and the checks are in
+[About text and glossary](#about-text-and-glossary).
 
 ### Step 11. A Sutra: the layout you want
 
@@ -610,6 +639,7 @@ this guide.
 | 8 | `columns`, `pivot` | useful pick lists and a Pivot tab |
 | 9 | `roles`, `alerts` | access control, `raw`, Calc rights; one-click alert rules |
 | 10 | `config/formats.yaml`, `config/semantics.yaml` | `30 h`, *Age (h)* |
+| 10b | `config/about.yaml` | a sentence about the ticket and the meaning of its fields in the *About this page* drawer |
 | 11 | `sutras/` | the layout you designed |
 | 12 | `tests/` | the Sutra under CI |
 | 13 | `guides/`, `console.help`, `console.workspaces`, `console.monitors` | help card, F1, starters |
@@ -728,6 +758,7 @@ is used when the key is absent. A folder or file that does not exist is simply s
 | `formats` | `config/formats.yaml` | extra named formats (`formats: { temp1: { type: number, decimals: 1, suffix: " °C" } }`) |
 | `semantics` | `config/semantics.yaml` | inference hints: `roles:` (a field-name regex → format, tone, strip weight) and `idFields:` |
 | `samples` | `samples` | sample documents for the built-in `demo` source |
+| `about` | `config/about.yaml` | the words of the *About this page* drawer: a sentence per kind, a glossary of fields ([About text and glossary](#about-text-and-glossary)); read when the file exists |
 
 ### `columns`: the key fields of a pick list
 
@@ -1079,6 +1110,107 @@ The roles only steer **inference**: a Sutra states its formats itself. Labels re
 how the hints fit in is in [INFERENCE.md](../architecture/INFERENCE.md). Mistake to avoid: a `labels` entry is global
 to the server, so `status: Ticket status` would relabel `status` in every other pack that is loaded. Name labels for
 fields that are yours (`ageHours`), and give a Sutra's strip entry an explicit `label:` for the shared ones.
+
+## About text and glossary
+
+The *About this page* drawer (`?` on a view; [how a user reads it](USER_GUIDE.md#about-this-page)) always shows where the
+data came from and why the layout is what it is: those come from the engine. What only **you** can say is what a
+kind is and what its figures mean. That is the pack's `config/about.yaml`, found beside `formats.yaml`,
+`semantics.yaml` and `help.yaml`. The file is optional: without it the drawer still works.
+
+![The drawer on a gene variant, with the genomics pack's text](img/about/04-genomics-variant.jpg)
+
+### The file
+
+From `packs/market-risk/config/about.yaml` (generated; shown shortened):
+
+```yaml
+about: 1                           # the file's version, required
+vocabulary:                        # entries to reuse, named by a field name
+  var99:
+    term: Value at risk, 99%, 1 day
+    means: The loss the portfolio is expected not to exceed on 99 of 100 trading days, from historical simulation.
+    unit: USD
+    sign: A loss, written as a positive number.
+kinds:
+  var:                             # a kind of this pack, or of a pack it extends
+    title: Value-at-risk result
+    about: >-                      # the sentence at the top of the drawer: a ${...} template over the document
+      ${$.resultId} is a 1-day 99% historical VaR for ${coalesce($.deskName, $.desk, 'this portfolio')}:
+      ${fmt($.var99, 'compact')} USD, ${fmt($.var99 / $.limit, 'pct0')} of its ${fmt($.limit, 'compact')} limit,
+      with ${$.exceptions} exception(s) in 250 days.
+    guide: market-risk             # slug[#anchor] of the pack's guide, linked from the drawer
+    glossary:                      # one entry per field, keyed by its path (dots between names)
+      var99: { use: var99 }        # reuse a vocabulary entry
+      exceptions:
+        term: Backtesting exceptions
+        means: Days in the last 250 whose actual loss was larger than the VaR of the day before.
+        unit: days
+    panels:
+      scenarios:
+        about: "The markers are -VaR (${fmt($.var99, 'compact')}) and -ES; days left of them are tail losses."
+```
+
+### Keys and rules
+
+| Key | Where | Type | Rule |
+|---|---|---|---|
+| `about` (file) | top | integer | required, `1` (`DRS-2040` otherwise) |
+| `vocabulary.<name>` | top | entry | `<name>` is a field name (no dots) |
+| `kinds.<kind>` | top | map | the kind must belong to this pack or a pack it `extends` (`DRS-2041`) |
+| `title` | kind | text | plain |
+| `about` | kind, `panels.<id>` | template | `${...}` expressions of the Rachana expression language, compiled when the pack loads (`DRS-2042`, with line and column) |
+| `guide` | kind | `slug[#anchor]` | a help-centre guide; the console's help-link test checks it |
+| `glossary.<key>` | kind | entry or `{ use: <name> }` | the key is a field path, dots between names, arrays not a step (the rule of `drishti.security.redact`); `use` must name a `vocabulary` entry visible to this pack (`DRS-2043`) |
+| entry: `term`, `means`, `unit`, `sign`, `note` | entry | plain text | at most `drishti.about.max-text` (600) characters each (`DRS-2044`); never evaluated, so no `${}` |
+| entry: `formula` | entry | plain text | shown as written; a derived kind's own fields get their formula automatically |
+| entry: `values` | entry | map | the meaning of each value of an enumerated field, shown for the value on the page |
+| `panels.<id>` | kind | `{ about }` | a note shown for that panel; the id should exist in some Sutra of the kind |
+
+Unknown keys are errors (`DRS-2040`): the parser is strict, so a typo is found when the pack loads. A broken entry is
+left out (the view and the drawer still work) and is reported with file, line and column on the admin *Sutras* page's
+problems list and in `GET /api/v1/sutras/problems`, under the key `<pack>/<file>`.
+
+### What the template sees: your readers' view, not the stored document
+
+`about` text is rendered over the document **as the person asking may see it**. A field named in
+`drishti.security.redact` reads `•••` in the sentence for a role without `raw`; do not try to work around it, and do not
+put values in a glossary entry (entries are never evaluated). An expression that fails renders `—` and is counted
+(`drishti.explain.template-errors`), never shown as an error. A rendered text is capped at `drishti.about.max-rendered`
+(1,000) characters. Formats are the pack's named formats (`fmt($.x, 'compact')`, your `formats.yaml` names too).
+
+![For a viewer the masked limit reads as the mask in the sentence (a demo: shipped setups do not mask `limit`)](img/about/05-viewer-masked.jpg)
+
+### Inheritance: `extends`
+
+The catalogue is built from every loaded pack's file in the order `extends` defines, **most specific pack first**
+(child first, parents right to left: the same order as `semantics.yaml`). A child can replace any entry by its key
+(write the whole `{ term, means }` again) and cannot delete one. There is no inheritance between kinds. Put a shared
+word in the lowest pack that owns the concept (`mtm` in `trading`, which `market-risk` and `counterparty-risk` reach
+through `extends`), as a `vocabulary` entry, and point to it with `use:`.
+
+How a field's entry is found (the glossary stage of the design, [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md); until it
+ships, the drawer shows the sentence, the panel notes and the other layers, not the glossary): the kind's `glossary`
+in the most specific pack, then a `vocabulary` entry with the field's last name, then, for a derived kind, the entry
+generated from its definition ("Sum of `mtm` over the trades of the desk"), then nothing: the field shows no hint.
+
+### Generated packs
+
+The shipped packs are generated (see [How the shipped packs are generated](#how-the-shipped-packs-are-generated)).
+Their `config/about.yaml` is copied from a hand-kept source in the generator folder (`tools/packgen/banking/about/`,
+`tools/packgen/genomics/about.yaml`) by `make_packs.py` / `packbuild.py`: edit that source and regenerate, never the
+generated file.
+
+### Check it
+
+- Start the server: a file with a problem lists it (codes `DRS-2040` to `DRS-2044`, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md)).
+- Open an entity and press `?`: the first section is your sentence, filled in. Try it as a user whose role is not
+  `raw`: masked fields read `•••`.
+- `sutra lint packs/<pack>` will warn (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and about
+  fields a Sutra shows that have no glossary entry; and `expect.yaml` will take `help: { coverage: 0.9, about: true }`,
+  the share of shown fields with an entry and that `about` renders without an error. Both are the lint-and-coverage
+  stage of the design and are **not available until it is merged**; see [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md).
+- The Build workbench will get an *About* tab to write and preview this text (stage 7 of the design; not yet).
 
 ## Guides and help
 
@@ -1474,6 +1606,11 @@ nonEmpty: [history]       # these panels must render with data on every sample
 samples:                  # optional: more expectations for one sample file
   TKT-1002.json: { nonEmpty: [history] }
 ```
+
+`expect.yaml` will also take `help: { coverage: 0.9, about: true }` once the lint-and-coverage stage of
+[CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md) is merged: `sutra test` then reports `help coverage 7/9 (78%)` per Sutra
+(the share of shown fields that have a glossary entry across the samples, and that the pack's `about` text renders without
+an error); see [About text and glossary](#about-text-and-glossary).
 
 Any other key in `expect.yaml` is a usage error (exit `2`), so a typo cannot silently pass. Without a `tests/<sutra>/`
 folder a Sutra is reported `skip (no samples)`, which is not a failure. Choose samples that differ: a ticket with one

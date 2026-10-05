@@ -246,7 +246,10 @@ notes: |
   Priority 20 puts it ahead of the genomics pack's own gene Sutra (priority 10).
 ```
 
-- `description` is one paragraph: what the layout shows and for which entities. The workbench and the catalogue show it.
+- `description` is one paragraph: what the layout shows and for which entities. The workbench and the catalogue show it, and so does
+  the *About this page* drawer on every view this Sutra draws (it is shown as written, never evaluated). Text that has to change
+  with the entity, such as "VAR-EQD is 70% of its limit", is written in the pack's `config/about.yaml`, not here
+  ([About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)).
 - `notes` is longer text for the next author and for reviewers: why the panels are in this order, what was
   tried and dropped. Write it as a YAML block (`notes: |` and the lines indented under it); the line breaks are
   kept. It is plain text, not Markdown.

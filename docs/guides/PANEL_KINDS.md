@@ -160,7 +160,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 ![A provenance panel](img/panels/kind-provenance.jpg)
 
 - **Use it when:** Every view that people will question: it answers *where did this come from*.
-- **Not when:** As a place for data of your own: it has none.
+- **Not when:** As a place for data of your own: it has none. For the full story (why this Sutra, which others were tried, empty panels, freshness and health) press `?`: [About this page](USER_GUIDE.md#about-this-page).
 - **Key options:** none (the common keys only). Every option and its values: [reference](RACHANA_REFERENCE.md#provenance).
 - **Empty when** never empty.
 - **Masked:** nothing in it comes from the document, so there is nothing to mask.

@@ -101,8 +101,11 @@ The prose has a place of its own, inside the file, as plain text:
 | `notes` | top level | Longer notes for authors and reviewers: why the layout is what it is, what changed in each version, who asked for it. Use a YAML block (`notes: \|`) for several lines. |
 | `description` | any panel | One or two sentences on what the panel shows. |
 
-They are plain text: nothing in them is evaluated, and the engine does not use them to build the view (they are
-not part of the ViewModel). They travel with the file, so they are in the workbench, in a code review diff and in
+They are plain text: nothing in them is evaluated (a `${...}` in a `description` is shown as written; parameterised text
+belongs in the pack's `config/about.yaml`, see [About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)), and the
+engine does not use them to build the view (they are not part of the ViewModel). The Sutra's `description` is **shown to users**: it is the
+second paragraph of *What you are looking at* in the [About this page](USER_GUIDE.md#about-this-page) drawer, and a panel's `description` is
+its note there. They travel with the file, so they are in the workbench, in a code review diff and in
 `GET /api/v1/sutras/{name}/{version}/source`, and nothing has to be kept in step with them.
 `description` and `notes` must be text (`DRS-2012 'notes' is plain text` otherwise).
 
@@ -270,7 +273,7 @@ panels:
     title: Terms
     key: F2                                      # F2 jumps here (keys are unique across the Sutra)
     code: TRM                                    # a short tag at the right of the panel header
-    description: The economic terms, as agreed at trade date.   # plain text for authors; not shown in the view
+    description: The economic terms, as agreed at trade date.   # plain text, shown in the About this page drawer, never evaluated
     columns:
       - { label: Trade date, bind: $.tradeDate, fmt: date }
       - { label: Effective, bind: $.effectiveDate, fmt: date }
@@ -1807,6 +1810,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2042` | `the template does not compile: …` | an `about` template (a kind's or a panel's) has a `${...}` expression that does not compile | fix the expression; the line and column are those of the text in the file |
 | `DRS-2043` | `use: nope names no vocabulary entry visible to pack market-risk (its own or an extended pack's)` | a glossary entry's `use` names no `vocabulary` entry in the pack's file or its parents' | add the vocabulary entry or fix the name |
 | `DRS-2044` | `text is 700 characters; the limit is 600 (drishti.about.max-text)` | one text of an about entry (term, means, unit, sign, note, formula, a value's meaning, title) is longer than the cap | shorten it |
+| `DRS-2045` to `DRS-2047` | *lint warnings of the design, not available yet* (see [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#lint-tests-and-coverage)) | `DRS-2045`: a Sutra binds `F1` (on a view `F1` opens the About drawer); `DRS-2046`: `panels.<id>` of an about file matches no panel; `DRS-2047`: a field a Sutra shows has no glossary entry. Warnings, not errors |
 | `DRS-2101` | `expression '…': DRS-2101 …`, `template '…': DRS-2101 …` | an expression or template does not compile, or is beyond the [size limits](#size-limits) | see [Expression errors](#expression-errors) |
 
 Other codes you may meet around Sutras:

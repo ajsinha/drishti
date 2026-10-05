@@ -26,7 +26,7 @@ differ when you try it.
 
 1. [The one-page picture](#1-the-one-page-picture)
 2. [The pieces and how they refer to each other](#2-the-pieces-and-how-they-refer-to-each-other)
-3. [Worked example A: a trade, end to end](#3-worked-example-a-a-trade-end-to-end)
+3. [Worked example A: a trade, end to end](#3-worked-example-a-a-trade-end-to-end) (3.9: [About this page, end to end](#39-about-this-page-end-to-end))
 4. [Worked example B: a gene variant, another domain](#4-worked-example-b-a-gene-variant-another-domain)
 5. [What happens without a Sutra](#5-what-happens-without-a-sutra)
 6. [How a new screen gets made today](#6-how-a-new-screen-gets-made-today)
@@ -51,9 +51,9 @@ product. Packs and Sutras are configuration read when the server starts (Sutras 
     |  REST + SSE under /api/v1, ViewModel JSON
     v
  SERVER    drishti-server/  (Java 21+, Spring Boot, port 18480)
-    |      controllers: CommandController, ViewController, StreamController, DesignController, ...
+    |      controllers: CommandController, ViewController, ExplainController, StreamController, DesignController, ...
     v
- ENGINE    drishti-engine/ ViewPipeline
+ ENGINE    drishti-engine/ ViewPipeline            (and ExplainService: the same pipeline asked "why", for About this page)
     |       command -> fetch -> match -> fingerprint -> layout -> link -> bind
     |          |         |        |                        |                |
     |          |         |        |                        |                +-- Binder (drishti-engine)
@@ -73,6 +73,7 @@ product. Packs and Sutras are configuration read when the server starts (Sutras 
     +-- CONFIGURATION loaded at start
     |     packs/<name>/pack.yaml   kinds, mnemonics, links, connectors, routes, roles
     |     packs/<name>/sutras/**   the layouts      packs/<name>/samples/**   example documents
+    |     packs/<name>/config/about.yaml   what each kind and field means (About this page)
     |     drishti-server/src/main/resources/application.yaml   drishti.sources, drishti.rachana, ...
     |
  BUILD     the Build workbench (console /build, server DesignController / GovernanceController)
@@ -101,6 +102,7 @@ The UI is the separate Python project in `console/`. The full module list is in
 | **Sutra** | One layout, written in the Rachana grammar: which records it fits, a title, a strip, panels, keys. | `packs/<name>/sutras/**.sutra.yaml` |
 | **Link** | A field that names another entity, so it opens that entity's own view. | `graph.fields` in `pack.yaml`; `link(...)` in a Sutra |
 | **Role / mask** | Who may open which kinds, and which fields read `•••`. | `pack.yaml` `roles:`; `drishti.security.redact` |
+| **About text** | The pack's own words for a kind (one sentence about this entity) and for its fields (term, meaning, unit, sign), shown in the About drawer. | `packs/<name>/config/about.yaml` (`pack.yaml` key `about:`) |
 
 How they point at each other:
 
@@ -117,6 +119,7 @@ How they point at each other:
 | A document field | another entity | `graph.fields` (a field named `tradeIds` holds ids of kind `trade`) |
 | A chart panel | another entity's data | `source: "link($.discountCurve, 'ir-curve')"` fetches that entity and plots its rows |
 | A caller | what they may see | `roles:` (`kinds:`, `raw:`) and `drishti.security.redact` (field names) |
+| A kind | the words that explain it | `kinds.<kind>` of an `about.yaml` in the pack or a pack it `extends:` (most specific wins); the glossary is keyed by field path |
 | A Sutra | its pack | the folder (`sutras: sutras` in `pack.yaml`); extra site Sutras in `drishti.rachana.dirs` |
 
 Two rules hold the whole thing together. A **kind** is the only thing a store, a Sutra and a command have in common:
@@ -361,6 +364,113 @@ kind `netting-set`, and this time:
 Different pack, different store, different Sutra, same pipeline. The two views know about each other only through the
 value `"nettingSet":"NS-MERIDIAN-RE-NY"` in the trade and the Sutra key `F7: "link($.nettingSet, 'netting-set')"`.
 
+### 3.9 About this page, end to end
+
+Everything so far answers "show me `MX-20000001`". The About drawer answers the next questions: *what am I looking at,
+can I trust it, and why does it look like this?* It adds no second pipeline: it asks the first one again, for the same
+caller, and writes down what that run decided. Press `?` on the trade view and follow the request.
+
+| # | What happens | Where | Code |
+|---|---|---|---|
+| 1 | `?` (focus not in a text field) or `F1` opens the drawer; the first time, it fetches its content | browser | `static/js/about.js` asks the console for `GET /v/trade/MX-20000001/about?generation=1` (the generation of the page you see) |
+| 2 | The console asks the server for the explanation as you, and renders the drawer partial | console | `terminal_routes.py` `about()`, `BackendClient.explain`, `terminal/_about.html` over `_macros/about.html` |
+| 3 | The server checks you may open kind `trade` (`DRS-5002` if not), then explains | server | `ExplainController`: `GET /api/v1/views/trade/MX-20000001/explain` |
+| 4 | **The view is re-run for you.** The explanation is built by the same code and with the same masks as the page, so it can say nothing your page does not | engine | `ExplainService.explain` calls `ViewPipeline.built(doc, asOf, redact, mayOpen)`, the method the view itself uses: fetch, redact, match, layout, link, bind |
+| 5 | **Why this Sutra.** Every Sutra of the kind is tried, in priority order | rachana | `SutraMatcher.explain(kind, doc, seen)` returns a `MatchTrace`: a verdict per Sutra (`true`, `false`, `error`, `masked`) with its `where` text and priority. The chosen one is the one the view used |
+| 6 | **Why a panel is empty.** A panel with nothing to draw is named with the reason | engine | `EmptinessReason`: `missing`, `null`, `empty list`, `masked`, `no values` or `no data`, with the document path it looked at |
+| 7 | **Provenance and health.** Source, generation, business date, fetch and update times, freshness, and one word of health | engine | `ViewModel.Provenance`, the `SourceRouter` freshness, `SourceHealth` (`up`, `degraded`, `down`: the same reduction `HealthController` uses) |
+| 8 | **The pack's words.** The `about.yaml` entry for the kind is found and its template rendered over the document **after** your redaction | rachana | `AboutCatalog.forKind("trade")`, `AboutText.render` (`Template.renderLenient`: a failing `${...}` reads `—` and counts in `drishti.explain.template-errors`) |
+| 9 | **The glossary.** The entries for exactly the fields on the page: the "What each number means" layer and the hover hints | rachana | design: `GlossaryResolver` (step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md); **not merged at the time of writing**, so the answer has no `glossary` block and the drawer no such layer yet) |
+| 10 | The answer is a `PageContext`, cached 60 s per (user, entity, business date, generation, locale, about revision) | engine | `PageContext`, `drishti.explain.*` |
+| 11 | The console turns it into the drawer, one `<details>` per layer, and moves focus to its heading | console | `_about.html`, `about.js`, `about.css` |
+
+**The request and the answer.** The real answer for `MX-20000001`, from a server started with the QUICKSTART packs
+(the long lists are cut with `…`; times and the generation differ when you try it):
+
+```
+GET /api/v1/views/trade/MX-20000001/explain
+{ "ref": {"kind":"trade","id":"MX-20000001"}, "mnemonic": "TRD", "locale": "en", "generation": 1,
+  "about":  { "sutraDescription": "Exchanges fixed for floating RFR-compounded payments." },
+  "data":   { "source": "murex-rates", "generation": 1, "fetchedAt": "2026-10-05T01:56:58Z", "current": true, "live": true,
+              "updatedAt": "2026-10-05T01:56:58Z", "stale": false, "health": "up",
+              "linked": {"fetched": 9, "pending": 0, "denied": 0, "budgetMs": 40} },
+  "layout": { "label": "Sutra irs-fixfloat v1 + inference", "fingerprint": "b597…7cd1", "inferred": true,
+              "sutra": {"name":"irs-fixfloat","version":1,"pack":"trading","priority":10,
+                        "where":"$.productType == 'IRS_FIXFLOAT'", "description":"…"},
+              "candidates": [ {"name":"abs","priority":10,"where":"$.productType == 'ABS'","result":"false"}, … ] },
+  "next":   { "keys": [ {"key":"F2","label":"Terms","action":"panel","panel":"terms"}, …,
+                        {"key":"F7","label":"Netting set","action":"link","link":{"kind":"netting-set","id":"NS-MERIDIAN-RE-NY"}}, … ],
+              "panelKinds": ["kv","tabs","ladder","waterfall","timeline","provenance","line","hbar","links"] },
+  "timings": {"view": 30.19, "explain": 1.5} }
+```
+
+Read it against the earlier sections. `layout.sutra` is section 3.3's choice (`irs-fixfloat v1`, found by its `where`);
+`candidates` are the other Sutras of the kind with what each `where` gave (here `false` for all 124); `data` is the
+provenance panel of 3.7 plus health; `next.keys` are the Sutra's F-keys of 3.8, with links already restricted to what
+you may open. Blocks that would be empty are left out: this page has no `noData`, `errors`, `masked` or `noAccess`
+block because nothing on it is empty, hidden or denied. (`layout.inferred` is true because the pipeline's inference
+completes the Sutra, as `layout` in 3.6 says: "Sutra irs-fixfloat v1 + inference".)
+
+**The pack's words (steps 8 and 9), and `extends`.** The `about` block above holds only the Sutra's own description,
+because no shipped pack has a `trade` entry yet (content for the other QUICKSTART packs is step 5 of the plan). Writing
+one is one file in the lowest pack that owns the kind, and it reaches `market-risk` through `extends`:
+
+```yaml
+# packs/trading/config/about.yaml      (illustrative: this entry is not shipped)
+about: 1
+kinds:
+  trade:
+    title: Trade
+    about: >-
+      ${$.tradeId} is a ${$.productName} with ${$.counterparty.name}, booked by ${$.trader}:
+      MTM ${fmt($.mtm, 'compact')} ${$.mtmCurrency}.
+```
+
+`AboutCatalog` is built from every loaded pack's file, most specific pack first, using the lineage `PackLineage`
+computes for `extends` (child first, parents right to left: the order `semantics.yaml` already uses). A child pack may
+replace any entry by its key; it cannot delete one. `AboutParser` is strict (`DRS-2040` to `DRS-2044`: unknown key, a
+kind outside the lineage, a template that does not compile, a `use:` naming no vocabulary entry, text over the cap); a
+broken entry is left out and listed with the Sutra problems (`GET /api/v1/sutras/problems`, keyed `<pack>/<file>`), and
+never fails the view. **Redaction comes first.** The template is rendered over the document your redactor produced, so
+for a viewer the `trader` above (named in `drishti.security.redact`) reads `•••` in the sentence, and the glossary never
+sees a value at all. That is the one rule of the whole feature: *the explanation is derived from your view, never from
+the stored document.* The text that ships today is the VaR page (`packs/market-risk/config/about.yaml`, kind `var`):
+
+```
+VAR-EQD is a 1-day 99% historical VaR for DESK-EQD: 14.7m USD, 70% of its 20.9m limit, with 0 exception(s) in 250 days.
+```
+
+and, with `limit` masked for the asker, "…14.7m USD, ••• of its ••• limit…". (`limit` is masked only in the screenshot
+demo of the [user guide](../guides/USER_GUIDE.md#about-this-page); no shipped configuration masks it.)
+
+**The drawer.** The partial lays the answer out as layers: what you are looking at (the pack's sentence, the Sutra
+description, panel notes, "Written by the <pack> pack"), where the data came from (layer 3), why the page looks like
+this (layer 4: "Layout: Sutra irs-fixfloat v1, the one that applies to this kind, priority 10", "1 field hidden for
+your role: Limit", panels with no data and why) and where next (the F-keys, one link per panel kind on the page). `F1`
+again, or *The full guide to this screen*, goes to the guide as it always did. When a live frame brings a newer
+generation, `about.js` asks again, passing the generation it shows; the server marks a still newer one `newer`.
+
+![The drawer on a VaR page](../guides/img/about/01-var-drawer.jpg)
+
+**The same for the gene variant (example B).** `VRNT VRNT-BRAF-V600E` takes the same eleven steps with other inputs:
+the pack is `genomics` (no `extends`), the Sutra `variant v1` (no `where`, so there are no rejected candidates), the
+source `reference-genome`, and the pack's `kinds.variant.about` yields, under the title *Sequence variant*,
+"VRNT-BRAF-V600E is a missense change in BRAF (p.Val600Glu, c.1799T>A); it is classified "Pathogenic (somatic)" for
+Melanoma, colorectal and thyroid cancer." Nothing in the code names `variant` or `genomics`: the words are in
+`packs/genomics/config/about.yaml`, which the generator `tools/packgen/genomics/make.py` writes from its own about
+source.
+
+| | Trade (A) | Variant (B) |
+|---|---|---|
+| About file | none yet: the Sutra description is shown | `packs/genomics/config/about.yaml`, `kinds.variant` |
+| Candidates in the `MatchTrace` | 124 other Sutras of kind `trade` | none |
+| Source and health | `murex-rates`, `up` | `reference-genome`, `up` |
+| **Unchanged** | `ExplainController`, `ExplainService`, `PageContext`, the drawer and its keys | the same |
+
+Where each part is changed is section 7; the design, the open decisions and the build plan are in
+[CONTEXT_HELP.md](CONTEXT_HELP.md); how to write the text is in the
+[pack developer guide](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
+
 ---
 
 ## 4. Worked example B: a gene variant, another domain
@@ -505,6 +615,10 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | Decide who may see what | `roles:` in `pack.yaml` (kinds, `raw`), `drishti.security.redact` (fields shown as `•••`), the Admin pages | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Add a command word | `mnemonics:` in `pack.yaml` (or under `drishti.commands` for a site) | PACKS.md |
 | Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACKS.md |
+| Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
+| Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [CONTEXT_HELP.md](CONTEXT_HELP.md); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
+| Change how the drawer looks or behaves | `console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [CONTEXT_HELP.md](CONTEXT_HELP.md) |
+| Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 
 ---
 

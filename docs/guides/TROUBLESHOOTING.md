@@ -388,6 +388,12 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** if the data is right and the Sutra is wrong, fix the Sutra in the Build workbench; see
   [runbooks/sutra-broken.md](../admin/runbooks/sutra-broken.md).
 
+### The About drawer says nothing about a number, or shows no "What you are looking at" sentence
+
+- **Cause:** the text is written by the domain pack, in its `config/about.yaml`. The drawer's other layers (where the data came from, why the page looks like this, where next) need no pack text. A kind the pack has not written about shows only the Sutra's `description`; a field with no glossary entry has no hint (the glossary layer needs a server with that stage of [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md)).
+- **Check:** a value reading `•••` in the sentence is masked for your role, on purpose. If the file has a mistake, the entry is left out and listed by `GET /api/v1/sutras/problems` (`DRS-2040` to `DRS-2044`, key `<pack>/<file>`) and on the admin *Sutras* page. "About this page could not be loaded" is a failed call: try again; the view itself is unaffected.
+- **Fix:** add or correct the entry: [About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
+
 ### A linked entity shows `pending` or `missing` instead of a badge
 
 - **Cause:** `pending`: the linked entity did not arrive within the 40 ms link budget (`drishti.graph.link-budget`).
@@ -784,6 +790,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-4003` | bad business date |
 | `DRS-4004` | bad search |
 | `DRS-4006` | `?panel=` of the explain endpoint names no panel of the view |
+| `DRS-4007` to `DRS-4009` | reserved for the optional *Ask about this page* (switched off, model failed, over the limit); nothing raises them in this release |
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |

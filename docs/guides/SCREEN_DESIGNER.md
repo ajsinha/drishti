@@ -213,6 +213,8 @@ The YAML tab is Studio's editor on the design's Sutra: completion of keys and va
 
 **Summary** reads the Sutra back as a page: what it applies to, the strip, each panel with its columns.
 
+**About text.** The Sutra's `description` and each panel's `description` (YAML tab) are what the *About this page* drawer says about your screen, so write them for the person who will press `?`. A design preview already has the drawer's data; the sentence with the entity's own numbers is written in the pack's `config/about.yaml` ([About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)). An **About** tab in the workbench, to write that file beside the Sutra, preview it over your samples and export it with the pack fragment, is stage 7 of the design ([CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#build-workbench-integration)) and is not in the workbench yet.
+
 ## 10. Problems
 
 ![The Problems tab: a refused edit with its line, and what the light check found](img/designer/14-problems.jpg)

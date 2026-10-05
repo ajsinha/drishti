@@ -1,0 +1,33 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# About this page: what the help desk's kinds mean (docs/guides/PACK_DEVELOPER_GUIDE.md, "About text and glossary").
+about: 1
+kinds:
+  ticket:
+    title: Support ticket
+    about: >-
+      ${$.ticketId} ("${$.subject}") is a ${lower($.priority)}-priority ticket for ${$.clientName}, ${lower($.status)} for
+      ${$.ageHours} hours and assigned to ${$.assignee}.
+    glossary:
+      ageHours:
+        term: Age
+        means: Hours since the ticket was opened. It keeps counting while the ticket is open.
+        unit: hours
+      priority:
+        term: Priority
+        means: How soon the team has promised to look at it.
+        values:
+          High: Within four working hours
+          Normal: Within one working day

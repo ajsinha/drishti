@@ -464,8 +464,8 @@ The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail).
 
 ### Explaining a view
 
-`GET /views/{kind}/{id}/explain` answers *can I trust this page, and why does it look like this* (the first two layers of the
-[About this page](../architecture/CONTEXT_HELP.md) design). It rebuilds the view for the caller, with the same field masks, the
+`GET /views/{kind}/{id}/explain` answers *can I trust this page, and why does it look like this* (the data behind the
+[About this page](../architecture/CONTEXT_HELP.md) drawer: [how a user reads it](USER_GUIDE.md#about-this-page), [how it works inside](../architecture/HOW_IT_FITS.md#39-about-this-page-end-to-end)). It rebuilds the view for the caller, with the same field masks, the
 same right to open kinds and the same restricted links, and derives the answer from that, so it tells nothing the view does not:
 a masked field's value is in no part of it, and a panel the caller may not open is named only by its title and the kind of
 entity it names. Every block is omitted when empty; answers are cached per user, page and generation for
@@ -478,6 +478,7 @@ curl -s $B/views/trade/IRS-48213/explain | jq -c '{data, layout: (.layout | {lab
 | Block | Fields |
 |---|---|
 | `ref`, `mnemonic`, `locale`, `generation`, `newer` | the page; `newer` is present (true) only when the server holds a newer generation than `?generation=` |
+| `about` | the pack's words, rendered over the document the caller may see (a field masked for them reads `•••` in `text`): `pack` (`name`, `title`), `kindTitle`, `text`, `sutraDescription` (the Sutra's `description` as written, never evaluated) and `panels` (`id`, `title`, `description`). Authored in the pack's `config/about.yaml` ([pack guide](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); absent when neither the pack nor the Sutra wrote anything |
 | `data` | `source`, `generation`, `fetchedAt`, `businessDate`, `current`, `live`, `updatedAt`, `staleAfter`, `stale`, `health` (`up`, `degraded` or `down`, as the admin health page reduces it) and `linked` (`fetched`, `pending`, `denied`, `budgetMs`) |
 | `layout.sutra` | the Sutra chosen: `name`, `version`, `priority`, `where` (its source text), `description` (the author's plain text) |
 | `layout.candidates` | the other Sutras of the kind in priority order, each with its `where` and `result`: `true`, `false`, `error`, or `masked` (the answer depends on a field the caller may not see, so it is not told) |
@@ -487,6 +488,8 @@ curl -s $B/views/trade/IRS-48213/explain | jq -c '{data, layout: (.layout | {lab
 | `layout.noAccess` | panels the caller may not open: `title` and `kind` only |
 | `next` | `keys` (the view's function keys, links restricted) and `panelKinds` (kinds of the panels the caller can see) |
 | `timings` | `view` and `explain`, milliseconds |
+
+Planned, not yet in the server (the design, [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#api)): a `glossary` block (the pack's entry for each field the page shows: term, meaning, unit, sign) and, for authors, `POST /studio/explain`, `GET /builder/designs/{id}/explain` and `POST /builder/about/preview` for the workbench. The optional *Ask about this page* endpoint and its codes `DRS-4007` to `DRS-4009` are the last stage of the design and may never ship. The pack's own text problems (`DRS-2040` to `DRS-2044`) are load problems, listed by `GET /sutras/problems`; they never fail an explain call.
 
 ### Raw documents, history and impact
 

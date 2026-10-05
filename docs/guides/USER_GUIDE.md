@@ -36,6 +36,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
 | [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
+| [About this page](#about-this-page) | `?`: what the page is, what each number means, where the data came from, why it looks like this |
 | [Layout mode](#layout-mode-arrange-a-view-your-way) | `Alt+L`: drag, resize and hide panels for yourself; promote your layout to the Sutra |
 | [The Pivot tab](#the-pivot-tab-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
 | [Keyboard](#keyboard) | Every key in one table |
@@ -467,6 +468,71 @@ The *How this view was built* panel answers "where did this come from?":
 The footer repeats the source and generation, and the business date when one is picked
 (`trading-store · gen 7 · as of 2026-09-29`).
 
+## About this page
+
+*What am I looking at, can I trust it, and why does it look like this?* Press `?` on any view (or `F1`, or the **About**
+button beside the title). A drawer opens on the right; the page stays usable beside it. It is written for you: what it
+says is worked out from the page **you** have, so a field hidden from your role is never explained with its value.
+
+![The About drawer on a VaR view](img/about/01-var-drawer.jpg)
+
+Each layer is a section you can fold; the first ones are open, and Drishti remembers which you folded (in this
+browser only).
+
+| Layer | What it tells you | Example |
+|---|---|---|
+| **What you are looking at** | One sentence about this entity, written by the domain pack and filled with its own numbers; the screen's description; notes on single panels; which pack wrote it | "VAR-EQD is a 1-day 99% historical VaR for DESK-EQD: 14.7m USD, 70% of its 20.9m limit, with 0 exception(s) in 250 days." |
+| **Where the data came from** | The source, its health (`up`, `degraded`, `down`), the generation, when it was fetched and updated, whether it is fresh or stale, a snapshot or a live feed, and how many linked entities were fetched | "Source var-engine · health up · fresh · a snapshot" |
+| **Why the page looks like this** | Which Sutra (layout) was chosen and why; panels that were added by inference; panels with no data and the reason (missing, null, empty list, masked); fields hidden for your role; panels you may not open | "Layout: Sutra var v1, the one that applies to this kind, priority 10." · "1 field hidden for your role: Limit (in strip)." |
+| **Where next** | The keys on this page (F7 and F8), and one link per kind of panel on it, to the guide that explains how to read it | "The histogram panel: what it shows and how to read it" |
+
+A layer with nothing to say is not shown. If you see **What each number means** (a layer that explains the figures one
+by one: term, unit and sign), your pack has a glossary; it comes with the next stage of the feature, so older servers
+do not show it.
+
+### The keys
+
+| Key | Does |
+|---|---|
+| `?` | Open or close the drawer (anywhere on a view except in a text field) |
+| `F1` | Open the drawer; `F1` again, inside it, or *The full guide to this screen*, opens this guide |
+| `Esc` | Close the drawer; focus goes back to where you were |
+| `Tab` | Move through the drawer. On a phone the drawer is a sheet that holds the focus until you close it |
+
+On a phone the drawer is a bottom sheet (swipe down, or tap **×**, to close it):
+
+![The About sheet on a phone](img/about/03-var-phone.jpg)
+
+All the layers open, on the same view:
+
+![Every layer of the drawer open](img/about/02-var-layers.jpg)
+
+### Someone else sees less
+
+Ask the same page as a user whose role hides a field and the drawer hides it too. In this picture the administrator
+chose to mask `limit` for the *viewer* role (a **demo**: no standard setup masks it). The sentence reads "••• of its •••
+limit" and layer 3 says "1 field hidden for your role: Limit":
+
+![The drawer for a viewer: the limit is masked](img/about/05-viewer-masked.jpg)
+
+### Another domain
+
+The words come from the pack, not from the program, so every domain explains itself in its own terms. A gene variant:
+
+![The drawer on a gene variant](img/about/04-genomics-variant.jpg)
+
+### Good to know
+
+- The drawer is fetched the first time you open it, never with the page, so it does not slow a view down.
+- When a live update brings a newer generation of the data, an open drawer asks again (at most once in two seconds).
+- No text? A pack without an `about` entry for the kind still shows the other layers; the pack's author can add one
+  ([how](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary); how it works inside is
+  [HOW_IT_FITS.md](../architecture/HOW_IT_FITS.md#39-about-this-page-end-to-end)).
+- Hover hints on field labels and a help popover on each panel's `?` come with the glossary stage; today the panel `?`
+  still opens that panel kind's page in this guide.
+- If the drawer says "could not be loaded", try again; the page itself is not affected. Error numbers are in
+  [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
 ## Layout mode: arrange a view your way
 
 A Sutra decides where each panel of a view goes, for everyone. **Layout mode** lets you arrange the panels for
@@ -731,8 +797,9 @@ keys than shown*); a search's drill-down shows 50 rows a page. An administrator 
 | `Enter` | Open the highlighted suggestion, or run the command (`<GO>`). In a table: open the selected row |
 | `PgUp` `PgDn` | In a selected table: move the selection a page up or down |
 | `Home` `End` | In a selected table: select the first or last row |
-| `Esc` | Close the suggestions, a menu, the raw JSON drawer or Calc |
-| `F1` | Help for the page you are on |
+| `Esc` | Close the suggestions, a menu, the raw JSON drawer, About this page or Calc |
+| `F1` | Help for the page you are on. On a view it opens [About this page](#about-this-page); `F1` again goes to the guide |
+| `?` | On a view (focus not in a text field): open or close [About this page](#about-this-page) |
 | `F2`–`F6` | Jump to the panel that shows that key in its header |
 | `F7` | Open the main linked entity (for a trade: its netting set) |
 | `F8` | Impact: what depends on this entity |
