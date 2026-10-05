@@ -1,0 +1,64 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The share dialog (COLLABORATION.md, Share with a note). Hidden until share.js opens it from the Share button, a panel's share
+   button or Alt+S. Nothing here names a pack, a kind or a person: the lists come from the server. #}
+<div class="shr-shade" data-share-dialog hidden>
+  <div class="shr-dlg" role="dialog" aria-modal="true" aria-labelledby="shrTitle" aria-describedby="shrHelp">
+    <header class="shr-h">
+      <h2 id="shrTitle" tabindex="-1">Share <span class="mono" data-shr-title></span></h2>
+      <button type="button" class="raw-x" data-shr-close aria-label="Close the share dialog">&times;</button>
+    </header>
+    <p id="shrHelp" class="visually-hidden">Choose who to send this view to, add a note, then send. Control and Enter send; Escape closes.</p>
+    <form class="shr-form" data-shr-form novalidate>
+      <fieldset class="shr-row shr-what">
+        <legend>What</legend>
+        <label><input type="radio" name="what" value="view" checked> the whole view</label>
+        <label data-shr-panel-opt hidden><input type="radio" name="what" value="panel"> panel: <b data-shr-panel-name></b></label>
+      </fieldset>
+      <div class="shr-row">
+        <span class="shr-lbl">As of</span>
+        <span class="shr-asof" data-shr-asof></span>
+        <label class="shr-live" data-shr-live-opt hidden><input type="checkbox" name="live"> send a live link instead</label>
+      </div>
+      <div class="shr-row">
+        <label class="shr-lbl" for="shrTo">To</label>
+        <div class="shr-to">
+          <ul class="shr-chips" data-shr-chips aria-label="Recipients"></ul>
+          <div class="shr-pick">
+            <input id="shrTo" type="text" class="studio-in" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="shrList"
+                   autocomplete="off" spellcheck="false" placeholder="type a name or a role" data-shr-to>
+            <ul id="shrList" class="shr-list" role="listbox" aria-label="People and roles" hidden></ul>
+          </div>
+        </div>
+      </div>
+      <div class="shr-row">
+        <label class="shr-lbl" for="shrNote">Note</label>
+        <div class="shr-note-wrap">
+          <textarea id="shrNote" class="studio-in" rows="4" data-shr-note placeholder="What should they look at? Typed values of hidden fields are never sent."></textarea>
+          <span class="shr-count mono" data-shr-count aria-live="off"></span>
+        </div>
+      </div>
+      <p class="shr-warn" data-shr-warn role="status" hidden></p>
+      <p class="shr-result" data-shr-result role="status" aria-live="polite"></p>
+      <footer class="shr-f">
+        <button type="button" class="btn-pill btn-sm-pill" data-shr-copy><i class="bi bi-link-45deg" aria-hidden="true"></i> <span data-shr-copy-label>Copy link</span></button>
+        <span class="shr-spacer"></span>
+        <button type="button" class="btn-pill btn-sm-pill" data-shr-cancel>Cancel</button>
+        <button type="submit" class="btn-pill btn-accent btn-sm-pill" data-shr-send>Send <kbd>Ctrl+&crarr;</kbd></button>
+      </footer>
+    </form>
+  </div>
+</div>

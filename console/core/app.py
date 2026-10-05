@@ -60,7 +60,7 @@ WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build")
+PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 # all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
@@ -168,7 +168,7 @@ def create_app(settings: Settings) -> FastAPI:
     catalogue = Servers(settings)
     from routes import (admin_routes, api_routes, asof_routes, auth_routes, build_routes, calc_routes, export_routes, help_routes, home_routes,
                         layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
-                        workspace_routes)
+                        workspace_routes, collab_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -273,4 +273,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(calc_routes.router)
     app.include_router(layout_routes.router)
     app.include_router(pivot_routes.router)
+    app.include_router(collab_routes.router)
     return app

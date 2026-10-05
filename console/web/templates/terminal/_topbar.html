@@ -144,7 +144,7 @@
       </div>
     </div>
     {% endif %}
-    <a class="tool bell" href="/alerts" title="Alerts" aria-label="Alerts" data-bell><i class="bi bi-bell" aria-hidden="true"></i><span class="bell-count" data-bell-count hidden>0</span></a>
+    <a class="tool bell" href="/inbox" title="Inbox and alerts (Alt+I)" aria-label="Inbox and alerts" aria-keyshortcuts="Alt+I" data-bell><i class="bi bi-bell" aria-hidden="true"></i><span class="bell-count" data-bell-count hidden>0</span></a>
     {% if pack_switcher | length > 1 %}
     {% set on = pack_switcher | selectattr('active') | map(attribute='name') | list %}
     <div class="dropdown">

@@ -44,6 +44,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
 | [Calc: Python on a view](#altc--calc-python-on-a-view) | `Alt+C`: Python in your browser on what you are looking at |
 | [Export, print and share](#export-print-and-share) | CSV, JSON, PDF and links |
+| [Share a view with a note](#share-a-view-with-a-note), [Your inbox](#your-inbox) | Send a view to colleagues; what they sent you |
 | [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
 | [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
 | [The workbench](#the-workbench-changing-how-a-screen-looks) | Changing how a screen looks |
@@ -807,6 +808,8 @@ keys than shown*); a search's drill-down shows 50 rows a page. An administrator 
 | `Alt+←` | Back |
 | `Alt+C` | Calc: Python on this view (where a pack offers it; `Option+C` on a Mac) |
 | `Alt+L` | Layout mode: arrange this view's panels for yourself (`Option+L` on a Mac); in layout mode, [its keys](#with-the-keyboard) |
+| `Alt+S` | Share this view (or panel) with people with a note; `Ctrl+Enter` sends, `Esc` closes |
+| `Alt+I` | Your inbox: what people sent you |
 | `R` `C` `V` `F`, `Delete`, `Alt+↑` `↓` | On a field of a [Pivot tab](#the-pivot-tab-slice-a-table-your-way): move it to Rows, Columns, Values or Filters, remove it, reorder it ([all its keys](#fields-and-zones-with-the-keyboard)) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4, also while the focus is inside a pane |
@@ -1097,7 +1100,7 @@ The buttons in a view's title line, and the **↓** in each panel header.
 | Comparison as CSV | **CSV** on the Compare page | One row per change |
 | Document as JSON | **JSON** in the title line | The whole document, as your role may see it |
 | Print or PDF | **Print** | A clean light page without the top bar and buttons; choose *Save as PDF* in the print dialog |
-| Share | **Share** | A link copied to the clipboard (the button briefly confirms) |
+| Share | **Share** (`Alt+S`), or a panel's **send** icon | A [dialog](#share-a-view-with-a-note): send the view, or one panel, to people with a note; **Copy link** is in it |
 
 Worked example (CSV): open `TRD MX-20000001` and click **↓** on *Cashflows*. You get a file whose first
 lines are:
@@ -1121,6 +1124,42 @@ example `/export/trade/MX-20000001/schedule.csv` (`schedule` is the panel's id) 
   to that page only: a *Pinned* banner says "You are seeing 29 Sep as known at …, as it was shared" (or that the source
   keeps no earlier versions so they see the latest for the date, or that the data has changed since, with *What changed*),
   and **Go live** drops it. Their own saved date, and their other tabs, are not changed.
+
+### Share a view with a note
+
+**Share** (or `Alt+S` on a view) opens a dialog. **Copy link** is the first thing in it, so the old one-click use is one
+click plus `Enter`; the rest sends the view to people inside Drishti.
+
+1. **What**: the whole view, or one panel (use the **send** icon in a panel's header to start with that panel chosen).
+2. **As of**: shown, never typed. It is the date and *known at* moment you are looking at, so the people you send it to open
+   exactly that; tick *send a live link instead* to send the live view. On a live page the link is live.
+3. **To**: type two letters of a name or a role (`rav`, `risk`) and pick from the list with the arrow keys and `Enter`
+   (or click). You can only find people who use at least one pack you use; a role stands for everyone in it (its size is
+   shown). `Backspace` in the empty field removes the last name.
+4. **Note**: plain text. Do not type the value of a hidden field: the server replaces it with `•••` for everyone who may
+   not see it, and tells you it did.
+5. **Send** (`Ctrl+Enter`). The dialog says who it reached ("Sent to 2") and who it did not and why ("Not sent to dkim:
+   cannot open trade views"). `Esc` closes the dialog and puts the focus back where it was. On a phone the dialog is a full
+   screen sheet.
+
+What the recipient gets: a notice on the **bell** within a second (a number on the bell, and a toast) and a row in
+their [inbox](#your-inbox). Opening it goes to the view **as you sent it**: your date and *known at* moment, with a
+banner "Shared by Ann Author", your note, and the usual *Pinned* banner. A shared panel is scrolled to and outlined. They
+see the view with *their own* rights: a field hidden from their role stays `•••`, and the note reads `•••` where you typed
+a hidden value.
+
+A person whose role does not open that kind of view (or who was sent it and then lost access) sees a plain page, "A shared
+view you cannot open", with who sent it and when, and nothing about what it holds; their inbox keeps the notice. If the
+reason is that the pack is switched off for them, the page offers **Switch on** *pack*. A link that was never sent to the
+reader looks the same as a link that does not exist.
+
+### Your inbox
+
+The **bell** in the top bar counts what is new for you (shares sent to you, and alerts as they fire); click it, or press
+`Alt+I`, for the inbox page. Each row says when, what kind (Share), who, and the start of their note, as you may read it
+now. Click a row to open it (opening marks it read), **Mark read** on a row, or **Mark all read**. Filter by *All*,
+*Shares*, *Mentions* or *Replies* and *Unread only*; **Older** pages back. Rules that fired are on the
+[Alerts](#alerts) page.
 
 ## Monitors
 

@@ -1,0 +1,42 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# A share's link opened by someone who cannot open what it points at (COLLABORATION.md, Share with a note): no title, no figures, no hint
+   of what the entity holds. `share` is None when the link names nothing this person was sent: the page then says only that. #}
+{% extends "base.html" %}
+{% block title %}A shared view you cannot open · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="thome share-denied" data-share-denied{% if share and share.reason %} data-reason="{{ share.reason }}"{% endif %}>
+  <h1>A shared view you cannot open</h1>
+  {% if share %}
+  <p>{{ share.senderName or share.sender }} shared {% if share.kind %}a <b>{{ share.kind }}</b> view{% else %}a view{% endif %} with you{% if share.createdAt %} on <span class="mono">{{ share.createdAt[:10] }}</span>{% endif %}.</p>
+  {% if share.reason == 'pack-off' and share.pack %}
+  <p>The <b>{{ pack_title }}</b> pack is switched off for you.</p>
+  <p><button type="button" class="btn-pill btn-accent" data-switch-on="{{ share.pack }}" data-active="{{ active_packs | tojson | forceescape }}">Switch on {{ pack_title }}</button>
+     <span class="adm-msg" data-switch-msg role="status" aria-live="polite"></span></p>
+  {% else %}
+  <p>Your roles do not open {% if share.kind %}{{ share.kind }} views{% else %}this kind of view{% endif %}.</p>
+  <p class="text-muted-d">Ask your administrator for access; this notice stays in your inbox.</p>
+  {% endif %}
+  {% else %}
+  <p>This link does not open anything for you. It may have been sent to someone else, or it may be mistyped.</p>
+  <p class="text-muted-d">If you were sent it, ask the person who shared it, or your administrator.</p>
+  {% endif %}
+  <p><a href="/t">Back to the terminal</a> &middot; <a href="/inbox">Your inbox</a></p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/inbox.js?v={{ ASSET_V }}"></script>{% endblock %}

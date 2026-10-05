@@ -263,9 +263,13 @@
       var url = b.getAttribute('data-share');
       var label = b.querySelector('[data-share-label]');
       var done = function (text) { if (label) { label.textContent = text; setTimeout(function () { label.textContent = 'Share'; }, 2000); } };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(function () { done('Link copied'); }, function () { window.prompt('Copy this link', url); });
-      } else { window.prompt('Copy this link', url); }
+      var copy = function () {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () { done('Link copied'); }, function () { window.prompt('Copy this link', url); });
+        } else { window.prompt('Copy this link', url); }
+      };
+      // share.js (the share dialog) takes the click when collaboration is on; otherwise the button copies the link as it always did
+      if (window.DrishtiShare) { window.DrishtiShare.open(b, copy); } else { copy(); }
     });
   });
   document.querySelectorAll('[data-print]').forEach(function (b) { b.addEventListener('click', function () { window.print(); }); });

@@ -1,0 +1,53 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The inbox (COLLABORATION.md, Inbox): shares (and later mentions and replies) as the server renders them for this reader now. #}
+{% extends "base.html" %}
+{% block title %}Inbox · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm inbox" data-inbox>
+  <h1>Inbox</h1>
+  <p class="text-muted-d">What people sent you. Rules that fired are on the <a href="/alerts">Alerts</a> page.</p>
+  <nav class="inbox-tabs" aria-label="Filter the inbox">
+    {% for key, name, _ in tabs %}<a class="fk{% if tab == key %} on{% endif %}" href="/inbox?tab={{ key }}{% if unread %}&amp;unread=1{% endif %}"{% if tab == key %} aria-current="page"{% endif %}>{{ name }}</a>{% endfor %}
+    <a class="fk{% if unread %} on{% endif %}" href="/inbox?tab={{ tab }}{% if not unread %}&amp;unread=1{% endif %}" aria-pressed="{{ 'true' if unread else 'false' }}">Unread only</a>
+    <button type="button" class="fk inbox-mark" data-inbox-mark-all>Mark all read</button>
+  </nav>
+  <p class="adm-msg" data-inbox-msg role="status" aria-live="polite">{{ error }}</p>
+  {% if rows %}
+  <ol class="inbox-list" data-inbox-list aria-label="Notices">
+    {% for r in rows %}
+    <li class="inbox-row{% if not r.read %} unread{% endif %}{% if not r.access %} noaccess{% endif %}" data-seq="{{ r.seq }}" data-read="{{ 'true' if r.read else 'false' }}">
+      <span class="inbox-dot" aria-hidden="true">{% if not r.read %}&#9679;{% endif %}</span>
+      <span class="inbox-when mono" title="{{ r.at }}">{{ (r.at or '')[:16] | replace('T', ' ') }}</span>
+      <span class="inbox-type">{{ r.type | capitalize }}</span>
+      <span class="inbox-main">
+        {% if r.href %}<a class="inbox-open" href="{{ r.href }}" data-inbox-open>{{ r.title }}</a>{% else %}<span>{{ r.title }}</span>{% endif %}
+        {% if r.excerpt %}<span class="inbox-excerpt">&ldquo;{{ r.excerpt }}&rdquo;</span>{% endif %}
+        {% if not r.read %}<span class="visually-hidden">unread</span>{% endif %}
+      </span>
+      <button type="button" class="fk inbox-read" data-inbox-read="{{ r.seq }}"{% if r.read %} hidden{% endif %}>Mark read</button>
+    </li>
+    {% endfor %}
+  </ol>
+  {% if more %}<p><a class="fk" href="/inbox?tab={{ tab }}{% if unread %}&amp;unread=1{% endif %}&amp;before={{ more }}">Older &rarr;</a></p>{% endif %}
+  {% elif not error %}
+  <p class="inbox-empty">Nothing here yet. When someone shares a view with you, it arrives here and in the bell.</p>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/inbox.js?v={{ ASSET_V }}"></script>{% endblock %}

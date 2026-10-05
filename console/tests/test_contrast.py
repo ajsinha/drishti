@@ -118,3 +118,15 @@ def test_the_light_fallback_is_the_light_theme():
     fallback = {k: v.lower() for k, v in re.findall(r"--d-([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})", block)}
     assert set(TEXT_TOKENS) | set(GROUNDS) | {"on-accent"} <= set(fallback)
     assert fallback == {k: light[k].lower() for k in fallback}
+
+
+def test_the_share_dialog_and_inbox_read_in_every_theme():
+    """Share with a note (collab.css): ink, muted, accent, warn and neg text on the surface; ink on the chips (surface-2), on an unread row
+    (emph-bg) and on the highlighted option (accent-tint): all at 4.5:1."""
+    for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark"):
+        t = _theme(name)
+        for fg in ("ink", "muted", "link", "accent", "warn", "neg"):
+            assert _ratio(t[fg], t["surface"]) >= 4.5, (name, fg, round(_ratio(t[fg], t["surface"]), 2))
+        for bg in ("surface-2", "emph-bg", "accent-tint"):
+            if bg in t:
+                assert _ratio(t["ink"], t[bg]) >= 4.5, (name, bg, round(_ratio(t["ink"], t[bg]), 2))
