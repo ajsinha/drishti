@@ -17,8 +17,8 @@
 
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
-data (ingest your own JSON Lines, load the demo data), server (health, packs), design (the Screen Designer's designs over
+Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
+data (profile and ingest your own JSON Lines, load the demo data), server (health, packs), design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_GUIDE.md.
@@ -885,6 +885,9 @@ def build_parser() -> argparse.ArgumentParser:
     dl.add_argument("--days", type=int, help="business days the book covers (script default 3)")
     dl.add_argument("--dry-run", action="store_true", help="print the command instead of running it")
 
+    # authoring tools: data profile, pack regenerate|diff|catalogue|i18n (tools/authoring.py)
+    load_module("authoring", "authoring.py").register(sys.modules[__name__], k, d, add, jvm, js, PFJ)
+
     # server -----------------------------------------------------------------------------------------------
     sv = group("server", "A running server over REST: health and pack management (administrator)")
     add(sv, "health", cmd_server_health, "server health: GET /api/v1/admin/health (exit 1 unless the status is OK)", [srv])
@@ -955,6 +958,7 @@ def main(argv=None) -> int:
     try:
         ap = build_parser()
         a, extra = ap.parse_known_args(argv)
+        a._argv = list(sys.argv[1:] if argv is None else argv)
         passthrough = (a.group == "sutra" and a.cmd != "gen") or (a.group == "data" and a.cmd == "load")
         if extra and not passthrough:
             ap.error("unrecognized arguments: " + " ".join(extra))

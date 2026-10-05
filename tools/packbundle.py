@@ -34,7 +34,7 @@ import tempfile
 
 MANIFEST = "MANIFEST.json"
 FORMAT = 1
-SKIP_DIRS = {".git", "__pycache__", ".idea", ".pytest_cache", ".venv", "node_modules"}
+SKIP_DIRS = {".git", "__pycache__", ".idea", ".pytest_cache", ".generated", ".venv", "node_modules"}
 SKIP_FILES = {".DS_Store", "Thumbs.db", MANIFEST}
 NAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 

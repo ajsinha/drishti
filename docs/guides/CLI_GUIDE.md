@@ -26,8 +26,8 @@ and how to run it all from PyCharm.
 - [2. Install and prerequisites](#2-install-and-prerequisites)
 - [3. Connecting to a server: URL, tokens and permissions](#3-connecting-to-a-server-url-tokens-and-permissions)
 - [4. `sutra`: shape, design, gen, lint, test, preview](#4-sutra-shape-design-gen-lint-test-preview)
-- [5. `pack`: make, new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
-- [6. `data`: ingest and load](#6-data-ingest-and-load)
+- [5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-regenerate-diff-catalogue-i18n-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
+- [6. `data`: profile, ingest and load](#6-data-profile-ingest-and-load)
 - [7. `server`: health and packs](#7-server-health-and-packs)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
 - [9. `docs`: screenshots](#9-docs-screenshots)
@@ -503,7 +503,7 @@ skeleton, optionally a Delta lake or files) instead of Sutra files only, use `pa
 
 It needs the built server jar (`./mvnw package -DskipTests`) and a JDK 21: all groups are designed in one Java run.
 
-## 5. `pack`: make, new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
+## 5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
 
 ### `pack make`: everything in one folder
 
@@ -844,6 +844,159 @@ python3 tools/drishti.py pack about-check packs/jsonl-demo
 Fix each by adding the field under `kinds.<kind>.glossary` (or a pack-wide `vocabulary` entry) in `config/about.yaml`; the
 format is in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
 
+### `pack regenerate`: new data, new Sutras, none of your edits lost
+
+A generated pack is a starting point you then edit (About text, labels, priorities). When the data grows (a new product type, a new
+field), `pack regenerate` generates again and **three-way merges** the result into your pack. `pack new` and `pack make` store what
+they generated in `<pack>/.generated/` (a `.base` copy of every generated file and the options used); that copy is the *base*, your
+pack is *ours*, the fresh generation is *theirs* (`tools/packregen.py`). Commit `.generated/` with the pack; the bundle leaves it out.
+
+| Situation | What happens |
+|---|---|
+| only the new generation changed a file | `refresh`: the file is replaced |
+| only you changed it | `keep`: your edit stays |
+| a group or file that is new | `add` |
+| no longer generated, you never edited it | `remove`; edited: `stale`, kept and listed |
+| both changed, in different places | `merge`: a line-level three-way merge (difflib), written |
+| both changed the same lines | `conflict`: both texts in the file between `<<<<<<< yours`, `=======` and `>>>>>>> regenerated` markers; listed; **exit 1** |
+| you deleted a file the generator still makes | `deleted`: it stays deleted |
+| no `.generated/` (a pack made before this) | nothing is merged: differing files are `no-baseline` (kept, exit 1), new files are added |
+
+```text
+$ python3 tools/drishti.py pack new few.jsonl --name mb --kind trade --match productType --key tradeId --out mb
+...
+$ python3 tools/drishti.py pack regenerate mb trade.jsonl --dry-run
+pack regenerate --dry-run: mb
+  add         sutras/trade/trade-abs.v1.sutra.yaml
+  add         sutras/trade/trade-amort-bond.v1.sutra.yaml
+  add         sutras/trade/trade-autocallable.v1.sutra.yaml
+  add         ... and 826 more
+  refresh     README.md
+  refresh     pack.yaml
+  refresh     samples/catalog.json
+  merge       config/about.yaml   (your edit and the new text merged cleanly)
+  keep        sutras/trade/trade-accreting-swap.v1.sutra.yaml   (your edit kept; the generated text did not change)
+  remove      samples/trade/MX-20000001.json   (no longer generated and you never edited it)
+  remove      ... and 23 more
+summary: 829 add, 1 keep, 1 merge, 3 refresh, 24 remove; 70 unchanged
+(exit 0)
+```
+
+Here two files had been edited by hand (a strip label in `trade-accreting-swap`, the About sentence): the label edit is kept, the
+About edit is merged with the regenerated skeleton. Without `--dry-run` the same plan is written, then `.generated/` is replaced by
+what was just generated (not by the merged result, so the next run still sees your edits as yours). A real conflict, here the
+generator now writes `priority: 20` on a line you changed to 15:
+
+```text
+$ python3 tools/drishti.py pack regenerate mb trade.jsonl --priority 20
+pack regenerate: mb
+  refresh     sutras/trade/trade-abs.v1.sutra.yaml
+  ...
+  conflict    sutras/trade/trade-accreting-swap.v1.sutra.yaml   (1 conflict(s): markers written, resolve them by hand)
+  keep        config/about.yaml   (your edit kept; the generated text did not change)
+summary: 1 conflict, 1 keep, 124 refresh; 778 unchanged
+attention: 1 file(s) need you (search for '<<<<<<<'), then  drishti.py pack check mb
+(exit 1)
+
+$ grep -n -A4 '<<<<<<<' mb/sutras/trade/trade-accreting-swap.v1.sutra.yaml
+<<<<<<< yours (the pack)
+match: { kind: trade, where: "$.productType == 'ACCRETING_SWAP'", priority: 15 }
+=======
+match: { kind: trade, where: "$.productType == 'ACCRETING_SWAP'", priority: 20 }
+>>>>>>> regenerated from the new data
+```
+
+Options not given on the command line (`--key`, `--date`, `--match`, `--priority`, `--samples`, `--version`...) are taken from the
+ones the pack was generated with. The command takes the same options as `pack new` (it writes no data: use `data ingest` for the
+lake) plus `--dry-run` and `--json`. It needs the jar like `pack new`, because it lints and tests the regenerated pack in a scratch
+folder first. Exit codes: 0 merged cleanly, 1 conflicts (or `no-baseline` files), 2 usage.
+
+### `pack diff`: what changed between two versions, and what breaks
+
+```text
+$ python3 tools/drishti.py pack diff dist/my-bank-1.0.0.tar.gz packs/my-bank
+pack diff: my-bank 1.0.0 -> my-bank 1.1.0
+
+BREAKING (1)
+  mnemonic renamed           TRA   TRA -> TRD for kind trade (typed commands and saved links use it)
+
+SELECTION (2)
+  sutra removed              trade-abs   sutras/trade/trade-abs.v1.sutra.yaml: its documents fall to another Sutra (match $.productType == 'ABS')
+  screen selection changes   trade-accreting-swap   priority 10 -> 20
+
+CHANGE (3)
+  version                    my-bank   1.0.0 -> 1.1.0
+  sutra changed              trade-accreting-swap   content changed
+  sutra changed              trade-amort-bond   content changed
+
+summary: 1 breaking, 2 selection, 3 change  (fail-on breaking: FAIL)
+```
+
+`OLD` and `NEW` are pack folders, `pack make` output folders or bundles (`.tar.gz`). Findings have four levels: **breaking** (a kind or
+a mnemonic removed or renamed: monitors, workspaces and alerts name them), **selection** (a Sutra added or removed, its match `where`,
+`kind` or `priority` changed: other documents get other screens), **layout** (`connectors`, `routes`, `ingest`, `columns` of
+`pack.yaml`: the data layout) and **change** (Sutra content, About text, glossary, panel notes, version). `--unified` adds the unified
+diff of each changed Sutra; `--fail-on breaking|any|none` (default `breaking`) decides the exit code (1 when a finding of that level
+exists); `--json` prints `{counts, findings: [{level, what, name, detail}], failed}`. Use it in CI before `pack deploy`.
+
+### `pack catalogue`: a readable catalogue for business review
+
+```text
+$ python3 tools/drishti.py pack catalogue packs/my-bank --out build/catalogue --format html --shots
+pack catalogue: 1 kind(s), 125 Sutra(s), 125 preview(s) -> build/catalogue/index.html
+```
+
+The page (or `catalogue.md` with the default `--format md`) lists, per kind, the About sentence and mnemonic, the glossary (term,
+meaning, unit, sign, notes, values) and the fields the Sutras show that no entry explains yet; then every Sutra with what it shows
+(description, key figures, panels with their kind and title) and the rule that selects it. The start of the Markdown:
+
+```text
+## Trade (`trade`, mnemonic TRD)
+
+A trade booked in the front office, e.g. ${$.tradeId}.
+
+### Fields and glossary
+
+| Field | Term | Meaning | Unit | Sign, notes |
+|---|---|---|---|---|
+| assetClass | assetClass | TODO: what this field means. |  |  |
+...
+#### trade-accreting-swap
+
+- **Selected when:** `$.productType == 'ACCRETING_SWAP'`, priority 10
+- **Key figures:** Notional, MTM, DV01, Vega, NPV, Clean PV
+- **Panels:** Details (kv), Sensitivities (area), Schedule (ladder), Pnl history (line)
+```
+
+`--shots` runs `sutra preview` over the pack (needs the jar) and links each Sutra's HTML snapshots from `previews/`. About text not yet
+written shows as its `TODO` placeholder, so the catalogue doubles as a review checklist.
+
+### `pack i18n`: translate the About text through a spreadsheet
+
+```text
+$ python3 tools/drishti.py pack i18n export packs/my-bank --lang fr --out build/fr.csv
+pack i18n export: 40 texts of my-bank -> build/fr.csv  (0 already translated, 40 to do)
+next: fill the 'translation' column, then  drishti.py pack i18n import packs/my-bank build/fr.csv --lang fr
+
+$ python3 tools/drishti.py pack i18n import packs/my-bank build/fr.csv --lang fr
+pack i18n import: 2 of 40 texts -> packs/my-bank/config/about.fr.yaml
+  missing (shown in English): 38
+    kinds/trade/glossary/assetClass/term
+    ...
+  EXTRA keys (not in about.yaml, ignored): 1
+    kinds/ghost/title
+(exit 1)
+```
+
+`export` writes a CSV with the columns `key`, `source` (the English text) and `translation` (prefilled from an existing
+`config/about.<lang>.yaml`). Keys are `/`-separated paths: `kinds/<kind>/title`, `.../about`, `.../glossary/<field>/<term|means|unit|sign|note>`,
+`.../glossary/<field>/values/<value>`, `.../panels/<panel>/about` and `vocabulary/<term>/...`. Keep every `${...}` expression as it is. `import`
+writes `config/about.<lang>.yaml`, the overlay the server merges over `about.yaml` key by key (the same kind of file the market-risk pack ships
+as `about.fr.yaml`); what is written is read back and must give exactly the imported keys. It reports **missing** keys (they show in
+English; an error only with `--strict`), **extra** keys (not in `about.yaml`: an error), a **changed source** column (the English text
+changed since the export) and translations whose `${...}` expressions differ from the English (an error). `--dry-run` writes nothing.
+Exit codes: 0 ok, 1 problems, 2 usage (bad `--lang`, no `about.yaml`).
+
 ### `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`: artifacts you ship by copying
 
 The offline path: no server API and no token. Full guide with real output, promotion, CI, Docker and Windows:
@@ -953,7 +1106,53 @@ registry:   (not configured)
 (Here the scratch server has no registry configured; with one, each row shows the version, whether the publisher is trusted, and
 the installed and loaded versions.)
 
-## 6. `data`: ingest and load
+## 6. `data`: profile, ingest and load
+
+### `data profile`: what is in your JSON Lines
+
+Before `pack make`, look at the data. `data profile` (`tools/dataprofile.py`) reads the files once, a document at a time, and reports
+per kind (the file name, or `--kind`): the document count; every field (dotted path; `[]` marks array elements, e.g.
+`sensitivities[].bucket`) with its types, coverage, distinct values and examples; and the candidates for the three choices `pack make`
+needs. Memory is bounded: `--max-distinct` (default 10,000) values are tracked per field; beyond it the distinct count reads
+`>=10000` and the field cannot be a key or a match column.
+
+```text
+$ python3 tools/drishti.py data profile data/jsonl/trade.jsonl
+data profile: 1 file(s), 750 document(s), 1 kind(s)
+
+== trade: 750 document(s), 402 field(s)
+  field                                 type            cover  distinct  examples
+  tradeId                               string           100%       750  MX-20000001, MX-20000002, MX-20000003
+  sourceSystem                          string           100%         6  Murex, Wall Street Systems, Calypso
+  productType                           string           100%       125  IRS_FIXFLOAT, OIS, BASIS_SWAP
+  tradeDate                             string           100%       385  2025-07-25, 2025-02-06, 2026-09-18
+  notional                              number           100%       247  242000000.0, 110000000.0, 204000000.0
+  counterparty.id                       string           100%        18  CP-MERIDIAN-RE, CP-HALCYON, CP-AURORA
+  terms.fixedRate                       number             7%        54  0.040829, 0.019194, 0.015994
+  sensitivities[].bucket                string           100%        10  3M, 6M, 1Y
+  legs[].leg                            integer           22%         2  1, 2
+  ...
+  key candidates (present and unique everywhere):
+    tradeId                      exact     present in all 750 documents, 750 different values
+    sourceTradeId                exact     present in all 750 documents, 750 different values
+  date candidates (ISO dates in at least 95% of the documents):
+    tradeDate                    385 date(s) 2024-04-12 .. 2026-09-25, coverage 100%
+    effectiveDate                328 date(s) 2024-04-15 .. 2026-09-28, coverage 100%
+  match candidates (split the kind into screens; score 0..1):
+    assetClass                   1.000  coverage 100%, 10 values over 750 documents (average 75.0 per value, evenness 0.94; largest group Rates = 156); name suggests a category
+    family                       1.000  coverage 100%, 13 values over 750 documents (average 57.7 per value, evenness 0.88; largest group swap = 144); name suggests a category
+    productType                  0.958  coverage 100%, 125 values over 750 documents (average 6.0 per value, evenness 1.00; largest group IRS_FIXFLOAT = 6); name suggests a category
+  suggested:
+    python3 tools/drishti.py pack make data/jsonl/trade.jsonl --kind trade --match assetClass --key tradeId --date tradeDate --name trade-pack
+```
+
+A **key** is a scalar present in every document with a different value in each (`exact` while the values fit in `--max-distinct`,
+`probable` beyond; id-like names first). A **date** is a field whose every value is an ISO date, present in at least 95% of the
+documents. A **match** column splits the kind into screens; the score (0 to 1) is `coverage x (1 - distinct/documents) x min(1,
+average group size/5) x min(1, distinct/8) x (0.5 + 0.5 x evenness)`, times 1.15 when the name ends in type, class, category, kind,
+family, product, segment, region or status, times 0.9 per nesting level; each line says why. It is a ranking, not a decision: here
+`assetClass` gives ten broad screens, `productType` gives 125 specific ones, and you choose. `--json` prints every field and
+candidate; exit 0, or 2 when nothing could be read.
 
 ### `data ingest`: your JSON Lines into a lake or files
 
@@ -1671,6 +1870,8 @@ Click the folder icon next to **Environment variables** to edit them as a table 
 | Name | **Parameters** |
 |---|---|
 | `drishti pack make` | `pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank --force` |
+| `drishti data profile` | `data profile data/jsonl` |
+| `drishti pack regenerate` | `pack regenerate packs/my-bank data/jsonl --dry-run` |
 | `drishti sutra gen` | `sutra gen data/jsonl --kind trade --match productType --out build/sutras` |
 | `drishti data ingest` | `data ingest --from data/new --pack build/my-bank/pack/my-bank --lake build/my-bank/data/delta --dry-run` (remove `--dry-run` to write) |
 | `drishti pack check` | `pack check build/my-bank/pack/my-bank --strict --junit build/reports` |
@@ -1708,7 +1909,7 @@ To stop on an error, tick **Run → View Breakpoints → Python Exception Breakp
 
 By default a configuration lives in `.idea/workspace.xml` (personal, not committed). To share it, open it in **Edit
 Configurations** and tick **Store as project file**: PyCharm writes it to `.run/<name>.run.xml` in the project, which can be
-committed. This repository ships two to start from, `.run/drishti pack make.run.xml` and `.run/drishti sutra gen.run.xml`; PyCharm
+committed. This repository ships four to start from, `.run/drishti pack make.run.xml`, `.run/drishti sutra gen.run.xml`, `.run/drishti data profile.run.xml` and `.run/drishti pack regenerate.run.xml`; PyCharm
 lists them under **Python** as soon as the project opens (reload with **File → Reload All from Disk** if it was open already).
 The format is one `<configuration>` element in a `ProjectRunConfigurationManager` component:
 

@@ -208,6 +208,8 @@ def run(opts) -> int:
 
     (out / "README.md").write_text(readme(opts, kinds, groups, keys, dates, lake_line), encoding="utf-8")
     license_fix(out)
+    import packregen
+    packregen.snapshot(out, opts)  # the baseline `pack regenerate` merges against
 
     say(f"pack written to {out}")
     rc = 0
