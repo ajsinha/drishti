@@ -19,10 +19,14 @@
               'no values': 'has no values', 'no data': 'has no data'} %}
 {% set VERDICT = {'true': 'its condition held', 'false': 'its condition was false', 'error': 'its condition could not be evaluated', 'masked': 'its condition depends on a hidden field'} %}
 
-{% macro layer_about(ex, open_) %}{% set s = (ex.layout or {}).sutra %}{% if s and s.description %}
+{% macro layer_about(ex, open_) %}{% set s = (ex.layout or {}).sutra %}{% set ab = ex.about or {} %}{% set desc = ab.sutraDescription or (s.description if s else none) %}{% if ab.text or desc or ab.panels %}
 <details class="about-layer" data-layer="about" id="about-l1"{% if open_ %} open{% endif %}>
   <summary><h3>What you are looking at</h3></summary>
-  <p class="about-text">{{ s.description }}</p>
+  {% if ab.kindTitle %}<p class="about-kind">{{ ab.kindTitle }}</p>{% endif %}
+  {% if ab.text %}<p class="about-text" data-about-pack-text>{{ ab.text }}</p>{% endif %}
+  {% if desc and desc != ab.text %}<p class="about-text about-muted">{{ desc }}</p>{% endif %}
+  {% if ab.panels %}<ul class="about-list">{% for pn in ab.panels %}<li><b>{{ pn.title or pn.id }}</b>: {{ pn.description }}</li>{% endfor %}</ul>{% endif %}
+  {% if ab.pack and ab.pack.title %}<p class="about-src">Written by the {{ ab.pack.title }} pack.</p>{% endif %}
 </details>{% endif %}{% endmacro %}
 
 {% macro layer_data(ex, open_) %}{% set d = ex.data %}{% if d %}

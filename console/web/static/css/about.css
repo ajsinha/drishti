@@ -58,3 +58,8 @@
   .about-grip { display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--d-border); margin: .45rem auto 0; }
 }
 @media print { .about { display: none; } }
+
+/* layer 1: the pack's own text first, the Sutra's description after it in a quieter voice */
+.about-kind { font-weight: 600; margin: .4rem 0 0; color: var(--d-ink); }
+.about-muted, .about-src { color: var(--d-muted); }
+.about-src { font-size: .75rem; margin: .3rem 0 0; }

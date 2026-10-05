@@ -91,3 +91,20 @@ def test_the_drawer_uses_theme_tokens_only():
     tokens = (WEB / "static" / "css" / "tokens.css").read_text()
     for t in set(re.findall(r"var\((--d-[a-z0-9-]+)\)", css)):
         assert t + ":" in tokens, t
+
+
+def test_the_packs_own_text_leads_layer_one_and_a_masked_value_stays_masked(client, backend, monkeypatch):
+    # steps 2 and 3 were built side by side: the drawer must show the explain answer's `about` block (step 3), the
+    # pack's text first, the Sutra description after it, the panel notes, and who wrote it; masked values arrive as •••
+    ex = json.loads((FIXTURES / "explain_trade_IRS-48213.json").read_text())
+    ex["about"] = {"pack": {"name": "market-risk", "title": "Market risk"}, "kindTitle": "Value-at-risk result",
+                   "text": "VAR-EQD is a 1-day 99% historical VaR: 14.7m USD, ••• of its ••• limit.",
+                   "sutraDescription": "Historical VaR and ES for a desk or portfolio.",
+                   "panels": [{"id": "dist", "title": "Scenario P&L distribution", "description": "Days left of the markers are tail losses."}]}
+    async def explain(kind, id_, user, generation=None):
+        return ex
+    monkeypatch.setattr(backend, "explain", explain)
+    h = client.get("/v/trade/IRS-48213/about").text
+    assert "Value-at-risk result" in h and "••• of its ••• limit" in h and "data-about-pack-text" in h
+    assert h.index("14.7m USD") < h.index("Historical VaR and ES"), "the pack's text comes before the Sutra description"
+    assert "Scenario P&amp;L distribution" in h and "Written by the Market risk pack." in h
