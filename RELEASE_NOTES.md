@@ -13,7 +13,43 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.15.0 — release notes
+# Drishti 1.16.0 — release notes
+
+*2026-10-05.* **Java 21 for production, About this page, and Share and Discussion.**
+
+- **Java 21 is the production runtime.** Drishti builds Java 21 bytecode and runs on Java 21 or newer (25 is tested too).
+  The build fails if any dependency needs a newer JVM (`enforceBytecodeVersion`), the drill runs every test on Java 21
+  (containers included) and checks Java 25, and the Docker image defaults to Temurin 21. Blocking work never runs under
+  `synchronized`, so virtual threads do not pin on 21 (a guard test keeps it so; a load test found and fixed one hot path).
+- **About this page** (`?`, F1 or **About** on any view): what you are looking at (the pack's own text, filled with the
+  page's values), what each number means (a glossary of exactly the fields shown, with formulas), where the data came from
+  and how fresh it is, why the page looks like this (the Sutra chosen and why, empty, masked and no-access panels), and
+  where to go next. Panel `?` popovers and dotted-underline hints on labels. Every quickstart pack ships its text, with
+  100% coverage enforced by `sutra test`; `sutra lint` warns about fields without an explanation; the Build workbench has
+  an About tab with a live preview; text can be translated (`about.<lang>.yaml`). Masked values never appear.
+- **Ask about this page** (off by default, per pack): a question box answered by an AI model you configure, given only the
+  page's explanation (labels, never masked values), with prompt-injection defences, limits and clean failures.
+- **Share with a note:** send a view or a panel, pinned to its date, to people and roles; they open it with their own
+  rights. Notices in the bell and an inbox; email (an outbox with retries, digests, per-person opt-outs) carrying values as
+  each recipient may see them; Teams, Slack and signed-webhook bridges; an optional watermarked picture, drawn for the
+  most restricted recipient. Links survive sign-in.
+- **Discussion:** threads on a view, a panel or a field, beside About in one drawer: @mentions, quotes of values,
+  "open as it was", a 15-minute edit window, retract, moderation, follow and mute. The old Notes became threads.
+- **Compliance:** tamper-evident history (hash chains and seals), retention, legal holds, an eDiscovery export with
+  checksums, and an Admin → Collaboration page (moderation, holds, export, verify, outbox, bridges).
+- **A third adversarial QA round** on the new features: 29 findings (2 High), all fixed or addressed
+  (`docs/qa/2026-10-05/`). Product decisions recorded: emails and chat bridges carry values, rendered for their audience.
+- **Faster, sturdier drill:** about 18–20 minutes (from 35–45); one shared server for the browser tests; a failed console
+  test is retried once and logged as flaky; timeouts report what the page was doing.
+
+**Upgrade notes:**
+- Run `./mvnw clean` (or *Rebuild Project*) once after pulling, so no Java 25 class files remain in `target/`.
+- Signed tokens for deleted or disabled accounts are now refused (`drishti.security.registered-users-only`, default
+  `true`); single sign-on is unaffected (it registers the account at sign-in).
+- New settings: `drishti.explain.*`, `drishti.about.*`, `drishti.explain.ask.*`, `drishti.collab.*` (all collaboration
+  email, bridges and snapshots are off until configured), console `ui.about_prefetch`. See CONFIGURATION.md.
+
+# Previous release: Drishti 1.15.0 — release notes
 
 *2026-10-04.* **A KPI tile, five developer guides with generated screenshots, and one source of truth per topic.**
 
@@ -43,7 +79,7 @@
 **Upgrade notes:** none required. Old help addresses (`/help/panels`, `/help/plugins`, `/help/connectors`,
 `/help/build-a-pack`, `/help/sutra-guide`, `/help/rachana-guide`) redirect to the new guides.
 
-# Previous release: Drishti 1.14.1 — release notes
+# Older release: Drishti 1.14.1 — release notes
 
 *2026-10-03.* **LZ4 Delta tables, clean errors for oversized requests, and masking of copied values.**
 
@@ -62,47 +98,3 @@
 
 **Upgrade notes:** none required. New settings: `drishti.http.request-limits.*`, `server.tomcat.max-swallow-size`
 (`DRISHTI_MAX_SWALLOW`), `drishti.security.mask-copies*`, Delta `lz4-decoder` and `lz4-via-native`.
-
-# Older release: Drishti 1.14.0 — release notes
-
-*2026-10-03.* **The Build workbench: from JSON files to a working, reviewed screen in minutes; two rounds of adversarial QA closed.**
-
-- **Build workbench** (Build → New screen). One page to design, test and ship screens:
-  - **Bring data:** JSON or JSONL files, a whole folder, a JSON Schema (samples are generated), entities from a store,
-    an example, or an existing Sutra. Drishti infers a schema with a role for every field (id, link, measure,
-    dimension, series, tree, OHLC, …) and **auto-designs** a first screen, each panel with its reason and alternatives.
-  - **Visual canvas:** the real view, with **+ Add panel** on every tab, a palette of all 20 kinds, drag to move,
-    edges to resize, drop a field for suggested panels or to bind it, remove with the trash button (with Undo), an
-    inspector with an editor for every option, YAML side by side, Notes, and a keyboard path for everything.
-  - **Tested as you type** against every sample (panel × sample grid), **preview with any JSON file**, versions and
-    diffs, a command palette (Ctrl+K), undo and redo.
-  - **Ship:** propose with evidence (check grid, sample names, notes, diff); approval publishes the next version.
-    Export a pack fragment, import a pack folder or zip, read-only share links, and file binding to a draft folder for
-    IDE editing in development.
-  - **Designs are kept on the server** per user (file or database store), with quotas and expiry; examples open as
-    your own copy. Designing is open to every signed-in user; saving, proposing and approving keep their rights.
-  - Guide: [SCREEN_DESIGNER.md](docs/guides/SCREEN_DESIGNER.md) (with screenshots); design:
-    [BUILD_WORKBENCH.md](docs/architecture/BUILD_WORKBENCH.md).
-- **Headless `sutra` CLI** in the server jar: `lint | test | shape | design | preview`, JUnit XML and HTML snapshots for
-  CI ([SUTRA_CLI.md](docs/guides/SUTRA_CLI.md)).
-- **Panels:** `source:` on every data panel (read a linked entity), **expandable row groups** (pivot `by: [a, b, c]` with
-  subtotals; tree tables with `children`), ten [examples](docs/guides/examples/README.md) covering all 20 kinds.
-- **How it fits together:** [HOW_IT_FITS.md](docs/architecture/HOW_IT_FITS.md) follows a trade and a genomics variant
-  through packs, connectors, Sutras and the UI.
-- **Quality:** every finding of the [2026-10-01](docs/qa/2026-10-01/README.md) and
-  [2026-10-03](docs/qa/2026-10-03/README.md) adversarial QA rounds is fixed or addressed (sessions that follow the
-  user, masks everywhere, one live connection per browser, atomic loads, safe retention, stricter grammar, phone width
-  and contrast, and more). Browser tests run in the build (Playwright).
-
-**Upgrade notes**
-
-- **Sign in once** after upgrading: console sessions are now kept on the server; upgrade the server and console
-  together. Servers behind one load balancer share one identity database.
-- **Identity schema:** new tables for console sessions and designs are created at start (SQLite and PostgreSQL).
-- **Redis loads replace each day by default;** partial or intraday loads pass `--merge`.
-- **Stores** for one kind are consulted in configuration order (after `routes`).
-- **Old Studio links** (`/studio?example=…` and the like) show a confirmation page before a design is created.
-- **`deploy/compose.yaml`** requires `DRISHTI_ADMIN_USER` and `DRISHTI_ADMIN_PASSWORD` and publishes the server on
-  127.0.0.1 only.
-- New settings are listed in [CONFIGURATION.md](docs/admin/CONFIGURATION.md) (`drishti.builder.*`, `drishti.panels.*`,
-  `drishti.security.token-read-posts`, console `auth.*`, `live.*`, `ui.*`, `builder.*`).
