@@ -527,7 +527,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-inference` | Shape analysis, semantic hints, rules, scorer, packer, `LayoutMerger` (Sutra ⊕ inference) | `InferenceConfiguration` |
 | `drishti-graph` | `ReferenceCatalog` (identifier patterns, reference fields), badges | `GraphConfiguration` |
 | `drishti-engine` | `ViewPipeline`, `Binder`, caches, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration` |
-| `drishti-identity` | Users, roles, passwords, lockout, audit, per-user preferences (workspaces, settings); stored in a JPA database (section 18) | `IdentityConfiguration` |
+| `drishti-identity` | Users, roles, passwords, lockout, audit, per-user preferences (workspaces, settings); the collaboration records (`com.ash.drishti.identity.collab`: shares, inbox, outbox, threads, holds, `HashChain`); stored in a JPA database (section 18) | `IdentityConfiguration` |
 | `drishti-packs` | Domain packs: reads `packs/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
 | `drishti-diskcache` | `DiskCache`: a size-bounded, daily-cleared RocksDB cache on local disk for live connectors | – |
 | `drishti-messaging` | `MessageStateSource`: the shared half of the ActiveMQ and RabbitMQ connectors (latest document per entity in a persistent RocksDB store plus a memory cache) | – |
@@ -689,6 +689,11 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
   before anything reads them; Rachana-EL carries the mask through (a value computed from it is masked, a condition on
   it is never true), so a masked field can be neither seen nor probed
   ([CONFIGURATION.md](../admin/CONFIGURATION.md#field-masks)).
+- **Collaboration** (share with a note, comment threads, the inbox; package `com.ash.drishti.server.collab`, records in `drishti-identity`).
+  What travels is a person's words and a pinned link, never data: every share, comment, notice and email is rendered **for the reader, when
+  they look**, from what they may see now (`Entitlements.mayReach`, `maskedValues`, `CommentRenderer`), and the records are tamper-evident
+  (`HashChain`). The whole path is worked through in [HOW_IT_FITS.md §3.10](HOW_IT_FITS.md#310-share-and-discussion-end-to-end), the design and
+  its as-built notes are [COLLABORATION.md](COLLABORATION.md), the decision is ADR-020.
 - **Console** CSP without `unsafe-inline`; all assets same-origin.
 
 ---

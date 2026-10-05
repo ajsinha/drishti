@@ -49,6 +49,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](guides/USER_GUIDE.md#compare-what-changed) |
 | See what depends on an entity (F8) | [Impact guide](../console/web/guides/impact.md) |
 | Download CSV or JSON, print, or share a link | [USER_GUIDE.md › Export, print and share](guides/USER_GUIDE.md#export-print-and-share) |
+| Send a view to a colleague with a note, read your inbox, discuss a number | [USER_GUIDE.md › Share a view with a note](guides/USER_GUIDE.md#share-a-view-with-a-note), [Your inbox](guides/USER_GUIDE.md#your-inbox), [Discussion](guides/USER_GUIDE.md#discussion) |
+| Follow a share and a comment end to end (rights, masks, audit, retention) | [HOW_IT_FITS.md §3.10](architecture/HOW_IT_FITS.md#310-share-and-discussion-end-to-end) |
 | Watch a list live, or be alerted when a figure crosses a line | [Monitors and alerts guide](../console/web/guides/monitors-and-alerts.md) |
 | Put several views on one screen | [Workspaces guide](../console/web/guides/workspaces.md) |
 | Change your theme, landing page or password | [USER_GUIDE.md › Your settings](guides/USER_GUIDE.md#your-settings) |
@@ -75,7 +77,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Design of the Screen Builder (JSON files → shape → visual designer → Sutra) | [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) |
 | The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) |
 | Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) |
-| Design of collaboration: share a view with a note, comment threads anchored to the data, the inbox, compliance and the plan | [COLLABORATION.md](architecture/COLLABORATION.md) |
+| Collaboration: share a view with a note, comment threads anchored to the data, the inbox, email, retention and legal hold; the design, what was built and the plan | [COLLABORATION.md](architecture/COLLABORATION.md) |
 
 ### Add an industry or data
 
@@ -182,7 +184,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [qa/2026-10-01](qa/2026-10-01/README.md) | you want the adversarial QA of 1.13.0: what was tested, every finding by severity with reproduction steps, what held up, and the proposed fix order |
 | [qa/2026-10-03](qa/2026-10-03/README.md) | you want the adversarial QA of the Build workbench (round 2, before 1.14.0): what was tested, every finding by severity, and how each was fixed |
 | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) | you want to know how *About this page* will explain a view (what it shows, what each number means, where the data came from, why the layout, where next): the PageContext, the explain API, pack `about.yaml`, masking rules and the build plan (proposed) |
-| [COLLABORATION.md](architecture/COLLABORATION.md) | you want to know how *share with a note* and comment threads will work: pins to the business date and generation, recipients' own rights, masks on user text, the inbox and email outbox, retention, legal hold, export, and the build plan (proposed) |
+| [COLLABORATION.md](architecture/COLLABORATION.md) | you want to know how *share with a note* and comment threads work and why: pins to the business date and generation, recipients' own rights, masks on user text, the inbox and email outbox, retention, legal hold, export, with a note on what was built differently from the design (steps 1 to 7 built; chat bridges and snapshots, phase 2, are not) |
 | [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md) | you want to know how server-side pricing (QuantLib) will work with Drishti and reach the screen: the design and phases (proposed, on the roadmap) |
 | [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
 | [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |

@@ -894,6 +894,12 @@ thread's hashes proves history was rewritten (the chain is evidence of tampering
 `kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`). A failure
 names the revision that was changed or no longer follows the one before it.
 
+**Backups.** Every collaboration table (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, `drishti_thread`,
+`drishti_comment`, `drishti_comment_revision`, `drishti_mention`, `drishti_follow`, `drishti_collab_hold`, `drishti_note_link`) is in the identity
+database, so the backup of that database is the backup of the record, and it is the only copy of what the hash chains protect. With
+`drishti.collab.store: file` (one server) the same records are the JSON-lines files under `drishti.collab.dir`; copy that folder, except
+`exports/`, which holds only what is waiting to be downloaded. A restored database needs no repair: the chains verify against the manifest you kept.
+
 ## 9b. The access log
 
 Every answered read is a row in `drishti_access` (about 150 bytes). A desk of 200 people opening 300 views a day each

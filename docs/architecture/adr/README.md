@@ -36,5 +36,6 @@
 | [017](017-sutras-are-yaml.md) | Sutras are YAML, through and through (supersedes 011) |
 | [018](018-signed-pack-registry.md) | Packs come from a signed, versioned registry |
 | [019](019-pricing-is-a-quantlib-service-behind-the-server.md) | Pricing is a QuantLib service behind the Drishti server (proposed) |
+| [020](020-collaboration-records-live-in-the-identity-database.md) | Collaboration records live in the identity database; the notice is a link, never data |
 
 ADRs are amended, never rewritten.

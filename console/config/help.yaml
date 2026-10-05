@@ -28,6 +28,7 @@ categories:
       - { slug: ide-guide, doc: guides/IDE_GUIDE.md, title: "IntelliJ IDEA and PyCharm", icon: code-square, summary: "Run and debug the server in IntelliJ IDEA and the console in PyCharm: JDK and interpreter, run configurations, reloading changes, tests, common problems." }
       - { slug: install-and-run, doc: guides/GETTING_STARTED.md, title: Install and run, icon: download, summary: "From nothing to your first view: build, start, sign in, and the first commands to type, step by step." }
       - { slug: impact, title: F8 · Impact, icon: diagram-3, summary: "What depends on an entity: its dependents, what they roll into, and the amount at stake." }
+      - { slug: sharing-and-discussion, title: Sharing and discussion, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
       - { slug: monitors-and-alerts, title: Monitors and alerts, icon: bell, summary: "Live watchlists, and rules the server checks on every change: alerted once, re-armed when clear." }
       - { slug: workspaces, title: Workspaces, icon: grid-1x2, summary: "Several live views on one screen, panes that follow each other, views dragged into panes, dividers to resize, saved per user." }
       - { slug: layout-mode, title: "Layout mode · arrange a view", icon: grid-3x3-gap, summary: "Alt+L: drag, resize and hide a view's panels for yourself, kept as your layout of its Sutra; authors promote it for review." }
@@ -142,4 +143,5 @@ contextual:
   workspace: workspaces
   monitor: monitors-and-alerts
   alerts: monitors-and-alerts
+  inbox: sharing-and-discussion
   impact: impact

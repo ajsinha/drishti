@@ -817,6 +817,7 @@ keys than shown*); a search's drill-down shows 50 rows a page. An administrator 
 | `Alt+C` | Calc: Python on this view (where a pack offers it; `Option+C` on a Mac) |
 | `Alt+L` | Layout mode: arrange this view's panels for yourself (`Option+L` on a Mac); in layout mode, [its keys](#with-the-keyboard) |
 | `Alt+S` | Share this view (or panel) with people with a note; `Ctrl+Enter` sends, `Esc` closes |
+| `Alt+N` | Discussion: the second tab of the side drawer ([Discussion](#discussion)) |
 | `Alt+I` | Your inbox: what people sent you |
 | `R` `C` `V` `F`, `Delete`, `Alt+↑` `↓` | On a field of a [Pivot tab](#the-pivot-tab-slice-a-table-your-way): move it to Rows, Columns, Values or Filters, remove it, reorder it ([all its keys](#fields-and-zones-with-the-keyboard)) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
@@ -1150,11 +1151,19 @@ click plus `Enter`; the rest sends the view to people inside Drishti.
    cannot open trade views"). `Esc` closes the dialog and puts the focus back where it was. On a phone the dialog is a full
    screen sheet.
 
+![The Share dialog on MX-20000001: the view as of 2026-09-30, Vera Lim chosen, a note, and the warning that the note holds the value of a hidden field](img/collab/01-share-dialog.jpg)
+
+![After Send: "Sent to 1 person", with Copy link still in the dialog](img/collab/02-share-sent.jpg)
+
 What the recipient gets: a notice on the **bell** within a second (a number on the bell, and a toast) and a row in
 their [inbox](#your-inbox). Opening it goes to the view **as you sent it**: your date and *known at* moment, with a
 banner "Shared by Ann Author", your note, and the usual *Pinned* banner. A shared panel is scrolled to and outlined. They
 see the view with *their own* rights: a field hidden from their role stays `•••`, and the note reads `•••` where you typed
 a hidden value.
+
+![Vera's view of the share: "Shared by Asha Rao", the note with the trader's name replaced by three dots, and the Pinned banner](img/collab/05-shared-view.jpg)
+
+![The same shared view on a phone](img/collab/06-shared-phone.jpg)
 
 A person whose role does not open that kind of view (or who was sent it and then lost access) sees a plain page, "A shared
 view you cannot open", with who sent it and when, and nothing about what it holds; their inbox keeps the notice. If the
@@ -1168,6 +1177,10 @@ The **bell** in the top bar counts what is new for you (shares sent to you, and 
 now. Click a row to open it (opening marks it read), **Mark read** on a row, or **Mark all read**. Filter by *All*,
 *Shares*, *Mentions* or *Replies* and *Unread only*; **Older** pages back. Rules that fired are on the
 [Alerts](#alerts) page.
+
+![Vera's top bar: the bell shows 1 new notice](img/collab/03-recipient-bell.jpg)
+
+![Vera's inbox: one unread Share row, "Asha Rao shared trade MX-20000001", with the start of the note as she may read it](img/collab/04-inbox.jpg)
 
 ## Monitors
 
@@ -1359,6 +1372,15 @@ On a phone the drawer is a sheet from the bottom edge.
   announced in the drawer ("1 new comment on VaR contribution").
 - **Moderation.** Administrators see **Hide** (with a reason; readers see "Hidden by a moderator: <reason>") and **Lock**
   (no new comments). Hidden comments are kept in the record.
+
+![Asha's Discussion tab: a comment that mentions @vera, with the trader's name typed and quoted, and the quoted MTM](img/collab/07-discussion-author.jpg)
+
+The same comment for a reader without access to the field: the typed name and the quoted field both read ••• and the quoted MTM stays,
+because the reader may see it. *Open as it was* is offered because this page now shows other data.
+
+![Vera's Discussion tab: the same comment with ••• where the trader's name was](img/collab/08-discussion-viewer.jpg)
+
+![The Discussion sheet on a phone](img/collab/09-discussion-phone.jpg)
 
 Notes written before discussions existed appear as one-comment threads. Every comment, edit, retraction and hide is in
 the audit log. Discussions are kept in the server's identity database, so everyone on that server sees the same ones;

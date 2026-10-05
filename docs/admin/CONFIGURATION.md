@@ -213,7 +213,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_COLLAB_ENABLED` | `drishti.collab.enabled` | `true` | Share with a note, the directory and the inbox ([COLLABORATION.md](../architecture/COLLABORATION.md)). |
 | `DRISHTI_COLLAB_DIR` | `drishti.collab.dir` | `./data/collab` | Where the file store keeps shares and inbox rows (`drishti.collab.store: file`), and exports. |
 | `DRISHTI_CONSOLE_URL` | `drishti.collab.console-url` | empty | The console's address, put in front of `/share/sh_…` in the links shares carry; email stays off while it is empty. |
-| `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | The From address of collaboration email (build step 4). |
+| `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | The From address of collaboration email. |
 | `DRISHTI_MASK_COPIES` | `drishti.security.mask-copies` | `false` | Also scrub exact copies of a masked value inside other text of the same document. |
 | `DRISHTI_MAX_SWALLOW` | `server.tomcat.max-swallow-size` | `64MB` | How much of an oversized body Tomcat drains after answering 413, so the client reads the answer. |
 | `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | Run the scheduled-reports scheduler on this server. |
@@ -858,10 +858,10 @@ cannot make a view slow or a page heavy. A panel that stops short says so (*N mo
 ### `drishti.collab` — share with a note, and the inbox
 
 Design: [COLLABORATION.md](../architecture/COLLABORATION.md). A person writes a note on a view, picks people and roles from the
-directory, and Drishti notifies them in the app (always) and by email (build step 4, off until configured); the link reopens the view
+directory, and Drishti notifies them in the app (always) and by email (off until configured); the link reopens the view
 pinned to the same business date and "known at" instant, with the **recipient's** rights. Shares, recipients and inbox rows are in
-the identity database (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`; the schema also holds the tables of the later
-build steps). Who may share is the role power `roles.<role>.collaborate`; who may read any share is `compliance` (see
+the identity database (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, the thread, comment, revision, mention
+and follow tables, `drishti_collab_hold`; back them up with the rest of the identity database, [OPERATIONS.md](OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export)). Who may share is the role power `roles.<role>.collaborate`; who may read any share is `compliance` (see
 [`drishti.security`](#drishtisecurity--tokens-roles-field-masks)).
 
 | Key | Default | Meaning |
@@ -879,7 +879,7 @@ build steps). Who may share is the role power `roles.<role>.collaborate`; who ma
 | `share.max-expanded` | `200` | People once roles are expanded. |
 | `share.max-text` | `2000` | Longest note, in characters. |
 | `share.undeliverable` | `tell` | `tell`: the sender learns who was not notified and why (they learn a colleague lacks a right, never data); `silent`: they do not. |
-| `share.post-to-thread` | `false` | The dialog's default for also posting the note to the discussion: a thread on the panel (or the whole view) with the note as its first comment, by the sender. |
+| `share.post-to-thread` | `false` | The default a client may offer for also posting the note to the discussion (a thread with the note as its first comment, by the sender); `GET /api/v1/collab` reports it. **As built, the server acts only on `postToThread` in the share request** and the console's dialog has no such tick yet, so this key changes nothing by itself. |
 | `threads.max-text`, `threads.max-per-entity`, `threads.edit-window`, `threads.page-size` | `4000`, `500`, `15m`, `50` | Comment thread limits: longest comment (characters), threads per entity, how long after writing the author may edit (after it, retract only; every revision is kept), and comments per page. |
 | `text.on-masked-copy` | `warn` | A masked field's value typed into a note: `warn` tells the sender, `reject` refuses it (`DRS-7011`), `allow` says nothing. Whatever is chosen, the value reads `•••` for every reader without `raw`. Only the document's own masked values are found (exact, as `mask-copies`); use `text.deny-patterns` for values known from elsewhere. |
 | `text.deny-patterns` | `[]` | Regular expressions refused in notes and comments (for example a medical record number format). |
@@ -889,9 +889,9 @@ build steps). Who may share is the role power `roles.<role>.collaborate`; who ma
 | `limits.directory-per-minute` | `60` | Directory searches one user makes a minute. |
 | `limits.mails-per-recipient-per-hour` | `30` | Emails queued for one recipient in an hour; more are not queued (the bell still rings) and a warning is logged. |
 | `inbox.keep` | `1000` | Newest inbox rows kept per user. |
-| `inbox.keep-days` | `180` | Days an inbox row is kept. |
+| `inbox.keep-days` | `180` | Days an inbox row should be kept. **Not enforced yet**: inbox rows are capped by `inbox.keep` only (and removed with their user). |
 | `inbox.poll` | `5s` | How often a server looks for rows another server wrote to the shared database, only while a stream is open, so a notice reaches a browser on any server within seconds. |
-| `inbox.coalesce` | `60s` | Several notices to one person about one thread within this long become one email. Applies to thread notices (build step 5); a share is always one email. |
+| `inbox.coalesce` | `60s` | Several notices to one person about one thread within this long become one email. Applies to thread notices (mentions and replies); a share is always one email. |
 | `email.enabled` | `false` | The email channel; also needs `spring.mail.host`, `console-url` and `drishti.security.enabled` (with sign-in off the server refuses to start with this on: identities are not real). Asking for email while it is off is `503 DRS-7012`. See [Email](#email-springmail-and-the-outbox). |
 | `email.content` | `comment` | `comment`: the product, the sender, the kind and id, the panel, the date and the note as that recipient may read it (masked values `•••`), and the link. `title`: the same without the note. `link-only`: the sender's name and the link only. Never a data value. Per pack: `packs.<pack>.email.content`. |
 | `email.from` | `drishti@localhost` (`DRISHTI_MAIL_FROM`) | The From address. |

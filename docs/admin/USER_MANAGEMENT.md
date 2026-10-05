@@ -269,11 +269,25 @@ or a pack opts in, has **no power of its own**:
   `search`.
 - **Switched off for everyone:** `DRISHTI_PIVOT_ENABLED=false` (server).
 
-## Notes and shared workspaces
+## Discussion, sharing and shared workspaces
 
-- **Notes** (see the User guide): anyone who may open a kind reads and adds notes on its entities; only the author
-  edits; the author or an administrator deletes. `note.add`, `note.edit` and `note.delete` are in the audit log.
-  A deleted user's notes stay (they are about the data, not the person).
+- **Discussion** (notes are now comment threads; see the User guide): anyone who may open a kind reads and writes comments on its
+  entities, and sends a view to colleagues with a note, if their role has the `collaborate` power (on unless an administrator took it away,
+  `roles.<role>.collaborate: false`). Only the author edits, and only within `drishti.collab.threads.edit-window`; nobody erases: a
+  retracted comment reads "Retracted by the author" and its text stays in the revisions. Comments, edits, retractions and moderation are in the
+  audit log (`collab.comment.*`, `collab.thread.*`); a share is in the access log as `share`.
+- **What people can learn about each other.** The people picker (the directory) lists only users who share a pack with the person searching
+  (`drishti.collab.directory.scope`), needs two letters, is rate limited, and shows a role's size, never its members. A notice is never sent to,
+  and a mention never reaches, someone who may not open that kind of view; the sender is told who was left out and why (never what the view
+  holds) under `share.undeliverable: tell`.
+- **Moderation** (`admin`): **Hide** a comment with a reason (readers see "Hidden by a moderator: <reason>"; the text stays in the record), **Lock** a
+  thread (no new comments), and remove a whole thread for good with `DELETE /admin/collab/threads/{id}` (audited; refused with `423 DRS-7010`
+  under a legal hold). The API is in [API_GUIDE.md](../guides/API_GUIDE.md#comment-threads).
+- **Compliance** (`roles.<role>.compliance`, a power of its own: an administrator does not have it unless the role does). A compliance officer
+  reads any share and the full record of any thread (hidden and retracted comments, every revision, unscrubbed), places and releases **legal
+  holds**, runs the **export** and **verifies** the hash chains. The runbooks (retention, holds, export, verify) are in
+  [OPERATIONS.md](OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export); there is no console page for them yet, they are
+  API calls.
 - **Shared workspaces**: a workspace's owner shares it with everyone, roles or named people. Readers see it
   read-only; panes on kinds a reader's roles may not open stay hidden. Share records are kept with the preferences
   (`drishti_preference`, namespace `workspace-shares`).

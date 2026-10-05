@@ -105,7 +105,7 @@ with the reason, and nothing is saved.
 
 - a **toast** in the corner: *warn NS-CASCADIA-TKY utilisation 80%* (severity, entity, your message);
 - a **count on the bell** in the top bar;
-- a new line under **Recent alerts** on the alerts page.
+- a new line under **Recent alerts** on the alerts page (the bell opens the inbox; the alerts page is linked from it, or open `/alerts`).
 
 Click the toast to open the netting set.
 
@@ -119,8 +119,10 @@ Click the toast to open the netting set.
   has Drishti open.
 - **Alert once, then re-arm.** A rule alerts when its condition *becomes* true. While it stays true, it does not
   repeat. When it turns false again, it re-arms, ready to alert next time.
-- **Everywhere you are.** New alerts show as a toast and a bell count on every page of the console. Clicking the
-  bell opens the alerts page; the first click also asks the browser for permission to show system notifications.
+- **Everywhere you are.** New alerts show as a toast and a bell count on every page of the console. The bell
+  counts alerts and what colleagues sent you (shares, mentions, replies; see [Sharing and discussion](/help/sharing-and-discussion)).
+  Clicking it (or `Alt+I`) opens your **inbox**; the alerts that fired are on the alerts page, linked from the inbox. The
+  first click also asks the browser for permission to show system notifications.
 - **Kept for a while.** Your rules are saved to your account. The most recent 200 alerts per user are kept in
   the server's memory; a restart clears that history, but not the rules.
 - **Up to 50 rules** per user.
