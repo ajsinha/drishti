@@ -25,7 +25,7 @@ and how to run it all from PyCharm.
 - [2. Install and prerequisites](#2-install-and-prerequisites)
 - [3. Connecting to a server: URL, tokens and permissions](#3-connecting-to-a-server-url-tokens-and-permissions)
 - [4. `sutra`: shape, design, gen, lint, test, preview](#4-sutra-shape-design-gen-lint-test-preview)
-- [5. `pack`: new, check, about-check, publish, keygen, verify, install](#5-pack-new-check-about-check-publish-keygen-verify-install)
+- [5. `pack`: new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-new-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
 - [6. `data`: ingest and load](#6-data-ingest-and-load)
 - [7. `server`: health and packs](#7-server-health-and-packs)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
@@ -95,7 +95,7 @@ options:
 
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (new, check, about-check, publish, keygen, verify, install),
+Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
 data (ingest your own JSON Lines, load the demo data), server (health, packs), design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
@@ -398,7 +398,7 @@ Each Sutra is `build/sutras/<kind>/<kind>-<group>.v1.sutra.yaml` with its `where
 `build/sutras/tests/<sutra>/sample-*.json` holds samples drawn across the dates. The generator is described in
 [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md); `--fallback` also writes a `<kind>-default` Sutra for documents no group matches.
 
-## 5. `pack`: new, check, about-check, publish, keygen, verify, install
+## 5. `pack`: new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install
 
 ### `pack new`: a complete pack from JSON Lines
 
@@ -712,7 +712,24 @@ python3 tools/drishti.py pack about-check packs/jsonl-demo
 Fix each by adding the field under `kinds.<kind>.glossary` (or a pack-wide `vocabulary` entry) in `config/about.yaml`; the
 format is in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md).
 
-### `pack publish`, `pack keygen`, `pack verify`: the registry (tools/packreg)
+### `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`: artifacts you ship by copying
+
+The offline path: no server API and no token. Full guide with real output, promotion, CI, Docker and Windows:
+[OPERATIONALISING.md](OPERATIONALISING.md).
+
+```bash
+drishti.py pack bundle packs/finance --out dist                 # finance-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
+drishti.py pack verify dist/finance-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
+drishti.py pack deploy dist/finance-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
+drishti.py pack rollback finance --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
+```
+
+`pack verify` also takes a folder (drift check of a deployed pack) and `--no-sutra` (no Java), `--server-version V`, `--json`.
+`pack deploy` copies to a temporary sibling, swaps by rename and keeps the previous version in the backup folder; it never
+touches a running server. `pack verify --registry R --publisher P --public-key K` is still the registry check below.
+Exit codes: 0 ok, 1 not verified or refused, 2 usage.
+
+### `pack publish`, `pack keygen`, `pack verify --registry`: the registry (tools/packreg)
 
 A registry is a folder (or a web location) of signed pack archives. `keygen` makes an Ed25519 key, `publish` zips a pack,
 signs it and adds it, `verify` re-checks a registry against a publisher's public key.

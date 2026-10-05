@@ -17,7 +17,7 @@
 
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
-Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (new, check, about-check, publish, keygen, verify, install),
+Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
 data (ingest your own JSON Lines, load the demo data), server (health, packs), design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
@@ -369,8 +369,136 @@ def cmd_pack_keygen(a, extra) -> int:
     return 0
 
 
+def pack_bundle():
+    return load_module("packbundle", "packbundle.py")
+
+
+def tool_versions() -> dict:
+    return {"python": ".".join(map(str, sys.version_info[:3])), "server": pack_bundle().server_version(ROOT)}
+
+
+def cmd_pack_bundle(a, extra) -> int:
+    PB = pack_bundle()
+    need_yaml()
+    pack = pathlib.Path(a.pack).resolve()
+    out = pathlib.Path(a.out).resolve() if a.out else pathlib.Path.cwd() / "dist"
+    if not a.no_check:
+        chk = argparse.Namespace(packs=[str(pack)], strict=False, junit=None, tail=0, json=False, jar=a.jar, java=a.java)
+        if cmd_pack_check(chk, extra):
+            raise CliError("the pack fails `pack check`: fix it first (or --no-check to bundle anyway)", 1)
+    try:
+        res = PB.bundle(pack, out, tool_versions(), a.requires_server or PB.server_version(ROOT))
+    except PB.BundleError as e:
+        raise CliError(str(e), e.code) from None
+    if a.json:
+        say_json({k: v for k, v in res.items() if k != "manifest"})
+    else:
+        print(f"bundled {res['pack']} {res['version']}: {res['files']} files")
+        print(f"  {res['archive']}\n  sha256 {res['sha256']}")
+    return 0
+
+
+def verify_bundle(a, source: pathlib.Path, server: str | None) -> tuple[dict, "object"]:
+    """Runs every offline check; returns (report, Opened). The caller cleans up the Opened."""
+    PB = pack_bundle()
+    need_yaml()
+    try:
+        op = PB.Opened(source)
+    except PB.BundleError as e:
+        raise CliError(str(e), e.code) from None
+    rep = {"source": str(source), "checks": {}, "ok": True}
+
+    def record(step: str, problems: list[str]):
+        rep["checks"][step] = problems
+        rep["ok"] = rep["ok"] and not problems
+    meta = PB.read_pack_yaml(op.pack)
+    rep.update(pack=str(meta.get("pack")), version=str(meta.get("version")))
+    man, probs = PB.check_manifest(op.pack)
+    record("checksums", probs)
+    if man is None:
+        rep["notes"] = ["no MANIFEST.json (a plain folder): checksums not checked"]
+    record("schema", PB.check_schema(op.pack) + check_ingest_block(op.pack))
+    record("server", PB.check_server(man, server))
+    if a.no_sutra:
+        rep["checks"]["sutra"] = ["skipped (--no-sutra)"]
+    else:
+        probs = []
+        for step in ("lint", "test"):
+            r = run_java(a, [step, str(op.pack)] + (["--strict"] if step == "lint" and a.strict else []), capture=True)
+            if r.returncode:
+                probs.append(f"sutra {step} failed (exit {r.returncode}): " + " | ".join(report_lines(r)[-3:]))
+        record("sutra", probs)
+    rep["notes"] = rep.get("notes", []) + op.notes
+    return rep, op
+
+
+def print_verify(rep: dict) -> None:
+    print(f"verify {rep['source']}: {rep.get('pack')} {rep.get('version')}")
+    for step, probs in rep["checks"].items():
+        print(f"  {step:<10}{'ok' if not probs else ('skipped' if probs[0].startswith('skipped') else 'FAILED')}")
+        for pr in probs:
+            if not pr.startswith("skipped"):
+                print(f"    - {pr}")
+    for n in rep.get("notes", []):
+        print(f"  note: {n}")
+    print("verified" if rep["ok"] else "NOT verified")
+
+
 def cmd_pack_verify(a, extra) -> int:
-    return 1 if load_module("packreg", "packreg/packreg.py").verify(pathlib.Path(a.registry), a.publisher, a.public_key) else 0
+    if a.registry:
+        if not (a.publisher and a.public_key):
+            raise CliError("registry verification needs --registry, --publisher and --public-key")
+        return 1 if load_module("packreg", "packreg/packreg.py").verify(pathlib.Path(a.registry), a.publisher, a.public_key) else 0
+    if not a.source:
+        raise CliError("pack verify BUNDLE|FOLDER   (or --registry R --publisher P --public-key K for a registry)")
+    rep, op = verify_bundle(a, pathlib.Path(a.source), a.server_version or pack_bundle().server_version(ROOT))
+    op.cleanup()
+    if a.json:
+        say_json(rep)
+    else:
+        print_verify(rep)
+    return 0 if rep["ok"] else 1
+
+
+def cmd_pack_deploy(a, extra) -> int:
+    PB = pack_bundle()
+    rep, op = verify_bundle(a, pathlib.Path(a.source), a.server_version or PB.server_version(ROOT))
+    try:
+        if not a.json:
+            print_verify(rep)
+        if not rep["ok"]:
+            if a.json:
+                say_json(rep)
+            raise CliError("not deploying: verification failed", 1)
+        res = PB.deploy(op, pathlib.Path(a.to).resolve(), a.backup, a.dry_run)
+    except PB.BundleError as e:
+        raise CliError(str(e), e.code) from None
+    finally:
+        op.cleanup()
+    if a.json:
+        say_json(res)
+    elif a.dry_run:
+        print(f"dry run: would copy {res['pack']} {res['version']} to {res['target']}"
+              + (f", moving {res['replaces']} to {res['backupDir']}" if res["replaces"] else " (a new pack)"))
+    else:
+        print(f"deployed {res['pack']} {res['version']} to {res['target']}" + (f"; previous {res['replaces']} kept at {res['backup']}" if res["backup"] else ""))
+        print("next: DRISHTI_PACKS must name it (restart) or Admin > Packs > Load; Sutra edits of a loaded pack hot-reload")
+    return 0
+
+
+def cmd_pack_rollback(a, extra) -> int:
+    PB = pack_bundle()
+    need_yaml()
+    try:
+        res = PB.rollback(a.name, pathlib.Path(a.to).resolve(), a.backup, a.version, a.dry_run)
+    except PB.BundleError as e:
+        raise CliError(str(e), e.code) from None
+    if a.json:
+        say_json(res)
+    else:
+        print(("dry run: would restore " if a.dry_run else "restored ") + f"{res['pack']} {res['version']} from {res['restore']}"
+              + (f"; the {res['replaces']} it replaced " + (f"is kept at {res['backup']}" if res["backup"] else "stays") if res["replaces"] else ""))
+    return 0
 
 
 def cmd_pack_install(a, extra) -> int:
@@ -689,10 +817,41 @@ def build_parser() -> argparse.ArgumentParser:
     pp.add_argument("--publisher", required=True)
     pg = add(k, "keygen", cmd_pack_keygen, "pack keygen: make a signing key (needs openssl)")
     pg.add_argument("--out", required=True)
-    pv = add(k, "verify", cmd_pack_verify, "pack verify: check a registry's archives against a publisher's public key")
-    pv.add_argument("--registry", required=True)
-    pv.add_argument("--publisher", required=True)
-    pv.add_argument("--public-key", required=True)
+    pb = add(k, "bundle", cmd_pack_bundle, "pack bundle: make a versioned, checksummed <name>-<version>.tar.gz (+ .sha256, MANIFEST) to copy to servers", [jvm],
+             "Runs `pack check` first (--no-check to skip). The archive is reproducible: the same content gives the same bytes.\n"
+             "example:\n  drishti.py pack bundle packs/my-bank --out dist\nGuide: docs/guides/OPERATIONALISING.md")
+    pb.add_argument("pack")
+    pb.add_argument("--out", metavar="DIR", help="where to write the bundle (default ./dist)")
+    pb.add_argument("--requires-server", metavar="VERSION", help="the minimum server version recorded in the manifest (default: this checkout's version)")
+    pb.add_argument("--no-check", action="store_true", help="do not run lint/test before bundling")
+    pb.add_argument("--json", action="store_true", help="print the result as JSON")
+    vparent = argparse.ArgumentParser(add_help=False)
+    vparent.add_argument("--no-sutra", action="store_true", help="skip `sutra lint` and `sutra test` (no Java needed: checksums, schema and server version only)")
+    vparent.add_argument("--strict", action="store_true", help="lint: help warnings fail the run")
+    vparent.add_argument("--server-version", metavar="V", help="the target server's version (default: this checkout's); a bundle that needs a newer one fails")
+    vparent.add_argument("--json", action="store_true", help="print the report as JSON")
+    pv = add(k, "verify", cmd_pack_verify, "pack verify: check a bundle or pack folder offline (checksums, schema, sutra lint/test, server version); or --registry for a registry's signatures",
+             [jvm, vparent], "examples:\n  drishti.py pack verify dist/my-bank-1.2.0.tar.gz\n  drishti.py pack verify packs/my-bank --no-sutra\n"
+             "  drishti.py pack verify --registry /srv/registry --publisher me --public-key keys/me.pub")
+    pv.add_argument("source", nargs="?", metavar="BUNDLE|FOLDER")
+    pv.add_argument("--registry")
+    pv.add_argument("--publisher")
+    pv.add_argument("--public-key")
+    pd = add(k, "deploy", cmd_pack_deploy, "pack deploy: verify, then copy a bundle or folder into a packs folder atomically, keeping the previous version (no server API)",
+             [jvm, vparent], "example:\n  drishti.py pack deploy dist/my-bank-1.2.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups\n"
+             "It never touches a running server: load it with DRISHTI_PACKS + restart or Admin > Packs > Load.")
+    pd.add_argument("source", metavar="BUNDLE|FOLDER")
+    pd.add_argument("--to", required=True, metavar="DIR", help="the server's packs folder (DRISHTI_PACKS_DIR) or drishti.packs.installed-dir")
+    pd.add_argument("--backup", metavar="DIR", help="keep the replaced version here (default DIR/.previous under --to)")
+    pd.add_argument("--dry-run", action="store_true", help="verify and show what would change; copy nothing")
+    pr_ = add(k, "rollback", cmd_pack_rollback, "pack rollback: put back the newest (or --version) backup of a pack; the version it replaces is kept too",
+              epilog="example:\n  drishti.py pack rollback my-bank --to /opt/drishti/packs --backup /opt/drishti/backups")
+    pr_.add_argument("name")
+    pr_.add_argument("--to", required=True, metavar="DIR")
+    pr_.add_argument("--backup", metavar="DIR")
+    pr_.add_argument("--version", help="restore this version rather than the newest backup")
+    pr_.add_argument("--dry-run", action="store_true")
+    pr_.add_argument("--json", action="store_true")
     pi = add(k, "install", cmd_pack_install, "pack install: install a registry pack on the running server (administrator), or --list the registry", [srv],
              "examples:\n  drishti.py pack install --list\n  drishti.py pack install my-bank 1.2.0")
     pi.add_argument("name", nargs="?")

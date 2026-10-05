@@ -88,6 +88,7 @@ categories:
     guides:
       - { slug: packs, doc: guides/PACKS.md, title: Domain packs, icon: box-seam, summary: "How industries plug in: what a pack contains, dependencies, connectors and routes, enabling packs, and writing your own." }
       - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extends, generators, signing, hot load; worked example, a help-desk pack." }
+      - { slug: operationalising, doc: guides/OPERATIONALISING.md, title: "Operationalising: ship by copying", icon: box-arrow-in-right, summary: "Bundles, checksums and verify; deploy by copying with a backup; promote the same artifact dev to test to prod; data lakes and files; CI, permissions, Docker and Kubernetes, rollback and troubleshooting. No server API needed." }
       - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "The drishti command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs into a running server, and the Screen Designer's propose and approve over REST; every command with real output, and running it from PyCharm." }
   - id: admin
     name: Administration
