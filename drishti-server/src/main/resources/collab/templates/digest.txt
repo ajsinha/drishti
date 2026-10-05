@@ -1,5 +1,5 @@
 ${headline} in ${product}:
 
 ${detail}
-These notices carry no figures: sign in to see what you are entitled to see.
+These notices may show figures as you are entitled to see them, or only a link where the pack says so: sign in for the live view.
 Change what you are emailed about under Settings, Notifications.

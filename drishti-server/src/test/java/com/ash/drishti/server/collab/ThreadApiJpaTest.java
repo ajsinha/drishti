@@ -23,6 +23,6 @@ import org.springframework.boot.test.context.SpringBootTest;
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
         "drishti.identity.database-url=jdbc:sqlite:target/threadapi-jpa-${random.uuid}/identity.db",
         "drishti.packs.overlay=target/threadapi-jpa-overlay/added.yaml", "drishti.collab.limits.comments-per-minute=1000",
-        "drishti.collab.inbox.poll=100ms", "drishti.collab.threads.edit-window=3s"})
+        "drishti.collab.inbox.poll=100ms", "drishti.collab.threads.edit-window=3s", "drishti.security.registered-users-only=true"})
 @AutoConfigureMockMvc
 class ThreadApiJpaTest extends ThreadApiContract {}

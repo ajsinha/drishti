@@ -40,8 +40,25 @@ public final class MailTemplates {
         this.override = overrideDir == null || overrideDir.isBlank() ? null : Path.of(overrideDir);
     }
 
-    /** The template file's text. */
+    /** The template file's text, without the leading {@code {# ... #}} comment (the licence header is not part of the message). */
     public String load(String name, String extension) {
+        return stripComments(raw(name, extension));
+    }
+
+    static String stripComments(String t) {
+        String s = t;
+        while (s.stripLeading().startsWith("{#")) {
+            String r = s.stripLeading();
+            int end = r.indexOf("#}");
+            if (end < 0) {
+                break;
+            }
+            s = r.substring(end + 2).replaceFirst("^\r?\n", "");
+        }
+        return s;
+    }
+
+    private String raw(String name, String extension) {
         String file = name + "." + extension;
         return cache.computeIfAbsent(file, f -> {
             try {

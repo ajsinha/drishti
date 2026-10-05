@@ -33,8 +33,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class IdentityConfiguration {
 
     @Bean
-    public JpaAuditLog auditLog(IdentityRepositories.Audit audit) {
-        return new JpaAuditLog(audit);
+    public JpaAuditLog auditLog(IdentityRepositories.Audit audit, com.ash.drishti.identity.collab.Seal.Store seals) {
+        return new JpaAuditLog(audit, seals);
     }
 
     @Bean
@@ -79,6 +79,14 @@ public class IdentityConfiguration {
         return props.jpa() ? com.ash.drishti.identity.collab.CollabTx.of(identityTransactions) : com.ash.drishti.identity.collab.CollabTx.serial();
     }
 
+    /** Tamper-evidence seals for threads, comment rows, holds and the audit trail, next to the rows they cover. */
+    @Bean
+    public com.ash.drishti.identity.collab.Seal.Store sealStore(com.ash.drishti.identity.collab.CollabProperties props,
+            IdentityRepositories.Seals seals, TransactionTemplate identityTransactions) {
+        return props.jpa() ? new com.ash.drishti.identity.collab.JpaSealStore(seals, identityTransactions)
+                : new com.ash.drishti.identity.collab.FileSealStore(java.nio.file.Path.of(props.dir()));
+    }
+
     @Bean
     public com.ash.drishti.identity.collab.ShareStore shareStore(com.ash.drishti.identity.collab.CollabProperties props,
             IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients, TransactionTemplate identityTransactions) {
@@ -104,16 +112,17 @@ public class IdentityConfiguration {
     public com.ash.drishti.identity.collab.ThreadStore threadStore(com.ash.drishti.identity.collab.CollabProperties props,
             IdentityRepositories.Threads threads, IdentityRepositories.Comments comments, IdentityRepositories.Revisions revisions,
             IdentityRepositories.Mentions mentions, IdentityRepositories.Follows follows, IdentityRepositories.NoteLinks links,
-            TransactionTemplate identityTransactions) {
-        return props.jpa() ? new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments, revisions, mentions, follows, links,
-                identityTransactions) : new com.ash.drishti.identity.collab.FileThreadStore(java.nio.file.Path.of(props.dir()));
+            TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals) {
+        return com.ash.drishti.identity.collab.Seals.sealing(props.jpa() ? new com.ash.drishti.identity.collab.JpaThreadStore(threads, comments,
+                revisions, mentions, follows, links, identityTransactions)
+                : new com.ash.drishti.identity.collab.FileThreadStore(java.nio.file.Path.of(props.dir())), seals);
     }
 
     @Bean
     public com.ash.drishti.identity.collab.HoldStore holdStore(com.ash.drishti.identity.collab.CollabProperties props,
-            IdentityRepositories.Holds holds, TransactionTemplate identityTransactions) {
-        return props.jpa() ? new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions)
-                : new com.ash.drishti.identity.collab.FileHoldStore(java.nio.file.Path.of(props.dir()));
+            IdentityRepositories.Holds holds, TransactionTemplate identityTransactions, com.ash.drishti.identity.collab.Seal.Store seals) {
+        return com.ash.drishti.identity.collab.Seals.sealing(props.jpa() ? new com.ash.drishti.identity.collab.JpaHoldStore(holds, identityTransactions)
+                : new com.ash.drishti.identity.collab.FileHoldStore(java.nio.file.Path.of(props.dir())), seals);
     }
 
     public static void requireSingleServerForFiles(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id) {

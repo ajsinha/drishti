@@ -136,8 +136,8 @@ public class CollabConfiguration {
 
     @Bean
     public ShareItemRenderer shareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy,
-            NotifyPrefs prefs, CollabProperties props, PanelTitles titles, SnapshotService snapshots) {
-        return new ShareItemRenderer(shares, principals, entitlements, policy, prefs, props.consoleUrl(), titles, snapshots);
+            NotifyPrefs prefs, CollabProperties props, PanelTitles titles, CommentRenderer comments, SnapshotService snapshots) {
+        return new ShareItemRenderer(shares, principals, entitlements, policy, prefs, props.consoleUrl(), titles, comments, snapshots);
     }
 
     @Bean

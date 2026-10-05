@@ -330,3 +330,9 @@ CREATE TABLE IF NOT EXISTS drishti_collab_hold (
     released_by VARCHAR(64),
     released_at TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS drishti_collab_seal (
+    seal_key VARCHAR(200) PRIMARY KEY,
+    cnt BIGINT NOT NULL,
+    hash VARCHAR(64) NOT NULL
+);

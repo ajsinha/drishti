@@ -39,7 +39,16 @@ public final class TokenFilter extends OncePerRequestFilter {
         this(props, verifier, t -> java.util.Optional.empty());
     }
 
+    /** Whether the account behind a signed token still exists and is enabled (a token outlives a deleted or disabled user otherwise). */
+    private final java.util.function.Predicate<Principal> account;
+
     public TokenFilter(SecurityProperties props, TokenVerifier verifier, java.util.function.Function<String, java.util.Optional<Principal>> apiTokens) {
+        this(props, verifier, apiTokens, p -> true);
+    }
+
+    public TokenFilter(SecurityProperties props, TokenVerifier verifier, java.util.function.Function<String, java.util.Optional<Principal>> apiTokens,
+            java.util.function.Predicate<Principal> account) {
+        this.account = account;
         this.props = props;
         this.verifier = verifier;
         this.apiTokens = apiTokens;
@@ -81,7 +90,11 @@ public final class TokenFilter extends OncePerRequestFilter {
                 chain.doFilter(req, res);
                 return;
             }
-            req.setAttribute(Principal.ATTRIBUTE, verifier.verify(bearer));
+            Principal signed = verifier.verify(bearer);
+            if (!account.test(signed)) {
+                throw new DrishtiException(com.ash.drishti.common.ErrorCode.UNAUTHENTICATED, "the account of this token does not exist or is disabled");
+            }
+            req.setAttribute(Principal.ATTRIBUTE, signed);
         } catch (DrishtiException e) {
             res.setStatus(401);
             res.setContentType("application/problem+json");

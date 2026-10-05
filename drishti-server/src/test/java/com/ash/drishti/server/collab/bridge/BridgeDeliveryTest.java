@@ -89,7 +89,7 @@ class BridgeDeliveryTest {
         assertThat(card.path("type").asText()).isEqualTo("AdaptiveCard");
         assertThat(card.path("body").get(0).path("text").asText()).isEqualTo("Ann Shah shared a view");
         assertThat(card.path("body").get(1).path("text").asText()).isEqualTo("Trade IRS-48213 · Panel: Cashflows · As of: 2026-09-30");
-        assertThat(card.path("body").get(2).path("text").asText()).isEqualTo("price ••• looks off, see $.mtm");
+        assertThat(card.path("body").get(2).path("text").asText()).isEqualTo("price ••• looks off, see •••");
         assertThat(card.path("actions").get(0).path("type").asText()).isEqualTo("Action.OpenUrl");
         assertThat(card.path("actions").get(0).path("url").asText()).isEqualTo("https://drishti.example/share/sh_1");
         assertNoValue(h);
@@ -105,7 +105,7 @@ class BridgeDeliveryTest {
         JsonNode blocks = m.path("blocks");
         assertThat(blocks.get(0).path("text").path("type").asText()).isEqualTo("mrkdwn");
         assertThat(blocks.get(0).path("text").path("text").asText()).isEqualTo("*Ann Shah shared a view*\nTrade IRS-48213 · Panel: Cashflows · As of: 2026-09-30");
-        assertThat(blocks.get(1).path("text").path("text").asText()).isEqualTo("> price ••• looks off, see $.mtm");
+        assertThat(blocks.get(1).path("text").path("text").asText()).isEqualTo("> price ••• looks off, see •••");
         assertThat(blocks.get(2).path("type").asText()).isEqualTo("actions");
         assertThat(blocks.get(2).path("elements").get(0).path("url").asText()).isEqualTo("https://drishti.example/share/sh_1");
         assertNoValue(h);
@@ -131,7 +131,7 @@ class BridgeDeliveryTest {
         assertThat(m.path("kind").asText()).isEqualTo("Trade");
         assertThat(m.path("entityId").asText()).isEqualTo("IRS-48213");
         assertThat(m.path("panel").asText()).isEqualTo("Cashflows");
-        assertThat(m.path("note").asText()).isEqualTo("check ••• against $.notional");
+        assertThat(m.path("note").asText()).isEqualTo("check ••• against 5000");
         assertThat(m.path("link").asText()).startsWith("https://drishti.example/v/trade/IRS-48213").endsWith("#p-cashflows");
         assertThat(hit.header("X-Drishti-Event")).isEqualTo("comment");
         assertThat(hit.header("X-Drishti-Delivery")).isNotBlank();
@@ -169,7 +169,7 @@ class BridgeDeliveryTest {
         BridgeHarness h = harness("json", everything());
         h.notifier.onShare(new Notifier.ShareEvent(h.share("sh_1"), List.of()));
         run(h);
-        assertThat(h.hits.get(0).body()).contains("price ••• looks off");
+        assertThat(h.hits.get(0).body()).contains("price ••• looks off").contains("see •••");
         assertThat(h.readers).isNotEmpty().allSatisfy(p -> {
             assertThat(p.roles()).containsExactly("viewer");
             assertThat(p.user()).isEqualTo("bridge:desk");
@@ -177,12 +177,12 @@ class BridgeDeliveryTest {
     }
 
     @Test
-    void anAdministratorWhoNamesARawRoleAsRenderAsAcceptsTheValueButQuotesStillNeverFillIn() throws Exception {
+    void anAdministratorWhoNamesARawRoleAsRenderAsGetsValuesAndQuotesFilled() throws Exception {
         BridgeHarness h = new BridgeHarness().configure("json", everything(), 30, "raw-reader");
         open.add(h);
         h.notifier.onShare(new Notifier.ShareEvent(h.share("sh_1"), List.of()));
         run(h);
-        assertThat(h.hits.get(0).body()).contains(BridgeHarness.MASKED_VALUE).contains("$.mtm").doesNotContain("{$.mtm}");
+        assertThat(h.hits.get(0).body()).contains(BridgeHarness.MASKED_VALUE).contains("1234567").doesNotContain("{$.mtm}");
     }
 
     @Test
@@ -193,7 +193,7 @@ class BridgeDeliveryTest {
         BridgeItemRenderer r = new BridgeItemRenderer(h.shares, h.threads, h.principals, h.entitlements,
                 new com.ash.drishti.server.collab.mail.MailContentPolicy(h.props, h.packs),
                 new com.ash.drishti.server.collab.PanelTitles((k, i, w) -> java.util.Map.of(), h.entitlements),
-                new com.ash.drishti.server.collab.LinkBuilder("https://drishti.example"), h.props, "Drishti", h.clock);
+                new com.ash.drishti.server.collab.LinkBuilder("https://drishti.example"), h.props, new com.ash.drishti.server.collab.thread.CommentRenderer(h.entitlements, h.docs), "Drishti", h.clock);
         h.share("sh_1");
         BridgeMessage m = r.render(OutboxItem.pending("bridge", "desk", "share", "sh_1", h.clock.instant()));
         assertThat(m.kind()).isNull();

@@ -820,7 +820,7 @@ Then send yourself a test: `POST /api/v1/admin/collab/mail-test` mails the signe
 
 **What is sent.** For each person a share reaches who has an address (`User.email`, set by an administrator or the identity provider; people cannot
 type addresses) and has not turned share mail off, one message: the sender's name, the kind and id, the panel and date, the note as that person
-may read it (masked values `•••`) and the link. A pack whose identifiers are sensitive sets `drishti.collab.packs.<pack>.email.content: link-only`.
+may read it (masked values `•••`, `{$.path}` quotes filled from the recipient's own view) and the link. Emails carry values by design (decision 2026-10-05): a pack that must not sends `link-only`. A pack whose identifiers are sensitive sets `drishti.collab.packs.<pack>.email.content: link-only`.
 The message is built when it is sent, so a person whose role was removed since gets nothing (the row is *cancelled*). Several notices for the same person inside `email.coalesce-window` (default 2 minutes; `0` = off) go out as one digest email, each notice
 still checked for opt-outs, rights and masking; so mail is sent up to that long after the event. People are not emailed about
 their own shares, and no more than `limits.mails-per-recipient-per-hour` an hour.
@@ -896,8 +896,8 @@ lives in `<drishti.collab.dir>/exports` and a restart forgets a job that was not
 `sha256sum -c`-style comparison of each entry; **keep the manifest and `chains.ndjson` in the firm's archive**: a later export that disagrees on a
 thread's hashes proves history was rewritten (the chain is evidence of tampering, not prevention: someone with the database could rewrite all of it).
 
-**Verify.** `GET /admin/collab/verify?thread=th_…` recomputes one chain (`{ok, steps, firstHash, lastHash, problem}`); with no `thread` (or with
-`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`). A failure
+**Verify.** `GET /admin/collab/verify?thread=th_…` recomputes one chain, checks the live comment rows against their revisions (text, author, state, revision number), and compares the thread's head (revision count and last hash) with the seal kept beside it, so a changed row or a removed newest revision is found (`{ok, steps, firstHash, lastHash, problem}`); with no `thread` (or with
+`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`), and also checks the legal holds and the audit trail, each sealed in `drishti_collab_seal` (or `seals.log` with the file store); rows that cannot be read are reported, never a 500. Seals are evidence, not prevention. A failure
 names the revision that was changed or no longer follows the one before it.
 
 **Backups.** Every collaboration table (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`, `drishti_outbox`, `drishti_thread`,
@@ -911,7 +911,7 @@ database, so the backup of that database is the backup of the record, and it is 
 `drishti.collab.snapshots.enabled` (default `false`) lets a sender tick **Include a picture** on a share: the server draws a PNG of the view (or the shared
 panel) and attaches it to the share's page and, when `email.content` is `comment`, to its email. Read this before turning it on.
 
-- **An image leaves the application's controls.** A masked field is `•••` in the picture, but an attachment can be forwarded, kept in a mailbox and read
+- **An image leaves the application's controls, and may show figures.** A masked field is `•••` in the picture, but an attachment can be forwarded, kept in a mailbox and read
   by anyone, with no rights check at the time it is read. That is why it is off by default, per pack switchable and an administrator's choice.
   A pack whose figures must never leave Drishti sets `drishti.collab.packs.<pack>.snapshots.enabled: false` (for instance a genomics pack); a share of
   such a kind asking for a picture is refused with `403 DRS-7015` and the dialog does not offer the option.
@@ -925,15 +925,15 @@ panel) and attaches it to the share's page and, when `email.content` is `comment
   `export` (kind, entity, and `snapshot sh_… for N recipients, masked|unmasked, bytes`).
 - **Resources.** Drawing is headless (`java.awt.headless=true` is set by the renderer), uses the JDK's logical fonts (a server needs a JDK with its font
   libraries, as the standard images have; nothing is downloaded), is bounded by `snapshots.timeout`, `max-bytes`, `width` and `max-height`, runs two at a
-  time, and is cached for `cache-ttl`. A picture is not stored: after the cache expires it is drawn again from the data as pinned.
+  time, and is cached for `cache-ttl`. A picture is not stored: after the cache expires it is drawn again from the data as pinned, but its rights are frozen when the share is made (the roles of the recipients and the sender are kept in the share): a redraw uses that profile together with the rights of the recipients and of whoever asks *now*, so it can only get more restrictive; promoting a recipient to `raw` later never unmasks a picture, and a masked sender never sees more than they could see themselves.
 - A picture that cannot be made (`503 DRS-7016`: timeout, too large, renderer failure) refuses the share; an email whose picture cannot be made later is
   sent without it. A digest email (several notices in one) carries no picture.
 
 ## 9a-4. Chat bridges (Teams, Slack, webhooks)
 
 A bridge posts a share, a comment or a mention to a chat channel as **a sentence and a link**: "Ann Shah commented on a view", the kind and id, the
-panel's title, the pinned date, the note, and the link. Never a data value: the note is written as a person holding only the role `bridges.render-as`
-(the bundled `viewer`, no `raw`) would read it, so a value copied from a masked field reads `•••`, and a `{$.mtm}` quote reads `$.mtm`. People who click
+panel's title, the pinned date, the note, and the link. Posts carry values (decision 2026-10-05): the note is written as a person holding only the role `bridges.render-as`
+(the bundled `viewer`, no `raw`) would read it, so a value copied from a masked field reads `•••`, and a `{$.mtm}` quote is filled from that role's view (`•••` if masked). Name a raw role in `render-as` only for a restricted channel. People who click
 the link sign in and see what *they* may see. A pack whose ids are sensitive sets `packs.<pack>.email.content: link-only` and its posts carry no id, panel or
 note either. Posts go through the same outbox as email (retries with backoff, dead letters, `outbox.max-attempts`), so a chat outage delays them and
 never loses one.

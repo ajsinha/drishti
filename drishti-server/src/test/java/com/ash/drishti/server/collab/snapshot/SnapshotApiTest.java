@@ -18,6 +18,7 @@ package com.ash.drishti.server.collab.snapshot;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -178,6 +179,29 @@ class SnapshotApiTest {
         mvc.perform(get("/api/v1/shares/" + id + "/picture").header("Authorization", as("sam", "ops"))).andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/shares/" + id).header("Authorization", as("rng", "risk"))).andExpect(jsonPath("$.picture").value(true));
         assertThat(accessLog.find(new AccessLog.Filter("ravi", "export", "trade", TRADE, null, null, 50))).anyMatch(e -> e.detail().contains(id));
+    }
+
+    @Test
+    void aPictureNeverUnmasksLaterWhenTheRecipientIsPromotedToRaw() throws Exception {
+        mvc.perform(post("/api/v1/admin/users").header("Authorization", as("drishti-dev-admin", "admin")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("username", "mia", "displayName", "MIA Person", "email", "mia@desk.test", "roles", List.of("trader"),
+                        "packs", List.of("finance"), "password", "long-enough-pass-1")))).andExpect(status().isCreated());
+        JsonNode res = body(mvc.perform(post("/api/v1/shares").header("Authorization", as("ravi", "trader")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(req(List.of("mia"), true)))).andExpect(status().isCreated()).andReturn());
+        String id = res.get("id").asText();
+        byte[] sender0 = mvc.perform(get("/api/v1/shares/" + id + "/picture").header("Authorization", as("ravi", "trader"))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        byte[] recipient0 = mvc.perform(get("/api/v1/shares/" + id + "/picture").header("Authorization", as("mia", "trader"))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        mvc.perform(put("/api/v1/admin/users/mia").header("Authorization", as("drishti-dev-admin", "admin")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("roles", List.of("risk"))))).andExpect(status().is2xxSuccessful());
+        principals.invalidate("mia");
+        byte[] sender1 = mvc.perform(get("/api/v1/shares/" + id + "/picture").header("Authorization", as("ravi", "trader"))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        byte[] recipient1 = mvc.perform(get("/api/v1/shares/" + id + "/picture").header("Authorization", as("mia", "risk"))).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        assertThat(sender1).as("the masked sender sees no more than before").isEqualTo(sender0);
+        assertThat(recipient1).as("the promoted recipient sees the picture as it was drawn for the share").isEqualTo(recipient0);
     }
 
     @Test

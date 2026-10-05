@@ -70,6 +70,8 @@ public final class IdentityRepositories {
     public interface Audit extends JpaRepository<AuditEventEntity, Long> {
         List<AuditEventEntity> findAllByOrderByIdDesc(Pageable page);
 
+        List<AuditEventEntity> findByIdGreaterThanOrderByIdAsc(Long id, Pageable page);
+
         List<AuditEventEntity> findBySubjectOrActorOrderByIdDesc(String subject, String actor, Pageable page);
     }
 
@@ -109,6 +111,8 @@ public final class IdentityRepositories {
 
         void deleteByKeyShareId(String shareId);
     }
+
+    public interface Seals extends JpaRepository<SealEntity, String> {}
 
     public interface Holds extends JpaRepository<HoldEntity, Long> {
         List<HoldEntity> findAllByOrderByIdDesc();

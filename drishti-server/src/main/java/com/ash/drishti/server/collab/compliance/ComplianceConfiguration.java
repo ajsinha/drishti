@@ -40,8 +40,9 @@ public class ComplianceConfiguration {
     }
 
     @Bean
-    public ChainVerifier chainVerifier(ThreadStore threads, ShareStore shares) {
-        return new ChainVerifier(threads, shares);
+    public ChainVerifier chainVerifier(ThreadStore threads, ShareStore shares, HoldStore holds, com.ash.drishti.identity.collab.Seal.Store seals,
+            com.ash.drishti.identity.JpaAuditLog audit) {
+        return new ChainVerifier(threads, shares, holds, seals, audit);
     }
 
     /** Runs on a schedule only when some retention is configured (the default keeps everything forever). */

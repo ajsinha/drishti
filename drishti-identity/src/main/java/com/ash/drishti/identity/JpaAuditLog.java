@@ -29,8 +29,73 @@ public final class JpaAuditLog implements AuditLog {
     private static final Logger LOG = LoggerFactory.getLogger(JpaAuditLog.class);
     private final IdentityRepositories.Audit audit;
 
+    private final com.ash.drishti.identity.collab.Seal.Store seals;
+
     public JpaAuditLog(IdentityRepositories.Audit audit) {
+        this(audit, null);
+    }
+
+    /** With {@code seals}, every row is chained to the one before it (tamper evidence: {@link #verify}). */
+    public JpaAuditLog(IdentityRepositories.Audit audit, com.ash.drishti.identity.collab.Seal.Store seals) {
         this.audit = audit;
+        this.seals = seals;
+    }
+
+    private static String rowHash(String prev, AuditEventEntity e) {
+        return com.ash.drishti.identity.collab.Seals.sha(prev + '\u001e' + com.ash.drishti.identity.collab.Seals.join(e.id, e.at, e.actor, e.action,
+                e.subject, e.detail));
+    }
+
+    /** Chains the saved row after the last sealed one. */
+    private synchronized void seal(AuditEventEntity e) {
+        if (seals == null) {
+            return;
+        }
+        var head = seals.get("audit:head");
+        String prev = head.map(com.ash.drishti.identity.collab.Seal::hash).orElse("");
+        String hash = rowHash(prev, e);
+        seals.put("audit:" + e.id, new com.ash.drishti.identity.collab.Seal(e.id, hash));
+        seals.put("audit:head", new com.ash.drishti.identity.collab.Seal(head.map(com.ash.drishti.identity.collab.Seal::count).orElse(0L) + 1, hash));
+    }
+
+    /** What the audit trail's seals say is wrong (empty when it holds); rows from before sealing began are not judged. */
+    public List<String> verify(int max) {
+        List<String> problems = new java.util.ArrayList<>();
+        if (seals == null) {
+            return problems;
+        }
+        String prev = "";
+        long rows = 0;
+        boolean sealedYet = false;
+        long after = 0;
+        for (;;) {
+            List<AuditEventEntity> page = audit.findByIdGreaterThanOrderByIdAsc(after, PageRequest.of(0, 500));
+            if (page.isEmpty()) {
+                break;
+            }
+            for (AuditEventEntity e : page) {
+                after = e.id;
+                var seal = seals.get("audit:" + e.id);
+                if (seal.isEmpty()) {
+                    if (sealedYet && problems.size() < max) {
+                        problems.add("audit row " + e.id + " has no seal (added outside Drishti)");
+                    }
+                    continue;
+                }
+                sealedYet = true;
+                rows++;
+                String expect = rowHash(prev, e);
+                if (!expect.equals(seal.get().hash()) && problems.size() < max) {
+                    problems.add("audit row " + e.id + " was changed, or a row before it was removed");
+                }
+                prev = seal.get().hash();
+            }
+        }
+        var head = seals.get("audit:head");
+        if (head.isPresent() && (head.get().count() != rows || !head.get().hash().equals(prev)) && problems.size() < max) {
+            problems.add("the audit trail's newest rows were removed (sealed " + head.get().count() + ", found " + rows + ")");
+        }
+        return problems;
     }
 
     @Override
@@ -43,6 +108,7 @@ public final class JpaAuditLog implements AuditLog {
         e.detail = detail == null ? "" : detail;
         try {
             audit.save(e);
+            seal(e);
         } catch (RuntimeException ex) {
             LOG.error("audit write failed for {} {}", action, subject, ex);   // never lose the action itself over its record
         }

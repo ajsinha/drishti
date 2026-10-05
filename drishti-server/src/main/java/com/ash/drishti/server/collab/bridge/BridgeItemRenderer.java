@@ -30,23 +30,23 @@ import com.ash.drishti.server.collab.PanelTitles;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.collab.mail.ItemRenderer;
 import com.ash.drishti.server.collab.mail.MailContentPolicy;
+import com.ash.drishti.server.collab.thread.CommentRenderer;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import java.time.Clock;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Builds the message of one outbox row for its bridge, at the moment of sending, from the stored share or comment. The note is read
  * as the <em>least-privileged audience</em> would read it: the reader is a synthetic principal holding only the role named by
  * {@code bridges.render-as} (the bundled {@code viewer}, which has no {@code raw}), so a range that copies a masked field's value
- * reads as the mask. A value quote ({@code {$.mtm}}) is never filled in: it reads as the path it quotes. The pack's
+ * reads as the mask. A value quote ({@code {$.mtm}}) is filled from that role's own view of the document (decision 2026-10-05: bridges
+ * publish values; masked fields stay masked for the default {@code viewer}, an administrator may name a raw role for a restricted
+ * channel). The pack's
  * {@code email.content} setting applies as well ({@code link-only} sends no id and no note, {@code title} no note). A share that is
  * gone, or a comment since retracted or hidden, is skipped (the row is cancelled).
  */
 public final class BridgeItemRenderer {
-
-    private static final Pattern QUOTE = Pattern.compile("\\{(\\$[A-Za-z0-9_.\\[\\]'\"-]*)}");
 
     private final ShareStore shares;
     private final ThreadStore threads;
@@ -56,12 +56,14 @@ public final class BridgeItemRenderer {
     private final PanelTitles titles;
     private final LinkBuilder links;
     private final CollabProperties props;
+    private final CommentRenderer comments;
     private final String product;
     private final Clock clock;
 
     @SuppressWarnings("java:S107")
     public BridgeItemRenderer(ShareStore shares, ThreadStore threads, Principals principals, Entitlements entitlements, MailContentPolicy policy,
-            PanelTitles titles, LinkBuilder links, CollabProperties props, String product, Clock clock) {
+            PanelTitles titles, LinkBuilder links, CollabProperties props, CommentRenderer comments, String product, Clock clock) {
+        this.comments = comments;
         this.shares = shares;
         this.threads = threads;
         this.principals = principals;
@@ -92,7 +94,7 @@ public final class BridgeItemRenderer {
     private BridgeMessage share(OutboxItem item, Principal reader) {
         Share s = shares.find(item.refId()).orElseThrow(() -> new ItemRenderer.Skip("the share no longer exists"));
         String mode = policy.modeFor(s.kind());
-        String text = MailContentPolicy.COMMENT.equals(mode) ? note(s.body(), s.maskedSpans(), reader) : null;
+        String text = MailContentPolicy.COMMENT.equals(mode) ? note(s.kind(), s.entityId(), s.pin(), s.body(), s.maskedSpans(), reader) : null;
         return message(BridgeRegistry.SHARE, s.id(), name(s.sender()) + " shared a view", mode, s.kind(), s.entityId(), s.panelId(), s.pin(), text,
                 links.share(s.id()), reader, s.createdAt());
     }
@@ -104,7 +106,7 @@ public final class BridgeItemRenderer {
         }
         CommentThread t = threads.thread(c.threadId()).orElseThrow(() -> new ItemRenderer.Skip("the thread no longer exists"));
         String mode = policy.modeFor(t.kind());
-        String text = MailContentPolicy.COMMENT.equals(mode) ? note(c.body(), c.maskedSpans(), reader) : null;
+        String text = MailContentPolicy.COMMENT.equals(mode) ? note(t.kind(), t.entityId(), c.pin(), c.body(), c.maskedSpans(), reader) : null;
         String verb = BridgeRegistry.MENTION.equals(item.template()) ? " mentioned a colleague in a comment" : " commented on a view";
         return message(item.template(), c.id(), name(c.author()) + verb, mode, t.kind(), t.entityId(), t.panelId(), c.pin(), text,
                 links.view(t.kind(), t.entityId(), c.pin(), t.panelId()), reader, c.createdAt());
@@ -118,11 +120,13 @@ public final class BridgeItemRenderer {
                 linkOnly ? null : line(titles.title(kind, entityId, panel, reader)), when, note, link, at == null ? clock.instant() : at);
     }
 
-    /** The note with masked ranges as the mask, value quotes as their paths, control characters gone, cut to {@code max-note}. */
-    String note(String body, List<Share.Span> spans, Principal reader) {
-        String scrubbed = NoteText.render(body, spans, entitlements.masks(reader));
-        String unquoted = QUOTE.matcher(scrubbed).replaceAll(m -> java.util.regex.Matcher.quoteReplacement(m.group(1)));
-        String clean = unquoted.replace("\r\n", "\n").replace('\r', '\n').replaceAll("[\\p{Cntrl}&&[^\n\t]]", "").strip();
+    /**
+     * The note as the bridge's {@code render-as} role reads it: masked ranges as the mask, value quotes filled from that role's view of
+     * the document at the pin (masked fields read as the mask), control characters gone, cut to {@code max-note}.
+     */
+    String note(String kind, String entityId, Pin pin, String body, List<Share.Span> spans, Principal reader) {
+        String text = CommentRenderer.text(comments.parts(kind, entityId, pin, body, spans, java.util.Set.of(), reader));
+        String clean = text.replace("\r\n", "\n").replace('\r', '\n').replaceAll("[\\p{Cntrl}&&[^\n\t]]", "").strip();
         return NoteText.excerpt(clean, props.bridges().maxNote());
     }
 
