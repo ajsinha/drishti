@@ -47,6 +47,7 @@ def test_question_mark_opens_the_drawer_with_its_layers_and_escape_closes_it(liv
     drawer.wait_for()
     assert page.evaluate("document.activeElement.id") == "aboutTitle"       # the focus moves to the heading
     text = drawer_text(page)
+    assert "Ask about this page" not in text                                    # Ask is off by default: no box
     for layer in ("Where the data came from", "Why the page looks like this", "Where next"):
         assert layer in text, text
     if page.locator("#aboutDrawer [data-layer=\"data\"]").get_attribute("open") is None:      # layers 1 and 2 are open first; the data layer opens on a click

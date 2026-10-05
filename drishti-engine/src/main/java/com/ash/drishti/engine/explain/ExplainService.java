@@ -132,7 +132,7 @@ public final class ExplainService {
         timings.put("view", e.viewMs());
         timings.put("explain", explainMs);
         return new PageContext(c.ref(), c.mnemonic(), c.locale(), c.generation(), generation != null && gen > generation ? Boolean.TRUE : null,
-                c.about(), c.glossary(), c.data(), c.layout(), c.next(), timings);
+                c.about(), c.glossary(), c.data(), c.layout(), c.next(), timings, null);
     }
 
     /**
@@ -148,7 +148,7 @@ public final class ExplainService {
         if (a != null && a.panels() != null) {
             a = new PageContext.About(a.pack(), a.kindTitle(), a.text(), a.sutraDescription(), a.panels().stream().filter(x -> x.id().equals(panel)).toList());
         }
-        return new PageContext(c.ref(), c.mnemonic(), c.locale(), c.generation(), c.newer(), a, terms, c.data(), c.layout(), c.next(), c.timings());
+        return new PageContext(c.ref(), c.mnemonic(), c.locale(), c.generation(), c.newer(), a, terms, c.data(), c.layout(), c.next(), c.timings(), null);
     }
 
     /** Forgets every answer (the admin's cache purge). */
@@ -167,7 +167,7 @@ public final class ExplainService {
         Set<String> ids = new LinkedHashSet<>();
         view.panels().forEach(p -> ids.add(p.id()));
         PageContext ctx = new PageContext(view.ref(), view.mnemonic(), locale, pv.generation(), null, about(view, built, locale), glossary(view, built, locale), data(pv, built), layout(view, built),
-                next(view), null);
+                next(view), null, null);
         return new Entry(ctx, ids, view.timings().getOrDefault("total", 0.0));
     }
 

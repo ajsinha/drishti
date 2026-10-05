@@ -88,3 +88,17 @@
   </ul>
 </details>
 {% endmacro %}
+
+{# Ask about this page: drawn only when the server says it is on for the page's pack (ex.ask.enabled; off by default). The answer is
+   written as text by about-ask.js, never as HTML; the layers above never depend on it. #}
+{% macro layer_ask(ex) %}{% if ex.ask and ex.ask.enabled %}
+<section class="about-ask" data-about-ask data-ask-url="/v/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}/ask" aria-labelledby="about-ask-h">
+  <h3 id="about-ask-h">Ask about this page</h3>
+  <form class="about-ask-form" data-ask-form>
+    <label class="visually-hidden" for="about-ask-q">Your question about this page</label>
+    <input id="about-ask-q" type="text" name="question" maxlength="500" autocomplete="off" placeholder="What does this page mean?" data-ask-input>
+    <button type="submit" class="btn btn-sm btn-primary" data-ask-send>Ask</button>
+  </form>
+  <p class="about-ask-answer" data-ask-answer role="status" aria-live="polite" hidden></p>
+  <p class="about-note about-ask-note">An AI assistant answers from this page's explanation only. It can be wrong; the layers above are the reference.</p>
+</section>{% endif %}{% endmacro %}

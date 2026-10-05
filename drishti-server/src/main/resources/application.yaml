@@ -259,6 +259,24 @@ drishti:
   explain:                           # About this page (docs/architecture/CONTEXT_HELP.md): GET /api/v1/views/{kind}/{id}/explain
     cache-size: 2000                 # answers kept; per user, page, business date and generation (masks and rights are per user)
     cache-ttl: 60s                   # how long an answer is served before it is derived again
+    ask:                             # Ask about this page (CONTEXT_HELP.md): OFF by default; while off no call to any model is ever made
+      enabled: ${DRISHTI_ASK_ENABLED:false}
+      endpoint: ${DRISHTI_ASK_ENDPOINT:}   # an OpenAI-compatible chat completions URL, or an Anthropic Messages URL (see api)
+      api: openai                    # openai | anthropic: the request and response shape
+      model: ${DRISHTI_ASK_MODEL:}
+      api-key: ${DRISHTI_ASK_KEY:}   # from the environment only; never logged
+      packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
+      values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do
+      max-question-chars: 500
+      max-prompt-kb: 24              # the whole prompt; the pack guide is cut first
+      max-guide-chars: 6000
+      max-answer-tokens: 400
+      max-answer-chars: 2000
+      timeout: 15s
+      per-user-per-minute: 6
+      per-user-per-day: 100
+      log-questions: true            # the question text goes to the access log (action ask); answers are never stored
+      log-answers: false             # true also writes the answer text to the server log
   pivot:                             # the Pivot tab (USER_GUIDE.md, The Pivot tab): only where a Sutra (pivot: on a table or
                                      # ladder) or a pack (pivot: beside a kind's columns:) opts in
     enabled: ${DRISHTI_PIVOT_ENABLED:true}     # false hides every Pivot tab, whatever Sutras and packs say

@@ -425,6 +425,7 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 |---|---|---|
 | `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`, with the caller's [field masks](#field-masks) (`"text":"•••"`); `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
 | `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. Every row of a table or ladder whose Sutra says `pivot:`, as raw values of its pivot's fields (masked fields `"•••"`), for the [Pivot tab](#the-pivot-tab-panel-rows-search-pivots-saved-pivots); `404 DRS-1001` when the view has no such panel or the panel offers no pivot |
+| `POST` | `/views/{kind}/{id}/ask` | Ask about this page, optional and off by default. Body `{question, locale?}`; answer `{answer, sources[]}` (plain text). `404 DRS-4007` when Ask is off globally or for the page's pack, `502`/`504 DRS-4008` when the model endpoint fails or is slow, `429 DRS-4009` over the per-user rate, `400` for an empty or too long question, `403 DRS-5002` as the view. See [Ask about this page](#ask-about-this-page) |
 | `GET` | `/views/{kind}/{id}/explain` | as-of. About this page, layers 3 and 4 ([design](../architecture/CONTEXT_HELP.md)): where the data came from and why the page looks as it does, for exactly what the caller sees. Query `panel` (narrows to a panel of the view, else `404 DRS-4006`) and `generation` (the generation your page shows; a newer one on the server adds `"newer":true`). Same rules as the view: `403 DRS-5002`, `404 DRS-1001`, `400 DRS-4003`. See [Explaining a view](#explaining-a-view) |
 
 Opening a view also records it in the caller's recent list. A view is formatted for display: every value
@@ -492,7 +493,17 @@ curl -s $B/views/trade/IRS-48213/explain | jq -c '{data, layout: (.layout | {lab
 | `next` | `keys` (the view's function keys, links restricted) and `panelKinds` (kinds of the panels the caller can see) |
 | `timings` | `view` and `explain`, milliseconds |
 
-Planned, not yet in the server (the design, [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#api)): a `glossary` block (the pack's entry for each field the page shows: term, meaning, unit, sign) and, for authors, `POST /studio/explain`, `GET /builder/designs/{id}/explain` and `POST /builder/about/preview` for the workbench. The optional *Ask about this page* endpoint and its codes `DRS-4007` to `DRS-4009` are the last stage of the design and may never ship. The pack's own text problems (`DRS-2040` to `DRS-2044`) are load problems, listed by `GET /sutras/problems`; they never fail an explain call.
+The explain answer carries `"ask": {"enabled": true|false}`: whether the box may be drawn for the page's pack.
+
+#### Ask about this page
+
+`POST /views/{kind}/{id}/ask` with `{"question": "…"}` answers `{"answer": "…", "sources": ["this page's context", "the glossary (5 entries)", "the pack guide"]}`.
+It is off unless an administrator sets `drishti.explain.ask.enabled` and lists the page's pack. The server builds the prompt from the
+caller's own explain answer (so field masks are already applied: a masked value is never sent), the glossary and the pack's guide
+text, and nothing else; labels only unless `values: shown`. The model gets no tools. Limits are per user (`DRS-4009`). Questions are
+recorded in the access log (action `ask`); answers are not stored. Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default).
+
+Planned, not yet in the server (the design, [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#api)): a `glossary` block (the pack's entry for each field the page shows: term, meaning, unit, sign) and, for authors, `POST /studio/explain`, `GET /builder/designs/{id}/explain` and `POST /builder/about/preview` for the workbench. The optional *Ask about this page* endpoint is described [below](#ask-about-this-page). The pack's own text problems (`DRS-2040` to `DRS-2044`) are load problems, listed by `GET /sutras/problems`; they never fail an explain call.
 
 ### Raw documents, history and impact
 
@@ -1342,6 +1353,9 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4003 | 400 | bad business date | unreadable, in the future, or before the history window |
 | DRS-4004 | 400 | bad search | a structured search cannot be read (`detail` says where), names a field the kind does not have, or has a `limit` outside 1 to 1000 |
 | DRS-4006 | 404 | no such panel | `?panel=` of `/views/{kind}/{id}/explain` names no panel of the view |
+| DRS-4007 | 404 | ask off | Ask about this page is switched off, globally or for the page's pack |
+| DRS-4008 | 502 / 504 | ask failed | the model endpoint failed, is not configured, or took longer than `drishti.explain.ask.timeout` |
+| DRS-4009 | 429 | ask rate limited | over `per-user-per-minute` or `per-user-per-day` questions |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
 | DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; any `/api/v1/builder/**` request body over `max-total-mb` (answered before the body is read: `detail` gives the size and the limit, the connection is not reset; `drishti.http.request-limits`, `server.tomcat.max-swallow-size`); designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |

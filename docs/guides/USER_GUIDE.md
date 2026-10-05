@@ -491,6 +491,14 @@ A layer with nothing to say is not shown. If you see **What each number means** 
 by one: term, unit and sign), your pack has a glossary; it comes with the next stage of the feature, so older servers
 do not show it.
 
+### Ask about this page (when your administrator has turned it on)
+
+At the end of the drawer, a box **Ask about this page** answers a question in your own words ("is this number a loss?", "why is the
+curve panel empty?"). It is not on unless your administrator switched it on for your pack; if you do not see it, it is off. The
+answer comes from a language model that is given only this page's explanation (labels, definitions, the pack's guide), not the
+document's values unless the administrator chose that, and never a field hidden from your role. It can be wrong: the layers above
+are the reference. If it cannot be reached the box says "Ask is unavailable"; everything else in the drawer works. `Alt+?` jumps to the box.
+
 ### The keys
 
 | Key | Does |

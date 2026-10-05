@@ -36,10 +36,19 @@ import java.util.Map;
  * @param layout why the page looks like this
  * @param next where to go from here
  * @param timings milliseconds spent
+ * @param ask whether the Ask box may be drawn for this page (set by the controller; configuration, not derived data)
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, long generation, Boolean newer, About about, List<Term> glossary, Data data, Layout layout,
-        Next next, Map<String, Double> timings) {
+        Next next, Map<String, Double> timings, Ask ask) {
+
+    /** Whether Ask about this page is on for the page's pack. */
+    public record Ask(boolean enabled) {}
+
+    /** The same answer with the Ask switch set. */
+    public PageContext withAsk(boolean enabled) {
+        return new PageContext(ref, mnemonic, locale, generation, newer, about, glossary, data, layout, next, timings, new Ask(enabled));
+    }
 
     /**
      * Layer 1: what the page is. {@code text} is the pack's template for the kind rendered over the document as the caller may

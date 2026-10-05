@@ -42,10 +42,12 @@ public class ExplainController {
 
     private final ExplainService explain;
     private final Entitlements entitlements;
+    private final com.ash.drishti.server.explain.AskService ask;
 
-    public ExplainController(ExplainService explain, Entitlements entitlements) {
+    public ExplainController(ExplainService explain, Entitlements entitlements, com.ash.drishti.server.explain.AskService ask) {
         this.explain = explain;
         this.entitlements = entitlements;
+        this.ask = ask;
     }
 
     /**
@@ -60,7 +62,9 @@ public class ExplainController {
         entitlements.requireOpen(principal, kind);
         ExplainService.Caller caller = new ExplainService.Caller(principal.user(), entitlements.redactor(principal),
                 k -> entitlements.mayOpen(principal, k), v -> entitlements.restrict(principal, v));
-        return explain.explain(EntityRef.of(kind, id), asOf, caller, panel, generation, languages(locale, acceptLanguage));
+        PageContext c = explain.explain(EntityRef.of(kind, id), asOf, caller, panel, generation, languages(locale, acceptLanguage));
+        boolean askOn = c.about() != null && c.about().pack() != null && ask.enabledFor(c.about().pack().name());
+        return c.withAsk(askOn);                       // configuration, not derived data: never part of the cached answer
     }
 
     /** The caller's languages, best first: {@code ?locale=}, then the {@code Accept-Language} tags by quality. */

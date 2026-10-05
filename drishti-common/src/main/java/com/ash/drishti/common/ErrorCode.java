@@ -43,6 +43,14 @@ public enum ErrorCode {
     BAD_SEARCH("DRS-4004", 400),
     /** {@code ?panel=} of an explain call names no panel of the view. */
     EXPLAIN_NO_PANEL("DRS-4006", 404),
+    /** Ask about this page is switched off, globally or for the page's pack. */
+    ASK_OFF("DRS-4007", 404),
+    /** Ask: the model endpoint failed, is not configured, or answered something unusable. */
+    ASK_FAILED("DRS-4008", 502),
+    /** Ask: the model endpoint did not answer within the configured timeout (same code as {@link #ASK_FAILED}). */
+    ASK_TIMEOUT("DRS-4008", 504),
+    /** Ask: over the per-user rate or daily budget. */
+    ASK_RATE_LIMITED("DRS-4009", 429),
     BAD_REQUEST("DRS-5001", 400),
     CACHE_NOT_FOUND("DRS-5004", 404),
     FORBIDDEN("DRS-5002", 403),

@@ -19,10 +19,11 @@ import re
 from urllib.parse import parse_qs, quote
 
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core import about_index, asof, collab as collab_core
 from core.backend import BackendError
+from core.csrf import BodyError, json_body
 from routes.common import ident, packs, render
 
 router = APIRouter(include_in_schema=False)
@@ -213,6 +214,22 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0):
     except BackendError as e:
         return render(request, "terminal/_about.html", status_code=e.page_status, ex=None, error=e, kind=kind, id=id_)
     return render(request, "terminal/_about.html", ex=ex, error=None, kind=kind, id=id_, index=about_index.build(ex))
+
+
+@router.post("/v/{kind}/{id_:path}/ask")
+async def ask(request: Request, kind: str, id_: str):
+    """Ask about this page: a thin proxy to the server, which holds the credentials and builds the prompt. JSON in and out; a problem
+    keeps the server's code (DRS-4007/4008/4009) so the drawer can say what happened. The page's own explanation never depends on it."""
+    try:
+        body = await json_body(request, limit=4096)
+    except BodyError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
+    try:
+        out = await request.app.state.backend.ask(kind, id_, ident(request), str(body.get("question", "")), request.query_params.get("locale"),
+                                                  request.headers.get("accept-language"))
+    except BackendError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+    return JSONResponse({"answer": out.get("answer", ""), "sources": out.get("sources", [])})
 
 
 @router.get("/v/{kind}/{id_:path}")

@@ -412,6 +412,13 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Check:** a value reading `•••` in the sentence is masked for your role, on purpose. If the file has a mistake, the entry is left out and listed by `GET /api/v1/sutras/problems` (`DRS-2040` to `DRS-2044`, key `<pack>/<file>`) and on the admin *Sutras* page. "About this page could not be loaded" is a failed call: try again; the view itself is unaffected.
 - **Fix:** add or correct the entry: [About text and glossary](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary).
 
+### The Ask box is missing, or says "Ask is unavailable"
+
+- **Cause (missing):** Ask is off by default. It appears only when `drishti.explain.ask.enabled=true` **and** the page's pack is in `drishti.explain.ask.packs`.
+- **Cause (unavailable, `DRS-4008`):** the model endpoint is down, slow (`timeout`), refused the key, or `endpoint`/`api`/`model` do not match what it speaks.
+- **Check:** `GET /api/v1/views/{kind}/{id}/explain` shows `ask.enabled`; the server log line `ask failed for …` says why; the access log shows each question with its outcome.
+- **Fix:** correct the settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default). The rest of the drawer never depends on Ask.
+
 ### A linked entity shows `pending` or `missing` instead of a badge
 
 - **Cause:** `pending`: the linked entity did not arrive within the 40 ms link budget (`drishti.graph.link-budget`).
@@ -809,7 +816,9 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-4003` | bad business date |
 | `DRS-4004` | bad search |
 | `DRS-4006` | `?panel=` of the explain endpoint names no panel of the view |
-| `DRS-4007` to `DRS-4009` | reserved for the optional *Ask about this page* (switched off, model failed, over the limit); nothing raises them in this release |
+| `DRS-4007` | *Ask about this page* is switched off, globally or for the page's pack (`drishti.explain.ask.enabled`, `packs`); the box is then not drawn |
+| `DRS-4008` | *Ask*: the model endpoint failed, is not configured, answered something unreadable (`502`) or took longer than `drishti.explain.ask.timeout` (`504`); the server log (`drishti.ask`) says which, never the key or the prompt |
+| `DRS-4009` | *Ask*: more questions than `per-user-per-minute` or `per-user-per-day`; wait and ask again |
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |
