@@ -200,11 +200,26 @@ class CommentMailTest {
     }
 
     @Test
+    void aShareEmailFillsQuotesPerRecipientLikeAMentionDoes() {
+        com.ash.drishti.api.DataNode doc = com.ash.drishti.api.DataNode.of(Map.of("mtm", 1234, "trader", SECRET));
+        com.ash.drishti.api.DataNode masked = com.ash.drishti.api.DataNode.of(Map.of("mtm", 1234, "trader", com.ash.drishti.api.DataNode.MASK));
+        when(docs.at(any(), any(), any())).thenReturn(Optional.of(doc));
+        when(entitlements.redact(any(), any())).thenReturn(masked);
+        Share s = new Share("sh_2", "ann", clock.instant(), "trade", "IRS-48213", "cashflows", null, new Pin(null, true, clock.instant(), 3, "demo"),
+                "mtm {$.mtm}, trader {$.trader}", List.of(), "in-app", null, null);
+        when(shares.find("sh_2")).thenReturn(Optional.of(s));
+        ShareItemRenderer r = new ShareItemRenderer(shares, principals, entitlements, new MailContentPolicy(props, packs), prefs, props.consoleUrl(), titles,
+                new CommentRenderer(entitlements, docs));
+        MailRenderer.Content c = r.content(OutboxItem.pending("email", "ravi", "share", "sh_2", clock.instant()), ravi);
+        assertThat(c.note()).isEqualTo("mtm 1234, trader •••").doesNotContain(SECRET);
+    }
+
+    @Test
     void aShareEmailNamesThePanelByItsTitleToo() {
         Share s = new Share("sh_1", "ann", clock.instant(), "trade", "IRS-48213", "cashflows", null, new Pin(null, true, clock.instant(), 3, "demo"), "look",
                 List.of(), "in-app", null, null);
         when(shares.find("sh_1")).thenReturn(Optional.of(s));
-        ShareItemRenderer r = new ShareItemRenderer(shares, principals, entitlements, new MailContentPolicy(props, packs), prefs, props.consoleUrl(), titles);
+        ShareItemRenderer r = new ShareItemRenderer(shares, principals, entitlements, new MailContentPolicy(props, packs), prefs, props.consoleUrl(), titles, new CommentRenderer(entitlements, docs));
         MailRenderer.Content c = r.content(OutboxItem.pending("email", "ravi", "share", "sh_1", clock.instant()), ravi);
         assertThat(c.panel()).isEqualTo("Cashflows");
         assertThat(c.link()).isEqualTo("https://drishti.example/share/sh_1");

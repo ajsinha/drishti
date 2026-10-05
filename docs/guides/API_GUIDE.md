@@ -269,6 +269,8 @@ alert rules are evaluated on the document as their owner may see it. The server 
 (`Entitlements.redactor`) before anything reads them, so nothing about a masked field can be probed: a condition on
 it is never true, ordering by it does not order, the type-ahead does not match it, Impact does not list entities
 tied to the analysed one only through it, and a total over it reads `•••`.
+A signed token whose user was deleted or disabled is refused with `401` (`drishti.security.registered-users-only`). A personal API token only reads, so `POST /views/{kind}/{id}/ask` answers `403` for it.
+
 Shares, their notes and inbox rows are masked answers too: a note's copies of a masked value read `•••` for a reader without `raw`, and a notice carries no data value, only who, what kind and which id.
 
 A `redact` entry with dots names a field by the end of its path (arrays are not a step): `lifecycle.timeline.description` masks
@@ -786,7 +788,7 @@ It is kept on the server, so it follows the user to any browser.
 | `DELETE` | `/admin/collab/holds/{id}` | `compliance`: release (`400` if already released); the hold stays in the list |
 | `POST` | `/admin/collab/retention/run?dryRun=` | `admin`: run retention now; `{dryRun, threadsPurged, sharesPurged, threadsHeld, sharesHeld}` |
 | `POST` | `/admin/collab/exports` `{from?, to?, kind?, id?, user?, includeShares?, includeThreads?}` | `compliance`: `202` with the job `{id, state, counts, error}`; `GET /admin/collab/exports/{id}` polls it; `GET /admin/collab/exports/{id}/download` is the zip, once, for the requester only (shares, threads, chains, holds, inbox notices and outbox delivery rows, each with its checksum in `manifest.json`) ([OPERATIONS](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export)) |
-| `GET` | `/admin/collab/verify?thread=` or `?kind=&id=&maxProblems=` | `compliance`: one chain `{ok, steps, firstHash, lastHash, problem}`, or every thread and share `{threads, threadsOk, shares, sharesOk, ok, problems[], truncated}` |
+| `GET` | `/admin/collab/verify?thread=` or `?kind=&id=&maxProblems=` | `compliance`: one chain `{ok, steps, firstHash, lastHash, problem}`, or every thread and share `{threads, threadsOk, shares, sharesOk, holds, holdsOk, auditOk, ok, problems[], truncated}` (problems also for changed live comment rows, removed newest revisions, holds and audit rows; an unreadable row is a problem, not an error) |
 | `GET` | `/admin/collab/outbox?state=&limit=` | `admin`: `{enabled, available, dispatching, counts, items[]}`; rows name recipient, template, share, attempts, next attempt and last error, never the message |
 | `POST` | `/admin/collab/outbox/{seq}/retry` | `admin`: send a dead or cancelled delivery again (`400` for any other state) |
 | `GET` | `/admin/collab/bridges` | `admin`: `{enabled, renderAs, perMinute, bridges[]}`; each bridge `{name, format, usable, status, host, routes[], outbox{state: count}}`; never the URL path or the secret |
@@ -1530,7 +1532,7 @@ to switch it on). `delivered` counts those notified; `skipped` says who was not 
 `does not have the pack for trade views`), by name only for people in your directory scope (others are one line per role: `some
 members may not open trade views`); under `undeliverable: silent` it is empty. The note is plain text, 1 to `share.max-text`
 characters, and refused (`422 DRS-7011`) when it matches `text.deny-patterns`, or contains the value of a masked field and
-`text.on-masked-copy` is `reject`; otherwise the value's positions are recorded and every reader without `raw` sees `•••` there,
+`text.on-masked-copy` is `reject` (for an author who holds `raw`: an author without it gets the same answer whether the text copies a hidden value or not, and reads their own text as written); otherwise the value's positions are recorded and every reader without `raw` sees `•••` there,
 and the sender gets a `warnings` entry. The **pin** `{businessDate, live, knownAt, generation, source}` is the page's: the date from
 the as-of headers, the generation you send (at most what the server holds now, else `422 DRS-7011`; `live: true` sends a live
 link). The share, its recipients, the inbox rows and the access-log `share` row are written in one transaction. More than

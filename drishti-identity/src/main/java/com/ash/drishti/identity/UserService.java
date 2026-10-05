@@ -412,6 +412,7 @@ public final class UserService {
     }
 
     private static String blank(String v, String fallback) {
-        return v == null || v.isBlank() ? fallback : v.trim();
+        String clean = v == null ? null : v.replaceAll("[\\p{Cntrl}]+", " ").trim();   // no line breaks in a name (mail headers, text parts)
+        return clean == null || clean.isBlank() ? fallback : clean;
     }
 }

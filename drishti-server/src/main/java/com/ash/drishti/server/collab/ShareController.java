@@ -68,7 +68,7 @@ public class ShareController {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("enabled", props.enabled());
         m.put("store", props.store());
-        m.put("email", false);
+        m.put("email", shares.emailAvailable());
         m.put("maxText", props.share().maxText());
         m.put("maxRecipients", props.share().maxRecipients());
         m.put("undeliverable", props.share().undeliverable());

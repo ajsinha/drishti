@@ -54,7 +54,7 @@ class ComplianceApiFileTest extends ComplianceApiContract {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        ((FileThreadStore) store).reload();
+        ((FileThreadStore) com.ash.drishti.identity.collab.Seals.unwrap(store)).reload();
     }
 
 }

@@ -343,7 +343,7 @@ public final class ThreadService {
             throw new DrishtiException(ErrorCode.NOT_EDITABLE, "the " + com.ash.drishti.server.collab.HumanDuration.of(props.threads().editWindow()) + " edit window has passed: retract the comment and write another");
         }
         String text = clean(body);
-        List<Share.Span> spans = spansAt(thread, c.pin(), text);
+        List<Share.Span> spans = spansAt(p, thread, c.pin(), text);
         Audience.Mentioned who = audience.resolve(p, text, thread.kind(), thread.gateKind());
         rateLimit(p.user());
         List<Notice> written = new ArrayList<>();
@@ -518,12 +518,15 @@ public final class ThreadService {
         Comment c = comment(commentId);
         CommentThread t = threadOf(p, c);
         boolean text = Comment.LIVE.equals(c.state()) || moderator(p);
-        List<String> secrets = text && entitlements.masks(p) ? pinned.at(t.kind(), t.entityId(), c.pin()).map(entitlements::maskedValues).orElse(null) : List.of();
+        boolean own = c.author().equals(p.user());      // the author reads their own text as written
+        List<String> secrets = text && !own && entitlements.masks(p) ? pinned.at(t.kind(), t.entityId(), c.pin()).map(entitlements::maskedValues).orElse(null) : List.of();
         List<RevisionView> out = new ArrayList<>();
         for (Revision r : store.revisions(commentId)) {
             String body = null;
             if (text && r.body() != null && secrets != null) {
                 body = NoteText.render(r.body(), NoteText.spans(r.body(), secrets), entitlements.masks(p));
+            } else if (text && r.body() != null && own) {
+                body = r.body();
             }
             out.add(new RevisionView(r.revision(), r.at(), r.actor(), r.action(), body, r.reason()));
         }
@@ -585,7 +588,7 @@ public final class ThreadService {
             if (c.body().indexOf('@') >= 0) {
                 store.mentions(c.id()).forEach(m -> targets.add(m.target()));
             }
-            parts = renderer.parts(t.kind(), t.entityId(), c.pin(), c.body(), spans(t, c), targets, reader);
+            parts = renderer.parts(t.kind(), t.entityId(), c.pin(), c.body(), c.author().equals(reader.user()) ? List.of() : spans(t, c), targets, reader);
             body = CommentRenderer.text(parts);
         }
         boolean mine = c.author().equals(reader.user());
@@ -647,16 +650,7 @@ public final class ThreadService {
             throw new DrishtiException(ErrorCode.TEXT_REFUSED, "bad pin: generation " + gen + " is newer than the " + held + " the server holds");
         }
         List<String> warnings = new ArrayList<>();
-        List<Share.Span> spans = doc == null ? List.of() : NoteText.spans(text, entitlements.maskedValues(doc.data()));
-        if (!spans.isEmpty()) {
-            if ("reject".equals(props.text().onMaskedCopy())) {
-                throw new DrishtiException(ErrorCode.TEXT_REFUSED, "the comment contains the value of a field that is hidden from some readers; remove it or quote it with {$.path}");
-            }
-            if ("warn".equals(props.text().onMaskedCopy())) {
-                warnings.add("The comment contains the value of a field hidden from some readers; people without full access will see "
-                        + com.ash.drishti.api.DataNode.MASK + ". Quote it with {$.path} instead.");
-            }
-        }
+        List<Share.Span> spans = doc == null ? List.of() : copies(author, "comment", kind, id, text, entitlements.maskedValues(doc.data()), warnings);
         Instant now = now();
         Pin pin = new Pin(asOf.live() ? null : asOf.businessDate(), asOf.live(), asOf.knownAt() != null && !asOf.live() ? asOf.knownAt() : now, gen,
                 doc == null ? null : doc.provenance().source());
@@ -664,7 +658,7 @@ public final class ThreadService {
     }
 
     /** The masked-value ranges of {@code text} against the document at {@code pin}; refuses when that document cannot be read. */
-    private List<Share.Span> spansAt(CommentThread t, Pin pin, String text) {
+    private List<Share.Span> spansAt(Principal author, CommentThread t, Pin pin, String text) {
         var doc = pinned.at(t.kind(), t.entityId(), pin);
         if (doc.isEmpty()) {
             if (pin != null && pin.generation() == 0) {
@@ -672,11 +666,43 @@ public final class ThreadService {
             }
             throw new DrishtiException(ErrorCode.SOURCE_FAILED, "could not read " + t.kind() + " " + t.entityId() + " at the comment's date to check the new text");
         }
-        List<Share.Span> spans = NoteText.spans(text, entitlements.maskedValues(doc.get()));
-        if (!spans.isEmpty() && "reject".equals(props.text().onMaskedCopy())) {
-            throw new DrishtiException(ErrorCode.TEXT_REFUSED, "the comment contains the value of a field that is hidden from some readers");
+        return copies(author, "comment edit", t.kind(), t.entityId(), text, entitlements.maskedValues(doc.get()), new ArrayList<>());
+    }
+
+    /**
+     * The ranges of {@code text} that copy a masked value, with the policy for the author. An author who holds {@code raw} can see the
+     * values, so they are warned (or refused, {@code on-masked-copy: reject}). An author without {@code raw} is never told anything:
+     * a hit and a miss answer alike, so the check cannot be used to guess a hidden value; each hit is written to the audit log
+     * instead ({@code collab.masked-copy}, not visible to the author). The ranges are stored either way.
+     */
+    public List<Share.Span> copies(Principal author, String what, String kind, String id, String text, List<String> secrets, List<String> warnings) {
+        List<Share.Span> spans = NoteText.spans(text, secrets);
+        if (spans.isEmpty()) {
+            return spans;
+        }
+        if (entitlements.masks(author)) {
+            audit.record(author.user(), "collab.masked-copy", kind + " " + id, what + " copies " + spans.size() + " masked value(s)");
+            return spans;
+        }
+        if ("reject".equals(props.text().onMaskedCopy())) {
+            throw new DrishtiException(ErrorCode.TEXT_REFUSED, "the " + what + " contains the value of a field that is hidden from some readers; remove it or quote it with {$.path}");
+        }
+        if ("warn".equals(props.text().onMaskedCopy())) {
+            warnings.add("The " + what + " contains the value of a field hidden from some readers; people without full access will see "
+                    + com.ash.drishti.api.DataNode.MASK + ". Quote it with {$.path} instead.");
         }
         return spans;
+    }
+
+    /** The note for a list line: ranges per the rule below, no quotes filled (that would read a document per line). */
+    public String noteLine(Principal reader, com.ash.drishti.identity.collab.Share s) {
+        return NoteText.render(s.body(), reader.user().equals(s.sender()) ? List.of() : s.maskedSpans(), entitlements.masks(reader));
+    }
+
+    /** A share's note as {@code reader} reads it: its sender sees it as written, others per the stored ranges; value quotes filled for the reader. */
+    public String noteFor(Principal reader, com.ash.drishti.identity.collab.Share s) {
+        List<Share.Span> spans = reader.user().equals(s.sender()) ? List.of() : s.maskedSpans();
+        return CommentRenderer.text(renderer.parts(s.kind(), s.entityId(), s.pin(), s.body(), spans, Set.of(), reader));
     }
 
     private EntityDocument fetch(String kind, String id, AsOf asOf, boolean lenient) {

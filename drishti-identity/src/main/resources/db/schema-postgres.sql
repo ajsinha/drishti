@@ -330,3 +330,9 @@ CREATE TABLE IF NOT EXISTS drishti_collab_hold (
 );
 ALTER TABLE drishti_collab_hold ADD COLUMN IF NOT EXISTS date_from TIMESTAMP WITH TIME ZONE;
 ALTER TABLE drishti_collab_hold ADD COLUMN IF NOT EXISTS date_to TIMESTAMP WITH TIME ZONE;
+
+CREATE TABLE IF NOT EXISTS drishti_collab_seal (
+    seal_key VARCHAR(200) PRIMARY KEY,
+    cnt BIGINT NOT NULL,
+    hash VARCHAR(64) NOT NULL
+);

@@ -195,15 +195,7 @@ public final class ShareService {
                     + " the server holds");
         }
         List<String> warnings = new ArrayList<>();
-        List<Share.Span> spans = NoteText.spans(note, entitlements.maskedValues(doc.data()));
-        if (!spans.isEmpty()) {
-            if ("reject".equals(props.text().onMaskedCopy())) {
-                throw new DrishtiException(ErrorCode.TEXT_REFUSED, "the note contains the value of a field that is hidden from some readers; remove it");
-            }
-            if ("warn".equals(props.text().onMaskedCopy())) {
-                warnings.add("The note contains the value of a field hidden from some readers; people without full access will see " + com.ash.drishti.api.DataNode.MASK + ".");
-            }
-        }
+        List<Share.Span> spans = threads.copies(sender, "note", kind, entityId, note, entitlements.maskedValues(doc.data()), warnings);
         rateLimit(sender.user());                      // after every check that can fail: a refused share costs nothing
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
         boolean live = Boolean.TRUE.equals(req.live());
@@ -211,10 +203,13 @@ public final class ShareService {
                 generation, doc.provenance().source());
         boolean toThread = postsToThread(req.postToThread(), props.share().postToThread());
         String threadId = toThread ? Ulid.next("th_", now.toEpochMilli()) : null;
-        Share share = new Share(Ulid.next("sh_", now.toEpochMilli()), sender.user(), now, kind, entityId, panel, gate, pin, note, spans,
-                picture ? "in-app,picture" : "in-app", threadId, null).signed();
         List<Recipient> rows = people.stream().map(d -> new Recipient(d.addressed(), d.user(), d.state(), null)).toList();
         List<Recipient> reached = rows.stream().filter(r -> Recipient.NOTIFIED.equals(r.state())).toList();
+        // the picture's rights profile is frozen now (the least-privileged recipients and the sender); later redraws can only narrow it
+        String channels = picture ? "in-app,picture,profile=" + SnapshotService.profileOf(java.util.stream.Stream.concat(
+                reached.stream().map(r -> principals.of(r.username())), java.util.stream.Stream.of(sender)).toList()) : "in-app";
+        Share share = new Share(Ulid.next("sh_", now.toEpochMilli()), sender.user(), now, kind, entityId, panel, gate, pin, note, spans,
+                channels, threadId, null).signed();
         if (picture && !reached.isEmpty()) {            // drawn before anything is written: a picture that cannot be made refuses the share
             snapshots.render(share, reached.stream().map(r -> principals.of(r.username())).toList(), sender.user(), false);
         }
@@ -300,7 +295,7 @@ public final class ShareService {
         return req.channels() != null && Boolean.TRUE.equals(req.channels().email());
     }
 
-    private boolean emailAvailable() {
+    public boolean emailAvailable() {
         return props.email().enabled() && notifiers.stream().anyMatch(n -> "email".equals(n.channel()) && n.available());
     }
 
@@ -480,7 +475,7 @@ public final class ShareService {
         List<RecipientView> shown = sender || compliance
                 ? store.recipients(id).stream().map(r -> new RecipientView(r.username(), r.addressed(), r.state(), r.openedAt())).toList() : null;
         return new View(s.id(), true, null, null, role, s.sender(), senderName, s.createdAt(), s.kind(), s.entityId(), s.panelId(), s.pin(),
-                NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(caller)), shown, threads.replies(caller, s), s.picture() ? Boolean.TRUE : null);
+                threads.noteFor(caller, s), shown, threads.replies(caller, s), s.picture() ? Boolean.TRUE : null);
     }
 
     /**
@@ -527,7 +522,7 @@ public final class ShareService {
             boolean access = blockedReason(caller, s) == null;
             out.add(new Summary(s.id(), s.createdAt(), s.sender(), displayName(s.sender()), s.kind(), access ? s.entityId() : null,
                     access ? s.panelId() : null, access ? s.pin() : null,
-                    access ? NoteText.excerpt(NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(caller)), 140) : null, access,
+                    access ? NoteText.excerpt(threads.noteLine(caller, s), 140) : null, access,
                     sent ? (int) store.recipients(s.id()).stream().filter(r -> Recipient.NOTIFIED.equals(r.state())).count() : null));
         }
         return out;

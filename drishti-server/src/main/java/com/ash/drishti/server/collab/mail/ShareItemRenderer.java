@@ -20,16 +20,17 @@ import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.collab.OutboxItem;
 import com.ash.drishti.identity.collab.Share;
 import com.ash.drishti.identity.collab.ShareStore;
-import com.ash.drishti.server.collab.NoteText;
 import com.ash.drishti.server.collab.PanelTitles;
 import com.ash.drishti.server.collab.Principals;
 import com.ash.drishti.server.collab.snapshot.SnapshotService;
+import com.ash.drishti.server.collab.thread.CommentRenderer;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 
 /**
  * The email for a share, built when it is sent: the sender's name, the kind and id, the panel, the date of the pin, and the note
- * as this recipient would read it (the copies of masked values replaced by the mask unless they hold {@code raw}); never a value.
+ * as this recipient would read it: the copies of masked values replaced by the mask unless they hold {@code raw}, and value quotes
+ * ({@code {$.path}}) filled from the recipient's own view (masked fields read as the mask). Under {@code link-only} no note at all.
  * Per-kind content mode from {@link MailContentPolicy}. A share whose recipient may no longer reach it, or who turned share mail
  * off, is skipped.
  */
@@ -45,14 +46,17 @@ public final class ShareItemRenderer implements ItemRenderer {
     private final String consoleUrl;
     private final PanelTitles titles;
     private final SnapshotService snapshots;
+    private final CommentRenderer comments;
 
     public ShareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy, NotifyPrefs prefs,
-            String consoleUrl, PanelTitles titles) {
-        this(shares, principals, entitlements, policy, prefs, consoleUrl, titles, null);
+            String consoleUrl, PanelTitles titles, CommentRenderer comments) {
+        this(shares, principals, entitlements, policy, prefs, consoleUrl, titles, comments, null);
     }
 
+    @SuppressWarnings("java:S107")
     public ShareItemRenderer(ShareStore shares, Principals principals, Entitlements entitlements, MailContentPolicy policy, NotifyPrefs prefs,
-            String consoleUrl, PanelTitles titles, SnapshotService snapshots) {
+            String consoleUrl, PanelTitles titles, CommentRenderer comments, SnapshotService snapshots) {
+        this.comments = comments;
         this.snapshots = snapshots;
         this.shares = shares;
         this.principals = principals;
@@ -80,7 +84,8 @@ public final class ShareItemRenderer implements ItemRenderer {
         String mode = policy.modeFor(s.kind());
         boolean linkOnly = MailContentPolicy.LINK_ONLY.equals(mode);
         String sender = principals.user(s.sender()).map(User::displayName).filter(n -> n != null && !n.isBlank()).orElse(s.sender());
-        String note = MailContentPolicy.COMMENT.equals(mode) ? NoteText.render(s.body(), s.maskedSpans(), entitlements.masks(who)) : null;
+        String note = MailContentPolicy.COMMENT.equals(mode)
+                ? CommentRenderer.text(comments.parts(s.kind(), s.entityId(), s.pin(), s.body(), s.maskedSpans(), java.util.Set.of(), who)) : null;
         String when = linkOnly ? null : s.pin().live() || s.pin().businessDate() == null ? "live when shared" : s.pin().businessDate().toString();
         return new MailRenderer.Content("share", sender + " shared a view with you", linkOnly ? null : label(s.kind()),
                 linkOnly ? null : s.entityId(), linkOnly ? null : titles.title(s.kind(), s.entityId(), s.panelId(), who), when, note, link(s.id()),

@@ -82,7 +82,7 @@ the data; the recipient sees the data with their own rights; and every message i
   read receipts between people. Every message hangs off a share or an anchor in the data.
 - **No buddy lists or social graph.** Recipients come from the directory Drishti already has (users, and roles as
   groups); nobody adds contacts, follows people or builds a network.
-- **No data in transit by default.** No figure, table or chart is placed in an email or a notification body. The
+- **No data in transit by default in notifications; email carries values by decision (2026-10-05).** No figure, table or chart is placed in an in-app notification body. The
   phase 2 snapshot is an explicit administrator choice, off by default.
 - **Not a records-archive product.** Drishti keeps an immutable, tamper-evident record and exports it; the firm's
   archive (WORM storage under SEC 17a-4, MiFID II record keeping) is where it is *retained* long-term. Drishti does
@@ -512,7 +512,7 @@ bean then uses it). Two checks:
 | Cross-pack leakage through `@mention` | a mention of a user or role notifies only people who `mayReach` the kind; others get nothing (not even "someone mentioned you"); the author is told who was not notified only under `undeliverable: tell` ([Decision 6](#decisions-for-the-product-owner)) | mention of a genomics-only user on a trade → no inbox row, no email |
 | Learning other people's rights through the directory | the directory is scoped to users who share a pack with the caller ([Decision 3](#decisions-for-the-product-owner)); `reach` is shown only under `tell`; rate limited | directory scope test |
 | A role mention as a broadcast tool | `mentionable-roles`, `max-group-size`; `admin` and `service` are never mentionable | — |
-| Email leaking data | default email has no values: see below; per-pack override to `link-only`; links go to the console only (`console-url`), never to the API; no tracking pixels, no remote images; `Auto-Submitted: auto-generated` | `MailRenderTest`: rendered mail for a non-raw recipient contains no masked value and no strip value |
+| Email leaking data | email carries values rendered for each recipient with their rights (decision 2026-10-05), `link-only` per pack sends none: see below; per-pack override to `link-only`; links go to the console only (`console-url`), never to the API; no tracking pixels, no remote images; `Auto-Submitted: auto-generated` | `MailRenderTest`: rendered mail for a non-raw recipient contains no masked value and no strip value |
 | Email to a wrong address | addresses come only from `User.email` set by an administrator or the provider; users cannot type addresses; changing a user's email is audited (existing) | — |
 | Injection: HTML or script in notes and comments | plain text only; the console escapes (Jinja autoescape, `textContent` in JS); mention and quote tokens are parsed on the server into structured parts, the console renders parts, never HTML; email HTML is built by escaping every inserted value | console test with `<script>`, `javascript:` and `{{` |
 | Injection: header injection in email | subjects are built from escaped parts with CR/LF removed; recipients are single validated addresses | mail test |
@@ -526,7 +526,7 @@ bean then uses it). Two checks:
 
 Default (`email.content: comment`): the product name, the sender's display name, the **kind's label and the entity id**
 (the same id that is in the link), the panel title if one was shared, the pin's date, and the note **as the recipient
-would see it** (masked spans as `•••`, quotes rendered as their label, not their value: "MTM (USD)"), plus the link.
+would see it** (masked spans as `•••`, `{$.path}` quotes filled with the value from that recipient's own view, `•••` where masked: decision 2026-10-05), plus the link.
 No strip values, no table rows, no counterparty, no title `with` part. `link-only` drops the id and the note ("Ashutosh
 Sinha shared a view with you"), for packs whose ids are themselves sensitive (a patient sample id). Justification:
 mail leaves the firm's controls (forwarding, mobile clients, retention elsewhere); an id is already in the link and is
@@ -762,6 +762,18 @@ tables (charts are drawn as their title with "open in Drishti"), so no browser r
 ([Decision 11](#decisions-for-the-product-owner)); a diagonal tiled watermark carries the recipients, the share id and
 the time; the image is stored with the share (counted in retention and export) and attached to the email only under
 `email.content: comment`. Each snapshot is recorded in the access log as `export`.
+
+## Decisions (product owner, 2026-10-05)
+
+Made after the data safety QA pass ([DATA_SAFETY.md](../qa/2026-10-05/DATA_SAFETY.md)); they override the original design where it said otherwise.
+
+- **Decision (product owner, 2026-10-05): emails carry values.** Each email is rendered per recipient with that recipient's rights: `{$.path}` quotes are filled and formatted, fields masked for the recipient read `•••`. Share emails fill quotes too, so mention, reply and share mail agree. `packs.<pack>.email.content: link-only` still sends only the link. (Replaces "no values in email".)
+- **Decision (product owner, 2026-10-05): a snapshot picture in email may carry figures.** The footer no longer says it carries none. The picture still follows the least-privileged-recipient rule and the per-pack `snapshots.enabled` switch; its rights profile is frozen when the share is made and a redraw can only narrow it (never unmask later, never show a sender more than they may see).
+- **Decision (product owner, 2026-10-05): chat bridges publish values.** Rendered as the bridge's `render-as` role (default `viewer`, so masked fields stay `•••`); an administrator may name a raw role for a restricted channel. `link-only` packs post only the link.
+- **No oracle for a masked value.** An author without `raw` gets no warning, no refusal and no changed text: they read their own text as written, other non-raw readers read `•••` per the stored ranges, raw readers read the text. Each detection is an audit event (`collab.masked-copy`). Authors with `raw` are still warned (`on-masked-copy`). Matching normalises case, spacing, zero-width characters, NFKC and common look-alikes; parts of a value and unknown look-alikes are not found.
+- **Tamper evidence** now covers the live comment row (text, author, state, revision), the thread head (revision count and last hash), legal holds and the audit trail, through seals kept in `drishti_collab_seal` (or `seals.log`). Still evidence, not prevention.
+- **`gateKind`** is supplied by the sender and is advisory: it can only add a gate to a thread or share; the kind check always applies. No pack defines panel gates today.
+- **Tokens** of deleted or disabled users are refused (`401`) on every API call (`drishti.security.registered-users-only`, default `true`); the console's own service identity is exempt. A personal API token cannot call `POST /views/{kind}/{id}/ask` (Ask is a POST; tokens only read).
 
 ## Documentation changes
 
@@ -1000,7 +1012,7 @@ cross-cutting sections only.
 | 2 | Store | JPA (identity database) as the default; the file store for single-server and tests, refused with a shared PostgreSQL database |
 | 3 | Directory scope | `shared-packs`: a user sees in the picker only users who share at least one assigned pack, and mentionable roles; `all` for small firms |
 | 4 | How a pinned link sets the date | per-request `asOf`/`knownAt` parameters with a banner, never the recipient's sticky cookie; fix the sign-in redirect to keep the query |
-| 5 | Email content | `comment` by default (kind label, id, panel title, the note as the recipient would read it, the link; no values); `link-only` per pack for packs whose ids are sensitive (genomics); email off until an administrator configures SMTP and `console-url` |
+| 5 | Email content | `comment` by default (kind label, id, panel title, the note as the recipient would read it with quotes filled for them, the link); `link-only` per pack for packs whose ids are sensitive (genomics); email off until an administrator configures SMTP and `console-url` |
 | 6 | Telling the sender who was not notified | `tell` (names and a reason: "may not open trade views"): sharing needs it, and the sender learns no data, only that a colleague lacks a right; `silent` for firms that treat rights as confidential |
 | 7 | Masked values typed into text | always scrub for readers without `raw` (write-time spans with the `mask-copies` rules, whatever `drishti.security.mask-copies` says), warn the author, `reject` available; offer value quotes as the safe way to cite a figure; document that values from outside the document are not caught (use `deny-patterns`) |
 | 8 | Edit, delete, retention | 15-minute edit window with every revision kept; after it, retract only; administrators hide with a reason; nothing erased before retention; retention default keep-forever (`keep-days: 0`) so no record is destroyed by default |

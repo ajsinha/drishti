@@ -86,6 +86,7 @@ abstract class ThreadApiContract {
         user("dkim", List.of("risk"), List.of("logistics"));
         user("lena", List.of("ops"), List.of("logistics"));
         user("spam", List.of("risk"), List.of("finance"));
+        user("tina", List.of("trader"), List.of("finance"));
     }
 
     // ---- helpers -------------------------------------------------------------------------------------------------------
@@ -227,7 +228,7 @@ abstract class ThreadApiContract {
         assertThat(res.get("comment").get("body").asText()).as("the author (raw) reads what she wrote").contains(SECRET);
         String cid = res.get("comment").get("id").asText();
 
-        String ravi = text(listFor("ravi", "trader", "").andExpect(status().isOk()));
+        String ravi = text(listFor("tina", "trader", "").andExpect(status().isOk()));
         assertThat(ravi).contains("Ask ••• about the fixing").doesNotContain(SECRET);
         assertThat(text(listFor("rng", "risk", "")).contains("Ask " + SECRET + " about the fixing")).isTrue();
         // the mention inbox, the revisions and the stored span too
@@ -238,6 +239,35 @@ abstract class ThreadApiContract {
                 .content(json.writeValueAsString(Map.of("body", "Ask " + SECRET + " about the reset", "revision", 1)))).andExpect(status().isOk());
         String hist = text(mvc.perform(get("/api/v1/comments/" + cid + "/revisions").header("Authorization", as("ravi", "trader"))));
         assertThat(hist).contains("about the fixing").contains("about the reset").doesNotContain(SECRET);
+    }
+
+    @Autowired com.ash.drishti.identity.AuditLog auditLog;
+
+    @Test
+    void anAuthorWithoutRawLearnsNothingFromAHitSoAGuessCannotBeConfirmed() throws Exception {
+        JsonNode hit = body(startOn("ravi", "trader", "trade", TRADE, entityThread("is it " + SECRET + "?")).andExpect(status().isCreated()));
+        JsonNode miss = body(startOn("ravi", "trader", "trade", TRADE, entityThread("is it Zzz Qqq?")).andExpect(status().isCreated()));
+        assertThat(hit.get("warnings")).as("no signal to the author on a hit").isEqualTo(miss.get("warnings"));
+        assertThat(hit.get("warnings")).isEmpty();
+        assertThat(hit.get("comment").get("body").asText()).as("the author reads their own text verbatim").isEqualTo("is it " + SECRET + "?");
+        assertThat(miss.get("comment").get("body").asText()).isEqualTo("is it Zzz Qqq?");
+        String forTina = text(listFor("tina", "trader", ""));
+        assertThat(forTina).contains("is it •••?").contains("is it Zzz Qqq?").doesNotContain(SECRET);
+        assertThat(text(listFor("rng", "risk", ""))).contains("is it " + SECRET + "?");
+        assertThat(text(listFor("ravi", "trader", ""))).as("the author's own list is the same for a hit and a miss").contains("is it " + SECRET + "?");
+        assertThat(auditLog.recent(200, "ravi")).extracting(com.ash.drishti.identity.AuditLog.Event::action).contains("collab.masked-copy");
+    }
+
+    @Test
+    void aTokenForAMissingOrDeletedUserIsRefusedEverywhere() throws Exception {
+        mvc.perform(get("/api/v1/me/inbox/count").header("Authorization", as("qa-ghost", "risk"))).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/v1/threads/trade/" + TRADE).header("Authorization", as("qa-ghost", "risk")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(entityThread("from nobody")))).andExpect(status().isUnauthorized());
+        user("qa-gone", List.of("risk"), List.of("finance"));
+        mvc.perform(get("/api/v1/me/inbox/count").header("Authorization", as("qa-gone", "risk"))).andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/admin/users/qa-gone").header("Authorization", admin())).andExpect(status().is2xxSuccessful());
+        mvc.perform(get("/api/v1/me/inbox/count").header("Authorization", as("qa-gone", "risk"))).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/directory").param("q", "an").header("Authorization", as("qa-gone", "risk"))).andExpect(status().isUnauthorized());
     }
 
     @Test

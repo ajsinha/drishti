@@ -143,11 +143,18 @@ final class BridgeHarness implements AutoCloseable {
         return build();
     }
 
+    /** The documents quotes are filled from; empty unless a test stubs it. */
+    final com.ash.drishti.server.collab.thread.PinnedDocs docs = mock(com.ash.drishti.server.collab.thread.PinnedDocs.class);
+
     private BridgeHarness build() {
+        com.ash.drishti.api.DataNode doc = com.ash.drishti.api.DataNode.of(java.util.Map.of("mtm", 1234567, "notional", 5000));
+        com.ash.drishti.api.DataNode masked = com.ash.drishti.api.DataNode.of(java.util.Map.of("mtm", com.ash.drishti.api.DataNode.MASK, "notional", 5000));
+        when(docs.at(any(), any(), any())).thenReturn(java.util.Optional.of(doc));
+        when(entitlements.redact(any(), any())).thenAnswer(inv -> entitlements.masks(inv.getArgument(0)) ? masked : inv.getArgument(1));
         registry = new BridgeRegistry(props, env::get);
         MailContentPolicy policy = new MailContentPolicy(props, packs);
         PanelTitles titles = new PanelTitles((kind, id, who) -> Map.of("cashflows", "Cashflows"), entitlements);
-        renderer = new BridgeItemRenderer(shares, threads, principals, entitlements, policy, titles, new LinkBuilder(props.consoleUrl()), props, "Drishti", clock);
+        renderer = new BridgeItemRenderer(shares, threads, principals, entitlements, policy, titles, new LinkBuilder(props.consoleUrl()), props, new com.ash.drishti.server.collab.thread.CommentRenderer(entitlements, docs), "Drishti", clock);
         AuditLog audit = mock(AuditLog.class);
         org.mockito.Mockito.doAnswer(inv -> audited.add(inv.getArgument(0) + "|" + inv.getArgument(1) + "|" + inv.getArgument(2) + "|" + inv.getArgument(3)))
                 .when(audit).record(any(), any(), any(), any());

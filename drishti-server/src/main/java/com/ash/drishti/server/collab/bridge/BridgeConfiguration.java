@@ -56,8 +56,8 @@ public class BridgeConfiguration {
     @Bean
     public BridgeItemRenderer bridgeItemRenderer(ShareStore shares, ThreadStore threads, Principals principals, Entitlements entitlements,
             MailContentPolicy policy, PanelTitles titles, LinkBuilder links, CollabProperties props,
-            @Value("${drishti.branding.product:Drishti}") String product) {
-        return new BridgeItemRenderer(shares, threads, principals, entitlements, policy, titles, links, props, product, Clock.systemUTC());
+            com.ash.drishti.server.collab.thread.CommentRenderer comments, @Value("${drishti.branding.product:Drishti}") String product) {
+        return new BridgeItemRenderer(shares, threads, principals, entitlements, policy, titles, links, props, comments, product, Clock.systemUTC());
     }
 
     @Bean

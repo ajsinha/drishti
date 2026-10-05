@@ -143,6 +143,7 @@ drishti:
     # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
     enabled: ${DRISHTI_SECURITY_ENABLED:false}
     secret: ${DRISHTI_TOKEN_SECRET:}
+    registered-users-only: true      # a signed token is refused when its user was deleted or disabled (false: trust the token alone)
     clock-skew: 30s
     # With security on, /actuator (except /actuator/health) needs an admin token or this one, for Prometheus:
     #   scrape_configs: [{ job_name: drishti, metrics_path: /actuator/prometheus, bearer_token: <this> }]

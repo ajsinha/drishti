@@ -140,26 +140,59 @@ public final class SnapshotService {
                 audience.add(principals.of(r.username()));
             }
         }
-        return render(share, audience, actor, false);
+        // A redraw can only get more restrictive: the rights profile frozen when the share was made, the recipients as they are now and
+        // whoever asks all bind it (a recipient promoted to raw later, or a sender asking, never widens what the picture shows).
+        List<Principal> bound = new ArrayList<>(frozen(share));
+        if (actor != null && !actor.isBlank()) {
+            bound.add(principals.of(actor));
+        }
+        return render(share, audience, bound, actor, false);
+    }
+
+    /** The profile to store with a new share: each distinct role set of the people it reaches, written {@code a+b|c}. */
+    public static String profileOf(List<Principal> audience) {
+        TreeSet<String> sets = new TreeSet<>();
+        audience.forEach(p -> sets.add(String.join("+", new TreeSet<>(p.roles())).replace(",", "").replace("|", "")));
+        return String.join("|", sets);
+    }
+
+    /** The principals of the profile stored with the share ({@code profile=} among its channels); none for an older share. */
+    static List<Principal> frozen(Share share) {
+        List<Principal> out = new ArrayList<>();
+        for (String c : share.channels().split(",")) {
+            if (c.startsWith("profile=")) {
+                for (String set : c.substring(8).split("\\|", -1)) {
+                    out.add(new Principal("frozen-profile", set.isEmpty() ? List.of() : List.of(set.split("\\+"))));
+                }
+            }
+        }
+        return out;
     }
 
     /** The picture for an audience: drawn (or taken from the cache), recorded, and returned. */
     public Image render(Share share, List<Principal> audience, String actor, boolean preview) {
+        return render(share, audience, List.of(), actor, preview);
+    }
+
+    /** As above; {@code bound} are principals whose rights also limit the picture without being counted as recipients. */
+    private Image render(Share share, List<Principal> audience, List<Principal> bound, String actor, boolean preview) {
         require(share.kind(), share.gateKind());
         List<Principal> may = audience.stream().filter(p -> entitlements.mayOpen(p, share.kind())
                 && (share.gateKind() == null || entitlements.mayOpen(p, share.gateKind()))).toList();
         if (may.isEmpty()) {
             throw new DrishtiException(ErrorCode.SNAPSHOT_REFUSED, "no recipient may open this view, so there is no picture to make");
         }
-        boolean masked = may.stream().anyMatch(entitlements::masks);
-        String viewKey = viewKey(share, may, masked);
+        List<Principal> rights = new ArrayList<>(may);
+        rights.addAll(bound);
+        boolean masked = rights.stream().anyMatch(entitlements::masks);
+        String viewKey = viewKey(share, rights, masked);
         String picKey = viewKey + '|' + (preview ? "preview-" + actor : share.id());
         byte[] cached = pictures.getIfPresent(picKey);
         if (cached != null) {
             log(share, actor, may.size(), masked, cached.length, true, preview);
             return new Image(cached, 0, 0, true, masked, may.size());
         }
-        SnapshotModel model = bounded(() -> model(share, may, viewKey, preview ? null : share.id(), masked));
+        SnapshotModel model = bounded(() -> model(share, may, rights, viewKey, preview ? null : share.id(), masked));
         byte[] png = bounded(() -> {
             try {
                 return painter.png(model);
@@ -187,13 +220,13 @@ public final class SnapshotService {
             throw new DrishtiException(ErrorCode.SNAPSHOT_REFUSED, "no recipient may open this view, so there is no picture to make");
         }
         boolean masked = may.stream().anyMatch(entitlements::masks);
-        return model(share, may, viewKey(share, may, masked), share.id(), masked);
+        return model(share, may, may, viewKey(share, may, masked), share.id(), masked);
     }
 
-    private SnapshotModel model(Share share, List<Principal> may, String viewKey, String shareRef, boolean masked) {
+    private SnapshotModel model(Share share, List<Principal> may, List<Principal> rights, String viewKey, String shareRef, boolean masked) {
         ViewModel view = views.getIfPresent(viewKey);
         if (view == null) {
-            view = buildView(share, may, masked);
+            view = buildView(share, rights, masked);
             views.put(viewKey, view);
         }
         CollabProperties.Snapshots c = props.snapshots();
