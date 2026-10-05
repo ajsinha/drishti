@@ -119,7 +119,7 @@ def render_explain(c: dict, say=print) -> None:
     s = lay.get("sutra") or {}
     say(f"\nWhy this layout: {lay.get('label')}" + (" (a Sutra plus inference for what it left out)" if lay.get("inferred") else ""))
     if s:
-        say(f"  Sutra {s.get('name')} v{s.get('version')} of pack {s.get('pack')}, priority {s.get('priority')}, where {s.get('where')}")
+        say(f"  Sutra {s.get('name')} v{s.get('version')} of pack {s.get('pack')}, priority {s.get('priority')}, where {s.get('where') or '(no where: matches every document of the kind)'}")
     cands = lay.get("candidates") or []
     if cands:
         chosen = next((x for x in cands if x.get("chosen")), None)

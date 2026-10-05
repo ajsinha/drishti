@@ -316,6 +316,26 @@ installed the same way: [the registry](PACK_DEVELOPER_GUIDE.md#a-signed-pack-reg
 whether the server is restarting (`"restarting": true`). Only a server started by its `main` (the jar, the
 container) restarts in place; elsewhere (tests) the change waits for the next start.
 
+## Deploying an archive, history, and the data source (Admin → Packs)
+
+Three more things live on **Admin → Packs**; each is written up step by step, with pictures, in
+[OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back).
+
+- **Deploy an archive.** Upload a `.tar.gz` made by `drishti.py pack bundle` or `pack make` (the pack only, never data). The server checks the
+  checksums and manifest, that no path leaves the pack folder, the server version it needs, the Sutras (lint and tests), the packs it extends, and an
+  optional signature by a trusted publisher; shows what it **changes** from the running version (breaking: kinds or mnemonics removed or renamed;
+  selection; layout; change), and, once you confirm, swaps it into `drishti.packs.installed-dir`, keeps the version it replaces and restarts in place.
+  If the server cannot start with the new files, the old ones are put back.
+- **History and roll back.** Every deployment, rollback and reverted attempt is listed, with the kept versions (`drishti.packs.deploy.keep-versions`, 5)
+  and a **Roll back to this** button; `shipped` goes back to the copy that ships with the server.
+- **Data source.** Per loaded pack: each connector's settings with the pack default, your override and any site value, a **Test connection** that lists
+  the newest business dates and row counts per kind, and **Save and apply** / **Reset**. An edit is saved to `data/packs/settings/<pack>.yaml`, never into
+  the pack, so redeploying the pack keeps it. Precedence, highest first: the site (environment variables, `application.yaml`), the override file, the pack.
+  Credentials are only environment references (`${NAME}`).
+
+The same from the terminal: `drishti.py server packs deploy|history|rollback|datasource`
+([CLI_GUIDE.md](CLI_GUIDE.md#server-packs-deploy-history-rollback-and-datasource)). A personal API token needs the `packs:admin` scope.
+
 ## Pack codes
 
 Every shipped pack has a short `code:`; typed alone on the command line (with `<GO>`) it opens the pack's overview:

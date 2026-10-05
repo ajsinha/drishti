@@ -106,7 +106,8 @@ public final class ConnectionProbe {
                 rows.add(rowsOf(instance, kind, maxDates));
             }
             String health = String.valueOf(instance.health());
-            return new Result("UP".equalsIgnoreCase(health) || health.startsWith("UP"), health, ms(t0), null, rows);
+            boolean up = "UP".equalsIgnoreCase(health) || health.startsWith("UP");
+            return new Result(up, health, ms(t0), up ? null : health, rows);
         } finally {
             try {
                 instance.close();

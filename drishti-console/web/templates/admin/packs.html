@@ -83,7 +83,7 @@
   {% set kept = history.kept or {} %}
   {% set any_kept = namespace(v=false) %}{% for n, ks in kept.items() %}{% if ks %}{% set any_kept.v = true %}{% endif %}{% endfor %}
   {% if any_kept.v %}
-  <div class="tbl-wrap"><table class="tbl adm-tbl" data-kept>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-kept data-plain>
     <caption class="sr-only">Versions kept for a rollback</caption>
     <thead><tr><th>Pack</th><th>Kept version</th><th>Kept at</th><th></th></tr></thead>
     <tbody>{% for n, ks in kept.items() %}{% for k in ks %}
@@ -93,7 +93,7 @@
         <td class="adm-actions"><button type="button" class="fk" data-rollback>Roll back to this</button></td></tr>
     {% endfor %}{% endfor %}</tbody></table></div>
   {% endif %}
-  <div class="tbl-wrap"><table class="tbl adm-tbl" data-history>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-history data-plain>
     <caption class="sr-only">Deployments and rollbacks</caption>
     <thead><tr><th>When (UTC)</th><th>What</th><th>Pack</th><th>Version</th><th>Replaced</th><th>By</th><th>Detail</th></tr></thead>
     <tbody>{% for r in history.history %}

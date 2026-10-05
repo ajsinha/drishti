@@ -105,7 +105,7 @@
         if (!rows.length) { return; }
         var box = el('div', { class: 'dep-lv dep-lv-' + lv }, [el('h4', { text: labels[lv] + ' (' + rows.length + ')' })]);
         if (lv === 'breaking') { box.setAttribute('role', 'alert'); }
-        var t = el('table', { class: 'tbl adm-tbl' }, [el('thead', {}, [el('tr', {}, ['What', 'Name', 'Detail'].map(function (h) { return el('th', { text: h }); }))])]);
+        var t = el('table', { class: 'tbl adm-tbl', 'data-plain': true }, [el('thead', {}, [el('tr', {}, ['What', 'Name', 'Detail'].map(function (h) { return el('th', { text: h }); }))])]);
         var tb = el('tbody');
         rows.forEach(function (f) { tb.appendChild(el('tr', {}, [el('td', { text: f.what }), el('td', { class: 'mono', text: f.name }), el('td', { class: 'cmp-path', text: f.detail || '' })])); });
         t.appendChild(tb);
@@ -199,7 +199,7 @@
       c.enabled.pack != null ? el('span', { class: 'text-muted-d mono', text: ' pack: ' + c.enabled.pack }) : null]));
     var tb = el('tbody', { 'data-rows': true });
     c.settings.forEach(function (s) { tb.appendChild(row(c, s)); });
-    var t = el('table', { class: 'tbl adm-tbl ds-tbl' }, [el('caption', { class: 'sr-only', text: 'Settings of ' + c.name }),
+    var t = el('table', { class: 'tbl adm-tbl ds-tbl', 'data-plain': true }, [el('caption', { class: 'sr-only', text: 'Settings of ' + c.name }),
       el('thead', {}, [el('tr', {}, ['Setting', 'Value', 'Where it comes from', ''].map(function (h) { return el('th', { text: h }); }))]), tb]);
     sec.appendChild(el('div', { class: 'tbl-wrap' }, [t]));
     var k = el('input', { class: 'studio-in', placeholder: 'setting name', 'aria-label': 'New setting name for ' + c.name, autocomplete: 'off' });
@@ -303,7 +303,7 @@
             el('td', { class: 'mono ds-num', text: (k.exact ? '' : '≥ ') + d.rows.toLocaleString('en-US') }), el('td', { class: 'cmp-path', text: k.note || '' })]));
         });
       });
-      host.appendChild(el('div', { class: 'tbl-wrap' }, [el('table', { class: 'tbl adm-tbl' }, [el('caption', { class: 'sr-only', text: 'What ' + c.connector + ' holds' }),
+      host.appendChild(el('div', { class: 'tbl-wrap' }, [el('table', { class: 'tbl adm-tbl', 'data-plain': true }, [el('caption', { class: 'sr-only', text: 'What ' + c.connector + ' holds' }),
         el('thead', {}, [el('tr', {}, ['Kind', 'Business date', 'Rows', ''].map(function (h) { return el('th', { text: h }); }))]), tb])]));
     });
   }

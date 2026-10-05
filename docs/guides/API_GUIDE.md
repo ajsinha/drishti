@@ -487,7 +487,7 @@ curl -s $B/views/trade/IRS-48213/explain | jq -c '{data, layout: (.layout | {lab
 | `about` | the pack's words, rendered over the document the caller may see (a field masked for them reads `•••` in `text`): `pack` (`name`, `title`), `kindTitle`, `text`, `sutraDescription` (the Sutra's `description` as written, never evaluated) and `panels` (`id`, `title`, `description`). Authored in the pack's `config/about.yaml` ([pack guide](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); absent when neither the pack nor the Sutra wrote anything |
 | `data` | `source`, `generation`, `fetchedAt`, `businessDate`, `current`, `live`, `updatedAt`, `staleAfter`, `stale`, `health` (`up`, `degraded` or `down`, as the admin health page reduces it) and `linked` (`fetched`, `pending`, `denied`, `budgetMs`) |
 | `layout.sutra` | the Sutra chosen: `name`, `version`, `priority`, `where` (its source text), `description` (the author's plain text) |
-| `layout.candidates` | the other Sutras of the kind in priority order, each with its `where` and `result`: `true`, `false`, `error`, or `masked` (the answer depends on a field the caller may not see, so it is not told) |
+| `layout.candidates` | every Sutra of the kind in priority order, **the chosen one included** (`chosen: true`; a view that no Sutra matched has none and is inferred), each with its `where` and `result`: `true`, `false`, `error`, or `masked` (the answer depends on a field the caller may not see, so it is not told; the chosen Sutra's own `where` is already in `layout.sutra`) |
 | `layout.label`, `fingerprint`, `inferred`, `inferredPanels` | how the layout was built, and the panels inference added |
 | `layout.noData`, `errors` | panels with nothing to show (`why`: `missing`, `null`, `empty list`, `masked`, `no values`, `no data`; and the `path` looked at) and panels that failed |
 | `layout.masked` | fields shown as `•••` for the caller: `key` (document path), `label`, `panels` |
@@ -1182,6 +1182,30 @@ curl -s $B/admin/status | jq -c .
 
 `defaultAdminPasswordInUse: true` is a warning: change the seeded admin's password before production.
 
+### Deploying a pack archive and the data source
+
+Admin → Packs from a script ([how it works, with pictures](OPERATIONALISING.md#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back);
+the CLI wraps these: `drishti.py server packs deploy|history|rollback|datasource`). Every call needs an administrator, and a personal token the `packs:admin` scope.
+Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-back`, `pack-datasource-changed`, `pack-datasource-reset`, `pack-datasource-tested`).
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/admin/packs/deploy` | The archive (`.tar.gz` from `pack bundle`, or `.zip`) **as the raw request body** (`Content-Type: application/octet-stream`). Optional headers: `X-Drishti-Filename`, `X-Drishti-Sha256` (the expected checksum), `X-Drishti-Signature` + `X-Drishti-Publisher` (Ed25519 over the archive bytes, base64, by a key in `drishti.packs.registry.trusted-keys`). Verifies and previews; **changes nothing**. `200` with `{ok, file, size, sha256, pack, version, checks[], preview, uploadId, expiresAt}`: `ok` is false when any check failed (and then there is no `uploadId`). `413 DRS-5005` above `drishti.packs.deploy.max-archive-mb`; `400` for an empty body |
+| `POST` | `/admin/packs/deploy/{uploadId}?acceptBreaking=false` | Deploys the verified upload: swaps the files into `drishti.packs.installed-dir` (keeping the replaced version), checks every loaded pack with it, then restarts in place (`restarting`), putting the old files back if the server cannot start. `409` when the preview has breaking changes and `acceptBreaking` is not `true`; `404` for an unknown or expired upload (it is used once) |
+| `DELETE` | `/admin/packs/deploy/{uploadId}` | Throws a verified upload away: `{discarded}` |
+| `GET` | `/admin/packs/history?pack=&limit=` | Newest first: `history[]` of `{at, action (deploy, rollback, reverted), pack, version, previous, by, detail, sha256?}`, and `kept{pack: [{version, keptAt}]}` (the versions a rollback can go to; `shipped` when an installed copy hides the one that ships with the server) |
+| `POST` | `/admin/packs/{name}/rollback?version=` | Goes back to a kept version (omitted: the newest kept; `shipped`: remove the installed copy). Same safe restart. `400` when there is no such version. `{restored, replaced, restarting, note}` |
+| `GET` | `/admin/packs/{name}/datasource` | A loaded pack's connectors: `{pack, file, overridden, plugins, connectors[]}`, each connector `{name, plugin, kinds, enabled{pack, override, site, effective, on, source}, settings[]}`, each setting `{key, pack, override, site, effective, resolved, resolvable, secret, source (pack, override, site), overridden}`. A credential's `resolved` is never sent |
+| `PUT` | `/admin/packs/{name}/datasource` `{connectors: {<connector>: {enabled?, settings: {key: value}}}}` | Saves the **whole desired override** to `data/packs/settings/<pack>.yaml` (values equal to the pack's are dropped), checks all packs, restarts in place and undoes the file if the server cannot start. `400` lists every problem: an unknown connector, a plugin or kind in the body (they belong to the pack), a credential that is not `${ENV_NAME}`, a password inside a URL. `{changed[], overridden, restarting, note}` |
+| `DELETE` | `/admin/packs/{name}/datasource?connector=` | Removes the override (one connector's, or all). Same safe restart |
+| `POST` | `/admin/packs/{name}/datasource/test` `{connector?, connectors?}` | Tries the connectors with the edit in the body (nothing saved) or, without `connectors`, the settings in force: starts a fresh instance of each enabled connector, reads what it holds and closes it. `{ok, tested, connectors[]}`, each `{connector, plugin, ok, health, ms, error, kinds[{kind, exact, note, dates[{date, rows}]}]}`; `ok` is about reaching the source, `rows` is how many entities it holds for the date (`exact` false: a lower bound). An unset environment variable in a setting is reported by name |
+
+```bash
+curl -s -X POST $B/admin/packs/deploy -H 'Content-Type: application/octet-stream' -H 'X-Drishti-Filename: my-bank-1.1.0.tar.gz' \
+     --data-binary @dist/my-bank-1.1.0.tar.gz | jq -c '{ok, uploadId, checks: [.checks[] | {name, ok}], counts: .preview.counts}'
+curl -s -X POST "$B/admin/packs/deploy/$ID?acceptBreaking=true" | jq -c '{deployed, previous, restarting}'
+```
+
 ### Administration: health and caches
 
 | Method | Path | Notes |
@@ -1470,7 +1494,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `read` | `GET`, `HEAD` and the read-only `POST`s (the default; what tokens always had) | - |
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
 | `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
-| `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` | `admin` |
+| `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the data source (`PUT` and `DELETE /admin/packs/{name}/datasource`, `POST .../datasource/test`) | `admin` |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by `drishti.py data`
 or the pack's sources), and users, roles, tokens, sign-in, caches, the audit log, shares, comments, notes, workspaces and
@@ -1486,6 +1510,7 @@ existed keep reading only.
 |---|---|---|
 | `GET` | `/me/tokens` | your tokens: id, name, created, expires, last used, revoked, active (never the secret) |
 | `GET` | `/me/tokens/scopes` | the write scopes on offer, in words, and `writeMaxDays` |
+| `GET` | `/me/token` | **the token this call used**: `{id, user, scopes, expiresAt}` (`expiresAt` null for a read token with no expiry); `404` when the call was made with a session, not a `drk_` token. `drishti.py doctor` uses it to show the exact scopes in force |
 | `POST` | `/me/tokens` `{name, days, scopes}` | makes one; `201` with `{token, secret}`: the secret appears only here. `days` 1–366 or null; `scopes` blank or `["read"]` for read-only, else names from `/me/tokens/scopes`, which require `days` ≤ `writeMaxDays`; at most 20 active per person; `403 DRS-5002` for a disabled account (a token cannot make tokens) |
 | `DELETE` | `/me/tokens/{id}` | revokes yours |
 | `GET` | `/admin/tokens` | (admin) everyone's |

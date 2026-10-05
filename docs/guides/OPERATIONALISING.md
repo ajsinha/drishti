@@ -36,6 +36,7 @@ the operator's path from "it works on my laptop" to "it runs in production, and 
 14. [Windows](#14-windows)
 15. [Troubleshooting](#15-troubleshooting)
 16. [`pack make`: one folder to deploy](#16-pack-make-one-folder-to-deploy)
+17. [Deploy from Admin → Packs, change a data source, history and roll back](#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back)
 
 The commands are those of `tools/drishti.py` ([CLI_GUIDE.md](CLI_GUIDE.md)). You need Python 3.10+ and PyYAML
 (`uv run --with pyyaml python tools/drishti.py ...`) on the machine that builds and verifies. The **target** machine
@@ -452,3 +453,175 @@ The folder (`build/my-bank-1.0.0/`) holds the pack (`pack/my-bank/`, section 5: 
 already verified), a ready configuration overlay, `run-server.sh` and `.ps1`, a `MANIFEST.json`, and a `README.txt` with the deploy,
 verify, "lift the data from Delta", update and rollback steps filled in with your kind, ids and dates. Options and the folder tree:
 [CLI_GUIDE.md, Quickest path](CLI_GUIDE.md#quickest-path-pack-make).
+
+## 17. Deploy from Admin → Packs, change a data source, history and roll back
+
+Sections 3 to 10 deploy by **copying files**: no server, no token. When the server is running and you are an administrator you can do the same
+from the browser (or the terminal) and get four things the copy does not give you: the server **checks the archive first**, shows you **what it
+changes** from the running version (breaking changes marked), **keeps the version it replaces** for a one-click rollback, and **puts the old files
+back by itself** if it cannot start with the new ones. The archive is the one section 3 makes (`pack bundle` or `pack make`): a `.tar.gz` holding
+**the pack only, never data**. Data is deployed separately (section 8), and where a pack reads it from is set in [17.5](#175-where-a-pack-reads-its-data-data-source).
+
+### 17.1 Deploy an archive
+
+1. Build and verify the bundle as in sections 3 and 4 (`drishti.py pack bundle packs/my-bank`).
+2. **Admin → Packs → Deploy an archive**: choose the `.tar.gz` (or drop it on the box) and press **Upload and check**. Nothing changes yet.
+
+   ![Deploy an archive: the checks the server ran on the upload](img/deploy/01-deploy-checks.jpg)
+
+   The server runs these checks and shows each as OK, NOTE (worth a look) or FAIL. Any FAIL refuses the archive and nothing is staged.
+
+   | Check | What it proves | Refused when |
+   |---|---|---|
+   | **archive** | size and SHA-256; with a `.sha256` file beside it (the CLI sends it) or `--sha256`, that the file arrived as it was bundled | larger than `drishti.packs.deploy.max-archive-mb` (HTTP 413, before it is read); the checksum differs |
+   | **signature** | an Ed25519 signature of the archive by a publisher whose key is in `drishti.packs.registry.trusted-keys` (the same keys as the registry) | a signature that does not verify, or a publisher that is not trusted; with `drishti.packs.deploy.require-signature: true`, no signature |
+   | **unpack** | only plain files and folders; no absolute path, no `..`, no link, device or special file; at most `max-files` files and `max-unpacked-mb` once unpacked | any of those (a zip or tar slip, a zip bomb) |
+   | **pack.yaml** | a plain `pack` name and `version` | missing or odd names |
+   | **manifest** | every file `MANIFEST.json` lists is there with its SHA-256 and size, nothing present is unlisted, and the manifest names the same pack and version as `pack.yaml` (the rules of `pack verify`) | a changed, missing or extra file; no manifest (unless `require-manifest: false`) |
+   | **server version** | the `requiresServer` the bundle was made with against this server's version | this server is older |
+   | **sutra lint**, **sutra test** | every Sutra parses and its expressions check, and every sample test passes: the same checker as `drishti.py sutra lint` / `test` | any problem, with the first ones named |
+   | **dependencies** | each pack it `extends` is loaded or on disk | a missing parent: deploy that pack first |
+
+3. Read **What it changes**. It is the same comparison as `drishti.py pack diff` (the Java and Python rule sets are tested against the same cases), between the
+   archive and the version that is **running** (or, for a pack that is not loaded, the copy on disk):
+
+   ![The preview: breaking changes boxed, the rest listed by level](img/deploy/02-deploy-preview.jpg)
+
+   | Level | Means | Deploying it |
+   |---|---|---|
+   | **breaking** | a kind or a mnemonic removed or renamed: monitors, workspaces, alerts and saved links name them | needs you to tick *I have read the breaking changes* (API: `acceptBreaking=true`) |
+   | **selection** | a Sutra added or removed, or its `match` changed: some documents get another screen | allowed |
+   | **layout** | connectors, routes, ingest or columns changed: the data layout moved | allowed; check the data source |
+   | **change** | Sutra content, about text or glossary changed | allowed |
+
+   A version that is the same as, or older than, the running one is flagged and still allowed.
+4. **Deploy**. The server swaps the files into `drishti.packs.installed-dir` (the folder that wins over `packs/`), keeps the previous version under
+   `.previous/<pack>/<version>-<time>`, then checks all loaded packs with the new one, **restarts in place** and reloads. A pack that was not loaded is loaded.
+   If the check fails, or the server cannot start with the new files, the old files are put back and the history says *reverted*; users stay signed in and
+   live views reconnect.
+
+### 17.2 History and roll back
+
+**Admin → Packs → History and roll back** lists every deployment, rollback and reverted attempt (when, what, pack, version, the version it replaced, who) and, above it,
+the versions kept for a rollback. **Roll back to this** puts a kept version back the same safe way. Rolling back is itself kept, so it can be undone.
+
+![Kept versions, and the history of what was deployed](img/deploy/03-history-rollback.jpg)
+
+- `drishti.packs.deploy.keep-versions` (5) previous versions are kept per pack; older ones are deleted.
+- A pack that was first deployed over the copy that ships with the server also offers **shipped with the server**: rolling back to it removes the installed copy.
+- Rollback restores **files only**. Data is not touched, and a data-source override ([17.5](#175-where-a-pack-reads-its-data-data-source)) stays as it was.
+- The history is `data/packs/deploy-history.jsonl` (`DRISHTI_PACKS_DEPLOY_HISTORY`); every step is also an audit row: `pack-upload-checked`, `pack-deployed`, `pack-rolled-back`.
+
+![The pack row after a deploy](img/deploy/04-pack-row.jpg)
+
+### 17.3 The same from the terminal
+
+```bash
+python3 tools/drishti.py server packs deploy dist/my-bank-1.1.0.tar.gz --preview   # checks and changes; discards the upload
+python3 tools/drishti.py server packs deploy dist/my-bank-1.1.0.tar.gz --accept-breaking --wait 60
+python3 tools/drishti.py server packs history --pack my-bank
+python3 tools/drishti.py server packs rollback my-bank --version 1.0.0              # or --version shipped
+```
+
+Without `--preview` the command deploys; with a breaking change it prints the preview and exits 1 until you add `--accept-breaking`. A personal API token
+needs the **packs:admin** scope (and its user the admin role). Every option and real output: [CLI_GUIDE.md, `server packs deploy`](CLI_GUIDE.md#server-packs-deploy-history-rollback-and-datasource).
+
+### 17.4 Copy path or Admin → Packs
+
+| | Copy (sections 5, 10) | Admin → Packs / `server packs deploy` |
+|---|---|---|
+| Needs a running server and a login | no | yes (administrator, `packs:admin` for a token) |
+| Checks before anything changes | `pack verify` on your machine | the server's checks above, on the server |
+| Shows what changes | `pack diff` | the same, in the page, against what is running |
+| Previous version kept | `.previous/` beside the packs | `.previous/` under the installed folder, N kept, listed in the page |
+| Restart | you | in place, with automatic undo |
+| Audit | file system | audit rows and the history file |
+
+### 17.5 Where a pack reads its data (Data source)
+
+A pack declares **connectors** (`connectors:` in `pack.yaml`): a plugin (a Delta lake, JSON Lines files, a database...), the kinds it serves, and its settings (a
+`root`, a JDBC `url`...). The settings in force come from three layers; the **highest wins**:
+
+| Layer | Where | Typical use |
+|---|---|---|
+| **site** | environment variables and the server's own configuration, e.g. `DRISHTI_SOURCES_CONNECTORS_RISK_STORE_SETTINGS_ROOT=/mnt/lake` | an operator pinning a value for the machine; the page shows it and cannot change it |
+| **override** | `data/packs/settings/<pack>.yaml` (`drishti.packs.settings-dir`, `DRISHTI_PACKS_SETTINGS`), written by Admin → Packs → **Data source** | pointing a pack at this site's lake or database |
+| **pack** | the pack's own `pack.yaml` | the default that ships with the pack |
+
+The pack's files are **never rewritten** by a data-source change, and a redeploy (17.1) replaces the pack folder but not the override, so your settings survive upgrades.
+The override file holds only what differs from the pack:
+
+```yaml
+# data/packs/settings/market-risk.yaml, written by Admin → Packs → Data source
+connectors:
+  risk-store:
+    enabled: true            # optional: switch the connector on or off
+    settings:
+      root: /mnt/shared/lake
+      engine: native
+      password: ${RISK_LAKE_PASSWORD}   # a credential is only ever an environment reference
+```
+
+**Admin → Packs → Data source** (a button on every loaded pack) shows each connector's settings with where each value comes from, in words: *pack default*,
+*overridden here* (with the pack's value beside it), *set by the site: wins over this file*:
+
+![The Data source panel: pack default against override, a site value that wins](img/deploy/05-data-source.jpg)
+
+- Edit a value, add a setting, or press **Use pack default** on a row. Only values that differ from the pack are kept.
+- **Test connection** tries the edited settings (before anything is saved) against the real source and lists, per kind, the newest business dates and how many
+  entities the source holds for each. For a source that cannot list its dates the count is the latest data, marked "≥" when it hit the search cap. It changes nothing.
+
+  ![Test connection: dates and row counts per kind](img/deploy/06-test-connection.jpg)
+
+- **Save and apply** writes the override file, runs the same check the server runs at start, then restarts in place; if it cannot start, the previous file is put back.
+- **Reset to the pack's defaults** removes the override (from the CLI, one connector's: `datasource reset my-bank --connector risk-store`).
+- A pack with an override is badged **data source overridden** in the packs table.
+
+  ![A pack with a data-source override](img/deploy/07-overridden.jpg)
+
+**Credentials.** A setting whose name says it is a credential (`password`, `secret`, `token`, `api-key`, `access-key`, `private-key`, `credential`) can only be an environment
+reference such as `${LAKE_PASSWORD}`; the server refuses the plain value, and a password written inside a URL (`jdbc:postgresql://user:pw@host/db`, `?password=...`).
+The password lives in the environment of the server process (a secret store, a Kubernetes secret), never in a file or a page. If the variable is not set, Test connection says so by name.
+
+**Shared connectors.** A connector belongs to the pack that declares it. If two unrelated packs declare the same connector name with different settings the server
+refuses to start, so override a shared connector in each pack that declares it, with the same values (the check on Save catches a mismatch before anything restarts).
+
+From the terminal:
+
+```bash
+python3 tools/drishti.py server packs datasource get my-bank
+python3 tools/drishti.py server packs datasource test my-bank --connector bank-store --set root=/mnt/dr-lake
+python3 tools/drishti.py server packs datasource set my-bank bank-store root=/mnt/dr-lake password='${LAKE_PW}' --test-first
+python3 tools/drishti.py server packs datasource reset my-bank
+```
+
+### 17.6 Settings, scopes and API
+
+| Property (environment) | Default | Meaning |
+|---|---|---|
+| `drishti.packs.deploy.max-archive-mb` | 50 | larger uploads are refused with HTTP 413; the console takes `packs.deploy_max_mb` |
+| `drishti.packs.deploy.max-unpacked-mb`, `max-files` | 200, 10000 | what an archive may unpack to |
+| `drishti.packs.deploy.keep-versions` | 5 | previous versions kept per pack |
+| `drishti.packs.deploy.require-signature` | false | only archives signed by a trusted publisher |
+| `drishti.packs.deploy.require-manifest` | true | an archive needs `MANIFEST.json` |
+| `drishti.packs.deploy.staging-minutes` | 30 | how long a verified upload waits for its confirmation |
+| `drishti.packs.deploy.history-file` (`DRISHTI_PACKS_DEPLOY_HISTORY`) | `./data/packs/deploy-history.jsonl` | the deployment history |
+| `drishti.packs.deploy.probe-dates`, `probe-timeout-seconds` | 3, 30 | Test connection: dates per kind, wait per source |
+| `drishti.packs.settings-dir` (`DRISHTI_PACKS_SETTINGS`) | `./data/packs/settings` | the override files |
+
+The endpoints (all `/api/v1/admin/packs/...`, administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-data-source).
+
+### 17.7 Troubleshooting
+
+| You see | Meaning | Do |
+|---|---|---|
+| *checksum mismatch: sutras/x.sutra.yaml* | the file changed after the bundle was made | bundle again; copy with a checksum-preserving tool |
+| *unsafe path in the archive* | an entry leaves the pack folder or is a link | rebuild the archive with `pack bundle`; never hand-tar absolute paths |
+| *no MANIFEST.json* | built with plain `tar`/`zip` | use `pack bundle`, or set `require-manifest: false` (not recommended) |
+| *the archive needs server >=X* | the bundle was made on a newer build | upgrade the server first |
+| *extends X, which is neither loaded nor on disk* | a parent pack is missing | deploy or load the parent first |
+| HTTP 413 | larger than `max-archive-mb` | raise it (and the console's `packs.deploy_max_mb`) if the archive is right; archives carry no data, so a big one usually has data in it |
+| history says *reverted* | the server could not start with the new files and put the old ones back | read `server.log` at that time; fix the pack and redeploy |
+| *a credential is never stored here* | a secret setting is not `${NAME}` | export the variable for the server process and write the reference |
+| *refers to an environment variable that is not set* | the server process has no such variable | set it in the process environment (not your shell) and restart |
+| a setting shows *set by the site* and edits do nothing | an environment variable or `application.yaml` sets it, and wins | change it there, or remove it |

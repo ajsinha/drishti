@@ -36,6 +36,8 @@ LIBS = (("yaml", "pyyaml", "every command that reads YAML (pack, sutra gen)"),
 DIR_VARS = (("DRISHTI_DELTA_ROOT", "Delta lake root"), ("DRISHTI_FILES_ROOT", "files root"), ("DRISHTI_PACKS_INSTALLED", "installed packs"),
             ("DRISHTI_PACKS_DIR", "packs dir"))
 PORTS = ((18480, "server"), (17480, "console"))
+if os.environ.get("DRISHTI_DOCTOR_PORTS"):            # "18971:server,17971:console": check these instead (a machine whose defaults are not yours to probe)
+    PORTS = tuple((int(x.split(":")[0]), x.split(":")[1]) for x in os.environ["DRISHTI_DOCTOR_PORTS"].split(",") if ":" in x)
 
 
 def item(level: str, name: str, detail: str, fix: str = "") -> dict:

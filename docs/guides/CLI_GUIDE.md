@@ -1436,12 +1436,13 @@ OK   health                      status UP
 OK   pack counterparty-risk      loaded, enabled, v1.0.0, 8 kinds, no Sutra problems
 
 kind                  id                        date        panels  empty  ms       result
-netting-set           NS-ALDERSHOT-FRA          2026-10-05  5       0      17.1     OK
-netting-set           NS-ALDERSHOT-FRA          2026-10-02  5       0      18.0     OK
-credit-limit          LIM-ALDERSHOT             2026-10-05  4       0      7.8      OK
-credit-limit          LIM-ALDERSHOT             2026-10-02  4       0      7.5      OK
+netting-set           NS-ALDERSHOT-FRA          2026-10-05  5       0      61.4     OK
+netting-set           NS-ALDERSHOT-FRA          2026-10-02  5       0      27.5     OK
+credit-limit          LIM-ALDERSHOT             2026-10-05  4       0      9.2      OK
+credit-limit          LIM-ALDERSHOT             2026-10-02  4       0      9.0      OK
 ...
-16 views, p50 7.6 ms, max 18.0 ms
+
+16 views, p50 10.2 ms, max 61.4 ms
 smoke: passed
 ```
 
@@ -1450,22 +1451,30 @@ smoke: passed
 Green, yellow and red lines, each with a fix; exit 1 on any red. It checks Java (on `JAVA_HOME` or the PATH, 21 or newer, vendor),
 the server jar (and its version), Python and the optional libraries (`pyyaml`, `deltalake`, `pyarrow`, with install hints), the
 repository layout (`packs/`, `drishti-console/.venv`), the directories you configured (`DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`,
-`DRISHTI_PACKS_INSTALLED`, `DRISHTI_PACKS_DIR`: readable, writable), and ports 18480 and 17480 (free, or in use by Drishti; only a
+`DRISHTI_PACKS_INSTALLED`, `DRISHTI_PACKS_DIR`: readable, writable), and ports 18480 and 17480 (override with `DRISHTI_DOCTOR_PORTS=18971:server,17971:console` to check other ports instead; free, or in use by Drishti; only a
 GET of `/actuator/health` on localhost, nothing is killed or changed). With `--server` it also checks reachability, the version
-and whether the token is accepted, with the scopes of your most recently used personal token.
+and whether the token is accepted, with the exact id, scopes and expiry of the token the call used (`GET /api/v1/me/token`; a signed-in session has none).
 
 ```
-$ python3 tools/drishti.py doctor --server http://localhost:18480
+$ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-RED    server jar              no drishti-server-*-exec.jar under drishti-server/target: build it ...
-                               fix: ./mvnw -q -DskipTests package   (or set DRISHTI_JAR)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-1.16.0-exec.jar (version 1.16.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
+GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
                                fix: pip install deltalake   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
-GREEN  port 18480              in use by Drishti: status UP
-GREEN  server                  http://localhost:18480: version 1.16.0, java 21.0.12.1, status OK
+YELLOW python pyarrow          not installed (needed for data ingest --store delta)
+                               fix: pip install pyarrow   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
+GREEN  repo packs/             ~/drishti/packs
+YELLOW console venv            ~/drishti/drishti-console/.venv
+                               fix: cd drishti-console && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
+GREEN  port 18971              in use by Drishti: status UP
+GREEN  port 17971              free (the default console port)
+YELLOW server                  http://localhost:18971: version 1.16.0, java 21.0.12.1, status DEGRADED
 YELLOW token                   none given: calls run anonymously or as --user
-doctor: 1 red, 4 yellow
+                               fix: set DRISHTI_TOKEN or --token-file (My account, API tokens)
+doctor: 0 red, 5 yellow
 ```
 
 ### `view get` and `view explain`: a view in the terminal
@@ -1477,32 +1486,167 @@ shown, where the data came from, and why this layout (the Sutra that matched and
 view: field masks and entitlements of your token apply exactly as in the browser.
 
 ```
-$ python3 tools/drishti.py view get trade/BBG-60000001
-Fixed income · Government bond  BBG-60000001  with Summit Clearing LLC   [TRD]
+$ python3 tools/drishti.py view get counterparty/CP-ALDERSHOT
+Counterparty and legal · Counterparty  CP-ALDERSHOT   [CPTY]
 
 Key figures
-  figure      value
-  ----------  ---------------
-  Notional    CHF 198,000,000
-  Direction   Short
-  MTM (USD)   −978,378
-  ...
-P&L explain (USD, opening to closing MTM)  (waterfall, explain, F5)
-  step            value
-  -----------  --------
-  Opening MTM  −955,004
-  Carry          −8,220
-  ...
-$ python3 tools/drishti.py view explain trade/BBG-60000001
-What you are looking at: Trade BBG-60000001  (pack Trading)
-  BBG-60000001: Government bond (Fixed income) with Summit Clearing LLC, booked as "Short": 198.0m CHF notional ...
+  figure    value
+  --------  -----------------------
+  Name      Aldershot Pension Trust
+  LEI       549300H5KZ2QJHEAMB55
+  Rating    AA-
+  Sector    Pensions
+  Country   GB
+  Type      Pension fund
+  Net MTM   +13,812,754
+  PFE peak  145.5m
+
+Netting sets  (table, nettingSets, F2)
+  Netting set       Agreement           Trades      Net MTM
+  ----------------  ------------------  ------  -----------
+  NS-ALDERSHOT-FRA  AGR-ALDERSHOT-ISDA       3     −339,550
+  NS-ALDERSHOT-LDN  AGR-ALDERSHOT-ISDA      20   −4,886,451
+  NS-ALDERSHOT-NY   AGR-ALDERSHOT-ISDA      22  +18,471,892
+  NS-ALDERSHOT-TKY  AGR-ALDERSHOT-ISDA       1     +566,863
+
+KYC and classification  (kv, kyc)
+  field                value
+  -------------------  ----------
+  Status               Approved
+...
+$ python3 tools/drishti.py view explain counterparty/CP-ALDERSHOT
+What you are looking at: counterparty CP-ALDERSHOT
+  A legal entity the bank trades with: identifiers, rating, sector, country and parent group.
+
 Glossary
-  field             shown in  means
-  Coupon            terms     The interest rate the bond pays on its face amount.
-  ...
-Why this layout: Sutra govt-bond v1 + inference (a Sutra plus inference for what it left out)
-  Match trace: the chosen Sutra matched; 124 other Sutra(s) were tried and did not match (first 10 shown)
+  field        shown in     means
+  -----------  -----------  --------------------------------------------------------------------
+  Name         strip        What the record is called, for people to read.
+  Country      strip        The country, as a two-letter ISO 3166 code where the data holds one.
+  Type         strip        The class of thing the record is, within its kind.
+  Netting set  nettingSets  The value that names this record uniquely within its kind.
+  Status       kyc          Where the record is in its life, such as open, closed or pending.
+
+Where the data came from
+  item        value
+  ----------  ------------------------------
+  source      counterparty-master
+  generation  1
+  fetchedAt   2026-10-05T21:47:04.727572297Z
+  updatedAt   2026-10-05T21:47:04.411564680Z
+  current     True
+  live        False
+  stale       False
+  health      up
+
+Why this layout: Sutra counterparty v1 + inference (a Sutra plus inference for what it left out)
+  Sutra counterparty v1 of pack banking-core, priority 10, where (no where: matches every document of the kind)
+  Match trace: counterparty (priority 10) is the chosen Sutra; 0 other Sutra(s) were tried and did not match (first 10 shown)
+  sutra           priority  where  result
+  --------------  --------  -----  ------
+  * counterparty  10               true
+
+Next: F2 Netting sets; F3 Group hierarchy; F7 Counterparty group; F8 Impact; F9 Raw JSON
 ```
+
+### `server packs deploy`, `history`, `rollback` and `datasource`
+
+Admin → Packs from the terminal ([the whole story with pictures: OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back)).
+You need an administrator; a personal API token needs the **packs:admin** scope. The archive carries the pack only, never data.
+
+**`server packs deploy ARCHIVE [--preview] [--accept-breaking] [--sha256 HEX] [--signature-file F --publisher P] [--wait SECONDS]`**
+uploads the `.tar.gz` (or `.zip`) as the raw request body and prints what the server checked (archive, checksum, signature, unpack safety, `pack.yaml`,
+manifest and every file's checksum, the server version it needs, Sutra lint and tests, the packs it extends) and the **preview**: the difference from the
+running version at four levels, breaking first. A `.sha256` file beside the archive (`pack bundle` writes it) is sent too, so the server checks it arrived intact.
+
+- `--preview` stops there and discards the upload: nothing changes.
+- Without it the pack is deployed: the replaced version is kept, the server restarts in place and puts the old files back if it cannot start. A **breaking** change
+  (a kind or mnemonic removed or renamed) makes the command print the preview and exit 1 until you add `--accept-breaking`.
+- `--wait N` waits up to N seconds for the server to answer again after the restart (exit 1 if it does not).
+- Exit: 0 deployed or previewed; 1 refused by a check, breaking changes not accepted, or the server not back; 2 usage (no such file).
+- `--json` prints `{verification, result}`; the verification is the server's own answer ([API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-data-source)).
+
+```text
+$ python3 tools/drishti.py server packs deploy dist/helpdesk-0.2.0.tar.gz
+archive helpdesk-0.2.0.tar.gz (5819 bytes, sha256 aee6b807bb8149e8...)
+  ok    archive         5819 bytes, sha256 aee6b807bb8149e8...
+  ok    checksum        matches the sha256 you gave
+  warn  signature       not signed; sign it with a publisher key listed in drishti.packs.registry.trusted-keys to prove where it came from
+  ok    unpack          21 files, 18 KB; no path leaves the pack folder, no links
+  ok    pack.yaml       helpdesk 0.2.0
+  ok    manifest        20 files listed; every checksum matches; nothing unlisted
+  ok    server version  needs >=1.0.0, this is 1.16.0
+  ok    sutra lint      1 Sutra file(s) passed
+  ok    sutra test      1 Sutra file(s) passed
+  ok    dependencies    extends no other pack
+
+Preview: helpdesk 0.1.0 (loaded) -> 0.2.0 (newer)
+  BREAKING (2)   <- monitors, workspaces, alerts or saved links may stop working
+    kind removed               agent-load   monitors, workspaces and alerts that name it stop working
+    mnemonic removed           LOAD   kind agent-load
+  CHANGE (1)
+    version                    helpdesk   0.1.0 -> 0.2.0
+  summary: 2 breaking, 1 change
+
+not deployed: 2 breaking change(s); read them above, then run again with --accept-breaking
+$ python3 tools/drishti.py server packs deploy dist/helpdesk-0.2.0.tar.gz --accept-breaking --wait 90
+...
+deployed helpdesk 0.2.0 (replacing 0.1.0): The server restarts in place now; live views reconnect by themselves.
+the server is back
+```
+
+**`server packs history [--pack P] [--limit N]`** lists deployments, rollbacks and reverted attempts, newest first, and the versions kept for a rollback;
+**`server packs rollback NAME [--version V]`** puts a kept version back (`--version shipped`: the copy that ships with the server; none: the newest kept).
+
+```text
+$ python3 tools/drishti.py server packs history
+  when (UTC)           action  pack      version  replaced  by
+  -------------------  ------  --------  -------  --------  ---------
+  2026-10-05 21:45:22  deploy  helpdesk  0.2.0    0.1.0     anonymous
+  2026-10-05 21:45:13  deploy  helpdesk  0.1.0              anonymous
+  kept for rollback, helpdesk: 0.1.0
+$ python3 tools/drishti.py server packs rollback helpdesk --version 0.1.0
+rolled helpdesk back to 0.1.0 (replacing 0.2.0): The server restarts in place now; live views reconnect by themselves.
+```
+
+**`server packs datasource get|set|test|reset`** is the pack's data source: where its connectors read from. Precedence, highest first: the **site**
+(environment variables and `application.yaml`), the administrator's **override file** (`data/packs/settings/<pack>.yaml`, which a redeploy keeps), the **pack**.
+`get` shows each setting with where its value comes from; `set PACK CONNECTOR KEY=VALUE... [--unset KEY] [--enabled true|false] [--test-first]` overrides settings
+(only differences from the pack are kept) and applies them with the safe restart; `test PACK [--connector C] [--set KEY=VALUE...]` tries the settings in force, or
+the `--set` ones (nothing saved), on the real source and lists, per kind, the newest business dates and how many entities the source holds (exit 1 on a problem);
+`reset PACK [--connector C]` removes the override. A credential setting (`password`, `secret`, `token`, `api-key`, ...) is only ever an environment reference:
+`password='${LAKE_PW}'` (single quotes, so your shell leaves it alone); the server refuses a plain value.
+
+```text
+$ python3 tools/drishti.py server packs datasource set market-risk risk-store root=/mnt/dr-lake
+saved the override for market-risk: changed risk-store.root; The server restarts in place now; live views reconnect by themselves.
+$ python3 tools/drishti.py server packs datasource get market-risk
+data source of market-risk: an administrator override is in force   [override file data/packs/settings/market-risk.yaml]
+
+  connector risk-store   plugin delta   kinds var, stress-scenario, stress-result, frtb-sensitivity, pnl-explain   on (pack)
+  setting  in force      where from
+  -------  ------------  -----------------------------------------------------------
+  root     /mnt/dr-lake  overridden; pack default ${DRISHTI_DELTA_ROOT:./data/delta}
+  domain   risk
+```
+
+```text
+$ python3 tools/drishti.py server packs datasource set market-risk risk-store root=/mnt/dr-lake --test-first
+tested market-risk: the edited settings, not yet saved
+
+  risk-store (delta): PROBLEM: DOWN: cannot reach /mnt/dr-lake/risk (engine: native)
+  kind              business date  rows  note
+  ----------------  -------------  ----  ---------------------------
+  var                              0     nothing found for this kind
+  ...
+
+not saved: the test failed
+$ python3 tools/drishti.py server packs datasource set market-risk risk-store password=hunter2
+drishti: the server said 400 DRS-5001: DRS-5001 the data source is not valid: risk-store.settings.password: a credential is never stored here; write an environment reference such as ${PASSWORD}
+```
+
+(The scratch server of these examples has no Delta lake, so the test reports the source down; against a lake the table lists each kind's dates and row counts,
+as in the [Test connection picture](OPERATIONALISING.md#175-where-a-pack-reads-its-data-data-source).)
 
 ### Shell completion
 
