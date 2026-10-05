@@ -14,3 +14,4 @@
 
 noErrors: true
 nonEmpty: [pnl]
+help: { about: true }

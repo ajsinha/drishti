@@ -31,12 +31,13 @@ import org.yaml.snakeyaml.Yaml;
  * nonEmpty: [pnl, limits]        # these panels render with data on every sample
  * samples:                       # optional, per sample file
  *   VAR-COMM.json: { nonEmpty: [pnl] }
+ * help: { coverage: 0.9, about: true }   # share of shown fields with a glossary entry; the page text renders
  * </pre>
  * Unknown keys are refused so a typo cannot silently pass.
  */
-record ExpectFile(boolean noErrors, List<String> nonEmpty, Map<String, List<String>> perSample) {
+record ExpectFile(boolean noErrors, List<String> nonEmpty, Map<String, List<String>> perSample, Double helpCoverage, boolean helpAbout) {
 
-    static final ExpectFile DEFAULT = new ExpectFile(true, List.of(), Map.of());
+    static final ExpectFile DEFAULT = new ExpectFile(true, List.of(), Map.of(), null, false);
 
     /** The non-empty panels expected of one sample file (the whole-folder list plus its own). */
     List<String> nonEmptyFor(String sampleFile) {
@@ -61,6 +62,8 @@ record ExpectFile(boolean noErrors, List<String> nonEmpty, Map<String, List<Stri
         boolean noErrors = true;
         List<String> nonEmpty = List.of();
         Map<String, List<String>> per = new LinkedHashMap<>();
+        Double coverage = null;
+        boolean about = false;
         for (Map.Entry<?, ?> e : m.entrySet()) {
             String key = String.valueOf(e.getKey());
             switch (key) {
@@ -71,6 +74,28 @@ record ExpectFile(boolean noErrors, List<String> nonEmpty, Map<String, List<Stri
                     noErrors = b;
                 }
                 case "nonEmpty" -> nonEmpty = ids(file, "nonEmpty", e.getValue());
+                case "help" -> {
+                    if (!(e.getValue() instanceof Map<?, ?> h)) {
+                        throw new CliArgs.UsageException(file + ": help must be a mapping (coverage, about)");
+                    }
+                    for (Map.Entry<?, ?> k : h.entrySet()) {
+                        switch (String.valueOf(k.getKey())) {
+                            case "coverage" -> {
+                                if (!(k.getValue() instanceof Number n) || n.doubleValue() < 0 || n.doubleValue() > 1) {
+                                    throw new CliArgs.UsageException(file + ": help.coverage must be a number from 0 to 1");
+                                }
+                                coverage = n.doubleValue();
+                            }
+                            case "about" -> {
+                                if (!(k.getValue() instanceof Boolean b)) {
+                                    throw new CliArgs.UsageException(file + ": help.about must be true or false");
+                                }
+                                about = b;
+                            }
+                            default -> throw new CliArgs.UsageException(file + ": unknown key '" + k.getKey() + "' under help (coverage, about)");
+                        }
+                    }
+                }
                 case "samples" -> {
                     if (!(e.getValue() instanceof Map<?, ?> sm)) {
                         throw new CliArgs.UsageException(file + ": samples must map a file name to its expectations");
@@ -87,10 +112,10 @@ record ExpectFile(boolean noErrors, List<String> nonEmpty, Map<String, List<Stri
                         per.put(String.valueOf(s.getKey()), ids(file, "samples." + s.getKey() + ".nonEmpty", one.get("nonEmpty")));
                     }
                 }
-                default -> throw new CliArgs.UsageException(file + ": unknown key '" + key + "' (noErrors, nonEmpty, samples)");
+                default -> throw new CliArgs.UsageException(file + ": unknown key '" + key + "' (noErrors, nonEmpty, samples, help)");
             }
         }
-        return new ExpectFile(noErrors, nonEmpty, per);
+        return new ExpectFile(noErrors, nonEmpty, per, coverage, about);
     }
 
     private static List<String> ids(Path file, String where, Object v) {
