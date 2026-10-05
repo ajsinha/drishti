@@ -183,6 +183,31 @@ public final class PackAccess {
         return owner == null || (states.enabled(owner) && effective(user).contains(owner));
     }
 
+    /** The pack that owns the kind, or null when no pack does. */
+    public String ownerOf(String kind) {
+        return kindOwner.get(kind);
+    }
+
+    /**
+     * True when the kind's pack is <em>assigned</em> to the user (directly, or required by an assigned pack), whether or not
+     * the user has it switched on; kinds no pack owns are always reachable. A switched-off pack for everyone is not reachable.
+     */
+    public boolean kindAssigned(String user, String kind) {
+        String owner = kindOwner.get(kind);
+        if (owner == null) {
+            return true;
+        }
+        if (!states.enabled(owner)) {
+            return false;
+        }
+        for (String a : assigned(user)) {
+            if (closure(a).contains(owner)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void validate(Set<String> packs) {
         if (packs != null && !installed().containsAll(packs)) {
             throw new DrishtiException(ErrorCode.INVALID_USER, "unknown pack; installed: " + installed());

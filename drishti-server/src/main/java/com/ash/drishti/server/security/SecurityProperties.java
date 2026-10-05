@@ -67,8 +67,10 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param approve may approve or reject proposed Sutras (never their own, with four-eyes on)
      * @param calc may use Calc: Python in the browser over what the role may open (PYTHON_CALC.md)
      * @param layout may customise layouts (layout mode, personal layouts); true unless set to false (viewer is)
+     * @param collaborate may share, comment and mention; true unless set to false
+     * @param compliance may place legal holds, export the collaboration record and read any share; false unless set
      */
-    public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout) {
+    public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance) {
         public Role {
             kinds = kinds == null ? List.of() : List.copyOf(kinds);
             raw = raw != null && raw;
@@ -77,6 +79,8 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
             approve = approve != null && approve;
             calc = calc != null && calc;
             layout = layout == null || layout;
+            collaborate = collaborate == null || collaborate;
+            compliance = compliance != null && compliance;
         }
     }
 }

@@ -269,6 +269,7 @@ alert rules are evaluated on the document as their owner may see it. The server 
 (`Entitlements.redactor`) before anything reads them, so nothing about a masked field can be probed: a condition on
 it is never true, ordering by it does not order, the type-ahead does not match it, Impact does not list entities
 tied to the analysed one only through it, and a total over it reads `•••`.
+Shares, their notes and inbox rows are masked answers too: a note's copies of a masked value read `•••` for a reader without `raw`, and a notice carries no data value, only who, what kind and which id.
 
 A `redact` entry with dots names a field by the end of its path (arrays are not a step): `lifecycle.timeline.description` masks
 every `description` under `lifecycle.timeline`, and no other `description`. The shipped setting masks it, because the trading
@@ -1303,7 +1304,7 @@ without seeing it.
 ## Error code table
 
 The complete list (from `ErrorCode` in `drishti-common`). The first digit groups them: 1 sources and data,
-2 Sutras and expressions, 3 inference, 4 engine, 5 API, 6 identity. Codes are never reused.
+2 Sutras and expressions, 3 inference, 4 engine, 5 API, 6 identity, 7 collaboration. Codes are never reused.
 
 | Code | HTTP | Name (`title`) | When you see it |
 |---|---|---|---|
@@ -1345,6 +1346,18 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-6008 | 404 | role not found | no such role |
 | DRS-6009 | 409 | role in use | the role is held by a user; take it away from them first |
 | DRS-6010 | 403 | password change due | (console) the user must choose a new password on My account before anything else |
+| DRS-7001 | 404 | share not found | no share with that id, or you are not its sender, a recipient it reached, or `compliance` (never a 403: the share's existence is not revealed) |
+| DRS-7002 | 422 | bad recipients | no recipient, an unknown user (or one outside your packs), a role that may not be addressed, or over `share.max-recipients`, `share.max-expanded` or `max-group-size` |
+| DRS-7003 | 429 | collab rate limited | over `limits.shares-per-minute`, `shares-per-day` or `directory-per-minute`; `Retry-After` says when to try again |
+| DRS-7004 | 403 | sharing off | collaboration (`drishti.collab.enabled`), or sharing for the kind's pack (`packs.<pack>.share-enabled`), is switched off |
+| DRS-7005 | 404 | thread not found | (comment threads, a later build step) no thread, or not visible to you |
+| DRS-7006 | 404 | comment not found | (comment threads) no comment, or not visible to you |
+| DRS-7007 | 409 | thread locked | (comment threads) a comment on a locked thread |
+| DRS-7008 | 403 | not editable | (comment threads) not the author, or the edit window has passed |
+| DRS-7009 | 409 | stale comment | (comment threads) an edit built on an older revision |
+| DRS-7010 | 423 | on hold | (compliance) a purge or removal of something under a legal hold |
+| DRS-7011 | 422 | text refused | an empty or too long note, a `text.deny-patterns` match, a masked value with `text.on-masked-copy: reject`, or a bad pin (a generation newer than the server holds) |
+| DRS-7012 | 503 | mail unavailable | email was asked for explicitly while it is off, or SMTP failed at once |
 
 `DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1448,6 +1461,48 @@ arrived within `staleAfter`; always false on a picked business date). Admin heal
 
 Reading and adding need the right to open the kind (`403 DRS-5002` otherwise). Personal API tokens only read.
 
+## Share with a note, the directory and the inbox
+
+Design: [COLLABORATION.md](../architecture/COLLABORATION.md). What travels is the sender's words and a pinned link, never data;
+what a person receives is computed for that person, when they look, from what they may see now. Everything below needs the
+`collaborate` power (every role has it unless an administrator took it away) and `drishti.collab.enabled` (otherwise
+`403 DRS-7004`). Personal API tokens read only: they cannot send.
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/collab` | what the console needs to draw the dialog: `{enabled, store, email, maxText, maxRecipients, undeliverable, onMaskedCopy, postToThread, minQuery, collaborate, compliance}`. Answers even when collaboration is off (`enabled: false`) |
+| `GET` | `/directory?q=ra&limit=10&kind=trade` | the people picker: `[{type: "user", name, displayName, desk, email: true}, {type: "role", name, size}]`. `q` needs `directory.min-query` characters (`400` otherwise). Only enabled users; with `directory.scope: shared-packs` (default) only users who share at least one assigned pack with you, and roles by the number of those people they hold (`admin` and `service` are never offered). `email` says whether an address exists, never the address. With `kind` and `share.undeliverable: tell`, each user also has `reach: true/false`: may they open that kind. Limited to `limits.directory-per-minute` |
+| `POST` | `/shares` | sends a share. Body `{"kind": "trade", "id": "MX-20000001", "panel": "cashflows", "gateKind": "trade", "generation": 1674, "note": "…", "to": {"users": ["ravi"], "roles": ["risk"]}, "channels": {"inApp": true, "email": false}, "live": false}`; the as-of headers (or `asOf`/`knownAt`) say which date the page showed. `201 {id, link, pin, delivered, skipped: [{name, reason}], warnings: []}`. See below |
+| `GET` | `/shares/{id}` | opens a share, for its sender, a recipient it reached, or a role with `compliance`; anyone else `404 DRS-7001` (the same as no such share). See below |
+| `GET` | `/me/shares?box=received\|sent&limit=50&before=` | your shares, newest first: `[{id, createdAt, sender, senderName, kind, entityId, panel, pin, excerpt, access, recipients}]` (`recipients` for the sent box; `entityId`, `pin` and `excerpt` are left out when you may no longer open the kind) |
+| `GET` | `/me/inbox?type=&unread=false&limit=50&before=` | your notices, newest first, rendered now for your rights: `[{seq, at, type, actor, actorName, kind, id, panel, shareId, threadId, commentId, read, access, title, excerpt}]`. When you can no longer open the kind, `access` is `false`, `id`, `panel` and `excerpt` are `null` and `title` reads `(no access) Ann shared a trade view` |
+| `GET` | `/me/inbox/count` | `{unread}`, for the bell at page load |
+| `POST` | `/me/inbox/read` | `{"seqs": [12, 13]}` or `{"upTo": 40}`; answers `{changed, unread}` |
+| `GET` | `/me/alerts/stream` | the one live stream (SSE): beside `alert` it carries `notice`, one inbox row as `GET /me/inbox` renders it, the moment it is written (from another server within `inbox.poll`) |
+
+**Sending.** The sender must open the kind (and a shared panel's `gateKind`: `403 DRS-5002` otherwise). `to.users` must be in your
+directory scope and `to.roles` mentionable (`DRS-7002` otherwise: an unknown user and one outside your packs look the same); at
+most `share.max-recipients` names and `share.max-expanded` people once roles are expanded. Each person is checked at delivery:
+their roles open the kind **and** the kind's pack is assigned to them (a pack they switched off still delivers, and the page offers
+to switch it on). `delivered` counts those notified; `skipped` says who was not and why (`may not open trade views`,
+`does not have the pack for trade views`), by name only for people in your directory scope (others are one line per role: `some
+members may not open trade views`); under `undeliverable: silent` it is empty. The note is plain text, 1 to `share.max-text`
+characters, and refused (`422 DRS-7011`) when it matches `text.deny-patterns`, or contains the value of a masked field and
+`text.on-masked-copy` is `reject`; otherwise the value's positions are recorded and every reader without `raw` sees `•••` there,
+and the sender gets a `warnings` entry. The **pin** `{businessDate, live, knownAt, generation, source}` is the page's: the date from
+the as-of headers, the generation you send (at most what the server holds now, else `422 DRS-7011`; `live: true` sends a live
+link). The share, its recipients, the inbox rows and the access-log `share` row are written in one transaction. More than
+`limits.shares-per-minute` or `limits.shares-per-day` is `429 DRS-7003` with `Retry-After`. Asking for `channels.email` while email
+is off is `503 DRS-7012`.
+
+**Opening.** For a recipient who may open the shared view, `GET /shares/{id}` answers `{id, access: true, role, sender, senderName,
+createdAt, kind, entityId, panel, pin, note}` (the note rendered for them: masked spans as `•••` unless their role has `raw`) and sets
+their first-open time; the sender and `compliance` also get `recipients: [{name, addressed, state, openedAt}]`. For a recipient who
+may not open it (their roles stopped opening the kind, or the pack is off) it answers `{id, access: false, reason: "no-access" |
+"no-pack" | "pack-off", pack, sender, senderName, createdAt, kind}` and nothing about the entity: no id, no title, no note, no pin.
+The link opens the view with `asOf` and `knownAt` taken from `pin` as request parameters (never the recipient's saved date) and the
+header `X-Drishti-Share: sh_…`, which the access log records as `share:sh_…` on the `view` row.
+
 ## Shared workspaces
 
 | Method | Path | What it does |
@@ -1475,8 +1530,8 @@ A schedule that does not parse, a query that does not parse, or a webhook outsid
 ## The access log (administrators)
 
 `GET /admin/access?user=&action=&kind=&id=&from=&to=&limit=` lists answered reads, newest first:
-`[{at, user, action, kind, entityId, detail, businessDate}]`. `action` is `view`, `raw`, `history`, `search` or
-`export`; `detail` is the search text or the history field; `from`/`to` take a date (`2026-09-30`) or an instant.
+`[{at, user, action, kind, entityId, detail, businessDate}]`. `action` is `view`, `raw`, `history`, `search`, `export` or
+`share`; `detail` is the search text or the history field; a `share` row (written at once, never dropped) says `sh_… to 8 (user:ravi, role:risk)`, and a `view` opened through a share's link says `share:sh_…`; `from`/`to` take a date (`2026-09-30`) or an instant.
 `limit` is 1-5000 (default 200). `GET /admin/access/stats` gives `written`, `dropped`, `queued` and `keepDays`.
 
 

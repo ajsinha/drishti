@@ -44,6 +44,10 @@ public final class RoleStore {
      * so a role saved by an earlier release keeps the default (allowed) without a migration.
      */
     static final String NO_LAYOUT = "no-layout";
+    /** Sharing and commenting are allowed unless a role is marked otherwise (same reason as {@link #NO_LAYOUT}). */
+    static final String NO_COLLABORATE = "no-collaborate";
+    /** The compliance power: holds, exports, reading any share. */
+    static final String COMPLIANCE = "compliance";
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9-]{1,63}");
     private final IdentityRepositories.Roles roles;
     private final TransactionTemplate tx;
@@ -119,6 +123,12 @@ public final class RoleStore {
                 if (!role.layout()) {
                     e.powers.add(NO_LAYOUT);
                 }
+                if (!role.collaborate()) {
+                    e.powers.add(NO_COLLABORATE);
+                }
+                if (role.compliance()) {
+                    e.powers.add(COMPLIANCE);
+                }
                 e.updatedAt = now;
                 e.updatedBy = actor;
                 e.kinds.clear();
@@ -156,12 +166,13 @@ public final class RoleStore {
 
     private static String describe(RoleDefinition r) {
         return "kinds=" + r.kinds() + (r.raw() ? " raw" : "") + (r.author() ? " author" : "") + (r.approve() ? " approve" : "")
-                + (r.admin() ? " admin" : "") + (r.calc() ? " calc" : "") + (r.layout() ? "" : " no-layout");
+                + (r.admin() ? " admin" : "") + (r.calc() ? " calc" : "") + (r.layout() ? "" : " no-layout")
+                + (r.collaborate() ? "" : " no-collaborate") + (r.compliance() ? " compliance" : "");
     }
 
     private static RoleDefinition toDefinition(RoleEntity e) {
         return new RoleDefinition(e.name, e.description, List.copyOf(new TreeSet<>(e.kinds)), e.raw, e.author, e.approve, e.admin,
-                e.powers.contains(CALC), !e.powers.contains(NO_LAYOUT), false,
+                e.powers.contains(CALC), !e.powers.contains(NO_LAYOUT), !e.powers.contains(NO_COLLABORATE), e.powers.contains(COMPLIANCE), false,
                 e.updatedAt, e.updatedBy);
     }
 }

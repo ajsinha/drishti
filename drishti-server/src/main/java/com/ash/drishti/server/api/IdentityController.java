@@ -79,10 +79,13 @@ public class IdentityController {
     private final com.ash.drishti.identity.ApiTokenStore apiTokens;
     private final com.ash.drishti.identity.SessionStore sessions;
     private final com.ash.drishti.identity.design.DesignService designs;
+    private final com.ash.drishti.identity.collab.InboxStore inbox;
 
     public IdentityController(UserService users, Entitlements entitlements, com.ash.drishti.identity.PreferenceStore preferences,
             com.ash.drishti.server.security.PackAccess packAccess, com.ash.drishti.identity.AlertHistory alerts, com.ash.drishti.identity.ApiTokenStore apiTokens,
-            com.ash.drishti.identity.SessionStore sessions, com.ash.drishti.identity.design.DesignService designs) {
+            com.ash.drishti.identity.SessionStore sessions, com.ash.drishti.identity.design.DesignService designs,
+            com.ash.drishti.identity.collab.InboxStore inbox) {
+        this.inbox = inbox;
         this.designs = designs;
         this.apiTokens = apiTokens;
         this.sessions = sessions;
@@ -176,6 +179,7 @@ public class IdentityController {
         preferences.forget(username);
         designs.forget(username);       // the user's Build designs and their samples go with the account
         alerts.forget(username);
+        inbox.forget(username);         // and their inbox (shares they sent stay: they are the record)
         apiTokens.forget(username);
         sessions.endAll(username.trim().toLowerCase(java.util.Locale.ROOT), p.user(), "deleted");
     }

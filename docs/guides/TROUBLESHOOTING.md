@@ -803,3 +803,10 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-5020`–`DRS-5024` | one operation of a Build edit was refused (listed in `problems` with its index): malformed, no such panel, option not accepted, bad value, text not editable in place |
 | `DRS-5010` | not signed in |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
+| `DRS-7001` | a share link that is not yours, or does not exist (HTTP 404; the two look the same on purpose). Ask the sender to share it with you again |
+| `DRS-7002` | a share had no recipient, or named someone you cannot address: an unknown user, one who uses none of your packs, a role that is not mentionable (HTTP 422). Search the picker for the name |
+| `DRS-7003` | too many shares or directory searches in a minute (or shares today); wait the `Retry-After` seconds (HTTP 429). Limits are `drishti.collab.limits.*` |
+| `DRS-7004` | sharing is off: `drishti.collab.enabled`, or `drishti.collab.packs.<pack>.share-enabled: false` for that kind's pack (HTTP 403) |
+| `DRS-7005`–`DRS-7010` | comment threads, moderation and holds (a later build step; see [COLLABORATION.md](../architecture/COLLABORATION.md)) |
+| `DRS-7011` | the note was refused: empty, over `share.max-text`, matches `text.deny-patterns`, holds the value of a masked field under `on-masked-copy: reject`, or the page's generation is newer than the server's (HTTP 422). Reload the page and send again |
+| `DRS-7012` | email was asked for but is off or unreachable (HTTP 503); the share can still be sent in Drishti only |

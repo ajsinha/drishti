@@ -46,7 +46,7 @@ public class RoleController {
 
     /** A role as an administrator writes it. */
     public record RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin, Boolean calc,
-            Boolean layout) {}
+            Boolean layout, Boolean collaborate, Boolean compliance) {}
 
     private final RoleCatalog roles;
     private final UserService users;
@@ -74,6 +74,8 @@ public class RoleController {
             m.put("admin", r.admin());
             m.put("calc", r.calc());
             m.put("layout", r.layout());
+            m.put("collaborate", r.collaborate());
+            m.put("compliance", r.compliance());
             m.put("builtIn", r.builtIn());
             m.put("updatedAt", r.updatedAt());
             m.put("updatedBy", r.updatedBy());
@@ -93,7 +95,8 @@ public class RoleController {
         entitlements.requireAdmin(p);
         List<String> kinds = r.kinds() == null ? List.of() : r.kinds().stream().map(String::trim).filter(k -> !k.isEmpty()).distinct().toList();
         return roles.save(new RoleDefinition(name, r.description(), kinds, Boolean.TRUE.equals(r.raw()), Boolean.TRUE.equals(r.author()),
-                Boolean.TRUE.equals(r.approve()), Boolean.TRUE.equals(r.admin()), Boolean.TRUE.equals(r.calc()), !Boolean.FALSE.equals(r.layout()), false, null, ""), p.user());
+                Boolean.TRUE.equals(r.approve()), Boolean.TRUE.equals(r.admin()), Boolean.TRUE.equals(r.calc()), !Boolean.FALSE.equals(r.layout()),
+                !Boolean.FALSE.equals(r.collaborate()), Boolean.TRUE.equals(r.compliance()), false, null, ""), p.user());
     }
 
     @DeleteMapping("/{name}")

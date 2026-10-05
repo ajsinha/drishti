@@ -74,6 +74,15 @@ public final class AccessLog implements AutoCloseable {
         }
     }
 
+    /**
+     * Records an event now, in the caller's transaction when there is one, never queued and never dropped: for what must not
+     * be unrecorded (a share). A failure propagates, so the caller's transaction rolls back with it.
+     */
+    public void recordNow(Event e) {
+        tx.executeWithoutResult(s -> repo.save(entity(e)));
+        written.incrementAndGet();
+    }
+
     /** Writes what is queued (also called at shutdown and by tests). */
     public void flush() {
         try {

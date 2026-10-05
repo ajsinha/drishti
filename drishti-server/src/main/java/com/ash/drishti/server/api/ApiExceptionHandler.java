@@ -53,6 +53,17 @@ public class ApiExceptionHandler {
         return p;
     }
 
+    /** Over a collaboration rate limit: {@code 429 DRS-7003} with {@code Retry-After}. */
+    @ExceptionHandler(com.ash.drishti.server.collab.RateLimitedException.class)
+    org.springframework.http.ResponseEntity<ProblemDetail> rateLimited(com.ash.drishti.server.collab.RateLimitedException e) {
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, e.getMessage());
+        p.setTitle("too many");
+        p.setProperty("code", e.errorCode().code());
+        return org.springframework.http.ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(org.springframework.http.HttpHeaders.RETRY_AFTER, Long.toString(e.retryAfterSeconds()))
+                .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON).body(p);
+    }
+
     @ExceptionHandler(DrishtiException.class)
     ProblemDetail drishti(DrishtiException e) {
         HttpStatus status = HttpStatus.valueOf(e.errorCode().httpStatus());

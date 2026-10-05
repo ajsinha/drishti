@@ -27,7 +27,8 @@ import org.springframework.transaction.support.TransactionTemplate;
  * database ({@link IdentityDatabase}). The server supplies {@link RoleNames}: built-in roles plus administrators' roles.
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties({IdentityProperties.class, com.ash.drishti.identity.design.DesignProperties.class})
+@EnableConfigurationProperties({IdentityProperties.class, com.ash.drishti.identity.design.DesignProperties.class,
+        com.ash.drishti.identity.collab.CollabProperties.class})
 @Import(IdentityDatabase.class)
 public class IdentityConfiguration {
 
@@ -64,6 +65,39 @@ public class IdentityConfiguration {
     public com.ash.drishti.identity.design.DesignSweeper designSweeper(com.ash.drishti.identity.design.DesignService designs,
             com.ash.drishti.identity.design.DesignProperties props) {
         return new com.ash.drishti.identity.design.DesignSweeper(designs, props.sweepInterval());
+    }
+
+    /**
+     * Where shares and inbox rows are kept ({@code drishti.collab.store}): the identity database (default) or files. Files are
+     * for one server: with a shared (PostgreSQL) database the server refuses to start, because several servers would not see
+     * each other's writes.
+     */
+    @Bean
+    public com.ash.drishti.identity.collab.CollabTx collabTx(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id,
+            TransactionTemplate identityTransactions) {
+        requireSingleServerForFiles(props, id);
+        return props.jpa() ? com.ash.drishti.identity.collab.CollabTx.of(identityTransactions) : com.ash.drishti.identity.collab.CollabTx.serial();
+    }
+
+    @Bean
+    public com.ash.drishti.identity.collab.ShareStore shareStore(com.ash.drishti.identity.collab.CollabProperties props,
+            IdentityRepositories.Shares shares, IdentityRepositories.ShareRecipients recipients, TransactionTemplate identityTransactions) {
+        return props.jpa() ? new com.ash.drishti.identity.collab.JpaShareStore(shares, recipients, identityTransactions)
+                : new com.ash.drishti.identity.collab.FileShareStore(java.nio.file.Path.of(props.dir()));
+    }
+
+    @Bean
+    public com.ash.drishti.identity.collab.InboxStore inboxStore(com.ash.drishti.identity.collab.CollabProperties props,
+            IdentityRepositories.Inbox inbox, TransactionTemplate identityTransactions) {
+        return props.jpa() ? new com.ash.drishti.identity.collab.JpaInboxStore(inbox, identityTransactions)
+                : new com.ash.drishti.identity.collab.FileInboxStore(java.nio.file.Path.of(props.dir()), props.inbox().keep());
+    }
+
+    public static void requireSingleServerForFiles(com.ash.drishti.identity.collab.CollabProperties props, IdentityProperties id) {
+        if (!props.jpa() && !id.sqlite()) {
+            throw new IllegalStateException("drishti.collab.store=file keeps shares on this server only, but drishti.identity.database-url "
+                    + "is a shared database: use drishti.collab.store=jpa");
+        }
     }
 
     @Bean
