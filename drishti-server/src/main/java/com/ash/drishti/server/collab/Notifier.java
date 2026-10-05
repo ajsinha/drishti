@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.collab;
 
+import com.ash.drishti.identity.collab.Comment;
+import com.ash.drishti.identity.collab.CommentThread;
 import com.ash.drishti.identity.collab.Notice;
 import com.ash.drishti.identity.collab.Recipient;
 import com.ash.drishti.identity.collab.Share;
@@ -30,6 +32,12 @@ public interface Notifier {
     /** The share and the recipients it reached (state {@code notified}). */
     record ShareEvent(Share share, List<Recipient> reached) {}
 
+    /**
+     * A comment's audience: {@code type} is {@code mention} (addressed: cannot be muted) or {@code reply} (followers); {@code shareId} is set
+     * for a reply to a share. {@code recipients} are usernames already checked with {@code mayReach} and never the author.
+     */
+    record CommentEvent(String type, CommentThread thread, Comment comment, String shareId, List<String> recipients) {}
+
     /** The channel's name: {@code in-app}, {@code email}. A share may ask for {@code email} only when a notifier of that channel is on. */
     String channel();
 
@@ -40,4 +48,9 @@ public interface Notifier {
 
     /** Delivers; returns the inbox rows written, which the caller pushes to open streams after the commit. */
     List<Notice> onShare(ShareEvent event);
+
+    /** Delivers a mention or reply notice; channels that do not carry comments leave this alone. Returns the inbox rows written. */
+    default List<Notice> onComment(CommentEvent event) {
+        return List.of();
+    }
 }

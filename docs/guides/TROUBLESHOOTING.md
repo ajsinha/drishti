@@ -807,6 +807,12 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-7002` | a share had no recipient, or named someone you cannot address: an unknown user, one who uses none of your packs, a role that is not mentionable (HTTP 422). Search the picker for the name |
 | `DRS-7003` | too many shares or directory searches in a minute (or shares today); wait the `Retry-After` seconds (HTTP 429). Limits are `drishti.collab.limits.*` |
 | `DRS-7004` | sharing is off: `drishti.collab.enabled`, or `drishti.collab.packs.<pack>.share-enabled: false` for that kind's pack (HTTP 403) |
-| `DRS-7005`–`DRS-7010` | comment threads, moderation and holds (a later build step; see [COLLABORATION.md](../architecture/COLLABORATION.md)) |
-| `DRS-7011` | the note was refused: empty, over `share.max-text`, matches `text.deny-patterns`, holds the value of a masked field under `on-masked-copy: reject`, or the page's generation is newer than the server's (HTTP 422). Reload the page and send again |
+| `DRS-7005` / `DRS-7006` | no such thread or comment, **or one you may not see**: threads follow the right to open the entity (its kind and pack, and a panel's gate kind), so ask for access rather than the id (HTTP 404) |
+| `DRS-7007` | the thread is locked by an administrator; ask for it to be unlocked, or start a new thread (HTTP 409) |
+| `DRS-7008` | a comment can be edited only by its author and only within `drishti.collab.threads.edit-window` (default 15 minutes); after that, retract it and write another (HTTP 403) |
+| `DRS-7009` | someone changed the comment since you opened it; reload it and edit again (HTTP 409) |
+| `DRS-7010` | a purge or removal of something under a legal hold (compliance, a later build step) |
+| a mention reached nobody | a mention notifies only people who may open the entity's kind with its pack assigned; with `share.undeliverable: tell` the answer lists who was skipped and why. A name that is no one in your directory scope stays plain text |
+| a comment shows `•••` where I typed a value | the value is a masked field's; readers without `raw` see the mask. Quote it with `{$.path}` instead: each reader sees their own view of it |
+| `DRS-7011` | the note or comment was refused: empty, over `share.max-text`, matches `text.deny-patterns`, holds the value of a masked field under `on-masked-copy: reject`, or the page's generation is newer than the server's (HTTP 422). Reload the page and send again |
 | `DRS-7012` | email was asked for but is off or unreachable (HTTP 503); the share can still be sent in Drishti only |

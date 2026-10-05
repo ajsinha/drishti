@@ -41,6 +41,19 @@ class FileCollabStoreTest {
     }
 
     @Test
+    void threadsFollowTheContractAndSurviveARestart() throws Exception {
+        Path dir = Files.createTempDirectory("collab-threads");
+        CollabStoreChecks.threads(new FileThreadStore(dir));
+        FileThreadStore again = new FileThreadStore(dir);
+        assertThat(again.linkedNotes()).hasSize(1);
+        CommentThread t = again.threads("trade", again.linkedNotes().isEmpty() ? "" : again.thread(
+                again.comment(again.commentOfNote(again.linkedNotes().iterator().next()).orElseThrow()).orElseThrow().threadId()).orElseThrow().entityId())
+                .get(0);
+        assertThat(HashChain.verify(t.id(), again.chain(t.id()))).isNull();
+        assertThat(again.chain(t.id())).hasSize(4);
+    }
+
+    @Test
     void whatWasWrittenIsThereAfterARestart() throws Exception {
         Path dir = Files.createTempDirectory("collab-restart");
         FileShareStore shares = new FileShareStore(dir);

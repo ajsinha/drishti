@@ -50,6 +50,11 @@ public final class NoteStore {
         return notes.findByKindAndEntityIdOrderByIdAsc(kind, id).stream().map(NoteStore::view).toList();
     }
 
+    /** Every note, oldest first (the import of notes into threads reads them once). */
+    public List<Note> all() {
+        return notes.findAll(org.springframework.data.domain.Sort.by("id")).stream().map(NoteStore::view).toList();
+    }
+
     public Note add(String kind, String id, String path, String author, String body) {
         String text = check(body);
         String field = path == null || path.isBlank() ? null : path.trim();

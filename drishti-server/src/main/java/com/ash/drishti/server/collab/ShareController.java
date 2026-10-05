@@ -84,6 +84,14 @@ public class ShareController {
         return shares.open(p, id);
     }
 
+    /** A reply from the sender or a recipient; the other party is told. */
+    @PostMapping("/shares/{id}/replies")
+    @ResponseStatus(HttpStatus.CREATED)
+    public com.ash.drishti.server.collab.thread.ThreadService.CommentView reply(@PathVariable String id, @RequestBody Map<String, String> body,
+            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return shares.reply(p, id, body.get("note"), asOf);
+    }
+
     @GetMapping("/me/shares")
     public List<ShareService.Summary> mine(@RequestParam(defaultValue = "received") String box, @RequestParam(defaultValue = "50") int limit,
             @RequestParam(required = false) String before, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

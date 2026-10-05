@@ -22,6 +22,7 @@ import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.identity.collab.CollabTx;
 import com.ash.drishti.identity.collab.InboxStore;
 import com.ash.drishti.identity.collab.ShareStore;
+import com.ash.drishti.server.collab.thread.ThreadService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
 import java.util.List;
@@ -50,8 +51,8 @@ public class CollabConfiguration {
 
     @Bean
     public InboxService inboxService(InboxStore store, ShareStore shares, Entitlements entitlements, Principals principals,
-            CollabProperties props) {
-        return new InboxService(store, shares, entitlements, principals, props.inbox().keep());
+            CollabProperties props, ObjectProvider<ThreadService> threads) {
+        return new InboxService(store, shares, entitlements, principals, props.inbox().keep(), threads::getIfAvailable);
     }
 
     @Bean
@@ -68,8 +69,8 @@ public class CollabConfiguration {
     @Bean
     public ShareService shareService(ShareStore store, CollabTx tx, CollabProperties props, Entitlements entitlements, PackAccess packs,
             Principals principals, DirectoryService directory, UserService users, SourceRouter router, List<Notifier> notifiers,
-            InboxHub hub, ObjectProvider<AccessLog> accessLog, RateLimits limits) {
+            InboxHub hub, ObjectProvider<AccessLog> accessLog, RateLimits limits, ThreadService threads) {
         return new ShareService(store, tx, props, entitlements, packs, principals, directory, users, router, notifiers, hub,
-                accessLog.getIfAvailable(), limits);
+                accessLog.getIfAvailable(), limits, threads);
     }
 }

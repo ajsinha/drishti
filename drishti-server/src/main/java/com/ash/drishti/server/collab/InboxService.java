@@ -48,14 +48,17 @@ public final class InboxService {
     private final Entitlements entitlements;
     private final Principals principals;
     private final int keep;
+    private final java.util.function.Supplier<com.ash.drishti.server.collab.thread.ThreadService> threads;
     private final Map<String, AtomicInteger> sincePrune = new ConcurrentHashMap<>();
 
-    public InboxService(InboxStore store, ShareStore shares, Entitlements entitlements, Principals principals, int keep) {
+    public InboxService(InboxStore store, ShareStore shares, Entitlements entitlements, Principals principals, int keep,
+            java.util.function.Supplier<com.ash.drishti.server.collab.thread.ThreadService> threads) {
         this.store = store;
         this.shares = shares;
         this.entitlements = entitlements;
         this.principals = principals;
         this.keep = keep;
+        this.threads = threads;
     }
 
     /** Stores a row (call inside the share's transaction); the newest {@code inbox.keep} per user are kept. */
@@ -95,7 +98,13 @@ public final class InboxService {
         };
         String title = access ? actorName + " " + verb + " " + n.kind() + " " + n.entityId() : "(no access) " + actorName + " " + verb + " a " + n.kind() + " view";
         String excerpt = null;
-        if (access && share != null && !share.body().isBlank()) {
+        com.ash.drishti.server.collab.thread.ThreadService ts = n.commentId() == null ? null : threads.get();
+        if (ts != null) {
+            var text = ts.noticeText(reader, n.commentId());
+            access = text.access();
+            excerpt = text.excerpt();
+            title = access ? actorName + " " + verb + " " + n.kind() + " " + n.entityId() : "(no access) " + actorName + " " + verb + " a " + n.kind() + " view";
+        } else if (access && share != null && !share.body().isBlank()) {
             excerpt = NoteText.excerpt(NoteText.render(share.body(), share.maskedSpans(), entitlements.masks(reader)), EXCERPT);
         }
         return new Row(n.seq(), n.at(), n.type(), n.actor(), actorName, n.kind(), access ? n.entityId() : null, access ? n.panelId() : null,
