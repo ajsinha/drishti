@@ -30,6 +30,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.backend import drs_advice, drs_message
 from core.config import Settings
+from core.nextpath import to_login
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 ASSET_VERSION = "1.15.0"
@@ -90,8 +91,13 @@ class AuthGate(BaseHTTPMiddleware):
         from core import asof
 
         stored = request.cookies.get(asof.COOKIE)
-        request.state.asof = asof.set_current(request.query_params.get("asOf") or stored)
-        request.state.known_at = asof.set_known(request.cookies.get(asof.KNOWN_COOKIE)) if request.state.asof != "live" else None
+        pinned = request.query_params.get("asOf")
+        request.state.asof = asof.set_current(pinned or stored)
+        # a pinned link carries its own date and "known at" for this request only: the saved cookies are not read for it
+        # and never written (a pin that names no instant has none, whatever the recipient's cookie holds)
+        known = request.query_params.get("knownAt") if pinned else request.cookies.get(asof.KNOWN_COOKIE)
+        request.state.known_at = asof.set_known(known) if request.state.asof != "live" else None
+        request.state.pinned = bool(pinned) and request.state.asof != "live"
         # a stored date that is no date at all, or one the server refuses, is dropped: live, and the cookie is cleared
         # (QA 2026-10-01 GRAM-09: it used to break every page until it expired)
         request.state.asof_cleared = bool(stored) and not request.query_params.get("asOf") and asof.clean(stored) != stored.strip()
@@ -114,7 +120,7 @@ class AuthGate(BaseHTTPMiddleware):
         if request.state.identity is None and protected(path):
             if path.startswith("/api/"):
                 return JSONResponse({"code": "DRS-5010", "detail": "sign in first"}, status_code=401)
-            response = RedirectResponse(f"/login?next={quote(str(request.url.path))}", status_code=303)
+            response = RedirectResponse(to_login(request.url.path, request.url.query), status_code=303)
         elif request.state.identity is not None and request.state.identity.must_change and protected(path) \
                 and path not in WHILE_MUST_CHANGE:
             if path.startswith("/api/") or request.method != "GET":

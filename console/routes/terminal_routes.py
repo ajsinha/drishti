@@ -209,9 +209,18 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0):
 
 
 @router.get("/v/{kind}/{id_:path}")
-async def view(request: Request, kind: str, id_: str, embed: int = 0):
+async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0):
+    pin = None                                      # how a pinned link (?asOf=&knownAt=&gen=) was honoured, for the banner
     try:
-        vm = await request.app.state.backend.view(kind, id_, ident(request))
+        try:
+            vm = await request.app.state.backend.view(kind, id_, ident(request))
+        except BackendError as e:
+            if not (getattr(request.state, "pinned", False) and asof.known_at() and e.code == "DRS-1007"):
+                raise
+            asof.set_known(None)                    # a store with no earlier versions: ask again for the date, say so
+            request.state.known_at = None
+            vm = await request.app.state.backend.view(kind, id_, ident(request))
+            pin = "retry"
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.page_status,
                       kind=kind, id=id_, error=e, embed=bool(embed))
@@ -219,16 +228,21 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0):
     panels, pivots = await request.app.state.pivots.view(request, vm, layout["panels"])   # each Pivot tab as the user saved it
     main = [p for p in panels if p.get("area") != "right"]
     right = [p for p in panels if p.get("area") == "right"]
+    if getattr(request.state, "pinned", False):
+        now = (vm.get("provenance") or {}).get("generation")
+        pin = pin or ("changed" if gen and now is not None and int(now) != gen else "asit")
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
-    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_),
-                  calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
+    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation")),
+                  pin=pin, pin_gen=gen or None, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
 
 
-def share_url(request: Request, kind: str, id_: str) -> str:
-    """A link that opens this view as the sender sees it: live, or the same business date and "known at" time."""
+def share_url(request: Request, kind: str, id_: str, generation=None) -> str:
+    """A link that opens this view as the sender sees it: live, or pinned to the same business date, "known at" instant
+    and generation as request parameters (they survive sign-in and never touch the recipient's saved date)."""
     base = str(request.base_url).rstrip("/")
     path = f"/v/{quote(kind)}/{quote(id_)}"
     if asof.current() == "live":
         return base + path
     known = asof.known_at()
-    return f"{base}/asof?d={asof.current()}" + (f"&ki={quote(known)}" if known else "") + f"&next={quote(path, safe='')}"
+    return (f"{base}{path}?asOf={asof.current()}" + (f"&knownAt={quote(known)}" if known else "")
+            + (f"&gen={int(generation)}" if generation is not None and str(generation).isdigit() else ""))

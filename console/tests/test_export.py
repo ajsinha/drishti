@@ -86,7 +86,7 @@ def test_the_view_offers_share_print_and_csv_and_the_share_link_reproduces_the_d
     client.cookies.set("drishti_knownat", "2026-09-29T14:30:00Z")
     try:
         page = client.get("/v/trade/IRS-48213").text
-        assert 'data-share="http://testserver/asof?d=2026-09-29&amp;ki=2026-09-29T14%3A30%3A00Z&amp;next=%2Fv%2Ftrade%2FIRS-48213"' in page
+        assert 'data-share="http://testserver/v/trade/IRS-48213?asOf=2026-09-29&amp;knownAt=2026-09-29T14%3A30%3A00Z&amp;gen=1742"' in page
     finally:
         client.cookies.delete("drishti_asof")
         client.cookies.delete("drishti_knownat")
