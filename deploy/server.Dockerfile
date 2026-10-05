@@ -1,7 +1,7 @@
 # Drishti server image. Build from the repository root after ./mvnw -q package -DskipTests:
 #   docker build -f deploy/server.Dockerfile -t drishti-server:1.15.0 .
-# Java 25 is the recommended runtime; Drishti runs on Java 21 or newer: --build-arg BASE_IMAGE=eclipse-temurin:21-jre
-ARG BASE_IMAGE=eclipse-temurin:25-jre
+# Production runs Java 21 (the default); Java 25 is also supported: --build-arg BASE_IMAGE=eclipse-temurin:25-jre
+ARG BASE_IMAGE=eclipse-temurin:21-jre
 FROM ${BASE_IMAGE}
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti

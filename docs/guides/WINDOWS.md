@@ -16,7 +16,7 @@
 # Drishti on Windows
 
 Drishti runs on Windows 10 and 11 (and Windows Server 2019 or later) without WSL, Docker or Hadoop. This guide covers
-the same ground as [QUICKSTART.md](QUICKSTART.md) in PowerShell: installing Java (21 or newer, 25 recommended) and Python, building the server
+the same ground as [QUICKSTART.md](QUICKSTART.md) in PowerShell: installing Java (21 or newer, production runs 21) and Python, building the server
 or copying a built one, loading the demo lake, starting the server and the console, what does not work on Windows,
 and what to do when something goes wrong.
 
@@ -43,7 +43,7 @@ system, and with it `winutils.exe`, is never used. See [DELTA_CONNECTOR.md › E
 
 | Tool | Version | Install with | Check with |
 |---|---|---|---|
-| JDK | **21 or newer; 25 recommended** (Temurin or any OpenJDK) | `winget install EclipseAdoptium.Temurin.25.JDK`, or the MSI from adoptium.net | `java -version` shows `openjdk version "25…` (or 21…) |
+| JDK | **21 or newer; 21 is the production target** (Temurin or any OpenJDK) | `winget install EclipseAdoptium.Temurin.21.JDK`, or the MSI from adoptium.net | `java -version` shows `openjdk version "21…` (or 25…) |
 | Python | 3.11 or newer | `winget install Python.Python.3.13`, or python.org (tick *Add python.exe to PATH*) | `python --version` |
 | uv | optional, recommended | `winget install astral-sh.uv` | `uv --version` |
 | git | to build from source | `winget install Git.Git` | `git --version` |
@@ -52,7 +52,7 @@ The Java you run Drishti with does not have to be the default Java. The scripts 
 `DRISHTI_JAVA_HOME`:
 
 ```powershell
-$env:DRISHTI_JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-25.0.1.8-hotspot'   # your JDK folder
+$env:DRISHTI_JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot'   # your JDK folder
 ```
 
 If PowerShell refuses to run the scripts (*running scripts is disabled on this system*), allow local scripts for your
@@ -112,8 +112,8 @@ With uv installed it fetches `deltalake`, `pyarrow` and `pyyaml` itself; without
 .\tools\windows\start-server.ps1 -Packs market-risk
 ```
 
-The script checks that Java is 25, sets `DRISHTI_DELTA_ENGINE=native`, and starts the jar with
-`-XX:+UseCompactObjectHeaders` (10–20% faster and 10% less heap on Java 25; the script leaves the flag out on Java 21, which refuses to start with it). It runs in the window until `Ctrl+C`.
+The script checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native`, and starts the jar with
+`-XX:+UseCompactObjectHeaders` only on Java 25 or newer (Java-25-only: 10% less heap; the script leaves the flag out on Java 21, the production target, which refuses to start with it). It runs in the window until `Ctrl+C`.
 Its options:
 
 | Option | Default | Meaning |
@@ -141,7 +141,7 @@ To run the jar by hand instead:
 
 ```powershell
 $env:DRISHTI_PACKS = 'market-risk'
-& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -XX:+UseCompactObjectHeaders -Xmx2g -jar drishti-server\target\drishti-server-1.15.0-exec.jar
+& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-1.15.0-exec.jar
 ```
 
 The native Delta engine is the default, so nothing else is needed.
@@ -191,7 +191,7 @@ and work on Windows; their servers are yours to run.
 
 | You see | Cause | Do this |
 |---|---|---|
-| `Drishti runs on Java 21 or newer (25 recommended); … says: … version "17…` | the script found an older Java | pass `-JavaHome` or set `DRISHTI_JAVA_HOME` to a JDK 21 or newer folder |
+| `Drishti runs on Java 21 or newer (production runs 21; 25 also supported); … says: … version "17…` | the script found an older Java | pass `-JavaHome` or set `DRISHTI_JAVA_HOME` to a JDK 21 or newer folder |
 | `running scripts is disabled on this system` | PowerShell's execution policy | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` |
 | `HADOOP_HOME and hadoop.home.dir are unset`, `Could not locate executable winutils.exe` | a Delta connector on `engine: hadoop` | remove `engine: hadoop` and unset `DRISHTI_DELTA_ENGINE` (or set it to `native`) |
 | Health: `DOWN: cannot reach C:\…\data\delta\trading (engine: native)` | no lake there | run `load-delta.ps1`, or start with `-LakeRoot` pointing at the lake |

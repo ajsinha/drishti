@@ -113,7 +113,7 @@ ports of their own, so that nothing of yours is touched: the QUICKSTART packs, p
 [QUICKSTART.md](QUICKSTART.md)):
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics,helpdesk \
   java -jar drishti-server/target/drishti-server-1.15.0-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 console/.venv/bin/python console/run_drishti_web.py
@@ -1661,7 +1661,7 @@ pack's own tests fails the Maven build. The Build workbench writes the same layo
 Run the pack-related tests alone while you work:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q -pl drishti-packs -am test -Dtest=PackLoaderTest -Dsurefire.failIfNoSpecifiedTests=false
 ./mvnw -q -pl drishti-rachana -am test -Dtest=PackSutrasTest -Dsurefire.failIfNoSpecifiedTests=false
 ./mvnw -q -pl drishti-server -am test -Dtest='ImperfectDataTest,DomainPacksTest,SutraCliTest' -Dsurefire.failIfNoSpecifiedTests=false

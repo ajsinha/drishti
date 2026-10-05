@@ -718,7 +718,7 @@ pictures is `tools/docs/shots/panels.py` (driver: `tools/docs/screenshots.py`). 
 - run it against **scratch ports**, never the usual ones (a JDK 21 or newer for the server):
 
   ```bash
-  export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+  export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
   ./mvnw -o -q package -DskipTests -pl drishti-server -am          # the driver starts the packaged server on :18997 and the console on :17997
   console/.venv/bin/python tools/docs/screenshots.py --guide panels --only metric
   console/.venv/bin/python tools/docs/screenshots.py --list --guide panels
@@ -803,7 +803,7 @@ The browser tests use the **packaged** server jar, so build first, or they test 
 1-minute load below 16; one heavy job at a time.
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64            # or any JDK 21 or newer
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64            # or any JDK 21 or newer
 ./mvnw -o -q install -N                                         # the parent POM, once
 # the engine, grammar and your test:
 ./mvnw -o -q test -pl drishti-rachana,drishti-engine,drishti-server -am -Dtest='MetricPanelTest,StudioTest,AutoDesignerTest,OpApplierTest,ExamplePreviewTest' -Dsurefire.failIfNoSpecifiedTests=false

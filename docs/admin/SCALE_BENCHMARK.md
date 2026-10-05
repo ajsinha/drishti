@@ -113,7 +113,7 @@ Options of `scale.sh`:
 Environment: `DRISHTI_BENCH_DIR` (scratch: data, logs, the server's own files; default `/tmp/drishti-bench`),
 `DRISHTI_BENCH_MIN_FREE_GB` (default 20: the run refuses to start, and stops between steps, when the machine has less
 memory available), `DRISHTI_BENCH_JAVA_HOME` (default `/usr/lib/jvm/java-25-openjdk-amd64`; the script refuses an
-older JDK).
+older JDK). `scale.sh` stays JDK 25 only on purpose: it benchmarks `-XX:+UseCompactObjectHeaders`, which Java 21 does not have; production runs Java 21).
 
 The stores and what `scale.sh` starts for them:
 

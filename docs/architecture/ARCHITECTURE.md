@@ -516,7 +516,7 @@ connectors, starter workspaces, help guides and sample data.
 
 ## 13. Module layout (Java)
 
-Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.drishti`, Java 21 or newer (25 recommended), packages
+Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.drishti`, Java 21 or newer (production runs 21; 25 also supported), packages
 `com.ash.drishti.<module>…`, `package-info.java` everywhere.
 
 | Module | Responsibility | Contributes |

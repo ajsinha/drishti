@@ -71,15 +71,15 @@ You need a Linux or macOS machine with the tools below. On Windows, Drishti runs
 On Ubuntu or Debian:
 
 ```bash
-sudo apt install openjdk-25-jdk python3 python3-venv git curl   # or openjdk-21-jdk: any JDK 21 or newer
+sudo apt install openjdk-21-jdk python3 python3-venv git curl   # any JDK 21 or newer works
 curl -LsSf https://astral.sh/uv/install.sh | sh      # installs uv into ~/.local/bin
 ```
 
-Drishti builds and runs on Java 21 or newer and refuses an older one; Java 25 (the current long-term release) is recommended. Point `JAVA_HOME` at
-a JDK 21 or newer (these examples use 25) in every terminal you use for Drishti. On Ubuntu the path is:
+Drishti builds and runs on Java 21 or newer and refuses an older one; Java 21 is the production target and the recommended runtime; Java 25 is also tested and supported. Point `JAVA_HOME` at
+a JDK 21 or newer (these examples use 21) in every terminal you use for Drishti. On Ubuntu the path is:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export PATH="$JAVA_HOME/bin:$PATH"
 java -version
 ```
@@ -119,7 +119,7 @@ You should see `drishti-server/target/drishti-server-1.15.0-exec.jar`.
 > **Note:** `./mvnw -q verify` builds **and** runs every test (several minutes more). Use it when you
 > change code; for a first try, `package -DskipTests` is enough.
 
-If the build stops with `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …`, your `JAVA_HOME` is older than Java 21. Go
+If the build stops with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …`, your `JAVA_HOME` is older than Java 21. Go
 back to Step 1.
 
 ## Step 4 · Set up the console
@@ -178,7 +178,7 @@ The sample history holds ten business days, ending on **30 September 2026**.
 Open a terminal in the `drishti` folder and run:
 
 ```bash
-export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
 export DRISHTI_STUDIO_SAVE=true
 java -jar drishti-server/target/drishti-server-1.15.0-exec.jar
@@ -449,7 +449,7 @@ stops it. Production details are in [OPERATIONS.md](../admin/OPERATIONS.md).
 
 | You see | Do this |
 |---|---|
-| `Drishti needs Java 21 or newer (any vendor: OpenJDK, Oracle, Temurin; 25 recommended). Maven is running on Java …` | `export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64` and build again |
+| `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …` | `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64` and build again |
 | `Port 18480 was already in use` | another server is running; stop it, or start this one with `DRISHTI_PORT=18481` and the console with `DRISHTI_BACKEND_URL=http://127.0.0.1:18481` |
 | The console says the backend is unreachable (`DRS-5003`) | start the server first; check `curl -s localhost:18480/actuator/health` |
 | A command gives `DRS-4001` | the mnemonic is unknown: check its pack is loaded (`/api/v1/packs`) and chosen in the pack switcher |

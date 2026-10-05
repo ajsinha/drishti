@@ -19,7 +19,7 @@ Drishti has two programs, and each has an IDE that suits it:
 
 | Program | Language | IDE | Starts | Listens on |
 |---|---|---|---|---|
-| **Server** (`drishti-server`) | Java 21 or newer (25 recommended), Spring Boot 3.5 | IntelliJ IDEA (Community or Ultimate) | `com.ash.drishti.server.DrishtiApplication` | `http://127.0.0.1:18480` |
+| **Server** (`drishti-server`) | Java 21 or newer (production runs 21; 25 also supported), Spring Boot 3.5 | IntelliJ IDEA (Community or Ultimate) | `com.ash.drishti.server.DrishtiApplication` | `http://127.0.0.1:18480` |
 | **Console** (the UX, `console/`) | Python 3.11 or newer, FastAPI | PyCharm (Community or Professional) | `console/run_drishti_web.py` | `http://127.0.0.1:17480` |
 
 Start the server first, then the console: the console calls the server for everything it shows. You can use one IDE for
@@ -32,7 +32,7 @@ For the command-line way to build and run, see [QUICKSTART.md](QUICKSTART.md). F
 
 | You need | Version | Check |
 |---|---|---|
-| A JDK (not only a JRE) | **21 or newer**, any vendor: OpenJDK, Oracle, Temurin, Corretto…; 25 recommended | `java -version` and `javac -version` |
+| A JDK (not only a JRE) | **21 or newer**, any vendor: OpenJDK, Oracle, Temurin, Corretto…; Java 21 is the production target | `java -version` and `javac -version` |
 | Python | 3.11 or newer | `python3 --version` |
 | The console's virtual environment | `console/.venv` | `ls console/.venv/bin/python` |
 | Docker (only for some tests) | any recent | `docker --version` |
@@ -46,7 +46,7 @@ python3 -m venv console/.venv && console/.venv/bin/pip install -r console/requir
 ```
 
 **Which Java version.** Drishti compiles to Java 21 bytecode, so the same build runs on Java 21, 25 and anything newer.
-Java 25 is recommended: with `-XX:+UseCompactObjectHeaders` the server uses about 10% less heap. Java 21 has no such
+Java 21 is the production target and the recommended runtime; Java 25 is also tested. On Java 25 only, `-XX:+UseCompactObjectHeaders` saves about 10% heap; Java 21 has no such
 flag and refuses to start when it is given, so leave it out there. The build stops on anything older than 21 with
 `Drishti needs Java 21 or newer … Maven is running on Java N from <folder>`, naming the Java it actually found.
 
@@ -62,8 +62,8 @@ Use an IntelliJ IDEA release that knows your JDK (Java 25 needs IDEA 2025.2 or n
    (the server, the engine, the 15 plugins, the testkit, …). Wait for the import and indexing to finish.
 2. **File → Project Structure → Project**:
    - **SDK**: your JDK 21 or newer. If it is not listed: **Add SDK → Add JDK…** and choose its folder, for example
-     `/usr/lib/jvm/java-25-openjdk-amd64` (Ubuntu OpenJDK), `/usr/lib/jvm/jdk-25-oracle-x64` (Oracle JDK on Linux),
-     `C:\Program Files\Java\jdk-25` (Oracle JDK on Windows) or `/Library/Java/JavaVirtualMachines/jdk-25.jdk/Contents/Home`
+     `/usr/lib/jvm/java-21-openjdk-amd64` (Ubuntu OpenJDK), `/usr/lib/jvm/jdk-21-oracle-x64` (Oracle JDK on Linux),
+     `C:\Program Files\Java\jdk-21` (Oracle JDK on Windows) or `/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home`
      (macOS).
    - **Language level**: *SDK default*, or 21 or higher.
 3. **Settings → Build, Execution, Deployment → Build Tools → Maven → Runner → JRE**: *Use Project JDK*. Maven run from the
@@ -194,7 +194,7 @@ from the Maven tool window (**drishti → Lifecycle → verify**: builds, runs e
   and its siblings are set ([DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md#22-maven-commands)).
 - Tests that need a broker or database (PostgreSQL, Kafka, RabbitMQ, S3 and others) start it in Docker with
   Testcontainers. Without Docker they are skipped (`disabledWithoutDocker`), not failed.
-- The test JDK is the project SDK. The drill runs the suite on Java 25 and again on Java 21; to do the same in the IDE,
+- The test JDK is the project SDK. The drill runs the suite on Java 21 and again on Java 25; to do the same in the IDE,
   switch the SDK in **Project Structure** and run the tests again.
 
 ### 5.2 Python tests in PyCharm

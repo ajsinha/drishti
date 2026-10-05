@@ -135,7 +135,7 @@ default `./packs`, relative to the directory you start the server in).
 2. Start it with the packs you want. From the repository root:
 
    ```bash
-   export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+   export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
    DRISHTI_PACKS=finance,logistics java -jar drishti-server/target/drishti-server-1.15.0-exec.jar
    ```
 

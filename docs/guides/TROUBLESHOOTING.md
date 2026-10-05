@@ -99,11 +99,11 @@ points at an older JDK, or an IDE uses its own JDK setting.
 
 
 - **Check:** `./mvnw -v` prints the Java version Maven uses: it must be 21 or newer, and a JDK, not only a JRE (the build
-  needs `javac`; on Ubuntu `sudo apt install openjdk-25-jdk-headless`).
-- **Fix:** point Maven at a JDK 21 or newer (25 recommended) and build again:
+  needs `javac`; on Ubuntu `sudo apt install openjdk-21.jdk-headless`).
+- **Fix:** point Maven at a JDK 21 or newer (production runs 21) and build again:
 
   ```bash
-  export JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64      # Oracle JDK on Linux: e.g. /usr/lib/jvm/jdk-25-oracle-x64
+  export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64      # Oracle JDK on Linux: e.g. /usr/lib/jvm/jdk-21-oracle-x64
   ./mvnw -v                                                 # must show Java version: 21 or newer and that folder
   ./mvnw -q verify
   ```
@@ -115,7 +115,7 @@ points at an older JDK, or an IDE uses its own JDK setting.
 
 - **Cause:** `java` on your `PATH` is older than 21.
 - **Check:** `java -version`.
-- **Fix:** run the jar with Java 21 or newer: `/usr/lib/jvm/java-25-openjdk-amd64/bin/java -XX:+UseCompactObjectHeaders -jar …` (the flag is for Java 25 and newer; on 21 leave it out),
+- **Fix:** run the jar with Java 21 or newer: `/usr/lib/jvm/java-21-openjdk-amd64/bin/java -jar …` (on Java 25 you may add `-XX:+UseCompactObjectHeaders`; Java 21 refuses to start with it),
   or put that JDK first on your `PATH`.
 
 ### Tests on Java 21 fail with "has been compiled by a more recent version of the Java Runtime (class file version 69.0)"
