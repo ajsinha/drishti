@@ -115,6 +115,27 @@ public final class JpaThreadStore implements ThreadStore {
     }
 
     @Override
+    public List<CommentThread> page(String afterId, int limit) {
+        return tx.execute(s -> threads.findByIdGreaterThanOrderByIdAsc(afterId == null ? "" : afterId, PageRequest.of(0, Math.max(1, limit)))
+                .stream().map(JpaThreadStore::toThread).toList());
+    }
+
+    @Override
+    public void deleteThread(String id) {
+        tx.executeWithoutResult(s -> {
+            List<String> ids = comments.findByThreadIdOrderByCreatedAtAscIdAsc(id).stream().map(c -> c.id).toList();
+            if (!ids.isEmpty()) {
+                revisions.deleteByKeyCommentIdIn(ids);
+                mentions.deleteByKeyCommentIdIn(ids);
+                links.deleteByCommentIdIn(ids);
+            }
+            comments.deleteByThreadId(id);
+            follows.deleteByKeyThreadId(id);
+            threads.deleteById(id);
+        });
+    }
+
+    @Override
     public Optional<Comment> comment(String id) {
         return tx.execute(s -> comments.findById(id).map(JpaThreadStore::toComment));
     }

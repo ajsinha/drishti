@@ -322,6 +322,8 @@ CREATE TABLE IF NOT EXISTS drishti_collab_hold (
     entity_id VARCHAR(200),
     username VARCHAR(64),
     thread_id VARCHAR(30),
+    date_from TIMESTAMP,
+    date_to TIMESTAMP,
     reason VARCHAR(400) NOT NULL,
     placed_by VARCHAR(64) NOT NULL,
     placed_at TIMESTAMP NOT NULL,

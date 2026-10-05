@@ -95,6 +95,9 @@ public class IdentityDatabase {
         for (int attempt = 1; ; attempt++) {
             try {
                 populator.execute(ds);
+                if (props.sqlite()) {
+                    ensureHoldRange(ds);
+                }
                 LOG.info("identity database ready: {} ({})", redact(props.databaseUrl()), schema);
                 return;
             } catch (RuntimeException e) {
@@ -110,6 +113,25 @@ public class IdentityDatabase {
                 }
                 backoff = Math.min(backoff * 2, 10_000);
             }
+        }
+    }
+
+    /** SQLite cannot add a column "if not exists": a hold table made before the date range existed gets its two columns here. */
+    private static void ensureHoldRange(DataSource ds) {
+        try (java.sql.Connection c = ds.getConnection(); java.sql.Statement st = c.createStatement()) {
+            java.util.Set<String> have = new java.util.HashSet<>();
+            try (java.sql.ResultSet r = st.executeQuery("PRAGMA table_info(drishti_collab_hold)")) {
+                while (r.next()) {
+                    have.add(r.getString("name"));
+                }
+            }
+            for (String col : new String[] {"date_from", "date_to"}) {
+                if (!have.contains(col)) {
+                    st.execute("ALTER TABLE drishti_collab_hold ADD COLUMN " + col + " TIMESTAMP");
+                }
+            }
+        } catch (java.sql.SQLException e) {
+            throw new IllegalStateException("could not update drishti_collab_hold", e);
         }
     }
 

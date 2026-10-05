@@ -95,6 +95,8 @@ public final class IdentityRepositories {
         List<ShareEntity> findBySenderAndIdLessThanOrderByIdDesc(String sender, String before, Pageable page);
 
         long countBySenderAndCreatedAtGreaterThanEqual(String sender, java.time.Instant since);
+
+        List<ShareEntity> findByIdGreaterThanOrderByIdAsc(String after, Pageable page);
     }
 
     public interface ShareRecipients extends JpaRepository<ShareRecipientEntity, ShareRecipientEntity.Key> {
@@ -104,6 +106,14 @@ public final class IdentityRepositories {
 
         List<ShareRecipientEntity> findByUsernameAndStateAndKeyShareIdLessThanOrderByKeyShareIdDesc(String username, String state,
                 String before, Pageable page);
+
+        void deleteByKeyShareId(String shareId);
+    }
+
+    public interface Holds extends JpaRepository<HoldEntity, Long> {
+        List<HoldEntity> findAllByOrderByIdDesc();
+
+        List<HoldEntity> findByReleasedAtIsNullOrderByIdDesc();
     }
 
     public interface Outbox extends JpaRepository<OutboxEntity, Long> {
@@ -164,14 +174,20 @@ public final class IdentityRepositories {
 
     public interface Threads extends JpaRepository<ThreadEntities.Thread, String> {
         List<ThreadEntities.Thread> findByKindAndEntityIdOrderByLastAtDesc(String kind, String entityId);
+
+        List<ThreadEntities.Thread> findByIdGreaterThanOrderByIdAsc(String after, Pageable page);
     }
 
     public interface Comments extends JpaRepository<ThreadEntities.Comment, String> {
         List<ThreadEntities.Comment> findByThreadIdOrderByCreatedAtAscIdAsc(String threadId);
+
+        void deleteByThreadId(String threadId);
     }
 
     public interface Revisions extends JpaRepository<ThreadEntities.Revision, ThreadEntities.RevisionKey> {
         List<ThreadEntities.Revision> findByKeyCommentIdOrderByKeyRevisionAsc(String commentId);
+
+        void deleteByKeyCommentIdIn(java.util.Collection<String> commentIds);
 
         @org.springframework.data.jpa.repository.Query("select r from CollabRevision r where r.key.commentId in "
                 + "(select c.id from CollabComment c where c.threadId = :thread) order by r.at asc")
@@ -185,6 +201,8 @@ public final class IdentityRepositories {
     public interface Mentions extends JpaRepository<ThreadEntities.Mention, ThreadEntities.MentionKey> {
         List<ThreadEntities.Mention> findByKeyCommentId(String commentId);
 
+        void deleteByKeyCommentIdIn(java.util.Collection<String> commentIds);
+
         List<ThreadEntities.Mention> findByKeyTargetInOrderByKeyCommentIdDesc(java.util.Collection<String> targets, Pageable page);
 
         List<ThreadEntities.Mention> findByKeyTargetInAndKeyCommentIdLessThanOrderByKeyCommentIdDesc(java.util.Collection<String> targets,
@@ -193,9 +211,13 @@ public final class IdentityRepositories {
 
     public interface Follows extends JpaRepository<ThreadEntities.Follow, ThreadEntities.FollowKey> {
         List<ThreadEntities.Follow> findByKeyThreadId(String threadId);
+
+        void deleteByKeyThreadId(String threadId);
     }
 
     public interface NoteLinks extends JpaRepository<ThreadEntities.NoteLink, Long> {
         java.util.Optional<ThreadEntities.NoteLink> findByCommentId(String commentId);
+
+        void deleteByCommentIdIn(java.util.Collection<String> commentIds);
     }
 }

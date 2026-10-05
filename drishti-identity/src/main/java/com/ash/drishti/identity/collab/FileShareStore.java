@@ -182,6 +182,30 @@ public final class FileShareStore implements ShareStore {
     }
 
     @Override
+    public List<Share> page(String afterId, int limit) {
+        load();
+        return index.values().stream().map(Entry::share).filter(s -> afterId == null || s.id().compareTo(afterId) > 0)
+                .sorted(Comparator.comparing(Share::id)).limit(Math.max(1, limit)).toList();
+    }
+
+    @Override
+    public void delete(String id) {
+        load();
+        ReentrantLock lock = locks.computeIfAbsent(id, k -> new ReentrantLock());
+        lock.lock();
+        try {
+            Entry e = index.remove(id);
+            if (e != null) {
+                Files.deleteIfExists(file(e.share()));
+            }
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     public long countSentSince(String sender, Instant since) {
         load();
         return index.values().stream().map(Entry::share).filter(s -> s.sender().equals(sender) && !s.createdAt().isBefore(since)).count();

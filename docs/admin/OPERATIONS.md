@@ -32,7 +32,7 @@ when other people will use the installation.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
+9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches)
@@ -840,6 +840,59 @@ Rows show the recipient, template, share id, attempts, next attempt and the last
 `dead` or `cancelled`. Alert on `drishti.collab.outbox{state="dead"} > 0` and on a growing `state="pending"`. The usual causes of dead letters are in
 [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#the-email-never-arrived). An outage of the mail server needs no action: rows stay pending and go out
 when it returns.
+
+## 9a-3. Collaboration retention, legal holds and the compliance export
+
+Nothing in the collaboration record is destroyed by default (`retention.keep-days: 0`). Comments are never deleted by their authors or by
+moderators: retract and hide change what readers see, and every revision stays. Only retention, or an administrator removing a whole thread,
+destroys anything, and neither touches what a legal hold covers.
+
+**Retention.** Set days in `application.yaml`, most specific first: `drishti.collab.retention.kinds.<kind>`, then
+`drishti.collab.packs.<pack>.retention-days` for the pack that owns the kind, then `retention.keep-days`. A daily job
+(`retention.interval`; it starts only when some retention above 0 is set) removes whole threads whose last activity, and shares whose creation,
+is older than that, and writes one audit event each (`collab.purge.thread` with the thread's final hash, `collab.purge.share`). A thread goes
+whole or not at all. Several servers on one database may each run it; it is idempotent. Look before you leap, and run it by hand:
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $ADMIN" 'http://localhost:18480/api/v1/admin/collab/retention/run?dryRun=true'
+# {"dryRun":true,"threadsPurged":12,"sharesPurged":30,"threadsHeld":2,"sharesHeld":1}   "held" = past retention but kept by a hold
+```
+
+**Legal holds** (the `compliance` role power; an administrator is not enough). A hold has a scope (`entity` = kind and id, `kind`, `user` =
+everything the person wrote, sent or received, `thread`, or `all`), a reason, and an optional date range (a thread is covered when its activity
+overlaps it, a share when it was sent inside it). Place and release are audited; a released hold stays in the list.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $COMPLIANCE" -H 'Content-Type: application/json' http://localhost:18480/api/v1/admin/collab/holds \
+  -d '{"scope":"entity","kind":"trade","id":"MX-20000001","from":"2026-09-01","to":"2026-09-30","reason":"case 4411"}'
+curl -s -H "Authorization: Bearer $COMPLIANCE" 'http://localhost:18480/api/v1/admin/collab/holds?active=true'
+curl -s -X DELETE -H "Authorization: Bearer $COMPLIANCE" http://localhost:18480/api/v1/admin/collab/holds/7     # release
+```
+
+An administrator's permanent removal of one thread (`DELETE /admin/collab/threads/{id}`) answers `423 DRS-7010` while a hold covers it.
+
+**Export (eDiscovery).** An export is a job: ask, poll, download once.
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $COMPLIANCE" -H 'Content-Type: application/json' http://localhost:18480/api/v1/admin/collab/exports \
+  -d '{"from":"2026-09-30","to":"2026-09-30","kind":"trade","id":"MX-20000001"}'          # 202 {"id":"…","state":"queued"}
+curl -s -H "Authorization: Bearer $COMPLIANCE" http://localhost:18480/api/v1/admin/collab/exports/ID          # state: queued|running|done|failed
+curl -s -H "Authorization: Bearer $COMPLIANCE" -o export.zip http://localhost:18480/api/v1/admin/collab/exports/ID/download
+```
+
+Filters (all optional): `from`/`to` (a day, or an instant), `kind`, `id`, `user` (a thread they wrote in; a share they sent or received),
+`includeShares`, `includeThreads`. The zip holds `shares.ndjson`, `threads.ndjson` (every comment with every revision, **unscrubbed**: this is the
+record), `chains.ndjson` (each thread's first and last hash and whether its chain verified), `holds.ndjson`, `README.txt` (field meanings and
+how to recompute a hash) and `manifest.json` (filters, who and when, counts, software version, and the SHA-256, size and line count of every
+other file). It is written line by line, so memory stays bounded; one export runs at a time per server (a queue of 8). Only the person who asked
+may download it, once; it is deleted then, or after `export-keep`. Starting, finishing and downloading are audited (`collab.export.*`); the file
+lives in `<drishti.collab.dir>/exports` and a restart forgets a job that was not finished. Check a file against the manifest with
+`sha256sum -c`-style comparison of each entry; **keep the manifest and `chains.ndjson` in the firm's archive**: a later export that disagrees on a
+thread's hashes proves history was rewritten (the chain is evidence of tampering, not prevention: someone with the database could rewrite all of it).
+
+**Verify.** `GET /admin/collab/verify?thread=th_…` recomputes one chain (`{ok, steps, firstHash, lastHash, problem}`); with no `thread` (or with
+`kind` and `id`) it checks every thread and share, in bounded memory, and reports the failures (`problems`, capped by `maxProblems`). A failure
+names the revision that was changed or no longer follows the one before it.
 
 ## 9b. The access log
 

@@ -236,6 +236,8 @@ drishti:
       keep-sent-days: 30
     retention:
       keep-days: 0                   # shares and threads; 0 keeps them forever
+      kinds: {}                      # days per entity kind, by kind name: { trade: 2555 }; beats the pack and the default
+      interval: 24h                  # how often the purge runs; it only runs when some retention above 0 is set (a pack: packs.<pack>.retention-days)
     export-keep: 24h
     packs: {}                        # per-pack overrides, by pack name: genomics: { share-enabled: false }
     bridges: { enabled: false, webhooks: [] }   # phase 2

@@ -152,6 +152,13 @@ abstract class IdentityStoreContract {
     }
 
     @Test
+    void removalAndHoldsRoundTripInTheDatabase() {
+        com.ash.drishti.identity.collab.CollabStoreChecks.removal(bean(com.ash.drishti.identity.collab.ThreadStore.class),
+                bean(com.ash.drishti.identity.collab.ShareStore.class));
+        com.ash.drishti.identity.collab.CollabStoreChecks.holds(bean(com.ash.drishti.identity.collab.HoldStore.class));
+    }
+
+    @Test
     void recordNowWritesAnAccessRowAtOnceAndRollsBackWithItsTransaction() {
         AccessLog log = bean(AccessLog.class);
         var tx = bean(com.ash.drishti.identity.collab.CollabTx.class);

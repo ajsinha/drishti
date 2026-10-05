@@ -39,6 +39,12 @@ public interface ShareStore {
     /** Shares that reached the user (recipient state {@code notified}), newest first. */
     List<Share> received(String username, int limit, String beforeId);
 
+    /** Shares in id (creation) order after {@code afterId} (null = from the start), at most {@code limit}. */
+    List<Share> page(String afterId, int limit);
+
+    /** Removes the share and its recipients (retention only, never under a legal hold). */
+    void delete(String id);
+
     /** How many shares the sender made at or after {@code since}. */
     long countSentSince(String sender, Instant since);
 }

@@ -64,6 +64,19 @@ class FileCollabStoreTest {
     }
 
     @Test
+    void removalAndHoldsFollowTheContractAndSurviveARestart() throws Exception {
+        Path dir = Files.createTempDirectory("collab-removal");
+        FileThreadStore threads = new FileThreadStore(dir);
+        CollabStoreChecks.removal(threads, new FileShareStore(dir));
+        CollabStoreChecks.holds(new FileHoldStore(dir));
+        assertThat(new FileHoldStore(dir).list(false)).hasSize(2);
+        FileThreadStore again = new FileThreadStore(dir);
+        assertThat(again.page(null, 100)).hasSize(1);
+        assertThat(again.comments(again.page(null, 1).get(0).id())).hasSize(1);
+        assertThat(new FileShareStore(dir).page(null, 100)).hasSize(1);
+    }
+
+    @Test
     void whatWasWrittenIsThereAfterARestart() throws Exception {
         Path dir = Files.createTempDirectory("collab-restart");
         FileShareStore shares = new FileShareStore(dir);

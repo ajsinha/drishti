@@ -64,7 +64,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
         inbox = inbox == null ? new Inbox(null, null, null, null) : inbox;
         email = email == null ? new Email(null, null, null, null) : email;
         outbox = outbox == null ? new Outbox(null, null, null, null, null, null, null, null) : outbox;
-        retention = retention == null ? new Retention(null) : retention;
+        retention = retention == null ? new Retention(null, null, null) : retention;
         exportKeep = exportKeep == null ? Duration.ofHours(24) : exportKeep;
         packs = packs == null ? Map.of() : Map.copyOf(packs);
         bridges = bridges == null ? new Bridges(null, null) : bridges;
@@ -227,10 +227,16 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
         }
     }
 
-    /** @param keepDays days shares and threads are kept; 0 keeps them forever */
-    public record Retention(Integer keepDays) {
+    /**
+     * @param keepDays days shares and threads are kept; 0 keeps them forever (the default for everything below)
+     * @param kinds days per entity kind, by kind name in configuration; overrides the pack's and the default; 0 keeps that kind forever
+     * @param interval how often the purge runs (it does nothing while every retention is 0)
+     */
+    public record Retention(Integer keepDays, Map<String, Integer> kinds, Duration interval) {
         public Retention {
             keepDays = keepDays == null || keepDays < 0 ? 0 : keepDays;
+            kinds = kinds == null ? Map.of() : Map.copyOf(kinds);
+            interval = interval == null || interval.isZero() || interval.isNegative() ? Duration.ofHours(24) : interval;
         }
     }
 
