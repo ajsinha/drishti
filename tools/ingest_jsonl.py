@@ -177,6 +177,10 @@ def ingest(args, say=print) -> Report:
     """The whole run; returns the report (used by pack_from_jsonl and the tests)."""
     report = Report()
     layouts: dict = {}
+    if not args.src:
+        raise SystemExit("ingest_jsonl: give --from (a folder or .jsonl file) or --watch DIR")
+    if args.mode is None:
+        args.mode = "overwrite-dates"
     if args.pack:
         domain, layouts, keys, dates = pack_settings(args.pack)
     else:
@@ -219,7 +223,7 @@ def ingest(args, say=print) -> Report:
 def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
                                 epilog=__doc__.split("\n\n", 1)[1], add_help=add_help)
-    p.add_argument("--from", dest="src", type=pathlib.Path, action="append", required=True, help="a folder of *.jsonl or one .jsonl file; repeatable")
+    p.add_argument("--from", dest="src", type=pathlib.Path, action="append", help="a folder of *.jsonl or one .jsonl file; repeatable (or use --watch)")
     p.add_argument("-r", "--recursive", action="store_true")
     p.add_argument("--pack", type=pathlib.Path, help="pack folder: domain, layouts, key and date fields come from its pack.yaml")
     p.add_argument("--domain", help="lake domain (without --pack)")
@@ -230,14 +234,28 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--lake", type=pathlib.Path, help="the Delta root (DRISHTI_DELTA_ROOT) for --store delta")
     p.add_argument("--store", choices=("delta", "files"), default="delta", help="delta (default) or the File connector's layout")
     p.add_argument("--root", type=pathlib.Path, help="the files root (DRISHTI_FILES_ROOT) for --store files")
-    p.add_argument("--mode", choices=MODES, default="overwrite-dates")
+    p.add_argument("--mode", choices=MODES, help="overwrite-dates (default), append or replace; a --watch run defaults to append")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--batch-rows", type=int, default=250_000)
+    w = p.add_argument_group("watch a drop folder (see tools/ingest_watch.py)")
+    w.add_argument("--watch", type=pathlib.Path, metavar="DIR", help="poll DIR for new or changed *.jsonl and ingest each once (instead of --from)")
+    w.add_argument("--once", action="store_true", help="with --watch: one pass, then exit (for cron); exit 1 if a file failed or had bad lines")
+    w.add_argument("--interval", type=float, default=10, help="with --watch: seconds between passes (default 10)")
+    w.add_argument("--stable-seconds", type=float, default=2, help="with --watch: a file is read only once its size and mtime have not changed for this long (default 2)")
+    w.add_argument("--done-dir", type=pathlib.Path, help="with --watch: move each ingested file here (default: leave it, the state file marks it)")
+    w.add_argument("--state", type=pathlib.Path, help="with --watch: the state file (default <lake or files root>/.drishti-ingest-state.json)")
     return p
+
+
+def ingest_watch_run(args) -> int:
+    import ingest_watch
+    return ingest_watch.watch(args, ingest)
 
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    if args.watch:
+        return ingest_watch_run(args)
     r = ingest(args)
     return 1 if r.bad else 0
 

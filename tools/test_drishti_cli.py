@@ -49,7 +49,7 @@ def run(*argv, env=None):
 class Wiring(unittest.TestCase):
     COMMANDS = [("sutra", c) for c in ("shape", "design", "lint", "test", "preview", "gen")] + \
                [("pack", c) for c in ("new", "check", "about-check", "publish", "keygen", "verify", "install")] + \
-               [("data", "ingest"), ("data", "load"), ("server", "health"), ("server", "packs"), ("docs", "shots")] + \
+               [("data", "ingest"), ("data", "load"), ("server", "smoke"), ("view", "get"), ("view", "explain"), ("server", "health"), ("server", "packs"), ("docs", "shots")] + \
                [("design", c) for c in ("list", "create", "get", "save", "check", "propose", "approve", "reject", "proposals", "export", "import",
                                         "bind", "autodesign", "delete")]
 

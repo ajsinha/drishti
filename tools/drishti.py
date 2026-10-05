@@ -18,7 +18,7 @@
     python3 tools/drishti.py <group> <command> [options]          (or: uv run --with pyyaml python tools/drishti.py ...)
 
 Groups: sutra (the Java `sutra` tool, plus `sutra gen`), pack (make, new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install),
-data (ingest your own JSON Lines, load the demo data), server (health, packs), design (the Screen Designer's designs over
+data (ingest your own JSON Lines or watch a drop folder, load the demo data), server (health, packs, smoke), view (get, explain), doctor, completion, design (the Screen Designer's designs over
 REST: create, save, check, propose, approve, export, import, bind) and docs (screenshots).
 Needs Python 3.10+ and PyYAML; deltalake and pyarrow only for `--store delta` ingests. The guide with every command,
 recipes and real output is docs/guides/CLI_GUIDE.md.
@@ -535,6 +535,8 @@ def cmd_pack_install(a, extra) -> int:
 
 def cmd_data_ingest(a, extra) -> int:
     need_yaml()
+    if a.watch:
+        return load_module("ingest_jsonl", "ingest_jsonl.py").ingest_watch_run(a)
     return 1 if load_module("ingest_jsonl", "ingest_jsonl.py").ingest(a).bad else 0
 
 
@@ -723,6 +725,43 @@ def cmd_docs_shots(a, extra) -> int:
     if a.list:
         cmd.append("--list")
     return subprocess.run(cmd, cwd=ROOT).returncode
+
+
+# ------------------------------------------------------------------------------------------------ smoke, doctor, view, completion
+
+def cmd_server_smoke(a, extra) -> int:
+    smoke = load_module("smoke", "smoke.py")
+    rep = smoke.run(Api.from_args(a), a.pack, a.ids, a.dates, a.kind)
+    emit(a, rep, "") if a.json else smoke.render(rep)
+    return 0 if rep["ok"] else 1
+
+
+def cmd_doctor(a, extra) -> int:
+    doctor = load_module("doctor", "doctor.py")
+    api = Api.from_args(a) if a.server or os.environ.get("DRISHTI_SERVER") else None
+    results = doctor.run(os.environ, ROOT, find_jar, find_java, api, a.java)
+    say_json({"ok": doctor.exit_code(results) == 0, "checks": results}) if a.json else doctor.render(results)
+    return doctor.exit_code(results)
+
+
+def cmd_view(a, extra) -> int:
+    vc = load_module("viewcmd", "viewcmd.py")
+    try:
+        explain = a.view_cmd == "explain"
+        path = vc.path_for(a.ref, a.date, "/explain" if explain else "", getattr(a, "panel", None))
+    except ValueError as e:
+        raise CliError(str(e)) from None
+    res = Api.from_args(a).json("GET", path)
+    if a.json:
+        say_json(res)
+    else:
+        (vc.render_explain if explain else vc.render_view)(res)
+    return 0
+
+
+def cmd_completion(a, extra) -> int:
+    print(load_module("completion", "completion.py").generate(a.shell, build_parser()), end="")
+    return 0
 
 
 # ------------------------------------------------------------------------------------------------ the parser
@@ -948,6 +987,35 @@ def build_parser() -> argparse.ArgumentParser:
     ss.add_argument("--guide", help="one guide only")
     ss.add_argument("--only", help="comma list of picture-name fragments")
     ss.add_argument("--list", action="store_true", help="list the pictures")
+    # smoke, doctor, view, completion ----------------------------------------------------------------------
+    sm = add(sv, "smoke", cmd_server_smoke, "server smoke: health, packs loaded and enabled, no Sutra problems, then open sample views of every kind on the latest and an earlier date (exit 1 on any failure)", [srv],
+             "examples:\n  drishti.py server smoke --server http://localhost:18480 --pack market-risk --ids 2 --dates 2\n  drishti.py server smoke --json > smoke.json\n"
+             "Needs an administrator token for the pack list (the Admin pages' API); --kind K (repeatable) checks named kinds without it.")
+    sm.add_argument("--pack", action="append", metavar="NAME", help="check this pack (repeatable; default every enabled pack)")
+    sm.add_argument("--kind", action="append", metavar="KIND", help="also check this kind (repeatable)")
+    sm.add_argument("--ids", type=int, default=3, metavar="N", help="sample ids per kind (default 3)")
+    sm.add_argument("--dates", type=int, default=2, metavar="N", help="business dates to open each on: the latest, then earlier ones (default 2)")
+    dr = groups.add_parser("doctor", help="doctor: is this machine ready (Java, jar, Python, directories, ports, and with --server the token)",
+                           description="Green/yellow/red lines with a fix for each; exit 1 on any red. Nothing is changed or stopped.",
+                           parents=[srv], formatter_class=argparse.RawDescriptionHelpFormatter, epilog="examples:\n  drishti.py doctor\n  drishti.py doctor --server http://localhost:18480 --token-file ~/.drishti-token")
+    dr.add_argument("--java", help="the java binary to check (default: JAVA_HOME, then JDK 21, then the PATH)")
+    dr.set_defaults(func=cmd_doctor, cmd=None)
+    vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
+    for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):
+        p = add(vw, name, cmd_view, f"view {name}: {what}", [srv], f"examples:\n  drishti.py view {name} trade/BBG-60000001\n  drishti.py view {name} trade/BBG-60000001 --date 2026-10-02")
+        p.set_defaults(view_cmd=name)
+        p.add_argument("ref", metavar="KIND/ID", help="for example trade/BBG-60000001")
+        p.add_argument("--date", metavar="YYYY-MM-DD", help="the business date (default the latest)")
+        if name == "explain":
+            p.add_argument("--panel", help="explain one panel only")
+        else:
+            p.add_argument("--table", action="store_true", help="text tables (the default; --json gives the raw view)")
+    cp = groups.add_parser("completion", help="completion: print a shell completion script (bash, zsh, powershell)",
+                           description="Generated from the command tree, so it is always current. bash: source <(drishti.py completion bash); zsh: source <(drishti.py completion zsh); "
+                                       "PowerShell: drishti.py completion powershell | Out-String | Invoke-Expression. See CLI_GUIDE.",
+                           formatter_class=argparse.RawDescriptionHelpFormatter)
+    cp.add_argument("shell", choices=load_module("completion", "completion.py").SHELLS)
+    cp.set_defaults(func=cmd_completion, cmd=None)
     return ap
 
 

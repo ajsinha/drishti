@@ -28,7 +28,7 @@ and how to run it all from PyCharm.
 - [4. `sutra`: shape, design, gen, lint, test, preview](#4-sutra-shape-design-gen-lint-test-preview)
 - [5. `pack`: make, new, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
 - [6. `data`: ingest and load](#6-data-ingest-and-load)
-- [7. `server`: health and packs](#7-server-health-and-packs)
+- [7. `server`: health and packs; also smoke, `doctor`, `view` and shell completion](#7-server-health-and-packs)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
 - [9. `docs`: screenshots](#9-docs-screenshots)
 - [10. Recipes](#10-recipes)
@@ -1032,6 +1032,40 @@ total rows: 64
 
 For Delta (`--store delta --lake DIR`, the default store) run it with `uv run --with pyyaml --with deltalake --with pyarrow`.
 
+### `data ingest --watch`: a drop folder that feeds the lake
+
+Instead of `--from`, point `--watch` at a folder where files arrive (an export job, an SFTP drop). The watcher polls for
+`*.jsonl`, waits until a file has stopped growing (size and mtime unchanged for `--stable-seconds`, default 2, so a file still being
+written is never read), ingests each file **once** with the options you gave (`--pack` or `--domain`, `--store`, `--lake` or
+`--root`...), and writes a state file (path, size, mtime, sha256) **only after the ingest succeeded**: a crash re-ingests the file
+that was in flight and never skips one. A file whose content later changes (another sha256) is ingested again; one that was only
+touched is not. A file that fails (a bad option, a full disk) is left where it is, logged, and tried again when it changes or on
+the next run; bad lines are logged and make `--once` exit 1.
+
+| Option | Meaning |
+|---|---|
+| `--watch DIR` | the drop folder (`-r` also looks in subfolders) |
+| `--once` | one pass and exit, for cron; exit 1 if any file failed or had bad lines |
+| `--interval S` | seconds between passes when watching (default 10) |
+| `--stable-seconds S` | how long a file must stay unchanged before it is read (default 2) |
+| `--done-dir DIR` | move each finished file here (a name clash gets a timestamp); without it the file stays and the state file marks it |
+| `--state FILE` | the state file (default `<lake or files root>/.drishti-ingest-state.json`) |
+
+The default mode of a watcher is `append` (each file is a new batch); use `--mode overwrite-dates` when every file holds complete
+days, so a corrected file replaces its dates instead of adding to them. Real output:
+
+```bash
+python3 tools/drishti.py data ingest --watch drop --once --domain demo --key id --date bd --store files --root files --done-dir done
+2026-10-05T16:44:48 INFO  watching drop for *.jsonl (mode append, state files/.drishti-ingest-state.json)
+2026-10-05T16:44:48 INFO  new file trade.jsonl (72 bytes): ingesting
+2026-10-05T16:44:48 INFO  trade.jsonl: 2 row(s) ingested
+2026-10-05T16:44:48 INFO  trade.jsonl: moved to done/trade.jsonl
+2026-10-05T16:44:48 INFO  pass finished: 1 file(s) ingested, 0 with problems
+```
+
+Cron: `*/5 * * * * cd /opt/drishti && python3 tools/drishti.py data ingest --watch /data/drop --once --pack packs/my-bank --lake /data/delta --done-dir /data/done`.
+As a service run it without `--once`; Ctrl-C stops it cleanly.
+
 ### `data load`: the demo data, at three sizes
 
 `data load --store S` runs `tools/load-S.sh`, which builds the **shipped banking packs' demo data** (1,791 sample documents
@@ -1188,6 +1222,105 @@ jsonl-demo            1.0.0    yes     yes  yes    2
 python3 tools/drishti.py server packs load my-bank       # POST /api/v1/admin/packs/my-bank/load
 python3 tools/drishti.py server packs off  my-bank       # PUT  /api/v1/admin/packs/my-bank  {"enabled": false}
 ```
+
+### `server smoke`: does the server serve what it should
+
+One command that opens real views: health `UP`; each pack (`--pack`, repeatable; default every enabled pack) loaded and enabled;
+no Sutra problems (the list the Admin pages show); then, for every kind of those packs, `--ids N` sample ids (from the search API)
+opened on the latest business date and on `--dates N - 1` earlier ones, each expected to answer 200 with at least one panel that has
+content. Prints a table (timings per view) or `--json`; exit 1 on any failure. A view that does not exist on an *earlier* date is
+a skip, not a failure. The pack list is the administrator's API; with a read-only token pass `--kind K` instead.
+
+```
+$ python3 tools/drishti.py server smoke --pack counterparty-risk --ids 1 --dates 2
+OK   health                      status UP
+OK   pack counterparty-risk      loaded, enabled, v1.0.0, 8 kinds, no Sutra problems
+
+kind                  id                        date        panels  empty  ms       result
+netting-set           NS-ALDERSHOT-FRA          2026-10-05  5       0      17.1     OK
+netting-set           NS-ALDERSHOT-FRA          2026-10-02  5       0      18.0     OK
+credit-limit          LIM-ALDERSHOT             2026-10-05  4       0      7.8      OK
+credit-limit          LIM-ALDERSHOT             2026-10-02  4       0      7.5      OK
+...
+16 views, p50 7.6 ms, max 18.0 ms
+smoke: passed
+```
+
+### `doctor`: is this machine ready
+
+Green, yellow and red lines, each with a fix; exit 1 on any red. It checks Java (on `JAVA_HOME` or the PATH, 21 or newer, vendor),
+the server jar (and its version), Python and the optional libraries (`pyyaml`, `deltalake`, `pyarrow`, with install hints), the
+repository layout (`packs/`, `drishti-console/.venv`), the directories you configured (`DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`,
+`DRISHTI_PACKS_INSTALLED`, `DRISHTI_PACKS_DIR`: readable, writable), and ports 18480 and 17480 (free, or in use by Drishti; only a
+GET of `/actuator/health` on localhost, nothing is killed or changed). With `--server` it also checks reachability, the version
+and whether the token is accepted, with the scopes of your most recently used personal token.
+
+```
+$ python3 tools/drishti.py doctor --server http://localhost:18480
+GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
+RED    server jar              no drishti-server-*-exec.jar under drishti-server/target: build it ...
+                               fix: ./mvnw -q -DskipTests package   (or set DRISHTI_JAR)
+GREEN  python                  /usr/bin/python3: Python 3.14.4
+YELLOW python deltalake        not installed (needed for data ingest --store delta)
+                               fix: pip install deltalake   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
+GREEN  port 18480              in use by Drishti: status UP
+GREEN  server                  http://localhost:18480: version 1.16.0, java 21.0.12.1, status OK
+YELLOW token                   none given: calls run anonymously or as --user
+doctor: 1 red, 4 yellow
+```
+
+### `view get` and `view explain`: a view in the terminal
+
+`view get KIND/ID [--date D]` prints the strip and every panel as text tables (key/value fields, tables and ladders, timelines,
+waterfalls and bars, series summarised as first/last/min/max, graphs and links); `--json` prints the server's view unchanged.
+`view explain KIND/ID [--date D] [--panel ID]` prints the About answer: what you are looking at, the glossary of every field
+shown, where the data came from, and why this layout (the Sutra that matched and the match trace). Both are the **caller's**
+view: field masks and entitlements of your token apply exactly as in the browser.
+
+```
+$ python3 tools/drishti.py view get trade/BBG-60000001
+Fixed income · Government bond  BBG-60000001  with Summit Clearing LLC   [TRD]
+
+Key figures
+  figure      value
+  ----------  ---------------
+  Notional    CHF 198,000,000
+  Direction   Short
+  MTM (USD)   −978,378
+  ...
+P&L explain (USD, opening to closing MTM)  (waterfall, explain, F5)
+  step            value
+  -----------  --------
+  Opening MTM  −955,004
+  Carry          −8,220
+  ...
+$ python3 tools/drishti.py view explain trade/BBG-60000001
+What you are looking at: Trade BBG-60000001  (pack Trading)
+  BBG-60000001: Government bond (Fixed income) with Summit Clearing LLC, booked as "Short": 198.0m CHF notional ...
+Glossary
+  field             shown in  means
+  Coupon            terms     The interest rate the bond pays on its face amount.
+  ...
+Why this layout: Sutra govt-bond v1 + inference (a Sutra plus inference for what it left out)
+  Match trace: the chosen Sutra matched; 124 other Sutra(s) were tried and did not match (first 10 shown)
+```
+
+### Shell completion
+
+`drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,
+options, the choices of options that have them, files for options that take a value, and the folders of `packs/` for `--pack`),
+so it is always current. Install:
+
+```bash
+# bash: for this shell, or save the output as ~/.local/share/bash-completion/completions/drishti.py
+source <(python3 tools/drishti.py completion bash)
+# zsh: in ~/.zshrc (uses bashcompinit)
+source <(python3 tools/drishti.py completion zsh)
+# PowerShell: add this line to $PROFILE
+python tools/drishti.py completion powershell | Out-String | Invoke-Expression
+```
+
+The script is registered for the names `drishti.py` and `drishti`, so an alias or a symlink called `drishti` completes too.
 
 ## 8. `design`: the Screen Designer over REST
 
@@ -1601,8 +1734,8 @@ $ python3 tools/drishti.py pack about-check packs/jsonl-demo --json
 | Code | Meaning | Examples |
 |---|---|---|
 | **0** | ok | a clean lint; a design that checks; a server whose health is `OK` |
-| **1** | problems found | a failing lint or test; `--strict` warnings; an unexplained field (`about-check`); a design with a failing sample; the server refused (401, 403, 404, 400...); the server cannot be reached; `server health` not `OK` |
-| **2** | usage | a missing or unknown option or file; the exec jar not found; PyYAML or `deltalake` not installed; `--load` without `--server`; a pack folder without `pack.yaml` |
+| **1** | problems found | a failing lint or test; `--strict` warnings; an unexplained field (`about-check`); a design with a failing sample; the server refused (401, 403, 404, 400...); the server cannot be reached; `server health` not `OK`; `server smoke` with a failing view or pack; `doctor` with a red line; `data ingest --watch --once` with a failed file |
+| **2** | usage | a missing or unknown option or file (a `view` reference that is not KIND/ID); the exec jar not found; PyYAML or `deltalake` not installed; `--load` without `--server`; a pack folder without `pack.yaml` |
 
 The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
