@@ -82,7 +82,7 @@ def test_the_f1_key_yields_to_the_drawer_and_the_drawer_is_wired_to_the_guide():
     app_js = (WEB / "static" / "js" / "app.js").read_text()
     assert re.search(r"key === 'F1'\) \{\s*if \(e\.defaultPrevented\) \{ return; \}", app_js)
     about_js = (WEB / "static" / "js" / "about.js").read_text()
-    assert "e.key === 'F1'" in about_js and "if (isOpen()) { return; }" in about_js      # F1 again inside the drawer: app.js goes to the guide
+    assert "e.key === 'F1'" in about_js and "if (isOpen() && current === 'about') { return; }" in about_js      # F1 again inside the drawer: app.js goes to the guide
     assert "e.key === '?'" in about_js and "typing(e.target)" in about_js            # `?` is ignored in a text field
 
 

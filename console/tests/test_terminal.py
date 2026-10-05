@@ -525,7 +525,7 @@ def test_a_view_says_how_fresh_its_data_is_and_warns_when_stale(client, monkeypa
 
 def test_notes_on_an_entity_and_its_fields(client, backend):
     page = client.get("/v/trade/IRS-48213").text
-    assert "data-notes-open" in page and "notes.js" in page and 'data-me="' in page
+    assert "data-discussion-open" in page and "discussion.js" in page and "notes.js" not in page and 'data-me="' in page
     r = client.post("/api/notes/trade/IRS-48213", json={"body": "Restated after the fixing", "path": "$.mtm"}).json()
     assert r["author"] and r["path"] == "$.mtm"
     assert [n["body"] for n in client.get("/api/notes/trade/IRS-48213").json()] == ["Restated after the fixing"]

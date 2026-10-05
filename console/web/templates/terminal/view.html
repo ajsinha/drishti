@@ -21,7 +21,7 @@
 {% block head %}<link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/about.css?v={{ ASSET_V }}">{% if calc and calc.offered and calc.allowed %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=(vm.provenance.live and asof == 'live'), built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
-<div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-generation="{{ vm.provenance.generation }}" data-label="{{ vm.title.id }}"
+<div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-generation="{{ vm.provenance.generation }}" data-asof="{{ asof }}" data-known="{{ known_at or '' }}" data-label="{{ vm.title.id }}"
      data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
      data-sutra="{{ layout.sutra }}" data-min-span="{{ layout.min_span }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
   {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
@@ -73,7 +73,7 @@
         <button type="button" class="tbar-link vhead-alert" data-print title="Print, or save as PDF"><i class="bi bi-printer" aria-hidden="true"></i> Print</button>
         {% if me and me.is_admin %}<a class="tbar-link vhead-alert" href="/admin/access?kind={{ vm.ref.kind | urlencode }}&id={{ vm.ref.id | urlencode }}" title="Who looked at {{ vm.title.id }} (administrators)"><i class="bi bi-eye" aria-hidden="true"></i> Viewed by</a>{% endif %}
         <button type="button" class="tbar-link vhead-alert" data-about-open aria-controls="aboutDrawer" aria-expanded="false" title="About this page: where the data came from and why it looks like this (?)"><i class="bi bi-info-circle" aria-hidden="true"></i> About</button>
-        <button type="button" class="tbar-link vhead-alert" data-notes-open title="Notes on {{ vm.title.id }} and its fields"><i class="bi bi-sticky" aria-hidden="true"></i> Notes <span class="tool-count" data-notes-count hidden>0</span></button>
+        <button type="button" class="tbar-link vhead-alert" data-discussion-open aria-controls="aboutDrawer" aria-expanded="false" aria-keyshortcuts="Alt+N" title="Discussion on {{ vm.title.id }}, its panels and fields (Alt+N)"><i class="bi bi-chat-left-text" aria-hidden="true"></i> Discussion <span class="tool-count" data-disc-count hidden>0</span></button>
       </span>
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
     </div>
@@ -88,22 +88,15 @@
   </div>
 </div>
 {% if not embed %}{% include "terminal/_share.html" %}{% endif %}
-<aside class="raw notes-drawer" id="notesDrawer" aria-label="Notes" hidden>
-  <header><strong>Notes</strong> <span class="mono">{{ vm.title.id }}</span><button type="button" class="raw-x" data-notes-close aria-label="Close">×</button></header>
-  <div class="notes-body">
-    <ol class="notes-list" data-notes-list></ol>
-    <form class="notes-form" data-notes-form>
-      <label>About <select class="studio-select" name="path" data-notes-path><option value="">{{ vm.title.id }} as a whole</option></select></label>
-      <textarea class="studio-in" name="body" rows="3" maxlength="2000" placeholder="What should the next reader know?" required></textarea>
-      <button type="submit" class="btn-pill btn-accent btn-sm-pill">Add note</button>
-      <span class="adm-msg" data-notes-msg role="status" aria-live="polite"></span>
-    </form>
-  </div>
-</aside>
-<aside class="about" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-about-url="/v/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}/about"{% if ABOUT_PREFETCH %} data-about-prefetch{% endif %}>
+<aside class="about side" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-tab="about" data-about-url="/v/{{ vm.ref.kind | urlencode }}/{{ vm.ref.id | urlencode }}/about"{% if ABOUT_PREFETCH %} data-about-prefetch{% endif %}>
   <div class="about-grip" aria-hidden="true"></div>
-  <header><h2 id="aboutTitle" tabindex="-1">About this page</h2><button type="button" class="raw-x" data-about-close aria-label="Close About this page">×</button></header>
-  <div class="about-body" data-about-body aria-live="polite"><p class="about-wait">Loading…</p></div>
+  <header><h2 id="aboutTitle" tabindex="-1">About this page</h2><button type="button" class="raw-x" data-about-close aria-label="Close the side drawer">×</button></header>
+  <div class="side-tabs" role="tablist" aria-label="Side drawer">
+    <button type="button" role="tab" id="aboutTab" data-tab="about" data-title="About this page" aria-selected="true" aria-controls="aboutPanel" aria-keyshortcuts="?">About</button>
+    <button type="button" role="tab" id="discTab" data-tab="discussion" data-disc-tab data-title="Discussion" aria-selected="false" tabindex="-1" aria-controls="discPanel" aria-keyshortcuts="Alt+N">Discussion<span data-disc-tabcount></span></button>
+  </div>
+  <div class="about-body" id="aboutPanel" role="tabpanel" aria-labelledby="aboutTab" data-tab-panel="about" data-about-body aria-live="polite"><p class="about-wait">Loading…</p></div>
+  {% include "terminal/_discussion.html" %}
   <p class="about-live" role="status" data-about-status></p>
 </aside>
 <aside class="raw" id="rawDrawer" aria-label="Raw JSON" hidden>
@@ -133,11 +126,13 @@
 <script src="/static/js/pivot.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/tree-rows.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/history.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/notes.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/people.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/share.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/about.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/about-hints.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/discussion-compose.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/discussion-view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/discussion.js?v={{ ASSET_V }}"></script>
 {% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
 <script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}

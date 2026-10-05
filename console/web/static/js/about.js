@@ -15,7 +15,8 @@
  */
 /* About this page (docs/architecture/CONTEXT_HELP.md): a drawer on a view that says where the data came from, why the page looks
    like this and where next. The body is an HTML fragment (GET /v/{kind}/{id}/about, which asks the server's explain endpoint),
-   fetched the first time the drawer opens and never with the view. `?` toggles it, F1 opens it (F1 again, inside it, goes to the
+   fetched the first time the drawer opens and never with the view. The drawer is the page's one side drawer (COLLABORATION.md, Decision 9): it has
+   two tabs, About and Discussion (discussion.js); this file owns the host (open, close, focus, the phone sheet, the tabs) and the About tab. `?` toggles it, F1 opens it (F1 again, inside it, goes to the
    screen guide as everywhere: app.js). The same fetch feeds the panel popovers and field hints (about-hints.js). On a phone it is a bottom sheet that traps the focus; Esc closes it and the focus goes back. */
 (function () {
   'use strict';
@@ -28,7 +29,8 @@
   var openers = document.querySelectorAll('[data-about-open]');
   var phone = window.matchMedia ? window.matchMedia('(max-width: 640px)') : { matches: false, addEventListener: function () {} };
   var STORE = 'drishti.about.layers';
-  var loaded = false, inflight = null, timer = null, opener = null, shownGen = '';
+  var tabEls = Array.prototype.slice.call(drawer.querySelectorAll('[role="tab"]')), tabPanels = drawer.querySelectorAll('[data-tab-panel]');
+  var loaded = false, inflight = null, timer = null, opener = null, shownGen = '', current = 'about';
 
   function remembered() { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch (e) { return {}; } }
   function remember(layer, open) {
@@ -88,21 +90,34 @@
       el.focus({ preventScroll: true });
     });
   }
-  window.drishtiAbout = { ensure: ensure, reveal: reveal, isOpen: function () { return !drawer.hidden; } };
+  window.drishtiAbout = { ensure: ensure, reveal: reveal, isOpen: function () { return !drawer.hidden; }, open: function (t) { open(t); }, close: function () { close(); },
+    setTab: function (t) { setTab(t); }, tab: function () { return current; } };
   function isOpen() { return !drawer.hidden; }
-  function open() {
-    if (isOpen()) { return; }
+  function announce() {
+    openers.forEach(function (b) { b.setAttribute('aria-expanded', isOpen() && current === 'about' ? 'true' : 'false'); });
+    document.dispatchEvent(new CustomEvent('drishti:drawer', { detail: { open: isOpen(), tab: current } }));
+  }
+  // the drawer shows one tab at a time: About (this file) or Discussion (discussion.js)
+  function setTab(name) {
+    current = name === 'discussion' ? 'discussion' : 'about';
+    tabEls.forEach(function (t) { var on = t.getAttribute('data-tab') === current; t.setAttribute('aria-selected', on ? 'true' : 'false'); t.tabIndex = on ? 0 : -1; if (on) { heading.textContent = t.getAttribute('data-title'); } });
+    tabPanels.forEach(function (p) { p.hidden = p.getAttribute('data-tab-panel') !== current; });
+    drawer.setAttribute('data-tab', current);
+    if (current === 'about' && isOpen() && !loaded) { load(false); }
+    announce();
+  }
+  function open(tab) {
+    if (isOpen()) { if (tab) { setTab(tab); } return; }
     opener = document.activeElement;
     drawer.hidden = false;
     drawer.setAttribute('aria-modal', phone.matches ? 'true' : 'false');
-    openers.forEach(function (b) { b.setAttribute('aria-expanded', 'true'); });
-    if (!loaded) { load(false); }
-    heading.focus({ preventScroll: true });
+    setTab(tab || 'about');
+    if (current === 'about') { heading.focus({ preventScroll: true }); }
   }
   function close() {
     if (!isOpen()) { return; }
     drawer.hidden = true;
-    openers.forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+    announce();
     if (status) { status.textContent = ''; }
     var back = opener && document.contains(opener) ? opener : openers[0];
     opener = null;
@@ -118,13 +133,17 @@
   document.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.metaKey) { return; }
     if (e.key === 'F1' && !e.altKey && !e.shiftKey) {
-      if (isOpen()) { return; }
-      e.preventDefault(); open(); return;
+      if (isOpen() && current === 'about') { return; }
+      e.preventDefault(); setTab('about'); open('about'); heading.focus({ preventScroll: true }); return;       // F1 on the Discussion tab goes to About
     }
-    if (e.key === '?' && !e.altKey && !typing(e.target)) { e.preventDefault(); toggle(); return; }
-    if (e.key === 'Escape' && isOpen() && !document.querySelector('.about-pop:not([hidden]), .about-tip:not([hidden])')) { e.preventDefault(); close(); return; }   // a popover over the drawer closes first (about-hints.js)
+    if (e.key === '?' && !e.altKey && !typing(e.target)) {
+      e.preventDefault();
+      if (isOpen() && current !== 'about') { setTab('about'); heading.focus({ preventScroll: true }); } else { toggle(); }
+      return;
+    }
+    if (e.key === 'Escape' && isOpen() && !document.querySelector('.about-pop:not([hidden]), .about-tip:not([hidden]), .disc-opts:not([hidden])')) { e.preventDefault(); close(); return; }   // a popover over the drawer closes first (about-hints.js)
     if (e.key === 'Tab' && isOpen() && phone.matches) {                   // the bottom sheet is modal: the focus stays inside it
-      var f = Array.prototype.filter.call(drawer.querySelectorAll('a[href], button, summary, [tabindex="0"], #aboutTitle'),
+      var f = Array.prototype.filter.call(drawer.querySelectorAll('a[href], button:not([disabled]), summary, textarea, select, input, [tabindex="0"], #aboutTitle'),
         function (el) { return el.checkVisibility ? el.checkVisibility() : el.offsetParent !== null; });   // not inside a closed layer
       if (!f.length) { return; }
       var first = f[0], last = f[f.length - 1];
@@ -134,7 +153,15 @@
     }
   }, true);
 
-  openers.forEach(function (b) { b.addEventListener('click', toggle); });
+  openers.forEach(function (b) { b.addEventListener('click', function () { if (isOpen() && current !== 'about') { setTab('about'); } else { toggle(); } }); });
+  tabEls.forEach(function (t, n) {                                      // tabs: click, or the arrow keys (the selected tab is the one in the tab order)
+    t.addEventListener('click', function () { setTab(t.getAttribute('data-tab')); });
+    t.addEventListener('keydown', function (e) {
+      var to = e.key === 'ArrowRight' ? (n + 1) % tabEls.length : e.key === 'ArrowLeft' ? (n - 1 + tabEls.length) % tabEls.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabEls.length - 1 : -1;
+      if (to < 0) { return; }
+      e.preventDefault(); tabEls[to].focus(); setTab(tabEls[to].getAttribute('data-tab'));
+    });
+  });
   drawer.querySelector('[data-about-close]').addEventListener('click', close);
 
   // swipe down on the sheet's handle or header closes it (phone)
@@ -150,7 +177,7 @@
     var g = e.detail && e.detail.generation;
     if (g === undefined) { return; }
     view.setAttribute('data-generation', String(g));
-    if (!isOpen() || String(g) === shownGen || timer) { return; }
+    if (!isOpen() || current !== 'about' || String(g) === shownGen || timer) { return; }
     timer = setTimeout(function () { timer = null; if (isOpen()) { load(true); } }, 2000);
   });
 })();
