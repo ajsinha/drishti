@@ -51,4 +51,8 @@ public class ApiTokenEntity {
 
     @Column(name = "revoked_at")
     public Instant revokedAt;
+
+    /** Comma-separated scopes; null for a token made before scopes existed (it reads). */
+    @Column(name = "scopes", length = 200)
+    public String scopes;
 }

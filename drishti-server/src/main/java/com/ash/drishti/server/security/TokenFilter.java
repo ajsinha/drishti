@@ -30,28 +30,31 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 public final class TokenFilter extends OncePerRequestFilter {
 
+    /** A verified personal token: who it stands for, its id for the audit trail and its scopes. */
+    public record Grant(String tokenId, Principal principal, java.util.List<String> scopes) {}
+
     private final SecurityProperties props;
     private final TokenVerifier verifier;
-    /** Personal API tokens ({@code drk_…}): the user they stand for, if any. */
-    private final java.util.function.Function<String, java.util.Optional<Principal>> apiTokens;
-
-    public TokenFilter(SecurityProperties props, TokenVerifier verifier) {
-        this(props, verifier, t -> java.util.Optional.empty());
-    }
-
+    private final TokenScopes scopes;
+    /** Personal API tokens ({@code drk_…}): the grant they stand for, if any. */
+    private final java.util.function.Function<String, java.util.Optional<Grant>> apiTokens;
     /** Whether the account behind a signed token still exists and is enabled (a token outlives a deleted or disabled user otherwise). */
     private final java.util.function.Predicate<Principal> account;
+    /** Where a write (or a refused attempt) done with a personal token is recorded. */
+    private final com.ash.drishti.identity.AuditLog audit;
 
-    public TokenFilter(SecurityProperties props, TokenVerifier verifier, java.util.function.Function<String, java.util.Optional<Principal>> apiTokens) {
-        this(props, verifier, apiTokens, p -> true);
+    public TokenFilter(SecurityProperties props, TokenVerifier verifier) {
+        this(props, verifier, t -> java.util.Optional.empty(), p -> true, null);
     }
 
-    public TokenFilter(SecurityProperties props, TokenVerifier verifier, java.util.function.Function<String, java.util.Optional<Principal>> apiTokens,
-            java.util.function.Predicate<Principal> account) {
+    public TokenFilter(SecurityProperties props, TokenVerifier verifier, java.util.function.Function<String, java.util.Optional<Grant>> apiTokens,
+            java.util.function.Predicate<Principal> account, com.ash.drishti.identity.AuditLog audit) {
         this.account = account;
         this.props = props;
         this.verifier = verifier;
         this.apiTokens = apiTokens;
+        this.scopes = new TokenScopes(props);
+        this.audit = audit;
     }
 
     @Override
@@ -75,19 +78,32 @@ public final class TokenFilter extends OncePerRequestFilter {
             }
             String bearer = auth.substring(7).trim();
             if (com.ash.drishti.identity.ApiTokenStore.looksLikeToken(bearer)) {
-                // a personal API token: it reads as its user, and never changes anything
-                Principal p = apiTokens.apply(bearer).orElseThrow(() -> new DrishtiException(
+                // a personal API token: it acts as its user, and only within the scopes it was given
+                Grant g = apiTokens.apply(bearer).orElseThrow(() -> new DrishtiException(
                         com.ash.drishti.common.ErrorCode.UNAUTHENTICATED, "API token unknown, revoked or expired"));
-                boolean reads = "GET".equals(req.getMethod()) || "HEAD".equals(req.getMethod())
-                        || "POST".equals(req.getMethod()) && props.tokenMayPost(RequestPaths.routed(req));   // an allow-listed POST only reads (SEC-15)
-                if (!reads) {
+                String method = req.getMethod();
+                String path = RequestPaths.routed(req);
+                TokenScopes.Verdict v = scopes.check(g.scopes(), method, path);
+                if (v != TokenScopes.Verdict.ALLOWED) {
+                    record(g, "token-denied", method, path, 403);
+                    java.util.List<String> opening = scopes.opening(method, path);
+                    String detail = v == TokenScopes.Verdict.NEVER ? "API tokens may not call this endpoint"
+                            : opening.isEmpty() ? "API tokens only read"
+                            : "this token lacks the scope " + String.join(" or ", opening);
                     res.setStatus(403);
                     res.setContentType("application/problem+json");
-                    res.getWriter().write("{\"title\":\"forbidden\",\"status\":403,\"code\":\"DRS-5002\",\"detail\":\"API tokens only read\"}");
+                    res.getWriter().write("{\"title\":\"forbidden\",\"status\":403,\"code\":\"DRS-5002\",\"detail\":\"" + detail + "\"}");
                     return;
                 }
-                req.setAttribute(Principal.ATTRIBUTE, p);
-                chain.doFilter(req, res);
+                req.setAttribute(Principal.ATTRIBUTE, g.principal());
+                boolean write = !scopes.reads(method, path);
+                try {
+                    chain.doFilter(req, res);
+                } finally {
+                    if (write) {
+                        record(g, "token-write", method, path, res.getStatus());
+                    }
+                }
                 return;
             }
             Principal signed = verifier.verify(bearer);
@@ -103,5 +119,16 @@ public final class TokenFilter extends OncePerRequestFilter {
             return;
         }
         chain.doFilter(req, res);
+    }
+
+    private void record(Grant g, String action, String method, String path, int status) {
+        if (audit == null) {
+            return;
+        }
+        try {
+            audit.record(g.principal().user(), action, path, "token " + g.tokenId() + " " + method + " " + path + " -> " + status);
+        } catch (RuntimeException e) {
+            logger.warn("could not audit a token write: " + e.getMessage());
+        }
     }
 }

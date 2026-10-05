@@ -134,7 +134,8 @@ CREATE TABLE IF NOT EXISTS drishti_api_token (
     created_at   TIMESTAMP NOT NULL,
     expires_at   TIMESTAMP,
     last_used_at TIMESTAMP,
-    revoked_at   TIMESTAMP
+    revoked_at   TIMESTAMP,
+    scopes       TEXT
 );
 CREATE INDEX IF NOT EXISTS drishti_api_token_user ON drishti_api_token (username);
 

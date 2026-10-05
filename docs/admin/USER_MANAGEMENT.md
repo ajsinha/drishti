@@ -195,10 +195,18 @@ A pack's role is still needed to open its kinds. Giving Priya the *trading* pack
 People read Drishti from scripts, notebooks and Excel with personal API tokens they make on **My account → API
 tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to know:
 
-- A token acts as its owner, with the owner's roles and packs at the time of each call, and **only reads**: every
-  `GET`, and the `POST`s that carry a query and change nothing, listed in `drishti.security.token-read-posts`
-  (`/api/v1/search/pivot/**` and `/api/v1/command`). Any other `POST`, `PUT`, `PATCH` or `DELETE` is refused with
-  `403 DRS-5002 API tokens only read`; add a path to the list only if it writes nothing.
+- A token acts as its owner, with the owner's roles and packs at the time of each call, and, unless it was
+  made with a **write scope**, **only reads**: every `GET`, and the `POST`s that carry a query and change nothing, listed in
+  `drishti.security.token-read-posts` (`/api/v1/search/pivot/**` and `/api/v1/command`). Any other `POST`, `PUT`, `PATCH` or
+  `DELETE` is refused with `403 DRS-5002 API tokens only read`; add a path to the list only if it writes nothing.
+- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve` or `packs:admin` when making a
+  token (`drishti.security.token-scopes`; the account page lists them in words). What a token may do is the scope **and** the
+  roles its user holds at the time of each call (`design:approve` is useless to someone who is not an approver, `packs:admin` to
+  someone who is not an admin), so demoting or disabling a user cuts their tokens at once. A token with a write scope must
+  expire (`drishti.security.token-write-max-days`, 90). Every write done with a token is in the audit log as `token-write`
+  (token id, method, path, status; never the secret) and each refusal as `token-denied`. Users, roles, tokens, sign-in, caches and
+  personal or collaboration state are never open to a token (`token-never`); there is no `admin` scope. Tokens made before scopes
+  existed keep reading only.
 - Disabling a user stops their tokens at once (and they cannot make new ones); deleting a user deletes them.
 - **Admin → Tokens** lists every token (owner, name, created, expires, last used) and revokes any of them.
 - Secrets are never stored, only their SHA-256; nobody, administrators included, can see a secret after it is made.
@@ -336,7 +344,7 @@ column, if they do not.
 | `drishti_audit` | one row per audited action, numbered in order |
 | `drishti_alert` | every alert a user's rules fired: when, rule, entity, severity, message (the newest `drishti.alerts.keep`, 1,000, per user) |
 | `drishti_pack_state` | packs an admin switched off or on (Admin → Packs) |
-| `drishti_api_token` | personal API tokens: owner, name, a SHA-256 of the secret (never the secret), created, expires, last used, revoked |
+| `drishti_api_token` | personal API tokens: owner, name, a SHA-256 of the secret (never the secret), scopes, created, expires, last used, revoked |
 | `drishti_session` | console sign-in sessions: a SHA-256 of the session id (never the id), user, created, expires. A row is removed at sign-out, when the user is disabled, deleted or has their password reset, and (hourly) once expired |
 | `drishti_access` | the access log: when, who, action (view, raw, history, search, export), kind, id, search text or field, business date |
 | `drishti_note` | notes on entities and their fields: entity, field path, author, text, created, edited. Kept when their author is deleted |

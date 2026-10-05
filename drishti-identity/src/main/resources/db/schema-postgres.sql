@@ -134,9 +134,11 @@ CREATE TABLE IF NOT EXISTS drishti_api_token (
     created_at   TIMESTAMP WITH TIME ZONE NOT NULL,
     expires_at   TIMESTAMP WITH TIME ZONE,
     last_used_at TIMESTAMP WITH TIME ZONE,
-    revoked_at   TIMESTAMP WITH TIME ZONE
+    revoked_at   TIMESTAMP WITH TIME ZONE,
+    scopes       VARCHAR(200)
 );
 CREATE INDEX IF NOT EXISTS drishti_api_token_user ON drishti_api_token (username);
+ALTER TABLE drishti_api_token ADD COLUMN IF NOT EXISTS scopes VARCHAR(200);
 
 -- Console sign-in sessions: a row per session, by a hash of its id; signing out, or disabling, deleting or resetting
 -- the password of the user, removes the rows, and the console then refuses the cookie.

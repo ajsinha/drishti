@@ -138,7 +138,7 @@ def absolute(p) -> str:
 
 class ApiError(CliError):
     HINTS = {401: " (no or bad token: set DRISHTI_TOKEN or --token-file)",
-             403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator)"}
+             403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve or packs:admin, see CLI_GUIDE)"}
 
     def __init__(self, status: int, code: str | None, detail: str):
         super().__init__(f"the server said {status}{' ' + code if code else ''}: {detail}{self.HINTS.get(status, '')}", 1)

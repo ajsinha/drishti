@@ -16,15 +16,18 @@
 # Reading Drishti from scripts, notebooks and Excel
 
 Everything you can open in the terminal you can also read from code, as yourself, with a **personal API token**.
-A token reads only what you may read (your roles and packs, at the time of each call) and **never changes anything**:
-any request other than `GET` with a token is refused (`403 DRS-5002 API tokens only read`), except the `POST`s that only read
-(`/search/pivot/**`, `/command`, the allow-list `drishti.security.token-read-posts`).
+A token reads what you may read (your roles and packs, at the time of each call) and, unless you gave it a **write scope**,
+**never changes anything**: any request other than `GET` with a read-only token is refused (`403 DRS-5002 API tokens only
+read`), except the `POST`s that only read (`/search/pivot/**`, `/command`, the allow-list
+`drishti.security.token-read-posts`). Tools and CI that must change things get a token with `design:write`,
+`design:approve` or `packs:admin`; see "Personal API tokens" in [CLI_GUIDE.md](CLI_GUIDE.md) and below.
 
 ## 1. Make a token
 
 1. Open **My account → API tokens**.
 2. Give it a name that says what uses it (`Risk notebook`, `Desk P&L workbook`) and, if you like, a lifetime in days
-   (1–366; blank for no expiry).
+   (1–366; blank for no expiry). Tick a **scope** only if the token must change things: `design:write`,
+   `design:approve` or `packs:admin` (the page explains each). A token with a write scope must expire (90 days at most).
 3. Press **Create token**. You see the token once, for example `drk_7QhK2mPq9xZa_4kq…` (`drk_`, a 12-character id, `_`,
    a 43-character secret). **Copy it now**: Drishti keeps only a hash of the secret and cannot show it again.
 4. The list shows each token's id, when it was created, when it expires, when it was last used, and **Revoke**.

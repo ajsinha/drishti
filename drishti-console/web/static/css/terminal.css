@@ -642,6 +642,8 @@ table.tbl tr.tbl-filter th::after { content: none; }
 
 /* My account → API tokens */
 .token-new { display: flex; flex-wrap: wrap; gap: .6rem; align-items: flex-end; margin-top: .6rem; }
+.token-scopes { flex-basis: 100%; border: 1px solid var(--d-border); border-radius: 6px; padding: .5rem .8rem; }
+.token-scopes .token-scope { flex-direction: row; align-items: baseline; gap: .5rem; font-size: .85rem; }
 .token-new label { display: flex; flex-direction: column; font-size: .8rem; gap: .2rem; }
 .token-secret { margin-top: .6rem; padding: .6rem .8rem; border: 1px solid var(--d-accent); border-radius: 6px; background: var(--d-accent-tint); }
 .token-secret code { word-break: break-all; }

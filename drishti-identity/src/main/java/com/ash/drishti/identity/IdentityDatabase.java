@@ -97,6 +97,7 @@ public class IdentityDatabase {
                 populator.execute(ds);
                 if (props.sqlite()) {
                     ensureHoldRange(ds);
+                    ensureTokenScopes(ds);
                 }
                 LOG.info("identity database ready: {} ({})", redact(props.databaseUrl()), schema);
                 return;
@@ -132,6 +133,23 @@ public class IdentityDatabase {
             }
         } catch (java.sql.SQLException e) {
             throw new IllegalStateException("could not update drishti_collab_hold", e);
+        }
+    }
+
+    /** A token table made before scopes existed gets its column here (SQLite has no "add column if not exists"). */
+    private static void ensureTokenScopes(DataSource ds) {
+        try (java.sql.Connection c = ds.getConnection(); java.sql.Statement st = c.createStatement()) {
+            boolean have = false;
+            try (java.sql.ResultSet r = st.executeQuery("PRAGMA table_info(drishti_api_token)")) {
+                while (r.next()) {
+                    have |= "scopes".equals(r.getString("name"));
+                }
+            }
+            if (!have) {
+                st.execute("ALTER TABLE drishti_api_token ADD COLUMN scopes TEXT");
+            }
+        } catch (java.sql.SQLException e) {
+            throw new IllegalStateException("could not update drishti_api_token", e);
         }
     }
 

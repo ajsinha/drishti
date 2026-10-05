@@ -38,15 +38,16 @@ public class SecurityConfiguration {
     public FilterRegistrationBean<TokenFilter> tokenFilter(SecurityProperties props, TokenVerifier verifier,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.ApiTokenStore> tokens,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.UserService> users,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.AuditLog> audit,
             @org.springframework.beans.factory.annotation.Value("${drishti.security.registered-users-only:true}") boolean registeredOnly) {
         // an API token stands for its user as they are now: their roles, and only while the account is enabled
-        java.util.function.Function<String, java.util.Optional<Principal>> apiTokens = bearer -> tokens.getObject().verify(bearer)
-                .flatMap(u -> users.getObject().find(u)).filter(com.ash.drishti.identity.User::enabled)
-                .map(u -> new Principal(u.username(), java.util.List.copyOf(u.roles())));
+        java.util.function.Function<String, java.util.Optional<TokenFilter.Grant>> apiTokens = bearer -> tokens.getObject().verify(bearer)
+                .flatMap(t -> users.getObject().find(t.user()).filter(com.ash.drishti.identity.User::enabled)
+                        .map(u -> new TokenFilter.Grant(t.id(), new Principal(u.username(), java.util.List.copyOf(u.roles())), t.scopes())));
         // a signed token stands for an account that must still exist and be enabled (the console's own service identity is exempt)
         java.util.function.Predicate<Principal> account = p -> !registeredOnly || p.roles().contains(Entitlements.SERVICE)
                 || users.getObject().find(p.user()).filter(com.ash.drishti.identity.User::enabled).isPresent();
-        FilterRegistrationBean<TokenFilter> r = new FilterRegistrationBean<>(new TokenFilter(props, verifier, apiTokens, account));
+        FilterRegistrationBean<TokenFilter> r = new FilterRegistrationBean<>(new TokenFilter(props, verifier, apiTokens, account, audit.getObject()));
         r.addUrlPatterns("/api/*");
         r.setOrder(1);
         return r;

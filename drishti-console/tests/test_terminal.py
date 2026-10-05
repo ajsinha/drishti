@@ -488,6 +488,11 @@ def test_people_make_and_revoke_api_tokens(client, backend):
     assert "API tokens" in page and "Risk notebook" in page and 'data-token="abc123def456"' in page
     made = client.post("/api/tokens", json={"name": "Excel", "days": "90"}).json()
     assert made["secret"].startswith("drk_") and backend.tokens_made[-1] == ("Excel", 90)
+    scoped = client.post("/api/tokens", json={"name": "CI", "days": "30", "scopes": ["design:write"]}).json()
+    assert scoped["secret"].startswith("drk_") and backend.scopes_made[-1] == ["design:write"]
+    assert client.post("/api/tokens", json={"name": "x", "days": "30", "scopes": "design:write"}).status_code == 400
+    assert "design:write" in page and "Create, edit, check, propose" in page and 'name="scope"' in page   # the choices, in words
+    assert "read only" in page and "Can: design:write, design:approve" in page                           # what each existing token may do
     assert client.post("/api/tokens", json={"name": " "}).status_code == 400
     assert client.post("/api/tokens", json={"name": "x", "days": "soon"}).status_code == 400
     assert client.delete("/api/tokens/abc123def456").json()["ok"] is True

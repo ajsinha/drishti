@@ -38,14 +38,18 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * Personal API tokens: {@code drk_<id>_<secret>}, created by a user for scripts, notebooks and spreadsheets. The secret
  * is shown once and only its SHA-256 is stored; verification compares in constant time. A token acts as its user (their
- * roles and packs at the time of each call) and may only read. Verified tokens are cached for a few seconds, so a busy
+ * roles and packs at the time of each call) and, unless it was given write scopes at creation, only reads; the scopes are
+ * stored with the token, the server decides what each scope allows, and a token never exceeds its user's current roles. Verified tokens are cached for a few seconds, so a busy
  * script does not query the database on every call; revoking clears the cache at once.
  */
 public final class ApiTokenStore {
 
     /** What a caller sees about a token: never its secret. */
     public record TokenView(String id, String user, String name, Instant createdAt, Instant expiresAt, Instant lastUsedAt,
-            Instant revokedAt, boolean active) {}
+            Instant revokedAt, boolean active, List<String> scopes) {}
+
+    /** A verified token: its id (for the audit trail), its user and its scopes ({@code read} when none were chosen). */
+    public record Verified(String id, String user, List<String> scopes) {}
 
     /** A new token: the full text, shown once. */
     public record Created(TokenView token, String secret) {}
@@ -60,7 +64,7 @@ public final class ApiTokenStore {
     private final Map<String, Cached> cache = new ConcurrentHashMap<>();
     private final Map<String, Instant> lastWritten = new ConcurrentHashMap<>();
 
-    private record Cached(String user, String hash, Instant expiresAt, Instant until) {}
+    private record Cached(String user, String hash, Instant expiresAt, Instant until, List<String> scopes) {}
 
     public ApiTokenStore(IdentityRepositories.ApiTokens tokens, TransactionTemplate tx, AuditLog audit) {
         this.tokens = tokens;
@@ -73,6 +77,11 @@ public final class ApiTokenStore {
     }
 
     public Created create(String user, String name, Integer days) {
+        return create(user, name, days, List.of());
+    }
+
+    /** Creates a token with the given scopes (empty: {@code read}); which scopes exist is the caller's rule. */
+    public Created create(String user, String name, Integer days, List<String> scopes) {
         String n = name == null ? "" : name.trim();
         if (n.isEmpty() || n.length() > 100) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "give the token a name of 1-100 characters (what uses it)");
@@ -92,13 +101,14 @@ public final class ApiTokenStore {
         e.secretHash = sha256(secret);
         e.createdAt = Instant.now();
         e.expiresAt = days == null ? null : e.createdAt.plus(Duration.ofDays(days));
+        e.scopes = scopes == null || scopes.isEmpty() ? null : String.join(",", scopes);
         tx.executeWithoutResult(s -> tokens.save(e));
-        audit.record(user, "token-created", user, id + " " + n + (days == null ? "" : " for " + days + " days"));
+        audit.record(user, "token-created", user, id + " " + n + (days == null ? "" : " for " + days + " days") + " scopes " + scopesOf(e.scopes));
         return new Created(view(e), "drk_" + id + "_" + secret);
     }
 
-    /** The user a token stands for, or empty when it is unknown, wrong, revoked or expired. */
-    public Optional<String> verify(String bearer) {
+    /** The token (id, user, scopes), or empty when it is unknown, wrong, revoked or expired. */
+    public Optional<Verified> verify(String bearer) {
         Matcher m = FORMAT.matcher(bearer == null ? "" : bearer.trim());
         if (!m.matches()) {
             return Optional.empty();
@@ -112,7 +122,7 @@ public final class ApiTokenStore {
                 cache.remove(id);
                 return Optional.empty();
             }
-            c = new Cached(e.username, e.secretHash, e.expiresAt, now.plus(CACHE));
+            c = new Cached(e.username, e.secretHash, e.expiresAt, now.plus(CACHE), scopesOf(e.scopes));
             cache.put(id, c);
         }
         if (c.expiresAt() != null && now.isAfter(c.expiresAt())) {
@@ -122,7 +132,7 @@ public final class ApiTokenStore {
             return Optional.empty();
         }
         touch(id, now);
-        return Optional.of(c.user());
+        return Optional.of(new Verified(id, c.user(), c.scopes()));
     }
 
     /** Records the last use at most once a minute per token, so verification stays a read. */
@@ -175,7 +185,12 @@ public final class ApiTokenStore {
 
     private static TokenView view(ApiTokenEntity e) {
         boolean active = e.revokedAt == null && (e.expiresAt == null || Instant.now().isBefore(e.expiresAt));
-        return new TokenView(e.id, e.username, e.name, e.createdAt, e.expiresAt, e.lastUsedAt, e.revokedAt, active);
+        return new TokenView(e.id, e.username, e.name, e.createdAt, e.expiresAt, e.lastUsedAt, e.revokedAt, active, scopesOf(e.scopes));
+    }
+
+    /** Stored scopes as a list; a token made before scopes existed has none and reads. */
+    static List<String> scopesOf(String stored) {
+        return stored == null || stored.isBlank() ? List.of("read") : List.of(stored.split(","));
     }
 
     private String randomText(int bytes) {

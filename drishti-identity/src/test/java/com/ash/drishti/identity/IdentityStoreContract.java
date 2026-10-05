@@ -294,7 +294,8 @@ abstract class IdentityStoreContract {
         ApiTokenStore t = bean(ApiTokenStore.class);
         ApiTokenStore.Created c = t.create("tess", "Notebook", 7);
         assertThat(c.secret()).matches("drk_[A-Za-z0-9]{12}_[A-Za-z0-9_-]{43}");
-        assertThat(t.verify(c.secret())).contains("tess");
+        assertThat(t.verify(c.secret())).map(ApiTokenStore.Verified::user).contains("tess");
+        assertThat(t.verify(c.secret()).get().scopes()).containsExactly("read");        // before scopes existed: read
         assertThat(t.verify(c.secret() + "x")).isEmpty();
         assertThat(t.verify("drk_nothing")).isEmpty();
         assertThat(t.of("tess")).singleElement().satisfies(v -> {
@@ -305,6 +306,9 @@ abstract class IdentityStoreContract {
         assertThat(t.revoke(c.token().id(), "someone-else", "x")).isFalse();      // only its owner (or an admin)
         assertThat(t.revoke(c.token().id(), "tess", "tess")).isTrue();
         assertThat(t.verify(c.secret())).isEmpty();
+        ApiTokenStore.Created w = t.create("tess", "CI", 30, List.of("design:write", "design:approve"));
+        assertThat(t.verify(w.secret()).get().scopes()).containsExactly("design:write", "design:approve");
+        assertThat(t.of("tess").get(0).scopes()).containsExactly("design:write", "design:approve");
         assertThatThrownBy(() -> t.create("tess", " ", null)).isInstanceOf(DrishtiException.class);
         assertThatThrownBy(() -> t.create("tess", "x", 999)).isInstanceOf(DrishtiException.class);
     }

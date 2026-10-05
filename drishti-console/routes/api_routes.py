@@ -54,7 +54,11 @@ async def create_token(request: Request):
     body = await json_body(request)
     days = body.get("days")
     try:
-        return await request.app.state.backend.create_token(body.get("name", ""), int(days) if days else None, ident(request))
+        scopes = body.get("scopes") or []
+        if not isinstance(scopes, list):
+            return JSONResponse({"code": "DRS-5001", "detail": "scopes is a list of scope names"}, status_code=400)
+        return await request.app.state.backend.create_token(body.get("name", ""), int(days) if days else None, ident(request),
+                                                            [str(s) for s in scopes])
     except (BackendError, ValueError) as e:
         if isinstance(e, ValueError):
             return JSONResponse({"code": "DRS-5001", "detail": "days is a number"}, status_code=400)
