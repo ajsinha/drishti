@@ -171,6 +171,62 @@ drishti:
     enabled: ${DRISHTI_ACCESS_LOG:true}
     keep-days: 90                    # older events are pruned once a day
     queue: 100000                    # events waiting to be written at most; beyond it they are dropped and counted
+  collab:                            # share with a note, comment threads, the inbox (docs/architecture/COLLABORATION.md)
+    enabled: ${DRISHTI_COLLAB_ENABLED:true}
+    store: jpa                       # jpa: the identity database (default) | file: one server only, refused beside PostgreSQL
+    dir: ${DRISHTI_COLLAB_DIR:./data/collab}   # the file store, and exports
+    console-url: ${DRISHTI_CONSOLE_URL:}       # links in emails and shares; empty turns email off
+    directory:                       # the people picker
+      scope: shared-packs            # shared-packs: only users who share a pack with the caller | all
+      min-query: 2
+      limit: 10
+    mentionable-roles: ["*"]         # roles usable as groups (admin and service never)
+    max-group-size: 200              # largest role a share or mention may expand to
+    share:
+      max-recipients: 25             # names (people and roles) in one share
+      max-expanded: 200              # people after roles are expanded
+      max-text: 2000                 # longest note, in characters
+      undeliverable: tell            # tell: the sender learns who was not notified and why | silent
+      post-to-thread: false          # the dialog's default for also posting to the discussion
+    threads:                         # comment threads (build step 5)
+      max-text: 4000
+      max-per-entity: 500
+      edit-window: 15m
+      page-size: 50
+    text:
+      on-masked-copy: warn           # a masked field's value typed into a note: warn | reject | allow (it is always scrubbed for readers without raw)
+      deny-patterns: []              # regular expressions refused in notes and comments
+    limits:                          # per user
+      shares-per-minute: 5
+      shares-per-day: 100
+      comments-per-minute: 10
+      directory-per-minute: 60
+      mails-per-recipient-per-hour: 30
+    inbox:
+      keep: 1000                     # newest rows kept per user
+      keep-days: 180
+      poll: 5s                       # a server looks for rows other servers wrote, only while a stream is open
+      coalesce: 60s
+    email:                           # build step 4
+      enabled: false                 # also needs spring.mail.host and console-url, and security on
+      content: comment               # link-only | title | comment
+      from: ${DRISHTI_MAIL_FROM:drishti@localhost}
+      templates-dir: ""
+    outbox:                          # build step 4
+      enabled: true
+      tick: 2s
+      batch: 50
+      max-attempts: 8
+      backoff: 30s
+      max-backoff: 1h
+      lease: 60s
+      keep-sent-days: 30
+    retention:
+      keep-days: 0                   # shares and threads; 0 keeps them forever
+    export-keep: 24h
+    packs: {}                        # per-pack overrides, by pack name: genomics: { share-enabled: false }
+    bridges: { enabled: false, webhooks: [] }   # phase 2
+    snapshots: { enabled: false }               # phase 2
   reports:                           # scheduled reports: a search delivered as CSV on a schedule
     enabled: ${DRISHTI_REPORTS_ENABLED:true}   # the scheduler; run it on one server of a group (reports still run by hand)
     folder: ${DRISHTI_REPORTS_DIR:./data/reports}

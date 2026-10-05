@@ -89,6 +89,50 @@ public final class IdentityRepositories {
         void deleteByKeyUsername(String username);
     }
 
+    public interface Shares extends JpaRepository<ShareEntity, String> {
+        List<ShareEntity> findBySenderOrderByIdDesc(String sender, Pageable page);
+
+        List<ShareEntity> findBySenderAndIdLessThanOrderByIdDesc(String sender, String before, Pageable page);
+
+        long countBySenderAndCreatedAtGreaterThanEqual(String sender, java.time.Instant since);
+    }
+
+    public interface ShareRecipients extends JpaRepository<ShareRecipientEntity, ShareRecipientEntity.Key> {
+        List<ShareRecipientEntity> findByKeyShareIdOrderByKeySeq(String shareId);
+
+        List<ShareRecipientEntity> findByUsernameAndStateOrderByKeyShareIdDesc(String username, String state, Pageable page);
+
+        List<ShareRecipientEntity> findByUsernameAndStateAndKeyShareIdLessThanOrderByKeyShareIdDesc(String username, String state,
+                String before, Pageable page);
+    }
+
+    public interface Inbox extends JpaRepository<InboxEntity, Long>, org.springframework.data.jpa.repository.JpaSpecificationExecutor<InboxEntity> {
+        long countByUsernameAndReadAtIsNull(String username);
+
+        List<InboxEntity> findBySeqGreaterThanOrderBySeq(long seq, Pageable page);
+
+        @org.springframework.data.jpa.repository.Query("select coalesce(max(i.seq), 0) from InboxEntity i")
+        long maxSeq();
+
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.data.jpa.repository.Query("update InboxEntity i set i.readAt = :at where i.username = :user and i.readAt is null and i.seq in :seqs")
+        int markRead(@org.springframework.data.repository.query.Param("user") String user,
+                @org.springframework.data.repository.query.Param("seqs") java.util.Collection<Long> seqs,
+                @org.springframework.data.repository.query.Param("at") java.time.Instant at);
+
+        @org.springframework.data.jpa.repository.Modifying
+        @org.springframework.data.jpa.repository.Query("update InboxEntity i set i.readAt = :at where i.username = :user and i.readAt is null and i.seq <= :upTo")
+        int markReadUpTo(@org.springframework.data.repository.query.Param("user") String user,
+                @org.springframework.data.repository.query.Param("upTo") long upTo,
+                @org.springframework.data.repository.query.Param("at") java.time.Instant at);
+
+        List<InboxEntity> findByUsernameOrderBySeqDesc(String username, Pageable page);
+
+        void deleteByUsernameAndSeqLessThan(String username, long seq);
+
+        void deleteByUsername(String username);
+    }
+
     public interface DesignSamples extends JpaRepository<DesignSampleEntity, DesignSampleEntity.Key> {
         void deleteByKeyUsernameAndKeyDesignId(String username, String designId);
 

@@ -17,7 +17,7 @@ package com.ash.drishti.common;
 
 /**
  * Stable error codes, {@code DRS-nnnn}. The first digit groups them: 1 sources and data, 2 Sutra,
- * 3 inference, 4 engine and graph, 5 API, 6 identity. Codes are never reused.
+ * 3 inference, 4 engine and graph, 5 API, 6 identity, 7 collaboration (shares, threads, the inbox). Codes are never reused.
  */
 public enum ErrorCode {
     ENTITY_NOT_FOUND("DRS-1001", 404),
@@ -63,7 +63,24 @@ public enum ErrorCode {
     ROLE_NOT_FOUND("DRS-6008", 404),
     ROLE_IN_USE("DRS-6009", 409),
     /** The console refuses everything but the account page until a password change asked for is done. */
-    PASSWORD_CHANGE_DUE("DRS-6010", 403);
+    PASSWORD_CHANGE_DUE("DRS-6010", 403),
+    /** No share with that id, or the caller is not its sender, a recipient or compliance (never a 403: the share's existence is not revealed). */
+    SHARE_NOT_FOUND("DRS-7001", 404),
+    /** No recipient, an unknown user or role, a role that may not be addressed, or over the recipient limits. */
+    BAD_RECIPIENTS("DRS-7002", 422),
+    /** Over a collaboration rate limit ({@code Retry-After} says when to try again). */
+    COLLAB_RATE_LIMITED("DRS-7003", 429),
+    /** Collaboration, the channel, or sharing for the kind's pack is off by policy. */
+    SHARING_OFF("DRS-7004", 403),
+    THREAD_NOT_FOUND("DRS-7005", 404),
+    COMMENT_NOT_FOUND("DRS-7006", 404),
+    THREAD_LOCKED("DRS-7007", 409),
+    NOT_EDITABLE("DRS-7008", 403),
+    STALE_COMMENT("DRS-7009", 409),
+    ON_HOLD("DRS-7010", 423),
+    /** Empty or too long text, a deny-pattern match, a masked copy with {@code on-masked-copy: reject}, or a bad pin. */
+    TEXT_REFUSED("DRS-7011", 422),
+    MAIL_UNAVAILABLE("DRS-7012", 503);
 
     private final String code;
     private final int httpStatus;

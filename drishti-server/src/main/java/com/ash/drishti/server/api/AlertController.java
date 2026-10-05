@@ -65,12 +65,17 @@ public class AlertController {
     private final Entitlements entitlements;
     private final PackRegistry packs;
     private final ExecutorService executor;
+    private final com.ash.drishti.server.collab.InboxHub hub;
+    private final com.ash.drishti.server.collab.InboxService inbox;
 
-    public AlertController(AlertEngine engine, Entitlements entitlements, PackRegistry packs, ExecutorService drishtiVirtualExecutor) {
+    public AlertController(AlertEngine engine, Entitlements entitlements, PackRegistry packs, ExecutorService drishtiVirtualExecutor,
+            com.ash.drishti.server.collab.InboxHub hub, com.ash.drishti.server.collab.InboxService inbox) {
         this.engine = engine;
         this.entitlements = entitlements;
         this.packs = packs;
         this.executor = drishtiVirtualExecutor;
+        this.hub = hub;
+        this.inbox = inbox;
     }
 
     @GetMapping("/rules")
@@ -118,22 +123,29 @@ public class AlertController {
     @GetMapping(path = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         SseEmitter emitter = new SseEmitter(0L);
-        LinkedBlockingQueue<AlertEvent> q = new LinkedBlockingQueue<>(100);
-        Subscription sub = engine.listen(p.user(), e -> {
+        LinkedBlockingQueue<Object> q = new LinkedBlockingQueue<>(100);
+        java.util.function.Consumer<Object> put = e -> {
             if (!q.offer(e)) {
                 q.poll();
                 q.offer(e);
             }
-        });
+        };
+        Subscription alerts = engine.listen(p.user(), put::accept);
+        // notices (shares first) ride the same stream: one connection, one bell (COLLABORATION.md, Decision 10)
+        Subscription notices = hub.listen(p.user(), put::accept);
         executor.execute(() -> {
             try {
                 emitter.send(SseEmitter.event().name("hello").data(Map.of("user", p.user())));
                 while (!Thread.currentThread().isInterrupted()) {
-                    AlertEvent e = q.poll(15, TimeUnit.SECONDS);
+                    Object e = q.poll(15, TimeUnit.SECONDS);
                     if (e == null) {
                         emitter.send(SseEmitter.event().comment("hb"));
-                    } else {
-                        emitter.send(SseEmitter.event().name("alert").id(Long.toString(e.seq())).data(e, MediaType.APPLICATION_JSON));
+                    } else if (e instanceof AlertEvent a) {
+                        emitter.send(SseEmitter.event().name("alert").id(Long.toString(a.seq())).data(a, MediaType.APPLICATION_JSON));
+                    } else if (e instanceof com.ash.drishti.identity.collab.Notice n) {
+                        // rendered now, for this reader: no entity id without access, masked spans scrubbed, no data values
+                        com.ash.drishti.server.collab.InboxService.Row row = inbox.render(n, p);
+                        emitter.send(SseEmitter.event().name("notice").id(Long.toString(n.seq())).data(row, MediaType.APPLICATION_JSON));
                     }
                 }
             } catch (IOException | IllegalStateException e) {
@@ -141,7 +153,8 @@ public class AlertController {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             } finally {
-                sub.close();
+                alerts.close();
+                notices.close();
             }
         });
         return emitter;

@@ -1,0 +1,106 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.identity.collab;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+
+/** What every {@link ShareStore} and {@link InboxStore} must do the same way: the file stores and the database stores both run this. */
+public final class CollabStoreChecks {
+
+    private CollabStoreChecks() {}
+
+    private static Share share(String sender, String kind, String id, Instant at, String body) {
+        return new Share(Ulid.next("sh_", at.toEpochMilli()), sender, at, kind, id, "cashflows", "trade",
+                new Pin(LocalDate.of(2026, 9, 30), false, Instant.parse("2026-09-30T18:00:00Z"), 1674, "demo"), body,
+                List.of(new Share.Span(4, 9)), "in-app", null, null).signed();
+    }
+
+    public static void shares(ShareStore s) {
+        String u = "u" + System.nanoTime();
+        Instant t0 = Instant.now().minusSeconds(120).truncatedTo(java.time.temporal.ChronoUnit.MILLIS);
+        Share a = share(u, "trade", "MX-1", t0, "see J. Smith here");
+        Share b = share(u, "trade", "MX-2", t0.plusSeconds(10), "second");
+        s.save(a, List.of(new Recipient("user:ravi", "ravi-" + u, Recipient.NOTIFIED, null),
+                new Recipient("role:risk", "rng-" + u, Recipient.NO_ACCESS, null)));
+        s.save(b, List.of(new Recipient("user:ravi", "ravi-" + u, Recipient.NOTIFIED, null)));
+
+        Share back = s.find(a.id()).orElseThrow();
+        assertThat(back).isEqualTo(a);
+        assertThat(back.intact()).isTrue();
+        assertThat(back.maskedSpans()).containsExactly(new Share.Span(4, 9));
+        assertThat(back.pin().businessDate()).isEqualTo(LocalDate.of(2026, 9, 30));
+        assertThat(back.pin().knownAt()).isEqualTo(Instant.parse("2026-09-30T18:00:00Z"));
+        assertThat(back.pin().generation()).isEqualTo(1674);
+        assertThat(s.find("sh_NOPE")).isEmpty();
+        assertThat(s.recipients(a.id())).extracting(Recipient::username).containsExactly("ravi-" + u, "rng-" + u);
+        assertThat(s.recipients(a.id())).extracting(Recipient::state).containsExactly(Recipient.NOTIFIED, Recipient.NO_ACCESS);
+
+        assertThat(s.sent(u, 10, null)).extracting(Share::id).containsExactly(b.id(), a.id());
+        assertThat(s.sent(u, 10, b.id())).extracting(Share::id).containsExactly(a.id());
+        assertThat(s.received("ravi-" + u, 10, null)).extracting(Share::id).containsExactly(b.id(), a.id());
+        assertThat(s.received("rng-" + u, 10, null)).as("a recipient who was not notified did not receive it").isEmpty();
+        assertThat(s.countSentSince(u, t0.minusSeconds(1))).isEqualTo(2);
+        assertThat(s.countSentSince(u, t0.plusSeconds(5))).isEqualTo(1);
+
+        Instant open = Instant.now();
+        assertThat(s.markOpened(a.id(), "ravi-" + u, open)).isTrue();
+        assertThat(s.markOpened(a.id(), "ravi-" + u, open.plusSeconds(9))).as("only the first open counts").isFalse();
+        assertThat(s.recipients(a.id()).get(0).openedAt()).isNotNull();
+        assertThat(s.recipients(a.id()).get(1).openedAt()).isNull();
+        Share tampered = new Share(a.id(), a.sender(), a.createdAt(), a.kind(), a.entityId(), a.panelId(), a.gateKind(), a.pin(), "other",
+                a.maskedSpans(), a.channels(), a.threadId(), a.hash());
+        assertThat(tampered.intact()).isFalse();
+    }
+
+    public static void inbox(InboxStore s) {
+        String u = "inb" + System.nanoTime();
+        Instant now = Instant.now();
+        long before = s.maxSeq();
+        Notice n1 = s.add(new Notice(0, u, now, "share", "trade", "MX-1", "cashflows", "sh_1", null, null, "ann", null));
+        Notice n2 = s.add(new Notice(0, u, now.plusSeconds(1), "mention", "var", "V-1", null, null, "th_1", "cm_1", "bob", null));
+        Notice n3 = s.add(new Notice(0, u, now.plusSeconds(2), "share", "trade", "MX-3", null, "sh_3", null, null, "ann", null));
+        assertThat(n1.seq()).isGreaterThan(before);
+        assertThat(n2.seq()).isGreaterThan(n1.seq());
+        assertThat(s.maxSeq()).isEqualTo(n3.seq());
+
+        assertThat(s.list(u, null, false, 10, 0)).extracting(Notice::seq).containsExactly(n3.seq(), n2.seq(), n1.seq());
+        assertThat(s.list(u, "share", false, 10, 0)).extracting(Notice::seq).containsExactly(n3.seq(), n1.seq());
+        assertThat(s.list(u, null, false, 10, n3.seq())).extracting(Notice::seq).containsExactly(n2.seq(), n1.seq());
+        assertThat(s.list(u, null, false, 1, 0)).hasSize(1);
+        assertThat(s.list("nobody-" + u, null, false, 10, 0)).isEmpty();
+        assertThat(s.unread(u)).isEqualTo(3);
+        assertThat(s.after(before, 100)).extracting(Notice::seq).contains(n1.seq(), n2.seq(), n3.seq());
+        assertThat(s.after(n3.seq(), 100)).isEmpty();
+
+        assertThat(s.markRead(u, List.of(n2.seq()), now)).isEqualTo(1);
+        assertThat(s.markRead(u, List.of(n2.seq()), now)).as("already read").isZero();
+        assertThat(s.unread(u)).isEqualTo(2);
+        assertThat(s.list(u, null, true, 10, 0)).extracting(Notice::seq).containsExactly(n3.seq(), n1.seq());
+        assertThat(s.markRead("someone-else", List.of(n1.seq()), now)).as("only the owner's rows").isZero();
+        assertThat(s.markReadUpTo(u, n3.seq(), now)).isEqualTo(2);
+        assertThat(s.unread(u)).isZero();
+        assertThat(s.list(u, null, false, 10, 0)).allMatch(n -> n.readAt() != null);
+
+        s.prune(u, 2);
+        assertThat(s.list(u, null, false, 10, 0)).extracting(Notice::seq).containsExactly(n3.seq(), n2.seq());
+        s.forget(u);
+        assertThat(s.list(u, null, false, 10, 0)).isEmpty();
+    }
+}

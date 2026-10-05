@@ -69,6 +69,49 @@ public final class Entitlements {
         return false;
     }
 
+    /**
+     * Delivery check for a share or mention: the role opens the kind and the kind's pack is <em>assigned</em> to the user
+     * (it may be switched off by the user: the recipient is still told, and the page offers to switch it on).
+     */
+    public boolean mayReach(Principal p, String kind) {
+        return packs.kindAssigned(p.user(), kind) && roleAllows(p, kind);
+    }
+
+    /** The reason {@link #mayReach} or {@link #mayOpen} fails, as a short code: ok, no-access (role), no-pack (not assigned), pack-off. */
+    public String reachState(Principal p, String kind) {
+        if (!roleAllows(p, kind)) {
+            return "no-access";
+        }
+        if (!packs.kindAssigned(p.user(), kind)) {
+            return "no-pack";
+        }
+        return packs.kindAllowed(p.user(), kind) ? "ok" : "pack-off";
+    }
+
+    /** Roles with {@code collaborate}: share, comment and mention. */
+    public boolean mayCollaborate(Principal p) {
+        return has(p, com.ash.drishti.identity.RoleDefinition::collaborate);
+    }
+
+    /** Roles with {@code compliance}: holds, exports, reading any share. */
+    public boolean mayCompliance(Principal p) {
+        return props.enabled() ? p.roles().stream().map(roles::find).anyMatch(r -> r.isPresent() && r.get().compliance())
+                : true;
+    }
+
+    /** True when the principal sees every field (no masks): used to decide whether text spans are scrubbed. */
+    public boolean raw(Principal p) {
+        return !masks(p);
+    }
+
+    /**
+     * The values of the document's masked fields that must not be typed into free text: the {@code mask-copies} rules,
+     * whatever {@code mask-copies} says (collaboration always scrubs). Empty when nothing is masked.
+     */
+    public List<String> maskedValues(DataNode doc) {
+        return props.redact().isEmpty() ? List.of() : copies(doc);
+    }
+
     public void requireOpen(Principal p, String kind) {
         if (!mayOpen(p, kind)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " may not open " + kind + " entities");

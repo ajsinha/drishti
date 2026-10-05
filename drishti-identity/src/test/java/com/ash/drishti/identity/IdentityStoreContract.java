@@ -136,6 +136,31 @@ abstract class IdentityStoreContract {
     }
 
     @Test
+    void sharesAndInboxRoundTripInTheDatabase() {
+        com.ash.drishti.identity.collab.CollabStoreChecks.shares(bean(com.ash.drishti.identity.collab.ShareStore.class));
+        com.ash.drishti.identity.collab.CollabStoreChecks.inbox(bean(com.ash.drishti.identity.collab.InboxStore.class));
+    }
+
+    @Test
+    void recordNowWritesAnAccessRowAtOnceAndRollsBackWithItsTransaction() {
+        AccessLog log = bean(AccessLog.class);
+        var tx = bean(com.ash.drishti.identity.collab.CollabTx.class);
+        String who = "rn" + System.nanoTime();
+        Instant at = Instant.now();
+        tx.run(() -> {
+            log.recordNow(new AccessLog.Event(at, who, "share", "trade", "MX-1", "sh_X to 1", "2026-09-30"));
+            return null;
+        });
+        assertThat(log.find(new AccessLog.Filter(who, "share", null, null, null, null, 10))).hasSize(1);
+        String other = "rb" + System.nanoTime();
+        assertThatThrownBy(() -> tx.run(() -> {
+            log.recordNow(new AccessLog.Event(at, other, "share", "trade", "MX-1", "x", null));
+            throw new IllegalStateException("boom");
+        })).isInstanceOf(IllegalStateException.class);
+        assertThat(log.find(new AccessLog.Filter(other, "share", null, null, null, null, 10))).isEmpty();
+    }
+
+    @Test
     void savedDocumentsAreBoundedAndPerUser() throws Exception {
         PreferenceStore prefs = bean(PreferenceStore.class);
         prefs.put("pat", "workspaces", "Rates", json.readTree("{\"layout\":\"2x2\",\"panes\":[\"TRD T-1\"]}"));
@@ -167,7 +192,7 @@ abstract class IdentityStoreContract {
     void administratorsDefineRolesAndTheyAreReadFromASnapshot() {
         RoleStore roles = bean(RoleStore.class);
         roles.save(new RoleDefinition("credit-analyst", "reads credit", List.of("counterparty", "credit-curve"), false, false, false, false,
-                false, false, false, null, null), "drishti-dev-admin", Set.of("admin"));
+                false, false, true, false, false, null, null), "drishti-dev-admin", Set.of("admin"));
         RoleDefinition r = roles.find("credit-analyst").orElseThrow();
         assertThat(r.kinds()).containsExactly("counterparty", "credit-curve");
         assertThat(r.mayOpen("counterparty")).isTrue();
@@ -176,7 +201,7 @@ abstract class IdentityStoreContract {
         assertThat(r.calc()).isFalse();
         assertThat(r.layout()).as("saved without layout: the no-layout power round-trips").isFalse();
 
-        roles.save(new RoleDefinition("credit-analyst", "reads credit and trades", List.of("*"), true, false, false, false, true, true, false, null, null),
+        roles.save(new RoleDefinition("credit-analyst", "reads credit and trades", List.of("*"), true, false, false, false, true, true, true, false, false, null, null),
                 "ops", Set.of("admin"));
         assertThat(roles.find("credit-analyst").orElseThrow().raw()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().calc()).as("the calc power round-trips (drishti_role_power)").isTrue();
@@ -184,9 +209,9 @@ abstract class IdentityStoreContract {
         assertThat(roles.find("credit-analyst").orElseThrow().calc()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().layout()).isTrue();
         assertThat(roles.find("credit-analyst").orElseThrow().mayOpen("trade")).isTrue();
-        assertThatThrownBy(() -> roles.save(new RoleDefinition("admin", "", List.of("*"), false, false, false, false, false, true, false, null, null), "ops",
+        assertThatThrownBy(() -> roles.save(new RoleDefinition("admin", "", List.of("*"), false, false, false, false, false, true, true, false, false, null, null), "ops",
                 Set.of("admin"))).hasMessageContaining("built-in");
-        assertThatThrownBy(() -> roles.save(new RoleDefinition("Bad Name", "", List.of("*"), false, false, false, false, false, true, false, null, null), "ops",
+        assertThatThrownBy(() -> roles.save(new RoleDefinition("Bad Name", "", List.of("*"), false, false, false, false, false, true, true, false, false, null, null), "ops",
                 Set.of())).isInstanceOf(DrishtiException.class);
         assertThat(roles.delete("credit-analyst", "ops")).isTrue();
         assertThat(roles.find("credit-analyst")).isEmpty();

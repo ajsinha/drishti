@@ -210,6 +210,10 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_OIDC_ISSUER` | `drishti.security.oidc.issuer` | empty | The OIDC issuer URL. |
 | `DRISHTI_OIDC_CLIENT_ID` | `drishti.security.oidc.client-id` | empty | The OIDC client id. |
 | `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | Record who looked at what (Admin → Access). |
+| `DRISHTI_COLLAB_ENABLED` | `drishti.collab.enabled` | `true` | Share with a note, the directory and the inbox ([COLLABORATION.md](../architecture/COLLABORATION.md)). |
+| `DRISHTI_COLLAB_DIR` | `drishti.collab.dir` | `./data/collab` | Where the file store keeps shares and inbox rows (`drishti.collab.store: file`), and exports. |
+| `DRISHTI_CONSOLE_URL` | `drishti.collab.console-url` | empty | The console's address, put in front of `/share/sh_…` in the links shares carry; email stays off while it is empty. |
+| `DRISHTI_MAIL_FROM` | `drishti.collab.email.from` | `drishti@localhost` | The From address of collaboration email (build step 4). |
 | `DRISHTI_MASK_COPIES` | `drishti.security.mask-copies` | `false` | Also scrub exact copies of a masked value inside other text of the same document. |
 | `DRISHTI_MAX_SWALLOW` | `server.tomcat.max-swallow-size` | `64MB` | How much of an oversized body Tomcat drains after answering 413, so the client reads the answer. |
 | `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | Run the scheduled-reports scheduler on this server. |
@@ -520,6 +524,8 @@ servers). The environment variables of this section are in the [placeholder tabl
 | `roles.<role>.admin` | `false` | May manage users, read the audit log, approve Sutras. |
 | `roles.<role>.calc` | `false` | May use Calc, Python in the browser on what the role opens ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may-use-calc)). |
 | `roles.<role>.layout` | `true` | May customise layouts: layout mode (`Alt+L`) and personal layouts ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). On unless set to `false`; the bundled `viewer` sets it to `false`. |
+| `roles.<role>.collaborate` | `true` | May share, comment and mention ([COLLABORATION.md](../architecture/COLLABORATION.md)). On unless set to `false`; a role saved by an earlier release keeps it without a migration. |
+| `roles.<role>.compliance` | `false` | May read any share, and (build step 7) place legal holds and export the collaboration record. Moderation is `admin`. |
 | `mask-copies` | `false` | Opt-in (`DRISHTI_MASK_COPIES`): after masking, exact copies of a masked field's value inside the other text of the same document also read `•••` ("Captured by J. Smith" with `trader` masked). Exact and case-sensitive; best effort. |
 | `mask-copies-min-length` | `3` | Shortest text value scrubbed as a copy; numbers are scrubbed from four digits. |
 | `mask-copies-max-nodes` | `50000` | A document with more nodes is not scanned for copies (its masked fields are still masked). |
@@ -818,6 +824,55 @@ cannot make a view slow or a page heavy. A panel that stops short says so (*N mo
 | `enabled` | `true` (`DRISHTI_ACCESS_LOG`) | Record every answered view, raw document, history read, search and CSV export in `drishti_access` (Admin → Access). |
 | `keep-days` | `90` | Older events are pruned once a day. |
 | `queue` | `100000` | Events waiting to be written. Recording never slows a read: events are written in batches every second, and when the queue is full they are dropped and counted (Admin → Access says how many). |
+
+### `drishti.collab` — share with a note, and the inbox
+
+Design: [COLLABORATION.md](../architecture/COLLABORATION.md). A person writes a note on a view, picks people and roles from the
+directory, and Drishti notifies them in the app (always) and by email (build step 4, off until configured); the link reopens the view
+pinned to the same business date and "known at" instant, with the **recipient's** rights. Shares, recipients and inbox rows are in
+the identity database (`drishti_share`, `drishti_share_recipient`, `drishti_inbox`; the schema also holds the tables of the later
+build steps). Who may share is the role power `roles.<role>.collaborate`; who may read any share is `compliance` (see
+[`drishti.security`](#drishtisecurity--tokens-roles-field-masks)).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` (`DRISHTI_COLLAB_ENABLED`) | Everything below. Off: every collaboration endpoint answers `403 DRS-7004`, and `GET /api/v1/collab` says `enabled: false`. |
+| `store` | `jpa` | Where shares and inbox rows are kept: `jpa` (the identity database, SQLite or PostgreSQL) or `file` (`dir`, one server only). The server refuses to start with `file` while `drishti.identity.database-url` is PostgreSQL. |
+| `dir` | `./data/collab` (`DRISHTI_COLLAB_DIR`) | The file store's folder, and exports. |
+| `console-url` | empty (`DRISHTI_CONSOLE_URL`) | The console's address; a share's `link` is this plus `/share/sh_…` (relative when empty). Email stays off while it is empty. |
+| `directory.scope` | `shared-packs` | `shared-packs`: the picker lists only users who share at least one assigned pack with the caller (and roles by those people); `all`: every enabled user, for small firms. |
+| `directory.min-query` | `2` | Fewest characters a directory search needs. |
+| `directory.limit` | `10` | Most entries one search returns. |
+| `mentionable-roles` | `["*"]` | Roles usable as groups (`*` for all); `admin` and `service` never are. |
+| `max-group-size` | `200` | Largest role a share may expand to. |
+| `share.max-recipients` | `25` | Names (people and roles) in one share. |
+| `share.max-expanded` | `200` | People once roles are expanded. |
+| `share.max-text` | `2000` | Longest note, in characters. |
+| `share.undeliverable` | `tell` | `tell`: the sender learns who was not notified and why (they learn a colleague lacks a right, never data); `silent`: they do not. |
+| `share.post-to-thread` | `false` | The dialog's default for also posting to the discussion (comment threads, build step 5). |
+| `threads.max-text`, `threads.max-per-entity`, `threads.edit-window`, `threads.page-size` | `4000`, `500`, `15m`, `50` | Comment thread limits (build step 5). |
+| `text.on-masked-copy` | `warn` | A masked field's value typed into a note: `warn` tells the sender, `reject` refuses it (`DRS-7011`), `allow` says nothing. Whatever is chosen, the value reads `•••` for every reader without `raw`. Only the document's own masked values are found (exact, as `mask-copies`); use `text.deny-patterns` for values known from elsewhere. |
+| `text.deny-patterns` | `[]` | Regular expressions refused in notes (for example a medical record number format). |
+| `limits.shares-per-minute` | `5` | Shares one user sends a minute (`429 DRS-7003`, with `Retry-After`). |
+| `limits.shares-per-day` | `100` | Shares one user sends in 24 hours (counted in the store, so it survives restarts and holds across servers). |
+| `limits.comments-per-minute` | `10` | Comments one user writes a minute (build step 5). |
+| `limits.directory-per-minute` | `60` | Directory searches one user makes a minute. |
+| `limits.mails-per-recipient-per-hour` | `30` | Emails one recipient is sent an hour (build step 4). |
+| `inbox.keep` | `1000` | Newest inbox rows kept per user. |
+| `inbox.keep-days` | `180` | Days an inbox row is kept. |
+| `inbox.poll` | `5s` | How often a server looks for rows another server wrote to the shared database, only while a stream is open, so a notice reaches a browser on any server within seconds. |
+| `inbox.coalesce` | `60s` | Several notices to one person about one thread within this long become one email (build step 4). |
+| `email.enabled` | `false` | The email channel (build step 4); also needs `spring.mail.host`, `console-url` and security on. Asking for it while off is `503 DRS-7012`. |
+| `email.content` | `comment` | `link-only`, `title` or `comment`: how much an email says (never a data value). |
+| `email.from` | `drishti@localhost` (`DRISHTI_MAIL_FROM`) | The From address. |
+| `email.templates-dir` | empty | A folder of email templates that override the built-in ones. |
+| `outbox.enabled` | `true` | This server dispatches the email outbox (build step 4); turn it off on servers of a group that should not. |
+| `outbox.tick`, `outbox.batch`, `outbox.max-attempts`, `outbox.backoff`, `outbox.max-backoff`, `outbox.lease`, `outbox.keep-sent-days` | `2s`, `50`, `8`, `30s`, `1h`, `60s`, `30` | The dispatcher: how often it looks, rows per tick, attempts before a row is dead, the retry delay (doubling to the maximum), how long a claimed row is held, and days a sent row is kept. |
+| `retention.keep-days` | `0` | Days shares and threads are kept; `0` keeps them forever, so no record is destroyed by default. |
+| `export-keep` | `24h` | How long an export file is kept (build step 7). |
+| `packs` | `{}` | Per-pack overrides by pack name, in configuration: `packs.genomics.share-enabled: false` switches sharing off for that pack's kinds (`403 DRS-7004`). |
+| `bridges.enabled`, `bridges.webhooks` | `false`, `[]` | Chat bridges (phase 2, not built). |
+| `snapshots.enabled` | `false` | Watermarked snapshots (phase 2, not built). |
 
 ### `drishti.reports` — scheduled reports
 

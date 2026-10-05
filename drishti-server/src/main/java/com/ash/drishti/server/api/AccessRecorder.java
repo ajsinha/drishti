@@ -51,12 +51,18 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
             Map.entry("/api/v1/search/pivot/{kind}/drill", "search"),
             Map.entry("/api/v1/search/csv", "export"));
 
+    /** A view opened through a share's link carries this header: the access-log row says {@code share:sh_...}, and the recipient's open is recorded. */
+    public static final String SHARE_HEADER = "X-Drishti-Share";
+
     private final ObjectProvider<AccessLog> log;
     private final boolean enabled;
+    private final ObjectProvider<com.ash.drishti.server.collab.ShareService> shares;
 
-    public AccessRecorder(ObjectProvider<AccessLog> log, @Value("${drishti.access-log.enabled:true}") boolean enabled) {
+    public AccessRecorder(ObjectProvider<AccessLog> log, @Value("${drishti.access-log.enabled:true}") boolean enabled,
+            ObjectProvider<com.ash.drishti.server.collab.ShareService> shares) {
         this.log = log;
         this.enabled = enabled;
+        this.shares = shares;
     }
 
     @Override
@@ -88,6 +94,14 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
         String date = request.getHeader(AsOfResolver.HEADER);
         if (date == null || date.isBlank()) {
             date = request.getParameter("asOf");
+        }
+        String share = request.getHeader(SHARE_HEADER);
+        if ("view".equals(action) && share != null && com.ash.drishti.identity.collab.Ulid.valid(share.trim(), "sh_")) {
+            detail = "share:" + share.trim();
+            com.ash.drishti.server.collab.ShareService svc = shares.getIfAvailable();
+            if (svc != null) {
+                svc.opened(share.trim(), who.user());
+            }
         }
         if (kind == null && detail != null) {                     // a search: its mnemonic or kind is the first word
             kind = detail.trim().split("\\s+", 2)[0];
