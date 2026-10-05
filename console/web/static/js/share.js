@@ -105,6 +105,7 @@
     var liveOpt = $('[data-shr-live-opt]');
     liveOpt.hidden = asof === 'live';                 // a live page's link is live already
     form.elements.live.checked = false;
+    form.elements.postToThread.checked = !!(conf && conf.postToThread);      // the server's default (drishti.collab.share.post-to-thread); the sender may change it
     $('[data-shr-asof]').textContent = pinText(false);
     root.hidden = false;
     document.body.classList.add('shr-open');
@@ -135,7 +136,7 @@
     var b = {
       kind: view.getAttribute('data-kind'), id: view.getAttribute('data-id'), note: noteBox.value.trim(),
       generation: parseInt(view.getAttribute('data-generation') || '0', 10) || 0,
-      to: { users: users, roles: roles }, channels: { inApp: true }, live: !!live,
+      to: { users: users, roles: roles }, channels: { inApp: true }, live: !!live, postToThread: !!form.elements.postToThread.checked,
       asOf: main.getAttribute('data-share-asof') || 'live', knownAt: main.getAttribute('data-share-known') || ''
     };
     if (what === 'panel' && panel) {

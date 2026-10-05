@@ -1,0 +1,124 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin > Collaboration (COLLABORATION.md, Administrators and compliance). Sections by role, as the API: moderation and retention and
+   bridges need `admin`; holds, export and verify need the `compliance` power. admin-collab.js fills each from /admin/collab/api/...; all
+   times arrive in the top bar's zone (`...Local`). #}
+{% extends "base.html" %}
+{% block title %}Collaboration · Admin · {{ PRODUCT }}{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm acol" data-admin-collab{% if admin %} data-admin{% endif %}{% if compliance %} data-compliance{% endif %}>
+  <h1>Collaboration</h1>
+  {% with tab='collab' %}{% include "admin/_nav.html" %}{% endwith %}
+  {% if not enabled %}<p class="adm-warn" role="status">Collaboration is switched off on this server (<span class="mono">drishti.collab.enabled</span>), so there is nothing to administer.</p>{% endif %}
+  <p class="adm-msg" data-acol-msg role="status" aria-live="polite"></p>
+
+  <section class="acol-sec" aria-labelledby="acolMod">
+    <h2 id="acolMod">Threads{% if admin %} and moderation{% endif %}</h2>
+    <p class="muted">Find threads by who wrote in them, the entity or the dates{% if admin %}; open one to hide or unhide a comment, or lock the thread so nobody replies{% endif %}. Hidden comments stay in the record.</p>
+    <form class="acol-form" data-acol-search novalidate>
+      <label>User <input class="studio-in" name="user" autocomplete="off" spellcheck="false"></label>
+      <label>Kind <input class="studio-in" name="kind" autocomplete="off" spellcheck="false"></label>
+      <label>Id <input class="studio-in" name="id" autocomplete="off" spellcheck="false"></label>
+      <label>From <input class="studio-in" name="from" type="date"></label>
+      <label>To <input class="studio-in" name="to" type="date"></label>
+      <button type="submit" class="btn-pill btn-accent btn-sm-pill">Search</button>
+    </form>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-acol-threads aria-label="Threads found" hidden>
+      <thead><tr><th>Entity</th><th>State</th><th>Comments</th><th>Started by</th><th>Last activity</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody></tbody></table></div>
+    <p><button type="button" class="fk" data-acol-more hidden>More threads</button></p>
+    <div class="acol-comments" data-acol-comments hidden>
+      <h3 data-acol-comments-title tabindex="-1"></h3>
+      <label class="acol-check"><input type="checkbox" data-acol-hidden-only> Only hidden comments</label>
+      <ul class="acol-clist" data-acol-clist></ul>
+    </div>
+  </section>
+
+  {% if compliance %}
+  <section class="acol-sec" aria-labelledby="acolHold">
+    <h2 id="acolHold">Legal holds</h2>
+    <p class="muted">A hold keeps what it covers past retention and out of permanent removal. Releasing it keeps the record of it.</p>
+    <label class="acol-check"><input type="checkbox" data-acol-active-holds> Active holds only</label>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-acol-holds aria-label="Legal holds">
+      <thead><tr><th>#</th><th>Covers</th><th>Dates</th><th>Reason</th><th>Placed</th><th>State</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody></tbody></table></div>
+    <form class="acol-form" data-acol-hold-form novalidate>
+      <label>Scope <select class="studio-in" name="scope" data-acol-scope><option value="entity">one entity</option><option value="kind">a kind</option>
+        <option value="user">a user</option><option value="thread">a thread</option><option value="all">everything</option></select></label>
+      <label data-acol-for="entity kind">Kind <input class="studio-in" name="kind" autocomplete="off" spellcheck="false"></label>
+      <label data-acol-for="entity">Id <input class="studio-in" name="id" autocomplete="off" spellcheck="false"></label>
+      <label data-acol-for="user" hidden>User <input class="studio-in" name="user" autocomplete="off" spellcheck="false"></label>
+      <label data-acol-for="thread" hidden>Thread <input class="studio-in" name="thread" autocomplete="off" spellcheck="false"></label>
+      <label>From <input class="studio-in" name="from" type="date"></label>
+      <label>To <input class="studio-in" name="to" type="date"></label>
+      <label class="acol-wide">Reason (required) <input class="studio-in" name="reason" maxlength="400" autocomplete="off"></label>
+      <button type="submit" class="btn-pill btn-accent btn-sm-pill">Place hold</button>
+    </form>
+  </section>
+
+  <section class="acol-sec" aria-labelledby="acolExp">
+    <h2 id="acolExp">Compliance export</h2>
+    <p class="muted">A zip of shares and threads with their hash chains and a manifest of checksums. It is made in the background and can be downloaded once.</p>
+    <form class="acol-form" data-acol-export-form novalidate>
+      <label>From <input class="studio-in" name="from" type="date"></label>
+      <label>To <input class="studio-in" name="to" type="date"></label>
+      <label>Kind <input class="studio-in" name="kind" autocomplete="off" spellcheck="false"></label>
+      <label>Id <input class="studio-in" name="id" autocomplete="off" spellcheck="false"></label>
+      <label>User <input class="studio-in" name="user" autocomplete="off" spellcheck="false"></label>
+      <label class="acol-check"><input type="checkbox" name="includeShares" checked> Shares</label>
+      <label class="acol-check"><input type="checkbox" name="includeThreads" checked> Threads</label>
+      <button type="submit" class="btn-pill btn-accent btn-sm-pill">Start export</button>
+    </form>
+    <p class="acol-export" data-acol-export role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="acol-sec" aria-labelledby="acolVer">
+    <h2 id="acolVer">Verify the chains</h2>
+    <p class="muted">Checks that no comment, share or revision was changed after it was written. Leave the thread blank to check everything.</p>
+    <form class="acol-form" data-acol-verify-form novalidate>
+      <label>Thread <input class="studio-in" name="thread" autocomplete="off" spellcheck="false" placeholder="th_..."></label>
+      <button type="submit" class="btn-pill btn-sm-pill">Verify</button>
+    </form>
+    <p class="acol-verify" data-acol-verify role="status" aria-live="polite"></p>
+    <ul class="acol-problems" data-acol-problems></ul>
+  </section>
+  {% endif %}
+
+  {% if admin %}
+  <section class="acol-sec" aria-labelledby="acolRet">
+    <h2 id="acolRet">Retention</h2>
+    <p class="muted">A dry run counts what the retention settings would remove now, and what a hold keeps. Nothing is deleted.</p>
+    <button type="button" class="btn-pill btn-sm-pill" data-acol-retention>Dry run</button>
+    <p class="acol-ret" data-acol-ret role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="acol-sec" aria-labelledby="acolBr">
+    <h2 id="acolBr">Bridges</h2>
+    <p class="muted">Where notices are also posted (chat, webhooks). Test posts one message to the bridge now.</p>
+    <p class="acol-br-head" data-acol-br-head></p>
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-acol-bridges aria-label="Bridges">
+      <thead><tr><th>Name</th><th>Format</th><th>Host</th><th>Status</th><th>Queue</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/admin-collab.js?v={{ ASSET_V }}"></script>{% endblock %}

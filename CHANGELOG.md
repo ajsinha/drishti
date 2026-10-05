@@ -17,6 +17,7 @@
 
 ## Unreleased
 
+- **Collaboration console polish:** the share dialog's tick *Also start a discussion on the view* (default from `drishti.collab.share.post-to-thread`), a reply box on the shared view's banner for the share's sender and recipients, **Admin > Collaboration** (threads and moderation, legal holds, compliance export, chain verify, retention dry run, bridges, role-gated as the API), every collaboration time in the top bar's zone with its label, and quoted values drawn as the page formats the field (`•••` stays for readers without raw). No server change.
 - Java 21 is the production runtime: docs, pom enforcer message, Windows script and server Dockerfile (default `eclipse-temurin:21-jre`) no longer say "25 recommended"; Java 25 stays supported (compact object headers there only).
 - **Fixed:** in a workspace pane, Alt+0..4 moved the focus again: the view's own date attribute (`data-page-asof`, added with Discussion) no longer looks like the top bar's date form, which made `app.js` stop before its pane keys; `app.js` now looks for the form only.
 - **Build:** `mvn package` fails when any runtime dependency needs a JVM newer than Java 21 (`enforceBytecodeVersion`, `maxJdkVersion` 21), so the product always runs on Java 21, the production runtime.

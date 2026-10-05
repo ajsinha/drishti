@@ -33,7 +33,8 @@
     if (extra) { Object.keys(extra).forEach(function (k) { b.setAttribute(k, extra[k]); }); }
     return b;
   }
-  function when(iso) { return iso ? String(iso).slice(0, 16).replace('T', ' ') : ''; }
+  // a time as the console shows it (the server sends <name>Local: the top bar's zone and its label); the UTC text only if that is missing
+  function when(iso, local) { return local || (iso ? String(iso).slice(0, 16).replace('T', ' ') + ' UTC' : ''); }
   function day(d) { var m = /^(\d{4})-(\d\d)-(\d\d)/.exec(d || ''); return m ? (+m[3]) + ' ' + MONTHS[+m[2] - 1] : (d || ''); }
 
   // the pin: which data the writer saw ("gen 1702 · 2 Oct"); live comments say so
@@ -48,7 +49,31 @@
     return !!date || (pin.generation && ctx.pageGen && String(pin.generation) !== String(ctx.pageGen));
   }
 
-  function parts(c) {
+  // A quoted value {$.path} as the page shows that field (its format: 1,875,863, 12.4%, not the stored 1875863). The server sends the stored
+  // value (or ••• for a reader without raw, which stays as it is). The field's cell on this page carries the formatted text: used as is when
+  // the page is at the data the comment saw; for older data the cell's grouping, decimals, prefix and suffix are applied to the stored number.
+  var MASKED = '•••', GONE = '—';
+  function cell(path) {
+    var all = document.querySelectorAll('[data-path]');
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].getAttribute('data-path') === path && !all[i].closest('#aboutDrawer') && !all[i].closest('[data-share-dialog]')) { return all[i]; }
+    }
+    return null;
+  }
+  function formatted(x, c, ctx) {
+    var raw = String(x.v == null ? '' : x.v);
+    if (!x.path || raw === MASKED || raw === GONE || raw === '') { return raw; }
+    var el1 = cell(x.path), shown = el1 ? el1.textContent.trim() : '';
+    if (!shown || shown === MASKED) { return raw; }
+    var same = !c.pin || !c.pin.generation || !ctx || !ctx.pageGen || String(c.pin.generation) === String(ctx.pageGen);
+    if (same) { return shown; }
+    var m = /^(\D*?)([-+]?\d[\d,]*)(?:\.(\d+))?(\D*)$/.exec(shown), n = Number(raw);
+    if (!m || !isFinite(n) || raw.trim() === '') { return raw; }
+    var out = Math.abs(n).toLocaleString('en-US', { useGrouping: m[2].indexOf(',') >= 0, minimumFractionDigits: (m[3] || '').length, maximumFractionDigits: (m[3] || '').length });
+    return m[1].replace(/[-+]$/, '') + (n < 0 ? '-' : '') + out + m[4];
+  }
+
+  function parts(c, ctx) {
     var p = el('p', 'disc-text');
     (c.parts || [{ t: 'text', v: c.body || '' }]).forEach(function (x) {
       if (x.t === 'mention') {
@@ -56,9 +81,9 @@
         m.setAttribute('aria-label', 'mention of ' + String(x.v).replace(/^@/, ''));
         p.appendChild(m);
       } else if (x.t === 'quote') {
-        var q = el('button', 'disc-quote mono', x.v);
+        var shown = formatted(x, c, ctx), q = el('button', 'disc-quote mono', shown);
         q.type = 'button'; q.setAttribute('data-act', 'goto'); q.setAttribute('data-path', x.path || '');
-        q.setAttribute('aria-label', 'value of ' + (x.path || 'a field') + ': ' + x.v + '. Show it on the page');
+        q.setAttribute('aria-label', 'value of ' + (x.path || 'a field') + ': ' + shown + '. Show it on the page');
         p.appendChild(q);
       } else { p.appendChild(document.createTextNode(x.v)); }
     });
@@ -71,16 +96,16 @@
     li.setAttribute('data-comment', c.id); li.setAttribute('data-revision', c.revision);
     var h = el('div', 'disc-ch');
     h.appendChild(el('b', null, c.authorName || c.author));
-    var tm = el('time', 'mono', when(c.createdAt)); tm.setAttribute('datetime', c.createdAt || '');
+    var tm = el('time', 'mono', when(c.createdAt, c.createdAtLocal)); tm.setAttribute('datetime', c.createdAt || '');
     h.appendChild(tm);
     if (c.pin) { h.appendChild(el('span', 'disc-pin mono', pinText(c.pin))); }
     li.appendChild(h);
     if (c.state === 'retracted') {
-      li.appendChild(el('p', 'disc-gone', 'Retracted by the author' + (c.editedAt ? ', ' + when(c.editedAt) : '')));
+      li.appendChild(el('p', 'disc-gone', 'Retracted by the author' + (c.editedAt ? ', ' + when(c.editedAt, c.editedAtLocal) : '')));
     } else if (c.state === 'hidden') {
       li.appendChild(el('p', 'disc-gone', 'Hidden by a moderator' + (c.stateReason ? ': ' + c.stateReason : '')));
     }
-    if (live || c.body != null) { li.appendChild(parts(c)); }      // a moderator still reads what was hidden or retracted
+    if (live || c.body != null) { li.appendChild(parts(c, ctx)); }      // a moderator still reads what was hidden or retracted
     var tools = el('div', 'disc-tools');
     if (c.edited) { tools.appendChild(btn('(edited)', 'history', { title: 'Show the earlier versions' })); }
     if (c.pin && c.href && differs(c.pin, ctx)) {

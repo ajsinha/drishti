@@ -30,7 +30,7 @@
 .shr-what > legend { float: none; }
 .shr-lbl { color: var(--d-muted); font-size: .85rem; padding-top: .3rem; }
 .shr-asof { font-size: .85rem; padding-top: .3rem; }
-.shr-live { grid-column: 2; font-size: .85rem; color: var(--d-muted); }
+.shr-live, .shr-thread { grid-column: 2; font-size: .85rem; color: var(--d-muted); }
 .shr-to { position: relative; min-width: 0; }
 .shr-chips { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; padding: 0; margin: 0 0 .3rem; }
 .shr-chips:empty { display: none; }
@@ -66,6 +66,17 @@ body.shr-open { overflow: hidden; }
   border-left: 3px solid var(--d-accent); border-radius: var(--d-radius); background: var(--d-surface); color: var(--d-ink); font-size: .9rem; }
 .share-banner .bi { color: var(--d-accent); margin-top: .15rem; }
 .share-note { margin: .3rem 0 0; padding: 0; border: 0; color: var(--d-ink); overflow-wrap: anywhere; white-space: pre-wrap; }
+.share-banner > div { flex: 1; min-width: 0; }
+.share-replies { margin-top: .5rem; display: grid; gap: .35rem; }
+.share-reply-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; }
+.share-reply-list li { overflow-wrap: anywhere; }
+.share-reply-list time { color: var(--d-muted); font-size: .8rem; margin: 0 .3rem; }
+.share-reply-form { display: grid; grid-template-columns: 1fr auto; gap: .35rem .5rem; align-items: end; }
+.share-reply-form textarea { grid-column: 1; resize: vertical; min-height: 2.6rem; }
+.share-reply-form button { grid-column: 2; }
+.share-reply-msg { grid-column: 1 / -1; font-size: .85rem; color: var(--d-muted); }
+.share-reply-msg:empty { display: none; }
+.share-reply-msg.bad { color: var(--d-bad); }
 .share-panel { margin-left: .5rem; color: var(--d-muted); font-size: .8rem; }
 .pnl:target { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 
@@ -91,7 +102,7 @@ body.shr-open { overflow: hidden; }
   .shr-dlg { width: 100%; height: 100%; border-radius: 0; border: 0; }
   .shr-row { grid-template-columns: 1fr; }
   .shr-row > legend { float: none; width: auto; }
-  .shr-live { grid-column: 1; }
+  .shr-live, .shr-thread { grid-column: 1; }
   .shr-f .btn-pill { flex: 1 1 auto; justify-content: center; }
   .inbox-row { grid-template-columns: 1rem 1fr auto; }
   .inbox-when, .inbox-type { grid-column: 2; }
@@ -162,3 +173,29 @@ body.shr-open { overflow: hidden; }
 .set-notify { border: 1px solid var(--d-border); border-radius: 6px; padding: .5rem .8rem; margin: .8rem 0; }
 .set-notify legend { float: none; width: auto; font-size: .9rem; font-weight: 700; padding: 0 .4rem; margin: 0; }
 .set-check { display: flex; gap: .5rem; align-items: center; margin: .25rem 0; }
+
+/* Admin > Collaboration */
+.acol-sec { margin: 0 0 1.6rem; }
+.acol-sec h2 { font-size: 1.05rem; margin: 0 0 .3rem; }
+.acol-form { display: flex; flex-wrap: wrap; gap: .5rem .8rem; align-items: flex-end; margin: .5rem 0 .8rem; }
+.acol-form label { display: flex; flex-direction: column; gap: .15rem; color: var(--d-muted); font-size: .82rem; min-width: 8rem; }
+.acol-form label[hidden] { display: none; }
+.acol-form .studio-in { width: 100%; }
+.acol-form .acol-wide { flex: 1 1 18rem; }
+.acol-check { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: .35rem; min-width: 0 !important; margin: .2rem 0; }
+.acol-comments { margin-top: .8rem; padding: .6rem .8rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
+.acol-comments h3 { font-size: .95rem; margin: 0 0 .3rem; }
+.acol-comments h3:focus { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.acol-clist { list-style: none; padding: 0; margin: .4rem 0 0; display: grid; gap: .5rem; }
+.acol-c { border-left: 3px solid var(--d-border); padding: .2rem .6rem; }
+.acol-c.hidden { border-left-color: var(--d-bad); }
+.acol-c.retracted { border-left-color: var(--d-muted); }
+.acol-ch { display: flex; flex-wrap: wrap; gap: .2rem .7rem; align-items: baseline; font-size: .85rem; }
+.acol-ch time { color: var(--d-muted); }
+.acol-state { color: var(--d-muted); }
+.acol-c.hidden .acol-state { color: var(--d-bad); }
+.acol-text { margin: .2rem 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.acol-reason { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .3rem; }
+.acol-reason .studio-in { flex: 1 1 14rem; }
+.acol-problems { list-style: none; padding: 0; margin: .3rem 0 0; font-size: .85rem; }
+@media (max-width: 640px) { .acol-form label { min-width: 100%; } .acol-form .btn-pill { width: 100%; } }

@@ -858,6 +858,10 @@ curl -s -X POST -H "Authorization: Bearer $ADMIN" 'http://localhost:18480/api/v1
 # {"dryRun":true,"threadsPurged":12,"sharesPurged":30,"threadsHeld":2,"sharesHeld":1}   "held" = past retention but kept by a hold
 ```
 
+Everything in this section can also be done in the console, on **Admin > Collaboration** (`/admin/collab`): holds (place, list, release), the export
+(start, wait, download once), verify and the retention dry run (the page only ever asks for the dry run; real runs stay the server's schedule). The
+calls below are what the page makes.
+
 **Legal holds** (the `compliance` role power; an administrator is not enough). A hold has a scope (`entity` = kind and id, `kind`, `user` =
 everything the person wrote, sent or received, `thread`, or `all`), a reason, and an optional date range (a thread is covered when its activity
 overlaps it, a share when it was sent inside it). Place and release are audited; a released hold stays in the list.

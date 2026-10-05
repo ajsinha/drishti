@@ -85,6 +85,9 @@ class Collab:
     async def share(self, share_id: str, ident) -> dict:
         return await self._b._send("GET", f"/shares/{quote(share_id, safe='')}", ident)
 
+    async def reply(self, share_id: str, note: str, ident) -> dict:
+        return await self._b._send("POST", f"/shares/{quote(share_id, safe='')}/replies", ident, json={"note": note})
+
     async def inbox(self, ident, type_: str = "", unread: bool = False, limit: int = 50, before: int = 0) -> list:
         params: dict[str, Any] = {"unread": "true" if unread else "false", "limit": limit}
         if type_:

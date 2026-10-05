@@ -920,14 +920,28 @@ dot reuses `.has-note`; (7) the account page's `notify.email.{share,mention,repl
 Tests: `test_discussion.py`, `test_discussion_browser.py` (two users, mention and bell, masked value and quote, edit, retract, hide, open as it was,
 keyboard-only, phone).
 
+**Console polish as built.** (1) The share dialog's tick *Also start a discussion on the view* (`name="postToThread"`) is set on opening from `/collab`'s
+`postToThread` (the server already reported it) and sent in the share body; no server change. (2) The share banner on `/v/{kind}/{id}?share=` lists the
+share's `replies` and, when `role` is `sender` or `recipient`, a reply form (`share-reply.js`, `Ctrl+Enter`) posting to `POST /api/share/{id}/replies`
+(a console proxy of `POST /shares/{id}/replies`); `compliance` reads only. (3) **Admin > Collaboration**: `routes/collab_admin_routes.py`
+(`/admin/collab`, JSON under `/admin/collab/api/...` proxying the server's `/admin/collab/*`), `templates/admin/collab.html`, `static/js/admin-collab.js`.
+The page opens for an administrator or a caller whose `/collab` says `compliance`; sections by role as the API (moderation, retention and bridges:
+`admin`; holds, export, verify: `compliance`; the thread search: either). Deviations from the plan: the file names (no `compliance_routes.py` or
+`core/compliance.py`); hide, unhide and lock reuse the Discussion calls (`/api/comment/{id}/hide`, `/api/thread/{id}/state`); hidden comments are
+found by opening a thread (a *Only hidden comments* filter), because the server has no list of hidden comments; retention is dry-run only; the export
+zip passes through the console in memory (`raw=True`) once. (4) Times: `core/asof.py:local_when` (`to_local` in the zone, then the label) is the one
+formatter; the zone is the business zone of the top bar's *known at* picker (else the clock's), the label is the zone's last name part ("New York").
+Templates use `when_local`; the JSON the pages draw gets `<name>Local` beside every `...At` (`routes/common.py:localise`), so the JavaScript never
+works a zone out. (5) A quoted value is drawn by `discussion-view.js` from the field's cell on the page (`[data-path]`): its text as is when the page
+is at the comment's generation, else the cell's grouping, decimals, prefix and suffix applied to the stored number; `•••` and `—` are never replaced.
+No server change (the server sends the stored value). Tests: `test_collab_polish.py`, `test_collab_polish_browser.py`.
+
 **Step 8 as built.** `HOW_IT_FITS.md` §3.10 (one worked example, A, on MX-20000001), the collaboration pieces in §1 and §2 and rows in §7;
 `ARCHITECTURE.md` (module row and a security paragraph); ADR-020; `USER_MANAGEMENT.md` (moderation, the compliance power, what the directory
 reveals); `OPERATIONS.md` (backups); `TROUBLESHOOTING.md` (the shared link and the missing notice); the console guide *Sharing and
 discussion* and `help.yaml` (`contextual: inbox`); pictures from `tools/docs/shots/collab.py` in `docs/guides/img/collab/`. Deviations: (1) the
 genomics example in a few lines is folded into §3.10's table rather than a second walk (example B is the same code with `link-only` mail);
-(2) **there is still no admin console page for moderation, holds and export** (step 7's deviation 1 stands: they are API calls, documented
-in OPERATIONS.md); (3) the console has no reply box on a shared view, and the share dialog has no *also post to the discussion* tick: replies to
-a share and `postToThread` are API only (`POST /shares/{id}/replies`, `postToThread` in the body); (4) the bell opens the inbox page, not a tray.
+(2) the admin console page, the share reply box and the *also post* tick were built afterwards (*Console polish as built*); (3) the item moved; (4) the bell opens the inbox page, not a tray.
 
 Each step's own docs are part of it (USER_GUIDE, API_GUIDE, CONFIGURATION rows for what it adds); step 8 writes the
 cross-cutting sections only.
