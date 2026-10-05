@@ -30,6 +30,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param roles role name to what it may see and do
  * @param tokenReadPosts POST paths (ant patterns) that only read, so a personal API token may call them; every other non-GET
  *     request stays refused for a token (SEC-15)
+ * @param tokenScopes the write scopes a personal API token may be given, by name: what each is for and the {@code METHOD path}
+ *     patterns it opens ({@code *} for any method); a token with none of them only reads (TokenScopes)
+ * @param tokenNever {@code METHOD path} patterns no token may ever call, whatever its scopes (minting tokens, users, sign-in,
+ *     personal and collaboration state); every non-GET endpoint must be in {@code token-read-posts}, a scope or here
+ * @param tokenWriteMaxDays longest life of a token that has a write scope, which must expire (default 90)
  * @param redact field names masked for roles without {@code raw}, on every path that shows or reads a value (Entitlements). An
  *     entry with dots ({@code lifecycle.timeline.description}) names a field by the end of its path (arrays are not a step)
  * @param maskCopies also replace, in the other text of the same document, exact copies of a masked field's value (default false)
@@ -39,7 +44,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("drishti.security")
 public record SecurityProperties(Boolean enabled, String secret, Duration clockSkew, Map<String, Role> roles, List<String> redact,
-        List<String> tokenReadPosts, Boolean maskCopies, Integer maskCopiesMinLength, Integer maskCopiesMaxNodes, Integer maskCopiesMaxValues) {
+        List<String> tokenReadPosts, Map<String, TokenScope> tokenScopes, List<String> tokenNever, Integer tokenWriteMaxDays, Boolean maskCopies, Integer maskCopiesMinLength, Integer maskCopiesMaxNodes, Integer maskCopiesMaxValues) {
 
     public SecurityProperties {
         enabled = enabled != null && enabled;
@@ -47,10 +52,21 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
         roles = roles == null ? Map.of() : Map.copyOf(roles);
         redact = redact == null ? List.of() : List.copyOf(redact);
         tokenReadPosts = tokenReadPosts == null ? List.of() : List.copyOf(tokenReadPosts);
+        tokenScopes = tokenScopes == null ? Map.of() : Map.copyOf(tokenScopes);
+        tokenNever = tokenNever == null ? List.of() : List.copyOf(tokenNever);
+        tokenWriteMaxDays = tokenWriteMaxDays == null ? 90 : Math.max(1, tokenWriteMaxDays);
         maskCopies = maskCopies != null && maskCopies;
         maskCopiesMinLength = maskCopiesMinLength == null ? 3 : Math.max(1, maskCopiesMinLength);
         maskCopiesMaxNodes = maskCopiesMaxNodes == null ? 50_000 : maskCopiesMaxNodes;
         maskCopiesMaxValues = maskCopiesMaxValues == null ? 64 : maskCopiesMaxValues;
+    }
+
+    /** A write scope of a personal API token: the words the account page shows and the requests it opens. */
+    public record TokenScope(String description, List<String> allow) {
+        public TokenScope {
+            description = description == null ? "" : description;
+            allow = allow == null ? List.of() : List.copyOf(allow);
+        }
     }
 
     /** Whether a personal API token may POST to the path: it is on the {@code token-read-posts} allow-list. */

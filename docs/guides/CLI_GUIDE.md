@@ -166,11 +166,32 @@ The token comes from `--token-file` (the file's text, trimmed), else the `DRISHT
 | sign-in **off** (the default for local development) | nothing, or `--user NAME` (header `X-Drishti-User`) to be a named user. Every role is granted. |
 | sign-in **on** | a **signed token** whose `sub` is you and whose `roles` carry what you need; see [API_GUIDE.md](API_GUIDE.md) ("Security on" and "Minting a token for a script"). |
 
-**Personal API tokens (`drk_…`, from My account → API tokens) only read.** The server refuses every request other than a
-`GET` made with one (`403 DRS-5002 API tokens only read`; see [CLIENTS.md](CLIENTS.md)). So a personal token is enough for
-`server health`, `server packs list`, `design list|get|proposals` and `pack install --list`, but **not** for anything that
-changes something (`design create|save|propose|approve`, `server packs load|unload|on|off`, `pack install`). Those need a
-signed token (or sign-in off).
+**Personal API tokens (`drk_…`, from My account → API tokens) read by default, and write only with a scope.** A token made
+without scopes only reads: it is enough for `server health`, `server packs list`, `design list|get|proposals` and
+`pack install --list`. To let a tool, a CI job or a GitOps pipeline change things, make the token with the scopes it needs
+and nothing more (least privilege). On **My account → API tokens** tick the scopes, set **Days** (a token with a write scope
+must expire: 90 days at most by default) and copy the secret once:
+
+| Scope | Opens | Also needs the user to hold |
+|---|---|---|
+| `read` (always) | everything you may read | nothing |
+| `design:write` | `design create\|save\|check\|autodesign\|import\|delete\|bind\|propose` (the Designs and Studio writes) | a role with `author` |
+| `design:approve` | `design approve\|reject` | a role with `approve` (or admin), and never your own proposal with four-eyes on |
+| `packs:admin` | `server packs load\|unload\|on\|off`, `pack install` | the admin role |
+
+A token never exceeds its user: the server checks the scope **and** the roles the user holds at the moment of each call, so
+a scope on an author's token does not make them an approver, and a disabled or deleted user's tokens stop at once. A token can
+never make tokens, manage users or change personal and collaboration state. Every write done with a token is in the audit log
+(`token-write`, with the token id and never the secret; refused attempts are `token-denied`). Use it in CI like this:
+
+```bash
+# one token per pipeline, scope design:write only, 30 days; stored as a CI secret, never in the repository
+echo "$DRISHTI_CI_TOKEN" > "$RUNNER_TEMP/drishti.tok"
+drishti design propose my-design --server https://drishti.bank.example:18480 --token-file "$RUNNER_TEMP/drishti.tok"
+```
+
+Without the scope the server answers `403 DRS-5002 this token lacks the scope design:write`. Rotate by making a new token
+and revoking the old one. A signed token (API_GUIDE "Minting a token for a script") works as before.
 
 **Permissions follow the screens.** The command line asks the same endpoints the screens do, so it can do exactly what you
 could do there and nothing more:

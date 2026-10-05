@@ -732,12 +732,24 @@ class FakeBackend:
 
     async def my_tokens(self, ident=None):
         return [{"id": "abc123def456", "user": "drishti-dev-admin", "name": "Risk notebook", "createdAt": "2026-10-01T09:00:00Z",
-                 "expiresAt": None, "lastUsedAt": None, "revokedAt": None, "active": True}]
+                 "expiresAt": None, "lastUsedAt": None, "revokedAt": None, "active": True, "scopes": ["read"]},
+                {"id": "ci0000000001", "user": "drishti-dev-admin", "name": "CI deploy", "createdAt": "2026-10-01T09:00:00Z",
+                 "expiresAt": "2026-12-30T09:00:00Z", "lastUsedAt": None, "revokedAt": None, "active": True,
+                 "scopes": ["design:write", "design:approve"]}]
 
-    async def create_token(self, name, days, ident=None):
+    scopes_made = []
+
+    async def token_scopes(self, ident=None):
+        return {"writeMaxDays": 90, "scopes": [
+            {"name": "design:write", "description": "Create, edit, check, propose, share and bind Designs."},
+            {"name": "design:approve", "description": "Approve or reject proposed Sutras."},
+            {"name": "packs:admin", "description": "Load, unload, switch on and off, install and roll back packs."}]}
+
+    async def create_token(self, name, days, ident=None, scopes=None):
         if not name.strip():
             raise BackendError(400, "DRS-5001", "give the token a name of 1-100 characters (what uses it)")
         self.tokens_made.append((name, days))
+        self.scopes_made.append(list(scopes or []))
         return {"token": {"id": "xyz987xyz987", "name": name, "active": True}, "secret": "drk_xyz987xyz987_" + "s" * 43}
 
     async def revoke_token(self, id_, ident=None):

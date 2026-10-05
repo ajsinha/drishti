@@ -1458,14 +1458,35 @@ You should see a line such as `MTM (USD) +1,595,251` each time the value ticks.
 
 A person makes tokens on **My account → API tokens** for scripts, notebooks and spreadsheets
 ([CLIENTS.md](CLIENTS.md)). Send one as `Authorization: Bearer drk_<id>_<secret>`. It acts as its owner (their roles
-and packs at the time of each call), only while the owner is enabled, and only for `GET`: any other method answers
-`403 DRS-5002 API tokens only read`, except the `POST`s that only read (pivot of a search, `/command`: the allow-list
-`drishti.security.token-read-posts`). An unknown, wrong, revoked or expired token answers `401`.
+and packs at the time of each call), only while the owner is enabled. A token made without scopes (`read`) only reads: any
+other method answers `403 DRS-5002 API tokens only read`, except the `POST`s that only read (pivot of a search, `/command`: the
+allow-list `drishti.security.token-read-posts`). An unknown, wrong, revoked or expired token answers `401`.
+
+**Write scopes.** A token may also be made with scopes (`drishti.security.token-scopes`); each opens a set of `METHOD path`
+patterns, and the server decides in one filter (`TokenScopes`):
+
+| Scope | Opens | The user must also hold |
+|---|---|---|
+| `read` | `GET`, `HEAD` and the read-only `POST`s (the default; what tokens always had) | - |
+| `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
+| `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
+| `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` | `admin` |
+
+There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by `drishti.py data`
+or the pack's sources), and users, roles, tokens, sign-in, caches, the audit log, shares, comments, notes, workspaces and
+every `/me/**` write are **never** open to a token (`drishti.security.token-never`). A write that no scope opens answers
+`403 DRS-5002 this token lacks the scope design:write` (or `API tokens only read`); one that is never open, `API tokens may not
+call this endpoint`. The effective right is the scope **and** the user's roles at the time of the call, so a token never exceeds
+its user; a disabled or deleted user's token answers `401`. A token with a write scope must expire (`token-write-max-days`,
+90 by default). Tokens are bearer credentials, so CSRF does not apply to them. Every write is audited as `token-write`
+(`token <id> POST /path -> 201`, the id and never the secret) and every refusal as `token-denied`; tokens made before scopes
+existed keep reading only.
 
 | Method | Path | Does |
 |---|---|---|
 | `GET` | `/me/tokens` | your tokens: id, name, created, expires, last used, revoked, active (never the secret) |
-| `POST` | `/me/tokens` `{name, days}` | makes one; `201` with `{token, secret}`: the secret appears only here. `days` 1–366 or null; at most 20 active per person; `403 DRS-5002` for a disabled account |
+| `GET` | `/me/tokens/scopes` | the write scopes on offer, in words, and `writeMaxDays` |
+| `POST` | `/me/tokens` `{name, days, scopes}` | makes one; `201` with `{token, secret}`: the secret appears only here. `days` 1–366 or null; `scopes` blank or `["read"]` for read-only, else names from `/me/tokens/scopes`, which require `days` ≤ `writeMaxDays`; at most 20 active per person; `403 DRS-5002` for a disabled account (a token cannot make tokens) |
 | `DELETE` | `/me/tokens/{id}` | revokes yours |
 | `GET` | `/admin/tokens` | (admin) everyone's |
 | `DELETE` | `/admin/tokens/{id}` | (admin) revokes anyone's |

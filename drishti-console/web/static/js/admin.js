@@ -44,7 +44,8 @@
     tk.querySelector('[data-token-new]').addEventListener('submit', function (e) {
       e.preventDefault();
       var f = e.target.elements;
-      fetch('/api/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name.value, days: f.days.value || null }) })
+      fetch('/api/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name.value, days: f.days.value || null,
+          scopes: Array.prototype.map.call(e.target.querySelectorAll('input[name=scope]:checked'), function (c) { return c.value; }) }) })
         .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
         .then(function (res) {
           if (!res.ok) { say(tmsg, drsMessage(res.body), true); return; }

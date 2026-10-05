@@ -148,11 +148,56 @@ drishti:
     # With security on, /actuator (except /actuator/health) needs an admin token or this one, for Prometheus:
     #   scrape_configs: [{ job_name: drishti, metrics_path: /actuator/prometheus, bearer_token: <this> }]
     metrics-token: ${DRISHTI_METRICS_TOKEN:}
-    # A personal API token only reads: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing
+    # A personal API token reads by default: GET and HEAD, plus these POSTs, which carry a query in the body and change nothing
     # (a pivot of a search, a command line). Add a path only if it writes nothing.
     token-read-posts:
       - /api/v1/search/pivot/**
       - /api/v1/command
+    # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
+    # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
+    # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
+    # its user. A write that no scope opens, and nothing in token-never, is refused. Every non-GET endpoint must be declared in
+    # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
+    token-scopes:
+      "[design:write]":
+        description: "Create, edit, check, propose, share and bind Designs, save Sutras from Studio (a save is a proposal with governance on), withdraw your own proposals. Needs the author role."
+        allow:
+          - POST /api/v1/builder/**
+          - PUT /api/v1/builder/**
+          - PATCH /api/v1/builder/**
+          - DELETE /api/v1/builder/**
+          - POST /api/v1/studio/**
+          - POST /api/v1/sutras
+          - POST /api/v1/sutras/proposals/*/withdraw
+      "[design:approve]":
+        description: "Approve or reject proposed Sutras. Needs the approver or admin role, and never your own proposal with four-eyes on."
+        allow:
+          - POST /api/v1/sutras/proposals/*/approve
+          - POST /api/v1/sutras/proposals/*/reject
+      "[packs:admin]":
+        description: "Load, unload, switch on and off, install and roll back packs. Needs the admin role."
+        allow:
+          - POST /api/v1/admin/packs/*/load
+          - POST /api/v1/admin/packs/*/unload
+          - PUT /api/v1/admin/packs/*
+          - POST /api/v1/admin/registry/**
+    token-never:                       # never for a token, whatever its scopes: tokens, users, sign-in, personal and collaboration state
+      - "* /api/v1/me/**"
+      - "* /api/v1/auth/**"
+      - "* /api/v1/admin/tokens/**"
+      - "* /api/v1/admin/users/**"
+      - "* /api/v1/admin/role-definitions/**"
+      - "* /api/v1/admin/caches/**"
+      - "* /api/v1/admin/collab/**"
+      - "* /api/v1/admin/reports/**"
+      - "* /api/v1/shares/**"
+      - "* /api/v1/threads/**"
+      - "* /api/v1/comments/**"
+      - "* /api/v1/notes/**"
+      - "* /api/v1/workspaces/**"
+      - "* /api/v1/views/**"
+      - "* /api/v1/command/aliases"
+    token-write-max-days: 90           # a token with a write scope must expire, within this many days (read tokens: 1-366 or never)
     roles:
       viewer:  { kinds: ["*"], layout: false }   # packs add domain roles (finance: trader, risk); layout: may arrange views (default true)
       author:  { kinds: ["*"], raw: true, author: true, calc: true }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)

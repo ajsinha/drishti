@@ -155,8 +155,12 @@ async def account(request: Request, saved: int = 0, error: str = ""):
         tokens = await request.app.state.backend.my_tokens(me)
     except BackendError:
         tokens = []
+    try:
+        choices = await request.app.state.backend.token_scopes(me)
+    except BackendError:
+        choices = {"scopes": [], "writeMaxDays": 90}
     return render(request, "account.html", profile=profile, must=me.must_change, saved=bool(saved), error=error,
-                  zones=ZONES, aliases=aliases, tokens=tokens, api_base=request.app.state.settings.get("backend.url"))
+                  zones=ZONES, aliases=aliases, tokens=tokens, token_scopes=choices, api_base=request.app.state.settings.get("backend.url"))
 
 
 ZONES = ["America/New_York", "America/Chicago", "America/Toronto", "America/Sao_Paulo", "Europe/London", "Europe/Frankfurt", "Europe/Paris",

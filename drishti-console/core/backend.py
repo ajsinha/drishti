@@ -298,8 +298,12 @@ class BackendClient:
     async def my_tokens(self, ident) -> list:
         return await self._get("/me/tokens", ident)
 
-    async def create_token(self, name: str, days, ident) -> dict:
-        return await self._send("POST", "/me/tokens", ident, json={"name": name, "days": days})
+    async def token_scopes(self, ident) -> dict:
+        """The write scopes a token may be given and the longest life of a write token (server configuration)."""
+        return await self._get("/me/tokens/scopes", ident)
+
+    async def create_token(self, name: str, days, ident, scopes=None) -> dict:
+        return await self._send("POST", "/me/tokens", ident, json={"name": name, "days": days, "scopes": scopes or []})
 
     async def revoke_token(self, id_: str, ident) -> None:
         return await self._send("DELETE", f"/me/tokens/{quote(id_)}", ident)

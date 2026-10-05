@@ -82,20 +82,31 @@
   </form>
   <section class="login-box adm-pw" data-tokens id="tokens">
     <h2>API tokens</h2>
-    <p class="text-muted-d adm-hint">For scripts, notebooks and spreadsheets: a token reads what you may read, as you, and never changes
-      anything. Send it as <span class="mono">Authorization: Bearer drk_…</span> to <span class="mono">{{ api_base }}/api/v1/…</span>
-      (see the <a href="/help/api">API guide</a>). The secret is shown once; revoke a token you no longer use.</p>
-    <div class="tbl-wrap"><table class="tbl" data-plain><thead><tr><th>Name</th><th>Created</th><th>Expires</th><th>Last used</th><th>Status</th><th></th></tr></thead><tbody>
+    <p class="text-muted-d adm-hint">For scripts, notebooks, spreadsheets and CI. A token acts as you: it never does more than your own
+      roles allow at the moment of each call, and stops when your account is disabled. By default it only <b>reads</b>. Tick a scope below
+      to let it change things too; a token with a write scope must expire, and everything it writes is recorded in the audit log. Send it as
+      <span class="mono">Authorization: Bearer drk_…</span> to <span class="mono">{{ api_base }}/api/v1/…</span>
+      (see the <a href="/help/api">API guide</a> and the <a href="/help/cli-guide">command-line guide</a>). The secret is shown once; revoke a token you no longer use.</p>
+    <div class="tbl-wrap"><table class="tbl" data-plain><thead><tr><th>Name</th><th>Can</th><th>Created</th><th>Expires</th><th>Last used</th><th>Status</th><th></th></tr></thead><tbody>
       {% for t in tokens or [] %}<tr data-token="{{ t.id }}"><td>{{ t.name }} <span class="mono text-muted-d">{{ t.id }}</span></td>
+        <td data-scopes>{% set sc = t.scopes or ['read'] %}{% if sc == ['read'] %}<span class="text-muted-d">read only</span>{% else %}<span class="mono">Can: {{ sc | join(', ') }}</span>{% endif %}</td>
         <td class="mono">{{ (t.createdAt or '')[:10] }}</td><td class="mono">{{ (t.expiresAt or 'never')[:10] }}</td>
         <td class="mono">{{ (t.lastUsedAt or '—')[:16] | replace('T', ' ') }}</td>
         <td>{% if t.active %}<span class="st st-ok">active</span>{% elif t.revokedAt %}<span class="st">revoked</span>{% else %}<span class="st st-warn">expired</span>{% endif %}</td>
         <td>{% if t.active %}<button type="button" class="fk" data-revoke>Revoke</button>{% endif %}</td></tr>
-      {% else %}<tr><td colspan="6" class="text-muted-d">No tokens yet.</td></tr>{% endfor %}
+      {% else %}<tr><td colspan="7" class="text-muted-d">No tokens yet.</td></tr>{% endfor %}
     </tbody></table></div>
     <form data-token-new class="token-new">
       <label>Name <input name="name" class="cmd-input" maxlength="100" placeholder="Risk notebook" required></label>
-      <label>Days <input name="days" class="cmd-input mono" type="number" min="1" max="366" placeholder="90 (blank: no expiry)"></label>
+      <label>Days <input name="days" class="cmd-input mono" type="number" min="1" max="366" placeholder="blank: no expiry (read only)"></label>
+      <fieldset class="token-scopes" data-scope-box>
+        <legend>What it may do</legend>
+        <label class="token-scope"><input type="checkbox" checked disabled> <b>read</b> <span class="text-muted-d">always: see what you may see</span></label>
+        {% for sc in (token_scopes or {}).get('scopes', []) %}<label class="token-scope"><input type="checkbox" name="scope" value="{{ sc.name }}"> <b class="mono">{{ sc.name }}</b>
+          <span class="text-muted-d">{{ sc.description }}</span></label>
+        {% endfor %}
+        <p class="text-muted-d adm-hint" data-scope-note>A token with a write scope must expire: set Days (at most {{ (token_scopes or {}).get('writeMaxDays', 90) }}).</p>
+      </fieldset>
       <button type="submit" class="btn-pill btn-accent">Create token</button>
     </form>
     <div class="token-secret" data-secret hidden>
