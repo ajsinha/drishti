@@ -1,0 +1,6 @@
+${headline}
+
+${detail}
+${product}: ${link}
+
+This is a test message sent from the administration page. It contains no data.

@@ -766,8 +766,11 @@ It is kept on the server, so it follows the user to any browser.
 
 | Method | Path | Notes |
 |---|---|---|
-| `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned}` with defaults filled in |
+| `GET` | `/me/settings` | `{theme, landing, clockZone, density, flash, searchLimit, pinned, notify: {email: {share, mention, reply}}}` with defaults filled in (the notify events are emailed when true) |
 | `PATCH` | `/me/settings` | change only the fields named; `null` resets one; unknown field or bad value → `400 DRS-5001` |
+| `GET` | `/admin/collab/outbox?state=&limit=` | `admin`: `{enabled, available, dispatching, counts, items[]}`; rows name recipient, template, share, attempts, next attempt and last error, never the message |
+| `POST` | `/admin/collab/outbox/{seq}/retry` | `admin`: send a dead or cancelled delivery again (`400` for any other state) |
+| `POST` | `/admin/collab/mail-test` | `admin`: mail a test message to your own address now; `503 DRS-7012` with the SMTP reason when it fails |
 | `GET` | `/me/packs` | `{assigned, active}` |
 | `PUT` | `/me/packs` | body `{"active": [...]}`; must be a non-empty subset of `assigned` (`403 DRS-5002` otherwise) |
 | `GET` | `/me/workspaces` | names of saved workspaces |

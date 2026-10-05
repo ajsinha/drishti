@@ -1,0 +1,8 @@
+${headline}
+
+${detail}
+Open it in ${product}:
+${link}
+
+You are receiving this because someone shared a view with you in ${product}. It carries no figures: sign in to see what you are entitled to see.
+Change what you are emailed about under Settings, Notifications.

@@ -28,6 +28,16 @@ spring:
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}
 
+  # Email (docs/admin/CONFIGURATION.md, "Email"): set spring.mail.host (SPRING_MAIL_HOST) to switch the SMTP client on, with
+  # port/username/password and properties.mail.smtp.* as for any Spring Boot application; leave host unset and no mail client exists.
+  #   mail:
+  #     host: smtp.example.com
+  #     port: 587
+  #     username: drishti
+  #     password: ...
+  #     properties.mail.smtp.starttls.required: true
+  #     properties.mail.smtp.connectiontimeout: 10000
+  #     properties.mail.smtp.timeout: 10000
   jpa:
     open-in-view: false      # no lazy loading while a view renders: the identity services load what they return
 
@@ -53,6 +63,9 @@ management:
     web:
       exposure:
         include: health,info,prometheus,metrics
+  health:
+    mail:
+      enabled: false         # a mail server that is down is retried by the outbox; it must not turn the server's health red
   endpoint:
     health:
       probes:

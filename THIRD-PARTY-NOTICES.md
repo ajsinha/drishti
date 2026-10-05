@@ -22,6 +22,8 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | Maven Wrapper (`mvnw`, `mvnw.cmd`, `.mvn/wrapper`) | Apache-2.0 |
 | Spring Boot, Spring Framework | Apache-2.0 |
 | Jackson | Apache-2.0 |
+| Jakarta Mail API and Eclipse Angus Mail (SMTP client, via `spring-boot-starter-mail`) | EPL-2.0 / GPL-2.0 with Classpath Exception / EDL-1.0 |
+| GreenMail (tests only: an in-process SMTP server) | Apache-2.0 |
 | Caffeine | Apache-2.0 |
 | JCTools | Apache-2.0 |
 | HdrHistogram | BSD-2-Clause / CC0 |

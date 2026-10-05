@@ -142,6 +142,11 @@ abstract class IdentityStoreContract {
     }
 
     @Test
+    void outboxFollowsTheContractInTheDatabase() {
+        com.ash.drishti.identity.collab.CollabStoreChecks.outbox(bean(com.ash.drishti.identity.collab.OutboxStore.class));
+    }
+
+    @Test
     void recordNowWritesAnAccessRowAtOnceAndRollsBackWithItsTransaction() {
         AccessLog log = bean(AccessLog.class);
         var tx = bean(com.ash.drishti.identity.collab.CollabTx.class);

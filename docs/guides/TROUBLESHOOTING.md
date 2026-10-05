@@ -311,6 +311,24 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   tab shares the browser's connection; the network panel shows a single `/api/channel?s=…` request for the whole
   browser (in the SharedWorker's own panel, `chrome://inspect/#workers`, when it runs there).
 
+### The email never arrived
+
+A share reached the bell but not the mailbox. Work down the list; each row is one cause.
+
+| Symptom | Cause | Check and fix |
+|---|---|---|
+| The share answers `503 DRS-7012`, or the dialog offers no email | Email is off | It needs `drishti.collab.email.enabled`, `spring.mail.host` and `drishti.collab.console-url`, and sign-in on. `GET /api/v1/admin/collab/outbox` shows `available`. |
+| The server stops at start with "drishti.collab.email.enabled needs drishti.security.enabled" | Sign-in is off | User names are not verified, so mail is refused. Turn security on, or email off. |
+| The dialog said "2 of 8 have no address" | The person has no email in their account | An administrator sets it under Admin → Users. People cannot add their own. |
+| One person never gets mail | They turned it off, or are at the hourly cap | `GET /api/v1/me/settings` shows `notify.email.share`; the cap is `limits.mails-per-recipient-per-hour` (the server log says "not queued"). |
+| Rows stay `pending` with `attempts` rising and a `lastError` such as "Could not connect" | The mail server is unreachable or stalled | Fix the host, port, firewall or TLS; rows go out by themselves. Set the smtp timeouts so a stalled server cannot hold the worker. |
+| A row is `dead` with `550` or "Invalid Addresses" | The server refused the address | Correct the address, then `POST /api/v1/admin/collab/outbox/{seq}/retry`. |
+| A row is `dead` after the last attempt | The outage outlasted `outbox.max-attempts` of backoff | Retry it once the server is back; raise `max-attempts` or `max-backoff` if outages are long. |
+| A row is `cancelled` ("can no longer open", "no valid address") | By design: the person lost the right to the view, was disabled, or the address is malformed | Nothing is sent to someone who should not see it. |
+| Nothing is sent and rows stay `pending` with no attempts | No server is dispatching | `outbox.enabled` is false on every server, or the server was started with email off. |
+| The mail is in spam | Missing sender authentication | Use a From address your mail server may send for (SPF/DKIM): `drishti.collab.email.from`. |
+| The message has no id or note | The pack is `link-only` | `drishti.collab.packs.<pack>.email.content`, or `email.content: link-only`. |
+
 ## Commands and views
 
 ### "DRS-4001 cannot read command '…'; type <MNEMONIC> <ID> <GO> with a mnemonic such as …"

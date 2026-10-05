@@ -41,6 +41,16 @@ class FileCollabStoreTest {
     }
 
     @Test
+    void outboxFollowsTheContractAndSurvivesARestart() throws Exception {
+        Path dir = Files.createTempDirectory("collab-outbox");
+        CollabStoreChecks.outbox(new FileOutboxStore(dir));
+        FileOutboxStore again = new FileOutboxStore(dir);
+        OutboxItem n = again.add(OutboxItem.pending("email", "ravi", "share", "sh_9", Instant.now()));
+        assertThat(new FileOutboxStore(dir).find(n.seq())).isPresent();
+        assertThat(n.seq()).isGreaterThan(3);
+    }
+
+    @Test
     void whatWasWrittenIsThereAfterARestart() throws Exception {
         Path dir = Files.createTempDirectory("collab-restart");
         FileShareStore shares = new FileShareStore(dir);
