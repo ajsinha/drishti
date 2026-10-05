@@ -390,9 +390,15 @@ class BridgeDeliveryTest {
             h.outbox.add(OutboxItem.pending("bridge", "desk", "share", "sh_1", h.clock.instant()));
             h.dispatcher.tick();
             assertThatThrownBy(() -> h.sender.test("desk", "root", "https://drishti.example")).isInstanceOf(DrishtiException.class);
-            String all = h.outbox.list(null, 50).toString() + h.audited + h.registry.all() + logs.list.stream().map(ILoggingEvent::getFormattedMessage).toList();
+            // the root logger also hears other tests' background threads: read the events under the appender's own lock
+            // (AppenderBase.doAppend synchronizes on it), or a concurrent append breaks the iteration
+            List<String> messages;
+            synchronized (logs) {
+                messages = logs.list.stream().map(ILoggingEvent::getFormattedMessage).toList();
+            }
+            String all = h.outbox.list(null, 50).toString() + h.audited + h.registry.all() + messages;
             assertThat(all).doesNotContain("xyzSECRETtoken", "T0SECRET", BridgeHarness.SIGNING_SECRET, h.base + BridgeHarness.SECRET_PATH);
-            assertThat(logs.list).isNotEmpty();
+            assertThat(messages).isNotEmpty();
         } finally {
             root.detachAppender(logs);
             root.setLevel(was);
