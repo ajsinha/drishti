@@ -223,10 +223,8 @@ public final class ExplainService {
         List<PageContext.Candidate> candidates = new ArrayList<>();
         for (MatchTrace.Candidate c : trace.candidates()) {
             Sutra s = c.sutra();
-            if (built.sutra().isPresent() && built.sutra().get() == s) {
-                continue;
-            }
-            candidates.add(new PageContext.Candidate(s.name(), s.version(), s.match().priority(), c.where(), c.result().text()));
+            boolean isChosen = built.sutra().isPresent() && built.sutra().get() == s;
+            candidates.add(new PageContext.Candidate(s.name(), s.version(), s.match().priority(), c.where(), c.result().text(), isChosen));
         }
         Map<String, Panel> defined = new LinkedHashMap<>();
         built.layout().sutra().panels().forEach(p -> defined.put(p.id(), p));

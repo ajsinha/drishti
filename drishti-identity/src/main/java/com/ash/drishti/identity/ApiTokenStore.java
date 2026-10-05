@@ -49,7 +49,7 @@ public final class ApiTokenStore {
             Instant revokedAt, boolean active, List<String> scopes) {}
 
     /** A verified token: its id (for the audit trail), its user and its scopes ({@code read} when none were chosen). */
-    public record Verified(String id, String user, List<String> scopes) {}
+    public record Verified(String id, String user, List<String> scopes, Instant expiresAt) {}
 
     /** A new token: the full text, shown once. */
     public record Created(TokenView token, String secret) {}
@@ -132,7 +132,7 @@ public final class ApiTokenStore {
             return Optional.empty();
         }
         touch(id, now);
-        return Optional.of(new Verified(id, c.user(), c.scopes()));
+        return Optional.of(new Verified(id, c.user(), c.scopes(), c.expiresAt()));
     }
 
     /** Records the last use at most once a minute per token, so verification stays a read. */

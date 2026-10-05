@@ -175,11 +175,18 @@ drishti:
           - POST /api/v1/sutras/proposals/*/approve
           - POST /api/v1/sutras/proposals/*/reject
       "[packs:admin]":
-        description: "Load, unload, switch on and off, install and roll back packs. Needs the admin role."
+        description: "Load, unload, switch on and off, deploy archives, install, change a pack's data source and roll back packs. Needs the admin role."
         allow:
           - POST /api/v1/admin/packs/*/load
           - POST /api/v1/admin/packs/*/unload
           - PUT /api/v1/admin/packs/*
+          - POST /api/v1/admin/packs/deploy
+          - POST /api/v1/admin/packs/deploy/*
+          - DELETE /api/v1/admin/packs/deploy/*
+          - POST /api/v1/admin/packs/*/rollback
+          - PUT /api/v1/admin/packs/*/datasource
+          - DELETE /api/v1/admin/packs/*/datasource
+          - POST /api/v1/admin/packs/*/datasource/test
           - POST /api/v1/admin/registry/**
     token-never:                       # never for a token, whatever its scopes: tokens, users, sign-in, personal and collaboration state
       - "* /api/v1/me/**"
@@ -460,6 +467,19 @@ drishti:
       trusted-keys: {}                       # publisher -> Ed25519 public key (tools/packreg keygen prints it)
       max-archive-mb: 50
       max-unpacked-mb: 200
+    # The administrator's data-source overrides, one file per pack (Admin → Packs → Data source); redeploying a pack keeps them.
+    settings-dir: ${DRISHTI_PACKS_SETTINGS:./data/packs/settings}
+    deploy:                                # Admin → Packs → Deploy archive (the archive carries the pack only, never data)
+      max-archive-mb: 50                   # larger uploads are refused with 413
+      max-unpacked-mb: 200
+      max-files: 10000
+      keep-versions: 5                     # previous versions kept per pack for a rollback
+      require-signature: false             # true: only archives signed by a publisher in registry.trusted-keys
+      require-manifest: true               # an archive needs MANIFEST.json (drishti.py pack bundle writes it)
+      staging-minutes: 30                  # a verified upload waits this long for its confirmation
+      history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:./data/packs/deploy-history.jsonl}
+      probe-dates: 3                       # business dates listed per kind by Test connection
+      probe-timeout-seconds: 30
     enabled: ${DRISHTI_PACKS:finance}
     # Packs new users get until an admin says otherwise (empty: every installed pack).
     default-for-users: ${DRISHTI_DEFAULT_PACKS:}

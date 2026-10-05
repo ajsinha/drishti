@@ -92,6 +92,16 @@ class DeltaSourcePluginTest extends DatedSourceContract {
     }
 
     @Test
+    void inventoryListsTheNewestDatesWithTheirRowCountsAndSaysNothingForAnUnknownKind() throws Exception {
+        Map<LocalDate, Long> inv = plugin().inventory("trade", 5);
+        assertThat(inv).isNotEmpty();
+        assertThat(new java.util.ArrayList<>(inv.keySet())).isSortedAccordingTo(java.util.Comparator.reverseOrder());      // newest first
+        assertThat(inv.values()).allMatch(n -> n > 0);
+        assertThat(plugin().inventory("trade", 1)).hasSize(1);
+        assertThat(plugin().inventory("no-such-kind", 3)).isEmpty();
+    }
+
+    @Test
     void knownAtBeforeTheTableExistedFindsNothingAndAfterTheLastCommitReadsTheLatest() throws Exception {
         EntityRef t1 = EntityRef.of("trade", "T-1");
         LocalDate d = LocalDate.of(2026, 9, 30);

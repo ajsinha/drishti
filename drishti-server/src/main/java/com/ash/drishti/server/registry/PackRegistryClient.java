@@ -220,7 +220,7 @@ public final class PackRegistryClient {
         }
     }
 
-    static boolean verify(byte[] data, String signature, String publicKey) {
+    public static boolean verify(byte[] data, String signature, String publicKey) {
         try {
             PublicKey key = KeyFactory.getInstance("Ed25519").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(publicKey.trim())));
             Signature s = Signature.getInstance("Ed25519");

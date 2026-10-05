@@ -1,0 +1,164 @@
+[
+  {
+    "level": "change",
+    "what": "version",
+    "name": "demo",
+    "detail": "1.0.0 -> 1.1.0"
+  },
+  {
+    "level": "breaking",
+    "what": "kind renamed",
+    "name": "legacy-desk",
+    "detail": "legacy-desk -> desk (monitors, workspaces and alerts that name 'legacy-desk' stop matching)"
+  },
+  {
+    "level": "breaking",
+    "what": "kind removed",
+    "name": "swap",
+    "detail": "monitors, workspaces and alerts that name it stop working"
+  },
+  {
+    "level": "change",
+    "what": "kind added",
+    "name": "swap-v2",
+    "detail": ""
+  },
+  {
+    "level": "change",
+    "what": "kind added",
+    "name": "option",
+    "detail": ""
+  },
+  {
+    "level": "change",
+    "what": "mnemonic label",
+    "name": "TRD",
+    "detail": "'Trades' -> 'Deals'"
+  },
+  {
+    "level": "breaking",
+    "what": "mnemonic renamed",
+    "name": "BK",
+    "detail": "BK -> BK2 for kind book (typed commands and saved links use it)"
+  },
+  {
+    "level": "breaking",
+    "what": "mnemonic removed",
+    "name": "SW",
+    "detail": "kind swap"
+  },
+  {
+    "level": "change",
+    "what": "mnemonic added",
+    "name": "OP",
+    "detail": "kind option"
+  },
+  {
+    "level": "selection",
+    "what": "sutra removed",
+    "name": "trade-old",
+    "detail": "sutras/gone.v1.sutra.yaml: its documents fall to another Sutra (match any)"
+  },
+  {
+    "level": "selection",
+    "what": "sutra added",
+    "name": "trade-extra",
+    "detail": "sutras/extra.v1.sutra.yaml: match qty > 100, priority 5"
+  },
+  {
+    "level": "change",
+    "what": "sutra changed",
+    "name": "edited",
+    "detail": "content changed"
+  },
+  {
+    "level": "selection",
+    "what": "screen selection changes",
+    "name": "trade-main",
+    "detail": "where \"side == 'B'\" -> \"side == 'S'\"; priority 10 -> 20"
+  },
+  {
+    "level": "change",
+    "what": "sutra changed",
+    "name": "trade-main",
+    "detail": "panels removed p2; panels added p3"
+  },
+  {
+    "level": "change",
+    "what": "about removed",
+    "name": "book",
+    "detail": ""
+  },
+  {
+    "level": "change",
+    "what": "about added",
+    "name": "option",
+    "detail": ""
+  },
+  {
+    "level": "change",
+    "what": "about about",
+    "name": "trade",
+    "detail": "text changed"
+  },
+  {
+    "level": "change",
+    "what": "glossary removed",
+    "name": "trade.px",
+    "detail": ""
+  },
+  {
+    "level": "change",
+    "what": "glossary changed",
+    "name": "trade.qty",
+    "detail": ""
+  },
+  {
+    "level": "change",
+    "what": "glossary added",
+    "name": "trade.side",
+    "detail": ""
+  },
+  {
+    "level": "change",
+    "what": "panel notes",
+    "name": "trade",
+    "detail": "changed"
+  },
+  {
+    "level": "layout",
+    "what": "connectors added",
+    "name": "fresh",
+    "detail": ""
+  },
+  {
+    "level": "layout",
+    "what": "connectors removed",
+    "name": "gone",
+    "detail": ""
+  },
+  {
+    "level": "layout",
+    "what": "connectors changed",
+    "name": "lake",
+    "detail": ""
+  },
+  {
+    "level": "layout",
+    "what": "routes removed",
+    "name": "book",
+    "detail": ""
+  },
+  {
+    "level": "layout",
+    "what": "routes added",
+    "name": "option",
+    "detail": ""
+  },
+  {
+    "level": "layout",
+    "what": "columns changed",
+    "name": "trade",
+    "detail": "columns removed qty; columns added side"
+  }
+]

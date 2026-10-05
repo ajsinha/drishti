@@ -43,7 +43,7 @@ public class SecurityConfiguration {
         // an API token stands for its user as they are now: their roles, and only while the account is enabled
         java.util.function.Function<String, java.util.Optional<TokenFilter.Grant>> apiTokens = bearer -> tokens.getObject().verify(bearer)
                 .flatMap(t -> users.getObject().find(t.user()).filter(com.ash.drishti.identity.User::enabled)
-                        .map(u -> new TokenFilter.Grant(t.id(), new Principal(u.username(), java.util.List.copyOf(u.roles())), t.scopes())));
+                        .map(u -> new TokenFilter.Grant(t.id(), new Principal(u.username(), java.util.List.copyOf(u.roles())), t.scopes(), t.expiresAt())));
         // a signed token stands for an account that must still exist and be enabled (the console's own service identity is exempt)
         java.util.function.Predicate<Principal> account = p -> !registeredOnly || p.roles().contains(Entitlements.SERVICE)
                 || users.getObject().find(p.user()).filter(com.ash.drishti.identity.User::enabled).isPresent();

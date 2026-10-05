@@ -208,6 +208,21 @@ public final class FileSourcePlugin implements SourcePlugin {
                 : null;
     }
 
+    @Override
+    public java.util.Map<LocalDate, Long> inventory(String kind, int maxDates) {
+        java.util.NavigableSet<LocalDate> held = jsonl.get(kind);
+        java.util.Map<LocalDate, Long> out = new java.util.LinkedHashMap<>();
+        if (held != null) {
+            for (LocalDate d : held.descendingSet()) {
+                if (out.size() >= maxDates) {
+                    break;
+                }
+                out.put(d, (long) day(kind, d).size());
+            }
+        }
+        return out;
+    }
+
     /**
      * A day's index, built on first use and again whenever the file changes. A file with unreadable lines, duplicate
      * ids, or that cannot be read at all is indexed once (and logged once) and kept until it changes.

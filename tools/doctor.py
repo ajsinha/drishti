@@ -158,14 +158,23 @@ def server_check(api) -> list[dict]:
     if not api.token:
         out.append(item("warn", "token", "none given: calls run anonymously or as --user", "set DRISHTI_TOKEN or --token-file (My account, API tokens)"))
         return out
-    try:
-        toks = api.json("GET", "/api/v1/me/tokens")
+    try:                                         # the token this very call used: exact id, scopes and expiry
+        me = api.json("GET", "/api/v1/me/token")
+        out.append(item("ok", "token", f"accepted; this token '{me.get('id')}' acts as {me.get('user')}: scopes {', '.join(me.get('scopes') or ['read'])}"
+                        f", expires {me.get('expiresAt') or 'never'}"))
+        return out
     except Exception as e:                       # noqa: BLE001
         status = getattr(e, "status", None)
         if status == 401:
             out.append(item("fail", "token", "the server rejected the token (401)", "make a new one: My account, API tokens; check it is not expired or revoked"))
-        else:
-            out.append(item("warn", "token", f"accepted, but its scopes could not be read: {str(e)[:100]}"))
+            return out
+        if status == 404:
+            out.append(item("ok", "token", "accepted as a signed-in session (not a personal drk_ token): its power is the user's roles"))
+            return out
+    try:                                         # an older server without /me/token: guess from the token list
+        toks = api.json("GET", "/api/v1/me/tokens")
+    except Exception as e:                       # noqa: BLE001
+        out.append(item("warn", "token", f"accepted, but its scopes could not be read: {str(e)[:100]}"))
         return out
     active = [t for t in toks if t.get("active")] if isinstance(toks, list) else []
     if not active:

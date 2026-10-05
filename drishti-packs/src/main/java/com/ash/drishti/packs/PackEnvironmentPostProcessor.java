@@ -41,7 +41,7 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         names.addAll(org.springframework.boot.context.properties.bind.Binder.get(env)
                 .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
                 .orElse(List.of()));
-        PackLoader loader = new PackLoader();
+        PackLoader loader = new PackLoader(new PackSettings(java.nio.file.Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings"))));
         List<Pack> packs = loader.load(PackLoader.dirs(dir, env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")),
                 List.copyOf(names));
         env.getPropertySources().addLast(new MapPropertySource(SOURCE, loader.properties(packs)));

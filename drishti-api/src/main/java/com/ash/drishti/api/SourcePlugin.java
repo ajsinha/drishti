@@ -169,6 +169,15 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /** Human-readable health; {@code "UP"} when healthy. */
+    /**
+     * What the source holds for a kind, newest business date first: the date and how many entities it has (at most
+     * {@code maxDates} dates). Empty when the source cannot say. Used by Admin → Packs → Data source → Test connection;
+     * it may read data, so it is never called on a request path.
+     */
+    default java.util.Map<java.time.LocalDate, Long> inventory(String kind, int maxDates) {
+        return java.util.Map.of();
+    }
+
     default String health() {
         return "UP";
     }

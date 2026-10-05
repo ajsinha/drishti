@@ -118,6 +118,24 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     /** A table's versions answer {@code knownAt}. */
     @Override
+    public Map<LocalDate, Long> inventory(String kind, int maxDates) {
+        if (!tables.containsKey(kind)) {
+            return Map.of();
+        }
+        Optional<DeltaTable.Layout> l = readableLayout(kind, null);
+        Map<LocalDate, Long> out = new LinkedHashMap<>();
+        if (l.isPresent()) {
+            for (LocalDate d : l.get().files().descendingKeySet()) {
+                if (out.size() >= maxDates) {
+                    break;
+                }
+                out.put(d, (long) idMap(kind, l.get(), d).ids().length);
+            }
+        }
+        return out;
+    }
+
+    @Override
     public boolean timeTravel() {
         return true;
     }

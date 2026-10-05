@@ -41,6 +41,17 @@ import java.util.Map;
 public final class PackLoader {
 
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
+    /** The administrator's data-source overrides, applied over each pack's connector settings; null when none are kept. */
+    private final PackSettings dataSources;
+
+    public PackLoader() {
+        this(null);
+    }
+
+    /** A loader that merges the override files of {@code settings} into the packs' connectors (see {@link PackSettings}). */
+    public PackLoader(PackSettings settings) {
+        this.dataSources = settings;
+    }
     private static final ObjectMapper JSON = new ObjectMapper();
 
     /**
@@ -226,15 +237,18 @@ public final class PackLoader {
                 Map<String, Object> c = map(e.getValue());
                 String base = "drishti.sources.connectors." + e.getKey();
                 Map<String, Object> props = new LinkedHashMap<>();
+                Map<String, Object> over = dataSources == null ? Map.of() : dataSources.connector(pack.name(), e.getKey());
                 props.put(base + ".plugin", c.get("plugin"));
-                if (c.get("enabled") != null) {
-                    props.put(base + ".enabled", c.get("enabled"));
+                Object enabledFlag = over.get("enabled") != null ? over.get("enabled") : c.get("enabled");
+                if (enabledFlag != null) {
+                    props.put(base + ".enabled", enabledFlag);
                 }
                 List<Object> ck = (List<Object>) c.getOrDefault("kinds", List.of());
                 for (int i = 0; i < ck.size(); i++) {
                     props.put(base + ".kinds[" + i + "]", ck.get(i));
                 }
                 flatten(base + ".settings.", map(c.get("settings")), props);
+                map(over.get("settings")).forEach((k, v) -> props.put(base + ".settings." + k, String.valueOf(v)));   // the administrator's override wins over the pack
                 offer(claims, overrides, lineage, "connector " + e.getKey(), pack.name(), props);
             }
             // routes: which connector answers each of the pack's kinds (the query inside a pack picks the connector)

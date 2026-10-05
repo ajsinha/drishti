@@ -164,7 +164,8 @@ class Api:
         return cls(getattr(a, "server", None) or os.environ.get("DRISHTI_SERVER") or DEFAULT_SERVER, token,
                    getattr(a, "user", None) or os.environ.get("DRISHTI_USER"), getattr(a, "timeout", 60))
 
-    def request(self, method: str, path: str, body=None, data: bytes | None = None, ctype: str | None = None) -> tuple[int, bytes]:
+    def request(self, method: str, path: str, body=None, data: bytes | None = None, ctype: str | None = None,
+                extra: dict | None = None) -> tuple[int, bytes]:
         headers = {"Accept": "application/json, application/zip;q=0.9"}
         if self.token:
             headers["Authorization"] = "Bearer " + self.token
@@ -174,7 +175,7 @@ class Api:
             data, ctype = json.dumps(body).encode("utf-8"), "application/json"
         if ctype:
             headers["Content-Type"] = ctype
-        req = urllib.request.Request(self.base + path, data=data, method=method, headers=headers)
+        req = urllib.request.Request(self.base + path, data=data, method=method, headers={**headers, **(extra or {})})
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as r:      # noqa: S310 - the URL is the operator's own --server
                 return r.status, r.read()
@@ -192,8 +193,8 @@ class Api:
         except OSError as e:
             raise CliError(f"cannot reach {self.base}: {e}", 1) from None
 
-    def json(self, method: str, path: str, body=None):
-        _, raw = self.request(method, path, body)
+    def json(self, method: str, path: str, body=None, **kw):
+        _, raw = self.request(method, path, body, **kw)
         return json.loads(raw) if raw.strip() else {}
 
 
@@ -939,6 +940,7 @@ def build_parser() -> argparse.ArgumentParser:
         p.set_defaults(func=cmd_server_packs)
         if act != "list":
             p.add_argument("name", help="the pack's name")
+    load_module("serverpacks", "serverpacks.py").register(sys.modules[__name__], ps, srv)
 
     # design -----------------------------------------------------------------------------------------------
     ds = group("design", "Screen Designer designs over REST: create, edit, check, propose, approve, ship (anyone may design; approving needs an approver)")

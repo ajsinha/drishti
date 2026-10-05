@@ -68,6 +68,21 @@ public class ApiTokenController {
         return tokens.of(p.user());
     }
 
+    /** The calling token itself (id, scopes, expiry), for tools that check what they may do; 404 when the caller signed in (a session). */
+    @GetMapping("/api/v1/me/token")
+    public java.util.Map<String, Object> current(jakarta.servlet.http.HttpServletRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        Object g = req.getAttribute(com.ash.drishti.server.security.TokenFilter.GRANT_ATTRIBUTE);
+        if (!(g instanceof com.ash.drishti.server.security.TokenFilter.Grant grant)) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "this call was made with a session, not a personal API token");
+        }
+        java.util.Map<String, Object> out = new java.util.LinkedHashMap<>();
+        out.put("id", grant.tokenId());
+        out.put("user", p.user());
+        out.put("scopes", grant.scopes());
+        out.put("expiresAt", grant.expiresAt());
+        return out;
+    }
+
     @GetMapping("/api/v1/me/tokens/scopes")
     public ScopeChoices scopeChoices() {
         return new ScopeChoices(props.tokenScopes().entrySet().stream().sorted(java.util.Map.Entry.comparingByKey())

@@ -33,6 +33,7 @@ python3 -m unittest -q tools/test_pack_bundle.py
 python3 -m unittest -q tools/test_packmake.py
 python3 -m unittest -q tools/test_pack_authoring.py
 python3 -m unittest -q tools/test_cli_extras.py
+python3 -m unittest -q tools/test_pack_deploy.py
 if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
   # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
   timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py

@@ -84,10 +84,13 @@ class ExplainControllerTest {
         assertThat(sutra.path("where").asText()).contains("productType == 'IRS'");
         assertThat(sutra.path("description").asText()).contains("interest rate swap");
         assertThat(layout.path("candidates")).isNotEmpty();
+        int chosen = 0;
         for (JsonNode c : layout.path("candidates")) {
-            assertThat(c.path("name").asText()).isNotEqualTo("irs-vanilla");
+            assertThat(c.path("name").asText().equals("irs-vanilla")).as("only the chosen Sutra is flagged chosen").isEqualTo(c.path("chosen").asBoolean());
+            chosen += c.path("chosen").asBoolean() ? 1 : 0;
             assertThat(c.path("result").asText()).isIn("true", "false", "error", "masked");
         }
+        assertThat(chosen).as("the match trace includes the chosen Sutra, flagged").isEqualTo(1);
         assertThat(layout.path("candidates").findValuesAsText("name")).contains("fx-swap");
 
         JsonNode next = e.path("next");

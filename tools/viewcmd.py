@@ -122,9 +122,15 @@ def render_explain(c: dict, say=print) -> None:
         say(f"  Sutra {s.get('name')} v{s.get('version')} of pack {s.get('pack')}, priority {s.get('priority')}, where {s.get('where')}")
     cands = lay.get("candidates") or []
     if cands:
-        won = [x for x in cands if str(x.get("result")).lower() == "true"]
-        say(f"  Match trace: the chosen Sutra matched; {len(cands)} other Sutra(s) were tried and {'did not match' if not won else str(len(won)) + ' matched too'} (first 10 shown)")
-        table(["sutra", "priority", "where", "result"], [[x.get("name"), x.get("priority"), x.get("where"), x.get("result")] for x in (won + [x for x in cands if x not in won])[:10]], say, width=70)
+        chosen = next((x for x in cands if x.get("chosen")), None)
+        others = [x for x in cands if not x.get("chosen")]
+        won = [x for x in others if str(x.get("result")).lower() == "true"]
+        say(f"  Match trace: {chosen['name']} (priority {chosen.get('priority')}) is the chosen Sutra; {len(others)} other Sutra(s) were tried and "
+            f"{'did not match' if not won else str(len(won)) + ' matched too, at a lower priority'} (first 10 shown)" if chosen else
+            f"  Match trace: no Sutra matched; {len(others)} were tried (first 10 shown)")
+        table(["sutra", "priority", "where", "result"],
+              [[("* " if x.get("chosen") else "") + str(x.get("name")), x.get("priority"), x.get("where"), x.get("result")]
+               for x in (([chosen] if chosen else []) + won + [x for x in others if x not in won])[:10]], say, width=70)
     keys = (c.get("next") or {}).get("keys") or []
     if keys:
         say("\nNext: " + "; ".join(f"{k['key']} {k['label']}" for k in keys))

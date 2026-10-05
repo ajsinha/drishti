@@ -40,7 +40,7 @@ VIEW = {"ref": {"kind": "trade", "id": "T1"}, "mnemonic": "TRD", "title": {"pill
 EXPLAIN = {"ref": {"kind": "trade", "id": "T1"}, "about": {"kindTitle": "Trade", "text": "A trade.", "pack": {"title": "Trading"}},
            "glossary": [{"label": "Coupon", "shownIn": ["terms"], "means": "The rate."}], "data": {"source": "s", "generation": 1},
            "layout": {"label": "Sutra t v1", "sutra": {"name": "t", "version": 1, "pack": "trading", "priority": 10, "where": "x"},
-                      "candidates": [{"name": "o", "priority": 10, "where": "y", "result": "false"}]}, "next": {"keys": [{"key": "F2", "label": "Terms"}]}}
+                      "candidates": [{"name": "t", "priority": 5, "where": "x", "result": "true", "chosen": True}, {"name": "o", "priority": 10, "where": "y", "result": "false"}]}, "next": {"keys": [{"key": "F2", "label": "Terms"}]}}
 
 
 class Fake(BaseHTTPRequestHandler):
@@ -88,6 +88,7 @@ class ServerCase(unittest.TestCase):
             "/api/v1/business-date": {"current": "2026-10-05", "previous": "2026-10-02", "earliest": "2021-10-05"},
             "/api/v1/search": {"rows": [{"ref": {"kind": "trade", "id": "T1"}}, {"ref": {"kind": "trade", "id": "T2"}}]},
             "/api/v1/views/trade/T1": VIEW, "/api/v1/views/trade/T2": VIEW, "/api/v1/views/trade/T1/explain": EXPLAIN,
+            "/api/v1/me/token": {"id": "abc123", "user": "ann", "scopes": ["read", "packs:admin"], "expiresAt": "2027-01-01T00:00:00Z"},
             "/api/v1/me/tokens": [{"name": "ci", "active": True, "scopes": ["read"], "expiresAt": None, "lastUsedAt": "2026-10-01T00:00:00Z"}],
         }
         self.srv = ThreadingHTTPServer(("127.0.0.1", 0), Fake)
@@ -136,11 +137,17 @@ class Doctor(ServerCase):
         code, out, _ = run("doctor", "--server", self.url, "--json", env={"DRISHTI_TOKEN": "drk_x", "DRISHTI_DELTA_ROOT": tempfile.gettempdir()})
         rep = {c["name"]: c for c in json.loads(out)["checks"]}
         self.assertIn("version 9.9", rep["server"]["detail"])
-        self.assertIn("scopes read", rep["token"]["detail"])
+        self.assertIn("scopes read, packs:admin", rep["token"]["detail"])
+        self.assertIn("'abc123'", rep["token"]["detail"])
         self.assertEqual("ok", rep["DRISHTI_DELTA_ROOT"]["level"])
 
+    def test_session_has_no_token_so_it_is_green_not_a_failure(self):
+        del Fake.routes["/api/v1/me/token"]
+        code, out, _ = run("doctor", "--server", self.url, "--json", env={"DRISHTI_TOKEN": "sess", "DRISHTI_DELTA_ROOT": tempfile.gettempdir()})
+        self.assertIn("signed-in session", {c["name"]: c for c in json.loads(out)["checks"]}["token"]["detail"])
+
     def test_rejected_token_is_red(self):
-        Fake.routes["/api/v1/me/tokens"] = lambda p: (401, {"detail": "bad"})
+        Fake.routes["/api/v1/me/token"] = lambda p: (401, {"detail": "bad"})
         code, out, _ = run("doctor", "--server", self.url, env={"DRISHTI_TOKEN": "bad"})
         self.assertEqual(1, code)
         self.assertIn("RED", out)
@@ -170,7 +177,7 @@ class View(ServerCase):
 
     def test_explain_prints_about_glossary_and_layout(self):
         out = run("view", "explain", "trade/T1", "--server", self.url)[1]
-        for text in ("A trade.", "Glossary", "The rate.", "Why this layout", "Match trace", "Sutra t v1"):
+        for text in ("A trade.", "Glossary", "The rate.", "Why this layout", "Match trace: t (priority 5) is the chosen Sutra; 1 other", "* t", "Sutra t v1"):
             self.assertIn(text, out)
 
     def test_bad_ref_and_missing_view(self):

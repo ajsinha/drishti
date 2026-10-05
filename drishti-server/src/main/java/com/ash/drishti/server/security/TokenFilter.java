@@ -31,7 +31,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public final class TokenFilter extends OncePerRequestFilter {
 
     /** A verified personal token: who it stands for, its id for the audit trail and its scopes. */
-    public record Grant(String tokenId, Principal principal, java.util.List<String> scopes) {}
+    public record Grant(String tokenId, Principal principal, java.util.List<String> scopes, java.time.Instant expiresAt) {}
+
+    /** Request attribute holding the {@link Grant} when the caller used a personal API token (absent for a session). */
+    public static final String GRANT_ATTRIBUTE = "drishti.grant";
 
     private final SecurityProperties props;
     private final TokenVerifier verifier;
@@ -96,6 +99,7 @@ public final class TokenFilter extends OncePerRequestFilter {
                     return;
                 }
                 req.setAttribute(Principal.ATTRIBUTE, g.principal());
+                req.setAttribute(GRANT_ATTRIBUTE, g);
                 boolean write = !scopes.reads(method, path);
                 try {
                     chain.doFilter(req, res);

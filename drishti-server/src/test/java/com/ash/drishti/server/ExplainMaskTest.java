@@ -79,7 +79,7 @@ class ExplainMaskTest {
         assertThat(masked.path("sutra").path("name").asText()).isEqualTo(full.path("sutra").path("name").asText());   // the view's own choice
         boolean sawMasked = false;
         for (JsonNode c : masked.path("candidates")) {
-            if (c.path("where").asText().contains("productType")) {
+            if (c.path("where").asText().contains("productType") && !c.path("chosen").asBoolean()) {
                 assertThat(c.path("result").asText()).isIn("masked", "false");   // never a revealing "true" for a candidate not chosen
                 sawMasked |= "masked".equals(c.path("result").asText());
             }

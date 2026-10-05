@@ -121,9 +121,9 @@ public record PageContext(ViewModel.Ref ref, String mnemonic, String locale, lon
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public record Chosen(String name, int version, String pack, int priority, String where, String description) {}
 
-    /** A Sutra of the kind that was not chosen: {@code result} is true, false, error or masked. */
+    /** A Sutra of the kind tried for the document, the chosen one included ({@code chosen}): {@code result} is true, false, error or masked. */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    public record Candidate(String name, int version, int priority, String where, String result) {}
+    public record Candidate(String name, int version, int priority, String where, String result, boolean chosen) {}
 
     public record InferredPanel(String id, String title, String reason) {}
 

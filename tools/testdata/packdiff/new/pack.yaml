@@ -1,0 +1,31 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+pack: demo
+version: 1.1.0
+title: Demo
+kinds: [trade, book, desk, swap-v2, option]
+mnemonics:
+  TRD: {kind: trade, label: Deals}
+  BK2: {kind: book, label: Books}
+  LD: {kind: desk, label: Desks}
+  OP: {kind: option, label: Options}
+connectors:
+  lake: {plugin: delta, kinds: [trade], settings: {root: ./data/delta, domain: b}}
+  fresh: {plugin: delta, kinds: [option], settings: {root: ./y}}
+routes:
+  trade: lake
+  option: fresh
+columns:
+  trade: [id, price, side]

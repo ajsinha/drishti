@@ -57,6 +57,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Map<java.time.LocalDate, Long> inventory(String kind, int maxDates) {
+        return serves(kind) ? delegate.inventory(kind, maxDates) : java.util.Map.of();
+    }
+
+    @Override
     public void start(SourceContext context) throws Exception {
         delegate.start(context);
     }

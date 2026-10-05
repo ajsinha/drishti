@@ -77,6 +77,12 @@ public class PackAdminController {
         this.overlay = new com.ash.drishti.server.PackOverlay(Path.of(env.getProperty("drishti.packs.overlay", "./data/packs/added.yaml")));
     }
 
+    /** A loader that reads the packs as the server will at its next start: with the administrators' data-source overrides applied. */
+    private com.ash.drishti.packs.PackLoader loader() {
+        return new com.ash.drishti.packs.PackLoader(new com.ash.drishti.packs.PackSettings(
+                Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings"))));
+    }
+
     /** Loads a pack that is on disk but not loaded: checked first, then the server restarts in place to read it. */
     @org.springframework.web.bind.annotation.PostMapping("/{name}/load")
     public Map<String, Object> load(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
@@ -110,7 +116,7 @@ public class PackAdminController {
                 env.getProperty("drishti.packs.enabled", "finance").split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(overlay.added());
         try {
-            com.ash.drishti.packs.PackLoader loader = new com.ash.drishti.packs.PackLoader();
+            com.ash.drishti.packs.PackLoader loader = loader();
             loader.properties(loader.load(com.ash.drishti.packs.PackLoader.dirs(dir.toString(),
                     env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")), List.copyOf(names)));
         } catch (RuntimeException e) {
@@ -133,7 +139,7 @@ public class PackAdminController {
                 env.getProperty("drishti.packs.enabled", "finance").split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
         names.addAll(added);
         try {                                                   // the same check the server does at start, before anything changes
-            com.ash.drishti.packs.PackLoader loader = new com.ash.drishti.packs.PackLoader();
+            com.ash.drishti.packs.PackLoader loader = loader();
             loader.properties(loader.load(com.ash.drishti.packs.PackLoader.dirs(dir.toString(),
                     env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")), List.copyOf(names)));
         } catch (RuntimeException e) {
@@ -162,6 +168,8 @@ public class PackAdminController {
             Map<String, Object> m = row(pack.name(), pack.title(), pack.description(), pack.version());
             m.put("loaded", true);
             m.put("added", overlay.added().contains(pack.name()));
+            m.put("dataSourceOverridden", new com.ash.drishti.packs.PackSettings(Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings")))
+                    .text(pack.name()) != null);
             m.put("enabled", access.isEnabled(pack.name()));
             m.put("extends", pack.parents());
             m.put("requiredBy", access.requiredBy(pack.name()));
