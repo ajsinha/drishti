@@ -25,7 +25,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from core import asof, collab as collab_core
 from core.backend import BackendError
 from core.csrf import json_body
-from routes.common import ident, render
+from routes.common import ident, local_zone, localise, render
 
 router = APIRouter(include_in_schema=False)
 
@@ -70,6 +70,19 @@ async def share(request: Request):
     asof.set_known(known if asof.current() != "live" else None)
     try:
         return JSONResponse(await collab(request).send(body, ident(request)), status_code=201)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/share/{share_id}/replies")
+async def share_reply(request: Request, share_id: str):
+    """A reply to a share, from its sender or a person it reached; the server tells the other party."""
+    sid = collab_core.clean_share(share_id)
+    if sid is None:
+        return JSONResponse({"code": "DRS-7001", "detail": "no such share"}, status_code=404)
+    body = await json_body(request)
+    try:
+        return JSONResponse(localise(await collab(request).reply(sid, str(body.get("note") or ""), ident(request)), *local_zone(request)), status_code=201)
     except BackendError as e:
         return _problem(e)
 

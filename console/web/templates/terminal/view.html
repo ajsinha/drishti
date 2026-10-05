@@ -28,9 +28,24 @@
   {% if shared and shared.access and not embed %}
   {# Opened through a share's link: who sent it, when, and their note (masked values read as the reader may see them) #}
   <section class="share-banner" role="note" aria-label="Shared with you" data-share-banner="{{ shared.id }}"><i class="bi bi-send-check" aria-hidden="true"></i>
-    <div><b>Shared by {{ shared.senderName or shared.sender }}</b> <span class="mono">{{ (shared.createdAt or '')[:16] | replace('T', ' ') }} UTC</span>
+    <div><b>Shared by {{ shared.senderName or shared.sender }}</b> <span class="mono" data-share-when>{{ when_local(shared.createdAt) }}</span>
       {% if shared.panel %}<span class="share-panel">panel {{ shared.panel }}</span>{% endif %}
-      {% if shared.note %}<blockquote class="share-note" data-share-note>{{ shared.note }}</blockquote>{% endif %}</div></section>
+      {% if shared.note %}<blockquote class="share-note" data-share-note>{{ shared.note }}</blockquote>{% endif %}
+      {% if shared.replies or shared.role in ['sender', 'recipient'] %}
+      <div class="share-replies" data-share-replies="{{ shared.id }}">
+        <ul class="share-reply-list" data-share-reply-list aria-label="Replies to this share">
+          {% for r in (shared.replies or []) %}<li><b>{{ r.authorName or r.author }}</b> <time class="mono" datetime="{{ r.createdAt }}">{{ when_local(r.createdAt) }}</time> <span>{{ r.body or '' }}</span></li>{% endfor %}
+        </ul>
+        {% if shared.role in ['sender', 'recipient'] %}
+        <form class="share-reply-form" data-share-reply-form novalidate>
+          <label class="visually-hidden" for="shareReply">Reply to this share</label>
+          <textarea id="shareReply" class="studio-in" rows="2" data-share-reply-text placeholder="Reply to {{ (shared.senderName or shared.sender) if shared.role == 'recipient' else 'the people you shared this with' }}"></textarea>
+          <button type="submit" class="btn-pill btn-accent btn-sm-pill" data-share-reply-send>Reply <kbd>Ctrl+&crarr;</kbd></button>
+          <span class="share-reply-msg" data-share-reply-msg role="status" aria-live="polite"></span>
+        </form>
+        {% endif %}
+      </div>
+      {% endif %}</div></section>
   {% endif %}
   {% if pin and not embed %}
   {# A pinned link (?asOf=&knownAt=&gen=): shown for this request only, the reader's own saved date is untouched #}
@@ -38,7 +53,7 @@
   <p class="asof-banner pin-banner" role="status" data-pin="{{ pin }}"><i class="bi bi-pin-angle" aria-hidden="true"></i>
     {% if pin == 'retry' %}You are seeing the latest data for <b class="mono">{{ asof }}</b>: this source keeps no earlier versions, so the exact time it was shared cannot be shown.
     {% elif pin == 'changed' %}You are seeing <b class="mono">{{ asof }}</b> live; the data has changed since it was shared (generation {{ pin_gen }} &rarr; {{ vm.provenance.generation }}).
-    {% else %}You are seeing <b class="mono">{{ asof }}</b>{% if known_text %} as known at <b class="mono">{{ known_text }}</b>{% endif %}, as it was shared.{% endif %}
+    {% else %}You are seeing <b class="mono">{{ asof }}</b>{% if known_text %} as known at <b class="mono">{{ known_text }} {{ ((business_date or {}).zone or CLOCK_TZ).split('/') | last | replace('_', ' ') }}</b>{% endif %}, as it was shared.{% endif %}
     <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}">Go live</a>
     {% if pin == 'changed' and known_text %}<a href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id }}?fromKnownAt={{ known_text | replace(' ', 'T') | urlencode }}">What changed</a>{% endif %}</p>
   {% endif %}
@@ -128,6 +143,7 @@
 <script src="/static/js/history.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/people.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/share.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/share-reply.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/about.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/about-hints.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/about-ask.js?v={{ ASSET_V }}"></script>

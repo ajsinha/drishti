@@ -71,3 +71,28 @@ async def library(request: Request):
         console_dir = Path(__file__).resolve().parent.parent
         libs[key] = Library(console_dir, console_dir / "config" / "help.yaml", request.app.state.docs_dir, current)
     return libs[key]
+
+
+def local_zone(request: Request) -> tuple[str, str]:
+    """The zone and label collaboration times are shown in: the business zone the top bar's "known at" uses, else the clock's."""
+    from core.asof import zone_label
+
+    zone = (getattr(request.state, "business_date", None) or {}).get("zone") or request.app.state.templates.env.globals.get("CLOCK_TZ") or "America/New_York"
+    return zone, zone_label(zone)
+
+
+def localise(value: Any, zone: str, label: str) -> Any:
+    """Adds ``<name>Local`` beside every ISO instant stored under a name ending ``At`` (``createdAt``, ``hiddenAt``) in the JSON the
+    collaboration pages draw, in place: the page never works a time zone out for itself."""
+    from core.asof import local_when
+
+    if isinstance(value, list):
+        for v in value:
+            localise(v, zone, label)
+    elif isinstance(value, dict):
+        for k, v in list(value.items()):
+            if k.endswith("At") and isinstance(v, str):
+                value[k + "Local"] = local_when(v, zone, label)
+            else:
+                localise(v, zone, label)
+    return value

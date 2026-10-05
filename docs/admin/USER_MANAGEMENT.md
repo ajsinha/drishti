@@ -286,8 +286,14 @@ or a pack opts in, has **no power of its own**:
 - **Compliance** (`roles.<role>.compliance`, a power of its own: an administrator does not have it unless the role does). A compliance officer
   reads any share and the full record of any thread (hidden and retracted comments, every revision, unscrubbed), places and releases **legal
   holds**, runs the **export** and **verifies** the hash chains. The runbooks (retention, holds, export, verify) are in
-  [OPERATIONS.md](OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export); there is no console page for them yet, they are
-  API calls.
+  [OPERATIONS.md](OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export); the console page for all of them is **Admin > Collaboration**
+  (`/admin/collab`; see the next item).
+- **Admin > Collaboration** (`/admin/collab`) shows what the signed-in roles may use, and the server decides every call: *Threads and moderation*
+  (search by user, kind, id and dates; open a thread to read its comments, see the hidden ones, **Hide** with a reason, **Unhide**, **Lock** or
+  **Unlock**; `admin`), *Legal holds* (list, place by scope, release; `compliance`), *Compliance export* (start, wait, download once;
+  `compliance`), *Verify the chains* (one thread or everything; `compliance`), *Retention* (a dry run that counts what would go and what a hold keeps,
+  never deletes; `admin`) and *Bridges* (the configured chat bridges with their queue, and a **Test** that posts one message; `admin`). A role that
+  holds only `compliance` sees the compliance sections; an administrator without the power sees the others. Times are in the top bar's zone.
 - **Shared workspaces**: a workspace's owner shares it with everyone, roles or named people. Readers see it
   read-only; panes on kinds a reader's roles may not open stay hidden. Share records are kept with the preferences
   (`drishti_preference`, namespace `workspace-shares`).

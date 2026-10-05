@@ -23,7 +23,7 @@ from fastapi.responses import JSONResponse
 from core import asof, threads as threads_core
 from core.backend import BackendError
 from core.csrf import json_body
-from routes.common import ident
+from routes.common import ident, local_zone, localise
 
 router = APIRouter(include_in_schema=False)
 
@@ -53,8 +53,8 @@ def _bad_id() -> JSONResponse:
 async def thread_list(request: Request, kind: str, id_: str, anchor: str = "", panel: str = "", path: str = "", state: str = "", limit: int = 0,
                       before: str = ""):
     try:
-        return await threads(request).list(kind, id_, ident(request), anchor=anchor, panel=panel, path=path, state=state, limit=limit or None,
-                                           before=before)
+        return localise(await threads(request).list(kind, id_, ident(request), anchor=anchor, panel=panel, path=path, state=state,
+                                                    limit=limit or None, before=before), *local_zone(request))
     except BackendError as e:
         return _problem(e)
 
@@ -73,7 +73,7 @@ async def thread_start(request: Request, kind: str, id_: str):
     try:
         out = await threads(request).start(kind, id_, body, ident(request))
         threads_core.annotate([{"kind": kind, "entityId": id_, "panel": body.get("panel"), "items": [out.get("comment") or {}]}])
-        return JSONResponse(out, status_code=201)
+        return JSONResponse(localise(out, *local_zone(request)), status_code=201)
     except BackendError as e:
         return _problem(e)
 
@@ -84,7 +84,7 @@ async def thread_reply(request: Request, tid: str):
         return _bad_id()
     body = _page_pin(await json_body(request))
     try:
-        return JSONResponse(await threads(request).reply(tid, body, ident(request)), status_code=201)
+        return JSONResponse(localise(await threads(request).reply(tid, body, ident(request)), *local_zone(request)), status_code=201)
     except BackendError as e:
         return _problem(e)
 
@@ -148,7 +148,7 @@ async def comment_revisions(request: Request, cid: str):
     if not threads_core.clean_id(cid):
         return _bad_id()
     try:
-        return await threads(request).revisions(cid, ident(request))
+        return localise(await threads(request).revisions(cid, ident(request)), *local_zone(request))
     except BackendError as e:
         return _problem(e)
 

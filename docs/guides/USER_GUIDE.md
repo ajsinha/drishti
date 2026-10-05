@@ -1147,7 +1147,10 @@ click plus `Enter`; the rest sends the view to people inside Drishti.
    shown). `Backspace` in the empty field removes the last name.
 4. **Note**: plain text. Do not type the value of a hidden field: the server replaces it with `•••` for everyone who may
    not see it, and tells you it did.
-5. **Send** (`Ctrl+Enter`). The dialog says who it reached ("Sent to 2") and who it did not and why ("Not sent to dkim:
+5. **Also start a discussion on the view** (a tick under the note): the note also becomes the first comment of a thread on the view, written by
+   you, so the conversation continues in the [Discussion](#discussion) tab. Whether it is ticked when the dialog opens is your administrator's
+   setting (`drishti.collab.share.post-to-thread`); you can change it for each share.
+6. **Send** (`Ctrl+Enter`). The dialog says who it reached ("Sent to 2") and who it did not and why ("Not sent to dkim:
    cannot open trade views"). `Esc` closes the dialog and puts the focus back where it was. On a phone the dialog is a full
    screen sheet.
 
@@ -1160,6 +1163,12 @@ their [inbox](#your-inbox). Opening it goes to the view **as you sent it**: your
 banner "Shared by Ann Author", your note, and the usual *Pinned* banner. A shared panel is scrolled to and outlined. They
 see the view with *their own* rights: a field hidden from their role stays `•••`, and the note reads `•••` where you typed
 a hidden value.
+
+**Reply.** Under the note, the sender and each person the share reached have a **Reply** box (`Ctrl+Enter` sends). Replies are listed under the
+note, oldest first, and the other side gets a notice. A compliance officer who opens the share can read the replies but not write one.
+
+**Times.** Every time the collaboration pages show (inbox rows, the share banner and its replies, the *known at* time in the Pinned banner,
+comment times, the administration page) is in the same zone as the top bar's *known at* picker, with its name after it: `2026-09-30 10:02 New York`.
 
 ![Vera's view of the share: "Shared by Asha Rao", the note with the trader's name replaced by three dots, and the Pinned banner](img/collab/05-shared-view.jpg)
 
@@ -1370,8 +1379,11 @@ On a phone the drawer is a sheet from the bottom edge.
 - **Resolve, follow, mute.** Anyone in the thread can **Resolve** and **Reopen** it. You follow threads you write in; **Follow**
   and **Mute** control whether you are told of replies. A reply on a thread you follow shows on your bell and a line is
   announced in the drawer ("1 new comment on VaR contribution").
+- **Quoted values.** A quote (`{` then pick a field) shows the value as the page shows that field: `1,875,863`, not the stored `1875863`; a reader
+  who may not see the field sees `•••`. If the page now shows newer data than the comment saw, the field's format is applied to the value the comment saw.
 - **Moderation.** Administrators see **Hide** (with a reason; readers see "Hidden by a moderator: <reason>") and **Lock**
-  (no new comments). Hidden comments are kept in the record.
+  (no new comments). Hidden comments are kept in the record. The whole set of moderation and compliance tools is on one page, **Admin > Collaboration**
+  (see [USER_MANAGEMENT](../admin/USER_MANAGEMENT.md)).
 
 ![Asha's Discussion tab: a comment that mentions @vera, with the trader's name typed and quoted, and the quoted MTM](img/collab/07-discussion-author.jpg)
 

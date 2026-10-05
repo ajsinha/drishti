@@ -105,6 +105,19 @@ def to_local(instant: str | None, zone: str) -> str:
     return t.strftime("%Y-%m-%dT%H:%M")
 
 
+def zone_label(zone: str | None) -> str:
+    """The short zone name the top bar shows next to the clock: the last part of the zone id, spaces for underscores ("New York")."""
+    return (zone or "America/New_York").split("/")[-1].replace("_", " ")
+
+
+def local_when(instant: str | None, zone: str | None, label: str | None = None) -> str:
+    """A UTC instant as the console shows times to people: ``2026-10-05 14:30 New York`` (:func:`to_local` in the zone, then the
+    zone's label). The collaboration pages (inbox, share banner, comments, administration) all use this, so a time reads the same
+    everywhere and says which clock it is on. '' when there is no instant or it cannot be read."""
+    local = to_local(instant, zone or "")
+    return f"{local.replace('T', ' ')} {label or zone_label(zone)}" if local else ""
+
+
 def headers() -> dict[str, str]:
     """Headers for backend calls: none when live (the server's default); a picked date, and a "known at" if set."""
     v = _current.get()

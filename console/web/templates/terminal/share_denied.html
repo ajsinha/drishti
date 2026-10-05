@@ -23,7 +23,7 @@
 <div class="thome share-denied" data-share-denied{% if share and share.reason %} data-reason="{{ share.reason }}"{% endif %}>
   <h1>A shared view you cannot open</h1>
   {% if share %}
-  <p>{{ share.senderName or share.sender }} shared {% if share.kind %}a <b>{{ share.kind }}</b> view{% else %}a view{% endif %} with you{% if share.createdAt %} on <span class="mono">{{ share.createdAt[:10] }}</span>{% endif %}.</p>
+  <p>{{ share.senderName or share.sender }} shared {% if share.kind %}a <b>{{ share.kind }}</b> view{% else %}a view{% endif %} with you{% if share.createdAt %} on <span class="mono">{{ when_local(share.createdAt) }}</span>{% endif %}.</p>
   {% if share.reason == 'pack-off' and share.pack %}
   <p>The <b>{{ pack_title }}</b> pack is switched off for you.</p>
   <p><button type="button" class="btn-pill btn-accent" data-switch-on="{{ share.pack }}" data-active="{{ active_packs | tojson | forceescape }}">Switch on {{ pack_title }}</button>

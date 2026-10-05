@@ -33,7 +33,7 @@
     {% for r in rows %}
     <li class="inbox-row{% if not r.read %} unread{% endif %}{% if not r.access %} noaccess{% endif %}" data-seq="{{ r.seq }}" data-read="{{ 'true' if r.read else 'false' }}">
       <span class="inbox-dot" aria-hidden="true">{% if not r.read %}&#9679;{% endif %}</span>
-      <span class="inbox-when mono" title="{{ r.at }}">{{ (r.at or '')[:16] | replace('T', ' ') }}</span>
+      <span class="inbox-when mono" title="{{ r.at }}">{{ when_local(r.at) }}</span>
       <span class="inbox-type">{{ r.type | capitalize }}</span>
       <span class="inbox-main">
         {% if r.href %}<a class="inbox-open" href="{{ r.href }}" data-inbox-open>{{ r.title }}</a>{% else %}<span>{{ r.title }}</span>{% endif %}

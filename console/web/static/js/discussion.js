@@ -192,7 +192,7 @@
         api('GET', '/api/comment/' + cid + '/revisions').then(function (r) {
           var old = li.querySelector('.disc-hist'); if (old) { old.remove(); return; }
           var ul = V.el('ul', 'disc-hist');
-          (r.ok ? r.b : []).forEach(function (v) { ul.appendChild(V.el('li', null, 'v' + v.revision + ' · ' + V.when(v.at) + ' · ' + v.action + (v.body ? ': ' + v.body : ''))); });
+          (r.ok ? r.b : []).forEach(function (v) { ul.appendChild(V.el('li', null, 'v' + v.revision + ' · ' + V.when(v.at, v.atLocal) + ' · ' + v.action + (v.body ? ': ' + v.body : ''))); });
           li.appendChild(ul);
         });
         break;

@@ -168,7 +168,7 @@ def create_app(settings: Settings) -> FastAPI:
     catalogue = Servers(settings)
     from routes import (admin_routes, api_routes, asof_routes, auth_routes, build_routes, calc_routes, export_routes, help_routes, home_routes,
                         layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
-                        workspace_routes, collab_routes, thread_routes)
+                        workspace_routes, collab_routes, thread_routes, collab_admin_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -205,6 +205,17 @@ def create_app(settings: Settings) -> FastAPI:
     from core.asof import to_local
 
     templates.env.globals["known_local"] = to_local
+    from jinja2 import pass_context
+
+    from core.asof import local_when, zone_label
+
+    @pass_context
+    def when_local(ctx, instant):
+        """A UTC instant in the zone of the top bar's "known at", its label after it: ``2026-10-05 14:30 New York``."""
+        zone = (ctx.get("business_date") or {}).get("zone") or ctx.get("CLOCK_TZ") or "America/New_York"
+        return local_when(instant, zone, zone_label(zone))
+
+    templates.env.globals["when_local"] = when_local
     app.state.settings = settings
     app.state.servers = catalogue
     app.state.auth = (Auth(settings) if len(catalogue) == 1 and catalogue.default == "default"
@@ -275,4 +286,5 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(pivot_routes.router)
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
+    app.include_router(collab_admin_routes.router)
     return app
