@@ -22,8 +22,9 @@
   'use strict';
   var charts = [];
 
-  function tokens() {
-    var s = getComputedStyle(document.documentElement), t = {};
+  function tokens(root) {
+    // a shadow root (an embedded view) reads the theme from its host element; a page, from <html>
+    var s = getComputedStyle(root && root.host ? root.host : document.documentElement), t = {};
     ['ink', 'muted', 'faint', 'border', 'link', 'accent', 'neg', 'pos', 'ok', 'warn', 'bad', 'surface', 'bg-2'].forEach(function (k) {
       t[k] = s.getPropertyValue('--d-' + k).trim();
     });
@@ -262,7 +263,7 @@
 
   function draw(root) {
     if (!window.echarts) { return; }
-    var t = tokens();
+    var t = tokens(root);
     (root || document).querySelectorAll('.xchart[data-xchart]').forEach(function (el) {
       var kind = el.getAttribute('data-kind'), d;
       try {

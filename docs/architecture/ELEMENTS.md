@@ -769,10 +769,11 @@ document), and no `'unsafe-inline'` or `'unsafe-eval'` anywhere. `frame-src` is 
 
 ## 11. Performance
 
-- **Payloads.** For the trading demo's commodity forward (11 panels) the ViewModel is about 25 KB of JSON; the embed
-  view with HTML is about 90 KB, 14 KB gzipped (estimate from the console's own page; measured in step 0). Frames are as
-  small as today: most carry a strip cell and the provenance panel (under 2 KB). The console compresses `/embed/v1/**`
-  (gzip; brotli where available), but **not** the stream (compression buffers SSE).
+- **Payloads** (measured in step 0, commodity forward, 8 panels): the embed view is 18.7 KB of JSON, 3.7 KB gzipped (the
+  first estimate, 90 KB, was high); a live frame is about 1.5 KB (a strip cell and the provenance panel). The console
+  compresses `/embed/v1/**` (gzip; brotli where available), but **not** the stream (compression buffers SSE). First paint
+  from navigation start is 0.3 to 0.6 s with every asset cold (Chromium, Firefox, WebKit); a switch of entity takes about
+  60 ms at the median, none over 110 ms.
 - **Static assets.** `drishti-elements.js` (the element, connection, enhancers, sanitiser) target ≤ 60 KB gzipped
   without ECharts; the view sheet (tokens, panels, tables, pivot, about; Bootstrap excluded: the panel macros do not use
   its classes, only Bootstrap Icons) ≤ 25 KB gzipped; ECharts (1 MB, about 330 KB gzipped) loaded only when a chart panel
@@ -899,7 +900,7 @@ five agents, heavy test runs one at a time).
 
 ### Step 0: proof of concept (M/L) — before anything else
 
-A throwaway-quality but real path: a sample host app (`tools/elements-poc/`, its own origin, its own tiny backend) shows
+A throwaway-quality but real path: a sample host app (`tools/elements-demo/`, its own origin, its own tiny backend) shows
 a live trade from a scratch Drishti with masks, and switches views dynamically. The host page has **its own search box**
 (type a command or an id: `TRD MX-20000001`, `CPTY …`, resolved through `GET /embed/v1/resolve`), a short list of
 **recent entities**, an **as-of date picker**, one main `<drishti-view>` and a **second, smaller element** (a second
@@ -936,6 +937,109 @@ Acceptance criteria:
 
 If 9 fails for a browser, the design changes before step 1 (for example `<link rel=stylesheet>` in the shadow root, with
 the console in the host's `style-src`).
+
+#### Step 0 results (2026-10-06)
+
+**Built.** `tools/elements-demo/` (the host: a stdlib Python server on its own origin with the strict CSP of section 10,
+its own sign-in, its own `/api/drishti-token` that asks the console for a token server to server, a search box, a recent
+list, an as-of picker, a main `<drishti-view>` and a second, smaller one), `drishti-console/web/embed/drishti-elements.js`
+(the element and one `Connection` per page and server, about 540 lines), `routes/embed_routes.py` and `core/embed_poc.py`
+(the embed endpoints and the DEV-ONLY token path, **off** unless `embed.poc.enabled`; signing key, per-app secret and exact
+origins in config), `templates/embed/vhead.html`. Run it with [the demo's README](../../tools/elements-demo/README.md).
+Acceptance: `drishti-console/tests/test_embed_elements_browser.py` (Playwright, Chromium, Firefox and WebKit, against a real
+scratch server, the console and the host on three ports) and `test_embed_poc.py` (CORS, masking, "nothing else changed").
+**All ten criteria passed in all three browsers** (40 tests passed). The rapid-switching test was checked by mutation:
+with the sequence guard removed it fails (a stale entity is painted).
+
+| # | Criterion | Chromium | Firefox | WebKit |
+|---|---|---|---|---|
+| 1 | live trade, cross-origin, strict host CSP, ticks, no CSP violation or report | pass | pass | pass |
+| 2 | masks for `viewer` and `author` (`•••`, no trader name) | pass | pass | pass |
+| 3 | search, recent entity and property drive the element: abort, `remove`, new view, ticks, recent list | pass | pass | pass |
+| 4 | `drishti:navigate` from a linked counterparty fills the host's search box and switches | pass | pass | pass |
+| 5 | as-of makes it `static` with no ticks; Live resubscribes | pass | pass | pass |
+| 6 | ten switches in 200 ms with answers delayed in reverse: only the last paints, `loaded` once, only its key subscribed | pass | pass | pass |
+| 7 | two elements, exactly one `GET /embed/v1/channel`, both tick, switching one does not disturb the other | pass | pass | pass |
+| 8 | console killed and restarted: `reconnecting`, then repaint and ticks | pass | pass | pass |
+| 9 | adopted sheets under the host CSP, icon font via `FontFace`, streamed fetch with `Authorization`, composed events, ECharts in the shadow root, no style leak either way | pass | pass | pass |
+| 10 | measured (below) | | | |
+
+Also covered: pause when the page is hidden (no ticks while paused, resumes live), a request aborted in flight
+(`AbortController` seen), no `unsafe-inline` and no `frame-src` in the host's CSP.
+
+**Measured** (loopback, this machine, scratch trading pack; the tests record them):
+
+| What | Chromium | Firefox | WebKit |
+|---|---|---|---|
+| first `drishti:loaded`, from navigation start (module, sheet, font, ECharts, view, paint) | 314 to 344 ms | 451 ms | 539 to 619 ms |
+| the same, from the element's own load to paint | 240 to 295 ms | 306 to 349 ms | 507 to 573 ms |
+| switch (attribute set to `drishti:loaded`), median / p95 / max of 10 | 58 / 78 / 106 ms | 51 / 73 / 76 ms | 69 / 82 / 93 ms |
+| search box to loaded (resolve, view, paint) | 54 to 136 ms | 88 ms | 138 ms |
+
+| Payload | Raw | gzip |
+|---|---|---|
+| embed view, commodity forward (8 panels, head, strip) | 18.7 KB | 3.7 KB |
+| embed view, counterparty | 13.1 KB | 2.7 KB |
+| a live frame (strip cell and provenance panel), median of 12 | 1.5 KB | not compressed (SSE) |
+| `drishti-elements.js` (POC) | 30 KB | 9.8 KB |
+| view sheet (tokens, theme, terminal, layout, gradients, Bootstrap Icons rules) | 163.5 KB | 30.5 KB |
+| `echarts.min.js` / `charts.js` | 1.12 MB / 19.5 KB | 369 KB / 6.7 KB |
+| icon font (woff2) | 92 KB | already compressed |
+
+**What held.** HTML over the wire from the existing macros works as is: every panel of the trade rendered from `panel(p)`
+with no change to the macros. The console's sheets, with `:root`, `html` and `body` rewritten to `:host` by a few regular
+expressions (`shadow_css`), style the shadow root, and the tokens do not leak into the host page nor the host's styles into
+the element. Constructable sheets, `FontFace` and ECharts SVG all work under a CSP without `'unsafe-inline'` in all three
+browsers. `fetch` with a `ReadableStream` and `Authorization` streams cross-origin in all three (CORS needs a preflight for
+`Authorization` and for the JSON `POST`s; the allow-list answers it). Events cross the shadow boundary (`composed`) and a
+`drishti:navigate` cancelled by the host did the round trip. Switching is fast (about 60 ms median).
+
+**What did not hold, or surprised; adjustments to the plan.**
+
+1. **Payload estimates were high.** The embed view is 18.7 KB (3.7 KB gzip) for 8 panels, not 90 KB (14 KB): section 11
+   now carries these numbers. The sheet is 30 KB gzipped, over the 25 KB target, almost all of it Bootstrap Icons' 2000
+   glyph rules: step 8 ships only the glyphs the macros use (or a subset font).
+2. **Hub is not reused.** `live-hub.js`'s `Hub` is a tab multiplexer (`hello`, `who`, `sub`, replay, `stale`); in a page
+   with no tabs to serve none of that applies, and its injectable `EventSource` is not enough reason to carry it. The POC's
+   `Connection` (about 90 lines: one stream, key diff by `POST`, backoff with plus or minus 20 % jitter, a silence watchdog,
+   `reconnected` per key) replaces "Hub with `FetchEventSource`" in steps 9 and 15; it shares the Hub's constants only.
+3. **Two counters, not one.** The load sequence (who may paint) and the **subscription epoch** (whose frames are applied)
+   must be separate: `refresh()` and the repaint after a reconnect take a new load sequence but must keep the subscription,
+   or every frame after the first refresh is dropped (found by test 8). Section 7.1's Refresh and Reconnect rules hold only
+   with that split.
+4. **The last key leaving closes the channel** (after a 1.5 s grace) instead of sending a `remove`: there is nothing left to
+   keep it open for. `remove` is sent while other keys remain. Criterion 3's "`remove` seen" holds with the second element on
+   the page, as in real use.
+5. **A live second element.** The demo's counterparty is not a live kind (it never ticks), so the second element watches
+   another trade; `panels="none"` (new, cheap) shows a header alone, which covers the "smaller element" until
+   `<drishti-panel>` (step 14).
+6. **Token timing.** Modules run in order and elements upgrade (and load) as soon as the module has run, before a host's own
+   script sets `tokenProvider`: the connection waits up to 3 s for the provider rather than failing with 401. Section 5.3
+   should say to set it before, or right after, the import.
+7. **Enhancers are partial.** Done: bars (`data-w`), tabs, line and area charts, the xcharts through `charts.js` (made
+   root-aware: `tokens(root)` reads the theme from the host element), links, flash, panel swap, deleted and restored. Not
+   done (steps 6 and 9): table sort and paging, tree rows, pivot, About, layout. `charts.js` still loads as a classic script
+   into the host page (`window.drishtiCharts`, a `resize` listener on the host's `window`): the root-scoped modules of step 6
+   must not touch host globals.
+8. **Chart animation on every tick.** The waterfall panel changes each tick, so it is swapped and its ECharts animation
+   restarts each time; in a screenshot taken mid-animation the bars are missing (WebKit more often). The console has the same
+   behaviour. Step 9: update the chart in place, or `animation: false` on updates.
+9. **WebKit** under strict CSP prints "Refused to apply a stylesheet" on the console's own pages as well (ECharts SVG); no
+   `securitypolicyviolation` event and no CSP report fire, and everything draws. Worth a look in step 11 with
+   `Content-Security-Policy-Report-Only` on a real host. Playwright's `wait_for_function` uses `eval`, which the host's CSP
+   blocks: the tests use locator expectations and `evaluate` (step 11 should too, rather than `bypass_csp`).
+10. **Environment.** Playwright's WebKit (WPE) needed `libevent`, `libavif`, `libmanette`, `libgav1` and `libhidapi-hidraw`
+    on this machine (not installable without root here: copied next to the browser from the packages); Firefox and Chromium
+    needed nothing.
+11. **Left as POC, to be replaced as planned.** Dev tokens and a role map instead of the RFC 8693 exchange and the server's
+    `raw` removal (steps 1 and 2); `provenance.masked` counted from `•••` in the HTML (step 3); the channel owner checked by
+    user only, not by host application, and a stream that outlives its token (no `event: token`) (steps 4 and 7); unversioned
+    asset URLs (`no-cache`, ETag) and view JSON not gzip-compressed (step 8); no Trusted Types or sanitiser yet. The
+    console's normal pages are unchanged: `/embed/` is excluded from the cookie identity, the as-of cookie logic and the
+    cross-site `POST` check, nothing else (`test_embed_poc.py` asserts the CSP, `X-Frame-Options`, no CORS header and a
+    foreign-origin `POST` still refused on the console's own paths).
+
+No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not needed. **Step 1 may start.**
 
 ### Steps
 

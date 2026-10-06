@@ -47,8 +47,8 @@ class SameOrigin(BaseHTTPMiddleware):
         self.allowed = frozenset(_origin(a.strip()) for a in allowed or () if a and a.strip())
 
     def permits(self, request) -> bool:
-        if request.method not in UNSAFE:
-            return True
+        if request.method not in UNSAFE or request.url.path.startswith("/embed/"):
+            return True                                  # /embed/: bearer token, no cookie to ride; its Origin allow-list is the router's
         sent = request.headers.get("origin")
         if sent is None:
             referer = request.headers.get("referer")

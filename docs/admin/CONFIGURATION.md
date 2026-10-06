@@ -265,6 +265,8 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |
+| `DRISHTI_EMBED_POC_ENABLED` | `embed.poc.enabled` | `false` | Proof of concept of embedded views (ELEMENTS.md, step 0): serve `/embed/v1/` for host applications. Development only. |
+| `DRISHTI_EMBED_POC_KEY` | `embed.poc.signing_key` | empty | Signs the proof of concept's dev tokens (at least 32 characters); environment only. |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
 | `DRISHTI_SESSION_SECRET` | `auth.session_secret` | empty | The session cookie secret (at least 32 characters); environment only. |
 | `DRISHTI_TOKEN_SECRET` | `auth.token_secret` | empty | The token secret shared with the server's `drishti.security.secret`. |
@@ -1576,6 +1578,20 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `copyright` / `notice` | the Drishti copyright and a ban on unauthorised copying | The legal lines in the footer and on the About page. Change them here, never in code; the server has the same under `drishti.branding`. |
 | `error_advice` | a short text for each of `DRS-1001`, `DRS-1002`, `DRS-1003`, `DRS-1004`, `DRS-1007`, `DRS-4003`, `DRS-4004`, and `default` | What an error page tells the user to do, by the code the server answered with. `{kind}` and `{id}` in a text become the entity asked for; a code with no entry gets `default`. Edit it so the advice fits your site (who to ask, which channel). |
 | `showcase` | four finance-pack screenshots | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
+
+### `embed.poc` — embedded views, proof of concept
+
+Off by default. This is the throwaway path of build step 0 in [ELEMENTS.md](../architecture/ELEMENTS.md), not a product feature: with `enabled: false` nothing under `/embed/` exists. The real design (token exchange on the server, `Admin → Embedding`) replaces it.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `false` (`DRISHTI_EMBED_POC_ENABLED`) | Serve `/embed/v1/` (view, channel, resolve, the element's script and sheet) and the dev-only `POST /embed/v1/poc/token`. |
+| `signing_key` | empty (`DRISHTI_EMBED_POC_KEY`) | Signs the dev tokens; at least 32 characters, or the console will not start with `enabled: true`. Not the server's secret. |
+| `token_ttl_seconds` | `300` | Lifetime of a dev token. |
+| `masked_role` | `viewer` | The role embedded calls run as when none of the user's roles maps: embedded views always mask (Decision 5). |
+| `apps.<id>.secret` | none | The host application's secret, shown only to its backend, which exchanges it for a token naming its signed-in user. |
+| `apps.<id>.origins` | none | The host's exact origins: the CORS allow-list (no wildcards) and the `Origin` every call must carry. |
+| `apps.<id>.role_map` | `{}` | The user's roles the host states, mapped to the roles embedded calls run as (every role with `raw` must map to one without). |
 
 ### `auth`
 

@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Added (proof of concept, off by default):** `<drishti-view>`, a live Drishti view inside another web application's page in a Shadow DOM, no iframe: the console's `/embed/v1/` (view as per-panel HTML, one channel, resolve, the element's script and sheet; `embed.poc.*`, exact-origin CORS, always masked) and a sample host application on its own origin (`tools/elements-demo/`). Acceptance runs in Chromium, Firefox and WebKit; results in `docs/architecture/ELEMENTS.md`, step 0. The token path is a dev-only stand-in for the planned RFC 8693 exchange.
 - **Added:** Admin menu → **Data loads** (`/admin/loads`): every loaded pack at a glance (today's expectations, latest loads, what needs attention); the Admin menu also lists **Collaboration**. Both were reachable only from tabs or a row button before.
 - **Docs:** design for **Drishti Elements** (`docs/architecture/ELEMENTS.md`, proposed): live Drishti views inside other web applications without iframes, as a `<drishti-view>` Web Component fed by HTML over the wire from the console, with embed tokens by token exchange (RFC 8693), the decisions and a build plan.
 

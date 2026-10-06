@@ -1,0 +1,54 @@
+<!doctype html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harbour CRM (a host application)</title>
+  <link rel="stylesheet" href="/host.css">
+  <!-- the only Drishti line a host adds to its page; the console is named in this page's CSP (script-src, connect-src, font-src) -->
+  <script type="module" src="__CONSOLE__/embed/v1/poc/drishti-elements.js" crossorigin="anonymous"></script>
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <b>Harbour CRM</b> <span class="muted">a host application on its own origin, with its own search and sign-in</span>
+    <span class="who">signed in as <b id="who" data-testid="who">nobody</b>
+      <button type="button" data-login="viewer">viewer</button> <button type="button" data-login="author">author</button></span>
+  </header>
+  <main class="cols">
+    <aside class="side">
+      <form id="search" role="search" autocomplete="off">
+        <label for="q">Find an entity (a command or an id)</label>
+        <input id="q" data-testid="search" name="q" placeholder="TRD MX-20000001" spellcheck="false">
+        <button type="submit">Go</button>
+        <p id="searchMsg" class="muted" role="status"></p>
+      </form>
+      <h2>Recent</h2>
+      <ul id="recent" data-testid="recent" class="recent"></ul>
+      <h2>As of</h2>
+      <p><input type="date" id="asof" data-testid="asof"> <button type="button" id="live">Live</button></p>
+      <h2>Watching</h2>
+      <drishti-view id="side" data-testid="side" kind="trade" entity="END-1000002" header="strip" panels="none" theme="light" label="Watched trade"></drishti-view>
+      <p class="muted" id="status" data-testid="status"></p>
+    </aside>
+    <section class="main">
+      <drishti-view id="main" data-testid="main" kind="trade" entity="END-1000008" theme="light"></drishti-view>
+    </section>
+  </main>
+</body>
+</html>

@@ -58,6 +58,7 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
+EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.poc.enabled (routes/embed_routes.py)
 
 
 PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox")
@@ -85,7 +86,7 @@ class AuthGate(BaseHTTPMiddleware):
         auth = request.app.state.auth
         # the session as the server knows it now (enabled, roles, password change due), not as the cookie remembers it
         path = request.url.path
-        request.state.identity = (None if path.startswith(("/static/", PYODIDE))
+        request.state.identity = (None if path.startswith(("/static/", PYODIDE, EMBED))   # /embed/: a bearer token, never the cookie (core/embed_poc.py)
                                   else await auth.current(request.cookies.get(auth.cookie), request.app.state.backend))
         request.state.pack_switcher = []
         from core import asof
@@ -102,7 +103,7 @@ class AuthGate(BaseHTTPMiddleware):
         # (QA 2026-10-01 GRAM-09: it used to break every page until it expired)
         request.state.asof_cleared = bool(stored) and not request.query_params.get("asOf") and asof.clean(stored) != stored.strip()
         request.state.business_date = None
-        if not path.startswith(("/static/", PYODIDE, "/api/", "/healthz", "/readyz", "/asof")):
+        if not path.startswith(("/static/", PYODIDE, EMBED, "/api/", "/healthz", "/readyz", "/asof")):
             info = await request.app.state.business_dates.info(request.app.state.backend, request.state.identity, request.state.asof)
             if info.get("refused") and not request.query_params.get("asOf"):
                 request.state.asof_cleared = True
@@ -111,7 +112,7 @@ class AuthGate(BaseHTTPMiddleware):
                 info = await request.app.state.business_dates.info(request.app.state.backend, request.state.identity, "live")
             request.state.business_date = info
         request.state.settings = None
-        if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, "/api/", "/healthz", "/readyz")):
+        if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/api/", "/healthz", "/readyz")):
             request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity)
             try:
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
@@ -288,4 +289,11 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)
+    from core.embed_poc import EmbedPoc
+
+    app.state.embed_poc = EmbedPoc(settings)
+    if app.state.embed_poc.enabled:               # PROOF OF CONCEPT, off by default: nothing under /embed/ exists otherwise
+        from routes import embed_routes
+
+        app.include_router(embed_routes.router)
     return app
