@@ -276,31 +276,63 @@ The development loop that works best:
 tools/drill.sh
 ```
 
-What it does, in order (it stops at the first failure, `set -euo pipefail`):
+Options: `--docs` (the light drill, below), `--full` (the full drill even when only docs changed), `--no-push` (verify
+only: no push, no merge, and it may run on any branch). `DRILL_MVN_ARGS="..."` adds Maven arguments to both Java runs
+(for example `-Ddrishti.test.forks=1` to run the test classes serially). The script prints `drill: mode = full` or
+`drill: mode = docs`, then each stage's time, then a summary.
 
-1. Refuses to run unless the current branch is `develop` (`drill: must be on develop`) and the working tree is
-   clean (`drill: commit your changes first`).
+**Which mode.** The commits since `origin/develop` decide: when every changed file is under `docs/` or `tools/docs/`,
+is a `*.md` file or is a `help.yaml`, the drill runs in docs mode by itself; otherwise it runs in full mode.
+`tools/drill.sh --docs` on anything else is refused, with the files that are not documentation listed.
+
+**Full mode**, in order (it stops at the first failure, `set -euo pipefail`):
+
+1. Refuses to run unless the current branch is `develop` (`drill: must be on develop`; not checked with `--no-push`)
+   and the working tree is clean (`drill: commit your changes first`).
 2. `python3 tools/license_headers.py`: every file carries the copyright header.
-3. Every generator that supports `--check` (`packs/*/tools/make_*.py` and `tools/packgen/*/make*.py` containing
-   the string `--check`) runs with `--check`: generated pack content must match what the generator would write now.
-4. `python3 -m unittest -q tools/samplegen/test_samplegen.py`.
-5. If `uv` is installed: the lake writer and lake-maintenance tests (`tools/samplegen/test_layout.py`,
-   `tools/lake/test_maintain.py`) with `deltalake`, `pyarrow` and `pyyaml` supplied by `uv run --with`, each under a
-   10-minute `timeout`: a hung test fails the drill (exit 124) instead of blocking it. (Tools that start worker
-   processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a
-   `spawn` pool.)
-6. The whole Java build, every test and every rule, offline, on **Java 21** (`JAVA21_HOME`, default
-   `/usr/lib/jvm/java-21-openjdk-amd64`), the production runtime, containers included; then the same on **Java 25**
-   (`JAVA25_HOME`; skipped with a message when that JDK is absent) with Docker hidden from the run, so the container tests
-   (PostgreSQL, Kafka, S3 … through Testcontainers, already run on 21) are skipped there: the second run checks that
-   nothing breaks on a newer JVM. The pom keeps every dependency at Java 21 bytecode (`enforceBytecodeVersion`).
-7. `drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`. If it fails, the failed tests (and only those) run once more:
-   a test that passes the second time is printed as `FLAKY` and appended to `target/drill-flakes.log` with the commit;
-   a test that fails twice, or a run that failed without a failed test to re-run (a collection error), stops the
-   drill. The retry exists for a rare workbench page that loads without its script starting under load; a timed-out
-   browser wait reports the page's state, failed requests and bad responses so the cause can be found.
-8. Pushes `develop`, fast-forwards `main` to `develop` (`git merge --ff-only`), pushes `main`, and returns to
-   `develop`. It prints `drilled: <the last commit>`.
+3. The whole Java build, every test and every rule, offline, on **Java 21** (`JAVA21_HOME`, default
+   `/usr/lib/jvm/java-21-openjdk-amd64`), the production runtime, containers included. It builds the jar the console
+   tests start. Test classes run in parallel JVM forks inside each module (`drishti.test.forks`, 4 by default, set in the
+   root `pom.xml`; each fork is reused for many classes). Anything a test writes at a fixed path carries
+   `${surefire.forkNumber}` (see `drishti-server/pom.xml`); Testcontainers and the in-test servers use free ports.
+   A test must not clear or change a JVM-wide setting for the classes that follow it in the same fork
+   (`PackDeployApiTest` puts the build's `drishti.packs.dir` back instead of clearing it).
+4. Then three jobs at the same time, each with its own log in `target/drill/` (`java25.log`, `console.log`,
+   `tools.log`) and its own timing; all must pass, and the tail of each failed log is printed:
+   - **Java 25**, the forward-compatibility run (`JAVA25_HOME`; skipped with a message when that JDK is absent): the same
+     tests again, with Docker hidden so the container tests (already run on 21) are skipped, so a library that breaks on a
+     newer JVM fails the drill. It runs in a **copy of the committed tree** (a `git archive` of `HEAD` into a temporary
+     directory, removed afterwards) with its own `target/` directories, so it can neither clean nor replace the jar the
+     console tests are running from your working tree. It uses two test forks, because three suites share the machine.
+   - **The console suite**, `pytest -n <min(4, cpus/2)> --dist loadfile drishti-console/tests`: pytest-xdist workers
+     each take whole test files, so a browser file keeps its module and session fixtures. Every live server and console
+     in the tests starts on a free port in the worker's own scratch directory (`wb_live.py`, `tmp_path_factory`); the
+     stand-in server object's state is put back after each test (`conftest.py`), so a test passes whichever tests ran
+     before it on its worker. If it fails, the failed tests (and only those) run once more, serially: a test that passes
+     the second time is printed as `FLAKY` and appended to `target/drill-flakes.log` with the commit; a test that
+     fails twice, or a run that failed without a failed test to re-run (a collection error), stops the drill. The retry
+     exists for a rare workbench page that loads without its script starting under load; a timed-out browser wait reports
+     the page's state, failed requests and bad responses, and when a failed request is `net::ERR_NETWORK_CHANGED`
+     (Chromium cancels requests when Docker changes the network interfaces) it reloads the page once and waits again
+     (`wait()` and `should_reload()` in `drishti-console/tests`).
+   - **The Python tool tests**: every generator that supports `--check` (`packs/*/tools/make_*.py`,
+     `tools/packgen/*/make*.py`: generated pack content must match what the generator writes now), the `unittest`
+     suites of `tools/`, and, if `uv` is installed, the lake writer and maintenance tests with `deltalake`, `pyarrow` and
+     `pyyaml` supplied by `uv run --with`, each under a 10-minute `timeout` (a hung test fails the drill, exit 124).
+     (Tools that start worker processes after pyarrow or deltalake have started threads must spawn them, never fork:
+     `bulk_trades.py` uses a `spawn` pool.)
+5. Pushes `develop`, fast-forwards `main` to `develop` (a fast-forward-only merge), pushes `main`, and returns to
+   `develop`. It prints `drilled (full): <the last commit>`.
+
+**Docs mode** runs the licence check, the documentation console tests (`test_docs_*.py`, `test_help*.py`,
+`test_guide_images.py`, `test_examples.py`) and the Python tool tests, concurrently, then the same push and merge. No Java
+build, no browser tests.
+
+**Timings** (24-CPU development machine, the same tests): the Java 21 verify took about 6.5 minutes and now about 3.5; the
+Java 25 verify took 3 to 4 and now runs inside the 5.5 minutes of the concurrent stage; the console suite took about 11
+minutes and now about 4 to 5; the tool tests take 1 to 4. The full drill went from about 22 minutes to about 9. The
+console suite needs `pytest-xdist` (in `requirements-test.txt`). The inotify watch limit of a loaded desktop
+(`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode: that is the machine, not the drill.
 
 `JAVA_HOME` defaults to `/usr/lib/jvm/java-21-openjdk-amd64` inside the script when it is not set.
 
