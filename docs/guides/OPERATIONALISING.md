@@ -273,6 +273,11 @@ curl -s localhost:18480/api/v1/admin/health | python3 -c "import json,sys; print
 
 ## 8. Data: a Delta lake or a files root
 
+> **Staging, not production ETL.** `drishti.py data ingest`, `data ingest --watch` and `pack make` are for staging data, small setups and
+> proofs of concept. Drishti is not an ingestion engine and will not become one: in production **your own ETL** (or a pipeline engine such as
+> DishtaYantra) loads the lake, the files or the database, and its last step tells Drishti the batch landed, so Drishti refreshes, verifies,
+> evaluates alerts and tells people, and flags a batch that is late: [DATA_LOADS.md](DATA_LOADS.md).
+
 Data is **not** in the bundle. The rule for both stores: **never write into the folder the server is reading in place
 while it is half-finished.** Write somewhere else, then make it appear in one step.
 

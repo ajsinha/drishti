@@ -86,6 +86,12 @@ public final class InboxService {
 
     /** The row for this reader, now. */
     public Row render(Notice n, Principal reader) {
+        if (n.type().startsWith("load")) {
+            // a data-load notice: kind = the kind, entityId = the business date, panelId = the one-line summary, threadId = the pack; never a data value
+            boolean may = entitlements.mayOpen(reader, n.kind());
+            return new Row(n.seq(), n.at(), n.type(), n.actor(), n.actor(), n.kind(), may ? n.entityId() : null, null, null, may ? n.threadId() : null,
+                    null, n.readAt() != null, may, may ? n.panelId() : "(no access) a " + n.kind() + " data load", null);
+        }
         Share share = n.shareId() == null ? null : shares.find(n.shareId()).orElse(null);
         boolean access = entitlements.mayOpen(reader, n.kind()) && (share == null || share.gateKind() == null
                 || entitlements.mayOpen(reader, share.gateKind()));

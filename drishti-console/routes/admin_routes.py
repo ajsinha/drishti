@@ -174,6 +174,45 @@ async def deploy_rollback(request: Request, name: str):
     return out
 
 
+LOAD_STATES = {"on-time": "ok", "landed-late": "warn", "pending": "", "late": "bad", "missing": "bad", "failed": "bad"}
+
+
+@router.get("/packs/{name}/loads")
+async def pack_loads(request: Request, name: str, kind: str = "", status: str = "", date: str = ""):
+    """Admin → Packs → Data loads: the pack's load history (filters: kind, status, date), what it expects and today's state, and the
+    expectation settings. Everything is read from the server; the page works without scripts (filters are a plain GET form)."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    backend = request.app.state.backend
+    params = {k: v for k, v in (("kind", kind), ("status", status), ("date", date)) if v}
+    try:
+        history = await backend.admin("GET", f"/loads/{quote(name)}", me, limit=200, **params)
+        expectations = await backend.admin("GET", f"/loads/{quote(name)}/expectations", me)
+        config = await backend.admin("GET", f"/loads/{quote(name)}/config", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+    return render(request, "admin/loads.html", pack=name, loads=history.get("loads", []), kinds=history.get("kinds", []), expectations=expectations,
+                  config=config, states=LOAD_STATES, f_kind=kind, f_status=status, f_date=date, status=await _status(request))
+
+
+@router.put("/api/loads/{name}/config")
+async def loads_config_save(request: Request, name: str):
+    body = await json_body(request)
+    try:
+        return await request.app.state.backend.admin("PUT", f"/loads/{quote(name)}/config", ident(request), body)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.delete("/api/loads/{name}/config")
+async def loads_config_reset(request: Request, name: str):
+    try:
+        return await request.app.state.backend.admin("DELETE", f"/loads/{quote(name)}/config", ident(request))
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.get("/api/packs/{name}/datasource")
 async def datasource_get(request: Request, name: str):
     try:

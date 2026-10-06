@@ -175,6 +175,36 @@ public final class AlertEngine implements AutoCloseable {
 
     // ---- evaluation ----------------------------------------------------------------------------
 
+    /**
+     * Evaluates every enabled rule on an entity of {@code kind} against the entity as it is on {@code date}, as if the rule were
+     * armed for that business date: the rule's remembered state is cleared first, so a condition that holds on the date fires once.
+     * Used when a data load is announced; returns how many alerts fired. Reads wait at most {@code budget} in all.
+     */
+    public int evaluateKindOn(String kind, java.time.LocalDate date, java.time.Duration budget) {
+        long deadline = System.nanoTime() + budget.toNanos();
+        int before = (int) fired.get();
+        java.util.Set<EntityRef> refs = new java.util.LinkedHashSet<>();
+        rulesByUser.forEach((user, rs) -> rs.stream().filter(r -> r.enabled() && r.ref().kind().equals(kind)).forEach(r -> {
+            refs.add(r.ref());
+            state.remove(user + "\u0000" + r.name());
+        }));
+        for (EntityRef ref : refs) {
+            long left = deadline - System.nanoTime();
+            if (left <= 0) {
+                break;
+            }
+            try {
+                evaluate(router.fetch(ref, com.ash.drishti.api.AsOf.of(date)).get(left, java.util.concurrent.TimeUnit.NANOSECONDS));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (java.util.concurrent.ExecutionException | java.util.concurrent.TimeoutException | RuntimeException e) {
+                LOG.debug("alert check of {} on {} skipped: {}", ref, date, e.getMessage());
+            }
+        }
+        return (int) fired.get() - before;
+    }
+
     void evaluate(EntityDocument doc) {
         if (doc.deleted()) {
             return;                                   // a deleted entity has no values to cross a threshold with

@@ -61,6 +61,10 @@ public enum ErrorCode {
     /** An edit made on an older revision of a Design than the server holds (reload, then edit again). */
     STALE_REVISION("DRS-5007", 409),
     UNAUTHENTICATED("DRS-5010", 401),
+    /** A data-load announcement or a Data loads query names a pack that is not loaded (or one the caller may not reach: the two look the same). */
+    LOAD_PACK_NOT_FOUND("DRS-5011", 404),
+    /** A data-load announcement names a kind the pack does not own. */
+    LOAD_KIND_UNKNOWN("DRS-5012", 422),
     USER_NOT_FOUND("DRS-6001", 404),
     USER_EXISTS("DRS-6002", 409),
     WEAK_PASSWORD("DRS-6003", 422),

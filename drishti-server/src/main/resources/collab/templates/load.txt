@@ -1,0 +1,8 @@
+${headline}
+
+${detail}
+Open the Data loads page in ${product}:
+${link}
+
+You are receiving this because you are told about data loads of this pack in ${product}. No data values are in this message.
+Change what you are emailed about under Settings, Notifications (event: load).

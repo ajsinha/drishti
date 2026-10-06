@@ -51,6 +51,7 @@
           <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
             {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
           <button type="button" class="fk" data-datasource title="Where this pack reads its data: see it, test it, change it">Data source</button>
+          <a class="fk" href="/admin/packs/{{ p.name }}/loads" title="Batches your ETL has announced, what is expected by when, and what is late">Data loads</a>
           {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from this page: unload it (the server restarts in place)">Unload</button>{% endif %}
         {% else %}<button type="button" class="fk" data-load="load" title="Check the pack, then restart the server in place to load it">Load</button>{% endif %}</td>
       </tr>

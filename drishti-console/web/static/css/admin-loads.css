@@ -1,0 +1,36 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin → Packs → Data loads. Colours come from the theme tokens (light, dark, high contrast); every state also has its word. */
+.loads-filter { flex-wrap: wrap; justify-content: flex-start; }
+.loads-filter label { display: flex; flex-direction: column; gap: .15rem; color: var(--d-muted); font-size: .85rem; }
+.loads-filter select, .loads-filter input { min-height: 2rem; }
+.loads-tbl td, .loads-tbl th { white-space: normal; }
+.loads-tbl td { vertical-align: top; }
+.loads-tbl td .st { white-space: nowrap; }
+.loads-steps summary { cursor: pointer; color: var(--d-link); white-space: nowrap; }
+.loads-tbl td:last-child { min-width: 20rem; }
+.loads-steps ol { margin: .4rem 0 0; padding-left: 1.2rem; }
+.loads-steps li { margin: .2rem 0; }
+.loads-sum { margin: .4rem 0 0; font-weight: 600; }
+.loads-field { display: flex; flex-direction: column; gap: .2rem; color: var(--d-muted); font-size: .85rem; margin: .5rem 0; max-width: 34rem; }
+.loads-check { display: flex; flex-direction: row; justify-content: flex-start; text-align: left; gap: .5rem; align-items: center; margin: .5rem 0; color: var(--d-ink); }
+.loads-expect { border: 1px solid var(--d-border); border-radius: 8px; margin: .7rem 0; padding: .3rem .9rem .8rem; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 640px) {
+  .loads-filter label, .loads-filter .btn-pill { flex: 1 1 100%; }
+  .loads-filter .btn-pill, .loads-expect .fk { min-height: 44px; }
+  .loads-field input, .loads-expect input, .loads-expect select { font-size: 16px; }
+}

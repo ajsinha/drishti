@@ -1,0 +1,110 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Data loads · {{ pack }} · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-loads.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-loads data-pack="{{ pack }}">
+  <h1>Data loads <span class="mono text-muted-d">{{ pack }}</span></h1>
+  {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p><a href="/admin/packs">&larr; Packs</a></p>
+  <p class="text-muted-d">Your ETL tells Drishti when a batch has landed (<a href="/help/data-loads">Telling Drishti new data has landed</a>);
+    Drishti then refreshes what it caches, checks the data is readable, evaluates alert rules, and tells the people this pack names.
+    Drishti does not load the data: it reads it where it lives. <span class="mono">/</span> focuses the filter, <span class="mono">e</span> opens the expectations settings.</p>
+
+  <h2 class="ws-h" id="expectations">Expectations</h2>
+  <p class="text-muted-d">What this pack expects to land each business day, and its state now
+    ({{ expectations.config.expect | length }} expected kind{{ '' if expectations.config.expect | length == 1 else 's' }};
+    settings from {{ {'pack': "the pack's own files", 'override': "an administrator's override", 'default': 'the defaults (nothing expected)'}[expectations.origin] }}).</p>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-expectations>
+    <caption class="visually-hidden">Expected loads and their state</caption>
+    <thead><tr><th scope="col">Business date</th><th scope="col">Kind</th><th scope="col">Due by</th><th scope="col">State</th><th scope="col">Landed</th></tr></thead>
+    <tbody>{% for s in expectations.expectations %}
+      <tr data-state="{{ s.state }}"><td class="mono">{{ s.businessDate }}</td><td class="mono">{{ s.kind }}</td><td class="mono">{{ s.by }} {{ s.zone }}</td>
+        <td><span class="st {% if states[s.state] %}st-{{ states[s.state] }}{% endif %}">{{ s.state }}</span>
+          {% if s.state in ('late', 'missing') %}<span class="visually-hidden">needs attention</span>{% endif %}</td>
+        <td class="mono">{% if s.landedAt %}{{ when_local(s.landedAt) }}{% else %}—{% endif %}</td></tr>
+    {% else %}<tr><td colspan="5" class="text-muted-d">Nothing is expected yet. Use <b>Expectations settings</b> to say which kinds should land, and by when.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p><button type="button" class="btn-pill btn-ghost" data-config-open>Expectations settings</button></p>
+
+  <h2 class="ws-h" id="history">History</h2>
+  <form class="adm-bar loads-filter" method="get" action="/admin/packs/{{ pack }}/loads" role="search" aria-label="Filter the loads">
+    <label>Kind <select name="kind" data-filter-kind><option value="">all</option>{% for k in kinds %}<option{% if k == f_kind %} selected{% endif %}>{{ k }}</option>{% endfor %}</select></label>
+    <label>Status <select name="status"><option value="">all</option><option{% if f_status == 'ready' %} selected{% endif %}>ready</option><option{% if f_status == 'failed' %} selected{% endif %}>failed</option></select></label>
+    <label>Date <input type="date" name="date" value="{{ f_date }}"></label>
+    <button class="btn-pill btn-ghost" type="submit">Filter</button>
+    {% if f_kind or f_status or f_date %}<a class="fk" href="/admin/packs/{{ pack }}/loads">Clear</a>{% endif %}
+  </form>
+  <div class="tbl-wrap"><table class="tbl adm-tbl loads-tbl" data-loads-table>
+    <caption class="visually-hidden">Data loads, newest first</caption>
+    <thead><tr><th scope="col">Received</th><th scope="col">Kind &middot; date</th><th scope="col">Status</th><th scope="col" class="ds-num">Rows</th>
+      <th scope="col">Source / batch</th><th scope="col">Verified</th><th scope="col" class="ds-num">Alerts</th><th scope="col" class="ds-num">Told</th><th scope="col">Steps</th></tr></thead>
+    <tbody>{% for r in loads %}
+      <tr data-load="{{ r.id }}" data-status="{{ r.status }}">
+        <td class="mono" title="{{ r.receivedAt }}">{{ when_local(r.receivedAt) }}<div class="text-muted-d">{{ r.receivedBy }}</div></td>
+        <td class="mono">{{ r.kind }}<div class="text-muted-d">{{ r.businessDate }}</div></td>
+        <td><span class="st {{ 'st-ok' if r.status == 'ready' else 'st-bad' }}">{{ r.status }}</span>{% if r.reload %} <span class="st st-warn" title="A ready load of this kind and date was already recorded">reload</span>{% endif %}
+          {% if r.attempt > 1 %}<span class="st" title="Announced again with a different outcome">attempt {{ r.attempt }}</span>{% endif %}</td>
+        <td class="mono ds-num">{{ '{:,}'.format(r.get('rows')) if r.get('rows') is not none else '—' }}{% if r.get('rejected') is not none %}<div class="text-muted-d">{{ '{:,}'.format(r.get('rejected')) }} rejected</div>{% endif %}</td>
+        <td class="mono">{{ r.source or '—' }}{% if r.batchId %}<div class="text-muted-d">{{ r.batchId }}</div>{% endif %}</td>
+        <td>{% if r.verified == 'verified' %}<span class="st st-ok">verified</span> <span class="mono text-muted-d">{{ r.entities }}</span>
+            {% elif r.verified == 'not-found' %}<span class="st st-bad">not found</span>{% else %}<span class="st">skipped</span>{% endif %}</td>
+        <td class="mono ds-num">{{ r.alerts }}</td><td class="mono ds-num">{{ r.notices }}</td>
+        <td><details class="loads-steps"><summary>{{ r.steps | length }} step{{ '' if r.steps | length == 1 else 's' }} &middot; {{ r.durationMs }} ms</summary>
+          <p class="loads-sum">{{ r.summary }}{% if r.note %} <span class="text-muted-d">&mdash; {{ r.note }}</span>{% endif %}</p>
+          <ol>{% for s in r.steps %}<li><span class="st st-{{ {'ok': 'ok', 'warn': 'warn', 'failed': 'bad', 'skipped': ''}[s.status] }}">{{ s.status }}</span>
+            <b>{{ s.name }}</b> {{ s.detail }} <span class="mono text-muted-d">{{ s.ms }} ms</span></li>{% endfor %}</ol></details></td>
+      </tr>
+    {% else %}<tr><td colspan="9" class="text-muted-d">{% if f_kind or f_status or f_date %}No loads match the filter.{% else %}No loads recorded yet. Your ETL announces one with
+      <span class="mono">drishti.py data landed --pack {{ pack }} --kind &hellip; --date &hellip;</span>.{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+
+  <dialog class="adm-dialog ds-dialog" data-config-dialog aria-labelledby="cfgTitle">
+    <div class="ds-head"><h2 id="cfgTitle">Expectations settings &middot; {{ pack }}</h2>
+      <button type="button" class="btn-pill btn-ghost" data-config-close aria-label="Close the settings">Close</button></div>
+    <p class="text-muted-d">Saved as an override file beside the load history; the pack's own files are not changed. Settings take effect at the next check.</p>
+    <form data-config-form>
+      <label class="loads-field">Tell these roles (comma separated)<input name="roles" value="{{ config.config.notify.roles | join(', ') }}"></label>
+      <label class="loads-field">and these users<input name="users" value="{{ config.config.notify.users | join(', ') }}"></label>
+      <label class="loads-check"><input type="checkbox" name="email"{% if config.config.notify.email %} checked{% endif %}> also send an email (needs the email channel)</label>
+      <label class="loads-field">Smoke test: open this many sample entities after each ready load (0 = off)<input name="smoke" type="number" min="0" value="{{ config.config.smoke }}"></label>
+      <fieldset class="loads-expect"><legend>Expected each business day</legend>
+        <table class="tbl ds-tbl" data-plain data-expect-rows><thead><tr><th scope="col">Kind</th><th scope="col">Due by (HH:mm)</th><th scope="col">Time zone</th><th scope="col">Calendar</th><th></th></tr></thead>
+          <tbody>{% for k, e in config.config.expect.items() %}
+            <tr><td><select name="x-kind">{% for kk in config.kinds %}<option{% if kk == k %} selected{% endif %}>{{ kk }}</option>{% endfor %}</select></td>
+              <td><input name="x-by" value="{{ e.by }}" size="6" aria-label="Due by"></td><td><input name="x-zone" value="{{ e.zone or '' }}" placeholder="server zone" aria-label="Time zone"></td>
+              <td><input name="x-cal" value="{{ e.calendar or '' }}" placeholder="server calendar" aria-label="Calendar"></td>
+              <td><button type="button" class="fk" data-expect-remove>Remove</button></td></tr>{% endfor %}</tbody></table>
+        <button type="button" class="fk" data-expect-add>Add a kind</button>
+      </fieldset>
+    </form>
+    <template data-expect-template><tr><td><select name="x-kind">{% for kk in config.kinds %}<option>{{ kk }}</option>{% endfor %}</select></td>
+      <td><input name="x-by" value="19:00" size="6" aria-label="Due by"></td><td><input name="x-zone" placeholder="server zone" aria-label="Time zone"></td>
+      <td><input name="x-cal" placeholder="server calendar" aria-label="Calendar"></td><td><button type="button" class="fk" data-expect-remove>Remove</button></td></tr></template>
+    <p class="adm-msg" data-config-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions">
+      <button type="button" class="btn-pill btn-ghost" data-config-reset>Reset to the pack's own settings</button>
+      <button type="button" class="btn-pill btn-accent" data-config-save>Save</button>
+    </div>
+  </dialog>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-loads.js?v={{ ASSET_V }}"></script>{% endblock %}

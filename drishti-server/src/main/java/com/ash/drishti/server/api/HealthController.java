@@ -59,10 +59,12 @@ public class HealthController {
     private final Entitlements entitlements;
     private final String version;
     private final List<String> overrides;
+    private final com.ash.drishti.server.loads.ExpectationService expectations;
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
-            org.springframework.core.env.Environment env) {
+            org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations) {
+        this.expectations = expectations;
         this.overrides = org.springframework.boot.context.properties.bind.Binder.get(env)
                 .bind("drishti.packs.overrides", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class)).orElse(List.of());
         this.registry = registry;
@@ -120,8 +122,9 @@ public class HealthController {
         List<Map<String, Object>> packRows = packs(sources);
         long packProblems = packRows.stream().filter(r -> !"OK".equals(r.get("status"))).count();
         String hotReload = sutras.hotReload();          // STOPPED: the Sutra watcher ended, edits are not picked up until a restart
+        List<com.ash.drishti.server.loads.ExpectationService.State> dataLate = expectations.attention(java.time.Instant.now());
         String overall = sources.isEmpty() || down == sources.size() ? "DOWN"
-                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || hotReload.startsWith("STOPPED") ? "DEGRADED"
+                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") ? "DEGRADED"
                 : "OK";   // stale: behind its stale-after; degraded: a connector that cannot read some of its data
         out.put("status", overall);
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
@@ -131,6 +134,8 @@ public class HealthController {
         out.put("failedToStart", failures);
         out.put("packs", packRows);
         out.put("sutras", Map.of("hotReload", hotReload, "problemFiles", sutras.problems().size()));
+        out.put("dataLate", dataLate.stream().map(d -> Map.of("pack", d.pack(), "kind", d.kind(), "businessDate", d.businessDate().toString(), "state", d.state(),
+                "by", d.by() + " " + d.zone(), "line", d.line())).toList());
         out.put("overrides", overrides);
         out.put("live", Map.of("streams", slots.open(), "topics", hub.topicCount(), "frames", live.frames(), "droppedFrames", live.droppedFrames(),
                 "p50Ms", live.percentile(50), "p99Ms", live.percentile(99)));

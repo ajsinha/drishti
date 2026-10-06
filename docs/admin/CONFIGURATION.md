@@ -246,6 +246,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PACKS_INSTALLED` | `drishti.packs.installed-dir` | `./data/packs/installed` | Where packs installed from a registry are kept. |
 | `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` | The administrator's per-pack data-source override files (Admin → Packs → Data source). |
+| `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | The data-load history per pack and the administrators' expectation overrides ([DATA_LOADS.md](../guides/DATA_LOADS.md)). |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | The history of archive deployments and rollbacks. |
 | `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | A signed pack registry (a folder, `file:` or `https:` URL with `index.json`); empty: none. |
 | `DRISHTI_PACKS` | `drishti.packs.enabled` | `finance` | The packs to load (comma list); a pack's parents load with it. |
@@ -866,6 +867,26 @@ cannot make a view slow or a page heavy. A panel that stops short says so (*N mo
 | `tree-depth` | `12` | Levels a table or ladder with `children` descends; deeper rows are left out. |
 | `tree-rows` | `10000` | Rows in all (every level) one such table builds; further rows are left out. |
 
+### `drishti.loads` — data loads (a batch landed)
+
+The signal your ETL sends when a batch has landed, its history, and the late-data check; see [DATA_LOADS.md](../guides/DATA_LOADS.md). What a
+pack expects and who is told is the pack's `loads:` section and the administrator's override file (`<dir>/config/<pack>.yaml`), not a server setting.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `dir` | `./data/loads` (`DRISHTI_LOADS_DIR`) | Where the load history (`<pack>.json`) and the expectation overrides (`config/<pack>.yaml`) are kept. |
+| `keep` | `2000` | Loads kept per pack. The oldest go first. |
+| `scheduler` | `true` | `false` turns the late-data check off; the API and the Data loads page still work. |
+| `check-interval` | `60s` | How often expectations are checked for late data. |
+| `verify-limit` | `1000` | Most entities counted when a load is verified (a count at the limit reads "or more"). |
+| `verify-timeout` | `20s` | How long the verify, alerts and smoke steps may each wait for the data. |
+| `lookback-days` | `3` | Business days before today that are still checked for missing data. |
+| `default-notify-roles` | `[admin]` | Roles told about a load or late data when the pack names no roles or users. |
+| `smoke-max` | `20` | Most sample entities a pack may ask to be opened after a ready load. |
+
+The token scope that opens `POST /api/v1/packs/{pack}/loads` to a personal API token is `loads:write` (`drishti.security.token-scopes`); the
+user still needs a role that opens the kind. The expectation settings (`/api/v1/admin/loads/**`) are never open to a token.
+
 ### `drishti.alerts` — alert history
 
 | Key | Default | Meaning |
@@ -1467,7 +1488,7 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 | `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}`. |
 | `management.endpoints.web.exposure.include` | `health,info,prometheus,metrics` | Actuator endpoints: `/actuator/health` (with `/liveness` and `/readiness` probes), `/actuator/prometheus` (timer `drishti.view`, gauges `drishti.live.*`). |
 | `drishti.security.token-read-posts` | `/api/v1/search/pivot/**`, `/api/v1/command` | The `POST` paths (ant patterns) a personal API token may call because they only read. Every other non-`GET` request stays refused for a token. |
-| `drishti.security.token-scopes` | `design:write`, `design:approve`, `packs:admin` | The write scopes a personal API token may be given: for each, a `description` (shown on the account page) and the `allow` list of `METHOD path` patterns it opens (`*` for any method). Keys with a colon are written `"[design:write]":`. A scope is only a door: the controller still checks the user's roles at the time of each call. A write no scope opens is refused. |
+| `drishti.security.token-scopes` | `design:write`, `design:approve`, `packs:admin`, `loads:write` | The write scopes a personal API token may be given: for each, a `description` (shown on the account page) and the `allow` list of `METHOD path` patterns it opens (`*` for any method). Keys with a colon are written `"[design:write]":`. A scope is only a door: the controller still checks the user's roles at the time of each call. A write no scope opens is refused. |
 | `drishti.security.token-never` | users, roles, tokens, sign-in, caches, reports, collaboration, `/me/**` | `METHOD path` patterns no token may ever write, whatever its scopes. `TokenScopeGuardTest` fails the build when a non-`GET` endpoint is in none of `token-read-posts`, a scope or this list. |
 | `drishti.security.token-write-max-days` | `90` | The longest life, in days, of a token with a write scope (which must expire). Read-only tokens keep 1-366 days or no expiry. |
 | `springdoc.api-docs.path` / `springdoc.swagger-ui.path` | `/api/docs` / `/api/docs/ui` | The OpenAPI description and its UI. |

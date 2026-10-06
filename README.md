@@ -184,6 +184,7 @@ Start with the **[quickstart](docs/guides/QUICKSTART.md)**, then the **[user gui
 | you want it running in ten minutes | [QUICKSTART.md](docs/guides/QUICKSTART.md) |
 | you run the server in IntelliJ IDEA and the console (UX) in PyCharm | [IDE_GUIDE.md](docs/guides/IDE_GUIDE.md) |
 | you build, check, load and ship packs and Sutras from a terminal or a pipeline (`tools/drishti.py`) | [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md) |
+| your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data | [DATA_LOADS.md](docs/guides/DATA_LOADS.md) |
 | you ship what you built to servers by copying: bundles, checksums, promotion, rollback (no API) | [OPERATIONALISING.md](docs/guides/OPERATIONALISING.md) |
 | you install for the first time, every step explained | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |

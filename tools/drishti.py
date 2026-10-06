@@ -31,6 +31,7 @@ http://localhost:18480) and the token from DRISHTI_TOKEN or --token-file; the to
 from __future__ import annotations
 
 import argparse
+import datetime
 import glob
 import importlib.util
 import json
@@ -139,7 +140,7 @@ def absolute(p) -> str:
 
 class ApiError(CliError):
     HINTS = {401: " (no or bad token: set DRISHTI_TOKEN or --token-file)",
-             403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve or packs:admin, see CLI_GUIDE)"}
+             403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve, packs:admin or loads:write, see CLI_GUIDE)"}
 
     def __init__(self, status: int, code: str | None, detail: str):
         super().__init__(f"the server said {status}{' ' + code if code else ''}: {detail}{self.HINTS.get(status, '')}", 1)
@@ -555,6 +556,63 @@ def cmd_data_load(a, extra) -> int:
     return subprocess.run(cmd, cwd=ROOT).returncode
 
 
+def load_date(text: str) -> str:
+    """--date: yyyy-MM-dd, or today / yesterday (this machine's calendar day)."""
+    t = text.strip().lower()
+    if t in ("today", "yesterday"):
+        d = datetime.date.today() - datetime.timedelta(days=1 if t == "yesterday" else 0)
+        return d.isoformat()
+    try:
+        return datetime.date.fromisoformat(t).isoformat()
+    except ValueError:
+        raise CliError(f"--date {text!r} is not yyyy-MM-dd (or today, yesterday)") from None
+
+
+def print_load(r: dict) -> None:
+    print(r.get("summary", ""))
+    print(f"  load {r.get('id')}  status {r.get('status')}  verified {r.get('verified')}  attempt {r.get('attempt')}"
+          f"{'  (a reload)' if r.get('reload') else ''}{'  (already announced: nothing ran again)' if r.get('duplicate') else ''}")
+    for st in r.get("steps", []):
+        print(f"  {st.get('name'):<8}{st.get('status'):<8}{st.get('detail', '')}")
+
+
+def cmd_data_landed(a, extra) -> int:
+    """Tells the server a batch landed (or failed). Exit 1 when a ready load is not verified (the data is not readable for the date)."""
+    body = {"kind": a.kind, "businessDate": load_date(a.date), "status": a.status}
+    for key, val in (("rows", a.rows), ("rejected", a.rejected), ("batchId", a.batch), ("source", a.source), ("note", a.note)):
+        if val is not None:
+            body[key] = val
+    r = Api.from_args(a).json("POST", f"/api/v1/packs/{q(a.pack)}/loads", body)
+    if a.json:
+        say_json(r)
+    else:
+        print_load(r)
+    return 1 if r.get("status") == "ready" and r.get("verified") != "verified" else 0
+
+
+def cmd_data_loads(a, extra) -> int:
+    params = [f"limit={a.limit}"] + [f"{k}={q(v)}" for k, v in (("kind", a.kind), ("date", a.date and load_date(a.date)), ("status", a.status)) if v]
+    api = Api.from_args(a)
+    h = api.json("GET", f"/api/v1/packs/{q(a.pack)}/loads?" + "&".join(params))
+    ex = api.json("GET", f"/api/v1/packs/{q(a.pack)}/loads/expectations") if a.expectations else None
+    if a.json:
+        say_json({**h, **({"expectations": ex["expectations"]} if ex else {})})
+        return 0
+    rows = h.get("loads", [])
+    print(f"{'received':<21}{'kind':<18}{'date':<12}{'status':<8}{'rows':>10}{'rej':>7}  {'verified':<10}{'alerts':>6}{'told':>5}  batch / source")
+    for r in rows:
+        print(f"{r.get('receivedAt', '')[:19].replace('T', ' '):<21}{r.get('kind', ''):<18}{r.get('businessDate', ''):<12}{r.get('status', ''):<8}"
+              f"{str(r.get('rows', '')):>10}{str(r.get('rejected', '')):>7}  {str(r.get('verified', '')):<10}{r.get('alerts', 0):>6}{r.get('notices', 0):>5}"
+              f"  {r.get('batchId', '') or ''} {r.get('source', '') or ''}".rstrip())
+    if not rows:
+        print("no loads recorded")
+    if ex:
+        print("expectations:")
+        for s in ex.get("expectations", []):
+            print(f"  {s['businessDate']}  {s['kind']:<18}by {s['by']} {s['zone']:<20}{s['state']}")
+    return 0
+
+
 # ------------------------------------------------------------------------------------------------ server
 
 def cmd_server_health(a, extra) -> int:
@@ -925,6 +983,28 @@ def build_parser() -> argparse.ArgumentParser:
     dl.add_argument("--trades", type=int, help="also generate a trade book of this many trades a day")
     dl.add_argument("--days", type=int, help="business days the book covers (script default 3)")
     dl.add_argument("--dry-run", action="store_true", help="print the command instead of running it")
+    srv_d = server_parent()
+    la = add(d, "landed", cmd_data_landed, "data landed: tell the server a batch has landed (or failed) so it refreshes, verifies, checks alerts and tells people (POST /api/v1/packs/{pack}/loads)",
+             [srv_d], "examples:\n  drishti.py data landed --pack my-bank --kind trade --date 2026-10-06 --rows 48213 --rejected 12 --batch eod-1007\n"
+             "  drishti.py data landed --pack my-bank --kind trade --date today --status failed --note 'copy stopped: disk full'\n"
+             "Needs an administrator, or a personal token with the loads:write scope. Exit 1 when a ready load is not verified (the data is not readable for that date).")
+    la.add_argument("--pack", required=True, help="the pack that owns the kind")
+    la.add_argument("--kind", required=True, help="the entity kind that landed")
+    la.add_argument("--date", required=True, help="the business date, yyyy-MM-dd (or today, yesterday)")
+    la.add_argument("--status", choices=["ready", "failed"], default="ready", help="ready (default) or failed")
+    la.add_argument("--rows", type=int, help="rows loaded")
+    la.add_argument("--rejected", type=int, help="rows rejected")
+    la.add_argument("--batch", help="the batch id; the same pack, kind, date and batch announced twice is recorded once")
+    la.add_argument("--source", help="where it came from (a job or system name)")
+    la.add_argument("--note", help="a short note (for a failed load: why)")
+    ls = add(d, "loads", cmd_data_loads, "data loads: the pack's load history and, with --expectations, what is due and its state (GET /api/v1/packs/{pack}/loads)",
+             [srv_d], "examples:\n  drishti.py data loads --pack my-bank\n  drishti.py data loads --pack my-bank --kind trade --status failed --json")
+    ls.add_argument("--pack", required=True)
+    ls.add_argument("--kind")
+    ls.add_argument("--date", help="only this business date (yyyy-MM-dd, today, yesterday)")
+    ls.add_argument("--status", choices=["ready", "failed"])
+    ls.add_argument("--limit", type=int, default=30, help="most loads listed (default 30)")
+    ls.add_argument("--expectations", action="store_true", help="also list what the pack expects and today's state (on-time, late, missing ...)")
 
     # authoring tools: data profile, pack regenerate|diff|catalogue|i18n (tools/authoring.py)
     load_module("authoring", "authoring.py").register(sys.modules[__name__], k, d, add, jvm, js, PFJ)

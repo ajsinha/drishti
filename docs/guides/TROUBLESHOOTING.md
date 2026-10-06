@@ -870,6 +870,8 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-5025` | a step could not be replayed when a design was rebased onto a newer version of its base (listed in `problems` with the step and why) |
 | `DRS-5020`–`DRS-5024` | one operation of a Build edit was refused (listed in `problems` with its index): malformed, no such panel, option not accepted, bad value, text not editable in place |
 | `DRS-5010` | not signed in |
+| `DRS-5011` | a data-load call named a pack that is not loaded (or one the caller may open nothing of): see [DATA_LOADS.md](DATA_LOADS.md#12-troubleshooting) |
+| `DRS-5012` | a data-load call named a kind the pack does not own (the message lists its kinds) |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
 | `DRS-7001` | a share link that is not yours, or does not exist (HTTP 404; the two look the same on purpose). Ask the sender to share it with you again |
 | `DRS-7002` | a share had no recipient, or named someone you cannot address: an unknown user, one who uses none of your packs, a role that is not mentionable (HTTP 422). Search the picker for the name |

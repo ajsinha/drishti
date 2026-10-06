@@ -27,7 +27,7 @@ and how to run it all from PyCharm.
 - [3. Connecting to a server: URL, tokens and permissions](#3-connecting-to-a-server-url-tokens-and-permissions)
 - [4. `sutra`: shape, design, gen, lint, test, preview](#4-sutra-shape-design-gen-lint-test-preview)
 - [5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-regenerate-diff-catalogue-i18n-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
-- [6. `data`: profile, ingest and load](#6-data-profile-ingest-and-load)
+- [6. `data`: profile, ingest, load, and tell the server a batch landed](#6-data-profile-ingest-and-load)
 - [7. `server`: health and packs; also smoke, `doctor`, `view` and shell completion](#7-server-health-and-packs)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
 - [9. `docs`: screenshots](#9-docs-screenshots)
@@ -223,6 +223,7 @@ must expire: 90 days at most by default) and copy the secret once:
 | `design:write` | `design create\|save\|check\|autodesign\|import\|delete\|bind\|propose` (the Designs and Studio writes) | a role with `author` |
 | `design:approve` | `design approve\|reject` | a role with `approve` (or admin), and never your own proposal with four-eyes on |
 | `packs:admin` | `server packs load\|unload\|on\|off`, `pack install` | the admin role |
+| `loads:write` | `data landed` | a role that opens the kind (or the admin role) |
 
 A token never exceeds its user: the server checks the scope **and** the roles the user holds at the moment of each call, so
 a scope on an author's token does not make them an approver, and a disabled or deleted user's tokens stop at once. A token can
@@ -1264,6 +1265,43 @@ python3 tools/drishti.py data ingest --watch drop --once --domain demo --key id 
 
 Cron: `*/5 * * * * cd /opt/drishti && python3 tools/drishti.py data ingest --watch /data/drop --once --pack packs/my-bank --lake /data/delta --done-dir /data/done`.
 As a service run it without `--once`; Ctrl-C stops it cleanly.
+
+### `data landed` and `data loads`: tell the server a batch landed
+
+Your ETL loads the data; Drishti reads it where it lives. When a batch is in place, **one call** makes the server refresh what it caches, check
+the data is readable for the date, evaluate the alert rules on it and tell the people the pack names. See
+[DATA_LOADS.md](DATA_LOADS.md) for the concepts, the API, expectations and late data, and recipes (Airflow, cron, DishtaYantra).
+
+```
+drishti.py data landed --pack P --kind K --date D [--status ready|failed] [--rows N] [--rejected N]
+                       [--batch ID] [--source S] [--note TEXT] [--json]
+drishti.py data loads  --pack P [--kind K] [--date D] [--status ready|failed] [--limit N] [--expectations] [--json]
+```
+
+`--date` is `yyyy-MM-dd`, or `today` / `yesterday`. The same pack, kind, date and batch announced twice is recorded once (safe to retry). Exit
+`1` when a `ready` load is **not verified** (the data is not readable for that date) or the server refuses it; `0` otherwise. It needs an
+administrator, or a personal token with the `loads:write` scope (`403 DRS-5002 this token lacks the scope loads:write` otherwise).
+
+```
+$ python tools/drishti.py data landed --pack market-risk --kind stress-result --date 2026-10-05 --rows 840 --rejected 0 --batch eod-20261005-1
+stress-result for 2026-10-05 loaded: 840 rows, 0 rejected; 0 alerts fired
+  load muwrjavp-5  status ready  verified verified  attempt 1
+  record  ok      recorded
+  refresh ok      caches dropped: demo, file, risk-store
+  verify  ok      80 stress-result entities on 2026-10-05
+  alerts  ok      0 alerts fired
+  smoke   ok      opened 2 of 2 sample entities
+  notices ok      1 person told
+$ python tools/drishti.py data loads --pack market-risk --limit 2 --expectations
+received             kind              date        status        rows    rej  verified  alerts told  batch / source
+2026-10-06 14:17:28  stress-result     2026-10-05  ready          840      0  verified       0    1  eod-20261005-1
+...
+expectations:
+  2026-10-06  var               by 23:59 America/New_York    failed
+```
+
+> `data ingest`, `data ingest --watch` and `pack make` stage data for a demo, a small team or a proof of concept. They are **not** a production
+> ETL: in production your own ETL loads the store and ends by calling `data landed`.
 
 ### `data load`: the demo data, at three sizes
 

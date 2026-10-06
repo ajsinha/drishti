@@ -41,6 +41,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Catalogue: about, packs, sources, Sutras](#catalogue-about-packs-sources-sutras)
    - [Sutra Studio and governance](#sutra-studio-and-governance)
    - [Sign-in and user administration](#sign-in-and-user-administration)
+   - [Data loads: telling Drishti a batch landed](#data-loads-telling-drishti-a-batch-landed)
    - [Administration: health and caches](#administration-health-and-caches)
    - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
 7. [The ViewModel in detail](#the-viewmodel-in-detail)
@@ -1206,6 +1207,24 @@ curl -s -X POST $B/admin/packs/deploy -H 'Content-Type: application/octet-stream
 curl -s -X POST "$B/admin/packs/deploy/$ID?acceptBreaking=true" | jq -c '{deployed, previous, restarting}'
 ```
 
+### Data loads: telling Drishti a batch landed
+
+Your ETL loads the data; one call makes Drishti act on it (refresh, verify, evaluate alert rules, tell people) and expectations flag a batch
+that did not come. Everything about it (every field, the idempotency rules, the steps, recipes for curl, Airflow, cron and DishtaYantra) is in
+[DATA_LOADS.md](DATA_LOADS.md); the CLI is `drishti.py data landed` and `data loads`.
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/packs/{pack}/loads` | body `{kind, businessDate (or asOf), status: ready\|failed, rows?, rejected?, source?, batchId?, note?}`; an administrator, or a token with the `loads:write` scope whose user's roles open the kind. `201` with the load record (`steps`, `verified`, `alerts`, `notices`, `summary`), or `200` with `duplicate: true` for the same pack, kind, date and batch announced with the same outcome again. `404 DRS-5011` unknown pack, `422 DRS-5012` unknown kind, `400 DRS-4003` bad or future date, `400 DRS-5001` bad status, counts or batch id |
+| `GET` | `/packs/{pack}/loads?kind=&date=&status=&limit=` | the pack's history, newest first (administrators, or users whose roles open a kind of the pack: only those kinds) |
+| `GET` | `/packs/{pack}/loads/{id}` | one load |
+| `GET` | `/packs/{pack}/loads/expectations` | what the pack expects and its state: `pending`, `on-time`, `landed-late`, `late`, `missing`, `failed` |
+| `GET` `PUT` `DELETE` | `/admin/loads/{pack}/config` | the expectation settings in force; save or remove the administrator's override (administrators; never a token) |
+| `GET` | `/admin/loads/{pack}`, `/admin/loads/{pack}/{id}`, `/admin/loads/{pack}/expectations` | the same reads for the console |
+
+Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and `data-load-config-reset`. `GET /admin/health` lists
+`dataLate` and is `DEGRADED` while it is not empty.
+
 ### Administration: health and caches
 
 | Method | Path | Notes |
@@ -1391,6 +1410,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5006 | 404 | design not found | no Build design with that id, or it belongs to someone else |
 | DRS-5007 | 409 | stale revision | an edit built on an older `rev` of a design than the server holds, or an undo or redo with nothing to move to |
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
+| DRS-5011 | 404 | load pack not found | a data-load call names a pack that is not loaded, or one none of whose kinds the caller may open |
+| DRS-5012 | 422 | load kind unknown | a data-load call names a kind the pack does not own |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
@@ -1494,10 +1515,11 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `read` | `GET`, `HEAD` and the read-only `POST`s (the default; what tokens always had) | - |
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
 | `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
+| `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_LOADS.md](DATA_LOADS.md)) | the roles that open the kind (an administrator needs no more) |
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the data source (`PUT` and `DELETE /admin/packs/{name}/datasource`, `POST .../datasource/test`) | `admin` |
 
-There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by `drishti.py data`
-or the pack's sources), and users, roles, tokens, sign-in, caches, the audit log, shares, comments, notes, workspaces and
+There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
+`drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, the audit log, shares, comments, notes, workspaces and
 every `/me/**` write are **never** open to a token (`drishti.security.token-never`). A write that no scope opens answers
 `403 DRS-5002 this token lacks the scope design:write` (or `API tokens only read`); one that is never open, `API tokens may not
 call this endpoint`. The effective right is the scope **and** the user's roles at the time of the call, so a token never exceeds

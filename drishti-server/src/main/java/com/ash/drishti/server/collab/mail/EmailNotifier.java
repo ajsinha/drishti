@@ -91,7 +91,8 @@ public final class EmailNotifier implements Notifier {
     }
 
     /** One pending email for the person: skipped for no address, the event turned off, or the hourly cap. */
-    private void queue(String who, String event, String ref) {
+    /** Queues one email of the event (a template name) for the person, if they have an address, want it and are under the hourly cap. */
+    public void queue(String who, String event, String ref) {
         Instant now = Instant.now();
         int cap = props.limits().mailsPerRecipientPerHour();
         if (principals.user(who).map(User::email).filter(a -> a != null && !a.isBlank()).isEmpty() || !prefs.emailOn(who, event)) {

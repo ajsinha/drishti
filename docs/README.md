@@ -36,8 +36,9 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 |---|---|
 | Get it running in ten minutes | [QUICKSTART.md](guides/QUICKSTART.md) |
 | Install and start it with every step explained | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
+| Tell Drishti a batch of data has landed (API, CLI, Airflow, cron, DishtaYantra), flag late data | [DATA_LOADS.md](guides/DATA_LOADS.md) | why Drishti does not ingest, the load API and CLI, expectations and late data, the Data loads page, the token scope, recipes |
 | Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) | the offline path: artifacts and where each goes, `pack bundle|verify|deploy|rollback`, CI, permissions, Docker and Kubernetes, troubleshooting |
-| Install and run it on Windows (PowerShell, no Hadoop) | [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes, running it from PyCharm |
+| Install and run it on Windows (PowerShell, no Hadoop) | [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load|landed|loads`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes, running it from PyCharm |
 | [WINDOWS.md](guides/WINDOWS.md) |
 | Run and debug the server in IntelliJ IDEA and the console in PyCharm | [IDE_GUIDE.md](guides/IDE_GUIDE.md) |
 | Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_GUIDE.md](guides/CLI_GUIDE.md) |

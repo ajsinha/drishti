@@ -15,6 +15,10 @@
 -->
 # Demo data: building it in each store, small to a million trades a day
 
+> **For staging, small setups and proofs of concept.** The loaders here, `drishti.py data ingest` (and `--watch`) and `pack make` are not a
+> production ETL; Drishti does not ingest your data. Production data is loaded by your own ETL, which ends by telling Drishti the batch landed:
+> [DATA_LOADS.md](../guides/DATA_LOADS.md).
+
 Nothing under `data/` is in git: the demo data is always generated, deterministically, by the scripts below. Each
 store has one script with the same options, so the same demo can be built small for a laptop or large for a scale test.
 

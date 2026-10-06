@@ -24,6 +24,12 @@
     heap {{ h.server.heapUsedMb }}/{{ h.server.heapMaxMb }} MB · {{ h.server.threads }} threads · Java {{ h.server.java }}</span>
 </div>
 
+{% if h.dataLate %}
+<section class="pnl" aria-label="Data that is late"><div class="pnl-b"><ul class="hl-late">{% for d in h.dataLate %}
+  <li class="t-neg" data-data-late><i class="bi bi-clock-history" aria-hidden="true"></i> <b>{{ d.line }}</b> <span class="text-muted-d">(expected by {{ d.by }})</span>
+    <a href="/admin/packs/{{ d.pack }}/loads">Data loads</a></li>{% endfor %}</ul></div></section>
+{% endif %}
+
 <h2 class="ws-h">Connectors</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
   <thead><tr><th>Connector</th><th>Status</th><th>Last update</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th></tr></thead>

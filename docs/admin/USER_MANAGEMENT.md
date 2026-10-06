@@ -199,7 +199,7 @@ tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to kn
   made with a **write scope**, **only reads**: every `GET`, and the `POST`s that carry a query and change nothing, listed in
   `drishti.security.token-read-posts` (`/api/v1/search/pivot/**` and `/api/v1/command`). Any other `POST`, `PUT`, `PATCH` or
   `DELETE` is refused with `403 DRS-5002 API tokens only read`; add a path to the list only if it writes nothing.
-- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve` or `packs:admin` when making a
+- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve`, `packs:admin` or `loads:write` (an ETL job announcing that a batch landed: [DATA_LOADS.md](../guides/DATA_LOADS.md#10-permissions)) when making a
   token (`drishti.security.token-scopes`; the account page lists them in words). What a token may do is the scope **and** the
   roles its user holds at the time of each call (`design:approve` is useless to someone who is not an approver, `packs:admin` to
   someone who is not an admin), so demoting or disabling a user cuts their tokens at once. A token with a write scope must

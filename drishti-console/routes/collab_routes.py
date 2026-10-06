@@ -158,6 +158,8 @@ async def inbox(request: Request, tab: str = "all", unread: int = 0, before: int
 
 def _row_href(r: dict) -> str:
     """Where a row goes: a share through its link (which checks the right to open), anything else to the entity it is about."""
+    if str(r.get("type", "")).startswith("load"):          # a data-load notice: threadId carries the pack; the page is for administrators
+        return f"/admin/packs/{quote(r['threadId'], safe='')}/loads" if r.get("access") and r.get("threadId") else ""
     if r.get("shareId"):
         return f"/share/{quote(r['shareId'], safe='')}"
     if r.get("access") and r.get("kind") and r.get("id"):

@@ -90,6 +90,7 @@ categories:
       - { slug: pack-developer-guide, doc: guides/PACK_DEVELOPER_GUIDE.md, title: Pack developer guide, icon: hammer, summary: "Build a domain pack end to end: pack.yaml, kinds, links, roles and masks, Sutras, samples, tests, extends, generators, signing, hot load; worked example, a help-desk pack." }
       - { slug: operationalising, doc: guides/OPERATIONALISING.md, title: "Operationalising: ship by copying", icon: box-arrow-in-right, summary: "Bundles, checksums and verify; deploy by copying with a backup; promote the same artifact dev to test to prod; data lakes and files; CI, permissions, Docker and Kubernetes, rollback and troubleshooting. No server API needed." }
       - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "The drishti command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs into a running server, and the Screen Designer's propose and approve over REST; every command with real output, and running it from PyCharm." }
+      - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Telling Drishti new data has landed", icon: cloud-arrow-down, summary: "Your ETL loads the data; Drishti acts on it. One call (API or drishti.py data landed) makes Drishti refresh, verify the data is readable, evaluate alert rules and tell the right people; expectations flag late data on Health. With curl, Airflow, cron and DishtaYantra recipes." }
   - id: admin
     name: Administration
     icon: shield-lock

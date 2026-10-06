@@ -336,6 +336,13 @@ Three more things live on **Admin → Packs**; each is written up step by step, 
 The same from the terminal: `drishti.py server packs deploy|history|rollback|datasource`
 ([CLI_GUIDE.md](CLI_GUIDE.md#server-packs-deploy-history-rollback-and-datasource)). A personal API token needs the `packs:admin` scope.
 
+## Telling Drishti new data has landed
+
+A pack can say which kinds its ETL is expected to land each business day, by when, and who is told, in a `loads:` section of its `pack.yaml`
+(an administrator can override it from Admin → Packs → *Data loads*). The ETL announces each batch with one call (`POST /api/v1/packs/{pack}/loads`
+or `drishti.py data landed`); Drishti refreshes, verifies, evaluates alert rules and notifies, and flags a batch that is late on Admin → Health.
+The manifest key, with examples: [DATA_LOADS.md](DATA_LOADS.md#6-configuration-reference).
+
 ## Pack codes
 
 Every shipped pack has a short `code:`; typed alone on the command line (with `<GO>`) it opens the pack's overview:
