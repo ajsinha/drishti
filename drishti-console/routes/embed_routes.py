@@ -37,7 +37,7 @@ router = APIRouter(prefix="/embed/v1", include_in_schema=False)
 WEB = Path(__file__).resolve().parent.parent / "web"
 API = "1.0"
 # the console's own sheets, in the order base.html loads them, rewritten for a shadow root (see shadow_css)
-SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css", "css/gradients.css", "vendor/bootstrap-icons/bootstrap-icons.css")
+SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css", "css/gradients.css", "css/pivot.css", "css/about.css", "vendor/bootstrap-icons/bootstrap-icons.css")
 _cache: dict = {}
 
 
@@ -154,6 +154,52 @@ async def charts_js(request: Request):
 async def echarts_js(request: Request):
     path = WEB / "static/vendor/echarts/echarts.min.js"
     return send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
+
+
+# The console's own enhancer scripts, root-scoped (static/js; ELEMENTS.md section 12): the element loads these, with
+# data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
+ENHANCERS = ("view", "charts", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints")
+
+
+@router.get("/poc/js/{name}.js")
+async def enhancer_js(request: Request, name: str):
+    if name not in ENHANCERS:
+        return refuse(request, 404, "DRS-9404", f"no such script: {name}")
+    path = WEB / "static/js" / f"{name}.js"
+    return send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
+
+
+@router.get("/poc/records/{kind}/{id_:path}/{panel}")
+async def pivot_records(request: Request, kind: str, id_: str, panel: str):
+    """The rows a pivot is computed from (the console's /api/pivot/records, for the embed caller's masked identity)."""
+    try:
+        me, _claims = identity(request)
+        return cors(request, JSONResponse(await request.app.state.backend.panel_records(kind, id_, panel, me), headers={"Cache-Control": "no-store"}))
+    except EmbedError as e:
+        return refuse(request, e.status, e.code, e.detail)
+    except BackendError as e:
+        return refuse(request, e.page_status, e.code, e.detail)
+
+
+@router.get("/poc/about/{kind}/{id_:path}")
+async def about(request: Request, kind: str, id_: str, generation: int = 0):
+    """The body of the About drawer (an HTML fragment, as /v/{kind}/{id}/about renders it), for the embed caller."""
+    from core import about_index
+
+    env = request.app.state.templates.env
+    try:
+        me, _claims = identity(request)
+    except EmbedError as e:
+        return refuse(request, e.status, e.code, e.detail)
+    extra = {"accept_language": request.headers["accept-language"]} if request.headers.get("accept-language") else {}
+    try:
+        ex = await request.app.state.backend.explain(kind, id_, me, generation or None, **extra)
+        html = env.get_template("terminal/_about.html").render(ex=ex, error=None, kind=kind, id=id_, index=about_index.build(ex))
+        status = 200
+    except BackendError as e:
+        html = env.get_template("terminal/_about.html").render(ex=None, error=e, kind=kind, id=id_)
+        status = e.page_status
+    return cors(request, Response(html, status_code=status, media_type="text/html", headers={"Cache-Control": "no-store"}))
 
 
 # -- the view ---------------------------------------------------------------------------------------------------------

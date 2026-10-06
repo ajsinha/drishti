@@ -286,5 +286,9 @@
   var api = { US: US, RS: RS, BLANK: BLANK, AGGS: AGGS, SHOWS: SHOWS, AGG_LABEL: AGG_LABEL, SHOW_LABEL: SHOW_LABEL, LIMITS: LIMITS,
     keyText: keyText, compareKey: compareKey, compareKeys: compareKeys, cellKey: cellKey, normalise: normalise, cube: cube,
     drill: drill, distinct: distinctValues, format: format, valueFormat: valueFormat, valueLabel: valueLabel, label: label };
-  if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else { root.drishtiPivotEngine = api; }
+  if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else {
+    var cs = typeof document !== 'undefined' && document.currentScript;
+    (root.drishtiModules = root.drishtiModules || {}).pivotEngine = api;
+    if (!(cs && cs.hasAttribute('data-manual'))) { root.drishtiPivotEngine = api; }
+  }
 })(this);

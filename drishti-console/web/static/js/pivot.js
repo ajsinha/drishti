@@ -27,14 +27,32 @@
    /api/pivot/records/…; a search's pivot is computed by the server over the whole day (/api/pivot/search/…). */
 (function () {
   'use strict';
-  var E = window.drishtiPivotEngine, G = window.drishtiPivotGrid;
+  var me = document.currentScript, reg0 = window.drishtiModules || {};
+  var E = reg0.pivotEngine || window.drishtiPivotEngine, G = reg0.pivotGrid || window.drishtiPivotGrid;
   if (!E || !G) { return; }
+  /** init(root, options): the Pivot tab of every opted-in panel under root (the document or a ShadowRoot), now and as panels
+      are swapped in. options: fetch(url, init) and url(path) (default: the page's own, same origin), save (false: no Save,
+      Reset or Promote, the arrangement is the Sutra's; an embedded view), exports (false: no CSV, Excel or Print).
+      Returns {state, scan, dispose}. Dialogs, drag ghosts and keys stay inside root. */
+  function init(root, options) {
+  options = options || {};
+  var doFetch = options.fetch || function (u, o) { return fetch(u, o); };
+  var toUrl = options.url || function (p) { return p; };
+  var canSave = options.save !== false, canExport = options.exports !== false;
+  var layer = root === document ? document.body : root;           // where a dialog or a drag ghost goes
+  var undo = [];
+  function on(t, type, fn, cap) { t.addEventListener(type, fn, cap); undo.push(function () { t.removeEventListener(type, fn, cap); }); }
+  function origin() {                                             // an element's host is the containing block of fixed boxes (it contains layout)
+    if (!root.host) { return { x: 0, y: 0 }; }
+    var r = root.host.getBoundingClientRect();
+    return { x: r.left, y: r.top };
+  }
   var ZONES = ['rows', 'columns', 'values', 'filters'];
   var ZONE_LABEL = { rows: 'Rows', columns: 'Columns', values: 'Values', filters: 'Filters', fields: 'the field list' };
   var ZONE_KEY = { r: 'rows', c: 'columns', v: 'values', f: 'filters' };
   var MAX = { rows: E.LIMITS.rows, columns: E.LIMITS.columns, values: E.LIMITS.values, filters: 12 };
   var STATE = {};                   // per panel (or searched kind): arrangement, grid state, records, open tab
-  var view = document.querySelector('.view[data-view]');
+  var view = root.querySelector('.view[data-view]');
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
   function button(label, title, cls) {
@@ -46,13 +64,13 @@
   function json(method, url, body) {
     var o = { method: method, headers: { Accept: 'application/json' } };
     if (body !== undefined) { o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body); }
-    return fetch(url, o).then(function (r) {
+    return doFetch(toUrl(url), o).then(function (r) {
       return r.text().then(function (t) { var b = parse(t) || {}; return { ok: r.ok, status: r.status, b: b }; });
     }, function () { return { ok: false, status: 0, b: { code: 'DRS-5003', detail: 'the console could not be reached' } }; });
   }
   function problem(res) { return (res.b && res.b.detail) || ('HTTP ' + res.status); }
   function tokens() {
-    var s = getComputedStyle(document.documentElement), t = {};
+    var s = getComputedStyle(root.host || document.documentElement), t = {};
     ['ink', 'muted', 'faint', 'border', 'link', 'accent', 'neg', 'pos', 'ok', 'warn', 'bad', 'surface', 'bg-2'].forEach(function (k) {
       t[k] = s.getPropertyValue('--d-' + k).trim();
     });
@@ -73,7 +91,7 @@
     this.sutra = view ? view.getAttribute('data-view-sutra') || '' : '';
     this.promote = !this.search && !!this.sutra && !!(view && view.hasAttribute('data-pivot-promote'));
     var key = this.search ? 'search:' + this.search : 'panel:' + this.panelId;
-    var saved = parse(this.host.getAttribute('data-pivot-saved'));
+    var saved = canSave ? parse(this.host.getAttribute('data-pivot-saved')) : null;
     this.st = STATE[key] || (STATE[key] = {
       arr: E.normalise(saved || this.spec, this.fields), saved: !!saved, open: false, records: null, documents: false,
       grid: { collapsedRows: {}, collapsedCols: {}, sort: null, totals: this.spec.totals !== false, heat: !!(saved || this.spec).heat, chartValue: 0 }
@@ -98,7 +116,7 @@
     if (this.search) { return '/api/pivot/saved/search/' + encodeURIComponent(this.search) + (tail || ''); }
     return '/api/pivot/saved/panel/' + encodeURIComponent(this.sutra) + '/' + encodeURIComponent(this.panelId) + (tail || '');
   };
-  Pivot.prototype.mayKeep = function () { return !!this.search || !!this.sutra; };
+  Pivot.prototype.mayKeep = function () { return canSave && (!!this.search || !!this.sutra); };
   Pivot.prototype.say = function (text) { if (this.live) { this.live.textContent = ''; this.live.textContent = text; } };
   Pivot.prototype.field = function (name) { return this.fields.filter(function (f) { return f.name === name; })[0] || { name: name, label: name }; };
   Pivot.prototype.labelOf = function (name) { return this.field(name).label || name; };
@@ -188,7 +206,7 @@
     csv.addEventListener('click', function () { self.exportAs('csv'); });
     xlsx.addEventListener('click', function () { self.exportAs('xlsx'); });
     print.addEventListener('click', function () { self.print(); });
-    [csv, xlsx, print].forEach(function (b) { bar.appendChild(b); });
+    if (canExport) { [csv, xlsx, print].forEach(function (b) { bar.appendChild(b); }); }
     if (this.mayKeep()) {
       var save = button('Save', 'Keep this arrangement for yourself: it opens like this next time', 'btn-accent'), reset = button('Reset', 'Back to the default arrangement (forgets yours)');
       save.setAttribute('data-pv-save', ''); reset.setAttribute('data-pv-reset', '');
@@ -343,7 +361,7 @@
   Pivot.prototype.wireDrag = function () {
     var self = this, drag = null;
     function zoneAt(x, y) {
-      var t = document.elementFromPoint(x, y);
+      var t = root.elementFromPoint(x, y);
       var z = t && t.closest ? t.closest('.pv-zone') : null;
       return z && self.host.contains(z) ? z : null;
     }
@@ -371,13 +389,14 @@
         drag.ghost = drag.chip.cloneNode(true);
         drag.ghost.classList.add('pv-ghost');
         drag.ghost.removeAttribute('id');
-        document.body.appendChild(drag.ghost);
+        layer.appendChild(drag.ghost);
         drag.chip.classList.add('pv-dragging');
         self.host.classList.add('pv-drag-on');
       }
       e.preventDefault();
-      drag.ghost.style.left = (e.clientX + 8) + 'px';
-      drag.ghost.style.top = (e.clientY + 8) + 'px';
+      var o = origin();
+      drag.ghost.style.left = (e.clientX + 8 - o.x) + 'px';
+      drag.ghost.style.top = (e.clientY + 8 - o.y) + 'px';
       clear();
       var z = zoneAt(e.clientX, e.clientY);
       if (z) {
@@ -799,22 +818,22 @@
     note.setAttribute('role', 'status');
     d.appendChild(h); d.appendChild(note); d.appendChild(body);
     shade.appendChild(d);
-    document.body.appendChild(shade);
-    function close() { shade.remove(); document.removeEventListener('keydown', esc, true); if (back && back.isConnected) { back.focus(); } }
+    layer.appendChild(shade);
+    function close() { shade.remove(); root.removeEventListener('keydown', esc, true); if (back && back.isConnected) { back.focus(); } }
     function esc(e) {
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
       if (e.key === 'Tab') {                                // keep the focus inside the dialog
         var f = Array.prototype.filter.call(d.querySelectorAll('a[href], button:not([disabled]), input, select, [tabindex="0"]'), function (n) { return n.offsetParent !== null; });
         if (!f.length) { return; }
-        if (e.shiftKey && document.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
-        else if (!e.shiftKey && document.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+        if (e.shiftKey && root.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+        else if (!e.shiftKey && root.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
       }
     }
     x.addEventListener('click', close);
     shade.addEventListener('click', function (e) { if (e.target === shade) { close(); } });
-    document.addEventListener('keydown', esc, true);
+    root.addEventListener('keydown', esc, true);
     x.focus();
-    return { body: body, note: note, close: close, focus: function () { if (!d.contains(document.activeElement)) { x.focus(); } } };
+    return { body: body, note: note, close: close, focus: function () { if (!d.contains(root.activeElement)) { x.focus(); } } };
   }
 
   // ---- export, print ---------------------------------------------------------------------------------------------
@@ -926,7 +945,7 @@
         });
       });
       this.prNote = note;
-      document.body.appendChild(drawer);
+      layer.appendChild(drawer);
     }
     drawer.hidden = false;
     this.prDiff.textContent = 'Saving your arrangement…';
@@ -961,15 +980,19 @@
       b.__pivot = new Pivot(b);
     });
   }
-  scan(document);
-  new MutationObserver(function (list) {
+  scan(root);
+  var mo = new MutationObserver(function (list) {
     list.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) { scan(n); } }); });
-  }).observe(document.body, { childList: true, subtree: true });
-  document.addEventListener('drishti:theme', function () {
-    document.querySelectorAll('.pv-box').forEach(function (b) { if (b.__pivot && b.__pivot.chart) { b.__pivot.drawChart(); } });
   });
-  window.addEventListener('resize', function () {
-    document.querySelectorAll('.pv-box').forEach(function (b) { if (b.__pivot && b.__pivot.chart) { b.__pivot.chart.resize(); } });
+  mo.observe(layer, { childList: true, subtree: true });
+  on(root, 'drishti:theme', function () {
+    root.querySelectorAll('.pv-box').forEach(function (b) { if (b.__pivot && b.__pivot.chart) { b.__pivot.drawChart(); } });
   });
-  window.drishtiPivot = { state: STATE, scan: scan };
+  function resize() { root.querySelectorAll('.pv-box').forEach(function (b) { if (b.__pivot && b.__pivot.chart) { b.__pivot.chart.resize(); } }); }
+  if (root === document) { on(window, 'resize', resize); }
+  else if (window.ResizeObserver) { var ro = new ResizeObserver(function () { requestAnimationFrame(resize); }); ro.observe(root.host); undo.push(function () { ro.disconnect(); }); }
+  return { state: STATE, scan: scan, dispose: function () { mo.disconnect(); undo.splice(0).forEach(function (f) { f(); }); } };
+  }
+  (window.drishtiModules = window.drishtiModules || {}).pivot = { init: init };
+  if (!(me && me.hasAttribute('data-manual'))) { window.drishtiPivot = init(document); }
 })();

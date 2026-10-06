@@ -17,10 +17,11 @@
    breadcrumbs (per browser tab) and the market clock. */
 (function () {
   'use strict';
-  var view = document.querySelector('[data-view]');
+  var me = document.currentScript, auto = !(me && me.hasAttribute('data-manual'));   // data-manual: a root-scoped caller (the element) runs init itself
+  var view = auto ? document.querySelector('[data-view]') : null;
 
   // ---- clock ----------------------------------------------------------------------------------
-  var clock = document.querySelector('[data-clock]');
+  var clock = auto ? document.querySelector('[data-clock]') : null;
   if (clock) {
     var tz = clock.getAttribute('data-tz'), label = clock.getAttribute('data-tz-label');
     var tick = function () {
@@ -31,6 +32,12 @@
     tick(); setInterval(tick, 1000);
   }
 
+  /** The parts of a view that are the same in the console and inside an element: bars, tabs, line and area charts, surfaces.
+      init(root, options): root is the document or a ShadowRoot; options.glUrl (null: no 3D). Returns {enhance, redraw, updateChart, dispose}. */
+  function init(root, options) {
+    options = options || {};
+    var undo = [];
+    function on(t, type, fn) { t.addEventListener(type, fn); undo.push(function () { t.removeEventListener(type, fn); }); }
   // ---- bars and gauges: widths from data-w (the CSP forbids inline styles) ---------------------
   function widths(root) {
     root.querySelectorAll('[data-w]').forEach(function (el) {
@@ -38,7 +45,6 @@
       requestAnimationFrame(function () { el.style.width = Math.max(0, Math.min(100, w)) + '%'; });
     });
   }
-  widths(document);
 
   // ---- tabs -----------------------------------------------------------------------------------
   function tabsIn(root) { root.querySelectorAll('[data-tabs]').forEach(function (box) {
@@ -47,17 +53,16 @@
       h.addEventListener('click', function () {
         heads.forEach(function (x, k) {
           x.classList.toggle('on', k === i); x.setAttribute('aria-selected', k === i ? 'true' : 'false');
-          document.getElementById(x.getAttribute('aria-controls')).hidden = k !== i;
+          root.getElementById(x.getAttribute('aria-controls')).hidden = k !== i;
         });
       });
     });
   }); }
-  tabsIn(document);
 
   // ---- charts ---------------------------------------------------------------------------------
   var charts = [];
   function tokens() {
-    var s = getComputedStyle(document.documentElement), t = {};
+    var s = getComputedStyle(root.host || document.documentElement), t = {};
     ['ink', 'muted', 'faint', 'border', 'link', 'accent', 'neg', 'pos', 'surface'].forEach(function (k) { t[k] = s.getPropertyValue('--d-' + k).trim(); });
     t.mono = s.getPropertyValue('--d-font-mono').trim();
     return t;
@@ -108,7 +113,7 @@
   function drawCharts() {
     if (!window.echarts) { return; }
     var t = tokens();
-    document.querySelectorAll('.chart[data-chart]').forEach(function (el) {
+    root.querySelectorAll('.chart[data-chart]').forEach(function (el) {
       try {
         var c = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
         c.setOption(option(el, t), true);
@@ -121,7 +126,6 @@
       }
     });
   }
-  drawCharts();
 
   // ---- surfaces: a heatmap, or a 3D surface that loads ECharts GL (vendored) only when first asked for ----------
   function surfaceOption(d, t, view) {
@@ -156,7 +160,8 @@
   function loadGl(done) {
     if (window.echarts && window.echarts.graphicGL) { done(); return; }
     var s = document.createElement('script');
-    s.src = '/static/vendor/echarts-gl/echarts-gl.min.js';
+    if (options.glUrl === null) { done(new Error('ECharts GL not offered here')); return; }
+    s.src = options.glUrl || '/static/vendor/echarts-gl/echarts-gl.min.js';
     s.onload = function () { done(); };
     s.onerror = function () { done(new Error('ECharts GL not available')); };
     document.head.appendChild(s);
@@ -186,11 +191,12 @@
     };
     if (view === '3d') { loadGl(render); } else { render(); }
   }
-  document.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); });
-  document.addEventListener('drishti:theme', function () {
-    document.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); });
+  function surfacesIn(r) { r.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); }); }
+  widths(root); tabsIn(root); drawCharts(); surfacesIn(root);
+  on(root, 'drishti:theme', function () {
+    root.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); });
   });
-  document.addEventListener('click', function (e) {
+  on(root, 'click', function (e) {
     var b = e.target.closest('[data-surface-view]');
     if (!b) { return; }
     var panel = b.closest('.pnl-b'), el = panel && panel.querySelector('.surface[data-surface]');
@@ -199,19 +205,24 @@
     el.setAttribute('data-view', b.getAttribute('data-surface-view'));
     drawSurface(el, b.getAttribute('data-surface-view'));
   });
-  window.addEventListener('resize', function () { charts.forEach(function (c) { c.resize(); }); });
-  document.addEventListener('drishti:theme', drawCharts);
+  // sizing: the window for the console; a ResizeObserver on the host for a shadow root (its box changes without the window)
+  if (root === document) { on(window, 'resize', function () { charts.forEach(function (c) { c.resize(); }); }); }
+  else if (window.ResizeObserver) {
+    var ro = new ResizeObserver(function () { requestAnimationFrame(function () { charts.forEach(function (c) { if (!c.isDisposed()) { c.resize(); } }); }); });
+    ro.observe(root.host); undo.push(function () { ro.disconnect(); });
+  }
+  on(root, 'drishti:theme', drawCharts);
 
   /** Hooks for live.js: re-enhance a replaced panel, and move a chart to new data without re-creating it. */
-  window.drishti = {
-    enhance: function (root) {
-      widths(root); tabsIn(root);
-      root.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); });
-      if (window.drishtiCharts) { window.drishtiCharts.draw(root); }
+  var api = {
+    dispose: function () { undo.splice(0).forEach(function (f) { f(); }); charts.forEach(function (c) { if (!c.isDisposed()) { c.dispose(); } }); charts = []; },
+    enhance: function (r) {
+      widths(r); tabsIn(r); surfacesIn(r);
+      if (window.drishtiCharts) { window.drishtiCharts.draw(r); }
     },
     redraw: drawCharts,
     updateChart: function (id, data) {
-      var el = document.querySelector('#p-' + CSS.escape(id) + ' .chart[data-chart]');
+      var el = (root.querySelector ? root : document).querySelector('#p-' + CSS.escape(id) + ' .chart[data-chart]');
       if (!el || !window.echarts) { return; }
       el.setAttribute('data-chart', JSON.stringify(data));
       var c = window.echarts.getInstanceByDom(el);
@@ -220,6 +231,13 @@
       if (foot && data.markText) { foot.textContent = data.markText; }
     }
   };
+  return api;
+  }
+
+  var reg = (window.drishtiModules = window.drishtiModules || {});
+  reg.view = { init: init };
+  if (!auto) { return; }
+  window.drishti = init(document);
 
   // ---- raw JSON drawer (F9) -------------------------------------------------------------------
   var raw = document.getElementById('rawDrawer');
