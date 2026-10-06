@@ -27,9 +27,12 @@ import time
 from pathlib import Path
 
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 from core.backend import BackendError
+from core import element_sheet as es
+from core.channel import ChannelSession
+from core.element_sheet import shadow_css  # noqa: F401 - kept importable from here
 from core.csrf import BodyError, json_body
 from core.embed_poc import EmbedError
 from routes import api_routes
@@ -37,8 +40,6 @@ from routes import api_routes
 router = APIRouter(prefix="/embed/v1", include_in_schema=False)
 WEB = Path(__file__).resolve().parent.parent / "web"
 API = "1.0"
-# the console's own sheets, in the order base.html loads them, rewritten for a shadow root (see shadow_css)
-SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css", "css/gradients.css", "vendor/bootstrap-icons/bootstrap-icons.css")
 _cache: dict = {}
 
 
@@ -95,23 +96,9 @@ async def dev_token(request: Request):
 
 
 # -- the element and what it needs ----------------------------------------------------------------------------------
-def shadow_css(text: str) -> str:
-    """A console sheet for a shadow root: the page-level selectors (:root, html, body) become the host element, and the
-    icon font's @font-face goes (a face declared inside a shadow root is not reliably used; the element adds it with FontFace)."""
-    text = re.sub(r"@font-face\s*\{[^}]*\}", "", text)
-    text = re.sub(r":root\[data-theme=\"([^\"]+)\"\]", r':host([data-theme="\1"])', text)
-    text = re.sub(r":root:not\(\[data-theme\]\)", ":host(:not([data-theme]))", text)
-    text = re.sub(r"html\[data-theme\]", ":host([data-theme])", text)
-    text = re.sub(r"(?<![\w-]):root\b", ":host", text)
-    text = re.sub(r"(?m)^(\s*)html,\s*body\b", r"\1:host", text)
-    text = re.sub(r"(?m)^(\s*)body\.(terminal|embed)\b", r"\1:host", text)
-    text = re.sub(r"(?m)^(\s*)body\b", r"\1:host", text)
-    return text
-
-
 def asset(name: str, build) -> tuple[bytes, str]:
     """A built asset, cached until a source file changes (its mtimes name the version)."""
-    key = (name, tuple((WEB / "static" / s).stat().st_mtime_ns for s in SHEETS), (WEB / "embed" / "drishti-elements.js").stat().st_mtime_ns)
+    key = (name, (es.OUT_DIR / es.SHEET_FILE).stat().st_mtime_ns, (WEB / "embed" / "drishti-elements.js").stat().st_mtime_ns)
     if _cache.get(name, (None,))[0] != key:
         _cache[name] = (key, build())
     body = _cache[name][1]
@@ -136,8 +123,21 @@ async def element_js(request: Request):
 
 @router.get("/poc/drishti-view.css")
 async def element_css(request: Request):
-    body, etag = asset("css", lambda: "\n".join(shadow_css((WEB / "static" / s).read_text(encoding="utf-8")) for s in SHEETS).encode())
+    """The generated sheet (tools/elements_sheet.py, committed under web/elements/): never built per request."""
+    body, etag = asset("css", lambda: (es.OUT_DIR / es.SHEET_FILE).read_bytes())
     return send(request, body, "text/css", etag)
+
+
+@router.get("/elements/{version}/drishti-view.css")
+async def versioned_css(request: Request, version: str):
+    """The same sheet under its content hash: the URL names the bytes, so it is cacheable for ever (build step 8)."""
+    manifest = json.loads((es.OUT_DIR / es.MANIFEST_FILE).read_text(encoding="utf-8"))
+    if version != manifest["version"]:
+        return refuse(request, 404, "DRS-5001", f"no such element sheet: {version} (the current one is {manifest['version']})")
+    response = await element_css(request)
+    if response.status_code == 200:
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return response
 
 
 @router.get("/poc/icons.woff2")
@@ -158,13 +158,15 @@ async def echarts_js(request: Request):
 
 
 # -- the view ---------------------------------------------------------------------------------------------------------
-def _render(request: Request, vm: dict) -> tuple[str, list]:
+def _render(request: Request, vm: dict, asof: str = "live") -> tuple[str, list, list]:
+    """The head, the panels and the provenance banners, each from the macros terminal/view.html uses (_macros/view.html)."""
     env = request.app.state.templates.env
-    module = env.get_template("_macros/panels.html").module
-    head = env.get_template("embed/vhead.html").render(vm=vm).strip()
+    parts = env.get_template("_macros/view.html").module
+    head = str(parts.vhead(vm)).strip()
+    banners = str(parts.provenance_banners(vm, asof, {"selected": asof}, True)).strip()
     panels = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "area": p.get("area") or "main", "span": p.get("span"),
-               "height": p.get("height"), "html": str(module.panel(p))} for p in vm.get("panels", [])]
-    return head, panels
+               "height": p.get("height"), "html": str(parts.panels([p], True)).strip()} for p in vm.get("panels", [])]
+    return head, panels, [banners] if banners else []
 
 
 @router.get("/views/{kind}/{id_:path}")
@@ -179,15 +181,15 @@ async def view(request: Request, kind: str, id_: str):
         vm = await request.app.state.backend.view(kind, id_, me)
     except BackendError as e:
         return refuse(request, e.page_status, e.code, e.detail)
-    head, panels = _render(request, vm)
-    prov = vm.get("provenance") or {}
     asof = getattr(request.state, "asof", "live")
+    head, panels, banners = _render(request, vm, asof)
+    prov = vm.get("provenance") or {}
     live = bool(prov.get("live")) and asof == "live"
     # POC: masked values counted by the mask in what is shown; build step 3 puts the count in the server's provenance
     shown = head + "".join(p["html"] for p in panels)
     masked = shown.count("•••")
     body = {"api": API, "ref": vm["ref"], "mnemonic": vm.get("mnemonic"), "title": vm["title"], "head": head, "strip": vm.get("strip", []),
-            "banners": [], "panels": panels, "provenance": {**prov, "masked": masked},
+            "banners": banners, "panels": panels, "provenance": {**prov, "masked": masked},
             "masked": {"count": masked, "panels": [p["id"] for p in panels if "•••" in p["html"]]},
             "subscribe": f"view:{vm['ref']['kind']}/{vm['ref']['id']}" if live else None,
             "asOf": asof, "timings": {"console": round((time.perf_counter() - started) * 1000, 1)}}
@@ -209,24 +211,28 @@ async def resolve(request: Request, text: str = ""):
 # -- the channel ------------------------------------------------------------------------------------------------------
 @router.get("/channel")
 async def channel(request: Request, s: list[str] = Query(default=[])):
-    """The console's channel, unchanged, for the embed caller; only view subscriptions are accepted."""
+    """The console's live channel (``core.channel.ChannelSession``, shared with ``/api/channel``) for the embed caller; only
+    view subscriptions are accepted, and the channel is owned by the user and the host application."""
     try:
-        identity(request)
+        me, claims = identity(request)
     except EmbedError as e:
         return refuse(request, e.status, e.code, e.detail)
-    response = await api_routes.channel(request, [k for k in s if k.startswith("view:")])
-    response.headers["Cache-Control"] = "no-store"
-    return cors(request, response)
+    limit = api_routes.max_subscriptions(request)
+    asked = list(dict.fromkeys(x for x in s if x.startswith("view:")))[:limit * 2]
+    session = ChannelSession(request.app.state.backend, me, lambda event, data: api_routes._view_event(request, event, data, embed=True),
+                             limit=limit, app=claims.app.id, registry=api_routes.CHANNELS)
+    return cors(request, StreamingResponse(session.events(asked, request.is_disconnected), media_type="text/event-stream",
+                                           headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"}))
 
 
 @router.post("/channel/{cid}")
 async def channel_change(request: Request, cid: str):
     try:
-        me, _claims = identity(request)
+        me, claims = identity(request)
     except EmbedError as e:
         return refuse(request, e.status, e.code, e.detail)
     ch = api_routes.CHANNELS.get(cid)
-    if ch is None or ch["user"] != me.user:      # build step 7 also checks the host application (ChannelSession)
+    if ch is None or ch["user"] != me.user or ch.get("app", "") != claims.app.id:
         return refuse(request, 404, "DRS-5001", "no such channel: open a new one")
     try:
         body = await json_body(request, limit=16_384)

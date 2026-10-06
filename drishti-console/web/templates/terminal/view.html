@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
-{% from "_macros/panels.html" import panel, cell_text, tone %}
+{% from "_macros/view.html" import vtitle, strip, panels, provenance_banners %}
 {% block title %}{{ vm.title.id }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}view{% endblock %}
 {% block body_class %}terminal{% if embed %} embed{% endif %}{% endblock %}
@@ -59,28 +59,11 @@
     <a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}">Go live</a>
     {% if pin == 'changed' and known_text %}<a href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id }}?fromKnownAt={{ known_text | replace(' ', 'T') | urlencode }}">What changed</a>{% endif %}</p>
   {% endif %}
-  {% if asof != 'live' and not vm.provenance.businessDate %}
-  {# The router asks dated stores first and an undated source only when none holds the entity for the date (UX-08) #}
-  {% set picked = (business_date or {}).selected or asof %}
-  <p class="asof-banner asof-unheld" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
-    <b>No data held for {{ picked }}</b>: no dated store has {{ vm.ref.id }} for that date. Shown instead:
-    the current data of <b>{{ vm.provenance.source }}</b>, a source that keeps no dates, as a still snapshot that does not update.
-    {% if not embed %}<a href="/asof?d=live&amp;next={{ request.url.path | urlencode }}">Back to live</a>{% endif %}</p>
-  {% elif asof != 'live' and vm.provenance.businessDate and vm.provenance.businessDate != (business_date or {}).selected %}
-  <p class="asof-banner" role="status"><i class="bi bi-calendar2-week" aria-hidden="true"></i>
-    Latest data on or before {{ (business_date or {}).selected }} is from <b class="mono">{{ vm.provenance.businessDate }}</b>.</p>
-  {% endif %}
-  {% if vm.provenance.stale %}
-  <p class="asof-banner stale-banner" role="alert"><i class="bi bi-hourglass-split" aria-hidden="true"></i>
-    <b>{{ vm.provenance.source }}</b> is behind: its last new data was <span class="mono" data-age="{{ vm.provenance.updatedAt }}">{{ vm.provenance.updatedAt }}</span>,
-    and it expects some within {{ vm.provenance.staleAfter | replace('PT', '') | lower }}. What you see may be out of date.</p>
-  {% endif %}
+  {{ provenance_banners(vm, asof, business_date, embed, request.url.path | urlencode) }}
   <section class="vhead">
     <nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav>
     <div class="vtitle">
-      {% if vm.title.pill %}<span class="pill">{{ vm.title.pill }}</span>{% endif %}
-      <h1 class="vid mono">{{ vm.title.id }}</h1>
-      {% if vm.title.with %}<span class="with">with</span> <span class="with-cp">{{ cell_text(vm.title.with) }}</span>{% endif %}
+      {{ vtitle(vm) }}
       {% if not embed %}<a class="tbar-link vhead-alert" href="/alerts?kind={{ vm.ref.kind }}&id={{ vm.ref.id | urlencode }}" title="Set an alert on {{ vm.title.id }}"><i class="bi bi-bell" aria-hidden="true"></i> Alert</a>
       <span class="vhead-tools">
         {% set pinned_here = (settings.pinned or []) | selectattr('kind', 'equalto', vm.ref.kind) | selectattr('id', 'equalto', vm.ref.id) | list %}
@@ -94,14 +77,11 @@
       </span>
       {% if vm.provenance.businessDate %}<a class="tbar-link vhead-alert" href="/compare/{{ vm.ref.kind }}/{{ vm.ref.id | urlencode }}" title="What changed since the previous business day, or between any two dates"><i class="bi bi-arrow-left-right" aria-hidden="true"></i> Compare</a>{% endif %}{% endif %}
     </div>
-    <dl class="strip">
-      {% for c in vm.strip %}<div class="strip-i"><dt>{{ c.label }}</dt>
-        <dd class="mono{{ tone(c) }}{% if c.emphasis %} emph{% endif %}"{% if c.path %} data-path="{{ c.path }}"{% endif %}>{{ cell_text(c) }}</dd></div>{% endfor %}
-    </dl>
+    {{ strip(vm) }}
   </section>
   <div class="vgrid">
-    <div class="vmain">{% for p in main %}{{ panel(p) }}{% endfor %}</div>
-    <aside class="vright" aria-label="Context">{% for p in right %}{{ panel(p) }}{% endfor %}</aside>
+    <div class="vmain">{{ panels(main) }}</div>
+    <aside class="vright" aria-label="Context">{{ panels(right) }}</aside>
   </div>
 </div>
 {% if not embed %}{% include "terminal/_share.html" %}{% endif %}
