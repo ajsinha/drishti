@@ -25,7 +25,7 @@ from core.config import load_settings
 from test_embed import HOST, make_client, token
 
 KIND, ID = "trade", "IRS-47102"
-AFFORDANCES = re.compile(r'<a class="pnl-help"[^>]*>.*?</a>', re.S)
+AFFORDANCES = re.compile(r'<a class="pnl-help" data-export-panel[^>]*>.*?</a>', re.S)   # the CSV download: console-only
 
 
 @pytest.fixture
