@@ -133,7 +133,7 @@ class SutraRegistryTest {
             Files.writeString(dir.resolve("probe.v1.sutra.yaml"), sutra("qa-probe", 1, "trade"));
             await(() -> r.latest("qa-probe").isPresent());
             assertThat(r.latest("qa-probe")).isPresent();
-            assertThat(r.hotReload()).isEqualTo("WATCHING");
+            assertThat(r.hotReload()).isIn("WATCHING", "POLLING");   // POLLING where the inotify watch limit is reached
         }
     }
 
@@ -155,7 +155,22 @@ class SutraRegistryTest {
             await(() -> r.latest("qa-probe").isPresent());
             assertThat(r.problems()).hasSize(2);
             assertThat(r.latest("qa-probe")).isPresent();
-            assertThat(r.hotReload()).isEqualTo("WATCHING");
+            assertThat(r.hotReload()).isIn("WATCHING", "POLLING");   // POLLING where the inotify watch limit is reached
         }
+    }
+
+    /** Hot reload by polling (drishti.rachana.watch: poll, and the fallback when file events are unavailable): a new file is loaded. */
+    @Test
+    void pollingPicksUpANewSutraWithoutFileEvents() throws Exception {
+        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(dir.toString()), true, Duration.ofMillis(50), null, null, null,
+                null, null, null, null, "poll", Duration.ofMillis(100)), new com.ash.drishti.rachana.el.ElCompiler())) {
+            assertThat(r.hotReload()).isEqualTo("POLLING");
+            Files.writeString(dir.resolve("polled.v1.sutra.yaml"), sutra("qa-polled", 1, "trade"));
+            await(() -> r.latest("qa-polled").isPresent());
+            assertThat(r.latest("qa-polled")).isPresent();
+        }
+        assertThat(new RachanaProperties(null, null, null, null, null, null, null, null, null, null).watch()).isEqualTo("auto");
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> new RachanaProperties(null, null, null, null, null, null, null, null, null, null,
+                "inotify", null)).isInstanceOf(IllegalArgumentException.class);
     }
 }

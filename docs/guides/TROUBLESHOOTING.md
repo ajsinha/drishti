@@ -111,6 +111,13 @@ points at an older JDK, or an IDE uses its own JDK setting.
 - **IntelliJ IDEA:** File → Project Structure → SDK = a JDK 21 or newer, and Settings → Build Tools → Maven → Runner → JRE =
   "Use Project JDK" (Maven run from the IDE uses that setting, not your shell's `JAVA_HOME`).
 
+### The log says "sutra hot reload polls the Sutra files" (Health: `hotReload: POLLING`)
+
+The operating system had no file watches left for the Sutra folders (Linux: *User limit of inotify watches reached*;
+IDEs and other tools use many), so the server watches by polling every `drishti.rachana.watch` `poll-interval` (2 s)
+instead. Edits are still picked up. To use file events again, raise the limit and restart:
+`echo 'fs.inotify.max_user_watches=524288' | sudo tee /etc/sysctl.d/60-inotify.conf && sudo sysctl --system`.
+
 ### The server stops at once with `UnsupportedClassVersionError … class file version 65.0` (or higher)
 
 - **Cause:** `java` on your `PATH` is older than 21.

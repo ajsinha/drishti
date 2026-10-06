@@ -51,7 +51,7 @@ class HealthApiTest {
         mvc.perform(get("/api/v1/admin/health").header("Authorization", as("admin")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").exists())
-                .andExpect(jsonPath("$.sutras.hotReload").value("WATCHING"))         // GRAM-02: a stopped watcher shows here
+                .andExpect(jsonPath("$.sutras.hotReload").value(org.hamcrest.Matchers.oneOf("WATCHING", "POLLING")))         // GRAM-02: a stopped watcher shows here
                 .andExpect(jsonPath("$.sources[?(@.name=='demo')].status").value(hasItem("UP")))
                 .andExpect(jsonPath("$.sources[?(@.name=='demo')].lastUpdate").value(hasItem(org.hamcrest.Matchers.notNullValue())))
                 .andExpect(jsonPath("$.sources[?(@.name=='demo')].stale").value(hasItem(false)))

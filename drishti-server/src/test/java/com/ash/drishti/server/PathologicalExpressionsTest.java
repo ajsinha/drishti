@@ -101,7 +101,7 @@ class PathologicalExpressionsTest {
                     .andExpect(jsonPath("$['" + "qa-deep.v1.sutra.yaml" + "'][0].message").value(containsString("nested deeper than 200")))
                     .andExpect(jsonPath("$['" + "qa-chain.v1.sutra.yaml" + "'][0].code").value("DRS-2101"));
             assertThat(sutras.latest("qa-deep")).isEmpty();
-            assertThat(sutras.hotReload()).isEqualTo("WATCHING");
+            assertThat(sutras.hotReload()).isIn("WATCHING", "POLLING");
         }
 
         @Test
@@ -119,7 +119,7 @@ class PathologicalExpressionsTest {
             }
             assertThat(sutras.latest("qa-probe")).isPresent();
             assertThat(sutras.problems()).containsKey(DIR.resolve("qa-deep2.v1.sutra.yaml").toString());
-            assertThat(sutras.hotReload()).isEqualTo("WATCHING");
+            assertThat(sutras.hotReload()).isIn("WATCHING", "POLLING");
         }
 
         @Test

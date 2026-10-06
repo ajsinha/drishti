@@ -363,6 +363,10 @@ public final class SutraRegistry implements AutoCloseable {
     }
 
     private void startWatching() {
+        if ("poll".equals(props.watch())) {
+            startPolling("drishti.rachana.watch is poll");
+            return;
+        }
         try {
             watcher = FileSystems.getDefault().newWatchService();
             for (String d : props.allDirs()) {
@@ -377,11 +381,82 @@ public final class SutraRegistry implements AutoCloseable {
                 }
             }
         } catch (IOException e) {
-            LOG.warn("sutra hot reload disabled", e);
+            // e.g. "User limit of inotify watches reached": edits must still be picked up, so look at the files instead
+            try {
+                if (watcher != null) {
+                    watcher.close();
+                }
+            } catch (IOException ignored) {
+                // the watcher was never usable
+            }
+            watcher = null;
+            startPolling("file events unavailable: " + e.getMessage());
             return;
         }
         hotReload = "WATCHING";
         watchThread = Thread.ofVirtual().name("drishti-rachana-watch").start(this::watchLoop);
+    }
+
+    /** Hot reload by looking at the files every {@code pollInterval}: their paths, sizes and modification times. */
+    private void startPolling(String why) {
+        LOG.warn("sutra hot reload polls the Sutra files every {} ({})", props.pollInterval(), why);
+        hotReload = "POLLING";
+        long every = props.pollInterval().toMillis();
+        String first = fingerprint();                  // taken now, as the files were loaded: an edit made before the loop runs still counts
+        watchThread = Thread.ofVirtual().name("drishti-rachana-poll").start(() -> {
+            String last = first;
+            boolean closing = false;
+            Throwable cause = null;
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    Thread.sleep(every);
+                    String now = fingerprint();
+                    if (!now.equals(last)) {
+                        last = now;
+                        try {
+                            reload();
+                        } catch (RuntimeException | StackOverflowError e) {
+                            LOG.error("sutra reload failed; the last good Sutras stay live", e);
+                        }
+                    }
+                }
+                closing = true;
+            } catch (InterruptedException e) {
+                closing = true;
+                Thread.currentThread().interrupt();
+            } catch (RuntimeException | Error e) {
+                cause = e;
+                throw e;
+            } finally {
+                hotReload = closing ? "OFF" : "STOPPED: " + (cause == null ? "unknown" : describe(cause));
+                if (!closing) {
+                    LOG.error("sutra hot reload stopped: edits to Sutra files are not picked up until a restart", cause);
+                }
+            }
+        });
+    }
+
+    /** Every file under the Sutra directories with its size and modification time: equal fingerprints, nothing changed. */
+    private String fingerprint() {
+        StringBuilder out = new StringBuilder();
+        for (String d : props.allDirs()) {
+            Path dir = Path.of(d).toAbsolutePath().normalize();
+            if (!Files.isDirectory(dir)) {
+                continue;
+            }
+            try (Stream<Path> s = Files.walk(dir)) {
+                s.filter(Files::isRegularFile).sorted().forEach(p -> {
+                    try {
+                        out.append(p).append('|').append(Files.size(p)).append('|').append(Files.getLastModifiedTime(p).toMillis()).append('\n');
+                    } catch (IOException e) {
+                        out.append(p).append("|gone\n");                         // deleted while walking: counts as a change
+                    }
+                });
+            } catch (IOException | java.io.UncheckedIOException e) {
+                out.append(dir).append("|unreadable\n");
+            }
+        }
+        return out.toString();
     }
 
     private void watchLoop() {

@@ -19,6 +19,7 @@ import com.ash.drishti.rachana.el.ElLimits;
 import java.time.Duration;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.bind.ConstructorBinding;
 
 /**
  * {@code drishti.rachana.*}.
@@ -26,6 +27,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param dirs directories scanned recursively for {@code *.yaml} Sutra files
  * @param hotReload watch the directories and reload changed files
  * @param reloadDebounce quiet period before a burst of file events triggers one reload
+ * @param watch how hot reload notices edits: {@code auto} (the operating system's file events, falling back to polling when
+ *     they are not available, e.g. the inotify watch limit is reached) or {@code poll} (always poll; network file systems)
+ * @param pollInterval how often polling looks at the Sutra files
  * @param formatsFile optional site file overriding or adding named formats
  * @param expressionCacheSize compiled Rachana-EL expressions kept in memory
  * @param studioSave allow Sutra Studio to write Sutra files (off by default; turn on for authoring environments)
@@ -38,8 +42,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("drishti.rachana")
 public record RachanaProperties(
         List<String> dirs, Boolean hotReload, Duration reloadDebounce, String formatsFile, Long expressionCacheSize, Boolean studioSave,
-        List<String> packDirs, List<String> packFormatsFiles, Integer maxExpressionDepth, Integer maxExpressionLength) {
+        List<String> packDirs, List<String> packFormatsFiles, Integer maxExpressionDepth, Integer maxExpressionLength, String watch,
+        Duration pollInterval) {
 
+    /** Without the hot-reload mode and poll interval (both default). */
+    public RachanaProperties(List<String> dirs, Boolean hotReload, Duration reloadDebounce, String formatsFile, Long expressionCacheSize,
+            Boolean studioSave, List<String> packDirs, List<String> packFormatsFiles, Integer maxExpressionDepth, Integer maxExpressionLength) {
+        this(dirs, hotReload, reloadDebounce, formatsFile, expressionCacheSize, studioSave, packDirs, packFormatsFiles, maxExpressionDepth,
+                maxExpressionLength, null, null);
+    }
+
+    @ConstructorBinding                                  // the canonical constructor binds the settings (there is a shorter one too)
     public RachanaProperties {
         dirs = dirs == null ? List.of("./sutras") : List.copyOf(dirs);
         hotReload = hotReload == null ? Boolean.TRUE : hotReload;
@@ -50,6 +63,11 @@ public record RachanaProperties(
         packFormatsFiles = packFormatsFiles == null ? List.of() : List.copyOf(packFormatsFiles);
         maxExpressionDepth = maxExpressionDepth == null ? ElLimits.DEFAULTS.maxDepth() : maxExpressionDepth;
         maxExpressionLength = maxExpressionLength == null ? ElLimits.DEFAULTS.maxLength() : maxExpressionLength;
+        watch = watch == null || watch.isBlank() ? "auto" : watch.strip().toLowerCase(java.util.Locale.ROOT);
+        if (!watch.equals("auto") && !watch.equals("poll")) {
+            throw new IllegalArgumentException("drishti.rachana.watch must be auto or poll, not " + watch);
+        }
+        pollInterval = pollInterval == null || pollInterval.isNegative() || pollInterval.isZero() ? Duration.ofSeconds(2) : pollInterval;
     }
 
     /** The bounds on every Rachana-EL expression (Sutras, alert rules, search conditions). */

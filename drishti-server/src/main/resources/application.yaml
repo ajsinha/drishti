@@ -392,6 +392,8 @@ drishti:
     # Edit a Sutra and the next view uses it; an invalid edit keeps the last good version.
     hot-reload: true
     reload-debounce: 250ms
+    watch: ${DRISHTI_SUTRA_WATCH:auto}   # auto: file events, else polling (inotify limit reached); poll: always poll (network file systems)
+    poll-interval: 2s                  # how often polling looks at the Sutra files
     # Bounds on every Rachana-EL expression (Sutras, alert rules, search conditions): deeper or longer is DRS-2101.
     max-expression-depth: 200
     max-expression-length: 10000
