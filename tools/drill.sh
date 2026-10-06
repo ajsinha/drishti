@@ -21,6 +21,7 @@
 #                             Refused when the commits since origin/develop touch anything but docs/**, *.md, help.yaml, tools/docs/**
 #   tools/drill.sh --full     the full drill even when only docs changed
 #   tools/drill.sh --no-push  verify only: no push, no merge (the timing of each stage is printed either way)
+#   DRILL_MVN_ARGS="..."      extra Maven arguments for both Java runs (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
 #
 # Full drill: licence check; Java 21 full verify (it builds the jar the console tests start); then, at the same time and each
 # with its own log under target/drill/: the Java 25 forward-compatibility verify (in a copy of the committed tree, so it
@@ -121,7 +122,7 @@ java25_verify() {
   trap 'rm -rf "$copy"' EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
-  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify
+  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify ${DRILL_MVN_ARGS:-}
 }
 
 t=$SECONDS
@@ -140,7 +141,7 @@ else
   JAVA21_HOME="${JAVA21_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
   [[ -x "$JAVA21_HOME/bin/java" ]] || { echo "drill: no JDK 21 at $JAVA21_HOME (set JAVA21_HOME)" >&2; exit 1; }
   t=$SECONDS
-  JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o verify
+  JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o verify ${DRILL_MVN_ARGS:-}
   stage_done "Java 21 verify" $t
   # Java 21 and newer are supported: the same tests again on Java 25, so a library that breaks on a newer JVM (Hadoop and the
   # removed Security Manager, Unsafe memory access) fails the drill.
