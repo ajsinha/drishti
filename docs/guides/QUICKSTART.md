@@ -117,7 +117,7 @@ Terminal 2, from the repository root:
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
-You should see `Uvicorn running on http://127.0.0.1:17480`. The console finds the server at
+You should see `Uvicorn running on http://0.0.0.0:17480` (every interface: other machines and phones on your network can open it by this machine's IP; set `DRISHTI_CONSOLE_HOST=127.0.0.1` to keep it to this machine). The console finds the server at
 `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL` changes that; `DRISHTI_CONSOLE_PORT` changes its own port).
 
 Open **http://localhost:17480/t** in your browser. Sign-in is off out of the box, so you are the development

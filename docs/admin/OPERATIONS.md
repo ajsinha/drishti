@@ -501,7 +501,7 @@ Defined in `drishti-console/config/application.yaml`.
 
 | Variable | Default | Setting | What it does |
 |---|---|---|---|
-| `DRISHTI_CONSOLE_HOST` | `127.0.0.1` | `server.host` | interface the console listens on. Keep `127.0.0.1` behind a proxy on the same host; the container image sets `0.0.0.0` |
+| `DRISHTI_CONSOLE_HOST` | `0.0.0.0` | `server.host` | interface the console listens on: every interface by default, so other machines and phones can open it. Set `127.0.0.1` behind a proxy on the same host, or to keep it to this machine |
 | `DRISHTI_CONSOLE_PORT` | `17480` | `server.port` | port |
 | `DRISHTI_BACKEND_URL` | `http://127.0.0.1:18480` | `backend.url` | the server |
 | `DRISHTI_AUTH_ENABLED` | `false` | `auth.enabled` | require sign-in; **`true` in production** |

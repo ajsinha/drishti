@@ -198,9 +198,11 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
 ### The console starts but cannot be opened from another machine
 
-- **Cause:** it listens on `127.0.0.1` only, by default.
-- **Fix:** `DRISHTI_CONSOLE_HOST=0.0.0.0 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py`, and, for anything
-  beyond a trial, turn security on first (see [OPERATIONS.md](../admin/OPERATIONS.md)).
+- **Cause:** it listens on every interface (`0.0.0.0`) by default, so the usual cause is a firewall on the console's machine, or
+  `DRISHTI_CONSOLE_HOST=127.0.0.1` set somewhere (an environment file, `config/application.local.yaml`, a run configuration).
+- **Fix:** open port 17480 (`sudo ufw allow 17480/tcp` on Ubuntu), or unset `DRISHTI_CONSOLE_HOST`. Open it by the machine's
+  address (`http://<ip>:17480`; `hostname -I` lists them), and, for anything beyond a trial, turn security on first (see
+  [OPERATIONS.md](../admin/OPERATIONS.md)).
 
 ## Signing in
 

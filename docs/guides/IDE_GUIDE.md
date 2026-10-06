@@ -170,7 +170,7 @@ The console reads `drishti-console/config/application.yaml`, then `drishti-conso
 
 ### 4.4 Run it
 
-Click **Run**. The log shows `Uvicorn running on http://127.0.0.1:17480`. Open that address. If the console says `DRS-5003 backend unreachable`, the
+Click **Run**. The log shows `Uvicorn running on http://0.0.0.0:17480` (it listens on every interface). Open http://localhost:17480, or http://<this machine's IP>:17480 from another machine or a phone. If the console says `DRS-5003 backend unreachable`, the
 server is not running or `DRISHTI_BACKEND_URL` points at the wrong port.
 
 ### 4.5 Debug it and change code

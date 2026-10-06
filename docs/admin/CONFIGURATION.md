@@ -263,7 +263,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 
 | Variable | Sets | Default | What it does |
 |---|---|---|---|
-| `DRISHTI_CONSOLE_HOST` | `server.host` | `127.0.0.1` | The address the console listens on. |
+| `DRISHTI_CONSOLE_HOST` | `server.host` | `0.0.0.0` | The address the console listens on (every interface; `127.0.0.1` keeps it to this machine). |
 | `DRISHTI_CONSOLE_PORT` | `server.port` | `17480` | The console's port. |
 | `DRISHTI_BACKEND_URL` | `backend.url` | `http://127.0.0.1:18480` | Where the server is. |
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
@@ -1540,7 +1540,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `server.host` | `127.0.0.1` (`DRISHTI_CONSOLE_HOST`) | Listening address. Use `0.0.0.0` in a container or behind a proxy on another host. |
+| `server.host` | `0.0.0.0` (`DRISHTI_CONSOLE_HOST`) | Listening address: every interface, so the console opens from other machines and phones. Use `127.0.0.1` behind a proxy on the same host, or to keep it to this machine. |
 | `server.port` | `17480` (`DRISHTI_CONSOLE_PORT`) | Listening port. |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
 | `backend.timeout_seconds` | `5` | Per call to the server. |
