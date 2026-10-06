@@ -187,7 +187,7 @@ document.addEventListener('securitypolicyviolation', (e) => window.__viol.push([
 const f = window.fetch.bind(window);
 window.fetch = (u, o) => {
   u = String((u && u.url) || u);
-  const m = /\\/embed\\/v1\\/views\\/trade\\/([^?]+)/.exec(u);
+  const m = /\\/embed\\/v1\\/views\\/trade\\/([^?/]+)(?:\\?|$)/.exec(u);
   if (m && o && o.signal) { window.__views.push(m[1]); o.signal.addEventListener('abort', () => window.__aborts.push(m[1])); }
   const d = m && window.__delay[m[1]];
   if (!d) { return f(u, o); }
@@ -245,6 +245,9 @@ class Page:
 
     def channel_posts(self):
         return [json.loads(r[2]) for r in self.requests if r[0] == "POST" and "/embed/v1/channel/" in r[1] and r[2]]
+
+    def state_of(self, sel):
+        return self.js(f"document.querySelector('{sel}').getAttribute('data-state')")
 
     def title(self, sel="#main"):
         return self.js(f"(document.querySelector('{sel}').shadowRoot.querySelector('.vid')||{{}}).textContent")
@@ -414,6 +417,26 @@ def test_two_elements_share_one_channel(host):
     assert len(h.channel_gets()) == 1
 
 
+# ---- 7b. step 7: the versioned embed API, one channel, the other element undisturbed -----------------------------------------------
+def test_step7_two_elements_one_channel_on_the_versioned_api(host):
+    h = host()
+    h.open()
+    h.state("#side", "live")
+    h.until(lambda: h.events("tick", "main") and h.events("tick", "side"), 20, "both elements ticking")
+    assert len(h.channel_gets()) == 1, [r[1] for r in h.channel_gets()]
+    side_views = lambda: [r for r in h.requests if "/embed/v1/views/trade/END-1000002" in r[1] and r[0] == "GET"]     # noqa: E731
+    before_views, before_ticks = len(side_views()), len(h.events("tick", "side"))
+    h.js("window.hostApp.show('trade', 'END-1000005')")                                  # switch the main one only
+    h.until(lambda: h.title() == "END-1000005", 10, "the main switch")
+    h.until(lambda: len(h.events("tick", "side")) > before_ticks + 1, 20, "the side element still ticking")
+    assert len(side_views()) == before_views, "the other element was reloaded"
+    assert h.js("document.querySelector('#side').getAttribute('entity')") == "END-1000002" and h.state_of("#side") == "live"
+    assert len(h.channel_gets()) == 1
+    ours = [r[1] for r in h.requests if "/embed/v1/" in r[1]]
+    assert ours and not any("/poc" in u for u in ours), [u for u in ours if "/poc" in u]
+    assert all(r[3].get("authorization", "").startswith("Bearer ") for r in h.requests if "/embed/v1/views/" in r[1] and r[0] == "GET")
+
+
 # ---- 8. the console restarts ------------------------------------------------------------------------------------------------------
 def test_console_restart_reconnects_and_repaints(host, stack):
     h = host()
@@ -501,8 +524,8 @@ def test_measurements(stack, browser):
 
     sizes = {}
     for name, path in (("view_trade", f"/embed/v1/views/trade/{MAIN_ID}"), ("view_counterparty", "/embed/v1/views/counterparty/CP-HARBORPT"),
-                       ("element_js", "/embed/v1/poc/drishti-elements.js"), ("element_css", "/embed/v1/poc/drishti-view.css"),
-                       ("echarts_js", "/embed/v1/poc/echarts.js"), ("charts_js", "/embed/v1/poc/charts.js"), ("icons_woff2", "/embed/v1/poc/icons.woff2")):
+                       ("element_js", "/embed/v1/drishti-elements.js"), ("element_css", "/embed/v1/drishti-view.css"),
+                       ("echarts_js", "/embed/v1/echarts.js"), ("charts_js", "/embed/v1/charts.js"), ("icons_woff2", "/embed/v1/icons.woff2")):
         body = get(path)
         sizes[name] = {"bytes": len(body), "gzip": len(gzip.compress(body, 6))}
     stack.record("sizes", sizes)
@@ -587,7 +610,7 @@ def test_pivot_regroups_without_saving_inside_the_element(host):
     box.locator("[data-pv-tab=pivot]").click()
     expect(box.locator(".pv-host table").first).to_be_visible(timeout=20000)
     before = box.locator(".pv-host").inner_text()
-    assert any("/embed/v1/poc/records/" in r[1] for r in h.requests), "the rows were not fetched through the embed API"
+    assert any("/panels/" in r[1] and r[1].endswith("/records") for r in h.requests), "the rows were not fetched through the embed API"
     chip = box.locator(".pv-fields .pv-chip").first          # regroup with the console's own key: C puts the field in Columns
     chip.focus()
     h.page.keyboard.press("c")
@@ -611,7 +634,7 @@ def test_panel_help_popover_and_the_about_drawer_inside_the_element(host):
     drawer = view.locator("#aboutDrawer")
     expect(drawer).to_be_visible()
     expect(drawer.locator("[data-about-body]")).not_to_contain_text("Loading", timeout=20000)
-    assert any("/embed/v1/poc/about/" in r[1] for r in h.requests)
+    assert any("/embed/v1/views/" in r[1] and "/about" in r[1] for r in h.requests)
     h.page.keyboard.press("Escape")
     expect(drawer).to_be_hidden()
 

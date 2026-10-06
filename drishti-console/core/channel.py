@@ -160,6 +160,9 @@ class ChannelSession:
                     if await is_disconnected():
                         break
                 current = list(self.tasks.values())
+                if self.ended and self.queue.empty():
+                    yield "event: end\ndata: {}\n\n"                # ended from outside (an embed token that ran out)
+                    break
                 if current and self.queue.empty() and all(t.done() for t in current):
                     yield "event: end\ndata: {}\n\n"                # every subscription has ended: say so, and close
                     break
