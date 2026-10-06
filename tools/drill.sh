@@ -40,7 +40,7 @@ for a in "$@"; do
   esac
 done
 
-[[ "$(git rev-parse --abbrev-ref HEAD)" == "develop" ]] || { echo "drill: must be on develop" >&2; exit 1; }
+[[ $PUSH == 0 || "$(git rev-parse --abbrev-ref HEAD)" == "develop" ]] || { echo "drill: must be on develop" >&2; exit 1; }
 [[ -z "$(git status --porcelain)" ]] || { echo "drill: commit your changes first" >&2; exit 1; }
 
 # the light drill is for commits that touch only documentation
