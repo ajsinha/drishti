@@ -16,20 +16,15 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
-import contextvars
 import json
-import secrets
-import time
-from urllib.parse import quote
 
 from fastapi import APIRouter, Query, Request
 
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from core.csrf import json_body
-from core import asof
 from core.backend import BackendError
+from core.channel import ChannelSession
 from routes.common import ident, live_who
 
 router = APIRouter(prefix="/api", include_in_schema=False)
@@ -193,20 +188,20 @@ async def view(request: Request, kind: str, id_: str):
 CHART_KINDS = {"line", "area"}
 
 
-def _panel_html(request: Request, panel: dict) -> str:
+def _panel_html(request: Request, panel: dict, embed: bool = False) -> str:
     """Renders one panel with the same macro as first paint, so live and static views look identical."""
     module = request.app.state.templates.env.get_template("_macros/panels.html").module
-    return str(module.panel(panel))
+    return str(module.panel(panel, embed))
 
 
-def _view_event(request: Request, event: str, data: str) -> str:
+def _view_event(request: Request, event: str, data: str, embed: bool = False) -> str:
     """A view stream event as the browser wants it: panel patches as ready HTML (charts as data), the view as its generation."""
     if event == "frame":
         frame = json.loads(data)
         for patch in frame.get("patches", []):
             panel = patch.get("panel")
             if panel and panel.get("kind") not in CHART_KINDS:
-                patch["html"] = _panel_html(request, panel)
+                patch["html"] = _panel_html(request, panel, embed)
                 patch["panel"] = {"id": panel["id"], "kind": panel["kind"]}
         return json.dumps(frame, ensure_ascii=False)
     if event == "view":
@@ -268,134 +263,11 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
     subscription: {"ch": "view:trade/T-1", "d": …}; the first, ``channel``, says whose session it runs as (``who``).
     Every frame is built for the signed-in user of the request that opened it. Upstream streams are closed within
     seconds of the browser going away, even when they are quiet."""
-    backend, me = request.app.state.backend, ident(request)
     limit = max_subscriptions(request)
     asked = list(dict.fromkeys(x for x in s if x))[:limit * 2]
-    queue: asyncio.Queue = asyncio.Queue(maxsize=2000)
-
-    opened: dict[str, list] = {}                      # subscription -> its upstream HTTP responses, closed to end it
-    stopping = asyncio.Event()
-
-    async def pump(sub: str):
-        responses = opened.setdefault(sub, [])
-        if sub.startswith("view:") and "/" in sub:
-            kind, _, id_ = sub[5:].partition("/")
-            upstream, is_view = backend.stream(kind, id_, me, opened=responses), True
-        elif sub == "alerts":
-            upstream, is_view = backend.sse("/me/alerts/stream", me, opened=responses), False
-        elif sub.startswith("monitor:"):
-            upstream, is_view = backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", me, opened=responses), False
-        else:
-            return
-        try:
-            async for event, data in upstream:
-                await queue.put((sub, event, _view_event(request, event, data) if is_view else data))
-        except BackendError as e:
-            await queue.put((sub, "gone", json.dumps({"code": e.code, "detail": e.detail})))
-        except Exception as e:  # noqa: BLE001 - one broken subscription must not end the others (nor a closed channel)
-            if not stopping.is_set() and sub in tasks:
-                await queue.put((sub, "gone", json.dumps({"code": "DRS-5003", "detail": str(e)})))
-
-    async def close_sub(sub: str, task):
-        for r in list(opened.pop(sub, [])):
-            try:
-                await r.aclose()                        # the pump's pending read fails and it returns
-            except Exception:  # noqa: BLE001 - already closed
-                pass
-        await asyncio.sleep(0.5)
-        if task is not None:
-            task.cancel()                               # still opening its request
-
-    async def stop():
-        """Ends every upstream stream by closing its response (never by cancelling a reading task: see detached)."""
-        stopping.set()
-        CHANNELS.pop(cid, None)
-        await asyncio.gather(*(close_sub(s_, t) for s_, t in list(tasks.items())), return_exceptions=True)
-
-    def add(sub: str):
-        if not sub or sub in tasks or ended[0]:
-            return
-        if len(tasks) >= limit:                       # say so: a view that silently never ticks looks broken
-            with contextlib.suppress(asyncio.QueueFull):
-                queue.put_nowait((sub, "gone", json.dumps({"code": "DRS-5003", "detail": f"this browser already follows {limit} "
-                                                           "live subscriptions (live.max_subscriptions): close some tabs or panes"})))
-            return
-        tasks[sub] = detached(pump(sub))
-
-    def remove(sub: str):
-        task = tasks.pop(sub, None)
-        if task is not None:
-            detached(close_sub(sub, task))
-
-    def detached(coro):
-        # Upstream work runs in tasks with a fresh context holding only the business date and "known at". Anything
-        # started from the request's context inherits Starlette's (anyio's) cancel scope, which, once the request has
-        # ended, cancels every await in it for good: the streams' clean-up never completed and their connections to the
-        # server stayed open (the console ran out of connections, and the UI froze). Ending a channel therefore closes
-        # the responses from a detached task too.
-        ctx = contextvars.Context()
-        ctx.run(asof.set_current, asof.current())
-        ctx.run(asof.set_known, asof.known_at())
-        return asyncio.get_running_loop().create_task(coro, context=ctx)
-
-    tasks: dict[str, asyncio.Task] = {}
-    last_pull = [time.monotonic()]
-    ended = [False]
-
-    def end():
-        if not ended[0]:
-            ended[0] = True
-            detached(stop())
-
-    async def watchdog():
-        # Starlette may stop reading this stream when the browser goes away without closing it. A live channel is read
-        # at least every two seconds; one nobody has read for five has lost its reader.
-        while not ended[0]:
-            await asyncio.sleep(1.0)
-            if time.monotonic() - last_pull[0] > 5.0:
-                end()
-
-    cid = secrets.token_urlsafe(12)
-    who = live_who(request)
-
-    async def events():
-        for x in asked:
-            add(x)
-        CHANNELS[cid] = {"user": me.user if me is not None else "", "add": add, "remove": remove}
-        detached(watchdog())
-        try:
-            yield f"event: channel\ndata: {json.dumps({'ch': '', 'd': {'id': cid, 'subs': asked, 'who': who}})}\n\n"
-            idle = 0
-            checked = time.monotonic()
-            while True:
-                last_pull[0] = time.monotonic()
-                if time.monotonic() - checked > 1.0:                # busy or quiet: notice a closed tab within a second
-                    checked = time.monotonic()
-                    if await request.is_disconnected():
-                        break
-                current = list(tasks.values())
-                if current and queue.empty() and all(t.done() for t in current):
-                    yield "event: end\ndata: {}\n\n"                # every subscription has ended: say so, and close
-                    break
-                try:
-                    sub, event, data = await asyncio.wait_for(queue.get(), timeout=2.0)
-                    idle = 0
-                except asyncio.TimeoutError:
-                    if await request.is_disconnected():
-                        break
-                    idle += 1
-                    if idle % 7 == 0:                               # a comment every ~15 s keeps proxies from closing it
-                        yield ": hb\n\n"
-                    continue
-                try:
-                    body = json.loads(data)
-                except (TypeError, ValueError):
-                    body = data
-                yield f"event: {event}\ndata: {json.dumps({'ch': sub, 'd': body}, ensure_ascii=False)}\n\n"
-        finally:
-            end()
-
-    return StreamingResponse(events(), media_type="text/event-stream",
+    session = ChannelSession(request.app.state.backend, ident(request), lambda event, data: _view_event(request, event, data),
+                             limit=limit, who=live_who(request), registry=CHANNELS)
+    return StreamingResponse(session.events(asked, request.is_disconnected), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
@@ -405,7 +277,7 @@ async def channel_change(request: Request, cid: str):
     by one, and reconnecting for each would make every view on the page think it had lost its connection."""
     ch = CHANNELS.get(cid)
     me = ident(request)
-    if ch is None or ch["user"] != (me.user if me is not None else ""):
+    if ch is None or ch["user"] != (me.user if me is not None else "") or ch.get("app", ""):
         return JSONResponse({"code": "DRS-5001", "detail": "no such channel: open a new one"}, status_code=404)
     body = await json_body(request)
     limit = max_subscriptions(request)

@@ -1327,6 +1327,27 @@ drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_sources
 
 `test_assets_policy.py` will fail if the template gains an inline script, handler or style, or an external URL.
 
+#### Regenerating the element stylesheet
+
+`<drishti-view>` (Drishti Elements, `docs/architecture/ELEMENTS.md`) styles its Shadow DOM with a **generated** sheet, not the
+console's own: `drishti-console/web/elements/drishti-view.css` and `drishti-view.manifest.json`. It is the console's tokens,
+theme, terminal, layout and gradients sheets with `:root`, `html` and `body` rewritten to `:host`, no `@font-face` (the
+element registers the icon font with the document's `FontFace` API), and of Bootstrap Icons only the glyphs that
+`templates/_macros/panels.html`, `templates/_macros/view.html` and the scripts that run inside the element name (currently
+9; 80.2 KB, 15.7 KB gzipped). Regenerate it after changing any of those sheets, a macro, or an icon in such a script:
+
+```bash
+python3 tools/elements_sheet.py            # write the sheet and its manifest; prints size and glyph count
+python3 tools/elements_sheet.py --check    # exit 1 when the committed files are stale
+python3 tools/elements_sheet.py --icons    # which glyph is named where
+```
+
+The output is reproducible and its version is the first 12 hex digits of its hash (served at
+`/embed/v1/elements/<version>/drishti-view.css`, cacheable for ever). `tests/test_element_sheet.py` fails when the committed
+sheet is stale or a macro uses a glyph the sheet lacks: run the tool and commit the two files. A name that is not a
+Bootstrap Icons glyph makes the tool fail and says where it is named. A new icon in a macro that only the full page shows
+still goes in the sheet: the guard scans whole macro files.
+
 ---
 
 ## 6. Testing strategy

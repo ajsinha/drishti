@@ -1,0 +1,47 @@
+{
+  "bytes": 82138,
+  "gzip": 16121,
+  "iconFont": {
+    "family": "bootstrap-icons",
+    "registered": "FontFace API (the sheet has no @font-face)"
+  },
+  "icons": {
+    "box": [
+      "templates/_macros/panels.html"
+    ],
+    "calendar2-week": [
+      "templates/_macros/view.html"
+    ],
+    "download": [
+      "templates/_macros/panels.html"
+    ],
+    "exclamation-triangle": [
+      "templates/_macros/view.html"
+    ],
+    "grid-3x3": [
+      "templates/_macros/panels.html"
+    ],
+    "hourglass-split": [
+      "templates/_macros/view.html"
+    ],
+    "inbox": [
+      "templates/_macros/panels.html"
+    ],
+    "lock": [
+      "templates/_macros/panels.html"
+    ],
+    "question-circle": [
+      "templates/_macros/panels.html"
+    ]
+  },
+  "sha256": "47b249d87d45c30a5b503dfdd6ad9e908d705223e199bf53a0805a9525c11574",
+  "sources": [
+    "css/tokens.css",
+    "css/theme.css",
+    "css/terminal.css",
+    "css/layout.css",
+    "css/gradients.css",
+    "vendor/bootstrap-icons/bootstrap-icons.css"
+  ],
+  "version": "518e75673409"
+}

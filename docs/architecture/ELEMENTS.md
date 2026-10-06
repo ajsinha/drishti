@@ -945,7 +945,7 @@ its own sign-in, its own `/api/drishti-token` that asks the console for a token 
 list, an as-of picker, a main `<drishti-view>` and a second, smaller one), `drishti-console/web/embed/drishti-elements.js`
 (the element and one `Connection` per page and server, about 540 lines), `routes/embed_routes.py` and `core/embed_poc.py`
 (the embed endpoints and the DEV-ONLY token path, **off** unless `embed.poc.enabled`; signing key, per-app secret and exact
-origins in config), `templates/embed/vhead.html`. Run it with [the demo's README](../../tools/elements-demo/README.md).
+origins in config). Run it with [the demo's README](../../tools/elements-demo/README.md).
 Acceptance: `drishti-console/tests/test_embed_elements_browser.py` (Playwright, Chromium, Firefox and WebKit, against a real
 scratch server, the console and the host on three ports) and `test_embed_poc.py` (CORS, masking, "nothing else changed").
 **All ten criteria passed in all three browsers** (40 tests passed). The rapid-switching test was checked by mutation:
@@ -982,7 +982,8 @@ Also covered: pause when the page is hidden (no ticks while paused, resumes live
 | embed view, counterparty | 13.1 KB | 2.7 KB |
 | a live frame (strip cell and provenance panel), median of 12 | 1.5 KB | not compressed (SSE) |
 | `drishti-elements.js` (POC) | 30 KB | 9.8 KB |
-| view sheet (tokens, theme, terminal, layout, gradients, Bootstrap Icons rules) | 163.5 KB | 30.5 KB |
+| view sheet (tokens, theme, terminal, layout, gradients, Bootstrap Icons rules); POC, built per request | 163.5 KB | 30.5 KB |
+| view sheet as built (step 8: comments dropped, 9 glyphs) | 80.2 KB | 15.7 KB |
 | `echarts.min.js` / `charts.js` | 1.12 MB / 19.5 KB | 369 KB / 6.7 KB |
 | icon font (woff2) | 92 KB | already compressed |
 
@@ -1040,6 +1041,45 @@ browsers. `fetch` with a `ReadableStream` and `Authorization` streams cross-orig
     foreign-origin `POST` still refused on the console's own paths).
 
 No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not needed. **Step 1 may start.**
+
+#### As built: steps 4, 5 and 8 (group B, 2026-10-06)
+
+**Step 4, the channel as a class.** `drishti-console/core/channel.py` `ChannelSession` holds what `api_routes.channel()` used to
+keep in closures: the subscriptions and their upstream responses, the queue, the detached tasks, the watchdog and the SSE text
+(`events(asked, is_disconnected)`). It knows no request or cookie: the identity to run as, the `render(event, data)` that turns
+an upstream event into what the caller wants (`_view_event`), the limit (`live.max_subscriptions`), the `who` fingerprint, the
+owning application and the registry dict are constructor arguments. The owner of a channel is the **user plus the host
+application** (`owned_by(user, app)`; empty for the console): `POST /api/channel/{cid}` refuses a channel opened by an embed
+caller, `POST /embed/v1/channel/{cid}` refuses one opened by the console or another application. `/api/channel` is a few lines
+over it and its behaviour is unchanged (`test_live_hub.py`, `test_live_deleted.py` and `test_terminal.py` pass untouched; the
+`CHANNELS` registry keeps its shape). `tests/test_channel_session.py` runs two users on two channels, the owner rule, the
+told (not silent) limit, the registry clean-up and `change(add, remove)`. The embed stream passes `embed=True` to
+`_view_event`, so live panel patches carry the same no-console-links markup as the first paint.
+
+**Step 5, the view parts as macros.** `templates/_macros/view.html`: `vtitle`, `strip`, `vhead` (title plus strip, the head of an
+embedded view), `panels(items, embed)` and `provenance_banners(vm, asof, business_date, embed, back_href)` (no data held for the
+date, the date actually shown, a late source). `terminal/view.html` calls them and `routes/embed_routes.py` `_render` calls the
+same macros, so there is no second template (`templates/embed/vhead.html` is gone). `panel(p, embed=false)` in `panels.html`
+drops, for `embed=true`, the two things that mean nothing in a host page: the help link to the console's `/help/panel-kinds`
+and the CSV download. The console page itself still renders with `embed=false` (also in its `?embed` iframe mode, unchanged).
+The payload's `banners` is now filled (it was `[]`) and the head carries no console-only affordances (alert, pin, share, JSON,
+print, About, Discussion, Compare stay in `view.html`). `tests/test_view_macros.py` proves a panel's HTML is the same on the
+console page and in the embed payload for every panel (after removing only the help and download links), that the strip is the
+same bytes, and that the banners come from the macro.
+
+**Step 8, the element stylesheet.** `python3 tools/elements_sheet.py` (library: `core/element_sheet.py`) writes
+`drishti-console/web/elements/drishti-view.css` and `drishti-view.manifest.json` (version = first 12 hex digits of the sheet's
+hash, source list, glyph to file map, size, gzip). Adjustment 1 is applied: of Bootstrap Icons only the base `.bi::before` rule
+and the 9 glyphs the macros and the element's scripts name are kept, comments and the licence block of each source are
+dropped (the generated file carries one header), and the result is **80.2 KB, 15.7 KB gzipped** (POC: 30.5 KB;
+target 25 KB). The sheet has no `@font-face`: the element registers the font with `new FontFace(...)` and `document.fonts.add`
+(the spike finding; it already did). The font file itself is still the full 92 KB woff2 (no `fontTools` here to subset it; a
+subset font is the follow-up if the 92 KB matters). Served at `/poc/drishti-view.css` (now the committed file, not rewritten per
+request) and at `/embed/v1/elements/<version>/drishti-view.css` with `Cache-Control: public, max-age=31536000, immutable` and a 404
+for any other version. The guard, `tests/test_element_sheet.py`, fails when the committed files differ from a fresh build, when a
+macro names a glyph the sheet lacks, when the sheet holds one nothing uses, or over the gzip target. Step 7 will serve the element
+script, font and `integrity.json` under the same `/elements/<version>/` path. `test_embed_elements_browser.py` passes in Chromium
+(14 tests) with the generated sheet.
 
 ### Steps
 
