@@ -655,6 +655,23 @@ drishti:
 
 Usage counters (tokens issued, calls, refusals by code, live streams, last use) are held in memory since the start, shown in Admin → Embedding and exported as `drishti.embed.tokens`, `.calls`, `.refusals` (tag `code`) and `.streams`, each tagged `app`. There is nothing to configure: only registered applications are counted, so the set is bounded by the registry.
 
+### Console `embed` — the console's side of embedded views
+
+In the console's `config/application.yaml` (or `--embed.key=value`). Off by default; see [ELEMENTS.md](../architecture/ELEMENTS.md) (step 7).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `embed.enabled` | `false` (`DRISHTI_EMBED_ENABLED`) | Serve `/embed/v1/...`. Off: nothing under `/embed/` exists. Needs the server's `drishti.embed.enabled` and `drishti.security.enabled`. |
+| `embed.origins_ttl_seconds` | `60` | How long the registered origins (the CORS allow-list, from the server's `/api/v1/embed/apps/origins`) are reused. A new application's origin works within this time. |
+| `embed.jwks_ttl_seconds` | `300` | How long the server's embed signing keys (`/api/v1/embed/jwks`) are reused. |
+| `embed.jwks_min_refetch_seconds` | `10` | A token naming an unknown key id (the server rotated its key) refetches the key set, but at most this often. |
+| `embed.audiences` | empty | Token audiences this console accepts (its public URL). Empty accepts what the server issued (the server checks its own `drishti.embed.audiences`). |
+| `embed.rate_per_minute` | `600` | Calls per host application per minute; over it `429 DRS-8004` with `Retry-After`. `0` = unlimited. |
+| `embed.max_streams` | `64` | Live subscriptions all embed channels together may hold open (each uses a connection of `backend.pool_size`). Beyond it a channel open is `429 DRS-8004`. `0` = unlimited. |
+| `embed.recheck_seconds` | `60` | An open stream asks the server this often whether its token still passes (user, application, scopes). |
+| `embed.token_grace_seconds` | `30` | After a stream's token expires, how long the console waits for a fresh one (`POST /embed/v1/channel/{cid}/token`) before ending the stream with `DRS-8001`. |
+| `embed.compress_min_bytes` | `512` | Payloads smaller than this are not compressed (Brotli when installed, else gzip). |
+
 ### `drishti.security.oidc` — single sign-on
 
 The console runs the browser sign-in flow; the server verifies the provider's ID token itself (signature,

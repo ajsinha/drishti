@@ -28,6 +28,7 @@ import time
 from dataclasses import dataclass
 
 from core.auth import Identity
+from core.embed_limits import EmbedLimits
 
 TYP = "drishti-embed+jwt"
 _ORIGINS_TTL = 60.0
@@ -36,9 +37,9 @@ _ORIGINS_TTL = 60.0
 class EmbedError(Exception):
     """A refused embed call, with the DRS code and HTTP status it is answered with (ELEMENTS.md, section 6.7)."""
 
-    def __init__(self, status: int, code: str, detail: str):
+    def __init__(self, status: int, code: str, detail: str, retry_after: str | None = None):
         super().__init__(detail)
-        self.status, self.code, self.detail = status, code, detail
+        self.status, self.code, self.detail, self.retry_after = status, code, detail, retry_after
 
 
 @dataclass(frozen=True)
@@ -63,6 +64,16 @@ def _origin(text) -> str:
     return str(text or "").strip().rstrip("/").lower()
 
 
+def origin_matches(allowed: str, origin: str) -> bool:
+    """An exact match, or a registered ``https://*.suffix`` by suffix (both already normalised by :func:`_origin`)."""
+    if allowed == origin:
+        return True
+    if "://*." in allowed:
+        scheme, _, rest = allowed.partition("://*.")
+        return origin.startswith(scheme + "://") and origin.endswith("." + rest)
+    return False
+
+
 class EmbedHosts:
     """The embed settings of one console and the CORS origins its server's host applications registered (cached 60 s)."""
 
@@ -72,6 +83,24 @@ class EmbedHosts:
         self._ttl = float(cfg.get("origins_ttl_seconds", _ORIGINS_TTL))
         self._origins: frozenset = frozenset()
         self._fetched = 0.0
+        self.settings = cfg
+        self.auth = None                       # EmbedAuth, built on first use (it needs the backend): see :meth:`verifier`
+        self.limits = EmbedLimits(cfg)
+        self.guards: dict = {}                 # open channel id -> its StreamGuard (core/embed_stream.py)
+
+    def verifier(self, request):
+        """The token verifier: keys from the server's ``/embed/jwks`` (cached), audiences from ``embed.audiences``."""
+        if self.auth is None:
+            from core.embed_auth import EmbedAuth
+
+            async def keys():
+                return await request.app.state.backend._get("/embed/jwks", request.app.state.auth.service())
+
+            cfg = self.settings
+            aud = cfg.get("audiences") or []
+            self.auth = EmbedAuth(keys, audiences=[aud] if isinstance(aud, str) else aud, ttl=float(cfg.get("jwks_ttl_seconds", 300)),
+                                  min_refetch=float(cfg.get("jwks_min_refetch_seconds", 10)))
+        return self.auth
 
     async def origins(self, request) -> frozenset:
         if time.monotonic() - self._fetched > self._ttl:
@@ -88,32 +117,20 @@ class EmbedHosts:
         o = _origin(origin)
         if not o or o == "null":
             return False
-        for a in await self.origins(request):
-            if a == o:
-                return True
-            if "://*." in a:
-                scheme, _, rest = a.partition("://*.")
-                if o.startswith(scheme + "://") and o.endswith("." + rest):
-                    return True
-        return False
+        return any(origin_matches(a, o) for a in await self.origins(request))
 
-    @staticmethod
-    def claims(bearer: str | None) -> dict:
-        """The token's claims, read to route the call (NOT trusted: the server verifies the signature on every call)."""
-        parts = (bearer or "").split(".")
-        if len(parts) != 3:
-            raise EmbedError(401, "DRS-8001", "embed token missing or malformed")
-        try:
-            head, claims = json.loads(_unb64(parts[0])), json.loads(_unb64(parts[1]))
-            if head.get("typ") != TYP or not claims.get("sub") or int(claims["exp"]) <= time.time():
-                raise ValueError("claims")
-        except (ValueError, KeyError, TypeError):
-            raise EmbedError(401, "DRS-8001", "embed token invalid or expired") from None
-        return claims
-
-    async def identity(self, request, bearer: str | None, origin: str | None) -> tuple[Identity, dict]:
-        """The caller of an /embed/ call and the token's claims. Raises EmbedError (the server's own checks come with the first call)."""
-        claims = self.claims(bearer)
+    async def identity(self, request, bearer: str | None, origin: str | None, *, count: bool = True) -> tuple[Identity, dict]:
+        """The caller of an /embed/ call and the verified claims. Raises EmbedError. The server checks the token again on every call."""
+        self.check_contract(request.headers.get("drishti-embed-api"))
         if origin and not await self.origin_allowed(request, origin):
             raise EmbedError(403, "DRS-8002", "this origin is not one of the host application's origins")
+        claims = await self.verifier(request).verify(bearer, origin)
+        if count:
+            self.limits.take(str(claims["azp"]))
         return EmbedIdentity(str(claims["sub"]), str(claims["sub"]), "", ("viewer",), token=bearer, origin=origin or None), claims
+
+    @staticmethod
+    def check_contract(value: str | None) -> None:
+        """The element's contract version (``Drishti-Embed-Api: 1.0``): a major this console no longer serves is ``410 DRS-8006``."""
+        if value and value.strip().split(".")[0] != "1":
+            raise EmbedError(410, "DRS-8006", f"the element's contract version {value.strip()} is not served (this console serves 1.x): upgrade the element")

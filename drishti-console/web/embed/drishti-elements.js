@@ -65,7 +65,7 @@ async function authed(url, init, signal) {            // a fetch with the bearer
 const once = {};
 const memo = (key, fn) => (once[key] || (once[key] = fn().catch((e) => { delete once[key]; throw e; })));
 const sheet = (server) => memo('sheet:' + server, async () => {
-  const text = await (await fetch(server + API + '/poc/drishti-view.css')).text();
+  const text = await (await fetch(server + API + '/drishti-view.css')).text();
   const s = new CSSStyleSheet();
   s.replaceSync(text);
   return s;
@@ -76,7 +76,7 @@ frameSheet.replaceSync(':host{display:block;position:relative;contain:content;co
   + '.view:focus{outline:none}.dv-note{padding:.4rem .8rem;font:12px/1.4 var(--d-font-mono,monospace);color:var(--d-muted,#666)}'
   + '.dv-error{padding:.8rem;border:1px solid var(--d-bad,#b00);color:var(--d-bad,#b00)}');
 const font = (server) => memo('font:' + server, async () => {
-  const face = new FontFace('bootstrap-icons', 'url(' + server + API + '/poc/icons.woff2) format("woff2")');
+  const face = new FontFace('bootstrap-icons', 'url(' + server + API + '/icons.woff2) format("woff2")');
   document.fonts.add(await face.load());
 });
 const script = (url) => memo('script:' + url, () => new Promise((resolve, reject) => {
@@ -87,8 +87,8 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
 }));
 const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'charts', 'tables', 'tree-rows', 'pivot', 'about', 'about-hints'];
 const chartLibs = (server) => memo('charts:' + server, async () => {
-  await script(server + API + '/poc/echarts.js');
-  for (const n of ENHANCERS) { await script(server + API + '/poc/js/' + n + '.js'); }       // in order: the engine before the grid before the pivot
+  await script(server + API + '/echarts.js');
+  for (const n of ENHANCERS) { await script(server + API + '/js/' + n + '.js'); }       // in order: the engine before the grid before the pivot
 });
 
 // ---- the one connection per page and server --------------------------------------------------------------------------
@@ -128,8 +128,27 @@ class Connection {
       if (!res.ok) { throw new Error('channel ' + res.status); }
     } catch (e) { this.loss(); }                    // the channel is gone (or the console is): start afresh
   }
-  close() { this.intentional = true; clearTimeout(this.timer); this.timer = null; clearTimeout(this.silence); if (this.ctrl) { this.ctrl.abort(); } this.ctrl = null; this.cid = null; this.synced = new Set(); }
+  // The stream outlives its token (ELEMENTS.md 7.2): a fresh one goes to the open channel before the old one runs out, and at once
+  // when the console says (event: token). The channel is not reopened, so no element repaints.
+  async renew() {
+    clearTimeout(this.renewTimer);
+    const cid = this.cid;
+    if (!cid || !cfg.tokenProvider) { return; }
+    try {
+      const token = await getToken(true);
+      const res = await fetch(this.server + API + '/channel/' + encodeURIComponent(cid) + '/token', { method: 'POST', cache: 'no-store',
+        headers: { Authorization: 'Bearer ' + token } });
+      if (!res.ok) { throw new Error('token ' + res.status); }
+      this.planRenewal();
+    } catch (e) { if (this.cid === cid) { this.renewTimer = setTimeout(() => this.renew(), 5000); } }
+  }
+  planRenewal() {
+    clearTimeout(this.renewTimer);
+    if (cfg.tokenProvider && tokenState.exp) { this.renewTimer = setTimeout(() => this.renew(), Math.max(1000, tokenState.exp - Date.now() - 45000)); }
+  }
+  close() { clearTimeout(this.renewTimer); this.intentional = true; clearTimeout(this.timer); this.timer = null; clearTimeout(this.silence); if (this.ctrl) { this.ctrl.abort(); } this.ctrl = null; this.cid = null; this.synced = new Set(); }
   loss() {
+    clearTimeout(this.renewTimer);
     if (this.ctrl) { this.intentional = true; this.ctrl.abort(); }
     this.ctrl = null; this.cid = null; this.synced = new Set(); clearTimeout(this.silence);
     if (!this.keys.size) { return; }
@@ -172,12 +191,14 @@ class Connection {
     if (!data) { return; }
     let m; try { m = JSON.parse(data); } catch (e) { return; }
     if (event === 'channel') {
-      this.cid = m.d.id; this.epoch++; this.retries = 0;
+      this.cid = m.d.id; this.epoch++; this.retries = 0; this.planRenewal();
       if (this.lost) { this.lost = false; this.all((h) => h.reconnected && h.reconnected()); }
       this.sync();
       return;
     }
     if (event === 'end') { return; }
+    if (event === 'token') { this.renew(); return; }
+    if (event === 'gone' && !m.ch) { this.loss(); return; }              // the token ran out: reconnect with a fresh one
     const set = this.keys.get(m.ch);
     if (set) { for (const h of [...set]) { h[event] && h[event](m.d); } }
   }
@@ -404,15 +425,15 @@ class DrishtiView extends HTMLElement {
   #boot(view) {
     const root = this.shadowRoot, reg = window.drishtiModules || {}, server = this.server, me = this;
     const kind = view.getAttribute('data-kind'), id = view.getAttribute('data-id');
-    const base = server + API + '/poc';
+    const base = server + API;
     const fetcher = (u, o) => authed(u, o, undefined);
     const toUrl = (p) => {                          // the console's relative paths, as embed API calls
-      const m = /^\/api\/pivot\/records\/(.+)$/.exec(p);
-      return m ? base + '/records/' + m[1] : p;
+      const m = /^\/api\/pivot\/records\/(.+)\/([^/]+)$/.exec(p);
+      return m ? base + '/views/' + m[1] + '/panels/' + m[2] + '/records' : p;
     };
     const drawer = document.createElement('div');
     drawer.innerHTML = '<aside class="about side" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-tab="about" data-about-url="'
-      + esc(base + '/about/' + encodeURIComponent(kind) + '/' + id.split('/').map(encodeURIComponent).join('/')) + '"><div class="about-grip" aria-hidden="true"></div>'
+      + esc(base + '/views/' + encodeURIComponent(kind) + '/' + id.split('/').map(encodeURIComponent).join('/') + '/about') + '"><div class="about-grip" aria-hidden="true"></div>'
       + '<header><h2 id="aboutTitle" tabindex="-1">About this page</h2><button type="button" class="raw-x" data-about-close aria-label="Close the side drawer">×</button></header>'
       + '<div class="about-body" id="aboutPanel" data-tab-panel="about" data-about-body aria-live="polite"><p class="about-wait">Loading…</p></div>'
       + '<p class="about-live" role="status" data-about-status></p></aside>';
@@ -527,7 +548,7 @@ async function resolve(text, opts = {}) {
   return res.json();
 }
 window.DrishtiElements = Object.freeze({
-  version: 'poc-0', configure: (o) => { Object.assign(cfg, o || {}); if (cfg.tokenProvider) { providerSet(); } }, resolve,
+  version: '1.0', configure: (o) => { Object.assign(cfg, o || {}); if (cfg.tokenProvider) { providerSet(); } }, resolve,
   invalidateToken: () => { tokenState.token = null; tokenState.exp = 0; },       // the host's user changed: the next call asks again
   connections: () => Object.keys(connections).length
 });

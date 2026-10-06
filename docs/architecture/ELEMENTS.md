@@ -1097,8 +1097,8 @@ No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not ne
 
 **Adjustments to the plan.**
 
-1. **The console does not verify embed tokens yet** (no `cryptography` in its environment; `EmbedAuth` with JWKS is step 7). It reads the token's claims to route the call, takes the CORS allow-list from `GET /api/v1/embed/apps/origins` (service identity, cached `embed.origins_ttl_seconds`), and sends the embed token itself, plus the browser's `Origin`, to the server, which verifies everything on every call. The server's answers (`DRS-8001` to `DRS-8005`, `Retry-After`) are passed on unchanged. Console-side signature checks add defence in depth, not the decision.
-2. **Scopes are a map, not one `allow` list:** `drishti.embed.scopes` names each scope's `METHOD path` patterns (`embed:view` opens views, the stream, panel rows, `GET /api/v1/embed/check` and the read-only `POST /api/v1/command`; `embed:about` opens `explain`), so a token's scopes decide the allow-list. `apps:` declared in configuration (GitOps) came with step 10 (see "Step 10 as built").
+1. **The console does not verify embed tokens yet** (done in step 7: `EmbedAuth`, below). It reads the token's claims to route the call, takes the CORS allow-list from `GET /api/v1/embed/apps/origins` (service identity, cached `embed.origins_ttl_seconds`), and sends the embed token itself, plus the browser's `Origin`, to the server, which verifies everything on every call. The server's answers (`DRS-8001` to `DRS-8005`, `Retry-After`) are passed on unchanged. Console-side signature checks add defence in depth, not the decision.
+2. **Scopes are a map, not one `allow` list:** `drishti.embed.scopes` names each scope's `METHOD path` patterns (`embed:view` opens views, the stream, panel rows, `GET /api/v1/embed/check` and the read-only `POST /api/v1/command`; `embed:about` opens `explain`), so a token's scopes decide the allow-list. `apps:` declared in configuration (GitOps) is not built: applications are registered through the admin API only (Admin → Embedding is step 10).
 3. **`private_key_jwt` and signed user assertions accept RSA (RS256/384/512) and ECDSA (ES256/384) keys** given as a JWK set; the demo host signs RS256 in 20 lines of standard-library Python (`tools/elements-demo/demo-host-key.json` is a demo key).
 4. **The user must already exist** in Drishti for an exchange (the OIDC rules create users at sign-in, not at exchange); an ID token's user is named as the sign-in names them (`UserService.federatedName`).
 5. **Rates count every embed call** (views, streams, panel rows, `explain`, `resolve`) per application and per user, in a one-minute window held in memory per server; with several servers each counts its own calls. The per-application `callsPerMinute` and `userCallsPerMinute` replace the design's `views` wording.
@@ -1106,7 +1106,7 @@ No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not ne
 7. **A typed command resolved for a host is not remembered** in the user's command history (the section 6.6 promise, now enforced on the server).
 8. **The ErrorCode registry holds `DRS-8006`** though only the console raises it (step 7), like `DRS-5003` the other way round.
 9. **Tokens that outlive a restart** need `drishti.embed.signing-key`; without it the key is made at start, a warning is logged, and a second server cannot verify the tokens of the first.
-10. **Not built here:** (usage counters came with step 10) the console's `EmbedAuth`, `event: token` and `/channel/{cid}/token` (step 7).
+10. **Not built here:** nothing left from this group: usage counters came with step 10, and the console's `EmbedAuth`, `event: token` and `/channel/{cid}/token` came in step 7.
 
 #### As built: steps 4, 5 and 8 (group B, 2026-10-06)
 
@@ -1140,12 +1140,63 @@ and the 9 glyphs the macros and the element's scripts name are kept, comments an
 dropped (the generated file carries one header), and the result is **80.2 KB, 15.7 KB gzipped** (POC: 30.5 KB;
 target 25 KB). The sheet has no `@font-face`: the element registers the font with `new FontFace(...)` and `document.fonts.add`
 (the spike finding; it already did). The font file itself is still the full 92 KB woff2 (no `fontTools` here to subset it; a
-subset font is the follow-up if the 92 KB matters). Served at `/poc/drishti-view.css` (now the committed file, not rewritten per
+subset font is the follow-up if the 92 KB matters). Served at `/embed/v1/drishti-view.css` (was `/poc/...` until step 7; now the committed file, not rewritten per
 request) and at `/embed/v1/elements/<version>/drishti-view.css` with `Cache-Control: public, max-age=31536000, immutable` and a 404
 for any other version. The guard, `tests/test_element_sheet.py`, fails when the committed files differ from a fresh build, when a
 macro names a glyph the sheet lacks, when the sheet holds one nothing uses, or over the gzip target. Step 7 will serve the element
 script, font and `integrity.json` under the same `/elements/<version>/` path. `test_embed_elements_browser.py` passes in Chromium
 (14 tests) with the generated sheet.
+
+#### Step 7 as built: the console's embed API (2026-10-06)
+
+The proof of concept's `/embed/v1/poc/*` routes are now the versioned API under `/embed/v1` (the `poc` aliases are gone; the demo,
+the element and the tests use the new paths). `core/embed_auth.py` (`EmbedAuth`), `core/embed_limits.py` (`EmbedLimits`),
+`core/embed_stream.py` (`StreamGuard`), `core/embed_wire.py` (compression), `core/embed.py` (`EmbedHosts`, origins, `EmbedError`) and
+`routes/embed_routes.py`.
+
+| Route | What |
+|---|---|
+| `GET /views/{kind}/{id}` | the HTML-over-the-wire payload (section 6.1) |
+| `GET /views/{kind}/{id}/about` | the About body (HTML), for the caller's masked identity |
+| `GET /views/{kind}/{id}/panels/{panel}/records` | the rows a Pivot works on |
+| `GET /resolve?text=` | a typed command or id to `{ref, mnemonic, title}`: the server's read-only `POST /command`, as the embed token's scope allows, no history |
+| `GET /channel?s=view:...` | the live stream (one per page; only `view:` keys), with `event: token` |
+| `POST /channel/{cid}` | `{add, remove}`; owner = user and host application |
+| `POST /channel/{cid}/token` | a fresh embed token in the `Authorization` header (never the URL) for an open stream |
+| `GET /drishti-elements.js`, `/drishti-view.css`, `/elements/{version}/drishti-view.css`, `/icons.woff2`, `/charts.js`, `/echarts.js`, `/js/{name}.js` | the element and what it loads |
+
+**Decisions as taken.**
+
+1. **`EmbedAuth` verifies every token before any work**: ES256 signature against the server's key set (`GET /api/v1/embed/jwks`, cached
+   `embed.jwks_ttl_seconds`, 300), `typ` `drishti-embed+jwt`, `exp` (5 s leeway), `sub` and `azp` present, the audience against
+   `embed.audiences` (empty accepts what the server issued; the server enforces its own list), and the browser's `Origin` against the
+   token's own `origins` claim (`403 DRS-8002`) as well as against the registered origins of all applications (the CORS allow-list from
+   `GET /api/v1/embed/apps/origins`, `embed.origins_ttl_seconds`). **Key rotation:** a token naming a `kid` the cache lacks makes one refetch,
+   at most every `embed.jwks_min_refetch_seconds` (10), so forged key ids cannot make the console hammer the server; an unknown key is
+   `401 DRS-8001`. The token is then passed to the server untouched; the server still decides on every call. Needs the `cryptography`
+   package (in `requirements.txt`).
+2. **Token life of a stream** (`StreamGuard`, Decision 2): at the token's `exp` the console sends `event: token`
+   (`{"ch": "", "d": {"expiresIn": 0}}`); the element has already been renewing 45 s before expiry (`Connection.renew`: the host's
+   `tokenProvider`, then `POST /channel/{cid}/token`), so normally nothing is seen. The fresh token must be for the same `sub` and `azp`
+   and extend the expiry, else `401 DRS-8001`; later upstream calls use it; no stream is dropped and no element repaints. With no fresh
+   token within `embed.token_grace_seconds` (30) the stream ends with `gone` `DRS-8001` and `end`: expiry is enforced. Every
+   `embed.recheck_seconds` (60) the console asks the server's `GET /embed/check` and ends the stream with the server's code when the
+   user or the application was disabled.
+3. **Limits** (`EmbedLimits`): `embed.rate_per_minute` (600) calls per host application, a sliding window, `429 DRS-8004` with
+   `Retry-After`; `embed.max_streams` (64) upstream subscriptions across all embed channels (a channel open past it is `429 DRS-8004`,
+   `Retry-After: 5`; a subscription added to an open channel past it gets `gone` `DRS-5003`), so embedding cannot take the pool of
+   `backend.pool_size` from the console's own users. `0` means unlimited for both.
+4. **`Drishti-Embed-Api`**: a request header naming a major version other than 1 is `410 DRS-8006` (raised by the console only).
+5. **Compression**: view, About, rows and assets are sent Brotli (when the browser accepts it and the optional `brotli` package is installed)
+   or gzip above `embed.compress_min_bytes` (512), with `Vary: Accept-Encoding, Origin`; the event stream is never compressed.
+6. **Problems** are `{"code": "DRS-…", "detail": "…"}` as before, now also with `Retry-After` for every `429`.
+
+**Tests.** `tests/test_embed_auth.py` (good, expired, wrong audience, wrong origin, tampered, forged signature, unknown and rotated `kid`,
+refetch throttling, TTL, server away; the guard: `event: token`, a fresh token keeps the stream open, silence ends it with `DRS-8001`,
+foreign or older tokens refused, the server re-check ends it), `tests/test_embed.py` (CORS per origin and per application, rate, stream
+cap, contract version, compression, forged tokens never reach the server) and, in `test_embed_elements_browser.py`,
+`test_step7_two_elements_one_channel_on_the_versioned_api` (acceptance row 7: Chromium, Firefox, WebKit). **Not done here:** the full element (step 9);
+a browser test of the live renewal (the element renews 45 s before a 5-minute token ends; covered by the unit tests of the guard).
 
 #### Step 10 as built: Admin → Embedding (2026-10-06)
 

@@ -81,7 +81,7 @@ def test_the_sheet_is_served_under_its_hash_for_ever_and_a_wrong_hash_is_refused
     assert ok.status_code == 200 and "immutable" in ok.headers["cache-control"] and ok.headers["access-control-allow-origin"] == HOST
     assert ok.text == es.committed()[0]
     assert client.get("/embed/v1/elements/deadbeef0000/drishti-view.css", headers={"Origin": HOST}).status_code == 404
-    assert client.get("/embed/v1/poc/drishti-view.css", headers={"Origin": HOST}).text == ok.text
+    assert client.get("/embed/v1/drishti-view.css", headers={"Origin": HOST}).text == ok.text
 
 
 def test_no_width_media_rule_is_left_in_the_element_sheet():
