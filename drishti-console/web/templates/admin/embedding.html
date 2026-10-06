@@ -1,0 +1,125 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Embedding · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-embedding.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-embedding>
+  {% with tab='embedding' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Embedding <a class="emb-help" href="/help/user-management#embedding-host-applications" aria-label="Help: embedding host applications" title="Help: embedding host applications">?</a></h1>
+  <p class="text-muted-d">The web applications allowed to show {{ PRODUCT }} views in their own pages (Drishti Elements). Each host application
+    has exact origins, a client secret or a public key it authenticates with, and the scopes and kinds it may use. Usage counts since
+    {% if since %}{{ when_local(since) }}{% else %}the server started{% endif %} and starts again at a restart.
+    See <a href="/help/user-management#embedding-host-applications">Embedding host applications</a>.
+    <span class="mono">n</span> registers an application, <span class="mono">/</span> focuses the filter.</p>
+  {% if not embed_enabled %}<p class="adm-warn" role="status"><i class="bi bi-info-circle" aria-hidden="true"></i>
+    Embedding is switched off on this server (<span class="mono">drishti.embed.enabled</span>). You can register applications now; no token is made until it is on.</p>{% endif %}
+  {% if strangers and strangers.refusals %}<p class="adm-warn" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    {{ strangers.refusals }} request{{ '' if strangers.refusals == 1 else 's' }} named no registered application and {{ 'was' if strangers.refusals == 1 else 'were' }} refused
+    ({% for c, n in strangers.refusalsByCode.items() %}{{ c }}: {{ n }}{{ ', ' if not loop.last }}{% endfor %}).</p>{% endif %}
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="adm-bar">
+    <input class="studio-in" type="search" data-filter placeholder="Filter by name, id or origin" aria-label="Filter the applications" autocomplete="off">
+    <button type="button" class="btn-pill btn-accent" data-new>New application</button>
+  </div>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-apps>
+    <caption class="visually-hidden">Host applications and what each did since the server started</caption>
+    <thead><tr><th scope="col">Application</th><th scope="col">Origins</th><th scope="col">Signs in with</th><th scope="col">Scopes &middot; kinds</th>
+      <th scope="col">Status</th><th scope="col">Usage</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody>{% for a in apps %}
+      <tr data-app="{{ a.id }}" data-enabled="{{ 'yes' if a.enabled else 'no' }}"{% if a.fromConfig %} data-config{% endif %}>
+        <th scope="row" class="emb-name"><b>{{ a.name }}</b><br><span class="mono text-muted-d">{{ a.id }}</span>
+          {% if a.fromConfig %}<br><span class="st" title="Declared in drishti.embed.apps: change it in configuration and restart">from config</span>{% endif %}</th>
+        <td class="mono emb-origins">{% for o in a.origins %}<div>{{ o }}</div>{% endfor %}</td>
+        <td>{% if a.hasSecret %}<span class="st">client secret</span>{% endif %}{% if a.jwks %}<span class="st">public key</span>{% endif %}</td>
+        <td>{% for s in a.scopes %}<span class="role">{{ s }}</span>{% endfor %}<div class="text-muted-d">{{ a.kinds | join(', ') if a.kinds else 'every kind the user may open' }}</div></td>
+        <td>{% if a.enabled %}<span class="st st-ok">enabled</span>{% else %}<span class="st st-bad">disabled</span>{% endif %}</td>
+        <td class="emb-usage" data-usage>
+          <div><span class="mono">{{ '{:,}'.format(a.usage.tokensIssued) }}</span> tokens &middot; <span class="mono">{{ '{:,}'.format(a.usage.calls) }}</span> calls &middot;
+            <span class="mono">{{ a.usage.streamsOpen }}</span> live</div>
+          <div{% if a.usage.refusals %} class="t-bad"{% endif %}><span class="mono">{{ '{:,}'.format(a.usage.refusals) }}</span> refused{% if a.usage.refusals %}
+            ({% for c, n in a.usage.refusalsByCode.items() %}{{ c }}: {{ n }}{{ ', ' if not loop.last }}{% endfor %}){% endif %}</div>
+          <div class="text-muted-d">last used {% if a.usage.lastUsedAt %}{{ when_local(a.usage.lastUsedAt) }}{% elif a.lastUsedAt %}{{ when_local(a.lastUsedAt) }}{% else %}never{% endif %}</div></td>
+        <td class="adm-actions">{% if a.fromConfig %}<span class="text-muted-d">read-only</span>
+          {% else %}{% if a.hasSecret %}<button type="button" class="fk" data-rotate>Rotate secret</button>{% endif %}
+          <button type="button" class="fk" data-switch="{{ 'disable' if a.enabled else 'enable' }}">{{ 'Disable' if a.enabled else 'Enable' }}</button>
+          <button type="button" class="fk emb-danger" data-delete>Delete</button>{% endif %}</td></tr>
+    {% else %}<tr data-none><td colspan="7" class="text-muted-d">No host application is registered. Use <b>New application</b>, or declare one in configuration (<span class="mono">drishti.embed.apps</span>).</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="text-muted-d" data-filter-none hidden>No application matches the filter.</p>
+
+  <dialog class="adm-dialog emb-dialog" data-new-dialog aria-labelledby="embNewTitle">
+    <div class="ds-head"><h2 id="embNewTitle">New host application</h2>
+      <button type="button" class="btn-pill btn-ghost" data-close aria-label="Close without saving">Close</button></div>
+    <form data-new-form autocomplete="off">
+      <label>Name<input class="studio-in" name="name" required maxlength="100" placeholder="Client CRM"></label>
+      <label>Id (lower case letters, digits, hyphens)<input class="studio-in mono" name="id" required pattern="[a-z][a-z0-9\-]{1,31}" maxlength="32" placeholder="client-crm"></label>
+      <label>Origins, one per line (scheme, host, optional port; no path){% if emb.allowWildcardOrigins %} <span class="text-muted-d">https://*.suffix is allowed</span>{% endif %}
+        <textarea class="studio-in mono" name="origins" rows="3" required placeholder="https://crm.bank.example"></textarea></label>
+      <fieldset class="emb-auth"><legend>How the application signs in</legend>
+        <label><input type="radio" name="auth" value="secret" checked> Client secret (made now, shown once)</label>
+        <label><input type="radio" name="auth" value="key"> Public key: a JWK set; the application signs its requests</label>
+        <label><input type="radio" name="auth" value="both"> Both</label>
+        <label data-jwks-field hidden>JWK set (JSON, public keys only)<textarea class="studio-in mono" name="jwks" rows="5" placeholder='{"keys":[{"kty":"RSA","kid":"host-1","n":"...","e":"AQAB"}]}'></textarea></label>
+      </fieldset>
+      <fieldset class="emb-scopes"><legend>Scopes</legend>
+        {% for s in emb.scopes or ['embed:view'] %}<label><input type="checkbox" name="scope" value="{{ s }}"{% if loop.first %} checked{% endif %}> <span class="mono">{{ s }}</span></label>{% endfor %}
+      </fieldset>
+      <label>Kinds it may show (comma separated; empty: every kind its users' roles open)<input class="studio-in mono" name="kinds" placeholder="trade, counterparty"></label>
+      <div class="emb-rates">
+        <label>Calls per minute<input class="studio-in" type="number" min="1" name="callsPerMinute" value="{{ emb.callsPerMinute or 600 }}"></label>
+        <label>Calls per user per minute<input class="studio-in" type="number" min="1" name="userCallsPerMinute" value="{{ emb.userCallsPerMinute or 60 }}"></label>
+        <label>Token life (seconds, 30&ndash;{{ emb.tokenMaxSeconds or 900 }})<input class="studio-in" type="number" min="30" max="{{ emb.tokenMaxSeconds or 900 }}" name="tokenSeconds" value="{{ [300, emb.tokenMaxSeconds or 900] | min }}"></label>
+      </div>
+      <label>Contact (optional)<input class="studio-in" name="contact" maxlength="200" placeholder="crm-team@bank.example"></label>
+    </form>
+    <p class="adm-msg" data-new-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-accent" data-create>Register</button></div>
+  </dialog>
+
+  <dialog class="adm-dialog emb-dialog" data-secret-dialog aria-labelledby="embSecretTitle">
+    <h2 id="embSecretTitle">Client secret for <span data-secret-app></span></h2>
+    <p class="adm-warn" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Copy it now. This is the only time it is shown; {{ PRODUCT }} keeps only a hash.</p>
+    <label>Client secret<input class="studio-in mono" data-secret-value readonly aria-label="Client secret" size="46"></label>
+    <p class="text-muted-d" data-secret-note></p>
+    <div class="adm-dlg-actions ds-actions">
+      <button type="button" class="btn-pill btn-ghost" data-secret-copy>Copy</button>
+      <button type="button" class="btn-pill btn-accent" data-secret-done>I have stored it</button></div>
+  </dialog>
+
+  <dialog class="adm-dialog emb-dialog" data-rotate-dialog aria-labelledby="embRotTitle">
+    <h2 id="embRotTitle">Rotate the secret of <span data-rotate-app></span></h2>
+    <p class="text-muted-d">A new secret is made and shown once. The old one keeps working for the grace period, so the application can switch over without a gap; 0 ends it at once.</p>
+    <label>Grace period (seconds)<input class="studio-in" type="number" min="0" value="3600" data-rotate-grace></label>
+    <p class="adm-msg" data-rotate-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-ghost" data-close>Cancel</button>
+      <button type="button" class="btn-pill btn-accent" data-rotate-go>Rotate</button></div>
+  </dialog>
+
+  <dialog class="adm-dialog emb-dialog" data-delete-dialog aria-labelledby="embDelTitle">
+    <h2 id="embDelTitle">Delete <span data-delete-app></span>?</h2>
+    <p>Its registration and secret are removed for good and its tokens stop at the next call. To stop it for a while and keep it, use <b>Disable</b> instead.</p>
+    <p class="adm-msg" data-delete-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-ghost" data-close>Keep it</button>
+      <button type="button" class="btn-pill btn-accent emb-danger-btn" data-delete-go>Delete</button></div>
+  </dialog>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-embedding.js?v={{ ASSET_V }}"></script>{% endblock %}

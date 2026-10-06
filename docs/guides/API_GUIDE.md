@@ -1462,6 +1462,10 @@ For `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)): a host applic
 | `PUT /api/v1/admin/embed/apps/{id}` | change any of those (`null` keeps; `enabled: false` revokes at once) |
 | `POST /api/v1/admin/embed/apps/{id}/rotate-secret` | `{graceSeconds}` (default 3600): a new secret, shown once; the old one works for the grace period |
 | `DELETE /api/v1/admin/embed/apps/{id}` | forget the application |
+| `POST /api/v1/admin/embed/apps/{id}/disable`, `/enable` | stop or resume the application without forgetting it (audited as `embed-app-disabled` / `-enabled`) |
+| `GET /api/v1/admin/embed/usage` | `{since, enabled, settings, apps: {id: {tokensIssued, calls, refusals, refusalsByCode, streamsOpen, lastUsedAt}}}`: counters since this server started, and what the registration form offers (`settings.scopes`, limits) |
+
+An application declared in `drishti.embed.apps` has `fromConfig: true` and answers `409` to every change; see [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications). The same pages are in the console at **Admin → Embedding**.
 
 **2. The host's backend buys a token** (RFC 8693; never from a browser: a request with an `Origin` header is refused `403 DRS-8002`):
 

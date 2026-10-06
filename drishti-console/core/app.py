@@ -169,7 +169,7 @@ def create_app(settings: Settings) -> FastAPI:
     catalogue = Servers(settings)
     from routes import (admin_routes, api_routes, asof_routes, auth_routes, build_routes, calc_routes, export_routes, help_routes, home_routes,
                         layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
-                        workspace_routes, collab_routes, thread_routes, collab_admin_routes)
+                        workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -289,6 +289,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)
+    app.include_router(embed_admin_routes.router)
     from core.embed import EmbedHosts
 
     app.state.embed = EmbedHosts(settings)

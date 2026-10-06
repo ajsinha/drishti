@@ -260,6 +260,7 @@ drishti:
       tokens-per-minute: 120                  # exchanges per host application
       views-per-minute: 600                   # calls per host application (the default for a new registration)
       views-per-user-per-minute: 60           # calls per user (the default for a new registration)
+    apps: []                                  # host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/admin/CONFIGURATION.md
   alerts:
     keep: 1000                      # fired alerts kept per user, in the identity database (they survive restarts)
   access-log:                        # who looked at what: views, raw, history, searches, CSV (Admin → Access)

@@ -84,12 +84,15 @@ public final class EmbedTokenService {
     private final Clock clock;
     private final boolean securityOn;
     private final RateWindows rates;
+    private final EmbedUsage usage;
+    private final Instant started = Instant.now();
     private final Map<String, Long> usedJti = new ConcurrentHashMap<>();
     private final SecureRandom random = new SecureRandom();
     private final AntPathMatcher matcher = new AntPathMatcher();
 
     public EmbedTokenService(EmbedProperties props, EmbedKeys keys, EmbedAppStore apps, UserService users, AuditLog audit,
-            IdTokenVerifier idTokens, OidcProperties oidc, Clock clock, boolean securityOn) {
+            IdTokenVerifier idTokens, OidcProperties oidc, Clock clock, boolean securityOn, EmbedUsage usage) {
+        this.usage = usage;
         this.props = props;
         this.keys = keys;
         this.apps = apps;
@@ -103,6 +106,11 @@ public final class EmbedTokenService {
         if (props.enabled() && !securityOn) {
             throw new IllegalStateException("drishti.embed.enabled needs drishti.security.enabled: an embed token is only checked when security is on");
         }
+    }
+
+    /** When this server (and so its usage counters) started. */
+    public Instant startedAt() {
+        return started;
     }
 
     public boolean enabled() {
@@ -173,8 +181,10 @@ public final class EmbedTokenService {
             String token = keys.sign(TYP, claims);
             audit.record(user.username(), "embed-token", app.id(), jti + " scope " + scope + " aud " + audience + " expires " + exp);
             apps.touch(app.id());
+            usage.tokenIssued(app.id());
             return new Response(token, ACCESS_TOKEN, "Bearer", exp.getEpochSecond() - now.getEpochSecond(), scope);
         } catch (EmbedException e) {
+            usage.refused(claimed != null && apps.find(claimed).isPresent() ? claimed : EmbedUsage.UNKNOWN, e.errorCode().code());
             audit.record(claimed == null || claimed.isBlank() ? "-" : claimed, "embed-token-refused", claimed == null ? "" : claimed, e.error() + ": " + e.getMessage());
             throw e;
         }
@@ -349,6 +359,18 @@ public final class EmbedTokenService {
 
     /** Checks one embed call (see the class comment); throws the refusal with its DRS code. */
     public Authorized authorize(String bearer, String origin, String method, String path) {
+        String[] known = new String[1];
+        try {
+            Authorized a = authorize(bearer, origin, method, path, known);
+            usage.call(a.app());
+            return a;
+        } catch (EmbedException e) {
+            usage.refused(known[0] == null ? EmbedUsage.UNKNOWN : known[0], e.errorCode().code());
+            throw e;
+        }
+    }
+
+    private Authorized authorize(String bearer, String origin, String method, String path, String[] known) {
         if (!props.enabled()) {
             throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 401, "invalid_token", "embedded views are not switched on on this server");
         }
@@ -369,6 +391,9 @@ public final class EmbedTokenService {
             throw new EmbedException(ErrorCode.EMBED_TOKEN_INVALID, 401, "invalid_token", "embed token is for another audience");
         }
         EmbedAppStore.App app = apps.find(c.path("azp").asText("")).orElse(null);
+        if (app != null) {
+            known[0] = app.id();
+        }
         if (app == null || !app.enabled()) {
             throw new EmbedException(ErrorCode.EMBED_APP, 403, "access_denied", "the host application is unknown or disabled");
         }

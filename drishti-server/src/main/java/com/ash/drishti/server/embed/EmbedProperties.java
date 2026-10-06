@@ -36,10 +36,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param limits call rates
  * @param allowWildcardOrigins let an application register {@code https://*.suffix} origins (review apps)
  * @param assertionMaxAge longest life of a client or subject assertion a host signs (its {@code exp} minus its {@code iat})
+ * @param apps host applications declared in configuration (GitOps): read-only in Admin → Embedding, marked "from config"
  */
 @ConfigurationProperties("drishti.embed")
 public record EmbedProperties(Boolean enabled, String issuer, List<String> audiences, String signingKey, Integer tokenMaxSeconds, String mask,
-        Map<String, List<String>> scopes, Limits limits, Boolean allowWildcardOrigins, Duration assertionMaxAge) {
+        Map<String, List<String>> scopes, Limits limits, Boolean allowWildcardOrigins, Duration assertionMaxAge, List<ConfiguredApp> apps) {
 
     /** The scope that opens views, the live stream and a panel's rows. */
     public static final String VIEW = "embed:view";
@@ -59,6 +60,22 @@ public record EmbedProperties(Boolean enabled, String issuer, List<String> audie
         }
     }
 
+    /**
+     * One host application declared in configuration. {@code secretSha256} is the hex SHA-256 of the client secret (never the secret);
+     * {@code jwks} the JWK set document when the application authenticates with a key. Unset numbers take the {@code limits} defaults.
+     */
+    public record ConfiguredApp(String id, String name, String contact, List<String> origins, List<String> kinds, List<String> scopes,
+            List<String> subjectTypes, List<String> subjectAudiences, String jwks, String secretSha256, Integer tokenSeconds,
+            Integer callsPerMinute, Integer userCallsPerMinute, Boolean enabled) {
+
+        /** As the registry's own draft, which the store validates exactly like an administrator's registration. */
+        public com.ash.drishti.identity.EmbedAppStore.Configured toConfigured() {
+            return new com.ash.drishti.identity.EmbedAppStore.Configured(new com.ash.drishti.identity.EmbedAppStore.Draft(id, name, contact,
+                    origins, kinds, scopes == null || scopes.isEmpty() ? List.of(VIEW) : scopes, subjectTypes, subjectAudiences, jwks,
+                    secretSha256 != null && !secretSha256.isBlank(), tokenSeconds, callsPerMinute, userCallsPerMinute, enabled), secretSha256);
+        }
+    }
+
     public EmbedProperties {
         enabled = enabled != null && enabled;
         issuer = issuer == null ? "" : issuer.trim().replaceAll("/+$", "");
@@ -73,6 +90,7 @@ public record EmbedProperties(Boolean enabled, String issuer, List<String> audie
         limits = limits == null ? new Limits(null, null, null) : limits;
         allowWildcardOrigins = allowWildcardOrigins != null && allowWildcardOrigins;
         assertionMaxAge = assertionMaxAge == null ? Duration.ofSeconds(60) : assertionMaxAge;
+        apps = apps == null ? List.of() : List.copyOf(apps);
     }
 
     /** The audience a token is made for when the request names none. */

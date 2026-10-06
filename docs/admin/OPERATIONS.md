@@ -1348,6 +1348,8 @@ drishti_view_seconds_sum 0.313422287
 drishti_view_seconds_max 0.017122086
 ```
 
+With embedding on, each registered host application has `drishti_embed_tokens_total`, `drishti_embed_calls_total`, `drishti_embed_refusals_total{code="DRS-8002"}` and the gauge `drishti_embed_streams`, all labelled `app` (the same numbers as Admin → Embedding; refusals that name no registered application are `app="(unknown)"`).
+
 The usual Spring metrics (`jvm_*`, `http_server_requests_seconds_*`, `process_*`) are there too.
 
 Import `deploy/grafana/drishti-dashboard.json` into Grafana. Its panels: view build p99 (`drishti_view_seconds`),

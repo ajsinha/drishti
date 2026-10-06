@@ -56,8 +56,10 @@ public class EmbedController {
     private final EmbedTokenService tokens;
     private final EmbedAppStore apps;
     private final Entitlements entitlements;
+    private final EmbedUsage usage;
 
-    public EmbedController(EmbedTokenService tokens, EmbedAppStore apps, Entitlements entitlements) {
+    public EmbedController(EmbedTokenService tokens, EmbedAppStore apps, Entitlements entitlements, EmbedUsage usage) {
+        this.usage = usage;
         this.tokens = tokens;
         this.apps = apps;
         this.entitlements = entitlements;
@@ -141,6 +143,25 @@ public class EmbedController {
         return apps.all();
     }
 
+    /** What each application did since this server started (not persisted): tokens, calls, refusals by code, live streams, last use. */
+    @GetMapping("/api/v1/admin/embed/usage")
+    public Map<String, Object> usage(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("since", tokens.startedAt());
+        out.put("enabled", tokens.enabled());
+        EmbedProperties pr = tokens.properties();                 // what the registration form offers: all from configuration
+        Map<String, Object> settings = new LinkedHashMap<>();
+        settings.put("scopes", pr.scopes().keySet().stream().sorted().toList());
+        settings.put("tokenMaxSeconds", pr.tokenMaxSeconds());
+        settings.put("callsPerMinute", pr.limits().viewsPerMinute());
+        settings.put("userCallsPerMinute", pr.limits().viewsPerUserPerMinute());
+        settings.put("allowWildcardOrigins", pr.allowWildcardOrigins());
+        out.put("settings", settings);
+        out.put("apps", usage.snapshots(apps.all().stream().map(EmbedAppStore.App::id).toList()));
+        return out;
+    }
+
     @GetMapping("/api/v1/admin/embed/apps/{id}")
     public EmbedAppStore.App one(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
@@ -159,6 +180,19 @@ public class EmbedController {
     public EmbedAppStore.App update(@PathVariable String id, @RequestBody EmbedAppStore.Draft draft, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         return apps.update(id, checked(draft), p.user());
+    }
+
+    /** Stops the application at once, keeping its registration (unlike delete): no new tokens, and its tokens fail at the next call. */
+    @PostMapping("/api/v1/admin/embed/apps/{id}/disable")
+    public EmbedAppStore.App disable(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return apps.setEnabled(id, false, p.user());
+    }
+
+    @PostMapping("/api/v1/admin/embed/apps/{id}/enable")
+    public EmbedAppStore.App enable(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return apps.setEnabled(id, true, p.user());
     }
 
     @PostMapping("/api/v1/admin/embed/apps/{id}/rotate-secret")
