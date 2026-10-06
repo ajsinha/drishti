@@ -100,6 +100,9 @@
     <!-- LZ4 Parquet pages (delta-rs and Arrow write them): the maintained lz4-java fork, safe pure-Java and JNI decoders -->
     <lz4-java.version>1.10.2</lz4-java.version>
     <duckdb.version>1.5.6.0</duckdb.version>
+    <!-- test classes run in this many parallel JVM forks per module (each fork reused for many classes); -Ddrishti.test.forks=1
+         runs them serially. Fixed scratch paths in a module's surefire configuration carry ${surefire.forkNumber} -->
+    <drishti.test.forks>4</drishti.test.forks>
   </properties>
 
   <dependencyManagement>
@@ -155,6 +158,14 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <forkCount>${drishti.test.forks}</forkCount>
+          <reuseForks>true</reuseForks>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>

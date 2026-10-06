@@ -25,7 +25,7 @@ import time
 import pytest
 
 from conftest import CONSOLE
-from wb_live import BROWSER_WAIT_MS, live_console, new_design, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
+from wb_live import BROWSER_WAIT_MS, should_reload, live_console, new_design, post, showcase_json, showcase_sutra  # noqa: F401 - the fixture
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 ALL_KINDS = ["kv", "status", "provenance", "markdown", "table", "ladder", "pivot", "tabs", "line", "area", "candlestick", "surface", "histogram",
@@ -57,13 +57,27 @@ def page(browser):
     pg.close()
 
 
-def wait(page, js, seconds=BROWSER_WAIT_MS / 1000):   # generous: the full suite runs beside Maven builds
-    """Polls a JavaScript expression until it is truthy (Playwright's own wait_for_function evaluates a string, which the console's CSP forbids)."""
+def _poll(page, js, seconds):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         if page.evaluate(js):
-            return
+            return True
         page.wait_for_timeout(100)
+    return False
+
+
+def wait(page, js, seconds=BROWSER_WAIT_MS / 1000):   # generous: the full suite runs beside Maven builds
+    """Polls a JavaScript expression until it is truthy (Playwright's own wait_for_function evaluates a string, which the console's CSP forbids).
+    When it times out and the page's failed requests hold net::ERR_NETWORK_CHANGED (Chromium cancels requests when Docker changes the
+    network interfaces), the page is reloaded once and waited on again; any other cause fails as before."""
+    if _poll(page, js, seconds):
+        return
+    if should_reload(getattr(page, "network", None), getattr(page, "reloaded_for_network", False)):
+        page.reloaded_for_network = True
+        page.network.append("drill: reloaded once after ERR_NETWORK_CHANGED")
+        page.reload()
+        if _poll(page, js, seconds):
+            return
     # say what the page was doing: a timeout on its own cannot tell a slow machine from a page that failed to start
     try:
         state = page.evaluate("({url: location.href, title: document.title, ready: document.readyState,"

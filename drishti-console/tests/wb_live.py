@@ -65,6 +65,16 @@ class Stack(str):
         return s
 
 
+NETWORK_CHANGED = "net::ERR_NETWORK_CHANGED"
+
+
+def should_reload(network, reloaded: bool) -> bool:
+    """Whether a wait that timed out is worth one reload: Chromium cancels the requests in flight when the machine's network
+    interfaces change (Docker starting or stopping a container does it), so a page can sit unstarted with ERR_NETWORK_CHANGED in
+    its failed requests. Once per page, and only for that cause: any other timeout is a real failure."""
+    return (not reloaded) and any(NETWORK_CHANGED in str(n) for n in (network or []))
+
+
 def free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))

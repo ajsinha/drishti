@@ -14,3 +14,4 @@ scipy>=1.13
 # Test-only: tests/test_live_tabs_browser.py drives Chromium (many live tabs, UX-01). Skipped unless the browser is there
 # too: `python -m playwright install chromium`.
 playwright>=1.45
+pytest-xdist>=3.5      # the drill runs the suite in parallel (tools/drill.sh)

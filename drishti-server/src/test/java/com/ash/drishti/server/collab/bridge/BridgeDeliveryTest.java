@@ -394,7 +394,10 @@ class BridgeDeliveryTest {
             // (AppenderBase.doAppend synchronizes on it), or a concurrent append breaks the iteration
             List<String> messages;
             synchronized (logs) {
-                messages = logs.list.stream().map(ILoggingEvent::getFormattedMessage).toList();
+                // not the JDK's own HttpServer, which the test's stand-in endpoint uses and which logs the request line it receives
+                // (a JUL bridge installed by an earlier test class in the same JVM makes it audible): only Drishti's lines matter
+                messages = logs.list.stream().filter(e -> !e.getLoggerName().startsWith("com.sun.net.httpserver"))
+                        .map(ILoggingEvent::getFormattedMessage).toList();
             }
             String all = h.outbox.list(null, 50).toString() + h.audited + h.registry.all() + messages;
             assertThat(all).doesNotContain("xyzSECRETtoken", "T0SECRET", BridgeHarness.SIGNING_SECRET, h.base + BridgeHarness.SECRET_PATH);
