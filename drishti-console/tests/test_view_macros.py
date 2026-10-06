@@ -55,7 +55,8 @@ def test_a_panel_is_the_same_html_on_the_console_page_and_in_the_embed_payload(c
     for p in body["panels"]:
         if p["id"] not in page:
             continue
-        assert "pnl-help" not in p["html"] and "data-export-panel" not in p["html"]     # console-only affordances dropped
+        # the panel ? stays (the element's About hints attach their popover to it); the CSV export is console-only
+        assert "pnl-help" in p["html"] and "data-export-panel" not in p["html"]
         assert AFFORDANCES.sub("", page[p["id"]]) == p["html"], p["id"]
         compared += 1
     assert compared == len(body["panels"]) >= 2
