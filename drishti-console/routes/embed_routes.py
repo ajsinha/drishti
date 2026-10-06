@@ -30,6 +30,7 @@ from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, Response
 
 from core.backend import BackendError
+from core.csrf import BodyError, json_body
 from core.embed_poc import EmbedError
 from routes import api_routes
 
@@ -84,12 +85,12 @@ async def dev_token(request: Request):
     if request.headers.get("origin"):
         return refuse(request, 403, "DRS-8002", "the dev token is for a host's backend, never a browser")
     try:
-        body = await request.json()
+        body = await json_body(request, limit=16_384)
         return JSONResponse(request.app.state.embed_poc.mint(body.get("app"), body.get("secret"), body.get("user"), body.get("roles")),
                             headers={"Cache-Control": "no-store"})
     except EmbedError as e:
         return refuse(request, e.status, e.code, e.detail)
-    except (ValueError, AttributeError):
+    except (BodyError, ValueError, AttributeError):
         return refuse(request, 400, "DRS-5001", "a JSON body {app, secret, user, roles}")
 
 
@@ -228,8 +229,8 @@ async def channel_change(request: Request, cid: str):
     if ch is None or ch["user"] != me.user:      # build step 7 also checks the host application (ChannelSession)
         return refuse(request, 404, "DRS-5001", "no such channel: open a new one")
     try:
-        body = await request.json()
-    except ValueError:
+        body = await json_body(request, limit=16_384)
+    except (BodyError, ValueError):
         return refuse(request, 400, "DRS-5001", "a JSON body {add, remove}")
     limit = api_routes.max_subscriptions(request)
     for sub in (body.get("remove") or [])[:limit]:
