@@ -22,8 +22,13 @@ import java.util.List;
  *
  * @param user user id
  * @param roles role names
+ * @param embedApp the host application whose embed token this call carries, or null: an embedded call always sees masked fields
  */
-public record Principal(String user, List<String> roles) {
+public record Principal(String user, List<String> roles, String embedApp) {
+
+    public Principal(String user, List<String> roles) {
+        this(user, roles, null);
+    }
 
     public static final String ATTRIBUTE = "drishti.principal";
 

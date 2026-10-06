@@ -12,16 +12,19 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Embedded views, proof of concept (docs/architecture/ELEMENTS.md, build step 0): the acceptance criteria, in Chromium,
+"""Embedded views (docs/architecture/ELEMENTS.md, build step 0, run against the real token exchange of steps 1 to 3): the acceptance criteria, in Chromium,
 Firefox and WebKit, against a HOST application on another origin (tools/elements-demo) and a real scratch server.
 
 The stack is three processes: the Drishti server (port 18969, the built jar, security on, the trading pack), the console
-(17969, embed.poc on) and the host (17968). A server already answering on 18969 is used as it is (the same token secret
-is assumed); the console and the host are always started here. Skipped when Playwright, a browser or the server jar is
+(17969, embed on) and the host (17968). The host application is registered at the server through the admin API (a client secret
+shown once, the demo host's public key), two users are created, and the host's backend does the RFC 8693 exchange with a
+user assertion it signs. A server already answering on 18969 is used as it is (the same token secret is assumed, embedding on);
+the console and the host are always started here. Skipped when Playwright, a browser or the server jar is
 missing. Measurements are appended to the file named by DRISHTI_ELEMENTS_RESULTS (default: the test's temp folder).
 
     drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_embed_elements_browser.py
 """
+import base64
 import glob
 import gzip
 import json
@@ -32,6 +35,7 @@ import statistics
 import subprocess
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -43,12 +47,46 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 from conftest import CONSOLE  # noqa: E402
 
 ROOT = CONSOLE.parent
-SERVER_PORT, CONSOLE_PORT, HOST_PORT = 18962, 17962, 17961
+SERVER_PORT, CONSOLE_PORT, HOST_PORT = (int(os.environ.get(k, d)) for k, d in (("DRISHTI_ELEMENTS_SERVER_PORT", 18969), ("DRISHTI_ELEMENTS_CONSOLE_PORT", 17969), ("DRISHTI_ELEMENTS_HOST_PORT", 17968)))
 SERVER = f"http://127.0.0.1:{SERVER_PORT}"
 CONSOLE_URL = f"http://127.0.0.1:{CONSOLE_PORT}"
 HOST = f"http://127.0.0.1:{HOST_PORT}"
 SECRET = os.environ.get("DRISHTI_ELEMENTS_TOKEN_SECRET", "poc-scratch-secret-0123456789abcdef0123")
-APP_SECRET = "demo-app-secret-not-for-production"
+APP_ID = "elements-demo"
+KEY = json.loads((ROOT / "tools/elements-demo/demo-host-key.json").read_text())
+
+
+def _admin_call(method: str, path: str, body=None):
+    """The server's admin API, as an administrator (the stack's token secret signs the token, as the console's does)."""
+    from core.auth import mint_token
+
+    data = None if body is None else json.dumps(body).encode()
+    req = urllib.request.Request(SERVER + "/api/v1" + path, data, {"Authorization": "Bearer " + mint_token("root", ["admin"], SECRET, 120),
+                                                                    "Content-Type": "application/json"}, method=method)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            raw = r.read()
+            return json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as e:
+        if e.code == 409 or e.code == 400 and b"already exists" in e.read():
+            return {}
+        raise
+
+
+def register_host() -> str:
+    """Users the host signs in, and the host application itself; returns the client secret (shown once)."""
+    for name, role in (("viewer", "viewer"), ("author", "author")):
+        _admin_call("POST", "/admin/users", {"username": name, "displayName": name, "roles": [role], "password": f"Embed-Demo-Pass-{name}-1!",
+                                             "mustChangePassword": False})
+    try:
+        _admin_call("DELETE", f"/admin/embed/apps/{APP_ID}")
+    except urllib.error.HTTPError:
+        pass
+    enc = lambda h: base64.urlsafe_b64encode(bytes.fromhex(h if len(h) % 2 == 0 else "0" + h)).rstrip(b"=").decode()  # noqa: E731
+    jwks = json.dumps({"keys": [{"kty": "RSA", "kid": KEY["kid"], "n": enc(KEY["n"]), "e": enc(KEY["e"])}]})
+    made = _admin_call("POST", "/admin/embed/apps", {"id": APP_ID, "name": "Elements demo", "origins": [HOST], "scopes": ["embed:view", "embed:about"],
+                                                     "jwks": jwks, "subjectTypes": ["jwt"], "callsPerMinute": 100000, "userCallsPerMinute": 100000})
+    return made["secret"]
 BROWSERS = ["chromium", "firefox", "webkit"]
 MAIN_ID, SIDE_ID = "END-1000008", "END-1000002"
 RAPID = [f"END-10000{n:02d}" for n in (6, 7, 9, 10, 11, 12, 13, 14, 15, 16)]      # ten trades for the rapid-switching test
@@ -76,11 +114,8 @@ class Stack:
         self.tmp, self.procs, self.results = tmp, {}, Path(os.environ.get("DRISHTI_ELEMENTS_RESULTS") or tmp / "results.jsonl")
 
     def start_console(self):
-        env = dict(os.environ, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_POC_ENABLED="true",
-                   DRISHTI_EMBED_POC_KEY="poc-signing-key-0123456789abcdef0123456")
-        app = "--embed.poc.apps.elements-demo."
-        args = [sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}",
-                f"{app}secret={APP_SECRET}", f"{app}origins={HOST}", f"{app}role_map.viewer=viewer", f"{app}role_map.author=viewer"]
+        env = dict(os.environ, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true")
+        args = [sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"]
         self.procs["console"] = subprocess.Popen(args, env=env, stdout=open(self.tmp / "console.log", "ab"), stderr=subprocess.STDOUT)
         _wait(CONSOLE_URL + "/healthz")
 
@@ -119,13 +154,14 @@ def stack(tmp_path_factory):
         work = tmp / "server"
         work.mkdir()
         env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "packs"), DRISHTI_SECURITY_ENABLED="true",
-                   DRISHTI_TOKEN_SECRET=SECRET)
+                   DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true", DRISHTI_PUBLIC_URL=SERVER, DRISHTI_CONSOLE_URL=CONSOLE_URL)
         s.procs["server"] = subprocess.Popen([java, "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"],
                                              cwd=work, env=env, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         _wait(SERVER + "/actuator/health", 120)
+    s.app_secret = register_host()
     s.start_console()
     s.procs["host"] = subprocess.Popen([sys.executable, str(ROOT / "tools/elements-demo/server.py"), "--port", str(HOST_PORT), "--console", CONSOLE_URL,
-                                        "--secret", APP_SECRET], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+                                        "--server", SERVER, "--secret", s.app_secret], stdout=open(tmp / "host.log", "ab"), stderr=subprocess.STDOUT)
     _wait(HOST + "/api/me")
     yield s
     s.close()
@@ -451,9 +487,9 @@ def test_switch_timing_over_ten_switches(host, stack, browser):
 def test_measurements(stack, browser):
     if browser.browser_type.name != "chromium":
         pytest.skip("payloads do not depend on the browser")
-    tok = json.loads(urllib.request.urlopen(urllib.request.Request(
-        CONSOLE_URL + "/embed/v1/poc/token", json.dumps({"app": "elements-demo", "secret": APP_SECRET, "user": "viewer", "roles": ["viewer"]}).encode(),
-        {"Content-Type": "application/json"})).read())["access_token"]
+    host_session = urllib.request.Request(HOST + "/api/login", json.dumps({"user": "viewer"}).encode(), {"Content-Type": "application/json"})
+    cookie = urllib.request.urlopen(host_session).headers["Set-Cookie"].split(";")[0]
+    tok = json.loads(urllib.request.urlopen(urllib.request.Request(HOST + "/api/drishti-token", headers={"Cookie": cookie})).read())["token"]
     auth = {"Authorization": "Bearer " + tok, "Origin": HOST}
 
     def get(path):

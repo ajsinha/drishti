@@ -22,7 +22,7 @@ from fastapi.testclient import TestClient
 from conftest import CONSOLE
 from core.app import create_app
 from core.config import load_settings
-from test_embed_poc import ARGS, HOST, token
+from test_embed import HOST, make_client, token
 
 KIND, ID = "trade", "IRS-47102"
 AFFORDANCES = re.compile(r'<a class="pnl-help"[^>]*>.*?</a>', re.S)
@@ -30,9 +30,7 @@ AFFORDANCES = re.compile(r'<a class="pnl-help"[^>]*>.*?</a>', re.S)
 
 @pytest.fixture
 def embed(backend):
-    app = create_app(load_settings(CONSOLE / "config", ARGS))
-    app.state.backend = backend
-    return TestClient(app)
+    return make_client(backend)
 
 
 def sections(html: str) -> dict:
@@ -50,7 +48,7 @@ def sections(html: str) -> dict:
 
 def test_a_panel_is_the_same_html_on_the_console_page_and_in_the_embed_payload(client, embed):
     page = sections(client.get(f"/v/{KIND}/{ID}").text)
-    tok, _ = token(embed)
+    tok = token()
     body = embed.get(f"/embed/v1/views/{KIND}/{ID}", headers={"Authorization": f"Bearer {tok}", "Origin": HOST}).json()
     assert body["panels"] and page
     compared = 0
@@ -65,7 +63,7 @@ def test_a_panel_is_the_same_html_on_the_console_page_and_in_the_embed_payload(c
 
 def test_the_title_and_strip_are_the_page_s(client, embed):
     page = client.get(f"/v/{KIND}/{ID}").text
-    tok, _ = token(embed)
+    tok = token()
     body = embed.get(f"/embed/v1/views/{KIND}/{ID}", headers={"Authorization": f"Bearer {tok}", "Origin": HOST}).json()
     strip = re.search(r'<dl class="strip">.*?</dl>', body["head"], re.S).group()
     assert strip in page                                              # the same macro, the same bytes

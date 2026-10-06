@@ -338,3 +338,28 @@ CREATE TABLE IF NOT EXISTS drishti_collab_seal (
     cnt BIGINT NOT NULL,
     hash VARCHAR(64) NOT NULL
 );
+
+-- Host applications that may show views in their own pages (Drishti Elements; docs/architecture/ELEMENTS.md).
+CREATE TABLE IF NOT EXISTS drishti_embed_app (
+    id                    VARCHAR(32)  PRIMARY KEY,
+    name                  VARCHAR(255) NOT NULL,
+    contact               VARCHAR(255) NOT NULL DEFAULT '',
+    origins               TEXT         NOT NULL DEFAULT '',
+    kinds                 TEXT         NOT NULL DEFAULT '',
+    scopes                VARCHAR(255) NOT NULL DEFAULT '',
+    subject_types         VARCHAR(255) NOT NULL DEFAULT '',
+    subject_audiences     TEXT         NOT NULL DEFAULT '',
+    jwks                  TEXT,
+    secret_hash           VARCHAR(255),
+    prev_secret_hash      VARCHAR(255),
+    prev_secret_until     TIMESTAMP WITH TIME ZONE,
+    token_seconds         INTEGER      NOT NULL,
+    calls_per_minute      INTEGER      NOT NULL,
+    user_calls_per_minute INTEGER      NOT NULL,
+    enabled               BOOLEAN      NOT NULL,
+    created_at            TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_by            VARCHAR(255) NOT NULL DEFAULT '',
+    updated_at            TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_by            VARCHAR(255) NOT NULL DEFAULT '',
+    last_used_at          TIMESTAMP WITH TIME ZONE
+);

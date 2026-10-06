@@ -25,8 +25,11 @@ entity inside the view (the counterparty) raises `drishti:navigate`; the host ta
 is served with the strict CSP a careful host would have (no `'unsafe-inline'`, no `frame-src`); anything it blocks is
 listed at `/api/csp-reports`.
 
-**The token path is a DEV-ONLY stand-in** (`embed.poc.enabled`, off by default) for the server's RFC 8693 exchange, which is
-build step 1. Do not enable it anywhere real.
+**The tokens are real.** The host's backend signs a short assertion about its signed-in user with its own RSA key
+(`demo-host-key.json`: a DEMO key, never use it anywhere real) and exchanges it, with its client secret, at the Drishti
+**server** (`POST /api/v1/embed/token`, RFC 8693, [API_GUIDE](../../docs/guides/API_GUIDE.md#embedding-views-in-another-web-application)).
+The page gets a five-minute, read-only, always-masked embed token. Both demo users must exist in Drishti (the exchange refuses
+a stranger).
 
 ## Run it
 
@@ -34,29 +37,31 @@ Three processes, on ports that are free. The commands are from the repository ro
 (`uv venv drishti-console/.venv && uv pip install -p drishti-console/.venv/bin/python -r drishti-console/requirements.txt`).
 
 ```bash
-# 1. the Drishti server, security on (the console's token secret must be the same), the trading pack, a scratch folder for ./data
+# 1. the Drishti server: security on, embedding on, the trading pack, a scratch folder for ./data
 ./mvnw -o -q package -DskipTests -pl drishti-server -am
 mkdir -p /tmp/drishti-elements && cd /tmp/drishti-elements
 DRISHTI_PACKS=trading DRISHTI_PACKS_DIR=<repo>/packs DRISHTI_SECURITY_ENABLED=true \
-DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 \
+DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \
+DRISHTI_PUBLIC_URL=http://127.0.0.1:18969 DRISHTI_CONSOLE_URL=http://127.0.0.1:17969 \
   java -jar <repo>/drishti-server/target/drishti-server-*-exec.jar --server.port=18969 --drishti.security.registered-users-only=false &
 
-# 2. the console, with the proof of concept on and one host application declared (exact origins, a secret)
-cd <repo>/drishti-console
-DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_POC_ENABLED=true \
-DRISHTI_EMBED_POC_KEY=poc-signing-key-0123456789abcdef0123456 \
-  .venv/bin/python run_drishti_web.py --server.port=17969 --backend.url=http://127.0.0.1:18969 \
-  --embed.poc.apps.elements-demo.secret=demo-app-secret-not-for-production \
-  --embed.poc.apps.elements-demo.origins=http://127.0.0.1:17968 \
-  --embed.poc.apps.elements-demo.role_map.viewer=viewer --embed.poc.apps.elements-demo.role_map.author=viewer &
+# 2. register the demo users and the host application as an administrator (the admin token is made with the same secret):
+#    see register_host() in drishti-console/tests/test_embed_elements_browser.py for the exact calls; the answer of
+#    POST /api/v1/admin/embed/apps shows the client secret once. Origins: http://127.0.0.1:17968; jwks: the public half of
+#    demo-host-key.json (n, e); subjectTypes: ["jwt"].
 
-# 3. the host application, on its own origin
+# 3. the console, with embedding on
+cd <repo>/drishti-console
+DRISHTI_TOKEN_SECRET=poc-scratch-secret-0123456789abcdef0123 DRISHTI_EMBED_ENABLED=true \
+  .venv/bin/python run_drishti_web.py --server.port=17969 --backend.url=http://127.0.0.1:18969 &
+
+# 4. the host application, on its own origin
 cd <repo>
-python3 tools/elements-demo/server.py --port 17968 --console http://127.0.0.1:17969 --secret demo-app-secret-not-for-production
+python3 tools/elements-demo/server.py --port 17968 --console http://127.0.0.1:17969 --server http://127.0.0.1:18969 --secret <the client secret>
 ```
 
 Open <http://127.0.0.1:17968/>, press **viewer** or **author** (the host's two demo users), and the trade
-`END-1000008` appears with its MTM ticking. Both users see masked fields (`•••`): embedded views always mask. Open the
+`END-1000008` appears with its MTM ticking. Both users see masked fields (`•••`) even though `author` holds the `raw` role: embedded views always mask. Open the
 console's own page (`http://127.0.0.1:17969/v/trade/END-1000008`) beside it to see the same trade unmasked.
 
 ## What to try

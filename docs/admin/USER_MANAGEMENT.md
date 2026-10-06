@@ -213,6 +213,23 @@ tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to kn
 - `token-created` and `token-revoked` are in the audit log; so are `signed-out` (a console sign-out) and
   `sessions-ended` (an administrator's disable, delete or password reset ended the user's console sessions).
 
+## Embedding host applications
+
+Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); until Admin → Embedding ships, register applications with the API ([API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)):
+
+```bash
+curl -s -X POST $SERVER/api/v1/admin/embed/apps -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{
+  "id": "crm", "name": "Client CRM", "contact": "crm-team@bank.example",
+  "origins": ["https://crm.bank.example"], "kinds": ["trade", "counterparty"], "scopes": ["embed:view"],
+  "jwks": "{\"keys\": [ ... the host backend public key ... ]}"}'      # the answer shows the client secret once
+```
+
+- The host's **backend** keeps the client secret (or signs with its key) and tells Drishti who its signed-in user is with that user's ID token or a JWT it signs itself; it can never name a user with the secret alone. The browser only ever holds a five-minute, read-only embed token.
+- Embedded views **always mask** the fields in `drishti.security.redact`, even for users whose roles have `raw`, and show only the kinds the application was registered for (`kinds`) that the user's roles open now.
+- `enabled: false` (a `PUT`) stops the application at once: its tokens are refused at the next call. Disabling a user does the same for that user. **Rotate** the secret with a grace period (`rotate-secret`) so the host can switch over.
+- The audit log has `embed-app-created`, `-changed`, `-enabled`, `-disabled`, `-secret-rotated`, `-deleted`, and for every token request `embed-token` or `embed-token-refused`. The access log shows each embedded view as the user's own with the detail `embed:<application>`, so "which application showed what to whom" is Admin → Access.
+- Rates (`callsPerMinute` per application, `userCallsPerMinute` per user) answer `429 DRS-8004` with `Retry-After`.
+
 ## Who looked at what: the access log
 
 Every read that was answered is recorded: a view, a raw document (F9), a history or compare read, a search and a

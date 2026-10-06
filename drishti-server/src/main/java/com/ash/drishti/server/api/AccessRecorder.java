@@ -103,7 +103,10 @@ public class AccessRecorder implements WebMvcConfigurer, HandlerInterceptor {
                 svc.opened(share.trim(), who.user());
             }
         }
-        if (kind == null && detail != null) {                     // a search: its mnemonic or kind is the first word
+        if (who.embedApp() != null) {
+            detail = "embed:" + who.embedApp();                // which host application showed it to this user
+        }
+        if (kind == null && detail != null) {                    // a search: its mnemonic or kind is the first word
             kind = detail.trim().split("\\s+", 2)[0];
         }
         sink.record(new AccessLog.Event(Instant.now(), who.user(), action, kind, id, detail, date == null || date.isBlank() ? null : date));

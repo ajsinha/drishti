@@ -207,6 +207,10 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_TOKEN_SECRET` | `drishti.security.secret` | empty | The token signing secret (at least 32 bytes), shared with the console. |
 | `DRISHTI_METRICS_TOKEN` | `drishti.security.metrics-token` | empty | A bearer token for Prometheus to scrape `/actuator/prometheus` with security on. |
 | `DRISHTI_OIDC_ENABLED` | `drishti.security.oidc.enabled` | `false` | Verify single-sign-on ID tokens. |
+| `DRISHTI_EMBED_ENABLED` | `drishti.embed.enabled` | `false` | Embedded views for other web applications: the token endpoint and embed tokens. Needs security on. |
+| `DRISHTI_PUBLIC_URL` | `drishti.embed.issuer` | empty | This server's public URL: the `iss` of embed tokens. |
+| `DRISHTI_CONSOLE_URL` | `drishti.embed.audiences` | empty | The console's public URL: the audience embed tokens are made for. |
+| `DRISHTI_EMBED_KEY_FILE` | `drishti.embed.signing-key` | empty | PEM file with the ES256 key pair that signs embed tokens (empty: made at start). |
 | `DRISHTI_OIDC_ISSUER` | `drishti.security.oidc.issuer` | empty | The OIDC issuer URL. |
 | `DRISHTI_OIDC_CLIENT_ID` | `drishti.security.oidc.client-id` | empty | The OIDC client id. |
 | `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | Record who looked at what (Admin → Access). |
@@ -265,8 +269,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_PRODUCT` | `ui.product` | `Drishti` | The product name shown in pages. |
 | `DRISHTI_USER` | `ui.user` | `ash` | The acting user while sign-in is off. |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | Fetch *About this page* when a view goes idle, so labels with a glossary entry are underlined at once; costs one explain per page view. |
-| `DRISHTI_EMBED_POC_ENABLED` | `embed.poc.enabled` | `false` | Proof of concept of embedded views (ELEMENTS.md, step 0): serve `/embed/v1/` for host applications. Development only. |
-| `DRISHTI_EMBED_POC_KEY` | `embed.poc.signing_key` | empty | Signs the proof of concept's dev tokens (at least 32 characters); environment only. |
+| `DRISHTI_EMBED_ENABLED` | `embed.enabled` | `false` | Serve `/embed/v1/` for host applications registered at the server (ELEMENTS.md). |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | Turn console sign-in on. |
 | `DRISHTI_SESSION_SECRET` | `auth.session_secret` | empty | The session cookie secret (at least 32 characters); environment only. |
 | `DRISHTI_TOKEN_SECRET` | `auth.token_secret` | empty | The token secret shared with the server's `drishti.security.secret`. |
@@ -611,6 +614,25 @@ A masked field cannot be probed: a condition on it is never true (`mtm > 0` and 
 does not order, and the type-ahead does not match it. A mask hides the field it names, nothing else: a value the
 document also holds under another name (cash-flow PVs that add up to a masked MTM, say) stays visible unless that field
 is listed too.
+
+### `drishti.embed` — embedded views for other web applications
+
+Off by default. A host application's backend buys a short embed token at the server (RFC 8693); every embed call is checked against the registered application and the user, and always masks. See [API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application) for the exchange and [USER_MANAGEMENT.md](USER_MANAGEMENT.md#embedding-host-applications) for registering an application.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `false` (`DRISHTI_EMBED_ENABLED`) | Switch embedding on. Without it there is no token endpoint and embed tokens are refused (`DRS-8001`). The server refuses to start with it on while `drishti.security.enabled` is off: an embed token is only checked when security is on. |
+| `issuer` | empty (`DRISHTI_PUBLIC_URL`) | The `iss` of embed tokens: this server's public URL. |
+| `audiences` | empty (`DRISHTI_CONSOLE_URL`) | The consoles that may accept embed tokens (their public URLs). A token request names one (`audience`); the first is the default. A call whose token names another is refused. |
+| `signing-key` | empty (`DRISHTI_EMBED_KEY_FILE`) | PEM file with a PKCS#8 EC `PRIVATE KEY` and its `PUBLIC KEY` block (P-256, ES256): `openssl ecparam -name prime256v1 -genkey -noout \| openssl pkcs8 -topk8 -nocrypt > key.pem` and append `openssl ec -pubout` of it. Empty: a key is made at start (a warning is logged), so tokens do not survive a restart and a second server cannot verify them. Published at `GET /api/v1/embed/jwks`. |
+| `token-max-seconds` | `900` | The longest life of an embed token, and the cap on an application's own `tokenSeconds` (default 300, at least 30). |
+| `mask` | `always` | Embed calls mask the fields in `drishti.security.redact` whatever the user's roles say. Only `always` exists. |
+| `allow-wildcard-origins` | `false` | Let an application register `https://*.suffix` origins (review apps). |
+| `assertion-max-age` | `60s` | The longest life (`exp` minus `iat`) of a client assertion or user assertion a host signs. |
+| `scopes` | `embed:view`, `embed:about` | Each embed scope with the `METHOD path` patterns it opens. A token calls nothing else, and nothing writes. Keys keep their colon in brackets: `[embed:view]`, `[embed:about]`. |
+| `limits.tokens-per-minute` | `120` | Token requests per host application per minute (`429 DRS-8004`). |
+| `limits.views-per-minute` | `600` | The default `callsPerMinute` of a new application: calls per application per minute. |
+| `limits.views-per-user-per-minute` | `60` | The default `userCallsPerMinute` of a new application. |
 
 ### `drishti.security.oidc` — single sign-on
 
@@ -1579,19 +1601,14 @@ sign-on settings (`auth.oidc`) apply to every server; each server verifies the I
 | `error_advice` | a short text for each of `DRS-1001`, `DRS-1002`, `DRS-1003`, `DRS-1004`, `DRS-1007`, `DRS-4003`, `DRS-4004`, and `default` | What an error page tells the user to do, by the code the server answered with. `{kind}` and `{id}` in a text become the entity asked for; a code with no entry gets `default`. Edit it so the advice fits your site (who to ask, which channel). |
 | `showcase` | four finance-pack screenshots | The landing page's pictures: `{slug, title, cmd, sutra}` each, the image being `web/static/img/shot-<slug>.png`. A caption names its `cmd` only when that command is one of the packs' examples. |
 
-### `embed.poc` — embedded views, proof of concept
+### `embed` — embedded views
 
-Off by default. This is the throwaway path of build step 0 in [ELEMENTS.md](../architecture/ELEMENTS.md), not a product feature: with `enabled: false` nothing under `/embed/` exists. The real design (token exchange on the server, `Admin → Embedding`) replaces it.
+Off by default: with `enabled: false` nothing under `/embed/` exists. Host applications and tokens are the **server's** (`drishti.embed.*`, [API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)); the console serves the embed routes, passes the embed token to the server on every call, and learns the registered origins for CORS from the server.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `false` (`DRISHTI_EMBED_POC_ENABLED`) | Serve `/embed/v1/` (view, channel, resolve, the element's script and sheet) and the dev-only `POST /embed/v1/poc/token`. |
-| `signing_key` | empty (`DRISHTI_EMBED_POC_KEY`) | Signs the dev tokens; at least 32 characters, or the console will not start with `enabled: true`. Not the server's secret. |
-| `token_ttl_seconds` | `300` | Lifetime of a dev token. |
-| `masked_role` | `viewer` | The role embedded calls run as when none of the user's roles maps: embedded views always mask (Decision 5). |
-| `apps.<id>.secret` | none | The host application's secret, shown only to its backend, which exchanges it for a token naming its signed-in user. |
-| `apps.<id>.origins` | none | The host's exact origins: the CORS allow-list (no wildcards) and the `Origin` every call must carry. |
-| `apps.<id>.role_map` | `{}` | The user's roles the host states, mapped to the roles embedded calls run as (every role with `raw` must map to one without). |
+| `enabled` | `false` (`DRISHTI_EMBED_ENABLED`) | Serve `/embed/v1/` (view, channel, resolve, the element's script and sheet). |
+| `origins_ttl_seconds` | `60` | How long the console keeps the origins its server's host applications registered (the CORS allow-list). A new or changed application is known within this time. |
 
 ### `auth`
 
@@ -1688,6 +1705,8 @@ Server (S), console (C), or both.
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | C | `live.max_subscriptions` |
 | `DRISHTI_TOKEN_SECRET` | S, C | `drishti.security.secret`, `auth.token_secret` |
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | S, C | `drishti.security.oidc.*`, `auth.oidc.*` |
+| `DRISHTI_EMBED_ENABLED` | S, C | `drishti.embed.enabled`, `embed.enabled` |
+| `DRISHTI_PUBLIC_URL`, `DRISHTI_CONSOLE_URL`, `DRISHTI_EMBED_KEY_FILE` | S | `drishti.embed.issuer`, `.audiences`, `.signing-key` |
 | `DRISHTI_OIDC_CLIENT_SECRET`, `DRISHTI_OIDC_REDIRECT_URI` | C | `auth.oidc.*` |
 | `DRISHTI_SEED_ADMIN` and other identity variables | S | see [USER_MANAGEMENT.md](USER_MANAGEMENT.md) |
 | `DRISHTI_DELTA_ROOT`, `DRISHTI_DELTA_ENGINE`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_STREAM_*`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_TRADING_TOPIC`, `DRISHTI_CACHE_*`, `DRISHTI_FEED_*`, `FRED_API_KEY`, `DRISHTI_FRED_SERIES` | S (packs) | [pack connectors](#environment-variables-used-by-the-packs-and-profiles) |

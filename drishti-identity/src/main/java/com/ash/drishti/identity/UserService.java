@@ -206,7 +206,7 @@ public final class UserService {
     }
 
     /** A provider's user name as a Drishti user name: lower case, anything outside a-z 0-9 . _ - becomes '-'. */
-    static String federatedName(String providerUser) {
+    public static String federatedName(String providerUser) {
         String n = norm(providerUser).replaceAll("[^a-z0-9._-]", "-").replaceAll("^[^a-z0-9]+", "");
         if (n.length() > 64) {
             n = n.substring(0, 64);

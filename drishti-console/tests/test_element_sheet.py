@@ -25,7 +25,7 @@ from conftest import CONSOLE
 from core import element_sheet as es
 from core.app import create_app
 from core.config import load_settings
-from test_embed_poc import ARGS, HOST
+from test_embed import HOST, make_client
 
 REGEN = "regenerate it: python3 tools/elements_sheet.py"
 
@@ -75,9 +75,7 @@ def test_the_sheet_is_for_a_shadow_root_small_and_has_no_font_face():
 
 
 def test_the_sheet_is_served_under_its_hash_for_ever_and_a_wrong_hash_is_refused(backend):
-    app = create_app(load_settings(CONSOLE / "config", ARGS))
-    app.state.backend = backend
-    client = TestClient(app)
+    client = make_client(backend)
     _, manifest = es.committed()
     ok = client.get(f"/embed/v1/elements/{manifest['version']}/drishti-view.css", headers={"Origin": HOST})
     assert ok.status_code == 200 and "immutable" in ok.headers["cache-control"] and ok.headers["access-control-allow-origin"] == HOST

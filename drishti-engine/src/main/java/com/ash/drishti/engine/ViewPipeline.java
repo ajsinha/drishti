@@ -412,13 +412,16 @@ public final class ViewPipeline {
         timings.put("total", ms(tBind - t0));
         var pv = doc.provenance();
         var fresh = router.freshness(ref.kind(), pv.source());
+        // what the caller's masks hid: counted on the built view, only when a mask changed the document at all
+        com.ash.drishti.engine.view.MaskCount.Result hidden = seen == doc ? new com.ash.drishti.engine.view.MaskCount.Result(0, List.of())
+                : com.ash.drishti.engine.view.MaskCount.of(title, strip, panels);
         ViewModel view = new ViewModel(new ViewModel.Ref(ref.kind(), ref.id()), mnemonics.codeFor(ref.kind()), title, strip, panels,
                 keys(s, panels, eval), new ViewModel.Provenance(layout.label(), fp.shortForm(), pv.source(), pv.generation(),
                         pv.fetchedAt().toString(), (pv.live() || router.pushes(ref)) && current,   // a ticks-only stream makes a stored entity live
                         pv.businessDate() == null ? null : pv.businessDate().toString(),
                         fresh.lastUpdate() == null ? null : fresh.lastUpdate().toString(),
                         fresh.staleAfter() == null ? null : fresh.staleAfter().toString(), fresh.stale() && current,
-                        s.version() > 0 ? s.name() : null), timings);
+                        s.version() > 0 ? s.name() : null, hidden.count(), hidden.panels()), timings);
         return new Built(view, doc, seen, sutra, layout, current,
                 new LinkCounts(linked.size(), pending.size(), denied.size(), graph.linkBudget().toMillis()));
     }

@@ -12,9 +12,13 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Embedded views, proof of concept (docs/architecture/ELEMENTS.md, step 0): off by default, an exact-origin CORS allow-list,
-embedded calls always masked, and nothing weakened for the console's own pages. The browser acceptance is in
-test_embed_elements_browser.py."""
+"""Embedded views (docs/architecture/ELEMENTS.md, steps 1 to 3 on the server): off by default, an exact-origin CORS allow-list taken
+from the server's registered host applications, the embed token passed to the server untouched (it verifies it on every call and
+always masks), and nothing weakened for the console's own pages. The browser acceptance is in test_embed_elements_browser.py."""
+import base64
+import json
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -24,45 +28,86 @@ from core.config import load_settings
 from routes.embed_routes import shadow_css
 
 HOST = "http://127.0.0.1:17968"
-APP = "--embed.poc.apps.demo."
-ARGS = ["--embed.poc.enabled=true", "--embed.poc.signing_key=poc-signing-key-0123456789abcdef0123456", f"{APP}secret=s3cret",
-        f"{APP}origins={HOST}", f"{APP}role_map.viewer=viewer", f"{APP}role_map.author=viewer"]
+ARGS = ["--embed.enabled=true"]
+
+
+def _b64(obj) -> str:
+    return base64.urlsafe_b64encode(json.dumps(obj).encode()).rstrip(b"=").decode()
+
+
+def token(user="alice", exp=None, typ="drishti-embed+jwt", app="demo") -> str:
+    """The shape of an embed token (the console only reads it to route the call; the server verifies the signature)."""
+    return f"{_b64({'alg': 'ES256', 'typ': typ})}.{_b64({'sub': user, 'azp': app, 'exp': exp or int(time.time()) + 300})}.c2ln"
+
+
+def make_client(backend):
+    """A console with embedding on whose server says one host application is registered, with the origin HOST."""
+    app = create_app(load_settings(CONSOLE / "config", ARGS))
+    app.state.backend = backend
+    app.state.embed._origins = frozenset({HOST})            # what the server's registered host applications say
+    app.state.embed._fetched = time.monotonic() + 3600
+    return TestClient(app)
 
 
 @pytest.fixture
 def embed(backend):
-    app = create_app(load_settings(CONSOLE / "config", ARGS))
-    app.state.backend = backend
-    return TestClient(app)
-
-
-def token(embed, roles=("author",), secret="s3cret"):
-    r = embed.post("/embed/v1/poc/token", json={"app": "demo", "secret": secret, "user": "alice", "roles": list(roles)})
-    return r.json().get("access_token"), r
+    return make_client(backend)
 
 
 def test_off_by_default(client):
     assert client.get("/embed/v1/poc/drishti-view.css").status_code == 404
+    assert client.get("/embed/v1/views/trade/X").status_code == 404
     assert client.post("/embed/v1/poc/token", json={}).status_code == 404
 
 
-def test_dev_token_needs_the_app_secret_and_no_browser_origin(embed):
-    assert token(embed, secret="wrong")[1].status_code == 401
-    assert embed.post("/embed/v1/poc/token", json={"app": "demo", "secret": "s3cret", "user": "a"}, headers={"Origin": HOST}).status_code == 403
-    assert token(embed)[0]
+def test_the_dev_token_path_is_gone(embed):
+    assert embed.post("/embed/v1/poc/token", json={"app": "demo", "secret": "x", "user": "a"}).status_code in (404, 405)
 
 
-def test_view_is_cors_allow_listed_and_always_masked(embed, backend):
-    tok, _ = token(embed, roles=("author", "admin"))
+def test_view_is_cors_allow_listed_and_calls_the_server_with_the_embed_token(embed, backend):
+    tok = token()
     ok = embed.get("/embed/v1/views/trade/IRS-47102", headers={"Authorization": f"Bearer {tok}", "Origin": HOST})
     assert ok.status_code == 200 and ok.headers["access-control-allow-origin"] == HOST and "Origin" in ok.headers["vary"]
     body = ok.json()
     assert body["ref"]["id"] == "IRS-47102" and body["panels"] and body["head"].startswith("<section")
-    assert backend.calls[-1][3].roles == ("viewer",)                 # author and admin both run as the masked role
+    me = backend.calls[-1][3]
+    assert me.token == tok and me.user == "alice"                       # the server gets the embed token itself, never a console token
+    assert me.headers() == {"Authorization": f"Bearer {tok}", "Origin": HOST}   # and the browser's Origin, to check against the app's
     evil = embed.get("/embed/v1/views/trade/IRS-47102", headers={"Authorization": f"Bearer {tok}", "Origin": "http://evil.example"})
     assert evil.status_code == 403 and evil.json()["code"] == "DRS-8002" and "access-control-allow-origin" not in evil.headers
     assert embed.get("/embed/v1/views/trade/IRS-47102", headers={"Origin": HOST}).json()["code"] == "DRS-8001"
     assert embed.get("/embed/v1/views/trade/IRS-47102", headers={"Authorization": "Bearer a.b.c", "Origin": HOST}).status_code == 401
+    expired = embed.get("/embed/v1/views/trade/IRS-47102", headers={"Authorization": f"Bearer {token(exp=int(time.time()) - 5)}", "Origin": HOST})
+    assert expired.status_code == 401 and expired.json()["code"] == "DRS-8001"
+    other = embed.get("/embed/v1/views/trade/IRS-47102", headers={"Authorization": f"Bearer {token(typ='JWT')}", "Origin": HOST})
+    assert other.status_code == 401                                      # a console or personal token is not an embed token
+
+
+def test_the_masked_count_is_the_servers(embed, backend):
+    from conftest import FIXTURES
+
+    vm = json.loads((FIXTURES / "view_trade_IRS-47102.json").read_text())
+    vm.setdefault("provenance", {}).update({"masked": 3, "maskedPanels": ["terms"]})
+
+    async def view(kind, id_, user):
+        return vm
+
+    backend.view = view
+    body = embed.get("/embed/v1/views/trade/IRS-47102", headers={"Authorization": f"Bearer {token()}", "Origin": HOST}).json()
+    assert body["provenance"]["masked"] == 3 and body["masked"] == {"count": 3, "panels": ["terms"]}
+
+
+def test_a_refusal_of_the_server_reaches_the_host_with_its_code_and_retry_after(embed, backend):
+    from core.backend import BackendError
+
+    async def view(kind, id_, user):
+        e = BackendError(429, "DRS-8004", "over the embed call rate")
+        e.retry_after = "7"
+        raise e
+
+    backend.view = view
+    r = embed.get("/embed/v1/views/trade/IRS-47102", headers={"Authorization": f"Bearer {token()}", "Origin": HOST})
+    assert r.status_code == 429 and r.json()["code"] == "DRS-8004" and r.headers["retry-after"] == "7"
 
 
 def test_preflight_only_for_listed_origins(embed):
@@ -73,8 +118,7 @@ def test_preflight_only_for_listed_origins(embed):
 
 
 def test_channel_accepts_only_view_keys_and_an_owner(embed):
-    tok, _ = token(embed)
-    h = {"Authorization": f"Bearer {tok}", "Origin": HOST}
+    h = {"Authorization": f"Bearer {token()}", "Origin": HOST}
     assert embed.post("/embed/v1/channel/nope", json={"add": ["alerts"]}, headers=h).status_code == 404
     assert embed.post("/embed/v1/channel/nope", json={}, headers={"Origin": HOST}).json()["code"] == "DRS-8001"
 

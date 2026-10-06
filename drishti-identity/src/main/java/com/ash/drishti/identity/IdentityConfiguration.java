@@ -173,12 +173,23 @@ public class IdentityConfiguration {
         return new PackStateStore(states, identityTransactions, auditLog);
     }
 
+    /** Host applications for embedded views (Drishti Elements); the limits are the defaults a new registration gets. */
+    @Bean
+    public EmbedAppStore embedAppStore(IdentityRepositories.EmbedApps apps, TransactionTemplate identityTransactions, JpaAuditLog auditLog,
+            org.springframework.core.env.Environment env) {
+        return new EmbedAppStore(apps, identityTransactions, auditLog,
+                Boolean.parseBoolean(env.getProperty("drishti.embed.allow-wildcard-origins", "false")),
+                Integer.parseInt(env.getProperty("drishti.embed.token-max-seconds", "900")),
+                Integer.parseInt(env.getProperty("drishti.embed.limits.views-per-minute", "600")),
+                Integer.parseInt(env.getProperty("drishti.embed.limits.views-per-user-per-minute", "60")));
+    }
+
     /**
      * Servers that share one database (PostgreSQL) see each other's role and pack changes within
      * {@code drishti.identity.refresh-seconds} (15): the snapshots every check reads are re-read on that interval.
      */
     @Bean(destroyMethod = "shutdownNow")
-    public java.util.concurrent.ScheduledExecutorService identityRefresher(RoleStore roles, PackStateStore packs,
+    public java.util.concurrent.ScheduledExecutorService identityRefresher(RoleStore roles, PackStateStore packs, EmbedAppStore embedApps,
             org.springframework.core.env.Environment env) {
         long every = Long.parseLong(env.getProperty("drishti.identity.refresh-seconds", "15"));
         var exec = java.util.concurrent.Executors.newSingleThreadScheduledExecutor(Thread.ofVirtual().name("drishti-identity-refresh").factory());
@@ -186,6 +197,7 @@ public class IdentityConfiguration {
             try {
                 roles.refresh();
                 packs.refresh();
+                embedApps.refresh();
             } catch (RuntimeException e) {
                 org.slf4j.LoggerFactory.getLogger(IdentityConfiguration.class).warn("identity refresh failed: {}", e.getMessage());
             }

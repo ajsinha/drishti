@@ -39,6 +39,7 @@ public class SecurityConfiguration {
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.ApiTokenStore> tokens,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.UserService> users,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.AuditLog> audit,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.embed.EmbedTokenService> embed,
             @org.springframework.beans.factory.annotation.Value("${drishti.security.registered-users-only:true}") boolean registeredOnly) {
         // an API token stands for its user as they are now: their roles, and only while the account is enabled
         java.util.function.Function<String, java.util.Optional<TokenFilter.Grant>> apiTokens = bearer -> tokens.getObject().verify(bearer)
@@ -47,7 +48,8 @@ public class SecurityConfiguration {
         // a signed token stands for an account that must still exist and be enabled (the console's own service identity is exempt)
         java.util.function.Predicate<Principal> account = p -> !registeredOnly || p.roles().contains(Entitlements.SERVICE)
                 || users.getObject().find(p.user()).filter(com.ash.drishti.identity.User::enabled).isPresent();
-        FilterRegistrationBean<TokenFilter> r = new FilterRegistrationBean<>(new TokenFilter(props, verifier, apiTokens, account, audit.getObject()));
+        FilterRegistrationBean<TokenFilter> r = new FilterRegistrationBean<>(new TokenFilter(props, verifier, apiTokens, account, audit.getObject())
+                .withEmbed(embed.getIfAvailable()));
         r.addUrlPatterns("/api/*");
         r.setOrder(1);
         return r;

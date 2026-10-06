@@ -88,7 +88,9 @@ public class CommandController {
         String typed = req.text() == null ? "" : req.text().replaceAll("(?i)<\\s*GO\\s*>", " ").trim();
         String text = memory.expand(principal.user(), typed).trim();         // MYBOOK -> BOOK BOOK-RATES-1
         ApiDtos.CommandResponse answer = resolve(text, asOf, principal);
-        memory.remember(principal.user(), typed);                            // only commands that could be read
+        if (principal.embedApp() == null) {
+            memory.remember(principal.user(), typed);                        // only commands that could be read; an embedded host never writes the user's history
+        }
         return answer;
     }
 

@@ -196,6 +196,8 @@ drishti:
       - "* /api/v1/me/**"
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
+      - "* /api/v1/embed/**"
+      - "* /api/v1/admin/embed/**"
       - "* /api/v1/admin/users/**"
       - "* /api/v1/admin/role-definitions/**"
       - "* /api/v1/admin/caches/**"
@@ -236,8 +238,30 @@ drishti:
     mask-copies-min-length: 3
     mask-copies-max-nodes: 50000
     mask-copies-max-values: 64
+  embed:                             # embedded views in other web applications (docs/architecture/ELEMENTS.md; API_GUIDE, Embedding)
+    enabled: ${DRISHTI_EMBED_ENABLED:false}   # off: no token endpoint, embed tokens refused. Needs drishti.security.enabled
+    issuer: ${DRISHTI_PUBLIC_URL:}            # the iss of embed tokens: this server's public URL
+    audiences: ["${DRISHTI_CONSOLE_URL:}"]      # the consoles that may accept embed tokens (their public URLs); the first is the default
+    signing-key: ${DRISHTI_EMBED_KEY_FILE:}   # PEM with a PKCS#8 EC PRIVATE KEY and a PUBLIC KEY block (ES256); empty = generated at start
+    token-max-seconds: 900                    # longest life of an embed token (an application's own lifetime may be shorter)
+    mask: always                              # embed calls always mask drishti.security.redact fields, whatever the user's roles
+    allow-wildcard-origins: false             # let an application register https://*.suffix origins (review apps)
+    assertion-max-age: 60s                    # longest life of a client or user assertion a host signs
+    scopes:                                   # what each embed scope opens; a token calls nothing else, and never writes
+      "[embed:view]":
+        - GET /api/v1/views/*/*
+        - GET /api/v1/views/*/*/stream
+        - GET /api/v1/views/*/*/panels/*/records
+        - GET /api/v1/embed/check
+        - POST /api/v1/command
+      "[embed:about]":
+        - GET /api/v1/views/*/*/explain
+    limits:
+      tokens-per-minute: 120                  # exchanges per host application
+      views-per-minute: 600                   # calls per host application (the default for a new registration)
+      views-per-user-per-minute: 60           # calls per user (the default for a new registration)
   alerts:
-    keep: 1000                       # fired alerts kept per user, in the identity database (they survive restarts)
+    keep: 1000                      # fired alerts kept per user, in the identity database (they survive restarts)
   access-log:                        # who looked at what: views, raw, history, searches, CSV (Admin → Access)
     enabled: ${DRISHTI_ACCESS_LOG:true}
     keep-days: 90                    # older events are pruned once a day

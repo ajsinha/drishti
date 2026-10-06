@@ -45,6 +45,7 @@ public final class TokenFilter extends OncePerRequestFilter {
     private final java.util.function.Predicate<Principal> account;
     /** Where a write (or a refused attempt) done with a personal token is recorded. */
     private final com.ash.drishti.identity.AuditLog audit;
+    private volatile com.ash.drishti.server.embed.EmbedTokenService embed;
 
     public TokenFilter(SecurityProperties props, TokenVerifier verifier) {
         this(props, verifier, t -> java.util.Optional.empty(), p -> true, null);
@@ -63,7 +64,15 @@ public final class TokenFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         // the path that is served, not the raw request line (SEC-02): /api/v1;x/… and /api/%761/… are /api/v1/…
-        return !RequestPaths.routed(request).startsWith("/api/v1/");
+        String path = RequestPaths.routed(request);
+        // the exchange authenticates inside its own request; the key set is public
+        return !path.startsWith("/api/v1/") || path.equals("/api/v1/embed/token") || path.equals("/api/v1/embed/jwks");
+    }
+
+    /** Switches on embed tokens (Drishti Elements); without it a bearer that is not a session or personal token is refused as before. */
+    public TokenFilter withEmbed(com.ash.drishti.server.embed.EmbedTokenService service) {
+        this.embed = service;
+        return this;
     }
 
     @Override
@@ -80,6 +89,11 @@ public final class TokenFilter extends OncePerRequestFilter {
                 throw new DrishtiException(com.ash.drishti.common.ErrorCode.UNAUTHENTICATED, "missing bearer token");
             }
             String bearer = auth.substring(7).trim();
+            com.ash.drishti.server.embed.EmbedTokenService emb = embed;
+            if (emb != null && com.ash.drishti.server.embed.EmbedTokenService.looksLikeEmbed(bearer)) {
+                embedCall(emb, bearer, req, res, chain);
+                return;
+            }
             if (com.ash.drishti.identity.ApiTokenStore.looksLikeToken(bearer)) {
                 // a personal API token: it acts as its user, and only within the scopes it was given
                 Grant g = apiTokens.apply(bearer).orElseThrow(() -> new DrishtiException(
@@ -122,6 +136,27 @@ public final class TokenFilter extends OncePerRequestFilter {
                     + "\",\"detail\":\"" + e.getMessage().replace("\"", "'") + "\"}");
             return;
         }
+        chain.doFilter(req, res);
+    }
+
+    /** An embed token: every check of {@link com.ash.drishti.server.embed.EmbedTokenService#authorize}, on every call. */
+    private void embedCall(com.ash.drishti.server.embed.EmbedTokenService emb, String bearer, HttpServletRequest req, HttpServletResponse res,
+            FilterChain chain) throws ServletException, IOException {
+        com.ash.drishti.server.embed.EmbedTokenService.Authorized a;
+        try {
+            a = emb.authorize(bearer, req.getHeader("Origin"), req.getMethod(), RequestPaths.routed(req));
+        } catch (com.ash.drishti.server.embed.EmbedException e) {
+            res.setStatus(e.status());
+            res.setContentType("application/problem+json");
+            if (e.retryAfter() > 0) {
+                res.setHeader("Retry-After", Long.toString(e.retryAfter()));
+            }
+            res.getWriter().write("{\"title\":\"embed\",\"status\":" + e.status() + ",\"code\":\"" + e.errorCode().code()
+                    + "\",\"detail\":\"" + e.getMessage().replace("\"", "'") + "\"}");
+            return;
+        }
+        req.setAttribute(Principal.ATTRIBUTE, a.principal());
+        req.setAttribute(com.ash.drishti.server.embed.EmbedTokenService.GRANT_ATTRIBUTE, a);
         chain.doFilter(req, res);
     }
 

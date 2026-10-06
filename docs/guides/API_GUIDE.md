@@ -1438,10 +1438,57 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-7014 | 404 | no such bridge | the bridge name is not in `drishti.collab.bridges.webhooks` |
 | DRS-7015 | 403 | picture refused | a picture was asked for where `drishti.collab.snapshots.enabled` (or the kind's pack) is off, or no recipient may open the view |
 | DRS-7016 | 503 | picture failed | the picture took longer than `snapshots.timeout`, is larger than `snapshots.max-bytes`, or could not be drawn |
+| DRS-8001 | 401 | embed token refused | an embedded-view call with a missing, malformed, expired or wrong-audience embed token, or embedding is off (`drishti.embed.enabled`) |
+| DRS-8002 | 403 | origin not allowed | the request's `Origin` is not one of the host application's registered origins (also: the token endpoint called from a browser) |
+| DRS-8003 | 403 | host application refused | the host application is unknown or disabled, its credentials are wrong, or embedding is off at the token endpoint |
+| DRS-8004 | 429 | embed rate limit | over the host application's or the user's call rate, or the application's token requests per minute; `Retry-After` says when |
+| DRS-8005 | 400 | kind not allowed | the host application may not show this kind (its `kinds` list) |
+| DRS-8006 | 410 | embed contract gone | the element's contract version is no longer served (raised by the console, not the server) |
 
-`DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
+`DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
 unknown `rachana:` version); see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes).
+
+## Embedding views in another web application
+
+For `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).
+
+**1. Register the host application** (an administrator; audited as `embed-app-created`, `embed-app-changed`, `embed-app-disabled`, `embed-app-secret-rotated`):
+
+| Method and path | What it does |
+|---|---|
+| `GET /api/v1/admin/embed/apps` and `/{id}` | the registered applications (never a secret) |
+| `POST /api/v1/admin/embed/apps` | `{id, name, contact, origins[], kinds[], scopes[], subjectTypes[], subjectAudiences[], jwks, secret, tokenSeconds, callsPerMinute, userCallsPerMinute, enabled}`. `id`: lower-case letters, digits, hyphens. `origins`: exact (`https://crm.bank.example`; no path; wildcards only with `drishti.embed.allow-wildcard-origins`). `scopes`: `embed:view`, `embed:about`. `kinds`: empty = every kind the user's roles open; an application may only narrow. `subjectTypes`: `id_token`, `jwt` (both by default). `jwks`: the host's public keys as JSON text (RSA or P-256/P-384). `secret: false` registers a key-only application. The answer holds the client `secret` **once** |
+| `PUT /api/v1/admin/embed/apps/{id}` | change any of those (`null` keeps; `enabled: false` revokes at once) |
+| `POST /api/v1/admin/embed/apps/{id}/rotate-secret` | `{graceSeconds}` (default 3600): a new secret, shown once; the old one works for the grace period |
+| `DELETE /api/v1/admin/embed/apps/{id}` | forget the application |
+
+**2. The host's backend buys a token** (RFC 8693; never from a browser: a request with an `Origin` header is refused `403 DRS-8002`):
+
+```
+POST /api/v1/embed/token
+Content-Type: application/x-www-form-urlencoded
+Authorization: Basic base64(crm:<client secret>)           # or client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer&client_assertion=<JWT>
+
+grant_type=urn:ietf:params:oauth:grant-type:token-exchange
+&subject_token=<the user's ID token, or a JWT the host signs>
+&subject_token_type=urn:ietf:params:oauth:token-type:id_token   (or ...:jwt)
+&audience=https://console.bank.example                           # one of drishti.embed.audiences; default: the first
+&scope=embed:view embed:about                                    # within the application's; default: all of them
+```
+
+- **Client authentication:** `client_secret_basic`, or `private_key_jwt`: a JWT signed with a key in the application's `jwks` with `iss` = `sub` = the application id, `aud` = the server's issuer or `…/api/v1/embed/token`, `iat`, `exp` at most 60 s later (`drishti.embed.assertion-max-age`) and a `jti` that is used once.
+- **Who the user is** (there is no plain "username" field: a stolen client secret alone makes nobody): the user's **ID token** from the identity provider (verified like a sign-in: signature, issuer, expiry, audience = Drishti's OIDC client id or one of the application's `subjectAudiences`; the user is `usernameClaim` as the sign-in names them), or a **JWT the host signs** with its registered key: `iss` = the application id, `sub` = the Drishti user name, `aud` as above, `iat`, `exp` within 60 s, `jti` once. The user must exist in Drishti and be enabled.
+- **Answer:** `{"access_token": "<JWT>", "issued_token_type": "urn:ietf:params:oauth:token-type:access_token", "token_type": "Bearer", "expires_in": 300, "scope": "embed:view embed:about"}`. The token is ES256, signed by the server's own key (`GET /api/v1/embed/jwks`, public), with `iss`, `aud`, `sub` (the user), `azp` (the application), `scope`, `origins`, `iat`, `exp` (at most `drishti.embed.token-max-seconds`), `jti` and `typ: drishti-embed+jwt`. It carries no roles: they are read at every call.
+- **Refusals** are in RFC 6749 form `{"error": "invalid_client", "error_description": "...", "code": "DRS-8003"}`: `invalid_client` 401 `DRS-8003` (unknown or disabled application, wrong secret or key), `invalid_grant` 400 `DRS-8001` (the subject token is expired, unsigned by a registered key, used before, not for this server) or `DRS-5010` (no such user, or disabled), `invalid_target` 400 `DRS-8001` (an audience this server makes no tokens for), `invalid_scope` 400, `slow_down` 429 `DRS-8004` (`drishti.embed.limits.tokens-per-minute` per application; `Retry-After`), `access_denied` 403 `DRS-8002` (called from a browser) or `DRS-8003` (embedding is off). Every exchange is in the audit log (`embed-token`, `embed-token-refused`).
+
+**3. Every embed call** (`Authorization: Bearer <embed token>`; the console's `/embed/v1/...` passes it on) is checked, in this order, before anything is read: the signature, `typ`, audience and expiry (`401 DRS-8001`); the host application exists and is enabled (`403 DRS-8003`); the user exists and is enabled (`401 DRS-5010`); the `Origin`, when the request has one, is one of the application's (`403 DRS-8002`); the scopes open the method and path (`403 DRS-5002`): only `GET`s of views, their stream, panel rows and `explain` (`embed:about`), the read-only `POST /api/v1/command`, and `GET /api/v1/embed/check`, as `drishti.embed.scopes` lists; the kind is one the application may show (`400 DRS-8005`); the rates of the application and of the user (`429 DRS-8004`, `Retry-After`). The caller is then the user **with their roles as they are now and with every field mask applied, whatever the roles say** (Decision 5): a user with `raw` still sees `•••` through an embedded view. A typed command resolved for a host does not enter the user's command history. The access log records each view as the user's, with the detail `embed:<application>`.
+
+Other endpoints: `GET /api/v1/embed/check` answers `{app, user, jti, scopes, expiresAt, expiresIn}` for a token that passes every check just now (the console re-checks a long-lived stream with it every `embed.recheck_seconds`); `GET /api/v1/embed/apps/origins` (the console's service identity only) lists the origins of the enabled applications, which is the console's CORS allow-list.
+
+**Renewal.** Tokens are short (default 5 minutes) and never refreshed by the browser: when one is about to expire the element asks the host page, whose backend repeats the exchange above for the same user (a fresh `jti`, a later `exp`); the console accepts it on the open stream only when `sub` and `azp` are the same (ELEMENTS.md, section 7.2). Disabling the application or the user takes effect at the next call, and on an open stream at the next re-check.
+
+**What a view says about masks.** `provenance.masked` (a number) and `provenance.maskedPanels` (panel ids) in every ViewModel and live `provenance` patch count the values the caller's masks replaced; both are `0` and `[]` when nothing is masked for the caller.
 
 ## Scripting recipes
 
