@@ -90,7 +90,7 @@ def test_no_width_media_rule_is_left_in_the_element_sheet():
     assert not re.findall(r"@media[^{]*\((?:max|min)-width", sheet), f"a width @media rule is in the element sheet; {REGEN}"
     assert "@container drishti (max-width: 640px)" in sheet
     assert "@media print" in sheet and "prefers-color-scheme" in sheet          # non-width media stay as they are
-    assert "container:drishti/inline-size" in (es.WEB / "embed" / "drishti-elements.js").read_text(encoding="utf-8")
+    assert "container:drishti/inline-size" in (es.WEB / "embed" / "assets.js").read_text(encoding="utf-8")
 
 
 def test_container_queries_rewrites_width_rules_only():

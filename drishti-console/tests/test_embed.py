@@ -129,6 +129,16 @@ def test_channel_accepts_only_view_keys_and_an_owner(embed):
     assert embed.post("/embed/v1/channel/nope", json={}, headers={"Origin": HOST}).json()["code"] == "DRS-8001"
 
 
+def test_the_element_modules_are_served_with_cors_and_only_those(embed):
+    entry = embed.get("/embed/v1/drishti-elements.js", headers={"Origin": HOST})
+    assert entry.status_code == 200 and "./m/element.js" in entry.text
+    for name in ("config", "tokens", "sanitize", "assets", "connection", "enhancers", "frames", "element"):
+        r = embed.get(f"/embed/v1/m/{name}.js", headers={"Origin": HOST})
+        assert r.status_code == 200 and r.headers["access-control-allow-origin"] == HOST and "javascript" in r.headers["content-type"], name
+    for bad in ("drishti-elements", "nothing", "A"):
+        assert embed.get(f"/embed/v1/m/{bad}.js", headers={"Origin": HOST}).status_code == 404, bad
+
+
 def test_the_consoles_own_pages_are_unchanged(embed):
     page = embed.get("/login")
     assert page.headers["content-security-policy"] == CSP and "frame-ancestors 'self'" in CSP

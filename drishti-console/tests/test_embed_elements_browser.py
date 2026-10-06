@@ -181,7 +181,7 @@ def browser(request, stack):
 # Everything the tests watch is collected in the page by this script (it runs before the host's own scripts).
 INIT = """
 window.__ev = []; window.__aborts = []; window.__views = []; window.__delay = {}; window.__viol = [];
-for (const t of ['loaded', 'tick', 'navigate', 'error', 'state', 'masked'])
+for (const t of ['loaded', 'tick', 'navigate', 'error', 'state', 'masked', 'token-needed'])
   document.addEventListener('drishti:' + t, (e) => window.__ev.push([t, e.target.id, e.detail, performance.now()]), true);
 document.addEventListener('securitypolicyviolation', (e) => window.__viol.push([e.violatedDirective, e.blockedURI]));
 const f = window.fetch.bind(window);
@@ -720,3 +720,95 @@ def test_taps_open_the_panel_help_and_a_field_hint_and_the_about_sheet_is_a_bott
     assert box["y"] > 0 and box["h"] < 844, "a bottom sheet, not a full-height side drawer"
     assert 0 < box["b"] <= 844 + 2, f"the sheet is out of view (bottom {box['b']})"
     assert h.js(PAGE_OVERFLOW) <= 0
+
+
+# ---- 10. build step 9: the full element -------------------------------------------------------------------------------------------------------
+def test_the_sanitiser_strips_scripts_and_handlers_from_a_payload(host):
+    """Defence in depth: whatever the (fake) payload carries, nothing executable reaches the shadow root."""
+    h = host()
+    evil = ('<img src="x" onerror="window.__pwned=1"><script>window.__pwned=1</script><iframe src="/"></iframe>'
+            '<a class="evil" href="javascript:window.__pwned=1" onclick="window.__pwned=1" style="x:y">go</a><div class="evil2" onmouseover="window.__pwned=1">ok</div>')
+
+    def tamper(route):
+        resp = route.fetch()
+        data = resp.json()
+        data["panels"][0]["html"] += evil
+        data["head"] += '<span class="evil3" onfocus="window.__pwned=1" data-keep="1">h</span>'
+        headers = {k: v for k, v in resp.headers.items() if k.lower() not in ("content-encoding", "content-length")}
+        route.fulfill(status=resp.status, headers=headers, body=json.dumps(data))
+
+    h.page.route(f"{CONSOLE_URL}/embed/v1/views/trade/*", tamper)
+    h.open()
+    got = h.js(f"""(() => {{ const r = {SR}; return {{
+      script: r.querySelectorAll('script').length, iframe: r.querySelectorAll('iframe').length, img: r.querySelectorAll('img').length,
+      handlers: [...r.querySelectorAll('*')].filter((e) => [...e.attributes].some((a) => a.name.startsWith('on'))).length,
+      href: r.querySelector('a.evil') && r.querySelector('a.evil').getAttribute('href'), style: r.querySelector('a.evil') && r.querySelector('a.evil').getAttribute('style'), kept: !!r.querySelector('.evil2'), data: !!r.querySelector('.evil3[data-keep]'),
+      pwned: window.__pwned || null }}; }})()""")
+    assert got == {"script": 0, "iframe": 0, "img": 0, "handlers": 0, "href": None, "style": None, "kept": True, "data": True, "pwned": None}, got
+    h.js(f"{SR}.querySelector('a.evil').click()")
+    h.page.wait_for_timeout(300)
+    assert h.js("window.__pwned || null") is None
+
+
+def test_trusted_types_enforced_host_still_works(host):
+    """A host that sets require-trusted-types-for 'script' and lists only drishti-elements: the element paints, the enhancers run, nothing is blocked."""
+    h = host()
+
+    h.page.goto(HOST + "/?tt=1")                       # the demo host with require-trusted-types-for 'script' and trusted-types drishti-elements
+    if not h.js("!!window.trustedTypes"):
+        pytest.skip("this browser has no Trusted Types")
+    try:
+        h.state("#main", "live")
+    except AssertionError:
+        raise AssertionError(f"not live under Trusted Types; console {h.console[:6]}; violations {h.js('window.__viol')}") from None
+    assert h.js("DrishtiElements.trustedTypes()") is True
+    assert h.title() == MAIN_ID
+    h.until(lambda: h.js(f"{SR}.querySelectorAll('table.tbl').length") >= 1, 20, "a table")
+    h.js(f"{SR}.querySelector('a.pnl-help').click()")                         # the panel ? popover (about.js, about-hints.js) through the element's writers
+    h.until(lambda: h.js(f"!!{SR}.querySelector('.about-pop:not([hidden]), .about-tip:not([hidden])')"), 10, "the panel help")
+    h.js(f"{SR}.querySelector('[data-about-open]').click()")
+    h.until(lambda: h.js(f"!!{SR}.querySelector('#aboutDrawer:not([hidden]) [data-layer]')"), 15, "the About drawer body")
+    assert h.js("window.__viol") == [], h.js("window.__viol")
+    assert not [c for c in h.console if "TrustedHTML" in c or "TrustedScript" in c or "PAGEERROR" in c], h.console
+
+
+def test_token_renewal_keeps_the_stream_open_past_the_tokens_expiry(host):
+    """A 30 s token: the provider is asked again before it runs out, the fresh one goes to the open channel (POST /channel/{cid}/token), and the
+    stream is still live, on the same channel, after the first token's expiry."""
+    _admin_call("PUT", f"/admin/embed/apps/{APP_ID}", {"tokenSeconds": 30})
+    try:
+        h = host()
+        h.open()
+        t0 = time.time()
+        first = h.until(lambda: h.channel_gets(), 10, "the channel request")[0][3].get("authorization")
+        renewals = lambda: [r for r in h.requests if r[0] == "POST" and r[1].endswith("/token") and "/embed/v1/channel/" in r[1]]  # noqa: E731
+        h.until(lambda: len(renewals()) >= 2, 45, "two renewals on the open channel")
+        while time.time() - t0 < 38:                                          # past the first token's expiry
+            h.page.wait_for_timeout(500)
+        assert h.state_of("#main") == "live"
+        assert len(h.channel_gets()) == 1                                     # never reopened: no repaint, no new channel
+        assert len({r[3].get("authorization") for r in renewals()} | {first}) >= 3     # every token on the wire is a different one
+        assert len([r for r in h.requests if r[1].endswith("/api/drishti-token")]) >= 3      # the host's provider was asked each time
+        h.page.evaluate("window.__ev.length = 0")
+        h.until(lambda: h.events("tick", "main"), 20, "ticks after the first token expired")
+        assert not [e for e in h.events("error") if e[2].get("code") == "DRS-8001"]
+    finally:
+        _admin_call("PUT", f"/admin/embed/apps/{APP_ID}", {"tokenSeconds": 300})
+
+
+def test_slots_show_host_content_and_a_missing_token_is_an_event(host):
+    h = host()
+    h.open()
+    h.js("""(() => { const e = document.createElement('drishti-view'); e.id = 'slotted';
+      e.innerHTML = '<p slot="empty" id="se">pick something</p><p slot="error" id="sx">custom failure</p>'; document.body.appendChild(e); })()""")
+    h.until(lambda: h.js("document.querySelector('#se').getBoundingClientRect().height") > 0, 5, "the empty slot")
+    assert h.js("document.querySelector('#sx').getBoundingClientRect().height") == 0
+    h.js("document.querySelector('#slotted').setAttribute('kind', 'trade'); document.querySelector('#slotted').setAttribute('entity', 'NO-SUCH-TRADE')")
+    h.state("#slotted", "error")
+    assert h.js("document.querySelector('#sx').getBoundingClientRect().height") > 0
+    assert h.js("document.querySelector('#se').getBoundingClientRect().height") == 0
+    assert h.js("document.querySelector('#slotted').shadowRoot.querySelector('.dv-error')") is None           # the host's content replaces the default
+    # a provider that fails: the element says so, and the host decides what to do
+    h.js("DrishtiElements.invalidateToken(); DrishtiElements.configure({tokenProvider: () => Promise.reject(new Error('no session'))})")
+    h.js("document.querySelector('#slotted').setAttribute('entity', 'NO-SUCH-TRADE-2')")
+    h.until(lambda: h.events("token-needed", "slotted"), 10, "drishti:token-needed")

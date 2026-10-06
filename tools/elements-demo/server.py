@@ -82,7 +82,7 @@ class Host(BaseHTTPRequestHandler):
         name = jar["demo_user"].value if "demo_user" in jar else ""
         return name if name in USERS else ""
 
-    def send(self, status, body: bytes, media="application/json", headers=None):
+    def send(self, status, body: bytes, media="application/json", headers=None, trusted_types=False):
         self.send_response(status)
         self.send_header("Content-Type", media)
         self.send_header("Content-Length", str(len(body)))
@@ -91,7 +91,7 @@ class Host(BaseHTTPRequestHandler):
         self.send_header("Content-Security-Policy", (
             f"default-src 'self'; script-src 'self' {self.console}; style-src 'self'; font-src {self.console}; "
             f"connect-src 'self' {self.console}; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; "
-            "report-uri /api/csp-report"))
+            "report-uri /api/csp-report" + ("; require-trusted-types-for 'script'; trusted-types drishti-elements" if trusted_types else "")))
         for k, v in (headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -114,7 +114,7 @@ class Host(BaseHTTPRequestHandler):
             return self.json(200, REPORTS)
         if path in ("/", "/index.html"):
             html = (HERE / "index.html").read_text(encoding="utf-8").replace("__CONSOLE__", self.console)
-            return self.send(200, html.encode(), "text/html; charset=utf-8")
+            return self.send(200, html.encode(), "text/html; charset=utf-8", trusted_types="tt=1" in self.path)     # /?tt=1: a host that enforces Trusted Types (names only drishti-elements)
         target = (HERE / path.lstrip("/")).resolve()
         if HERE in target.parents and target.is_file():
             return self.send(200, target.read_bytes(), mimetypes.guess_type(target.name)[0] or "application/octet-stream")

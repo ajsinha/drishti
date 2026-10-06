@@ -28,7 +28,7 @@
       "templates/_macros/panels.html"
     ],
     "info-circle": [
-      "embed/drishti-elements.js"
+      "embed/enhancers.js"
     ],
     "lock": [
       "templates/_macros/panels.html"

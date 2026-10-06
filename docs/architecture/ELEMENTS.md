@@ -230,6 +230,8 @@ importing twice is harmless.
 | `known-at` | an ISO instant | none | bitemporal "as known at" (`X-Drishti-Known-At`) |
 | `theme` | `inherit`, or a Drishti theme: `terminal`, `light`, `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark` | `inherit` | `inherit` uses the host's `--d-*` values, falling back to `light` |
 | `header` | `full`, `strip`, `none` | `full` | title + strip, strip only, or panels only |
+| `density` | `compact`, `comfortable` | the sheet's | row padding of tables (a host-level choice; the view's own look otherwise) |
+| `panel` | a panel id | none | **reserved** for `<drishti-panel>` (phase 2): accepted and ignored by `<drishti-view>` (use `panels` to show some) |
 | `panels` | comma-separated panel ids | all | show only these panels (the view is still built whole; see `<drishti-panel>` for one panel) |
 | `live` | `auto`, `off` | `auto` | `off` loads once and never subscribes |
 | `locale` | a BCP 47 tag | the browser's | pack text (`?locale=` of About) |
@@ -245,6 +247,7 @@ Attributes are reflected to properties of the same name in camelCase (`asOf`, `k
 | `state` | read-only string | `idle`, `loading`, `live`, `static`, `reconnecting`, `paused`, `deleted`, `error` (the state machine, [section 7](#7-loading-reloading-refreshing-reconnecting)) |
 | `view` | read-only object | `{ref, title, generation, provenance, panels: [{id, kind, title}]}` once loaded |
 | `lastError` | read-only `{code, status, detail}` or null | |
+| `theme`, `density` | string | the attributes of the same name |
 
 ### 5.4 Methods
 
@@ -268,6 +271,7 @@ All are `CustomEvent`s dispatched on the element, `bubbles: true, composed: true
 | `drishti:error` | `{code, status, detail, fatal, retryInMs}` | no | a DRS code from [section 6.7](#67-errors); `fatal: false` while the element retries by itself |
 | `drishti:masked` | `{count, panels: [id]}` | no | the view the user is shown has masked fields (after load and when it changes) |
 | `drishti:state` | `{state, previous}` | no | every state change (drives a host's own live indicator) |
+| `drishti:token-needed` | `{reason: "missing" \| "refused" \| "provider-failed"}` | no | there is no token provider, the server refused the token twice, or the provider threw/rejected: the host signs the user in again and sets `tokenProvider` (an element in `error` after a 401 reloads by itself when the provider is set) |
 
 ### 5.6 Styling
 
@@ -317,9 +321,10 @@ element in a 360 px sidebar, and taps on `?`, a field hint and About (`test_embe
 
 | Slot | Shown | Default |
 |---|---|---|
-| `loading` | before the first paint | a skeleton of header and panels |
-| `error` | a fatal error with no view to keep | the DRS code and detail, and a *Try again* button |
-| `toolbar` | in the header, right side | nothing: the host's own buttons (for example *Open in Drishti*) |
+| `loading` | while loading and no view has been painted yet | nothing (the element dims the view it has, while it reloads) |
+| `empty` | no `kind`/`entity` yet (state `idle`) | nothing |
+| `error` | an error with no view to keep | the DRS code and detail (`role="alert"`); with a slotted node, the host's content replaces it, and `drishti:error` still fires |
+| `toolbar` | **not built** (reserved) | |
 
 ### 5.8 Keyboard
 
@@ -1197,6 +1202,58 @@ foreign or older tokens refused, the server re-check ends it), `tests/test_embed
 cap, contract version, compression, forged tokens never reach the server) and, in `test_embed_elements_browser.py`,
 `test_step7_two_elements_one_channel_on_the_versioned_api` (acceptance row 7: Chromium, Firefox, WebKit). **Not done here:** the full element (step 9);
 a browser test of the live renewal (the element renews 45 s before a 5-minute token ends; covered by the unit tests of the guard).
+
+### Step 9 as built: the full `<drishti-view>` (2026-10-06)
+
+**Code layout.** `web/embed/drishti-elements.js` is now the entry (41 lines: defines the element, publishes `window.DrishtiElements`
+with `configure`, `resolve`, `invalidateToken`, `connections`, `trustedTypes`). The library is ES modules under `web/embed/`, served
+as `GET /embed/v1/m/<name>.js` (CORS like the entry; only files that exist there, never the entry itself) and imported with
+relative `./m/` URLs, so one `<script type="module">` line still loads everything: `config` (settings, `esc`, `problem`), `tokens`
+(provider, expiry, `authed`, `token-needed`), `sanitize` (allow-list and the Trusted Types policy), `assets` (the adopted sheet, the
+icon font through `FontFace`, the scripts), `connection` (one per page and server), `enhancers` (the console's scripts started on
+the shadow root), `frames` (live patches), `element` (the state machine). Each file is under 310 lines. The console's enhancer
+scripts stay classic scripts on the console's own pages (a module conversion would change their load order for no gain under
+`script-src 'self'`); `enhancers.js` is their ES-module face for the element (load once, `init(shadowRoot, options)`, dispose). The one
+change inside them: `about.js` takes `options.setHtml`, so the About body is written through the element's sanitiser (the console's
+default is `innerHTML`, unchanged).
+
+**State machine** as in section 7 (last request wins: one sequence number and `AbortController` per load; attribute changes in one
+task coalesce into one load; a refresh keeps the subscription, a reload ends its epoch). Added in this step: the `loading`, `empty`
+and `error` slots, `density`, the reserved `panel`, `drishti:token-needed`, and a token provider set after an element failed with
+a 401 reloads it. `entity` stays the attribute for the entity id (the design's name; `id` is the page's own DOM id attribute and
+would turn every `<drishti-view id="main">` into a request for an entity called `main`).
+
+**Tokens.** The provider may be sync or async and return a string or `{token, expiresAt}` (else the JWT's `exp`). A token is reused
+until 60 s before it ends, or until 40 % of its life remains when that is shorter (a 30 s token is replaced at 18 s); one new token
+on a 401. The open channel gets the fresh token by `POST /embed/v1/channel/{cid}/token` before the old one ends (the same margin), and
+at once on `event: token`; nothing repaints and the channel is not reopened.
+
+**Sanitiser and Trusted Types.** Every string of markup from the server (header, panels, live patches, the About body, strip cells) is
+parsed inertly in a `<template>` and rebuilt from an allow-list: the macros' elements (tables, definition lists, buttons, `svg`
+primitives, headings...) and attributes (`class`, `id`, `role`, `title`, `href`, `data-*`, `aria-*`, table and svg geometry...);
+`script`, `style`, `iframe`, `object`, `embed`, `link`, `meta`, `img`, `use`, `foreignObject`, `template`, comments, every `on*` and
+`style` attribute and any `href` that is not relative, `#`, `http(s)` or `mailto` are removed; unknown elements are unwrapped. The
+single policy `drishti-elements` (`createHTML` sanitises; `createScriptURL` accepts only `/embed/v1/` paths) is created when the
+browser has Trusted Types, so a host sends `require-trusted-types-for 'script'; trusted-types drishti-elements` and nothing more
+(`/?tt=1` of the demo host does). No other sink is used: the element builds its own markup with `setHtml`. ECharts, tables, tree
+rows, the pivot and About ran under it unchanged.
+
+**Other behaviour kept from step 6/7:** pause when the page is hidden or the element scrolled away (grace `hiddenGraceMs`, then
+resume reloads and resubscribes), the enhancers' `ResizeObserver` on the host (charts follow a host's split panes), links as
+composed cancellable `drishti:navigate`, `?`/`Esc`/`Alt+n` only while the focus is inside the element.
+
+**Tests** (`test_embed_elements_browser.py`, Chromium, Firefox, WebKit; the installed Firefox and WebKit have no Trusted Types, that test skips there):
+rapid switching last-wins and request aborts, two elements one channel (step 7's versioned-API variant too), hidden tab pauses then
+resumes, navigate through the host, `test_the_sanitiser_strips_scripts_and_handlers_from_a_payload` (the response is tampered with in
+flight: script, iframe, img, `onerror`, `onclick`, `javascript:` and inline style all gone, `data-*` kept, nothing runs),
+`test_trusted_types_enforced_host_still_works`, `test_token_renewal_keeps_the_stream_open_past_the_tokens_expiry` (a 30 s token: the
+provider is asked again, renewals go to the open channel, one channel only, still ticking after the first token's expiry),
+`test_slots_show_host_content_and_a_missing_token_is_an_event`; `test_embed.py` serves the modules. Acceptance row 9 passes in the three
+browsers: adopted sheets under the host CSP, icon font via `FontFace`, streamed fetch with `Authorization`, composed events, ECharts in
+the shadow root, no style leak either way.
+
+**Not built:** the `toolbar` slot, `openAbout(panelId)` and `focusPanel(id)` methods, `<drishti-panel>` (phase 2), a `locale` attribute
+(the sheet has no locale yet); `live.js`/`view-panels.js` splits of step 6 remain not done (the element applies frames itself in `frames.js`).
 
 #### Step 10 as built: Admin → Embedding (2026-10-06)
 

@@ -87,7 +87,7 @@ async def preflight(request: Request, path: str):
 # -- the element and what it needs ----------------------------------------------------------------------------------
 def asset(name: str, build) -> tuple[bytes, str]:
     """A built asset, cached until a source file changes (its mtimes name the version)."""
-    key = (name, (es.OUT_DIR / es.SHEET_FILE).stat().st_mtime_ns, (WEB / "embed" / "drishti-elements.js").stat().st_mtime_ns)
+    key = (name, (es.OUT_DIR / es.SHEET_FILE).stat().st_mtime_ns, max(f.stat().st_mtime_ns for f in (WEB / "embed").glob("*.js")))
     if _cache.get(name, (None,))[0] != key:
         _cache[name] = (key, build())
     body = _cache[name][1]
@@ -123,6 +123,16 @@ async def reply(request: Request, body: str | bytes, media: str, status: int = 2
 @router.get("/drishti-elements.js")
 async def element_js(request: Request):
     body, etag = asset("js", lambda: (WEB / "embed" / "drishti-elements.js").read_bytes())
+    return await send(request, body, "text/javascript", etag)
+
+
+@router.get("/m/{name}.js")
+async def element_module(request: Request, name: str):
+    """The library's ES modules (web/embed/*.js, imported by drishti-elements.js as ./m/<name>.js): a name that is a file there, nothing else."""
+    path = WEB / "embed" / f"{name}.js"
+    if not re.fullmatch(r"[a-z][a-z-]*", name) or name == "drishti-elements" or not path.is_file():
+        return await refuse(request, 404, "DRS-9404", f"no such module: {name}")
+    body, etag = asset("m:" + name, path.read_bytes)
     return await send(request, body, "text/javascript", etag)
 
 

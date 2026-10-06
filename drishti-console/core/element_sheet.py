@@ -39,7 +39,7 @@ ICON_SHEET = "vendor/bootstrap-icons/bootstrap-icons.css"
 GZIP_TARGET = 25 * 1024
 # where a glyph can be named: the macros every embedded view is rendered with, and the scripts that run inside the element
 ICON_SOURCES = ("templates/_macros/panels.html", "templates/_macros/view.html", "static/js/tables.js", "static/js/tree-rows.js",
-                "static/js/view.js", "static/js/charts.js", "static/js/pivot.js", "embed/drishti-elements.js")
+                "static/js/view.js", "static/js/charts.js", "static/js/pivot.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js")
 ICON_NAME = re.compile(r"(?<![\w-])bi-([a-z0-9]+(?:-[a-z0-9]+)*)")
 BASE_ICON_CLASSES = {"bi"}          # the font's base rule is always kept
 _LICENCE = re.compile(r"\A/\*.*?\*/\s*", re.S)

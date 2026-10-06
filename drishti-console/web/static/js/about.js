@@ -30,6 +30,7 @@
   options = options || {};
   var doFetch = options.fetch || function (u, o) { return fetch(u, o); };
   var toUrl = options.url || function (p) { return p; };
+  var setHtml = options.setHtml || function (el, html) { el.innerHTML = html; };       // the element passes its sanitising, Trusted Types writer
   var drawer = root.getElementById('aboutDrawer');
   var view = root.querySelector('[data-view]');
   if (!drawer || !view) { return null; }
@@ -73,7 +74,7 @@
     inflight = doFetch(toUrl(url()), { credentials: 'same-origin', headers: { Accept: 'text/html' } })
       .then(function (r) { return r.text(); })
       .then(function (html) {
-        body.innerHTML = html; loaded = true; applyRemembered(); parseIndex();
+        setHtml(body, html); loaded = true; applyRemembered(); parseIndex();
         var card = body.querySelector('[data-about-generation]');
         shownGen = card ? card.getAttribute('data-about-generation') : '';
         var refresh = body.querySelector('[data-about-refresh]');
@@ -81,7 +82,7 @@
         if (quiet && status && before !== (body.querySelector('[data-layer="data"]') || {}).textContent) { status.textContent = 'About this page updated'; }
         root.dispatchEvent(new CustomEvent('drishti:about', { detail: index }));
       })
-      .catch(function () { body.innerHTML = '<p class="about-error" role="alert">About this page could not be loaded. Try again.</p>'; index = null; })
+      .catch(function () { setHtml(body, '<p class="about-error" role="alert">About this page could not be loaded. Try again.</p>'); index = null; })
       .then(function () { inflight = null; });
     return inflight;
   }

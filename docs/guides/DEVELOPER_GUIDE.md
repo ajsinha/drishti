@@ -1376,7 +1376,7 @@ A script that makes a rendered view interactive (sorting, charts, popovers) must
   and a `ResizeObserver` on `root.host` for a shadow root.
 - Return `{ dispose }` (remove listeners and observers). Register `window.drishtiModules.<name> = { init }`; start
   `init(document)` unless `document.currentScript` has `data-manual`; publish console globals only in that case.
-- Add the script to `ENHANCERS` in `routes/embed_routes.py` and to `#boot` in `web/embed/drishti-elements.js`; extend
+- Add the script to `ENHANCERS` in `routes/embed_routes.py` and to `boot` in `web/embed/enhancers.js` (and `ENHANCERS` in `web/embed/assets.js`); extend
   `test_embed_elements_browser.py` to prove it inside the element. The console's own browser tests must pass unchanged.
 
 ## 6. Testing strategy
