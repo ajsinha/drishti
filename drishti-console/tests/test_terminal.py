@@ -551,7 +551,12 @@ def test_workspaces_shared_with_you_and_sharing_yours(client, backend):
 
 
 
-def test_scheduled_reports_page(client, backend):
+def test_scheduled_reports_page(client, backend, monkeypatch):
+    async def search(q, ident=None):                     # the page offers "Schedule…" beside a search result: it needs a search to show
+        return {"kind": "trade", "mnemonic": "TRD", "columns": ["$.mtm"], "labels": {"$.mtm": "MTM"},
+                "rows": [{"ref": {"kind": "trade", "id": "IRS-48213"}, "title": "IRS-48213", "values": {"$.mtm": -412580.5}}],
+                "scanned": 1, "matched": 1, "partial": False, "elapsedMs": 1.0}
+    monkeypatch.setattr(backend, "search", search, raising=False)
     assert "Schedule…" in client.get("/s", params={"q": "TRD where mtm < 0"}).text
     page = client.get("/reports", params={"q": "TRD where mtm < 0"}).text
     assert 'value="TRD where mtm &lt; 0"' in page and "business-days 18:30" in page

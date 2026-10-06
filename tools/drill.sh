@@ -60,15 +60,20 @@ echo "drill: mode = $MODE$([[ $PUSH == 0 ]] && echo ' (no push)')"
 PY=drishti-console/.venv/bin/python
 LOGS=target/drill; mkdir -p "$LOGS"
 T0=$SECONDS; STAGES=()
-stage_done() { STAGES+=("$(printf '%-36s %5ss' "$1" "$(( SECONDS - $2 ))")"); }
+stage_done() { STAGES+=("$(printf '%-36s %5ss' "$1" "$(( SECONDS - $2 ))")"); echo "drill: ${STAGES[-1]}"; }
 cpus=$(nproc 2>/dev/null || echo 4); workers=$(( cpus / 2 )); (( workers > 4 )) && workers=4; (( workers < 1 )) && workers=1
 
 # background jobs: each has its own log; wait_job returns the job's status and prints the log's tail when it failed
 declare -A PID
-start_job() { local name=$1; shift; "$@" > "$LOGS/$name.log" 2>&1 & PID[$name]=$!; }
+start_job() {
+  local name=$1 began=$SECONDS; shift
+  ( rc=0; "$@" || rc=$?; echo $(( SECONDS - began )) > "$LOGS/$name.secs"; exit $rc ) > "$LOGS/$name.log" 2>&1 &
+  PID[$name]=$!
+}
 wait_job() {
   local name=$1 rc=0
   wait "${PID[$name]}" || rc=$?
+  echo "drill: $name took $(cat "$LOGS/$name.secs" 2>/dev/null || echo '?')s ($([[ $rc == 0 ]] && echo passed || echo FAILED))"
   if (( rc != 0 )); then echo "drill: $name FAILED (exit $rc); last lines of $LOGS/$name.log:" >&2; tail -n 40 "$LOGS/$name.log" >&2; fi
   return $rc
 }
@@ -119,7 +124,7 @@ console_tests() {
 java25_verify() {
   set -e
   local copy; copy=$(mktemp -d "${TMPDIR:-/tmp}/drishti-java25.XXXXXX")
-  trap 'rm -rf "$copy"' EXIT
+  trap "rm -rf '$copy'" EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
   DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify ${DRILL_MVN_ARGS:-}

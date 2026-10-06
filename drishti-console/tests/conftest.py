@@ -797,6 +797,21 @@ def backend():
     return FakeBackend()
 
 
+@pytest.fixture(autouse=True)
+def _backend_state_is_per_test(request):
+    """The stand-in server is one object for the whole session, and several tests replace its methods or fields for good
+    (``backend.admin = ...``). Put its instance state back after each test that uses it, so a test passes whichever tests ran
+    before it on its worker (pytest-xdist hands each worker whole files in an order of its own)."""
+    if "backend" not in request.fixturenames and "client" not in request.fixturenames:
+        yield
+        return
+    be = request.getfixturevalue("backend")
+    saved = dict(be.__dict__)
+    yield
+    be.__dict__.clear()
+    be.__dict__.update(saved)
+
+
 @pytest.fixture(scope="session")
 def client(backend):
     app = create_app(load_settings(CONSOLE / "config"))
