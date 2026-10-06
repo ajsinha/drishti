@@ -109,7 +109,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see exactly one file, for example `drishti-server/target/drishti-server-1.17.0-exec.jar`.
+You should see exactly one file, for example `drishti-server/target/drishti-server-1.17.1-exec.jar`.
 
 > Use `clean`. Without it, `target/` keeps the jars of earlier versions, and both `java -jar
 > drishti-server-*-exec.jar` and the server Dockerfile's `COPY drishti-server/target/drishti-server-*-exec.jar`
@@ -120,7 +120,7 @@ You should see exactly one file, for example `drishti-server/target/drishti-serv
 ```bash
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-1.17.0-exec.jar /opt/drishti/drishti-server.jar
+sudo cp drishti-server/target/drishti-server-1.17.1-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r packs console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -190,7 +190,7 @@ You should see:
 
 ```
 {"status":"UP","groups":["liveness","readiness"]}
-{"build":{"artifact":"drishti-server","name":"drishti-server","time":"2026-09-30T23:03:19.273Z","version":"1.17.0","group":"com.ash.drishti"}}
+{"build":{"artifact":"drishti-server","name":"drishti-server","time":"2026-09-30T23:03:19.273Z","version":"1.17.1","group":"com.ash.drishti"}}
 {"status":"UP"}
 ```
 
@@ -233,8 +233,8 @@ From the repository root:
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ./mvnw -q clean package -DskipTests
-docker build -f deploy/server.Dockerfile  -t drishti-server:1.17.0 .   # base image eclipse-temurin:21-jre; --build-arg BASE_IMAGE=eclipse-temurin:25-jre for Java 25
-docker build -f deploy/console.Dockerfile -t drishti-console:1.17.0 .
+docker build -f deploy/server.Dockerfile  -t drishti-server:1.17.1 .   # base image eclipse-temurin:21-jre; --build-arg BASE_IMAGE=eclipse-temurin:25-jre for Java 25
+docker build -f deploy/console.Dockerfile -t drishti-console:1.17.1 .
 ```
 
 The server image contains the jar and `packs/`. The console image contains the console, `docs/`, `packs/` and the
@@ -1259,7 +1259,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 {
     "status": "OK",
     "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
-    "server": { "version": "1.17.0", "uptimeSeconds": 6916, "java": "25.0.4.1", "heapUsedMb": 121,
+    "server": { "version": "1.17.1", "uptimeSeconds": 6916, "java": "25.0.4.1", "heapUsedMb": 121,
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24 },
     "sources": [
         { "name": "credit-store", "version": "1.0", "status": "UP", "health": "UP",

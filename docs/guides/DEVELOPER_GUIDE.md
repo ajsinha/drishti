@@ -251,7 +251,7 @@ working directory):
 ```bash
 ./mvnw -q package -DskipTests
 DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-1.17.0-exec.jar
+  java -jar drishti-server/target/drishti-server-1.17.1-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`,
@@ -443,7 +443,7 @@ connector of the same name is overridden by this file):
 
 ```bash
 DRISHTI_PACKS=market-risk PG_PASSWORD=… LAKE_ACCESS_KEY=… LAKE_SECRET_KEY=… \
-  java -jar drishti-server/target/drishti-server-1.17.0-exec.jar \
+  java -jar drishti-server/target/drishti-server-1.17.1-exec.jar \
   --spring.config.additional-location=file:/etc/drishti/connectors.yaml
 ```
 
@@ -1389,7 +1389,7 @@ idle (`… installed but not configured …`), failures with stack traces, the i
 with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-1.17.0-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-1.17.1-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`).
@@ -1456,14 +1456,14 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
 
 ## 9. Releasing
 
-Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git tag` lists `v1.0.0` … `v1.17.0`).
+Releases are numbered `MAJOR.MINOR.PATCH` and tagged `vX.Y.Z` on `main` (`git tag` lists `v1.0.0` … `v1.17.1`).
 The release commit for 1.9.0 (`Release 1.9.0`) shows every file a bump touches.
 
 1. **Start clean on `develop`** with everything for the release merged and drilled.
 2. **Bump the version** everywhere it is written. Find the old version first:
 
    ```bash
-   git grep -n -F '1.17.0' -- '*pom.xml' drishti-console/core/app.py deploy README.md docs
+   git grep -n -F '1.17.1' -- '*pom.xml' drishti-console/core/app.py deploy README.md docs
    ```
 
    | File | What changes |

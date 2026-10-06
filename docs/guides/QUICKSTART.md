@@ -50,7 +50,7 @@ cd drishti
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see `drishti-server/target/drishti-server-1.17.0-exec.jar`. The first build downloads its
+You should see `drishti-server/target/drishti-server-1.17.1-exec.jar`. The first build downloads its
 libraries and takes a few minutes.
 
 If the build stops with `Drishti needs Java 21 or newer (any vendor; production runs Java 21). Maven is running on Java …`, `JAVA_HOME` is older than Java 21.
@@ -90,7 +90,7 @@ Terminal 1, from the repository root:
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 export DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics
-java -jar drishti-server/target/drishti-server-1.17.0-exec.jar
+java -jar drishti-server/target/drishti-server-1.17.1-exec.jar
 ```
 
 | Variable | What it does | Default |
@@ -185,7 +185,7 @@ mvn -v                                  # "Apache Maven 3.9.…" and "Java versi
 mvn -q package -DskipTests              # build (add -o to work offline once ~/.m2 is filled)
 mvn -q verify                           # build, every test and every rule
 mvn -q -pl drishti-server -am package -DskipTests    # one module and what it needs
-ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-1.17.0-exec.jar
+ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-1.17.1-exec.jar
 ```
 
 Run the server from the repository root (it finds `./packs` and `./data` relative to where you start it). It runs on
@@ -193,7 +193,7 @@ Java 21 (the production target) or any newer JDK. Java-25-only note: `-XX:+UseCo
 
 ```bash
 DRISHTI_PACKS=market-risk,counterparty-risk \
-  java -jar drishti-server/target/drishti-server-1.17.0-exec.jar
+  java -jar drishti-server/target/drishti-server-1.17.1-exec.jar
 ```
 
 Run the console in a Python virtual environment (Python 3.11 or newer). With uv, as in step 3; without it:
@@ -223,7 +223,7 @@ and the packs overlay `./data/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves i
 
 | You want | Do | Command |
 |---|---|---|
-| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -jar drishti-server/target/drishti-server-1.17.0-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
+| a site file read **in addition**, on top of the bundled defaults | `--spring.config.additional-location` | `java -jar drishti-server/target/drishti-server-1.17.1-exec.jar --spring.config.additional-location=file:/etc/drishti/site.yaml` |
 | the same, from the environment | `SPRING_CONFIG_ADDITIONAL_LOCATION` | `SPRING_CONFIG_ADDITIONAL_LOCATION=file:/etc/drishti/site.yaml java -jar …` |
 | several files, later ones win | a comma list | `--spring.config.additional-location=file:/etc/drishti/site.yaml,file:/etc/drishti/secrets.yaml` |
 | a folder of files | end it with `/` | `--spring.config.additional-location=file:/etc/drishti/conf.d/` |

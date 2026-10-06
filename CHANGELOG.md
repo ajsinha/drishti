@@ -16,6 +16,8 @@
 # Changelog
 
 ## Unreleased
+
+## 1.17.1 — The logo leads home and back, hot reload by polling, a nine-minute drill (2026-10-06)
 - **Fixed:** Sutra hot reload no longer stops when the operating system has no file watches left (Linux *User limit of inotify watches reached*): it polls the Sutra files instead (`drishti.rachana.watch: auto|poll`, `poll-interval`); Health shows `hotReload: POLLING`. Before, edits were ignored until a restart.
 - **Changed:** the drill is about 2.5 times faster with the same tests: Maven test classes run in parallel forks (`drishti.test.forks`), the console suite on pytest-xdist workers, the Java 25 verify (in a copy of the committed tree) beside the console and tool tests; `tools/drill.sh --docs` (chosen by itself when only documentation changed) is the light drill and `--no-push` verifies without pushing; a browser wait that timed out on `net::ERR_NETWORK_CHANGED` reloads the page once. Tests that depended on the order they ran in were fixed (the stand-in server's state is restored per test, `PackDeployApiTest` restores the pack folders it changed, a bridge test ignores the JDK's own HTTP server log). See the developer guide, section 2.6.
 - **Changed:** the name and logo in the top bar lead to the landing page from every page, signed in or not; a signed-in visitor gets **← Back to …** (Alt+B) to the page they came from (same-site paths only).

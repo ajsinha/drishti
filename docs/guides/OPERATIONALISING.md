@@ -99,8 +99,8 @@ The manifest (also inside the archive as `finance/MANIFEST.json`) describes the 
   "version": "1.0.0",
   "extends": [],
   "kinds": ["trade", "netting-set", "csa", "..."],
-  "requiresServer": ">=1.17.0",
-  "generator": { "tool": "drishti.py pack bundle", "python": "3.14.7", "server": "1.17.0" },
+  "requiresServer": ">=1.17.1",
+  "generator": { "tool": "drishti.py pack bundle", "python": "3.14.7", "server": "1.17.1" },
   "data": { "ingest": {}, "connectors": [], "note": "the bundle carries the pack only; data ... is deployed separately" },
   "files": [ { "path": "pack.yaml", "sha256": "…", "size": 1210 }, "…" ]
 }

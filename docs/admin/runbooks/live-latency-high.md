@@ -72,7 +72,7 @@ A healthy server with some viewers:
    ```
 
    ```text
-   {'version': '1.17.0', 'uptimeSeconds': 6945, 'java': '25.0.4.1', 'heapUsedMb': 127, 'heapMaxMb': 15640, 'threads': 75, 'cpus': 24}
+   {'version': '1.17.1', 'uptimeSeconds': 6945, 'java': '25.0.4.1', 'heapUsedMb': 127, 'heapMaxMb': 15640, 'threads': 75, 'cpus': 24}
    ```
 
    `heapUsedMb` near `heapMaxMb` means the heap is too small (Fix D). Check host CPU with `top` or your monitoring.
@@ -198,13 +198,13 @@ server, so load spreads by user. To protect a server from a burst, lower the cap
 `DRS-5001` and the browser retries:
 
 ```bash
-java -jar drishti-server-1.17.0-exec.jar --drishti.live.max-streams=5000
+java -jar drishti-server-1.17.1-exec.jar --drishti.live.max-streams=5000
 ```
 
 **Fix D. JVM.** Give the server ZGC and enough heap:
 
 ```bash
-JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-1.17.0-exec.jar
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-1.17.1-exec.jar
 ```
 
 **Fix E. Sticky sessions** for several console processes. In nginx, for example, `ip_hash;` in the console's

@@ -1,5 +1,5 @@
 # Drishti console image (all front-end assets are vendored; no network needed at runtime).
-#   docker build -f deploy/console.Dockerfile -t drishti-console:1.17.0 .
+#   docker build -f deploy/console.Dockerfile -t drishti-console:1.17.1 .
 #
 # Calc's Python runtime (Pyodide) is not in git: the first stage installs it with tools/fetch-pyodide.sh (a pinned
 # release, its SHA-256 checked), so the image serves it and a running console needs no internet. A runtime already

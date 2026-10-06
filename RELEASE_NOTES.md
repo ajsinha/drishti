@@ -13,7 +13,27 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.17.0 — release notes
+# Drishti 1.17.1 — release notes
+
+*2026-10-06.* **A way home and back, hot reload that never stops, and a drill in nine minutes.**
+
+- **The name and logo lead home:** clicking them in the top bar opens the landing page from any page, also when you are
+  signed in; the landing page then offers **← Back to …** (Alt+B) to the view or page you came from. Only same-site paths
+  are accepted, so the logo cannot be turned into a redirect.
+- **Sutra hot reload never stops silently:** when the operating system has no file watches left (Linux *User limit of
+  inotify watches reached*, common on developer machines with several IDEs), the server polls the Sutra files instead
+  and keeps picking up edits; Admin → Health shows `hotReload: POLLING`. New settings `drishti.rachana.watch: auto|poll`
+  (`DRISHTI_SUTRA_WATCH`) and `poll-interval` (2 s).
+- **The drill takes about 9 minutes instead of about 22, testing as much:** Java tests in parallel forks, console tests
+  in parallel workers, the Java 25 check beside the console tests, and a `--docs` mode (about a minute) chosen by itself
+  for documentation-only changes; `--no-push` for timing runs. Browser tests reload a page once when Chromium cancelled
+  its requests because Docker changed the network (`ERR_NETWORK_CHANGED`), the cause of the rare workbench failures.
+- Tests no longer depend on the order they run in, and no longer leave files in a `data` folder of the server module.
+
+**Upgrade notes:** none required. Developers: `uv pip install -r drishti-console/requirements-test.txt` once (adds
+`pytest-xdist`).
+
+# Previous release: Drishti 1.17.0 — release notes
 
 *2026-10-05.* **From a folder of JSON Lines to a deployed pack, by command line or by the admin page.**
 
@@ -45,7 +65,7 @@
 - New settings: `drishti.packs.deploy.*`, `drishti.security.token-scopes`, `token-write-max-days`, console
   `packs.deploy_max_mb`. See CONFIGURATION.md.
 
-# Previous release: Drishti 1.16.0 — release notes
+# Older release: Drishti 1.16.0 — release notes
 
 *2026-10-05.* **Java 21 for production, About this page, and Share and Discussion.**
 
@@ -80,33 +100,3 @@
   `true`); single sign-on is unaffected (it registers the account at sign-in).
 - New settings: `drishti.explain.*`, `drishti.about.*`, `drishti.explain.ask.*`, `drishti.collab.*` (all collaboration
   email, bridges and snapshots are off until configured), console `ui.about_prefetch`. See CONFIGURATION.md.
-
-# Older release: Drishti 1.15.0 — release notes
-
-*2026-10-04.* **A KPI tile, five developer guides with generated screenshots, and one source of truth per topic.**
-
-- **`metric`, the 21st panel kind:** a big-number KPI tile with one formatted, toned figure, an optional change beside
-  it (`delta`), a unit and a caption. The workbench offers it first for a lone measure, and auto-design drafts one. The
-  figure never breaks inside: it shrinks with its tile. See [PANEL_KINDS.md#metric](docs/guides/PANEL_KINDS.md#metric).
-- **Five developer guides**, each with real, worked examples and screenshots made by a script, so they stay true:
-  - [PANEL_DEVELOPER_GUIDE.md](docs/guides/PANEL_DEVELOPER_GUIDE.md): add a panel kind end to end, worked through the
-    real `metric` code, with an ordered checklist and the tests that catch a missed step. Plus
-    [PANEL_KINDS.md](docs/guides/PANEL_KINDS.md), the catalogue of all twenty-one kinds (where F1 lands).
-  - [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md): the plugin interface method by
-    method, testing with the testkit contracts, and a teaching plugin that is built and contract-tested but not shipped.
-  - [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md): a help-desk pack built step by step with real outputs,
-    from `pack.yaml` to the signed registry.
-  - [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md): writing, testing and shipping Sutras.
-  - [BUILD_WORKBENCH_TUTORIAL.md](docs/guides/BUILD_WORKBENCH_TUTORIAL.md): four complete projects in 46 steps with
-    66 pictures: from JSON files, by hand, changing a live Sutra, and keyboard only.
-- **The documentation was harmonised:** guides teach and link; reference documents own each setting. The retired guides
-  (PANELS, PLUGIN_GUIDE, CONNECTOR_GUIDE, RACHANA_GUIDE, SUTRA_CLI and the in-app copies) are short pointers, their help
-  addresses redirect, about 70 links were repointed, and about 520 repeated lines were removed from the connector
-  references.
-- **Fixed in the Build workbench** (found while writing the tutorial): auto-design failed when a top-level field also
-  occurs nested; dropping a field on a `kv` panel left it empty; after a typed YAML edit the editor stopped following the
-  canvas and could save stale text; a rebase left the "base moved" flag; approving your own design showed "base moved"
-  pointing at your own new version.
-
-**Upgrade notes:** none required. Old help addresses (`/help/panels`, `/help/plugins`, `/help/connectors`,
-`/help/build-a-pack`, `/help/sutra-guide`, `/help/rachana-guide`) redirect to the new guides.
