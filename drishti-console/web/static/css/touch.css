@@ -37,4 +37,8 @@
 /* a code example is a box with rounded corners: on a phone a wide line scrolls inside it, it is not cut off */
 @media (max-width: 640px) {
   .help-example { overflow-x: auto; }
+  /* finger-sized tools no longer fit one line on a phone: the view's tools wrap, and a panel's code label gives way */
+  .vhead-tools { flex-wrap: wrap; max-width: 100%; }
+  .pnl-h { flex-wrap: wrap; row-gap: .25rem; }
+  .pnl-code { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .25rem; white-space: normal; min-width: 0; max-width: 100%; }
 }
