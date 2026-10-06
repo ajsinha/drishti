@@ -200,8 +200,12 @@ window.fetch = (u, o) => {
 class Page:
     """One signed-in host page, with the requests it made."""
 
-    def __init__(self, browser, user="viewer", viewport=(1300, 1100)):
-        self.ctx = browser.new_context(viewport={"width": viewport[0], "height": viewport[1]})
+    def __init__(self, browser, user="viewer", viewport=(1300, 1100), touch=False):
+        opts = {"viewport": {"width": viewport[0], "height": viewport[1]}}
+        if touch:                                           # a phone: touch always, the mobile viewport where the engine offers it (Firefox has no is_mobile)
+            opts["has_touch"] = True
+            opts["is_mobile"] = browser.browser_type.name != "firefox"
+        self.ctx = browser.new_context(**opts)
         self.ctx.request.post(HOST + "/api/login", data=json.dumps({"user": user}))
         self.page = self.ctx.new_page()
         self.page.add_init_script(INIT)
@@ -627,3 +631,69 @@ def test_keys_are_scoped_to_the_element(host):
     expect(drawer).to_be_visible()
     h.page.keyboard.press("Escape")
     expect(drawer).to_be_hidden()
+
+
+# ---- responsive: the element answers to its OWN width (container queries), not the host page's viewport -------------------
+COLS = "(sel) => getComputedStyle(document.querySelector('#main').shadowRoot.querySelector(sel)).gridTemplateColumns.split(' ').length"
+PAGE_OVERFLOW = "() => document.documentElement.scrollWidth - document.documentElement.clientWidth"
+
+
+def _box(h, sel):
+    return h.js("(() => { const e = document.querySelector('#main').shadowRoot.querySelector('%s'); const r = e.getBoundingClientRect();"
+                " return {x: r.x, y: r.y, w: r.width, h: r.height, b: r.bottom}; })()" % sel)
+
+
+def test_a_phone_host_with_a_full_width_element_has_no_sideways_scroll_and_stacks(host):
+    h = host(viewport=(390, 844), touch=True)
+    h.open()
+    expect(h.page.locator("#main").locator("section[data-panel]").first).to_be_visible(timeout=15000)
+    assert h.js(PAGE_OVERFLOW) <= 0, "the host page scrolls sideways"
+    assert h.page.evaluate(COLS, ".vgrid") == 1                         # main and context stack
+    assert h.page.evaluate(COLS, ".strip") <= 2                         # the key figures wrap to two columns
+    panels = h.js("[...document.querySelector('#main').shadowRoot.querySelectorAll('.vmain > section[data-panel]')].slice(0, 4).map((e) => e.getBoundingClientRect().x)")
+    assert len(set(round(x) for x in panels)) == 1, "the panels sit side by side on a phone"
+    assert h.js("document.querySelector('#main').getBoundingClientRect().width") <= 390
+    for sel in ("a.pnl-help[data-about-help]", "[data-about-open]"):       # finger-sized controls
+        b = _box(h, sel)
+        assert b["w"] >= 43.5 and b["h"] >= 43.5, f"{sel} is {b['w']}x{b['h']}"
+
+
+def test_a_desktop_host_with_the_element_in_a_narrow_sidebar_uses_the_narrow_layout(host):
+    h = host(viewport=(1800, 1000))
+    h.open()
+    expect(h.page.locator("#main").locator("section[data-panel]").first).to_be_visible(timeout=15000)
+    wide = (h.page.evaluate(COLS, ".vgrid"), h.page.evaluate(COLS, ".strip"))
+    assert wide[0] == 2 and wide[1] >= 4, f"the full-width layout is not wide: {wide}"
+    h.js("document.querySelector('section.main').style.cssText = 'width: 360px'")
+    h.page.wait_for_function("document.querySelector('#main').clientWidth <= 360")
+    assert h.js("window.innerWidth") == 1800                                # the host viewport did not change
+    h.until(lambda: h.page.evaluate(COLS, ".vgrid") == 1, what="the narrow one-column layout")
+    assert h.page.evaluate(COLS, ".strip") <= 2
+    assert h.js(PAGE_OVERFLOW) <= 0
+    table = h.js("(() => { const w = document.querySelector('#main').shadowRoot.querySelector('.tbl-wrap'); return w ? getComputedStyle(w).overflowX : 'auto'; })()")
+    assert table in ("auto", "scroll")                                      # a table scrolls inside its panel, never the host page
+
+
+def test_taps_open_the_panel_help_and_a_field_hint_and_the_about_sheet_is_a_bottom_sheet(host):
+    h = host(viewport=(390, 844), touch=True)
+    h.open()
+    view = h.page.locator("#main")
+    help_ = view.locator("section[data-panel] a.pnl-help[data-about-help]").first
+    expect(help_).to_be_visible(timeout=15000)
+    help_.tap()
+    expect(view.locator(".about-pop")).to_be_visible(timeout=15000)
+    gloss = view.locator("[data-gloss]").first
+    gloss.scroll_into_view_if_needed()
+    gloss.tap()
+    expect(view.locator(".about-tip")).to_be_visible(timeout=5000)             # a tap pins the field hint: no hover needed
+    view.locator("[data-about-open]").tap()
+    drawer = view.locator("#aboutDrawer")
+    expect(drawer).to_be_visible()
+    expect(drawer.locator("[data-about-body]")).not_to_contain_text("Loading", timeout=20000)
+    el = h.js("(() => { const r = document.querySelector('#main').getBoundingClientRect(); return {w: r.width}; })()")
+    h.until(lambda: _box(h, "#aboutDrawer")["b"] <= 846, timeout=3, what="the sheet scrolled into view")
+    box = _box(h, "#aboutDrawer")
+    assert abs(box["w"] - el["w"]) <= 2, f"the sheet is {box['w']} wide in an element {el['w']} wide"
+    assert box["y"] > 0 and box["h"] < 844, "a bottom sheet, not a full-height side drawer"
+    assert 0 < box["b"] <= 844 + 2, f"the sheet is out of view (bottom {box['b']})"
+    assert h.js(PAGE_OVERFLOW) <= 0

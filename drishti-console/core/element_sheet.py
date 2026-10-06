@@ -34,7 +34,7 @@ STATIC = WEB / "static"
 OUT_DIR = WEB / "elements"
 SHEET_FILE, MANIFEST_FILE = "drishti-view.css", "drishti-view.manifest.json"
 # the console's own sheets, in the order base.html loads them (the icon sheet is handled apart: only its used glyphs go in)
-SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css", "css/gradients.css", "css/pivot.css", "css/about.css")
+SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css", "css/gradients.css", "css/pivot.css", "css/about.css", "css/touch.css")
 ICON_SHEET = "vendor/bootstrap-icons/bootstrap-icons.css"
 GZIP_TARGET = 25 * 1024
 # where a glyph can be named: the macros every embedded view is rendered with, and the scripts that run inside the element
@@ -57,6 +57,48 @@ def shadow_css(text: str) -> str:
     text = re.sub(r"(?m)^(\s*)body\.(terminal|embed)\b", r"\1:host", text)
     text = re.sub(r"(?m)^(\s*)body\b", r"\1:host", text)
     return text
+
+
+CONTAINER = "drishti"
+_WIDTH_MEDIA = re.compile(r"@media\s+((?:\(\s*(?:max|min)-width\s*:\s*[^)]+\)\s*(?:and\s+)?)+)\{")
+
+
+def container_queries(text: str) -> str:
+    """Width-based ``@media`` rules become ``@container drishti`` rules, so an embedded view answers to the width of its
+    element, not of the host page's viewport. Non-width media (colour scheme, print, hover, motion, contrast) stay as they
+    are. The host element is the container, and a container cannot style itself, so a ``:host`` selector inside such a
+    rule moves to ``.view``; viewport units (``vw``) inside become container units (``cqw``)."""
+    out, pos = [], 0
+    for m in _WIDTH_MEDIA.finditer(text):
+        if m.start() < pos:
+            continue
+        depth, i = 1, m.end()
+        while depth:
+            depth += (text[i] == "{") - (text[i] == "}")
+            i += 1
+        body = re.sub(r"(?<![\w-]):host\b(?!\()", ".view", text[m.end():i - 1])
+        body = re.sub(r"(\d)vw\b", r"\1cqw", body)
+        out += [text[pos:m.start()], f"@container {CONTAINER} {m.group(1).strip()} {{", body, "}"]
+        pos = i
+    out.append(text[pos:])
+    return "".join(out)
+
+
+# What only an embedded view needs on top of the console's sheets (appended last, so it wins at equal specificity): the About
+# drawer sized to the ELEMENT (a fixed box in the host element, whose width is not the viewport's), tables and panels that
+# scroll inside themselves, and finger-sized controls where the element is narrow or the device is touch.
+ELEMENT_ADDENDUM = """\
+.about { width: min(420px, 92cqw); }
+.pnl, .vmain > *, .vright > * { min-width: 0; }
+.tbl-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+@container drishti (max-width: 640px) {
+  .about { width: 100cqw; }
+  .pnl-help, .tbl-pg-b, tr.tbl-filter button, .about-more, .raw-x, [data-about-open] { min-width: 44px; min-height: 44px; }
+}
+@media (pointer: coarse) {
+  .pnl-help, .tbl-pg-b, tr.tbl-filter button, .about-more, .raw-x, [data-about-open] { min-width: 44px; min-height: 44px; }
+}
+"""
 
 
 def _compact(text: str) -> str:
@@ -98,7 +140,8 @@ def build() -> tuple[str, dict]:
     unknown = sorted(n for n in used if n not in rules)
     if unknown:
         raise ValueError(f"not Bootstrap Icons glyphs: {', '.join('bi-' + n for n in unknown)} (named in {sorted({f for n in unknown for f in used[n]})})")
-    parts = [_compact(shadow_css((STATIC / s).read_text(encoding="utf-8"))) for s in SHEETS]
+    parts = [_compact(container_queries(shadow_css((STATIC / s).read_text(encoding="utf-8")))) for s in SHEETS]
+    parts.append(ELEMENT_ADDENDUM)
     parts.append(_compact(rules[""]) + "".join(_compact(rules[n]) for n in used))
     body = "".join(parts)
     version = hashlib.sha256(body.encode()).hexdigest()[:12]

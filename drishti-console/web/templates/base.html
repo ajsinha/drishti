@@ -41,6 +41,7 @@
   <link rel="stylesheet" href="/static/css/gradients.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/nav.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/collab.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/touch.css?v={{ ASSET_V }}">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">

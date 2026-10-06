@@ -25,24 +25,29 @@ import pytest
 import yaml
 
 from conftest import CONSOLE
-from wb_live import BROWSER_WAIT_MS
+from wb_live import BROWSER_WAIT_MS, _stack  # the real server: the phone sweep needs real pages, not the stand-in's
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
 from test_live_tabs_browser import _views, browser, console_url  # noqa: E402,F401 - the shared browser fixtures
 
 WIDTHS = (390, 1600, 2560)
+PACK = "trading"                      # a pack the stand-in server loads (its loads page is the same shape for any pack)
+NO_SHARE = "sh_0123456789abcdef"     # a share id nobody can open: the clean no-access page
 ADMIN = ("users", "audit", "health", "caches", "packs", "roles", "tokens", "access")
 
 
-def _pages() -> list[str]:
-    views = _views()
+def _pages(views: list[str] | None = None) -> list[str]:
+    views = views or _views()
     first = views[0]
     pages = ["/", "/t", *(f"/v/{v}" for v in views), "/v/trade/NOPE-404", "/v/nosuchkind/X",
              "/s?q=TRD%20where%20mtm%20%3E%201m%20order%20by%20mtm%20desc%20limit%2020",
              f"/compare/{first}?a=2026-09-29&b=2026-09-30", f"/impact/{first}", "/history", "/m", "/alerts", "/w",
              "/build", "/build/reviews", "/reports", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
-             "/help", "/help/search?q=pivot", "/about", "/about/competitive"]
+             "/help", "/help/search?q=pivot", "/about", "/about/competitive",
+             # the newer pages: data loads (all, and one pack's), collaboration admin, the inbox, a share nobody may open, the landing page's way back
+             "/admin/loads", f"/admin/packs/{PACK}/loads", "/admin/collab", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",
+             f"/?from=/v/{first}", "/?from=/admin/loads"]
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     pages += [f"/help/{g['slug']}" for cat in catalogue["categories"] for g in cat.get("guides", [])]
     # last, a view at a past business date and then as known at a time: the top bar's widest state
@@ -114,3 +119,81 @@ def test_the_sweep_covers_every_help_guide_and_admin_page():
     pages = _pages()
     assert sum(1 for p in pages if re.match(r"/help/[a-z]", p) and "search" not in p) >= 30
     assert all(f"/admin/{a}" in pages for a in ADMIN)
+
+
+# ---- a phone (390 px, touch): real content, finger-sized controls, nothing clipped ----------------------------------------
+# Pages that are meant to be problem pages (a missing entity, a kind that does not exist, a share nobody may open).
+PROBLEM_PAGES = ("/v/trade/NOPE-404", "/v/nosuchkind/X", f"/share/{NO_SHARE}")
+# What marks a page that fell over instead of showing its content: the problem template's alert, an error status.
+CONTENT = r"""() => {
+  const bad = [...document.querySelectorAll('.thome > .pnl-err, .dv-error, .adm-err, [data-problem]')].map(e => e.textContent.trim().slice(0, 90));
+  return { bad, text: document.body.innerText.trim().length };
+}"""
+
+# Visible controls smaller than 44 px in their smaller side (the console's own bar for touch). Not counted: a link inside a
+# sentence of running text (the inline exception of WCAG 2.5.8: its size is set by the line), a control whose label or wrapping
+# link/button gives it a 44 px hit area, and the page footer.
+TARGETS = r"""() => {
+  const out = [], seen = new Set();
+  const vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e);
+    return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && !e.closest('[hidden], [aria-hidden=true], .skip-link') && r.bottom > 0; };
+  const big = r => Math.min(r.width, r.height) >= 43.5;
+  const inline = e => { if (e.tagName !== 'A' || getComputedStyle(e).display !== 'inline') return false;
+    const p = e.closest('p, li, td, dd, dt, h1, h2, h3, h4, label, small, figcaption') || e.parentElement;
+    return p && (p.textContent || '').trim().length > (e.textContent || '').trim().length + 12; };
+  for (const e of document.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea, [role=button], summary')) {
+    if (!vis(e) || e.closest('footer')) continue;
+    const r = e.getBoundingClientRect();
+    const label = e.labels && e.labels[0] && vis(e.labels[0]) ? e.labels[0].getBoundingClientRect() : null;
+    if (big(r) || (label && big(label)) || inline(e)) continue;
+    const wrap = e.parentElement && e.parentElement.closest('a[href], button, label, summary');
+    if (wrap && big(wrap.getBoundingClientRect())) continue;
+    const cls = x => typeof x.className === 'string' && x.className ? '.' + x.className.trim().split(/\s+/)[0] : '';
+    const name = (e.parentElement ? e.parentElement.tagName.toLowerCase() + cls(e.parentElement) + ' > ' : '') + e.tagName.toLowerCase() + cls(e) + (e.getAttribute('type') ? '[' + e.getAttribute('type') + ']' : '');
+    const key = name + ' ' + Math.round(r.width) + 'x' + Math.round(r.height);
+    if (!seen.has(key)) { seen.add(key); out.push(key + ' "' + (e.textContent || e.getAttribute('aria-label') || e.getAttribute('title') || '').trim().slice(0, 24) + '"'); }
+  }
+  return out;
+}"""
+
+# Text cut off by overflow:hidden without an ellipsis or a way to scroll (text-overflow: ellipsis is a decision; clipping silently is not).
+CLIPPED = r"""() => {
+  const out = [];
+  for (const e of document.querySelectorAll('body *')) {
+    const s = getComputedStyle(e);
+    if (s.overflowX !== 'hidden' && s.overflowX !== 'clip') continue;
+    if (e.scrollWidth <= e.clientWidth + 1 || !e.clientWidth || s.textOverflow === 'ellipsis' || s.display === 'none') continue;
+    if (!e.textContent.trim() || e.closest('[aria-hidden=true], svg, canvas, .chart, .xchart, .surface, .visually-hidden, .sr-only, .asof-live-l')) continue;
+    out.push(e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/)[0] : '') + ' ' + e.scrollWidth + '>' + e.clientWidth);
+  }
+  return [...new Set(out)].slice(0, 6);
+}"""
+
+
+@pytest.fixture(scope="module")
+def phone_console(tmp_path_factory):
+    """The real server with the trading pack (its sample trade exists) behind a console; skipped without the built jar."""
+    yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": PACK})
+
+
+def test_phone_pages_show_content_have_finger_sized_targets_and_clip_nothing(browser, phone_console):
+    console_url = str(phone_console)
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    page = ctx.new_page()
+    broken, small, clipped = [], [], []
+    try:
+        for url in _pages(["trade/END-1000008"]):
+            if url == "/history":                      # a page that does not exist (it is in the sweep as a 404 page)
+                continue
+            resp = page.goto(console_url + url, wait_until="load", timeout=BROWSER_WAIT_MS)
+            page.wait_for_timeout(250)
+            seen = page.evaluate(CONTENT)
+            if url not in PROBLEM_PAGES and (resp.status >= 400 or seen["bad"] or not seen["text"]):
+                broken.append(f"{url}: status {resp.status} {seen['bad'][:1]}")
+            small += [f"{url}: {t}" for t in page.evaluate(TARGETS)]
+            clipped += [f"{url}: {c}" for c in page.evaluate(CLIPPED)]
+    finally:
+        ctx.close()
+    assert not broken, "pages that show a problem instead of content:\n" + "\n".join(broken)
+    assert not small, "tap targets under 44 px:\n" + "\n".join(small)
+    assert not clipped, "text clipped horizontally:\n" + "\n".join(clipped)

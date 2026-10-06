@@ -82,3 +82,21 @@ def test_the_sheet_is_served_under_its_hash_for_ever_and_a_wrong_hash_is_refused
     assert ok.text == es.committed()[0]
     assert client.get("/embed/v1/elements/deadbeef0000/drishti-view.css", headers={"Origin": HOST}).status_code == 404
     assert client.get("/embed/v1/poc/drishti-view.css", headers={"Origin": HOST}).text == ok.text
+
+
+def test_no_width_media_rule_is_left_in_the_element_sheet():
+    """Inside a host page a width @media reacts to the host's viewport; the element must answer to its own width."""
+    sheet, _ = es.committed()
+    assert not re.findall(r"@media[^{]*\((?:max|min)-width", sheet), f"a width @media rule is in the element sheet; {REGEN}"
+    assert "@container drishti (max-width: 640px)" in sheet
+    assert "@media print" in sheet and "prefers-color-scheme" in sheet          # non-width media stay as they are
+    assert "container:drishti/inline-size" in (es.WEB / "embed" / "drishti-elements.js").read_text(encoding="utf-8")
+
+
+def test_container_queries_rewrites_width_rules_only():
+    src = ("@media (max-width: 640px) {\n  :host { font-size: 15px; }\n  .about { width: 100vw; }\n}\n"
+           "@media (min-width: 700px) and (max-width: 900px) { .a { b: c; } }\n@media print { .x { y: z; } }\n@media (prefers-color-scheme: dark) { .q { r: s; } }\n")
+    out = es.container_queries(src)
+    assert "@container drishti (max-width: 640px) {" in out and ".view { font-size: 15px; }" in out and "width: 100cqw" in out
+    assert "@container drishti (min-width: 700px) and (max-width: 900px) {" in out
+    assert "@media print {" in out and "@media (prefers-color-scheme: dark) {" in out and "@media (max-width" not in out

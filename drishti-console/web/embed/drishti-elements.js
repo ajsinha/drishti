@@ -71,7 +71,7 @@ const sheet = (server) => memo('sheet:' + server, async () => {
   return s;
 });
 const frameSheet = new CSSStyleSheet();
-frameSheet.replaceSync(':host{display:block;position:relative;contain:content}.view{min-height:0}'
+frameSheet.replaceSync(':host{display:block;position:relative;contain:content;container:drishti/inline-size}.view{min-height:0}'
   + ':host([data-state="loading"]) .view{opacity:.55;transition:opacity .15s}'
   + '.view:focus{outline:none}.dv-note{padding:.4rem .8rem;font:12px/1.4 var(--d-font-mono,monospace);color:var(--d-muted,#666)}'
   + '.dv-error{padding:.8rem;border:1px solid var(--d-bad,#b00);color:var(--d-bad,#b00)}');
@@ -433,7 +433,15 @@ class DrishtiView extends HTMLElement {
     m.pivot = start('pivot', root, { fetch: fetcher, url: toUrl, save: false, exports: false });
     m.about = start('about', root, { fetch: fetcher, guideKey: false, reload: () => me.reload() });
     m.hints = m.about ? start('aboutHints', root, { about: m.about, open: (h) => window.open(h.startsWith('/') ? server + h : h, '_blank', 'noopener') }) : null;
-    root.addEventListener('drishti:about', () => { const d = root.getElementById('aboutDrawer'); d && this.#absolutise(d); });
+    root.addEventListener('drishti:about', () => {
+      const d = root.getElementById('aboutDrawer');
+      if (!d) { return; }
+      this.#absolutise(d);
+      if (!d.hidden && this.clientWidth <= 640) {
+        const r = this.getBoundingClientRect(), vh = window.innerHeight;
+        if (r.bottom > vh || r.bottom < 0) { this.scrollIntoView({ block: 'end', inline: 'nearest' }); }      // a fixed box cannot be scrolled to: the element's bottom edge is where the sheet sits
+      }     // narrow: the drawer is a bottom sheet of the element, which may be below the fold
+    });
   }
   #swapped(fresh) {                                 // a panel was replaced by a live frame: bars, tabs, charts, labels again (tables, tree rows and pivots see it through their observers)
     const m = this.#mods;

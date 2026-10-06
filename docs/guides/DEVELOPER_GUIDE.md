@@ -1348,6 +1348,16 @@ sheet is stale or a macro uses a glyph the sheet lacks: run the tool and commit 
 Bootstrap Icons glyph makes the tool fail and says where it is named. A new icon in a macro that only the full page shows
 still goes in the sheet: the guard scans whole macro files.
 
+**Writing element CSS: width rules become container rules.** Write responsive rules in the console's sheets as usual
+(`@media (max-width: 640px) { ... }`). The generator rewrites every width-based `@media` rule into
+`@container drishti (max-width: 640px) { ... }`, so an embedded view answers to the width of its **element** (the host
+element is a size container, `container: drishti / inline-size`), not to the host page's viewport; `:host` inside such a rule
+becomes `.view` (a container cannot style itself) and `vw` becomes `cqw`. Non-width media (`prefers-color-scheme`,
+`prefers-reduced-motion`, `print`, `hover`, `pointer`) are kept. Do not write `@container` by hand in the console's sheets, and
+do not use `100vw` or `vh` for something inside the element's tree where the element's own size is meant. Element-only rules
+(finger-sized controls, the About sheet's width) live in `ELEMENT_ADDENDUM` in `core/element_sheet.py`.
+`test_element_sheet.py` fails if a width `@media` rule is left in the sheet.
+
 ---
 
 ### 5.9 Write a view enhancer (the `init(root)` contract)
