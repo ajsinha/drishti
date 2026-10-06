@@ -40,13 +40,18 @@ def token(user="alice", exp=None, typ="drishti-embed+jwt", app="demo") -> str:
     return f"{_b64({'alg': 'ES256', 'typ': typ})}.{_b64({'sub': user, 'azp': app, 'exp': exp or int(time.time()) + 300})}.c2ln"
 
 
-@pytest.fixture
-def embed(backend):
+def make_client(backend):
+    """A console with embedding on whose server says one host application is registered, with the origin HOST."""
     app = create_app(load_settings(CONSOLE / "config", ARGS))
     app.state.backend = backend
     app.state.embed._origins = frozenset({HOST})            # what the server's registered host applications say
     app.state.embed._fetched = time.monotonic() + 3600
     return TestClient(app)
+
+
+@pytest.fixture
+def embed(backend):
+    return make_client(backend)
 
 
 def test_off_by_default(client):
