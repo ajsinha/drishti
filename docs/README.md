@@ -82,6 +82,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) |
 | Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) |
 | Collaboration: share a view with a note, comment threads anchored to the data, the inbox, email, retention and legal hold; the design, what was built and the plan | [COLLABORATION.md](architecture/COLLABORATION.md) |
+| [ELEMENTS.md](architecture/ELEMENTS.md) | you want to know how Drishti Elements will put live views into other web applications without iframes: `<drishti-view>` in a Shadow DOM, HTML over the wire from the console, one connection per page, embed tokens by token exchange (RFC 8693), security, the decisions and the build plan (proposed) |
+| Show Drishti's live views inside another web application without iframes (Drishti Elements: Web Components, embed API, token exchange) | [ELEMENTS.md](architecture/ELEMENTS.md) |
 
 ### Add an industry or data
 
