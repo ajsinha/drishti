@@ -22,7 +22,8 @@
    are enhanced when they appear (data-tree-ready marks the ones already done). */
 (function () {
   'use strict';
-  var E = window.drishtiPivotEngine, G = window.drishtiPivotGrid;
+  var me = document.currentScript, reg0 = window.drishtiModules || {};
+  var E = reg0.pivotEngine || window.drishtiPivotEngine, G = reg0.pivotGrid || window.drishtiPivotGrid;
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
 
@@ -147,17 +148,24 @@
     host.setAttribute('data-tree-ready', '');
   }
 
-  function scan(root) {
-    if (!root.querySelectorAll) { return; }
-    var tables = Array.prototype.slice.call(root.querySelectorAll('table.tbl-tree:not([data-tree-ready])'));
-    if (root.matches && root.matches('table.tbl-tree:not([data-tree-ready])')) { tables.push(root); }
-    tables.forEach(function (t) { t.setAttribute('data-tree-ready', ''); treeTable(t); });
-    var hosts = Array.prototype.slice.call(root.querySelectorAll('.pv-tree-host:not([data-tree-ready])'));
-    if (root.matches && root.matches('.pv-tree-host:not([data-tree-ready])')) { hosts.push(root); }
-    hosts.forEach(pivotTree);
+  /** init(root, options): expandable rows under root (the document or a ShadowRoot), now and as panels are swapped in. */
+  function init(root) {
+    function scan(node) {
+      if (!node.querySelectorAll) { return; }
+      var tables = Array.prototype.slice.call(node.querySelectorAll('table.tbl-tree:not([data-tree-ready])'));
+      if (node.matches && node.matches('table.tbl-tree:not([data-tree-ready])')) { tables.push(node); }
+      tables.forEach(function (t) { t.setAttribute('data-tree-ready', ''); treeTable(t); });
+      var hosts = Array.prototype.slice.call(node.querySelectorAll('.pv-tree-host:not([data-tree-ready])'));
+      if (node.matches && node.matches('.pv-tree-host:not([data-tree-ready])')) { hosts.push(node); }
+      hosts.forEach(pivotTree);
+    }
+    scan(root);
+    var mo = new MutationObserver(function (list) {
+      list.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) { scan(n); } }); });
+    });
+    mo.observe(root === document ? document.body : root, { childList: true, subtree: true });
+    return { scan: scan, dispose: function () { mo.disconnect(); } };
   }
-  scan(document);
-  new MutationObserver(function (list) {
-    list.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) { scan(n); } }); });
-  }).observe(document.body, { childList: true, subtree: true });
+  (window.drishtiModules = window.drishtiModules || {}).treeRows = { init: init };
+  if (!(me && me.hasAttribute('data-manual'))) { init(document); }
 })();

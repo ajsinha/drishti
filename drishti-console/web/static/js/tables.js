@@ -26,8 +26,14 @@
    it is (a form laid out as a table). */
 (function () {
   'use strict';
+  var me = document.currentScript;
   var SIZES = [25, 50, 100, 250];
   var KEY = 'drishti.tableRows';
+  /** init(root, options): sort, filter and page every table under root (the document or a ShadowRoot), now and as panels are
+      swapped in. options.scope names the page for remembered state (default: the path). Returns {scan, dispose}. */
+  function init(root, options) {
+  options = options || {};
+  var scope = options.scope || location.pathname;
   var state = {};                      // a table's key -> its view state, so a re-rendered table keeps its place
 
   function size() {
@@ -35,8 +41,8 @@
   }
   function keyOf(t) {
     var panel = t.closest('[data-panel], section[id], .pnl');
-    return location.pathname + '|' + (panel && (panel.getAttribute('data-panel') || panel.id) || '') + '|' +
-      Array.prototype.indexOf.call(document.querySelectorAll('table.tbl'), t);
+    return scope + '|' + (panel && (panel.getAttribute('data-panel') || panel.id) || '') + '|' +
+      Array.prototype.indexOf.call(root.querySelectorAll('table.tbl'), t);
   }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
   function button(label, title, fn) {
@@ -209,10 +215,11 @@
     quick.addEventListener('input', function () { st.q = quick.value.trim(); st.page = 0; st.sel = -1; filter(); render(); });
     sizeSel.addEventListener('change', function () {
       try { localStorage.setItem(KEY, sizeSel.value); } catch (e) { /* private window: this page only */ }
-      document.querySelectorAll('.tbl-pg-size').forEach(function (s) { s.value = sizeSel.value; });
-      document.dispatchEvent(new CustomEvent('drishti:table-size'));
+      root.querySelectorAll('.tbl-pg-size').forEach(function (s) { s.value = sizeSel.value; });
+      root.dispatchEvent(new CustomEvent('drishti:table-size'));
     });
-    document.addEventListener('drishti:table-size', function () { if (!t.isConnected) { return; } st.page = st.sel >= 0 ? Math.floor(st.sel / size()) : 0; render(); });
+    root.addEventListener('drishti:table-size', onSize);
+    function onSize() { if (!t.isConnected) { return; } st.page = st.sel >= 0 ? Math.floor(st.sel / size()) : 0; render(); }
 
     t.tabIndex = 0;
     t.setAttribute('aria-label', (t.getAttribute('aria-label') || 'Table') + ': ↑ ↓ to move, Enter to open; click a heading to sort');
@@ -240,13 +247,19 @@
     sort(); filter(); render();
   }
 
-  function scan(root) {
-    (root.querySelectorAll ? root.querySelectorAll('table.tbl') : []).forEach(enhance);
-    if (root.matches && root.matches('table.tbl')) { enhance(root); }
+  function scan(node) {
+    (node.querySelectorAll ? node.querySelectorAll('table.tbl') : []).forEach(enhance);
+    if (node.matches && node.matches('table.tbl')) { enhance(node); }
   }
-  scan(document);
+  scan(root);
   // Live updates and workspace panes replace panels: enhance their new tables too, with the same sort and filters.
-  new MutationObserver(function (list) {
+  var mo = new MutationObserver(function (list) {
     list.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) { scan(n); } }); });
-  }).observe(document.body, { childList: true, subtree: true });
+  });
+  mo.observe(root === document ? document.body : root, { childList: true, subtree: true });
+  return { scan: scan, dispose: function () { mo.disconnect(); } };
+  }
+  var reg = (window.drishtiModules = window.drishtiModules || {});
+  reg.tables = { init: init };
+  if (!(me && me.hasAttribute('data-manual'))) { init(document); }
 })();

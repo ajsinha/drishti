@@ -1,6 +1,6 @@
 {
-  "bytes": 82138,
-  "gzip": 16121,
+  "bytes": 100211,
+  "gzip": 18903,
   "iconFont": {
     "family": "bootstrap-icons",
     "registered": "FontFace API (the sheet has no @font-face)"
@@ -27,6 +27,9 @@
     "inbox": [
       "templates/_macros/panels.html"
     ],
+    "info-circle": [
+      "embed/drishti-elements.js"
+    ],
     "lock": [
       "templates/_macros/panels.html"
     ],
@@ -34,14 +37,16 @@
       "templates/_macros/panels.html"
     ]
   },
-  "sha256": "47b249d87d45c30a5b503dfdd6ad9e908d705223e199bf53a0805a9525c11574",
+  "sha256": "51d9ba433399b02797ea4c933079433935306e45fcb36029c362b54e4c4b27e1",
   "sources": [
     "css/tokens.css",
     "css/theme.css",
     "css/terminal.css",
     "css/layout.css",
     "css/gradients.css",
+    "css/pivot.css",
+    "css/about.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "518e75673409"
+  "version": "d971e315fbf6"
 }

@@ -21,8 +21,22 @@
    the `?` stays a link to the panel kind's guide, as before. */
 (function () {
   'use strict';
-  var api = window.drishtiAbout;
-  if (!api || !document.querySelector('[data-view]')) { return; }
+  var me = document.currentScript;
+  /** init(root, options): panel `?` popovers and field hints under root (the document or a ShadowRoot). options.about is the
+      About drawer's API (default window.drishtiAbout: the console's), options.open(href) opens a link (default: navigate).
+      Returns {refresh, dispose}: refresh() marks labels and `?` links again after panels were swapped in. */
+  function init(root, options) {
+  options = options || {};
+  var api = options.about || window.drishtiAbout;
+  if (!api || !root.querySelector('[data-view]')) { return null; }
+  var layer = root === document ? document.body : root;            // where a popover or tooltip goes
+  var undo = [];
+  function on(t, type, fn, cap) { t.addEventListener(type, fn, cap); undo.push(function () { t.removeEventListener(type, fn, cap); }); }
+  function origin() {                                              // an element's host is the containing block of fixed boxes
+    if (!root.host) { return { x: 0, y: 0 }; }
+    var r = root.host.getBoundingClientRect();
+    return { x: r.left, y: r.top };
+  }
   var HOVER_MS = 400;
   var tip = null, tipFor = null, pinned = false, hoverTimer = null, pop = null, popFor = null, pointer = '';
   var terms = {};                                                         // field key -> entry
@@ -59,14 +73,15 @@
     var x = Math.min(Math.max(8, r.left), Math.max(8, window.innerWidth - w - 8));
     var y = r.bottom + 6;
     if (y + hh > window.innerHeight - 8) { y = Math.max(8, r.top - hh - 6); }
-    box.style.left = x + 'px'; box.style.top = y + 'px';
+    var o = origin();
+    box.style.left = (x - o.x) + 'px'; box.style.top = (y - o.y) + 'px';
   }
 
   // ---- field tooltips -----------------------------------------------------------------------------------------------
   function ensureTip() {
     if (!tip) {
       tip = h('div', 'about-tip'); tip.id = 'aboutTip'; tip.setAttribute('role', 'tooltip'); tip.hidden = true;
-      document.body.appendChild(tip);
+      layer.appendChild(tip);
     }
     return tip;
   }
@@ -95,23 +110,23 @@
   }
   function glossOf(e) { return e.target && e.target.closest ? e.target.closest('.about-gloss') : null; }
 
-  document.addEventListener('mouseover', function (e) {
+  on(root, 'mouseover', function (e) {
     var g = glossOf(e);
     if (!g || g === tipFor) { return; }
     clearTimeout(hoverTimer);
     hoverTimer = setTimeout(function () { showTip(g, false); }, HOVER_MS);
   });
-  document.addEventListener('mouseout', function (e) {
+  on(root, 'mouseout', function (e) {
     var g = glossOf(e);
     if (!g) { return; }
     clearTimeout(hoverTimer); hoverTimer = null;
     if (!pinned && g === tipFor) { hideTip(); }
   });
-  document.addEventListener('focusin', function (e) { var g = glossOf(e); if (g) { showTip(g, false); } });
-  document.addEventListener('focusout', function (e) { var g = glossOf(e); if (g && !pinned && g === tipFor) { hideTip(); } });
-  document.addEventListener('pointerdown', function (e) { pointer = e.pointerType || ''; }, true);
-  document.addEventListener('scroll', function () { if (tipFor) { hideTip(); } }, true);
-  document.addEventListener('keydown', function (e) {
+  on(root, 'focusin', function (e) { var g = glossOf(e); if (g) { showTip(g, false); } });
+  on(root, 'focusout', function (e) { var g = glossOf(e); if (g && !pinned && g === tipFor) { hideTip(); } });
+  on(root, 'pointerdown', function (e) { pointer = e.pointerType || ''; }, true);
+  on(root, 'scroll', function () { if (tipFor) { hideTip(); } }, true);
+  on(root, 'keydown', function (e) {
     var g = glossOf(e);
     if (g && e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault(); e.stopPropagation();
@@ -124,7 +139,7 @@
     if (!visible(pop)) { return; }
     pop.hidden = true;
     var a = popFor; popFor = null;
-    if (a) { a.setAttribute('aria-expanded', 'false'); if (restore && document.contains(a)) { a.focus({ preventScroll: true }); } }
+    if (a) { a.setAttribute('aria-expanded', 'false'); if (restore && a.isConnected) { a.focus({ preventScroll: true }); } }
   }
   function buildPop(a, idx) {
     var sec = a.closest('section[data-panel]');
@@ -135,7 +150,7 @@
     var mine = (idx.terms || []).filter(function (t) { return (t.shownIn || []).indexOf(id) >= 0; });
     if (!pop) {
       pop = h('div', 'about-pop'); pop.setAttribute('role', 'dialog'); pop.tabIndex = -1; pop.hidden = true;
-      document.body.appendChild(pop);
+      layer.appendChild(pop);
     }
     pop.textContent = '';
     pop.setAttribute('aria-label', 'About ' + title);
@@ -167,10 +182,10 @@
     if (visible(pop) && popFor === a) { closePop(true); return; }
     closePop(false); hideTip();
     api.ensure().then(function (idx) {
-      if (!idx || !buildPop(a, idx)) { location.href = a.getAttribute('href'); }       // nothing to say: today's link
+      if (!idx || !buildPop(a, idx)) { if (options.open) { options.open(a.getAttribute('href')); } else { location.href = a.getAttribute('href'); } }       // nothing to say: today's link
     });
   }
-  document.addEventListener('click', function (e) {
+  on(root, 'click', function (e) {
     var a = e.target.closest && e.target.closest('a[data-about-help]');
     if (a) { e.preventDefault(); togglePop(a); return; }
     if (visible(pop) && !pop.contains(e.target)) { closePop(false); }
@@ -178,13 +193,13 @@
     var g = glossOf(e);
     if (g && pointer === 'touch') { if (pinned && tipFor === g) { hideTip(); } else { showTip(g, true); } }   // a tap pins the tooltip
   });
-  document.addEventListener('keydown', function (e) {
+  on(root, 'keydown', function (e) {
     if (e.key === 'Escape' && visible(pop)) { e.preventDefault(); e.stopPropagation(); closePop(true); return; }
     if (e.key === 'Escape' && tipFor) { var f = tipFor; hideTip(); if (f.focus) { f.focus({ preventScroll: true }); } return; }
     var a = e.target.closest && e.target.closest('a[data-about-help]');
     if (a && e.key === ' ') { e.preventDefault(); togglePop(a); }
   }, true);
-  document.addEventListener('focusin', function (e) {
+  on(root, 'focusin', function (e) {
     if (visible(pop) && !pop.contains(e.target) && e.target !== popFor) { closePop(false); }
   });
 
@@ -207,23 +222,31 @@
         (t.labels && t.labels.length ? t.labels : [t.label]).forEach(function (l) { m[l] = t; });
       });
     });
-    if (scopes.strip) { document.querySelectorAll('dl.strip .strip-i dt').forEach(function (el) { mark(el, 'strip', scopes.strip); }); }
-    document.querySelectorAll('section[data-panel]').forEach(function (sec) {
+    if (scopes.strip) { root.querySelectorAll('dl.strip .strip-i dt').forEach(function (el) { mark(el, 'strip', scopes.strip); }); }
+    root.querySelectorAll('section[data-panel]').forEach(function (sec) {
       var m = scopes[sec.getAttribute('data-panel')];
       if (m) { sec.querySelectorAll('.kv-item dt, dl.rows dt, thead th').forEach(function (el) { mark(el, sec.getAttribute('data-panel'), m); }); }
     });
   }
 
-  document.querySelectorAll('section[data-panel] a.pnl-help[href^="/help/panel-kinds"]').forEach(function (a) {
-    a.setAttribute('data-about-help', '');
-    a.setAttribute('role', 'button'); a.setAttribute('aria-haspopup', 'dialog'); a.setAttribute('aria-expanded', 'false');
-    a.setAttribute('title', 'About this panel');
-  });
-  document.addEventListener('drishti:about', function (e) { decorate(e.detail); });
+  var lastIndex = null;
+  function wire() {
+    root.querySelectorAll('section[data-panel] a.pnl-help[href*="/help/panel-kinds"]:not([data-about-help])').forEach(function (a) {
+      a.setAttribute('data-about-help', '');
+      a.setAttribute('role', 'button'); a.setAttribute('aria-haspopup', 'dialog'); a.setAttribute('aria-expanded', 'false');
+      a.setAttribute('title', 'About this panel');
+    });
+  }
+  wire();
+  on(root, 'drishti:about', function (e) { lastIndex = e.detail; decorate(e.detail); });
   // The labels need the answer, so it is fetched once the page is idle (the drawer and the popovers share it).
   // ui.about_prefetch (on by default) costs one extra explain per page view; off, the labels are underlined once the drawer opens.
-  var drawerEl = document.getElementById('aboutDrawer');
+  var drawerEl = root.getElementById('aboutDrawer');
   if (drawerEl && drawerEl.hasAttribute('data-about-prefetch')) {
     (window.requestIdleCallback || function (f) { return setTimeout(f, 200); })(function () { api.ensure(); });
   }
+  return { refresh: function () { wire(); if (lastIndex) { decorate(lastIndex); } }, dispose: function () { undo.splice(0).forEach(function (f) { f(); }); hideTip(); closePop(false); } };
+  }
+  (window.drishtiModules = window.drishtiModules || {}).aboutHints = { init: init };
+  if (!(me && me.hasAttribute('data-manual'))) { init(document); }
 })();

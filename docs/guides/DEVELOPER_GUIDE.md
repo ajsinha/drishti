@@ -1350,6 +1350,25 @@ still goes in the sheet: the guard scans whole macro files.
 
 ---
 
+### 5.9 Write a view enhancer (the `init(root)` contract)
+
+A script that makes a rendered view interactive (sorting, charts, popovers) must work on the console's page and inside a
+`<drishti-view>` Shadow DOM, from one copy of the code (docs/architecture/ELEMENTS.md, section 12). The contract:
+
+- Wrap the code in `function init(root, options)`; `root` is `document` or a `ShadowRoot`. Query with `root.querySelector*` and
+  `root.getElementById`, never `document.*` for view content; use `root.activeElement` and `root.elementFromPoint`.
+- Watch for new panels with a `MutationObserver` on `root === document ? document.body : root`; listen for keys and events on
+  `root` (never on `document` or `window` when root is a shadow root), so a host page's keys are untouched.
+- Take everything environmental from `options`: `fetch(url, init)` and `url(path)` (the embed API differs from the console's
+  paths), feature switches (`save`, `exports`, `guideKey`), callbacks (`open`, `reload`). No `location`, no `localStorage` keys that
+  collide, no fixed positions computed against the window without the host's origin (`root.host.getBoundingClientRect()`).
+- Read theme tokens from `getComputedStyle(root.host || document.documentElement)`; size with a window `resize` for the document
+  and a `ResizeObserver` on `root.host` for a shadow root.
+- Return `{ dispose }` (remove listeners and observers). Register `window.drishtiModules.<name> = { init }`; start
+  `init(document)` unless `document.currentScript` has `data-manual`; publish console globals only in that case.
+- Add the script to `ENHANCERS` in `routes/embed_routes.py` and to `#boot` in `web/embed/drishti-elements.js`; extend
+  `test_embed_elements_browser.py` to prove it inside the element. The console's own browser tests must pass unchanged.
+
 ## 6. Testing strategy
 
 | Layer | Where | How | Examples |

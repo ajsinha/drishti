@@ -16,7 +16,9 @@
 /* <drishti-view>: a live Drishti view inside another web application, in a Shadow DOM, no iframe.
    PROOF OF CONCEPT (docs/architecture/ELEMENTS.md, build step 0): the load sequence with last-request-wins, one page
    connection (fetch + ReadableStream with Authorization), reconnect with backoff, pause when hidden, links as events.
-   Not yet: About, Pivot, sorting/paging enhancers, Trusted Types, versioned asset URLs (steps 6 to 9). */
+   The view is made interactive by the console's own enhancer scripts, loaded once per page and called with init(shadowRoot, options)
+   (ELEMENTS.md section 12, build step 6): tables, tree rows, pivot (no saving), charts, the About drawer and panel hints.
+   Not yet: Trusted Types, versioned asset URLs (steps 8 to 9). */
 const MODULE_ORIGIN = new URL(import.meta.url).origin;
 const API = '/embed/v1';
 
@@ -71,7 +73,7 @@ const sheet = (server) => memo('sheet:' + server, async () => {
 const frameSheet = new CSSStyleSheet();
 frameSheet.replaceSync(':host{display:block;position:relative;contain:content}.view{min-height:0}'
   + ':host([data-state="loading"]) .view{opacity:.55;transition:opacity .15s}'
-  + '.dv-note{padding:.4rem .8rem;font:12px/1.4 var(--d-font-mono,monospace);color:var(--d-muted,#666)}'
+  + '.view:focus{outline:none}.dv-note{padding:.4rem .8rem;font:12px/1.4 var(--d-font-mono,monospace);color:var(--d-muted,#666)}'
   + '.dv-error{padding:.8rem;border:1px solid var(--d-bad,#b00);color:var(--d-bad,#b00)}');
 const font = (server) => memo('font:' + server, async () => {
   const face = new FontFace('bootstrap-icons', 'url(' + server + API + '/poc/icons.woff2) format("woff2")');
@@ -79,10 +81,15 @@ const font = (server) => memo('font:' + server, async () => {
 });
 const script = (url) => memo('script:' + url, () => new Promise((resolve, reject) => {
   const s = document.createElement('script');
-  s.src = url; s.async = true; s.onload = resolve; s.onerror = () => reject(new Error('cannot load ' + url));
+  s.src = url; s.async = false; s.setAttribute('data-manual', '');        // data-manual: the script registers its init(root, options) and does not start on the host's document
+  s.onload = resolve; s.onerror = () => reject(new Error('cannot load ' + url));
   document.head.appendChild(s);
 }));
-const chartLibs = (server) => memo('charts:' + server, async () => { await script(server + API + '/poc/echarts.js'); await script(server + API + '/poc/charts.js'); });
+const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'charts', 'tables', 'tree-rows', 'pivot', 'about', 'about-hints'];
+const chartLibs = (server) => memo('charts:' + server, async () => {
+  await script(server + API + '/poc/echarts.js');
+  for (const n of ENHANCERS) { await script(server + API + '/poc/js/' + n + '.js'); }       // in order: the engine before the grid before the pivot
+});
 
 // ---- the one connection per page and server --------------------------------------------------------------------------
 class Connection {
@@ -178,38 +185,13 @@ class Connection {
 const connections = {};
 const connectionFor = (server) => connections[server] || (connections[server] = new Connection(server));
 
-// ---- charts of the line and area panels (the console's view.js draws them the same way) ---------------------------------
-const compact = (v) => {
-  if (typeof v !== 'number' || !isFinite(v)) { return ''; }
-  const a = Math.abs(v);
-  if (a >= 1e9) { return (v / 1e9).toFixed(1) + 'bn'; }
-  if (a >= 1e6) { return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'm'; }
-  if (a >= 1e4) { return (v / 1e3).toFixed(a >= 1e5 ? 0 : 1) + 'k'; }
-  return Math.round(v * 100) / 100;
-};
-function lineOption(d, area, t) {
-  d.x = d.x || []; d.series = d.series || [];
-  const tone = (n) => t[n] || t.link;
-  const series = d.series.map((s) => {
-    const o = { type: 'line', name: s.label, data: (s.values || []).map((v) => (typeof v === 'number' && isFinite(v) ? v : null)), symbol: area ? 'none' : 'circle',
-      symbolSize: 5, lineStyle: { width: 1.6, color: tone(s.tone) }, itemStyle: { color: tone(s.tone) } };
-    if (area) { o.areaStyle = { color: tone(s.tone), opacity: .12 }; }
-    return o;
-  });
-  const axis = { axisLine: { lineStyle: { color: t.border } }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 }, splitLine: { lineStyle: { color: t.border, opacity: .5 } } };
-  return { animationDuration: 300, grid: { left: 44, right: 12, top: 12, bottom: 22 },
-    tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.border, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 } },
-    xAxis: Object.assign({ type: 'category', data: d.x, boundaryGap: false }, axis),
-    yAxis: Object.assign({ type: 'value', scale: !area }, axis, { axisLabel: Object.assign({}, axis.axisLabel, { formatter: compact }) }), series };
-}
-
 // ---- <drishti-view> ----------------------------------------------------------------------------------------------------
 const ATTRS = ['kind', 'entity', 'as-of', 'known-at', 'theme', 'header', 'live', 'server', 'panels', 'label'];
 const RELOAD = new Set(['kind', 'entity', 'as-of', 'known-at', 'header', 'live', 'server', 'panels']);
 
 class DrishtiView extends HTMLElement {
   static get observedAttributes() { return ATTRS; }
-  #seq = 0; #subs = 0; #ctrl = null; #unsub = null; #state = 'idle'; #gen = 0; #queued = false; #charts = new Set(); #ro = null; #io = null;
+  #seq = 0; #subs = 0; #ctrl = null; #unsub = null; #state = 'idle'; #gen = 0; #queued = false; #mods = null; #io = null;
   #hiddenTimer = null; #away = false; #paused = false; #retry = null; #retries = 0; #ready = null; #deleted = false; #view = null; #lastError = null;
   #cleanup = false;
 
@@ -244,7 +226,7 @@ class DrishtiView extends HTMLElement {
   }
   attributeChangedCallback(name, was, now) {
     if (was === now) { return; }
-    if (name === 'theme') { this.#theme(); this.#redraw(); }
+    if (name === 'theme') { this.#theme(); this.shadowRoot.dispatchEvent(new Event('drishti:theme')); }
     if (RELOAD.has(name) && this.isConnected) { this.#schedule(); }
   }
   #adopt() {                                         // the shared sheet (one per page) and the icon font; idempotent
@@ -260,10 +242,6 @@ class DrishtiView extends HTMLElement {
     if (t === 'inherit') { this.removeAttribute('data-theme'); } else { this.setAttribute('data-theme', t); }
   }
   #observe() {
-    if (!this.#ro && typeof ResizeObserver !== 'undefined') {
-      this.#ro = new ResizeObserver(() => requestAnimationFrame(() => this.#charts.forEach((c) => c.isDisposed() || c.resize())));
-      this.#ro.observe(this);
-    }
     if (!this.#io && typeof IntersectionObserver !== 'undefined') {
       this.#io = new IntersectionObserver((es) => { this.#away = !es[es.length - 1].isIntersecting; this.#visibility(); });
       this.#io.observe(this);
@@ -281,9 +259,9 @@ class DrishtiView extends HTMLElement {
     this.#seq++; this.#subs++; this.#ctrl && this.#ctrl.abort(); this.#ctrl = null;
     this.#unsub && this.#unsub(); this.#unsub = null;
     clearTimeout(this.#retry); clearTimeout(this.#hiddenTimer);
-    this.#ro && this.#ro.disconnect(); this.#ro = null; this.#io && this.#io.disconnect(); this.#io = null;
+    this.#io && this.#io.disconnect(); this.#io = null;
     document.removeEventListener('visibilitychange', this.onVisible);
-    this.#charts.forEach((c) => c.isDisposed() || c.dispose()); this.#charts.clear();
+    this.#dispose();
     this.#setState('idle');
   }
 
@@ -398,16 +376,17 @@ class DrishtiView extends HTMLElement {
       head = t.innerHTML;
     }
     const main = panels.filter((p) => p.area !== 'right'), right = panels.filter((p) => p.area === 'right');
-    this.#charts.forEach((c) => c.isDisposed() || c.dispose()); this.#charts.clear();
-    root.querySelectorAll('.view').forEach((v) => v.remove());
+    this.#dispose();
+    root.querySelectorAll('.view, .about.side').forEach((v) => v.remove());
     const view = document.createElement('div');
     view.className = 'view'; view.setAttribute('part', 'view'); view.setAttribute('data-view', ''); view.setAttribute('role', 'region');
     view.setAttribute('aria-label', this.getAttribute('label') || data.title.id);
+    view.tabIndex = -1;                             // a click inside gives the focus to the element, so its keys (?) work and the host page's do not
+    view.setAttribute('data-kind', data.ref.kind); view.setAttribute('data-id', data.ref.id); view.setAttribute('data-generation', String((data.provenance || {}).generation || 0));
     view.innerHTML = head + '<div class="vgrid"><div class="vmain">' + main.map((p) => p.html).join('') + '</div><aside class="vright" aria-label="Context">'
       + right.map((p) => p.html).join('') + '</aside></div>';
     root.appendChild(view);
-    this.#absolutise(view);
-    this.#enhance(view);
+    this.#boot(view);
   }
   #absolutise(root) {                               // console-relative links that are not entities open the console in a new tab
     root.querySelectorAll('a[href^="/"]').forEach((a) => {
@@ -415,41 +394,55 @@ class DrishtiView extends HTMLElement {
       a.href = this.server + a.getAttribute('href'); a.target = '_blank'; a.rel = 'noopener';
     });
   }
-  #enhance(root) {
-    root.querySelectorAll('[data-w]').forEach((el) => {
-      const w = parseFloat(el.getAttribute('data-w')) || 0;
-      requestAnimationFrame(() => { el.style.width = Math.max(0, Math.min(100, w)) + '%'; });
-    });
-    root.querySelectorAll('[data-tabs]').forEach((box) => {
-      const heads = box.querySelectorAll('[role="tab"]');
-      heads.forEach((h, i) => h.addEventListener('click', () => heads.forEach((x, k) => {
-        x.classList.toggle('on', k === i); x.setAttribute('aria-selected', k === i ? 'true' : 'false');
-        const pane = this.shadowRoot.getElementById(x.getAttribute('aria-controls'));
-        if (pane) { pane.hidden = k !== i; }
-      })));
-    });
-    this.#draw(root);
+  #dispose() {
+    const m = this.#mods; this.#mods = null;
+    if (m) { for (const k of ['pivot', 'tree', 'tables', 'about', 'hints', 'charts', 'view']) { m[k] && m[k].dispose && m[k].dispose(); } }
+    const e = window.echarts, root = this.shadowRoot;
+    if (e && root) { root.querySelectorAll('.chart, .xchart, .surface').forEach((el) => { const c = e.getInstanceByDom(el); c && !c.isDisposed() && c.dispose(); }); }
   }
-  #tokens() {
-    const s = getComputedStyle(this), t = {};
-    ['ink', 'muted', 'border', 'link', 'accent', 'neg', 'pos', 'surface'].forEach((k) => { t[k] = s.getPropertyValue('--d-' + k).trim(); });
-    t.mono = s.getPropertyValue('--d-font-mono').trim();
-    return t;
+  // The console's enhancers, called on the shadow root (ELEMENTS.md section 12). Fetches carry the bearer and go to the embed API.
+  #boot(view) {
+    const root = this.shadowRoot, reg = window.drishtiModules || {}, server = this.server, me = this;
+    const kind = view.getAttribute('data-kind'), id = view.getAttribute('data-id');
+    const base = server + API + '/poc';
+    const fetcher = (u, o) => authed(u, o, undefined);
+    const toUrl = (p) => {                          // the console's relative paths, as embed API calls
+      const m = /^\/api\/pivot\/records\/(.+)$/.exec(p);
+      return m ? base + '/records/' + m[1] : p;
+    };
+    const drawer = document.createElement('div');
+    drawer.innerHTML = '<aside class="about side" id="aboutDrawer" role="dialog" aria-modal="false" aria-labelledby="aboutTitle" hidden data-tab="about" data-about-url="'
+      + esc(base + '/about/' + encodeURIComponent(kind) + '/' + id.split('/').map(encodeURIComponent).join('/')) + '"><div class="about-grip" aria-hidden="true"></div>'
+      + '<header><h2 id="aboutTitle" tabindex="-1">About this page</h2><button type="button" class="raw-x" data-about-close aria-label="Close the side drawer">×</button></header>'
+      + '<div class="about-body" id="aboutPanel" data-tab-panel="about" data-about-body aria-live="polite"><p class="about-wait">Loading…</p></div>'
+      + '<p class="about-live" role="status" data-about-status></p></aside>';
+    root.appendChild(drawer.firstChild);
+    if (!view.querySelector('[data-about-open]')) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tbar-link vhead-alert'; b.setAttribute('data-about-open', ''); b.setAttribute('aria-controls', 'aboutDrawer'); b.setAttribute('aria-expanded', 'false');
+      b.title = 'About this page: where the data came from and why it looks like this (?)'; b.innerHTML = '<i class="bi bi-info-circle" aria-hidden="true"></i> About';
+      view.insertBefore(b, view.firstChild);
+    }
+    this.#absolutise(view);
+    const m = this.#mods = {};
+    const start = (name, ...args) => { try { return reg[name] && reg[name].init(...args); } catch (e) { if (window.console) { console.warn('drishti: ' + name + ' not started', e); } return null; } };
+    m.view = start('view', root, { glUrl: null });
+    m.charts = start('charts', root);        // an entity click is a hidden link click: it reaches the element's own link handler
+    m.tables = start('tables', root, { scope: server + '|' + kind + '/' + id });
+    m.tree = start('treeRows', root);
+    m.pivot = start('pivot', root, { fetch: fetcher, url: toUrl, save: false, exports: false });
+    m.about = start('about', root, { fetch: fetcher, guideKey: false, reload: () => me.reload() });
+    m.hints = m.about ? start('aboutHints', root, { about: m.about, open: (h) => window.open(h.startsWith('/') ? server + h : h, '_blank', 'noopener') }) : null;
+    root.addEventListener('drishti:about', () => { const d = root.getElementById('aboutDrawer'); d && this.#absolutise(d); });
   }
-  #draw(root) {
-    if (!window.echarts) { return; }
-    const t = this.#tokens();
-    root.querySelectorAll('.chart[data-chart]').forEach((el) => {
-      try {
-        const d = JSON.parse(el.getAttribute('data-chart')) || {};
-        const c = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
-        c.setOption(lineOption(d, el.getAttribute('data-kind') === 'area', t), true);
-        this.#charts.add(c);
-      } catch (e) { el.className = 'pnl-empty'; el.textContent = 'No data available'; }
-    });
-    if (window.drishtiCharts) { window.drishtiCharts.draw(this.shadowRoot); }
+  #swapped(fresh) {                                 // a panel was replaced by a live frame: bars, tabs, charts, labels again (tables, tree rows and pivots see it through their observers)
+    const m = this.#mods;
+    if (!m) { return; }
+    m.view && m.view.enhance(fresh);
+    m.charts && m.charts.draw();
+    m.view && m.view.redraw();
+    m.hints && m.hints.refresh();
   }
-  #redraw() { if (this.#view) { this.#draw(this.shadowRoot); } }
 
   // -- live frames: the console's patches, applied inside the shadow root --------------------------------------------------
   #frame(f) {
@@ -466,6 +459,7 @@ class DrishtiView extends HTMLElement {
       } catch (e) { if (window.console) { console.warn('drishti: patch not applied', p.op, e); } }
     }
     if (typeof f.generation === 'number') { this.#gen = Math.max(this.#gen, f.generation); }
+    root.dispatchEvent(new CustomEvent('drishti:frame', { detail: { generation: this.#gen } }));      // the About drawer asks again when it is open
     this.#emit('tick', { generation: this.#gen, seq: f.seq, latencyMs: f.latencyMs, changed });
     if (root) { /* the frame is applied */ }
   }
@@ -480,15 +474,7 @@ class DrishtiView extends HTMLElement {
   #panel(p) {
     const old = this.shadowRoot.getElementById('p-' + p.panel.id);
     if (!old) { return; }
-    if (!p.html) {
-      const el = old.querySelector('.chart[data-chart]');
-      if (el && window.echarts) {
-        el.setAttribute('data-chart', JSON.stringify(p.panel.data));
-        const c = window.echarts.getInstanceByDom(el);
-        c && c.setOption(lineOption(JSON.parse(el.getAttribute('data-chart')), el.getAttribute('data-kind') === 'area', this.#tokens()), false);
-      }
-      return;
-    }
+    if (!p.html) { this.#mods && this.#mods.view && this.#mods.view.updateChart(p.panel.id, p.panel.data); return; }
     const chosen = old.querySelector('[role="tab"][aria-selected="true"]');
     const tpl = document.createElement('template');
     tpl.innerHTML = p.html.trim();
@@ -497,7 +483,7 @@ class DrishtiView extends HTMLElement {
     fresh.className = fresh.className.split(/\s+/).filter((c) => !mine.test(c)).concat(old.className.split(/\s+/).filter((c) => mine.test(c))).join(' ');
     old.replaceWith(fresh);
     this.#absolutise(fresh);
-    this.#enhance(fresh);
+    this.#swapped(fresh);
     if (chosen) { const t = this.shadowRoot.getElementById(chosen.id); t && t.click(); }
     fresh.querySelectorAll('tbody td, dd').forEach((td) => td.classList.add('live-cell'));
   }

@@ -53,8 +53,9 @@
   function tooltip(t, extra) {
     return Object.assign({ backgroundColor: t.surface, borderColor: t.border, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 } }, extra || {});
   }
-  function open(el, link) {
+  function open(el, link, options) {
     if (!link || !link.kind || !link.id) { return; }
+    if (options && options.navigate) { options.navigate(link); return; }
     var a = document.createElement('a');
     a.href = '/v/' + encodeURIComponent(link.kind) + '/' + encodeURIComponent(link.id);
     a.hidden = true;
@@ -261,7 +262,7 @@
 
   var BUILD = { waterfall: waterfall, histogram: histogram, scatter: scatter, candlestick: candlestick, graph: graph };
 
-  function draw(root) {
+  function draw(root, options) {
     if (!window.echarts) { return; }
     var t = tokens(root);
     (root || document).querySelectorAll('.xchart[data-xchart]').forEach(function (el) {
@@ -275,7 +276,7 @@
           el.__clicks = true;
           c.on('click', function (p) {
             var link = p.data && ((p.data.point && p.data.point.link) || (p.data.node && p.data.node.link));
-            open(el, link);
+            open(el, link, options);
           });
         }
       } catch (e) {
@@ -288,12 +289,32 @@
       }
     });
   }
-  draw(document);
-  document.addEventListener('drishti:theme', function () { draw(document); });
-  window.addEventListener('resize', function () {
-    charts = charts.filter(function (c) { return !c.isDisposed(); });
-    charts.forEach(function (c) { c.resize(); });
-    draw(document);                              // labels are fitted to the width: lay them out again
-  });
-  window.drishtiCharts = { draw: draw, options: BUILD, labelFit: labelFit };   // options: the builders, for tests and tools
+  /** init(root, options): draw the panel charts under root (the document or a ShadowRoot), and keep them right: theme changes
+      (a `drishti:theme` event on root) and size changes (the window for a page, a ResizeObserver on the host for a shadow root).
+      options.navigate(link) takes an entity click (default: a hidden link click, which a workspace pane or the element turns
+      into a selection). Returns {draw, dispose}. */
+  function init(root, options) {
+    options = options || {};
+    var undo = [], mine = [];
+    function on(t, type, fn) { t.addEventListener(type, fn); undo.push(function () { t.removeEventListener(type, fn); }); }
+    function again() { draw(root, options); }
+    again();
+    on(root, 'drishti:theme', again);
+    if (root === document) { on(window, 'resize', function () { charts = charts.filter(function (c) { return !c.isDisposed(); }); charts.forEach(function (c) { c.resize(); }); again(); }); }
+    else if (window.ResizeObserver) {
+      var ro = new ResizeObserver(function () { requestAnimationFrame(function () {
+        root.querySelectorAll('.xchart[data-xchart]').forEach(function (el) { var c = window.echarts && window.echarts.getInstanceByDom(el); if (c && !c.isDisposed()) { c.resize(); } });
+        again();                             // labels are fitted to the width: lay them out again
+      }); });
+      ro.observe(root.host); undo.push(function () { ro.disconnect(); });
+    }
+    return { draw: again, dispose: function () { undo.splice(0).forEach(function (f) { f(); }); } };
+  }
+  var reg = (window.drishtiModules = window.drishtiModules || {});
+  reg.charts = { init: init, draw: draw, options: BUILD, labelFit: labelFit };
+  var me = document.currentScript;
+  if (!(me && me.hasAttribute('data-manual'))) {
+    init(document);
+    window.drishtiCharts = { draw: draw, options: BUILD, labelFit: labelFit };   // options: the builders, for tests and tools
+  }
 })();

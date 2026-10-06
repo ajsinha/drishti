@@ -19,7 +19,8 @@
    (flattened, numbers raw) and the chart (ECharts options). It draws; pivot.js owns the state and the events. */
 (function () {
   'use strict';
-  var E = window.drishtiPivotEngine;
+  var me = document.currentScript;
+  var E = (window.drishtiModules || {}).pivotEngine || window.drishtiPivotEngine;
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
   function join(p) { return p.join(E.US); }
@@ -326,6 +327,8 @@
       series: series };
   }
 
-  window.drishtiPivotGrid = { layout: layout, render: render, flatten: flatten, chart: chart, valueOf: valueOf,
+  var api = { layout: layout, render: render, flatten: flatten, chart: chart, valueOf: valueOf,
     lineLabel: lineLabel, slotLabel: slotLabel };
+  (window.drishtiModules = window.drishtiModules || {}).pivotGrid = api;
+  if (!(me && me.hasAttribute('data-manual'))) { window.drishtiPivotGrid = api; }
 })();

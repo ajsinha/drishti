@@ -25,6 +25,7 @@ missing. Measurements are appended to the file named by DRISHTI_ELEMENTS_RESULTS
 import glob
 import gzip
 import json
+import re
 import os
 import socket
 import statistics
@@ -42,7 +43,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 from conftest import CONSOLE  # noqa: E402
 
 ROOT = CONSOLE.parent
-SERVER_PORT, CONSOLE_PORT, HOST_PORT = 18969, 17969, 17968
+SERVER_PORT, CONSOLE_PORT, HOST_PORT = 18962, 17962, 17961
 SERVER = f"http://127.0.0.1:{SERVER_PORT}"
 CONSOLE_URL = f"http://127.0.0.1:{CONSOLE_PORT}"
 HOST = f"http://127.0.0.1:{HOST_PORT}"
@@ -480,3 +481,113 @@ def test_measurements(stack, browser):
                     frames.append(len(block) + 2)
     assert frames, "no live frame within 12 s"
     stack.record("frames", {"count": len(frames), "median_bytes": statistics.median(frames), "max_bytes": max(frames)})
+
+
+# ---- 11. the console's enhancers inside the element (ELEMENTS.md build step 6) ---------------------------------------------
+SR = "document.querySelector('#main').shadowRoot"
+PAGED = ("<div class='tbl-wrap'><table class='tbl' aria-label='Injected'><thead><tr><th>Name</th><th>Amount</th></tr></thead><tbody>"
+         + "".join(f"<tr><td>row{i:02d}</td><td>{(i * 37) % 31}</td></tr>" for i in range(30)) + "</tbody></table></div>")
+TREE = ("<div class='tbl-wrap'><table class='tbl tbl-tree' data-plain data-tree><thead><tr><th>Item</th></tr></thead><tbody>"
+        "<tr data-depth='0'><td><span class='tr-ind tr-d0'><button type='button' class='tr-tog' aria-expanded='false' aria-label='Expand Parent'>▸</button>Parent</span></td></tr>"
+        "<tr data-depth='1'><td><span class='tr-ind tr-d1'>Child</span></td></tr></tbody></table></div>")
+
+
+def inject(h, html):
+    h.js(f"(() => {{ const d = document.createElement('div'); d.className = 'injected'; d.innerHTML = {json.dumps(html)}; {SR}.appendChild(d); }})()")
+
+
+def test_enhancers_are_registered_and_the_host_page_is_untouched(host):
+    h = host()
+    h.open()
+    h.until(lambda: h.js("!!(window.drishtiModules && window.drishtiModules.tables && window.drishtiModules.pivot)"), 20, "modules registered")
+    # one namespace and none of the globals the console's scripts publish on its own pages
+    assert h.js("[window.drishtiAbout, window.drishtiPivot, window.drishtiCharts, window.drishti, window.drishtiPivotEngine, window.drishtiPivotGrid]") == [None] * 6
+    assert h.js(f"{SR}.querySelectorAll('table.tbl').length") >= 1
+
+
+def test_table_sorts_and_pages_inside_the_element(host):
+    h = host()
+    h.open()
+    inject(h, PAGED)
+    t = h.page.locator("#main").locator(".injected table.tbl")
+    expect(t.locator("th").first).to_have_class(re.compile("tbl-sortable"), timeout=10000)
+    t.locator("th").nth(1).click()
+    expect(t.locator("th").nth(1)).to_have_attribute("aria-sort", "ascending")
+    assert t.locator("tbody tr:not([hidden]) td").first.inner_text() == "row00"          # amount 0 sorts first
+    bar = h.page.locator("#main").locator(".injected .tbl-pg")
+    expect(bar.locator(".tbl-pg-info")).to_contain_text("1–25 of 30")
+    bar.locator("[data-pg=fwd]").first.click()
+    expect(bar.locator(".tbl-pg-info")).to_contain_text("26–30 of 30")
+    assert h.js("document.querySelectorAll('.tbl-pg, .tbl-sortable').length") == 0          # nothing was added to the host page
+
+
+def test_tree_row_expands_inside_the_element(host):
+    h = host()
+    h.open()
+    inject(h, TREE)
+    t = h.page.locator("#main").locator(".injected table.tbl-tree")
+    child = t.locator("tbody tr").nth(1)
+    expect(child).to_be_hidden()
+    t.locator(".tr-tog").click()
+    expect(child).to_be_visible()
+    expect(t.locator(".tr-tog")).to_have_attribute("aria-expanded", "true")
+
+
+def test_pivot_regroups_without_saving_inside_the_element(host):
+    h = host()
+    h.open()
+    box = h.page.locator("#main").locator(".pv-box").first
+    for trade in ("BBG-60000001", "BBG-60000005", "BBG-60000011", *RAPID):           # the first trade that has a pivot panel
+        if box.count():
+            break
+        h.page.evaluate(f"window.hostApp.show('trade', '{trade}')")
+        h.page.wait_for_timeout(1500)
+        h.state("#main", "live") if h.js(f"document.querySelector('#main').getAttribute('data-state')") == "loading" else None
+    assert box.count() == 1, "no trade of the pack has a pivot panel"
+    box.locator("[data-pv-tab=pivot]").click()
+    expect(box.locator(".pv-host table").first).to_be_visible(timeout=20000)
+    before = box.locator(".pv-host").inner_text()
+    assert any("/embed/v1/poc/records/" in r[1] for r in h.requests), "the rows were not fetched through the embed API"
+    chip = box.locator(".pv-fields .pv-chip").first          # regroup with the console's own key: C puts the field in Columns
+    chip.focus()
+    h.page.keyboard.press("c")
+    expect(box.locator(".pv-host")).not_to_have_text(before, timeout=10000)
+    assert box.locator("[data-pv-save], [data-pv-reset], [data-pv-promote], [data-pv-export]").count() == 0        # layouts are the Sutra's only
+    assert not [r for r in h.requests if r[0] in ("PUT", "DELETE") or "/api/pivot" in r[1]]
+
+
+def test_panel_help_popover_and_the_about_drawer_inside_the_element(host):
+    h = host()
+    h.open()
+    view = h.page.locator("#main")
+    help_ = view.locator("section[data-panel] a.pnl-help[data-about-help]").first
+    expect(help_).to_be_visible(timeout=15000)
+    help_.click()
+    pop = view.locator(".about-pop")
+    expect(pop).to_be_visible(timeout=15000)
+    h.page.keyboard.press("Escape")
+    expect(pop).to_be_hidden()
+    view.locator("[data-about-open]").click()
+    drawer = view.locator("#aboutDrawer")
+    expect(drawer).to_be_visible()
+    expect(drawer.locator("[data-about-body]")).not_to_contain_text("Loading", timeout=20000)
+    assert any("/embed/v1/poc/about/" in r[1] for r in h.requests)
+    h.page.keyboard.press("Escape")
+    expect(drawer).to_be_hidden()
+
+
+def test_keys_are_scoped_to_the_element(host):
+    h = host()
+    h.open()
+    view = h.page.locator("#main")
+    drawer = view.locator("#aboutDrawer")
+    h.page.locator("body").click(position={"x": 5, "y": 5})
+    h.page.keyboard.press("?")                                        # a key in the host page: not Drishti's
+    h.page.keyboard.press("F1")
+    h.page.wait_for_timeout(300)
+    expect(drawer).to_be_hidden()
+    view.locator(".vtitle").first.click()                             # focus inside the element: the same key is Drishti's
+    h.page.keyboard.press("?")
+    expect(drawer).to_be_visible()
+    h.page.keyboard.press("Escape")
+    expect(drawer).to_be_hidden()
