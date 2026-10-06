@@ -856,6 +856,10 @@ click (`tabindex=-1`) so `?` works inside it; a key pressed elsewhere on the hos
 carries `pivot.css` and `about.css`. Tests: `test_embed_elements_browser.py` (Chromium, Firefox, WebKit): sort and paging, tree
 row, pivot regroup with no PUT, panel `?` popover, About drawer, key scoping; the console's own browser tests pass unchanged.
 
+After the merge with steps 1-3: the embed routes `await` the now-async `cors`, `send`, `refuse` and `identity` helpers (the enhancer
+scripts, `/poc/records` and `/poc/about` returned unawaited coroutines, a 500), and the panel `?` link (`a.pnl-help`) is rendered in
+embedded views again, because `about-hints.js` wires its popover to it.
+
 ## 13. Distribution and versioning
 
 - **Served by the console**: `/elements/<semver>/drishti-elements.js`, `…/drishti-view.css`, `…/charts.js`, fonts, and

@@ -151,21 +151,21 @@ ENHANCERS = ("view", "charts", "tables", "tree-rows", "pivot", "pivot-engine", "
 @router.get("/poc/js/{name}.js")
 async def enhancer_js(request: Request, name: str):
     if name not in ENHANCERS:
-        return refuse(request, 404, "DRS-9404", f"no such script: {name}")
+        return await refuse(request, 404, "DRS-9404", f"no such script: {name}")
     path = WEB / "static/js" / f"{name}.js"
-    return send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
+    return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 
 @router.get("/poc/records/{kind}/{id_:path}/{panel}")
 async def pivot_records(request: Request, kind: str, id_: str, panel: str):
     """The rows a pivot is computed from (the console's /api/pivot/records, for the embed caller's masked identity)."""
     try:
-        me, _claims = identity(request)
-        return cors(request, JSONResponse(await request.app.state.backend.panel_records(kind, id_, panel, me), headers={"Cache-Control": "no-store"}))
+        me, _claims = await identity(request)
+        return await cors(request, JSONResponse(await request.app.state.backend.panel_records(kind, id_, panel, me), headers={"Cache-Control": "no-store"}))
     except EmbedError as e:
-        return refuse(request, e.status, e.code, e.detail)
+        return await refuse(request, e.status, e.code, e.detail)
     except BackendError as e:
-        return refuse(request, e.page_status, e.code, e.detail)
+        return await refuse(request, e.page_status, e.code, e.detail)
 
 
 @router.get("/poc/about/{kind}/{id_:path}")
@@ -175,9 +175,9 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0):
 
     env = request.app.state.templates.env
     try:
-        me, _claims = identity(request)
+        me, _claims = await identity(request)
     except EmbedError as e:
-        return refuse(request, e.status, e.code, e.detail)
+        return await refuse(request, e.status, e.code, e.detail)
     extra = {"accept_language": request.headers["accept-language"]} if request.headers.get("accept-language") else {}
     try:
         ex = await request.app.state.backend.explain(kind, id_, me, generation or None, **extra)
@@ -186,7 +186,7 @@ async def about(request: Request, kind: str, id_: str, generation: int = 0):
     except BackendError as e:
         html = env.get_template("terminal/_about.html").render(ex=None, error=e, kind=kind, id=id_)
         status = e.page_status
-    return cors(request, Response(html, status_code=status, media_type="text/html", headers={"Cache-Control": "no-store"}))
+    return await cors(request, Response(html, status_code=status, media_type="text/html", headers={"Cache-Control": "no-store"}))
 
 
 # -- the view ---------------------------------------------------------------------------------------------------------
