@@ -471,6 +471,11 @@ The check uses an injected clock in tests; in production it is the server's cloc
 
 ## 9. The Data loads page
 
+> **Where to find it.** Admin menu → **Data loads** (`/admin/loads`) shows every loaded pack at a glance: today's
+> expectations (on time, late, missing) and its latest loads, with a banner when something needs attention. **Open** on
+> a pack (or the **Data loads** button on its row in Admin → Packs) goes to that pack's page with the full history,
+> each load's steps and the expectation settings.
+
 Admin → Packs → **Data loads** on a loaded pack's row (`/admin/packs/{pack}/loads`; administrators only).
 
 ![The Data loads page: expectations with their state, and the history](img/loads/01-data-loads-history.jpg)

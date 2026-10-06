@@ -177,6 +177,35 @@ async def deploy_rollback(request: Request, name: str):
 LOAD_STATES = {"on-time": "ok", "landed-late": "warn", "pending": "", "late": "bad", "missing": "bad", "failed": "bad"}
 
 
+@router.get("/loads")
+async def all_loads(request: Request):
+    """Admin → Data loads: every loaded pack at a glance, with today's expectations (on time, late, missing) and its latest loads;
+    each pack links to its own Data loads page."""
+    import asyncio
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    backend = request.app.state.backend
+    try:
+        rows = await backend.admin("GET", "/packs", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+    packs = [p for p in (rows if isinstance(rows, list) else rows.get("packs", [])) if p.get("loaded")]
+
+    async def one(p):
+        name = p.get("name")
+        try:
+            history, expectations = await asyncio.gather(backend.admin("GET", f"/loads/{quote(name)}", me, limit=5),
+                                                          backend.admin("GET", f"/loads/{quote(name)}/expectations", me))
+            return {"name": name, "title": p.get("title") or name, "loads": history.get("loads", []),
+                    "expectations": expectations.get("expectations", []), "error": None}
+        except BackendError as e:
+            return {"name": name, "title": p.get("title") or name, "loads": [], "expectations": [], "error": str(e)}
+    summary = await asyncio.gather(*(one(p) for p in packs))
+    attention = sum(1 for s in summary for x in s["expectations"] if x.get("state") in ("late", "missing", "failed"))
+    return render(request, "admin/loads_all.html", packs=summary, attention=attention, states=LOAD_STATES, status=await _status(request))
+
+
 @router.get("/packs/{name}/loads")
 async def pack_loads(request: Request, name: str, kind: str = "", status: str = "", date: str = ""):
     """Admin → Packs → Data loads: the pack's load history (filters: kind, status, date), what it expects and today's state, and the

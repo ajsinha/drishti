@@ -1,0 +1,45 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Data loads · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-loads.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-loads-overview>
+  {% with tab='loads' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Data loads</h1>
+  <p class="text-muted-d">What your ETL has announced to {{ PRODUCT }} (<span class="mono">POST /api/v1/packs/&lt;pack&gt;/loads</span> or
+    <span class="mono">drishti.py data landed</span>), what each pack expects today, and what is late.
+    {{ PRODUCT }} does not load the data: it reads it where it lives. See the <a href="/help/data-loads">Data loads guide</a>.</p>
+  {% if attention %}<p class="adm-warn" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    {{ attention }} expected load{{ '' if attention == 1 else 's' }} need{{ 's' if attention == 1 else '' }} attention (late, missing or failed).</p>{% endif %}
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-loads-all>
+    <caption class="visually-hidden">Every loaded pack: today's expectations and its latest loads</caption>
+    <thead><tr><th scope="col">Pack</th><th scope="col">Today's expectations</th><th scope="col">Latest loads</th><th scope="col"></th></tr></thead>
+    <tbody>{% for p in packs %}
+      <tr><td><b>{{ p.title }}</b><br><span class="mono text-muted-d">{{ p.name }}</span></td>
+        <td>{% if p.error %}<span class="st st-bad">{{ p.error }}</span>
+          {% else %}{% for x in p.expectations %}<span class="st {% if states[x.state] %}st-{{ states[x.state] }}{% endif %}" title="{{ x.kind }} for {{ x.businessDate }}, due by {{ x.by }} {{ x.zone }}">{{ x.kind }}: {{ x.state }}</span> {% else %}<span class="text-muted-d">nothing expected</span>{% endfor %}{% endif %}</td>
+        <td>{% for l in p.loads %}<div class="mono">{{ l.kind }} {{ l.businessDate }} · <span class="st {{ 'st-bad' if l.status == 'failed' or l.verified == 'not-found' else 'st-ok' if l.status == 'ready' else '' }}">{{ l.status }}{% if l.verified == 'not-found' %}, not found{% endif %}</span>{% if l.rows is defined and l.rows is not none %} · {{ '{:,}'.format(l.rows) }} rows{% endif %}</div>{% else %}<span class="text-muted-d">no loads announced yet</span>{% endfor %}</td>
+        <td><a class="fk" href="/admin/packs/{{ p.name }}/loads">Open</a></td></tr>
+    {% else %}<tr><td colspan="4" class="text-muted-d">No pack is loaded. Load one under <a href="/admin/packs">Packs</a>.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}

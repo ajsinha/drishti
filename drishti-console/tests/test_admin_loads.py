@@ -129,3 +129,25 @@ def test_a_load_notice_in_the_inbox_links_to_the_loads_page_for_those_who_may_op
     row = {"type": "load", "access": True, "threadId": "my-bank", "kind": "trade", "id": "2026-10-06"}
     assert _row_href(row) == "/admin/packs/my-bank/loads"
     assert _row_href({**row, "access": False}) == ""
+
+
+def test_the_admin_menu_and_tabs_lead_to_data_loads_and_collaboration(client):
+    page = client.get("/admin/packs").text
+    assert 'href="/admin/loads"' in page and 'href="/admin/collab"' in page
+
+
+def test_all_packs_at_a_glance_with_what_needs_attention(client, backend, monkeypatch):
+    calls = []
+    with_loads(backend, monkeypatch, calls)
+    inner = backend.admin
+
+    async def admin(method, path, ident, body=None, timeout=None, **params):
+        if path == "/packs":
+            return [{"name": "trading", "title": "Trading", "loaded": True}, {"name": "spare", "title": "Spare", "loaded": False}]
+        return await inner(method, path, ident, body, timeout, **params)
+    monkeypatch.setattr(backend, "admin", admin)
+    page = client.get("/admin/loads").text
+    assert "Trading" in page and "Spare" not in page, "only loaded packs"
+    assert "trade: late" in page and "1 expected load needs attention" in page
+    assert "trade 2026-10-06" in page and "48,213 rows" in page and 'href="/admin/packs/trading/loads"' in page
+    assert 'aria-current="page"' in page.split("Data loads</a>")[0].rsplit("<a", 1)[1]
