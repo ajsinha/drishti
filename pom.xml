@@ -18,7 +18,7 @@
 
   <groupId>com.ash.drishti</groupId>
   <artifactId>drishti-parent</artifactId>
-  <version>1.17.1</version>
+  <version>1.18.0</version>
   <packaging>pom</packaging>
   <name>Drishti</name>
   <description>Any data. Any domain. One grammar.</description>
@@ -94,7 +94,7 @@
     <zstd-jni.version>1.5.7-6</zstd-jni.version>
     <!-- 1.10.x reads and writes Parquet 1.16, the version Delta Kernel uses: one Parquet on the server's classpath -->
     <iceberg.version>1.10.1</iceberg.version>
-    <parquet.version>1.17.1</parquet.version>
+    <parquet.version>1.18.0</parquet.version>
     <!-- the Snappy that hadoop-client-api brings: Parquet pages written by delta-rs are Snappy by default -->
     <snappy-java.version>1.1.10.4</snappy-java.version>
     <!-- LZ4 Parquet pages (delta-rs and Arrow write them): the maintained lz4-java fork, safe pure-Java and JNI decoders -->

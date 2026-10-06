@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>1.17.1</version>
+    <version>1.18.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-inference</artifactId>

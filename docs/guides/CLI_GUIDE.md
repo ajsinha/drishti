@@ -1401,7 +1401,7 @@ python3 tools/drishti.py server health
 ```
 
 ```text
-status DEGRADED  version 1.17.1  java 21.0.12.1  uptime 190s
+status DEGRADED  version 1.18.0  java 21.0.12.1  uptime 190s
 packs 2  sources 4 (degraded 0, down 2)  packs with problems 1  failed to start 0
   file                        DOWN      DOWN: no directory /srv/drishti/run/data/feeds
   genomics-store              DOWN      DOWN: cannot reach /srv/drishti/delta/genomics (engine: native)
@@ -1496,7 +1496,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-1.17.1-exec.jar (version 1.17.1)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-1.18.0-exec.jar (version 1.18.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -1509,7 +1509,7 @@ YELLOW console venv            ~/drishti/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18971              in use by Drishti: status UP
 GREEN  port 17971              free (the default console port)
-YELLOW server                  http://localhost:18971: version 1.17.1, java 21.0.12.1, status DEGRADED
+YELLOW server                  http://localhost:18971: version 1.18.0, java 21.0.12.1, status DEGRADED
 YELLOW token                   none given: calls run anonymously or as --user
                                fix: set DRISHTI_TOKEN or --token-file (My account, API tokens)
 doctor: 0 red, 5 yellow
@@ -1613,7 +1613,7 @@ archive helpdesk-0.2.0.tar.gz (5819 bytes, sha256 aee6b807bb8149e8...)
   ok    unpack          21 files, 18 KB; no path leaves the pack folder, no links
   ok    pack.yaml       helpdesk 0.2.0
   ok    manifest        20 files listed; every checksum matches; nothing unlisted
-  ok    server version  needs >=1.0.0, this is 1.17.1
+  ok    server version  needs >=1.0.0, this is 1.18.0
   ok    sutra lint      1 Sutra file(s) passed
   ok    sutra test      1 Sutra file(s) passed
   ok    dependencies    extends no other pack
@@ -2124,7 +2124,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-1.17.1-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-1.18.0-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -2177,7 +2177,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `.venv-tools` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-1.17.1-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-1.18.0-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.

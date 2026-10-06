@@ -115,7 +115,7 @@ ports of their own, so that nothing of yours is touched: the QUICKSTART packs, p
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,climate-risk,operational-risk,retail-banking,genomics,politics-society,economics,helpdesk \
-  java -jar drishti-server/target/drishti-server-1.17.1-exec.jar
+  java -jar drishti-server/target/drishti-server-1.18.0-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -456,7 +456,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-1.17.1-exec.jar sutra test packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -604,7 +604,7 @@ step out, so that it needs no data folder.
 
 ```bash
 python3 tools/license_headers.py --fix                                  # a header on every new file
-java -jar drishti-server/target/drishti-server-1.17.1-exec.jar sutra test packs/helpdesk
+java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test packs/helpdesk
 python3 tools/packreg/packreg.py keygen --out ~/.drishti/acme           # once per publisher
 python3 tools/packreg/packreg.py publish packs/helpdesk --registry /srv/drishti-registry --key ~/.drishti/acme.pem --publisher acme
 ```
@@ -2149,7 +2149,7 @@ curl -s $B/sutras/problems                                  # {}
 curl -s $B/admin/health | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["overrides"]); print([(p["name"], p["status"], p["version"]) for p in d["packs"] if p["name"]=="helpdesk"])'
 curl -s $B/packs/HELP/overview | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["name"], d["code"], [(k["mnemonic"], k["count"]) for k in d["kinds"]])'
 curl -s $B/sources | python3 -c 'import json,sys; [print(s["name"], s["kinds"], s["health"]) for s in json.load(sys.stdin)["sources"]]'
-java -jar drishti-server/target/drishti-server-1.17.1-exec.jar sutra test packs/helpdesk
+java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test packs/helpdesk
 ```
 
 The output for the finished help-desk pack, with the file connector of step 16 on:

@@ -434,7 +434,7 @@ Restart the server and check that `timings.fetch` is below the new timeout and t
 ### Example 2: many fast-ticking entities on a small server
 
 ```bash
-java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-1.17.1-exec.jar \
+java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-1.18.0-exec.jar \
   --drishti.live.frame=100ms --drishti.live.max-streams=5000
 ```
 
@@ -473,7 +473,7 @@ The server image runs with `-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGeneration
 p99. Use the same flags when you run the jar yourself:
 
 ```bash
-JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-1.17.1-exec.jar
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-1.18.0-exec.jar
 ```
 
 Check heap use under load in Admin → Health (`server.heapUsedMb`, `heapMaxMb`) or with

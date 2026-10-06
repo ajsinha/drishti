@@ -13,7 +13,30 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.17.1 — release notes
+# Drishti 1.18.0 — release notes
+
+*2026-10-06.* **Data loads: tell Drishti new data has landed, and it acts on it.**
+
+- **The "batch landed" signal** (docs/guides/DATA_LOADS.md). Your ETL — Airflow, a cron script, DishtaYantra — tells
+  Drishti that a kind's data for a business date is ready: `POST /api/v1/packs/{pack}/loads` or
+  `drishti.py data landed --pack P --kind K --date D --rows N`. Drishti then refreshes what it reads, **verifies** the
+  date is there, **evaluates the alert rules** on that date, optionally runs a smoke check, and **sends notices** (bell,
+  inbox, email) to the roles you choose, e.g. "EOD trades for 2026-10-06 loaded: 48,213 rows, 12 rejected; 3 alerts
+  fired". Re-announcing is safe (idempotent per pack, kind, date and batch); a failure is recorded too.
+- **Expectations and late data:** per pack, which kinds are due each business day and by when (time, zone, business-day
+  calendar). A late or missing load is flagged once, Health shows `data late: …`, and the flag clears when it lands.
+- **Admin → Packs → Data loads:** the history of every load with each step's result, today's expectations (on time,
+  late, missing), filters and settings. **CLI:** `data landed` (exit 1 when a ready load is not verified) and
+  `data loads [--expectations]`.
+- **A least-privilege token scope, `loads:write`,** for ETL jobs: they may announce loads only for kinds their user's
+  roles reach.
+- Drishti does not ingest data itself: `data ingest`, `--watch` and `pack make` stay for staging, small setups and
+  proofs of concept; production ingestion stays with your ETL.
+
+**Upgrade notes:** none required. New: `drishti.loads.*` settings, the `loads:` section in `pack.yaml`, the `loads:write`
+token scope, problem codes DRS-5011 and DRS-5012.
+
+# Previous release: Drishti 1.17.1 — release notes
 
 *2026-10-06.* **A way home and back, hot reload that never stops, and a drill in nine minutes.**
 
@@ -33,7 +56,7 @@
 **Upgrade notes:** none required. Developers: `uv pip install -r drishti-console/requirements-test.txt` once (adds
 `pytest-xdist`).
 
-# Previous release: Drishti 1.17.0 — release notes
+# Older release: Drishti 1.17.0 — release notes
 
 *2026-10-05.* **From a folder of JSON Lines to a deployed pack, by command line or by the admin page.**
 
@@ -64,39 +87,3 @@
   configurations at `drishti-console/`.
 - New settings: `drishti.packs.deploy.*`, `drishti.security.token-scopes`, `token-write-max-days`, console
   `packs.deploy_max_mb`. See CONFIGURATION.md.
-
-# Older release: Drishti 1.16.0 — release notes
-
-*2026-10-05.* **Java 21 for production, About this page, and Share and Discussion.**
-
-- **Java 21 is the production runtime.** Drishti builds Java 21 bytecode and runs on Java 21 or newer (25 is tested too).
-  The build fails if any dependency needs a newer JVM (`enforceBytecodeVersion`), the drill runs every test on Java 21
-  (containers included) and checks Java 25, and the Docker image defaults to Temurin 21. Blocking work never runs under
-  `synchronized`, so virtual threads do not pin on 21 (a guard test keeps it so; a load test found and fixed one hot path).
-- **About this page** (`?`, F1 or **About** on any view): what you are looking at (the pack's own text, filled with the
-  page's values), what each number means (a glossary of exactly the fields shown, with formulas), where the data came from
-  and how fresh it is, why the page looks like this (the Sutra chosen and why, empty, masked and no-access panels), and
-  where to go next. Panel `?` popovers and dotted-underline hints on labels. Every quickstart pack ships its text, with
-  100% coverage enforced by `sutra test`; `sutra lint` warns about fields without an explanation; the Build workbench has
-  an About tab with a live preview; text can be translated (`about.<lang>.yaml`). Masked values never appear.
-- **Ask about this page** (off by default, per pack): a question box answered by an AI model you configure, given only the
-  page's explanation (labels, never masked values), with prompt-injection defences, limits and clean failures.
-- **Share with a note:** send a view or a panel, pinned to its date, to people and roles; they open it with their own
-  rights. Notices in the bell and an inbox; email (an outbox with retries, digests, per-person opt-outs) carrying values as
-  each recipient may see them; Teams, Slack and signed-webhook bridges; an optional watermarked picture, drawn for the
-  most restricted recipient. Links survive sign-in.
-- **Discussion:** threads on a view, a panel or a field, beside About in one drawer: @mentions, quotes of values,
-  "open as it was", a 15-minute edit window, retract, moderation, follow and mute. The old Notes became threads.
-- **Compliance:** tamper-evident history (hash chains and seals), retention, legal holds, an eDiscovery export with
-  checksums, and an Admin → Collaboration page (moderation, holds, export, verify, outbox, bridges).
-- **A third adversarial QA round** on the new features: 29 findings (2 High), all fixed or addressed
-  (`docs/qa/2026-10-05/`). Product decisions recorded: emails and chat bridges carry values, rendered for their audience.
-- **Faster, sturdier drill:** about 18–20 minutes (from 35–45); one shared server for the browser tests; a failed console
-  test is retried once and logged as flaky; timeouts report what the page was doing.
-
-**Upgrade notes:**
-- Run `./mvnw clean` (or *Rebuild Project*) once after pulling, so no Java 25 class files remain in `target/`.
-- Signed tokens for deleted or disabled accounts are now refused (`drishti.security.registered-users-only`, default
-  `true`); single sign-on is unaffected (it registers the account at sign-in).
-- New settings: `drishti.explain.*`, `drishti.about.*`, `drishti.explain.ask.*`, `drishti.collab.*` (all collaboration
-  email, bridges and snapshots are off until configured), console `ui.about_prefetch`. See CONFIGURATION.md.
