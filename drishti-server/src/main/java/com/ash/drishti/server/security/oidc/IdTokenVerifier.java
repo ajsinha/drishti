@@ -50,6 +50,19 @@ public final class IdTokenVerifier {
 
     /** The token's claims when every check passes; otherwise a sign-in refusal. */
     public JsonNode verify(String token, String expectedNonce) {
+        return verify(token, expectedNonce, java.util.List.of(props.clientId()), true);
+    }
+
+    /**
+     * An ID token a host application presents to exchange for an embed token (RFC 8693): the same signature, issuer, expiry
+     * and audience checks, the audience being any of {@code audiences} (the client ids the provider issued to Drishti or to the
+     * host application), and no nonce (the user did not sign in to Drishti with it).
+     */
+    public JsonNode verifyForExchange(String token, java.util.Collection<String> audiences) {
+        return verify(token, null, audiences, false);
+    }
+
+    private JsonNode verify(String token, String expectedNonce, java.util.Collection<String> audiences, boolean checkNonce) {
         try {
             String[] parts = token == null ? new String[0] : token.split("\\.", -1);
             if (parts.length != 3) {
@@ -70,7 +83,7 @@ public final class IdTokenVerifier {
                 throw refuse("bad signature");
             }
             JsonNode claims = json.readTree(Base64.getUrlDecoder().decode(parts[1]));
-            checkClaims(claims, expectedNonce);
+            checkClaims(claims, expectedNonce, audiences, checkNonce);
             return claims;
         } catch (DrishtiException e) {
             throw e;
@@ -79,18 +92,19 @@ public final class IdTokenVerifier {
         }
     }
 
-    private void checkClaims(JsonNode c, String expectedNonce) {
+    private void checkClaims(JsonNode c, String expectedNonce, java.util.Collection<String> audiences, boolean checkNonce) {
         Instant now = clock.instant();
         long skew = props.clockSkew().toSeconds();
         if (!props.issuer().equals(c.path("iss").asText().replaceAll("/+$", ""))) {
             throw refuse("issuer");
         }
         JsonNode aud = c.path("aud");
-        boolean audienceOk = aud.isArray() ? contains(aud, props.clientId()) : props.clientId().equals(aud.asText());
-        if (!audienceOk || props.clientId().isBlank()) {
+        java.util.List<String> accepted = audiences.stream().filter(a -> a != null && !a.isBlank()).toList();
+        boolean audienceOk = accepted.stream().anyMatch(a -> aud.isArray() ? contains(aud, a) : a.equals(aud.asText()));
+        if (!audienceOk) {
             throw refuse("audience");
         }
-        if (aud.isArray() && aud.size() > 1 && !props.clientId().equals(c.path("azp").asText())) {
+        if (aud.isArray() && aud.size() > 1 && !accepted.contains(c.path("azp").asText())) {
             throw refuse("authorised party");
         }
         if (!c.path("exp").canConvertToLong() || c.path("exp").asLong() + skew < now.getEpochSecond()) {
@@ -102,8 +116,8 @@ public final class IdTokenVerifier {
         if (c.hasNonNull("iat") && c.get("iat").asLong() - skew > now.getEpochSecond()) {
             throw refuse("issued in the future");
         }
-        if (expectedNonce == null || expectedNonce.isBlank()
-                || !MessageDigest.isEqual(expectedNonce.getBytes(StandardCharsets.UTF_8), c.path("nonce").asText().getBytes(StandardCharsets.UTF_8))) {
+        if (checkNonce && (expectedNonce == null || expectedNonce.isBlank()
+                || !MessageDigest.isEqual(expectedNonce.getBytes(StandardCharsets.UTF_8), c.path("nonce").asText().getBytes(StandardCharsets.UTF_8)))) {
             throw refuse("nonce");
         }
     }

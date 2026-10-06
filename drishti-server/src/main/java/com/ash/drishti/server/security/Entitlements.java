@@ -191,7 +191,7 @@ public final class Entitlements {
 
     /** True when the principal sees some fields masked: a role without {@code raw} while {@code redact} names fields. */
     public boolean masks(Principal p) {
-        return !props.redact().isEmpty() && !has(p, com.ash.drishti.identity.RoleDefinition::raw);
+        return !props.redact().isEmpty() && (p.embedApp() != null || !has(p, com.ash.drishti.identity.RoleDefinition::raw));
     }
 
     /**

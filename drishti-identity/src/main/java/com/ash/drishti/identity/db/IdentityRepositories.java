@@ -30,6 +30,8 @@ public final class IdentityRepositories {
 
     public interface PackStates extends JpaRepository<PackStateEntity, String> {}
 
+    public interface EmbedApps extends JpaRepository<EmbedAppEntity, String> {}
+
     public interface ApiTokens extends JpaRepository<ApiTokenEntity, String> {
         List<ApiTokenEntity> findByUsernameOrderByCreatedAtDesc(String username);
 

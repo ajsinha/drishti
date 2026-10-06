@@ -17,7 +17,7 @@ package com.ash.drishti.common;
 
 /**
  * Stable error codes, {@code DRS-nnnn}. The first digit groups them: 1 sources and data, 2 Sutra,
- * 3 inference, 4 engine and graph, 5 API, 6 identity, 7 collaboration (shares, threads, the inbox). Codes are never reused.
+ * 3 inference, 4 engine and graph, 5 API, 6 identity, 7 collaboration (shares, threads, the inbox), 8 embedded views. Codes are never reused.
  */
 public enum ErrorCode {
     ENTITY_NOT_FOUND("DRS-1001", 404),
@@ -100,7 +100,19 @@ public enum ErrorCode {
     /** A picture was asked for where snapshots are off (the server's policy or the kind's pack), or no recipient could be shown one. */
     SNAPSHOT_REFUSED("DRS-7015", 403),
     /** The picture could not be drawn: it took longer than the timeout, is larger than the byte limit, or the renderer failed. */
-    SNAPSHOT_FAILED("DRS-7016", 503);
+    SNAPSHOT_FAILED("DRS-7016", 503),
+    /** Embedded views (Drishti Elements): the embed token is missing, malformed, expired, for another audience, or embedding is off. */
+    EMBED_TOKEN_INVALID("DRS-8001", 401),
+    /** Embedded views: the request's {@code Origin} is not one of the host application's registered origins. */
+    EMBED_ORIGIN("DRS-8002", 403),
+    /** Embedded views: the host application is unknown or disabled, or its credentials are wrong. */
+    EMBED_APP("DRS-8003", 403),
+    /** Embedded views: over the host application's or the user's call rate ({@code Retry-After} says when to retry). */
+    EMBED_RATE_LIMITED("DRS-8004", 429),
+    /** Embedded views: the kind is not one this host application may show. */
+    EMBED_KIND("DRS-8005", 400),
+    /** Embedded views: the element's contract version is no longer served (raised by the console). */
+    EMBED_VERSION_GONE("DRS-8006", 410);
 
     private final String code;
     private final int httpStatus;

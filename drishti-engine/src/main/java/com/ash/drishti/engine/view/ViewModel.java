@@ -104,11 +104,29 @@ public record ViewModel(
      * {@code staleAfter}: the source's threshold (ISO-8601 duration) or null; {@code stale}: older than that.
      */
     /** {@code sutra}: the name of the Sutra that laid the view out, or null (inference alone); personal layouts are kept by it. */
+    /**
+     * {@code masked}: how many values in the view the caller's field masks replaced ({@code •••}), 0 when nothing is masked for them;
+     * {@code maskedPanels}: the ids of the panels that hold some, so an embedding page can say "some values are hidden".
+     */
     public record Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
-            String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra) {
+            String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra, int masked, List<String> maskedPanels) {
+
+        public Provenance {
+            maskedPanels = maskedPanels == null ? List.of() : List.copyOf(maskedPanels);
+        }
+
+        public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live,
+                String businessDate, String updatedAt, String staleAfter, boolean stale, String sutra) {
+            this(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, 0, List.of());
+        }
 
         public Provenance(String layout, String fingerprint, String source, long generation, String fetchedAt, boolean live, String businessDate) {
             this(layout, fingerprint, source, generation, fetchedAt, live, businessDate, null, null, false, null);
+        }
+
+        /** The same provenance with the mask counts of a built view. */
+        public Provenance withMasked(int count, List<String> panels) {
+            return new Provenance(layout, fingerprint, source, generation, fetchedAt, live, businessDate, updatedAt, staleAfter, stale, sutra, count, panels);
         }
     }
 
