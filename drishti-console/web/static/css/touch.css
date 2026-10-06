@@ -1,0 +1,40 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Finger-sized controls (UX-02): on a device whose primary pointer is coarse every control a person taps is at least 44 px in
+   both directions (test_page_widths_browser.py checks it at 390 px). A mouse keeps the compact desktop sizes. Links inside
+   running text keep their size (WCAG 2.5.8, inline exception). This sheet loads last. */
+@media (pointer: coarse) {
+  .tbar .tbar-brand, .tbar .asof-live, .tbar-menu-btn, .tbar-tools .tool, .tbar-tools .theme-btn, .brand, .theme-btn, button, [role="button"] { min-width: 44px; min-height: 44px; justify-content: center; }
+  .tbar .cmd-input, .asof-date { height: 44px; min-height: 44px; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]) { min-height: 44px; }
+  .srch-form .srch-q { min-width: 10rem; }
+  label:has(> input[type="checkbox"]), label:has(> input[type="radio"]) { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; min-width: 44px; }
+  .fk { min-width: 44px; min-height: 44px; }
+  .tbl-pg-size, .tbl-pg-q, .srch-q, input[type="search"], input[type="text"], input[type="number"], input[type="password"], input[type="date"],
+  input[type="datetime-local"], select, .studio-in { min-height: 44px; }
+  input[type="checkbox"], input[type="radio"] { min-width: 24px; min-height: 24px; }
+  .help-example .copy, .lp-replay, .btn-pill, .btn, .chip, .tbar-link, .asof-known-btn, .asof-known-x, .srch-vs, .pnl-help, .help-shot, summary, .lnk-btn { min-height: 44px; min-width: 44px; }
+  .btn-pill, .btn, .chip, .tbar-link, .help-shot, .pnl-help, summary { display: inline-flex; align-items: center; justify-content: center; }
+  .help-toc a, .help-nav a, .adm-tabs > a, .crumbs > a, .tabs-inline > a, main li > a:only-child, main td > a, main dd > a:only-child, main li > a:first-child, main li > a:last-child,
+  main p > a:only-child, .lk-target > .lnk, .with-cp > .lnk, dd > .lnk, .cmp-sum > .lnk, .chart-foot > .lnk, td > .lnk { display: inline-block; min-height: 44px; min-width: 44px; padding-block: .6rem; box-sizing: border-box; text-align: center; }
+  .help-toc li { margin: 0; }
+  .asof-known a.asof-known-x { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+  .set-form label { display: flex; align-items: center; min-height: 44px; min-width: 44px; }
+}
+/* a code example is a box with rounded corners: on a phone a wide line scrolls inside it, it is not cut off */
+@media (max-width: 640px) {
+  .help-example { overflow-x: auto; }
+}

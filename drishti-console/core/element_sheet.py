@@ -34,7 +34,7 @@ STATIC = WEB / "static"
 OUT_DIR = WEB / "elements"
 SHEET_FILE, MANIFEST_FILE = "drishti-view.css", "drishti-view.manifest.json"
 # the console's own sheets, in the order base.html loads them (the icon sheet is handled apart: only its used glyphs go in)
-SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css", "css/gradients.css", "css/pivot.css", "css/about.css")
+SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css", "css/gradients.css", "css/pivot.css", "css/about.css", "css/touch.css")
 ICON_SHEET = "vendor/bootstrap-icons/bootstrap-icons.css"
 GZIP_TARGET = 25 * 1024
 # where a glyph can be named: the macros every embedded view is rendered with, and the scripts that run inside the element
