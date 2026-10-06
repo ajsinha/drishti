@@ -67,7 +67,7 @@ cpus=$(nproc 2>/dev/null || echo 4); workers=$(( cpus / 2 )); (( workers > 4 )) 
 declare -A PID
 start_job() {
   local name=$1 began=$SECONDS; shift
-  ( rc=0; "$@" || rc=$?; echo $(( SECONDS - began )) > "$LOGS/$name.secs"; exit $rc ) > "$LOGS/$name.log" 2>&1 &
+  ( rc=0; ( "$@" ) || rc=$?; echo $(( SECONDS - began )) > "$LOGS/$name.secs"; exit $rc ) > "$LOGS/$name.log" 2>&1 &
   PID[$name]=$!
 }
 wait_job() {
@@ -127,7 +127,7 @@ java25_verify() {
   trap "rm -rf '$copy'" EXIT
   git archive HEAD | tar -x -C "$copy"
   cd "$copy"
-  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify ${DRILL_MVN_ARGS:-}
+  DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify -Ddrishti.test.forks=2 ${DRILL_MVN_ARGS:-}
 }
 
 t=$SECONDS
@@ -152,6 +152,7 @@ else
   # removed Security Manager, Unsafe memory access) fails the drill.
   JAVA25_HOME="${JAVA25_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
   t=$SECONDS
+  # two test forks, not four: three suites share the machine now, and a loaded one starts its Spring contexts slowly
   if [[ -x "$JAVA25_HOME/bin/java" ]]; then export JAVA25_HOME; start_job java25 java25_verify
   else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
   start_job console console_tests

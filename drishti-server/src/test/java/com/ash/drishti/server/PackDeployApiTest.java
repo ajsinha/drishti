@@ -86,7 +86,13 @@ class PackDeployApiTest {
     private static final String[] SYSTEM_PROPERTIES = {"drishti.packs.dir", "drishti.packs.installed-dir", "drishti.packs.overlay", "drishti.packs.settings-dir",
             "drishti.packs.deploy.history-file"};
 
+    /** What the build set before this class ran (surefire sets drishti.packs.dir): put back afterwards, not cleared, as the next test class in the same JVM needs it. */
+    private static final java.util.Map<String, String> BEFORE = new java.util.HashMap<>();
+
     static {
+        for (String k : SYSTEM_PROPERTIES) {
+            BEFORE.put(k, System.getProperty(k));
+        }
         try {
             root = Files.createTempDirectory("drishti-deploy");
             acme = KeyPairGenerator.getInstance("Ed25519").generateKeyPair();
@@ -116,7 +122,11 @@ class PackDeployApiTest {
     @org.junit.jupiter.api.AfterAll
     static void forgetTheFolders() {
         for (String k : SYSTEM_PROPERTIES) {
-            System.clearProperty(k);
+            if (BEFORE.get(k) == null) {
+                System.clearProperty(k);
+            } else {
+                System.setProperty(k, BEFORE.get(k));
+            }
         }
     }
 
