@@ -832,6 +832,30 @@ dropped, and `@font-face` rules removed from the sheet and registered on the doc
 spike showed `@font-face` in a shadow sheet does not load). A test fails when a selector in the source sheets cannot be
 rewritten.
 
+### Step 6 as built (root-scoped modules)
+
+The scripts stayed classic scripts (the console's pages and `script-src 'self'` are unchanged); each is an IIFE that registers
+`window.drishtiModules.<name> = { init }` and starts `init(document)` itself unless its `<script>` has `data-manual`, which the
+element sets when it loads them (`GET /embed/v1/poc/js/<name>.js`, a whitelist in `embed_routes.ENHANCERS`). `drishtiModules` is
+the only global the element adds to the host page; with `data-manual` the engine, grid, charts, About and Pivot globals
+(`window.drishtiPivot`, `drishtiAbout`, `drishtiCharts`, `drishti`, ...) are not set. A real ES-module wrapper stays for step 9.
+
+| Module | `init(root, options)` | Notes |
+|---|---|---|
+| `view.js` | bars, tabs, line/area charts, surfaces; returns `{enhance, redraw, updateChart, dispose}` | clock, F-keys, raw drawer, share, breadcrumbs stay console-only (`auto` only); `options.glUrl: null` = no 3D (heatmap); sizing by `ResizeObserver` on the host in a shadow root |
+| `charts.js` | the xcharts; theme and size handling; returns `{draw, dispose}` | tokens from the host; `options.navigate(link)` optional (default: hidden link click) |
+| `tables.js` | sort, filter, paging, keys | `MutationObserver` on the root; `options.scope` namespaces remembered state; page-size event on the root |
+| `tree-rows.js` | `▸/▾` rows and tree pivots | engine and grid found in the registry |
+| `pivot.js` | the Pivot tab | `options.fetch/url` (records go to `/embed/v1/poc/records/...`), `save:false` (no Save, Reset, Promote; the saved arrangement is ignored: layouts are the Sutra's only, Decision 10), `exports:false`; dialogs, drag ghost and Esc capture inside root; fixed boxes corrected for the host element |
+| `about.js` | the drawer | element renders the drawer (About tab only), fetches `/embed/v1/poc/about/...`; `?` and Esc on the root; `guideKey:false`; `drishti:frame` dispatched on the root by the element |
+| `about-hints.js` | `?` popovers, field hints | popovers inside the root; `refresh()` after panel swaps |
+
+Not done here: `live.js` split and `view-panels.js` (the element still applies frames itself; its own copy of the line/area
+option builder is gone, it uses `view.js`), `pivot.js` split (998 lines, under the cap). The element's `.view` takes focus on
+click (`tabindex=-1`) so `?` works inside it; a key pressed elsewhere on the host page does nothing (tested). The sheet now also
+carries `pivot.css` and `about.css`. Tests: `test_embed_elements_browser.py` (Chromium, Firefox, WebKit): sort and paging, tree
+row, pivot regroup with no PUT, panel `?` popover, About drawer, key scoping; the console's own browser tests pass unchanged.
+
 ## 13. Distribution and versioning
 
 - **Served by the console**: `/elements/<semver>/drishti-elements.js`, `…/drishti-view.css`, `…/charts.js`, fonts, and
