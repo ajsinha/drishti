@@ -62,7 +62,10 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
         "drishti.security.redact=trader,counterparty,mtm", "drishti.security.registered-users-only=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.security.oidc.enabled=true", "drishti.security.oidc.client-id=drishti",
-        "drishti.embed.enabled=true", "drishti.embed.issuer=https://drishti.test", "drishti.embed.audiences[0]=https://console.test"})
+        "drishti.embed.enabled=true", "drishti.embed.issuer=https://drishti.test", "drishti.embed.audiences[0]=https://console.test",
+        "drishti.embed.apps[0].id=gitops", "drishti.embed.apps[0].name=Declared in config", "drishti.embed.apps[0].origins[0]=https://gitops.bank.example",
+        "drishti.embed.apps[0].scopes[0]=embed:view",
+        "drishti.embed.apps[0].secret-sha256=20b67fe342b673443bdc90ed8cb3855e255991539dce4a9c15c252c6a39f1475"})
 @AutoConfigureMockMvc
 class EmbedTokenTest {
 
@@ -516,5 +519,72 @@ class EmbedTokenTest {
         refused(run(exchange(app, secret, assertion(app, u, Map.of(), null), EmbedTokenService.JWT)), 401, "DRS-8003");        // the old secret is gone
         assertThat(run(exchange(app, next, assertion(app, u, Map.of(), null), EmbedTokenService.JWT)).getResponse().getStatus()).isEqualTo(200);
         assertThat(run(get("/api/v1/admin/embed/apps/" + app).header("Authorization", admin())).getResponse().getContentAsString()).doesNotContain(next);
+    }
+
+    // ---- usage, disable, apps declared in configuration (step 10) ------------------------------------------------------------
+
+    private JsonNode usageOf(String app) throws Exception {
+        return body(run(get("/api/v1/admin/embed/usage").header("Authorization", admin()))).path("apps").path(app);
+    }
+
+    @Test
+    void usageCountsTokensCallsRefusalsAndLastUseAndIsForAdministratorsOnly() throws Exception {
+        String app = uid("crm-"), u = uid("ula");
+        String secret = register(app, Map.of());
+        user(u, "full");
+        assertThat(usageOf(app).path("tokensIssued").asInt()).isZero();
+        assertThat(usageOf(app).path("lastUsedAt").isNull()).isTrue();
+        String tok = token(app, secret, u);
+        assertThat(call(tok, CRM, VIEW).getResponse().getStatus()).isEqualTo(200);
+        assertThat(call(tok, CRM, VIEW).getResponse().getStatus()).isEqualTo(200);
+        refused(call(tok, "https://evil.example", VIEW), 403, "DRS-8002");
+        refused(run(exchange(app, "wrong", assertion(app, u, Map.of(), null), EmbedTokenService.JWT)), 401, "DRS-8003");
+        JsonNode use = usageOf(app);
+        assertThat(use.path("tokensIssued").asInt()).isEqualTo(1);
+        assertThat(use.path("calls").asInt()).isEqualTo(2);
+        assertThat(use.path("refusals").asInt()).isEqualTo(2);
+        assertThat(use.path("refusalsByCode").path("DRS-8002").asInt()).isEqualTo(1);
+        assertThat(use.path("refusalsByCode").path("DRS-8003").asInt()).isEqualTo(1);
+        assertThat(use.path("lastUsedAt").asText()).isNotBlank();
+        assertThat(run(get("/api/v1/admin/embed/usage").header("Authorization", "Bearer " + tokens.mint("bob", List.of("full"), 60))).getResponse().getStatus()).isEqualTo(403);
+    }
+
+    @Test
+    void disableIsNotDeleteItKeepsTheRegistrationAndIsAudited() throws Exception {
+        String app = uid("crm-"), u = uid("dee");
+        String secret = register(app, Map.of());
+        user(u, "full");
+        String tok = token(app, secret, u);
+        MvcResult off = run(post("/api/v1/admin/embed/apps/" + app + "/disable").header("Authorization", admin()));
+        assertThat(off.getResponse().getStatus()).isEqualTo(200);
+        assertThat(body(off).path("enabled").asBoolean()).isFalse();
+        refused(call(tok, CRM, VIEW), 403, "DRS-8003");
+        assertThat(run(get("/api/v1/admin/embed/apps/" + app).header("Authorization", admin())).getResponse().getStatus()).isEqualTo(200);
+        assertThat(usageOf(app).path("refusalsByCode").path("DRS-8003").asInt()).isEqualTo(1);
+        assertThat(body(run(post("/api/v1/admin/embed/apps/" + app + "/enable").header("Authorization", admin()))).path("enabled").asBoolean()).isTrue();
+        assertThat(call(tok, CRM, VIEW).getResponse().getStatus()).isEqualTo(200);
+        assertThat(audit.recent(200, app).stream().map(e -> e.action()).toList())
+                .contains("embed-app-created", "embed-app-disabled", "embed-app-enabled");
+    }
+
+    @Test
+    void anApplicationDeclaredInConfigurationIsListedWorksAndCannotBeChangedHere() throws Exception {
+        String u = uid("gil");
+        user(u, "full");
+        JsonNode listed = body(run(get("/api/v1/admin/embed/apps/gitops").header("Authorization", admin())));
+        assertThat(listed.path("fromConfig").asBoolean()).isTrue();
+        assertThat(listed.path("hasSecret").asBoolean()).isTrue();
+        assertThat(listed.toString()).doesNotContain("20b67fe3");            // the hash is not shown either
+        MvcResult r = run(exchange("gitops", "gitops-secret", assertion("gitops", u, Map.of(), null), EmbedTokenService.JWT));
+        assertThat(r.getResponse().getStatus()).as("the secret authenticates (not 401); a secret-only app has no key for user assertions").isEqualTo(400);
+        for (var req : List.of(put("/api/v1/admin/embed/apps/gitops").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"x\"}"),
+                post("/api/v1/admin/embed/apps/gitops/disable"), post("/api/v1/admin/embed/apps/gitops/rotate-secret"), delete("/api/v1/admin/embed/apps/gitops"))) {
+            assertThat(run(req.header("Authorization", admin())).getResponse().getStatus()).isEqualTo(409);
+        }
+        MvcResult dup = run(post("/api/v1/admin/embed/apps").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("id", "gitops", "name", "x", "origins", List.of(CRM), "scopes", List.of("embed:view")))));
+        assertThat(dup.getResponse().getStatus()).isEqualTo(409);
+        assertThat(body(run(get("/api/v1/embed/apps/origins").header("Authorization", "Bearer " + tokens.mint("console", List.of("service"), 60)))).path("origins").toString())
+                .contains("https://gitops.bank.example");
     }
 }

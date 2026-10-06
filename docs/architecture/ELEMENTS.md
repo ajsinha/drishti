@@ -1098,7 +1098,7 @@ No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not ne
 **Adjustments to the plan.**
 
 1. **The console does not verify embed tokens yet** (no `cryptography` in its environment; `EmbedAuth` with JWKS is step 7). It reads the token's claims to route the call, takes the CORS allow-list from `GET /api/v1/embed/apps/origins` (service identity, cached `embed.origins_ttl_seconds`), and sends the embed token itself, plus the browser's `Origin`, to the server, which verifies everything on every call. The server's answers (`DRS-8001` to `DRS-8005`, `Retry-After`) are passed on unchanged. Console-side signature checks add defence in depth, not the decision.
-2. **Scopes are a map, not one `allow` list:** `drishti.embed.scopes` names each scope's `METHOD path` patterns (`embed:view` opens views, the stream, panel rows, `GET /api/v1/embed/check` and the read-only `POST /api/v1/command`; `embed:about` opens `explain`), so a token's scopes decide the allow-list. `apps:` declared in configuration (GitOps) is not built: applications are registered through the admin API only (Admin → Embedding is step 10).
+2. **Scopes are a map, not one `allow` list:** `drishti.embed.scopes` names each scope's `METHOD path` patterns (`embed:view` opens views, the stream, panel rows, `GET /api/v1/embed/check` and the read-only `POST /api/v1/command`; `embed:about` opens `explain`), so a token's scopes decide the allow-list. `apps:` declared in configuration (GitOps) came with step 10 (see "Step 10 as built").
 3. **`private_key_jwt` and signed user assertions accept RSA (RS256/384/512) and ECDSA (ES256/384) keys** given as a JWK set; the demo host signs RS256 in 20 lines of standard-library Python (`tools/elements-demo/demo-host-key.json` is a demo key).
 4. **The user must already exist** in Drishti for an exchange (the OIDC rules create users at sign-in, not at exchange); an ID token's user is named as the sign-in names them (`UserService.federatedName`).
 5. **Rates count every embed call** (views, streams, panel rows, `explain`, `resolve`) per application and per user, in a one-minute window held in memory per server; with several servers each counts its own calls. The per-application `callsPerMinute` and `userCallsPerMinute` replace the design's `views` wording.
@@ -1106,7 +1106,7 @@ No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not ne
 7. **A typed command resolved for a host is not remembered** in the user's command history (the section 6.6 promise, now enforced on the server).
 8. **The ErrorCode registry holds `DRS-8006`** though only the console raises it (step 7), like `DRS-5003` the other way round.
 9. **Tokens that outlive a restart** need `drishti.embed.signing-key`; without it the key is made at start, a warning is logged, and a second server cannot verify the tokens of the first.
-10. **Not built here:** usage counters for Admin → Embedding (only `lastUsedAt` is kept), the console's `EmbedAuth`, `event: token` and `/channel/{cid}/token` (step 7).
+10. **Not built here:** (usage counters came with step 10) the console's `EmbedAuth`, `event: token` and `/channel/{cid}/token` (step 7).
 
 #### As built: steps 4, 5 and 8 (group B, 2026-10-06)
 
@@ -1146,6 +1146,16 @@ for any other version. The guard, `tests/test_element_sheet.py`, fails when the 
 macro names a glyph the sheet lacks, when the sheet holds one nothing uses, or over the gzip target. Step 7 will serve the element
 script, font and `integrity.json` under the same `/elements/<version>/` path. `test_embed_elements_browser.py` passes in Chromium
 (14 tests) with the generated sheet.
+
+#### Step 10 as built: Admin → Embedding (2026-10-06)
+
+**Server.** `EmbedUsage` (one bean, `server/embed`) holds per registered application, lock-free (`LongAdder`): tokens issued, embed calls, refusals by DRS code, live streams open and the last use; only ids the registry knows are counted (the rest share the `(unknown)` bucket), so memory is bounded by the registry. `EmbedTokenService` records an issued token, a refused exchange and, around `authorize`, every call and every refusal (the application is taken from the token once its signature has been checked). `StreamController` counts a live stream open for an embed principal and closes it with the stream. The numbers are also Micrometer meters `drishti.embed.tokens`, `.calls`, `.refusals{code}` and `.streams`, tagged `app`. `GET /api/v1/admin/embed/usage` returns them with the registration form's choices (`settings`: the scopes this server defines, the limits, whether wildcard origins are allowed). Counters start again at a restart; there is no retention to configure, because nothing grows with time. **Disable** is `POST .../{id}/disable` and `/enable` (audited `embed-app-disabled` / `-enabled`), distinct from delete.
+
+**Config apps.** `drishti.embed.apps` is a list of registrations (`secret-sha256`, never a secret; or `jwks`). `EmbedAppStore.setConfigured` validates each with the same rules as a registration (a bad entry stops the start, naming the id), keeps them in the snapshot beside the stored ones (`fromConfig: true`, last use in memory only, nothing written to the identity database) and refuses `create`, `update`, rotate, disable and delete for those ids with `409`. A configured id wins over a stored one of the same id.
+
+**Console.** `/admin/embedding` (`routes/embed_admin_routes.py`, `admin/embedding.html`, `admin-embedding.js`, `admin-embedding.css`) in the Admin menu and the Admin tabs: the list with usage, *New application* (id follows the name; scopes come from the server), the secret dialog (shown once, forgotten on close, `no-store`), rotate with a grace period, disable and enable, delete behind a confirm that focuses *Keep it*; keys `n`, `/`, `Esc`; 44 px targets under `pointer: coarse`; the page is in the 390/1600/2560 sweep. The help `?` opens *Embedding host applications* in the Users and roles guide, which F1 on any admin page reaches.
+
+**Not built:** editing an existing registration in the page (origins, scopes and limits change through `PUT /api/v1/admin/embed/apps/{id}`; rotate, disable and delete are in the page), and apps declared in a pack's own files (only the server's configuration, which a pack's settings can feed through the environment).
 
 ### Steps
 

@@ -633,6 +633,27 @@ Off by default. A host application's backend buys a short embed token at the ser
 | `limits.tokens-per-minute` | `120` | Token requests per host application per minute (`429 DRS-8004`). |
 | `limits.views-per-minute` | `600` | The default `callsPerMinute` of a new application: calls per application per minute. |
 | `limits.views-per-user-per-minute` | `60` | The default `userCallsPerMinute` of a new application. |
+| `apps` | empty | Host applications declared in configuration (GitOps), shown in Admin → Embedding as *from config* and read-only; see below. |
+
+**Declaring applications in configuration** (`application.yaml`, a pack's settings or the environment). Each entry takes the fields of a registration; the client secret is never written, only its hash, `printf '%s' "$SECRET" | sha256sum`. An entry is checked like a registration when the server starts, and an invalid one stops the start with its id and the problem. A configured application cannot be changed, rotated, disabled or deleted through the API or the page (`409`); an id in both places is the configured one.
+
+```yaml
+drishti:
+  embed:
+    apps:
+      - id: client-crm
+        name: Client CRM
+        origins: ["https://crm.bank.example"]
+        kinds: [trade, counterparty]          # empty: every kind the user's roles open
+        scopes: ["embed:view"]
+        secret-sha256: 20b67fe342b673443bdc90ed8cb3855e255991539dce4a9c15c252c6a39f1475   # or jwks: '{"keys": [...]}' (or both)
+        token-seconds: 300
+        calls-per-minute: 600
+        user-calls-per-minute: 60
+        enabled: true
+```
+
+Usage counters (tokens issued, calls, refusals by code, live streams, last use) are held in memory since the start, shown in Admin → Embedding and exported as `drishti.embed.tokens`, `.calls`, `.refusals` (tag `code`) and `.streams`, each tagged `app`. There is nothing to configure: only registered applications are counted, so the set is bounded by the registry.
 
 ### `drishti.security.oidc` — single sign-on
 

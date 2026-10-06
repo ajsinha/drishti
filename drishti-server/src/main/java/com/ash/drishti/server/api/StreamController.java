@@ -61,12 +61,15 @@ public class StreamController {
     private final LiveProperties props;
     private final ExecutorService executor;
     private final LiveStreamSlots slots;
+    private final com.ash.drishti.server.embed.EmbedUsage embedUsage;
     private final Entitlements entitlements;
     private final com.ash.drishti.engine.command.RecentEntities recents;
 
     public StreamController(ViewPipeline pipeline, TopicHub hub, LiveMetrics metrics, LiveProperties props,
             ExecutorService drishtiVirtualExecutor, Entitlements entitlements, io.micrometer.core.instrument.MeterRegistry meters,
-            LiveStreamSlots slots, com.ash.drishti.engine.command.RecentEntities recents) {
+            LiveStreamSlots slots, com.ash.drishti.engine.command.RecentEntities recents,
+            com.ash.drishti.server.embed.EmbedUsage embedUsage) {
+        this.embedUsage = embedUsage;
         this.entitlements = entitlements;
         this.recents = recents;
         this.slots = slots;
@@ -126,9 +129,16 @@ public class StreamController {
             slot.release();
             throw e;
         }
+        String embedApp = principal.embedApp();
+        if (embedApp != null) {
+            embedUsage.streamOpened(embedApp);          // Admin → Embedding: live streams open per host application
+        }
         Runnable closeAll = () -> {
             stream.close();
             slot.release();
+            if (embedApp != null) {
+                embedUsage.streamClosed(embedApp);
+            }
         };
         executor.execute(() -> write(emitter, initial, box, closeAll));
         return emitter;

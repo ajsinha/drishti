@@ -49,8 +49,14 @@ public class EmbedConfiguration {
     }
 
     @Bean
+    public EmbedUsage embedUsage(io.micrometer.core.instrument.MeterRegistry meters) {
+        return new EmbedUsage(meters, Clock.systemUTC());
+    }
+
+    @Bean
     public EmbedTokenService embedTokenService(EmbedProperties props, EmbedKeys keys, EmbedAppStore apps, UserService users, AuditLog audit,
-            IdTokenVerifier idTokens, OidcProperties oidc, SecurityProperties security) {
-        return new EmbedTokenService(props, keys, apps, users, audit, idTokens, oidc, Clock.systemUTC(), security.enabled());
+            IdTokenVerifier idTokens, OidcProperties oidc, SecurityProperties security, EmbedUsage usage) {
+        apps.setConfigured(props.apps().stream().map(EmbedProperties.ConfiguredApp::toConfigured).toList());
+        return new EmbedTokenService(props, keys, apps, users, audit, idTokens, oidc, Clock.systemUTC(), security.enabled(), usage);
     }
 }

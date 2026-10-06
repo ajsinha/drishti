@@ -1,0 +1,37 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin → Embedding. Colours come from the theme tokens (light, dark, high contrast); every state also has its word. */
+.emb-help { display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; border: 1px solid var(--d-border); border-radius: 50%;
+  font-size: .9rem; text-decoration: none; color: var(--d-link); vertical-align: middle; }
+.adm-tbl th.emb-name { text-align: left; font-weight: 400; }
+.emb-origins { overflow-wrap: anywhere; min-width: 12rem; }
+.emb-usage { min-width: 15rem; }
+.emb-usage div { white-space: normal; }
+.emb-danger { color: var(--d-bad) !important; }
+.emb-danger-btn { background: var(--d-bad); border-color: var(--d-bad); }
+.emb-dialog { width: min(560px, 94vw); max-height: 92vh; overflow: auto; }
+.emb-dialog textarea, .emb-dialog input { box-sizing: border-box; max-width: 100%; }
+.emb-auth, .emb-scopes { margin: .3rem 0; }
+.emb-auth label, .emb-scopes label { flex-direction: row; align-items: center; gap: .5rem; color: var(--d-ink); }
+.emb-auth label[data-jwks-field] { flex-direction: column; align-items: stretch; color: var(--d-muted); }
+.emb-rates { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+[data-jwks-field][hidden] { display: none; }
+@media (pointer: coarse) { .emb-help { min-width: 44px; min-height: 44px; } }
+@media (max-width: 640px) {
+  .emb-rates { grid-template-columns: 1fr; }
+  .emb-dialog input, .emb-dialog textarea { font-size: 16px; }
+  .adm-bar .btn-pill { width: 100%; }
+}

@@ -215,7 +215,7 @@ tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to kn
 
 ## Embedding host applications
 
-Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); until Admin → Embedding ships, register applications with the API ([API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)):
+Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); register applications on **Admin → Embedding** (`/admin/embedding`), or with the API ([API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)), for example:
 
 ```bash
 curl -s -X POST $SERVER/api/v1/admin/embed/apps -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{
@@ -229,6 +229,16 @@ curl -s -X POST $SERVER/api/v1/admin/embed/apps -H "Authorization: Bearer $ADMIN
 - `enabled: false` (a `PUT`) stops the application at once: its tokens are refused at the next call. Disabling a user does the same for that user. **Rotate** the secret with a grace period (`rotate-secret`) so the host can switch over.
 - The audit log has `embed-app-created`, `-changed`, `-enabled`, `-disabled`, `-secret-rotated`, `-deleted`, and for every token request `embed-token` or `embed-token-refused`. The access log shows each embedded view as the user's own with the detail `embed:<application>`, so "which application showed what to whom" is Admin → Access.
 - Rates (`callsPerMinute` per application, `userCallsPerMinute` per user) answer `429 DRS-8004` with `Retry-After`.
+
+### The Admin → Embedding page
+
+Admin menu → **Embedding** (`/admin/embedding`, administrators only) lists every host application: name and id, its origins, how it signs in (client secret, public key, or both), scopes and kinds, whether it is enabled, and what it did **since the server started**: tokens issued, embed calls, live streams open now, refusals by code (`DRS-8002` wrong origin, `DRS-8003` unknown or disabled, `DRS-8004` rate limit, and so on), and when it was last used. Refusals that name no registered application are counted together in a line above the table. The counters are in memory (they start again at a restart) and are also Prometheus metrics (`drishti_embed_tokens_total`, `_calls_total`, `_refusals_total{code}`, `drishti_embed_streams`, each with an `app` label).
+
+- **New application** (key `n`): name, id (made from the name; lower-case letters, digits and hyphens), origins one per line, how it signs in, scopes (the ones this server defines), the kinds it may show (empty: every kind its users' roles open), rates and token life. With a client secret, the secret is **shown once** in its own dialog, with a Copy button; closing the dialog forgets it, and a reload does not bring it back. With a public key, paste a JWK set (public keys only).
+- **Rotate secret** asks for a grace period (seconds; the old secret keeps working that long, `0` ends it at once) and shows the new secret once.
+- **Disable** stops the application at once (no new tokens; its tokens fail at the next call) but keeps its registration; **Enable** brings it back. **Delete** asks first and removes it for good. All of them are audited (`embed-app-created`, `-disabled`, `-enabled`, `-secret-rotated`, `-deleted`).
+- Applications **declared in configuration** (`drishti.embed.apps`, for GitOps; [CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)) are marked *from config* and read-only: change them in the file and restart. A configured id cannot be registered again here.
+- Keys: `n` opens *New application*, `/` focuses the filter, `Esc` closes a dialog. The page works at phone width and in both themes.
 
 ## Who looked at what: the access log
 

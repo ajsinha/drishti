@@ -56,7 +56,8 @@ public final class EmbedAppStore {
     /** What callers see about an application: never a secret. */
     public record App(String id, String name, String contact, List<String> origins, List<String> kinds, List<String> scopes,
             List<String> subjectTypes, List<String> subjectAudiences, String jwks, boolean hasSecret, int tokenSeconds, int callsPerMinute,
-            int userCallsPerMinute, boolean enabled, Instant createdAt, String createdBy, Instant updatedAt, String updatedBy, Instant lastUsedAt) {
+            int userCallsPerMinute, boolean enabled, Instant createdAt, String createdBy, Instant updatedAt, String updatedBy, Instant lastUsedAt,
+            boolean fromConfig) {
 
         /** Whether the request's {@code Origin} is one of this application's origins (exact, or a registered {@code https://*.suffix}). */
         public boolean allowsOrigin(String origin) {
@@ -88,6 +89,9 @@ public final class EmbedAppStore {
             List<String> subjectTypes, List<String> subjectAudiences, String jwks, Boolean secret, Integer tokenSeconds, Integer callsPerMinute,
             Integer userCallsPerMinute, Boolean enabled) {}
 
+    /** An application declared in configuration ({@code drishti.embed.apps}): read-only here; {@code secretSha256} is the hex SHA-256 of its secret. */
+    public record Configured(Draft draft, String secretSha256) {}
+
     /** A new application, and the client secret (null when it was registered with a key only): shown once. */
     public record Created(App app, String secret) {}
 
@@ -104,6 +108,7 @@ public final class EmbedAppStore {
     private final ReentrantLock writes = new ReentrantLock();
     private final Map<String, Instant> lastTouched = new ConcurrentHashMap<>();
     private volatile Map<String, Row> snapshot = Map.of();
+    private volatile Map<String, Row> configured = Map.of();
 
     public EmbedAppStore(IdentityRepositories.EmbedApps apps, TransactionTemplate tx, AuditLog audit, boolean wildcards, int maxSeconds,
             int defaultCalls, int defaultUserCalls) {
@@ -131,16 +136,85 @@ public final class EmbedAppStore {
         Map<String, Row> next = new LinkedHashMap<>();
         tx.execute(s -> apps.findAll()).stream().sorted(java.util.Comparator.comparing(e -> e.id))
                 .forEach(e -> next.put(e.id, new Row(view(e), e.secretHash, e.prevSecretHash, e.prevSecretUntil)));
+        next.putAll(configured);                      // an application declared in configuration wins over a registered one of the same id
         snapshot = Map.copyOf(next);
+    }
+
+    /**
+     * Installs the applications declared in configuration (GitOps): validated like a registration, read-only afterwards, and not stored.
+     * Throws {@link IllegalStateException} naming the application when one is invalid, so a bad file stops the start.
+     */
+    public void setConfigured(List<Configured> declared) {
+        writes.lock();
+        try {
+            Map<String, Row> next = new LinkedHashMap<>();
+            Instant at = Instant.now();
+            for (Configured c : declared == null ? List.<Configured>of() : declared) {
+                Draft d = c.draft();
+                String id = d.id() == null ? "" : d.id().trim();
+                try {
+                    if (!ID.matcher(id).matches()) {
+                        throw bad("the id is 2-32 characters: lower-case letters, digits and hyphens, starting with a letter");
+                    }
+                    if (next.containsKey(id)) {
+                        throw bad("declared twice");
+                    }
+                    EmbedAppEntity e = new EmbedAppEntity();
+                    e.id = id;
+                    e.createdAt = at;
+                    e.createdBy = "config";
+                    e.updatedAt = at;
+                    e.updatedBy = "config";
+                    apply(e, d, true);
+                    String hash = c.secretSha256() == null ? "" : c.secretSha256().trim().toLowerCase(java.util.Locale.ROOT);
+                    if (!hash.isEmpty() && !hash.matches("[0-9a-f]{64}")) {
+                        throw bad("secret-sha256 is the 64 hex characters of the SHA-256 of the client secret");
+                    }
+                    e.secretHash = hash.isEmpty() ? null : hash;
+                    if (e.secretHash == null && (e.jwks == null || e.jwks.isBlank())) {
+                        throw bad("give the application a secret-sha256 or a jwks to authenticate with");
+                    }
+                    App base = view(e);
+                    next.put(id, new Row(new App(base.id(), base.name(), base.contact(), base.origins(), base.kinds(), base.scopes(), base.subjectTypes(),
+                            base.subjectAudiences(), base.jwks(), base.hasSecret(), base.tokenSeconds(), base.callsPerMinute(), base.userCallsPerMinute(),
+                            base.enabled(), base.createdAt(), base.createdBy(), base.updatedAt(), base.updatedBy(), null, true), e.secretHash, null, null));
+                } catch (DrishtiException ex) {
+                    throw new IllegalStateException("drishti.embed.apps '" + id + "': " + ex.getMessage(), ex);
+                }
+            }
+            configured = Map.copyOf(next);
+            reload();
+        } finally {
+            writes.unlock();
+        }
     }
 
     public Optional<App> find(String id) {
         Row r = id == null ? null : snapshot.get(id);
-        return r == null ? Optional.empty() : Optional.of(r.app());
+        return r == null ? Optional.empty() : Optional.of(seen(r.app()));
     }
 
     public List<App> all() {
-        return snapshot.values().stream().map(Row::app).sorted(java.util.Comparator.comparing(App::id)).toList();
+        return snapshot.values().stream().map(Row::app).map(this::seen).sorted(java.util.Comparator.comparing(App::id)).toList();
+    }
+
+    /** A configured application is not in the table, so its last use is kept in memory. */
+    private App seen(App a) {
+        Instant t = a.fromConfig() ? lastTouched.get(a.id()) : null;
+        return t == null ? a : new App(a.id(), a.name(), a.contact(), a.origins(), a.kinds(), a.scopes(), a.subjectTypes(), a.subjectAudiences(),
+                a.jwks(), a.hasSecret(), a.tokenSeconds(), a.callsPerMinute(), a.userCallsPerMinute(), a.enabled(), a.createdAt(), a.createdBy(),
+                a.updatedAt(), a.updatedBy(), t, true);
+    }
+
+    private void notConfigured(String id) {
+        if (configured.containsKey(id)) {
+            throw new DrishtiException(ErrorCode.PROPOSAL_CONFLICT, "'" + id + "' is declared in configuration (drishti.embed.apps): change it there and restart");
+        }
+    }
+
+    /** Disables or enables a registered application (audited): it gets no token and its tokens stop at the next call. Keeps everything else. */
+    public App setEnabled(String id, boolean enabled, String actor) {
+        return update(id, new Draft(null, null, null, null, null, null, null, null, null, null, null, null, null, enabled), actor);
     }
 
     /** The origins of every enabled application: what the console's CORS allow-list is made of. */
@@ -169,6 +243,7 @@ public final class EmbedAppStore {
             if (!ID.matcher(id).matches()) {
                 throw bad("the id is 2-32 characters: lower-case letters, digits and hyphens, starting with a letter");
             }
+            notConfigured(id);
             if (snapshot.containsKey(id)) {
                 throw bad("a host application '" + id + "' already exists");
             }
@@ -199,6 +274,7 @@ public final class EmbedAppStore {
     public App update(String id, Draft d, String actor) {
         writes.lock();
         try {
+            notConfigured(id);
             App changed = tx.execute(s -> {
                 EmbedAppEntity e = apps.findById(id).orElseThrow(() -> notFound(id));
                 boolean was = e.enabled;
@@ -223,6 +299,7 @@ public final class EmbedAppStore {
     public Created rotateSecret(String id, long graceSeconds, String actor) {
         writes.lock();
         try {
+            notConfigured(id);
             String secret = randomText(32);
             tx.executeWithoutResult(s -> {
                 EmbedAppEntity e = apps.findById(id).orElseThrow(() -> notFound(id));
@@ -244,6 +321,7 @@ public final class EmbedAppStore {
     public void delete(String id, String actor) {
         writes.lock();
         try {
+            notConfigured(id);
             boolean gone = Boolean.TRUE.equals(tx.execute(s -> {
                 if (!apps.existsById(id)) {
                     return false;
@@ -269,6 +347,9 @@ public final class EmbedAppStore {
             return;
         }
         lastTouched.put(id, now);
+        if (configured.containsKey(id)) {
+            return;
+        }
         try {
             tx.executeWithoutResult(s -> apps.findById(id).ifPresent(e -> {
                 e.lastUsedAt = now;
@@ -394,7 +475,7 @@ public final class EmbedAppStore {
     private static App view(EmbedAppEntity e) {
         return new App(e.id, e.name, e.contact, lines(e.origins), lines(e.kinds), csv(e.scopes), csv(e.subjectTypes), lines(e.subjectAudiences),
                 e.jwks, e.secretHash != null, e.tokenSeconds, e.callsPerMinute, e.userCallsPerMinute, e.enabled, e.createdAt, e.createdBy,
-                e.updatedAt, e.updatedBy, e.lastUsedAt);
+                e.updatedAt, e.updatedBy, e.lastUsedAt, false);
     }
 
     private static List<String> lines(String s) {
