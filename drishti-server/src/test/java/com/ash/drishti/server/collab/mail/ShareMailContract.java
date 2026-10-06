@@ -66,7 +66,9 @@ abstract class ShareMailContract extends ShareMailSupport {
         assertThat(mailTo("ann@desk.test", 0)).as("never to the sender").isEmpty();
         // no value of the data: the document's own figures and names are not in any message
         for (MimeMessage m : List.of(ravi, rng)) {
-            assertThat(part(m, "text/plain") + part(m, "text/html")).doesNotContain("MTM", "notional", "counterparty");
+            // share ids are random (ULIDs): one may spell "MTM", so they are taken out before looking for the data's words
+            String body = (part(m, "text/plain") + part(m, "text/html")).replaceAll("sh_[0-9A-Z]+", "sh_ID");
+            assertThat(body).doesNotContain("MTM", "notional", "counterparty");
         }
     }
 
