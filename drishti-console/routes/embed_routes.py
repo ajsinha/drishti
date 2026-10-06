@@ -14,7 +14,7 @@
 
 """The embed API of the proof of concept (docs/architecture/ELEMENTS.md, section 6; build step 0).
 
-Cross-origin, bearer-token, CORS by an exact origin allow-list. Only mounted when ``embed.poc.enabled`` (core/app.py). The
+Cross-origin, bearer-token, CORS by an exact origin allow-list. Only mounted when ``embed.enabled`` (core/app.py). The
 view, the channel and the command reuse the console's own code (the view model, ``_view_event``, ``api_routes.channel``);
 the element's script and sheet are served here, with CORS, because a module script and a font need it cross-origin.
 """
@@ -31,7 +31,7 @@ from fastapi.responses import JSONResponse, Response
 
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
-from core.embed_poc import EmbedError
+from core.embed import EmbedError
 from routes import api_routes
 
 router = APIRouter(prefix="/embed/v1", include_in_schema=False)
@@ -42,10 +42,10 @@ SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css
 _cache: dict = {}
 
 
-def cors(request: Request, response: Response) -> Response:
+async def cors(request: Request, response: Response) -> Response:
     """Allow-list CORS: the request's exact Origin when some host application lists it, else nothing (the browser refuses)."""
     origin = request.headers.get("origin")
-    if origin and request.app.state.embed_poc.origin_allowed(origin):
+    if origin and await request.app.state.embed.origin_allowed(request, origin):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Vary"] = "Origin"
         response.headers["Access-Control-Expose-Headers"] = "Drishti-Embed-Api"
@@ -53,18 +53,19 @@ def cors(request: Request, response: Response) -> Response:
     return response
 
 
-def refuse(request: Request, status: int, code: str, detail: str) -> Response:
-    return cors(request, JSONResponse({"code": code, "detail": detail}, status_code=status, headers={"Cache-Control": "no-store"}))
+async def refuse(request: Request, status: int, code: str, detail: str, retry_after: str | None = None) -> Response:
+    headers = {"Cache-Control": "no-store"}
+    if retry_after:
+        headers["Retry-After"] = str(retry_after)
+    return await cors(request, JSONResponse({"code": code, "detail": detail}, status_code=status, headers=headers))
 
 
-def identity(request: Request):
-    """The embed caller as an Identity running as the masked role, and its claims. Raises EmbedError."""
-    poc = request.app.state.embed_poc
+async def identity(request: Request):
+    """The embed caller as an Identity that calls the server with its embed token, and the token's claims. Raises EmbedError.
+    The server verifies the token (signature, audience, expiry, host application, user, origin, scopes, rates) on every call."""
     auth = request.headers.get("authorization", "")
-    claims = poc.verify(auth[7:].strip() if auth.lower().startswith("bearer ") else "", request.headers.get("origin"))
-    from core.auth import Identity
-
-    me = request.app.state.auth._with_token(Identity(claims.user, claims.user, "", poc.masked_roles(claims)))
+    me, claims = await request.app.state.embed.identity(request, auth[7:].strip() if auth.lower().startswith("bearer ") else "",
+                                                        request.headers.get("origin"))
     request.state.identity = me
     return me, claims
 
@@ -72,26 +73,11 @@ def identity(request: Request):
 @router.options("/{path:path}")
 async def preflight(request: Request, path: str):
     origin = request.headers.get("origin")
-    if not request.app.state.embed_poc.origin_allowed(origin):
+    if not await request.app.state.embed.origin_allowed(request, origin):
         return Response(status_code=403)
-    return cors(request, Response(status_code=204, headers={
+    return await cors(request, Response(status_code=204, headers={
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Allow-Headers": "authorization, content-type, drishti-embed-api",
         "Access-Control-Max-Age": "600"}))
-
-
-@router.post("/poc/token")
-async def dev_token(request: Request):
-    """DEV ONLY: the host's backend (server to server, so no Origin) exchanges its app secret for an embed token."""
-    if request.headers.get("origin"):
-        return refuse(request, 403, "DRS-8002", "the dev token is for a host's backend, never a browser")
-    try:
-        body = await json_body(request, limit=16_384)
-        return JSONResponse(request.app.state.embed_poc.mint(body.get("app"), body.get("secret"), body.get("user"), body.get("roles")),
-                            headers={"Cache-Control": "no-store"})
-    except EmbedError as e:
-        return refuse(request, e.status, e.code, e.detail)
-    except (BodyError, ValueError, AttributeError):
-        return refuse(request, 400, "DRS-5001", "a JSON body {app, secret, user, roles}")
 
 
 # -- the element and what it needs ----------------------------------------------------------------------------------
@@ -118,43 +104,43 @@ def asset(name: str, build) -> tuple[bytes, str]:
     return body, f"\"{abs(hash(key)):x}\""
 
 
-def send(request: Request, body: bytes, media: str, etag: str) -> Response:
+async def send(request: Request, body: bytes, media: str, etag: str) -> Response:
     if request.headers.get("if-none-match") == etag:
-        return cors(request, Response(status_code=304, headers={"ETag": etag, "Cache-Control": "no-cache"}))
+        return await cors(request, Response(status_code=304, headers={"ETag": etag, "Cache-Control": "no-cache"}))
     headers = {"ETag": etag, "Cache-Control": "no-cache"}      # POC: revalidated each time; step 8 serves versioned immutable URLs
     if "gzip" in request.headers.get("accept-encoding", "") and media != "font/woff2":
         body, headers["Content-Encoding"] = gzip.compress(body, 6), "gzip"
         headers["Vary"] = "Accept-Encoding, Origin"
-    return cors(request, Response(body, media_type=media, headers=headers))
+    return await cors(request, Response(body, media_type=media, headers=headers))
 
 
 @router.get("/poc/drishti-elements.js")
 async def element_js(request: Request):
     body, etag = asset("js", lambda: (WEB / "embed" / "drishti-elements.js").read_bytes())
-    return send(request, body, "text/javascript", etag)
+    return await send(request, body, "text/javascript", etag)
 
 
 @router.get("/poc/drishti-view.css")
 async def element_css(request: Request):
     body, etag = asset("css", lambda: "\n".join(shadow_css((WEB / "static" / s).read_text(encoding="utf-8")) for s in SHEETS).encode())
-    return send(request, body, "text/css", etag)
+    return await send(request, body, "text/css", etag)
 
 
 @router.get("/poc/icons.woff2")
 async def icons_font(request: Request):
-    return send(request, (WEB / "static/vendor/bootstrap-icons/fonts/bootstrap-icons.woff2").read_bytes(), "font/woff2", '"icons"')
+    return await send(request, (WEB / "static/vendor/bootstrap-icons/fonts/bootstrap-icons.woff2").read_bytes(), "font/woff2", '"icons"')
 
 
 @router.get("/poc/charts.js")
 async def charts_js(request: Request):
     """charts.js (waterfall, histogram, ...), served with CORS so a module can import it; the element loads it as a script."""
-    return send(request, (WEB / "static/js/charts.js").read_bytes(), "text/javascript", f'"{(WEB / "static/js/charts.js").stat().st_mtime_ns:x}"')
+    return await send(request, (WEB / "static/js/charts.js").read_bytes(), "text/javascript", f'"{(WEB / "static/js/charts.js").stat().st_mtime_ns:x}"')
 
 
 @router.get("/poc/echarts.js")
 async def echarts_js(request: Request):
     path = WEB / "static/vendor/echarts/echarts.min.js"
-    return send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
+    return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 
 # -- the view ---------------------------------------------------------------------------------------------------------
@@ -172,38 +158,36 @@ async def view(request: Request, kind: str, id_: str):
     """The initial view: the head, the strip and every panel as the console's own macros render them, plus the channel key."""
     started = time.perf_counter()
     try:
-        me, _claims = identity(request)
+        me, _claims = await identity(request)
     except EmbedError as e:
-        return refuse(request, e.status, e.code, e.detail)
+        return await refuse(request, e.status, e.code, e.detail)
     try:
         vm = await request.app.state.backend.view(kind, id_, me)
     except BackendError as e:
-        return refuse(request, e.page_status, e.code, e.detail)
+        return await refuse(request, e.page_status, e.code, e.detail, e.retry_after)
     head, panels = _render(request, vm)
     prov = vm.get("provenance") or {}
     asof = getattr(request.state, "asof", "live")
     live = bool(prov.get("live")) and asof == "live"
-    # POC: masked values counted by the mask in what is shown; build step 3 puts the count in the server's provenance
-    shown = head + "".join(p["html"] for p in panels)
-    masked = shown.count("•••")
+    masked = int(prov.get("masked") or 0)            # counted by the server (provenance.masked), not from the markup
     body = {"api": API, "ref": vm["ref"], "mnemonic": vm.get("mnemonic"), "title": vm["title"], "head": head, "strip": vm.get("strip", []),
-            "banners": [], "panels": panels, "provenance": {**prov, "masked": masked},
-            "masked": {"count": masked, "panels": [p["id"] for p in panels if "•••" in p["html"]]},
+            "banners": [], "panels": panels, "provenance": prov,
+            "masked": {"count": masked, "panels": list(prov.get("maskedPanels") or [])},
             "subscribe": f"view:{vm['ref']['kind']}/{vm['ref']['id']}" if live else None,
             "asOf": asof, "timings": {"console": round((time.perf_counter() - started) * 1000, 1)}}
-    return cors(request, Response(json.dumps(body, ensure_ascii=False), media_type="application/json", headers={"Cache-Control": "no-store"}))
+    return await cors(request, Response(json.dumps(body, ensure_ascii=False), media_type="application/json", headers={"Cache-Control": "no-store"}))
 
 
 @router.get("/resolve")
 async def resolve(request: Request, text: str = ""):
     try:
-        me, _claims = identity(request)
+        me, _claims = await identity(request)
         out = await request.app.state.backend.command(text, me)
     except EmbedError as e:
-        return refuse(request, e.status, e.code, e.detail)
+        return await refuse(request, e.status, e.code, e.detail)
     except BackendError as e:
-        return refuse(request, e.page_status, e.code, e.detail)
-    return cors(request, JSONResponse(out, headers={"Cache-Control": "no-store"}))
+        return await refuse(request, e.page_status, e.code, e.detail, e.retry_after)
+    return await cors(request, JSONResponse(out, headers={"Cache-Control": "no-store"}))
 
 
 # -- the channel ------------------------------------------------------------------------------------------------------
@@ -211,30 +195,30 @@ async def resolve(request: Request, text: str = ""):
 async def channel(request: Request, s: list[str] = Query(default=[])):
     """The console's channel, unchanged, for the embed caller; only view subscriptions are accepted."""
     try:
-        identity(request)
+        await identity(request)
     except EmbedError as e:
-        return refuse(request, e.status, e.code, e.detail)
+        return await refuse(request, e.status, e.code, e.detail)
     response = await api_routes.channel(request, [k for k in s if k.startswith("view:")])
     response.headers["Cache-Control"] = "no-store"
-    return cors(request, response)
+    return await cors(request, response)
 
 
 @router.post("/channel/{cid}")
 async def channel_change(request: Request, cid: str):
     try:
-        me, _claims = identity(request)
+        me, _claims = await identity(request)
     except EmbedError as e:
-        return refuse(request, e.status, e.code, e.detail)
+        return await refuse(request, e.status, e.code, e.detail)
     ch = api_routes.CHANNELS.get(cid)
     if ch is None or ch["user"] != me.user:      # build step 7 also checks the host application (ChannelSession)
-        return refuse(request, 404, "DRS-5001", "no such channel: open a new one")
+        return await refuse(request, 404, "DRS-5001", "no such channel: open a new one")
     try:
         body = await json_body(request, limit=16_384)
     except (BodyError, ValueError):
-        return refuse(request, 400, "DRS-5001", "a JSON body {add, remove}")
+        return await refuse(request, 400, "DRS-5001", "a JSON body {add, remove}")
     limit = api_routes.max_subscriptions(request)
     for sub in (body.get("remove") or [])[:limit]:
         ch["remove"](str(sub))
     for sub in [x for x in (body.get("add") or []) if str(x).startswith("view:")][:limit * 2]:
         ch["add"](str(sub))
-    return cors(request, JSONResponse({"ok": True}, headers={"Cache-Control": "no-store"}))
+    return await cors(request, JSONResponse({"ok": True}, headers={"Cache-Control": "no-store"}))

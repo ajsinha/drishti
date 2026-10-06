@@ -1041,6 +1041,25 @@ browsers. `fetch` with a `ReadableStream` and `Authorization` streams cross-orig
 
 No browser failed criterion 9, so the `<link rel=stylesheet>` fallback is not needed. **Step 1 may start.**
 
+#### Steps 1 to 3 as built (2026-10-06)
+
+**Built.** Server: `drishti-identity` `EmbedAppStore` (table `drishti_embed_app` in both schema files, cached snapshot, refreshed with the roles and packs every `drishti.identity.refresh-seconds`), and in `drishti-server` the package `server/embed`: `EmbedTokenService` (the exchange and the per-call checks), `EmbedKeys` (ES256 key from a PEM file or made at start, JWKS), `Jws` (JDK-only RSA and ECDSA verification and JWK reading for what hosts present), `RateWindows`, `EmbedController` (token endpoint, `jwks`, `check`, `apps/origins`, the admin registry), a branch in `TokenFilter`, `Principal.embedApp` (which makes `Entitlements.masks` true whatever the roles), `AccessRecorder` detail `embed:<app>`, `IdTokenVerifier.verifyForExchange`, `ErrorCode` `DRS-8001` to `DRS-8006`, and `provenance.masked` / `maskedPanels` (`engine/view/MaskCount`, counted on the built view). Console: `core/embed.py` replaces the proof of concept's token code. Tests: `EmbedTokenTest` (18: both client authentications, both subject kinds, every refusal, masking whatever the roles, kinds, rates, renewal, audit rows, the registry), `EmbedOffByDefaultTest`, console `test_embed.py`, and the step 0 browser acceptance re-run against the real flow (all 14 Chromium tests pass; the stack registers the host through the admin API and the host's backend signs its user assertion with an RSA key and exchanges it at the server).
+
+**Decisions as taken.** Decision 2: the server side of renewal is that a fresh exchange gives a fresh token for the same `sub` and `azp`, and `GET /api/v1/embed/check` tells the console in one call whether a token still passes every check (user, application, scopes), which is what its stream re-check and `event: token` handling (step 7) use; the server itself checks a token when a call or stream *opens*. Decision 4: there is no plain-username path; both subject kinds exist and ID tokens need single sign-on enabled. Decision 5: `Principal.embedApp != null` masks every `redact` field regardless of `raw` (`drishti.embed.mask: always` is the only value).
+
+**Adjustments to the plan.**
+
+1. **The console does not verify embed tokens yet** (no `cryptography` in its environment; `EmbedAuth` with JWKS is step 7). It reads the token's claims to route the call, takes the CORS allow-list from `GET /api/v1/embed/apps/origins` (service identity, cached `embed.origins_ttl_seconds`), and sends the embed token itself, plus the browser's `Origin`, to the server, which verifies everything on every call. The server's answers (`DRS-8001` to `DRS-8005`, `Retry-After`) are passed on unchanged. Console-side signature checks add defence in depth, not the decision.
+2. **Scopes are a map, not one `allow` list:** `drishti.embed.scopes` names each scope's `METHOD path` patterns (`embed:view` opens views, the stream, panel rows, `GET /api/v1/embed/check` and the read-only `POST /api/v1/command`; `embed:about` opens `explain`), so a token's scopes decide the allow-list. `apps:` declared in configuration (GitOps) is not built: applications are registered through the admin API only (Admin → Embedding is step 10).
+3. **`private_key_jwt` and signed user assertions accept RSA (RS256/384/512) and ECDSA (ES256/384) keys** given as a JWK set; the demo host signs RS256 in 20 lines of standard-library Python (`tools/elements-demo/demo-host-key.json` is a demo key).
+4. **The user must already exist** in Drishti for an exchange (the OIDC rules create users at sign-in, not at exchange); an ID token's user is named as the sign-in names them (`UserService.federatedName`).
+5. **Rates count every embed call** (views, streams, panel rows, `explain`, `resolve`) per application and per user, in a one-minute window held in memory per server; with several servers each counts its own calls. The per-application `callsPerMinute` and `userCallsPerMinute` replace the design's `views` wording.
+6. **`provenance.masked` is counted on the built view** (strip, title and every panel's data, text containing the mask), only when a mask changed the document; `maskedPanels` lists the panel ids. It travels in live `provenance` patches.
+7. **A typed command resolved for a host is not remembered** in the user's command history (the section 6.6 promise, now enforced on the server).
+8. **The ErrorCode registry holds `DRS-8006`** though only the console raises it (step 7), like `DRS-5003` the other way round.
+9. **Tokens that outlive a restart** need `drishti.embed.signing-key`; without it the key is made at start, a warning is logged, and a second server cannot verify the tokens of the first.
+10. **Not built here:** usage counters for Admin → Embedding (only `lastUsedAt` is kept), the console's `EmbedAuth`, `event: token` and `/channel/{cid}/token` (step 7).
+
 ### Steps
 
 | # | Step | Size | Group | Depends on |

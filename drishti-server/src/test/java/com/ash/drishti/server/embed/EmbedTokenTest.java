@@ -401,6 +401,19 @@ class EmbedTokenTest {
     }
 
     @Test
+    void aTypedCommandResolvesForTheHostButNeverEntersTheUsersHistory() throws Exception {
+        String app = uid("crm-"), u = uid("hal");
+        String secret = register(app, Map.of());
+        user(u, "full");
+        String tok = token(app, secret, u);
+        MvcResult r = run(post("/api/v1/command").header("Authorization", "Bearer " + tok).header("Origin", CRM).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"text\":\"TRD MX-20000001\"}"));
+        assertThat(r.getResponse().getStatus()).as(r.getResponse().getContentAsString()).isEqualTo(200);
+        String history = run(get("/api/v1/command/history").header("Authorization", "Bearer " + tokens.mint(u, List.of("full"), 60))).getResponse().getContentAsString();
+        assertThat(history).doesNotContain("MX-20000001");
+    }
+
+    @Test
     void anApplicationMayNarrowTheKindsItShows() throws Exception {
         String app = uid("crm-"), u = uid("uma");
         String secret = register(app, Map.of("kinds", List.of("counterparty")));

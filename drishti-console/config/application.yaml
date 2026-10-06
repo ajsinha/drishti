@@ -71,21 +71,13 @@ ui:
     - { slug: fx-swap, title: FX swap, cmd: TRD FXS-20931, sutra: fx-swap v2 }
     - { slug: commodity-future, title: Commodity future, cmd: TRD CFT-77120, sutra: listed-future v1 }
     - { slug: netting-set, title: Netting set, cmd: NSET NS-NORTH-01, sutra: netting-set v1 }
-# PROOF OF CONCEPT of embedded views (docs/architecture/ELEMENTS.md, step 0). OFF by default: with enabled false nothing under
-# /embed/ is served and no middleware behaves differently. The token minting here ("poc/token") is a DEV-ONLY stand-in for the
-# server's RFC 8693 token exchange (build step 1): a host's backend proves itself with its app secret and names a user.
-# Never switch it on in production. Embedded calls always run as the masked role (Decision 5), whatever roles the user holds.
+# Embedded views for other web applications (docs/architecture/ELEMENTS.md). OFF by default: with enabled false nothing under
+# /embed/ is served and no middleware behaves differently. Host applications are registered at the SERVER (Admin API
+# /api/v1/admin/embed/apps; drishti.embed.* there), which makes the tokens and checks every call; the console only serves the
+# embed routes and learns the registered origins (CORS) from the server, cached origins_ttl_seconds. Embedded calls always mask.
 embed:
-  poc:
-    enabled: ${DRISHTI_EMBED_POC_ENABLED:false}
-    signing_key: ${DRISHTI_EMBED_POC_KEY:}        # >= 32 characters; signs the dev tokens (not the server's secret)
-    token_ttl_seconds: 300
-    masked_role: viewer                           # the role embedded calls run as when none of the user's roles maps
-    apps: {}                                      # host applications: exact CORS origins, a secret, and role -> masked role
-      # elements-demo:
-      #   secret: ${DRISHTI_EMBED_POC_APP_SECRET:}
-      #   origins: ["http://127.0.0.1:17968"]
-      #   role_map: { viewer: viewer, author: viewer }
+  enabled: ${DRISHTI_EMBED_ENABLED:false}
+  origins_ttl_seconds: 60
 auth:
   enabled: ${DRISHTI_AUTH_ENABLED:false}      # off for local development
   session_secret: ${DRISHTI_SESSION_SECRET:}  # >= 32 characters; from the environment only

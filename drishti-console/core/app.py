@@ -58,7 +58,7 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
-EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.poc.enabled (routes/embed_routes.py)
+EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
 PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox")
@@ -86,7 +86,7 @@ class AuthGate(BaseHTTPMiddleware):
         auth = request.app.state.auth
         # the session as the server knows it now (enabled, roles, password change due), not as the cookie remembers it
         path = request.url.path
-        request.state.identity = (None if path.startswith(("/static/", PYODIDE, EMBED))   # /embed/: a bearer token, never the cookie (core/embed_poc.py)
+        request.state.identity = (None if path.startswith(("/static/", PYODIDE, EMBED))   # /embed/: a bearer token, never the cookie (core/embed.py)
                                   else await auth.current(request.cookies.get(auth.cookie), request.app.state.backend))
         request.state.pack_switcher = []
         from core import asof
@@ -289,10 +289,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)
-    from core.embed_poc import EmbedPoc
+    from core.embed import EmbedHosts
 
-    app.state.embed_poc = EmbedPoc(settings)
-    if app.state.embed_poc.enabled:               # PROOF OF CONCEPT, off by default: nothing under /embed/ exists otherwise
+    app.state.embed = EmbedHosts(settings)
+    if app.state.embed.enabled:                   # off by default: nothing under /embed/ exists otherwise
         from routes import embed_routes
 
         app.include_router(embed_routes.router)
