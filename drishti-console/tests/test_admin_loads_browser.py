@@ -122,8 +122,8 @@ def test_settings_are_edited_saved_and_reset_from_the_keyboard(browser, loads_co
     new.locator("[name=x-by]").fill("08:30")
     new.locator("[name=x-zone]").fill("Europe/London")
     dialog.locator("[name=email]").check()
-    dialog.locator("[data-config-save]").click()
-    page.wait_for_load_state("load")
+    with page.expect_navigation():                       # the page reloads itself once the server has saved: wait for THAT load,
+        dialog.locator("[data-config-save]").click()    # or the next goto collides with it under load (net::ERR_ABORTED)
     deadline = time.monotonic() + 10
     while backend.saved is None and time.monotonic() < deadline:
         time.sleep(0.05)
@@ -132,7 +132,8 @@ def test_settings_are_edited_saved_and_reset_from_the_keyboard(browser, loads_co
     page.goto(url + "/admin/packs/trading/loads")                                                   # the page reloads itself after a save
     page.keyboard.press("e")
     page.locator("[data-config-dialog]").wait_for()
-    page.locator("[data-config-reset]").click()
+    with page.expect_navigation():                       # reset reloads the page too
+        page.locator("[data-config-reset]").click()
     deadline = time.monotonic() + 10
     while backend.reset == 0 and time.monotonic() < deadline:
         time.sleep(0.05)
