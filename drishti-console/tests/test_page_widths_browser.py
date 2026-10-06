@@ -32,6 +32,8 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from test_live_tabs_browser import _views, browser, console_url  # noqa: E402,F401 - the shared browser fixtures
 
 WIDTHS = (390, 1600, 2560)
+PACK = "trading"                      # a pack the stand-in server loads (its loads page is the same shape for any pack)
+NO_SHARE = "sh_0123456789abcdef"     # a share id nobody can open: the clean no-access page
 ADMIN = ("users", "audit", "health", "caches", "packs", "roles", "tokens", "access")
 
 
@@ -42,7 +44,10 @@ def _pages() -> list[str]:
              "/s?q=TRD%20where%20mtm%20%3E%201m%20order%20by%20mtm%20desc%20limit%2020",
              f"/compare/{first}?a=2026-09-29&b=2026-09-30", f"/impact/{first}", "/history", "/m", "/alerts", "/w",
              "/build", "/build/reviews", "/reports", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
-             "/help", "/help/search?q=pivot", "/about", "/about/competitive"]
+             "/help", "/help/search?q=pivot", "/about", "/about/competitive",
+             # the newer pages: data loads (all, and one pack's), collaboration admin, the inbox, a share nobody may open, the landing page's way back
+             "/admin/loads", f"/admin/packs/{PACK}/loads", "/admin/collab", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",
+             f"/?from=/v/{first}", "/?from=/admin/loads"]
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     pages += [f"/help/{g['slug']}" for cat in catalogue["categories"] for g in cat.get("guides", [])]
     # last, a view at a past business date and then as known at a time: the top bar's widest state

@@ -294,6 +294,25 @@ of the contract.
 `overflow: auto` on the host if it wants a scroll). The panel grid uses the Sutra's spans (`c-span-N`) relative to the
 element's width (container queries, not the viewport).
 
+**Responsive behaviour (container queries).** The element is a size container (`container: drishti / inline-size` on the host),
+and the generated sheet turns each width `@media` rule of the console into `@container drishti (...)` (same breakpoints:
+1700, 1400, 1100, 1000, 900, 760, 640 and 560 px). So a view in a 360 px sidebar of a wide desktop page uses the phone layout
+(one column, a two-column key-figure strip, wrapped tab heads), and a full-width view on a phone does the same; the host
+page's viewport is never consulted. Non-width media (colour scheme, print, hover, pointer, motion, contrast) are kept.
+Hosts size the element with ordinary layout: give it a width (a grid cell, a flex item with `min-width: 0`, a fixed-width
+column); do not make it `display: inline` or shrink-wrapped, because a size container has no intrinsic width of its own
+(`display: block`, as wide as its container, is the default). Give a flex or grid cell `min-width: 0` so a wide table
+cannot widen the column.
+
+*Touch.* A panel's `?` and a column or field hint open by tap (a tap pins the hint; no hover is needed). Where the element is
+at most 640 px wide, or the device's primary pointer is coarse, the element's controls (`?`, page buttons, filter buttons,
+About, the drawer's close and "more") are at least 44 by 44 px. Tables scroll sideways inside their panel and never widen the
+host page. The About drawer is a right-hand side drawer sized to the element (at most 420 px, 92 % of the element's width) and
+becomes a bottom sheet the element's full width when the element is 640 px or narrower; as it is positioned inside the
+element, opening it scrolls the host page so the element's bottom edge is in view. Charts resize with the element
+(`ResizeObserver`). Tested in Chromium, Firefox and WebKit: a 390 px touch host with a full-width element, a 1800 px host with the
+element in a 360 px sidebar, and taps on `?`, a field hint and About (`test_embed_elements_browser.py`).
+
 ### 5.7 Slots
 
 | Slot | Shown | Default |
