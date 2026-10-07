@@ -15,9 +15,9 @@
 -->
 # Drishti Elements: Drishti's views inside other web applications, without iframes
 
-Status: proposed architecture (the feature is agreed with the product owner; the decisions marked **Decision:** are open,
-each with a recommendation). Owner: the console (`drishti-console/`), the server's security layer and view pipeline.
-Nothing in this document is built yet; [the build plan](#16-build-plan) says in what order it would be.
+Status: steps 0 to 10 of [the build plan](#16-build-plan) are built (each has an "as built" note there, saying what differs from
+this design); steps 11 to 15 are not. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
+otherwise. Owner: the console (`drishti-console/`), the server's security layer and view pipeline.
 
 Contents
 

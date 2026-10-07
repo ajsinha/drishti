@@ -24,7 +24,7 @@ In these docs, `<GO>` means "press Enter".
 
 | Tool | Version | Check with | You should see |
 |---|---|---|---|
-| OpenJDK | **25** (the build refuses any other) | `java -version` | `openjdk version "25.…` |
+| OpenJDK | **21** or newer (production runs 21; 25 also supported; the build refuses anything older) | `java -version` | `openjdk version "21.…` |
 | Python | 3.11 or newer | `python3 --version` | `Python 3.11` or later |
 | uv | any recent | `uv --version` | `uv 0.…` |
 | git | any | `git --version` | `git version …` |
