@@ -7,5 +7,10 @@
   "display": "standalone",
   "background_color": "#0e1628",
   "theme_color": "#0e1628",
-  "icons": [{ "src": "/static/img/drishti-icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }]
+  "icons": [
+    { "src": "/static/img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/img/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/static/img/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
 }

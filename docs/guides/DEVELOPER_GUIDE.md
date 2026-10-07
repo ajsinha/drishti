@@ -1327,6 +1327,28 @@ drishti-console/.venv/bin/python -m pytest -q drishti-console/tests/test_sources
 
 `test_assets_policy.py` will fail if the template gains an inline script, handler or style, or an external URL.
 
+#### Regenerating the favicon and app icons
+
+The browser-tab icon, the home-screen icons and the app manifest's icons are all the logo mark (the amber braces and eye
+of `web/static/img/drishti-mark.svg`), filling a navy tile with the eye's outline in white, so they read on light and dark
+tab bars. They are generated, never drawn by hand, into `drishti-console/web/static/img/icons/`:
+
+| File | Size | Used by |
+|---|---|---|
+| `favicon.ico` | 16, 32 and 48 px in one file | `/favicon.ico` (browsers ask for it on their own) and `<link rel="icon">` |
+| `favicon.svg` | scalable | `<link rel="icon" type="image/svg+xml">` in `base.html`; modern browsers prefer it |
+| `favicon-16.png`, `favicon-32.png`, `favicon-48.png` | as named | the `.ico`; 16 and 32 px use heavier strokes so the mark survives at tab size |
+| `apple-touch-icon.png` | 180 px, square corners | iOS "Add to Home Screen" (iOS rounds the corners) |
+| `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | as named | `manifest.webmanifest`; the maskable one keeps the mark inside the 80 % safe zone |
+
+```bash
+python3 tools/make_icons.py            # writes every file above (needs Inkscape and ImageMagick)
+python3 tools/make_icons.py --check    # exit 1 when an icon is missing or favicon.svg is not what the script makes
+```
+
+Change the colours, the fill or the stroke weights in the script, never in the files. `tests/test_icons.py` checks that
+the files exist, that `/favicon.ico` answers, and that the pages and the manifest link them.
+
 #### Regenerating the element stylesheet
 
 `<drishti-view>` (Drishti Elements, `docs/architecture/ELEMENTS.md`) styles its Shadow DOM with a **generated** sheet, not the

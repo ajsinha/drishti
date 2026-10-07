@@ -15,14 +15,17 @@
 """Public pages: the landing page."""
 from __future__ import annotations
 
+from pathlib import Path
 from urllib.parse import unquote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from core.nextpath import safe_next
 from core.packs import samples
 from routes.common import packs, render
+
+ICONS = Path(__file__).resolve().parent.parent / "web" / "static" / "img" / "icons"
 
 router = APIRouter(include_in_schema=False)
 
@@ -54,6 +57,12 @@ def back_label(path: str) -> str:
     names = {"t": "the terminal", "build": "Build", "admin": "Admin", "help": "Help", "inbox": "your inbox", "w": "your workspace",
              "account": "your account", "alerts": "alerts", "monitors": "monitors", "compare": "Compare"}
     return names.get(parts[0], "where you were") if parts else "where you were"
+
+
+@router.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """Browsers ask for /favicon.ico on their own (feeds, error pages, bookmarks); it is the logo mark, built by tools/make_icons.py."""
+    return FileResponse(ICONS / "favicon.ico", media_type="image/x-icon", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/healthz")

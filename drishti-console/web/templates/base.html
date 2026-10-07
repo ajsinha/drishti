@@ -24,12 +24,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="{{ PRODUCT }}">
   <link rel="manifest" href="/static/manifest.webmanifest">
-  <link rel="apple-touch-icon" href="/static/img/drishti-icon.png">
+  <link rel="apple-touch-icon" href="/static/img/icons/apple-touch-icon.png?v={{ ASSET_V }}">
   <meta name="copyright" content="{{ COPYRIGHT }}">
   <meta name="description" content="{{ PRODUCT }} — {{ TAGLINE }}">
   <meta name="drishti-live" content="{{ LIVE_WHO }}">
   <title>{% block title %}{{ PRODUCT }}{% endblock %}</title>
-  <link rel="icon" type="image/png" href="/static/img/drishti-icon.png">
+  <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/svg+xml" href="/static/img/icons/favicon.svg?v={{ ASSET_V }}">
   <script src="/static/js/theme-init.js?v={{ ASSET_V }}"></script>
   <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.css?v={{ ASSET_V }}">

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <title>Drishti</title>
+  <rect width="200" height="200" rx="36.0" fill="#16233F"/>
+  <g transform="translate(-13.58 31.85) scale(1.1358)">
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M42,18 C29,18 31,30 31,40 L31,49 C31,56 27,60 19,60 C27,60 31,64 31,71 L31,80 C31,90 29,102 42,102" stroke="#E39B2D" stroke-width="8"/>
+      <path d="M158,18 C171,18 169,30 169,40 L169,49 C169,56 173,60 181,60 C173,60 169,64 169,71 L169,80 C169,90 171,102 158,102" stroke="#E39B2D" stroke-width="8"/>
+      <path d="M50,60 Q100,12 150,60 Q100,108 50,60 Z" stroke="#FFFFFF" stroke-width="7"/>
+    </g>
+    <circle cx="100" cy="60" r="18" fill="#E39B2D"/>
+    <circle cx="100" cy="60" r="8.5" fill="#16233F"/>
+    <circle cx="105" cy="55" r="3" fill="#FFFFFF"/>
+  </g>
+</svg>
