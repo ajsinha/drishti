@@ -806,7 +806,8 @@ def _backend_state_is_per_test(request):
         yield
         return
     be = request.getfixturevalue("backend")
-    saved = dict(be.__dict__)
+    # one level deeper than the fields: a list or dict a test appends to in place (backend.calls) must not leak into the next test
+    saved = {k: (v.copy() if isinstance(v, (list, dict, set)) else v) for k, v in be.__dict__.items()}
     yield
     be.__dict__.clear()
     be.__dict__.update(saved)
