@@ -685,6 +685,27 @@ def test_a_zoomed_panel_fills_the_elements_own_box_and_leaves_the_host_page_alon
     assert h.js(f"{SR}.querySelectorAll('.pnl-zoom').length") == 0
 
 
+def test_a_zoomed_table_fits_the_elements_height_and_restores_its_page_size(host):
+    h = host()
+    h.open()
+    long = PAGED.replace("</tbody>", "".join(f"<tr><td>more{i:02d}</td><td>{i}</td></tr>" for i in range(200)) + "</tbody>")
+    inject(h, "<section class='pnl' id='p-fitx' data-panel='fitx' data-kind='table'><div class='pnl-h'><h3>Fit</h3><span class='pnl-code'></span></div>"
+              "<div class='pnl-b'>" + long + "</div></section>")
+    btn = h.page.locator("#main").locator("#p-fitx .pnl-zoom-btn")
+    expect(btn).to_be_visible(timeout=15000)
+    size = "#p-fitx .tbl-pg-size"
+    assert h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent") == "25 rows"
+    btn.click()
+    h.until(lambda: str(h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent")).startswith("Fit ("), 10, "fit applied")
+    h.page.wait_for_timeout(300)
+    r = h.js(f"(() => {{ const b = {SR}.querySelector('#p-fitx .pnl-b'), t = {SR}.querySelector('#p-fitx table.tbl');"
+             " return [[...t.tBodies[0].rows].filter(x => !x.hidden).length, b.scrollHeight > b.clientHeight + 1]; })()")
+    assert r[0] >= 5 and r[1] is False, r
+    assert h.js("localStorage.getItem('drishti.tableRows')") is None
+    h.page.keyboard.press("Escape")
+    h.until(lambda: h.js(f"{SR}.querySelector('{size}').selectedOptions[0].textContent") == "25 rows", 10, "page size restored")
+
+
 def test_zoom_works_under_a_trusted_types_host_at_phone_width(host):
     h = host(viewport=(390, 800), touch=True)
     h.page.goto(HOST + "/?tt=1")

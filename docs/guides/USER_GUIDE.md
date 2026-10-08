@@ -670,8 +670,12 @@ While a panel is zoomed:
 - the focus is in the panel, and the other panels are inert (neither focusable nor read by a screen reader) until you
   restore; only one panel is zoomed at a time;
 - it stays **live**: ticking values, charts and tables keep updating, and a chart redraws at the larger size;
-- a table uses the whole height (it scrolls inside the panel; choose *100 rows* in its pager to see more at once), and a
-  pivot, tree table, ladder, surface or graph work as usual;
+- a table **fits the height**: the pager's page size is set to the number of rows that fill the panel (the size box reads
+  *Fit (37)*), so there is no scrollbar and no blank space under the rows, and the page keeps the row that was at its top.
+  It is recomputed when the window is resized, when you switch a tab inside the panel and when live updates add or remove
+  rows. Pick a size yourself and it is kept until you restore (choose *Fit* to go back); the fit is never saved, and
+  restoring puts back your own page size and the page with the same top row. A pivot, ladder, surface or graph use the
+  height as usual;
 - the button now reads *Restore <title>* and is pressed; pressing it again, `Z`, or `Esc` restores the panel and puts
   the focus back on its button.
 

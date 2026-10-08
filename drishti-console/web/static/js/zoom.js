@@ -71,6 +71,9 @@
       v.style.setProperty('--zoom-top', top + 'px');
       v.style.setProperty('--zoom-bottom', bottom + 'px');
     }
+    function fit(on) {                        // tables.js fits the page size of the zoomed panel's tables to its height, and puts it back
+      try { root.dispatchEvent(new CustomEvent('drishti:table-fit', { detail: { on: on } })); } catch (e) { /* none */ }
+    }
     function setHash(id) {
       if (!isDoc || !window.history || !history.replaceState) { return; }
       try { history.replaceState(history.state, '', location.pathname + location.search + (id ? '#zoom=' + encodeURIComponent(id) : '')); } catch (e) { /* sandboxed */ }
@@ -105,6 +108,7 @@
       apply(p);
       setHash(id);
       watch(p);
+      fit(true);
       if (focus !== false) { p.focus({ preventScroll: true }); }
       requestAnimationFrame(function () { resizeCharts(p); });
       return true;
@@ -116,6 +120,7 @@
       watch(null);
       leaveFullscreen();
       panels().forEach(function (o) { o.removeAttribute('inert'); o.removeAttribute('aria-hidden'); o.classList.remove('pnl-zoom'); });
+      fit(false);
       var v = viewOf(p);
       if (v) { v.classList.remove('has-zoom'); v.style.removeProperty('--zoom-top'); v.style.removeProperty('--zoom-bottom'); }
       if (isDoc) { document.documentElement.classList.remove('zoom-lock'); } else if (host) { host.removeAttribute('data-zoomed'); }
@@ -183,6 +188,7 @@
       if (!p.classList.contains('pnl-zoom') || p.hasAttribute('inert')) {
         apply(p);
         watch(p);
+        fit(true);
         var a = isDoc ? document.activeElement : root.activeElement;
         if (!a || a === document.body) { p.focus({ preventScroll: true }); }
         requestAnimationFrame(function () { resizeCharts(p); });
