@@ -35,7 +35,7 @@ frameSheet.replaceSync(':host{display:block;position:relative;contain:content;co
   + ':host([data-state="loading"]) .view{opacity:.55;transition:opacity .15s}'
   + '.view:focus{outline:none}.dv-note{padding:.4rem .8rem;font:12px/1.4 var(--d-font-mono,monospace);color:var(--d-muted,#666)}'
   + '.dv-error{padding:.8rem;border:1px solid var(--d-bad,#b00);color:var(--d-bad,#b00)}'
-  + '.dv-slot[hidden]{display:none}'
+  + '.dv-slot[hidden]{display:none}:host([data-zoomed]){min-height:min(32rem,90vh)}'
   + ':host([density="compact"]) :is(td,th){padding-block:.1rem}:host([density="comfortable"]) :is(td,th){padding-block:.55rem}');
 
 export const font = (server) => memo('font:' + server, async () => {
@@ -51,7 +51,7 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
 }));
 
 // the console's own scripts, in order: the engine before the grid before the pivot (served from the allow-list in routes/embed_routes.py)
-export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'charts', 'tables', 'tree-rows', 'pivot', 'about', 'about-hints'];
+export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'charts', 'tables', 'tree-rows', 'pivot', 'about', 'about-hints', 'zoom'];
 export const chartLibs = (server) => memo('charts:' + server, async () => {
   await script(server + API + '/echarts.js');
   for (const n of ENHANCERS) { await script(server + API + '/js/' + n + '.js'); }

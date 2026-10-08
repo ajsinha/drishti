@@ -61,6 +61,7 @@ export function boot(host, view, server, reload) {
   m.charts = start('charts', root);        // an entity click is a hidden link click: it reaches the element's own link handler
   m.tables = start('tables', root, { scope: server + '|' + kind + '/' + id });
   m.tree = start('treeRows', root);
+  m.zoom = start('zoom', root);
   m.pivot = start('pivot', root, { fetch: fetcher, url: toUrl, save: false, exports: false });
   m.about = start('about', root, { fetch: fetcher, guideKey: false, reload, setHtml });
   m.hints = m.about ? start('aboutHints', root, { about: m.about, open: (h) => window.open(h.startsWith('/') ? server + h : h, '_blank', 'noopener') }) : null;
@@ -78,7 +79,7 @@ export function boot(host, view, server, reload) {
 
 /** Ends what `boot` started: observers, listeners and chart instances. */
 export function dispose(mods, root) {
-  if (mods) { for (const k of ['pivot', 'tree', 'tables', 'about', 'hints', 'charts', 'view']) { mods[k] && mods[k].dispose && mods[k].dispose(); } }
+  if (mods) { for (const k of ['zoom', 'pivot', 'tree', 'tables', 'about', 'hints', 'charts', 'view']) { mods[k] && mods[k].dispose && mods[k].dispose(); } }
   const e = window.echarts;
   if (e && root) { root.querySelectorAll('.chart, .xchart, .surface').forEach((el) => { const c = e.getInstanceByDom(el); c && !c.isDisposed() && c.dispose(); }); }
 }

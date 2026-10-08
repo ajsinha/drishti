@@ -146,3 +146,27 @@
 
 /* the function-key bar stays above panels raised by layout mode (their handles and badges) */
 footer.fkeys { z-index: 40; }
+
+/* ---- zoom: one panel expanded over the view area (static/js/zoom.js; USER_GUIDE.md, Zoom a panel) ----
+   The panel stays where it is in the document (live patches keep landing on it); the class lifts it over the view. In the console it
+   sits between the top bar and the function keys (zoom.js sets --zoom-top and --zoom-bottom), in <drishti-view> it fills the
+   element's own box (the host contains fixed boxes). */
+.pnl-zoom-btn { background: none; border: 0; padding: 0 .15rem; cursor: pointer; line-height: 1; font-size: .8rem; }
+.pnl-zoom-btn[aria-pressed="true"] { color: var(--d-accent); }
+.pnl-zoom-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.layout-on .pnl-zoom-btn { display: none; }
+:root.zoom-lock { overflow: hidden; }
+.pnl.pnl-zoom { position: fixed; top: var(--zoom-top, 0); right: 0; bottom: var(--zoom-bottom, 0); left: 0; z-index: 35; display: flex; flex-direction: column;
+  width: auto; height: auto !important; margin: 0; border-radius: 0; overflow: hidden; grid-column: auto; }
+.pnl-zoom:focus { outline: none; }
+.pnl-zoom > .pnl-b { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.pnl-zoom:is([data-kind="line"], [data-kind="area"], [data-kind="waterfall"], [data-kind="histogram"], [data-kind="scatter"], [data-kind="candlestick"], [data-kind="graph"], [data-kind="surface"]) > .pnl-b { display: flex; flex-direction: column; }
+.pnl-zoom > .pnl-b > .chart { flex: 1 1 auto; height: auto; min-height: 240px; }
+.pnl-zoom .tbl-wrap { max-width: 100%; }
+@media print {
+  :root.zoom-lock { overflow: visible; }
+  .has-zoom .pnl:not(.pnl-zoom), .has-zoom .vhead, .has-zoom .strip, .has-zoom .vright:not(:has(.pnl-zoom)), .has-zoom .vmain:not(:has(.pnl-zoom)) { display: none !important; }
+  .pnl.pnl-zoom { position: static; display: block; overflow: visible; }
+  .pnl-zoom > .pnl-b { overflow: visible; }
+  .pnl-zoom-btn { display: none !important; }
+}

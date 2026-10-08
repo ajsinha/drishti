@@ -38,6 +38,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
 | [About this page](#about-this-page) | `?`: what the page is, what each number means, where the data came from, why it looks like this |
 | [Layout mode](#layout-mode-arrange-a-view-your-way) | `Alt+L`: drag, resize and hide panels for yourself; promote your layout to the Sutra |
+| [Zoom a panel](#zoom-a-panel) | `Z`: one panel fills the view area; restore with `Esc`; shareable as `#zoom=<panel>` |
 | [The Pivot tab](#the-pivot-tab-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
@@ -651,6 +652,52 @@ removed panel); the full line diff, where a move reads as a deleted block and an
 diff**. The promote drawer shows the same before you submit ([Reviews](#reviews-approving-a-sutra)). With review switched off on the server the button
 reads **Publish** and the new version is live at once.
 
+## Zoom a panel
+
+A chart you want to read closely, a table with many columns, a pivot you are slicing: **zoom** expands one panel to fill
+the view area, and **restore** puts it back. Nothing is saved to your layout and the Sutra is untouched.
+
+![A panel's heading with its zoom button, next to the help (?) button](img/zoom/01-button.jpg)
+
+Every panel's heading has a **zoom button** (the arrows icon, *Expand Hypothetical P&L, last 60 days*) next to the
+help (?) button. Click it, or press `Z` while the panel has the focus (use `F2` to `F6` to focus a panel, or `Tab`).
+
+![The chart panel zoomed: it fills the screen between the top bar and the function keys](img/zoom/02-chart.jpg)
+
+While a panel is zoomed:
+
+- it fills the view area **below the top bar and above the function keys**; the page behind it does not scroll;
+- the focus is in the panel, and the other panels are inert (neither focusable nor read by a screen reader) until you
+  restore; only one panel is zoomed at a time;
+- it stays **live**: ticking values, charts and tables keep updating, and a chart redraws at the larger size;
+- a table uses the whole height (it scrolls inside the panel; choose *100 rows* in its pager to see more at once), and a
+  pivot, tree table, ladder, surface or graph work as usual;
+- the button now reads *Restore <title>* and is pressed; pressing it again, `Z`, or `Esc` restores the panel and puts
+  the focus back on its button.
+
+![A table zoomed: all its columns and as many rows as fit](img/zoom/03-table.jpg)
+
+| Key | Does |
+|---|---|
+| `Z` | On a focused panel (not in a text field): zoom it. While zoomed: restore |
+| `Shift`+`Z` | Zoom the panel and ask the browser for **true full screen**, for a wall display (nothing happens where the browser has no full screen) |
+| `Esc` | Restore. An open drawer (About, raw JSON), popover or menu closes first; a second `Esc` restores |
+
+**Share or reload a zoomed panel.** The address gains `#zoom=<panel id>` (for example `/v/var/VAR-EQD#zoom=pnl`):
+reload the page, or send the link, and the panel opens zoomed. An id that is not on the page is ignored.
+
+**Layout mode** (`Alt+L`) and zoom exclude each other: turning layout mode on restores a zoomed panel first, and the
+zoom buttons are hidden while you arrange the view.
+
+**On a phone** the zoomed panel fills the screen under the top bar, and the button is a finger-sized 44 pixel target.
+
+![A zoomed chart on a phone](img/zoom/04-phone.jpg)
+
+**Print** prints the zoomed panel alone.
+
+**In another application.** Inside `<drishti-view>` the panel fills the element's own box, not the host page; the keys
+work only while the focus is inside the element ([Drishti Elements, keyboard](../architecture/ELEMENTS.md#58-keyboard)).
+
 ## The Pivot tab: slice a table your way
 
 Some tables can be turned into an **Excel-style pivot**: drag *Product* down the side, *Maturity bucket* across the
@@ -810,7 +857,8 @@ keys than shown*); a search's drill-down shows 50 rows a page. An administrator 
 | `Enter` | Open the highlighted suggestion, or run the command (`<GO>`). In a table: open the selected row |
 | `PgUp` `PgDn` | In a selected table: move the selection a page up or down |
 | `Home` `End` | In a selected table: select the first or last row |
-| `Esc` | Close the suggestions, a menu, the raw JSON drawer, About this page or Calc |
+| `Esc` | Close the suggestions, a menu, the raw JSON drawer, About this page or Calc; then restore a [zoomed panel](#zoom-a-panel) |
+| `Z` | On a focused panel: [zoom](#zoom-a-panel) it, or restore it; `Shift`+`Z` also asks for full screen |
 | `F1` | Help for the page you are on. On a view it opens [About this page](#about-this-page); `F1` again goes to the guide |
 | `?` | On a view (focus not in a text field): open or close [About this page](#about-this-page) |
 | `F2`–`F6` | Jump to the panel that shows that key in its header |

@@ -1,11 +1,14 @@
 {
-  "bytes": 103359,
-  "gzip": 19599,
+  "bytes": 104954,
+  "gzip": 19925,
   "iconFont": {
     "family": "bootstrap-icons",
     "registered": "FontFace API (the sheet has no @font-face)"
   },
   "icons": {
+    "arrows-fullscreen": [
+      "static/js/zoom.js"
+    ],
     "box": [
       "templates/_macros/panels.html"
     ],
@@ -17,6 +20,9 @@
     ],
     "exclamation-triangle": [
       "templates/_macros/view.html"
+    ],
+    "fullscreen-exit": [
+      "static/js/zoom.js"
     ],
     "grid-3x3": [
       "templates/_macros/panels.html"
@@ -37,7 +43,7 @@
       "templates/_macros/panels.html"
     ]
   },
-  "sha256": "80c7644a98aef500e74d784162ff261a58cf1dbe63d569c5c4d3492647cbd627",
+  "sha256": "9714a684b0a2134fb1dbe1c98c6f35aeb7858f1b798aa111105fe7ce2d6dd989",
   "sources": [
     "css/tokens.css",
     "css/theme.css",
@@ -49,5 +55,5 @@
     "css/touch.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "d47df6f559ce"
+  "version": "9831ece9ac28"
 }

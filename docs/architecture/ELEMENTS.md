@@ -141,6 +141,7 @@ The direction was checked against the code. The parts the element reuses, and th
 | The hub | `live-hub.js` `Hub(opts)` | reconnect with backoff (2 s doubling to 30 s), resync of keys, connect timer; takes `EventSource` and `fetch` **as options** | a SharedWorker must be same-origin with the page, so cross-origin it cannot run in one; `EventSource` cannot send `Authorization` |
 | Patch application | `live.js` | strip cells, panel swap (keeps tab choice, user's span), flash, deleted banner | `document.querySelector`, globals `window.drishti`, `window.DrishtiChannel`, `location.reload()` |
 | Charts | `view.js` (line/area: `drawCharts`, `updateChart`), `charts.js` (waterfall, histogram, scatter, candlestick, graph from `data-xchart`), surfaces (ECharts GL loaded on demand) | ECharts with SVG renderer; colours from `--d-*` tokens | `getComputedStyle(document.documentElement)`, `document.querySelectorAll`, `window.resize`, links built as `/v/…` |
+| Panel zoom | `zoom.js` (root-scoped `init(root)`): a `pnl-zoom` class lifts one panel over the view; in the element the host (`contain: content`) makes it fill the element's own box; no hash, no page scroll lock there | CSS classes and attributes only | `document` listeners and `location.hash` are used only when `root` is the document |
 | Table behaviour | `tables.js` (sort, filter, page, keys), `tree-rows.js` | everything a table does | a `MutationObserver` on `document.body`: it never sees inside a shadow root |
 | Pivots | `pivot-engine.js` (pure), `pivot-grid.js` (DOM, mostly local), `pivot.js` (975 lines; `fetch('/api/pivot/…')`, saved arrangements) | the Pivot tab | relative URLs, cookie fetches, writes |
 | About | `about.js`, `about-hints.js`, `GET /v/{kind}/{id}/about` (fragment) | the drawer, panel `?` popovers, field hints | `document.getElementById('aboutDrawer')`, document-wide `keydown` |
@@ -329,7 +330,7 @@ element in a 360 px sidebar, and taps on `?`, a field hint and About (`test_embe
 ### 5.8 Keyboard
 
 Shortcuts work **only while the focus is inside the element** (listeners on the shadow root, never on `document`):
-`?` opens About, `Esc` closes it, `Alt+1..9` move between panels, the table keys of `tables.js` inside a table. The
+`?` opens About, `Esc` closes it, `Z` zooms the focused panel to the element's own box (`Esc` restores; `Shift+Z` asks for full screen), `Alt+1..9` move between panels, the table keys of `tables.js` inside a table. The
 console's global keys (`F1` guide, the command line, `Alt+0..4` workspace panes, `Alt+L` layout mode) are not bound.
 
 ### 5.9 Examples

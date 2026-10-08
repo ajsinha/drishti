@@ -152,6 +152,7 @@
   function enter() {
     if (on) { return; }
     on = true;
+    if (window.drishtiZoom) { window.drishtiZoom.restore(false); }      // a zoomed panel and layout mode exclude each other
     dirty = false;
     snapshot = capture();
     view.classList.add('layout-on');

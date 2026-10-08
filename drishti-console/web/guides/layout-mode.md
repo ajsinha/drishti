@@ -65,5 +65,7 @@ Each change is read out by screen readers.
   (*moved: Legs from position 1 to 2 (main → side)*) and a diff of the other edits (the full line diff is one click
   away), then submitted for review like a Studio save. The reviewer sees the same.
 
+To read one panel closely instead, [zoom it](using-the-terminal) (`Z`); layout mode and zoom exclude each other.
+
 More in the [user guide](using-the-terminal) (*Layout mode*), and the panel options `span` and `height` in the
 [Rachana reference](rachana-reference).

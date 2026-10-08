@@ -656,6 +656,51 @@ def test_keys_are_scoped_to_the_element(host):
     expect(drawer).to_be_hidden()
 
 
+def _inside(h, sel):
+    """The panel's box against the element's own box, in the host page's coordinates."""
+    return h.js("(() => { const host = document.querySelector('#main'), p = host.shadowRoot.querySelector('%s'), a = host.getBoundingClientRect(), b = p.getBoundingClientRect();"
+                " return {l: b.left - a.left, r: a.right - b.right, t: b.top - a.top, b: a.bottom - b.bottom, w: b.width, hw: a.width}; })()" % sel)
+
+
+def test_a_zoomed_panel_fills_the_elements_own_box_and_leaves_the_host_page_alone(host):
+    h = host()
+    h.open()
+    view = h.page.locator("#main")
+    btn = view.locator("section[data-panel] .pnl-zoom-btn").first
+    expect(btn).to_be_visible(timeout=15000)
+    expect(btn).to_have_attribute("aria-pressed", "false")
+    pid = h.js(f"{SR}.querySelector('section[data-panel] .pnl-zoom-btn').closest('section').id")
+    btn.click()
+    expect(btn).to_have_attribute("aria-pressed", "true")
+    box = _inside(h, "#" + pid)
+    assert abs(box["l"]) <= 1 and abs(box["r"]) <= 1 and abs(box["t"]) <= 1 and box["b"] >= -1, box      # fills the element's width and starts at its top; never leaves it
+    assert box["w"] >= box["hw"] - 2
+    assert h.js("[document.documentElement.classList.contains('zoom-lock'), location.hash, getComputedStyle(document.documentElement).overflow]") == [False, "", "visible"]
+    assert h.js(f"{SR}.querySelectorAll('section[data-panel][inert]').length") == h.js(f"{SR}.querySelectorAll('section[data-panel]').length") - 1
+    h.page.keyboard.press("Escape")
+    expect(btn).to_have_attribute("aria-pressed", "false")
+    assert h.js(f"{SR}.querySelectorAll('.pnl-zoom, [inert]').length") == 0
+    h.page.locator("body").click(position={"x": 5, "y": 5})
+    h.page.keyboard.press("z")                                                  # a key in the host page: not Drishti's
+    assert h.js(f"{SR}.querySelectorAll('.pnl-zoom').length") == 0
+
+
+def test_zoom_works_under_a_trusted_types_host_at_phone_width(host):
+    h = host(viewport=(390, 800), touch=True)
+    h.page.goto(HOST + "/?tt=1")
+    if not h.js("!!window.trustedTypes"):
+        pytest.skip("this browser has no Trusted Types")
+    h.state("#main", "live")
+    btn = h.page.locator("#main section[data-panel] .pnl-zoom-btn").first
+    expect(btn).to_be_visible(timeout=15000)
+    assert h.js(f"{SR}.querySelector('.pnl-zoom-btn').getBoundingClientRect().width") >= 43.5
+    btn.click()
+    expect(btn).to_have_attribute("aria-pressed", "true")
+    assert h.js("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 1
+    assert h.js("window.__viol") == []
+    assert not [c for c in h.console if "TrustedHTML" in c or "TrustedScript" in c or "PAGEERROR" in c], h.console
+
+
 # ---- responsive: the element answers to its OWN width (container queries), not the host page's viewport -------------------
 COLS = "(sel) => getComputedStyle(document.querySelector('#main').shadowRoot.querySelector(sel)).gridTemplateColumns.split(' ').length"
 PAGE_OVERFLOW = "() => document.documentElement.scrollWidth - document.documentElement.clientWidth"
