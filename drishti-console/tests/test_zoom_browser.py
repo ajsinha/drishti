@@ -35,6 +35,14 @@ def leg2(n):
 
 
 class PanelTicking(TickingBackend):
+    async def view(self, kind, id_, user):                    # the cashflows table is long: 300 rows, so it pages
+        vm = await super().view(kind, id_, user)
+        for p in vm["panels"]:
+            if p["id"] == "cashflows":
+                row = p["data"]["rows"][0]
+                p["data"]["rows"] = [{**row, "cells": [{**c, "text": f"{c.get('text', '')} #{i}"} for c in row["cells"]]} for i in range(300)]
+        return vm
+
     async def stream(self, kind, id_, ident=None, opened=None):
         yield "view", json.dumps({"provenance": {"generation": 1}})
         n = 0
@@ -238,3 +246,92 @@ def test_print_shows_the_zoomed_panel_alone(page):
     assert page.evaluate("getComputedStyle(document.getElementById('p-cashflows')).display") == "none"
     assert page.evaluate("getComputedStyle(document.getElementById('p-curve')).display") != "none"
     assert page.evaluate("getComputedStyle(document.getElementById('p-curve')).position") == "static"
+
+
+# ---- a zoomed table fits the height --------------------------------------------------------------------------------------
+SIZE_JS = """(() => { const t = document.querySelector('#p-cashflows table.tbl'), b = t.closest('.pnl-b');
+  const rows = [...t.tBodies[0].rows].filter(r => !r.hidden);
+  const last = t.closest('.tbl-wrap').getBoundingClientRect().bottom, room = b.getBoundingClientRect().bottom - parseFloat(getComputedStyle(b).paddingBottom);
+  return { rows: rows.length, first: rows[0].cells[0].textContent, scroll: b.scrollHeight > b.clientHeight + 1,
+           gap: room - last, rowH: rows[0].offsetHeight, opt: document.querySelector('#p-cashflows .tbl-pg-size').selectedOptions[0].textContent,
+           saved: localStorage.getItem('drishti.tableRows') }; })()"""
+
+
+def sizes(page):
+    return page.evaluate(SIZE_JS)
+
+
+def settle(page):
+    page.wait_for_timeout(350)
+
+
+def test_zoomed_table_fills_the_height_keeps_the_top_row_and_restores(page):
+    page.locator("#p-cashflows table.tbl tbody tr:not([hidden])").first.wait_for()
+    page.set_viewport_size({"width": 1280, "height": 1500})
+    before = sizes(page)
+    assert before["rows"] == 25 and before["opt"] == "25 rows"
+    page.evaluate("document.querySelector('#p-cashflows .tbl-pg [data-pg=fwd]').click()")      # page 2: top row is #25
+    assert sizes(page)["first"].endswith("#25")
+    btn(page, "cashflows").click()
+    settle(page)
+    z = sizes(page)
+    assert z["rows"] > before["rows"] and not z["scroll"] and z["gap"] < z["rowH"] + 2, z
+    assert z["opt"] == f"Fit ({z['rows']})" and z["saved"] is None
+    assert int(z["first"].rsplit("#", 1)[1]) % z["rows"] == 0 and int(z["first"].rsplit("#", 1)[1]) <= 25   # the page holding row 25
+    btn(page, "cashflows").click()
+    settle(page)
+    r = sizes(page)
+    assert r["rows"] == 25 and r["opt"] == "25 rows" and r["first"].endswith("#25"), r
+
+
+def test_resize_recomputes_and_an_explicit_choice_is_respected_until_restore(page):
+    btn(page, "cashflows").click()
+    settle(page)
+    a = sizes(page)["rows"]
+    page.set_viewport_size({"width": 1280, "height": 600})
+    settle(page)
+    b = sizes(page)
+    assert b["rows"] < a and not b["scroll"], (a, b)
+    page.select_option("#p-cashflows .tbl-pg-size", "50")
+    assert sizes(page)["rows"] == 50
+    page.set_viewport_size({"width": 1280, "height": 700})
+    settle(page)
+    c = sizes(page)
+    assert c["rows"] == 50 and c["saved"] is None
+    page.select_option("#p-cashflows .tbl-pg-size", "fit")
+    assert sizes(page)["rows"] != 50
+    btn(page, "cashflows").click()
+    settle(page)
+    assert sizes(page)["rows"] == 25
+
+
+def test_the_saved_page_size_is_not_changed_by_zoom_and_pager_keys_still_page(page):
+    page.select_option("#p-cashflows .tbl-pg-size", "50")
+    btn(page, "cashflows").click()
+    settle(page)
+    n = sizes(page)["rows"]
+    page.focus("#p-cashflows table.tbl")
+    page.keyboard.press("PageDown")
+    page.keyboard.press("PageDown")
+    assert int(sizes(page)["first"].rsplit("#", 1)[1]) == n or sizes(page)["rows"] == n
+    page.keyboard.press("Escape")
+    page.reload(wait_until="load")
+    page.wait_for_selector("#p-cashflows .tbl-pg-size")
+    s = sizes(page)
+    assert s["saved"] == "50" and s["rows"] == 50
+
+
+def test_phone_zoomed_table_fits_without_scrolling(browser, url):
+    ctx = browser.new_context(viewport={"width": 390, "height": 800}, has_touch=True, is_mobile=True)
+    pg = ctx.new_page()
+    try:
+        pg.goto(url + VIEW, wait_until="load")
+        pg.wait_for_selector("#p-cashflows .pnl-zoom-btn")
+        pg.evaluate("document.getElementById('p-cashflows').scrollIntoView()")
+        pg.locator("#p-cashflows .pnl-zoom-btn").tap()
+        pg.wait_for_function("document.querySelector('#p-cashflows .tbl-pg-size').selectedOptions[0].textContent.startsWith('Fit')")
+        settle(pg)
+        z = sizes(pg)
+        assert z["rows"] > 5 and not z["scroll"] and z["opt"].startswith("Fit ("), z
+    finally:
+        ctx.close()

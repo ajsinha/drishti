@@ -28,6 +28,7 @@
   'use strict';
   var me = document.currentScript;
   var SIZES = [25, 50, 100, 250];
+  var MIN_FIT = 5;
   var KEY = 'drishti.tableRows';
   /** init(root, options): sort, filter and page every table under root (the document or a ShadowRoot), now and as panels are
       swapped in. options.scope names the page for remembered state (default: the path). Returns {scan, dispose}. */
@@ -157,9 +158,13 @@
     SIZES.forEach(function (n) { var o = el('option', null, n + ' rows'); o.value = n; sizeSel.appendChild(o); });
     sizeSel.value = size();
 
-    function pages() { return Math.max(1, Math.ceil(visible().length / size())); }
+    // A zoomed panel fits its table to the height (fitOn): the page size is then a temporary one, `fitN` (measured) or the
+    // reader's own pick while zoomed (`picked`); neither is remembered, and restoring puts the saved size back.
+    var fitOn = false, fitN = null, picked = null;
+    function perPage() { return picked || fitN || size(); }
+    function pages() { return Math.max(1, Math.ceil(visible().length / perPage())); }
     function render() {
-      var vis = visible(), per = size(), n = pages();
+      var vis = visible(), per = perPage(), n = pages();
       st.page = Math.min(Math.max(0, st.page), n - 1);
       all().forEach(function (r) { r.hidden = true; r.classList.remove('tbl-sel'); r.setAttribute('aria-selected', 'false'); });
       vis.forEach(function (r, i) {
@@ -177,7 +182,7 @@
       var vis = visible();
       if (!vis.length) { return; }
       st.sel = Math.min(Math.max(0, i), vis.length - 1);
-      st.page = Math.floor(st.sel / size());
+      st.page = Math.floor(st.sel / perPage());
       render();
       if (scroll && vis[st.sel].scrollIntoView) { vis[st.sel].scrollIntoView({ block: 'nearest' }); }
     }
@@ -214,12 +219,68 @@
 
     quick.addEventListener('input', function () { st.q = quick.value.trim(); st.page = 0; st.sel = -1; filter(); render(); });
     sizeSel.addEventListener('change', function () {
+      if (fitOn) {                                        // zoomed: a pick holds until restore and is not remembered; "Fit" goes back to the measured size
+        reflow(function () { picked = sizeSel.value === 'fit' ? null : parseInt(sizeSel.value, 10); });
+        syncSel();
+        return;
+      }
       try { localStorage.setItem(KEY, sizeSel.value); } catch (e) { /* private window: this page only */ }
       root.querySelectorAll('.tbl-pg-size').forEach(function (s) { s.value = sizeSel.value; });
       root.dispatchEvent(new CustomEvent('drishti:table-size'));
     });
     root.addEventListener('drishti:table-size', onSize);
-    function onSize() { if (!t.isConnected) { return; } st.page = st.sel >= 0 ? Math.floor(st.sel / size()) : 0; render(); }
+    function onSize() { if (!t.isConnected) { return; } st.page = st.sel >= 0 ? Math.floor(st.sel / perPage()) : 0; render(); syncSel(); }
+
+    // Change the page size and keep the row that was at the top of the page in view.
+    var anchor = null, anchorPage = -1;                  // the top row when the fit began, kept while the reader has not paged since
+    function reflow(change) {
+      if (anchor == null || st.page !== anchorPage) { anchor = st.page * perPage(); }
+      change();
+      st.page = Math.floor(anchor / perPage());
+      render();
+      anchorPage = st.page;
+    }
+    function syncSel() {
+      var o = sizeSel.querySelector('option[value=fit]');
+      if (fitOn && fitN) {
+        if (!o) { o = el('option'); o.value = 'fit'; sizeSel.insertBefore(o, sizeSel.firstChild); }
+        o.textContent = 'Fit (' + fitN + ')';
+        sizeSel.value = picked ? picked : 'fit';
+      } else {
+        if (o) { o.remove(); }
+        sizeSel.value = size();
+      }
+    }
+    // The height the table may use: the panel body minus everything that is not a row (heading, footer, padding), over a row's height.
+    function room() {
+      var cont = t.closest('.pnl-b'), shown = all().filter(function (r) { return !r.hidden; });
+      if (!cont || !t.offsetParent || !shown.length) { return 0; }
+      var sum = shown.reduce(function (a, r) { return a + r.offsetHeight; }, 0);
+      if (!sum) { return 0; }
+      var cr = cont.getBoundingClientRect(), bottom = 0;
+      Array.prototype.forEach.call(cont.children, function (c) { if (c.offsetParent) { bottom = Math.max(bottom, c.getBoundingClientRect().bottom); } });
+      var content = bottom - cr.top + cont.scrollTop + (parseFloat(getComputedStyle(cont).paddingBottom) || 0);
+      return Math.max(MIN_FIT, Math.floor((cont.clientHeight - (content - sum)) / (sum / shown.length)));
+    }
+    t.__tblFit = function (on) {
+      if (!on) {
+        if (!fitOn) { return; }
+        reflow(function () { fitOn = false; fitN = null; picked = null; });
+        anchor = null;
+        syncSel();
+        return;
+      }
+      var n = room();
+      if (!n) { return; }
+      var cont = t.closest('.pnl-b');
+      fitOn = true;
+      if (n !== fitN) { reflow(function () { fitN = n; }); }
+      for (var i = 0; i < 3 && !picked && fitN > MIN_FIT && cont.scrollHeight > cont.clientHeight + 1; i++) {   // rows taller than the average: one fewer until nothing scrolls
+        reflow(function () { fitN -= 1; });
+      }
+      syncSel();
+    };
+    if (zoomFit) { scheduleFit(); }
 
     t.tabIndex = 0;
     t.setAttribute('aria-label', (t.getAttribute('aria-label') || 'Table') + ': ↑ ↓ to move, Enter to open; click a heading to sort');
@@ -229,7 +290,7 @@
     });
     t.addEventListener('keydown', function (e) {
       if (e.target !== t && e.target.closest('input, select, textarea, button, th')) { return; }
-      var per = size(), handled = true;
+      var per = perPage(), handled = true;
       switch (e.key) {
         case 'ArrowDown': select(st.sel + 1, true); break;
         case 'ArrowUp': select(st.sel < 0 ? 0 : st.sel - 1, true); break;
@@ -251,13 +312,53 @@
     (node.querySelectorAll ? node.querySelectorAll('table.tbl') : []).forEach(enhance);
     if (node.matches && node.matches('table.tbl')) { enhance(node); }
   }
+  // ---- a zoomed panel: its tables fit the height (zoom.js says so with drishti:table-fit; the class pnl-zoom is the state) ----
+  var fitTimer = 0, fitRo = null, fitMo = null, fitSeen = null;
+  function zoomedPanel() { return root.querySelector('.pnl.pnl-zoom'); }
+  var zoomFit = false;
+  function fitAll(on) {
+    var p = on ? zoomedPanel() : root;
+    (p ? p.querySelectorAll('table.tbl') : []).forEach(function (x) { if (x.__tblFit) { x.__tblFit(on); } });
+    if (on && p) { watchFit(p); }
+  }
+  function scheduleFit() { if (!fitTimer && zoomFit) { fitTimer = setTimeout(function () { fitTimer = 0; if (zoomFit) { fitAll(true); } }, 100); } }
+  function watchFit(p) {
+    if (fitSeen === p) { return; }
+    unwatchFit();
+    fitSeen = p;
+    var body = p.querySelector(':scope > .pnl-b') || p;
+    if (window.ResizeObserver) { fitRo = new ResizeObserver(scheduleFit); fitRo.observe(body); }
+    fitMo = new MutationObserver(function (list) {          // a tab or pane shown, rows added or removed by a live patch; not our own paging
+      for (var i = 0; i < list.length; i++) {
+        var m = list[i], tg = m.target;
+        if (tg.nodeType !== 1 || (tg.closest && tg.closest('.tbl-pg')) || tg.tagName === 'TR') { continue; }
+        scheduleFit();
+        return;
+      }
+    });
+    fitMo.observe(p, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+  }
+  function unwatchFit() {
+    if (fitRo) { fitRo.disconnect(); fitRo = null; }
+    if (fitMo) { fitMo.disconnect(); fitMo = null; }
+    fitSeen = null;
+  }
+  function onFit(e) {
+    var on = !!(e.detail && e.detail.on);
+    zoomFit = on;
+    if (!on) { if (fitTimer) { clearTimeout(fitTimer); fitTimer = 0; } unwatchFit(); }
+    fitAll(on);
+  }
+  root.addEventListener('drishti:table-fit', onFit);
+  zoomFit = !!zoomedPanel();                      // zoomed from the link before this ran
   scan(root);
+  if (zoomFit) { fitAll(true); }
   // Live updates and workspace panes replace panels: enhance their new tables too, with the same sort and filters.
   var mo = new MutationObserver(function (list) {
     list.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) { scan(n); } }); });
   });
   mo.observe(root === document ? document.body : root, { childList: true, subtree: true });
-  return { scan: scan, dispose: function () { mo.disconnect(); } };
+  return { scan: scan, dispose: function () { mo.disconnect(); root.removeEventListener('drishti:table-fit', onFit); unwatchFit(); if (fitTimer) { clearTimeout(fitTimer); } } };
   }
   var reg = (window.drishtiModules = window.drishtiModules || {});
   reg.tables = { init: init };
