@@ -109,7 +109,7 @@ you are on is highlighted.
 | Alerts | a bell | Opens `/alerts`. A number on the bell counts alerts you have not seen ([Alerts](#alerts)) |
 | Packs | a box with a number | Appears when you may use more than one pack. The number is how many you have switched on; hover to read their names ([Domain packs](#domain-packs-choosing-what-you-see)) |
 | Theme | a palette | Seven themes ([Themes](#themes)) |
-| You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on |
+| You | a round avatar with your initial and name | A menu: your name, desk and roles, a clock in your time zone (`NY` by default), **My account**, **Settings**, and **Sign out** when sign-in is on (when it is off, the menu says *Sign-in is off on this server* and links to how to turn it on) |
 
 Worked example: find the audit log without typing an address.
 
@@ -1467,7 +1467,7 @@ whether you are signed in there.
 Each server has its own users and data, so you sign in to each separately. You can be signed in to several at once and
 switch without signing in again. **Sign out** signs you out of the current server only, and ends that session on the
 server: the browser's cookie, or a copy of it, no longer signs anyone in. (Opening `/logout` by a link only asks; the
-**Sign out** button does it.) A link someone shares opens on
+**Sign out** button does it; you land on the home page with a "Signed out" note.) With sign-in on, the home page shows a **Sign in** button when nobody is signed in, and your name with a menu (Open the terminal, My account, Sign out) when you are. A link someone shares opens on
 the server it was made on (it carries `?srv=…`). A server not shown in the list can still be reached with the link
 `/connect/<its id>` if you were given one.
 

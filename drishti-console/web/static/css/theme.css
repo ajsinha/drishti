@@ -157,3 +157,13 @@ a:hover { text-decoration: underline; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .lp-pipe .pulse { display: none; }
 }
+
+/* sign in / account menu on the public pages; the login page's way home; the "Signed out" notice */
+.nav-public .pub-user-btn { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; min-width: 44px; justify-content: center; background: transparent; border: 0; color: var(--d-ink); border-radius: 22px; padding: 0 .4rem; }
+.nav-public .pub-user-btn:hover, .nav-public .pub-user-btn:focus-visible { background: var(--d-surface); }
+.nav-public .pub-user .avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: .85rem; color: #fff; background: linear-gradient(135deg, var(--d-grad-from), var(--d-grad-to)); }
+.nav-public .links a[data-sign-in] { color: var(--d-ink); }
+.login { flex-direction: column; align-items: center; gap: 1rem; }
+.login-back { margin: 0; font-size: .9rem; }
+.login-back a { display: inline-flex; align-items: center; gap: .3rem; min-height: 44px; min-width: 44px; }
+.lp-notice { display: inline-block; margin: 0 0 1rem; padding: .5rem .9rem; border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-surface); color: var(--d-ink); font-size: .92rem; }

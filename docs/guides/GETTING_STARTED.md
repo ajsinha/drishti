@@ -359,7 +359,7 @@ The monitor is saved to your account. **Monitors** in the top bar (`/m`) lists i
 
 With sign-in off, anyone who can reach the console acts as the development user. To try real
 sign-in on your machine, stop both programs (`Ctrl+C` in each terminal) and restart them with
-security on. Server and console must share the same **token secret**.
+security on. Server and console must share the same **token secret**. Once it is on, the home page shows a **Sign in** button and, after signing in, your name with **Sign out**; with it off, the top bar's user menu says *Sign-in is off on this server*.
 
 ```bash
 # in both terminals, the same value (at least 32 characters)

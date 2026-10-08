@@ -183,7 +183,10 @@
         <a class="dropdown-item" href="/account"><i class="bi bi-person-circle" aria-hidden="true"></i> My account</a>
         <a class="dropdown-item" href="/account#settings"><i class="bi bi-sliders" aria-hidden="true"></i> Settings</a>
         {% if AUTH_ENABLED %}<div class="dropdown-divider"></div>
-        <form method="post" action="/logout" class="m-0"><button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button></form>{% endif %}
+        <form method="post" action="/logout" class="m-0"><button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button></form>
+        {% else %}<div class="dropdown-divider"></div>
+        <div class="dropdown-item-text text-muted-d small" data-sign-in-off><i class="bi bi-unlock" aria-hidden="true"></i> Sign-in is off on this server</div>
+        <a class="dropdown-item" href="/help/user-management#signing-in-and-out"><i class="bi bi-question-circle" aria-hidden="true"></i> How to turn it on</a>{% endif %}
       </div>
     </div>
   </div>

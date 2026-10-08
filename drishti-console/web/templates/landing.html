@@ -19,6 +19,7 @@
 {% block content %}
 <section class="lp-hero">
   <div class="lp-wrap">
+    {% if request.query_params.get('signedout') and AUTH_ENABLED and not me %}<p class="lp-notice" role="status" data-signed-out><i class="bi bi-check-circle" aria-hidden="true"></i> Signed out. <a class="lnk" href="{{ SIGN_IN_URL }}">Sign in again</a></p>{% endif %}
     <span class="lp-badge"><span class="dot" aria-hidden="true"></span>A live entity terminal</span>
     <h1 class="lp-title">Any data. Any domain. <span class="lp-grad">One grammar.</span></h1>
     <p class="lp-sub">{{ PRODUCT }} turns any record from any system — a swap, an FX trade, a futures position,

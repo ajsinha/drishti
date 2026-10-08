@@ -27,6 +27,24 @@ You need the **admin** role for everything here. All of it is under **Admin** in
 
 ---
 
+## Signing in and out
+
+Where the links are, when sign-in is **on** (`DRISHTI_AUTH_ENABLED=true`, see [OPERATIONS.md](OPERATIONS.md)):
+
+- The landing page (when you are not signed in): a **Sign in** button in the top navigation. It returns you to the page you
+  were on. Any protected page (the terminal, Search, Admin) sends you to the sign-in page first.
+- Signed in: your initial and name at the right of the top bar, or of the landing page's navigation, open a menu with
+  **My account** and **Sign out**. Signing out ends the session on the server and lands on the landing page with a
+  "Signed out" notice. It is a POST from the console's own pages only.
+- The sign-in page has a link back to the home page.
+
+When sign-in is **off** (the local default), everyone who reaches the console acts as the development user, so there is
+nothing to sign in to and no **Sign out**. The top bar's user menu says **Sign-in is off on this server** and links here, and
+`/login` says so and offers to open the terminal. To turn it on, set `DRISHTI_AUTH_ENABLED=true` with the session and token
+secrets on both programs (GETTING_STARTED, step 13).
+
+---
+
 ## 1. Your first ten minutes: add a person
 
 The example: Priya joins the credit desk. She should see counterparties and credit curves, nothing else, and she

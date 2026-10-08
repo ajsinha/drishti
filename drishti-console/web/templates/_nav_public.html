@@ -26,6 +26,23 @@
       <a class="hide-sm" href="/help">Help</a>
       <a class="hide-sm" href="/about">About</a>
       <a href="/t" class="btn-pill btn-accent btn-sm-pill">Terminal</a>
+      {# Sign-in off: nothing new here (Terminal opens at once, the top bar says so once you are in). #}
+      {% if AUTH_ENABLED and not me and request.url.path not in ("/login", "/logout") %}
+      <a href="{{ SIGN_IN_URL }}" class="btn-pill btn-ghost btn-sm-pill" data-sign-in>Sign in</a>
+      {% elif AUTH_ENABLED and me %}
+      <div class="dropdown pub-user">
+        <button class="pub-user-btn" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ me.display }}" aria-label="{{ me.display }}: account menu" data-public-user>
+          <span class="avatar" aria-hidden="true">{{ (me.display or '?')[:1] | upper }}</span><span class="uname hide-sm">{{ me.display }}</span></button>
+        <div class="dropdown-menu dropdown-menu-end user-menu">
+          <div class="user-menu-h"><div class="fw-semibold">{{ me.display }}</div></div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/t"><i class="bi bi-terminal" aria-hidden="true"></i> Open the terminal</a>
+          <a class="dropdown-item" href="/account"><i class="bi bi-person-circle" aria-hidden="true"></i> My account</a>
+          <div class="dropdown-divider"></div>
+          <form method="post" action="/logout" class="m-0"><button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sign out</button></form>
+        </div>
+      </div>
+      {% endif %}
       {% include "_theme_menu.html" %}
     </div>
   </div>

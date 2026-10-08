@@ -22,6 +22,8 @@ from typing import Any
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+from core.nextpath import login_url
+
 
 def live_who(request: Request) -> str:
     """Whose live data a page shows: a fingerprint of the server, user and sign-in session (never the session id itself).
@@ -41,6 +43,7 @@ def render(request: Request, template: str, status_code: int = 200, **context: A
     context.setdefault("me", getattr(request.state, "identity", None))
     context.setdefault("pack_switcher", getattr(request.state, "pack_switcher", []))
     context.setdefault("AUTH_ENABLED", request.app.state.auth.enabled)
+    context.setdefault("SIGN_IN_URL", login_url(request.url.path, request.url.query))
     catalogue = request.app.state.servers
     context.setdefault("SERVER", catalogue.get(getattr(request.state, "server", None) and request.state.server.id) or catalogue.get(catalogue.default))
     context.setdefault("SERVERS", catalogue.listed() if len(catalogue) > 1 else [])

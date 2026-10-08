@@ -31,3 +31,9 @@ def safe_next(target: str | None, default: str = "/t") -> str:
 def to_login(path: str, query: str = "") -> str:
     """The sign-in URL that returns to this exact page, query and all."""
     return "/login?next=" + quote(f"{path}?{query}" if query else path, safe="/")
+
+
+def login_url(path: str, query: str = "") -> str:
+    """The sign-in URL for a page, returning to it afterwards; a target that is not a path on this console is dropped."""
+    here = f"{path}?{query}" if query else path
+    return to_login(path, query) if safe_next(here, default="") else "/login"

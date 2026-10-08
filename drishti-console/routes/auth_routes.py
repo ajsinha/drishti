@@ -135,7 +135,7 @@ async def logout(request: Request):
         except BackendError:
             pass                                         # already ended, or the server is down: the cookie goes anyway
         auth.forget(session=claimed.session)
-    r = RedirectResponse("/", status_code=303)
+    r = RedirectResponse("/?signedout=1" if auth.enabled else "/", status_code=303)
     r.delete_cookie(auth.cookie)
     return r
 
