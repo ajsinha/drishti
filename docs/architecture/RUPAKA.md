@@ -230,6 +230,34 @@ security:
 - **In the browser,** DuckDB-Wasm is optional: it lets a user slice an extract they already received (pivot, filter,
   re-aggregate) with no round trip. It never connects to a store.
 
+### 7.1 Data at scale: JSON in Delta and Kafka
+
+Most of the data Drishti serves is **JSON documents** in Delta Lake (partitioned by `business_date`) and on Kafka topics.
+DuckDB is a fast single-node, column-oriented engine that spills to disk; it handles very large tables when it reads
+**columns** and prunes partitions and row groups, but a query that has to parse a JSON document column costs in proportion
+to the bytes of JSON, every time. The architecture therefore answers each query from the smallest layer that can:
+
+| Layer | Content | Written by | Used for |
+|---|---|---|---|
+| **Raw** | JSON documents in Delta, as today | the site's ETL | drill to the full record; rare ad-hoc fields |
+| **Columns** | per kind, the fields that datasets declare, typed (Parquet/Delta), partitioned by business date | **Drishti**, incrementally, when a data-load signal (DATA_LOADS.md) says a date landed: JSON is parsed once per load, not per query | almost every BI query |
+| **Rollups** | per dataset, pre-aggregations for the common group-bys | Drishti, after the columns of that date | dashboards answered in milliseconds (aggregate-aware routing, as Power BI's aggregations) |
+| **Hot** | the current state of live kinds (Kafka state mode, LIVE_BI producers), bounded by the dataset's window | the live path, in memory | live tables and visuals |
+| **Continuous** | heavy streaming aggregates | a producer (Pravaha, Flink), per LIVE_BI | live totals over large streams |
+
+The query planner rewrites a visual's query to the first layer that can answer it (rollup, then columns, then raw), and
+joins the hot state with today's columns for live tables. Drishti's own searches already work this way: the Delta
+connector's promoted columns are why a search over a million trades a day answers in about 134 ms (PERFORMANCE.md).
+
+**Engine interface.** The compiler emits SQL against an `AnalyticEngine` interface. **DuckDB** (embedded, no extra
+process) is the default. A dataset too large for one node sets `engine: <name>` and its `direct` tables are pushed down to
+a distributed engine the site already runs (Trino or Starburst, Spark or Databricks SQL, ClickHouse, StarRocks) through
+a connector, with Drishti still adding row rules and applying masks to the results. Reports and the designer do not change.
+
+**Sizing rule of thumb** (to be replaced by measurements, LOAD_AND_MEMORY.md): one DuckDB server for datasets whose
+*columns* layer fits a few terabytes and whose heavy queries run at modest concurrency; a distributed engine beyond that.
+The phase 0 POC measures the JSON, columns and rollup paths side by side (RUPAKA_POC.md).
+
 ## 8. Reports and visuals
 
 A report is `bi/reports/<id>.report.yaml`: pages, each a 12-column grid of visuals; filters at report, page and visual
@@ -477,7 +505,7 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 |---|---|---|---|
 | 0 | **Proof of concept**: Perspective live grid fed by Drishti's live path; masked Arrow out of a server DuckDB query; DuckDB-Wasm slicing it; CSP and size measured | M | a page shows a live pivot at target rates and a cached query under target, with masks proven |
 | 1 | **Shell and catalogue**: BI top bar item, `RUPAKA <GO>`, `/bi` home, catalogue, workspaces (personal and shared), powers, audit | M | a published report appears for its audience only |
-| 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows |
+| 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows |
 | 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test) |
 | 4 | **Publishing and governance**: review before publish, versions, endorsement, lineage, impact of dataset changes, pack bundles for environments | M | certified content and lineage shown; deployment by bundle with rollback |
 | 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run |
