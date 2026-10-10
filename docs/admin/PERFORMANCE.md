@@ -93,6 +93,9 @@ measurements above: store sizes within about 25%, searches mostly within a facto
 
 ## How to measure
 
+Many users at once, soak runs and memory profiling (server, console and browser) have their own strategy:
+[LOAD_AND_MEMORY.md](LOAD_AND_MEMORY.md).
+
 Start with method 1. It needs nothing but `curl` and tells you, for one view, where the time goes.
 
 ### 1. The `timings` of one view

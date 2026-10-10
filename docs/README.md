@@ -109,6 +109,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](admin/OPERATIONS.md) |
 | Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
+| [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) | you need to know how many users a server holds, whether memory stays flat over a day, and how to load-test and memory-profile the server, the console and the browser (strategy, tools, gates, build plan) |
 | Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
 | Run the server on Windows, or choose the Delta engine (native or Hadoop) | [WINDOWS.md](guides/WINDOWS.md), [DELTA_CONNECTOR.md › Engines](connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) |
