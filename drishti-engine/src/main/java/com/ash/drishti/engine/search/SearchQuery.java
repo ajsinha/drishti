@@ -243,8 +243,22 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
         }
         Set<String> fields = new LinkedHashSet<>();
         String condition = m.group(2) == null ? null : translate(m.group(2).trim(), fields);
+        checkPatterns(condition);
         String orderBy = order == null ? null : translate(order, fields);
         return new SearchQuery(m.group(1), condition, orderBy, desc, limit, List.copyOf(fields));
+    }
+
+    private static final Pattern REGEX_CALL = Pattern.compile("matches(?:Case)?\\s*\\(\\s*[^,()]+,\\s*'((?:[^'\\\\]|\\\\.)*)'");
+
+    /** Refuses a regular expression the search engine will not run (DRS-4010) before anything is scanned. */
+    static void checkPatterns(String condition) {
+        if (condition == null) {
+            return;
+        }
+        Matcher m = REGEX_CALL.matcher(condition);
+        while (m.find()) {
+            com.ash.drishti.common.SafeRegex.compile(m.group(1).replaceAll("\\\\(['\\\\])", "$1"), true);
+        }
     }
 
     /** The number after {@code limit}: a whole number from 1 to {@link #MAX_LIMIT}, else a search problem saying so. */
