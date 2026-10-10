@@ -78,7 +78,7 @@ def start_servers(work: Path) -> list:
     packs = work / "packs"
     packs.mkdir()
     for name in QUICKSTART:
-        (packs / name).symlink_to(ROOT / "packs" / name)
+        (packs / name).symlink_to(ROOT / "config" / "packs" / name)
     prod, dr = work / "lake-prod", work / "lake-dr"
     write_lake(prod, {"2026-10-02": {"ticket": 3}, "2026-10-05": {"ticket": 4, "agent": 2}})
     write_lake(dr, {"2026-10-04": {"ticket": 5, "agent": 2}, "2026-10-05": {"ticket": 6, "agent": 2}})

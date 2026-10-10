@@ -430,12 +430,12 @@ def test_connector_templates_and_ingest_block(tmp_path):
     pl = P.make_plan(schemas("trade"), {"trade": docs}, {"trade": {"connector": "lake-main"}})
     pl.pack.update(name="p1")
     man = build.pack_manifest(pl)
-    assert list(man["connectors"]) == ["lake-main"] and man["routes"] == {"trade": "lake-main"}
-    assert man["connectors"]["lake-main"]["plugin"] == "delta" and man["ingest"] == {"trade": {"key": "tradeId", "date": "tradeDate"}}
+    assert man["connectors"] == ["lake-main"] and man["routes"] == {"trade": "lake-main"}
+    assert man["connector-templates"]["lake-main"]["plugin"] == "delta" and man["ingest"] == {"trade": {"key": "tradeId", "date": "tradeDate"}}
     pl2 = P.make_plan(schemas("trade"), {"trade": docs}, {"trade": {"template": "file"}})
     pl2.pack.update(name="p1")
     m2 = build.pack_manifest(pl2)
-    assert list(m2["connectors"]) == ["p1-store"] and m2["connectors"]["p1-store"]["plugin"] == "file"
+    assert m2["connectors"] == ["p1-store"] and m2["connector-templates"]["p1-store"]["plugin"] == "file"
 
 
 def test_real_samples_are_split_across_sutras():

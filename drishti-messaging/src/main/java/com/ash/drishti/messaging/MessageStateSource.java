@@ -124,7 +124,7 @@ public abstract class MessageStateSource implements SourcePlugin {
         long cacheMb = Long.parseLong(ctx.setting("cache-mb", "128"));
         this.memory = Caffeine.newBuilder().maximumWeight(cacheMb * 1024 * 1024)
                 .weigher((EntityRef r, EntityDocument d) -> weights.getOrDefault(r, 1024)).build();
-        String dir = ctx.setting("state.dir", Path.of(ctx.setting("state.root", "./data/state"), sourceName).toString());
+        String dir = ctx.setting("state.dir", Path.of(ctx.setting("state.root", com.ash.drishti.api.DataDir.under("state")), sourceName).toString());
         String reset = ctx.setting("state.reset-at", "never");
         this.store = new DiskCache(Path.of(dir), (long) (Double.parseDouble(ctx.setting("state.max-gb", "10")) * 1024 * 1024 * 1024),
                 "never".equals(reset) ? null : LocalTime.parse(reset), ZoneId.of(ctx.setting("state.zone", "America/New_York")),

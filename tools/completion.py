@@ -15,7 +15,7 @@
 """`drishti.py completion bash|zsh|powershell`: a shell completion script generated from the argparse tree.
 
 It completes groups, commands, actions and options (so it is always current), the choices of options that have them, files
-for options that take a value, and pack names (the folders of ./packs and of the current folder) for --pack.
+for options that take a value, and pack names (the folders of ./config/packs and of the current folder) for --pack.
 zsh uses the bash script through bashcompinit.
 """
 from __future__ import annotations
@@ -79,7 +79,7 @@ _drishti_complete() {{
   esac
   if [[ -n "$choices" ]]; then COMPREPLY=($(compgen -W "$choices" -- "$cur")); return; fi
   if [[ " $vals " == *" $prev "* ]]; then      # an option that takes a value
-    if [[ "$prev" == --pack ]]; then COMPREPLY=($(compgen -W "$(ls packs 2>/dev/null)" -- "$cur") $(compgen -d -- "$cur")); return; fi
+    if [[ "$prev" == --pack ]]; then COMPREPLY=($(compgen -W "$(ls config/packs 2>/dev/null)" -- "$cur") $(compgen -d -- "$cur")); return; fi
     COMPREPLY=($(compgen -f -- "$cur")); return
   fi
   if [[ "$cur" == -* ]]; then COMPREPLY=($(compgen -W "$opts" -- "$cur")); return; fi

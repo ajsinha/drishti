@@ -25,7 +25,7 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 /**
- * The {@code expect.yaml} beside a Sutra's test samples ({@code packs/<p>/tests/<sutra>/expect.yaml}):
+ * The {@code expect.yaml} beside a Sutra's test samples ({@code config/packs/<p>/tests/<sutra>/expect.yaml}):
  * <pre>
  * noErrors: true                 # no panel in an error state on any sample (default true)
  * nonEmpty: [pnl, limits]        # these panels render with data on every sample

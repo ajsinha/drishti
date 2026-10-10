@@ -131,7 +131,7 @@ class Make(unittest.TestCase):
         for needle in ("pm-test 2.1.0", "kind          trade", "tradeId", "businessDate", "2026-09-17", "2026-09-18", "T-000", "12",
                        "pack/pm-test/", "DRISHTI_FILES_ROOT", "drishti.packs.installed-dir", "/api/v1/views/trade/T-000?asOf=2026-09-17", "pm-test-2.1.0.tar.gz"):
             self.assertIn(needle, text)
-        self.assertNotIn("{", text.replace("${DRISHTI_FILES_ROOT:./data/files}", "").replace('{"ref":{"kind":"trade","id":"T-000"}', ""))
+        self.assertNotIn("{", text.replace("${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "").replace('{"ref":{"kind":"trade","id":"T-000"}', ""))
 
     def test_manifest_records_choices_and_checksums(self):
         m = json.loads((self.out / "MANIFEST.json").read_text(encoding="utf-8"))

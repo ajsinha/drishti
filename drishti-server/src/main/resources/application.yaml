@@ -26,7 +26,7 @@ spring:
     import:
       - optional:file:./application.local.yaml
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
-      - optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}
+      - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}
 
   # Email (docs/admin/CONFIGURATION.md, "Email"): set spring.mail.host (SPRING_MAIL_HOST) to switch the SMTP client on, with
   # port/username/password and properties.mail.smtp.* as for any Spring Boot application; leave host unset and no mail client exists.
@@ -72,6 +72,10 @@ management:
         enabled: true
 
 drishti:
+  data:
+    # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
+    # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
+    dir: ${DRISHTI_DATA_DIR:./data}
   branding:
     # The product's name and legal notices, wherever people see them (pages, the About answer, messages). Change them
     # here, not in code; the console has the same keys under ui: in drishti-console/config/application.yaml.
@@ -94,7 +98,7 @@ drishti:
       file:
         enabled: true
         settings:
-          root: ${DRISHTI_FEEDS:./data/feeds}
+          root: ${DRISHTI_FEEDS:${drishti.data.dir}/feeds}
           source-name: feed-file
           rescan-seconds: 30
       rest:                         # an HTTP/JSON service; off until configured
@@ -277,7 +281,7 @@ drishti:
   collab:                            # share with a note, comment threads, the inbox (docs/architecture/COLLABORATION.md)
     enabled: ${DRISHTI_COLLAB_ENABLED:true}
     store: jpa                       # jpa: the identity database (default) | file: one server only, refused beside PostgreSQL
-    dir: ${DRISHTI_COLLAB_DIR:./data/collab}   # the file store, and exports
+    dir: ${DRISHTI_COLLAB_DIR:${drishti.data.dir}/collab}   # the file store, and exports
     console-url: ${DRISHTI_CONSOLE_URL:}       # links in emails and shares; empty turns email off
     directory:                       # the people picker
       scope: shared-packs            # shared-packs: only users who share a pack with the caller | all
@@ -352,7 +356,7 @@ drishti:
       recipients: count                         # the watermark names: count | names
   reports:                           # scheduled reports: a search delivered as CSV on a schedule
     enabled: ${DRISHTI_REPORTS_ENABLED:true}   # the scheduler; run it on one server of a group (reports still run by hand)
-    folder: ${DRISHTI_REPORTS_DIR:./data/reports}
+    folder: ${DRISHTI_REPORTS_DIR:${drishti.data.dir}/reports}
     webhooks: []                     # URL prefixes reports may post to, e.g. [https://hooks.bank.example/drishti/]; empty: none
     per-user: 20
     tick: 30s
@@ -363,11 +367,13 @@ drishti:
     columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
   bi:
+    dir: ${DRISHTI_BI_DIR:./config/bi}   # Rupaka files: datasets/, reports/, python/ (config/bi/README.md); never inside a pack
     poc:                             # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): throw-away endpoints under /api/v1/bi/poc
       enabled: ${DRISHTI_BI_POC_ENABLED:false}   # off: they answer 404 as if the code were absent
       rows: 10000                    # trades per day in the generated sample lake (at most 10,000: local-safe)
       days: 2                        # days in the sample lake (at most 5)
       lake-dir: ${DRISHTI_BI_POC_LAKE:}   # where the Parquet sample lake is written (empty: the system temp folder); never under data/
+      bi-dir: ${drishti.bi.dir}      # where the POC looks for dataset files
       max-group-by: 4                # most dimensions one query may group by
       feed-trades: []                # live demo trades the row feed follows (empty: 24 trades of the trading pack)
       feed-batch: 100ms              # how often the feed sends the rows that changed
@@ -409,14 +415,14 @@ drishti:
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:
     #   DRISHTI_IDENTITY_DB_URL=jdbc:postgresql://db:5432/drishti DRISHTI_IDENTITY_DB_USER=drishti DRISHTI_IDENTITY_DB_PASSWORD=...
     # The schema (drishti-identity: db/schema-sqlite.sql, db/schema-postgres.sql) is applied at start; no migrations.
-    database-url: ${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:./data/identity/drishti.db}
+    database-url: ${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:${drishti.data.dir}/identity/drishti.db}
     database-user: ${DRISHTI_IDENTITY_DB_USER:}
     database-password: ${DRISHTI_IDENTITY_DB_PASSWORD:}
     database-pool-size: 8
     refresh-seconds: 15              # servers sharing one database see each other's role and pack changes this soon
     # The files of releases before 1.10, imported once into an empty database and renamed *.imported.
-    users-file: ${DRISHTI_USERS_FILE:./data/identity/users.json}
-    audit-file: ${DRISHTI_AUDIT_FILE:./data/identity/audit.jsonl}
+    users-file: ${DRISHTI_USERS_FILE:${drishti.data.dir}/identity/users.json}
+    audit-file: ${DRISHTI_AUDIT_FILE:${drishti.data.dir}/identity/audit.jsonl}
     iterations: 240000              # PBKDF2-HMAC-SHA256
     min-password-length: 10
     max-failed-attempts: 5
@@ -450,7 +456,7 @@ drishti:
     # With review on, a Studio save is a proposal; an approver (role flag approve, or an admin) makes it live.
     enabled: ${DRISHTI_SUTRA_REVIEW:true}
     four-eyes: ${DRISHTI_SUTRA_FOUR_EYES:true}   # nobody approves their own proposal (when security is on)
-    dir: ${DRISHTI_GOVERNANCE_DIR:./data/governance}
+    dir: ${DRISHTI_GOVERNANCE_DIR:${drishti.data.dir}/governance}
   engine:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
     fingerprint-cache-size: 100000  # one per (entity, generation)
@@ -489,7 +495,7 @@ drishti:
     designs:
       # The Build workbench's Designs (/api/v1/builder/designs): samples, a Sutra and notes kept per user. Limits answer DRS-5005.
       store: file   # file (dir below, readable by the server only) or jpa (the identity database)
-      dir: ./data/designs
+      dir: ${drishti.data.dir}/designs
       max-per-user: 50              # named designs one user keeps (scratch ones: max-scratch)
       max-samples: 50               # samples in one design
       max-mb: 25                    # megabytes of samples, Sutra, notes and tests in one design
@@ -505,7 +511,7 @@ drishti:
       max-ops: 100                  # steps of the operation log a design keeps for undo and redo
   loads:
     # "A batch landed" (docs/guides/DATA_LOADS.md): POST /api/v1/packs/{pack}/loads, its history and the late-data check.
-    dir: ${DRISHTI_LOADS_DIR:./data/loads}   # history per pack, and the administrators' expectation overrides (config/<pack>.yaml)
+    dir: ${DRISHTI_LOADS_DIR:${drishti.data.dir}/loads}   # history per pack, and the administrators' expectation overrides (config/<pack>.yaml)
     keep: 2000                    # loads kept per pack
     scheduler: true               # false: no late-data check (the API and the page still work)
     check-interval: 60s           # how often expectations are checked for late data
@@ -515,20 +521,20 @@ drishti:
     default-notify-roles: [admin] # told when a pack names no roles or users
     smoke-max: 20                 # most sample entities a pack may ask to be opened
   packs:
-    # Domain packs (packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
+    # Domain packs (config/packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.
-    dir: ${DRISHTI_PACKS_DIR:./packs}
+    dir: ${DRISHTI_PACKS_DIR:./config/packs}
     # Packs loaded from Admin → Packs are listed here (drishti.packs.added) and read at every start; see spring.config.import.
-    overlay: ${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}
+    overlay: ${DRISHTI_PACKS_OVERLAY:${drishti.data.dir}/packs/added.yaml}
     # Packs installed from a signed registry (Admin → Packs → From the registry); looked in before dir, so they win.
-    installed-dir: ${DRISHTI_PACKS_INSTALLED:./data/packs/installed}
+    installed-dir: ${DRISHTI_PACKS_INSTALLED:${drishti.data.dir}/packs/installed}
     registry:
       url: ${DRISHTI_PACK_REGISTRY:}         # a folder, file: or https: URL with index.json; empty: no registry
       trusted-keys: {}                       # publisher -> Ed25519 public key (tools/packreg keygen prints it)
       max-archive-mb: 50
       max-unpacked-mb: 200
     # The administrator's data-source overrides, one file per pack (Admin → Packs → Data source); redeploying a pack keeps them.
-    settings-dir: ${DRISHTI_PACKS_SETTINGS:./data/packs/settings}
+    settings-dir: ${DRISHTI_PACKS_SETTINGS:${drishti.data.dir}/packs/settings}
     deploy:                                # Admin → Packs → Deploy archive (the archive carries the pack only, never data)
       max-archive-mb: 50                   # larger uploads are refused with 413
       max-unpacked-mb: 200
@@ -537,7 +543,7 @@ drishti:
       require-signature: false             # true: only archives signed by a publisher in registry.trusted-keys
       require-manifest: true               # an archive needs MANIFEST.json (drishti.py pack bundle writes it)
       staging-minutes: 30                  # a verified upload waits this long for its confirmation
-      history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:./data/packs/deploy-history.jsonl}
+      history-file: ${DRISHTI_PACKS_DEPLOY_HISTORY:${drishti.data.dir}/packs/deploy-history.jsonl}
       probe-dates: 3                       # business dates listed per kind by Test connection
       probe-timeout-seconds: 30
     enabled: ${DRISHTI_PACKS:finance}
@@ -545,7 +551,7 @@ drishti:
     # or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -> Packs ("Hide samples from business
     # users") saves a choice that overrides this. Use developers once real packs exist.
     samples: ${DRISHTI_PACKS_SAMPLES:visible}
-    samples-file: ${DRISHTI_PACKS_SAMPLES_FILE:./data/packs/samples-mode}
+    samples-file: ${DRISHTI_PACKS_SAMPLES_FILE:${drishti.data.dir}/packs/samples-mode}
     # The packs folder is watched: a new pack folder is loaded, an edited one re-checked and swapped in, a deleted one unloaded,
     # with no restart. auto: file events with polling as the safety net; poll: look every `poll`; off: only Admin -> Packs acts.
     watch: ${DRISHTI_PACKS_WATCH:auto}

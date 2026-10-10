@@ -16,7 +16,7 @@ from pathlib import Path
 
 from core import sutra_diff
 
-IRS = (Path(__file__).resolve().parents[2] / "packs" / "finance" / "sutras" / "rates" / "irs-vanilla.v3.sutra.yaml").read_text()
+IRS = (Path(__file__).resolve().parents[2] / "config" / "packs" / "finance" / "sutras" / "rates" / "irs-vanilla.v3.sutra.yaml").read_text()
 
 OLD = """rachana: 1
 sutra: s-test

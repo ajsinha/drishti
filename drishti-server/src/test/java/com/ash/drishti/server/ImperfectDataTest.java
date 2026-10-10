@@ -58,7 +58,7 @@ class ImperfectDataTest {
 
     static List<Sutra> allSutras() throws Exception {
         List<Sutra> out = new ArrayList<>();
-        try (Stream<Path> packs = Files.list(Path.of("..", "packs"))) {
+        try (Stream<Path> packs = Files.list(Path.of("..", "config", "packs"))) {
             for (Path pack : packs.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList()) {
                 try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of(pack.resolve("sutras").toString()), false,
                         null, null, null, null, null, null, null, null), new ElCompiler())) {
@@ -92,7 +92,7 @@ class ImperfectDataTest {
     void everySutraSurvivesImperfectDocuments() throws Exception {
         List<Sutra> sutras = allSutras();
         assertThat(sutras).hasSizeGreaterThan(150);
-        Object sample = mapper.readValue(Files.readString(Path.of("../packs/finance/samples/trade/IRS-48213.json")), Object.class);
+        Object sample = mapper.readValue(Files.readString(Path.of("../config/packs/finance/samples/trade/IRS-48213.json")), Object.class);
         int empties = 0;
         for (Sutra s : sutras) {
             List<Object> docs = List.of(Map.of("id", "X-1"), mangle(sample, 1, new Random(1)), mangle(sample, 2, new Random(2)),
@@ -123,7 +123,7 @@ class ImperfectDataTest {
         var m = java.util.regex.Pattern.compile("(?ms)^```yaml\\s*$\\n((?:#[^\\n]*\\n|\\s*\\n)*rachana:.*?)^```\\s*$").matcher(guide);
         assertThat(m.find()).isTrue();
         Sutra s = new com.ash.drishti.rachana.parse.SutraParser().parse(m.group(1), "nested-data.md", "docs");
-        DataNode trade = codec.read(Files.readString(Path.of("../packs/trading/samples/trade/MX-20000001.json")));
+        DataNode trade = codec.read(Files.readString(Path.of("../config/packs/trading/samples/trade/MX-20000001.json")));
         ViewModel vm = pipeline.preview(Optional.of(s), new EntityDocument(EntityRef.of("trade", "MX-20000001"), trade,
                 new Provenance("test", 1, Instant.now(), false)));
         assertThat(vm.panels()).allSatisfy(p -> assertThat(p.empty()).as(p.id()).isFalse());

@@ -20,7 +20,7 @@
 | Accepted (built in 1.12) | 2026-10-01 | Ashutosh Sinha |
 
 ## Context
-Packs were folders in the server's `packs/` directory: copied by hand, with no version history on the server, no
+Packs were folders in the server's `config/packs/` directory: copied by hand, with no version history on the server, no
 way to know who made a pack, and no rollback. A pack carries Sutras, vocabulary, connectors and roles, so a pack
 from the wrong hands can point a connector at the wrong data or widen a role.
 

@@ -47,7 +47,7 @@ def start_servers(work: Path) -> list:
     packs = work / "packs"
     packs.mkdir()
     for name in ("banking-core", "market-data", "trading"):
-        (packs / name).symlink_to(ROOT / "packs" / name)
+        (packs / name).symlink_to(ROOT / "config" / "packs" / name)
     (packs / "desk-demo").mkdir()
     (packs / "desk-demo" / "pack.yaml").write_text(
         "pack: desk-demo\nversion: 1.0.0\ntitle: Desk demo\ndescription: Quotes read from a stream somebody has not set up yet.\n"

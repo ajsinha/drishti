@@ -32,10 +32,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param feedTrades the live demo trades the row feed follows (ids of kind trade)
  * @param feedBatch how often the feed writer sends the rows that changed (the latest value of each row wins)
  * @param benchRuns default runs of the layout comparison
+ * @param biDir the folder Rupaka files live in ({@code drishti.bi.dir}, default {@code ./config/bi}: datasets/, reports/, python/); never inside a pack
  */
 @ConfigurationProperties("drishti.bi.poc")
 public record PocProperties(Boolean enabled, Integer rows, Integer days, String lakeDir, Integer maxGroupBy, List<String> feedTrades,
-        Duration feedBatch, Integer benchRuns) {
+        Duration feedBatch, Integer benchRuns, String biDir) {
 
     public static final int MAX_ROWS = 10_000;
 
@@ -49,6 +50,7 @@ public record PocProperties(Boolean enabled, Integer rows, Integer days, String 
                 "IMG-400022", "IMG-400037", "IMG-400094", "IMG-400109", "MX-20000004", "MX-20000019", "MX-20000034", "MX-20000049", "MX-20000064",
                 "MX-20000079", "MX-20000094", "MX-20000109", "MX-20000124", "MX-20000163", "MX-20000184", "WSS-1500007", "WSS-1500022") : List.copyOf(feedTrades);
         feedBatch = feedBatch == null || feedBatch.isNegative() || feedBatch.isZero() ? Duration.ofMillis(100) : feedBatch;
+        biDir = biDir == null || biDir.isBlank() ? "./config/bi" : biDir;
         benchRuns = benchRuns == null || benchRuns <= 0 ? 30 : Math.min(benchRuns, 500);
     }
 }

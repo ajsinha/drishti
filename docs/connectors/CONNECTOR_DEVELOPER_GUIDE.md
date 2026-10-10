@@ -191,7 +191,7 @@ reads through (`connectors: [trading-store]` and `routes:` in its `pack.yaml`) a
 | the pack's template (`connectors:` mapping or `connector-templates:` in `pack.yaml`) | the pack's suggestion; written to the file once at the first start, and used in memory when the file cannot be written |
 
 A file with no template of that name is a new site connector. A connector file holds `plugin`, `enabled`, `kinds`, `description` and `settings`; nesting under
-`settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:./data/delta}` are placeholders: the environment variable if set, else the default
+`settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` are placeholders: the environment variable if set, else the default
 after the colon. A **credential** setting (`password`, `secret…`, `token`, `api-key`, `access-key`, `private-key`, `credential`) may only be an `${ENV_VAR}` or a
 `file:/path` reference ([CONNECTOR_FILES.md, Credentials and TLS](CONNECTOR_FILES.md#5-credentials-and-tls)). The server's own settings (`drishti.sources.fetch-timeout`,
 `routes`, `plugins.<plugin>`) stay in `application.yaml` and `application.local.yaml`.
@@ -981,7 +981,7 @@ time travel, search and reverse lookups, with no Spark.
 # config/connectors/trading-store.yaml
 plugin: delta
 kinds: [trade]
-settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: trading }
+settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: trading }
 ```
 
 **Layout.** A table per kind, `<root>/<domain>/<kind>/`, rows `(id, doc)` plus the pack's promoted columns,
@@ -999,7 +999,7 @@ Glue). **Use it when** your lake is Iceberg.
 # config/connectors/trading-store.yaml
 plugin: iceberg
 kinds: [trade]
-settings: { root: "${DRISHTI_ICEBERG_ROOT:./data/iceberg}", domain: trading }
+settings: { root: "${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}", domain: trading }
 ```
 
 **Layout.** A table per kind, partitioned by business date, sorted by id, promoted columns beside the document.
@@ -1014,7 +1014,7 @@ single server holds a large book in one file and wants day-wide searches without
 ```yaml
 # config/connectors/trading-store.yaml
 plugin: duckdb
-settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", table: trading.entities }
+settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}", table: trading.entities }
 ```
 
 **Layout.** A schema per domain, `<domain>.entities (kind, id, business_date, doc, <promoted columns>)`, each day sorted
@@ -1154,7 +1154,7 @@ key; a failed fetch keeps the last good data and shows in health. → full refer
 
 ### `demo`
 
-**For.** The enabled packs' sample entities (`packs/<pack>/samples/`), so everything works with nothing installed.
+**For.** The enabled packs' sample entities (`config/packs/<pack>/samples/`), so everything works with nothing installed.
 It runs as itself and serves every kind; it ticks live (`_meta.walk` random-walks the named fields).
 
 ```yaml
@@ -1310,7 +1310,7 @@ show settings. Prefer the AWS credential chain (instance roles) to `access-key` 
 
 ### A pack with several connectors, worked through
 
-A pack for an equities desk, `packs/equity-desk/pack.yaml` (illustrative; the structure is exactly that of the
+A pack for an equities desk, `config/packs/equity-desk/pack.yaml` (illustrative; the structure is exactly that of the
 shipped `trading` pack), keeps history in Delta Lake and takes live orders from Kafka. Its `connectors:` mapping is the pack's **suggested templates**: at the first start the server writes
 `config/connectors/equity-store.yaml` and `config/connectors/equity-orders.yaml` from them, and those files are then the site's (a pack that only wants to name its connectors writes
 `connectors: [equity-store, equity-orders]` and lets the site create the files):
@@ -1338,7 +1338,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [order, position]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: equity           # <root>/equity/order/, <root>/equity/position/
       mode.position: snapshot
       mode.order: effective    # an order row is written only when the order changes

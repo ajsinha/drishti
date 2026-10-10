@@ -45,12 +45,12 @@ class PackSettingsTest {
     void aConnectorFileReplacesThePacksTemplateAndLeavesThePackFilesAlone(@TempDir Path dir) throws Exception {
         Path packs = Files.createDirectories(dir.resolve("packs/risk"));
         String yaml = "pack: risk\nkinds: [var]\nconnectors:\n  lake:\n    plugin: delta\n    enabled: true\n    kinds: [var]\n    settings:\n"
-                + "      root: ${DRISHTI_DELTA_ROOT:./data/delta}\n      domain: risk\n";
+                + "      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n      domain: risk\n";
         Files.writeString(packs.resolve("pack.yaml"), yaml);
         ConnectorFiles files = new ConnectorFiles(dir.resolve("connectors"));
         PackLoader plain = new PackLoader(files);
         Map<String, Object> before = plain.properties(plain.load(dir.resolve("packs"), List.of("risk")));
-        assertThat(before).containsEntry("drishti.sources.connectors.lake.settings.root", "${DRISHTI_DELTA_ROOT:./data/delta}");   // no file: the template applies
+        assertThat(before).containsEntry("drishti.sources.connectors.lake.settings.root", "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}");   // no file: the template applies
 
         files.write("lake", "plugin: delta\nenabled: false\nsettings:\n  root: /mnt/lake\n  engine: native\n");
         Map<String, Object> after = plain.properties(plain.load(dir.resolve("packs"), List.of("risk")));

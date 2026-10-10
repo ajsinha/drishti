@@ -106,8 +106,8 @@ public final class PackDeployService {
             ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer,
             JsonCodec codec, com.ash.drishti.packs.ConnectorFiles connectorFiles) {
         this.connectorFiles = connectorFiles;
-        this.installed = Path.of(env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")).toAbsolutePath().normalize();
-        this.packsDir = Path.of(env.getProperty("drishti.packs.dir", "./packs")).toAbsolutePath().normalize();
+        this.installed = Path.of(com.ash.drishti.packs.PackPaths.installedDir(env)).toAbsolutePath().normalize();
+        this.packsDir = Path.of(com.ash.drishti.packs.PackPaths.packsDir(env)).toAbsolutePath().normalize();
         this.props = props;
         this.registryProps = registryProps;
         this.running = running;

@@ -65,7 +65,7 @@ class TradingStreamTest {
         p.put("value.serializer", StringSerializer.class.getName());
         PRODUCER = new KafkaProducer<>(p);
         try {
-            SAMPLE = Files.readString(Path.of("../packs/trading/samples/trade/MX-20000001.json"));
+            SAMPLE = Files.readString(Path.of("../config/packs/trading/samples/trade/MX-20000001.json"));
             String streamed = SAMPLE.replaceFirst("\"mtm\": -?[0-9.]+", "\"mtm\": 1234567");
             PRODUCER.send(new ProducerRecord<>("drishti.trading.trades", "MX-20000001", streamed)).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {

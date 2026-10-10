@@ -34,7 +34,7 @@ public class PackReloadConfiguration {
     public PackReloader packReloader(ConfigurableEnvironment env, PackRegistry registry, ConnectorManager connectors, SutraRegistry sutras,
             Mnemonics mnemonics, AuditLog audit, SamplePolicy samples) {
         PackReloader r = new PackReloader(env, registry, connectors, sutras, mnemonics,
-                new PackOverlay(Path.of(env.getProperty("drishti.packs.overlay", "./data/packs/added.yaml"))), audit, samples);
+                new PackOverlay(Path.of(com.ash.drishti.packs.PackPaths.overlay(env))), audit, samples);
         r.start();
         return r;
     }

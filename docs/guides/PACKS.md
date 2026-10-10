@@ -17,7 +17,7 @@
 
 Drishti's core knows no industry. It knows documents, shapes, the Rachana layout grammar, inference, links and
 live updates. Everything that belongs to one industry — the commands you type, the layouts, the sample data, the
-help pages — arrives in a **domain pack**: one folder under `packs/`.
+help pages — arrives in a **domain pack**: one folder under `config/packs/`.
 
 This guide is for users and administrators. It explains, with examples:
 
@@ -36,10 +36,10 @@ pack step by step.
 
 A pack is configuration and content only. It contains no Java and no Python that the server runs (its Calc snippets,
 `python/*.py`, run in the user's browser; see [Calc](PACK_DEVELOPER_GUIDE.md#calc-python-snippets)). Here is the
-smallest complete pack in the repository, `packs/logistics/`:
+smallest complete pack in the repository, `config/packs/logistics/`:
 
 ```text
-packs/logistics/
+config/packs/logistics/
 ├── pack.yaml                    the manifest: kinds, commands, links, roles, alerts, console extras
 ├── sutras/
 │   └── shipment.v1.sutra.yaml   one layout (a Sutra, in YAML), for shipments in transit
@@ -75,7 +75,7 @@ Words used below:
 
 ## The packs that ship
 
-There are fourteen packs in `packs/`. Each row lists the pack, what it inherits from, its mnemonics, and one
+There are fourteen packs in `config/packs/`. Each row lists the pack, what it inherits from, its mnemonics, and one
 command to try. The example ids are real: they exist in the pack's `samples/` folder.
 
 | Pack | Extends | Mnemonics | Try |
@@ -95,7 +95,7 @@ command to try. The example ids are real: they exist in the pack's `samples/` fo
 | `finance` | — | `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement · `CRV` curve · `CPTY` counterparty · `LIM` credit limit · `CLR` clearing account · `SPEC` contract specification · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings | `TRD IRS-48213` |
 | `logistics` | — | `SHP` shipment · `CTR` container · `VSL` vessel · `PORT` port | `SHP SHP-10042` |
 
-Every pack's overview guide (*Help → Domain packs*, or `packs/<name>/guides/`) describes its domain and has a
+Every pack's overview guide (*Help → Domain packs*, or `config/packs/<name>/guides/`) describes its domain and has a
 **Finding things** section with the commands that work for every kind of the pack:
 
 | Command | Does |
@@ -105,7 +105,7 @@ Every pack's overview guide (*Help → Domain packs*, or `packs/<name>/guides/`)
 | `CUST <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `CUST <GO>` | Lists every customer. |
 
-(That table is copied from `packs/retail-banking/guides/retail-banking.md`; every pack guide has the same one
+(That table is copied from `config/packs/retail-banking/guides/retail-banking.md`; every pack guide has the same one
 for its own kinds. Pick lists are explained in [USER_GUIDE.md](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities).)
 
 **Two families.** The `finance` pack is the small demo behind the four original mockups (`TRD IRS-48213`). The
@@ -131,7 +131,7 @@ them in (see [Inheritance](PACK_DEVELOPER_GUIDE.md#inheritance)).
 
 The server reads one setting, `drishti.packs.enabled`, from the environment variable `DRISHTI_PACKS` (a
 comma-separated list; default `finance`). Packs are looked for in `drishti.packs.dir` (`DRISHTI_PACKS_DIR`,
-default `./packs`, relative to the directory you start the server in).
+default `./config/packs`, relative to the directory you start the server in).
 
 1. Stop the server.
 2. Start it with the packs you want. From the repository root:
@@ -165,12 +165,12 @@ packs folder, set `DRISHTI_PACKS_DIR` for both processes.
 
 What happens at start-up:
 
-- Each listed pack is read from `packs/<name>/pack.yaml`, and so is every pack it extends.
+- Each listed pack is read from `config/packs/<name>/pack.yaml`, and so is every pack it extends.
 - The packs' contents become **lowest-precedence** configuration. Anything the site sets in
   `drishti-server/src/main/resources/application.yaml`, an external `application.yaml` or an environment variable
   overrides a pack.
 - The server **refuses to start**, with a message naming the packs, when:
-  - a listed pack folder or its `pack.yaml` is missing (`pack 'x' not found at packs/x/pack.yaml (required by 'y')`);
+  - a listed pack folder or its `pack.yaml` is missing (`pack 'x' not found at config/packs/x/pack.yaml (required by 'y')`);
   - `pack:` inside `pack.yaml` does not match the folder name;
   - packs extend each other in a cycle;
   - two packs own the same kind (`kind trade is defined by both pack 'finance' and pack 'trading'`);
@@ -187,7 +187,7 @@ console (`/admin/packs`).
 |---|---|---|
 | **on** | Loaded and in use | **Switch off** (unless another switched-on pack needs it) |
 | **off** | Loaded, but switched off for everyone | **Switch on** |
-| **not loaded** | A folder under `packs/` that `DRISHTI_PACKS` did not name | **Load** (below) |
+| **not loaded** | A folder under `config/packs/` that `DRISHTI_PACKS` did not name | **Load** (below) |
 
 What switching off does, at every user's next click:
 
@@ -456,7 +456,7 @@ The same answer as JSON: `curl -s localhost:18480/api/v1/packs/MKT/overview`. A 
 1. Read the pack's change notes (its guide, or the generator's commit). Look for renamed kinds, mnemonics or
    link fields: saved monitors, workspaces and alert rules refer to kinds and ids, and a renamed kind leaves
    them pointing at nothing.
-2. Replace the folder `packs/<name>/` with the new version (for a repository checkout: `git pull`).
+2. Replace the folder `config/packs/<name>/` with the new version (for a repository checkout: `git pull`).
 3. If it adds packs it extends, nothing else is needed: parents load with their child.
 4. Restart the server. Watch its log for the pack loader's refusals (a kind now owned by two packs, a clash
    with an unrelated pack).

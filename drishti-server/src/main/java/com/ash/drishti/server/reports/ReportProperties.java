@@ -34,7 +34,7 @@ public record ReportProperties(Boolean enabled, String folder, List<String> webh
 
     public ReportProperties {
         enabled = enabled == null ? Boolean.TRUE : enabled;
-        folder = folder == null || folder.isBlank() ? "./data/reports" : folder;
+        folder = folder == null || folder.isBlank() ? com.ash.drishti.api.DataDir.under("reports") : folder;
         webhooks = webhooks == null ? List.of() : List.copyOf(webhooks);
         perUser = perUser == null ? 20 : perUser;
         tick = tick == null ? Duration.ofSeconds(30) : tick;

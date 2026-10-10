@@ -154,7 +154,7 @@ using the layout the connectors read. A pack made by `tools/packgen/pack_from_js
 
 ```bash
 # Delta lake (default): <root>/<domain>/<kind>/business_date=...; serve with DRISHTI_DELTA_ROOT
-uv run --with pyyaml --with deltalake --with pyarrow python tools/ingest_jsonl.py --from data/trade.jsonl --pack packs/my-bank --lake /tmp/lake
+uv run --with pyyaml --with deltalake --with pyarrow python tools/ingest_jsonl.py --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
 DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
 # JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
 uv run --with pyyaml python tools/ingest_jsonl.py --from data/jsonl --domain my-bank --key trade=tradeId --date trade=businessDate \
@@ -167,7 +167,7 @@ See [Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#genera
 
 ## The samples
 
-The banking packs' samples in `packs/<pack>/samples/` are what the `demo` source serves live; they are written by
+The banking packs' samples in `config/packs/<pack>/samples/` are what the `demo` source serves live; they are written by
 
 ```bash
 python3 tools/packgen/banking/make_data.py

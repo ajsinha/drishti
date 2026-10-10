@@ -15,7 +15,7 @@
 """The retail-banking pack: customers, deposit accounts, mortgages, card accounts, personal loans, branches,
 collections cases and IFRS 9 portfolio segments, booked in the banking-core legal entities.
 
-    python3 tools/packgen/retail/make.py            write packs/retail-banking
+    python3 tools/packgen/retail/make.py            write config/packs/retail-banking
     python3 tools/packgen/retail/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/retail/make.py --lake data/delta
 """

@@ -31,7 +31,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
-PACKS = ROOT / "packs"
+PACKS = ROOT / "config" / "packs"
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
@@ -92,7 +92,7 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
     if spec.impact:
         m["graph"]["impact"] = spec.impact
     for d, ks in spec.domains.items():
-        settings = {"root": "${DRISHTI_DELTA_ROOT:./data/delta}", "domain": d}
+        settings = {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": d}
         if d in spec.effective_domains:
             settings.update({f"mode.{k.kind}": "effective" for k in ks})
         m["connectors"][f"{d}-store"] = {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": [k.kind for k in ks],

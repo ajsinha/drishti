@@ -115,8 +115,8 @@ public final class PackReloader implements AutoCloseable {
         this.overlay = overlay;
         this.audit = audit;
         this.samples = samples;
-        this.packsDir = env.getProperty("drishti.packs.dir", "./packs");
-        this.installedDir = env.getProperty("drishti.packs.installed-dir", "./data/packs/installed");
+        this.packsDir = com.ash.drishti.packs.PackPaths.packsDir(env);
+        this.installedDir = com.ash.drishti.packs.PackPaths.installedDir(env);
         this.watchMode = env.getProperty("drishti.packs.watch", "auto").strip().toLowerCase(java.util.Locale.ROOT);
         if (!Set.of("auto", "poll", "off").contains(watchMode)) {
             throw new IllegalArgumentException("drishti.packs.watch must be auto, poll or off, not " + watchMode);

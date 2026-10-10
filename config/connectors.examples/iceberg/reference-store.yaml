@@ -29,7 +29,7 @@ kinds:
 - clearing-account
 description: reference-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
-  root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}
+  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   domain: reference
   mode.counterparty: effective
   mode.counterparty-group: effective

@@ -72,7 +72,7 @@ def start_servers(work: Path) -> list:
     shutil.copy(plugin[-1], work / "plugins-extra")
     shutil.copytree(EXAMPLE / "sample", work / "sample")
     (work / "data" / "feeds").mkdir(parents=True)             # the shipped `file` connector reads ./data/feeds: an empty folder keeps it UP
-    for name in ("packs", "config"):
+    for name in ("config",):
         (work / name).symlink_to(ROOT / name)
     (work / "application.local.yaml").write_text(site_config(work))
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-25-openjdk-amd64") + "/bin/java"

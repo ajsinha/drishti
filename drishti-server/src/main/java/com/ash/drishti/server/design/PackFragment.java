@@ -256,7 +256,7 @@ public class PackFragment {
                 + "- `samples/" + kind + "/`: up to three documents to try the view on.\n"
                 + (hasAbout(d) ? "- `" + ABOUT_FILE + "`: the About text (page text, panel text, glossary) written in the workbench's About tab.\n" : "")
                 + "\n"
-                + "To use it: put this folder under the server's `packs/` directory and load it from Admin -> Packs (or list it in `DRISHTI_PACKS`).\n"
+                + "To use it: put this folder under the server's `config/packs/` directory and load it from Admin -> Packs (or list it in `DRISHTI_PACKS`).\n"
                 + (d.notes == null || d.notes.isBlank() ? "" : "\nThe design's notes are in `" + NOTES_FILE + "`.\n");
     }
 

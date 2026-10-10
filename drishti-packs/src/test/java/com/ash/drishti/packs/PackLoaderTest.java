@@ -27,7 +27,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 class PackLoaderTest {
 
-    static final Path PACKS = Path.of("..", "packs").toAbsolutePath().normalize();
+    static final Path PACKS = Path.of("..", "config", "packs").toAbsolutePath().normalize();
 
     @Test
     void theShippedPacksLoadAndContributeProperties() {
@@ -90,10 +90,10 @@ class PackLoaderTest {
     @Test
     void requiredPacksLoadFirstAndBringTheirConnectors(@TempDir Path dir) throws Exception {
         write(dir, "core", "kinds: [counterparty]\nconnectors:\n  core-lake:\n    plugin: delta\n    kinds: [counterparty]\n"
-                + "    settings: { root: \"${DRISHTI_DELTA_ROOT:./data/delta}\", domain: core }\n");
+                + "    settings: { root: \"${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\", domain: core }\n");
         write(dir, "risk", "requires: [core]\nkinds: [var]\nconnectors:\n  risk-lake: { plugin: delta, settings: { domain: risk } }\n"
                 + "  core-lake:\n    plugin: delta\n    kinds: [counterparty]\n"
-                + "    settings: { root: \"${DRISHTI_DELTA_ROOT:./data/delta}\", domain: core }\nroutes: { var: risk-lake }\n");
+                + "    settings: { root: \"${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\", domain: core }\nroutes: { var: risk-lake }\n");
         PackLoader l = new PackLoader();
         List<Pack> packs = l.load(dir, List.of("risk"));
         assertThat(packs).extracting(Pack::name).containsExactly("core", "risk");
@@ -101,7 +101,7 @@ class PackLoaderTest {
         assertThat(props).containsEntry("drishti.sources.connectors.core-lake.plugin", "delta")
                 .containsEntry("drishti.sources.connectors.core-lake.kinds[0]", "counterparty")
                 .containsEntry("drishti.sources.connectors.core-lake.settings.domain", "core")
-                .containsEntry("drishti.sources.connectors.core-lake.settings.root", "${DRISHTI_DELTA_ROOT:./data/delta}")
+                .containsEntry("drishti.sources.connectors.core-lake.settings.root", "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}")
                 .containsEntry("drishti.sources.connectors.risk-lake.settings.domain", "risk")
                 .containsEntry("drishti.sources.routes.var", "risk-lake")
                 .containsEntry("drishti.packs.loaded", "core,risk");

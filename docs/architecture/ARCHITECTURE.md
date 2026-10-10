@@ -29,7 +29,7 @@ engine** filling whatever the grammar does not say. A brand-new product type wit
 no Sutra at all still renders a usable view on day one; a Sutra makes it beautiful.
 
 The four reference mockups (`docs/requirements/drishti-*.png`) define the target. Their entities and Sutras ship in
-the `finance` pack (`packs/finance/`), so they open only on a server that enables it (`DRISHTI_PACKS=finance`, the
+the `finance` pack (`config/packs/finance/`), so they open only on a server that enables it (`DRISHTI_PACKS=finance`, the
 default):
 
 | Mockup | Command | Sutra | Source |
@@ -218,7 +218,7 @@ Abbreviated:
 ```
 
 Reading it: the router found the trade in the `demo` plugin (whose sample's `_meta` names the source system
-`murex-rates`); `SutraMatcher` chose `irs-fixfloat v1` from `packs/trading/sutras/rates/`; inference added what the
+`murex-rates`); `SutraMatcher` chose `irs-fixfloat v1` from `config/packs/trading/sutras/rates/`; inference added what the
 Sutra did not say ("+ inference"); the counterparty, netting set, book and trader were fetched as links and given
 badges from the pack's `badges:` expressions. The console renders the panels with the Jinja macros in
 `web/templates/_macros/panels.html`, main-area panels on the left and `area: right` panels on the right.
@@ -272,7 +272,7 @@ Rachana is the grammar; each Sutra is one YAML document written in it (ADR-017, 
 Markdown Sutras). The first key, `rachana: 1`, is the language version, so the grammar can evolve without
 misreading old files; `description`, `notes` and a per-panel `description` carry the prose. Files are named
 `<name>.v<N>.sutra.yaml` and are found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
-pack's `sutras/` folder (`packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
+pack's `sutras/` folder (`config/packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
 kinds' required and allowed options and reports problems with line and column (codes `DRS-2001`, `DRS-2002`; the
 detailed checks are 2009–2027). Any other file in a Sutra folder (a `.sutra.md` from before 1.11, a plain `.yaml`)
 is reported as `DRS-2004` with the fix. Because the grammar is plain YAML, `RachanaSchema` generates a JSON Schema of
@@ -281,7 +281,7 @@ any schema-aware editor complete and check Sutras with it. With `hot-reload` on,
 invalid edit keeps the last good version and is listed at `GET /api/v1/sutras/problems`. Bindings use a small,
 compiled, side-effect-free expression language (**Rachana-EL**) — not scripting.
 
-A real Sutra, abbreviated (`packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml`, after its copyright comment):
+A real Sutra, abbreviated (`config/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml`, after its copyright comment):
 
 ```yaml
 rachana: 1
@@ -477,12 +477,12 @@ connector, e.g. `market-store` and `trading-store`. Lake retention, compaction a
 
 ## 12. Domain packs
 
-The core carries no industry. A **domain pack** (`packs/<name>/pack.yaml`) holds everything specific to one:
+The core carries no industry. A **domain pack** (`config/packs/<name>/pack.yaml`) holds everything specific to one:
 kinds, Sutras, mnemonics, identifier patterns, reference fields and link badges, roles, semantic hints and formats,
 connectors, starter workspaces, help guides and sample data.
 
 - **Loading.** `drishti.packs.enabled` (`DRISHTI_PACKS`, default `finance`) lists the packs, from
-  `drishti.packs.dir` (`./packs`). Before any bean is built, `PackEnvironmentPostProcessor` loads them and adds
+  `drishti.packs.dir` (`./config/packs`). Before any bean is built, `PackEnvironmentPostProcessor` loads them and adds
   their content as the **lowest-precedence** property source, so site configuration always wins. No core module
   depends on `drishti-packs`; they only read ordinary properties.
 - **Inheritance (ADR-015).** A pack may say `extends: [parent, …]`. Enabling a pack loads its ancestors too: the
@@ -504,7 +504,7 @@ connectors, starter workspaces, help guides and sample data.
 - **Per-user packs.** Installed packs are what the server runs; an admin **assigns** packs to users (default
   `drishti.packs.default-for-users`), and each user chooses which assigned ones are **active**. A kind owned by an
   inactive pack cannot be opened (`PackAccess`).
-- **Shipped packs** (`packs/`): `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk`,
+- **Shipped packs** (`config/packs/`): `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk`,
   `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `finance` (the reference mockups),
   `logistics` (shipments, containers, vessels, ports), `genomics`, `politics-society`, `economics` — the
   non-financial ones prove the core is neutral.
@@ -528,7 +528,7 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-graph` | `ReferenceCatalog` (identifier patterns, reference fields), badges | `GraphConfiguration` |
 | `drishti-engine` | `ViewPipeline`, `Binder`, caches, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration` |
 | `drishti-identity` | Users, roles, passwords, lockout, audit, per-user preferences (workspaces, settings); the collaboration records (`com.ash.drishti.identity.collab`: shares, inbox, outbox, threads, holds, `HashChain`); stored in a JPA database (section 18) | `IdentityConfiguration` |
-| `drishti-packs` | Domain packs: reads `packs/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
+| `drishti-packs` | Domain packs: reads `config/packs/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
 | `drishti-diskcache` | `DiskCache`: a size-bounded, daily-cleared RocksDB cache on local disk for live connectors | – |
 | `drishti-messaging` | `MessageStateSource`: the shared half of the ActiveMQ and RabbitMQ connectors (latest document per entity in a persistent RocksDB store plus a memory cache) | – |
 | `drishti-server` | **The** Spring Boot application: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI | controllers, filters |
@@ -570,9 +570,9 @@ secrets in tracked files. The full key reference is [CONFIGURATION.md](../admin/
 | File | Owns |
 |---|---|
 | `drishti-server/src/main/resources/application.yaml` | server port, actuator, every `drishti.*` default: `sources`, `business-date`, `security`, `identity`, `rachana`, `governance`, `engine`, `packs`, `commands`, `live`, `graph` |
-| `packs/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
+| `config/packs/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
 | `config/connectors/<name>.yaml` | one connector of the site: plugin, switch, kinds and settings; watched and applied without a restart |
-| `packs/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
+| `config/packs/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
 | `drishti-rachana/src/main/resources/formats.yaml` (+ `drishti.rachana.formats-file`) | core named number/date formats |
 | `drishti-inference/src/main/resources/inference/semantics.yaml` | core semantic hints and density limits |
 | `./sutras/**` (`drishti.rachana.dirs`) | site Sutras, in addition to the packs' |

@@ -16,7 +16,7 @@
 audit and regulatory issues, operational-risk scenarios, third-party risk, cyber incidents and SMA capital, per desk
 and legal entity of the banking packs.
 
-    python3 tools/packgen/oprisk/make.py            write packs/operational-risk
+    python3 tools/packgen/oprisk/make.py            write config/packs/operational-risk
     python3 tools/packgen/oprisk/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/oprisk/make.py --lake data/delta
 """

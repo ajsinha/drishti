@@ -37,7 +37,7 @@ public record LoadsProperties(String dir, Integer keep, Duration checkInterval, 
         Integer lookbackDays, List<String> defaultNotifyRoles, Integer smokeMax) {
 
     public LoadsProperties {
-        dir = dir == null || dir.isBlank() ? "./data/loads" : dir;
+        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.DataDir.under("loads") : dir;
         keep = keep == null ? 2000 : Math.max(10, keep);
         checkInterval = checkInterval == null ? Duration.ofSeconds(60) : checkInterval;
         scheduler = scheduler == null || scheduler;

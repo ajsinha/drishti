@@ -610,7 +610,7 @@ Choose **Create a read-only link**.
 >
 > **Export as a pack fragment** downloads a zip with the Sutra, tests for every sample and a stub `pack.yaml`, to put in a pack ([section 24](SCREEN_DESIGNER.md#24-pack-fragments-export-and-import)). **Import** brings a pack or a folder of Sutras back as designs.
 >
-> The same checks run without a browser: `java -jar drishti-server-<version>-exec.jar sutra test packs/<pack>` uses the checker of the **Tests** tab, writes JUnit XML for your CI and exits `1` on a problem ([section 26](SCREEN_DESIGNER.md#26-the-command-line-and-ci), [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci)). A fragment you export passes it unchanged.
+> The same checks run without a browser: `java -jar drishti-server-<version>-exec.jar sutra test config/packs/<pack>` uses the checker of the **Tests** tab, writes JUnit XML for your CI and exits `1` on a problem ([section 26](SCREEN_DESIGNER.md#26-the-command-line-and-ci), [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci)). A fragment you export passes it unchanged.
 
 ---
 

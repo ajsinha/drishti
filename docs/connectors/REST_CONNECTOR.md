@@ -182,7 +182,7 @@ and the server settings that bear on it, in `application.yaml`: `drishti.sources
 
 ### 4.2 Pack form
 
-The pack's suggested template, in `packs/<pack>/pack.yaml` (keys with dots are written flat); the server writes it to `config/connectors/crm-api.yaml` at the first start
+The pack's suggested template, in `config/packs/<pack>/pack.yaml` (keys with dots are written flat); the server writes it to `config/connectors/crm-api.yaml` at the first start
 if the site has none:
 
 ```yaml

@@ -16,7 +16,7 @@
 # Runbook: a Sutra is broken, or an edit does not show
 
 A *Sutra* is the file that lays out the view of one family of entities, for example
-`packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml` for commodity forwards. A Sutra is one YAML file, `<name>.v<N>.sutra.yaml`, whose
+`config/packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml` for commodity forwards. A Sutra is one YAML file, `<name>.v<N>.sutra.yaml`, whose
 first key is `rachana: 1` (the Rachana language version). Sutras are read from the
 enabled packs' `sutras/` folders and from the site directory (`drishti.rachana.dirs`, default `./sutras`,
 environment `DRISHTI_SUTRAS`). The grammar is in [RACHANA_REFERENCE.md](../../guides/RACHANA_REFERENCE.md).
@@ -57,11 +57,11 @@ Otherwise each file with problems is listed with its problems, for example:
 
 ```json
 {
-    "packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml": [
+    "config/packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml": [
         {
             "code": "DRS-2021",
             "message": "unknown panel kind 'tabel'",
-            "location": {"file": "packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml", "line": 41, "column": 11}
+            "location": {"file": "config/packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml", "line": 41, "column": 11}
         }
     ]
 }
@@ -71,7 +71,7 @@ The same appears in the server log as a warning, one line per problem, in the fo
 `sutra problem <file>:<line>:<column> <code> <message>`:
 
 ```text
-sutra problem packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml:41:11 DRS-2021 unknown panel kind 'tabel'
+sutra problem config/packs/trading/sutras/commodity/cmd-forward.v1.sutra.yaml:41:11 DRS-2021 unknown panel kind 'tabel'
 ```
 
 Common codes:

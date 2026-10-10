@@ -148,7 +148,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
-        this.lake = LakeStore.of(ctx.setting("root", "./data/delta"), ctx.setting("domain", ""), ctx.settings());
+        this.lake = LakeStore.of(ctx.setting("root", com.ash.drishti.api.DataDir.under("delta")), ctx.setting("domain", ""), ctx.settings());
         this.engine = lake.engine();
         this.idColumn = ctx.setting("id-column", "id");
         this.docColumn = ctx.setting("doc-column", "doc");

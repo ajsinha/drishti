@@ -182,7 +182,7 @@ public final class SutraRegistry implements AutoCloseable {
 
     /**
      * {@code text} with every Sutra root directory taken off the front of the paths in it, so a problem shown to a
-     * client names {@code packs/banking/sutras/x.sutra.yaml}'s place under its root and not the server's disk layout
+     * client names {@code config/packs/banking/sutras/x.sutra.yaml}'s place under its root and not the server's disk layout
      * (SEC-11). The log keeps the absolute paths.
      */
     public String relative(String text) {

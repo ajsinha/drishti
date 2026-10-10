@@ -17,7 +17,7 @@
 pack declares), so a running server picks them up within its refresh interval.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py \\
-        --from data/jsonl --pack packs/my-bank --lake /var/lib/drishti/delta
+        --from data/jsonl --pack config/packs/my-bank --lake /var/lib/drishti/delta
 
 Input: --from is a folder (its *.jsonl; -r for subfolders) or one .jsonl file, repeatable; a line is a plain JSON document or the loader envelope
 {"kind", "id", "doc"} (doc an object or JSON text, unwrapped). The kind is the file stem unless the envelope says one.
@@ -73,7 +73,8 @@ def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
     import yaml
     import layout as L  # delta only
     m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
-    conns = [c for c in (m.get("connectors") or {}).values() if c.get("plugin") in ("delta", "file")]
+    defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})   # a pack names its connectors and suggests them as templates
+    conns = [c for c in defs.values() if c.get("plugin") in ("delta", "file")]
     if not conns:
         raise SystemExit(f"ingest_jsonl: {pack}/pack.yaml declares no delta or file connector (generate the pack with --date)")
     c = conns[0]

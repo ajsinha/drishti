@@ -178,7 +178,7 @@ Why each part is shaped this way:
 ## 4. Declaring the layout in a pack
 
 The layout belongs to the kind, so the pack that owns the kind declares it, on the Delta connector that stores it. The
-trading pack suggests this template (`packs/trading/pack.yaml`, written by `tools/packgen/banking/make_packs.py`); at the first start the server writes it to
+trading pack suggests this template (`config/packs/trading/pack.yaml`, written by `tools/packgen/banking/make_packs.py`); at the first start the server writes it to
 `config/connectors/trading-store.yaml`, which is then the site's file ([As a connector file](#as-a-connector-file)):
 
 ```yaml
@@ -188,7 +188,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: trading
       layout:
         trade:
@@ -691,7 +691,7 @@ enabled: ${DRISHTI_LAKE_ENABLED:true}
 kinds: [trade]
 description: Trading lake
 settings:
-  root: ${DRISHTI_DELTA_ROOT:./data/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
   domain: trading
   layout:
     trade:
@@ -878,7 +878,7 @@ write_deltalake("data/delta/trading/trade", table, mode="overwrite",
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta --days 10
 # or one pack's samples into one domain
 uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-    --samples packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--calendar USNY]
+    --samples config/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--calendar USNY]
 DRISHTI_PACKS=counterparty-risk,market-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
@@ -894,7 +894,7 @@ DRISHTI_PACKS=counterparty-risk,market-risk java -jar drishti-server/target/dris
 
 ### Configuration by example
 
-**The pack's suggested template**, as shipped in `packs/trading/pack.yaml` (the layout keys are in [section 4](#4-declaring-the-layout-in-a-pack)); the file `config/connectors/trading-store.yaml` has the same settings:
+**The pack's suggested template**, as shipped in `config/packs/trading/pack.yaml` (the layout keys are in [section 4](#4-declaring-the-layout-in-a-pack)); the file `config/connectors/trading-store.yaml` has the same settings:
 
 ```yaml
 connectors:
@@ -904,13 +904,13 @@ connectors:
     kinds:
     - trade                               # serve only trades from this domain
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}   # one variable moves every pack's lake
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # one variable moves every pack's lake
       domain: trading                     # tables live under <root>/trading/<kind>/
 routes:
   trade: trading-store                    # trades are asked of the lake first
 ```
 
-Reference data that changes rarely is `effective` (from `packs/banking-core/pack.yaml`):
+Reference data that changes rarely is `effective` (from `config/packs/banking-core/pack.yaml`):
 
 ```yaml
 connectors:
@@ -919,15 +919,15 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [counterparty, counterparty-group, issuer, agreement, ccp, legal-entity, book, desk, trader, calendar, csa, clearing-account]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: reference
       mode.counterparty: effective        # a row only when the counterparty changes
       mode.book: effective
       # ... one mode.<kind> line per kind
 ```
 
-`packs/finance/pack.yaml` declares its lake without `kinds`, so it serves every table it finds:
-`finance-lake: { plugin: delta, enabled: ${DRISHTI_LAKE_ENABLED:true}, settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: finance, lookback-days: 10 } }`.
+`config/packs/finance/pack.yaml` declares its lake without `kinds`, so it serves every table it finds:
+`finance-lake: { plugin: delta, enabled: ${DRISHTI_LAKE_ENABLED:true}, settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: finance, lookback-days: 10 } }`.
 
 **Site form**, your own domain, as the connector file `config/connectors/treasury-lake.yaml`:
 

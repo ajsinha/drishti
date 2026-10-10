@@ -246,7 +246,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | **Sutra** | A layout for one kind of entity: one YAML file, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` |
 | **Rachana** | The grammar Sutras are written in; **Rachana-EL** is its expression language (`$.mtm > 0`) |
 | **Inference** | Drishti laying out a view by itself from the shape of the data |
-| **Pack** | An industry's commands, layouts, links, roles and sample data, in `packs/<name>/` |
+| **Pack** | An industry's commands, layouts, links, roles and sample data, in `config/packs/<name>/` |
 | **Source / connector** | Where documents come from: the demo samples, Delta Lake, PostgreSQL, Kafka, … |
 | **Business date** | The day you are looking at: **Live** (today, ticking) or a picked past date |
 | **Known at** | A moment in time; the data as it was known then, before later corrections |

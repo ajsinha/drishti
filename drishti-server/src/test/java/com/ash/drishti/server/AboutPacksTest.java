@@ -55,7 +55,7 @@ class AboutPacksTest {
     private static final List<String> PACKS = List.of("market-risk", "counterparty-risk", "liquidity-risk", "climate-risk", "operational-risk",
             "retail-banking", "genomics", "politics-society", "economics", "trading");
 
-    private static final Path PACKS_DIR = Path.of("..", "packs");
+    private static final Path PACKS_DIR = Path.of("..", "config", "packs");
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 
     @Autowired AboutCatalog catalog;

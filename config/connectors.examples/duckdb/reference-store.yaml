@@ -42,7 +42,7 @@ settings:
   mode.calendar: effective
   mode.csa: effective
   mode.clearing-account: effective
-  path: ${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}
+  path: ${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}
   memory-limit: ${DRISHTI_DUCKDB_MEMORY:1GB}
   table: reference.entities
   pool-size: '4'

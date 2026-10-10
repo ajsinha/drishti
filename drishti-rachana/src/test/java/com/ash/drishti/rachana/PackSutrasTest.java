@@ -29,7 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class PackSutrasTest {
 
     static Stream<Path> packs() throws Exception {
-        try (Stream<Path> s = Files.list(Path.of("..", "packs"))) {
+        try (Stream<Path> s = Files.list(Path.of("..", "config", "packs"))) {
             return s.filter(p -> Files.isDirectory(p.resolve("sutras"))).sorted().toList().stream();
         }
     }

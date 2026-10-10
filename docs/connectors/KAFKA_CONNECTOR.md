@@ -174,7 +174,7 @@ dot, and each message for MX-20000001 repaints it within a frame. This is descri
 
 ### 5.1 Pack form: the trading pack's `trading-stream`
 
-The pack's suggested template, as shipped in `packs/trading/pack.yaml`, off until `DRISHTI_STREAM_TRADING=true`. At the first start the server writes it to
+The pack's suggested template, as shipped in `config/packs/trading/pack.yaml`, off until `DRISHTI_STREAM_TRADING=true`. At the first start the server writes it to
 `config/connectors/trading-stream.yaml` (same settings, the file form in [As a connector file](#as-a-connector-file)), which is then the site's:
 
 ```yaml
@@ -191,7 +191,7 @@ connectors:
       id-field: tradeId                                      # the id of a message without a key
       stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}         # engine setting: amber in Health after 15 quiet minutes
       disk-cache.enabled: ${DRISHTI_STREAM_DISK_CACHE:true}
-      disk-cache.root: ${DRISHTI_CACHE_ROOT:./data/cache}    # → ./data/cache/trading-stream
+      disk-cache.root: ${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}    # → ./data/cache/trading-stream
       disk-cache.max-gb: ${DRISHTI_STREAM_CACHE_GB:10}
       disk-cache.reset-at: ${DRISHTI_CACHE_RESET_AT:02:00}
       disk-cache.zone: America/New_York
@@ -973,7 +973,7 @@ topic's partitions, 5 s for a cold read, supervisor backoff 1 s to 30 s.
 ```bash
 docker compose -f deploy/compose.data.yaml up -d kafka            # apache/kafka 3.9.1, single-node KRaft, cleanup.policy compact
 uv run --with kafka-python python tools/samplegen/stream.py \
-    --bootstrap localhost:9092 --topic drishti.trading.trades --samples packs/trading/samples/trade --rate 5 --seconds 0
+    --bootstrap localhost:9092 --topic drishti.trading.trades --samples config/packs/trading/samples/trade --rate 5 --seconds 0
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false \
   java -jar drishti-server/target/drishti-server-*-exec.jar
 ```

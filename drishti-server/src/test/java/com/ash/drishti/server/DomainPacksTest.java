@@ -43,7 +43,7 @@ class DomainPacksTest {
     void everyAdvertisedExampleOpensAFullView() throws Exception {
         for (String pack : new String[] {"liquidity-risk", "climate-risk", "operational-risk", "retail-banking", "genomics", "politics-society", "economics"}) {
             JsonNode manifest = new ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).readTree(
-                    Files.readString(Path.of("../packs", pack, "pack.yaml")));
+                    Files.readString(Path.of("../config/packs", pack, "pack.yaml")));
             for (JsonNode ex : manifest.path("console").path("examples")) {
                 EntityRef ref = commands.require(ex.get(0).asText());
                 ViewModel v = pipeline.view(ref);

@@ -57,7 +57,7 @@ Lowest to highest; a later layer wins:
 pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  environment variables  <  --arguments
 ```
 
-* **Packs** (`packs/<name>/pack.yaml`) contribute mnemonics, roles, connectors, routes, link fields and so on.
+* **Packs** (`config/packs/<name>/pack.yaml`) contribute mnemonics, roles, connectors, routes, link fields and so on.
   They are added as the lowest-precedence source, so anything the site writes in its own configuration
   overrides a pack.
 * **`application.yaml`** is the bundled default.
@@ -167,7 +167,7 @@ Each row was tried against a scratch server. Points to know:
   the same placeholder.
 * **Nested.** The default may itself be a placeholder: `${A:${B:18480}}` uses `A`, else `B`, else `18480` (tried
   with `--server.port='${NOPE_A:${NOPE_B:18989}}'`). A placeholder may also sit inside a longer value
-  (`optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}`, `s3a://${LAKE_BUCKET:bank-lake}/drishti`).
+  (`optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}`, `s3a://${LAKE_BUCKET:bank-lake}/drishti`).
   The bundled file nests none.
 * **Your own files** can use the syntax anywhere (`password: ${TRADES_DB_PASSWORD}`).
 
@@ -177,6 +177,36 @@ the first `}` (no nesting); a missing variable with no default is empty; and the
 become booleans, digits numbers). Precedence, lowest first: `drishti-console/config/application.yaml`, `drishti-console/config/application.local.yaml`,
 then `DRISHTI_CONSOLE__A__B` environment variables, then `--a.b=value` arguments. The console has no flag
 for choosing another config *directory*; see [QUICKSTART](../guides/QUICKSTART.md#build-and-run-without-the-wrapper-or-from-an-ide).
+
+### The data folder and the config folder
+
+Everything the product owner puts in files lives in one of two places, both relative to the server's working directory:
+
+| Folder | Setting (variable) | Holds |
+|---|---|---|
+| `config/connectors/` | `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | One file per connector ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). |
+| `config/packs/` | `drishti.packs.dir` (`DRISHTI_PACKS_DIR`) | The domain packs. |
+| `config/bi/` | `drishti.bi.dir` (`DRISHTI_BI_DIR`) | Rupaka (BI) files: `datasets/`, `reports/`, `python/` (`config/bi/README.md`). |
+| `data/` | `drishti.data.dir` (`DRISHTI_DATA_DIR`) | Everything written at run time. |
+
+`drishti.data.dir` is the umbrella for every runtime path. Each of these defaults to a folder under it, and each keeps its own
+setting, which still overrides the default:
+
+| Under the data folder | Setting |
+|---|---|
+| `identity/` (database, users file, audit file, preferences) | `drishti.identity.*` |
+| `packs/added.yaml`, `packs/installed/`, `packs/settings/`, `packs/samples-mode`, `packs/deploy-history.jsonl` | `drishti.packs.overlay`, `installed-dir`, `settings-dir`, `samples-file`, `deploy.history-file` |
+| `delta/`, `files/`, `iceberg/`, `duckdb/` (the lake and store roots the packs' connector suggestions use) | `DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_DUCKDB_PATH` |
+| `cache/` (stream disk caches), `state/` (message-source state), `feeds/` (the bundled file source) | `DRISHTI_CACHE_ROOT`, `state.root`, `DRISHTI_FEEDS` |
+| `loads/`, `collab/`, `designs/`, `reports/`, `governance/` | `drishti.loads.dir`, `drishti.collab.dir`, `drishti.builder.designs.dir`, `drishti.reports.folder`, `drishti.governance.dir` |
+
+Move the whole tree with one setting: `DRISHTI_DATA_DIR=/var/lib/drishti` puts the identity database at
+`/var/lib/drishti/identity/drishti.db` and the lake at `/var/lib/drishti/delta`. The plugins read it too (the server publishes the
+resolved value to them as the system property `drishti.data.dir`, and command-line tools read `DRISHTI_DATA_DIR`).
+The `./data/...` defaults shown in this page are the defaults of this setting.
+
+**Moved:** the packs folder was `./packs` and is now `./config/packs` (`git mv packs config/packs`). For one release a server
+whose packs folder does not exist, and that finds `./packs`, uses `./packs` and logs a warning; the console does the same with `../packs`.
 
 ### Every placeholder in the server's `application.yaml`
 
@@ -248,7 +278,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_SUTRA_REVIEW` | `drishti.governance.enabled` | `true` | A Studio save is a proposal an approver makes live. |
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept. |
-| `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./packs` | The packs directory. |
+| `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
+| `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `python/`. Never inside a pack. |
+| `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PACKS_SAMPLES` | `drishti.packs.samples` | `visible` | Who sees sample packs: `visible`, `developers` (author or admin) or `hidden`; Admin → Packs can override it. |
 | `DRISHTI_PACKS_SAMPLES_FILE` | `drishti.packs.samples-file` | `./data/packs/samples-mode` | Where the Admin → Packs choice for sample packs is saved. |
@@ -290,7 +322,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
 | `DRISHTI_BI_POC_ENABLED` | `bi.poc_enabled` | `false` | Rupaka phase 0 proof of concept: the `/bi/poc` page, its top-bar entry and `RUPAKA <GO>`. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
-| `DRISHTI_PACKS_DIR` | `packs.dir` | `../packs` | The packs directory (a relative path resolves from `drishti-console/`). |
+| `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 
 ---
 
@@ -442,7 +474,7 @@ What the bundled file sets under `plugins`:
 | Plugin | `enabled` default | Bundled settings |
 |---|---|---|
 | `demo` | `true` (`DRISHTI_DEMO_ENABLED`) | sample directories come from the packs |
-| `file` | `true` | `root: ${DRISHTI_FEEDS:./data/feeds}`, `source-name: feed-file`, `rescan-seconds: 30` |
+| `file` | `true` | `root: ${DRISHTI_FEEDS:${drishti.data.dir:./data}/feeds}`, `source-name: feed-file`, `rescan-seconds: 30` |
 | `rest` | `false` (`DRISHTI_REST_ENABLED`) | `base-url: ${DRISHTI_REST_URL:http://localhost:9000/api}`, `path: /{kind}/{id}`, `source-name: rest`, `timeout-ms: 2000` |
 | `jdbc` | `false` (`DRISHTI_JDBC_ENABLED`) | `url`, `user`, `password` from `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD`; `source-name: jdbc`, `pool-size: 4` |
 | `delta` | `false` | runs only as named connectors (the packs declare one per data domain) |
@@ -476,7 +508,7 @@ drishti:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `dir` | `./packs` (`DRISHTI_PACKS_DIR`) | The folder holding one sub-folder per pack. Relative to the server's working directory. The console reads the same variable (its default `../packs` is relative to `drishti-console/`), so use an absolute path when you set it. |
+| `dir` | `./config/packs` (`DRISHTI_PACKS_DIR`) | The folder holding one sub-folder per pack. Relative to the server's working directory. The console reads the same variable (its default `../config/packs` is relative to `drishti-console/`), so use an absolute path when you set it. |
 | `enabled` | `finance` (`DRISHTI_PACKS`) | Comma-separated packs to load, in order. Packs they `extends:` (or the older `requires:`) are loaded as well. A missing pack stops start-up with a clear message. |
 | `default-for-users` | empty = every installed pack (`DRISHTI_DEFAULT_PACKS`) | The packs a user sees until an admin assigns packs to them. |
 | `samples` | `visible` (`DRISHTI_PACKS_SAMPLES`) | Who sees sample packs (`sample: true` in `pack.yaml`): `visible` (everyone), `developers` (only users with the author or admin power; use this once real packs exist) or `hidden` (nobody; sample packs are not loaded and their connectors do not start). The setting an administrator saves in Admin → Packs overrides it. |
@@ -913,6 +945,12 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
 [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
 
+### `drishti.bi` — where Rupaka files live
+
+| Key | Default | Meaning |
+|---|---|---|
+| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The folder of BI files: `datasets/<id>.dataset.yaml`, `reports/<id>.report.yaml`, `python/`. Not inside a pack. See `config/bi/README.md` and [RUPAKA.md](../architecture/RUPAKA.md), "Where BI files live". |
+
 ### `drishti.bi.poc` — Rupaka phase 0 proof of concept
 
 **Throw-away code**, off by default, that tests the risky parts of the BI design (`docs/architecture/RUPAKA_POC.md`):
@@ -928,6 +966,7 @@ feed. Endpoints under `/api/v1/bi/poc` exist only while `enabled` is true (other
 | `max-group-by` | `4` | Most dimensions one query may group by. |
 | `feed-trades` | 24 trades of the trading pack | The live demo trades the row feed follows. |
 | `feed-batch` | `100ms` | How often the feed sends the rows that changed since the last send. |
+| `bi-dir` | `drishti.bi.dir` | Where the proof of concept looks for dataset files; `bench` lists the ones it finds (`biDatasets`). |
 | `bench-runs` | `30` | Default runs of `GET /api/v1/bi/poc/bench`, the JSON-column / typed-column / rollup comparison. |
 
 ### `drishti.layouts` — personal layouts
@@ -1649,7 +1688,7 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 | `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres`, `aerospike` or `duckdb`, above. |
 | `spring.config.additional-location` | none (`SPRING_CONFIG_ADDITIONAL_LOCATION`) | Another config file or folder read **in addition to** the bundled one, e.g. `file:/etc/drishti/site.yaml`. See [QUICKSTART](../guides/QUICKSTART.md#supplying-a-different-application-config). |
 | `spring.config.location` | none | Config files read **instead of** the defaults: the bundled `application.yaml` is then not read unless you list `classpath:/application.yaml` first. |
-| `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:./data/packs/added.yaml}`. |
+| `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}`. |
 | `management.endpoints.web.exposure.include` | `health,info,prometheus,metrics` | Actuator endpoints: `/actuator/health` (with `/liveness` and `/readiness` probes), `/actuator/prometheus` (timer `drishti.view`, gauges `drishti.live.*`). |
 | `drishti.security.token-read-posts` | `/api/v1/search/pivot/**`, `/api/v1/command` | The `POST` paths (ant patterns) a personal API token may call because they only read. Every other non-`GET` request stays refused for a token. |
 | `drishti.security.token-scopes` | `design:write`, `design:approve`, `packs:admin`, `loads:write` | The write scopes a personal API token may be given: for each, a `description` (shown on the account page) and the `allow` list of `METHOD path` patterns it opens (`*` for any method). Keys with a colon are written `"[design:write]":`. A scope is only a door: the controller still checks the user's roles at the time of each call. A write no scope opens is refused. |
@@ -1778,7 +1817,7 @@ read by both programs, so one set of variables configures both halves.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `packs.dir` | `../packs` (`DRISHTI_PACKS_DIR`), relative to `drishti-console/` | Where pack content (examples, guides) is read. |
+| `packs.dir` | `../config/packs` (`DRISHTI_PACKS_DIR`), relative to `drishti-console/` | Where pack content (examples, guides) is read. |
 | `packs.enabled` | `finance` | Used only when the server cannot be asked which packs are enabled. |
 | `help.docs_dir` | `../docs` | The documents rendered in the help centre's reference section. |
 | `studio.examples_dir` | `../docs/guides/examples` | The Rachana examples (`<name>.sutra.yaml`, `<name>.json`, `<name>.md`) that the Build workbench (**Build → New screen → Examples**, the File menu) and **Help → Examples** offer. Only names of complete example sets present there are served. |

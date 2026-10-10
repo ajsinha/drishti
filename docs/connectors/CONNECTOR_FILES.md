@@ -81,7 +81,7 @@ enabled: true                     # optional, default true; may be ${DRISHTI_LAK
 kinds: [trade]                    # optional: limit the kinds it serves (default: what the plugin and the pack's routes say)
 description: Trading lake         # optional, free text
 settings:                         # the plugin's settings; nesting is flattened to the dotted keys the plugin reads
-  root: ${DRISHTI_DELTA_ROOT:./data/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
   domain: trading
   tls:                            # tls: {ca-file: x} is the setting tls.ca-file
     ca-file: /etc/drishti/tls/ca.pem
@@ -113,7 +113,7 @@ enabled: "${DRISHTI_LAKE_ENABLED:true}"
 kinds:
 - trade
 settings:
-  root: "${DRISHTI_DELTA_ROOT:./data/delta}"
+  root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
   domain: trading
   layout.trade.columns: "tradeId,productType,productName,direction,currency,notional,mtm,pnl1d,…"
   layout.trade.sort-by: id
@@ -301,7 +301,7 @@ enabled: "${DRISHTI_LAKE_ENABLED:true}"
 kinds:
 - trade
 settings:
-  root: "${DRISHTI_DELTA_ROOT:./data/delta}"
+  root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
   domain: trading
   …
 ```

@@ -22,5 +22,5 @@ kinds:
 - pnl-explain
 description: risk-store read from files (the former application-files.yaml profile)
 settings:
-  root: ${DRISHTI_FILES_ROOT:./data/files}
+  root: ${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}
   domain: risk

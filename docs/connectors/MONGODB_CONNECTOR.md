@@ -163,7 +163,7 @@ pack declares them on `trading-store`; the `mongodb` profile (`SPRING_PROFILES_A
 to the MongoDB plugin and keeps the pack's settings:
 
 ```yaml
-# packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
 connectors:
   trading-store:
     settings:

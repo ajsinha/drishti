@@ -188,7 +188,7 @@ mvn -q -pl drishti-server -am package -DskipTests    # one module and what it ne
 ls drishti-server/target/*-exec.jar     # the application: drishti-server/target/drishti-server-1.18.0-exec.jar
 ```
 
-Run the server from the repository root (it finds `./packs` and `./data` relative to where you start it). It runs on
+Run the server from the repository root (it finds `./config/packs` and `./data` relative to where you start it). It runs on
 Java 21 (the production target) or any newer JDK. Java-25-only note: `-XX:+UseCompactObjectHeaders` saves about 10% of the heap there, and Java 21 refuses to start with it, so leave it out on 21:
 
 ```bash

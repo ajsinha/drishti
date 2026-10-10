@@ -25,7 +25,7 @@ configuration: mnemonics, reference patterns, badges, roles, semantic hints, for
 tutorials and placeholders. "Any domain" was true of the engine and not of the product.
 
 ## Decision
-Everything industry-specific lives in a **domain pack** (`packs/<name>/`). A `pack.yaml` declares the
+Everything industry-specific lives in a **domain pack** (`config/packs/<name>/`). A `pack.yaml` declares the
 vocabulary, next to the pack's Sutras, hints, formats, samples, starters and guides.
 
 The `drishti-packs` module turns the enabled packs into the lowest-precedence property source through
@@ -39,4 +39,4 @@ Finance and logistics ship as packs; the second one proves the core is neutral.
 - A new industry is content and configuration, with no code.
 - The core semantic hints and formats are neutral, so an unrecognised domain still renders sensibly
   but more plainly until its pack adds vocabulary.
-- Deployments must ship the `packs/` folder (both images copy it).
+- Deployments must ship the `config/packs/` folder (both images copy it).

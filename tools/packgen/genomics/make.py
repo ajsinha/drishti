@@ -16,7 +16,7 @@
 studies and clinical trials. Reference facts are public (see reference.py); samples, runs, studies and trials are
 synthetic.
 
-    python3 tools/packgen/genomics/make.py            write packs/genomics
+    python3 tools/packgen/genomics/make.py            write config/packs/genomics
     python3 tools/packgen/genomics/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/genomics/make.py --lake data/delta
 """

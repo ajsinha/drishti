@@ -207,7 +207,7 @@ own commits per table). For several writers, use a REST catalog: it commits atom
 The Drishti profile `iceberg` (`SPRING_PROFILES_ACTIVE=iceberg`, `drishti-server/src/main/resources/application-iceberg.yaml`; deprecated, replaced by the connector files in
 `config/connectors.examples/iceberg/`, see [As a connector file](#as-a-connector-file)) switches the banking packs' store connectors (`reference-store`, `market-store`, `trading-store`, `risk-store`,
 `credit-store`, `collateral-store`) to this plugin with `catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}`,
-`root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}`, `uri: ${DRISHTI_ICEBERG_URI:}`, `warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}`
+`root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}`, `uri: ${DRISHTI_ICEBERG_URI:}`, `warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}`
 and `credential: ${DRISHTI_ICEBERG_CREDENTIAL:}`; the packs keep deciding kinds, routes, modes and promoted columns.
 
 ## 5. Declaring the layout in a pack
@@ -625,7 +625,7 @@ description: Trading documents in an Iceberg catalog
 settings:
   domain: trading
   catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
-  root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}
+  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   uri: ${DRISHTI_ICEBERG_URI:}
   warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
   credential: ${DRISHTI_ICEBERG_CREDENTIAL}   # an environment (or file:) reference

@@ -136,7 +136,7 @@ to this plugin and keeps the packs' settings, so the trading pack's 19 promoted 
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:./data/files}" } }
+      trading-store: { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }
       # … reference-store, market-store, risk-store, credit-store, collateral-store alike
 ```
 
@@ -467,7 +467,7 @@ settings:
   lookback-days: '5'               # a picked date may fall back at most 5 days to an older date folder
 ```
 
-**Pack form** (`packs/<your-pack>/pack.yaml`), the same connector suggested by a pack as a template (written to the file above at the first start if
+**Pack form** (`config/packs/<your-pack>/pack.yaml`), the same connector suggested by a pack as a template (written to the file above at the first start if
 the site has none):
 
 ```yaml
@@ -548,7 +548,7 @@ drishti:
       file:
         enabled: true
         settings:
-          root: ${DRISHTI_FEEDS:./data/feeds}   # the folder to serve
+          root: ${DRISHTI_FEEDS:${drishti.data.dir:./data}/feeds}   # the folder to serve
           source-name: feed-file                # shown in provenance (the route name stays `file`)
           rescan-seconds: 30                    # how often the search index and the dated folders are re-listed
           lookback-days: 10                     # how far back a picked date may fall to an older dated folder
@@ -564,7 +564,7 @@ settings:
   lookback-days: '5'
 ```
 
-and the pack that reads it names it and routes the kind (`packs/<pack>/pack.yaml`):
+and the pack that reads it names it and routes the kind (`config/packs/<pack>/pack.yaml`):
 
 ```yaml
 connectors: [eod-futures]

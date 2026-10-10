@@ -19,9 +19,9 @@
 drishti:
   sources:
     connectors:
-      reference-store:  { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:./data/files}" } }
-      market-store:     { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:./data/files}" } }
-      trading-store:    { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:./data/files}" } }
-      risk-store:       { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:./data/files}" } }
-      credit-store:     { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:./data/files}" } }
-      collateral-store: { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:./data/files}" } }
+      reference-store:  { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }
+      market-store:     { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }
+      trading-store:    { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }
+      risk-store:       { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }
+      credit-store:     { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }
+      collateral-store: { plugin: file, settings: { root: "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}" } }

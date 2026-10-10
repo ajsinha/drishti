@@ -6,7 +6,7 @@ FROM ${BASE_IMAGE}
 RUN useradd --system --uid 10001 drishti
 WORKDIR /opt/drishti
 COPY drishti-server/target/drishti-server-*-exec.jar app.jar
-COPY packs/ packs/
+COPY config/packs/ config/packs/
 USER drishti
 EXPOSE 18480
 ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC"

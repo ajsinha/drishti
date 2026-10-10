@@ -171,7 +171,7 @@ a Delta lake, so a machine without them runs everything else.
 
 ```bash
 uv run --with pyyaml python tools/drishti.py --help
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack packs/my-bank --lake data/delta
+uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
 ```
 
 **With a virtual environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij)):
@@ -191,7 +191,7 @@ uv venv .venv-tools && uv pip install --python .venv-tools/bin/python pyyaml del
 | `DRISHTI_TOKEN` | the bearer token (never printed) | none |
 | `DRISHTI_USER` | the user name sent when the server has sign-in off | none |
 
-The Java commands run **from the repository root** (the engine reads `./packs` and `./sutras` relative to it), so every path
+The Java commands run **from the repository root** (the engine reads `./config/packs` and `./sutras` relative to it), so every path
 you give is made absolute first: use paths relative to *your* current directory as you normally would.
 
 ## 3. Connecting to a server: URL, tokens and permissions
@@ -291,8 +291,8 @@ the Java tool:
                      java on the PATH)
 
 examples:
-  drishti.py sutra lint packs/market-risk --strict
-  drishti.py sutra test packs/market-risk --junit build/market-risk.xml
+  drishti.py sutra lint config/packs/market-risk --strict
+  drishti.py sutra test config/packs/market-risk --junit build/market-risk.xml
   drishti.py sutra shape samples/ --out build
   drishti.py sutra design samples/ --kind ticket
 Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.
@@ -544,7 +544,7 @@ Try it without touching anything of yours: `DRISHTI_JAR=... DRISHTI_PORT=18974 b
 
 ### `pack new`: a complete pack from JSON Lines
 
-Writes `packs/<name>/` (or `--out`): `pack.yaml` (kinds, mnemonics, columns, and with a date a connector, routes and the
+Writes `config/packs/<name>/` (or `--out`): `pack.yaml` (kinds, mnemonics, columns, and with a date a connector, routes and the
 optional `ingest:` block), `samples/`, one Sutra per kind or `--match` group, `tests/<sutra>/` with `expect.yaml`,
 `config/about.yaml` (kind titles and glossary entries with `TODO` text for you to fill in) and a `README.md`; then it runs
 `sutra lint` and `sutra test` on it. With a dated store option it also **writes your documents into that store**, so the pack
@@ -581,7 +581,7 @@ options:
                         pack description
   --mnemonic MNEMONIC   kind=MNEMONIC,kind2=M2 (default: initials of the kind,
                         upper case)
-  --out OUT             default packs/<name>
+  --out OUT             default config/packs/<name>
   --force               overwrite an existing --out folder
   --catalog-samples CATALOG_SAMPLES
                         documents per kind kept in samples/ (default 25)
@@ -645,7 +645,7 @@ store for every date you ingested; the business-date picker and history work.
 ```bash
 python3 tools/drishti.py pack new data/jsonl --name jsonl-demo --title "JSONL demo" \
     --key trade=tradeId,counterparty=counterpartyId --date businessDate --match trade=productType \
-    --store files --files-root data/files --out packs/jsonl-demo
+    --store files --files-root data/files --out config/packs/jsonl-demo
 ```
 
 ```text
@@ -666,10 +666,10 @@ trade               2026-10-02             30
 total rows: 64
 Dated store (files): 64 rows written to data/files (domain jsonl-demo); 0 document(s) without a date or id skipped
 Dated store (files): 64 rows written to data/files (domain jsonl-demo); 0 document(s) without a date or id skipped
-pack written to packs/jsonl-demo
+pack written to config/packs/jsonl-demo
 ...
-ok      packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml
-ok      packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml
+ok      config/packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml
+ok      config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml
 ```
 
 The same, into a **Delta lake** (needs `deltalake` and `pyarrow`, so run it with `uv run --with ...`):
@@ -696,16 +696,16 @@ trade               2026-10-01             30
 trade               2026-10-02             30
 ...
      trade-bond: help coverage 1/5 (20%)
-ok   packs/jsonl-lake/sutras/trade/trade-bond.v1.sutra.yaml (5 samples)
+ok   config/packs/jsonl-lake/sutras/trade/trade-bond.v1.sutra.yaml (5 samples)
      trade-fx-forward: help coverage 1/5 (20%)
-ok   packs/jsonl-lake/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
+ok   config/packs/jsonl-lake/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
      trade-swap: help coverage 1/5 (20%)
-ok   packs/jsonl-lake/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
+ok   config/packs/jsonl-lake/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
 ```
 
 **`--load --server URL`** asks the running server to load the pack straight away (it calls `POST /api/v1/admin/packs/<name>/load`;
 you must be an administrator, and it takes effect at once, with no restart). The pack has to be where the server reads packs from: its
-`drishti.packs.dir` (default `./packs`) or its installed-dir. If `--out` is somewhere else the command says so.
+`drishti.packs.dir` (default `./config/packs`) or its installed-dir. If `--out` is somewhere else the command says so.
 
 ```bash
 python3 tools/drishti.py pack new data/jsonl --name jsonl-demo --date businessDate --store files \
@@ -760,48 +760,48 @@ the Java tool:
                the PATH)
 
 examples:
-  drishti.py pack check packs/my-bank --strict --junit build/reports
-  drishti.py pack check packs/a packs/b --json
+  drishti.py pack check config/packs/my-bank --strict --junit build/reports
+  drishti.py pack check config/packs/a config/packs/b --json
 exit: 0 all passed, 1 any failure, 2 usage
 ```
 
 ```bash
-python3 tools/drishti.py pack check packs/jsonl-demo --junit build/reports
+python3 tools/drishti.py pack check config/packs/jsonl-demo --junit build/reports
 ```
 
 ```text
 == jsonl-demo: sutra lint: exit 0
-packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml:1 warning DRS-2047 field 'notional' is shown but has no glossary entry (kinds.trade.gl...
+config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml:1 warning DRS-2047 field 'notional' is shown but has no glossary entry (kinds.trade.gl...
 ...
-packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'mtm' is shown but has no glossary entry (kinds.trade.glossary in c...
-packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'businessDate' is shown but has no glossary entry (kinds.trade.glos...
-packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'productType' is shown but has no glossary entry (kinds.trade.gloss...
+config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'mtm' is shown but has no glossary entry (kinds.trade.glossary in c...
+config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'businessDate' is shown but has no glossary entry (kinds.trade.glos...
+config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'productType' is shown but has no glossary entry (kinds.trade.gloss...
 == jsonl-demo: sutra test: exit 0
      counterparty-default: help coverage 2/4 (50%)
-ok   packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml (4 samples)
+ok   config/packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml (4 samples)
      trade-bond: help coverage 1/5 (20%)
-ok   packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml (5 samples)
+ok   config/packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml (5 samples)
      trade-fx-forward: help coverage 1/5 (20%)
-ok   packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
+ok   config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
      trade-swap: help coverage 1/5 (20%)
-ok   packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
+ok   config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
 ```
 
 The exit code is 0 here; with `--strict` the generated pack's unexplained fields fail the run:
 
 ```bash
-python3 tools/drishti.py pack check packs/jsonl-demo --strict --tail 3
+python3 tools/drishti.py pack check config/packs/jsonl-demo --strict --tail 3
 ```
 
 ```text
 == jsonl-demo: sutra lint --strict: exit 1
-packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'mtm' is shown but has no glossary entry (kinds.trade.glossary in c...
-packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'businessDate' is shown but has no glossary entry (kinds.trade.glos...
-packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'productType' is shown but has no glossary entry (kinds.trade.gloss...
+config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'mtm' is shown but has no glossary entry (kinds.trade.glossary in c...
+config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'businessDate' is shown but has no glossary entry (kinds.trade.glos...
+config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml:1 warning DRS-2047 field 'productType' is shown but has no glossary entry (kinds.trade.gloss...
 == jsonl-demo: sutra test: exit 0
-ok   packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
+ok   config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml (5 samples)
      trade-swap: help coverage 1/5 (20%)
-ok   packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
+ok   config/packs/jsonl-demo/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
 ```
 
 `--junit DIR` writes `DIR/<pack>-lint.xml` and `DIR/<pack>-test.xml`, which any CI shows as test results.
@@ -838,7 +838,7 @@ Runs `sutra lint` and lists its help warnings per Sutra. Exit 1 when any field i
 ```
 
 ```bash
-python3 tools/drishti.py pack about-check packs/jsonl-demo
+python3 tools/drishti.py pack about-check config/packs/jsonl-demo
 ```
 
 ```text
@@ -924,7 +924,7 @@ folder first. Exit codes: 0 merged cleanly, 1 conflicts (or `no-baseline` files)
 ### `pack diff`: what changed between two versions, and what breaks
 
 ```text
-$ python3 tools/drishti.py pack diff dist/my-bank-1.0.0.tar.gz packs/my-bank
+$ python3 tools/drishti.py pack diff dist/my-bank-1.0.0.tar.gz config/packs/my-bank
 pack diff: my-bank 1.0.0 -> my-bank 1.1.0
 
 BREAKING (1)
@@ -952,7 +952,7 @@ exists); `--json` prints `{counts, findings: [{level, what, name, detail}], fail
 ### `pack catalogue`: a readable catalogue for business review
 
 ```text
-$ python3 tools/drishti.py pack catalogue packs/my-bank --out build/catalogue --format html --shots
+$ python3 tools/drishti.py pack catalogue config/packs/my-bank --out build/catalogue --format html --shots
 pack catalogue: 1 kind(s), 125 Sutra(s), 125 preview(s) -> build/catalogue/index.html
 ```
 
@@ -984,12 +984,12 @@ written shows as its `TODO` placeholder, so the catalogue doubles as a review ch
 ### `pack i18n`: translate the About text through a spreadsheet
 
 ```text
-$ python3 tools/drishti.py pack i18n export packs/my-bank --lang fr --out build/fr.csv
+$ python3 tools/drishti.py pack i18n export config/packs/my-bank --lang fr --out build/fr.csv
 pack i18n export: 40 texts of my-bank -> build/fr.csv  (0 already translated, 40 to do)
-next: fill the 'translation' column, then  drishti.py pack i18n import packs/my-bank build/fr.csv --lang fr
+next: fill the 'translation' column, then  drishti.py pack i18n import config/packs/my-bank build/fr.csv --lang fr
 
-$ python3 tools/drishti.py pack i18n import packs/my-bank build/fr.csv --lang fr
-pack i18n import: 2 of 40 texts -> packs/my-bank/config/about.fr.yaml
+$ python3 tools/drishti.py pack i18n import config/packs/my-bank build/fr.csv --lang fr
+pack i18n import: 2 of 40 texts -> config/packs/my-bank/config/about.fr.yaml
   missing (shown in English): 38
     kinds/trade/glossary/assetClass/term
     ...
@@ -1013,7 +1013,7 @@ The offline path: no server API and no token. Full guide with real output, promo
 [OPERATIONALISING.md](OPERATIONALISING.md).
 
 ```bash
-drishti.py pack bundle packs/finance --out dist                 # finance-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
+drishti.py pack bundle config/packs/finance --out dist                 # finance-1.0.0.tar.gz + .sha256 + .manifest.json (runs pack check first)
 drishti.py pack verify dist/finance-1.0.0.tar.gz                # sha256, manifest checksums, schema, server version, sutra lint + test
 drishti.py pack deploy dist/finance-1.0.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups [--dry-run]
 drishti.py pack rollback finance --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
@@ -1049,12 +1049,12 @@ options:
   --publisher PUBLISHER
 
 example:
-  drishti.py pack publish packs/my-bank --registry /srv/registry --key keys/me.pem --publisher me
+  drishti.py pack publish config/packs/my-bank --registry /srv/registry --key keys/me.pem --publisher me
 ```
 
 ```bash
 python3 tools/drishti.py pack keygen --out keys/me.pem
-python3 tools/drishti.py pack publish packs/jsonl-demo --registry registry --key keys/me.pem --publisher me
+python3 tools/drishti.py pack publish config/packs/jsonl-demo --registry registry --key keys/me.pem --publisher me
 ```
 
 ```text
@@ -1204,8 +1204,8 @@ options:
   --batch-rows BATCH_ROWS
 
 examples:
-  drishti.py data ingest --from data/new --pack packs/my-bank --lake data/delta
-  drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack packs/my-bank --store files --root data/files --dry-run
+  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+  drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack config/packs/my-bank --store files --root data/files --dry-run
 ```
 
 `--mode overwrite-dates` (the default) replaces only the dates in your input, so re-running a day is safe; `append` adds;
@@ -1213,7 +1213,7 @@ examples:
 
 ```bash
 # look first
-python3 tools/drishti.py data ingest --from data/jsonl --pack packs/jsonl-demo --store files --root data/files2 --dry-run
+python3 tools/drishti.py data ingest --from data/jsonl --pack config/packs/jsonl-demo --store files --root data/files2 --dry-run
 ```
 
 ```text
@@ -1225,7 +1225,7 @@ total rows: 64
 ```
 
 ```bash
-python3 tools/drishti.py data ingest --from data/jsonl --pack packs/jsonl-demo --store files --root data/files2
+python3 tools/drishti.py data ingest --from data/jsonl --pack config/packs/jsonl-demo --store files --root data/files2
 ```
 
 ```text
@@ -1272,7 +1272,7 @@ python3 tools/drishti.py data ingest --watch drop --once --domain demo --key id 
 2026-10-05T16:44:48 INFO  pass finished: 1 file(s) ingested, 0 with problems
 ```
 
-Cron: `*/5 * * * * cd /opt/drishti && python3 tools/drishti.py data ingest --watch /data/drop --once --pack packs/my-bank --lake /data/delta --done-dir /data/done`.
+Cron: `*/5 * * * * cd /opt/drishti && python3 tools/drishti.py data ingest --watch /data/drop --once --pack config/packs/my-bank --lake /data/delta --done-dir /data/done`.
 As a service run it without `--once`; Ctrl-C stops it cleanly.
 
 ### `data landed` and `data loads`: tell the server a batch landed
@@ -1497,7 +1497,7 @@ smoke: passed
 
 Green, yellow and red lines, each with a fix; exit 1 on any red. It checks Java (on `JAVA_HOME` or the PATH, 21 or newer, vendor),
 the server jar (and its version), Python and the optional libraries (`pyyaml`, `deltalake`, `pyarrow`, with install hints), the
-repository layout (`packs/`, `drishti-console/.venv`), the directories you configured (`DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`,
+repository layout (`config/packs/`, `drishti-console/.venv`), the directories you configured (`DRISHTI_DELTA_ROOT`, `DRISHTI_FILES_ROOT`,
 `DRISHTI_PACKS_INSTALLED`, `DRISHTI_PACKS_DIR`: readable, writable), and ports 18480 and 17480 (override with `DRISHTI_DOCTOR_PORTS=18971:server,17971:console` to check other ports instead; free, or in use by Drishti; only a
 GET of `/actuator/health` on localhost, nothing is killed or changed). With `--server` it also checks reachability, the version
 and whether the token is accepted, with the exact id, scopes and expiry of the token the call used (`GET /api/v1/me/token`; a signed-in session has none).
@@ -1512,7 +1512,7 @@ YELLOW python deltalake        not installed (needed for data ingest --store del
                                fix: pip install deltalake   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
 YELLOW python pyarrow          not installed (needed for data ingest --store delta)
                                fix: pip install pyarrow   or run through uv: uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py ...
-GREEN  repo packs/             ~/drishti/packs
+GREEN  repo config/packs/             ~/drishti/packs
 YELLOW console venv            ~/drishti/drishti-console/.venv
                                fix: cd drishti-console && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
@@ -1846,7 +1846,7 @@ the server's answer unchanged. Errors: `DRS-5031` invalid (422), `DRS-5032` stal
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,
-options, the choices of options that have them, files for options that take a value, and the folders of `packs/` for `--pack`),
+options, the choices of options that have them, files for options that take a value, and the folders of `config/packs/` for `--pack`),
 so it is always current. Install:
 
 ```bash
@@ -1922,7 +1922,7 @@ server connection:
 
 ```bash
 export DRISHTI_SERVER=http://localhost:18977
-python3 tools/drishti.py design create --name swap-demo --kind trade --samples packs/jsonl-demo/tests/trade-swap --autodesign
+python3 tools/drishti.py design create --name swap-demo --kind trade --samples config/packs/jsonl-demo/tests/trade-swap --autodesign
 python3 tools/drishti.py design list
 python3 tools/drishti.py design check f0bc597072b6
 python3 tools/drishti.py design propose f0bc597072b6 --note "first cut"
@@ -2094,8 +2094,8 @@ python3 tools/drishti.py pack new data/jsonl --name jsonl-demo --title "JSONL de
     --store files --files-root data/files
 
 # 2. check it, and list the help text still to write
-python3 tools/drishti.py pack check packs/jsonl-demo
-python3 tools/drishti.py pack about-check packs/jsonl-demo
+python3 tools/drishti.py pack check config/packs/jsonl-demo
+python3 tools/drishti.py pack about-check config/packs/jsonl-demo
 
 # 3. restart the server once with the store's root (DRISHTI_FILES_ROOT=$PWD/data/files, as in QUICKSTART or your IDE run
 #    configuration), then load the pack into it without another restart of yours
@@ -2118,7 +2118,7 @@ curl -s "http://localhost:18977/api/v1/views/trade/TRD-0050?asOf=2026-10-02" | h
 ```
 
 `TRD-0050` is not among the pack's sample files, so this answer came **from the files store**. New documents tomorrow: run
-`data ingest --from data/new --pack packs/jsonl-demo --store files --root data/files`; the default mode replaces only the dates
+`data ingest --from data/new --pack config/packs/jsonl-demo --store files --root data/files`; the default mode replaces only the dates
 in the input, and the server picks the new files up on its next rescan.
 
 **Three ways a pack becomes known** to a server (the third is section 10.4): start with `DRISHTI_PACKS=...,jsonl-demo` and a
@@ -2129,8 +2129,8 @@ restart; `server packs load jsonl-demo` (or **Admin → Packs → Load**; it tak
 
 ```bash
 set -e
-python3 tools/drishti.py pack check packs/my-bank --strict --junit build/reports       # exit 1 fails the job
-python3 tools/drishti.py pack check packs/my-bank --json > build/pack-check.json       # for a dashboard
+python3 tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports       # exit 1 fails the job
+python3 tools/drishti.py pack check config/packs/my-bank --json > build/pack-check.json       # for a dashboard
 ```
 
 A GitHub Actions job (the jar is built once and reused):
@@ -2140,7 +2140,7 @@ A GitHub Actions job (the jar is built once and reused):
   with: { distribution: temurin, java-version: 21 }
 - run: ./mvnw -q -DskipTests -pl drishti-server -am package
 - uses: astral-sh/setup-uv@v5
-- run: uv run --with pyyaml python tools/drishti.py pack check packs/my-bank --strict --junit build/reports
+- run: uv run --with pyyaml python tools/drishti.py pack check config/packs/my-bank --strict --junit build/reports
 - uses: actions/upload-artifact@v4
   if: always()
   with: { name: pack-reports, path: build/reports }
@@ -2171,7 +2171,7 @@ With review off (`drishti.governance.enabled: false`) `design propose` saves the
 
 ```bash
 python3 tools/drishti.py pack keygen --out keys/me.pem                      # once; keep the private key secret
-python3 tools/drishti.py pack publish packs/my-bank --registry /srv/registry --key keys/me.pem --publisher me
+python3 tools/drishti.py pack publish config/packs/my-bank --registry /srv/registry --key keys/me.pem --publisher me
 # the server trusts the publisher (drishti.packs.registry.trusted-keys.me = the public key keygen printed), then:
 python3 tools/drishti.py pack install --list
 python3 tools/drishti.py pack install my-bank 1.0.0
@@ -2201,20 +2201,20 @@ stay on stderr.
 | every `design ... --json` | the server's own JSON (`design export` prints `{file, bytes}`) |
 
 ```text
-$ python3 tools/drishti.py pack check packs/jsonl-demo --json
+$ python3 tools/drishti.py pack check config/packs/jsonl-demo --json
 {
   "ok": true,
   "packs": [
     {
       "pack": "jsonl-demo",
-      "path": "packs/jsonl-demo",
+      "path": "config/packs/jsonl-demo",
       "steps": {
         "lint": {
           "exit": 0,
           "output": [
-            "ok      packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml",
-            "ok      packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml",
-            "ok      packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml"
+            "ok      config/packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml",
+            "ok      config/packs/jsonl-demo/sutras/trade/trade-bond.v1.sutra.yaml",
+            "ok      config/packs/jsonl-demo/sutras/trade/trade-fx-forward.v1.sutra.yaml"
           ],
           "error": "hutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/cli-work/packs/jsonl-demo/sutras/trade/trade-fx-for...
         },
@@ -2222,7 +2222,7 @@ $ python3 tools/drishti.py pack check packs/jsonl-demo --json
           "exit": 0,
           "output": [
             "     counterparty-default: help coverage 2/4 (50%)",
-            "ok   packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml (4 samples)",
+            "ok   config/packs/jsonl-demo/sutras/counterparty/counterparty-default.v1.sutra.yaml (4 samples)",
             "     trade-bond: help coverage 1/5 (20%)"
           ],
           "error": ""
@@ -2236,7 +2236,7 @@ $ python3 tools/drishti.py pack check packs/jsonl-demo --json
 ```
 
 ```text
-$ python3 tools/drishti.py pack about-check packs/jsonl-demo --json
+$ python3 tools/drishti.py pack about-check config/packs/jsonl-demo --json
 {
   "ok": false,
   "strict": false,
@@ -2310,7 +2310,7 @@ empty PyCharm to a run configuration for each common task.
 
 ### 14.1 Create the interpreter
 
-1. Open the repository root as the project (**File → Open**, the folder that holds `tools/`, `packs/`, `pom.xml`).
+1. Open the repository root as the project (**File → Open**, the folder that holds `tools/`, `config/packs/`, `pom.xml`).
 2. Make a virtual environment with `uv` (any virtual environment works), in a terminal at the repository root:
 
    ```bash
@@ -2343,12 +2343,12 @@ Click the folder icon next to **Environment variables** to edit them as a table 
 |---|---|
 | `drishti pack make` | `pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank --force` |
 | `drishti data profile` | `data profile data/jsonl` |
-| `drishti pack regenerate` | `pack regenerate packs/my-bank data/jsonl --dry-run` |
+| `drishti pack regenerate` | `pack regenerate config/packs/my-bank data/jsonl --dry-run` |
 | `drishti sutra gen` | `sutra gen data/jsonl --kind trade --match productType --out build/sutras` |
 | `drishti data ingest` | `data ingest --from data/new --pack build/my-bank/pack/my-bank --lake build/my-bank/data/delta --dry-run` (remove `--dry-run` to write) |
 | `drishti pack check` | `pack check build/my-bank/pack/my-bank --strict --junit build/reports` |
 | `drishti server packs load` | `server packs load my-bank --server http://localhost:18480` with `DRISHTI_TOKEN` set |
-| `drishti sutra lint` | `sutra lint packs/my-bank` |
+| `drishti sutra lint` | `sutra lint config/packs/my-bank` |
 | `drishti server health` | `server health` |
 
 Press **Run** (Shift+F10): the output is in the Run window, and a non-zero exit code shows as a failed run (exit 1 = a check
@@ -2416,7 +2416,7 @@ it without the command-line program, and debug the engine while it lints:
 | Main class | `com.ash.drishti.server.DrishtiApplication` |
 | *Use classpath of module* | `drishti-server` |
 | JRE | JDK 21 or newer |
-| **Program arguments** | `sutra lint packs/my-bank --strict` |
+| **Program arguments** | `sutra lint config/packs/my-bank --strict` |
 | **Working directory** | **the repository root** |
 
 (or **JAR Application** with the exec jar as *Path to JAR* and the same program arguments). It prints what the command line

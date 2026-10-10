@@ -45,7 +45,7 @@ Contents:
 
 ## What a pack is made of
 
-A pack is one folder under `packs/`. The folder name is the pack's name. Here is the finished help-desk pack of this
+A pack is one folder under `config/packs/`. The folder name is the pack's name. Here is the finished help-desk pack of this
 guide, `docs/guides/examples/pack/helpdesk/`:
 
 ```text
@@ -104,7 +104,7 @@ The finished pack is in the repository. Open it beside this guide:
 | samples | [catalog.json](examples/pack/helpdesk/samples/catalog.json) |
 | guide and starters | [helpdesk.md](examples/pack/helpdesk/guides/helpdesk.md), [help.yaml](examples/pack/helpdesk/config/help.yaml), [workspaces.yaml](examples/pack/helpdesk/config/workspaces.yaml) |
 
-It is not in `packs/`, so no server loads it by accident. To follow along, build it yourself in `packs/helpdesk/`
+It is not in `config/packs/`, so no server loads it by accident. To follow along, build it yourself in `config/packs/helpdesk/`
 (steps 1 to 14), or copy the finished folder there.
 
 **A scratch server to try things on.** Every step ends with something you can see. Use a scratch server and console on
@@ -131,13 +131,13 @@ on the finished pack. (Your counts and ticking numbers may differ a little: the 
 ### Step 1. Create the folders
 
 ```bash
-mkdir -p packs/helpdesk/{samples/ticket,samples/agent,samples/client,sutras,tests/ticket,guides,config,python}
+mkdir -p config/packs/helpdesk/{samples/ticket,samples/agent,samples/client,sutras,tests/ticket,guides,config,python}
 ```
 
 ### Step 2. The smallest working manifest
 
-`packs/helpdesk/pack.yaml`. Every file in the repository carries the copyright header: copy the comment block from
-the top of `packs/logistics/pack.yaml`, or run `python3 tools/license_headers.py --fix` when you are done (the build's
+`config/packs/helpdesk/pack.yaml`. Every file in the repository carries the copyright header: copy the comment block from
+the top of `config/packs/logistics/pack.yaml`, or run `python3 tools/license_headers.py --fix` when you are done (the build's
 `LicenseHeaderTest` fails otherwise).
 
 ```yaml
@@ -456,11 +456,11 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
-ok   packs/helpdesk/sutras/ticket.v1.sutra.yaml (2 samples)
+ok   config/packs/helpdesk/sutras/ticket.v1.sutra.yaml (2 samples)
 ```
 
 Exit code `0`. `target/sutra-tests.xml` is JUnit XML for your CI's report step. Now break the expectation on purpose
@@ -469,7 +469,7 @@ Exit code `0`. `target/sutra-tests.xml` is JUnit XML for your CI's report step. 
 ```text
 ticket / TKT-1001.json: panel timeline is not in the Sutra
 ticket / TKT-1002.json: panel timeline is not in the Sutra
-FAIL packs/helpdesk/sutras/ticket.v1.sutra.yaml (2 samples)
+FAIL config/packs/helpdesk/sutras/ticket.v1.sutra.yaml (2 samples)
 ```
 
 Exit code `1`. A mistake in the Sutra itself fails `sutra lint`, with the line (`DRS-2021 unknown panel kind
@@ -606,9 +606,9 @@ step out, so that it needs no data folder.
 
 ```bash
 python3 tools/license_headers.py --fix                                  # a header on every new file
-java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test packs/helpdesk
+java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test config/packs/helpdesk
 python3 tools/packreg/packreg.py keygen --out ~/.drishti/acme           # once per publisher
-python3 tools/packreg/packreg.py publish packs/helpdesk --registry /srv/drishti-registry --key ~/.drishti/acme.pem --publisher acme
+python3 tools/packreg/packreg.py publish config/packs/helpdesk --registry /srv/drishti-registry --key ~/.drishti/acme.pem --publisher acme
 ```
 
 ```text
@@ -652,8 +652,8 @@ this guide.
 
 ## `pack.yaml`, key by key
 
-Below is the complete `packs/logistics/pack.yaml`, annotated. Then the keys only larger packs use, from
-`packs/counterparty-risk/pack.yaml`. Every key here is read either by the server's pack loader
+Below is the complete `config/packs/logistics/pack.yaml`, annotated. Then the keys only larger packs use, from
+`config/packs/counterparty-risk/pack.yaml`. Every key here is read either by the server's pack loader
 (`drishti-packs/…/PackLoader.java`) or by the console (`drishti-console/core/packs.py`); keys not listed are ignored.
 
 **Every key at a glance.** Only `pack` is required; a pack with nothing else loads and does nothing.
@@ -768,7 +768,7 @@ is used when the key is absent. A folder or file that does not exist is simply s
 
 When a command names several entities (`TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`), the user gets a
 **pick list**: a table with one row per entity. `columns:` says which fields of each kind appear beside the id,
-in order. From `packs/trading/pack.yaml` and `packs/banking-core/pack.yaml`:
+in order. From `config/packs/trading/pack.yaml` and `config/packs/banking-core/pack.yaml`:
 
 ```yaml
 columns:                        # KIND: [field, …]  document paths, as in a search ("counterparty.name" works too)
@@ -835,7 +835,7 @@ You should see `['$.name', '$.deskName', '$.tradeCount', '$.mtm', '$.dv01']`.
 
 A kind's search results and pick lists can offer the same **Table | Pivot** switch a Sutra gives a table
 ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). It is offered **only** for the kinds a pack names
-under `pivot:`, beside `columns:`; every other kind's results stay a plain list. From `packs/trading/pack.yaml`
+under `pivot:`, beside `columns:`; every other kind's results stay a plain list. From `config/packs/trading/pack.yaml`
 (generated):
 
 ```yaml
@@ -877,7 +877,7 @@ in `tools/packgen/banking/risk_data.py` (netting sets, books, clearing accounts,
 
 ### Keys for packs that inherit and read real data
 
-From `packs/counterparty-risk/pack.yaml` (abridged; the file is generated by `tools/packgen/banking/make_packs.py`):
+From `config/packs/counterparty-risk/pack.yaml` (abridged; the file is generated by `tools/packgen/banking/make_packs.py`):
 
 ```yaml
 pack: counterparty-risk
@@ -893,13 +893,13 @@ connectors:                     # the connectors this pack reads through. Here a
     enabled: ${DRISHTI_LAKE_ENABLED:true}    # ${VAR:default} is resolved from the environment
     kinds: [netting-set, credit-limit, exposure-profile, cva, sa-ccr]
     settings:                   # passed to the plugin as-is (see CONNECTOR_GUIDE.md for each plugin's settings; credentials only as ${ENV})
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: credit            # reads data/delta/credit/<kind>/
   collateral-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [collateral-balance, margin-call, simm]
-    settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: collateral }
+    settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: collateral }
 
 routes:                         # KIND: CONNECTOR — which connector answers each kind
   netting-set: credit-store
@@ -919,7 +919,7 @@ and routes its kinds. The reference for the file is [CONNECTOR_FILES.md](../conn
 ```yaml
 connectors: [credit-store, collateral-store]        # the form for a pack that only names connectors
 connector-templates:                                # optional: what to suggest if the site has none yet
-  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: credit } }
+  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit } }
 routes: { netting-set: credit-store, margin-call: collateral-store }
 ```
 
@@ -984,7 +984,7 @@ connectors:
   trading-store:
     plugin: delta
     settings:
-      root: "${DRISHTI_DELTA_ROOT:./data/delta}"
+      root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
       domain: trading
       layout:
         trade:
@@ -1162,7 +1162,7 @@ kind is and what its figures mean. That is the pack's `config/about.yaml`, found
 
 ### The file
 
-From `packs/market-risk/config/about.yaml` (generated; shown shortened):
+From `config/packs/market-risk/config/about.yaml` (generated; shown shortened):
 
 ```yaml
 about: 1                           # the file's version, required
@@ -1243,15 +1243,15 @@ so a first translation can be one kind, or one sentence. For a regional tag the 
 (`fr-CA`, then `fr`, then `en`). The language of an answer is `?locale=` on the explain request, else the user's *Language of
 help text* on the account page, else the browser's `Accept-Language`; the first of those with an overlay wins, and the
 answer's `locale` says which was used. Numbers in a template use the pack's named formats and are not localised. The
-shipped example is `packs/market-risk/config/about.fr.yaml` (the VaR page in French).
+shipped example is `config/packs/market-risk/config/about.fr.yaml` (the VaR page in French).
 
 ### Generated packs
 
 The shipped packs are generated (see [How the shipped packs are generated](#how-the-shipped-packs-are-generated)).
 Their `config/about.yaml` (and any `about.<lang>.yaml`) is copied from a hand-kept source in the generator folder
 (`tools/packgen/banking/about/<pack>.yaml`, `tools/packgen/<generator>/about.yaml`) by `make_packs.py` / `packbuild.py`: edit
-that source and regenerate, never the generated file; `--check` fails when they differ. `sutra lint packs/<pack>` and
-`sutra test packs/<pack>` (with `help: { about: true }` in `expect.yaml` and a `tests/help-coverage.txt` ratchet) keep every
+that source and regenerate, never the generated file; `--check` fails when they differ. `sutra lint config/packs/<pack>` and
+`sutra test config/packs/<pack>` (with `help: { about: true }` in `expect.yaml` and a `tests/help-coverage.txt` ratchet) keep every
 shown field explained.
 
 ### Check it
@@ -1259,7 +1259,7 @@ shown field explained.
 - Start the server: a file with a problem lists it (codes `DRS-2040` to `DRS-2044`, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md)).
 - Open an entity and press `?`: the first section is your sentence, filled in. Try it as a user whose role is not
   `raw`: masked fields read `•••`.
-- `sutra lint packs/<pack>` will warn (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and about
+- `sutra lint config/packs/<pack>` will warn (`DRS-2046`, `DRS-2047`) about a `panels.<id>` that matches no panel and about
   fields a Sutra shows that have no glossary entry; and `expect.yaml` will take `help: { coverage: 0.9, about: true }`,
   the share of shown fields with an entry and that `about` renders without an error. Both are the lint-and-coverage
   stage of the design and are **not available until it is merged**; see [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md).
@@ -1367,7 +1367,7 @@ python:
   dir: python                   # optional: the folder of snippet files (default python/)
 ```
 
-Longer snippets read better as files: `packs/<pack>/python/<name>.py`, in name order after the inline ones, each
+Longer snippets read better as files: `config/packs/<pack>/python/<name>.py`, in name order after the inline ones, each
 starting with three comment lines (after the copyright header, which is not shown to the user):
 
 ```python
@@ -1412,7 +1412,7 @@ You should see the private key's file (`~/.drishti/acme.pem`, keep it secret) an
 **2. Publish a pack.** The registry is a folder (put it on a web server, or a shared drive):
 
 ```bash
-python3 tools/packreg/packreg.py publish packs/trading --registry /srv/drishti-registry \
+python3 tools/packreg/packreg.py publish config/packs/trading --registry /srv/drishti-registry \
     --key ~/.drishti/acme.pem --publisher acme
 ```
 
@@ -1506,7 +1506,7 @@ definition would be used. If only `trading` and `market-data` defined it, `tradi
 ### Worked example: overriding a parent
 
 Say your bank wants `NSET` to read "Netting set (CSA)" and wants netting sets read from its own PostgreSQL
-connector, without editing the shipped pack. Create `packs/my-bank/pack.yaml`:
+connector, without editing the shipped pack. Create `config/packs/my-bank/pack.yaml`:
 
 ```yaml
 pack: my-bank
@@ -1546,7 +1546,7 @@ This example is the one `PackLoaderTest.aChildInheritsItsParentsAndTheRightmostP
 on every build, so the results below are guaranteed. Four small packs:
 
 ```yaml
-# packs/base/pack.yaml
+# config/packs/base/pack.yaml
 pack: base
 kinds: [curve]
 mnemonics: { CRV: { kind: curve, label: Curve } }
@@ -1555,7 +1555,7 @@ graph: { badges: { curve: "'base'" } }
 ```
 
 ```yaml
-# packs/left/pack.yaml
+# config/packs/left/pack.yaml
 pack: left
 extends: [base]
 kinds: [trade]
@@ -1565,7 +1565,7 @@ graph: { badges: { curve: "'left'" } }
 ```
 
 ```yaml
-# packs/right/pack.yaml
+# config/packs/right/pack.yaml
 pack: right
 extends: [base]
 kinds: [quote]
@@ -1574,7 +1574,7 @@ roles: { trader: { kinds: [trade, quote] } }
 ```
 
 ```yaml
-# packs/child/pack.yaml
+# config/packs/child/pack.yaml
 pack: child
 extends: [left, right]
 kinds: [var]
@@ -1641,15 +1641,15 @@ Four layers, from the cheapest. The first three need no server.
 
 | Layer | Command | What it proves |
 |---|---|---|
-| Sutra lint | `sutra lint packs/<pack>` | every Sutra parses and its keys, expressions and panel options are valid (`DRS-…` codes with the line) |
-| Sutra tests | `sutra test packs/<pack>` | each Sutra renders against the samples in `tests/<sutra>/` with no panel in error, and the panels `expect.yaml` names are filled |
-| The pack's tests in the build | `./mvnw verify` | the manifest loads, every `packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests |
+| Sutra lint | `sutra lint config/packs/<pack>` | every Sutra parses and its keys, expressions and panel options are valid (`DRS-…` codes with the line) |
+| Sutra tests | `sutra test config/packs/<pack>` | each Sutra renders against the samples in `tests/<sutra>/` with no panel in error, and the panels `expect.yaml` names are filled |
+| The pack's tests in the build | `./mvnw verify` | the manifest loads, every `config/packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests |
 | A scratch server | the [checklist](#verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
 ### `tests/` and `expect.yaml`
 
 ```text
-packs/<pack>/tests/<sutra>/        one folder per Sutra, named by the Sutra's name (the `sutra:` line)
+config/packs/<pack>/tests/<sutra>/        one folder per Sutra, named by the Sutra's name (the `sutra:` line)
     TKT-1001.json                  plain entity documents (the kind comes from the Sutra's match.kind); .jsonl files hold one document per line
     expect.yaml                    optional
 ```
@@ -1675,9 +1675,9 @@ Every command and option (`--junit`, `--out` snapshots, the shape and design com
 ### In CI
 
 ```sh
-java -jar drishti-server-exec.jar sutra lint packs/helpdesk
-java -jar drishti-server-exec.jar sutra test packs/helpdesk --junit target/sutra-tests.xml
-java -jar drishti-server-exec.jar sutra preview packs/helpdesk --out target/snapshots   # HTML snapshots to attach as build artifacts
+java -jar drishti-server-exec.jar sutra lint config/packs/helpdesk
+java -jar drishti-server-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server-exec.jar sutra preview config/packs/helpdesk --out target/snapshots   # HTML snapshots to attach as build artifacts
 ```
 
 Publish `sutra-tests.xml` with your CI's JUnit report step. A Sutra whose panels read other entities with `source:` needs
@@ -1691,7 +1691,7 @@ pack's own tests fails the Maven build. The Build workbench writes the same layo
 | Check | Where | What it proves | Picks up a new pack by itself? |
 |---|---|---|---|
 | `PackLoaderTest` | `drishti-packs` | the loader: manifests, inheritance order, overrides, refusals (clashes, cycles, missing packs) | — (tests the rules, with packs it writes itself) |
-| `PackSutrasTest` | `drishti-rachana` | every pack's Sutras parse and validate with zero problems, and every `name@version` is unique | yes: every `packs/*/sutras/` |
+| `PackSutrasTest` | `drishti-rachana` | every pack's Sutras parse and validate with zero problems, and every `name@version` is unique | yes: every `config/packs/*/sutras/` |
 | `SutraCliTest` | `drishti-server` | `sutra test` over every pack with a `tests/` folder | yes |
 | `ImperfectDataTest` | `drishti-server` | every Sutra of every pack survives missing fields, wrong types and flipped shapes: the view still builds, and empty panels say *No data available* | yes |
 | `DomainPacksTest` | `drishti-server` | the generated domain packs load together, and every example command they advertise opens a full view built by a Sutra, every panel filled, no link missing | no: it names the packs it tests |
@@ -1726,7 +1726,7 @@ help cards from one description. Each generated file says so in a comment near t
 |---|---|
 | `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `snippets/<pack>/*.py` through `calc_snippets.py`), `make_sutras.py` the 171 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
 | `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `politics-society`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
-| `finance`, `logistics` | hand-written; their samples come from `packs/<name>/tools/` |
+| `finance`, `logistics` | hand-written; their samples come from `config/packs/<name>/tools/` |
 
 ### Never edit a generated file by hand
 
@@ -1748,9 +1748,9 @@ When everything is in step you should see:
 retail-banking: 159 files up to date
 ```
 
-After a hand edit to `packs/trading/pack.yaml`, the first command stops with
-`pack manifests out of date; run make_packs.py: ['packs/trading/pack.yaml']`. The packbuild generators also
-refuse files they did not write: an extra Sutra dropped into `packs/retail-banking/sutras/` gives
+After a hand edit to `config/packs/trading/pack.yaml`, the first command stops with
+`pack manifests out of date; run make_packs.py: ['config/packs/trading/pack.yaml']`. The packbuild generators also
+refuse files they did not write: an extra Sutra dropped into `config/packs/retail-banking/sutras/` gives
 `retail-banking pack out of date; run tools/packgen/retail/make.py. stale=[] extra=[…]`.
 
 ### Changing a generated pack, step by step
@@ -1771,7 +1771,7 @@ Example: show the trader's name in trade pick lists.
    ```
 
    You should see `wrote 5 pack manifests: banking-core, market-data, trading, market-risk, counterparty-risk`.
-4. Check the result: `git diff packs/trading/pack.yaml` shows `- trader` added under `columns: trade:`.
+4. Check the result: `git diff config/packs/trading/pack.yaml` shows `- trader` added under `columns: trade:`.
 5. Restart the server (packs load at start-up), type `TRD MX-200000` and press Enter: the pick list has a
    *Trader* column.
 6. Commit the generator **and** the files it wrote, together. `--check` now passes.
@@ -1815,8 +1815,8 @@ Create `tools/packgen/library/make.py`. Start with the imports every generator u
 # tools/packgen/library/make.py: the top of the file
 """The library pack: book titles and authors.
 
-    python3 tools/packgen/library/make.py            write packs/library
-    python3 tools/packgen/library/make.py --check    fail if packs/library differs from what would be written
+    python3 tools/packgen/library/make.py            write config/packs/library
+    python3 tools/packgen/library/make.py --check    fail if config/packs/library differs from what would be written
 """
 from __future__ import annotations
 
@@ -1940,7 +1940,7 @@ if __name__ == "__main__":
 #### Generator step 5. Run it
 
 ```bash
-# write packs/library
+# write config/packs/library
 python3 tools/packgen/library/make.py
 ```
 
@@ -1963,7 +1963,7 @@ library data is inconsistent:
 Other commands:
 
 ```bash
-# fail if packs/library differs from what the script would write (tools/drill.sh runs this for every generator)
+# fail if config/packs/library differs from what the script would write (tools/drill.sh runs this for every generator)
 python3 tools/packgen/library/make.py --check
 
 # also build ten business days of history in the Delta Lake, for the date picker
@@ -1973,7 +1973,7 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/librar
 #### Generator step 6. What you get
 
 ```text
-packs/library/
+config/packs/library/
   pack.yaml                            kinds, mnemonics, id patterns, link fields, badges, roles, connector, routes, examples
   sutras/library/book-title.v1.sutra.yaml   one YAML Sutra per kind (rachana: 1, with a description)
   sutras/library/author.v1.sutra.yaml
@@ -2014,7 +2014,7 @@ If an admin assigns packs per user, add `library` to your user under **Admin →
 
 #### Generator step 8. Make it part of the build
 
-- Commit `tools/packgen/library/make.py` and `packs/library/`.
+- Commit `tools/packgen/library/make.py` and `config/packs/library/`.
 - Add `library` to the pack list in `drishti-server/src/test/java/com/ash/drishti/server/DomainPacksTest.java`, so
   every example command is checked to open with no empty panel and no missing link.
 - `tools/drill.sh` runs every generator with `--check`, so a pack that drifts from its script fails the build.
@@ -2049,8 +2049,8 @@ DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/targ
 
 # later: new days from a single file, only those dates are replaced (idempotent)
 uv run --with pyyaml --with deltalake --with pyarrow python tools/ingest_jsonl.py \
-    --from data/new/trade.jsonl --pack packs/my-bank --lake /tmp/lake
-uv run --with pyyaml python tools/ingest_jsonl.py --from data/new --pack packs/my-bank --store files --root /tmp/files  # no Delta needed
+    --from data/new/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
+uv run --with pyyaml python tools/ingest_jsonl.py --from data/new --pack config/packs/my-bank --store files --root /tmp/files  # no Delta needed
 ```
 
 - **`--key`, `--date`, `--match`** are dotted paths, one value for every kind (`--key id`) or per kind (`--key trade=tradeId,cp=cpId`;
@@ -2061,7 +2061,7 @@ uv run --with pyyaml python tools/ingest_jsonl.py --from data/new --pack packs/m
 - **`--date`** names the business-date field: it is kept out of the match; the pack gets a Delta (or File) connector, `routes` and an
   `ingest:` block (`{kind: {key, date}}`, an optional tooling key read by `ingest_jsonl.py --pack` and ignored by the server); the lake is partitioned by `business_date`.
   Documents without the date are reported and left out of the lake and files; kinds without `--date` are served from `samples/`.
-- **`pack_from_jsonl.py`** refuses to overwrite `--out` (default `packs/<name>`) without `--force`; `--mnemonic kind=ABC` overrides
+- **`pack_from_jsonl.py`** refuses to overwrite `--out` (default `config/packs/<name>`) without `--force`; `--mnemonic kind=ABC` overrides
   the initials; `--store files --files-root DIR` writes the File layout (`DIR/<pack>/<date>/<kind>.jsonl`, serve with
   `DRISHTI_FILES_ROOT=DIR`) instead of a lake. `config/about.yaml` holds `TODO` glossary entries for every field the Sutras show.
 - **`ingest_jsonl.py`** `--mode overwrite-dates` (default) replaces only the dates in the input, `append` adds, `replace`
@@ -2102,7 +2102,7 @@ add the new name and keep the old one for a release where you can.
 
 You do not have to write a Sutra by hand. Design it in the Build workbench (from JSON samples, a JSON Schema, or an
 existing Sutra: [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)), and **ship** it as a pack fragment: *Ship → Export as a pack
-fragment* downloads a zip you can put in `packs/`. The workbench section that describes the export, the import and the
+fragment* downloads a zip you can put in `config/packs/`. The workbench section that describes the export, the import and the
 file layout is [SCREEN_DESIGNER.md §24](SCREEN_DESIGNER.md#24-pack-fragments-export-and-import); this is what it means for
 a pack author, from a real export of the help-desk ticket Sutra (the design id is in the address bar):
 
@@ -2157,7 +2157,7 @@ From a fragment to a pack, as an author:
    ids (`^TKT-`, not `^TICK-`), and the stub knows nothing of links, columns, roles or connectors: add them as in the steps above.
    `kinds:` must be a kind **no other pack owns**.
 3. **Keep the tests.** `tests/<sutra>/` already passes `sutra test`; add a sample for each shape your data really has.
-4. **Load it** from *Admin → Packs → Load* (the folder under `packs/`), or list it in `DRISHTI_PACKS`.
+4. **Load it** from *Admin → Packs → Load* (the folder under `config/packs/`), or list it in `DRISHTI_PACKS`.
 
 The other way round: *New screen → Or import a pack* takes a zip or a folder (any pack) and turns each `*.sutra.yaml`
 into a design, with the pack's `tests/` and `samples/` documents as its samples. Use it to revise a shipped pack's Sutra
@@ -2189,7 +2189,7 @@ curl -s $B/sutras/problems                                  # {}
 curl -s $B/admin/health | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["overrides"]); print([(p["name"], p["status"], p["version"]) for p in d["packs"] if p["name"]=="helpdesk"])'
 curl -s $B/packs/HELP/overview | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["name"], d["code"], [(k["mnemonic"], k["count"]) for k in d["kinds"]])'
 curl -s $B/sources | python3 -c 'import json,sys; [print(s["name"], s["kinds"], s["health"]) for s in json.load(sys.stdin)["sources"]]'
-java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test packs/helpdesk
+java -jar drishti-server/target/drishti-server-1.18.0-exec.jar sutra test config/packs/helpdesk
 ```
 
 The output for the finished help-desk pack, with the file connector of step 16 on:
@@ -2201,7 +2201,7 @@ The output for the finished help-desk pack, with the file connector of step 16 o
 helpdesk HELP [('TKT', 4), ('AGT', 1), ('CLI', 2), ('LOAD', 1)]
 helpdesk-store ['ticket'] UP
 agent-totals ['agent-load'] UP
-ok   packs/helpdesk/sutras/ticket.v1.sutra.yaml (2 samples)
+ok   config/packs/helpdesk/sutras/ticket.v1.sutra.yaml (2 samples)
 ```
 
 `[]` is the list of overrides (nothing of another pack was redefined). The four counts are the entities each kind has

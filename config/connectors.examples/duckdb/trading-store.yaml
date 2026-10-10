@@ -19,7 +19,7 @@ kinds:
 description: trading-store read from duckdb (the former application-duckdb.yaml profile)
 settings:
   domain: trading
-  path: ${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}
+  path: ${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}
   memory-limit: ${DRISHTI_DUCKDB_MEMORY:1GB}
   table: trading.entities
   pool-size: '8'

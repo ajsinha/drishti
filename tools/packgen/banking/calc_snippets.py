@@ -20,7 +20,7 @@ snippets/<pack>/<file>.py beside this file, each a copyright header, then its co
     # kinds: ir-curve, trade            the kinds it is offered on
     # example: CRV CRV-USD-OIS          the sample entity it is checked on (docs and the browser check; not shipped)
 
-then the code. make_packs.py writes each to packs/<pack>/python/<file>.py (header, the generated note, title,
+then the code. make_packs.py writes each to config/packs/<pack>/python/<file>.py (header, the generated note, title,
 description and kinds, then the code) and switches Calc on in the packs that have some (`python: { enabled: true }`).
 Each runs against the sample data as it is; console tests run none of them (they need a browser), so a change here is
 checked in a browser (PYTHON_CALC.md, Snippet catalogue)."""

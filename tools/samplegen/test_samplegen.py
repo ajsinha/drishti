@@ -54,14 +54,14 @@ class Conventions(unittest.TestCase):
 
 class FinanceSamples(unittest.TestCase):
     def test_swaps_reprice_to_their_mtm(self):
-        for f in glob.glob(str(ROOT / "packs/finance/samples/trade/IRS-4*.json")):
+        for f in glob.glob(str(ROOT / "config/packs/finance/samples/trade/IRS-4*.json")):
             d = json.loads(pathlib.Path(f).read_text())
             if "legs" in d:
                 pv = sum(leg["pv"] for leg in d["legs"])
                 self.assertLess(abs(pv - d["mtm"]), max(100, abs(d["mtm"]) * 0.01), d["tradeId"])
 
     def test_every_trade_is_fully_booked(self):
-        for f in glob.glob(str(ROOT / "packs/finance/samples/trade/*.json")):
+        for f in glob.glob(str(ROOT / "config/packs/finance/samples/trade/*.json")):
             d = json.loads(pathlib.Path(f).read_text())
             for block in ("execution", "lifecycle", "regulatory", "settlementInstructions", "valuation", "legalEntity"):
                 self.assertIn(block, d, f"{d['tradeId']} lacks {block}")

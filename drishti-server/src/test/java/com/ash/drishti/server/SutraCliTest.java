@@ -269,7 +269,7 @@ class SutraCliTest {
     @Test
     void sutraTestPassesOverEveryShippedPacksTestsAndTheExamples() throws IOException {
         List<String> targets = new ArrayList<>();
-        try (Stream<Path> packs = Files.list(ROOT.resolve("packs"))) {
+        try (Stream<Path> packs = Files.list(ROOT.resolve("config/packs"))) {
             packs.filter(p -> Files.isDirectory(p.resolve("tests"))).sorted().forEach(p -> targets.add(p.toString()));
         }
         assertThat(targets).as("packs with a tests/ folder").hasSizeGreaterThanOrEqualTo(3);

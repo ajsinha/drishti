@@ -163,7 +163,7 @@ not offer Calc do not ([PYTHON_CALC.md](../guides/PYTHON_CALC.md#9-roles-who-may
 layouts*. A pack declares one like this:
 
 ```yaml
-# packs/climate-risk/pack.yaml
+# config/packs/climate-risk/pack.yaml
 roles:
   climate-analyst:
     kinds: [climate-profile, financed-emissions, climate-scenario, climate-stress, physical-asset, taxonomy-alignment]

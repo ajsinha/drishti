@@ -33,7 +33,7 @@ enabled: true                     # optional, default true
 kinds: [trade]                    # optional: limit the kinds it serves
 description: Trading lake         # optional
 settings:                         # the plugin's settings; nesting is flattened to dotted keys
-  root: ${DRISHTI_DELTA_ROOT:./data/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
   domain: trading
 ```
 

@@ -187,9 +187,21 @@ dated store, the pack serves its samples.
 
 The **mnemonic** (`TRD <GO>`) is the initials of a multi-word kind or its first three letters, made unique within the batch and **against the packs already on
 the server**. **Connectors**: a pack names its sources by a **logical connector name** only, never by a host or a path; those are the connector's own settings on the
-server. A kind with real, dated data gets a `file` or `delta` connector named `<pack>-store` (change it per kind); a kind without data needs none and serves its samples. *(The connector
-file model, with credentials and TLS per logical name, is described by the connectors guides; a `CONNECTOR_FILES.md` is not part of this release yet, so the generated
-`pack.yaml` carries the inline connector the way `pack make` always has.)*
+server. A kind with real, dated data gets a `file` or `delta` connector named `<pack>-store` (change it per kind); a kind without data needs none and serves its samples.
+The generated `pack.yaml` **names** its connectors and **suggests** their definitions, as [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) describes:
+
+```yaml
+connectors: [desk-pack-store]            # the logical names the pack reads through
+routes: {trade: desk-pack-store}         # which connector answers each kind
+connector-templates:                     # the connection settings, as the pack's suggestion
+  desk-pack-store:
+    plugin: delta
+    settings: {root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: desk-pack, ...}
+```
+
+At the server's first start with the pack on, it writes the suggestion to `config/connectors/desk-pack-store.yaml` once and never overwrites it; from
+then on the site edits that file (or Admin → Connectors), several packs may name the same connector, and the pack never carries a host, a path or a
+credential of the site's. The same holds for `pack make` and `drishti.py pack new --lake`.
 
 ### What is reported rather than decided
 
@@ -459,7 +471,7 @@ The folder is the one `pack make` writes ([CLI guide](CLI_GUIDE.md#quickest-path
 
 ```text
 pack/desk-pack/
-├── pack.yaml                 kinds, mnemonics, columns, graph.fields (the links); connectors, routes, ingest when real dated data was given
+├── pack.yaml                 kinds, mnemonics, columns, graph.fields (the links); connectors (the names), connector-templates (their suggested settings), routes and ingest when real dated data was given
 ├── sutras/<kind>/<sutra>.v1.sutra.yaml
 ├── tests/<sutra>/            sample-N.json / sample-example-N.json / sample-synthetic-N.json and expect.yaml
 ├── samples/                  documents per kind and catalog.json, so the pack opens before any data source
@@ -566,5 +578,4 @@ All are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 ## Not yet, and what this leaves for later
 
 - **Controls.** Enumerated fields are listed as dropdown suggestions (plan and `MANIFEST.json`); the design of controls is in progress (RUPAKA, the BI design note, section 8, has none yet), so nothing is written to a Sutra.
-- **Connector files.** Packs here carry the inline connector they always did; a per-logical-name connector file model is not on this branch.
 - **Editing the generated Sutras in place.** Open one in the workbench to refine it; to keep the schema as the source, change the schema and generate again (`pack regenerate` merges later changes).

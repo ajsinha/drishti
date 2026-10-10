@@ -17,7 +17,7 @@ partitioned by business date, with a history of business days. Past dates vary t
 numbers with a deterministic random walk, so moving the date in the console changes what you see.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
-        --samples packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30]
+        --samples config/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30]
 
 Layout (what the connector reads):  <root>/<domain>/<kind>/_delta_log/…
                                     <root>/<domain>/<kind>/business_date=YYYY-MM-DD/part-….parquet
@@ -136,7 +136,7 @@ def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--samples", required=True)
-    ap.add_argument("--root", default="data/delta")
+    ap.add_argument("--root", default=__import__("os").environ.get("DRISHTI_DATA_DIR", "data") + "/delta")
     ap.add_argument("--domain", required=True)
     ap.add_argument("--days", type=int, default=10)
     ap.add_argument("--as-of", default=None)

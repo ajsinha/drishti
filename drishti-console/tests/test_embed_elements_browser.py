@@ -153,7 +153,7 @@ def stack(tmp_path_factory):
             pytest.skip("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
         work = tmp / "server"
         work.mkdir()
-        env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "packs"), DRISHTI_SECURITY_ENABLED="true",
+        env = dict(os.environ, DRISHTI_PACKS="trading", DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true",
                    DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true", DRISHTI_PUBLIC_URL=SERVER, DRISHTI_CONSOLE_URL=CONSOLE_URL)
         s.procs["server"] = subprocess.Popen([java, "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"],
                                              cwd=work, env=env, stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)

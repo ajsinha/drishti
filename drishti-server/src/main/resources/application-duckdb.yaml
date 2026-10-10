@@ -19,9 +19,9 @@
 drishti:
   sources:
     connectors:
-      reference-store:  { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: reference.entities, pool-size: "4" } }
-      market-store:     { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: market.entities, pool-size: "4" } }
-      trading-store:    { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: trading.entities, pool-size: "8" } }
-      risk-store:       { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: risk.entities, pool-size: "4" } }
-      credit-store:     { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: credit.entities, pool-size: "4" } }
-      collateral-store: { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: collateral.entities, pool-size: "4" } }
+      reference-store:  { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: reference.entities, pool-size: "4" } }
+      market-store:     { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: market.entities, pool-size: "4" } }
+      trading-store:    { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: trading.entities, pool-size: "8" } }
+      risk-store:       { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: risk.entities, pool-size: "4" } }
+      credit-store:     { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: credit.entities, pool-size: "4" } }
+      collateral-store: { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}", memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: collateral.entities, pool-size: "4" } }

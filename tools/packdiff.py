@@ -177,8 +177,9 @@ def diff_packs(old: dict, new: dict, unified: bool = False) -> list[dict]:
             add("change", "panel notes", k, "changed")
 
     # data layout
-    for key in ("connectors", "routes", "ingest", "columns"):
+    for key in ("connectors", "connector-templates", "routes", "ingest", "columns"):
         a, b = om.get(key) or {}, nm.get(key) or {}
+        a, b = ({x: x for x in v} if isinstance(v, list) else v for v in (a, b))      # connectors: a list of names, or a mapping of definitions
         for n in sorted(set(a) | set(b)):
             if n not in a:
                 add("layout", f"{key} added", n)

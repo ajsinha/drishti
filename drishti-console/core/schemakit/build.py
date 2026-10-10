@@ -111,10 +111,10 @@ def connector_block(pack: str, kinds: list, store: str, plan_cols: dict) -> dict
     """A connector for kinds that share a logical name: the file or delta plugin on the usual root, one layout per kind."""
     if store == "file":
         return {"plugin": "file", "enabled": "${DRISHTI_FILES_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
-                "settings": {"root": "${DRISHTI_FILES_ROOT:./data/files}", "domain": pack, "id-field": "id",
+                "settings": {"root": "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "domain": pack, "id-field": "id",
                              "layout": {k.kind: {"columns": plan_cols[k.kind]} for k in kinds}}}
     return {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
-            "settings": {"root": "${DRISHTI_DELTA_ROOT:./data/delta}", "domain": pack,
+            "settings": {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": pack,
                          "layout": {k.kind: {"columns": plan_cols[k.kind], "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000} for k in kinds}}}
 
 
@@ -147,10 +147,12 @@ def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
         if k.template in ("file", "delta"):
             by_conn.setdefault(k.connector or f"{p['name']}-store", []).append(k)
     if by_conn:
-        m["connectors"], m["routes"], ing = {}, {}, {}
+        # the pack NAMES its connectors (docs/connectors/CONNECTOR_FILES.md); the connection settings are the pack's template:
+        # the server writes the site's connector file from it once, and the file is the site's afterwards
+        m["connectors"], m["routes"], m["connector-templates"], ing = sorted(by_conn), {}, {}, {}
         for name, ks in sorted(by_conn.items()):
             store = ks[0].template
-            m["connectors"][name] = connector_block(p["name"], ks, store, {k.kind: columns_for(k) + ([k.date] if k.date and k.date not in columns_for(k) else []) for k in ks})
+            m["connector-templates"][name] = connector_block(p["name"], ks, store, {k.kind: columns_for(k) + ([k.date] if k.date and k.date not in columns_for(k) else []) for k in ks})
             for k in ks:
                 m["routes"][k.kind] = name
                 if k.key and k.date:
@@ -241,7 +243,7 @@ Generated from JSON Schema by schemakit (`docs/guides/SCHEMA_TO_PACK.md`). Nothi
 
 ## What was generated
 
-- `pack.yaml`: kinds, mnemonics, `columns` (pick-list columns), `graph.fields` (links between kinds)"""+(", connectors and routes" if any(k.template in ("file", "delta") for k in plan.kinds) else "")+f""".
+- `pack.yaml`: kinds, mnemonics, `columns` (pick-list columns), `graph.fields` (links between kinds)"""+(", the connectors it names (their connection settings are the pack's connector templates) and routes" if any(k.template in ("file", "delta") for k in plan.kinds) else "")+f""".
 - `sutras/<kind>/`: {len(items)} Sutra(s), drafted by auto-design from sample documents and then labelled from the schema (titles, descriptions, formats, links).
 - `tests/<sutra>/`: samples named `sample-N.json` (real documents), `sample-example-N.json` (the schema's own examples) or
   `sample-synthetic-N.json` (generated from the schema: **synthetic**), and `expect.yaml`.

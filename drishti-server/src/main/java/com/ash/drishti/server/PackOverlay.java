@@ -31,7 +31,7 @@ import org.yaml.snakeyaml.Yaml;
 
 /**
  * The packs an administrator loaded from Admin → Packs: {@code drishti.packs.added} in a small configuration file the
- * server imports at start ({@code DRISHTI_PACKS_OVERLAY}, default {@code ./data/packs/added.yaml}). Written atomically;
+ * server imports at start ({@code DRISHTI_PACKS_OVERLAY}, default {@code ./data/packs/added.yaml}, under {@code drishti.data.dir}). Written atomically;
  * changes are serialised.
  */
 public final class PackOverlay {

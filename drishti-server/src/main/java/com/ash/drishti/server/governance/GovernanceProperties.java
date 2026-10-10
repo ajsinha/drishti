@@ -31,6 +31,6 @@ public record GovernanceProperties(Boolean enabled, Boolean fourEyes, String dir
     public GovernanceProperties {
         enabled = enabled == null || enabled;
         fourEyes = fourEyes == null || fourEyes;
-        dir = dir == null || dir.isBlank() ? "./data/governance" : dir;
+        dir = dir == null || dir.isBlank() ? com.ash.drishti.api.DataDir.under("governance") : dir;
     }
 }

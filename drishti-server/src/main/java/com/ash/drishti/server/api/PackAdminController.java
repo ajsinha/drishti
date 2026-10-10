@@ -78,8 +78,8 @@ public class PackAdminController {
         this.entitlements = entitlements;
         this.env = env;
         this.audit = audit;
-        this.dir = Path.of(env.getProperty("drishti.packs.dir", "./packs"));
-        this.overlay = new com.ash.drishti.server.PackOverlay(Path.of(env.getProperty("drishti.packs.overlay", "./data/packs/added.yaml")));
+        this.dir = Path.of(com.ash.drishti.packs.PackPaths.packsDir(env));
+        this.overlay = new com.ash.drishti.server.PackOverlay(Path.of(com.ash.drishti.packs.PackPaths.overlay(env)));
     }
 
     private Map<String, Object> outcome(String name, com.ash.drishti.server.PackReloader.Result r) {
@@ -213,7 +213,7 @@ public class PackAdminController {
     private List<Map<String, Object>> onDisk() {
         List<Map<String, Object>> out = new ArrayList<>();
         Set<String> seen = new java.util.HashSet<>();
-        for (Path d : com.ash.drishti.packs.PackLoader.dirs(dir.toString(), env.getProperty("drishti.packs.installed-dir", "./data/packs/installed"))) {
+        for (Path d : com.ash.drishti.packs.PackLoader.dirs(dir.toString(), com.ash.drishti.packs.PackPaths.installedDir(env))) {
             for (Map<String, Object> m : onDisk(d)) {
                 if (seen.add((String) m.get("name"))) {
                     out.add(m);

@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --from=pyodide /src/drishti-console/ .
 # The help centre renders the repository's documents, so they ship with the console.
 COPY docs/ /opt/drishti/docs/
-COPY packs/ /opt/drishti/packs/
+COPY config/packs/ /opt/drishti/config/packs/
 # Build -> New pack makes its bundle with the same module as `drishti.py pack bundle` (builder.tools_dir, ../tools from the console).
 COPY tools/packbundle.py /opt/drishti/tools/packbundle.py
 COPY LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/

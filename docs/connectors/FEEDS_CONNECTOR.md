@@ -244,7 +244,7 @@ An `ir-curve` (the recorded 30 September curve, three of its twelve points):
 
 ### 4.1 The pack form, as shipped
 
-`packs/market-data/pack.yaml` suggests the five connectors as templates (two shown; the other three differ only in name, switch,
+`config/packs/market-data/pack.yaml` suggests the five connectors as templates (two shown; the other three differ only in name, switch,
 `kinds` and `feed`). At the first start the server writes each one to `config/connectors/<name>.yaml` (`nyfed-sofr-feed.yaml`, `fred-feed.yaml`, …), and those files are then
 the site's; the file form is in [As a connector file](#as-a-connector-file):
 
@@ -728,7 +728,7 @@ its pack's `connectorsOff` (`"connectorsOff": ["ecb-estr-feed", "fred-feed"]`), 
 
 ### Configuration by example
 
-`packs/market-data/pack.yaml` declares all five connectors, each off until its variable is set
+`config/packs/market-data/pack.yaml` declares all five connectors, each off until its variable is set
 ([section 4.1](#41-the-pack-form-as-shipped)); every setting is in [section 12](#12-settings).
 
 The SOFR document:

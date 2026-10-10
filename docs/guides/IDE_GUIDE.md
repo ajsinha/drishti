@@ -87,7 +87,7 @@ To build the runnable jar as well (what `java -jar` and the Docker image use), o
 | Main class | `com.ash.drishti.server.DrishtiApplication` | the Spring Boot application |
 | Module / *Use classpath of module* | `drishti-server` | it depends on every plugin, so all of them are on the classpath |
 | JRE | your JDK 21 or newer | |
-| **Working directory** | **the repository root** (the default is the `drishti-server` folder: change it) | the server reads `./packs`, `./data`, `./sutras` and `./application.local.yaml` relative to it |
+| **Working directory** | **the repository root** (the default is the `drishti-server` folder: change it) | the server reads `./config/packs`, `./data`, `./sutras` and `./application.local.yaml` relative to it |
 | VM options | Java 25 or newer: `-XX:+UseCompactObjectHeaders`; Java 21: leave empty. Optionally `-Xmx2g` | the flag saves heap and exists only from Java 25 |
 | Environment variables | e.g. `DRISHTI_PACKS=market-risk,counterparty-risk,retail-banking;DRISHTI_STUDIO_SAVE=true` (separate with `;`) | which packs load, and whether the Build workbench may save Sutras; every `DRISHTI_*` variable is in [CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault) |
 | Program arguments | optional, e.g. `--spring.config.additional-location=file:/home/you/drishti-site.yaml` | a settings file of your own on top of the defaults ([QUICKSTART.md](QUICKSTART.md#supplying-a-different-application-config)) |
