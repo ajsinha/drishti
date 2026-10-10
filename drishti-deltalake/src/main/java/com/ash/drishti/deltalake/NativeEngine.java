@@ -81,6 +81,11 @@ public final class NativeEngine implements Engine, AutoCloseable {
         return new NativeEngine(new NativeFileIO(S3Settings.from(settings), conf));
     }
 
+    /** The TLS material of the S3 endpoint ({@code tls.*}), or null. */
+    public com.ash.drishti.api.tls.TlsMaterial tls() {
+        return io.tls();
+    }
+
     /** An engine with default settings: local disk, and S3 with the AWS credential and region chains. */
     public static NativeEngine create() {
         return create(Map.of());

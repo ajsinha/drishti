@@ -28,6 +28,7 @@
   <name>drishti-deltalake</name>
   <description>A Hadoop-free Delta Kernel engine: reads Delta tables on local disk (Windows included, no winutils.exe) and in S3 through java.nio and the AWS SDK</description>
   <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>io.delta</groupId><artifactId>delta-kernel-api</artifactId><version>${delta-kernel.version}</version></dependency>
     <!-- for its Hadoop-free parts only: JSON handler, expression evaluator, column vectors and Parquet column readers -->
     <dependency>
@@ -47,6 +48,7 @@
     <dependency><groupId>software.amazon.awssdk</groupId><artifactId>s3</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>software.amazon.awssdk</groupId><artifactId>apache5-client</artifactId><version>${awssdk.version}</version></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
     <dependency><groupId>org.testcontainers</groupId><artifactId>testcontainers-junit-jupiter</artifactId><version>${testcontainers.version}</version><scope>test</scope></dependency>
   </dependencies>

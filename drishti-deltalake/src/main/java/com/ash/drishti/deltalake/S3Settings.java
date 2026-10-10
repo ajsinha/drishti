@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.deltalake;
 
+import com.ash.drishti.api.tls.TlsContexts;
+import com.ash.drishti.api.tls.TlsException;
+import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.tls.TlsSettings;
 import java.util.Map;
 
 /**
@@ -29,8 +33,15 @@ import java.util.Map;
  * @param region the region, or blank for the AWS region chain (then {@code us-east-1})
  * @param pathStyle path-style addressing ({@code http://host/bucket/key}), the default with an endpoint
  * @param readBlockBytes the smallest ranged GET: small reads (a Parquet footer, a deletion vector) fetch this much
+ * @param tls the shared TLS material ({@code tls.*}: a private CA, a client certificate) for an {@code https://} endpoint, or null
  */
-public record S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes) {
+public record S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes,
+        TlsMaterial tls) {
+
+    /** Without TLS material: the JVM's trust, as before. */
+    public S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes) {
+        this(endpoint, accessKey, secretKey, region, pathStyle, readBlockBytes, null);
+    }
 
     /** The default smallest ranged GET: 1 MiB. */
     public static final int DEFAULT_READ_BLOCK = 1 << 20;
@@ -41,7 +52,26 @@ public record S3Settings(String endpoint, String accessKey, String secretKey, St
         boolean pathStyle = Boolean.parseBoolean(settings.getOrDefault("s3.path-style", String.valueOf(!endpoint.isEmpty())));
         int block = Integer.parseInt(settings.getOrDefault("s3.read-block-kb", String.valueOf(DEFAULT_READ_BLOCK / 1024))) * 1024;
         return new S3Settings(endpoint, settings.getOrDefault("s3.access-key", "").trim(), settings.getOrDefault("s3.secret-key", ""),
-                settings.getOrDefault("s3.region", "").trim(), pathStyle, Math.max(4096, block));
+                settings.getOrDefault("s3.region", "").trim(), pathStyle, Math.max(4096, block), tls(settings, endpoint));
+    }
+
+    /**
+     * The shared {@code tls.*} settings for this endpoint: an {@code https://} endpoint builds the module's context (a private CA,
+     * a client certificate); {@code tls.*} against a plain or absent endpoint is a start-up error naming the setting.
+     */
+    static TlsMaterial tls(Map<String, String> settings, String endpoint) {
+        TlsSettings ts = TlsSettings.from(settings);
+        boolean https = endpoint.regionMatches(true, 0, "https://", 0, 8);
+        if (!https) {
+            if (ts.enabled()) {
+                throw new TlsException("tls.enabled is true but s3.endpoint is not https:// (" + (endpoint.isEmpty() ? "not set" : endpoint) + ")");
+            }
+            if (TlsSettings.anyGiven(settings, "tls.")) {
+                throw new TlsException("tls.* is set but s3.endpoint is not https://: set s3.endpoint to the store's https:// address");
+            }
+            return null;
+        }
+        return TlsContexts.build(ts);
     }
 
     @Override

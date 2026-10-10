@@ -63,6 +63,7 @@ plugins:
       - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
   delta:
+    tls: true
     settings:
       - { name: root, required: true, type: path, desc: "Lake root (folder, or s3://bucket/prefix)", group: connection }
       - { name: domain, desc: "Domain folder under the root", group: connection }
@@ -89,6 +90,7 @@ plugins:
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
   iceberg:
+    tls: true
     settings:
       - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
       - { name: warehouse, desc: "REST catalog warehouse", group: connection }
@@ -119,8 +121,10 @@ plugins:
       - { name: set, desc: "Set", group: connection }
       - { name: domain, desc: "Domain", group: connection }
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
-      - { name: user, desc: "User", group: connection }
+      - { name: user, desc: "User (leave out with auth-mode: pki)", group: connection }
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
+      - { name: auth-mode, type: "enum:internal|external|pki", desc: "pki logs in with the client certificate (tls.cert-file + tls.key-file, or tls.keystore)", group: security }
+      - { name: tls-name, desc: "The name the server certificate carries (the server's tls-name); default: each host's own name", group: security }
       - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
       - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
@@ -139,6 +143,8 @@ plugins:
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
       - { name: doc-format, desc: "Document format", group: mapping }
       - { name: read-preference, desc: "Read preference", group: connection }
+      - { name: auth-mechanism, type: "enum:x509", desc: "x509 logs in with the client certificate (needs tls.enabled and tls.cert-file + tls.key-file, or tls.keystore)", group: security }
+      - { name: x509-user, desc: "The certificate subject to log in as (default: the server derives it from the certificate)", group: security }
       - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
       - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
@@ -214,6 +220,7 @@ plugins:
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
       - { name: generation-header, desc: "Response header carrying the data generation", group: mapping }
       - { name: timeout-ms, type: int, desc: "Request timeout", group: tuning }
+      - { name: "header.*", desc: "A request header: header.<Name> (header.Authorization: Bearer ${SERVICE_TOKEN})", group: connection }
   s3:
     tls: true
     settings:
