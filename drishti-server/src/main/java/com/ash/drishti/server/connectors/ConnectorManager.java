@@ -516,6 +516,7 @@ public final class ConnectorManager {
         m.put("updated", updated.get(name));
         m.put("etag", d == null ? null : d.etag());
         m.put("problems", problemsOf(name, status));
+        m.put("retry", registry.retryStatus(name).map(s -> com.ash.drishti.common.RetryBoard.describe(s, Instant.now())).orElse(null));
         m.put("usedBy", usedBy(name));
         m.put("template", t.map(Template::pack).orElse(null));
         return m;

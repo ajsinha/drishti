@@ -19,6 +19,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 
+from core import retry as retrymod
 from core.ai import config as cfgmod
 from core.ai.types import LlmError, ModelInfo, ProviderConfig
 
@@ -48,9 +49,11 @@ class Entry:
 
 
 class LlmRegistry:
-    def __init__(self, factories: dict, source, runtime, default_model: str = ""):
-        """``source()`` returns ``(configs, file_errors)``; ``runtime`` is handed to provider factories (the ``server`` provider)."""
+    def __init__(self, factories: dict, source, runtime, default_model: str = "", retry: retrymod.RetryBoard | None = None):
+        """``source()`` returns ``(configs, file_errors)``; ``runtime`` is handed to provider factories (the ``server`` provider).
+        ``retry`` tracks providers that could not be set up: they are tried again on its schedule, not at every look."""
         self._factories, self._source, self._runtime = factories, source, runtime
+        self.retry = retry or retrymod.RetryBoard("ai provider", retrymod.RetryPolicy())
         self._default = (default_model or "").strip()
         self._entries: dict[str, Entry] = {}
         self.file_errors: dict[str, str] = {}
@@ -60,19 +63,34 @@ class LlmRegistry:
         configs, errors = self._source()
         entries: dict[str, Entry] = {}
         for c in configs:
-            state = self._entries[c.name].state if c.name in self._entries else State()
+            prev = self._entries.get(c.name)
+            state = prev.state if prev else State()
             if not c.enabled:
+                self.retry.forget(c.name)
                 entries[c.name] = Entry(c, None, None, state)
                 continue
+            if prev and prev.error and prev.config == c and self.retry.failing(c.name) and (
+                    not self.retry.policy.enabled or c.name not in self.retry.due()):
+                entries[c.name] = prev                      # refused before, same file, not yet time to try again
+                continue
+            if prev and prev.config != c:
+                self.retry.forget(c.name)                    # the file changed: a fresh start
             f = self._factories.get(c.type.lower())
             if f is None:
-                entries[c.name] = Entry(c, None, f"no provider type '{c.type}' is installed (have: {sorted(self._factories)})", state)
+                why = f"no provider type '{c.type}' is installed (have: {sorted(self._factories)})"
+                self.retry.failed(c.name, why, True)
+                entries[c.name] = Entry(c, None, why, state)
                 continue
             try:
                 entries[c.name] = Entry(c, f(c, self._runtime), None, state)
+                self.retry.succeeded(c.name)
             except LlmError as e:
-                LOG.warning("ai provider %s not loaded: %s", c.name, e.message)
+                self.retry.failed(c.name, e.message, retrymod.looks_permanent(e.message))
                 entries[c.name] = Entry(c, None, e.message, state)
+        for k in list(self.retry.statuses()):
+            if not k.startswith("file ") and k not in entries:
+                self.retry.forget(k)
+        _track_files(self.retry, errors)
         self._entries, self.file_errors, self.loaded_at = entries, dict(errors), time.time()
 
     def types(self) -> list[str]:
@@ -143,6 +161,18 @@ class LlmRegistry:
         for e in self._entries.values():
             if e.provider is not None:
                 await e.provider.aclose()
+
+
+def _track_files(board: retrymod.RetryBoard, errors: dict) -> None:
+    """A file that cannot be read is a failure too (it is read again when it changes or its retry is due)."""
+    for f, why in errors.items():
+        key = f"file {f}"
+        s = board.status(key)
+        if s is None or s.last_error != why or key in board.due():
+            board.failed(key, why, retrymod.looks_permanent(why))
+    for k in list(board.statuses()):
+        if k.startswith("file ") and k[5:] not in errors:
+            board.succeeded(k)
 
 
 def from_directory(directory, factories, runtime, default_model: str = "", env=None) -> LlmRegistry:

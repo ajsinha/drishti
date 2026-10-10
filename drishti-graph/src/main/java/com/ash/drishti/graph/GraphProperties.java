@@ -41,6 +41,12 @@ public record GraphProperties(
         impact = impact == null ? new Impact(null, null, null) : impact;
     }
 
+    /** The settings for {@code env}: what packs contribute to {@code drishti.graph.*} at this moment (all defaults when nothing is set). */
+    public static GraphProperties of(org.springframework.core.env.Environment env) {
+        return org.springframework.boot.context.properties.bind.Binder.get(env).bind("drishti.graph", GraphProperties.class)
+                .orElseGet(() -> new GraphProperties(null, null, null, null, null));
+    }
+
     /**
      * @param follow reference fields followed upward from dependents (a trade's {@code nettingSet}) to find what they roll into
      * @param measures kind to a Rachana-EL expression summed per group ({@code $.mtm})

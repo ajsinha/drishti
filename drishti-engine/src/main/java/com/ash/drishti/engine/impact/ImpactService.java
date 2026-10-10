@@ -56,7 +56,7 @@ import java.util.function.UnaryOperator;
  * the caller sees them: a masked measure reads {@link DataNode#MASK}, and so does the total of a group that holds one
  * (never added up); a masked follow field rolls nothing up.
  */
-public final class ImpactService {
+public final class ImpactService implements com.ash.drishti.common.LiveSettings {
 
     /**
      * @param ref the entity
@@ -97,7 +97,7 @@ public final class ImpactService {
     private final SourceRouter router;
     private final Mnemonics mnemonics;
     private final ReferenceCatalog catalog;
-    private final GraphProperties.Impact config;
+    private volatile GraphProperties.Impact config;
     private final ElCompiler el;
     private final Formats formats;
     private final ExecutorService executor;
@@ -113,6 +113,12 @@ public final class ImpactService {
         this.executor = executor;
     }
 
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        GraphProperties.Impact next = GraphProperties.of(candidate).impact();
+        return () -> config = next;
+    }
+
     public Impact analyse(EntityRef target, Predicate<String> mayOpen) {
         return analyse(target, mayOpen, com.ash.drishti.api.AsOf.LATEST);
     }
@@ -125,6 +131,7 @@ public final class ImpactService {
     /** What depends on {@code target} as the caller may see it: {@code redact} masks what the caller's role may not see. */
     public Impact analyse(EntityRef target, Predicate<String> mayOpen, com.ash.drishti.api.AsOf asOf, UnaryOperator<DataNode> redact) {
         long t0 = System.nanoTime();
+        GraphProperties.Impact config = this.config;
         Ties ties = ties(target.kind(), redact);
         Set<String> kinds = new LinkedHashSet<>();
         if (ties != Ties.NONE) {                                    // every field that names the target is masked: none
@@ -231,6 +238,7 @@ public final class ImpactService {
      */
     private Optional<Group> columns(int level, String kind, List<EntityRef> refs, Map<EntityRef, String> rolled,
             com.ash.drishti.api.AsOf asOf, UnaryOperator<DataNode> redact) {
+        GraphProperties.Impact config = this.config;                // one snapshot for the whole call, even if packs change meanwhile
         String measure = config.measures().get(kind);
         String path = measure != null && measure.matches("^\\$\\.[A-Za-z_][A-Za-z0-9_.]*$") ? measure.substring(2) : null;
         java.util.Set<String> have = router.columnar(kind);
@@ -288,6 +296,7 @@ public final class ImpactService {
         if (!mayOpen.test(kind)) {
             return new Group(level, kind, mnemonics.codeFor(kind), List.of(), refs.size(), null, 0);
         }
+        GraphProperties.Impact config = this.config;
         String measure = config.measures().get(kind);
         String fmt = config.formats().get(kind);
         double sum = 0;

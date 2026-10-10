@@ -19,6 +19,8 @@ and (on request, one server at a time) their tools. Nothing here changes configu
 ``POST /api/ai/chat`` is what console features call (signed in, JSON body only, through the policy)."""
 from __future__ import annotations
 
+import time
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
@@ -36,15 +38,23 @@ def _problem(e: LlmError) -> JSONResponse:
     return JSONResponse({"code": "DRS-4016", "kind": e.kind, "detail": e.message}, status_code=_STATUS.get(e.kind, 502))
 
 
+def _retry(board, name: str):
+    s = board.status(name)
+    return s.as_dict() if s else None
+
+
 def _local(ai) -> dict:
     reg = ai.registry
     providers = [{"name": e.config.name, "type": e.config.type, "enabled": e.config.enabled, "baseUrl": e.config.base_url, "keySet": bool(e.config.api_key),
-                  "health": reg.health(e), "models": [{"ref": m.ref, "id": m.id, "kind": m.kind, "capabilities": list(m.capabilities)} for m in
+                  "health": reg.health(e), "retry": _retry(ai.retry_ai, e.config.name), "models": [{"ref": m.ref, "id": m.id, "kind": m.kind, "capabilities": list(m.capabilities)} for m in
                                                       (e.provider.models() if e.provider else [])]} for e in reg.entries()]
     servers = [{"name": e.config["name"], "transport": e.config["transport"], "enabled": e.config["enabled"], "url": e.config["url"],
-                "allowedTools": e.config["allowed_tools"], "health": ai.mcp.health(e)} for e in ai.mcp.entries()]
+                "allowedTools": e.config["allowed_tools"], "health": ai.mcp.health(e), "retry": _retry(ai.retry_mcp, e.config["name"])}
+               for e in ai.mcp.entries()]
+    now = time.time()
     return {"enabled": ai.enabled, "dir": ai.dir, "types": reg.types(), "providers": providers, "fileErrors": reg.file_errors,
-            "mcpEnabled": ai.mcp_enabled, "mcpDir": ai.mcp_dir, "mcpServers": servers, "mcpFileErrors": ai.mcp.file_errors}
+            "mcpEnabled": ai.mcp_enabled, "mcpDir": ai.mcp_dir, "mcpServers": servers, "mcpFileErrors": ai.mcp.file_errors,
+            "fileRetry": {k: s.as_dict(now) for k, s in {**ai.retry_ai.statuses(), **ai.retry_mcp.statuses()}.items() if k.startswith("file ")}}
 
 
 async def _remote(request: Request):
@@ -73,6 +83,29 @@ async def page(request: Request, tools: str = "", where: str = "console"):
             tool_error = getattr(e, "detail", None) or getattr(e, "message", str(e))
     return render(request, "admin/ai.html", local=_local(ai), remote=remote, remote_error=remote_error, tools_of=tools, tools_where=where,
                   tool_list=tool_list, tool_error=tool_error)
+
+
+@router.post("/admin/api/retry/{area}")
+async def retry_now(request: Request, area: str):
+    """Admin "Retry now" (admins; audited by the server and by the console's AI layer). ``area``: packs, connectors, ai, mcp or all. The
+    console's own AI providers and MCP servers are tried at once for ai, mcp and all; the server is asked for the same."""
+    me = ident(request)
+    if not me.is_admin:
+        return JSONResponse({"code": "DRS-5002", "detail": "administrators only"}, status_code=403)
+    body = await json_body(request)
+    if area not in ("packs", "connectors", "ai", "mcp", "all"):
+        return JSONResponse({"code": "DRS-5001", "detail": "area must be packs, connectors, ai, mcp or all"}, status_code=400)
+    out: dict = {"area": area}
+    ai = request.app.state.ai
+    if area in ("ai", "mcp", "all") and (ai.enabled or ai.mcp_enabled):
+        out["console"] = await ai.retry_now()
+        ai._audit({"user": me.user, "feature": "retry", "area": "console", "name": area, "outcome": "retry-now", "detail": f"{out['console']} tried"})
+    try:
+        params = {"name": body["name"]} if body.get("name") else {}
+        out["server"] = await request.app.state.backend.admin("POST", f"/retry/{area}", me, **params)
+    except BackendError as e:
+        out["serverError"] = e.detail
+    return out
 
 
 @router.get("/admin/ai/api/overview")

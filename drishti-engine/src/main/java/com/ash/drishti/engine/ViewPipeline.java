@@ -79,7 +79,7 @@ import java.util.function.UnaryOperator;
  * keys, links, panel records, live patches). The overloads without {@code redact} mask nothing.
  * Thread-safe.
  */
-public final class ViewPipeline {
+public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** Cache key for effective layouts. */
     record LayoutKey(Object sutra, String kind, Fingerprint fingerprint) {}
@@ -570,6 +570,12 @@ public final class ViewPipeline {
         var s = layouts.stats();
         return Map.of("layouts", layouts.estimatedSize(), "layoutHitRate", Math.round(s.hitRate() * 1000) / 1000.0,
                 "fingerprints", fingerprints.estimatedSize());
+    }
+
+    /** Packs changed their links, formats, hints or routes: every cached layout was built on the old ones, so they are dropped. */
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        return this::purgeCaches;
     }
 
     /** Drops cached layouts and fingerprints; the next views recompute them. */

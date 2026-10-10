@@ -119,9 +119,10 @@ DRISHTI_PORT=18996 DRISHTI_PACKS=market-risk,counterparty-risk,liquidity-risk,cl
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
-The commands below use `B=http://localhost:18996/api/v1` for the server's API. **Packs load when the server starts:**
-after a change to `pack.yaml`, `config/` or `samples/`, restart the server. A change to a Sutra needs no restart
-(see [Versioning a pack](#versioning-a-pack) for what a change needs).
+The commands below use `B=http://localhost:18996/api/v1` for the server's API. **Packs follow the folder while the server runs:**
+a change to `pack.yaml`, `config/` or `samples/` is picked up within a few seconds (the packs folder is watched, `drishti.packs.poll`),
+checked with the loaded packs and swapped in; a bad edit keeps the last good version running and shows on Admin → Packs. No change needs
+a restart (see [Versioning a pack](#versioning-a-pack) for what a change needs, and [PACKS.md](PACKS.md#live-reload-the-packs-folder-is-watched)).
 
 ## Build it, step by step
 
@@ -249,7 +250,7 @@ Add to `graph:` in `pack.yaml`:
     client: "$.tier"
 ```
 
-Restart and open `TKT TKT-1001`. *Linked entities* now lists the agent and the client, with their badges. The
+Save, wait a few seconds for the reload (or press Retry now in Admin → Packs) and open `TKT TKT-1001`. *Linked entities* now lists the agent and the client, with their badges. The
 view-model answer says it exactly:
 
 ```text
@@ -271,7 +272,7 @@ Add under `graph:`:
     formats:  { ticket: amount0 }
 ```
 
-Restart, open `AGT AGT-07` and press `F8`. The same answer from the API (`curl -s $B/impact/agent/AGT-07`, condensed):
+Save, wait for the reload, open `AGT AGT-07` and press `F8`. The same answer from the API (`curl -s $B/impact/agent/AGT-07`, condensed):
 
 ```text
 level 1  ticket  TKT-1001 (30)  TKT-1002 (6)  TKT-1003 (52)   total 88
@@ -351,7 +352,7 @@ labels:                             # field → label, everywhere (strips, table
 idFields: ["ticketId", "agentId", "clientId"]
 ```
 
-Restart. The age reads `30 h` and the pick list column is headed *Age (h)*. The format file and the hints are
+Save and wait for the reload. The age reads `30 h` and the pick list column is headed *Age (h)*. The format file and the hints are
 explained in [Vocabulary](#vocabulary-labels-formats-and-inference-hints).
 
 ### Step 10b. About this page: say what a ticket is
@@ -376,7 +377,7 @@ kinds:
         unit: hours
 ```
 
-Restart and press `?` on `TKT TKT-1001`: the drawer's first section reads *TKT-1001 ("Cannot sign in") is a high-priority
+Save, wait for the reload and press `?` on `TKT TKT-1001`: the drawer's first section reads *TKT-1001 ("Cannot sign in") is a high-priority
 ticket for Acme Freight Ltd, open for 30 hours and assigned to AGT-07.* The sentence is a template over the ticket, so
 it changes when the ticket does. The keys, the rules and the checks are in
 [About text and glossary](#about-text-and-glossary).
@@ -529,7 +530,7 @@ routes:
   agent-load: agent-totals
 ```
 
-and `ticketIds: { kind: ticket, label: Ticket }` under `graph.fields`, so the members show as links. Restart and type
+and `ticketIds: { kind: ticket, label: Ticket }` under `graph.fields`, so the members show as links. Save, wait for the reload and type
 `LOAD AGT-07`:
 
 ![LOAD AGT-07: Hours open 36, Oldest 30 h, Ticket count 2, summed from the open tickets](img/packs/05-derived-load.jpg)
@@ -583,7 +584,7 @@ routes:
   ticket: helpdesk-store            # tickets are read from this connector first
 ```
 
-Restart. At this first start the server writes `config/connectors/helpdesk-store.yaml` from the template (the log says `connector file helpdesk-store.yaml generated from
+Save. When the pack loads (a few seconds) the server writes `config/connectors/helpdesk-store.yaml` from the template (the log says `connector file helpdesk-store.yaml generated from
 the template of pack 'helpdesk'`), and never overwrites it afterwards. Check the connector, then open `TKT TKT-2001`:
 
 ```bash
@@ -1179,7 +1180,7 @@ themselves.
 
 ## Vocabulary: labels, formats and inference hints
 
-Two optional files teach every screen the pack's words. They are read at start-up and join the site's configuration at
+Two optional files teach every screen the pack's words. They are read when the pack loads (and again whenever packs change, with no restart) and join the site's configuration at
 the lowest precedence ([What becomes of each key](#what-becomes-of-each-key)); a more specific pack's entry wins over
 a parent's ([Inheritance](#inheritance)).
 
@@ -1826,7 +1827,7 @@ Example: show the trader's name in trade pick lists.
 
    You should see `wrote 5 pack manifests: banking-core, market-data, trading, market-risk, counterparty-risk`.
 4. Check the result: `git diff config/packs/trading/pack.yaml` shows `- trader` added under `columns: trade:`.
-5. Restart the server (packs load at start-up), type `TRD MX-200000` and press Enter: the pick list has a
+5. Wait for the server to reload the pack (a few seconds; no restart), type `TRD MX-200000` and press Enter: the pick list has a
    *Trader* column.
 6. Commit the generator **and** the files it wrote, together. `--check` now passes.
 
@@ -2042,14 +2043,14 @@ Never edit these files by hand: change the script and run it again (each file sa
 
 #### Generator step 7. Open it
 
-Restart the server with the pack enabled, for example on its own:
+Start the server with the pack enabled, for example on its own (or, on a running server, copy the folder into the packs folder and it is loaded):
 
 ```bash
 # start the server with only the library pack
 DRISHTI_PACKS=library java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
-or alongside others: `DRISHTI_PACKS=finance,library`. Restart the console too, so it reads the new guide. Then:
+or alongside others: `DRISHTI_PACKS=finance,library`. The console reads the guide from the server, so it needs no restart. Then:
 
 1. In the terminal, type `TI`. You should see `TITLE` (Book) in the suggestions.
 2. Type `TITLE TITLE-0001` and press Enter. You should see the pill *Library · Book* and the id *TITLE-0001*; the
@@ -2142,8 +2143,8 @@ makes the same archive byte for byte for the same folder, so bump `version:` bef
 | You changed | It takes effect |
 |---|---|
 | a Sutra (`sutras/`) | within about a second (hot reload), on every server reading that folder |
-| `pack.yaml` (any key), `config/formats.yaml`, `config/semantics.yaml` | at the next server restart |
-| `samples/` | at the next server restart (the demo source reads them when it starts) |
+| `pack.yaml` (any key), `config/formats.yaml`, `config/semantics.yaml`, `config/about.yaml` | within a few seconds (`drishti.packs.poll`): roles, graph, search columns and pivots, formats, hints, About pages, routes are all swapped in live; a bad edit keeps the last good version |
+| `samples/` | within a few seconds (the demo source is restarted on its new folders; nothing else is touched) |
 | `console:` keys, `guides/`, `config/help.yaml`, `config/workspaces.yaml` | in the console within a minute |
 | data behind a connector | at once, or at the connector's next rescan |
 

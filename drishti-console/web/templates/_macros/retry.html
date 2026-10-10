@@ -1,0 +1,30 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{#
+  "failed — next retry in Ns (attempt k)" and the last error, for a thing the server or the console is retrying by itself, and the
+  "Retry now" button (handled by /static/js/admin-retry.js). `r` is the retry map the server sends: attempt, nextRetryInSeconds
+  (-1 when retrying is off), lastError, permanent.
+#}
+{% macro retry_note(r) -%}
+{%- if r %}<div class="t-warn retry-note" data-retry data-attempt="{{ r.attempt }}" data-next="{{ r.nextRetryInSeconds }}">failed &mdash;
+  {% if r.nextRetryInSeconds < 0 %}retrying is off{% else %}{{ 'looks permanent, ' if r.permanent }}next retry in <span data-retry-in>{{ r.nextRetryInSeconds }}</span>s{% endif %} (attempt {{ r.attempt }}){% if r.lastError %}
+  <span class="text-muted-d retry-error">last error: {{ r.lastError[:200] }}</span>{% endif %}</div>{% endif -%}
+{%- endmacro %}
+
+{% macro retry_button(area, label="Retry now") -%}
+<button type="button" class="fk" data-retry-now="{{ area }}" title="Try everything that failed again now, without waiting for its next retry">{{ label }}</button>
+<span class="retry-msg" data-retry-msg role="status" aria-live="polite"></span>
+{%- endmacro %}

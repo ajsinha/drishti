@@ -43,10 +43,12 @@ import java.util.concurrent.atomic.AtomicReference;
  * Routes entity reads to plugins. The configured route for a kind is tried first, then the default route,
  * then any other plugin that serves the kind. Every read runs on a virtual thread with a deadline.
  */
-public final class SourceRouter {
+public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
 
     private final SourceRegistry registry;
     private final SourcesProperties props;
+    /** Kind to connector, as the site and the loaded packs set it; swapped whole when packs change their routes. */
+    private volatile java.util.Map<String, String> routes;
     private final ExecutorService executor;
 
     private final SourceStats stats = new SourceStats();
@@ -56,9 +58,18 @@ public final class SourceRouter {
         return stats;
     }
 
+    /** Packs changed: the kinds they route to connectors are read again. */
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        java.util.Map<String, String> next = java.util.Map.copyOf(org.springframework.boot.context.properties.bind.Binder.get(candidate)
+                .bind("drishti.sources.routes", org.springframework.boot.context.properties.bind.Bindable.mapOf(String.class, String.class)).orElse(java.util.Map.of()));
+        return () -> routes = next;
+    }
+
     public SourceRouter(SourceRegistry registry, SourcesProperties props, ExecutorService virtualExecutor) {
         this.registry = registry;
         this.props = props;
+        this.routes = props.routes();
         this.executor = virtualExecutor;
         registry.attach(this);
     }
@@ -66,7 +77,7 @@ public final class SourceRouter {
     /** Plugins to try for {@code kind}, in order. */
     List<SourcePlugin> candidates(String kind) {
         Map<String, SourcePlugin> ordered = new LinkedHashMap<>();
-        for (String name : new String[] {props.routes().get(kind), props.defaultRoute()}) {
+        for (String name : new String[] {routes.get(kind), props.defaultRoute()}) {
             if (name != null) {
                 registry.plugin(name).filter(p -> p.manifest().serves(kind)).ifPresent(p -> ordered.put(name, p));
             }
@@ -93,7 +104,7 @@ public final class SourceRouter {
 
     /** Why nothing serves {@code kind}: a connector the kind is routed to that does not exist, is off, or failed; else no source at all. */
     DrishtiException noSource(String kind) {
-        String routed = props.routes().get(kind);
+        String routed = routes.get(kind);
         if (routed != null && registry.plugin(routed).isEmpty()) {
             var status = registry.connectorStatuses().get(routed);
             if (status == null) {
@@ -198,7 +209,7 @@ public final class SourceRouter {
                         + (asOf.businessDate() == null ? "" : " for " + asOf.businessDate()) + " and does not list " + ref);
             }
         }
-        String routed = props.routes().get(ref.kind());
+        String routed = routes.get(ref.kind());
         if (routed != null && registry.plugin(routed).isEmpty()) {
             throw noSource(ref.kind());                 // the connector the pack routes this kind to is not there: say that, not just "nothing holds it"
         }

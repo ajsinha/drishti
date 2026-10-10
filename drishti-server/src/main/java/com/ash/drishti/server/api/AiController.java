@@ -73,7 +73,11 @@ public class AiController {
     private final Entitlements entitlements;
     private final AuditLog audit;
 
-    public AiController(AiProperties ai, McpProperties mcp, LlmGateway gateway, McpGateway mcpGateway, Entitlements entitlements, AuditLog audit) {
+    private final com.ash.drishti.server.RetryService retry;
+
+    public AiController(AiProperties ai, McpProperties mcp, LlmGateway gateway, McpGateway mcpGateway, Entitlements entitlements, AuditLog audit,
+            com.ash.drishti.server.RetryService retry) {
+        this.retry = retry;
         this.ai = ai;
         this.mcp = mcp;
         this.gateway = gateway;
@@ -92,6 +96,8 @@ public class AiController {
         out.put("types", reg.types());
         out.put("defaultModel", ai.defaultModel());
         List<Map<String, Object>> providers = new ArrayList<>();
+        Map<String, Map<String, Object>> aiRetry = retry.ai();
+        Map<String, Map<String, Object>> mcpRetry = retry.mcp();
         for (LlmRegistry.Entry e : reg.entries()) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("name", e.config().name());
@@ -100,6 +106,7 @@ public class AiController {
             m.put("baseUrl", e.config().baseUrl());
             m.put("keySet", !e.config().apiKey().isEmpty());
             m.put("health", reg.health(e));
+            m.put("retry", aiRetry.get(e.config().name()));
             m.put("models", e.provider() == null ? List.of() : e.provider().models());
             providers.add(m);
         }
@@ -117,6 +124,7 @@ public class AiController {
             m.put("url", e.config().url());
             m.put("allowedTools", e.config().allowedTools());
             m.put("health", mr.health(e));
+            m.put("retry", mcpRetry.get(e.config().name()));
             servers.add(m);
         }
         out.put("mcpServers", servers);

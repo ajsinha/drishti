@@ -20,8 +20,10 @@
 See docs/architecture/AI_PROVIDERS.md."""
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
+from core import retry as retrymod
 from core.ai import config as cfgmod
 from core.ai.gateway import LlmGateway
 from core.ai.mcp import McpGateway, McpPolicy, McpRegistry
@@ -50,10 +52,14 @@ class AiRuntime:
                             cost_per_user_per_day=float(settings.get("ai.policy.cost_per_user_per_day", 0) or 0),
                             feature_roles={k: list(v.get("roles", [])) for k, v in (settings.get("ai.policy.features", {}) or {}).items()})
         self.audit_log: list[dict] = []
+        self.poll_seconds = max(0.5, float(settings.get("ai.poll_seconds", 5) or 5))
+        self._fingerprint = None
+        self.retry_ai = retrymod.RetryBoard("ai provider", retrymod.RetryPolicy.of(settings, "ai"), listener=lambda *a: self._retry_event("ai", *a))
+        self.retry_mcp = retrymod.RetryBoard("mcp server", retrymod.RetryPolicy.of(settings, "mcp"), listener=lambda *a: self._retry_event("mcp", *a))
         self.registry = LlmRegistry(FACTORIES, (lambda: cfgmod.load_providers(self.dir, env)) if self.enabled else (lambda: ([], {})), self,
-                                    str(settings.get("ai.default_model", "") or ""))
+                                    str(settings.get("ai.default_model", "") or ""), self.retry_ai)
         self.gateway = LlmGateway(self.registry, DefaultPolicy(ps, masker, self._audit))
-        self.mcp = McpRegistry((lambda: cfgmod.load_mcp(self.mcp_dir, env)) if self.mcp_enabled else (lambda: ([], {})), self)
+        self.mcp = McpRegistry((lambda: cfgmod.load_mcp(self.mcp_dir, env)) if self.mcp_enabled else (lambda: ([], {})), self, retry=self.retry_mcp)
         self.mcp_gateway = McpGateway(self.mcp, McpPolicy(
             server_roles=dict(settings.get("mcp.server_roles", {}) or {}), tool_roles=dict(settings.get("mcp.tool_roles", {}) or {}),
             server_features=dict(settings.get("mcp.server_features", {}) or {}), redacted_fields=frozenset(redact), masker=masker, audit=self._audit))
@@ -71,6 +77,58 @@ class AiRuntime:
     def reload(self) -> None:
         self.registry.reload()
         self.mcp.reload()
+        self._fingerprint = self._files()
+
+    def _retry_event(self, area: str, event: str, key: str, detail: str) -> None:
+        self._audit({"user": "system", "feature": "retry", "area": area, "name": key, "outcome": f"{area}-{event}", "detail": detail})
+
+    def _files(self) -> tuple:
+        """Names, sizes and modification times of the provider and MCP files: what a reload would read."""
+        out = []
+        for d, on in ((self.dir, self.enabled), (self.mcp_dir, self.mcp_enabled)):
+            if not on:
+                continue
+            try:
+                out.extend((f.name, f.stat().st_size, f.stat().st_mtime_ns) for f in sorted(Path(d).glob("*.y*ml")))
+            except OSError:
+                out.append((d, -1, 0))
+        return tuple(out)
+
+    async def tick(self) -> bool:
+        """One look: reload when a file changed or something that failed is due for another try, then reconnect MCP servers that lost
+        their connection. Returns whether a reload happened. Called every ``ai.poll_seconds`` by :meth:`supervise`."""
+        import asyncio
+
+        files = self._files()
+        due = bool(self.retry_ai.due() or self.retry_mcp.due())
+        reloaded = files != self._fingerprint or due
+        if reloaded:
+            await asyncio.to_thread(self.reload)
+        await self.mcp.probe_down()
+        return reloaded
+
+    async def supervise(self) -> None:
+        """Runs for the life of the console: files that change are picked up (no restart), and what failed is retried with backoff."""
+        import asyncio
+        import logging
+
+        while True:
+            await asyncio.sleep(self.poll_seconds)
+            try:
+                await self.tick()
+            except Exception:                                # noqa: BLE001  (one bad pass must not end the supervision)
+                logging.getLogger("drishti.ai").exception("ai/mcp supervision pass failed; it runs again")
+
+    def retry_status(self) -> dict:
+        now = time.time()
+        return {"ai": {k: s.as_dict(now) for k, s in self.retry_ai.statuses().items()},
+                "mcp": {k: s.as_dict(now) for k, s in self.retry_mcp.statuses().items()}}
+
+    async def retry_now(self) -> int:
+        """Admin "Retry now": everything failing is tried at once. Returns how many were failing."""
+        n = self.retry_ai.retry_all_now() + self.retry_mcp.retry_all_now()
+        await self.tick()
+        return n
 
     async def aclose(self) -> None:
         await self.registry.aclose()

@@ -1417,6 +1417,29 @@ A script that makes a rendered view interactive (sorting, charts, popovers) must
 - Add the script to `ENHANCERS` in `routes/embed_routes.py` and to `boot` in `web/embed/enhancers.js` (and `ENHANCERS` in `web/embed/assets.js`); extend
   `test_embed_elements_browser.py` to prove it inside the element. The console's own browser tests must pass unchanged.
 
+### 5.10 Retry and live-reload utilities
+
+Two small, Spring-light pieces in `drishti-common` serve every area that keeps something running from files (packs, connectors, AI providers,
+MCP servers; BI artifacts should use them too). Operator view: [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
+
+**Retrying what failed** (`com.ash.drishti.common`, no Spring, virtual-thread friendly, locks are `ReentrantLock`, nothing blocks under `synchronized`):
+
+| Class | Use |
+|---|---|
+| `RetryPolicy.of(env::getProperty, "bi")` | reads `drishti.retry.*` then the area's `drishti.retry.bi.*` (`enabled`, `initial`, `factor`, `max`, `jitter`, `permanent-after`); `baseDelay(attempt)`, `delay(attempt, permanent, random)`; `looksPermanent(error)` classes refused credentials and bad settings |
+| `RetryTracker` | the state of one failing thing: `failed(error, permanentHint)` plans the next try, `due()`, `retryNow()`, `succeeded()`, `status()` |
+| `RetryBoard` | the failing things of one area by name: `failed(key, error, hint)` (logs failures 1, 2, 4, 8, ...), `succeeded(key)` (logs the recovery, returns true if it had failed), `due()`, `retryNow(key)`, `retryAllNow()`, `statuses()`, `forget(key)`, and a `Listener` for the audit log; `RetryBoard.describe(status, now)` is the JSON the Admin pages read |
+
+The owner supplies the timer: call `board.due()` from a scheduler, a watcher pass or a request, try each key, and report the outcome with `failed` / `succeeded`. Do the
+attempt outside any lock the board does not own. The console twin is `core/retry.py` (`RetryPolicy.of(settings, "ai")`, `RetryBoard`).
+
+**Following settings without a restart** (`LiveSettings`): a bean built from settings a pack contributes implements `Runnable prepare(Environment candidate)`. The pack
+reloader calls it with a *candidate* environment (the current one with the new pack settings in it); `prepare` binds, validates and builds the new state and
+returns the commit that swaps it in. Throw from `prepare`, never from the commit: a throw refuses the whole reload and nothing has changed. The commit only
+assigns a `volatile` reference (or a copy-on-write structure), so a reader sees the old state or the new one, never a mixture; take one local snapshot per call when you
+read the state more than once. Examples: `ReferenceCatalog`, `SearchProperties`, `RoleCatalog`, `Formats`, `AboutCatalog`, `SourceRouter`, `SourceRegistry` (plain
+plugins' settings).
+
 ## 6. Testing strategy
 
 | Layer | Where | How | Examples |

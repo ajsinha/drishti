@@ -26,24 +26,37 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Knows which identifiers and fields name other entities. Built once from {@link GraphProperties};
- * immutable and thread-safe.
+ * Knows which identifiers and fields name other entities. Built from {@link GraphProperties} and rebuilt when packs
+ * change ({@link com.ash.drishti.common.LiveSettings}); thread-safe.
  */
-public final class ReferenceCatalog {
+public final class ReferenceCatalog implements com.ash.drishti.common.LiveSettings {
 
     private record Compiled(Pattern pattern, String kind) {}
 
-    private final List<Compiled> patterns = new ArrayList<>();
-    private final Map<String, GraphProperties.FieldRef> fields;
+    /** Patterns and fields as one unit, swapped whole when packs change: a reader sees the old pair or the new, never one of each. */
+    private record State(List<Compiled> patterns, Map<String, GraphProperties.FieldRef> fields) {
+        static State of(GraphProperties props) {
+            List<Compiled> out = new ArrayList<>();
+            props.idPatterns().forEach(p -> out.add(new Compiled(Pattern.compile(p.pattern()), p.kind())));
+            return new State(List.copyOf(out), props.fields());
+        }
+    }
+
+    private volatile State state;
 
     public ReferenceCatalog(GraphProperties props) {
-        props.idPatterns().forEach(p -> patterns.add(new Compiled(Pattern.compile(p.pattern()), p.kind())));
-        this.fields = props.fields();
+        this.state = State.of(props);
+    }
+
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        State next = State.of(GraphProperties.of(candidate));
+        return () -> state = next;
     }
 
     /** The kind an identifier belongs to, judged by the configured patterns. */
     public Optional<String> kindOf(String id) {
-        for (Compiled c : patterns) {
+        for (Compiled c : state.patterns()) {
             if (c.pattern.matcher(id).find()) {
                 return Optional.of(c.kind);
             }
@@ -53,13 +66,13 @@ public final class ReferenceCatalog {
 
     /** The kind of entity a field of this name refers to, per the configured fields ({@code nettingSet} is a netting set). */
     public Optional<String> kindOfField(String field) {
-        GraphProperties.FieldRef ref = field == null ? null : fields.get(field);
+        GraphProperties.FieldRef ref = field == null ? null : state.fields().get(field);
         return ref == null ? Optional.empty() : Optional.of(ref.kind());
     }
 
     /** The configured fields that name entities of {@code kind} ({@code counterparty} for counterparties), sorted. */
     public List<String> fieldsNaming(String kind) {
-        return fields.entrySet().stream().filter(e -> kind.equals(e.getValue().kind())).map(Map.Entry::getKey).sorted().toList();
+        return state.fields().entrySet().stream().filter(e -> kind.equals(e.getValue().kind())).map(Map.Entry::getKey).sorted().toList();
     }
 
     /**
@@ -69,6 +82,7 @@ public final class ReferenceCatalog {
      */
     public List<LinkRef> discover(DataNode doc, EntityRef self) {
         List<LinkRef> out = new ArrayList<>();
+        Map<String, GraphProperties.FieldRef> fields = state.fields();
         Set<EntityRef> seen = new LinkedHashSet<>();
         seen.add(self);
         if (!(doc instanceof DataNode.Obj o)) {

@@ -24,9 +24,9 @@ import com.ash.drishti.rachana.format.Formats;
 import java.util.Map;
 
 /** Renders the short badge beside a link ({@code EE 4.1m}, {@code threshold 0}, {@code live}) from config. */
-public final class BadgeRenderer {
+public final class BadgeRenderer implements com.ash.drishti.common.LiveSettings {
 
-    private final Map<String, String> badges;
+    private volatile Map<String, String> badges;
     private final ElCompiler el;
     private final Formats formats;
 
@@ -35,6 +35,13 @@ public final class BadgeRenderer {
         this.el = el;
         this.formats = formats;
         badges.values().forEach(el::compile);
+    }
+
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        Map<String, String> next = GraphProperties.of(candidate).badges();
+        next.values().forEach(el::compile);                       // a badge that does not compile refuses the reload
+        return () -> badges = next;
     }
 
     /** The badge for a target of {@code kind}; empty when none is configured or it evaluates to nothing. */

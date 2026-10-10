@@ -334,6 +334,28 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_AI_DEFAULT_MODEL` | `ai.default_model` | empty | The model used when a call names none (`provider/model`). |
 | `DRISHTI_MCP_ENABLED` | `mcp.enabled` | `false` | Turn on the console's MCP client. |
 | `DRISHTI_MCP_DIR` | `mcp.dir` | `./config/mcp` | The folder of MCP server files. |
+| `DRISHTI_RETRY_ENABLED` | `retry.enabled` | `true` | Try again what failed (the console's AI providers and MCP servers); `false` turns the retries off. |
+| `DRISHTI_RETRY_INITIAL` | `retry.initial` | `5s` | Wait before the first retry. |
+| `DRISHTI_RETRY_MAX` | `retry.max` | `5m` | No wait is longer than this. |
+
+### Retry settings
+
+What failed is tried again by itself, with exponential backoff and jitter; see [OPERATIONS.md](OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
+The server reads `drishti.retry.*` (packs refused, connectors, AI providers, MCP servers) and the console reads `retry.*` (its own AI
+providers and MCP servers; server names with hyphens, console names with underscores). A per-area override replaces any key for one
+area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `ai`, `mcp`) and `retry.<area>.<key>` in the console
+(areas `ai`, `mcp`).
+
+| Server | Console | Default | Meaning |
+|---|---|---|---|
+| `drishti.retry.enabled` | `retry.enabled` | `true` | Retry at all; `false` leaves a failure to the next file change or an administrator's Retry now |
+| `drishti.retry.initial` | `retry.initial` | `5s` | Wait before the first retry (`500ms`, `5s`, `2m`, `1h`) |
+| `drishti.retry.factor` | `retry.factor` | `2.0` | Each further wait is this many times the one before |
+| `drishti.retry.max` | `retry.max` | `5m` | No wait is longer than this (and a permanent failure waits this long) |
+| `drishti.retry.jitter` | `retry.jitter` | `0.2` | Each wait varies by up to this fraction either way (`0` = none), so many failing things do not retry together |
+| `drishti.retry.permanent-after` | `retry.permanent_after` | `3` | A failure waiting cannot fix (refused credentials, a setting that is wrong) seen this many times in a row is treated as permanent and retried only every `max` |
+| `drishti.retry.<area>.<key>` | `retry.<area>.<key>` | the general value | Per-area override of any key above |
+| (none) | `ai.poll_seconds` | `5` | How often the console looks at `config/ai` and `config/mcp` for a changed file and for a retry that is due |
 
 ### AI and MCP policy settings
 

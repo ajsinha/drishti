@@ -66,8 +66,9 @@ import org.springframework.core.env.MapPropertySource;
  *   removed. A pack another loaded pack extends is never unloaded; that is reported instead.</li>
  * </ul>
  * Bursts of file changes are debounced, one reload runs at a time, and every change is audited. Roles, graph and search
- * settings, formats and About pages are bound when the server starts; when a change touches them the result says a
- * restart is needed for them (the rest has already taken effect).
+ * settings, formats, semantic hints, About pages, kind routes and sample-data folders follow too: each is a
+ * {@link com.ash.drishti.common.LiveSettings} that builds its new state first (a refusal changes nothing) and then swaps it in,
+ * so nothing needs a restart.
  */
 public final class PackReloader implements AutoCloseable {
 
@@ -89,6 +90,8 @@ public final class PackReloader implements AutoCloseable {
     private final PackOverlay overlay;
     private final AuditLog audit;
     private final SamplePolicy samples;
+    /** Everything built from settings that packs contribute; asked, in one reload at a time, to follow a change. */
+    private final java.util.function.Supplier<List<com.ash.drishti.common.LiveSettings>> live;
     /** The folders packs are read from, fixed when the server starts (a later change to the environment must not move them). */
     private final String packsDir;
     private final String installedDir;
@@ -104,9 +107,18 @@ public final class PackReloader implements AutoCloseable {
     private final Set<String> candidates = new LinkedHashSet<>();
     private final List<DirectoryWatcher> watchers = new ArrayList<>();
     private volatile String lastRun = "";
+    /** Packs that are refused or kept at their last version are looked at again on this schedule even when no file changed. */
+    private final com.ash.drishti.common.RetryBoard retry;
+    private String retryContext = "";
 
     public PackReloader(ConfigurableEnvironment env, PackRegistry registry, ConnectorManager connectors, SutraRegistry sutras, Mnemonics mnemonics,
             PackOverlay overlay, AuditLog audit, SamplePolicy samples) {
+        this(env, registry, connectors, sutras, mnemonics, overlay, audit, samples, List::of);
+    }
+
+    public PackReloader(ConfigurableEnvironment env, PackRegistry registry, ConnectorManager connectors, SutraRegistry sutras, Mnemonics mnemonics,
+            PackOverlay overlay, AuditLog audit, SamplePolicy samples, java.util.function.Supplier<List<com.ash.drishti.common.LiveSettings>> live) {
+        this.live = live;
         this.env = env;
         this.registry = registry;
         this.connectors = connectors;
@@ -124,6 +136,20 @@ public final class PackReloader implements AutoCloseable {
         this.pollMs = duration(env.getProperty("drishti.packs.poll", "5s")).toMillis();
         this.debounceMs = duration(env.getProperty("drishti.packs.reload-debounce", "750ms")).toMillis();
         this.seen = fingerprints();
+        this.retry = new com.ash.drishti.common.RetryBoard("pack", com.ash.drishti.common.RetryPolicy.of(env::getProperty, "packs"));
+        this.retry.listener(new com.ash.drishti.common.RetryBoard.Listener() {
+            @Override
+            public void failed(String area, String key, com.ash.drishti.common.RetryTracker.Status s, boolean logged) {
+                if (logged) {
+                    audit.record("system", "pack-retry-failed", key, "attempt " + s.attempt() + ": " + s.lastError());
+                }
+            }
+
+            @Override
+            public void recovered(String area, String key, int failures, String lastError) {
+                audit.record("system", "pack-recovered", key, "loaded after " + failures + " failed attempt(s); it was: " + lastError);
+            }
+        });
     }
 
     private static Duration duration(String text) {
@@ -180,6 +206,7 @@ public final class PackReloader implements AutoCloseable {
         try {
             Map<String, String> now = fingerprints();
             if (now.equals(seen)) {
+                retryRefused();
                 return;
             }
             for (int i = 0; i < 40; i++) {                           // debounce: wait until the folders stop changing
@@ -208,8 +235,85 @@ public final class PackReloader implements AutoCloseable {
             if (r.changed() || !r.problems().isEmpty()) {
                 LOG.info("packs reloaded: loaded {}, reloaded {}, unloaded {}, problems {}", r.loaded(), r.reloaded(), r.unloaded(), r.problems());
             }
+            syncRetry(true);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // -- retrying what was refused ---------------------------------------------------------------------------------
+
+    /**
+     * Nothing changed in the pack folders, but a pack may still be refused (a conflict with another pack, a missing {@code extends},
+     * a missing connector, a failed validation) for a reason that lies elsewhere and has since gone. Called with the lock held:
+     * when a refused pack's retry is due, or anything it depends on changed (the connector files, the sample-pack switch, the
+     * administrator's overlay), everything is evaluated again with the usual rules.
+     */
+    private void retryRefused() {
+        syncRetry(false);
+        String ctx = context();
+        if (!ctx.equals(retryContext)) {
+            retryContext = ctx;
+            retry.retryAllNow();
+        }
+        if (retry.policy().enabled() && !retry.due().isEmpty()) {
+            Result r = reconcile("retry", "automatic retry of refused packs", Set.of(), true);
+            if (r.changed()) {
+                LOG.info("packs retried: loaded {}, reloaded {}, unloaded {}", r.loaded(), r.reloaded(), r.unloaded());
+            }
+            syncRetry(true);
+        }
+    }
+
+    /** Brings the retry board in line with the registry's problems; {@code ran} says a reconcile has just looked at them again. */
+    private void syncRetry(boolean ran) {
+        Map<String, String> problems = Map.copyOf(registry.problems());
+        problems.forEach((n, m) -> {
+            if (!retry.failing(n) || ran) {
+                retry.failed(n, m, com.ash.drishti.common.RetryPolicy.looksPermanent(m));
+            }
+        });
+        retry.statuses().keySet().stream().filter(n -> !problems.containsKey(n)).forEach(retry::succeeded);
+    }
+
+    /** What a refused pack may be waiting for: connector files, the sample-pack switch and the overlay. */
+    private String context() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(samples.hidden()).append('|').append(overlay.added()).append('|');
+        try (Stream<Path> s = Files.list(connectors.files().dir())) {
+            s.sorted().forEach(f -> {
+                try {
+                    sb.append(f.getFileName()).append(':').append(Files.size(f)).append(':').append(Files.getLastModifiedTime(f).toMillis()).append(';');
+                } catch (IOException e) {
+                    sb.append(f.getFileName()).append(";");
+                }
+            });
+        } catch (IOException e) {
+            sb.append("-");
+        }
+        return sb.toString();
+    }
+
+    /** For Admin and Health: each refused pack with its attempt, seconds to the next retry and last error. */
+    public Map<String, Map<String, Object>> retryStatus() {
+        Map<String, Map<String, Object>> out = new TreeMap<>();
+        java.time.Instant now = java.time.Instant.now();
+        retry.statuses().forEach((k, v) -> out.put(k, com.ash.drishti.common.RetryBoard.describe(v, now)));
+        return out;
+    }
+
+    /** Admin "Retry now": looks at every refused pack again at once. Audited by the caller's actor. */
+    public Result retryNow(String actor) {
+        lock.lock();
+        try {
+            syncRetry(false);
+            int n = retry.retryAllNow();
+            audit.record(actor, "pack-retry-now", "packs", n + " refused pack(s) retried");
+            Result r = reconcile(actor, "retry now", Set.of(), true);
+            syncRetry(true);
+            return r;
         } finally {
             lock.unlock();
         }
@@ -296,7 +400,16 @@ public final class PackReloader implements AutoCloseable {
             candidates.removeIf(n -> !problems.containsKey(n));
             return new Result(loaded, reloaded, unloaded, problems, List.of());
         }
-        List<String> restartFor = apply(loader, dirs, files, accepted, current, loaded, unloaded);
+        List<String> restartFor;
+        try {
+            restartFor = apply(loader, dirs, files, accepted, current, loaded, unloaded);
+        } catch (SettingsRefused e) {
+            problems.put("(all)", "the packs' settings cannot be used: " + e.getMessage() + "; nothing was changed");
+            registry.problems().put("(all)", problems.get("(all)"));
+            audit.record(actor, "pack-problem", "(all)", problems.get("(all)"));
+            lastRun = java.time.Instant.now().toString();
+            return new Result(List.of(), List.of(), List.of(), problems, List.of());
+        }
         if (persistNew) {
             persistLoaded(loaded, unloaded);
         }
@@ -478,11 +591,12 @@ public final class PackReloader implements AutoCloseable {
         }
     }
 
-    /** Makes the accepted set the running one. Returns the settings that are bound at start and so need a restart. */
+    /** Makes the accepted set the running one, including every setting packs contribute (see {@link com.ash.drishti.common.LiveSettings}). Always returns an empty list: nothing needs a restart. */
     private List<String> apply(PackLoader loader, List<Path> dirs, ConnectorFiles files, List<Pack> packs, Map<String, Pack> current,
             List<String> loaded, List<String> unloaded) {
         Map<String, Object> oldProps = env.getPropertySources().get(PackEnvironmentPostProcessor.SOURCE) instanceof MapPropertySource m
                 ? new LinkedHashMap<>(m.getSource()) : Map.of();
+        List<Runnable> commits = prepareLive(loader.properties(packs));      // nothing has changed yet: a refusal here leaves everything as it was
         ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, null,
                 Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")));
         boot.generated().forEach(n -> audit.record("system", "connector-generated", n, "written from a pack's connector template"));
@@ -516,34 +630,45 @@ public final class PackReloader implements AutoCloseable {
             held.removeAll(refs);
         }
         connectors.suppress(held);
-        List<String> restart = new ArrayList<>();
-        restart(restart, oldProps, props, "drishti.security.roles.", "roles that packs define");
-        restart(restart, oldProps, props, "drishti.graph.", "graph reference patterns, badges and impact settings");
-        restart(restart, oldProps, props, "drishti.search.", "search columns and pivots");
-        restart(restart, oldProps, props, "drishti.rachana.pack-formats-files", "formats");
-        restart(restart, oldProps, props, "drishti.inference.pack-semantics-files", "semantic hints");
-        restart(restart, oldProps, props, "drishti.about.", "About pages and pack guides");
-        restart(restart, oldProps, props, "drishti.sources.routes.", "kind routes");
-        restart(restart, oldProps, props, "drishti.sources.plugins.demo.", "sample data directories");
-        return restart;
+        commits.forEach(Runnable::run);          // roles, links, search, formats, hints, About, routes, sample folders; the view caches last
+        return List.of();                       // nothing needs a restart any more: every setting packs contribute is followed live
     }
 
-    private static void restart(List<String> out, Map<String, Object> before, Map<String, Object> after, String prefix, String what) {
-        Map<String, Object> a = new TreeMap<>();
-        Map<String, Object> b = new TreeMap<>();
-        before.forEach((k, v) -> {
-            if (k.startsWith(prefix)) {
-                a.put(k, v);
-            }
-        });
-        after.forEach((k, v) -> {
-            if (k.startsWith(prefix)) {
-                b.put(k, v);
-            }
-        });
-        if (!a.equals(b)) {
-            out.add(what);
+    /** Thrown when a change to what packs contribute cannot be used; raised before anything is changed. */
+    private static final class SettingsRefused extends RuntimeException {
+        SettingsRefused(String message, Throwable cause) {
+            super(message, cause);
         }
+    }
+
+    /**
+     * Asks every {@link com.ash.drishti.common.LiveSettings} bean to build its new state against a candidate environment (the
+     * current one with {@code props} as the packs' settings). All of them accept or the reload is refused.
+     */
+    private List<Runnable> prepareLive(Map<String, Object> props) {
+        List<com.ash.drishti.common.LiveSettings> beans = new ArrayList<>(live.get());
+        if (beans.isEmpty()) {
+            return List.of();
+        }
+        beans.sort(java.util.Comparator.comparingInt(b -> b instanceof com.ash.drishti.engine.ViewPipeline ? 1 : 0));    // caches are dropped last
+        org.springframework.core.env.StandardEnvironment candidate = new org.springframework.core.env.StandardEnvironment();
+        org.springframework.core.env.MutablePropertySources ms = candidate.getPropertySources();
+        new ArrayList<>(ms.stream().toList()).forEach(ps -> ms.remove(ps.getName()));
+        env.getPropertySources().forEach(ps -> {
+            if (!PackEnvironmentPostProcessor.SOURCE.equals(ps.getName()) && !"configurationProperties".equals(ps.getName())) {
+                ms.addLast(ps);
+            }
+        });
+        ms.addLast(new MapPropertySource(PackEnvironmentPostProcessor.SOURCE, props));
+        List<Runnable> commits = new ArrayList<>();
+        for (com.ash.drishti.common.LiveSettings l : beans) {
+            try {
+                commits.add(l.prepare(candidate));
+            } catch (RuntimeException e) {
+                throw new SettingsRefused(l.getClass().getSimpleName() + ": " + describe(e), e);
+            }
+        }
+        return commits;
     }
 
     private static List<String> indexed(Map<String, Object> props, String key) {

@@ -34,16 +34,30 @@ import java.util.TreeSet;
  * administrators define in Admin → Roles (the identity database). A built-in name always means the built-in role.
  * Lookups are lock-free reads of immutable maps.
  */
-public final class RoleCatalog implements RoleNames {
+public final class RoleCatalog implements RoleNames, com.ash.drishti.common.LiveSettings {
 
-    private final Map<String, SecurityProperties.Role> builtIn;
+    /** Swapped whole when packs change their roles: a lookup sees the old set or the new, so a signed-in user's kinds follow at the next call. */
+    private volatile Map<String, SecurityProperties.Role> builtIn;
     private final RoleStore store;
 
     public RoleCatalog(SecurityProperties props, RoleStore store) {
-        Map<String, SecurityProperties.Role> roles = new java.util.HashMap<>(props.roles());
-        roles.putIfAbsent("admin", new SecurityProperties.Role(List.of("*"), true, true, true, false, true, true, true, false));
-        this.builtIn = Map.copyOf(roles);
+        this.builtIn = withAdmin(props.roles());
         this.store = store;
+    }
+
+    private static Map<String, SecurityProperties.Role> withAdmin(Map<String, SecurityProperties.Role> configured) {
+        Map<String, SecurityProperties.Role> roles = new java.util.HashMap<>(configured);
+        roles.putIfAbsent("admin", new SecurityProperties.Role(List.of("*"), true, true, true, false, true, true, true, false));
+        return Map.copyOf(roles);
+    }
+
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        Map<String, SecurityProperties.Role> fresh = org.springframework.boot.context.properties.bind.Binder.get(candidate)
+                .bind("drishti.security.roles", org.springframework.boot.context.properties.bind.Bindable.mapOf(String.class, SecurityProperties.Role.class))
+                .orElse(Map.of());
+        Map<String, SecurityProperties.Role> next = withAdmin(fresh);
+        return () -> builtIn = next;
     }
 
     public Optional<RoleDefinition> find(String name) {
@@ -62,8 +76,9 @@ public final class RoleCatalog implements RoleNames {
     /** Built-in roles first, then administrators' roles, each by name. */
     public List<RoleDefinition> all() {
         List<RoleDefinition> out = new ArrayList<>();
-        builtIn.keySet().stream().sorted().forEach(n -> out.add(find(n).orElseThrow()));
-        store.all().stream().filter(r -> !builtIn.containsKey(r.name())).sorted(Comparator.comparing(RoleDefinition::name)).forEach(out::add);
+        Map<String, SecurityProperties.Role> built = builtIn;
+        built.keySet().stream().sorted().forEach(n -> find(n).ifPresent(out::add));
+        store.all().stream().filter(r -> !built.containsKey(r.name())).sorted(Comparator.comparing(RoleDefinition::name)).forEach(out::add);
         return out;
     }
 

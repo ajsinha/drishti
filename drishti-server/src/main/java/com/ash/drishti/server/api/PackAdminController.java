@@ -68,8 +68,12 @@ public class PackAdminController {
     private final com.ash.drishti.server.PackReloader reloader;
     private final com.ash.drishti.packs.SamplePolicy policy;
 
+    private final com.ash.drishti.server.RetryService retry;
+
     public PackAdminController(PackRegistry registry, PackAccess access, PackStateStore states, Entitlements entitlements, Environment env,
-            com.ash.drishti.identity.AuditLog audit, com.ash.drishti.server.PackReloader reloader, com.ash.drishti.packs.SamplePolicy policy) {
+            com.ash.drishti.identity.AuditLog audit, com.ash.drishti.server.PackReloader reloader, com.ash.drishti.packs.SamplePolicy policy,
+            com.ash.drishti.server.RetryService retry) {
+        this.retry = retry;
         this.reloader = reloader;
         this.policy = policy;
         this.registry = registry;
@@ -172,8 +176,10 @@ public class PackAdminController {
         entitlements.requireAdmin(p);
         List<Map<String, Object>> out = new ArrayList<>();
         Set<String> loaded = registry.packs().stream().map(Pack::name).collect(Collectors.toSet());
+        Map<String, Map<String, Object>> retrying = retry.packs();
         for (Pack pack : registry.packs()) {
             Map<String, Object> m = row(pack.name(), pack.title(), pack.description(), pack.version());
+            m.put("retry", retrying.get(pack.name()));
             m.put("loaded", true);
             m.put("added", overlay.added().contains(pack.name()));
             m.put("sample", pack.sample());
@@ -196,6 +202,7 @@ public class PackAdminController {
                 m.put("loaded", false);
                 m.put("enabled", false);
                 m.put("problem", registry.problems().get((String) m.get("name")));
+                m.put("retry", retrying.get((String) m.get("name")));
                 out.add(m);
             }
         }

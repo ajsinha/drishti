@@ -2131,7 +2131,7 @@ You should see `Notional AUD 242,000,000`, `MTM (USD) +1,875,863` highlighted, `
   `"sutras": {"hotReload": "WATCHING", "problemFiles": 0}`; `OFF` means hot reload is turned off, and
   `STOPPED: <reason>` (with the overall status `DEGRADED` and an error in the log) means the watcher has ended
   unexpectedly and edits are not picked up until a restart.
-- Formats and semantic hints are read at start-up only; Sutras are the only thing that hot-reloads.
+- Sutras hot-reload on their own; formats and semantic hints are re-read whenever the packs change (an edit of a pack's `config/formats.yaml` or `config/semantics.yaml` is picked up within the packs poll interval, with no restart; a file that is not valid YAML refuses the change and the last good one stays).
 
 ### The workbench
 

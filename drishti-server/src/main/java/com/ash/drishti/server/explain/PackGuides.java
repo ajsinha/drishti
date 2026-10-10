@@ -53,7 +53,7 @@ public final class PackGuides {
         if (about.isEmpty() || about.get().guide() == null || pack == null) {
             return Optional.empty();
         }
-        Path root = props.packs().stream().filter(p -> p.name().equals(pack) && p.file() != null).map(p -> packRoot(Path.of(p.file()))).filter(java.util.Objects::nonNull)
+        Path root = catalog.sources().stream().filter(p -> p.name().equals(pack) && p.file() != null).map(p -> packRoot(Path.of(p.file()))).filter(java.util.Objects::nonNull)
                 .findFirst().orElse(null);
         if (root == null) {
             return Optional.empty();

@@ -32,10 +32,17 @@ public class PackReloadConfiguration {
 
     @Bean(destroyMethod = "close")
     public PackReloader packReloader(ConfigurableEnvironment env, PackRegistry registry, ConnectorManager connectors, SutraRegistry sutras,
-            Mnemonics mnemonics, AuditLog audit, SamplePolicy samples) {
+            Mnemonics mnemonics, AuditLog audit, SamplePolicy samples, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.common.LiveSettings> live) {
         PackReloader r = new PackReloader(env, registry, connectors, sutras, mnemonics,
-                new PackOverlay(Path.of(com.ash.drishti.packs.PackPaths.overlay(env))), audit, samples);
+                new PackOverlay(Path.of(com.ash.drishti.packs.PackPaths.overlay(env))), audit, samples, () -> live.orderedStream().toList());
         r.start();
         return r;
+    }
+
+    /** What is failing and being retried, across packs, connectors, AI providers and MCP servers; and Retry now. */
+    @Bean
+    public RetryService retryService(PackReloader packs, com.ash.drishti.engine.source.SourceRegistry sources, com.ash.drishti.ai.LlmRegistry llm,
+            com.ash.drishti.ai.McpRegistry mcp, AuditLog audit) {
+        return new RetryService(packs, sources, llm, mcp, audit);
     }
 }

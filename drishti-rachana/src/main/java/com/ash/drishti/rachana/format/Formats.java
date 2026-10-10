@@ -31,14 +31,26 @@ import java.util.Set;
 
 /**
  * The named formats used by {@code fmt:} and {@code fmt(...)}: the bundled {@code formats.yaml}, optionally
- * overridden by a site file. Immutable after construction.
+ * overridden by a site file. The table is swapped whole when packs change their formats
+ * ({@link com.ash.drishti.common.LiveSettings}), so a reader sees the old table or the new one.
  */
-public final class Formats {
+public final class Formats implements com.ash.drishti.common.LiveSettings {
 
-    private final Map<String, FormatSpec> specs;
+    private volatile Map<String, FormatSpec> specs;
+    private final String overrideFile;
 
-    private Formats(Map<String, FormatSpec> specs) {
+    private Formats(Map<String, FormatSpec> specs, String overrideFile) {
         this.specs = Map.copyOf(specs);
+        this.overrideFile = overrideFile;
+    }
+
+    /** Packs changed: the bundled formats, each pack's formats now, then the site file. A file that is not valid YAML refuses the reload. */
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        java.util.List<String> files = org.springframework.boot.context.properties.bind.Binder.get(candidate)
+                .bind("drishti.rachana.pack-formats-files", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class)).orElse(java.util.List.of());
+        Map<String, FormatSpec> next = load(overrideFile, files).specs;
+        return () -> specs = next;
     }
 
     /** The bundled formats, plus overrides from {@code overrideFile} when it exists. */
@@ -64,7 +76,7 @@ public final class Formats {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return new Formats(m);
+        return new Formats(m, overrideFile);
     }
 
     public static Formats defaults() {

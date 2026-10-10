@@ -31,28 +31,51 @@ import java.util.Set;
  * the strip, the main column and the right column under the density limits. Deterministic, stateless and
  * thread-safe; callers cache results by shape fingerprint.
  */
-public final class InferenceEngine {
+public final class InferenceEngine implements com.ash.drishti.common.LiveSettings {
 
-    private final Semantics semantics;
-    private final ColumnInference columns;
+    /** The semantic hints and what is built on them, swapped together when packs change their hints. */
+    private record Live(Semantics semantics, ColumnInference columns) {
+        static Live of(Semantics s) {
+            return new Live(s, new ColumnInference(s));
+        }
+    }
+
+    private volatile Live live;
+    private final String semanticsFile;
     private final List<InferenceRule> rules;
 
     public InferenceEngine(Semantics semantics, List<InferenceRule> rules) {
-        this.semantics = semantics;
-        this.columns = new ColumnInference(semantics);
+        this(semantics, rules, null);
+    }
+
+    /** {@code semanticsFile} is the site's override file, read again with the packs' hints when packs change. */
+    public InferenceEngine(Semantics semantics, List<InferenceRule> rules, String semanticsFile) {
+        this.live = Live.of(semantics);
+        this.semanticsFile = semanticsFile;
         this.rules = List.copyOf(rules);
     }
 
+    /** Packs changed: the hints of the loaded packs, then the site's, are read again. A file that does not read refuses the reload. */
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        List<String> files = org.springframework.boot.context.properties.bind.Binder.get(candidate)
+                .bind("drishti.inference.pack-semantics-files", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class)).orElse(List.of());
+        Live next = Live.of(Semantics.load(semanticsFile, files));
+        return () -> live = next;
+    }
+
     public ColumnInference columns() {
-        return columns;
+        return live.columns();
     }
 
     public Semantics semantics() {
-        return semantics;
+        return live.semantics();
     }
 
     public InferredLayout infer(DataNode doc, String kind) {
-        RuleContext ctx = new RuleContext(doc, kind, semantics, columns);
+        Live l = live;
+        Semantics semantics = l.semantics();
+        RuleContext ctx = new RuleContext(doc, kind, semantics, l.columns());
         List<Candidate> all = new ArrayList<>();
         for (InferenceRule r : rules) {
             r.propose(ctx, all);
@@ -64,7 +87,7 @@ public final class InferenceEngine {
 
     /** {@code [Humanized kind · product] ID with counterparty}. */
     Title title(DataNode doc, String kind) {
-        String idField = semantics.idFields(kind).stream().filter(f -> doc.get(f).type().isScalar() && !doc.get(f).isNull())
+        String idField = semantics().idFields(kind).stream().filter(f -> doc.get(f).type().isScalar() && !doc.get(f).isNull())
                 .findFirst().orElseGet(() -> firstIdLike(doc));
         String pill = Semantics.humanize(kind.replace('-', ' '));
         String product = doc.get("product").asText();
@@ -108,11 +131,11 @@ public final class InferenceEngine {
         o.fields().forEach((k, v) -> {
             i[0]++;
             if (v.type().isScalar() && !v.isNull() && !skip.contains(k)) {
-                scored.add(new Scored(k, semantics.role(k, v), i[0]));
+                scored.add(new Scored(k, semantics().role(k, v), i[0]));
             }
         });
         scored.sort(Comparator.comparingInt((Scored s) -> -s.role().weight()).thenComparingInt(Scored::order));
-        List<Scored> top = new ArrayList<>(scored.subList(0, Math.min(semantics.limit("strip", 8), scored.size())));
+        List<Scored> top = new ArrayList<>(scored.subList(0, Math.min(semantics().limit("strip", 8), scored.size())));
         top.sort(Comparator.comparingInt(Scored::order));
         boolean emphasised = false;
         List<StripItem> out = new ArrayList<>();
