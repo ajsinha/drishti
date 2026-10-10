@@ -19,7 +19,7 @@
 {% block title %}{{ design.name or 'Untitled design' if design else 'Design not found' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/form.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% if not design %}
@@ -136,6 +136,7 @@
         <button type="button" role="tab" id="wbTabTests" data-tab="tests" aria-controls="wbPaneTests" aria-selected="false" tabindex="-1">Tests</button>
         <button type="button" role="tab" id="wbTabVer" data-tab="versions" aria-controls="wbPaneVer" aria-selected="false" tabindex="-1">Versions</button>
         <button type="button" role="tab" id="wbTabAbout" data-tab="about" aria-controls="wbPaneAbout" aria-selected="false" tabindex="-1" title="The text the About this page drawer shows: written here, previewed on the sample">About</button>
+        <button type="button" role="tab" id="wbTabForm" data-tab="form" aria-controls="wbPaneForm" aria-selected="false" tabindex="-1" title="The search form of this kind (FORM &lt;pack&gt;): its fields, written here and previewed live">Form</button>
       </div>
       <div class="wb-panes">
         <div class="wb-pane" id="wbPaneIns" role="tabpanel" aria-labelledby="wbTabIns" data-inspector></div>
@@ -151,6 +152,23 @@
           <textarea id="wbAboutSrc" data-about-src spellcheck="false" placeholder="about: 1&#10;kinds:&#10;  {{ design.kind }}:&#10;    about: &quot;Say what this page is.&quot;"></textarea>
           <div data-about-lint aria-live="polite"></div>
           <section class="wb-about-card" data-about-card aria-label="About card preview"></section>
+        </div>
+        <div class="wb-pane wb-formtab" id="wbPaneForm" role="tabpanel" aria-labelledby="wbTabForm" hidden data-form>
+          <p class="text-muted-d wb-about-intro">The <strong>search form</strong> of this kind (<code>FORM &lt;pack&gt;</code>): add fields from the samples, reorder them, set each one's type, operators, label and default, and see the form as people will. It is the <code>form:</code> section of <code>pack.yaml</code> for this kind; proposing the design sends the change to review with the Sutra.
+            <a href="/help/screen-designer#the-form-tab" class="lnk">How it works</a></p>
+          <div class="wb-about-bar"><button type="button" class="btn-pill btn-ghost" data-form-starter title="Write a form from the samples' fields"><i class="bi bi-magic" aria-hidden="true"></i> Starter</button>
+            <button type="button" class="btn-pill btn-ghost" data-form-inforce title="Start from the form now in force for this kind">Use the form in force</button>
+            <span class="text-muted-d" data-form-status role="status"></span></div>
+          <h3 class="wbf-h">Fields in the samples</h3>
+          <div class="wbf-palette" data-form-palette role="group" aria-label="Add a field from the samples"></div>
+          <h3 class="wbf-h">Form fields <span class="text-muted-d">(Alt+Up and Alt+Down move the focused field)</span></h3>
+          <ol class="wbf-list" data-form-list aria-label="Form fields"></ol>
+          <details class="wbf-yaml" data-form-yamlbox><summary>YAML</summary>
+            <label for="wbFormSrc" class="visually-hidden">Form (YAML list of fields)</label>
+            <textarea id="wbFormSrc" data-form-src spellcheck="false" rows="8" placeholder="- {path: mtm, label: MTM, type: amount}"></textarea></details>
+          <div data-form-problems aria-live="polite"></div>
+          <h3 class="wbf-h">Preview</h3>
+          <form class="wbf-preview qf" data-form-preview aria-label="The form as people will see it"></form>
         </div>
       </div>
     </aside>
@@ -191,7 +209,7 @@
 <script src="/static/js/layout-rules.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-files.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/build-shape-tree.js?v={{ ASSET_V }}"></script>
-{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "about", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
+{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "about", "form-tab", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
 <script src="/static/js/build/{{ f }}.js?v={{ ASSET_V }}"></script>
 {% endfor %}
 {% endblock %}

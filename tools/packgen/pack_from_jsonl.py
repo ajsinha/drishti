@@ -147,6 +147,8 @@ def run(opts) -> int:
     manifest: dict = {"pack": opts.name, "version": getattr(opts, "version", None) or "1.0.0", "code": pack_code(opts.name), "title": opts.title or opts.name,
                       "description": opts.description or f"Generated from {', '.join(p.name for p in opts.inputs)} by tools/packgen/pack_from_jsonl.py.",
                       "kinds": sorted(kinds), "sutras": "sutras", "samples": "samples", "mnemonics": mnemonics, "columns": columns}
+    import packform as PF                   # the form: section (FORM pack): each kind's search form, typed from its sample values
+    manifest["form"] = {k: PF.form_from_documents(v, 10, keys[k]) for k, v in sorted(kinds.items())}
     if dates:
         if opts.store == "files":
             conn = {"plugin": "file", "enabled": "${DRISHTI_FILES_ENABLED:true}", "kinds": sorted(dates),

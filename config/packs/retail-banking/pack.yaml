@@ -178,6 +178,149 @@ columns:
   - customers
   - deposits
   - lending
+form:
+  customer:
+  - path: customerId
+    label: Customer id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: segment
+    label: Segment
+    type: enum
+  - path: totalDeposits
+    label: Total deposits
+    type: amount
+  - path: totalLending
+    label: Total lending
+    type: amount
+  - path: kycRisk
+    label: Kyc risk
+    type: text
+  deposit-account:
+  - path: accountId
+    label: Account id
+    type: id
+  - path: holderName
+    label: Holder name
+    type: text
+  - path: type
+    label: Type
+    type: enum
+  - path: balance
+    label: Balance
+    type: amount
+  - path: currency
+    label: Currency
+    type: enum
+  - path: rate
+    label: Rate
+    type: number
+  - path: status
+    label: Status
+    type: enum
+  mortgage:
+  - path: loanId
+    label: Loan id
+    type: id
+  - path: borrowerName
+    label: Borrower name
+    type: text
+  - path: balance
+    label: Balance
+    type: amount
+  - path: rate
+    label: Rate
+    type: number
+  - path: ltv
+    label: Ltv
+    type: number
+  - path: remainingYears
+    label: Remaining years
+    type: number
+  - path: daysPastDue
+    label: Days past due
+    type: date
+  card-account:
+  - path: cardId
+    label: Card id
+    type: id
+  - path: holderName
+    label: Holder name
+    type: text
+  - path: product
+    label: Product
+    type: enum
+  - path: balance
+    label: Balance
+    type: amount
+  - path: limit
+    label: Limit
+    type: amount
+  - path: utilisation
+    label: Utilisation
+    type: number
+  - path: status
+    label: Status
+    type: enum
+  personal-loan:
+  - path: loanId
+    label: Loan id
+    type: id
+  - path: borrowerName
+    label: Borrower name
+    type: text
+  - path: purpose
+    label: Purpose
+    type: enum
+  - path: balance
+    label: Balance
+    type: amount
+  - path: rate
+    label: Rate
+    type: number
+  - path: daysPastDue
+    label: Days past due
+    type: date
+  branch:
+  - path: branchId
+    label: Branch id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: city
+    label: City
+    type: text
+  - path: customers
+    label: Customers
+    type: number
+  - path: deposits
+    label: Deposits
+    type: amount
+  - path: lending
+    label: Lending
+    type: amount
+  collections-case:
+  - path: caseId
+    label: Case id
+    type: id
+  - path: customerName
+    label: Customer name
+    type: text
+  - path: arrears
+    label: Arrears
+    type: amount
+  - path: daysPastDue
+    label: Days past due
+    type: date
+  - path: stage
+    label: Stage
+    type: enum
+  - path: status
+    label: Status
+    type: enum
 roles:
   retail:
     kinds:

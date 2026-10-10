@@ -302,6 +302,8 @@ public final class DesignService {
             JsonNode entry = d.ops.get(direction < 0 ? d.opsAt - 1 : d.opsAt);
             if (ABOUT_PART.equals(entry.path("part").asText())) {
                 d.about = entry.path(direction < 0 ? "aboutBefore" : "aboutAfter").asText("");
+            } else if (FORM_PART.equals(entry.path("part").asText())) {
+                d.form = entry.path(direction < 0 ? "formBefore" : "formAfter").asText("");
             } else {
                 d.sutra = entry.path(direction < 0 ? "before" : "after").asText("");
             }
@@ -384,6 +386,8 @@ public final class DesignService {
 
     /** The marker of a log step that changed the About text, not the Sutra (its {@code before} and {@code after} are the unchanged Sutra). */
     public static final String ABOUT_PART = "about";
+    /** The marker of a log step that changed the search form (the Form tab), not the Sutra. */
+    public static final String FORM_PART = "form";
 
     /**
      * Replaces the Design's About text (the pack's about.yaml) as a step of the log, so undo, redo and revisions cover it like a Sutra
@@ -410,6 +414,39 @@ public final class DesignService {
             }
             d.opsAt = d.ops.size();
             d.about = next;
+            d.rev++;
+            d.status = "draft";
+            d.updated = clock.getAsLong();
+            store.save(d);
+            return d;
+        });
+    }
+
+    /**
+     * Replaces the Design's search form (a YAML list of fields) as a step of the log, like {@link #setAbout}: undo, redo and revisions
+     * cover it; a text that changes nothing is not a step; {@code 409 DRS-5007} when {@code baseRev} is stale.
+     */
+    public StoredDesign setForm(String user, String id, int baseRev, String text) {
+        return locked(user, () -> {
+            StoredDesign d = get(user, id);
+            stale(d, baseRev);
+            String next = text == null ? "" : text;
+            if (next.equals(d.form)) {
+                return d;
+            }
+            if (StoredDesign.aboutBytes(next) > props.maxNotesKb() * 1024L) {
+                throw tooMany("the search form is over " + props.maxNotesKb() + " KB (drishti.builder.designs.max-notes-kb)");
+            }
+            ObjectNode e = JSON.createObjectNode();
+            e.set("ops", JSON.createArrayNode().add(JSON.createObjectNode().put("op", FORM_PART)));
+            e.put("part", FORM_PART).put("before", d.sutra).put("after", d.sutra).put("formBefore", d.form).put("formAfter", next).put("at", clock.getAsLong());
+            d.ops = new ArrayList<>(d.ops.subList(0, Math.min(d.opsAt, d.ops.size())));
+            d.ops.add(e);
+            while (d.ops.size() > props.maxOps()) {
+                d.ops.remove(0);
+            }
+            d.opsAt = d.ops.size();
+            d.form = next;
             d.rev++;
             d.status = "draft";
             d.updated = clock.getAsLong();
@@ -494,6 +531,7 @@ public final class DesignService {
             String copyName = name == null || name.isBlank() ? (from.name.isEmpty() ? "Untitled" : from.name) + " copy" : name;
             StoredDesign c = create0(user, copyName, from.kind, from.base, from.sutra, from.notes);
             c.about = from.about;
+            c.form = from.form;
             c.tests = new ArrayList<>(from.tests);
             c.samples = new ArrayList<>(from.samples);
             for (SampleInfo s : from.samples) {

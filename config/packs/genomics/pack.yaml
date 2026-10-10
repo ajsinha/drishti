@@ -175,6 +175,118 @@ columns:
   - yieldGb
   - q30
   - status
+form:
+  gene:
+  - path: geneId
+    label: Gene id
+    type: id
+  - path: symbol
+    label: Symbol
+    type: text
+  - path: name
+    label: Name
+    type: text
+  - path: chromosome
+    label: Chromosome
+    type: text
+  - path: location
+    label: Location
+    type: text
+  - path: length
+    label: Length
+    type: number
+  variant:
+  - path: variantId
+    label: Variant id
+    type: id
+  - path: geneSymbol
+    label: Gene symbol
+    type: text
+  - path: proteinChange
+    label: Protein change
+    type: text
+  - path: consequence
+    label: Consequence
+    type: enum
+  - path: significance
+    label: Significance
+    type: enum
+  - path: condition
+    label: Condition
+    type: text
+  protein:
+  - path: proteinId
+    label: Protein id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: accession
+    label: Accession
+    type: id
+  - path: length
+    label: Length
+    type: number
+  - path: massKda
+    label: Mass kda
+    type: text
+  - path: subcellular
+    label: Subcellular
+    type: text
+  sample:
+  - path: sampleId
+    label: Sample id
+    type: id
+  - path: tissue
+    label: Tissue
+    type: enum
+  - path: diagnosis
+    label: Diagnosis
+    type: text
+  - path: purity
+    label: Purity
+    type: number
+  - path: variantCount
+    label: Variant count
+    type: number
+  - path: collected
+    label: Collected
+    type: date
+  sequencing-run:
+  - path: runId
+    label: Run id
+    type: id
+  - path: instrument
+    label: Instrument
+    type: enum
+  - path: yieldGb
+    label: Yield gb
+    type: amount
+  - path: q30
+    label: Q30
+    type: number
+  - path: status
+    label: Status
+    type: enum
+  clinical-trial:
+  - path: trialId
+    label: Trial id
+    type: id
+  - path: title
+    label: Title
+    type: text
+  - path: phase
+    label: Phase
+    type: enum
+  - path: status
+    label: Status
+    type: enum
+  - path: enrolled
+    label: Enrolled
+    type: number
+  - path: biomarkerName
+    label: Biomarker name
+    type: text
 roles:
   scientist:
     kinds:

@@ -673,6 +673,7 @@ Below is the complete `config/packs/logistics/pack.yaml`, annotated. Then the ke
 | `graph.impact` | server | `follow: [assignee]`, `measures: { ticket: "$.ageHours" }` | What F8 rolls up and sums | below |
 | `columns` | server | `ticket: [subject, status, priority]` | Key fields in pick lists and searches | [columns](#columns-the-key-fields-of-a-pick-list) |
 | `pivot` | server | `trade: { rows: [book], columns: [currency] }` | A Pivot tab on the kind's search results and pick lists | [pivot](#pivot-a-pivot-tab-on-search-results) |
+| `form` | server | `trade: [ { path: mtm, type: amount } ]` | The search form of each kind (`FORM <pack>`): its fields, their types and operators | [form](#form-the-search-form-of-a-kind) |
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [Roles](#roles-and-field-masks) |
 | `python` | server | `python: { enabled: true }` | Calc (Python in the browser, `Alt+C`) on this pack's kinds, and starter snippets (also `python/*.py`) | [Calc](#calc-python-snippets) |
 | `connectors` | server | `[helpdesk-store]` (names), or `helpdesk-store: { plugin: file, … }` (a mapping: the pack's templates) | The connectors the pack reads through. A list names site connectors; a mapping names them **and** suggests each one's definition | [below](#connectors-the-pack-names-them-the-site-owns-them) |
@@ -874,6 +875,59 @@ generator: `PIVOTS` in `tools/packgen/banking/make_packs.py`.
 A Sutra's tables opt in on their own (`pivot:` on the panel). In the banking generators that is `pivot=` on a `Panel`
 in `tools/packgen/banking/risk_data.py` (netting sets, books, clearing accounts, desks, collateral) and
 `SCHEDULE_PIVOTS` in `make_sutras.py` (a trade's cash flows, fixings and amortisation); rerun `make_sutras.py`.
+
+### `form`: the search form of a kind
+
+`FORM <pack> <GO>` opens a form for a pack's kinds: one input per field, typed, which the server compiles to the ordinary search
+(`TRD where mtm between 1m and 5m ...`) and runs as any search, so masks, kinds per role and packs per user apply. A pack declares the
+form of a kind under `form:`; a kind with no entry gets one **inferred**: the kind's search columns, the fields its Sutras' `match.where`
+reads and the plain fields of their strip, typed from sample values (numbers, ISO dates, true/false, a short list of repeated words is a
+choice) and from the field's name, and labelled with the `term` from `config/about.yaml`.
+
+```yaml
+form:
+  trade:                              # a kind of this pack; a list of fields, or {calendar: USNY, fields: [...]}
+    - { path: tradeId, label: Trade id, type: id, group: Identity, order: 1, help: "One or many: paste a list. MX-2* is any id starting MX-2." }
+    - { path: counterparty.name, label: Counterparty, type: text, group: Identity }
+    - { path: book, type: enum, group: Where }                       # the values come from the data unless you list them: values: [A, B]
+    - { path: notional, type: amount, operators: [">=", "<=", between, "="], group: Money }
+    - { path: maturityDate, type: date, group: Dates, help: "Relative ranges work: next 10 business days." }
+    - { path: internalNote, type: text, hidden: true }              # not an input, but a saved search may use it
+```
+
+| Key of a field | Meaning |
+|---|---|
+| `path` | The document path searched (`mtm`, `counterparty.name`, `legs[0].rate`); a `$.` in front is dropped. Required |
+| `label` | The heading; by default the path in words (`Counterparty name`) |
+| `type` | `text`, `number`, `amount`, `date`, `enum`, `id` or `bool` (default `text`) |
+| `operators` | Which operators the person may choose, the first being the default; all of the type's when left out (below) |
+| `default` | What the input starts with when the form is first opened |
+| `order` | Position in the form (lower first). Fields without one follow, in the order written |
+| `group` | A heading the field sits under; fields of one group sit together |
+| `help` | One line shown under the field |
+| `required` | The form cannot be submitted without it |
+| `hidden` | Not offered as an input; kept so a saved or shared search can use it. A required hidden field needs a `default` |
+| `values` | For an `enum`: the values offered. Left out, the form offers the values found in the data (and the `values` of the field's `about.yaml` glossary entry) |
+
+| Type | Input | Operators (first is the default) |
+|---|---|---|
+| `text` | a text box and a *Match case* box | `equals`, `contains`, `starts` (starts with), `regex` (a regular expression, see `matches` in the [Rachana reference](RACHANA_REFERENCE.md#functions)) |
+| `number`, `amount` | one box, or two for `between`; amounts take `250k`, `1.5m`, `2bn` | `=`, `between`, `>`, `<`, `>=`, `<=` |
+| `date` | a date picker, two for `between`, or a relative range as text | `on`, `between`, `relative` (`today`, `yesterday`, `last 5 business days`, `next 3 business days`, `last 30 days`, `this week`, `this month`, `month to date`, `year to date`), `before`, `after` |
+| `enum` | a tick box for each known value | `in` |
+| `id` | a box to paste a list of ids (spaces, commas or lines); `MX-2*` is any id starting `MX-2` | `in` |
+| `bool` | Any, Yes, No | `is` |
+
+Business-day ranges (`last 5 business days`) run on the server's calendar, or on the calendar a kind names: `trade: { calendar: USNY, fields: [...] }`.
+A field the kind's source does not keep as a column is marked **slower: not indexed** (the documents are read to answer it).
+
+`pack check` reads the section: a field path that is not a path, an unknown `type`, an operator the type lacks (`between` on text), a duplicate
+path, `values` on a field that is not an `enum`, a non-number `order`, a kind that is not the pack's, or a key it does not know is an error
+that names the kind and field (`pack.yaml form.trade.fields[2] (mtm): type 'money' is not one of text, number, ...`). In a generated pack,
+set it in the generator: `TRADE_FORM` and `forms()` in `tools/packgen/banking/make_packs.py`, or `columns` for the other generators (a kind's
+form is its id and its pick-list columns, typed by name; `tools/packform.py` has the rules). `pack make` and *New pack* write a `form:` from the
+sample documents or schemas. A change proposed from the workbench's Form tab is kept on the server, once approved, in front of the pack's own
+`form:` until the pack carries it ([Screen designer, The Form tab](SCREEN_DESIGNER.md#the-form-tab)).
 
 ### Keys for packs that inherit and read real data
 

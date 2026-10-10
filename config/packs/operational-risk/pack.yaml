@@ -162,6 +162,121 @@ columns:
   - criticality
   - annualSpend
   - slaBreaches
+form:
+  loss-event:
+  - path: eventId
+    label: Event id
+    type: id
+  - path: eventType
+    label: Event type
+    type: enum
+  - path: deskName
+    label: Desk name
+    type: text
+  - path: netLoss
+    label: Net loss
+    type: amount
+  - path: grossLoss
+    label: Gross loss
+    type: amount
+  - path: status
+    label: Status
+    type: enum
+  - path: occurred
+    label: Occurred
+    type: date
+  risk-control:
+  - path: assessmentId
+    label: Assessment id
+    type: id
+  - path: risk
+    label: Risk
+    type: text
+  - path: deskName
+    label: Desk name
+    type: text
+  - path: inherent
+    label: Inherent
+    type: text
+  - path: effectiveness
+    label: Effectiveness
+    type: text
+  - path: residual
+    label: Residual
+    type: text
+  key-risk-indicator:
+  - path: kriId
+    label: Kri id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: deskName
+    label: Desk name
+    type: text
+  - path: value
+    label: Value
+    type: amount
+  - path: amber
+    label: Amber
+    type: text
+  - path: red
+    label: Red
+    type: text
+  - path: status
+    label: Status
+    type: enum
+  issue:
+  - path: issueId
+    label: Issue id
+    type: id
+  - path: title
+    label: Title
+    type: text
+  - path: severity
+    label: Severity
+    type: enum
+  - path: owner
+    label: Owner
+    type: text
+  - path: due
+    label: Due
+    type: date
+  - path: status
+    label: Status
+    type: enum
+  third-party:
+  - path: vendorId
+    label: Vendor id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: criticality
+    label: Criticality
+    type: enum
+  - path: annualSpend
+    label: Annual spend
+    type: amount
+  - path: slaBreaches
+    label: Sla breaches
+    type: text
+  cyber-incident:
+  - path: incidentId
+    label: Incident id
+    type: id
+  - path: title
+    label: Title
+    type: text
+  - path: severity
+    label: Severity
+    type: enum
+  - path: recordsAffected
+    label: Records affected
+    type: number
+  - path: status
+    label: Status
+    type: enum
 roles:
   oprisk:
     kinds:

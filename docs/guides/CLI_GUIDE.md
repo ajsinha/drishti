@@ -731,7 +731,13 @@ key table of [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)). Delete it and 
 ### `pack check`: lint + test + help coverage, for CI
 
 For each pack: `sutra lint` (with `--strict`: help warnings fail), then `sutra test` (renders every sample, checks `expect.yaml`
-and reports help coverage per Sutra), and a check that the `ingest:` block names real kinds with a `key` and a `date`.
+and reports help coverage per Sutra), and a check of the pack.yaml tooling keys: the `ingest:` block names real kinds with a `key` and a `date`, and the `form:` section (the search form of each kind, see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)) is valid: a path that is not a path, an unknown
+`type`, an operator the type lacks, a duplicate field, `values` on a field that is not an `enum` or a kind the pack does not have is reported with the kind and the field, and fails the run:
+
+```text
+pack.yaml form.trade.fields[2] (mtm): type 'money' is not one of text, number, amount, date, enum, id, bool
+pack.yaml form.trade.fields[0] (counterparty.name): operator 'between' does not suit type text (allowed: equals, contains, starts, regex)
+```
 
 **`drishti.py pack check --help`**
 

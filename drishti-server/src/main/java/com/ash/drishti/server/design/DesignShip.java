@@ -72,10 +72,14 @@ public class DesignShip {
     private final RachanaProperties props;
     private final Entitlements entitlements;
     private final DesignRebase rebase;
+    private final FormDefinitions formDefinitions;
+    private final DesignFormService formService;
 
     public DesignShip(DesignService designs, DesignController designApi, SutraGovernance governance, SutraRegistry sutras, RachanaProperties props,
-            Entitlements entitlements, DesignRebase rebase) {
+            Entitlements entitlements, DesignRebase rebase, FormDefinitions formDefinitions, DesignFormService formService) {
         this.rebase = rebase;
+        this.formDefinitions = formDefinitions;
+        this.formService = formService;
         this.designs = designs;
         this.designApi = designApi;
         this.governance = governance;
@@ -113,6 +117,9 @@ public class DesignShip {
             return new Proposed(pr, null);
         }
         Sutra s = sutras.save(d.sutra);
+        if (formChanged(d)) {                                  // no review is configured: the form is in force at once, as the Sutra is
+            formDefinitions.approve(formService.kindOf(d), d.form, who.user(), null);
+        }
         designs.markStatus(who.user(), id, LIVE + s.version() + ")", d.rev);
         return new Proposed(null, s);
     }
@@ -154,6 +161,10 @@ public class DesignShip {
                 || !f.toAbsolutePath().normalize().startsWith(Path.of(props.dirs().get(0)).toAbsolutePath().normalize())).orElse(false);
     }
 
+    private boolean formChanged(StoredDesign d) {
+        return d.form != null && !d.form.isBlank() && !d.form.strip().equals(formDefinitions.yamlOf(formService.kindOf(d)).strip());
+    }
+
     /** The evidence that goes to the reviewers; sample contents are never part of it. */
     ObjectNode evidence(StoredDesign d, JsonNode matrix) {
         ObjectNode e = JSON.createObjectNode();
@@ -162,6 +173,10 @@ public class DesignShip {
             e.put("base", d.base);
         }
         e.put("notes", d.notes == null ? "" : d.notes);
+        if (formChanged(d)) {                                  // a change to the search form is reviewed with the Sutra: before and after
+            String kind = formService.kindOf(d);
+            e.putObject("form").put("kind", kind).put("before", formDefinitions.yamlOf(kind)).put("after", d.form);
+        }
         ObjectNode moved = rebase.moved(d);
         if (moved != null) {
             e.set("baseMoved", moved);
@@ -192,6 +207,9 @@ public class DesignShip {
             return;
         }
         String status = Proposal.APPROVED.equals(p.status()) ? LIVE + p.version() + ")" : "draft";
+        if (Proposal.APPROVED.equals(p.status()) && ev.path("form").path("after").isTextual() && ev.path("form").path("kind").isTextual()) {
+            formDefinitions.approve(ev.get("form").get("kind").asText(), ev.get("form").get("after").asText(), ev.path("owner").asText(""), p.id());
+        }
         designs.markStatus(ev.get("owner").asText(), ev.get("designId").asText(), status, ev.path("rev").canConvertToInt() ? ev.get("rev").asInt() : null);
     }
 

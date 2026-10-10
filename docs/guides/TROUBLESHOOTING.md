@@ -915,6 +915,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-2033` | a Sutra's YAML has a key written twice, a second document or a tag |
 | `DRS-2040`–`DRS-2044` | a pack's `config/about.yaml` has a problem (unknown key or bad version, kind not in the pack's lineage, a template that does not compile, `use` with no vocabulary entry, a text over the cap); listed by `GET /api/v1/sutras/problems` as `<pack>/about.yaml`; the entry is left out and the page is unaffected; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
 | `DRS-2045`–`DRS-2047` | `sutra lint` help warnings (not load errors): a Sutra binds `F1`, an about `panels.<id>` matches no panel, a shown field has no glossary entry; `--strict` fails the run on them |
+| `DRS-2060` | A search form (the `form:` section of a pack, or a design's Form tab) is not valid YAML or names a field path, type or operator wrongly; the message says which field and what is allowed |
 | `DRS-2101` / `DRS-2102` | expression syntax (or past the size limits) / evaluation error |
 | `DRS-3001` | reserved; nothing raises it in this release |
 | `DRS-4001` | command not understood |
@@ -925,6 +926,8 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-4007` | *Ask about this page* is switched off, globally or for the page's pack (`drishti.explain.ask.enabled`, `packs`); the box is then not drawn |
 | `DRS-4008` | *Ask*: the model endpoint failed, is not configured, answered something unreadable (`502`) or took longer than `drishti.explain.ask.timeout` (`504`); the server log (`drishti.ask`) says which, never the key or the prompt |
 | `DRS-4009` | *Ask*: more questions than `per-user-per-minute` or `per-user-per-day`; wait and ask again |
+| `DRS-4010` | A regular expression the search refuses (`matches`, the form's *matches regex*): longer than 200 characters, too large once expanded, or using back-references, look-around, atomic groups, possessive quantifiers or `\b`. The message says which; rewrite the pattern with classes, groups, alternation and `* + ? {n,m}` |
+| `DRS-4011` | A regular expression ran longer than `drishti.search.regex.timeout-ms` (50) on a single value; simplify it or anchor it with `^` |
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |

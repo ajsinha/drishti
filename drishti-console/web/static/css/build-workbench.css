@@ -261,3 +261,31 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-about-formula { display: block; margin-top: .1rem; }
 .wb-about-key { font-size: .75rem; font-family: var(--d-font-mono); }
 .wb-right .wb-tabs { flex-wrap: wrap; }
+
+/* The Form tab: the search form of the design's kind (form-tab.js). */
+.wb-formtab { overflow: auto; padding: .5rem .6rem; flex-direction: column; gap: .4rem; }
+.wb-right .wb-panes .wb-formtab:not([hidden]) { display: flex; }
+.wbf-h { font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--d-muted); margin: .5rem 0 .1rem; font-weight: 600; }
+.wbf-palette { display: flex; flex-wrap: wrap; gap: .3rem; }
+.wbf-chip { font-size: .78rem; padding: .1rem .5rem; min-height: 28px; }
+.wbf-chip:disabled { opacity: .45; }
+.wbf-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .4rem; }
+.wbf-card { border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-surface); padding: .35rem .5rem; }
+.wbf-card:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.wbf-drag { opacity: .5; }
+.wbf-head { display: flex; align-items: center; gap: .35rem; }
+.wbf-grip { cursor: grab; color: var(--d-muted); padding: 0 .2rem; }
+.wbf-path { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.wbf-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: .3rem .6rem; margin-top: .3rem; }
+.wbf-lbl { display: flex; flex-direction: column; font-size: .72rem; color: var(--d-muted); margin: 0; }
+.wbf-wide, .wbf-ops, .wbf-flags { grid-column: 1 / -1; }
+.wbf-in { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 5px; padding: .15rem .35rem; min-height: 28px; font: inherit; font-size: .82rem; }
+.wbf-ops { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .1rem .8rem; font-size: .8rem; }
+.wbf-ops legend { font-size: .72rem; color: var(--d-muted); width: 100%; float: none; margin: 0; }
+.wbf-chk { display: inline-flex; align-items: center; gap: .3rem; margin: 0; font-size: .8rem; }
+.wbf-flags { display: flex; gap: 1rem; }
+.wbf-yaml textarea { width: 100%; font: .78rem/1.4 var(--d-font-mono); background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem; }
+.wbf-preview { border: 1px dashed var(--d-border); border-radius: 8px; padding: .5rem; }
+.wbf-preview .qf-fields { grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
+.wb-form-diff { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .6rem; }
+@media (pointer: coarse) { .wbf-in, .wbf-chip { min-height: 44px; } .wbf-card .btn-pill { min-width: 44px; min-height: 44px; } }

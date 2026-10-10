@@ -113,6 +113,32 @@ pivot:                          # a Pivot tab on search results and pick lists o
     columns: [currency]
     values: [{ field: mtm, agg: sum }]
     filters: [productType]
+form:                          # FORM finance: the search form of each kind (see the form: section of the pack developer guide)
+  trade:
+    - { path: tradeId, label: Trade id, type: id, group: Identity, order: 1, help: "One or many: paste a list; MX-2* is any id starting MX-2." }
+    - { path: productType, label: Product type, type: enum, group: Product, order: 2 }
+    - { path: direction, type: enum, group: Product, order: 3 }
+    - { path: book, type: enum, group: Where, order: 4 }
+    - { path: desk, type: enum, group: Where, order: 5 }
+    - { path: mtm, label: MTM, type: amount, operators: [">", "<", between, "="], group: Money, order: 6, help: "Amounts take k, m and bn: 250k, 1.5m." }
+    - { path: tradeDate, type: date, group: Dates, order: 7 }
+  counterparty:
+    - { path: counterpartyId, label: Counterparty id, type: id, group: Identity }
+    - { path: name, type: text, group: Identity }
+    - { path: country, type: enum, group: Profile }
+    - { path: status, type: enum, group: Profile }
+    - { path: onboarded, type: date, group: Profile }
+  netting-set:
+    - { path: nettingSetId, label: Netting set id, type: id }
+    - { path: netMtm, label: Net MTM, type: amount }
+    - { path: limit, type: amount }
+    - { path: utilisation, type: number, help: "A share of the limit: 0.8 is 80%." }
+  credit-limit:
+    - { path: limitId, label: Limit id, type: id }
+    - { path: status, type: enum }
+    - { path: limit, type: amount }
+    - { path: utilisation, type: number }
+    - { path: reviewDue, type: date }
 roles:                         # calc: may use Calc, Python in the browser (docs/guides/PYTHON_CALC.md)
   trader: { kinds: [trade, curve, fx-spot, index, book, contract-spec, clearing-account, counterparty, fixing, book-pnl], calc: true }
   risk:   { kinds: ["*"], raw: true, calc: true }

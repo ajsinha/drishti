@@ -162,6 +162,7 @@ drishti:
     token-read-posts:
       - /api/v1/search/pivot/**
       - /api/v1/command
+      - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
       - /api/v1/bi/poc/query            # Rupaka phase 0 proof of concept: a read (an Arrow answer), only when drishti.bi.poc.enabled
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the

@@ -30,6 +30,12 @@
   {% endif %}
   <p class="text-muted-d">Samples ({{ ev.sampleNames | length }}), names only: <span class="mono">{{ ev.sampleNames | join(', ') }}</span>{% if ev.syntheticSamples %}
     · generated from a schema, not real data: <span class="mono">{{ ev.syntheticSamples | join(', ') }}</span>{% endif %}</p>
+  {% if ev.form %}<h3 class="ws-h">Search form of {{ ev.form.kind }} (FORM &lt;pack&gt;)</h3>
+  <p class="text-muted-d">This design changes the kind's search form. Approving puts the form on the right in force; the pack's own <code>form:</code> is not edited.</p>
+  <div class="wb-form-diff" data-evidence-form>
+    <div><h4 class="ws-h">Now in force</h4><pre class="wb-notes">{{ ev.form.before or '(none: the form is inferred)' }}</pre></div>
+    <div><h4 class="ws-h">Proposed</h4><pre class="wb-notes">{{ ev.form.after }}</pre></div>
+  </div>{% endif %}
   {% if ev.notes %}<h3 class="ws-h">Author's notes</h3><pre class="wb-notes" data-evidence-notes>{{ ev.notes }}</pre>{% endif %}
 </div></section>
 {% endif %}

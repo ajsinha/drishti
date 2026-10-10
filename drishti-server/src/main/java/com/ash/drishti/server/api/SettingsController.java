@@ -107,6 +107,7 @@ public class SettingsController {
                     next.put("searchLimit", v.asInt());
                 }
                 case "pinned" -> next.set("pinned", pins(v));
+                case "savedSearches" -> next.set("savedSearches", savedSearches(v));
                 case "notify" -> next.set("notify", notify(v, next.path("notify")));
                 default -> throw bad("unknown setting '" + e.getKey() + "'");
             }
@@ -132,6 +133,7 @@ public class SettingsController {
         com.ash.drishti.server.collab.mail.NotifyPrefs.EVENTS.forEach(e -> email.put(e, s.path("notify").path("email").path(e).asBoolean(true)));
         out.putObject("notify").set("email", email);
         out.set("pinned", s.path("pinned").isArray() ? s.get("pinned") : json.createArrayNode());
+        out.set("savedSearches", s.path("savedSearches").isArray() ? s.get("savedSearches") : json.createArrayNode());
         return out;
     }
 
@@ -149,6 +151,26 @@ public class SettingsController {
         });
         ObjectNode out = json.createObjectNode();
         out.set("email", email);
+        return out;
+    }
+
+    /** Named searches from the query-by-form page: {@code [{name, path}]}, at most 50, the path being a console search or form address. */
+    private ArrayNode savedSearches(JsonNode v) {
+        if (!v.isArray() || v.size() > 50) {
+            throw bad("savedSearches is a list of at most 50 searches");
+        }
+        ArrayNode out = json.createArrayNode();
+        Set<String> seen = new HashSet<>();
+        for (JsonNode e : v) {
+            String name = e.path("name").asText().strip();
+            String path = e.path("path").asText();
+            if (name.isEmpty() || name.length() > 64 || !path.matches("/(form|s)[/?].{0,1990}")) {
+                throw bad("each saved search needs a name (up to 64 characters) and a path starting /form/ or /s?");
+            }
+            if (seen.add(name.toLowerCase(java.util.Locale.ROOT))) {
+                out.addObject().put("name", name).put("path", path);
+            }
+        }
         return out;
     }
 

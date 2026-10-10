@@ -87,6 +87,7 @@
 
   function go(i) {
     var s = items[i];
+    if (s && s.href) { window.location.href = s.href; return; }          // FORM <pack> [kind]: the pack's search form
     if (s && s.id) {
       window.location.href = '/v/' + encodeURIComponent(s.kind) + '/' + encodeURIComponent(s.id);
       return;

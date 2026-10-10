@@ -631,6 +631,29 @@ fields on offer, each with `label`, `fmt` and `promoted` (whether a source keeps
 pivot it from columns), the arrangement it opens with, and the limits (`maxRowKeys`, `maxColumnKeys`,
 `documentScan`). For other kinds `"pivot"` is `null`.
 
+### Search by form (`/forms`)
+
+The same search as the console's `FORM <pack>` page. The server describes a kind's form and compiles criteria to a command of the search
+grammar; the command is then run by `GET /search`, so masks, kinds per role, packs per user and sample-pack visibility apply as for any search.
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/forms/{pack}?kind=` | The form of a pack's kind (the first kind you may open when `kind` is left out): `{pack, code, title, kinds[{kind, mnemonic, label, declared}], kind, mnemonic, form{kind, calendar?, inferred, fields[]}}`. A field is `{path, label, type, operators[], default?, order?, group?, help?, required?, hidden?, values?[], indexed}`. `indexed` is true when the kind's source keeps the field as a column; the others are read from the documents ("slower: not indexed"). A pack without a `form:` for the kind gets fields inferred from its search columns, the Sutra's match fields and strip fields (`inferred: true`). `400` when the pack is not switched on for you, `403 DRS-5002` when you may open none of its kinds |
+| `POST` | `/forms/{pack}/{kind}/compile` | Body `{criteria[{path, op, value?, value2?, values?[], case?}], orderBy?, descending?, limit?}` answers `{command}`, for example `TRD where (mtm >= 1m and mtm <= 5m) and book = 'BOOK-FI-1' order by mtm desc limit 50`. A criterion with no value is left out. `400 DRS-4004` for a field not in the form, an operator its type lacks, or a value that cannot be read (the message says which); `400 DRS-4010` for a refused regular expression |
+
+Operators by type: `text` equals, contains, starts, regex (with `case: true` to match case); `number` and `amount` `=`, `between`, `>`, `<`,
+`>=`, `<=` (values may be `250k`, `1.5m`, `2bn`); `date` on, between, relative (`last 5 business days`, `next 3 business days`, `last 30 days`,
+`this week`, `month to date`, ...on the pack's calendar), before, after; `enum` and `id` in (a list, or for ids a pasted list, with `*` as a wildcard);
+`bool` is (`true` or `false`).
+
+The grammar gained two functions for regular expressions, usable in any search: `matches(field, 'pattern')` (ignores case) and
+`matchesCase(field, 'pattern')`, and the infix `field matches 'pattern'`. They run on a linear-time engine (a Thompson NFA, so no pattern
+can take exponential time): classes, groups, alternation, `* + ? {n,m}`, `^`, `$`, a leading `(?i)`. Back-references, look-around, atomic
+groups, possessive quantifiers and `\b` are refused with `DRS-4010`, as are patterns over 200 characters or whose expansion passes 4,000 steps;
+a value is cut to 8,192 characters and a match that takes over 50 ms is `DRS-4011`. The caps are the system properties
+`drishti.search.regex.max-pattern`, `.max-program`, `.max-input` and `.timeout-ms`. The form's other limits are
+`drishti.search.form.max-values` (500, an `in` list), `.max-inferred-fields` (14), `.enum-max` (12) and `.sample-rows` (200).
+
 ### The Pivot tab: panel rows, search pivots, saved pivots
 
 The console's Pivot tab ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)) is offered only where a
@@ -1437,6 +1460,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-2005 | 404 | proposal not found | no Sutra proposal with that id |
 | DRS-2006 | 409 | proposal conflict | the proposal was already decided, or the live Sutra changed after it was proposed |
 | DRS-2007 | 403 | four eyes | the author may not approve their own proposal |
+| DRS-2060 | 422 | form invalid | a search form that is not valid YAML or names a field path, type or operator wrongly; the Form tab lists each problem, `pack check` reports the pack's |
 | DRS-2101 | 422 | el syntax | a Rachana-EL expression does not parse (alert rules, Sutra expressions, search conditions) |
 | DRS-2102 | 422 | el eval | a Rachana-EL expression failed while evaluating |
 | DRS-3001 | 500 | inference failed | reserved: the code exists, but nothing in this release raises it (a document with no Sutra is laid out by inference, which does not fail) |
@@ -1448,6 +1472,8 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4007 | 404 | ask off | Ask about this page is switched off, globally or for the page's pack |
 | DRS-4008 | 502 / 504 | ask failed | the model endpoint failed, is not configured, or took longer than `drishti.explain.ask.timeout` |
 | DRS-4009 | 429 | ask rate limited | over `per-user-per-minute` or `per-user-per-day` questions |
+| DRS-4010 | 400 | regex refused | a regular expression the search will not run: over 200 characters, too large once expanded, back-references, look-around, atomic groups, possessive quantifiers or word boundaries (see [Regular expressions in search](#search-by-form-forms)) |
+| DRS-4011 | 408 | regex timeout | a regular expression ran longer than `drishti.search.regex.timeout-ms` (50) on one value |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
 | DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; any `/api/v1/builder/**` request body over `max-total-mb` (answered before the body is read: `detail` gives the size and the limit, the connection is not reset; `drishti.http.request-limits`, `server.tomcat.max-swallow-size`); designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |

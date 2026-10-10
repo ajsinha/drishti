@@ -282,6 +282,15 @@ def check_ingest_block(pack: pathlib.Path) -> list[str]:
     return problems
 
 
+def check_form_block(pack: pathlib.Path) -> list[str]:
+    """The optional `form:` section (query by form, `FORM <pack>`): each kind's fields, their types and operators (tools/packform.py)."""
+    try:
+        m = need_yaml().safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    except OSError:
+        return [f"{pack}/pack.yaml: not found"]
+    return load_module("packform", "packform.py").validate(m)
+
+
 def cmd_pack_check(a, extra) -> int:
     junit = pathlib.Path(a.junit).resolve() if a.junit else None
     if junit:
@@ -306,7 +315,7 @@ def cmd_pack_check(a, extra) -> int:
                     print("\n".join(lines[-a.tail:]))
                 if r.returncode and r.stderr.strip() and not any(DIAG.search(x) for x in lines):
                     print(r.stderr.strip()[-800:], file=sys.stderr)        # nothing but engine output to explain the failure: show it
-        entry["packYaml"] = check_ingest_block(pack)
+        entry["packYaml"] = check_ingest_block(pack) + check_form_block(pack)
         for pr in entry["packYaml"]:
             print(pr, file=sys.stderr)
         entry["ok"] = all(s["exit"] == 0 for s in entry["steps"].values()) and not entry["packYaml"]
@@ -436,7 +445,7 @@ def verify_bundle(a, source: pathlib.Path, server: str | None) -> tuple[dict, "o
     record("checksums", probs)
     if man is None:
         rep["notes"] = ["no MANIFEST.json (a plain folder): checksums not checked"]
-    record("schema", PB.check_schema(op.pack) + check_ingest_block(op.pack))
+    record("schema", PB.check_schema(op.pack) + check_ingest_block(op.pack) + check_form_block(op.pack))
     record("server", PB.check_server(man, server))
     if a.no_sutra:
         rep["checks"]["sutra"] = ["skipped (--no-sutra)"]

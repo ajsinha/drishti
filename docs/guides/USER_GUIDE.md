@@ -1263,6 +1263,78 @@ without `where` opens a single match directly.
 - Where the kind's pack offers it, a **Table | Pivot** switch turns the results into a pivot over **every** match of
   the day, computed on the server ([The Pivot tab](#search-results-computed-on-the-server)).
 
+## Search with a form (`FORM <pack>`)
+
+If you would rather fill in boxes than write a search, type `FORM` and a pack on the command line. The page is a form for the pack's
+kinds: one input for each field people search by, each suited to what the field holds. When you press **Search** the form writes the search
+for you, shows it, and runs it as any other search ([Search by value](#search-by-value)), so what you may see is exactly what it was.
+
+```text
+FORM trading <GO>
+```
+
+Type-ahead helps: `FORM tra` completes to `FORM trading`, and after a space it lists the kinds you may open in that pack
+(`FORM trading trade`). Only the packs and kinds you may open are offered. A pack with several kinds shows a row of them under its title;
+pick one to switch forms. `FORM` alone lists the packs you can search with a form and your saved searches.
+
+![The trading pack's form for trades: a text field with its operator, an amount, a relative date, choices, a pasted list of ids and the Search button](img/form/01-form.jpg)
+
+### The inputs
+
+| The field holds | The input | What you can ask |
+|---|---|---|
+| text (a name, a description) | a box, an operator and *Match case* | equals, contains, starts with, matches a regular expression (case is ignored unless you tick *Match case*) |
+| a number or an amount | one box, or two for *between* | `=`, between, `>`, `<`, `≥`, `≤`; amounts take `250k`, `1.5m`, `2bn` |
+| a date | a date picker, two for *between*, or text for *relative* | on, between, before, after, or a range on the business-day calendar: `last 5 business days`, `next 10 business days`, `last 30 days`, `this week`, `month to date`, `year to date` |
+| one of a few values (book, currency) | a tick box for each value the data holds | is one of the ticked values |
+| an identifier | a box to paste a list: spaces, commas or lines | is one of them; `MX-2*` is any id starting `MX-2` |
+| yes or no | Any, Yes, No | is |
+
+Leave a field empty and it takes no part. A field marked **slower: not indexed** is not kept by the source as a column, so the documents are read to answer it:
+fine for a few thousand, slow for a million. Below the fields choose how to **sort** and how many results to **show**.
+
+### The search it made
+
+![The results: the command the form made with a Copy button, the count, and the table of trades with its column funnels](img/form/02-results.jpg)
+
+The line under the form is the search, in the grammar of [Search by value](#search-by-value). For the form above, on the real server:
+
+```text
+TRD where (currency = 'EUR' or currency = 'USD') and notional >= 100m and mtm > 0 order by mtm desc limit 25
+```
+
+**Copy** puts it on the clipboard (paste it into the command line or the search box); **Edit as text** opens it in the search box. The table is the
+console's table: sort by a heading, filter each column with its funnel ([Filter a table like Excel](#filter-a-table-like-excel)), page and walk it by keyboard. The key
+cell opens the view; **Alt+Left** brings you back to the form with your criteria in place and the results again, because everything you filled in is in the
+page's address (`/form/trading?kind=trade&op.mtm=>&v.mtm=1m&run=1`): bookmark it or send it.
+
+### Keep it: name it, watch it, schedule it, send it
+
+Under the results: **Save as named search** (it appears under *Your saved searches* here and on `FORM`), **Watch as a monitor** (the first 50 results, live),
+**Schedule a report** (the search delivered as CSV on a schedule, see [Scheduled reports](#scheduled-reports)) and **Share link** (copies the form's address, which
+opens the same form with the same criteria for whoever has the right to see the pack).
+
+### Regular expressions
+
+*matches regex* uses a safe engine: it cannot be made to run for ever, whatever the pattern. It reads classes (`[A-Z]`, `\d`, `\w`), groups, `|`, `* + ? {n,m}`,
+`^` and `$`. It refuses what cannot be done in linear time (back-references such as `(a)\1`, look-around such as `(?=x)`, atomic groups, possessive quantifiers, `\b`),
+patterns over 200 characters, and anything too large once expanded, with a message that says which and the code `DRS-4010`; a pattern that takes over 50 ms on one value
+stops with `DRS-4011`.
+
+![A regular expression the search refused: the message names the back-reference and the code DRS-4010](img/form/04-regex-refused.jpg)
+
+### Keyboard and phone
+
+Tab walks the fields in reading order; **Enter** searches (in the list of ids, **Ctrl+Enter**); **Esc** clears every field. Everything is labelled for a screen reader.
+On a phone the fields stack in one column and every control is at least 44 px.
+
+![The form on a phone, 390 px wide](img/form/03-phone.jpg)
+
+### Who decides what the form offers
+
+The pack's author writes the form (`form:` in `pack.yaml`, see the [Pack developer guide](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind)); a pack that does not gets one
+inferred from its search columns and screen. Authors can shape a kind's form in the workbench's [Form tab](SCREEN_DESIGNER.md#the-form-tab).
+
 ## Export, print and share
 
 The buttons in a view's title line, and the **↓** in each panel header.

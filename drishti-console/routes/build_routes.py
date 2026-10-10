@@ -114,7 +114,7 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
             "bindDir": binding.get("dir") or "", "baseMoved": design.get("baseMoved") or None, "id": design["id"], "samples": design.get("samples") or [], "opsAt": design.get("opsAt", 0), "opsCount": len(design.get("ops") or []) if "opsCount" not in design else design["opsCount"],
             "status": design.get("status", "draft"),
             "tab": tab if tab in ("design", "yaml", "summary", "notes", "split") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
-            "notice": notice[:300], "base": design.get("base") or "", "notes": design.get("notes") or "", "about": design.get("about") or ""}
+            "notice": notice[:300], "base": design.get("base") or "", "notes": design.get("notes") or "", "about": design.get("about") or "", "form": design.get("form") or ""}
     return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict(),
                   examples=request.app.state.examples.names(), pending=pending)
 
@@ -467,6 +467,37 @@ async def about_save(request: Request, id_: str):
     body = await _body(request)
     try:
         return await request.app.state.backend.designs("PUT", f"/{id_}/about", ident(request), {k: body[k] for k in ("baseRev", "text", "sample") if k in body})
+    except BackendError as e:
+        return _error(e)
+
+
+# ---- the Form tab ------------------------------------------------------------------------------------------------------------
+
+@router.get("/designs/{id_}/form")
+async def form_read(request: Request, id_: str):
+    """The Design's saved search form with the field palette of its samples, a starter and the form now in force for the kind."""
+    try:
+        return await request.app.state.backend.designs("GET", f"/{id_}/form", ident(request))
+    except BackendError as e:
+        return _error(e)
+
+
+@router.post("/designs/{id_}/form/preview")
+async def form_preview(request: Request, id_: str):
+    """Body ``{text}``: the form the text makes, and what is wrong with it; nothing is saved."""
+    body = await _body(request)
+    try:
+        return await request.app.state.backend.designs("POST", f"/{id_}/form/preview", ident(request), {k: body[k] for k in ("text",) if k in body})
+    except BackendError as e:
+        return _error(e)
+
+
+@router.put("/designs/{id_}/form")
+async def form_save(request: Request, id_: str):
+    """Body ``{baseRev, text}``: keeps the text as a step of the Design's log (undo and revisions cover it). A stale revision is 409."""
+    body = await _body(request)
+    try:
+        return await request.app.state.backend.designs("PUT", f"/{id_}/form", ident(request), {k: body[k] for k in ("baseRev", "text") if k in body})
     except BackendError as e:
         return _error(e)
 

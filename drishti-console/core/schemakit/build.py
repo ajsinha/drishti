@@ -125,13 +125,44 @@ def columns_for(kp: KindPlan, n: int = 7) -> list[str]:
     return list(dict.fromkeys(pref + [p for p in scal if p not in pref]))[:n]
 
 
+_NUM_FMT = re.compile(r"(?i)(money|amount|ccy|usd|price|signed|mtm|notional)")
+
+
+def form_for(kp: KindPlan, n: int = 10) -> list[dict]:
+    """The kind's search form (the form: section), from what the plan knows: the key first (an id), then the pick-list columns by role: a
+    status or dimension with known values is a choice, a date a date, a flag yes/no, a number an amount or a plain number, the rest text."""
+    by_path = {f.path: f for f in kp.fields}
+    out: list[dict] = []
+    for path in ([kp.key] if kp.key and "." not in kp.key else []) + [c for c in columns_for(kp, n) if c != kp.key]:
+        f = by_path.get(path)
+        role = f.role if f else ""
+        if path == kp.key or role in ("id", "link"):
+            t = "id"
+        elif role in ("date", "datetime") or (f and f.type == "string" and f.format in ("date", "date-time")):
+            t = "date"
+        elif role == "flag" or (f and f.type == "boolean"):
+            t = "bool"
+        elif f and f.type in ("number", "integer"):
+            t = "amount" if _NUM_FMT.search(f.fmt or "") else "number"
+        elif role in ("status", "dimension") or (f and f.enum):
+            t = "enum"
+        else:
+            t = "text"
+        entry = {"path": path, "label": (f.label if f and f.label else humanize(path)), "type": t}
+        if t == "enum" and f and f.enum:
+            entry["values"] = [str(v) for v in f.enum][:40]
+        out.append(entry)
+    return out
+
+
 def pack_manifest(plan: Plan, kinds_dir_note: str = "") -> dict:
     p = plan.pack
     m: dict = {"pack": p["name"], "version": p.get("version") or "1.0.0", "code": p.get("code") or p["name"][:4].upper(),
                "title": p.get("title") or p["name"], "description": p.get("description") or f"Generated from schemas for {p['name']}.",
                "kinds": [k.kind for k in plan.kinds], "sutras": "sutras", "samples": "samples",
                "mnemonics": {k.mnemonic: {"kind": k.kind, "label": k.title} for k in plan.kinds},
-               "columns": {k.kind: columns_for(k) for k in plan.kinds}}
+               "columns": {k.kind: columns_for(k) for k in plan.kinds},
+               "form": {k.kind: form_for(k) for k in plan.kinds}}      # the search form of each kind (FORM pack)
     fields: dict = {}
     for k in plan.kinds:
         for l in k.links:
