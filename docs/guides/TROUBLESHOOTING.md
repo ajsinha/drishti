@@ -928,6 +928,11 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-4009` | *Ask*: more questions than `per-user-per-minute` or `per-user-per-day`; wait and ask again |
 | `DRS-4010` | A regular expression the search refuses (`matches`, the form's *matches regex*): longer than 200 characters, too large once expanded, or using back-references, look-around, atomic groups, possessive quantifiers or `\b`. The message says which; rewrite the pattern with classes, groups, alternation and `* + ? {n,m}` |
 | `DRS-4011` | A regular expression ran longer than `drishti.search.regex.timeout-ms` (50) on a single value; simplify it or anchor it with `^` |
+| `DRS-4015` | The AI layer or the MCP client is off: set `drishti.ai.enabled` / `drishti.mcp.enabled` and configure a provider ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) |
+| `DRS-4016` | The AI provider or MCP server failed or timed out: Admin → AI shows its health; check its URL, key variable and TLS |
+| `DRS-4017` | Over the AI rate or cost limit for your user: wait, or ask an admin to raise the policy limit |
+| `DRS-4018` | The AI policy does not allow this feature for your role |
+| `DRS-4019` | The model, provider, MCP server or tool named is not configured: check `config/ai/` or `config/mcp/` |
 | `DRS-5001` | bad request |
 | `DRS-5002` | forbidden (role or pack) |
 | `DRS-5003` | raised by the console only: it cannot reach the server, a live stream was refused, or a browser is over its live-subscription limit |

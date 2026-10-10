@@ -334,6 +334,27 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_MCP_ENABLED` | `mcp.enabled` | `false` | Turn on the console's MCP client. |
 | `DRISHTI_MCP_DIR` | `mcp.dir` | `./config/mcp` | The folder of MCP server files. |
 
+### AI and MCP policy settings
+
+The server's `drishti.ai.policy.*` and `drishti.mcp.*` settings and the console's `ai.policy.*` and `mcp.*` settings
+(server names with hyphens, console names with underscores). Everything is off unless `drishti.ai.enabled` /
+`drishti.mcp.enabled` (console `ai.enabled` / `mcp.enabled`) is true; see [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)
+and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md).
+
+| Server | Console | Default | Meaning |
+|---|---|---|---|
+| `drishti.ai.policy.mask-redacted` | `ai.policy.mask_redacted` | `true` | Mask the `drishti.security.redact` fields (and `mask-patterns`) in every prompt |
+| `drishti.ai.policy.mask-patterns` | `ai.policy.mask_patterns` | `[]` | Extra regular expressions replaced by the mask in every prompt |
+| `drishti.ai.policy.audit` | `ai.policy.audit` | `true` | One access-log row per call (who, feature, model, sizes, tokens, outcome; never the text) |
+| `drishti.ai.policy.per-user-per-minute` | `ai.policy.per_user_per_minute` | `0` | Calls a user may make per minute (`0` = no limit; over it: `DRS-4017`) |
+| `drishti.ai.policy.per-user-per-day` | `ai.policy.per_user_per_day` | `0` | Calls a user may make per day (`0` = no limit) |
+| `drishti.ai.policy.cost-per-user-per-day` | `ai.policy.cost_per_user_per_day` | `0` | Cost a user may spend per day, in the unit of the models' `cost-per-1k-*` prices (`0` = no limit) |
+| `drishti.ai.policy.features` | `ai.policy.features` | `{}` | Per feature: allowed roles and its own limits, e.g. `"[ask]": {roles: [risk], per-user-per-minute: 6}` (refused: `DRS-4018`) |
+| `drishti.mcp.server-roles` | `mcp.server_roles` | `{}` | Per MCP server, the roles allowed (absent: every signed-in user) |
+| `drishti.mcp.tool-roles` | `mcp.tool_roles` | `{}` | Per `server/tool`, the roles allowed |
+| `drishti.mcp.server-features` | `mcp.server_features` | `{}` | Per MCP server, the features allowed to call it |
+
+
 ---
 
 ## Value formats

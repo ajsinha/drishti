@@ -1474,6 +1474,11 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-4009 | 429 | ask rate limited | over `per-user-per-minute` or `per-user-per-day` questions |
 | DRS-4010 | 400 | regex refused | a regular expression the search will not run: over 200 characters, too large once expanded, back-references, look-around, atomic groups, possessive quantifiers or word boundaries (see [Regular expressions in search](#search-by-form-forms)) |
 | DRS-4011 | 408 | regex timeout | a regular expression ran longer than `drishti.search.regex.timeout-ms` (50) on one value |
+| DRS-4015 | 404 | AI off | the AI layer or the MCP client is switched off (`drishti.ai.enabled`, `drishti.mcp.enabled`); AI_PROVIDERS.md |
+| DRS-4016 | 502 / 504 | AI call failed | the provider or MCP server failed (502) or did not answer in time (504); the message never carries a key or a prompt |
+| DRS-4017 | 429 | AI rate limited | over a per-user rate or cost limit of the AI policy |
+| DRS-4018 | 403 | AI policy | the AI policy refuses the call for this user, role or feature |
+| DRS-4019 | 404 | AI not found | no such model, provider, MCP server or tool |
 | DRS-5001 | 400 | bad request | an invalid argument or body; a path not written plainly (`;`, a needless `%`-escape, a dot or empty segment); also "too many live streams on this server" |
 | DRS-5002 | 403 | forbidden | the caller lacks the role, the pack is not active for them, or the feature is off |
 | DRS-5005 | 413 | too large | builder samples over `drishti.builder.max-samples`, `max-file-mb`, `max-total-mb` or `max-depth`; any `/api/v1/builder/**` request body over `max-total-mb` (answered before the body is read: `detail` gives the size and the limit, the connection is not reset; `drishti.http.request-limits`, `server.tomcat.max-swallow-size`); designs over `drishti.builder.designs.*` (`detail` names the limit and the file) |
