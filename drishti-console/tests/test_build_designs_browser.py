@@ -18,6 +18,8 @@ rest, the tree by keyboard, the filter, a download, and the set surviving a relo
 Runs Chromium through Playwright; skipped when Playwright or its Chromium is not installed (`pip install playwright`
 and `playwright install chromium`). The console runs in-process on a free port against the stand-in server."""
 import json
+import shutil
+import tempfile
 from pathlib import Path
 import socket
 import threading
@@ -83,7 +85,11 @@ def test_new_examples_showcase_opens_a_design_page_with_all_21_panels(console_ur
 
 
 def test_new_folder_of_examples_then_auto_design(console_url, browser):
-    folder = Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples"
+    examples = Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples"
+    folder = Path(tempfile.mkdtemp(prefix="drishti-examples-"))           # the top-level examples only: schemas/ holds the
+    for f in examples.iterdir():                                          # New pack guide's JSONL, more samples than one design takes
+        if f.is_file():
+            shutil.copy(f, folder / f.name)
     page = browser.new_page()
     page.goto(console_url + "/build/new")
     page.set_input_files("[data-folder]", str(folder))
