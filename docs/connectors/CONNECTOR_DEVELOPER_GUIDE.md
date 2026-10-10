@@ -18,7 +18,8 @@
 This guide is for the person who connects Drishti to data: choosing among the fifteen connectors that ship, combining
 and operating them, and, when none fits, writing a new one. It teaches. The exact settings, data layouts, health texts
 and limits of each connector live in that connector's own document (`docs/connectors/<NAME>_CONNECTOR.md`), and this
-guide links there instead of repeating them.
+guide links there instead of repeating them. Named connectors are **files**, one YAML file per connector in `config/connectors/`: the folder, the
+format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md).
 
 | If you want to… | Go to |
 |---|---|
@@ -61,14 +62,15 @@ A user opens an entity by typing `<MNEMONIC> <ID> <GO>` in the terminal, for exa
 kind that some enabled pack gives a mnemonic (or an id pattern) to; through the API any kind can be read
 (`GET /api/v1/views/{kind}/{id}`).
 
-### Plugin, connector, pack connector, route
+### Plugin, connector, connector file, route
 
 | Word | What it is | Example |
 |---|---|---|
 | **plugin** | a piece of software that knows how to talk to one *type* of store | `jdbc` talks to databases, `kafka` to Kafka |
 | **connector** | one plugin pointed at one *particular* store, with a name and its own settings | `desk-db`: the `jdbc` plugin, pointed at `jdbc:postgresql://db.bank.example/desk` |
-| **pack connector** | a connector declared by a pack in its `pack.yaml`, so it comes with the pack | the trading pack's `trading-store` (Delta Lake) and `trading-stream` (Kafka) |
-| **site connector** | a connector declared in your site's `application.local.yaml` | anything you add yourself |
+| **connector file** | one YAML file, `config/connectors/<name>.yaml`; the file name is the connector's name. Connectors belong to the site, not to a pack ([CONNECTOR_FILES.md](CONNECTOR_FILES.md)) | `config/connectors/trading-store.yaml` (Delta Lake) |
+| **pack template** | what a pack suggests for a connector it names (its `pack.yaml` `connectors:` mapping or `connector-templates:`); the server writes it to the file once, at the first start, and never overwrites the file | the trading pack's templates for `trading-store` (Delta Lake) and `trading-stream` (Kafka) |
+| **site connector** | a connector file no pack suggests | anything you add yourself |
 | **route** | "for this kind, ask this connector first" | `trade: trading-store` |
 | **default route** | the connector asked second, for every kind | `demo` (the sample data), as shipped |
 
@@ -108,7 +110,7 @@ This is the single most useful thing to understand. For a read of `<kind>/<id>`,
 
 1. the kind's **route**, if it names a running connector that serves the kind;
 2. the **default route** (`demo`), if it serves the kind;
-3. **every other** running connector that serves the kind, **in the order they are written in the config** (the order of the keys under `drishti.sources.connectors`, kept after a reload; with packs, pack order then the order inside each pack). A connector with no `kinds` list serves *every* kind
+3. **every other** running connector that serves the kind, **in the order they were registered** (a connector keeps its place in the order when its file changes or it is restarted). A connector with no `kinds` list serves *every* kind
    (the shipped `demo` and `file` do; so does a Kafka or message-queue connector before its first message, unless you
    give it `kinds`).
 
@@ -176,22 +178,30 @@ You should see:
 
 ### Where configuration goes
 
-| File | Who writes it | Precedence |
-|---|---|---|
-| `packs/<pack>/pack.yaml` → `connectors:` and `routes:` | the pack author | lowest |
-| `drishti-server/src/main/resources/application.yaml` | shipped defaults | above the packs |
-| `application-postgres.yaml`, `application-aerospike.yaml` | profiles (`SPRING_PROFILES_ACTIVE=postgres`) | above `application.yaml` |
-| `./application.local.yaml` (git-ignored, in the folder you start the server from) | your site | above the shipped files |
-| environment variables, `--key=value` on the command line | the operator | highest |
+A connector is configured by **one file**, `config/connectors/<name>.yaml`, edited in your editor, in **Admin → Connectors**, or with
+`drishti.py connector apply`, and applied to the running server without a restart. A pack does not carry connection settings: it **names** the connectors it
+reads through (`connectors: [trading-store]` and `routes:` in its `pack.yaml`) and may **suggest** a template for each. Precedence, highest first
+(the full table and the rules are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md#precedence)):
 
-A site entry overrides a pack's **key by key**: you can change one setting of a pack connector without repeating the
-rest. A **list** (such as `kinds:`) is replaced as a whole. Values like `${DRISHTI_DELTA_ROOT:./data/delta}` are
-placeholders: the environment variable if set, else the default after the colon. They work in packs and site files
-alike, and are how secrets stay out of files.
+| Source | Role |
+|---|---|
+| environment variables, and `drishti.sources.connectors.*` in `application.yaml` / `application.local.yaml` (**deprecated**) | override a file setting by setting until you move them to the file; a warning names the file to write |
+| `config/connectors/<name>.yaml` | the site's definition; it **replaces** the pack's template for that name **wholesale** (settings are not merged) |
+| the pack's template (`connectors:` mapping or `connector-templates:` in `pack.yaml`) | the pack's suggestion; written to the file once at the first start, and used in memory when the file cannot be written |
+
+A file with no template of that name is a new site connector. A connector file holds `plugin`, `enabled`, `kinds`, `description` and `settings`; nesting under
+`settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:./data/delta}` are placeholders: the environment variable if set, else the default
+after the colon. A **credential** setting (`password`, `secret…`, `token`, `api-key`, `access-key`, `private-key`, `credential`) may only be an `${ENV_VAR}` or a
+`file:/path` reference ([CONNECTOR_FILES.md, Credentials and TLS](CONNECTOR_FILES.md#5-credentials-and-tls)). The server's own settings (`drishti.sources.fetch-timeout`,
+`routes`, `plugins.<plugin>`) stay in `application.yaml` and `application.local.yaml`.
 
 ---
 
 ## Which connector should I use?
+
+Whichever you choose, it is configured as a connector file (`config/connectors/<name>.yaml`), and every document in the list below ends with an
+"As a connector file" section holding a complete example. Ready-made files for the databases, caches and lakes are in
+[`config/connectors.examples/`](../../config/connectors.examples).
 
 ### By situation
 
@@ -263,18 +273,20 @@ results:
 export DRISHTI_PACKS=counterparty-risk,market-risk
 ```
 
-**3. Put site configuration in `application.local.yaml`** in the folder you start the server from (the repository
-root when developing). It is git-ignored. The server imports it at start (`spring.config.import:
-optional:file:./application.local.yaml`), so a missing file is fine. Every chapter shows the lines to add under:
+**3. Put each connector in a file in `config/connectors/`**, in the folder you start the server from (the repository root when developing). The file name is
+the connector's name (`config/connectors/desk-db.yaml` is the connector `desk-db`); copy one of `config/connectors.examples/` or write it in **Admin → Connectors**.
+The folder is created on the first write, and a pack's suggested connectors are written there at the first start. Every chapter shows the file to write:
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      # your connectors go here
-    routes:
-      # optional: kind -> connector
+# config/connectors/desk-db.yaml
+plugin: jdbc
+kinds: [trade]
+settings:
+  url: ${DESK_DB_URL}
 ```
+
+Routes (`kind -> connector`) are the pack's `routes:`; the server's own settings stay in `application.local.yaml` (git-ignored, imported at start through
+`spring.config.import: optional:file:./application.local.yaml`, so a missing file is fine).
 
 **4. Start the server**, then the console in a second terminal:
 
@@ -284,7 +296,8 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
 The server listens on `http://localhost:18480`, the console on `http://localhost:17480`. Configuration is read at
-start: **after changing `application.local.yaml`, a pack or an environment variable, restart the server.**
+start, except connector files: **a change to a file in `config/connectors/` is applied to that connector within seconds; after changing `application.local.yaml`, a pack or an
+environment variable, restart the server.**
 
 **5. Check the connectors.** For anyone (security on or off):
 
@@ -339,7 +352,7 @@ the date the document is for (`null` for undated connectors); `live` says whethe
 A source plugin brings entity documents from one system into Drishti. Plugins depend only on `drishti-api` (no
 Spring, no Jackson), so they stay small and cannot clash with the server's libraries. The interface is
 `com.ash.drishti.api.SourcePlugin`; the types around it (`EntityRef`, `EntityDocument`, `AsOf`, `Provenance`,
-`PluginManifest`, `SourceCapabilities`, `SourceContext`, `HitIndex`, `ColumnSet`, `DateCoverage`) are in the same
+`PluginManifest`, `SourceCapabilities`, `SourceContext`, `HitIndex`, `ColumnSet`, `DateCoverage`, `SettingSpec`) are in the same
 package. Only two methods are abstract beyond `manifest`/`start`/`fetch`: everything else has a default that says "I do
 not do that", so a first plugin is three methods long.
 
@@ -365,6 +378,7 @@ public interface SourcePlugin extends AutoCloseable {
     default void purgeCaches();
     default String health();
     default void close();
+    default List<SettingSpec> settingSpecs();
 }
 ```
 
@@ -377,6 +391,7 @@ public interface SourcePlugin extends AutoCloseable {
 | `Provenance(source, generation, fetchedAt, live, businessDate)` | where the document came from; the console shows it in *How this view was built* |
 | `AsOf(businessDate, knownAt, live)` | which data is wanted: `AsOf.LATEST` (live, current), `AsOf.of(date)` (a picked business date), optionally `knownAt` (as known at an instant, before later corrections) |
 | `EntityHit(ref, title, subtitle)` | one line of type-ahead |
+| `SettingSpec(name, type, required, defaultValue, description, secret, group)` | one setting the plugin reads, as the connector form and validator see it ([`settingSpecs()`](#settingspecs-describing-your-settings)) |
 
 ### `manifest()`: name, version, kinds, capabilities
 
@@ -490,6 +505,46 @@ data is, and the connector's `stale-after` setting turns it into a warning.
 | `purgeCaches()` | drop everything cached (memory and disk) so the next reads refill from the source of truth. Called by an admin at any time; must be safe while reads are in flight. Never purge the only copy of data (the message-queue state stores do not) |
 | `close()` | stop background tasks and release connections; called at shutdown and when a connector is reloaded |
 
+### `settingSpecs()`: describing your settings
+
+Optional. A connector is a file whose `settings:` the plugin reads ([Configuration binding](#configuration-binding)), and **Admin → Connectors** generates its
+form, and the validator checks the file, from a description of those settings. The plugin gives it by overriding
+
+```java
+default List<SettingSpec> settingSpecs()      // the default declares none
+```
+
+returning one `com.ash.drishti.api.SettingSpec` per setting:
+
+```java
+public record SettingSpec(String name, String type, boolean required, String defaultValue,
+                          String description, boolean secret, String group)
+```
+
+| Component | Meaning |
+|---|---|
+| `name` | the setting key as the plugin reads it (`root`, `bootstrap-servers`). A trailing `.*` covers a whole subtree (`layout.*`, `mode.*`, `query.*`), so free-form keys the plugin reads per kind are not reported as typos |
+| `type` | `string` (the default when blank), `int`, `boolean`, `duration`, `path`, `list` or `enum:a\|b\|c` |
+| `required` | true when the plugin cannot start without it; the form marks it and the validator refuses a file without it |
+| `defaultValue` | what the plugin uses when the setting is absent, or null; shown as the field's placeholder |
+| `description` | one line, shown under the field |
+| `secret` | true for a credential: the form accepts only an `${ENV_VAR}` or a `file:/path` reference for it, and the validator refuses a literal value |
+| `group` | the form section (`connection`, `security`, `tuning`, `tls`, …; `general` when blank) |
+
+```java
+@Override public List<SettingSpec> settingSpecs() {
+    return List.of(
+        new SettingSpec("root", "path", true, null, "Folder of day files", false, "connection"),
+        new SettingSpec("rescan-seconds", "int", false, "30", "How often the folder is listed", false, "tuning"),
+        new SettingSpec("mode.*", "string", false, null, "Per-kind read mode (mode.<kind>)", false, "mapping"));
+}
+```
+
+A setting a file carries that no spec covers is a **warning** (a likely typo), never a refusal. The shipped plugins are described in
+`drishti-engine/src/main/resources/drishti/plugin-settings.yaml`, which also holds the settings every plugin shares (`source-name`, `mode.*`, `domain`,
+`stale-after`) and the shared `tls.*` block; **a plugin that overrides `settingSpecs()` wins** over its entry there, and a plugin that declares nothing falls back
+to that catalogue. A plugin of yours that declares nothing still works: its form then offers only the free-form **Other settings** list.
+
 ### Failure semantics
 
 The router asks the candidate sources one by one (see [How a request picks a connector](#how-a-request-picks-a-connector)).
@@ -536,24 +591,30 @@ needs one, stays idle (see below). `GET /api/v1/sources` lists the running conne
 ## Configuration binding
 
 A plugin runs in one of two ways. **As itself**, under `drishti.sources.plugins.<plugin>`: one instance, one set of
-settings. **As named connectors**, under `drishti.sources.connectors.<name>` (or `connectors:` in a pack's
-`pack.yaml`): the same plugin several times, each with its own settings, name and, optionally, kinds.
+settings. **As named connectors**, each a **file** in `config/connectors/` (`config/connectors/<name>.yaml`; the file name is the connector's name): the
+same plugin several times, each with its own settings, name and, optionally, kinds. A pack names the connectors it reads through and may suggest a template for
+each, which the server writes to the file at the first start ([CONNECTOR_FILES.md](CONNECTOR_FILES.md)).
 
 ```yaml
+# application.local.yaml: the server's own settings
 drishti:
   sources:
     plugin-dir: ./plugins                       # extra jars, each in its own class loader
-    connectors:
-      desk-days:
-        plugin: dayfolder
-        kinds: [trade, counterparty]
-        settings: { root: ./data/days, id-field: id, mode.counterparty: effective }
-    routes: { trade: desk-days }
 ```
 
-A connector has four keys: `plugin`, `enabled` (default true), `kinds` (limits what it serves: reads, subscriptions,
-reverse lookups and search for other kinds answer nothing) and `settings` (handed to the plugin as `Map<String,
-String>`; `source-name` defaults to the connector's name, so documents say which connector they came from). **The
+```yaml
+# config/connectors/desk-days.yaml
+plugin: dayfolder
+kinds: [trade, counterparty]
+settings: { root: ./data/days, id-field: id, mode.counterparty: effective }
+```
+
+and the pack that reads it routes the kind: `connectors: [desk-days]` and `routes: { trade: desk-days }` in its `pack.yaml`.
+
+A connector file has these keys: `plugin`, `enabled` (default true), `kinds` (limits what it serves: reads, subscriptions,
+reverse lookups and search for other kinds answer nothing) `description` (free text) and `settings` (nesting is flattened to dotted keys, and the plugin is handed a `Map<String,
+String>`; `source-name` defaults to the connector's name, so documents say which connector they came from). The old definition under `drishti.sources.connectors.<name>` in
+`application.yaml` still works but is deprecated. **The
 settings of each shipped plugin, with defaults, are in that connector's own document** (the table in
 [CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin) lists the plugin names a connector
 can name); a plugin of yours documents its own.
@@ -567,13 +628,14 @@ Rules worth knowing when you write a plugin:
   as a failure. Do the same for your plugin when it has nothing to run with.
 - **Names.** Routes, health and *How this view was built* use the connector's name. A plugin running as itself is known
   by its manifest name or its `source-name`.
-- **Setting keys with dots** (`mode.trade`, `header.Authorization`) are literal keys. In a pack's `pack.yaml` write them
-  flat (`mode.trade: effective`); a nested map there arrives as dotted keys only where documented. In `application.yaml`
-  Spring drops characters other than letters, digits, `-` and `.` from map keys unless the key is bracketed and
-  quoted: `"[kind.desk_orders]": order`.
+- **Setting keys with dots** (`mode.trade`, `header.Authorization`) are literal keys. In a connector file write them
+  flat (`mode.trade: effective`) or nested (`mode: {trade: effective}`); both arrive as the same dotted key. In a pack's `pack.yaml` template write them
+  flat. Only in the deprecated `application.yaml` form does Spring drop characters other than letters, digits, `-` and `.` from map keys unless the key is
+  bracketed and quoted: `"[kind.desk_orders]": order`.
 - **Values are strings.** YAML numbers and booleans are converted; parse them yourself and fail with a clear message.
-  Placeholders (`${DESK_ROOT:./data}`) are resolved by Spring, in packs as well as in site files, so secrets stay out of
-  files.
+  Placeholders (`${DESK_ROOT:./data}`) are resolved when the connector starts, in connector files as well as in packs, so secrets stay out of
+  files; a credential setting may only be a reference (`${ENV_VAR}` or `file:/path`).
+- **Describe your settings.** Override [`settingSpecs()`](#settingspecs-describing-your-settings) so Admin → Connectors can generate the form for your plugin and check its files.
 - **Routing order** for a kind is its route, then the `default-route`, then every other source serving it, re-ordered
   for a picked date (dated first) or Live (live first): see [How a request picks a connector](#how-a-request-picks-a-connector).
 
@@ -709,16 +771,18 @@ mkdir -p plugins-extra && cp docs/guides/examples/connector/target/drishti-examp
 drishti:
   sources:
     plugin-dir: ./plugins-extra
-    connectors:
-      desk-days:
-        plugin: dayfolder
-        kinds: [trade, counterparty]
-        settings: { root: docs/guides/examples/connector/sample, source-name: desk-days, mode.counterparty: effective,
-                    link.trade.netting-set: nettingSet }
     routes: { trade: desk-days, counterparty: desk-days }
 ```
 
-Restart, then `curl -s localhost:18480/api/v1/sources | jq -c '.sources[] | select(.name=="desk-days")'` and open
+```yaml
+# config/connectors/desk-days.yaml
+plugin: dayfolder
+kinds: [trade, counterparty]
+settings: { root: docs/guides/examples/connector/sample, source-name: desk-days, mode.counterparty: effective,
+            link.trade.netting-set: nettingSet }
+```
+
+Restart (the plugin jar is loaded at start; the connector file is applied within seconds), then `curl -s localhost:18480/api/v1/sources | jq -c '.sources[] | select(.name=="desk-days")'` and open
 `trade T-1` in the console (a pack that gives `trade` a mnemonic is needed for typing it; the API reads any kind).
 Pick 29 September in the business-date picker: the view shows an MTM of 101 (100.5 in the file); pick the 30th: 112. *How this view was built*
 names `desk-days`.
@@ -751,8 +815,8 @@ which.
 
 One short section per connector: what it is for, a minimal configuration, the layout it expects, how the data gets in,
 and where it stops. Everything else (every setting and default, health texts, scale, diagnosing) is in the document the
-last line of each section links to. Configuration goes in `application.local.yaml` under `drishti.sources` (or in a
-pack's `pack.yaml`): see [Where configuration goes](#where-configuration-goes).
+last line of each section links to. Each example below is the connector file (`config/connectors/<name>.yaml`); a pack may suggest the same settings as a template in its `pack.yaml`. See
+[Where configuration goes](#where-configuration-goes) and [CONNECTOR_FILES.md](CONNECTOR_FILES.md).
 
 ### `file`
 
@@ -762,6 +826,8 @@ connector in five minutes, or a large book in plain files (it indexes each day o
 ```yaml
 drishti: { sources: { plugins: { file: { enabled: true, settings: { root: ./data/files, source-name: eod-files } } } } }
 ```
+
+or as a connector file (`config/connectors/eod-files.yaml`): `plugin: file`, `settings: { root: ./data/files }`.
 
 **Layout.** JSON lines, one file per kind per business day: `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl` (an undated
 `<kind>.jsonl` also works); or a file per entity, `<root>/<kind>/<id>.json` or `.csv`, and dated
@@ -775,14 +841,11 @@ refused. → full reference: [FILE_CONNECTOR.md](FILE_CONNECTOR.md)
 has an API and you want to copy nothing.
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      positions-api:
-        plugin: rest
-        kinds: [position]
-        settings: { base-url: "${POSITIONS_URL:http://localhost:9000/api}", path: "/{kind}/{id}", header.Authorization: "Bearer ${POSITIONS_TOKEN}" }
-    routes: { position: positions-api }
+# config/connectors/positions-api.yaml
+plugin: rest
+kinds: [position]
+settings: { base-url: "${POSITIONS_URL:http://localhost:9000/api}", path: "/{kind}/{id}", header.Authorization: "Bearer ${POSITIONS_TOKEN}" }
+# the pack (or application.yaml) routes the kind:  routes: { position: positions-api }
 ```
 
 **Layout.** `GET <base-url><path>` with `{kind}` and `{id}` substituted; `404` means not held, any other status of 400
@@ -795,14 +858,13 @@ the service. → full reference: [REST_CONNECTOR.md](REST_CONNECTOR.md)
 not want to copy and you can write the SQL.
 
 ```yaml
-connectors:
-  trading-db:
-    plugin: jdbc
-    settings:
-      url: ${DRISHTI_TRADES_URL:jdbc:postgresql://db:5432/trades}
-      user: ${DRISHTI_TRADES_USER:drishti}
-      password: ${DRISHTI_TRADES_PASSWORD}
-      query.trade: SELECT … FROM trades WHERE trade_id = :id AND business_date = :asOf
+# config/connectors/trading-db.yaml
+plugin: jdbc
+settings:
+  url: ${DRISHTI_TRADES_URL:jdbc:postgresql://db:5432/trades}
+  user: ${DRISHTI_TRADES_USER:drishti}
+  password: ${DRISHTI_TRADES_PASSWORD}
+  query.trade: SELECT … FROM trades WHERE trade_id = :id AND business_date = :asOf
 ```
 
 **Layout.** Your tables; the first row of a query is the document, each column a field; a query that uses `:asOf`
@@ -817,9 +879,13 @@ makes the kind dated. **Loader:** none. **Limits:** search and reverse lookups o
 scale.
 
 ```yaml
-connectors:
-  trading-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}",
-                   user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD}", table: trading.entities } }
+# config/connectors/trading-store.yaml
+plugin: jdbc
+settings:
+  url: ${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}
+  user: ${DRISHTI_PG_USER:drishti}
+  password: ${DRISHTI_PG_PASSWORD}
+  table: trading.entities
 ```
 
 **Layout.** One row per entity per business date, the pack's promoted fields as columns. **Loader:**
@@ -832,8 +898,10 @@ connectors:
 time travel, search and reverse lookups, with no Spark.
 
 ```yaml
-connectors:
-  trading-store: { plugin: delta, kinds: [trade], settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: trading } }
+# config/connectors/trading-store.yaml
+plugin: delta
+kinds: [trade]
+settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: trading }
 ```
 
 **Layout.** A table per kind, `<root>/<domain>/<kind>/`, rows `(id, doc)` plus the pack's promoted columns,
@@ -848,8 +916,10 @@ files' modification times (copy lakes with `cp -p`); codecs other than Snappy an
 Glue). **Use it when** your lake is Iceberg.
 
 ```yaml
-connectors:
-  trading-store: { plugin: iceberg, kinds: [trade], settings: { root: "${DRISHTI_ICEBERG_ROOT:./data/iceberg}", domain: trading } }
+# config/connectors/trading-store.yaml
+plugin: iceberg
+kinds: [trade]
+settings: { root: "${DRISHTI_ICEBERG_ROOT:./data/iceberg}", domain: trading }
 ```
 
 **Layout.** A table per kind, partitioned by business date, sorted by id, promoted columns beside the document.
@@ -862,8 +932,9 @@ applied by every read. → full reference: [ICEBERG_CONNECTOR.md](ICEBERG_CONNEC
 single server holds a large book in one file and wants day-wide searches without a database server or a lake.
 
 ```yaml
-connectors:
-  trading-store: { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", table: trading.entities } }
+# config/connectors/trading-store.yaml
+plugin: duckdb
+settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}", table: trading.entities }
 ```
 
 **Layout.** A schema per domain, `<domain>.entities (kind, id, business_date, doc, <promoted columns>)`, each day sorted
@@ -877,8 +948,9 @@ by id. **Loader:** `tools/load-duckdb.sh` (`--keep-days`); a load writes a new f
 without a lake.
 
 ```yaml
-connectors:
-  trading-store: { plugin: mongodb, settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: drishti } }
+# config/connectors/trading-store.yaml
+plugin: mongodb
+settings: { uri: "${DRISHTI_MONGODB_URI:mongodb://localhost:27017}", database: drishti }
 ```
 
 **Layout.** A collection per domain, a document per entity per business date (`_id` `kind/id/yyyyMMdd`), the promoted
@@ -892,8 +964,9 @@ recent kernels (use 7). → full reference: [MONGODB_CONNECTOR.md](MONGODB_CONNE
 at memory speed with live ticks, and Delta Lake behind it for history.
 
 ```yaml
-connectors:
-  trading-store: { plugin: redis, settings: { uri: "${DRISHTI_REDIS_URI:redis://localhost:6379}" } }
+# config/connectors/trading-store.yaml
+plugin: redis
+settings: { uri: "${DRISHTI_REDIS_URI:redis://localhost:6379}" }
 ```
 
 **Layout.** A compressed document per entity per day (zstd, dictionary per kind); promoted fields column-wise in chunks
@@ -907,8 +980,9 @@ about 1 GB of memory per million trades a day; TTL retention; a day Redis does n
 two key lookups per view, with retention by record TTL.
 
 ```yaml
-connectors:
-  trading-store: { plugin: aerospike, settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" } }
+# config/connectors/trading-store.yaml
+plugin: aerospike
+settings: { hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}", namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}" }
 ```
 
 **Layout.** Three sets per domain: a record per entity per business date (`kind/id/yyyyMMdd`: the document and the
@@ -922,11 +996,10 @@ promoted bins), an index record per entity (its dates), a record per kind (its d
 tick; pair it with a lake for history.
 
 ```yaml
-connectors:
-  trading-stream:
-    plugin: kafka
-    kinds: [trade]
-    settings: { bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", topics: drishti.trading.trades, kind: trade, id-field: tradeId }
+# config/connectors/trading-stream.yaml
+plugin: kafka
+kinds: [trade]
+settings: { bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}", topics: drishti.trading.trades, kind: trade, id-field: tradeId }
 ```
 
 **Layout.** Messages are an envelope `{kind, id, doc}`, or whole documents with `kind` and `id-field`; a tombstone
@@ -940,11 +1013,10 @@ keeps nothing and only pushes. → full reference: [KAFKA_CONNECTOR.md](KAFKA_CO
 ActiveMQ.
 
 ```yaml
-connectors:
-  limits-mq:
-    plugin: activemq
-    kinds: [credit-limit]
-    settings: { broker-url: "failover:(tcp://localhost:61616)", destinations: "queue:limits", kind.limits: credit-limit, id-field.limits: limitId }
+# config/connectors/limits-mq.yaml
+plugin: activemq
+kinds: [credit-limit]
+settings: { broker-url: "failover:(tcp://localhost:61616)", destinations: "queue:limits", kind.limits: credit-limit, id-field.limits: limitId }
 ```
 
 **Layout.** A JSON message body on a destination with a `kind.<destination>`, or an envelope `{kind, id, doc}`; a
@@ -957,11 +1029,10 @@ the latest document per entity in a local RocksDB state store, the only copy, wi
 **For.** The same as ActiveMQ, for RabbitMQ (AMQP 0-9-1).
 
 ```yaml
-connectors:
-  margin-mq:
-    plugin: rabbitmq
-    kinds: [margin-call]
-    settings: { uri: "${RABBIT_URI:amqp://guest:guest@localhost:5672/%2f}", queues: drishti.margin-calls, kind.drishti.margin-calls: margin-call, id-field.drishti.margin-calls: callId }
+# config/connectors/margin-mq.yaml
+plugin: rabbitmq
+kinds: [margin-call]
+settings: { uri: "${RABBIT_URI}", queues: drishti.margin-calls, kind.drishti.margin-calls: margin-call, id-field.drishti.margin-calls: callId }
 ```
 
 **Layout, loader, limits:** as for ActiveMQ; queues are declared durable unless `declare: false`, messages are
@@ -974,8 +1045,10 @@ restart. → full reference: [RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md)
 lives in object storage.
 
 ```yaml
-connectors:
-  risk-docs: { plugin: s3, kinds: [stress-result], settings: { bucket: "${RISK_DOCS_BUCKET:risk-docs}", prefix: eod/, region: us-east-1 } }
+# config/connectors/risk-docs.yaml
+plugin: s3
+kinds: [stress-result]
+settings: { bucket: "${RISK_DOCS_BUCKET:risk-docs}", prefix: eod/, region: us-east-1 }
 ```
 
 **Layout.** `<prefix><kind>/<id>.json` and dated `<prefix><yyyy-MM-dd>/<kind>/<id>.json`. **Loader:** none (any
@@ -988,11 +1061,14 @@ uploader: `aws s3 sync`, `mc cp`). **Limits:** listing a large bucket costs; ids
 rates next to your own data; each is off until one variable switches it on.
 
 ```yaml
-connectors:
-  nyfed-sofr-feed: { plugin: feed, enabled: true, kinds: [rate-fixing], settings: { feed: nyfed-sofr, refresh-minutes: 60 } }
+# config/connectors/nyfed-sofr-feed.yaml
+plugin: feed
+enabled: true
+kinds: [rate-fixing]
+settings: { feed: nyfed-sofr, refresh-minutes: '60' }
 ```
 
-**Layout.** One connector per feed, declared by the market-data pack; entities carry the feed in their id
+**Layout.** One connector (one file) per feed, suggested by the market-data pack; entities carry the feed in their id
 (`FIX-SOFR-NYFED`). **Loader:** none. **Limits:** needs the internet (or a mirror: `url: file://…`); FRED needs a free
 key; a failed fetch keeps the last good data and shows in health. → full reference: [FEEDS_CONNECTOR.md](FEEDS_CONNECTOR.md)
 
@@ -1028,7 +1104,7 @@ eviction are in [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md#7-durability-and-d
 
 ### History from a lake, live from Kafka, for the same kind
 
-This is what the trading pack ships: `trading-store` (Delta Lake, dated) and `trading-stream` (Kafka, live), both
+This is what the trading pack names: `trading-store` (Delta Lake, dated) and `trading-stream` (Kafka, live), both
 serving `trade`, with `routes: { trade: trading-store }`. With the stream on and the demo off, the candidates for
 `trade` are the route (`trading-store`), then every other connector serving `trade` (`trading-stream`, and `file`,
 which serves every kind). Then:
@@ -1045,13 +1121,11 @@ or database answers every read, and Kafka only pushes each new message to the vi
 store already has the day's data and the topic is just the change feed, or the topic is too large to index:
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      trading-stream:
-        plugin: kafka
-        settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics: drishti.trading.trades,
-                    kind: trade, id-field: tradeId }
+# config/connectors/trading-stream.yaml
+plugin: kafka
+kinds: [trade]
+settings: { mode: ticks, bootstrap-servers: "${DRISHTI_KAFKA_BOOTSTRAP}", topics: drishti.trading.trades,
+            kind: trade, id-field: tradeId }
 ```
 
 The view is live because a connector *pushes* the kind (the plugin answers `pushes(ref)` with true in ticks mode),
@@ -1078,52 +1152,57 @@ Run one connector per data domain. A server with the banking packs runs, for exa
 Each connector lists its own `kinds`, has its own health, its own cache and its own read statistics. Keep connector
 names stable: routes, health history, cache purges and provenance all use them.
 
-### Overriding a pack's connector from the site
+### Changing a pack's connector from the site
 
-The site's files sit above every pack and merge **key by key**. Change only what you name:
+The connector files are the site's, so change a pack's connector by editing its file (in **Admin → Connectors**, or in your editor). A file **replaces** the
+pack's template for that name **wholesale**: the settings are not merged, so what the file does not say is not inherited. To change only the root of
+`trading-store`, start from the generated file (`drishti.py connector get trading-store`) and edit that line:
 
 ```yaml
-# application.local.yaml
-drishti:
-  sources:
-    connectors:
-      trading-store:
-        settings:
-          root: /srv/lake                  # only the root changes; plugin, kinds, domain, route stay the pack's
-      trading-stream:
-        enabled: true                      # the stream on, whatever DRISHTI_STREAM_TRADING says
-        settings:
-          bootstrap-servers: kafka1.bank.example:9092
-          topics: trading.trades.v2        # the pack's kind, id-field and disk-cache settings stay
-      credit-store:
-        kinds: [credit-limit, netting-set] # a list is REPLACED: this connector now serves only these two kinds
-      fred-feed:
-        enabled: false                     # a parent pack's connector, switched off for this site
-    routes:
-      credit-limit: limits-drop            # routes merge the same way: this one kind changes
+# config/connectors/trading-store.yaml (generated from the trading pack's template, then edited)
+plugin: delta
+kinds: [trade]
+settings:
+  root: /srv/lake                  # the line the site changed
+  domain: trading
+  layout.trade.columns: tradeId,productType,…
+```
+
+```yaml
+# config/connectors/trading-stream.yaml: the stream on, whatever DRISHTI_STREAM_TRADING says
+plugin: kafka
+enabled: true
+kinds: [trade]
+settings:
+  bootstrap-servers: kafka1.bank.example:9092
+  topics: trading.trades.v2
+  kind: trade
+  id-field: tradeId
 ```
 
 Points to remember:
 
-- **Lists replace.** `kinds:` in the site replaces the pack's whole list; kinds you leave out are no longer served by
-  that connector.
-- **Keys the new plugin does not read are ignored.** Switching `trading-store` to `jdbc` leaves the pack's `root`
-  and `domain` in place, harmlessly. (Aerospike *does* read `domain`, as its set, and `layout`, as its promoted bins.)
-- **Typos create new connectors.** A site entry whose name no pack declares and that has no `plugin:` fails to start:
-  `GET /api/v1/admin/health` shows `"failedToStart": {"trading-stor": "no plugin named 'null'"}`.
-- **Between packs**, a child pack that redefines a parent's connector replaces it *as a whole*, and the override is
+- **A file is the whole definition.** `kinds:` in the file is the connector's list; kinds you leave out are no longer served by that connector. **Reset to pack default**
+  (Admin → Connectors, or `drishti.py connector reset <name>`) puts the pack's template back and keeps your text in the history.
+- **Switch one off with `enabled: false`** in its file (`drishti.py connector disable fred-feed`).
+- **Keys the plugin does not read are ignored** (with a warning on the form and from the validator). Switching `trading-store` to `jdbc` and leaving `root` in the file is
+  harmless. (Aerospike *does* read `domain`, as its set, and `layout`, as its promoted bins.)
+- **A file with no `plugin:`** fails to start. A file name that no pack names and that is not a typo of one defines a new site connector; a pack that names a
+  connector nobody defined loads, and its kinds answer `DRS-1011 connector <name> is not configured` ([CONNECTOR_FILES.md](CONNECTOR_FILES.md#a-pack-names-a-connector-nobody-defined)).
+- **Between packs**, a child pack that redefines a parent's connector template replaces it *as a whole*, and the override is
   listed in health (`overrides`); two unrelated packs that define the same connector differently stop the server at
   start, naming both. See [PACKS.md](../guides/PACKS.md).
+- **The deprecated form still works.** `drishti.sources.connectors.<name>` in `application.yaml` overrides a file setting by setting, with a warning that names the file to write.
 
 ### Switching connectors off
 
 | To | Do |
 |---|---|
-| switch one connector off | `enabled: false` under its name in `application.local.yaml` |
+| switch one connector off | `enabled: false` in its file (Admin → Connectors **Disable**, or `drishti.py connector disable <name>`) |
 | switch every pack's lake off | `DRISHTI_LAKE_ENABLED=false` |
 | switch the samples off | `DRISHTI_DEMO_ENABLED=false` |
 | switch a plugin running as itself off | `drishti.sources.plugins.<plugin>.enabled: false` (`DRISHTI_REST_ENABLED`, `DRISHTI_JDBC_ENABLED`, `DRISHTI_S3_ENABLED`, `DRISHTI_ACTIVEMQ_ENABLED`, `DRISHTI_RABBITMQ_ENABLED`) |
-| one value for one start | `java -jar … --drishti.sources.connectors.trading-stream.enabled=true` |
+| one value for one start | `java -jar … --drishti.sources.connectors.trading-stream.enabled=true` (the deprecated form; it overrides the file for that start) |
 
 A connector that is off is listed under its pack's `connectorsOff` in health. Note that **Admin → Packs** (switching a
 pack off for everyone) hides the pack's kinds from users; it does not stop its connectors. Use `enabled: false` for
@@ -1131,26 +1210,29 @@ that.
 
 ### Secrets
 
-Never write a password in a YAML file. Use a placeholder and set the variable where the server runs (systemd
-`Environment=`, a Kubernetes secret, the shell):
+A connector file never holds a secret. A setting whose name says it is a credential (`password`, `secret…`, `token`, `api-key`, `access-key`, `private-key`, `credential`)
+must be an environment reference or a file reference; set the variable where the server runs (systemd `Environment=`, a Kubernetes secret, the shell), or mount the
+secret as a file:
 
 ```yaml
 settings:
-  password: ${DESK_DB_PASSWORD}             # no default: make sure it is set (see below)
-  user: ${DESK_DB_USER:drishti}             # with a default
+  password: ${DESK_DB_PASSWORD}                    # an environment reference, no default
+  # password: file:/run/secrets/desk-db-password   # or a file reference: the first line is the secret
+  user: ${DESK_DB_USER:drishti}                    # not a credential: a default is fine
   header.Authorization: "Bearer ${CRM_TOKEN}"
-  client.sasl.jaas.config: "${KAFKA_JAAS}"
+  client.sasl.jaas.config: ${KAFKA_JAAS}
 ```
 
-Spring leaves a placeholder it cannot resolve as it is, so with the variable unset the connector receives the text
-`${DESK_DB_PASSWORD}` and its connection fails; give a default (`${X:}` for empty) where empty is acceptable.
-Health and `/api/v1/sources` do not show settings. Prefer the AWS credential chain (instance roles) to `access-key`
-and `secret-key` for S3 and S3A.
+A literal value, a default inside the reference (`${X:fallback}`) and a password inside a URL (`jdbc:…//user:pw@host`, `?password=…`) are **refused** by Admin → Connectors,
+the API and the CLI. A variable that is unset and has no default refuses that file, and the last good configuration keeps running. Health and `/api/v1/sources` do not
+show settings. Prefer the AWS credential chain (instance roles) to `access-key` and `secret-key` for S3 and S3A. Details: [CONNECTOR_FILES.md](CONNECTOR_FILES.md#5-credentials-and-tls).
 
 ### A pack with several connectors, worked through
 
 A pack for an equities desk, `packs/equity-desk/pack.yaml` (illustrative; the structure is exactly that of the
-shipped `trading` pack), keeps history in Delta Lake and takes live orders from Kafka:
+shipped `trading` pack), keeps history in Delta Lake and takes live orders from Kafka. Its `connectors:` mapping is the pack's **suggested templates**: at the first start the server writes
+`config/connectors/equity-store.yaml` and `config/connectors/equity-orders.yaml` from them, and those files are then the site's (a pack that only wants to name its connectors writes
+`connectors: [equity-store, equity-orders]` and lets the site create the files):
 
 ```yaml
 pack: equity-desk
@@ -1208,7 +1290,7 @@ undeclared-kinds plugin such as `file`). Then:
   an error rather than silently serving other data.
 
 **Inheritance.** Enabling `equity-desk` (`DRISHTI_PACKS=equity-desk`) loads `banking-core` and `market-data` too
-(`extends:` and `requires:` both pull parents in), and every connector the three declare runs: `reference-store`,
+(`extends:` and `requires:` both pull parents in), and every connector the three name runs: `reference-store`,
 `market-store`, the five feeds (off unless switched on), `equity-store` and `equity-orders`. Where two packs declare
 the same connector name (or route, mnemonic, field, badge or role):
 
@@ -1221,34 +1303,38 @@ the same connector name (or route, mnemonic, field, badge or role):
 So a child pack that redefines `market-store` replaces its whole definition (plugin, kinds and every setting); it
 does not merge with the parent's.
 
-**Site overrides.** The site's files sit above every pack and merge key by key, so a site changes only what it
-names:
+**Site overrides.** The site's connector files replace the pack's templates wholesale, so a site edits the file it was given. `config/connectors/equity-store.yaml`,
+moved to PostgreSQL (same kinds, modes and route; a different store):
 
 ```yaml
-# application.local.yaml
-drishti:
-  sources:
-    connectors:
-      equity-store:
-        plugin: jdbc                               # same kinds, modes and route; a different store
-        settings:
-          url: jdbc:postgresql://pg.bank.example:5432/drishti
-          user: ${PG_USER}
-          password: ${PG_PASSWORD}
-          table: equity.entities                   # the pack's root and domain stay, and jdbc ignores them
-      equity-orders:
-        enabled: true                              # the stream on, whatever DRISHTI_STREAM_EQUITY says
-        settings:
-          bootstrap-servers: kafka1.bank.example:9092
-      fred-feed:
-        enabled: false                             # a parent pack's connector, switched off for this site
-    routes:
-      position: equity-store                       # routes merge the same way
+plugin: jdbc
+kinds: [order, position]
+settings:
+  url: jdbc:postgresql://pg.bank.example:5432/drishti
+  user: ${PG_USER}
+  password: ${PG_PASSWORD}
+  table: equity.entities
+  mode.position: snapshot
+  mode.order: effective
 ```
 
-Remember that a site `kinds:` list replaces the pack's whole list, and that keys the new plugin does not read are
-simply ignored (`root` and `domain` above; but `domain` *is* read by `aerospike`, as the set, and so is `layout`, as the promoted
-bins, which is why the `aerospike` profile needs to give only `hosts` and `namespace`).
+`config/connectors/equity-orders.yaml`, the stream on whatever `DRISHTI_STREAM_EQUITY` says, and the parent pack's feed off for this site (`config/connectors/fred-feed.yaml` with
+`enabled: false`, or `drishti.py connector disable fred-feed`):
+
+```yaml
+plugin: kafka
+enabled: true
+kinds: [order]
+settings:
+  bootstrap-servers: kafka1.bank.example:9092
+  topics: equity.orders
+  kind: order
+  id-field: orderId
+```
+
+Remember that a file's `kinds:` list is the connector's whole list, and that keys the new plugin does not read are
+simply ignored (`root` and `domain` above would be; but `domain` *is* read by `aerospike`, as the set, and so is `layout`, as the promoted
+bins). Routes stay the pack's (`routes:` in its `pack.yaml`).
 
 ---
 
@@ -1400,8 +1486,9 @@ calls.
 | `DRS-1002 no source serves kind 'x'` | `curl -s $B/sources \| jq '.sources[].kinds'` | no running connector serves the kind (both `demo` and `file` are off): add `kinds` to a connector, or switch one on |
 | `DRS-1003 <connector> failed reading …` | `curl -s $B/admin/health \| jq '.sources[] \| select(.name=="<connector>") \| {health, reads}'` | the store is down or rejecting the query: `lastError` says why |
 | `DRS-1004 timed out reading …` | `reads.p99Ms` of the connectors serving the kind | raise `drishti.sources.fetch-timeout`; route the kind to the fast store |
-| A connector is missing from `/sources` | `curl -s $B/sources \| jq .failures`; the server log for `failed to start` or `installed but not configured` | fix the setting named in the message; check `enabled` and the pack in `DRISHTI_PACKS` |
-| `failedToStart` shows `no plugin named 'null'` | the connector name in `application.local.yaml` | a typo: no pack declares that name, so it has no `plugin` |
+| A connector is missing from `/sources` | `curl -s $B/sources \| jq .failures`; `drishti.py connector list` (state and problems); the server log for `failed to start`, `connector file … is not usable` or `installed but not configured` | fix the setting named in the message; check `enabled` and the pack in `DRISHTI_PACKS`; a bad file keeps the last good configuration running |
+| `DRS-1011 connector <name> is not configured` | `ls config/connectors`; Admin → Packs → Data source | a pack routes the kind to a connector nobody defined: create it (Admin → Connectors, **Create**) |
+| `failedToStart` shows `no plugin named 'null'` | the connector's file in `config/connectors/` (`drishti.py connector get <name>`) | the file has no `plugin:` (or a typo in a name defined only in the deprecated `application.yaml` form) |
 | `failedToStart` shows `no plugin named 'x'` | `ls drishti-server/target/*exec.jar`; `DRISHTI_PLUGIN_DIR` | misspelt plugin name (`postgres` is not a plugin; it is `jdbc`) |
 | Health `DOWN: no Delta tables under ./data/delta/<domain>` | `ls data/delta/<domain>/*/_delta_log` | build the lake or set `DRISHTI_DELTA_ROOT`; restart |
 | A picked date shows *No data held for <date>* (the current data of an undated source) | `curl -s "$B/entities/<kind>/<id>/raw?asOf=<date>" \| jq .provenance` | the dated store does not hold that date (`lookback-days`, history kept); load it |

@@ -176,7 +176,8 @@ Why each part is shaped this way:
 ## 4. Declaring the layout in a pack
 
 The layout belongs to the kind, so the pack that owns the kind declares it, on the Delta connector that stores it. The
-trading pack declares (`packs/trading/pack.yaml`, written by `tools/packgen/banking/make_packs.py`):
+trading pack suggests this template (`packs/trading/pack.yaml`, written by `tools/packgen/banking/make_packs.py`); at the first start the server writes it to
+`config/connectors/trading-store.yaml`, which is then the site's file ([As a connector file](#as-a-connector-file)):
 
 ```yaml
 connectors:
@@ -205,7 +206,7 @@ connectors:
 | `layout.<kind>.row-group-rows` | Rows per Parquet row group (default 10,000; the trading pack sets 1,000, which keeps the first open of a trade fast). |
 
 The pack loader flattens the nested settings into the connector's flat settings (`layout.trade.columns =
-tradeId,productType,…`), which is what the connector reads; you can also set them that way in site configuration.
+tradeId,productType,…`), which is what the connector reads; in a connector file you may write them nested or flat.
 
 **Choosing the columns.** Promote every field that a question over the whole book reads:
 
@@ -615,9 +616,34 @@ when it was; a document search says `"partial": true` with a smaller `scanned`.
 | a view fails with `DRS-1003 … failed reading` while other dates open | that date's files cannot be read (see the row above); the view does not fall back to another store's data | as above |
 | searches say `partial: true` with `failed: [{"source": "trading-store", …}]` | a date or the table's ids could not be read; the type-ahead keeps the ids it listed before | as above; the reason is in the answer and in Health |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/trading-store.yaml
+plugin: delta
+enabled: ${DRISHTI_LAKE_ENABLED:true}
+kinds: [trade]
+description: Trading lake
+settings:
+  root: ${DRISHTI_DELTA_ROOT:./data/delta}
+  domain: trading
+  layout:
+    trade:
+      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
+                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
+                risk.dv01, sourceSystem]
+      sort-by: id
+      file-rows: '250000'
+      row-group-rows: '1000'
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). A Delta Lake on S3-compatible storage, with the access keys as references, is `config/connectors.examples/other/customer-lake.yaml` (see [`config/connectors.examples/`](../../config/connectors.examples)).
+
 ## 14. Settings
 
-On a Delta connector (`drishti.sources.connectors.<name>.settings`, or the connector's `settings:` in a pack):
+In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -804,7 +830,7 @@ DRISHTI_PACKS=counterparty-risk,market-risk java -jar drishti-server/target/dris
 
 ### Configuration by example
 
-**Pack form**, as shipped in `packs/trading/pack.yaml` (the layout keys are in [section 4](#4-declaring-the-layout-in-a-pack)):
+**The pack's suggested template**, as shipped in `packs/trading/pack.yaml` (the layout keys are in [section 4](#4-declaring-the-layout-in-a-pack)); the file `config/connectors/trading-store.yaml` has the same settings:
 
 ```yaml
 connectors:
@@ -839,46 +865,42 @@ connectors:
 `packs/finance/pack.yaml` declares its lake without `kinds`, so it serves every table it finds:
 `finance-lake: { plugin: delta, enabled: ${DRISHTI_LAKE_ENABLED:true}, settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: finance, lookback-days: 10 } }`.
 
-**Site form**, your own domain:
+**Site form**, your own domain, as the connector file `config/connectors/treasury-lake.yaml`:
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      treasury-lake:
-        plugin: delta
-        kinds: [funding-source, hqla-holding]    # what this connector serves
-        settings:
-          root: /srv/lake                        # local folder (or s3a://bucket/path, below)
-          domain: treasury                       # /srv/lake/treasury/<kind>/
-          mode.funding-source: effective
-          lookback-days: 10                      # snapshot kinds
-          refresh-seconds: 10                    # how long a table's latest version is cached
-          cache-mb: 512                          # partitions kept in memory, by size
+plugin: delta
+kinds: [funding-source, hqla-holding]    # what this connector serves
+settings:
+  root: /srv/lake                        # local folder (or s3a://bucket/path, below)
+  domain: treasury                       # /srv/lake/treasury/<kind>/
+  mode.funding-source: effective
+  lookback-days: '10'                    # snapshot kinds
+  refresh-seconds: '10'                  # how long a table's latest version is cached
+  cache-mb: '512'                        # partitions kept in memory, by size
 ```
 
-**The lake in S3 or an S3-compatible store** (MinIO, Ceph). A site moves a pack's lake without touching the pack; the
-settings are in [section 14](#14-settings):
+**The lake in S3 or an S3-compatible store** (MinIO, Ceph). The site moves a pack's lake by writing the connector file of the same
+name; the settings are in [section 14](#14-settings). The file replaces the pack's template wholesale, so it repeats `plugin`, `kinds`
+and `domain`:
 
 ```yaml
-# application.local.yaml
-drishti:
-  sources:
-    connectors:
-      trading-store:
-        settings:
-          root: s3a://risk-lake/banking            # read through Hadoop's S3A (or the native engine)
-          s3.region: us-east-1
-          # credentials: the AWS chain (environment, profile, instance role), or
-          # s3.access-key: ${LAKE_ACCESS_KEY}
-          # s3.secret-key: ${LAKE_SECRET_KEY}
-          # an S3-compatible store:
-          # s3.endpoint: https://minio.bank.example # path-style; TLS when https
-          # s3.path-style: "false"                  # only with an endpoint; default true
-          # hadoop.fs.s3a.connection.maximum: "200" # any Hadoop setting, prefixed hadoop.
+# config/connectors/trading-store.yaml
+plugin: delta
+kinds: [trade]
+settings:
+  domain: trading
+  root: s3a://risk-lake/banking            # read through Hadoop's S3A (or the native engine)
+  s3.region: us-east-1
+  # credentials: the AWS chain (environment, profile, instance role), or
+  # s3.access-key: ${LAKE_ACCESS_KEY}
+  # s3.secret-key: ${LAKE_SECRET_KEY}      # or file:/run/secrets/lake-secret-key
+  # an S3-compatible store:
+  # s3.endpoint: https://minio.bank.example # path-style; TLS when https
+  # s3.path-style: "false"                  # only with an endpoint; default true
+  # hadoop.fs.s3a.connection.maximum: "200" # any Hadoop setting, prefixed hadoop.
 ```
 
-`domain` and `kinds` still come from the pack; the tables are read at `s3a://risk-lake/banking/trading/<kind>`.
+The tables are read at `s3a://risk-lake/banking/trading/<kind>`.
 `DRISHTI_DELTA_ROOT=s3a://risk-lake/banking` moves every pack's lake at once.
 
 **Maintenance** for a smaller window, as in `deploy/lake-maintenance.yaml` ([section 10](#10-keeping-the-lake-in-shape)):

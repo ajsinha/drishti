@@ -366,6 +366,10 @@ The `postgres` profile (`application-postgres.yaml`, inside the jar) points each
 table `<domain>.entities`; the `aerospike` profile points them at a set per domain. The packs still decide the
 kinds and routes; the profile changes only the store.
 
+The profiles still work but are deprecated: copy the example files for your store from `config/connectors.examples/<store>/` into
+`config/connectors/` instead (a file replaces the pack's template wholesale, whereas a profile overlays it setting by setting), and
+drop the profile ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md#11-moving-off-applicationyaml-and-the-old-data-source-override)).
+
 **Aerospike at scale, and retention.** Each domain is three sets: `<domain>` (a record per entity per business date,
 the document and the pack's promoted fields as bins), `<domain>_ix` (a record per entity listing its dates) and
 `<domain>_kinds` (the kinds' dates). Add a bulk book and a retention period to the load:
@@ -466,7 +470,24 @@ Everything about users, roles and the identity database is in [USER_MANAGEMENT.m
 
 ### 6.4 Server: pack connectors
 
-These are read by the packs' `pack.yaml` files (`connectors:` sections).
+Connectors are site resources: one YAML file each in `config/connectors/` (`DRISHTI_CONNECTORS_DIR`), the file name being the
+connector's name. The packs name the connectors they read through; their `pack.yaml` `connectors:` sections are templates from
+which the server writes a missing file once, at the first start, and never overwrites it afterwards. The variables below are
+read by those templates and by `${NAME:default}` references inside connector files. See
+[CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
+
+**Changing a connector without a restart.** Edit the file (or use **Admin → Connectors**, `/admin/connectors`, or
+`drishti.py connector apply`). The folder is watched (`drishti.sources.connectors-watch`, default `auto`, with a poll every 5 s as
+a safety net): only the connector whose file changed is restarted, and reads in flight get `connectors-drain` (3 s) to finish.
+Every earlier text of a file is kept in `config/connectors/.history/` and can be restored from the page. A change to an environment
+variable that a file refers to still needs a restart of the server, because variables are read at start-up.
+
+**Reading a bad-file problem.** A file that cannot be read (bad YAML, an unknown top-level key, a `name:` that differs from the file
+name, a credential written in clear, an unset `${VARIABLE}` without a default, a plugin that is not installed) does not stop the
+server and does not stop the connector: the last good configuration keeps running. The problem is in the log, in **Admin → Health**
+(the `connectors` block: `badFiles` with the message, `watch`, `deprecated`) and on the Connectors page. A pack row in Health
+lists `connectorsNotConfigured` when a pack routes a kind to a connector that has no file (views of that kind say `DRS-1011`). The
+table of messages and fixes is in [CONNECTOR_FILES.md, section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems).
 
 | Variable | Default | Used by | What it does |
 |---|---|---|---|
@@ -1027,6 +1048,8 @@ working directory unless you changed them.
 | `sutras/` (`DRISHTI_SUTRAS`) | your own Sutras, and what Studio saves | **yes**, preferably in version control | git, or copy |
 | `application.local.yaml`, `drishti-console/config/application.local.yaml`, `/etc/drishti/drishti.env` | your configuration and secrets | **yes**, securely | copy |
 | `data/state/<connector>/` | ActiveMQ and RabbitMQ connectors' latest document of each entity received (RocksDB, with its write-ahead log). A queue does not send a message twice, so this is the only copy Drishti has | yes, if you use those connectors | stop the server, copy the whole folder (the write-ahead log with the table files), start; or rely on the source system to re-send. A copy taken while the server runs is not consistent |
+| `config/connectors/` (`DRISHTI_CONNECTORS_DIR`) | one YAML file per connector: which plugin, where it connects, which kinds it serves. No secret is written in a file (credentials are `${ENV_NAME}` references). `.history/` holds earlier texts, a convenience and not a backup | **yes**, preferably in version control | commit the folder, or copy it (files are written atomically) |
+| `data/packs/settings/.migrated/` | the original data-source override files that were moved into connector files at the upgrade | once, then optional | copy; they are kept only as a record |
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
 | `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
 | `data/feeds/` (`DRISHTI_FEEDS`) | files for the file connector | by whoever writes them | |
@@ -1044,7 +1067,7 @@ if [ -f data/identity/drishti.db ]; then                      # 1.10+: a consist
   sqlite3 data/identity/drishti.db ".backup 'data/identity/backup.db'"
 fi
 tar czf /backup/drishti/drishti-$stamp.tgz --exclude=data/identity/drishti.db* \
-    data/identity data/governance sutras application.local.yaml
+    data/identity data/governance sutras config/connectors application.local.yaml
 ls -1t /backup/drishti/drishti-*.tgz | tail -n +15 | xargs -r rm --
 ```
 
@@ -1084,7 +1107,8 @@ DRISHTI_DELTA_ROOT=s3a://risk-lake/banking java -jar drishti-server.jar
 ```
 
 Credentials then come from the AWS default chain (environment variables, profile, instance role). To set the
-region, an endpoint or keys explicitly, override the connector in `application.local.yaml`:
+region, an endpoint or keys explicitly, give the connector its own file, `config/connectors/trading-store.yaml` (the same keys
+under `drishti.sources.connectors.trading-store` in `application.local.yaml` still work but are deprecated):
 
 ```yaml
 drishti:
@@ -1286,6 +1310,10 @@ How to read it:
 
 - **`status`**: `OK`; `DEGRADED` when any source is down, degraded or stale, a connector failed to start
   (`failedToStart`), a pack has a problem or the Sutra watcher has stopped; `DOWN` when no source is up at all.
+- **`connectors`**: `count` and `failed` connectors, `badFiles` (a file that could not be read, with the message; the last
+  good configuration keeps running), `watch` (`WATCHING`, `POLLING`, `OFF` or `STOPPED: <reason>`; on `STOPPED` edits are not
+  picked up until a restart), the folder, and `deprecated` (connectors still defined in `application.yaml`, which the start-up
+  warning names). A bad file or a pack's `connectorsNotConfigured` makes the status `DEGRADED`.
 - **`sutras`**: `hotReload` is `WATCHING` (edits to Sutra files are picked up), `OFF` (`drishti.rachana.hot-reload:
   false`) or `STOPPED: <reason>` (the watcher ended unexpectedly; the log has the error; restart to pick up edits
   again). `problemFiles` counts the files listed by `GET /api/v1/sutras/problems`, site and pack.

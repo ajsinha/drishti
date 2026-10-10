@@ -24,7 +24,8 @@ This guide is for users and administrators. It explains, with examples:
 1. [What a pack is](#what-a-pack-is), and [every pack that ships](#the-packs-that-ship), with its commands.
 2. [How to load packs](#turning-packs-on), [switch them off and on for everyone](#switching-packs-off-and-on-admin--packs)
    and [who sees which pack](#who-sees-which-pack).
-3. [Loading a pack while the server runs](#loading-a-pack-while-the-server-runs), [pack codes](#pack-codes) and
+3. [Where a pack reads its data](#packs-and-connectors-where-a-pack-reads-its-data): the connector files that packs name.
+4. [Loading a pack while the server runs](#loading-a-pack-while-the-server-runs), [pack codes](#pack-codes) and
    [upgrading or removing a pack](#upgrading-and-removing-a-pack).
 
 **Writing a pack** (the manifest key by key, links, roles, Sutras, samples, tests, inheritance, generators, the signed
@@ -68,8 +69,9 @@ Words used below:
 | **mnemonic** | the short command for a kind | `SHP` opens a `shipment` |
 | **id** | one entity's identifier | `SHP-10042` |
 | **Sutra** | a layout for a kind, written in Rachana: one YAML file starting `rachana: 1` | `sutras/shipment.v1.sutra.yaml` |
-| **connector** | a named data source a pack reads from | `credit-store` (a Delta Lake folder) |
+| **connector** | a configured source of data, owned by the site: one YAML file in `config/connectors/` whose file name is its name; a pack names the connectors it reads through | `credit-store` (a Delta Lake folder) |
 | **route** | which connector answers a kind | `netting-set: credit-store` |
+| **template** | a pack's suggestion for a connector, written to the connector file once, at the first start | the `connectors:` mapping of a shipped pack |
 
 ## The packs that ship
 
@@ -316,10 +318,50 @@ installed the same way: [the registry](PACK_DEVELOPER_GUIDE.md#a-signed-pack-reg
 whether the server is restarting (`"restarting": true`). Only a server started by its `main` (the jar, the
 container) restarts in place; elsewhere (tests) the change waits for the next start.
 
-## Deploying an archive, history, and the data source (Admin → Packs)
+## Packs and connectors: where a pack reads its data
+
+A pack says **what** it reads; the site says **where**. In `pack.yaml` a pack lists the **names** of the connectors it reads through and routes each of its kinds to one:
+
+```yaml
+kinds: [trade, order]
+connectors: [trading-store, trading-stream]     # names of site connectors
+routes:
+  trade: trading-store                          # which connector answers each kind
+  order: trading-stream
+```
+
+The connector itself is a **site resource**: one YAML file per connector in `config/connectors/` (`drishti.sources.connectors-dir`, `DRISHTI_CONNECTORS_DIR`), and
+the file name is the connector's name: `config/connectors/trading-store.yaml` is the connector `trading-store`. The file holds the plugin (a Delta lake, JSON Lines
+files, a database, Kafka...), the kinds it serves and its settings. It is edited by the administrator, in an editor or in **Admin → Connectors**, and applied to
+the running server without a restart; only that connector restarts. The model, the file format and an example for every store are in
+[CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
+
+- **Templates and what gets generated.** A pack may carry a suggestion for each connector it names: the `connectors:` **mapping** of definitions that every pack
+  shipped with Drishti uses (read as the pack's templates), or `connector-templates:` beside a plain list of names. At the first start, for each connector a pack
+  names, the server writes `config/connectors/<name>.yaml` from the template **if no file of that name exists**, and never overwrites a file afterwards (it is logged and
+  audited as `connector-generated`). So a shipped pack works out of the box. From then on the **file is the site's**: it replaces the template wholesale (nothing is
+  merged), and an upgrade of the pack does not touch it.
+- **Kinds go through routes.** The pack's `routes:` say which connector answers each kind; the file's `kinds:` can narrow that. The same connector can therefore serve
+  several packs while each pack stays in charge of its own kinds.
+- **Shared connectors.** Several packs may name the same connector. Admin → Connectors shows which packs use each one and for which kinds, and asks before you disable or delete a connector that
+  packs use. A connector that a pack's template suggests is not deleted (it would come back): reset it to the pack's default, or disable it.
+- **A connector nobody defined.** The pack still loads. Its kinds answer `DRS-1011` (connector not configured), Admin → Health shows the pack as degraded with
+  `connectorsNotConfigured`, and Admin → Packs → **Data source** marks the connector *not configured* with a **Create** link that opens a new connector pre-filled from the
+  pack's template.
+- **Archives carry names and templates only.** A pack archive (`pack make`, `pack bundle`, Deploy archive) never contains a site's connection settings. Deploying
+  one shows the connectors it names that this site lacks, and a **Create connectors** step writes their files from the templates.
+- **Credentials** in a connector file are only `${ENV_VAR}` or `file:/path` references, never a literal.
+
+![Admin -> Packs -> Data source: the pack's connectors, one not configured, with Edit and Create links](../connectors/img/connector_files/07-pack-connectors.jpg)
+
+The precedence for a connector's settings, highest first: environment variables and `drishti.sources.connectors.*` in the server's own configuration (deprecated; they
+override a file setting by setting), the connector file, the pack's template. `drishti.py connector list|get|apply|test|...`
+([CLI_GUIDE.md](CLI_GUIDE.md#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)) does from a terminal what Admin → Connectors does.
+
+## Deploying an archive, history, and the pack's connectors (Admin → Packs)
 
 Three more things live on **Admin → Packs**; each is written up step by step, with pictures, in
-[OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back).
+[OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back).
 
 - **Deploy an archive.** Upload a `.tar.gz` made by `drishti.py pack bundle` or `pack make` (the pack only, never data). The server checks the
   checksums and manifest, that no path leaves the pack folder, the server version it needs, the Sutras (lint and tests), the packs it extends, and an
@@ -328,13 +370,13 @@ Three more things live on **Admin → Packs**; each is written up step by step, 
   If the server cannot start with the new files, the old ones are put back.
 - **History and roll back.** Every deployment, rollback and reverted attempt is listed, with the kept versions (`drishti.packs.deploy.keep-versions`, 5)
   and a **Roll back to this** button; `shipped` goes back to the copy that ships with the server.
-- **Data source.** Per loaded pack: each connector's settings with the pack default, your override and any site value, a **Test connection** that lists
-  the newest business dates and row counts per kind, and **Save and apply** / **Reset**. An edit is saved to `data/packs/settings/<pack>.yaml`, never into
-  the pack, so redeploying the pack keeps it. Precedence, highest first: the site (environment variables, `application.yaml`), the override file, the pack.
-  Credentials are only environment references (`${NAME}`).
+- **Data source.** Per loaded pack, a **read-only view** of the connectors it names: each one's state, plugin, the kinds this pack takes from it, and what defines it (a
+  connector file, the pack's template, or nothing, in which case it is marked *not configured* with a **Create** link). **Edit** links go to Admin → Connectors,
+  where settings are changed, tested (**Test connection** lists the newest business dates and row counts per kind) and saved ([above](#packs-and-connectors-where-a-pack-reads-its-data)).
+  The earlier per-pack override file `data/packs/settings/<pack>.yaml` is moved into connector files once, at the first start after the upgrade.
 
-The same from the terminal: `drishti.py server packs deploy|history|rollback|datasource`
-([CLI_GUIDE.md](CLI_GUIDE.md#server-packs-deploy-history-rollback-and-datasource)). A personal API token needs the `packs:admin` scope.
+The same from the terminal: `drishti.py server packs deploy|history|rollback|datasource get`
+([CLI_GUIDE.md](CLI_GUIDE.md#server-packs-deploy-history-rollback-and-datasource)). A personal API token needs the `packs:admin` scope; connectors have their own commands, `drishti.py connector ...`.
 
 ## Telling Drishti new data has landed
 
@@ -374,7 +416,8 @@ The same answer as JSON: `curl -s localhost:18480/api/v1/packs/MKT/overview`. A 
 4. Restart the server. Watch its log for the pack loader's refusals (a kind now owned by two packs, a clash
    with an unrelated pack).
 5. Check *Admin → Health*: the pack shows its new version, `sutraProblems` is empty, and its connectors are
-   up. Check *Admin → Packs*: a pack switched off before the upgrade stays off (the switch is kept by name).
+   up and none is *not configured* (a new version may name a connector this site has no file for yet: create it in Admin → Connectors).
+   Existing connector files are not changed by an upgrade. Check *Admin → Packs*: a pack switched off before the upgrade stays off (the switch is kept by name).
 6. Open one of its example commands from `/t`.
 
 **Removing a pack:** take it out of `DRISHTI_PACKS` and restart. Saved monitors, workspaces and alert rules that

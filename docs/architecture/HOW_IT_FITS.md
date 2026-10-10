@@ -106,7 +106,7 @@ The UI is the separate Python project in `drishti-console/`. The full module lis
 | **Entity id** | The name of one record of a kind: `MX-20000001`. An entity is `(kind, id)`. | In the data; recognised by `graph.id-patterns` |
 | **Mnemonic** | The short command for a kind: `TRD` for `trade`. | `pack.yaml` `mnemonics:` |
 | **Pack** | A folder `packs/<name>/` that adds a domain: kinds, mnemonics, links, connectors, Sutras, samples, roles. | `packs/<name>/pack.yaml` |
-| **Connector** | A named instance of a source plugin: which plugin, its settings, which kinds it serves. | `pack.yaml` `connectors:` or `drishti.sources.connectors` |
+| **Connector** | A named instance of a source plugin: which plugin, its settings, which kinds it serves. | `config/connectors/<name>.yaml` (one file per connector; a pack's `connectors:` is only a template for it) |
 | **Source plugin** | The code that reads one kind of store (`delta`, `kafka`, `jdbc`, `demo`, ...). | `plugins/drishti-plugin-*` |
 | **Sutra** | One layout, written in the Rachana grammar: which records it fits, a title, a strip, panels, keys. | `packs/<name>/sutras/**.sutra.yaml` |
 | **Link** | A field that names another entity, so it opens that entity's own view. | `graph.fields` in `pack.yaml`; `link(...)` in a Sutra |
@@ -171,7 +171,10 @@ So `TRD` means `trade`, and `MX-20000001` alone is recognised as a trade.
 
 ### 3.2 The connector serves the kind
 
-In the same file:
+The pack names the connector in `routes:` and suggests its settings in a `connectors:` template (shown here). Connectors belong to the
+site: at the first start the server writes the template to `config/connectors/trading-store.yaml` if there is no such file, and from then
+on the file is the connector (edit it, or use Admin → Connectors; changes apply without a restart, see
+[CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). The template:
 
 ```yaml
 connectors:
@@ -817,7 +820,7 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 
 | I want to... | Change | Read |
 |---|---|---|
-| Read a new store (a database, a topic, a folder, a service) | A connector: `plugin:` and `settings:` under `connectors:` in `pack.yaml`, or `drishti.sources.connectors` in `application.yaml`; `routes:` for the kinds it serves | [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Read a new store (a database, a topic, a folder, a service) | A connector: a file `config/connectors/<name>.yaml` with `plugin:` and `settings:` (or Admin → Connectors); the pack names it in `routes:` for the kinds it serves, and may carry a `connectors:` template for it | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Add a domain (new kinds, commands, links) | A pack folder `packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACKS.md](../guides/PACKS.md) |
 | Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
@@ -850,4 +853,5 @@ Rachana, Sutra, inference, layout, ViewModel, patch, link). Then:
 - [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md) and [SCREEN_BUILDER.md](SCREEN_BUILDER.md): how screens are made.
 - [PACKS.md](../guides/PACKS.md): every key of `pack.yaml`.
 - [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md): every key of a Sutra.
+- [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md): connector files, live reload and Admin → Connectors.
 - [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md): connectors.

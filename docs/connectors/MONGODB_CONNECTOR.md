@@ -161,7 +161,7 @@ pack declares them on `trading-store`; the `mongodb` profile (`SPRING_PROFILES_A
 to the MongoDB plugin and keeps the pack's settings:
 
 ```yaml
-# packs/trading/pack.yaml (generated)
+# packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
 connectors:
   trading-store:
     settings:
@@ -172,7 +172,7 @@ connectors:
                     tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
                     risk.dv01, sourceSystem]
 
-# drishti-server application-mongodb.yaml (the profile)
+# drishti-server application-mongodb.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
@@ -502,9 +502,33 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | the first search on a past day is slow | that day's columns are being read | expected once per day per `columns-seconds`; raise `read-threads` |
 | `dayReads` keeps growing | `columns-cache-mb` too small for the days in use | raise `columns-cache-mb` |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/trading-store.yaml
+plugin: mongodb
+kinds: [trade]
+description: Trading documents in MongoDB
+settings:
+  domain: trading
+  uri: ${DRISHTI_MONGODB_URI:mongodb://localhost:27017}
+  database: ${DRISHTI_MONGODB_DATABASE:drishti}
+  layout:
+    trade:
+      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
+                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
+                risk.dv01, sourceSystem]
+```
+
+The `mongodb` profile (`SPRING_PROFILES_ACTIVE=mongodb`) did this for the six banking stores and still works, but is deprecated. A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 3](#3-declaring-which-fields-are-columns)).
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/mongodb/`](../../config/connectors.examples/mongodb). A MongoDB connector over TLS is `config/connectors.examples/other/positions-mongo.yaml`.
+
 ## 12. Settings
 
-On a MongoDB connector (`drishti.sources.connectors.<name>.settings`):
+In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|

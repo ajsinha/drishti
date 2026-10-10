@@ -82,7 +82,7 @@ could not be refreshed); `skipped` means the check did not apply (a failed load)
 folders, a dated SQL source) this proves the date is there. A connector that holds no dates can only show the kind has entities.
 
 **Expectations.** Per pack, per kind: *by when* the load is due each business day, in which time zone and by which business-day calendar.
-They come from the pack's own `loads:` section and the administrator's override file, exactly like the data source.
+They come from the pack's own `loads:` section and the administrator's override file. (Where the pack reads its data is separate: it is set in connector files, `config/connectors/<name>.yaml`, see [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).)
 
 **Late.** An expectation whose deadline has passed with no `ready` load is **late** (today) or **missing** (an earlier business day in the
 look-back window). It is flagged once: a notice to the people the pack names, and a line on Admin → Health (`data late: my-bank/trade
@@ -680,8 +680,8 @@ Because the call is idempotent per batch id, DishtaYantra's replays and retries 
 | `404 DRS-5011 no loaded pack named ...` | wrong pack name, the pack is not loaded or switched off, or the caller can open none of its kinds | `GET /api/v1/packs` for the names; Admin → Packs |
 | `422 DRS-5012 pack ... has no kind ...` | a typo, or the kind belongs to another pack | the message lists the pack's kinds |
 | `400 DRS-4003 ... is in the future` | the business date is after today in the server's zone | send the date the data is *for* |
-| `"verified": "not-found"` / CLI exit 1 | the connector cannot read that date: wrong root, the date folder or partition is not written yet, a stale cache on another server | check Admin → Packs → Data source → Test connection; on a multi-server setup announce on every server (section 13) |
-| `refresh ... no connector serves trade` | the kind is served by no connector of this server | the data source is not configured on this server |
+| `"verified": "not-found"` / CLI exit 1 | the connector cannot read that date: wrong root, the date folder or partition is not written yet, a stale cache on another server | check Admin → Connectors → the connector → Test connection (or `drishti.py connector test NAME`); on a multi-server setup announce on every server (section 13) |
+| `refresh ... no connector serves trade` | the kind is served by no connector of this server | the connector that serves the kind is not configured on this server: Admin → Packs → Data source marks it *not configured* (the kind answers `DRS-1011`); create its file in Admin → Connectors |
 | `alerts ... skipped` | the data is not readable for the date (see `verify`) | fix verify first |
 | `notices ... no one to tell` | nobody with the named roles may open the kind, or the roles/users are misspelt | Expectations settings; the roles must exist and open the kind |
 | a load is `late` although it landed | the load was announced for another business date, another kind, or `failed` was announced last | History: the dates and the newest status per kind and date |

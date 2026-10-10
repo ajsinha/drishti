@@ -1638,7 +1638,8 @@ between them without the menu.
 |---|---|---|
 | Users | `/admin/users` | Create users; set roles and the packs each user may use; enable, disable, reset passwords |
 | Roles | `/admin/roles` | Define roles: the kinds each opens, and its powers |
-| Packs | `/admin/packs` | Switch a domain pack off or on for everyone |
+| Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
+| Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
 | Caches | `/admin/caches` | What the engine and each connector hold; **Purge** one or **Purge all** (safe at any time) |
@@ -1751,7 +1752,8 @@ Worked example: check that every data source is up.
 
 A connector whose plugin is installed but has no settings (a Kafka connector without `topics`, a feed without
 `feed`) stays **idle**: it is not started and is not counted as failed. Anything else that is not **UP** is
-explained in [runbooks/source-down.md](../admin/runbooks/source-down.md).
+explained in [runbooks/source-down.md](../admin/runbooks/source-down.md). A connector a pack names but that has no file shows as *not configured* (its kinds answer `DRS-1011`);
+an administrator creates it in *Admin → Connectors*, and a connector file with a mistake is listed on Health as a bad file while the last good configuration keeps running.
 
 Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 

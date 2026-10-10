@@ -133,7 +133,7 @@ pack declares them on `trading-store`; the `postgres` profile (`SPRING_PROFILES_
 connector to the `jdbc` plugin in table mode and keeps the pack's settings, so the declaration applies unchanged:
 
 ```yaml
-# packs/trading/pack.yaml (generated)
+# packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
 connectors:
   trading-store:
     settings:
@@ -143,12 +143,12 @@ connectors:
                     tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
                     risk.dv01, sourceSystem]
 
-# drishti-server application-postgres.yaml (the profile)
+# drishti-server application-postgres.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
       trading-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}",
-                       user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}",
+                       user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD}",
                        table: trading.entities, pool-size: "12" } }
 ```
 
@@ -457,9 +457,38 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | the connector serves no kinds after an outage at start | it reads its catalogue again after 10 s, then every `refresh-seconds` | wait, or list `kinds:` in settings |
 | a search on an older day is slow every time | `columns-cache-mb` too small for the days users move between | raise it (230 MB per million trades a day) |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/trading-store.yaml
+plugin: jdbc
+kinds: [trade]
+description: Trading documents in PostgreSQL (table mode)
+settings:
+  domain: trading
+  url: ${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}
+  user: ${DRISHTI_PG_USER:drishti}
+  password: ${DRISHTI_PG_PASSWORD}      # or file:/run/secrets/pg-password
+  table: trading.entities               # schema.table; setting table turns table mode on
+  pool-size: '12'
+  mode.trade: snapshot                  # effective for reference data
+  lookback-days: '10'
+  layout:
+    trade:
+      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
+                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
+                risk.dv01, sourceSystem]
+```
+
+A database URL may not carry a password (`jdbc:…//user:pw@host`, `?password=…`): the page, the API and the CLI refuse it with the name to use. The `postgres` profile did this for the six banking stores and still works, but is deprecated.
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/postgres/`](../../config/connectors.examples/postgres). Query mode (your own SQL) is a file of the same shape with `query.<kind>` settings: [JDBC_QUERIES.md](JDBC_QUERIES.md).
+
 ## 12. Settings
 
-On a `jdbc` connector in table mode (`drishti.sources.connectors.<name>.settings`):
+In the connector file's `settings:` in table mode (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -497,19 +526,18 @@ Loader options (`PostgresLoader`, through `tools/load-postgres.sh`): `--user`, `
 ## 14. Query mode: your own SQL
 
 Table mode needs no SQL from you: the connector writes its own queries over the layout above. When your data already
-lives in your own tables, use *query mode* instead: one SQL query per kind, in the connector's settings (in a pack's
-`pack.yaml`, or in site configuration):
+lives in your own tables, use *query mode* instead: one SQL query per kind, in the connector file's settings (`config/connectors/trading-db.yaml`; a pack may suggest it as a template):
 
 ```yaml
-connectors:
-  trading-db:
-    plugin: jdbc
-    settings:
-      url: ${DRISHTI_PG_URL}
-      query.trade: >
-        SELECT t.*, c.legal_name AS counterparty_name FROM trades t JOIN counterparties c ON c.id = t.counterparty_id
-         WHERE t.trade_id = :id AND t.business_date = (SELECT MAX(business_date) FROM trades WHERE trade_id = :id AND business_date <= :asOf)
-      query.counterparty: SELECT * FROM counterparties WHERE id = ?
+# config/connectors/trading-db.yaml
+plugin: jdbc
+kinds: [trade, counterparty]
+settings:
+  url: ${DRISHTI_PG_URL}
+  query.trade: >
+    SELECT t.*, c.legal_name AS counterparty_name FROM trades t JOIN counterparties c ON c.id = t.counterparty_id
+     WHERE t.trade_id = :id AND t.business_date = (SELECT MAX(business_date) FROM trades WHERE trade_id = :id AND business_date <= :asOf)
+  query.counterparty: SELECT * FROM counterparties WHERE id = ?
 ```
 
 A kind has one main query (`query.<kind>`) and may add parts from other tables (`query.<kind>.<part>`); a connector
@@ -534,27 +562,24 @@ business date is the row's `business_date`; its version is that date's day numbe
 
 #### Configure it
 
-**Site form, replacing a pack's lake with PostgreSQL.** The banking packs declare `<domain>-store` connectors on
-Delta Lake. The `postgres` profile (`application-postgres.yaml`) switches six of them to PostgreSQL by naming only
-`plugin` and `settings`; the pack's `kinds`, route and `mode.<kind>` settings stay. Your site can do the same for
-one connector:
+**Site form, replacing a pack's lake with PostgreSQL.** The banking packs suggest `<domain>-store` connectors on Delta Lake. The
+connector file of the same name replaces the suggestion wholesale; `config/connectors.examples/postgres/` has all six (the `postgres`
+profile, `application-postgres.yaml`, did the same and still works but is deprecated). For one connector:
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      trading-store:                                 # the trading pack's connector, by name
-        plugin: jdbc                                 # replaces the pack's "delta"; kinds and route stay
-        settings:
-          url: ${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}
-          user: ${DRISHTI_PG_USER:drishti}
-          password: ${DRISHTI_PG_PASSWORD:drishti}
-          table: trading.entities                    # setting table turns table mode on
-          pool-size: 8
-          # the pack's root and domain stay too; jdbc ignores them
+# config/connectors/trading-store.yaml
+plugin: jdbc                                   # replaces the pack's "delta"
+kinds: [trade]
+settings:
+  domain: trading
+  url: ${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}
+  user: ${DRISHTI_PG_USER:drishti}
+  password: ${DRISHTI_PG_PASSWORD}             # an environment (or file:) reference, never the value
+  table: trading.entities                      # setting table turns table mode on
+  pool-size: '8'
 ```
 
-**Pack form, a pack that owns its PostgreSQL store:**
+**Pack form, a pack that owns its PostgreSQL store** (its suggested template; the server writes it to `config/connectors/trading-store.yaml` at the first start):
 
 ```yaml
 connectors:
@@ -564,7 +589,7 @@ connectors:
     settings:
       url: ${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}
       user: ${DRISHTI_PG_USER:drishti}
-      password: ${DRISHTI_PG_PASSWORD:drishti}
+      password: ${DRISHTI_PG_PASSWORD}
       table: trading.entities                        # schema.table; plain SQL names only
       mode.trade: snapshot                           # the default; effective for reference data
       lookback-days: 10                              # snapshot kinds: how far back a picked date may fall

@@ -309,7 +309,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Change how a screen looks (Sutras) | [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | See every panel kind working, and copy from ten small Sutras with their data | [examples/](examples/README.md), or **File** in the workbench, or **Help → Examples** |
 | Build Drishti from source, run the tests, add an endpoint, plugin, pack or page | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
-| Connect your own data | [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Connect your own data | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (one YAML file per connector in `config/connectors/`, or Admin → Connectors), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Turn on sign-in and run it for others | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) and [OPERATIONS.md](../admin/OPERATIONS.md) |
 | See every document | [the documentation map](../README.md) |
 

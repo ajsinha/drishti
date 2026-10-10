@@ -174,7 +174,8 @@ dot, and each message for MX-20000001 repaints it within a frame. This is descri
 
 ### 5.1 Pack form: the trading pack's `trading-stream`
 
-As shipped in `packs/trading/pack.yaml`, off until `DRISHTI_STREAM_TRADING=true`:
+The pack's suggested template, as shipped in `packs/trading/pack.yaml`, off until `DRISHTI_STREAM_TRADING=true`. At the first start the server writes it to
+`config/connectors/trading-stream.yaml` (same settings, the file form in [As a connector file](#as-a-connector-file)), which is then the site's:
 
 ```yaml
 connectors:
@@ -203,47 +204,47 @@ environment variables are listed in
 
 ### 5.2 Site form: envelopes and a mapped topic on a secured cluster
 
+The connector file `config/connectors/risk-stream.yaml`. The Kafka client's own properties are `client.<property>`; the JAAS line is
+a credential, so it is an environment reference:
+
 ```yaml
-# application.local.yaml
-drishti:
-  sources:
-    connectors:
-      risk-stream:
-        plugin: kafka
-        kinds: [netting-set, credit-limit]                  # without it an envelope connector serves every kind
-        settings:
-          bootstrap-servers: kafka1.bank.example:9093,kafka2.bank.example:9093
-          topics: risk.envelopes,risk.limits                # comma list
-          kind.risk.limits: credit-limit                    # this topic: whole credit-limit documents
-          id-field.risk.limits: limitId
-          cache-mb: 512
-          stale-after: 30m
-          client.security.protocol: SASL_SSL                # any consumer property: client.<property>
-          client.sasl.mechanism: SCRAM-SHA-512
-          client.sasl.jaas.config: "${KAFKA_JAAS}"
+plugin: kafka
+kinds: [netting-set, credit-limit]                    # without it an envelope connector serves every kind
+settings:
+  bootstrap-servers: kafka1.bank.example:9093,kafka2.bank.example:9093
+  topics: risk.envelopes,risk.limits                  # comma list (or a YAML list)
+  kind.risk.limits: credit-limit                      # this topic: whole credit-limit documents
+  id-field.risk.limits: limitId
+  cache-mb: '512'
+  stale-after: 30m
+  client.security.protocol: SASL_SSL                  # any consumer property: client.<property>
+  client.sasl.mechanism: SCRAM-SHA-512
+  client.sasl.jaas.config: ${KAFKA_JAAS}
 ```
 
 Give a Kafka connector `kinds:`. Its manifest lists `kind`, every `kind.<topic>` and every kind it has seen in a
 message; an envelope connector with no `kinds` serves *every* kind until its first message, so it is asked (and
 answers "not held") for every read.
 
-Setting keys with dots are literal keys; in a site file, a topic name with characters other than letters, digits,
-`-` and `.` needs the bracketed form, `"[kind.desk_orders]": order`
-([CONNECTOR_DEVELOPER_GUIDE.md, Configuration binding](CONNECTOR_DEVELOPER_GUIDE.md#configuration-binding)).
+Setting keys with dots are literal keys. In a connector file they are written as they are (or nested, which is flattened to the same dotted key); no bracketing is needed, a topic name
+such as `desk_orders` is simply `kind.desk_orders: order`.
 
 ### 5.3 Site form: ticks over the lake
 
-```yaml
-drishti:
-  sources:
-    connectors:
-      trading-stream:
-        settings:
-          mode: ticks                                       # keep nothing; push to views the lake answers
-          disk-cache.enabled: false                         # ignored in ticks mode anyway
-```
+The connector file `config/connectors/trading-stream.yaml` with the stream switched to `ticks`. The file replaces the pack's template wholesale, so it
+repeats the topic, kind and id field:
 
-Site entries merge key by key into the pack's connector, so this keeps the pack's topic, kind and id field.
+```yaml
+plugin: kafka
+enabled: ${DRISHTI_STREAM_TRADING:false}
+kinds: [trade]
+settings:
+  bootstrap-servers: ${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}
+  topics: ${DRISHTI_TRADING_TOPIC:drishti.trading.trades}
+  kind: trade
+  id-field: tradeId
+  mode: ticks                                         # keep nothing; push to views the lake answers
+```
 
 ## 6. Read paths and what each costs
 
@@ -515,9 +516,37 @@ settings:
 | `DRS-1004` while the broker is down | a cold read waits up to 5 s for Kafka | expected until the broker returns; or raise `fetch-timeout` above 5 s to fall through to the lake |
 | messages skipped after a long outage | resume offset removed by retention, `auto.offset.reset` is `latest` | `client.auto.offset.reset: earliest`, or restart the server to replay |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/trading-stream.yaml
+plugin: kafka
+enabled: ${DRISHTI_STREAM_TRADING:false}
+kinds: [trade]
+description: Live trades from Kafka
+settings:
+  bootstrap-servers: kafka-1.example.com:9093,kafka-2.example.com:9093
+  topics: [drishti.trading.trades]
+  kind: trade
+  id-field: tradeId
+  stale-after: 15m
+  disk-cache:
+    enabled: true
+    root: ./data/cache
+    max-gb: '10'
+  tls:                          # the shared TLS block; see CONNECTOR_FILES.md
+    enabled: true
+    truststore: { path: /etc/drishti/tls/ca.p12, password: ${KAFKA_TRUSTSTORE_PASSWORD} }
+    keystore:   { path: /etc/drishti/tls/client.p12, password: ${KAFKA_KEYSTORE_PASSWORD} }
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). The same over TLS is `config/connectors.examples/other/trading-stream.yaml`.
+
 ## 14. Settings
 
-On a `kafka` connector (`drishti.sources.connectors.<name>.settings`):
+In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -645,7 +674,7 @@ EOF
 
 ### Configuration by example
 
-The pack form and the secured-cluster site form are in [section 5](#5-configuration); the settings are in
+The pack's template and the secured-cluster connector file are in [section 5](#5-configuration); the settings are in
 [section 14](#14-settings). The disk cache starts empty on every run (the topic is replayed anyway); it saves
 re-reading Kafka for documents not in memory.
 

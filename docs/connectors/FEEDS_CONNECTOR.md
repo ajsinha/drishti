@@ -244,8 +244,9 @@ An `ir-curve` (the recorded 30 September curve, three of its twelve points):
 
 ### 4.1 The pack form, as shipped
 
-`packs/market-data/pack.yaml` declares the five connectors (two shown; the other three differ only in name, switch,
-`kinds` and `feed`):
+`packs/market-data/pack.yaml` suggests the five connectors as templates (two shown; the other three differ only in name, switch,
+`kinds` and `feed`). At the first start the server writes each one to `config/connectors/<name>.yaml` (`nyfed-sofr-feed.yaml`, `fred-feed.yaml`, …), and those files are then
+the site's; the file form is in [As a connector file](#as-a-connector-file):
 
 ```yaml
 connectors:
@@ -292,38 +293,45 @@ DRISHTI_FEED_FRED=true FRED_API_KEY=… DRISHTI_FRED_SERIES=DGS10,DFF,SOFR \
 
 ### 4.2 The site form
 
-A site entry under `drishti.sources.connectors` overrides the pack key by key
-([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors)):
+The site edits the files the server wrote, in **Admin → Connectors** or by hand (a file is the whole definition, so the pack's template is not merged into it;
+[CONNECTOR_FILES.md, Precedence](CONNECTOR_FILES.md#precedence)). Switching a feed on, whatever its variable says, and changing its schedule is
+`config/connectors/ecb-fx-feed.yaml`:
 
 ```yaml
-# application.local.yaml
-drishti:
-  sources:
-    connectors:
-      ecb-fx-feed:
-        enabled: true                     # on, whatever DRISHTI_FEED_ECB_FX says
-        settings:
-          refresh-minutes: 30
-          timeout-seconds: 10
-      fred-feed:
-        enabled: true
-        settings:
-          series: DGS2,DGS10,DGS30        # FIX-FRED-DGS2, FIX-FRED-DGS10, FIX-FRED-DGS30
-      us-treasury-feed:
-        enabled: false                    # off for this site
+plugin: feed
+enabled: true                         # on, whatever DRISHTI_FEED_ECB_FX says
+kinds: [fx-spot]
+settings:
+  feed: ecb-fx
+  stale-after: 4d
+  refresh-minutes: '30'
+  timeout-seconds: '10'
 ```
 
-A feed without the market-data pack is a named connector of your own; it needs `plugin: feed` and `settings.feed`,
+`config/connectors/fred-feed.yaml` with three series, written with the key in the environment (the pack's template has an empty default, `${FRED_API_KEY:}`, which a
+credential reference may not carry in a file you write):
+
+```yaml
+plugin: feed
+enabled: true
+kinds: [rate-fixing]
+settings:
+  feed: fred
+  api-key: ${FRED_API_KEY}
+  series: DGS2,DGS10,DGS30            # FIX-FRED-DGS2, FIX-FRED-DGS10, FIX-FRED-DGS30
+  refresh-minutes: '60'
+  stale-after: 4d
+```
+
+A feed off for this site is `enabled: false` in its file (`us-treasury-feed.yaml`).
+
+A feed without the market-data pack is a named connector of your own, `config/connectors/sofr-public.yaml`; it needs `plugin: feed` and `settings.feed`,
 and its kinds need a pack mnemonic before a user can type them:
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      sofr-public:
-        plugin: feed
-        kinds: [rate-fixing]
-        settings: { feed: nyfed-sofr, refresh-minutes: 60, stale-after: 4d }
+plugin: feed
+kinds: [rate-fixing]
+settings: { feed: nyfed-sofr, refresh-minutes: '60', stale-after: 4d }
 ```
 
 Two connectors with the same `feed` are independent: each fetches on its own schedule.
@@ -544,15 +552,18 @@ done
 ```
 
 ```yaml
-# application.local.yaml on the servers without internet
-drishti:
-  sources:
-    connectors:
-      nyfed-sofr-feed:   { enabled: true, settings: { url: "file:///srv/mirror/sofr-last-60.json" } }
-      ecb-estr-feed:     { enabled: true, settings: { url: "file:///srv/mirror/estr.csv" } }
-      ecb-fx-feed:       { enabled: true, settings: { url: "file:///srv/mirror/ecb-fx-90d.xml" } }
-      us-treasury-feed:  { enabled: true, settings: { url: "file:///srv/mirror/ust-202608.xml,file:///srv/mirror/ust-202609.xml" } }
-      fred-feed:         { enabled: true, settings: { url: "file:///srv/mirror/fred-DGS10.json,file:///srv/mirror/fred-DFF.json", series: "DGS10,DFF" } }
+# config/connectors/nyfed-sofr-feed.yaml on the servers without internet (one file per feed; the other four differ in name and url)
+plugin: feed
+enabled: true
+kinds: [rate-fixing]
+settings:
+  feed: nyfed-sofr
+  url: file:///srv/mirror/sofr-last-60.json
+# the other mirrors, in their own files:
+#   ecb-estr-feed.yaml     settings.url: file:///srv/mirror/estr.csv
+#   ecb-fx-feed.yaml       settings.url: file:///srv/mirror/ecb-fx-90d.xml
+#   us-treasury-feed.yaml  settings.url: file:///srv/mirror/ust-202608.xml,file:///srv/mirror/ust-202609.xml
+#   fred-feed.yaml         settings.url: file:///srv/mirror/fred-DGS10.json,file:///srv/mirror/fred-DFF.json   and   settings.series: DGS10,DFF
 ```
 
 The connector re-reads the files every `refresh-minutes`. Because the Treasury URLs name months, change them (or keep
@@ -608,9 +619,28 @@ time of the last successful fetch:
 | server start takes 20 s or more | a feed's first fetch is waiting for its timeouts | lower `timeout-seconds`, fix the network, or switch the feed off |
 | a FRED series shows under another series' id | `url` lists more URLs than `series` names, or in a different order | make `url` and `series` match one to one |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/nyfed-sofr-feed.yaml (generated from the market-data pack's template at the first start)
+plugin: feed
+enabled: ${DRISHTI_FEED_NYFED_SOFR:false}
+kinds:
+- rate-fixing
+settings:
+  feed: nyfed-sofr
+  user-agent: Drishti public data feed connector
+  stale-after: 4d
+  refresh-minutes: '60'
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). The five feeds have no hand-written example: their files are generated from the pack's templates (list them with `drishti.py connector list`); the other stores' examples are in [`config/connectors.examples/`](../../config/connectors.examples).
+
 ## 12. Settings
 
-On a `feed` connector (`drishti.sources.connectors.<name>.settings`):
+In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|

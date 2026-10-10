@@ -1183,11 +1183,11 @@ curl -s $B/admin/status | jq -c .
 
 `defaultAdminPasswordInUse: true` is a warning: change the seeded admin's password before production.
 
-### Deploying a pack archive and the data source
+### Deploying a pack archive and the pack's connectors
 
-Admin → Packs from a script ([how it works, with pictures](OPERATIONALISING.md#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back);
-the CLI wraps these: `drishti.py server packs deploy|history|rollback|datasource`). Every call needs an administrator, and a personal token the `packs:admin` scope.
-Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-back`, `pack-datasource-changed`, `pack-datasource-reset`, `pack-datasource-tested`).
+Admin → Packs from a script ([how it works, with pictures](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back);
+the CLI wraps these: `drishti.py server packs deploy|history|rollback|datasource get`). Every call needs an administrator, and a personal token the `packs:admin` scope.
+Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-back`; connector changes are listed [below](#connectors-apiv1adminconnectors)). The settings of a pack's connectors are not in the archive: see [Connectors](#connectors-apiv1adminconnectors).
 
 | Method | Path | Notes |
 |---|---|---|
@@ -1196,15 +1196,53 @@ Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-ba
 | `DELETE` | `/admin/packs/deploy/{uploadId}` | Throws a verified upload away: `{discarded}` |
 | `GET` | `/admin/packs/history?pack=&limit=` | Newest first: `history[]` of `{at, action (deploy, rollback, reverted), pack, version, previous, by, detail, sha256?}`, and `kept{pack: [{version, keptAt}]}` (the versions a rollback can go to; `shipped` when an installed copy hides the one that ships with the server) |
 | `POST` | `/admin/packs/{name}/rollback?version=` | Goes back to a kept version (omitted: the newest kept; `shipped`: remove the installed copy). Same safe restart. `400` when there is no such version. `{restored, replaced, restarting, note}` |
-| `GET` | `/admin/packs/{name}/datasource` | A loaded pack's connectors: `{pack, file, overridden, plugins, connectors[]}`, each connector `{name, plugin, kinds, enabled{pack, override, site, effective, on, source}, settings[]}`, each setting `{key, pack, override, site, effective, resolved, resolvable, secret, source (pack, override, site), overridden}`. A credential's `resolved` is never sent |
-| `PUT` | `/admin/packs/{name}/datasource` `{connectors: {<connector>: {enabled?, settings: {key: value}}}}` | Saves the **whole desired override** to `data/packs/settings/<pack>.yaml` (values equal to the pack's are dropped), checks all packs, restarts in place and undoes the file if the server cannot start. `400` lists every problem: an unknown connector, a plugin or kind in the body (they belong to the pack), a credential that is not `${ENV_NAME}`, a password inside a URL. `{changed[], overridden, restarting, note}` |
-| `DELETE` | `/admin/packs/{name}/datasource?connector=` | Removes the override (one connector's, or all). Same safe restart |
-| `POST` | `/admin/packs/{name}/datasource/test` `{connector?, connectors?}` | Tries the connectors with the edit in the body (nothing saved) or, without `connectors`, the settings in force: starts a fresh instance of each enabled connector, reads what it holds and closes it. `{ok, tested, connectors[]}`, each `{connector, plugin, ok, health, ms, error, kinds[{kind, exact, note, dates[{date, rows}]}]}`; `ok` is about reaching the source, `rows` is how many entities it holds for the date (`exact` false: a lower bound). An unset environment variable in a setting is reported by name |
+| `GET` | `/admin/packs/{name}/datasource` | **Read only.** A loaded pack's connectors: `{pack, directory, connectors[], missing[]}`, each connector `{name, state, health, plugin, kinds (from this pack), origin (file, pack, application), defined, problems[]}`; `missing` names the connectors the pack uses that nothing defines. The old `PUT`, `DELETE` and `.../test` on this path are removed: use `/admin/connectors` |
+| `POST` | `/admin/packs/deploy/{uploadId}/connectors` | The **Create connectors** step: writes `config/connectors/<name>.yaml` from the pack's templates for the connectors the site lacks (never overwrites an existing file); audited as `connector-generated`. The upload answer of `POST /admin/packs/deploy` carries `connectors: {names, missing, creatable}` so a script can see them first; deploying without this step is fine, the pack's templates are written at the next start anyway |
 
 ```bash
 curl -s -X POST $B/admin/packs/deploy -H 'Content-Type: application/octet-stream' -H 'X-Drishti-Filename: my-bank-1.1.0.tar.gz' \
      --data-binary @dist/my-bank-1.1.0.tar.gz | jq -c '{ok, uploadId, checks: [.checks[] | {name, ok}], counts: .preview.counts}'
 curl -s -X POST "$B/admin/packs/deploy/$ID?acceptBreaking=true" | jq -c '{deployed, previous, restarting}'
+```
+
+### Connectors (`/api/v1/admin/connectors`)
+
+A **connector** is a site resource: one YAML file in `config/connectors/` whose file name is the connector's name. A pack names the connectors it reads
+through; it does not carry their settings ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) is the reference; the CLI wraps these calls:
+`drishti.py connector list|get|apply|delete|test|plugins|enable|disable|reset|history`). Every call needs an administrator, and a personal token the
+`packs:admin` scope for the writes (the reads are administrator-only). From the console the same-origin and CSRF rules apply. Every change is audited, with setting
+*names* and never values: `connector-saved`, `connector-deleted`, `connector-reset`, `connector-enabled`, `connector-disabled`, `connector-restored`,
+`connector-tested`, `connector-generated` (a file written from a pack's template at start) and `connector-migrated` (an old data-source override moved into a file).
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/connectors` | Every connector: `origin` (`file`, `pack`, `application`), `plugin`, `kinds`, `enabled`, `state`, `health`, `lastUpdate`, `updated`, `etag`, `problems`, `usedBy` (the packs and kinds); plus `directory`, `watch`, `misnamed`, `fileProblems`, `deprecated`, `knownKinds` |
+| `GET` | `/admin/connectors/plugins` | The plugins and the settings each reads: `name`, `type`, `required`, `default`, `description`, `secret`, `group`; `tls` says whether the shared TLS section applies |
+| `GET` | `/admin/connectors/{name}` | The effective settings (credentials masked), the file `text`, `etag` (also the `ETag` header), `usedBy`, `packDefault` (the pack's template), `history`. `404 DRS-5033` for an unknown name |
+| `PUT` | `/admin/connectors/{name}` | Create or change. Body `{"text": "<yaml>"}` or the form's fields. An existing file needs `If-Match: <etag>`; `?confirm=true` after switching off a connector packs use. Validates, writes atomically (the old text goes to `.history/`), applies to that one connector without a restart. `422 DRS-5031` when invalid; `409 DRS-5032` for a stale `If-Match`, an existing file without one, or an unconfirmed change to a connector in use |
+| `DELETE` | `/admin/connectors/{name}` | Delete a file no pack's template suggests (`If-Match`; `?confirm=true` when packs use it). The text is kept in `.history/`. `409 DRS-5032` for a connector a template names: reset or disable it |
+| `POST` | `/admin/connectors/{name}/enabled` `{"enabled": false}` | Switch on or off, keeping the rest of the file (`?confirm=true` when packs use it) |
+| `POST` | `/admin/connectors/{name}/reset` | Put the pack's template back as the file; your text goes to the history |
+| `POST` | `/admin/connectors/{name}/test` | Try a draft (the same bodies as `PUT`) or, with no body, the saved file: a throwaway instance is started, asked what it holds per kind (business dates and counts), and closed. Nothing that runs is changed. Failures come back in words, with a hint for TLS and network errors |
+| `POST` | `/admin/connectors/{name}/validate`, `/render`, `/parse` | The findings for a draft; the YAML of the form's fields; the form's fields of a YAML. Nothing is saved |
+| `GET` | `/admin/connectors/{name}/history/{id}` | The text of a kept version |
+| `POST` | `/admin/connectors/{name}/restore/{id}` | Put a kept version back (and apply it) |
+
+Validation: the name rule (lower case letters, digits and hyphens, at most 64; `plugins` and `history` are reserved); the plugin exists; required settings are present; types
+(`int`, `boolean`, enums); a credential setting is `${ENV_VAR}` or `file:/path` (never a literal, a default inside the reference or a password inside a URL). Unknown
+settings and unknown kinds are **warnings**, not refusals. A stale version:
+
+```
+$ curl -i -X PUT $B/admin/connectors/site-quotes -H 'If-Match: "0000000000000000"' -d '{"text":"plugin: file\n..."}'
+HTTP/1.1 409
+{"type":"about:blank","title":"connector conflict","status":409,"detail":"DRS-5032 connector 'site-quotes' changed since you read it (now 3e4b312691e95f5c, you have 0000000000000000); reload it and apply your edit again","code":"DRS-5032"}
+```
+
+A kind routed to a connector that has no file answers `404 DRS-1011` and the pack still loads (Admin → Health shows `connectorsNotConfigured`):
+
+```
+HTTP/1.1 404
+{"title":"connector not configured","status":404,"detail":"DRS-1011 connector desk-archive is not configured: kind 'quote-archive' is routed to it, but no connector file desk-archive.yaml exists (create it in Admin -> Connectors)","instance":"/api/v1/views/quote-archive/Q-1","code":"DRS-1011"}
 ```
 
 ### Data loads: telling Drishti a batch landed
@@ -1264,6 +1302,9 @@ curl -s $B/admin/health | jq -c '.sources[0], .packs[0]'
 
 A source's `reads` grows read counts, errors, p50/p99 and the last error once it has served traffic.
 `connectorsOff` lists connectors a pack expects that are disabled or failed to start.
+`connectorsNotConfigured` lists connectors a pack names that no file defines (the pack is then `DEGRADED` and its kinds answer `DRS-1011`). The top level carries a
+`connectors` block: `{count, failed, badFiles, problems, watch, directory, deprecated}`; `watch` is `WATCHING`, `POLLING`, `OFF` or `STOPPED: <reason>`, and a bad connector file
+in `badFiles` (the last good configuration keeps running) makes the overall status `DEGRADED`.
 
 Caches:
 
@@ -1386,6 +1427,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-1005 | 422 | invalid json | a document (e.g. sample JSON pasted into Studio) is not valid JSON or not an object |
 | DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |
 | DRS-1007 | 400 | no time travel | `knownAt` asked of a dated store that keeps no earlier versions (only Delta Lake and Iceberg do); `detail` names the connector (`DRS-1007 recent-files keeps no earlier versions, so a read 'as known at' an instant cannot be answered from it …`). Today's data is never shown in its place; a structured search names it in `failed` and is `partial` |
+| DRS-1011 | 404 | connector not configured | a kind is routed to a connector that has no file in the connector folder; the pack loads, the kind does not; create it in Admin → Connectors or `drishti.py connector apply` |
 | DRS-2001 | 422 | sutra parse | the Sutra text cannot be parsed |
 | DRS-2002 | 422 | sutra invalid | the Sutra parsed but has problems (listed in `problems`) |
 | DRS-2003 | 404 | sutra not found | no Sutra with that name and version |
@@ -1412,6 +1454,9 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-5010 | 401 | unauthenticated | missing, bad or expired bearer token |
 | DRS-5011 | 404 | load pack not found | a data-load call names a pack that is not loaded, or one none of whose kinds the caller may open |
 | DRS-5012 | 422 | load kind unknown | a data-load call names a kind the pack does not own |
+| DRS-5031 | 422 | connector invalid | a connector file or body is not valid: bad name, unknown plugin or top-level key, missing required setting, wrong type, a `name:` that is not the file name, or a credential that is not an `${ENV_VAR}` or `file:` reference; `detail` names the setting |
+| DRS-5032 | 409 | connector conflict | the `If-Match` version is stale (someone changed it since you read it), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use and `confirm=true` was not sent; also deleting a connector a pack's template names |
+| DRS-5033 | 404 | no such connector | no connector of that name (a file, a pack template or the server's configuration) |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
@@ -1569,7 +1614,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
 | `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
 | `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_LOADS.md](DATA_LOADS.md)) | the roles that open the kind (an administrator needs no more) |
-| `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the data source (`PUT` and `DELETE /admin/packs/{name}/datasource`, `POST .../datasource/test`) | `admin` |
+| `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`) | `admin` |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
 `drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, the audit log, shares, comments, notes, workspaces and

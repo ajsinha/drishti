@@ -36,7 +36,7 @@ the operator's path from "it works on my laptop" to "it runs in production, and 
 14. [Windows](#14-windows)
 15. [Troubleshooting](#15-troubleshooting)
 16. [`pack make`: one folder to deploy](#16-pack-make-one-folder-to-deploy)
-17. [Deploy from Admin → Packs, change a data source, history and roll back](#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back)
+17. [Deploy from Admin → Packs, connectors, history and roll back](#17-deploy-from-admin--packs-connectors-history-and-roll-back)
 
 The commands are those of `tools/drishti.py` ([CLI_GUIDE.md](CLI_GUIDE.md)). You need Python 3.10+ and PyYAML
 (`uv run --with pyyaml python tools/drishti.py ...`) on the machine that builds and verifies. The **target** machine
@@ -459,13 +459,13 @@ already verified), a ready configuration overlay, `run-server.sh` and `.ps1`, a 
 verify, "lift the data from Delta", update and rollback steps filled in with your kind, ids and dates. Options and the folder tree:
 [CLI_GUIDE.md, Quickest path](CLI_GUIDE.md#quickest-path-pack-make).
 
-## 17. Deploy from Admin → Packs, change a data source, history and roll back
+## 17. Deploy from Admin → Packs, connectors, history and roll back
 
 Sections 3 to 10 deploy by **copying files**: no server, no token. When the server is running and you are an administrator you can do the same
 from the browser (or the terminal) and get four things the copy does not give you: the server **checks the archive first**, shows you **what it
 changes** from the running version (breaking changes marked), **keeps the version it replaces** for a one-click rollback, and **puts the old files
 back by itself** if it cannot start with the new ones. The archive is the one section 3 makes (`pack bundle` or `pack make`): a `.tar.gz` holding
-**the pack only, never data**. Data is deployed separately (section 8), and where a pack reads it from is set in [17.5](#175-where-a-pack-reads-its-data-data-source).
+**the pack only, never data**. Data is deployed separately (section 8), and where a pack reads it from is set in connector files, [17.5](#175-where-a-pack-reads-its-data-connectors).
 
 ### 17.1 Deploy an archive
 
@@ -514,7 +514,7 @@ the versions kept for a rollback. **Roll back to this** puts a kept version back
 
 - `drishti.packs.deploy.keep-versions` (5) previous versions are kept per pack; older ones are deleted.
 - A pack that was first deployed over the copy that ships with the server also offers **shipped with the server**: rolling back to it removes the installed copy.
-- Rollback restores **files only**. Data is not touched, and a data-source override ([17.5](#175-where-a-pack-reads-its-data-data-source)) stays as it was.
+- Rollback restores **files only**. Data is not touched, and connector files ([17.5](#175-where-a-pack-reads-its-data-connectors)) stays as it was.
 - The history is `data/packs/deploy-history.jsonl` (`DRISHTI_PACKS_DEPLOY_HISTORY`); every step is also an audit row: `pack-upload-checked`, `pack-deployed`, `pack-rolled-back`.
 
 ![The pack row after a deploy](img/deploy/04-pack-row.jpg)
@@ -542,63 +542,106 @@ needs the **packs:admin** scope (and its user the admin role). Every option and 
 | Restart | you | in place, with automatic undo |
 | Audit | file system | audit rows and the history file |
 
-### 17.5 Where a pack reads its data (Data source)
+### 17.5 Where a pack reads its data: connectors
 
-A pack declares **connectors** (`connectors:` in `pack.yaml`): a plugin (a Delta lake, JSON Lines files, a database...), the kinds it serves, and its settings (a
-`root`, a JDBC `url`...). The settings in force come from three layers; the **highest wins**:
+A pack does not carry connection settings. It **names** the connectors it reads through (`connectors:` in `pack.yaml`, a list of names) and says which
+connector answers each kind (`routes:`). A **connector** is a site resource: one YAML file in `config/connectors/`, whose file name is the connector's
+name (`config/connectors/trading-store.yaml` is `trading-store`). The file holds the plugin (a Delta lake, JSON Lines files, a database...), the kinds it
+serves and its settings (a `root`, a JDBC `url`...). The whole reference, with an example for every store, is [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md);
+what an operator needs is here.
 
-| Layer | Where | Typical use |
-|---|---|---|
-| **site** | environment variables and the server's own configuration, e.g. `DRISHTI_SOURCES_CONNECTORS_RISK_STORE_SETTINGS_ROOT=/mnt/lake` | an operator pinning a value for the machine; the page shows it and cannot change it |
-| **override** | `data/packs/settings/<pack>.yaml` (`drishti.packs.settings-dir`, `DRISHTI_PACKS_SETTINGS`), written by Admin → Packs → **Data source** | pointing a pack at this site's lake or database |
-| **pack** | the pack's own `pack.yaml` | the default that ships with the pack |
-
-The pack's files are **never rewritten** by a data-source change, and a redeploy (17.1) replaces the pack folder but not the override, so your settings survive upgrades.
-The override file holds only what differs from the pack:
-
-```yaml
-# data/packs/settings/market-risk.yaml, written by Admin → Packs → Data source
-connectors:
-  risk-store:
-    enabled: true            # optional: switch the connector on or off
-    settings:
-      root: /mnt/shared/lake
-      engine: native
-      password: ${RISK_LAKE_PASSWORD}   # a credential is only ever an environment reference
+```
+pack.yaml                         config/connectors/trading-lake.yaml          the system behind it
+kinds: [trade]                    plugin: delta
+connectors: [trading-lake]   ──►  kinds: [trade]                         ──►   a Delta lake, a database,
+routes: {trade: trading-lake}     settings: { root: /mnt/lake, … }             a Kafka topic, ...
 ```
 
-**Admin → Packs → Data source** (a button on every loaded pack) shows each connector's settings with where each value comes from, in words: *pack default*,
-*overridden here* (with the pack's value beside it), *set by the site: wins over this file*:
+**Who writes the file.** A pack may also carry a **template** (a suggestion: the older `connectors:` mapping of definitions, or `connector-templates:`).
+At the first start, for every connector a pack names, the server writes `config/connectors/<name>.yaml` from the template if no file of that name exists, and
+**never overwrites** a file afterwards. So a shipped pack works out of the box, and from then on the file is yours. A file **replaces** the template
+wholesale (nothing is merged). The precedence, highest first: environment variables and `drishti.sources.connectors.*` in the server's own configuration
+(deprecated; they override a file setting by setting), then the file, then the pack's template.
 
-![The Data source panel: pack default against override, a site value that wins](img/deploy/05-data-source.jpg)
+```
+$ ls config/connectors
+desk-quotes.yaml  desk-totals.yaml  ecb-estr-feed.yaml  ecb-fx-feed.yaml  fred-feed.yaml  ledger-db.yaml  market-store.yaml
+nyfed-sofr-feed.yaml  reference-store.yaml  site-quotes.yaml  trading-store.yaml  trading-stream.yaml  us-treasury-feed.yaml
 
-- Edit a value, add a setting, or press **Use pack default** on a row. Only values that differ from the pack are kept.
-- **Test connection** tries the edited settings (before anything is saved) against the real source and lists, per kind, the newest business dates and how many
-  entities the source holds for each. For a source that cannot list its dates the count is the latest data, marked "≥" when it hit the search cap. It changes nothing.
+connectors: connector file trading-store.yaml generated from the template of pack 'trading'
+```
 
-  ![Test connection: dates and row counts per kind](img/deploy/06-test-connection.jpg)
-
-- **Save and apply** writes the override file, runs the same check the server runs at start, then restarts in place; if it cannot start, the previous file is put back.
-- **Reset to the pack's defaults** removes the override (from the CLI, one connector's: `datasource reset my-bank --connector risk-store`).
-- A pack with an override is badged **data source overridden** in the packs table.
-
-  ![A pack with a data-source override](img/deploy/07-overridden.jpg)
-
-**Credentials.** A setting whose name says it is a credential (`password`, `secret`, `token`, `api-key`, `access-key`, `private-key`, `credential`) can only be an environment
-reference such as `${LAKE_PASSWORD}`; the server refuses the plain value, and a password written inside a URL (`jdbc:postgresql://user:pw@host/db`, `?password=...`).
-The password lives in the environment of the server process (a secret store, a Kubernetes secret), never in a file or a page. If the variable is not set, Test connection says so by name.
-
-**Shared connectors.** A connector belongs to the pack that declares it. If two unrelated packs declare the same connector name with different settings the server
-refuses to start, so override a shared connector in each pack that declares it, with the same values (the check on Save catches a mismatch before anything restarts).
-
-From the terminal:
+**Changing where a pack reads.** Edit the file (in an editor, in version control, or in **Admin → Connectors**) and the running server applies it to that one
+connector, without a restart and without touching the others: a new file starts a connector, a changed file restarts only that connector (reads in flight are
+given `connectors-drain` to finish), a deleted file stops it. A bad file never takes a running connector down: the last good configuration keeps running and
+Admin → Health shows the problem. From the terminal:
 
 ```bash
-python3 tools/drishti.py server packs datasource get my-bank
-python3 tools/drishti.py server packs datasource test my-bank --connector bank-store --set root=/mnt/dr-lake
-python3 tools/drishti.py server packs datasource set my-bank bank-store root=/mnt/dr-lake password='${LAKE_PW}' --test-first
-python3 tools/drishti.py server packs datasource reset my-bank
+python3 tools/drishti.py connector get trading-store --yaml > trading-store.yaml     # edit root: ...
+python3 tools/drishti.py connector apply trading-store.yaml --test-first             # test, then save and apply, if nobody changed it meanwhile
+python3 tools/drishti.py connector history trading-store                             # every earlier text; restore from the page or the API
 ```
+
+`apply` reads the file's current version and sends it as `If-Match`, so a job that runs while someone else edits fails instead of overwriting.
+Every command and real output: [CLI_GUIDE.md, `connector`](CLI_GUIDE.md#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history).
+
+**Admin → Connectors** (administrators; the Admin menu links to it) lists every connector with origin, plugin, kinds, status, which packs use it and when it
+changed. **New connector** and **Edit** open a form generated from the plugin's declared settings, a YAML tab (the same draft as text), **Test connection** and
+**History**. Test connection starts a throwaway instance on the draft's settings, lists per kind the newest business dates and how many entities the source
+holds, and closes it; nothing that runs is changed. Save writes the file atomically (the old text goes to `.history/`), applies it to that connector and says
+what state it reached; two editors cannot overwrite each other (the page sends the file's ETag and a stale one is refused with *changed since you read it*).
+
+![Admin -> Connectors: every connector with origin, plugin, kinds, status, who uses it and when it changed](../connectors/img/connector_files/01-connectors-list.jpg)
+
+![Test connection: a failure explained in words](../connectors/img/connector_files/04-test-connection.jpg)
+
+**Admin → Packs → Data source** (a button on every loaded pack) is now a **read-only view**: the pack's connectors, each with its state, plugin, the kinds
+this pack takes from it and what defines it, with **Edit** links to Admin → Connectors. It changes nothing.
+
+![Admin -> Packs -> Data source: the pack's connectors, one not configured, with Edit and Create links](../connectors/img/connector_files/07-pack-connectors.jpg)
+
+**A connector the pack names but nobody defined.** The pack still loads. Its kinds report `DRS-1011` (HTTP 404, "connector not configured"), Admin → Health
+shows the pack as degraded with `connectorsNotConfigured`, and the Data source view marks the connector **not configured** with a **Create** link that opens a
+new connector pre-filled from the pack's template, when it has one. From the terminal `datasource get` shows the same and exits 1 while one is missing:
+
+```
+$ drishti.py server packs datasource get desk-demo
+connectors of desk-demo   [files in /srv/drishti/config/connectors; change them with `drishti.py connector ...`]
+  connector     state           plugin  kinds from this pack  defined by          problems
+  ------------  --------------  ------  --------------------  ------------------  ----------------------------------------
+  desk-quotes   running         file    quote                 file
+  desk-archive  not configured          quote-archive         nothing defines it  connector desk-archive is not configured
+  desk-archive is not configured: create it with `drishti.py connector apply desk-archive.yaml` or in Admin -> Connectors
+[exit 1]
+```
+
+**Credentials.** A setting whose name says it is a credential (`password`, `secret`, `token`, `api-key`, `access-key`, `private-key`, `credential`) can only be an
+environment reference such as `${LAKE_PASSWORD}` or a file reference such as `file:/run/secrets/lake-password`; Admin → Connectors, the API and the CLI refuse a
+plain value, a default inside the reference and a password written inside a URL (`jdbc:postgresql://user:pw@host/db`, `?password=...`) with `DRS-5031`. The secret lives in the
+environment or the secret mount of the server process, never in a file or a page. If the variable is not set, that file is refused and the last good
+configuration keeps running. The folder holds no secret, so it can be kept in version control.
+
+**Shared connectors.** Several packs may name the same connector. Admin → Connectors shows who uses each one and for which kinds, and **asks before you disable or
+delete** a connector packs use (`DRS-5032` over the API until `confirm=true`). A connector a pack's template suggests is never deleted, because it would reappear at the next
+start: **Reset to pack default** puts the template back (your text is kept in the history), or disable it.
+
+**Archives carry names and templates only.** A pack archive (`pack make`, `pack bundle`, Deploy archive) never carries a site's settings. The deploy preview
+lists the connectors the pack names that this site lacks (field `connectors`: `names`, `missing`, `creatable`), and a **Create connectors** step
+(`POST /api/v1/admin/packs/deploy/{id}/connectors`) writes the files from the templates before you deploy; loading the pack writes them at the next start anyway.
+Rollback of a pack (17.2) restores the pack's files only; connector files are the site's and stay as they are.
+
+**Upgrading from the earlier Data source override.** Settings saved in Admin → Packs → Data source before connector files existed live in
+`data/packs/settings/<pack>.yaml`. At the first start after the upgrade the server moves each one into the connector file of the same name (the override's
+`enabled` and `settings` applied on top of the existing file, or on top of the pack's template when there is none), keeps the original in
+`data/packs/settings/.migrated/<pack>.yaml.<timestamp>` and the file's earlier text in `.history/`, and logs and audits it (`connector-migrated`):
+
+```
+connectors: data-source override of pack 'risk' for connector 'risk-store' moved into risk-store.yaml
+connectors: original override file of pack 'risk' kept in data/packs/settings/.migrated
+```
+
+An override the server cannot place (neither a template nor a file says which plugin to use) is left where it is and reported; nothing is dropped. The calls
+`PUT`, `DELETE` and `.../test` on `/admin/packs/{name}/datasource` and `drishti.py server packs datasource set|test|reset` are removed: use `/admin/connectors` and `drishti.py connector`.
 
 ### 17.6 Settings, scopes and API
 
@@ -612,9 +655,14 @@ python3 tools/drishti.py server packs datasource reset my-bank
 | `drishti.packs.deploy.staging-minutes` | 30 | how long a verified upload waits for its confirmation |
 | `drishti.packs.deploy.history-file` (`DRISHTI_PACKS_DEPLOY_HISTORY`) | `./data/packs/deploy-history.jsonl` | the deployment history |
 | `drishti.packs.deploy.probe-dates`, `probe-timeout-seconds` | 3, 30 | Test connection: dates per kind, wait per source |
-| `drishti.packs.settings-dir` (`DRISHTI_PACKS_SETTINGS`) | `./data/packs/settings` | the override files |
+| `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | `./config/connectors` | the connector files, one per connector; file name = connector name |
+| `drishti.sources.connectors-watch` | `auto` | `auto` (file events, polling as a fallback), `poll`, or `off` (read at start only) |
+| `drishti.sources.connectors-poll` | `5s` | how often the files are looked at |
+| `drishti.sources.connectors-drain` | `3s` | a connector being restarted stays open this long so reads in flight finish |
+| `drishti.sources.connectors-generate` | `true` | write a file from a pack's template when none of that name exists |
+| `drishti.packs.settings-dir` (`DRISHTI_PACKS_SETTINGS`) | `./data/packs/settings` | the old data-source override files; read once at start to migrate them, backups in `.migrated/` |
 
-The endpoints (all `/api/v1/admin/packs/...`, administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-data-source).
+The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/connectors` for connectors; administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors) and [CONNECTOR_FILES.md, section 9](../connectors/CONNECTOR_FILES.md#9-the-rest-api).
 
 ### 17.7 Troubleshooting
 
@@ -627,6 +675,7 @@ The endpoints (all `/api/v1/admin/packs/...`, administrator only; a personal tok
 | *extends X, which is neither loaded nor on disk* | a parent pack is missing | deploy or load the parent first |
 | HTTP 413 | larger than `max-archive-mb` | raise it (and the console's `packs.deploy_max_mb`) if the archive is right; archives carry no data, so a big one usually has data in it |
 | history says *reverted* | the server could not start with the new files and put the old ones back | read `server.log` at that time; fix the pack and redeploy |
-| *a credential is never stored here* | a secret setting is not `${NAME}` | export the variable for the server process and write the reference |
-| *refers to an environment variable that is not set* | the server process has no such variable | set it in the process environment (not your shell) and restart |
-| a setting shows *set by the site* and edits do nothing | an environment variable or `application.yaml` sets it, and wins | change it there, or remove it |
+| *a credential is never written into a connector file* (`DRS-5031`) | a secret setting is not `${NAME}` or `file:/path` | export the variable for the server process and write the reference |
+| *refers to an environment variable that is not set* | the server process has no such variable | set it in the process environment (not your shell) and restart; the last good configuration keeps running meanwhile |
+| a connector file edit does nothing, or Health lists a bad file | `connectors-watch: off`, the file name breaks the rule, or the text is invalid | see [CONNECTOR_FILES.md, section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems) |
+| a kind answers `DRS-1011` | the pack names a connector with no file | create it in Admin → Connectors (the Create link on Data source) or `drishti.py connector apply` |

@@ -40,7 +40,7 @@ partitions and versions, a database has a date column, a feed drops a folder per
   before the date (within a lookback), effective tables the last change on or before it. `knownAt` uses Delta
   time travel ("as known at", before a restatement). The root is configurable (default `./data/delta`); each domain
   or pack keeps its own folder.
-- **Named connectors** (`drishti.sources.connectors.<name>: {plugin, settings, kinds}`) run a plugin several times,
+- **Named connectors** (one file `config/connectors/<name>.yaml` with `plugin`, `settings` and `kinds`; formerly `drishti.sources.connectors.<name>`) run a plugin several times,
   such as one lake per domain.
 - The file plugin reads `<root>/<yyyy-MM-dd>/<kind>/<id>.json`; the JDBC plugin binds `:asOf` in its queries.
 

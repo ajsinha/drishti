@@ -28,7 +28,8 @@ and how to run it all from PyCharm.
 - [4. `sutra`: shape, design, gen, lint, test, preview](#4-sutra-shape-design-gen-lint-test-preview)
 - [5. `pack`: make, new, regenerate, diff, catalogue, i18n, check, about-check, bundle, verify, deploy, rollback, publish, keygen, install](#5-pack-make-new-regenerate-diff-catalogue-i18n-check-about-check-bundle-verify-deploy-rollback-publish-keygen-install)
 - [6. `data`: profile, ingest, load, and tell the server a batch landed](#6-data-profile-ingest-and-load)
-- [7. `server`: health and packs; also smoke, `doctor`, `view` and shell completion](#7-server-health-and-packs)
+- [7. `server`: health and packs; also smoke, `doctor`, `view`, shell completion, and the `connector` commands](#7-server-health-and-packs)
+  - [`connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history)
 - [8. `design`: the Screen Designer over REST](#8-design-the-screen-designer-over-rest)
 - [9. `docs`: screenshots](#9-docs-screenshots)
 - [10. Recipes](#10-recipes)
@@ -1589,7 +1590,7 @@ Next: F2 Netting sets; F3 Group hierarchy; F7 Counterparty group; F8 Impact; F9 
 
 ### `server packs deploy`, `history`, `rollback` and `datasource`
 
-Admin → Packs from the terminal ([the whole story with pictures: OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back)).
+Admin → Packs from the terminal ([the whole story with pictures: OPERATIONALISING.md, section 17](OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)).
 You need an administrator; a personal API token needs the **packs:admin** scope. The archive carries the pack only, never data.
 
 **`server packs deploy ARCHIVE [--preview] [--accept-breaking] [--sha256 HEX] [--signature-file F --publisher P] [--wait SECONDS]`**
@@ -1602,7 +1603,7 @@ running version at four levels, breaking first. A `.sha256` file beside the arch
   (a kind or mnemonic removed or renamed) makes the command print the preview and exit 1 until you add `--accept-breaking`.
 - `--wait N` waits up to N seconds for the server to answer again after the restart (exit 1 if it does not).
 - Exit: 0 deployed or previewed; 1 refused by a check, breaking changes not accepted, or the server not back; 2 usage (no such file).
-- `--json` prints `{verification, result}`; the verification is the server's own answer ([API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-data-source)).
+- `--json` prints `{verification, result}`; the verification is the server's own answer ([API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors)).
 
 ```text
 $ python3 tools/drishti.py server packs deploy dist/helpdesk-0.2.0.tar.gz
@@ -1647,44 +1648,192 @@ $ python3 tools/drishti.py server packs rollback helpdesk --version 0.1.0
 rolled helpdesk back to 0.1.0 (replacing 0.2.0): The server restarts in place now; live views reconnect by themselves.
 ```
 
-**`server packs datasource get|set|test|reset`** is the pack's data source: where its connectors read from. Precedence, highest first: the **site**
-(environment variables and `application.yaml`), the administrator's **override file** (`data/packs/settings/<pack>.yaml`, which a redeploy keeps), the **pack**.
-`get` shows each setting with where its value comes from; `set PACK CONNECTOR KEY=VALUE... [--unset KEY] [--enabled true|false] [--test-first]` overrides settings
-(only differences from the pack are kept) and applies them with the safe restart; `test PACK [--connector C] [--set KEY=VALUE...]` tries the settings in force, or
-the `--set` ones (nothing saved), on the real source and lists, per kind, the newest business dates and how many entities the source holds (exit 1 on a problem);
-`reset PACK [--connector C]` removes the override. A credential setting (`password`, `secret`, `token`, `api-key`, ...) is only ever an environment reference:
-`password='${LAKE_PW}'` (single quotes, so your shell leaves it alone); the server refuses a plain value.
+**`server packs datasource get PACK`** is the pack's connectors, **read only**: which connectors the pack names, the state of each, the plugin, the kinds
+this pack takes from it and what defines it (a file in the connector folder, the pack's own template, the server's configuration, or nothing). A pack names its
+connectors and routes its kinds to them; the settings belong to the site, in one YAML file per connector in `config/connectors/`, and are changed with the
+[`connector` commands](#connector-list-get-apply-delete-test-plugins-enable-disable-reset-history) below or in Admin → Connectors. The earlier `datasource set`, `test` and
+`reset` are **removed** (so is the `PUT`, `DELETE` and `.../test` of `/api/v1/admin/packs/{name}/datasource` they called); the settings saved by them are moved into
+connector files at the first start of the new server ([OPERATIONALISING.md, 17.5](OPERATIONALISING.md#175-where-a-pack-reads-its-data-connectors)).
+Exit: 0 every connector the pack names is configured; **1 while one is not** (or the server refused); 2 usage.
 
 ```text
-$ python3 tools/drishti.py server packs datasource set market-risk risk-store root=/mnt/dr-lake
-saved the override for market-risk: changed risk-store.root; The server restarts in place now; live views reconnect by themselves.
-$ python3 tools/drishti.py server packs datasource get market-risk
-data source of market-risk: an administrator override is in force   [override file data/packs/settings/market-risk.yaml]
+$ python3 tools/drishti.py server packs datasource get desk-demo
+connectors of desk-demo   [files in /srv/drishti/config/connectors; change them with `drishti.py connector ...`]
+  connector     state           plugin  kinds from this pack  defined by          problems
+  ------------  --------------  ------  --------------------  ------------------  ----------------------------------------
+  desk-quotes   running         file    quote                 file
+  desk-archive  not configured          quote-archive         nothing defines it  connector desk-archive is not configured
+  desk-archive is not configured: create it with `drishti.py connector apply desk-archive.yaml` or in Admin -> Connectors
+[exit 1]
+```
 
-  connector risk-store   plugin delta   kinds var, stress-scenario, stress-result, frtb-sensitivity, pnl-explain   on (pack)
-  setting  in force      where from
-  -------  ------------  -----------------------------------------------------------
-  root     /mnt/dr-lake  overridden; pack default ${DRISHTI_DELTA_ROOT:./data/delta}
-  domain   risk
+### `connector`: list, get, apply, delete, test, plugins, enable, disable, reset, history
+
+Admin → Connectors from the terminal ([the model, the file format and every store's example: CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)).
+A **connector** is one YAML file in the connector folder (`config/connectors/`, `drishti.sources.connectors-dir`), and **the file name is the connector's name**.
+Packs only name the connectors they read through. You need an administrator; a personal API token needs the **`packs:admin`** scope. All commands take the usual
+`--server`, `--token-file`, `--user`, `--timeout` and `--json` (machine-readable output). Exit: **0** done; **1** refused by the server (with the `DRS-` code) or, for `test`, the
+connector does not work; **2** usage (no such file, unknown option). The server applies a change to that one connector without a restart.
+
+| Command | Does | Options |
+|---|---|---|
+| `connector list` | every connector: where it is defined, plugin, kinds, state, which packs use it, problems | `--origin file\|pack\|application`, `--status running\|disabled\|failed\|idle\|not_loaded` |
+| `connector get NAME` | the effective settings (credentials masked), the file's path, kinds, state and **version** (the ETag) | `--yaml` prints only the file's text |
+| `connector apply FILE` | create or change a connector from a YAML file; the name is the file name without `.yaml` | `--name N` (override), `--if-match V` (the version you expect; default: read it now), `--test-first` (try the settings on the real source and apply only if they work), `--confirm` (go ahead although it switches off a connector packs use) |
+| `connector delete NAME` | remove the file (its text is kept in `.history/`); refused for a connector a pack's template suggests (reset or disable it) | `--if-match V`, `--confirm` |
+| `connector test [NAME]` | start a throwaway instance on the saved settings, or the settings of `--file`, ask it what it holds, close it; exit 1 when it fails | `--file F` |
+| `connector plugins [NAME]` | the installed plugins; with a name, the settings that plugin reads (type, default, required, secret) | |
+| `connector enable NAME`, `disable NAME` | switch on or off, keeping the rest of the file | `--confirm` |
+| `connector reset NAME` | put the pack's suggested default back as the file (your text is kept in the history) | |
+| `connector history NAME` | the kept earlier versions of the file (restore them in the page or with `POST .../restore/{id}`) | |
+
+`apply` reads the connector's current version and sends it as `If-Match`, so it is safe in a GitOps job: someone else's edit in between makes the job fail with
+`DRS-5032` instead of being overwritten. A new connector needs no version. A literal credential in the file is refused with `DRS-5031`; write `${ENV_VAR}` or `file:/path`.
+
+```text
+$ python3 tools/drishti.py connector list
+14 connector(s) in /srv/drishti/config/connectors   (watching: WATCHING)
+  name              origin       plugin   kinds                                      state           used by       problems
+  ----------------  -----------  -------  -----------------------------------------  --------------  ------------  ----------------------------------------------------------------------------
+  desk-quotes       file         file     quote                                      running         desk-demo
+  desk-totals       file         derived  desk-pnl                                   running         trading
+  ecb-estr-feed     file         feed     rate-fixing                                disabled        market-data
+  ecb-fx-feed       file         feed     fx-spot                                    disabled        market-data
+  fred-feed         file         feed     rate-fixing                                disabled        market-data
+  ledger-db         file         jdbc     ledger-entry                               running (DOWN)
+  legacy-feed       application  file                                                running                       defined in application.yaml (deprecated); save it to create legacy-feed.yaml
+  market-store      file         delta    ir-curve,repo-curve,fx-spot +17            running (DOWN)  market-data
+  nyfed-sofr-feed   file         feed     rate-fixing                                disabled        market-data
+  reference-store   file         delta    counterparty,counterparty-group,issuer +9  running (DOWN)  banking-core
+  site-quotes       file         file     quote                                      running
+  trading-store     file         delta    trade                                      running (DOWN)  trading
+  trading-stream    file         kafka    trade                                      disabled        trading
+  us-treasury-feed  file         feed     ir-curve                                   disabled        market-data
+  deprecated: legacy-feed is defined in the server's own configuration; apply a file to replace it
+```
+
+(The scratch server of these examples has no Delta lake or PostgreSQL, so those connectors are `DOWN`.) The `origin` is `file` (a file in the folder), `pack` (a
+pack's template that has no file yet) or `application` (the deprecated `drishti.sources.connectors` of the server's own configuration).
+
+```text
+$ python3 tools/drishti.py connector get site-quotes
+connector site-quotes   origin file   plugin file   running   version 3e4b312691e95f5c
+  file /srv/drishti/config/connectors/site-quotes.yaml
+  kinds quote
+  settings (credentials masked):
+  setting        value
+  -------------  ---------------------
+  root           /srv/desk/lake
+  lookback-days  10
+$ python3 tools/drishti.py connector get site-quotes --yaml
+# A site connector: no pack suggests it.
+plugin: file
+kinds: [quote]
+description: Quotes from the desk's drop folder
+settings:
+  root: /srv/desk/lake
+  lookback-days: '10'
 ```
 
 ```text
-$ python3 tools/drishti.py server packs datasource set market-risk risk-store root=/mnt/dr-lake --test-first
-tested market-risk: the edited settings, not yet saved
-
-  risk-store (delta): PROBLEM: DOWN: cannot reach /mnt/dr-lake/risk (engine: native)
-  kind              business date  rows  note
-  ----------------  -------------  ----  ---------------------------
-  var                              0     nothing found for this kind
-  ...
-
-not saved: the test failed
-$ python3 tools/drishti.py server packs datasource set market-risk risk-store password=hunter2
-drishti: the server said 400 DRS-5001: DRS-5001 the data source is not valid: risk-store.settings.password: a credential is never stored here; write an environment reference such as ${PASSWORD}
+$ python3 tools/drishti.py connector plugins
+  plugin     tls  settings
+  ---------  ---  --------
+  derived         0
+  demo            7
+  file            12
+  delta           26
+  aerospike  yes  26
+  redis      yes  36
+  mongodb    yes  31
+  iceberg         23
+  duckdb          17
+  feed       yes  19
+  kafka      yes  22
+  activemq   yes  18
+  rabbitmq   yes  19
+  s3         yes  23
+  rest       yes  17
+  jdbc       yes  32
+$ python3 tools/drishti.py connector plugins file
+plugin file
+  setting            type                default    what it is
+  -----------------  --------  --------  -------    ------------------------------------------------------------------------------
+  root               path      required             Folder of documents
+  domain             string                         Domain
+  id-field           string                         Field holding the entity id
+  rescan-seconds     int                            Rescan interval
+  lookback-days      int                            Days of history to index
+  max-load-rows      int                            Documents to load at most
+  max-document-mb    int                            Largest document
+  max-nesting-depth  int                            Deepest nesting
+  index-cache-mb     int                            Index cache size
+  source-name        string                         The name documents carry as their provenance (default: the connector's name)
+  mode.*             string                         Per-kind read mode (mode.<kind>)
+  stale-after        duration                       Mark the source stale when it has received nothing for this long (15m, 2h, 1d)
 ```
 
-(The scratch server of these examples has no Delta lake, so the test reports the source down; against a lake the table lists each kind's dates and row counts,
-as in the [Test connection picture](OPERATIONALISING.md#175-where-a-pack-reads-its-data-data-source).)
+`test` reports whether the source is reachable, its health and how long it took, then per kind the newest business dates and how many entities the source holds
+(`≥` marks a count that hit the search cap). A failure is explained in words, with a hint for TLS and network errors, and exits 1:
+
+```text
+$ python3 tools/drishti.py connector test site-quotes
+site-quotes (file): reachable, health UP, 7 ms
+  kind   business date  rows  note
+  -----  -------------  ----  ----
+  quote  2026-10-05     4
+  quote  2026-10-02     3
+$ python3 tools/drishti.py connector test ledger-db
+ledger-db (jdbc): PROBLEM: DOWN: Connection to 127.0.0.1:59997 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections. (reconnecting)
+  note: kinds: kind 'ledger-entry' is not owned by a loaded pack (loaded: agreement, bond, book, calendar, cap-vol-surface, ccp, clearing-account, commodity, and 28 more)
+[exit 1]
+```
+
+Applying a file. The first file below holds a literal password and is refused before anything is written; with a reference it is accepted, and applying it
+again with a changed value says which settings changed:
+
+```text
+$ python3 tools/drishti.py connector apply orders-lake.yaml
+drishti: the server said 422 DRS-5031: DRS-5031 the connector is not valid: settings.password: a credential is never written into a connector file; use an environment reference such as ${PASSWORD} or a file: reference such as file:/run/secrets/password
+[exit 1]
+$ python3 tools/drishti.py connector apply orders-lake.yaml --test-first
+applied orders-lake: running; changed (new connector), root; version 3694fd093d970a61
+$ python3 tools/drishti.py connector get orders-lake
+connector orders-lake   origin file   plugin file   running   version 3694fd093d970a61
+  file /srv/drishti/config/connectors/orders-lake.yaml
+  kinds quote
+  settings (credentials masked):
+  setting  value
+  -------  -----
+  root     /tmp
+$ python3 tools/drishti.py connector apply orders-lake.yaml
+applied orders-lake: running; changed lookback-days; version 3ec110fbdf22d988
+$ python3 tools/drishti.py connector history orders-lake
+  version             kept at                         bytes
+  ------------------  ------------------------------  -----
+  20261010T140558502  2026-10-10T14:05:58.501804365Z  90
+```
+
+Switching off or deleting a connector packs use asks first (`DRS-5032`, exit 1) and goes ahead with `--confirm`; a connector a pack's template suggests is never deleted:
+
+```text
+$ python3 tools/drishti.py connector disable trading-store
+drishti: the server said 409 DRS-5032: DRS-5032 disabling connector 'trading-store' would stop serving pack trading (trade); repeat with confirm=true to go ahead
+[exit 1]
+$ python3 tools/drishti.py connector disable trading-store --confirm
+trading-store is off (disabled)
+$ python3 tools/drishti.py connector enable trading-store
+trading-store is on (running)
+$ python3 tools/drishti.py connector delete trading-store
+drishti: the server said 409 DRS-5032: DRS-5032 connector 'trading-store' is named by pack trading's template, so it is not deleted: reset it to the pack's default, or disable it
+[exit 1]
+$ python3 tools/drishti.py connector delete orders-lake
+deleted orders-lake (its text is kept in the connector folder's .history)
+```
+
+`connector reset NAME` prints `NAME is back to the pack's default (running)` and keeps your previous text in `connector history`. With `--json` every command prints
+the server's answer unchanged. Errors: `DRS-5031` invalid (422), `DRS-5032` stale version, existing file without `--if-match`, or in use without `--confirm`
+(409), `DRS-5033` no such connector (404); see [API_GUIDE.md](API_GUIDE.md#connectors-apiv1adminconnectors).
 
 ### Shell completion
 
@@ -2114,8 +2263,8 @@ $ python3 tools/drishti.py pack about-check packs/jsonl-demo --json
 
 | Code | Meaning | Examples |
 |---|---|---|
-| **0** | ok | a clean lint; a design that checks; a server whose health is `OK` |
-| **1** | problems found | a failing lint or test; `--strict` warnings; an unexplained field (`about-check`); a design with a failing sample; the server refused (401, 403, 404, 400...); the server cannot be reached; `server health` not `OK`; `server smoke` with a failing view or pack; `doctor` with a red line; `data ingest --watch --once` with a failed file |
+| **0** | ok | a clean lint; a design that checks; a server whose health is `OK`; a `connector apply` that was saved |
+| **1** | problems found | a failing lint or test; `--strict` warnings; an unexplained field (`about-check`); a design with a failing sample; the server refused (401, 403, 404, 400...); the server cannot be reached; `server health` not `OK`; `server smoke` with a failing view or pack; `doctor` with a red line; `connector test` that cannot reach the source; `server packs datasource get` while a connector is not configured; a `connector` change refused (`DRS-5031`, `5032`, `5033`); `data ingest --watch --once` with a failed file |
 | **2** | usage | a missing or unknown option or file (a `view` reference that is not KIND/ID); the exec jar not found; PyYAML or `deltalake` not installed; `--load` without `--server`; a pack folder without `pack.yaml` |
 
 The Java `sutra` commands keep their own 0/1/2 and pass them through.

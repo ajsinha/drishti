@@ -202,8 +202,8 @@ trading-store:
 do atomically: two writers committing at once can lose a commit. One loader at a time is safe (the loader serialises its
 own commits per table). For several writers, use a REST catalog: it commits atomically on its side.
 
-The Drishti profile `iceberg` (`SPRING_PROFILES_ACTIVE=iceberg`, `drishti-server/src/main/resources/application-iceberg.yaml`)
-switches the banking packs' store connectors (`reference-store`, `market-store`, `trading-store`, `risk-store`,
+The Drishti profile `iceberg` (`SPRING_PROFILES_ACTIVE=iceberg`, `drishti-server/src/main/resources/application-iceberg.yaml`; deprecated, replaced by the connector files in
+`config/connectors.examples/iceberg/`, see [As a connector file](#as-a-connector-file)) switches the banking packs' store connectors (`reference-store`, `market-store`, `trading-store`, `risk-store`,
 `credit-store`, `collateral-store`) to this plugin with `catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}`,
 `root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}`, `uri: ${DRISHTI_ICEBERG_URI:}`, `warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}`
 and `credential: ${DRISHTI_ICEBERG_CREDENTIAL:}`; the packs keep deciding kinds, routes, modes and promoted columns.
@@ -547,9 +547,36 @@ current snapshot's days with delete files.
 Iceberg logs `Table location loaded` once per table and `Refreshing table metadata` when a table changes; the
 connector turns off the scan report Iceberg would log for every planning.
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/trading-store.yaml
+plugin: iceberg
+kinds: [trade]
+description: Trading documents in an Iceberg catalog
+settings:
+  domain: trading
+  catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
+  root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}
+  uri: ${DRISHTI_ICEBERG_URI:}
+  warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
+  credential: ${DRISHTI_ICEBERG_CREDENTIAL}   # an environment (or file:) reference
+  layout:
+    trade:
+      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
+                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
+                risk.dv01, sourceSystem]
+```
+
+A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 5](#5-declaring-the-layout-in-a-pack)).
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/iceberg/`](../../config/connectors.examples/iceberg).
+
 ## 15. Settings
 
-On an Iceberg connector (`drishti.sources.connectors.<name>.settings`, or the connector's `settings:` in a pack):
+In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|

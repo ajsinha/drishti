@@ -409,6 +409,13 @@ curl -s "$B/command/suggest?q=TRD%20IRS" | jq .
 | real ids answer with sample data, or a picked old date shows a sample | the demo is on beside real stores | `DRISHTI_DEMO_ENABLED=false` |
 | `DRS-1002 no source serves kind 'x'` after switching it off | the demo (and `file`) served that kind | configure a connector for the kind |
 
+## As a connector file
+
+The demo connector is not a named connector, so it has **no connector file**: it runs as itself under `drishti.sources.plugins.demo`, and its settings
+([section 14](#14-settings)) stay in `application.yaml` and `application.local.yaml` as shown in [section 5](#5-configuration). Connector files, one YAML file
+per connector in `config/connectors/`, are for the connectors that read your systems ([CONNECTOR_FILES.md](CONNECTOR_FILES.md)); the other stores' examples are in
+[`config/connectors.examples/`](../../config/connectors.examples). In production, switch the demo off (`DRISHTI_DEMO_ENABLED=false`) and give each kind a connector file.
+
 ## 14. Settings
 
 Under `drishti.sources.plugins.demo`:

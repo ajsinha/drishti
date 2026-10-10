@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Admin -> Connectors (docs/connectors/CONNECTOR_FILES.md), written to docs/connectors/img/connector-files/.
+"""The pictures of Admin -> Connectors (docs/connectors/CONNECTOR_FILES.md), written to docs/connectors/img/connector_files/.
 
 The setup is its own: a scratch server and console (the ports of DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT) with the trading
 pack, whose connector templates are written out as files in a scratch connector folder at the first start, a site connector over a folder of

@@ -94,6 +94,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Build a pack, from an empty folder to a working view | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) |
 | Load packs, switch them off and on, assign them to users | [PACKS.md](guides/PACKS.md#turning-packs-on) |
 | Generate a full pack from Python (Sutras, samples, guide, lake) | [PACK_DEVELOPER_GUIDE.md › Generators](guides/PACK_DEVELOPER_GUIDE.md) |
+| Define a connector as a file, change it without a restart, manage it in Admin → Connectors | [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) |
 | Choose a connector, write a new plugin and test it | [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) |
 | Connect your data, step by step, with every setting of the connector | the per-connector docs under [connectors/](connectors/), one per store |
 | Understand live updates (SSE, frames, reconnects) | [LIVE.md](architecture/LIVE.md) |
@@ -164,6 +165,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [PANEL_DEVELOPER_GUIDE.md](guides/PANEL_DEVELOPER_GUIDE.md) | you add a new panel kind to Drishti |
 | [HOW_IT_FITS.md](architecture/HOW_IT_FITS.md) | you are new and want the whole working: how connectors, packs and Sutras relate, and how a command becomes a live screen |
 | [INFERENCE.md](architecture/INFERENCE.md) | a view looks different from what you expected and *How this view was built* says `inference` |
+| [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) | you define connectors: one YAML file each in `config/connectors`, an example per store, how packs and files fit, live reload, Admin → Connectors, the API and CLI, moving off `application.yaml` |
 | [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) | you choose a connector, write a new source plugin, or test one with the testkit contracts; each connector's settings and walk-through are in its own `*_CONNECTOR.md` |
 | [LIVE.md](architecture/LIVE.md) | you need to know how values tick: streams, frames, coalescing, reconnects, one channel per browser, shared by its tabs |
 | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) | you create users, define roles, assign packs, reset passwords, set up single sign-on or read the audit log |
