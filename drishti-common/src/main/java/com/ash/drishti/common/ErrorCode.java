@@ -53,6 +53,18 @@ public enum ErrorCode {
     ASK_TIMEOUT("DRS-4008", 504),
     /** Ask: over the per-user rate or daily budget. */
     ASK_RATE_LIMITED("DRS-4009", 429),
+    /** The AI layer (docs/architecture/AI_PROVIDERS.md) or the MCP client is switched off. */
+    AI_OFF("DRS-4010", 404),
+    /** An AI or MCP call failed at the provider or server (never carries a key or a prompt). */
+    AI_FAILED("DRS-4011", 502),
+    /** An AI or MCP call did not answer in time (same code as {@link #AI_FAILED}). */
+    AI_TIMEOUT("DRS-4011", 504),
+    /** An AI call is over a per-user rate or cost limit. */
+    AI_RATE_LIMITED("DRS-4012", 429),
+    /** The AI policy refuses the call for this user, role or feature. */
+    AI_POLICY("DRS-4013", 403),
+    /** No such model, provider, MCP server or tool. */
+    AI_NOT_FOUND("DRS-4014", 404),
     BAD_REQUEST("DRS-5001", 400),
     CACHE_NOT_FOUND("DRS-5004", 404),
     FORBIDDEN("DRS-5002", 403),

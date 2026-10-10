@@ -51,6 +51,8 @@ class AskOffByDefaultTest {
         String auth = "Bearer " + tokens.mint("ann", List.of("full"), 300);
         mvc.perform(post("/api/v1/views/var/VAR-COMM/ask").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON).content("{\"question\":\"hi\"}"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-4007"));
+        mvc.perform(post("/api/v1/ai/chat").header("Authorization", auth).contentType(MediaType.APPLICATION_JSON).content("{\"prompt\":\"hi\"}"))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("DRS-4010"));   // the AI layer is off too
         mvc.perform(get("/api/v1/views/var/VAR-COMM/explain").header("Authorization", auth)).andExpect(jsonPath("$.ask.enabled").value(false));
     }
 }

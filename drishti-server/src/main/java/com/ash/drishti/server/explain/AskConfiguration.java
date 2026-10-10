@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.explain;
 
+import com.ash.drishti.ai.LlmGateway;
 import com.ash.drishti.engine.explain.ExplainService;
 import com.ash.drishti.identity.AccessLog;
 import com.ash.drishti.rachana.about.AboutCatalog;
@@ -31,11 +32,6 @@ import org.springframework.context.annotation.Configuration;
 public class AskConfiguration {
 
     @Bean
-    AskProvider askProvider(AskProperties cfg) {
-        return AskProviders.create(cfg);
-    }
-
-    @Bean
     AskRateLimiter askRateLimiter(AskProperties cfg) {
         return new AskRateLimiter(Clock.systemUTC(), cfg.perUserPerMinute(), cfg.perUserPerDay());
     }
@@ -46,8 +42,8 @@ public class AskConfiguration {
     }
 
     @Bean
-    AskService askService(ExplainService explain, AskProperties cfg, AskProvider provider, AskRateLimiter limiter, PackGuides guides,
+    AskService askService(ExplainService explain, AskProperties cfg, LlmGateway gateway, AskRateLimiter limiter, PackGuides guides,
             ObjectProvider<AccessLog> accessLog) {
-        return new AskService(explain, cfg, provider, limiter, guides, accessLog);
+        return new AskService(explain, cfg, gateway, limiter, guides, accessLog);
     }
 }

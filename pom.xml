@@ -44,6 +44,7 @@
     <module>drishti-engine</module>
     <module>drishti-identity</module>
     <module>drishti-packs</module>
+    <module>drishti-ai</module>
     <module>drishti-testkit</module>
     <module>drishti-diskcache</module>
     <module>drishti-messaging</module>
@@ -106,10 +107,14 @@
     <!-- test classes run in this many parallel JVM forks per module (each fork reused for many classes); -Ddrishti.test.forks=1
          runs them serially. Fixed scratch paths in a module's surefire configuration carry ${surefire.forkNumber} -->
     <drishti.test.forks>4</drishti.test.forks>
+    <!-- LLM provider layer (drishti-ai): Spring AI 1.0.x targets Spring Boot 3.4/3.5 and Java 17+ bytecode -->
+    <spring-ai.version>1.0.3</spring-ai.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <dependency><groupId>org.springframework.ai</groupId><artifactId>spring-ai-bom</artifactId><version>${spring-ai.version}</version><type>pom</type><scope>import</scope></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-ai</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-rachana</artifactId><version>${project.version}</version></dependency>

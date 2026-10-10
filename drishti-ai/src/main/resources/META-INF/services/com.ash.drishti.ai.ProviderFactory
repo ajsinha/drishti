@@ -1,0 +1,3 @@
+com.ash.drishti.ai.SpringAiOpenAiProvider$Factory
+com.ash.drishti.ai.AnthropicProvider$Factory
+com.ash.drishti.ai.MockProvider$Factory

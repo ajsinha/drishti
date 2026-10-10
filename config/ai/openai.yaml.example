@@ -1,0 +1,25 @@
+# Copy to config/ai/openai.yaml (no .example) and set drishti.ai.enabled=true. One file = one provider.
+# Any OpenAI-compatible endpoint: OpenAI, Azure OpenAI, vLLM, Ollama (http://host:11434), LiteLLM, a company gateway.
+type: openai
+enabled: true
+base-url: https://api.openai.com            # no trailing path; Ollama: http://localhost:11434
+completions-path: /v1/chat/completions     # Azure: /openai/deployments/<name>/chat/completions?api-version=...
+api-key: ${OPENAI_API_KEY}                 # an ${ENV_NAME} placeholder only; a literal key is refused
+timeout: 60s
+retries: 0                                 # extra attempts after a failure
+default-model: fast
+# header:                                   # extra headers; credentials as ${ENV} (Azure: api-key)
+#   api-key: ${AZURE_OPENAI_KEY}
+# tls:                                      # the shared tls.* keys, for https:// endpoints with a private CA or mutual TLS
+#   ca-file: /etc/drishti/ca.pem
+models:
+  - name: fast                              # the logical name features use
+    id: gpt-4o-mini                         # what the provider calls it
+    max-tokens: 400
+    temperature: 0.2
+    capabilities: [chat, tool-calls, json-mode]
+    cost-per-1k-input: 0.00015
+    cost-per-1k-output: 0.0006
+  - name: embed
+    id: text-embedding-3-small
+    kind: embedding
