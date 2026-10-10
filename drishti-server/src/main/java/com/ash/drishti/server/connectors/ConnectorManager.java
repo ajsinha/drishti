@@ -570,6 +570,7 @@ public final class ConnectorManager {
         Map<String, String> shown = new LinkedHashMap<>();
         settings.forEach((k, v) -> shown.put(k, ConnectorSecrets.secretKey(k) && !v.isBlank() && !ConnectorSecrets.reference(v) ? "***" : v));
         m.put("settings", shown);
+        m.put("tls", tlsSummary(settings));
         m.put("text", files.text(name));
         if (files.exists(name)) {
             m.put("file", files.file(name).toString());
@@ -584,6 +585,39 @@ public final class ConnectorManager {
             return h;
         }).toList() : List.of());
         return m;
+    }
+
+    /** The TLS the settings ask for and when each configured certificate expires; {@code null} when no {@code tls.*} setting is given. */
+    static Map<String, Object> tlsSummary(Map<String, String> settings) {
+        if (!com.ash.drishti.api.tls.TlsSettings.anyGiven(settings, "tls.")) {
+            return null;
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        try {
+            var ts = com.ash.drishti.api.tls.TlsSettings.from(settings);
+            out.put("enabled", ts.enabled());
+            out.put("verifyHostname", ts.verifyHostname());
+            out.put("protocols", ts.protocols());
+            if (!ts.enabled()) {
+                return out;
+            }
+            var material = com.ash.drishti.api.tls.TlsContexts.build(ts);
+            Instant now = Instant.now();
+            out.put("certificates", material.certificates().stream().map(c -> {
+                Map<String, Object> x = new LinkedHashMap<>();
+                x.put("source", c.source());
+                x.put("subject", c.subject());
+                x.put("notBefore", c.notBefore());
+                x.put("notAfter", c.notAfter());
+                x.put("daysLeft", c.daysLeft(now));
+                x.put("expired", c.expired(now));
+                return x;
+            }).toList());
+            out.put("warnings", material.warnings());
+        } catch (RuntimeException e) {
+            out.put("error", String.valueOf(e.getMessage()));
+        }
+        return out;
     }
 
     /** The connectors a pack names, with the state of each and where to edit it; those nothing defines are listed as missing. */

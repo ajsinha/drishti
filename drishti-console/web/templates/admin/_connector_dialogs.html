@@ -1,0 +1,71 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The connector editor and confirm dialogs, shared by the list and a connector's own page (driven by /static/js/admin-connectors.js). #}
+  <dialog class="adm-dialog conn-dialog" data-edit-dialog aria-labelledby="connTitle">
+    <div class="ds-head"><h2 id="connTitle" data-title>Connector</h2>
+      <button type="button" class="btn-pill btn-ghost" data-close aria-label="Close without saving">Close</button></div>
+    <p class="text-muted-d" data-origin-note></p>
+    <div class="conn-tabs" role="tablist" aria-label="Connector editor" data-tabs>
+      <button type="button" role="tab" id="connTabForm" aria-controls="connPaneForm" aria-selected="true" data-tab="form">Form</button>
+      <button type="button" role="tab" id="connTabYaml" aria-controls="connPaneYaml" aria-selected="false" tabindex="-1" data-tab="yaml">YAML</button>
+      <button type="button" role="tab" id="connTabTest" aria-controls="connPaneTest" aria-selected="false" tabindex="-1" data-tab="test">Test</button>
+      <button type="button" role="tab" id="connTabHistory" aria-controls="connPaneHistory" aria-selected="false" tabindex="-1" data-tab="history">History</button>
+    </div>
+    <div role="tabpanel" id="connPaneForm" aria-labelledby="connTabForm" data-pane="form">
+      <div class="conn-grid">
+        <label>Name<input class="studio-in mono" data-f-name maxlength="64" pattern="[a-z0-9][a-z0-9\-]*" autocomplete="off" spellcheck="false" aria-describedby="connNameHelp" placeholder="trading-lake"></label>
+        <label>Plugin<select class="studio-in" data-f-plugin></select></label>
+        <label class="chk conn-on"><input type="checkbox" data-f-enabled checked> Connector is on</label>
+        <label class="conn-wide">Description<input class="studio-in" data-f-description maxlength="200" autocomplete="off"></label>
+      </div>
+      <p class="text-muted-d" id="connNameHelp">Lower case letters, digits and hyphens. The file is <span class="mono" data-file-name>name.yaml</span>; packs refer to the connector by this name.</p>
+      <fieldset class="conn-set" data-kinds-set><legend>Kinds it serves</legend>
+        <div class="conn-chips" data-chips aria-live="polite"></div>
+        <div class="conn-kind-add"><input class="studio-in mono" list="connKinds" data-kind-in placeholder="add a kind" aria-label="Add a kind" autocomplete="off" spellcheck="false">
+          <datalist id="connKinds"></datalist><button type="button" class="fk" data-kind-add>Add kind</button></div>
+        <p class="text-muted-d">Empty: it serves whatever the packs route to it.</p>
+      </fieldset>
+      <div data-groups></div>
+    </div>
+    <div role="tabpanel" id="connPaneYaml" aria-labelledby="connTabYaml" data-pane="yaml" hidden>
+      <label class="visually-hidden" for="connYaml">The connector file as YAML</label>
+      <textarea class="studio-in mono conn-yaml" id="connYaml" data-yaml rows="18" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+      <p class="text-muted-d">Comments are kept as you type them. Both tabs edit the same draft: leaving this tab reads the text into the form.</p>
+    </div>
+    <div role="tabpanel" id="connPaneTest" aria-labelledby="connTabTest" data-pane="test" hidden>
+      <p class="text-muted-d">Starts a throwaway instance on the settings in this draft, asks it what it holds for the kinds it serves, and closes it. Nothing that runs is changed.</p>
+      <div data-test-out aria-live="polite"></div>
+    </div>
+    <div role="tabpanel" id="connPaneHistory" aria-labelledby="connTabHistory" data-pane="history" hidden>
+      <p class="text-muted-d">Every earlier text of this file is kept in <span class="mono">.history/</span>. Pick one to see what changed, or put it back.</p>
+      <div data-history></div>
+      <pre class="conn-diff" data-diff tabindex="0" aria-label="Differences between the chosen version and the current file" hidden></pre>
+    </div>
+    <ul class="conn-problems" data-problems aria-live="polite"></ul>
+    <p class="adm-msg" data-edit-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions">
+      <button type="button" class="btn-pill btn-ghost" data-test>Test connection</button>
+      <button type="button" class="btn-pill btn-accent" data-save>Save</button>
+    </div>
+  </dialog>
+
+  <dialog class="adm-dialog conn-confirm" data-confirm-dialog aria-labelledby="connConfTitle">
+    <h2 id="connConfTitle" data-confirm-title>Are you sure?</h2>
+    <p data-confirm-text></p>
+    <ul data-confirm-uses></ul>
+    <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-ghost" data-confirm-no>Keep it as it is</button>
+      <button type="button" class="btn-pill btn-accent emb-danger-btn" data-confirm-yes>Go ahead</button></div>
+  </dialog>

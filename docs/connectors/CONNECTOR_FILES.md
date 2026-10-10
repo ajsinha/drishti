@@ -411,6 +411,28 @@ configuration), plugin, kinds, **status** with the plugin's own health beside it
 it last changed. Filter by text, status or origin. `n` creates a connector and `/` focuses the filter. A connector defined in
 `application.yaml` is flagged with the file that would replace it; a bad file shows its problem on its row.
 
+### One connector: its own page
+
+Every connector name in the list is a link (Tab to it, Enter opens it) to `/admin/connectors/<name>`; the packs in *Used by* link to their pages.
+
+![One connector: summary, TLS certificate expiry, packs that use it, settings, the file and its history](img/connector_files/11-connector-detail.jpg)
+
+The page shows: the plugin, the origin (and the file), whether it is on, the **status** and the plugin's health, the last update and when the file changed; when the
+connector failed to start or lost its connection, *failed — next retry in Ns (attempt k)* with the last error and **Retry now**; **TLS**: on or off, the protocols,
+whether the host name is checked, and each configured certificate (client certificate, CA bundle, key store) with its subject and **expiry date and days left**
+(a warning under 30 days, *expired* once past; a setting that cannot be read is shown as the error). Then the **kinds it serves**, the **packs and kinds that use it**
+(links), the **settings in effect** (credentials shown as `***`), the file as **read-only text**, and the **history** of kept versions.
+
+Buttons: **Edit** opens the editor described below, **Test connection** opens it on the Test tab and runs the test on the saved file, **Compare or restore** opens the History
+tab, **Disable / Enable**, **Reset to pack default** and **Delete** behave as on the list (a pack's connector is never deleted; the page asks before it disables or deletes one packs use,
+and after a delete it returns to the list). The editor also opens by address: `/admin/connectors?name=<name>&tab=history` or `&tab=test`.
+
+![The connector's page on a phone: one column, targets of at least 44 px](img/connector_files/13-connector-detail-phone.jpg)
+
+The pack side is the same: a pack's page lists the connectors it names, each linked here, and flags a missing one with **Create** ([PACKS.md](../guides/PACKS.md#one-pack-its-own-page)).
+
+![A pack's page: its connectors, one running, one missing with Create](img/connector_files/12-pack-detail.jpg) ![A pack's page on a phone](img/connector_files/14-pack-detail-phone.jpg)
+
 **New connector** and **Edit** open one editor with four tabs (arrow keys move between them):
 
 ![New connector: a form generated from the plugin's settings, with a TLS section](img/connector_files/02-new-connector-form.jpg)
@@ -469,7 +491,7 @@ every change is **audited** (setting *names*, never values) as `connector-saved`
 |---|---|
 | `GET /` | Every connector: `origin`, `plugin`, `kinds`, `enabled`, `state`, `health`, `lastUpdate`, `updated`, `etag`, `problems`, `usedBy`; plus `directory`, `watch`, `misnamed`, `fileProblems`, `deprecated`, `knownKinds`. |
 | `GET /plugins` | The plugins and their settings: `name`, `type`, `required`, `default`, `description`, `secret`, `group`; `tls` says whether the TLS section applies. |
-| `GET /{name}` | The effective settings (credentials masked), the file `text`, `etag` (also the `ETag` header), `usedBy`, `packDefault`, `history`. |
+| `GET /{name}` | The effective settings (credentials masked), the file `text`, `etag` (also the `ETag` header), `usedBy`, `packDefault`, `history`, `retry` (attempt, `nextRetryInSeconds`, `lastError`), and `tls`: `null` when no `tls.*` setting is given, else `enabled`, `verifyHostname`, `protocols`, `certificates` (`source`, `subject`, `notBefore`, `notAfter`, `daysLeft`, `expired`), `warnings`, or `error` when the material cannot be read. |
 | `PUT /{name}` | Create or change. Body `{"text": "<yaml>"}` or the form's fields. An existing file needs `If-Match: <etag>`; `?confirm=true` after switching off a connector packs use. Validates, writes atomically, applies. |
 | `DELETE /{name}` | Delete a file no pack suggests (`If-Match`, `?confirm=true` when packs use it). |
 | `POST /{name}/enabled` | `{"enabled": false}`: switch on or off, keeping the rest of the file. |

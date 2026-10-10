@@ -228,7 +228,7 @@
         : el('a', { class: 'fk', href: c.createUrl, text: 'Create', 'aria-label': 'Create connector ' + c.name });
       var problems = (c.problems || []).map(function (x) { return el('div', { class: 't-bad', text: x }); });
       tb.appendChild(el('tr', { 'data-connector': c.name }, [
-        el('th', { scope: 'row', class: 'mono', text: c.name }),
+        el('th', { scope: 'row', class: 'mono' }, [c.defined ? el('a', { href: '/admin/connectors/' + q(c.name), text: c.name }) : c.name]),
         el('td', {}, [el('span', { class: st[0], text: st[1] })].concat(c.health ? [el('span', { class: 'text-muted-d', text: ' ' + c.health })] : [])),
         el('td', { class: 'mono', text: c.plugin || (c.hasTemplate ? 'from the pack\'s template' : '\u2014') }),
         el('td', { class: 'mono', text: (c.kinds || []).join(', ') || '\u2014' }),

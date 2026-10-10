@@ -31,7 +31,7 @@ from pathlib import Path
 
 from shotlib import CONSOLE_PORT, ROOT, SERVER_PORT, Ctx, listening, register
 
-OUT = ROOT / "docs" / "connectors" / "img" / "connector-files"
+OUT = ROOT / "docs" / "connectors" / "img" / "connector_files"
 DEAD_DB = 59997                              # nothing listens here: the connector below is meant to be DOWN
 shot = register("connector_files", OUT)
 
@@ -62,9 +62,12 @@ def start_servers(work: Path) -> list:
     (conns / "site-quotes.yaml").write_text(
         f"# A site connector: no pack suggests it.\nplugin: file\nkinds: [quote]\ndescription: Quotes from the desk's drop folder\nsettings:\n  root: {lake}\n  lookback-days: '10'\n",
         encoding="utf-8")
+    ca = work / "ledger-ca.pem"                    # a real certificate, so the connector's page can show when it expires
+    subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(work / "ledger-ca.key"), "-out", str(ca), "-days", "21",
+                    "-subj", "/CN=Ledger Root CA"], check=True, capture_output=True)
     (conns / "ledger-db.yaml").write_text(
         f"plugin: jdbc\nkinds: [ledger-entry]\ndescription: The ledger database (down on purpose)\nsettings:\n  url: jdbc:postgresql://127.0.0.1:{DEAD_DB}/ledger\n  user: drishti\n"
-        "  password: ${LEDGER_DB_PASSWORD}\n  table: ledger.entities\n  tls:\n    enabled: true\n    ca-file: /etc/drishti/tls/ca.pem\n"
+        "  password: ${LEDGER_DB_PASSWORD}\n  table: ledger.entities\n  tls:\n    enabled: true\n    ca-file: " + str(ca) + "\n"
         "    truststore-password: ${LEDGER_TRUSTSTORE_PASSWORD}\n", encoding="utf-8")
     (work / "application.local.yaml").write_text("drishti:\n  sources:\n    connectors:\n      legacy-feed:\n        plugin: file\n        settings: { root: ./data/legacy }\n", encoding="utf-8")
     for d in ("data/legacy", "data/desk-quotes", "delta"):
@@ -212,3 +215,32 @@ def phone(c: Ctx):
     c.page.screenshot(path=str(OUT / "10-phone.jpg"), type="jpeg", quality=84)
     print("  wrote", (OUT / "10-phone.jpg").relative_to(ROOT))
     c.page.keyboard.press("Escape")
+
+
+def settle(c: Ctx, url: str, selector: str):
+    c.page.goto(c.base + url)
+    c.page.wait_for_selector(selector)
+    c.page.wait_for_timeout(1500)
+
+
+@shot("11-connector-detail.jpg")
+def connector_detail(c: Ctx):
+    wide(c, 1280, 1500)
+    settle(c, "/admin/connectors/ledger-db", "[data-tls]")
+    c.save("11-connector-detail.jpg", ".adm")
+
+
+@shot("12-pack-detail.jpg")
+def pack_detail(c: Ctx):
+    wide(c, 1280, 1700)
+    settle(c, "/admin/packs/desk-demo", "[data-connectors]")
+    c.save("12-pack-detail.jpg", ".adm")
+
+
+@shot("13-connector-detail-phone.jpg", also=("14-pack-detail-phone.jpg",))
+def detail_phone(c: Ctx):
+    c.page.set_viewport_size({"width": 390, "height": 844})
+    settle(c, "/admin/connectors/ledger-db", "[data-tls]")
+    c.save("13-connector-detail-phone.jpg")
+    settle(c, "/admin/packs/desk-demo", "[data-connectors]")
+    c.save("14-pack-detail-phone.jpg")

@@ -47,7 +47,7 @@ def _pages(views: list[str] | None = None) -> list[str]:
              "/help", "/help/search?q=pivot", "/about", "/about/competitive",
              # the newer pages: data loads (all, and one pack's), collaboration admin, the inbox, a share nobody may open, the landing page's way back
              "/bi", "/bi/catalogue", "/bi/workspaces", "/bi/w/me", "/bi/datasets", "/bi/designer", "/bi/explore", "/admin/bi",
-             "/admin/loads", f"/admin/packs/{PACK}/loads", "/admin/collab", "/admin/embedding", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",
+             "/admin/loads", f"/admin/packs/{PACK}/loads", f"/admin/packs/{PACK}", "/admin/connectors", "/admin/connectors/trading-store", "/admin/collab", "/admin/embedding", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",
              f"/?from=/v/{first}", "/?from=/admin/loads"]
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
     pages += [f"/help/{g['slug']}" for cat in catalogue["categories"] for g in cat.get("guides", [])]

@@ -1,0 +1,137 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}{{ p.title or p.name }} · Packs · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% from "_macros/retry.html" import retry_note, retry_button %}
+{% set loaded = p.loaded %}
+<div class="adm" data-pack-admin data-pack-detail="{{ p.name }}">
+  {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="adm-crumb"><a href="/admin/packs">Packs</a> <span aria-hidden="true">/</span> <span class="mono">{{ p.name }}</span></p>
+  <h1 class="ws-h">{{ p.title or p.name }}{% if p.sample %} <span class="st st-warn" data-sample-badge title="A sample pack: a demonstration, shown or hidden by the sample-pack setting">Sample</span>{% endif %}
+    <a class="emb-help" href="/help/packs" aria-label="Help: domain packs and this page" title="Help: domain packs and this page">?</a></h1>
+  {% if p.description %}<p class="text-muted-d">{{ p.description }}</p>{% endif %}
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+
+  <section aria-labelledby="pdSummary" class="det-sec" data-pack="{{ p.name }}">
+    <h2 class="ws-h" id="pdSummary">Summary</h2>
+    <dl class="det-kv">
+      <dt>Name</dt><dd class="mono">{{ p.name }} {{ p.version }}</dd>
+      {% if d.code %}<dt>Code</dt><dd class="mono">{{ d.code }}</dd>{% endif %}
+      <dt>Status</dt><dd data-status>{% if not loaded and p.problem %}<span class="st st-bad">refused</span>
+        {% elif not loaded %}<span class="st" title="On disk; Load it from here">not loaded</span>
+        {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
+        {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{% endif %}{{ retry_note(p.retry) }}
+        {% if p.retry %}{{ retry_button('packs') }}{% endif %}</dd>
+      <dt>Changed</dt><dd class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} by {{ p.updatedBy }}{% else %}—{% endif %}</dd>
+      <dt>Builds on</dt><dd data-extends>{% for x in p.extends or [] %}<a class="mono" href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">nothing</span>{% endfor %}</dd>
+      <dt>Needed by</dt><dd data-needed-by>{% for x in p.requiredBy or [] %}<a class="mono" href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">no other pack</span>{% endfor %}</dd>
+    </dl>
+    <p class="adm-actions det-actions">{% if loaded %}
+      <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
+        {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
+      {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from the Packs page: unload it now (no restart)">Unload</button>{% endif %}
+      {% else %}<button type="button" class="fk" data-load="load" title="Check the pack with the loaded ones, then load it now (no restart)">Load</button>{% endif %}
+    </p>
+  </section>
+
+  {% if loaded %}
+  <section aria-labelledby="pdKinds" class="det-sec">
+    <h2 class="ws-h" id="pdKinds">Kinds and mnemonics</h2>
+    <div class="tbl-wrap"><table class="tbl adm-tbl det-tbl" data-plain data-kinds>
+      <caption class="visually-hidden">The kinds of this pack</caption>
+      <thead><tr><th scope="col">Kind</th><th scope="col">Mnemonic</th><th scope="col">Open a record</th><th scope="col">Search form</th><th scope="col">Form fields</th></tr></thead>
+      <tbody>{% for k in d.kinds or [] %}<tr data-kind="{{ k.kind }}">
+        <th scope="row" class="mono">{{ k.kind }}{% if k.label and k.label != k.kind %}<div class="text-muted-d">{{ k.label }}</div>{% endif %}</th>
+        <td class="mono">{{ k.mnemonic or '—' }}</td>
+        <td>{% if examples.get(k.kind) %}<a class="mono" href="/v/{{ k.kind | urlencode }}/{{ examples[k.kind] | urlencode }}" data-example>{{ examples[k.kind] }}</a>{% else %}<span class="text-muted-d">no record yet{% if not p.enabled %} (pack is off){% endif %}</span>{% endif %}</td>
+        <td><a href="/form/{{ p.name | urlencode }}?kind={{ k.kind | urlencode }}" data-form-link>FORM {{ p.name }}</a></td>
+        <td class="mono">{% if k.declaredForm %}{{ k.formFields | length }} declared{% else %}<span class="text-muted-d">inferred</span>{% endif %}
+          {% if k.formFields %}<div class="text-muted-d" title="{{ k.formFields | join(', ') }}">{{ k.formFields[:4] | join(', ') }}{{ ' …' if k.formFields | length > 4 }}</div>{% endif %}</td>
+      </tr>{% else %}<tr><td colspan="5" class="text-muted-d">This pack brings no kind.</td></tr>{% endfor %}</tbody>
+    </table></div>
+  </section>
+
+  <section aria-labelledby="pdSutras" class="det-sec">
+    <h2 class="ws-h" id="pdSutras">Sutras</h2>
+    {% if d.sutras %}<div class="tbl-wrap"><table class="tbl adm-tbl det-tbl" data-plain data-sutras>
+      <caption class="visually-hidden">The Sutras in this pack</caption>
+      <thead><tr><th scope="col">Sutra</th><th scope="col">Kind</th><th scope="col">Versions</th><th scope="col"><span class="visually-hidden">Open</span></th></tr></thead>
+      <tbody>{% for s in d.sutras %}<tr><th scope="row" class="mono">{{ s.name }}</th><td class="mono">{{ s.kind or '—' }}</td>
+        <td class="mono">{% for v in s.versions or [s.version] %}v{{ v }}{{ ', ' if not loop.last }}{% endfor %}</td>
+        <td><a class="fk" href="/studio?sutra={{ s.name | urlencode }}" aria-label="Open {{ s.name }} in the Build workbench">Open in Build</a></td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d">No Sutra of its own: the kinds are shown with the generated screen.</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="pdConn" class="det-sec">
+    <h2 class="ws-h" id="pdConn">Connectors it names</h2>
+    {% if sources.connectors %}<div class="tbl-wrap"><table class="tbl adm-tbl det-tbl" data-plain data-connectors>
+      <caption class="visually-hidden">The connectors this pack reads through</caption>
+      <thead><tr><th scope="col">Connector</th><th scope="col">Status</th><th scope="col">Kinds from this pack</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
+      <tbody>{% for c in sources.connectors %}<tr data-connector="{{ c.name }}">
+        <th scope="row" class="mono">{% if c.defined %}<a href="/admin/connectors/{{ c.name | urlencode }}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</th>
+        <td>{% if c.defined %}<span class="st {{ {'RUNNING': 'st-ok', 'FAILED': 'st-bad'}.get(c.state, 'st-warn' if c.state in ('IDLE', 'NOT_LOADED') else '') }}">{{ c.state | lower | replace('_', ' ') }}</span>
+          {% else %}<span class="st st-bad">missing</span> <span class="text-muted-d">nothing defines it</span>{% endif %}</td>
+        <td class="mono">{{ (c.kinds or []) | join(', ') or '—' }}</td>
+        <td>{% if c.defined %}<a class="fk" href="/admin/connectors/{{ c.name | urlencode }}">Open</a>{% else %}<a class="fk" href="{{ c.createUrl }}" aria-label="Create connector {{ c.name }}">Create</a>{% endif %}</td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d">This pack names no connector.</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="pdForm" class="det-sec">
+    <h2 class="ws-h" id="pdForm">Query by form and About</h2>
+    {% set declared = (d.kinds or []) | selectattr('declaredForm') | list %}
+    {% set abouts = (d.kinds or []) | selectattr('about') | list %}
+    <p data-form-summary>{{ declared | length }} of {{ (d.kinds or []) | length }} kind{{ '' if (d.kinds or []) | length == 1 else 's' }} declare a <span class="mono">form:</span> section; the others get a form inferred from their data.
+      <span class="mono">FORM {{ p.name }} &lt;GO&gt;</span> opens it.</p>
+    <p data-about-summary>{{ abouts | length }} kind{{ '' if abouts | length == 1 else 's' }} carry About text from this pack, with {{ d.glossaryTerms or 0 }} glossary term{{ '' if (d.glossaryTerms or 0) == 1 else 's' }} in all.</p>
+  </section>
+
+  <section aria-labelledby="pdLoads" class="det-sec">
+    <h2 class="ws-h" id="pdLoads">Data loads</h2>
+    {% set exp = expectations.expectations or [] %}
+    <p data-loads-summary>{{ exp | length }} expectation{{ '' if exp | length == 1 else 's' }} today{% if exp %}:
+      {% for s in exp %}<span class="mono">{{ s.kind }}</span> <span class="st {{ {'on-time': 'st-ok', 'landed-late': 'st-warn', 'late': 'st-bad', 'missing': 'st-bad', 'failed': 'st-bad'}.get(s.state, '') }}">{{ s.state }}</span>{{ ', ' if not loop.last }}{% endfor %}{% endif %}.
+      {% if loads %}Last load: <span class="mono">{{ loads[0].kind }} {{ loads[0].businessDate }}</span>{% if loads[0].receivedAt %} at {{ when_local(loads[0].receivedAt) }}{% endif %}.{% else %}No load has been announced yet.{% endif %}
+      <a href="/admin/packs/{{ p.name | urlencode }}/loads">Open the data loads page</a>.</p>
+  </section>
+  {% endif %}
+
+  <section aria-labelledby="pdHistory" class="det-sec">
+    <h2 class="ws-h" id="pdHistory">Deploy history</h2>
+    {% if kept %}<div class="tbl-wrap"><table class="tbl adm-tbl" data-kept data-plain>
+      <caption class="visually-hidden">Versions kept for a rollback</caption>
+      <thead><tr><th scope="col">Kept version</th><th scope="col">Kept at</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
+      <tbody>{% for k in kept %}<tr data-pack="{{ p.name }}" data-version="{{ k.version }}">
+        <td class="mono">{% if k.version == 'shipped' %}shipped with the server ({{ k.shippedVersion }}){% else %}{{ k.version }}{% endif %}</td>
+        <td class="mono">{{ (k.keptAt or '')[:16] | replace('T', ' ') or '—' }}</td>
+        <td class="adm-actions"><button type="button" class="fk" data-rollback>Roll back to this</button></td></tr>{% endfor %}</tbody></table></div>{% endif %}
+    <div class="tbl-wrap"><table class="tbl adm-tbl" data-history data-plain>
+      <caption class="visually-hidden">Deployments and rollbacks of this pack</caption>
+      <thead><tr><th scope="col">When (UTC)</th><th scope="col">What</th><th scope="col">Version</th><th scope="col">Replaced</th><th scope="col">By</th><th scope="col">Detail</th></tr></thead>
+      <tbody>{% for r in history %}<tr><td class="mono">{{ r.at[:19] | replace('T', ' ') }}</td><td>{{ r.action }}</td><td class="mono">{{ r.version }}</td>
+        <td class="mono">{{ r.previous or '—' }}</td><td>{{ r.by }}</td><td class="cmp-path">{{ r.detail }}</td></tr>
+      {% else %}<tr><td colspan="6" class="text-muted-d">Nothing has been deployed from the console for this pack.</td></tr>{% endfor %}</tbody></table></div>
+  </section>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script>{% endblock %}
