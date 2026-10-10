@@ -41,16 +41,16 @@ import java.util.Map;
 public final class PackLoader {
 
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
-    /** The administrator's data-source overrides, applied over each pack's connector settings; null when none are kept. */
-    private final PackSettings dataSources;
+    /** The connector files of the site; a pack's template for a connector is only used when no file of that name exists. */
+    private final ConnectorFiles connectorFiles;
 
     public PackLoader() {
         this(null);
     }
 
-    /** A loader that merges the override files of {@code settings} into the packs' connectors (see {@link PackSettings}). */
-    public PackLoader(PackSettings settings) {
-        this.dataSources = settings;
+    /** A loader that leaves a pack's connector template out where the site has a connector file of that name. */
+    public PackLoader(ConnectorFiles files) {
+        this.connectorFiles = files;
     }
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -231,24 +231,24 @@ public final class PackLoader {
                 }
                 offer(claims, overrides, lineage, "role " + e.getKey(), pack.name(), props);
             }
-            // connectors: one per data domain (a Delta Lake domain folder, a database). Data domains and packs are
-            // many-to-many: several packs may declare the same connector identically; a child may redefine one.
-            for (Map.Entry<String, Object> e : map(m.get("connectors")).entrySet()) {
-                Map<String, Object> c = map(e.getValue());
+            // connectors: the pack names site connectors (config/connectors/<name>.yaml). What it defines inline is a
+            // template, in force only while no file of that name exists (the server writes one from it at start).
+            for (Map.Entry<String, Map<String, Object>> e : pack.connectorTemplates().entrySet()) {
+                if (connectorFiles != null && connectorFiles.exists(e.getKey())) {
+                    continue;
+                }
+                Map<String, Object> c = e.getValue();
                 String base = "drishti.sources.connectors." + e.getKey();
                 Map<String, Object> props = new LinkedHashMap<>();
-                Map<String, Object> over = dataSources == null ? Map.of() : dataSources.connector(pack.name(), e.getKey());
                 props.put(base + ".plugin", c.get("plugin"));
-                Object enabledFlag = over.get("enabled") != null ? over.get("enabled") : c.get("enabled");
-                if (enabledFlag != null) {
-                    props.put(base + ".enabled", enabledFlag);
+                if (c.get("enabled") != null) {
+                    props.put(base + ".enabled", c.get("enabled"));
                 }
                 List<Object> ck = (List<Object>) c.getOrDefault("kinds", List.of());
                 for (int i = 0; i < ck.size(); i++) {
                     props.put(base + ".kinds[" + i + "]", ck.get(i));
                 }
                 flatten(base + ".settings.", map(c.get("settings")), props);
-                map(over.get("settings")).forEach((k, v) -> props.put(base + ".settings." + k, String.valueOf(v)));   // the administrator's override wins over the pack
                 offer(claims, overrides, lineage, "connector " + e.getKey(), pack.name(), props);
             }
             // routes: which connector answers each of the pack's kinds (the query inside a pack picks the connector)
@@ -280,7 +280,7 @@ public final class PackLoader {
      * {@code book-pnl.from: trade}). Lists become comma lists.
      */
     @SuppressWarnings("unchecked")
-    static void flatten(String prefix, Map<String, Object> settings, Map<String, Object> out) {
+    public static void flatten(String prefix, Map<String, Object> settings, Map<String, Object> out) {
         settings.forEach((k, v) -> {
             if (v instanceof Map<?, ?> nested) {
                 flatten(prefix + k + ".", (Map<String, Object>) nested, out);

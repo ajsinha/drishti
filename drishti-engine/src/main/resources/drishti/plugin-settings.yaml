@@ -1,0 +1,264 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The settings of the shipped source plugins, for the connector form and validator (Admin -> Connectors).
+# A plugin that overrides SourcePlugin#settingSpecs() wins over its entry here. Fields: name (a trailing .* covers a
+# subtree), type (string|int|boolean|duration|path|list|enum:a|b), required, default, desc, secret, group.
+# A plugin with `tls: true` also offers the shared tls.* section.
+common:
+  - { name: source-name, desc: "The name documents carry as their provenance (default: the connector's name)", group: general }
+  - { name: stale-after, type: duration, desc: "Mark the source stale when it has received nothing for this long (15m, 2h, 1d)", group: general }
+tls:
+  - { name: tls.enabled, type: boolean, default: "false", desc: "Use TLS for this connector", group: tls }
+  - { name: tls.truststore.path, type: path, desc: "Truststore holding the CA certificates to trust (JKS or PKCS12)", group: tls }
+  - { name: tls.truststore.password, secret: true, desc: "Truststore password: ${ENV_VAR} or file:/path", group: tls }
+  - { name: tls.truststore.type, type: "enum:PKCS12|JKS|PEM", default: PKCS12, desc: "Truststore format", group: tls }
+  - { name: tls.keystore.path, type: path, desc: "Client keystore for mutual TLS", group: tls }
+  - { name: tls.keystore.password, secret: true, desc: "Keystore password: ${ENV_VAR} or file:/path", group: tls }
+  - { name: tls.keystore.type, type: "enum:PKCS12|JKS|PEM", default: PKCS12, desc: "Keystore format", group: tls }
+  - { name: tls.verify-hostname, type: boolean, default: "true", desc: "Check the server certificate names the host", group: tls }
+plugins:
+  jdbc:
+    tls: true
+    settings:
+      - { name: url, required: true, desc: "JDBC URL, e.g. jdbc:postgresql://host:5432/db", group: connection }
+      - { name: user, desc: "Database user", group: connection }
+      - { name: password, secret: true, desc: "Database password: ${ENV_VAR} or file:/path", group: connection }
+      - { name: table, desc: "Table holding the entities", group: connection }
+      - { name: kind-column, desc: "Column holding the kind", group: mapping }
+      - { name: id-column, desc: "Column holding the entity id", group: mapping }
+      - { name: doc-column, desc: "Column holding the JSON document", group: mapping }
+      - { name: date-column, desc: "Column holding the business date", group: mapping }
+      - { name: json-columns, type: list, desc: "Columns that hold JSON", group: mapping }
+      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: zone, desc: "Time zone of the date column", group: mapping }
+      - { name: pool-size, type: int, default: "4", desc: "Connections in the pool", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
+      - { name: scan-threads, type: int, desc: "Threads for scans", group: tuning }
+      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
+      - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+      - { name: "query.*", desc: "Custom SQL per purpose (query.trade, ...)", group: mapping }
+  duckdb:
+    settings:
+      - { name: path, required: true, desc: "DuckDB database file", type: path, group: connection }
+      - { name: table, desc: "Table holding the entities", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: memory-limit, desc: "DuckDB memory limit (e.g. 2GB)", group: tuning }
+      - { name: threads, type: int, desc: "DuckDB threads", group: tuning }
+      - { name: pool-size, type: int, desc: "Connections in the pool", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
+      - { name: scan-threads, type: int, desc: "Threads for scans", group: tuning }
+      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
+      - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+  delta:
+    settings:
+      - { name: root, required: true, type: path, desc: "Lake root (folder, or s3://bucket/prefix)", group: connection }
+      - { name: domain, desc: "Domain folder under the root", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
+      - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
+      - { name: engine, desc: "Reader engine", group: tuning }
+      - { name: date-column, desc: "Business date column", group: mapping }
+      - { name: id-column, desc: "Entity id column", group: mapping }
+      - { name: doc-column, desc: "Document column", group: mapping }
+      - { name: warm-dates, type: int, desc: "Business dates to warm at start", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
+      - { name: max-concurrent-reads, type: int, desc: "Concurrent reads", group: tuning }
+      - { name: cache-mb, type: int, desc: "Cache size", group: tuning }
+      - { name: doc-cache-mb, type: int, desc: "Document cache size", group: tuning }
+      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
+      - { name: id-map-mb, type: int, desc: "Id map size", group: tuning }
+      - { name: lz4-via-native, type: boolean, desc: "Use native LZ4", group: tuning }
+      - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
+      - { name: s3.region, desc: "S3 region", group: s3 }
+      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
+      - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
+  iceberg:
+    settings:
+      - { name: root, type: path, desc: "Warehouse root", group: connection }
+      - { name: uri, desc: "Catalog URI", group: connection }
+      - { name: catalog, desc: "Catalog name", group: connection }
+      - { name: namespace, desc: "Namespace", group: connection }
+      - { name: domain, desc: "Domain", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
+      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
+      - { name: max-concurrent-reads, type: int, desc: "Concurrent reads", group: tuning }
+      - { name: layout-cache, type: int, desc: "Layout cache entries", group: tuning }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+      - { name: s3.endpoint, desc: "S3-compatible endpoint", group: s3 }
+      - { name: s3.region, desc: "S3 region", group: s3 }
+      - { name: s3.path-style, type: boolean, desc: "Path-style S3 addressing", group: s3 }
+      - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
+      - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
+  aerospike:
+    tls: true
+    settings:
+      - { name: hosts, required: true, desc: "host:port list, comma separated", group: connection }
+      - { name: namespace, required: true, desc: "Namespace", group: connection }
+      - { name: set, desc: "Set", group: connection }
+      - { name: domain, desc: "Domain", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: user, desc: "User", group: connection }
+      - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
+      - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
+      - { name: scan-threads, type: int, desc: "Threads for scans", group: tuning }
+      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
+      - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+  mongodb:
+    tls: true
+    settings:
+      - { name: uri, required: true, desc: "MongoDB URI (credentials as ${ENV} references)", group: connection }
+      - { name: database, desc: "Database", group: connection }
+      - { name: collection, desc: "Collection", group: connection }
+      - { name: domain, desc: "Domain", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: doc-format, desc: "Document format", group: mapping }
+      - { name: read-preference, desc: "Read preference", group: connection }
+      - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
+      - { name: batch-size, type: int, desc: "Batch size", group: tuning }
+      - { name: batch, type: int, desc: "Batch", group: tuning }
+      - { name: read-threads, type: int, desc: "Read threads", group: tuning }
+      - { name: in-flight, type: int, desc: "Reads in flight", group: tuning }
+      - { name: heavy-reads, type: int, desc: "Heavy reads at once", group: tuning }
+      - { name: ttl-days, type: int, desc: "Days to keep", group: tuning }
+      - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
+      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+  redis:
+    tls: true
+    settings:
+      - { name: uri, required: true, desc: "redis:// or rediss:// URI (credentials as ${ENV} references)", group: connection }
+      - { name: user, desc: "User", group: connection }
+      - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
+      - { name: cluster, type: boolean, desc: "Redis Cluster", group: connection }
+      - { name: domain, desc: "Domain", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: codec, desc: "Document codec", group: mapping }
+      - { name: live, type: boolean, desc: "Subscribe to live updates", group: tuning }
+      - { name: fail-fast, type: boolean, desc: "Fail at start when unreachable", group: tuning }
+      - { name: timeout-ms, type: int, desc: "Command timeout", group: tuning }
+      - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
+      - { name: threads, type: int, desc: "Threads", group: tuning }
+      - { name: in-flight, type: int, desc: "Reads in flight", group: tuning }
+      - { name: heavy-reads, type: int, desc: "Heavy reads at once", group: tuning }
+      - { name: ttl-days, type: int, desc: "Days to keep", group: tuning }
+      - { name: level, type: int, desc: "Compression level", group: tuning }
+      - { name: chunk-rows, type: int, desc: "Rows per chunk", group: tuning }
+      - { name: dict-kb, type: int, desc: "Dictionary size", group: tuning }
+      - { name: dict-samples, type: int, desc: "Dictionary samples", group: tuning }
+      - { name: recheck-ms, type: int, desc: "Recheck interval", group: tuning }
+      - { name: keep-replaced-seconds, type: int, desc: "Keep replaced data this long", group: tuning }
+      - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
+      - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
+  file:
+    settings:
+      - { name: root, required: true, type: path, desc: "Folder of documents", group: connection }
+      - { name: domain, desc: "Domain", group: connection }
+      - { name: id-field, desc: "Field holding the entity id", group: mapping }
+      - { name: rescan-seconds, type: int, desc: "Rescan interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: max-load-rows, type: int, desc: "Documents to load at most", group: tuning }
+      - { name: max-document-mb, type: int, desc: "Largest document", group: tuning }
+      - { name: max-nesting-depth, type: int, desc: "Deepest nesting", group: tuning }
+      - { name: index-cache-mb, type: int, desc: "Index cache size", group: tuning }
+  demo:
+    settings:
+      - { name: dirs, type: list, desc: "Sample folders", group: connection }
+      - { name: ticking, type: boolean, desc: "Tick values for live demos", group: tuning }
+      - { name: tick-ms, type: int, desc: "Tick interval", group: tuning }
+  feeds:
+    tls: true
+    settings:
+      - { name: url, desc: "Feed URL", group: connection }
+      - { name: feed, desc: "Built-in feed name", group: connection }
+      - { name: series, type: list, desc: "Series to read", group: mapping }
+      - { name: api-key, secret: true, desc: "API key: ${ENV_VAR} or file:/path", group: connection }
+      - { name: user-agent, desc: "User-Agent header", group: connection }
+      - { name: refresh-minutes, type: int, desc: "Refresh interval", group: tuning }
+      - { name: timeout-seconds, type: int, desc: "Request timeout", group: tuning }
+  rest:
+    tls: true
+    settings:
+      - { name: base-url, required: true, desc: "Base URL of the service", group: connection }
+      - { name: path, desc: "Path template", group: connection }
+      - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
+      - { name: generation-header, desc: "Response header carrying the data generation", group: mapping }
+      - { name: timeout-ms, type: int, desc: "Request timeout", group: tuning }
+  s3:
+    tls: true
+    settings:
+      - { name: bucket, required: true, desc: "Bucket", group: connection }
+      - { name: prefix, desc: "Key prefix", group: connection }
+      - { name: endpoint, desc: "S3-compatible endpoint", group: connection }
+      - { name: region, desc: "Region", group: connection }
+      - { name: path-style, type: boolean, desc: "Path-style addressing", group: connection }
+      - { name: access-key, secret: true, desc: "Access key: ${ENV_VAR} or file:/path", group: connection }
+      - { name: secret-key, secret: true, desc: "Secret key: ${ENV_VAR} or file:/path", group: connection }
+      - { name: rescan-seconds, type: int, desc: "Rescan interval", group: tuning }
+      - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
+      - { name: cache-entries, type: int, desc: "Cache entries", group: tuning }
+      - { name: cache-seconds, type: int, desc: "Cache lifetime", group: tuning }
+  kafka:
+    tls: true
+    settings:
+      - { name: bootstrap-servers, required: true, desc: "Broker list host:port,...", group: connection }
+      - { name: topics, type: list, required: true, desc: "Topics to read", group: connection }
+      - { name: kind, desc: "Kind of the messages", group: mapping }
+      - { name: id-field, desc: "Field holding the entity id", group: mapping }
+      - { name: mode, desc: "Consumption mode", group: mapping }
+      - { name: search, type: boolean, desc: "Keep messages searchable", group: mapping }
+      - { name: poll-ms, type: int, desc: "Poll interval", group: tuning }
+      - { name: cache-mb, type: int, desc: "Cache size", group: tuning }
+      - { name: "disk-cache.*", desc: "On-disk cache (enabled, dir, max-gb, ...)", group: tuning }
+      - { name: "security.*", desc: "Kafka security settings (protocol, SASL)", group: security }
+  activemq:
+    tls: true
+    settings:
+      - { name: broker-url, required: true, desc: "Broker URL", group: connection }
+      - { name: destinations, type: list, required: true, desc: "Queues and topics", group: connection }
+      - { name: user, desc: "User", group: connection }
+      - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
+      - { name: client-id, desc: "Client id", group: connection }
+      - { name: max-redeliveries, type: int, desc: "Redeliveries before giving up", group: tuning }
+  rabbitmq:
+    tls: true
+    settings:
+      - { name: uri, required: true, desc: "amqp:// or amqps:// URI (credentials as ${ENV} references)", group: connection }
+      - { name: queues, type: list, required: true, desc: "Queues to read", group: connection }
+      - { name: "bind.*", desc: "Queue bindings", group: connection }
+      - { name: declare, type: boolean, desc: "Declare queues at start", group: connection }
+      - { name: prefetch, type: int, desc: "Prefetch", group: tuning }
+      - { name: heartbeat-seconds, type: int, desc: "Heartbeat", group: tuning }
+      - { name: recovery-interval-ms, type: int, desc: "Recovery interval", group: tuning }

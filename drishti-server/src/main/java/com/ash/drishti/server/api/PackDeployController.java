@@ -18,8 +18,7 @@ package com.ash.drishti.server.api;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
-import com.ash.drishti.packs.PackSettings;
-import com.ash.drishti.server.deploy.DataSourceService;
+import com.ash.drishti.server.connectors.ConnectorManager;
 import com.ash.drishti.server.deploy.PackDeployService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
@@ -45,29 +44,22 @@ import org.springframework.web.bind.annotation.RestController;
  * Admin → Packs → Deploy archive and Data source. An archive (the pack only, never data) is uploaded as the raw request
  * body, verified and previewed ({@code POST /deploy}), then confirmed ({@code POST /deploy/{id}}): the files are swapped into
  * the installed folder (the previous version kept) and the server restarts in place to read them, putting the old files back
- * if it cannot start. {@code POST /{pack}/rollback} goes back to a kept version. The data source of a loaded pack is read,
- * tried, changed and reset under {@code /{pack}/datasource}; a change is saved to the pack's override file and applied the same
- * safe way. Everything needs an administrator (and, for a personal API token, the {@code packs:admin} scope); every change is audited.
+ * if it cannot start. {@code POST /{pack}/rollback} goes back to a kept version. The connectors a loaded pack uses are shown under
+ * {@code /{pack}/datasource} (they are changed in Admin &rarr; Connectors). Everything needs an administrator (and, for a personal API token, the {@code packs:admin} scope); every change is audited.
  */
 @RestController
 @RequestMapping("/api/v1/admin/packs")
 public class PackDeployController {
 
-    /** {"connectors": {"risk-store": {"enabled": true, "settings": {"root": "/mnt/lake"}}}}: the whole desired override. */
-    public record DataSource(Map<String, Object> connectors) {}
-
-    /** {"connector": "risk-store", "connectors": {...}}: what to try; no connectors means the settings in force. */
-    public record TestRequest(String connector, Map<String, Object> connectors) {}
-
     private final PackDeployService deploy;
-    private final DataSourceService sources;
+    private final ConnectorManager connectors;
     private final PackAdminController admin;
     private final Entitlements entitlements;
     private final AuditLog audit;
 
-    public PackDeployController(PackDeployService deploy, DataSourceService sources, PackAdminController admin, Entitlements entitlements, AuditLog audit) {
+    public PackDeployController(PackDeployService deploy, ConnectorManager connectors, PackAdminController admin, Entitlements entitlements, AuditLog audit) {
         this.deploy = deploy;
-        this.sources = sources;
+        this.connectors = connectors;
         this.admin = admin;
         this.entitlements = entitlements;
         this.audit = audit;
@@ -169,55 +161,14 @@ public class PackDeployController {
 
     // -- data source -------------------------------------------------------------------------------------------------
 
-    /** The pack's connectors with each setting's pack default, administrator override, site value and the one in force. */
+    /**
+     * The pack's connectors, as a view: each one's origin, state and health, whether it is defined at all, and where to edit
+     * it ({@code /admin/connectors?name=}). Connectors are changed in Admin &rarr; Connectors, not here.
+     */
     @GetMapping("/{name}/datasource")
     public Map<String, Object> dataSource(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        return sources.get(name);
-    }
-
-    /** Saves the whole desired override (only what differs from the pack stays) and applies it with the safe restart. */
-    @PutMapping("/{name}/datasource")
-    public Map<String, Object> save(@PathVariable String name, @RequestBody DataSource body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireAdmin(p);
-        Map<String, Object> doc = sources.normalise(name, Map.of("connectors", body.connectors() == null ? Map.of() : body.connectors()));
-        return apply(name, doc, "pack-datasource-changed", p);
-    }
-
-    /** Removes the override (one connector's with {@code connector}, else all of it): the pack's own settings apply again. */
-    @DeleteMapping("/{name}/datasource")
-    public Map<String, Object> reset(@PathVariable String name, @RequestParam(required = false) String connector, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireAdmin(p);
-        return apply(name, sources.without(name, connector), "pack-datasource-reset", p);
-    }
-
-    /** Tries the connectors (the settings in force, or an edit not yet saved): dates and how many entities per kind. Changes nothing. */
-    @PostMapping("/{name}/datasource/test")
-    public Map<String, Object> test(@PathVariable String name, @RequestBody(required = false) TestRequest body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireAdmin(p);
-        Map<String, Object> candidate = body == null || body.connectors() == null ? null : Map.of("connectors", body.connectors());
-        Map<String, Object> out = sources.test(name, candidate, body == null ? null : body.connector());
-        audit.record(p.user(), "pack-datasource-tested", name, (Boolean.TRUE.equals(out.get("ok")) ? "reachable" : "problem") + ", " + out.get("tested"));
-        return out;
-    }
-
-    private Map<String, Object> apply(String name, Map<String, Object> doc, String action, Principal p) {
-        PackSettings st = sources.settings();
-        List<String> changed = sources.changed(name, doc);
-        String before = st.text(name);
-        st.write(name, doc);
-        audit.record(p.user(), action, name, changed.isEmpty() ? "no change" : "settings " + changed);
-        Map<String, Object> out = new LinkedHashMap<>();
-        if (changed.isEmpty()) {
-            out.put("name", name);
-            out.put("restarting", false);
-            out.put("note", "Nothing changed; the server was not restarted.");
-        } else {
-            out.putAll(admin.reload(action + "-applied", name, p, () -> st.putText(name, before)));
-        }
-        out.put("overridden", !doc.isEmpty());
-        out.put("changed", changed);
-        return out;
+        return connectors.packView(name);
     }
 
     private static String clean(String s) {

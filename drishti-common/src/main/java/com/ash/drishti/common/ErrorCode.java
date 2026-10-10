@@ -28,6 +28,8 @@ public enum ErrorCode {
     PLUGIN_LOAD_FAILED("DRS-1006", 500),
     /** A read "as known at" an instant from a store that keeps no earlier versions (it would show today's data). */
     NO_TIME_TRAVEL("DRS-1007", 400),
+    /** A kind is routed to a connector (by a pack) for which no connector file or definition exists. */
+    CONNECTOR_NOT_CONFIGURED("DRS-1011", 404),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),
@@ -65,6 +67,11 @@ public enum ErrorCode {
     LOAD_PACK_NOT_FOUND("DRS-5011", 404),
     /** A data-load announcement names a kind the pack does not own. */
     LOAD_KIND_UNKNOWN("DRS-5012", 422),
+    /** A connector file or draft that fails validation. */
+    CONNECTOR_INVALID("DRS-5031", 422),
+    /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */
+    CONNECTOR_CONFLICT("DRS-5032", 409),
+    CONNECTOR_NOT_FOUND("DRS-5033", 404),
     USER_NOT_FOUND("DRS-6001", 404),
     USER_EXISTS("DRS-6002", 409),
     WEAK_PASSWORD("DRS-6003", 422),

@@ -91,6 +91,21 @@ public final class SourceRouter {
         return fetch(ref, timeout, AsOf.LATEST);
     }
 
+    /** Why nothing serves {@code kind}: a connector the kind is routed to that does not exist, is off, or failed; else no source at all. */
+    DrishtiException noSource(String kind) {
+        String routed = props.routes().get(kind);
+        if (routed != null && registry.plugin(routed).isEmpty()) {
+            var status = registry.connectorStatuses().get(routed);
+            if (status == null) {
+                return new DrishtiException(ErrorCode.CONNECTOR_NOT_CONFIGURED, "connector " + routed + " is not configured: kind '" + kind
+                        + "' is routed to it, but no connector file " + routed + ".yaml exists (create it in Admin -> Connectors)");
+            }
+            return new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "connector " + routed + " is " + status.state().toLowerCase(java.util.Locale.ROOT)
+                    + (status.problem() == null ? "" : ": " + status.problem()) + " (kind '" + kind + "' is routed to it)");
+        }
+        return new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "no source serves kind '" + kind + "'");
+    }
+
     /**
      * Reads {@code ref} as of {@code asOf}. Dated sources get the date and stamp the business date their document
      * is for; undated ones answer with what they hold and their documents carry no date, so the view can say so.
@@ -98,8 +113,7 @@ public final class SourceRouter {
     public CompletableFuture<EntityDocument> fetch(EntityRef ref, Duration timeout, AsOf asOf) {
         List<SourcePlugin> candidates = candidates(ref.kind());
         if (candidates.isEmpty()) {
-            return CompletableFuture.failedFuture(
-                    new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "no source serves kind '" + ref.kind() + "'"));
+            return CompletableFuture.failedFuture(noSource(ref.kind()));
         }
         readOrder(candidates, asOf);
         AtomicReference<String> asking = new AtomicReference<>();

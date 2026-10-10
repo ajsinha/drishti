@@ -39,8 +39,24 @@ public final class SourceRegistry implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(SourceRegistry.class);
 
-    private final Map<String, SourcePlugin> plugins;
-    private final Map<String, String> failures = new LinkedHashMap<>();
+    /** Copy-on-write: readers take the current snapshot and never lock; changes swap in a new one under {@link #swap}. */
+    private volatile Map<String, SourcePlugin> plugins = Map.of();
+    private final Map<String, String> failures = new java.util.concurrent.ConcurrentHashMap<>();
+    private final List<SourcePlugin> discovered;
+    private final JsonCodec codec;
+    private final SourcesProperties props;
+    private final Map<String, java.util.concurrent.locks.ReentrantLock> locks = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, ConnectorStatus> statuses = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, SourcesProperties.ConnectorSettings> applied = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Where a named connector stands.
+     *
+     * @param state {@code RUNNING}, {@code DISABLED}, {@code IDLE} (installed, not configured) or {@code FAILED}
+     * @param problem why it is not running, or null
+     * @param since when this state began
+     */
+    public record ConnectorStatus(String state, String problem, java.time.Instant since) {}
     /** By connector name and by the name its documents carry (source-name): the source and its stale-after. */
     private final Map<String, SourcePlugin> bySource = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, java.time.Duration> staleAfter = new java.util.concurrent.ConcurrentHashMap<>();
@@ -93,6 +109,9 @@ public final class SourceRegistry implements AutoCloseable {
     private final ScheduledExecutorService scheduler;
 
     public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec) {
+        this.discovered = List.copyOf(discovered);
+        this.codec = codec;
+        this.props = props;
         // Shared by every plugin for refreshes, rescans, ticks and nightly cache clearing, several of which block on
         // I/O (a feed download, an Aerospike scan, a Delta reindex). Virtual-thread workers: a blocked task releases
         // its carrier, and sixteen of them cost next to nothing, so one slow task never delays the others.
@@ -108,23 +127,18 @@ public final class SourceRegistry implements AutoCloseable {
         Map<SourcePlugin, Map<String, String>> settings = new java.util.IdentityHashMap<>();
         enabled.forEach(p -> settings.put(p, props.settingsFor(p.manifest().name()).settings()));
         props.connectors().forEach((name, c) -> {
+            applied.put(name, c);
             if (!c.enabled()) {
-                return;
-            }
-            SourcePlugin proto = discovered.stream().filter(p -> p.manifest().name().equals(c.plugin())).findFirst().orElse(null);
-            if (proto == null) {
-                failures.put(name, "no plugin named '" + c.plugin() + "'");
+                statuses.put(name, new ConnectorStatus("DISABLED", null, java.time.Instant.now()));
                 return;
             }
             try {
-                SourcePlugin fresh = proto.getClass().getDeclaredConstructor().newInstance();
-                SourcePlugin instance = new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), fresh);
+                SourcePlugin instance = instantiate(name, c);
                 enabled.add(instance);
-                Map<String, String> own = new LinkedHashMap<>(c.settings());
-                own.putIfAbsent("source-name", name);   // documents say which connector they came from
-                settings.put(instance, own);
-            } catch (ReflectiveOperationException e) {
-                failures.put(name, "cannot create " + c.plugin() + ": " + e.getMessage());
+                settings.put(instance, ownSettings(name, c));
+            } catch (IllegalStateException e) {
+                failures.put(name, e.getMessage());
+                statuses.put(name, new ConnectorStatus("FAILED", e.getMessage(), java.time.Instant.now()));
             }
         });
         try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -141,33 +155,186 @@ public final class SourceRegistry implements AutoCloseable {
                 try {
                     starts.get(i).get();
                     started.put(p.manifest().name(), p);
-                    Map<String, String> own = settings.get(p);
-                    String sourceName = own.getOrDefault("source-name", p.manifest().name());
-                    bySource.put(p.manifest().name(), p);
-                    bySource.put(sourceName, p);
-                    String after = own.get("stale-after");
-                    if (after != null && !after.isBlank()) {
-                        try {
-                            java.time.Duration d = org.springframework.boot.convert.DurationStyle.detectAndParse(after.trim());
-                            staleAfter.put(p.manifest().name(), d);
-                            staleAfter.put(sourceName, d);
-                        } catch (IllegalArgumentException bad) {
-                            LOG.warn("{}: stale-after '{}' is not a duration (15m, 2h, 1d); ignored", p.manifest().name(), after);
-                        }
-                    }
+                    register(p, settings.get(p));
                     LOG.info("source plugin started: {}", p.manifest().name());
                 } catch (Exception e) {
                     Throwable cause = e.getCause() == null ? e : e.getCause();
                     if (cause instanceof com.ash.drishti.api.PluginNotConfigured) {
                         LOG.info("source plugin {} is installed but not configured ({}); it stays idle", p.manifest().name(), cause.getMessage());
+                        if (applied.containsKey(p.manifest().name())) {
+                            statuses.put(p.manifest().name(), new ConnectorStatus("IDLE", String.valueOf(cause.getMessage()), java.time.Instant.now()));
+                        }
                         continue;
                     }
                     failures.put(p.manifest().name(), String.valueOf(cause.getMessage()));
+                    if (applied.containsKey(p.manifest().name())) {
+                        statuses.put(p.manifest().name(), new ConnectorStatus("FAILED", String.valueOf(cause.getMessage()), java.time.Instant.now()));
+                    }
                     LOG.error("source plugin {} failed to start", p.manifest().name(), cause);
                 }
             }
         }
+        started.keySet().forEach(n -> {
+            if (applied.containsKey(n)) {
+                statuses.put(n, new ConnectorStatus("RUNNING", null, java.time.Instant.now()));
+            }
+        });
         this.plugins = Collections.unmodifiableMap(started);
+    }
+
+    /** A fresh instance of the connector's plugin, named and limited to its kinds. */
+    private SourcePlugin instantiate(String name, SourcesProperties.ConnectorSettings c) {
+        SourcePlugin proto = discovered.stream().filter(p -> p.manifest().name().equals(c.plugin())).findFirst().orElse(null);
+        if (proto == null) {
+            throw new IllegalStateException("no plugin named '" + c.plugin() + "'");
+        }
+        try {
+            return new ConnectorInstance(name, new java.util.HashSet<>(c.kinds()), proto.getClass().getDeclaredConstructor().newInstance());
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("cannot create " + c.plugin() + ": " + e.getMessage());
+        }
+    }
+
+    private static Map<String, String> ownSettings(String name, SourcesProperties.ConnectorSettings c) {
+        Map<String, String> own = new LinkedHashMap<>(com.ash.drishti.common.ConnectorSecrets.resolve(c.settings()));
+        own.putIfAbsent("source-name", name);   // documents say which connector they came from
+        return own;
+    }
+
+    /** Makes a started plugin findable by name and by the source name its documents carry, with its freshness limit. */
+    private void register(SourcePlugin p, Map<String, String> own) {
+        String sourceName = own.getOrDefault("source-name", p.manifest().name());
+        bySource.put(p.manifest().name(), p);
+        bySource.put(sourceName, p);
+        String after = own.get("stale-after");
+        if (after != null && !after.isBlank()) {
+            try {
+                java.time.Duration d = org.springframework.boot.convert.DurationStyle.detectAndParse(after.trim());
+                staleAfter.put(p.manifest().name(), d);
+                staleAfter.put(sourceName, d);
+            } catch (IllegalArgumentException bad) {
+                LOG.warn("{}: stale-after '{}' is not a duration (15m, 2h, 1d); ignored", p.manifest().name(), after);
+            }
+        }
+    }
+
+    private void unregister(String name, SourcePlugin p) {
+        bySource.values().removeIf(x -> x == p);
+        staleAfter.keySet().removeIf(k -> !bySource.containsKey(k));
+    }
+
+    private synchronized void swap(String name, SourcePlugin next) {
+        Map<String, SourcePlugin> m = new LinkedHashMap<>(plugins);
+        if (next == null) {
+            m.remove(name);
+        } else {
+            m.put(name, next);
+        }
+        plugins = Collections.unmodifiableMap(m);
+    }
+
+    /**
+     * Brings a named connector to the given settings while the server runs: stops the instance that is running (it is
+     * taken out of routing at once, kept open for {@code connectors-drain} so reads in flight finish, then closed),
+     * and starts a new one unless the settings say disabled. One change per connector at a time; others are not held up.
+     *
+     * @return the state it ends in
+     */
+    public ConnectorStatus apply(String name, SourcesProperties.ConnectorSettings c) {
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            stopLocked(name);
+            applied.put(name, c);
+            if (!c.enabled()) {
+                failures.remove(name);
+                return status(name, "DISABLED", null);
+            }
+            SourcePlugin instance;
+            try {
+                instance = instantiate(name, c);
+            } catch (IllegalStateException e) {
+                failures.put(name, e.getMessage());
+                return status(name, "FAILED", e.getMessage());
+            }
+            Map<String, String> own = ownSettings(name, c);
+            try {
+                instance.start(new EngineSourceContext(own, codec, scheduler, reader));
+            } catch (Exception e) {
+                closeQuietly(instance);
+                if (e instanceof com.ash.drishti.api.PluginNotConfigured) {
+                    failures.remove(name);
+                    return status(name, "IDLE", e.getMessage());
+                }
+                failures.put(name, String.valueOf(e.getMessage()));
+                LOG.error("connector {} failed to start", name, e);
+                return status(name, "FAILED", String.valueOf(e.getMessage()));
+            }
+            register(instance, own);
+            swap(name, instance);
+            failures.remove(name);
+            LOG.info("connector {} started ({})", name, c.plugin());
+            return status(name, "RUNNING", null);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Stops a named connector and forgets its settings (its file was deleted). */
+    public void remove(String name) {
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            stopLocked(name);
+            applied.remove(name);
+            statuses.remove(name);
+            failures.remove(name);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private ConnectorStatus status(String name, String state, String problem) {
+        ConnectorStatus st = new ConnectorStatus(state, problem, java.time.Instant.now());
+        statuses.put(name, st);
+        return st;
+    }
+
+    private void stopLocked(String name) {
+        SourcePlugin old = plugins.get(name);
+        if (old == null) {
+            return;
+        }
+        swap(name, null);
+        unregister(name, old);
+        long drain = props.connectorsDrain().toMillis();
+        if (drain > 0) {
+            try {
+                Thread.sleep(drain);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        closeQuietly(old);
+        LOG.info("connector {} stopped", name);
+    }
+
+    private static void closeQuietly(SourcePlugin p) {
+        try {
+            p.close();
+        } catch (Exception e) {
+            LOG.warn("closing {} failed", p.manifest().name(), e);
+        }
+    }
+
+    /** The settings a named connector was last started (or switched off) with, if it is known. */
+    public Optional<SourcesProperties.ConnectorSettings> applied(String name) {
+        return Optional.ofNullable(applied.get(name));
+    }
+
+    /** State of every named connector the registry knows. */
+    public Map<String, ConnectorStatus> connectorStatuses() {
+        return Map.copyOf(statuses);
     }
 
     /** Freshness of the source a document names ({@code provenance.source}), as of now. */
@@ -200,7 +367,7 @@ public final class SourceRegistry implements AutoCloseable {
     }
 
     public Map<String, String> failures() {
-        return Collections.unmodifiableMap(failures);
+        return Map.copyOf(failures);
     }
 
     @Override

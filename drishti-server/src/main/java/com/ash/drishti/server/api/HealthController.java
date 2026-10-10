@@ -60,11 +60,13 @@ public class HealthController {
     private final String version;
     private final List<String> overrides;
     private final com.ash.drishti.server.loads.ExpectationService expectations;
+    private final com.ash.drishti.server.connectors.ConnectorManager connectors;
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
-            org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations) {
+            org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors) {
         this.expectations = expectations;
+        this.connectors = connectors;
         this.overrides = org.springframework.boot.context.properties.bind.Binder.get(env)
                 .bind("drishti.packs.overrides", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class)).orElse(List.of());
         this.registry = registry;
@@ -124,7 +126,7 @@ public class HealthController {
         String hotReload = sutras.hotReload();          // STOPPED: the Sutra watcher ended, edits are not picked up until a restart
         List<com.ash.drishti.server.loads.ExpectationService.State> dataLate = expectations.attention(java.time.Instant.now());
         String overall = sources.isEmpty() || down == sources.size() ? "DOWN"
-                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") ? "DEGRADED"
+                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") || !connectors.fileProblems().isEmpty() ? "DEGRADED"
                 : "OK";   // stale: behind its stale-after; degraded: a connector that cannot read some of its data
         out.put("status", overall);
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
@@ -137,6 +139,7 @@ public class HealthController {
         out.put("dataLate", dataLate.stream().map(d -> Map.of("pack", d.pack(), "kind", d.kind(), "businessDate", d.businessDate().toString(), "state", d.state(),
                 "by", d.by() + " " + d.zone(), "line", d.line())).toList());
         out.put("overrides", overrides);
+        out.put("connectors", connectors.healthSummary());
         out.put("live", Map.of("streams", slots.open(), "topics", hub.topicCount(), "frames", live.frames(), "droppedFrames", live.droppedFrames(),
                 "p50Ms", live.percentile(50), "p99Ms", live.percentile(99)));
         return out;
@@ -156,12 +159,10 @@ public class HealthController {
                             "problems", ps.stream().map(x -> x.code() + " " + x.message()).toList()));
                 }
             });
-            List<String> connectors = new ArrayList<>();
-            if (pack.manifest().get("connectors") instanceof Map<?, ?> c) {
-                c.keySet().forEach(k -> connectors.add(String.valueOf(k)));
-            }
-            List<String> connectorsDown = connectors.stream().filter(c -> statusOf.containsKey(c) && !"UP".equals(statusOf.get(c))).toList();
-            List<String> connectorsMissing = connectors.stream().filter(c -> !statusOf.containsKey(c)).toList();   // disabled or failed to start
+            List<String> refs = pack.connectorRefs();
+            List<String> connectorsDown = refs.stream().filter(c -> statusOf.containsKey(c) && !"UP".equals(statusOf.get(c))).toList();
+            List<String> connectorsMissing = refs.stream().filter(c -> !statusOf.containsKey(c)).toList();   // disabled, failed to start, or not configured
+            List<String> notConfigured = connectors.missingFor(pack);
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("name", pack.name());
             row.put("title", pack.title());
@@ -171,10 +172,11 @@ public class HealthController {
             row.put("kinds", pack.kinds().size());
             row.put("sutras", countSutras(dir));
             row.put("sutraProblems", broken);
-            row.put("connectors", connectors);
+            row.put("connectors", refs);
             row.put("connectorsDown", connectorsDown);
             row.put("connectorsOff", connectorsMissing);
-            row.put("status", !broken.isEmpty() || !connectorsDown.isEmpty() ? "DEGRADED" : "OK");
+            row.put("connectorsNotConfigured", notConfigured);
+            row.put("status", !broken.isEmpty() || !connectorsDown.isEmpty() || !notConfigured.isEmpty() ? "DEGRADED" : "OK");
             out.add(row);
         }
         return out;

@@ -125,12 +125,17 @@ drishti:
         enabled: ${DRISHTI_RABBITMQ_ENABLED:false}
       s3:                           # documents in Amazon S3 or an S3-compatible store; off until configured
         enabled: ${DRISHTI_S3_ENABLED:false}
-    # Named connectors: several instances of a plugin, each with its own settings and, optionally, kinds.
-    # A pack keeps its data in its own domain folder of the lake: <root>/<domain>/<kind>/business_date=…/
-    # Build the sample lake with:  uv run --with deltalake --with pyarrow python tools/samplegen/lake.py \
-    #     --samples packs/finance/samples --root data/delta --domain finance --days 10
-    # Packs declare their own connectors (pack.yaml `connectors:`); an entry here overrides a pack's, e.g.
-    #   trading-lake: { plugin: delta, settings: { root: /data/lake, domain: trading } }
+    # Named connectors: several instances of a plugin, each with its own settings. They live in FILES, one per connector:
+    #   <connectors-dir>/<name>.yaml     the file name is the connector's logical name; packs refer to it by that name.
+    # The folder is watched: a changed file restarts only that connector, a new file starts one, a deleted file stops it.
+    # See docs/connectors/CONNECTOR_FILES.md and Admin -> Connectors. Ready-made files: config/connectors.examples/.
+    connectors-dir: ${DRISHTI_CONNECTORS_DIR:./config/connectors}   # created on first write
+    connectors-watch: auto                  # auto (file events, polling as a fallback) | poll | off
+    connectors-poll: 5s                     # how often the files are looked at (also the safety net beside file events)
+    connectors-drain: 3s                    # a connector being restarted or stopped stays open this long so reads in flight finish
+    connectors-generate: true               # write a connector file from a pack's connector template when none of that name exists
+    # DEPRECATED: connectors defined here still work (and override the file of the same name, setting by setting), but the
+    # server logs a warning naming the equivalent file. Move them to <connectors-dir>/<name>.yaml.
     connectors: {}
   business-date:
     # Every read is for a business date. The default is today in `zone`, rolled back to a business day of
@@ -175,7 +180,7 @@ drishti:
           - POST /api/v1/sutras/proposals/*/approve
           - POST /api/v1/sutras/proposals/*/reject
       "[packs:admin]":
-        description: "Load, unload, switch on and off, deploy archives, install, change a pack's data source and roll back packs. Needs the admin role."
+        description: "Load, unload, switch on and off, deploy archives, install and roll back packs, and create, change, test and delete connectors (Admin -> Connectors). Needs the admin role."
         allow:
           - POST /api/v1/admin/packs/*/load
           - POST /api/v1/admin/packs/*/unload
@@ -184,9 +189,9 @@ drishti:
           - POST /api/v1/admin/packs/deploy/*
           - DELETE /api/v1/admin/packs/deploy/*
           - POST /api/v1/admin/packs/*/rollback
-          - PUT /api/v1/admin/packs/*/datasource
-          - DELETE /api/v1/admin/packs/*/datasource
-          - POST /api/v1/admin/packs/*/datasource/test
+          - PUT /api/v1/admin/connectors/*
+          - DELETE /api/v1/admin/connectors/*
+          - POST /api/v1/admin/connectors/**
           - POST /api/v1/admin/registry/**
       "[loads:write]":
         description: "Announce that a batch of data has landed (or failed) for a pack: Drishti then refreshes, verifies, checks alerts and tells the people the pack names. Only for packs your roles reach; needs no admin role."
