@@ -181,7 +181,7 @@ def browser(request, stack):
 # Everything the tests watch is collected in the page by this script (it runs before the host's own scripts).
 INIT = """
 window.__ev = []; window.__aborts = []; window.__views = []; window.__delay = {}; window.__viol = [];
-for (const t of ['loaded', 'tick', 'navigate', 'error', 'state', 'masked', 'token-needed'])
+for (const t of ['loaded', 'paint', 'tick', 'navigate', 'error', 'state', 'masked', 'token-needed'])
   document.addEventListener('drishti:' + t, (e) => window.__ev.push([t, e.target.id, e.detail, performance.now()]), true);
 document.addEventListener('securitypolicyviolation', (e) => window.__viol.push([e.violatedDirective, e.blockedURI]));
 const f = window.fetch.bind(window);
@@ -663,8 +663,7 @@ def _inside(h, sel):
 
 
 def _press_zoom(btn):
-    """Clicks a panel's zoom button until it reads pressed. The element repaints the view when the stream's first look is newer than the
-    page it fetched (a refresh), and a click whose mouse-down and mouse-up straddle that swap is lost, as for a person; click again."""
+    """Clicks a panel's zoom button until it reads pressed (a click can still be lost to a swap of the panel under it, as for a person)."""
     for _ in range(6):
         if btn.get_attribute("aria-pressed") == "true":
             return
@@ -715,6 +714,33 @@ def test_a_repaint_of_the_same_entity_keeps_the_zoomed_panel_zoomed(host):
     assert h.js("document.querySelector('#main').hasAttribute('data-zoomed')") is True
     h.page.keyboard.press("Escape")
     expect(btn).to_have_attribute("aria-pressed", "false")
+
+
+def test_a_live_element_paints_once_and_then_only_patches(host, browser):
+    """The stream's first look is usually a generation ahead of the page the element fetched (the page is a moment old). That, and every
+    tick after it, is applied as patches in place: over ten seconds of ticks the element paints once, and zoom, scroll and focus stay."""
+    h = host()
+    h.open()
+    h.page.wait_for_timeout(2500)                                               # the trade has ticked on: the next load is behind the stream
+    h.page.reload()
+    h.state("#main", "live")
+    btn = h.page.locator("#main").locator("section[data-panel] .pnl-zoom-btn").first
+    expect(btn).to_be_visible(timeout=15000)
+    pid = h.js(f"{SR}.querySelector('section[data-panel] .pnl-zoom-btn').closest('section').id")
+    _press_zoom(btn)
+    h.js(f"{SR}.querySelector('#{pid}').scrollTop = 5")
+    scrolled = h.js(f"{SR}.querySelector('#{pid}').scrollTop")                 # 0 when the panel does not overflow: then it must stay 0
+    h.js(f"{SR}.querySelector('#{pid} .pnl-zoom-btn').focus()")
+    ticks = len(h.events("tick", "main"))
+    h.page.wait_for_timeout(10000)
+    paints = h.events("paint", "main")
+    assert len(paints) == 1, [(e[2], round(e[3])) for e in paints]
+    assert len(h.events("paint", "side")) == 1
+    assert len(h.events("tick", "main")) >= ticks + 5, "patches still apply"
+    assert h.js(f"{SR}.querySelector('#{pid}').classList.contains('pnl-zoom')") is True
+    assert h.js(f"{SR}.activeElement && {SR}.activeElement.closest('#{pid}') !== null") is True
+    assert h.js(f"{SR}.querySelector('#{pid}').scrollTop") == scrolled
+    assert h.js(f"+{SR}.querySelector('[data-view]').getAttribute('data-generation')") >= 1
 
 
 def test_a_zoomed_table_fits_the_elements_height_and_restores_its_page_size(host):

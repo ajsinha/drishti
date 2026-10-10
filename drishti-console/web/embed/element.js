@@ -34,7 +34,7 @@ export class DrishtiView extends HTMLElement {
   static get observedAttributes() { return ATTRS; }
   #seq = 0; #subs = 0; #ctrl = null; #unsub = null; #state = 'idle'; #gen = 0; #queued = false; #mods = null; #io = null;
   #hiddenTimer = null; #away = false; #paused = false; #retry = null; #retries = 0; #ready = null; #deleted = false; #view = null; #lastError = null;
-  #cleanup = false; #offToken = null; #slots = {};
+  #html = new Map(); #rs = 0; #gap = false; #cleanup = false; #offToken = null; #slots = {};
 
   constructor() {
     super();
@@ -219,12 +219,47 @@ export class DrishtiView extends HTMLElement {
   #subscribe(key, epoch) {
     const mine = () => epoch === this.#subs;                // a refresh keeps the subscription; a reload, pause or teardown ends its epoch
     this.#unsub = connectionFor(this.server).subscribe(key, {
-      view: (d) => { if (mine() && d && d.generation > this.#gen) { this.refresh(); } },
+      view: (d) => { if (mine() && d && d.generation > this.#gen) { this.#resync(false); } },      // the stream is ahead of the page: bring the page level in place, never repaint it
       frame: (f) => { if (mine()) { this.#frame(f); } },
       gone: (d) => { if (mine()) { this.#emit('error', { code: (d && d.code) || 'DRS-5003', status: 0, detail: d && d.detail, fatal: false }); if (!this.#deleted) { this.#setState('static'); } } },
       state: (s) => { if (mine() && !this.#deleted) { this.#setState(s); } },
-      reconnected: () => { if (mine()) { this.refresh(); } }
+      reconnected: () => { if (mine()) { this.#resync(true); } }
     });
+  }
+  // The stream's first look (or the one after a reconnect) is ahead of the page we fetched: fetch the view again and apply only what differs,
+  // as patches, in place. Nothing is disposed or re-booted, so zoom, scroll, selection and focus stay. A different entity or a lost
+  // element goes through the normal load (reload/refresh), never through here.
+  async #resync(gap) {                               // gap: the stream was lost and is back, so whatever generation the server now has is the truth
+    this.#gap = this.#gap || gap;                    // a later `view` must not hide that the stream was lost
+    const id = ++this.#rs, seq = this.#seq, subs = this.#subs, ref = this.#view && this.#view.ref;
+    if (!ref || this.#deleted) { return; }
+    const ok = () => id === this.#rs && seq === this.#seq && subs === this.#subs;
+    try {
+      const url = this.server + API + '/views/' + encodeURIComponent(this.kind) + '/' + this.entity.split('/').map(encodeURIComponent).join('/');
+      const res = await authed(url, {});
+      if (!ok()) { return; }
+      if (!res.ok) { return this.refresh(); }
+      const data = await res.json();
+      if (!ok()) { return; }
+      if (data.ref.kind !== ref.kind || data.ref.id !== ref.id) { return this.refresh(); }
+      const g = (data.provenance || {}).generation || 0;
+      if (this.#state === 'reconnecting') { this.#setState('live'); }      // the page is level with the server again
+      if (!this.#gap && g <= this.#gen) { return; }
+      this.#gap = false;
+      const root = this.shadowRoot, changed = { strip: frames.syncStrip(root, data.head), panels: [] };
+      for (const p of data.panels) {
+        if (!this.#html.has(p.id) || this.#html.get(p.id) === p.html) { continue; }
+        this.#html.set(p.id, p.html);
+        this.#swap(frames.panel(root, { panel: { id: p.id }, html: p.html }, this.#mods, (n) => this.absolutise(n)), p);
+        changed.panels.push(p.id);
+      }
+      this.#gen = g;
+      const v = root.querySelector('.view');
+      v && v.setAttribute('data-generation', String(g));
+      if (this.#view) { this.#view.generation = g; this.#view.provenance = data.provenance; }
+      root.dispatchEvent(new CustomEvent('drishti:frame', { detail: { generation: g } }));
+      this.#emit('tick', { generation: g, seq: 0, latencyMs: 0, changed });
+    } catch (e) { if (ok() && !(e && e.name === 'AbortError')) { this.refresh(); } }
   }
   pause() { if (this.#paused || !this.#view) { return; } this.#paused = true; this.#subs++; this.#unsub && this.#unsub(); this.#unsub = null; this.#setState('paused'); }
   resume() { if (!this.#paused) { return; } this.#paused = false; this.#load({ keepSub: false }); }
@@ -257,6 +292,8 @@ export class DrishtiView extends HTMLElement {
       + right.map((p) => p.html).join('') + '</aside></div>');
     root.appendChild(view);
     this.#mods = boot(this, view, this.server, () => this.reload());
+    this.#html = new Map(panels.map((p) => [p.id, p.html]));
+    this.#emit('paint', { ref: data.ref, generation: (data.provenance || {}).generation || 0 });
     if (zoomed && this.#mods.zoom) { this.#mods.zoom.zoom(zoomed, focused); }
   }
   absolutise(root) {                                // console-relative links that are not entities open the console in a new tab
@@ -277,7 +314,7 @@ export class DrishtiView extends HTMLElement {
         if (p.op === 'deleted') { this.#deleted = true; this.#setState('deleted'); frames.banner(root, this.entity, p.at); continue; }
         if (this.#deleted) { continue; }
         if (p.op === 'strip') { if (frames.strip(root, p)) { changed.strip.push(p.index); } }
-        else if (p.op === 'panel') { this.#swap(frames.panel(root, p, this.#mods, (n) => this.absolutise(n)), p); changed.panels.push(p.panel.id); }
+        else if (p.op === 'panel') { if (p.html) { this.#html.set(p.panel.id, p.html); } this.#swap(frames.panel(root, p, this.#mods, (n) => this.absolutise(n)), p); changed.panels.push(p.panel.id); }
         else if (p.op === 'provenance') { this.#gen = p.provenance.generation || this.#gen; }
       } catch (e) { if (window.console) { console.warn('drishti: patch not applied', p.op, e); } }
     }
