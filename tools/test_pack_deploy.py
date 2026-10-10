@@ -48,19 +48,9 @@ def verification(ok=True, breaking=0, **kw):
     return rep
 
 
-DS = {"pack": "my", "file": "/d/settings/my.yaml", "overridden": True, "plugins": ["delta"],
-      "connectors": [{"name": "store", "plugin": "delta", "kinds": ["trade"],
-                      "enabled": {"pack": "true", "override": None, "site": None, "effective": "true", "on": True, "source": "pack"},
-                      "settings": [{"key": "root", "pack": "./data", "override": "/mnt/lake", "site": None, "effective": "/mnt/lake", "resolved": "/mnt/lake", "resolvable": True,
-                                    "secret": False, "source": "override", "overridden": True},
-                                   {"key": "domain", "pack": "risk", "override": None, "site": None, "effective": "risk", "resolved": "risk", "resolvable": True,
-                                    "secret": False, "source": "pack", "overridden": False},
-                                   {"key": "password", "pack": None, "override": "${LAKE_PW}", "site": None, "effective": "${LAKE_PW}", "resolved": None, "resolvable": False,
-                                    "secret": True, "source": "override", "overridden": True}]}]}
-
-TEST = {"pack": "my", "tested": "the settings in force", "ok": True,
-        "connectors": [{"connector": "store", "plugin": "delta", "ok": True, "health": "UP", "ms": 12, "error": None,
-                        "kinds": [{"kind": "trade", "exact": True, "note": "", "dates": [{"date": "2026-10-05", "rows": 120}, {"date": "2026-10-02", "rows": 118}]}]}]}
+DS = {"pack": "my", "directory": "/srv/config/connectors", "missing": ["thing-stream"],
+      "connectors": [{"name": "store", "defined": True, "origin": "file", "state": "RUNNING", "plugin": "delta", "kinds": ["trade"], "problems": []},
+                     {"name": "thing-stream", "defined": False, "state": "NOT_CONFIGURED", "kinds": ["thing"], "problems": ["connector thing-stream is not configured"]}]}
 
 
 class Fake(BaseHTTPRequestHandler):
@@ -207,63 +197,19 @@ class DataSource(ServerCase):
         super().setUp()
         Fake.routes[("GET", "/api/v1/admin/packs/my/datasource")] = DS
 
-    def test_get_shows_each_layer_and_never_a_secret_value(self):
+    def test_get_lists_the_packs_connectors_and_exits_1_while_one_is_not_configured(self):
         code, out, _ = run("server", "packs", "datasource", "get", "my", "--server", self.url)
-        self.assertEqual(0, code)
-        for text in ("an administrator override is in force", "connector store", "/mnt/lake", "overridden; pack default ./data", "${LAKE_PW}", "variable NOT SET"):
-            self.assertIn(text, out)
-        self.assertNotIn("hunter2", out)
-
-    def test_set_merges_into_the_stored_override_and_can_test_first(self):
-        Fake.routes[("PUT", "/api/v1/admin/packs/my/datasource")] = {"changed": ["store.root"], "restarting": False, "note": "Saved."}
-        Fake.routes[("POST", "/api/v1/admin/packs/my/datasource/test")] = TEST
-        code, out, _ = run("server", "packs", "datasource", "set", "my", "store", "root=/mnt/other", "domain=risk2", "--test-first", "--server", self.url)
-        self.assertEqual(0, code)
-        sent = json.loads(self.calls("PUT")[0]["body"])["connectors"]["store"]["settings"]
-        self.assertEqual({"root": "/mnt/other", "password": "${LAKE_PW}", "domain": "risk2"}, sent)      # the existing override is kept, the new values win
-        tested = json.loads(self.calls("POST")[0]["body"])
-        self.assertEqual("store", tested["connector"])
-        self.assertIn("store.root", out)
-
-    def test_a_failed_test_stops_the_save(self):
-        bad = json.loads(json.dumps(TEST))
-        bad["ok"] = False
-        bad["connectors"][0].update(ok=False, error="cannot read the lake")
-        Fake.routes[("POST", "/api/v1/admin/packs/my/datasource/test")] = bad
-        code, out, _ = run("server", "packs", "datasource", "set", "my", "store", "root=/nope", "--test-first", "--server", self.url)
         self.assertEqual(1, code)
-        self.assertIn("PROBLEM: cannot read the lake", out)
-        self.assertIn("not saved", out)
-        self.assertEqual([], self.calls("PUT"))
-
-    def test_unset_and_enabled_and_unknown_connector(self):
-        Fake.routes[("PUT", "/api/v1/admin/packs/my/datasource")] = {"changed": [], "note": "ok"}
-        run("server", "packs", "datasource", "set", "my", "store", "--unset", "root", "--enabled", "false", "--server", self.url)
-        sent = json.loads(self.calls("PUT")[0]["body"])["connectors"]["store"]
-        self.assertEqual({"password": "${LAKE_PW}"}, sent["settings"])
-        self.assertIs(False, sent["enabled"])
-        self.assertEqual(2, run("server", "packs", "datasource", "set", "my", "nope", "root=x", "--server", self.url)[0])
-        self.assertEqual(2, run("server", "packs", "datasource", "set", "my", "store", "oops", "--server", self.url)[0])
-
-    def test_test_prints_dates_and_row_counts_and_exits_1_on_a_problem(self):
-        Fake.routes[("POST", "/api/v1/admin/packs/my/datasource/test")] = TEST
-        code, out, _ = run("server", "packs", "datasource", "test", "my", "--server", self.url)
-        self.assertEqual(0, code)
-        for text in ("store (delta): reachable, health UP", "2026-10-05", "120", "2026-10-02", "118"):
+        for text in ("connectors of my", "/srv/config/connectors", "store", "running", "delta", "file", "thing-stream", "nothing defines it",
+                     "thing-stream is not configured: create it with `drishti.py connector apply thing-stream.yaml`"):
             self.assertIn(text, out)
-        bad = json.loads(json.dumps(TEST))
-        bad["ok"] = False
-        bad["connectors"][0].update(ok=False, error="boom")
-        Fake.routes[("POST", "/api/v1/admin/packs/my/datasource/test")] = bad
-        self.assertEqual(1, run("server", "packs", "datasource", "test", "my", "--server", self.url)[0])
-        self.assertEqual(2, run("server", "packs", "datasource", "test", "my", "--set", "root=/x", "--server", self.url)[0])      # --set needs --connector
+        done = dict(DS, missing=[], connectors=DS["connectors"][:1])
+        Fake.routes[("GET", "/api/v1/admin/packs/my/datasource")] = done
+        self.assertEqual(0, run("server", "packs", "datasource", "get", "my", "--server", self.url)[0])
 
-    def test_reset_one_connector_or_all(self):
-        Fake.routes[("DELETE", "/api/v1/admin/packs/my/datasource")] = {"overridden": False, "note": "Saved."}
-        self.assertEqual(0, run("server", "packs", "datasource", "reset", "my", "--connector", "store", "--server", self.url)[0])
-        self.assertIn("connector=store", self.calls("DELETE")[0]["path"])
-        self.assertEqual(0, run("server", "packs", "datasource", "reset", "my", "--server", self.url)[0])
-        self.assertNotIn("connector=", self.calls("DELETE")[1]["path"])
+    def test_the_edit_commands_are_gone(self):
+        for sub in ("set", "test", "reset"):
+            self.assertEqual(2, run("server", "packs", "datasource", sub, "my", "--server", self.url)[0])
 
 
 class SharedDiffCases(unittest.TestCase):
