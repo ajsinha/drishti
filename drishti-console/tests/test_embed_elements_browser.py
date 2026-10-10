@@ -584,6 +584,41 @@ def test_table_sorts_and_pages_inside_the_element(host):
     assert h.js("document.querySelectorAll('.tbl-pg, .tbl-sortable').length") == 0          # nothing was added to the host page
 
 
+def test_column_filters_work_inside_the_element_and_leave_the_host_page_alone(host):
+    h = host()
+    h.open()
+    inject(h, PAGED)
+    t = h.page.locator("#main").locator(".injected table.tbl")
+    expect(t.locator("th .cf-btn").first).to_be_attached(timeout=10000)
+    assert t.locator("th .cf-btn").count() == 2
+    rows = lambda: t.locator("tbody tr:not([hidden])").count()
+    t.locator("th").nth(1).locator(".cf-btn").click()
+    m = h.page.locator("#main").locator(".cf-menu")
+    expect(m).to_be_visible()
+    m.locator(".cf-op").select_option(label="Greater than")
+    m.locator(".cf-a").fill("20")
+    m.get_by_role("button", name="OK").click()
+    expect(m).to_have_count(0)
+    n = h.js(f"[...{SR}.querySelectorAll('.injected tbody tr')].filter(r => +r.cells[1].textContent > 20).length")
+    assert rows() == min(n, 25) and n > 0
+    bar = h.page.locator("#main").locator(".injected .tbl-pg")
+    expect(bar.locator(".tbl-pg-info")).to_contain_text(f"{n} of 30 rows (filtered)")
+    t.locator("th").nth(0).locator(".cf-btn").click()                         # a checklist on the name column, searched
+    m.locator(".cf-q").fill("row0")
+    m.get_by_role("button", name="OK").click()
+    expect(m).to_have_count(0)
+    assert rows() <= 10
+    h.page.keyboard.press("Alt+Shift+X")                                      # one key clears them all
+    expect(bar.locator(".tbl-pg-info")).to_contain_text("1–25 of 30")
+    t.locator("th").nth(0).locator(".cf-btn").click()                         # Esc closes the menu and nothing else
+    expect(m).to_be_visible()
+    h.page.keyboard.press("Escape")
+    expect(m).to_have_count(0)
+    # nothing was added to the host page: no buttons, menus, live region or address filters
+    assert h.js("document.querySelectorAll('.cf-btn, .cf-menu, .cf-live').length") == 0
+    assert h.js("location.search.indexOf('f.') < 0")
+
+
 def test_tree_row_expands_inside_the_element(host):
     h = host()
     h.open()

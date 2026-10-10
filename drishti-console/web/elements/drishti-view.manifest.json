@@ -1,6 +1,6 @@
 {
-  "bytes": 106028,
-  "gzip": 20093,
+  "bytes": 109432,
+  "gzip": 20625,
   "iconFont": {
     "family": "bootstrap-icons",
     "registered": "FontFace API (the sheet has no @font-face)"
@@ -24,6 +24,9 @@
     "fullscreen-exit": [
       "static/js/zoom.js"
     ],
+    "funnel": [
+      "static/js/colfilter.js"
+    ],
     "grid-3x3": [
       "templates/_macros/panels.html"
     ],
@@ -43,7 +46,7 @@
       "templates/_macros/panels.html"
     ]
   },
-  "sha256": "a37783ea64a7db9b2522c888e08b418fb0d2eb27b91b5fc89f0210cd0b95e24e",
+  "sha256": "27ec048ccb60266791ca6e6742508e0b36957f95712c6c0bb42d8b9c84626a60",
   "sources": [
     "css/tokens.css",
     "css/theme.css",
@@ -51,9 +54,10 @@
     "css/layout.css",
     "css/gradients.css",
     "css/pivot.css",
+    "css/colfilter.css",
     "css/about.css",
     "css/touch.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "18d1c9c10967"
+  "version": "71d1ed013d1b"
 }
