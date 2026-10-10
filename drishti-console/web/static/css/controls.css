@@ -62,7 +62,17 @@
 .ctl-pick:hover td, .ctl-pick:hover { background: var(--d-highlight); }
 .ctl-picked, .ctl-picked td { background: var(--d-highlight); box-shadow: inset 3px 0 0 var(--d-accent); }
 [aria-busy="true"] [data-panel] { opacity: .85; }
-@media (max-width: 640px), (pointer: coarse) {
+@media (pointer: coarse) {
+  .ctl-in, .ctl-sum, .ctl-seg-b, .ctl-switch, .ctl-act { min-height: 44px; }
+  .ctl-item { min-height: 44px; }
+  .ctl-item input { min-width: 24px; min-height: 24px; }
+  .ctl-bar { gap: .6rem; }
+  .ctl-bar > .ctl, .ctl-head > .ctl { flex: 1 1 100%; }
+  .ctl-date-range .ctl-in, .ctl-number-range .ctl-in { flex: 1 1 8rem; width: auto; }
+  .ctl-head { margin-left: 0; width: 100%; }
+  .ctl-pop > .ctl-acts, .ctl-pop > .ctl-list { min-width: 0; width: 100%; }
+}
+@media (max-width: 640px) {
   .ctl-in, .ctl-sum, .ctl-seg-b, .ctl-switch, .ctl-act { min-height: 44px; }
   .ctl-item { min-height: 44px; }
   .ctl-item input { min-width: 24px; min-height: 24px; }

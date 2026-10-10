@@ -109,9 +109,11 @@
   // change of a control (controls.js) moves the subscription, and the first view event of the new one is not a reconnect.
   var base = 'view:' + view.dataset.kind + '/' + view.dataset.id;
   function key(q) { return q ? base + '?' + q : base; }
+  var current = '';
   var off = subscribe(window.drishtiControls ? window.drishtiControls.query() : '');
   function subscribe(q) {
-    return window.DrishtiChannel.subscribe(key(q), {
+    current = key(q);
+    return window.DrishtiChannel.subscribe(current, {
       view: function () {
         if (!first) { location.reload(); return; }   // reconnected: the server sent a fresh view, so repaint from it
         first = false;
@@ -124,7 +126,7 @@
     });
   }
   document.addEventListener('drishti:controls', function (e) {
-    if (deletedAt) { return; }
+    if (deletedAt || key(e.detail.query) === current) { return; }          // the stream already has these values
     off(); first = true; off = subscribe(e.detail.query);
   });
   function onFrame(f) {

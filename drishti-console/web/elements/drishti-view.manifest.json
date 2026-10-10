@@ -1,6 +1,6 @@
 {
-  "bytes": 114711,
-  "gzip": 21414,
+  "bytes": 115191,
+  "gzip": 21422,
   "iconFont": {
     "family": "bootstrap-icons",
     "registered": "FontFace API (the sheet has no @font-face)"
@@ -46,7 +46,7 @@
       "templates/_macros/panels.html"
     ]
   },
-  "sha256": "14c5e45fc426fc197c5f4e6524cf18ef389aebb3152c0bf99c26c1ec812d793d",
+  "sha256": "45e32a8b65b169d0100a80fbcb3397df62bac7fd3eb639e320fa58958e0228b5",
   "sources": [
     "css/tokens.css",
     "css/theme.css",
@@ -60,5 +60,5 @@
     "css/touch.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
-  "version": "4e308f95f513"
+  "version": "b97a308d3bb3"
 }
