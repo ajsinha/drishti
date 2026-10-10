@@ -69,7 +69,6 @@
    "rate": 0.031621,
    "dayCount": "ACT/360",
    "frequency": "Annual",
-   "businessDay": "Mod. following",
    "calendar": "USNY",
    "paymentLag": "2 business days",
    "rollConvention": "19",
@@ -77,42 +76,45 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2025-03-10",
-     "accrualEnd": "2025-04-21",
      "payDate": "2025-04-23",
      "notional": 237000000.0,
      "rate": 0.031621,
-     "yearFraction": 0.116667,
      "amount": -874320.65,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-03-10",
+     "periodEnd": "2025-04-21",
+     "accrualFactor": 0.116667,
+     "discountFactor": 1.0,
+     "type": "Interest"
     },
     {
      "n": 2,
-     "accrualStart": "2025-04-21",
-     "accrualEnd": "2026-04-20",
      "payDate": "2026-04-22",
      "notional": 237000000.0,
      "rate": 0.031621,
-     "yearFraction": 1.011111,
      "amount": -7577445.63,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-04-21",
+     "periodEnd": "2026-04-20",
+     "accrualFactor": 1.011111,
+     "discountFactor": 1.0,
+     "type": "Interest"
     },
     {
      "n": 3,
-     "accrualStart": "2026-04-20",
-     "accrualEnd": "2027-04-19",
      "payDate": "2027-04-21",
      "notional": 237000000.0,
      "rate": 0.031621,
-     "yearFraction": 1.011111,
      "amount": -7577445.63,
-     "df": 0.984816,
      "pv": -7462391.76,
-     "status": "Fixed"
+     "status": "Fixed",
+     "periodStart": "2026-04-20",
+     "periodEnd": "2027-04-19",
+     "accrualFactor": 1.011111,
+     "discountFactor": 0.984816,
+     "type": "Interest"
     }
    ],
    "pv": -7462391.76,
@@ -120,7 +122,9 @@
    "payReceive": "Pay",
    "rateType": "Fixed",
    "index": null,
-   "spread": 0.0
+   "spread": 0.0,
+   "legId": "MX-20000057-L1",
+   "businessDayConvention": "Mod. following"
   },
   {
    "leg": 2,
@@ -133,7 +137,6 @@
    "spread": 0.00252,
    "dayCount": "ACT/360",
    "frequency": "Quarterly",
-   "businessDay": "Mod. following",
    "calendar": "USNY",
    "paymentLag": "2 business days",
    "compounding": "Compounded in arrears",
@@ -143,152 +146,390 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2025-03-10",
-     "accrualEnd": "2025-04-21",
      "fixingDate": "2025-04-17",
      "payDate": "2025-04-23",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.027289,
      "spread": 0.00252,
-     "yearFraction": 0.116667,
      "amount": 824218.85,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-03-10",
+     "periodEnd": "2025-04-21",
+     "accrualFactor": 0.116667,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-03-10",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027288,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-04-10",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027291,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 2,
-     "accrualStart": "2025-04-21",
-     "accrualEnd": "2025-07-21",
      "fixingDate": "2025-07-17",
      "payDate": "2025-07-23",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.026825,
      "spread": 0.00252,
-     "yearFraction": 0.252778,
      "amount": 1758010.04,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-04-21",
+     "periodEnd": "2025-07-21",
+     "accrualFactor": 0.252778,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-04-21",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.02679,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-05-21",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.026835,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-06-21",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.02685,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 3,
-     "accrualStart": "2025-07-21",
-     "accrualEnd": "2025-10-20",
      "fixingDate": "2025-10-16",
      "payDate": "2025-10-22",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.027651,
      "spread": 0.00252,
-     "yearFraction": 0.252778,
      "amount": 1807494.32,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-07-21",
+     "periodEnd": "2025-10-20",
+     "accrualFactor": 0.252778,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-07-21",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027635,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-08-21",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027651,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-09-21",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027668,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 4,
-     "accrualStart": "2025-10-20",
-     "accrualEnd": "2026-01-20",
      "fixingDate": "2026-01-15",
      "payDate": "2026-01-22",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.027444,
      "spread": 0.00252,
-     "yearFraction": 0.255556,
      "amount": 1814819.6,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-10-20",
+     "periodEnd": "2026-01-20",
+     "accrualFactor": 0.255556,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-10-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027421,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-11-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027435,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-12-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027476,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 5,
-     "accrualStart": "2026-01-20",
-     "accrualEnd": "2026-04-20",
      "fixingDate": "2026-04-16",
      "payDate": "2026-04-22",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.026786,
      "spread": 0.00252,
-     "yearFraction": 0.25,
      "amount": 1736380.5,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-01-20",
+     "periodEnd": "2026-04-20",
+     "accrualFactor": 0.25,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-01-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.026772,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-02-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.026781,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-03-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.026804,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 6,
-     "accrualStart": "2026-04-20",
-     "accrualEnd": "2026-07-20",
      "fixingDate": "2026-07-16",
      "payDate": "2026-07-22",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.027528,
      "spread": 0.00252,
-     "yearFraction": 0.252778,
      "amount": 1800125.6,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-04-20",
+     "periodEnd": "2026-07-20",
+     "accrualFactor": 0.252778,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-04-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027546,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-05-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027524,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-06-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027515,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 7,
-     "accrualStart": "2026-07-20",
-     "accrualEnd": "2026-10-19",
      "fixingDate": "2026-10-15",
      "payDate": "2026-10-21",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.026919,
      "spread": 0.00252,
-     "yearFraction": 0.252778,
      "amount": 1763611.51,
-     "df": 0.998432,
      "pv": 1760846.34,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-07-20",
+     "periodEnd": "2026-10-19",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.998432,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-07-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.026932,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.026919,
+       "source": "BoC CORRA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-20",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.026905,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 8,
-     "accrualStart": "2026-10-19",
-     "accrualEnd": "2027-01-19",
      "fixingDate": "2027-01-14",
      "payDate": "2027-01-21",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.027151,
      "spread": 0.00252,
-     "yearFraction": 0.255556,
      "amount": 1797103.63,
-     "df": 0.99155,
      "pv": 1781918.9,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-10-19",
+     "periodEnd": "2027-01-19",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.99155,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-10-19",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027181,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-19",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027164,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-19",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027109,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 9,
-     "accrualStart": "2027-01-19",
-     "accrualEnd": "2027-04-19",
      "fixingDate": "2027-04-15",
      "payDate": "2027-04-21",
      "notional": 237000000.0,
      "index": "CORRA",
      "rate": 0.027352,
      "spread": 0.00252,
-     "yearFraction": 0.25,
      "amount": 1769901.12,
-     "df": 0.984816,
      "pv": 1743027.42,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-01-19",
+     "periodEnd": "2027-04-19",
+     "accrualFactor": 0.25,
+     "discountFactor": 0.984816,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-01-19",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027392,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-19",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027377,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-19",
+       "index": "CORRA",
+       "tenor": "1M",
+       "rate": 0.027289,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     }
    ],
    "pv": 5285792.66,
    "payReceive": "Receive",
-   "rateType": "Float"
+   "rateType": "Float",
+   "legId": "MX-20000057-L2",
+   "businessDayConvention": "Mod. following",
+   "resetFrequency": "Monthly"
   }
  ],
  "schedule": [
@@ -648,7 +889,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 6723
+   "mtm": 6723,
+   "legs.1.cashflows.6.fixings.2.rate": 0.000108
   }
  }
 }

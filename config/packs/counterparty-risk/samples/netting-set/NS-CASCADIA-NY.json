@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-CASCADIA-NY",
  "tradeCount": 18,
- "netMtm": 13850938,
- "collateral": 11694151,
- "eePeak": 19910965,
- "pfePeak": 45167548,
- "limit": 87000000.0,
+ "netMtm": 16705877,
+ "collateral": 14104536,
+ "eePeak": 20148843,
+ "pfePeak": 45692893,
+ "limit": 88000000.0,
  "utilisation": 0.5192,
- "cva": -488978,
+ "cva": -494829,
  "profile": [
   {
    "tenor": "0",
-   "ee": 3858177,
-   "pfe": 10021603
+   "ee": 4302731,
+   "pfe": 10999621
   },
   {
    "tenor": "1M",
-   "ee": 5654045,
-   "pfe": 13972512
+   "ee": 6089433,
+   "pfe": 14930366
   },
   {
    "tenor": "3M",
-   "ee": 7891064,
-   "pfe": 18826578
+   "ee": 8308684,
+   "pfe": 19745342
   },
   {
    "tenor": "6M",
-   "ee": 10197650,
-   "pfe": 23901067
+   "ee": 10589967,
+   "pfe": 24764165
   },
   {
    "tenor": "1Y",
-   "ee": 13387207,
-   "pfe": 30915294
+   "ee": 13749526,
+   "pfe": 31714408
   },
   {
    "tenor": "2Y",
-   "ee": 17865063,
-   "pfe": 40766575
+   "ee": 18157467,
+   "pfe": 41411878
   },
   {
    "tenor": "3Y",
-   "ee": 19910965,
-   "pfe": 45167548
+   "ee": 20148843,
+   "pfe": 45692893
   },
   {
    "tenor": "5Y",
-   "ee": 13822358,
-   "pfe": 31147339
+   "ee": 13949725,
+   "pfe": 31427546
   },
   {
    "tenor": "7Y",
-   "ee": 9771973,
-   "pfe": 21942315
+   "ee": 9849225,
+   "pfe": 22112270
   },
   {
    "tenor": "10Y",
-   "ee": 7951183,
-   "pfe": 17799903
+   "ee": 7987674,
+   "pfe": 17880184
   }
  ],
  "trades": [
@@ -82,6 +82,17 @@
    "maturity": "2029-01-29",
    "maturityBucket": "2-5Y",
    "mtm": -4251048
+  },
+  {
+   "tradeId": "MX-20000100",
+   "product": "European swaption",
+   "assetClass": "Rates",
+   "currency": "AUD",
+   "book": "BOOK-RATES-2",
+   "notional": 23000000.0,
+   "maturity": "2031-02-28",
+   "maturityBucket": "2-5Y",
+   "mtm": 3203297
   },
   {
    "tradeId": "BBG-60000076",
@@ -194,17 +205,6 @@
    "mtm": -404709
   },
   {
-   "tradeId": "MX-20000100",
-   "product": "European swaption",
-   "assetClass": "Rates",
-   "currency": "AUD",
-   "book": "BOOK-RATES-2",
-   "notional": 23000000.0,
-   "maturity": "2027-09-24",
-   "maturityBucket": "0-1Y",
-   "mtm": 348358
-  },
-  {
    "tradeId": "END-1000048",
    "product": "Commodity spread option",
    "assetClass": "Commodity",
@@ -263,7 +263,7 @@
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": 8381936
+   "mtm": 11236875
   },
   {
    "asset": "Credit",
@@ -294,7 +294,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 27701
+   "netMtm": 33411
   }
  }
 }

@@ -6,7 +6,7 @@
  "sector": "Technology",
  "country": "CH",
  "type": "Corporate",
- "netMtm": -40542132,
+ "netMtm": -46466242,
  "pfePeak": 45241048,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-LUMEN-NY",
    "agreement": "AGR-LUMEN-ISDA",
    "trades": 15,
-   "netMtm": -32179190
+   "netMtm": -38103300
   },
   {
    "id": "NS-LUMEN-TKY",

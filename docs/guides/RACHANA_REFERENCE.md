@@ -915,6 +915,7 @@ One sub-panel per element of `each`, as tabs or side by side.
 | `tabTitle` | | `'#' + (#index + 1)` | Expression for each tab's title. |
 | `layout` | | `tabs` | `tabs` (one visible at a time) or `columns` (all side by side, for two or three legs). |
 | `body` | | | A nested panel: `kind` is required (use `kv`), `id` is optional (`body`); only its `columns` are used. |
+| `panels` | | | A list of panels shown inside **each** tab, under the body's fields (see [Panels inside a tab](#panels-inside-a-tab)). |
 
 The body is validated like any panel, so a body of `kind: table` would need `rows` (`DRS-2022`); write it as
 `kind: kv`. A body without columns gets the fields of the **first** element, inferred.
@@ -938,6 +939,60 @@ The body is validated like any panel, so a body of `kind: table` would need `row
 You should see two boxes, `Leg 1 · Receive fixed 4.0829%` and `Leg 2 · Pay AONIA compounded`; the floating
 leg's `Rate` is empty (it has none) and both show `Spread 0.0 bp`. With `layout: tabs`, the selected tab is kept
 when a live update repaints the panel.
+
+##### Panels inside a tab
+
+A tab can hold whole panels, not only the fields of a `body`. `panels:` is a list; each entry is an ordinary panel with an `id` that is
+unique among the tab's panels, and it is read with `@` the tab's element, so `rows: "@.cashflows"` is the cashflows of *this* leg. The
+tabs come from `each`, one per element, **whatever the count** (a cap has one leg, a commodity swap three or four).
+
+| Rule | Why |
+|---|---|
+| the kind is `kv`, `status`, `table`, `ladder`, `hbar`, `markdown` or `metric` | charts, `links`, `pivot` and `provenance` draw things of the whole view (`DRS-2023`) |
+| no `tabs` inside a tab | one level of tabs; deeper structure is a tree table (below) (`DRS-2023`) |
+| no `pivot:` on a table inside a tab | the Pivot tab reads the whole panel by its id (`DRS-2023`) |
+| no `span` or `height` | the panels take the size of their tabs panel (`DRS-2030`) |
+| an `id` on each, unique within the tab (`DRS-2010`, `DRS-2024`) | the live view and the CSV name the panels by it |
+| `panels:` on any other kind | `DRS-2023`: only `tabs` take it |
+
+A table inside a tab can be a **tree whose children come from a nested array of the row**: `children: "@.fixings"` evaluates, for each
+cashflow, to that cashflow's own `fixings`, which open under it. The child rows are another kind of row than the cashflows (a fixing
+has a date, an index, a tenor and a rate, no amount), so the columns read whichever field is there: `coalesce(@.periodStart,
+@.fixingDate)`. A cashflow with no `fixings` (a fixed one) is a leaf with no toggle. Do not total such a table (the tree adds up only
+the rows with no children, and the floating cashflows have some).
+
+```yaml
+  - id: legs
+    kind: tabs
+    title: Legs
+    each: $.legs
+    tabTitle: "'Leg ' + @.leg + ' · ' + @.label"
+    panels:
+      - id: leg-terms
+        kind: kv
+        title: Leg terms
+        columns:
+          - { label: Pay/receive, bind: "@.payReceive" }
+          - { label: Index, bind: "@.index" }
+          - { label: Leg PV, bind: "@.pv", fmt: signed0, tone: sign }
+      - id: leg-cashflows
+        kind: table
+        title: Cashflows and fixings
+        rows: "@.cashflows"
+        children: "@.fixings"
+        expand: 1
+        columns:
+          - { label: Period start / fixing, bind: "coalesce(@.periodStart, @.fixingDate)", fmt: date }
+          - { label: Rate, bind: "@.rate", fmt: pct4 }
+          - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
+          - { label: Source, bind: "@.source" }
+```
+
+On a three-leg commodity swap you should see three tabs; the second one (the index leg) shows its terms, then a table with a row a
+month, each with a ▸ that opens the month's daily fixings. A live update repaints the panel, keeps the selected tab and the rows you
+opened, and shows a moved fixing in its nested cell. Without a Sutra, inference lays such a document out the same way: a tab per
+element, the element's fields, and a table for each list it holds, a tree when those rows hold lists again (docs/guides/PACK_DEVELOPER_GUIDE.md,
+Modelling deep documents). The worked pictures are in the [User guide](USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings).
 
 #### line
 
@@ -1928,20 +1983,20 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2001` | `YAML syntax: <parser message>` | the file is not valid YAML (bad indentation, a `:` or `#` in an unquoted value, a tab) | fix the YAML; quote values with `: `, ` #`, or a leading `#`, `@`, `*`, `&` |
 | `DRS-2004` | `Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py <file> --delete`, or `a Sutra file is named <name>.v<N>.sutra.yaml; rename <file>` | a `.sutra.md` file, or a plain `.yaml`/`.yml` file, in a Sutra directory | convert it with `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`, or rename it to `<name>.v<N>.sutra.yaml` (or move a YAML file that is not a Sutra out of the directory) |
 | `DRS-2009` | `missing 'rachana: 1' (the Rachana language version) at the top`, `'rachana: 2' is not a language version this server reads (it reads 1)` | no `rachana:` key, or a version this server does not know | put `rachana: 1` first in the file |
-| `DRS-2010` | `missing 'sutra'`, `missing 'version'`, `missing 'kind'`, `missing 'id'`, `missing 'bind'`, `missing 'match' mapping with at least 'kind'`, `missing 'id' in title: the expression for the large identifier, such as $.tradeId` | a required key is absent | add it |
+| `DRS-2010` | `missing 'sutra'`, `missing 'version'`, `missing 'kind'`, `missing 'id'`, `missing 'bind'`, `missing 'match' mapping with at least 'kind'`, `missing 'id' in title: the expression for the large identifier, such as $.tradeId`, `a panel inside a tab needs an 'id'` | a required key is absent | add it |
 | `DRS-2011` | `unknown key 'pannels' in top level` (also `in match`, `in title`, `in strip item`, `in column`) | a misspelt or unsupported key | fix the spelling; panel options are reported as `DRS-2023` instead |
 | `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text`, `'notes' is plain text`, `'kind' in match is an entity kind written as text (such as trade), not '42'`, `'priority' in match must be a whole number (higher is tried first), not 'high'` | a value of the wrong shape | write the shape shown in the message |
 | `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer up to 2147483647, not '0'` | bad name or version (also a version too large for any number, which is not reported as YAML syntax) | `irs-vanilla`; `version: 3` unquoted |
 | `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric` | a kind that does not exist | use one of the 21 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
-| `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
-| `DRS-2024` | `duplicate panel id 'legs'` | two panels with one id | rename one |
+| `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `only 'tabs' panels take 'panels'`, `a 'line' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric`, `a panel inside a tab cannot hold tabs of its own`, `a panel inside a tab cannot have a Pivot tab; put the table in a panel of its own`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
+| `DRS-2024` | `duplicate panel id 'legs'`, `two panels of this tab are called 'terms'` | two panels with one id | rename one |
 | `DRS-2025` | `'F13' is not a function key (F1-F12)`, `function key F2 is used twice` | a bad or repeated key | use `F1`–`F12` once each, across panels and `keys` |
 | `DRS-2026` | `the strip holds at most 8 figures, found 9` | more than 8 strip items | move figures into a `kv` panel |
 | `DRS-2027` | `area must be 'main' or 'right'` | `area: left`, `area: side` | `main` or `right` |
 | `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.yaml` | two files define one `name@version` | raise the version, or remove the duplicate |
 | `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'`, `option 'colors' of 'waterfall' panels must be one of gain-loss, theme, not 'rainbow'`, `option 'rows' of 'table' panels is an expression written as text (such as $.cashflows), not '5'`, `option 'limit' of 'table' panels must be a whole number of rows, 1 or more, not 'many'`, `option 'search' of 'table' panels must be true or false, not 'maybe'`, `option 'fields' of 'status' panels must be a list of { label, bind, fmt, tone }, not '5'`, `option 'series' of 'area' panels must be a list of { label, value, tone }, not '5'`, `option 'text' of 'markdown' panels is text (a template with ${expression} parts), not '[1, 2]'` | an option value the kind does not allow, or of the wrong type | use one of the values listed, or the type named |
-| `DRS-2030` | `span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'`, `height must be a whole number from 1 to 24 (grid rows), not '30'`, `'span' sizes a whole panel: a tabs body takes the size of its panel` | a size outside the grid, not a whole number, or on a `tabs` body | a whole number in range, on the panel itself |
+| `DRS-2030` | `span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'`, `height must be a whole number from 1 to 24 (grid rows), not '30'`, `'span' sizes a whole panel: a tabs body takes the size of its panel` | a size outside the grid, not a whole number, or on a `tabs` body or a panel inside a tab | a whole number in range, on the panel itself |
 | `DRS-2031` | `'pivot' is true, false, or a mapping of fields, rows, columns, values, filters, heat, chart, totals; not 'yes please'`, `pivot rows name 'desk', which is not one of its fields (currency, mtm, product)`, `pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'`, `pivot value 'show' must be one of value, pctRow, pctColumn, pctTotal, not 'pctBook'`, `pivot field 'a' is in both rows and columns`, `a pivot has at most 4 row fields and 4 column fields`, `a pivot shows at most 6 values, found 7`, `pivot field '$.book' is not a field path (letters, digits, _ and dots); for an expression write { field: name, bind: <expression> }`, `pivot field 'a' is listed twice`, `unknown key 'colour' in pivot`, `pivot 'chart' must be one of bar, line, heatmap, not 'pie'`, `pivot 'heat' is true or false, not 'maybe'`, `a pivot filter keeps either 'values' or a range ('min', 'max'), not both`, `pivot 'fields' is a non-empty list of field paths (or { field, bind, label, fmt })` | a `pivot:` the Pivot tab cannot use | use the names its fields have, the values listed, or `pivot: true` ([the option](#pivot-a-pivot-tab-on-a-table-or-ladder)) |
 | `DRS-2032` | `the file could not be loaded: <reason>` (for example `it is nested too deeply to read (StackOverflowError)`) | a failure while reading the file that none of the other checks foresee; the server log has the stack trace | simplify the file; if it looks valid, report the log entry. The other Sutras load and hot reload carries on |
 | `DRS-2033` | `duplicate key 'version' (first written at line 3): YAML would keep only the last, so write each key once`, `a second YAML document (after '---'): a Sutra file holds exactly one, and the rest would be ignored`, `YAML tag '!panel' is not allowed in a Sutra: write the value plainly` | YAML that is valid but would not be read as written: a key twice in one mapping, a second document, a tag other than the core ones (`!!str`, `!!int`, …) | write each key once, one document per file, no tags |

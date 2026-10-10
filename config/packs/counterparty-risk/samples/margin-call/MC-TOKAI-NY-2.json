@@ -3,9 +3,9 @@
  "callDate": "2026-09-28",
  "marginType": "Variation",
  "direction": "We call",
- "amount": 129000.0,
+ "amount": 201000.0,
  "status": "Settled",
- "disputeAmount": 13000.0,
+ "disputeAmount": 20000.0,
  "events": [
   {
    "at": "2026-09-28 09:05",

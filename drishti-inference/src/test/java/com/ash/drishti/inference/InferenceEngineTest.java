@@ -74,9 +74,13 @@ class InferenceEngineTest {
     @Test
     void eachReferenceEntityStaysUsableWithoutItsSutra() throws Exception {
         InferredLayout irs = ENGINE.infer(fixture("trade", "IRS-48213"), "trade");
-        assertThat(panel(irs.panels(), "legs").kind()).isEqualTo(PanelKind.TABS);
-        assertThat(panel(irs.panels(), "legs-0-cashflows").kind()).isEqualTo(PanelKind.TABLE);
-        assertThat(panel(irs.panels(), "legs-0-cashflows").columns()).extracting(c -> c.bind()).contains("@.amount", "@.pv");
+        Panel legs = panel(irs.panels(), "legs");                            // legs that hold cashflows: a tab each, with a table of that leg's cashflows
+        assertThat(legs.kind()).isEqualTo(PanelKind.TABS);
+        assertThat(legs.parts()).extracting(Panel::id).containsExactly("terms", "cashflows");
+        assertThat(legs.parts().get(1).kind()).isEqualTo(PanelKind.TABLE);
+        assertThat(legs.parts().get(1).option("rows")).contains("@.cashflows");
+        assertThat(legs.parts().get(1).columns()).extracting(c -> c.bind()).contains("@.amount", "@.pv");
+        assertThat(irs.panels()).extracting(Panel::id).doesNotContain("legs-0-cashflows");   // and not again beside the tabs, for the first leg only
         assertThat(panel(irs.panels(), "dv01bytenor").kind()).isEqualTo(PanelKind.HBAR);
         assertThat(irs.strip()).hasSizeLessThanOrEqualTo(8).extracting(StripItem::bind).contains("$.mtm", "$.notional");
 
@@ -91,6 +95,33 @@ class InferenceEngineTest {
 
         InferredLayout curve = ENGINE.infer(fixture("curve", "USD-SOFR"), "curve");
         assertThat(panel(curve.panels(), "points").kind()).isEqualTo(PanelKind.LINE);
+    }
+
+    @Test
+    void legsThatHoldCashflowsThatHoldFixingsAreTabsOfTreeTables() {
+        DataNode doc = JSON.read("""
+                {"tradeId":"CMD-1","notional":1000000,"mtm":120.5,
+                 "legs":[
+                  {"leg":1,"payReceive":"Pay","type":"FIXED","currency":"USD","rate":71.0,
+                   "cashflows":[{"periodStart":"2026-10-01","payDate":"2026-11-05","rate":71.0,"amount":-710.0,"status":"Projected"},
+                                {"periodStart":"2026-11-01","payDate":"2026-12-05","rate":71.0,"amount":-710.0,"status":"Projected"}]},
+                  {"leg":2,"payReceive":"Receive","type":"FLOAT","currency":"USD","index":"WTI",
+                   "cashflows":[{"periodStart":"2026-10-01","payDate":"2026-11-05","rate":72.5,"amount":725.0,"status":"Projected",
+                                 "fixings":[{"fixingDate":"2026-10-01","rate":72.0,"source":"NYMEX"},{"fixingDate":"2026-10-02","rate":73.0,"source":"NYMEX"}]}]},
+                  {"leg":3,"payReceive":"Pay","type":"FEE","currency":"USD","rate":0.1,
+                   "cashflows":[{"periodStart":"2026-10-01","payDate":"2026-11-05","rate":0.1,"amount":-5.0,"status":"Projected"}]}]}""");
+        InferredLayout l = ENGINE.infer(doc, "trade");
+        Panel legs = panel(l.panels(), "legs");
+        assertThat(legs.kind()).isEqualTo(PanelKind.TABS);
+        assertThat(legs.option("each")).contains("$.legs");
+        assertThat(legs.parts()).extracting(Panel::id).containsExactly("terms", "cashflows");
+        Panel flows = legs.parts().get(1);
+        assertThat(flows.option("rows")).contains("@.cashflows");
+        assertThat(flows.option("children")).contains("@.fixings");                           // some cashflows hold fixings: a tree
+        assertThat(flows.columns()).extracting(c -> c.bind()).contains("@.periodStart", "@.amount", "@.fixingDate", "@.source");
+        assertThat(flows.columns()).noneMatch(c -> c.total());                               // the fixing rows are another kind of row: no totals
+        assertThat(l.panels()).extracting(Panel::id).noneMatch(id -> id.startsWith("legs-"));
+        assertThat(l.explanations().get("legs")).contains("3 records with lists of their own");
     }
 
     @Test

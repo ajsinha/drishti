@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-CASCADIA",
- "total": 5346391,
- "posted": 5185999,
- "received": 5453319,
+ "total": 5574786,
+ "posted": 5407542,
+ "received": 5686282,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 2405876
+   "im": 2508654
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 641567
+   "im": 668974
   },
   {
    "riskClass": "Equity",
-   "im": 962350
+   "im": 1003461
   },
   {
    "riskClass": "Commodity",
-   "im": 427711
+   "im": 445983
   },
   {
    "riskClass": "FX",
-   "im": 908886
+   "im": 947714
   }
  ],
  "nettingSet": "NS-CASCADIA-FRA",

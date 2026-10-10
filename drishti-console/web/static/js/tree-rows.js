@@ -27,6 +27,7 @@
   var E = reg0.pivotEngine || window.drishtiPivotEngine, G = reg0.pivotGrid || window.drishtiPivotGrid;
 
   var treeState = {};                                      // a tree's filters by panel, so a live patch that replaces the table keeps them
+  var openMem = {};                                        // the rows a reader opened, by table: a live patch repaints the panel, and what was opened stays open
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
 
   // ---- table rows with children -----------------------------------------------------------------------------------
@@ -37,10 +38,13 @@
     var heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
     var count = null, clearBtn = null, lastLive = '';
     function cellText(r, i) { var c = r.cells[i]; return c ? c.textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').trim() : ''; }
-    rows.forEach(function (r) {
+    var panelOf = t.closest('[data-panel], section[id], .pnl'), pidOf = panelOf && (panelOf.getAttribute('data-panel') || panelOf.id) || 'tree';
+    var memKey = scope + '|' + pidOf + '|' + (panelOf ? Array.prototype.indexOf.call(panelOf.querySelectorAll('table.tbl'), t) : 0);
+    var mem = openMem[memKey];
+    rows.forEach(function (r, i) {
       r.__depth = +r.getAttribute('data-depth');
       var b = r.querySelector('.tr-tog');
-      r.__open = !!b && b.getAttribute('aria-expanded') === 'true';
+      r.__open = !!b && (mem && mem.length === rows.length ? mem[i] === true : b.getAttribute('aria-expanded') === 'true');
       r.__text = r.textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').toLowerCase();
     });
     function textHit(r) { return !q || r.__text.indexOf(q) >= 0; }
@@ -87,6 +91,7 @@
       if (!b || q || (ctl && ctl.active())) { return; }
       var r = b.closest('tr');
       r.__open = !r.__open;
+      openMem[memKey] = rows.map(function (x) { return x.__open === true; });
       paint();
       var again = r.querySelector('.tr-tog');
       if (again) { again.focus(); }

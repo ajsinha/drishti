@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-HARBORPT-NY",
  "tradeCount": 14,
- "netMtm": 26195845,
- "collateral": 24420387,
- "eePeak": 11447478,
- "pfePeak": 25950077,
- "limit": 54000000.0,
- "utilisation": 0.4806,
- "cva": -12635,
+ "netMtm": 33345551,
+ "collateral": 31085512,
+ "eePeak": 6980358,
+ "pfePeak": 16238175,
+ "limit": 34000000.0,
+ "utilisation": 0.4776,
+ "cva": -6338,
  "profile": [
   {
    "tenor": "0",
-   "ee": 3589161,
-   "pfe": 9531005
+   "ee": 4073742,
+   "pfe": 10597083
   },
   {
    "tenor": "1M",
-   "ee": 3762609,
-   "pfe": 9154052
+   "ee": 4282059,
+   "pfe": 10316267
   },
   {
    "tenor": "3M",
-   "ee": 5155988,
-   "pfe": 12215200
+   "ee": 5688910,
+   "pfe": 13407052
   },
   {
    "tenor": "6M",
-   "ee": 6442832,
-   "pfe": 15036194
+   "ee": 6980358,
+   "pfe": 16238175
   },
   {
    "tenor": "1Y",
-   "ee": 8278428,
-   "pfe": 19074504
+   "ee": 3569620,
+   "pfe": 8079352
   },
   {
    "tenor": "2Y",
-   "ee": 9738928,
-   "pfe": 22191266
+   "ee": 2620099,
+   "pfe": 5874643
   },
   {
    "tenor": "3Y",
-   "ee": 11447478,
-   "pfe": 25950077
+   "ee": 2597661,
+   "pfe": 5825278
   },
   {
    "tenor": "5Y",
-   "ee": 2172535,
-   "pfe": 4872590
+   "ee": 2311370,
+   "pfe": 5178027
   },
   {
    "tenor": "7Y",
-   "ee": 936365,
-   "pfe": 2089666
+   "ee": 1020573,
+   "pfe": 2274922
   },
   {
    "tenor": "10Y",
-   "ee": 256418,
-   "pfe": 568495
+   "ee": 296195,
+   "pfe": 656004
   }
  ],
  "trades": [
@@ -82,6 +82,17 @@
    "maturity": "2037-12-14",
    "maturityBucket": "10Y+",
    "mtm": -8928821
+  },
+  {
+   "tradeId": "MX-20000102",
+   "product": "European swaption",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-1",
+   "notional": 222000000.0,
+   "maturity": "2028-06-05",
+   "maturityBucket": "1-2Y",
+   "mtm": 4403209
   },
   {
    "tradeId": "MX-20000053",
@@ -115,28 +126,6 @@
    "maturity": "2026-10-28",
    "maturityBucket": "0-1Y",
    "mtm": 1944745
-  },
-  {
-   "tradeId": "MX-20000102",
-   "product": "European swaption",
-   "assetClass": "Rates",
-   "currency": "USD",
-   "book": "BOOK-RATES-1",
-   "notional": 222000000.0,
-   "maturity": "2026-10-07",
-   "maturityBucket": "0-1Y",
-   "mtm": -1632251
-  },
-  {
-   "tradeId": "END-1000013",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-3",
-   "notional": 208000000.0,
-   "maturity": "2031-09-11",
-   "maturityBucket": "2-5Y",
-   "mtm": -1134050
   },
   {
    "tradeId": "WSS-1500095",
@@ -214,20 +203,31 @@
    "maturity": "2032-02-17",
    "maturityBucket": "5-10Y",
    "mtm": 21107
+  },
+  {
+   "tradeId": "END-1000013",
+   "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-3",
+   "notional": 208000000.0,
+   "maturity": "2027-08-31",
+   "maturityBucket": "0-1Y",
+   "mtm": -19804
   }
  ],
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": 24159930
+   "mtm": 30195390
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 2082733
   },
   {
    "asset": "Money market",
    "mtm": 1388131
-  },
-  {
-   "asset": "Commodity",
-   "mtm": 968487
   },
   {
    "asset": "Credit",
@@ -254,7 +254,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 52391
+   "netMtm": 66691
   }
  }
 }

@@ -33,7 +33,8 @@ public final class Emptiness {
             case null -> true;
             case PanelData.Fields f -> blank(f.fields());
             case PanelData.Table t -> t.rows() == null || t.rows().isEmpty();
-            case PanelData.Tabs t -> t.tabs() == null || t.tabs().isEmpty() || t.tabs().stream().allMatch(x -> blank(x.fields()));
+            case PanelData.Tabs t -> t.tabs() == null || t.tabs().isEmpty() || t.tabs().stream().allMatch(x -> blank(x.fields())
+                    && (x.panels() == null || x.panels().stream().allMatch(ViewModel.PanelView::empty)));
             case PanelData.Chart c -> c.x() == null || c.x().isEmpty() || c.series() == null
                     || c.series().stream().allMatch(s -> s.values() == null || s.values().stream().noneMatch(Emptiness::finite));
             case PanelData.Bars b -> b.bars() == null || b.bars().isEmpty();

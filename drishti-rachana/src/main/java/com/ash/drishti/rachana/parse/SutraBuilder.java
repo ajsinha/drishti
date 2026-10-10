@@ -52,7 +52,7 @@ final class SutraBuilder {
     private static final int LANGUAGE = SutraParser.LANGUAGE;
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
             "description", "notes", "controls");
-    private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "description",
+    private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "panels", "description",
             Panel.SPAN, Panel.HEIGHT);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
     private static final Set<String> COLUMN = Set.of("label", "bind", "fmt", "tone", "total", "link");
@@ -253,6 +253,16 @@ final class SutraBuilder {
                 body = panel(m.get("body"), true);
             }
         }
+        List<Panel> parts = new ArrayList<>();
+        if (m.containsKey("panels")) {
+            if (kind != PanelKind.TABS) {
+                problem("DRS-2023", "only 'tabs' panels take 'panels'", m.get("panels"));
+            } else if (nested) {
+                problem("DRS-2023", "a panel inside a tab cannot hold tabs of its own", m.get("panels"));
+            } else {
+                parts = parts(m.get("panels"));
+            }
+        }
         Map<String, Object> options = new LinkedHashMap<>();
         size(m, Panel.SPAN, Panel.MAX_SPAN, "columns of the 12-column grid", nested, options);
         size(m, Panel.HEIGHT, Panel.MAX_HEIGHT, "grid rows", nested, options);
@@ -283,7 +293,38 @@ final class SutraBuilder {
             }
         }
         return new Panel(id, kind, text(m.get("title"), null), key, text(m.get("code"), null), area, bool(m.get("infer")),
-                columns, body, options, loc(n));
+                columns, body, options, loc(n), parts);
+    }
+
+    /** Panels a tab may hold: those that read a record or a list and draw no chart of their own. */
+    private static final Set<PanelKind> TAB_PARTS = Set.of(PanelKind.KV, PanelKind.STATUS, PanelKind.TABLE, PanelKind.LADDER,
+            PanelKind.HBAR, PanelKind.MARKDOWN, PanelKind.METRIC);
+
+    /** The {@code panels:} of a tabs panel: each needs an id (unique among them) and a kind a tab can hold. */
+    private List<Panel> parts(PNode list) {
+        List<Panel> out = new ArrayList<>();
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        for (PNode n : listOf(list, "panels")) {
+            if (n.isMap() && !n.map().containsKey("id")) {
+                problem("DRS-2010", "a panel inside a tab needs an 'id'", n);
+                continue;
+            }
+            Panel part = panel(n, true);
+            if (part == null) {
+                continue;
+            }
+            if (part.kind() != null && !TAB_PARTS.contains(part.kind())) {
+                problem("DRS-2023", "a '" + part.kind().id() + "' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric", n);
+            }
+            if (part.options().containsKey(Panel.PIVOT)) {
+                problem("DRS-2023", "a panel inside a tab cannot have a Pivot tab; put the table in a panel of its own", n);
+            }
+            if (!ids.add(part.id())) {
+                problem("DRS-2024", "two panels of this tab are called '" + part.id() + "'", n);
+            }
+            out.add(part);
+        }
+        return out;
     }
 
     /** {@code span} and {@code height}: whole numbers within bounds, on top-level panels only; kept with the options. */

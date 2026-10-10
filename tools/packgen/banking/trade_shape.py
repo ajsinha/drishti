@@ -45,6 +45,35 @@ LEG_COLUMNS = [("Pay/receive", "@.payReceive", None, None), ("Rate type", "@.rat
                ("Rate", "@.rate", "pct4", None), ("Spread", "@.spread", "bp1", None), ("Frequency", "@.frequency", None, None),
                ("Day count", "@.dayCount", None, None), ("Currency", "@.currency", None, None), ("Notional", "@.notional", "amount0", None)]
 
+# A deep trade (trade > legs > cashflows > fixings): what each leg tab shows. Terms are a kv of the leg; the cashflows are a
+# tree table whose floating rows open to their fixings (rows `@.cashflows`, children `@.fixings`). The fixing rows have other
+# fields than the cashflow rows, so the columns read the one that is there (coalesce).
+LEG_TERMS = {
+    "rates": [("Pay/receive", "@.payReceive", None, None), ("Rate type", "@.rateType", None, None), ("Index", "@.index", None, None),
+              ("Fixed rate", "@.rate", "pct4", None), ("Spread", "@.spread", "bp1", None), ("Frequency", "@.frequency", None, None),
+              ("Resets", "@.resetFrequency", None, None), ("Day count", "@.dayCount", None, None),
+              ("Business day", "@.businessDayConvention", None, None), ("Calendar", "@.calendar", None, None),
+              ("Currency", "@.currency", None, None), ("Notional", "@.notional", "amount0", None), ("Leg PV", "@.pv", "signed0", "sign")],
+    "option": [("Buy/sell", "@.payReceive", None, None), ("Leg type", "@.type", None, None), ("Index", "@.index", None, None),
+               ("Strike", "@.strike", "pct4", None), ("Frequency", "@.frequency", None, None), ("Resets", "@.resetFrequency", None, None),
+               ("Day count", "@.dayCount", None, None), ("Business day", "@.businessDayConvention", None, None),
+               ("Calendar", "@.calendar", None, None), ("Currency", "@.currency", None, None), ("Notional", "@.notional", "amount0", None),
+               ("Leg PV", "@.pv", "signed0", "sign")],
+    "commodity": [("Pay/receive", "@.payReceive", None, None), ("Leg type", "@.type", None, None), ("Index", "@.index", None, None),
+                  ("Price", "@.rate", "price2", None), ("Quantity", "@.quantity", "amount0", None), ("Per", "@.quantityUnit", None, None),
+                  ("Frequency", "@.frequency", None, None), ("Resets", "@.resetFrequency", None, None),
+                  ("Business day", "@.businessDayConvention", None, None), ("Calendar", "@.calendar", None, None),
+                  ("Payment lag", "@.paymentLag", None, None), ("Currency", "@.currency", None, None),
+                  ("Notional", "@.notional", "amount0", None), ("Leg PV", "@.pv", "signed0", "sign")],
+}
+CASHFLOW_COLUMNS = [("Period start / fixing", "coalesce(@.periodStart, @.fixingDate)", "date", None), ("Period end", "@.periodEnd", "date", None),
+                    ("Pay date", "@.payDate", "date", None), ("Type", "coalesce(@.type, @.index)", None, None),
+                    ("Accrual", "@.accrualFactor", "df4", None), ("Rate", "@.rate", "pct4", None),
+                    ("Amount", "@.amount", "signed0", "sign"), ("DF", "@.discountFactor", "df4", None), ("PV", "@.pv", "signed0", "sign"),
+                    ("Status", "@.status", None, "status"), ("Tenor", "@.tenor", None, None), ("Source", "@.source", None, None)]
+
+CASHFLOW_COLUMNS_FMT = {("commodity", "Rate"): ("price2", None), ("commodity", "Accrual"): (None, None)}
+
 # schedule name -> (panel kind, title, code, columns (label, field, fmt, tone, total)); rows are $.schedule
 SCHEDULES = {
     "cashflows": ("ladder", "Cashflows", "CF", [("Pay date", "payDate", "date", None, False), ("Leg", "leg", None, None, False),

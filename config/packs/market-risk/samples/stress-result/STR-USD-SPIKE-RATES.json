@@ -1,20 +1,20 @@
 {
  "resultId": "STR-USD-SPIKE-RATES",
  "scenarioName": "USD +15% vs all",
- "pnl": -30420406,
- "limit": -67000000.0,
+ "pnl": -30681072,
+ "limit": -67500000.0,
  "byBook": [
   {
    "book": "BOOK-RATES-1",
-   "pnl": -10777150
+   "pnl": -10762356
   },
   {
    "book": "BOOK-RATES-2",
-   "pnl": -12099349
+   "pnl": -12256047
   },
   {
    "book": "BOOK-RATES-3",
-   "pnl": -7543907
+   "pnl": -7662669
   }
  ],
  "scenario": "SCN-USD-SPIKE",

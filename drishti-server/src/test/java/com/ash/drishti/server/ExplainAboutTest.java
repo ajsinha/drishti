@@ -69,10 +69,10 @@ class ExplainAboutTest {
         JsonNode about = e.path("about");
         assertThat(about.path("pack").path("name").asText()).isEqualTo("market-risk");
         assertThat(about.path("kindTitle").asText()).isEqualTo("Value-at-risk result");
-        assertThat(about.path("text").asText()).startsWith("VAR-COMM is a 1-day 99% historical VaR for DESK-COMM: 11.0m USD, 58% of its 18.9m limit, with 1 exception(s)");
+        assertThat(about.path("text").asText()).startsWith("VAR-COMM is a 1-day 99% historical VaR for DESK-COMM: 10.9m USD, 58% of its 18.9m limit, with 1 exception(s)");
         assertThat(e.path("layout").path("sutra").path("pack").asText()).isEqualTo("market-risk");
         assertThat(about.path("panels").findValuesAsText("id")).contains("scenarios");
-        assertThat(about.path("panels").findValuesAsText("description").toString()).contains("The markers are -VaR (11.0m)");
+        assertThat(about.path("panels").findValuesAsText("description").toString()).contains("The markers are -VaR (10.9m)");
     }
 
     @Test
@@ -82,7 +82,7 @@ class ExplainAboutTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
         assertThat(fr.path("locale").asText()).isEqualTo("fr");
         assertThat(fr.path("about").path("kindTitle").asText()).isEqualTo("Résultat de valeur à risque");
-        assertThat(fr.path("about").path("text").asText()).startsWith("VAR-COMM est une VaR historique à 1 jour et 99 % pour DESK-COMM : 11.0m USD");
+        assertThat(fr.path("about").path("text").asText()).startsWith("VAR-COMM est une VaR historique à 1 jour et 99 % pour DESK-COMM : 10.9m USD");
         assertThat(fr.path("about").path("panels").toString()).contains("Les repères sont -VaR");
         assertThat(fr.path("glossary").toString()).contains("Valeur à risque, 99 %, 1 jour").contains("Exceptions de backtesting");
         JsonNode viaHeader = json.readTree(mvc.perform(get("/api/v1/views/var/VAR-COMM/explain").header("Authorization", auth)
@@ -110,9 +110,9 @@ class ExplainAboutTest {
         JsonNode e = explain("masked", "var/VAR-COMM");
         String text = e.path("about").path("text").asText();
         assertThat(text).startsWith("VAR-COMM is a 1-day 99% historical VaR for DESK-COMM: ••• USD");
-        assertThat(text).doesNotContain("11.0m", "58%", "18.9m", "10959317", "18940000");
-        assertThat(e.toString()).doesNotContain("11.0m", "10959317", "18940000", "18.9m");
-        assertThat(e.path("about").path("panels").toString()).doesNotContain("11.0m");   // the panel's text reads the mask too
+        assertThat(text).doesNotContain("10.9m", "58%", "18.9m", "10949577", "18930000");
+        assertThat(e.toString()).doesNotContain("10.9m", "10949577", "18930000", "18.9m");
+        assertThat(e.path("about").path("panels").toString()).doesNotContain("10.9m");   // the panel's text reads the mask too
         String variant = explain("masked", "variant/VRNT-APOE-E4").path("about").path("text").asText();
         assertThat(variant).contains("classified \"•••\"").doesNotContain("Risk factor");
     }

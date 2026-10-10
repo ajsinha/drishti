@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-ALDERSHOT-NY",
  "tradeCount": 22,
- "netMtm": 18472754,
- "collateral": 12275222,
- "eePeak": 18563443,
- "pfePeak": 42556674,
- "limit": 74000000.0,
- "utilisation": 0.5751,
- "cva": -12349,
+ "netMtm": 21121197,
+ "collateral": 14035123,
+ "eePeak": 18650640,
+ "pfePeak": 42672908,
+ "limit": 75000000.0,
+ "utilisation": 0.569,
+ "cva": -11062,
  "profile": [
   {
    "tenor": "0",
-   "ee": 10744118,
-   "pfe": 27735298
+   "ee": 11632660,
+   "pfe": 29690090
   },
   {
    "tenor": "1M",
-   "ee": 12551231,
-   "pfe": 30419270
+   "ee": 13421453,
+   "pfe": 32333759
   },
   {
    "tenor": "3M",
-   "ee": 17048293,
-   "pfe": 40312806
+   "ee": 17883000,
+   "pfe": 42149164
   },
   {
    "tenor": "6M",
-   "ee": 15263368,
-   "pfe": 35310772
+   "ee": 16047504,
+   "pfe": 37035871
   },
   {
    "tenor": "1Y",
-   "ee": 18563443,
-   "pfe": 42556674
+   "ee": 18650640,
+   "pfe": 42672908
   },
   {
    "tenor": "2Y",
-   "ee": 7790068,
-   "pfe": 17494449
+   "ee": 7473679,
+   "pfe": 16722794
   },
   {
    "tenor": "3Y",
-   "ee": 7864544,
-   "pfe": 17658298
+   "ee": 7236718,
+   "pfe": 16201479
   },
   {
    "tenor": "5Y",
-   "ee": 4506980,
-   "pfe": 10068043
+   "ee": 3409177,
+   "pfe": 7577278
   },
   {
    "tenor": "7Y",
-   "ee": 4136516,
-   "pfe": 9244886
+   "ee": 2690771,
+   "pfe": 5988647
   },
   {
    "tenor": "10Y",
-   "ee": 508724,
-   "pfe": 1119194
+   "ee": 581660,
+   "pfe": 1279653
   }
  ],
  "trades": [
@@ -84,17 +84,6 @@
    "mtm": 5446207
   },
   {
-   "tradeId": "MX-20000016",
-   "product": "Basis swap (float/float)",
-   "assetClass": "Rates",
-   "currency": "GBP",
-   "book": "BOOK-RATES-1",
-   "notional": 146000000.0,
-   "maturity": "2033-12-23",
-   "maturityBucket": "5-10Y",
-   "mtm": -5360345
-  },
-  {
    "tradeId": "BBG-60000067",
    "product": "Asset-backed security",
    "assetClass": "Fixed income",
@@ -115,17 +104,6 @@
    "maturity": "2027-03-22",
    "maturityBucket": "0-1Y",
    "mtm": -3938043
-  },
-  {
-   "tradeId": "MX-20000084",
-   "product": "Interest rate cap",
-   "assetClass": "Rates",
-   "currency": "EUR",
-   "book": "BOOK-RATES-2",
-   "notional": 182000000.0,
-   "maturity": "2026-10-07",
-   "maturityBucket": "0-1Y",
-   "mtm": 3578990
   },
   {
    "tradeId": "CLY-3000048",
@@ -205,6 +183,17 @@
    "mtm": -1215501
   },
   {
+   "tradeId": "END-1000018",
+   "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-2",
+   "notional": 24000000.0,
+   "maturity": "2027-08-31",
+   "maturityBucket": "0-1Y",
+   "mtm": 1166701
+  },
+  {
    "tradeId": "MX-20000050",
    "product": "Forward-starting swap",
    "assetClass": "Rates",
@@ -216,6 +205,17 @@
    "mtm": -526108
   },
   {
+   "tradeId": "MX-20000021",
+   "product": "Cross-currency swap (non-MtM)",
+   "assetClass": "Rates",
+   "currency": "CHF",
+   "book": "BOOK-RATES-2",
+   "notional": 151000000.0,
+   "maturity": "2036-02-21",
+   "maturityBucket": "5-10Y",
+   "mtm": 491353
+  },
+  {
    "tradeId": "MX-20000058",
    "product": "Constant maturity swap",
    "assetClass": "Rates",
@@ -225,6 +225,17 @@
    "maturity": "2029-11-26",
    "maturityBucket": "2-5Y",
    "mtm": -468454
+  },
+  {
+   "tradeId": "MX-20000016",
+   "product": "Basis swap (float/float)",
+   "assetClass": "Rates",
+   "currency": "GBP",
+   "book": "BOOK-RATES-1",
+   "notional": 146000000.0,
+   "maturity": "2033-12-23",
+   "maturityBucket": "5-10Y",
+   "mtm": -459026
   },
   {
    "tradeId": "MX-20000133",
@@ -271,28 +282,6 @@
    "mtm": -301692
   },
   {
-   "tradeId": "MX-20000021",
-   "product": "Cross-currency swap (non-MtM)",
-   "assetClass": "Rates",
-   "currency": "CHF",
-   "book": "BOOK-RATES-2",
-   "notional": 151000000.0,
-   "maturity": "2036-02-21",
-   "maturityBucket": "5-10Y",
-   "mtm": 204436
-  },
-  {
-   "tradeId": "END-1000018",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-2",
-   "notional": 24000000.0,
-   "maturity": "2036-07-14",
-   "maturityBucket": "5-10Y",
-   "mtm": 127504
-  },
-  {
    "tradeId": "MX-20000025",
    "product": "Cross-currency swap (MtM resetting)",
    "assetClass": "Rates",
@@ -302,20 +291,31 @@
    "maturity": "2033-04-18",
    "maturityBucket": "5-10Y",
    "mtm": -71768
+  },
+  {
+   "tradeId": "MX-20000084",
+   "product": "Interest rate cap",
+   "assetClass": "Rates",
+   "currency": "EUR",
+   "book": "BOOK-RATES-2",
+   "notional": 182000000.0,
+   "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
+   "mtm": 0
   }
  ],
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": 7700672
+   "mtm": 9309918
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 5665569
   },
   {
    "asset": "Fixed income",
    "mtm": 4905373
-  },
-  {
-   "asset": "Commodity",
-   "mtm": 4626372
   },
   {
    "asset": "Credit",
@@ -342,7 +342,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 36945
+   "netMtm": 42242
   }
  }
 }

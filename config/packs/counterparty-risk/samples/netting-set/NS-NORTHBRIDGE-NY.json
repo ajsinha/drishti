@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-NORTHBRIDGE-NY",
  "tradeCount": 13,
- "netMtm": 38305686,
- "collateral": 27370585,
- "eePeak": 20482074,
- "pfePeak": 46165951,
+ "netMtm": 36484191,
+ "collateral": 26069071,
+ "eePeak": 20236453,
+ "pfePeak": 45625584,
  "limit": 59000000.0,
- "utilisation": 0.7825,
- "cva": -190342,
+ "utilisation": 0.7733,
+ "cva": -186288,
  "profile": [
   {
    "tenor": "0",
-   "ee": 12483117,
-   "pfe": 28858219
+   "ee": 11963136,
+   "pfe": 27714261
   },
   {
    "tenor": "1M",
-   "ee": 13371949,
-   "pfe": 30571101
+   "ee": 12862689,
+   "pfe": 29450729
   },
   {
    "tenor": "3M",
-   "ee": 14859327,
-   "pfe": 33837206
+   "ee": 14370850,
+   "pfe": 32762557
   },
   {
    "tenor": "6M",
-   "ee": 16136837,
-   "pfe": 36647729
+   "ee": 15677955,
+   "pfe": 35638189
   },
   {
    "tenor": "1Y",
-   "ee": 17541365,
-   "pfe": 39719141
+   "ee": 17136404,
+   "pfe": 38828225
   },
   {
    "tenor": "2Y",
-   "ee": 19395893,
-   "pfe": 43799102
+   "ee": 19080508,
+   "pfe": 43105256
   },
   {
    "tenor": "3Y",
-   "ee": 20482074,
-   "pfe": 46165951
+   "ee": 20236453,
+   "pfe": 45625584
   },
   {
    "tenor": "5Y",
-   "ee": 4621509,
-   "pfe": 10250533
+   "ee": 4472532,
+   "pfe": 9922784
   },
   {
    "tenor": "7Y",
-   "ee": 3661512,
-   "pfe": 8138539
+   "ee": 3571153,
+   "pfe": 7939749
   },
   {
    "tenor": "10Y",
-   "ee": 897608,
-   "pfe": 1974737
+   "ee": 854925,
+   "pfe": 1880835
   }
  ],
  "trades": [
@@ -104,17 +104,6 @@
    "maturity": "2030-11-12",
    "maturityBucket": "2-5Y",
    "mtm": -1890065
-  },
-  {
-   "tradeId": "MX-20000083",
-   "product": "Interest rate cap",
-   "assetClass": "Rates",
-   "currency": "EUR",
-   "book": "BOOK-RATES-1",
-   "notional": 158000000.0,
-   "maturity": "2027-09-09",
-   "maturityBucket": "0-1Y",
-   "mtm": 1821498
   },
   {
    "tradeId": "MX-20000111",
@@ -203,12 +192,23 @@
    "maturity": "2035-05-14",
    "maturityBucket": "5-10Y",
    "mtm": 173547
+  },
+  {
+   "tradeId": "MX-20000083",
+   "product": "Interest rate cap",
+   "assetClass": "Rates",
+   "currency": "EUR",
+   "book": "BOOK-RATES-1",
+   "notional": 158000000.0,
+   "maturity": "2027-09-09",
+   "maturityBucket": "0-1Y",
+   "mtm": 3
   }
  ],
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": 41386777
+   "mtm": 39565282
   },
   {
    "asset": "Credit",
@@ -239,7 +239,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 76611
+   "netMtm": 72968
   }
  }
 }

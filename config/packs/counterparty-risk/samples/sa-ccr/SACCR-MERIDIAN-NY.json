@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-MERIDIAN-NY",
- "replacementCost": 406404,
+ "replacementCost": 2986461,
  "addOn": 63787541,
  "multiplier": 1.0,
- "ead": 89871523,
- "rwa": 44935762,
+ "ead": 93483603,
+ "rwa": 46741802,
  "addOns": [
   {
    "assetClass": "Interest rate",

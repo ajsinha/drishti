@@ -43,6 +43,47 @@ panels:
       - { label: Premium, bind: $.terms.premium, fmt: amount0 }
       - { label: Effective, bind: $.effectiveDate, fmt: date }
       - { label: Counterparty, bind: $.counterparty.name }
+  - id: legs
+    kind: tabs
+    title: Legs
+    each: $.legs
+    tabTitle: "'Leg ' + @.leg + ' · ' + @.label"
+    panels:
+      - id: leg-terms
+        kind: kv
+        title: Leg terms
+        columns:
+          - { label: Buy/sell, bind: "@.payReceive" }
+          - { label: Leg type, bind: "@.type" }
+          - { label: Index, bind: "@.index" }
+          - { label: Strike, bind: "@.strike", fmt: pct4 }
+          - { label: Frequency, bind: "@.frequency" }
+          - { label: Resets, bind: "@.resetFrequency" }
+          - { label: Day count, bind: "@.dayCount" }
+          - { label: Business day, bind: "@.businessDayConvention" }
+          - { label: Calendar, bind: "@.calendar" }
+          - { label: Currency, bind: "@.currency" }
+          - { label: Notional, bind: "@.notional", fmt: amount0 }
+          - { label: Leg PV, bind: "@.pv", fmt: signed0, tone: sign }
+      - id: leg-cashflows
+        kind: table
+        title: Cashflows and fixings
+        rows: "@.cashflows"
+        children: "@.fixings"
+        expand: 1
+        columns:
+          - { label: Period start / fixing, bind: "coalesce(@.periodStart, @.fixingDate)", fmt: date }
+          - { label: Period end, bind: "@.periodEnd", fmt: date }
+          - { label: Pay date, bind: "@.payDate", fmt: date }
+          - { label: Type, bind: "coalesce(@.type, @.index)" }
+          - { label: Accrual, bind: "@.accrualFactor", fmt: df4 }
+          - { label: Rate, bind: "@.rate", fmt: pct4 }
+          - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
+          - { label: DF, bind: "@.discountFactor", fmt: df4 }
+          - { label: PV, bind: "@.pv", fmt: signed0, tone: sign }
+          - { label: Status, bind: "@.status", tone: status }
+          - { label: Tenor, bind: "@.tenor" }
+          - { label: Source, bind: "@.source" }
   - id: explain
     kind: waterfall
     title: "P&L explain (USD, opening to closing MTM)"

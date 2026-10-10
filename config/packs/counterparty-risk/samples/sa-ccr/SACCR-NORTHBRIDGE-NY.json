@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-NORTHBRIDGE-NY",
- "replacementCost": 10935101,
+ "replacementCost": 10415120,
  "addOn": 62471137,
  "multiplier": 1.0,
- "ead": 102768733,
- "rwa": 102768733,
+ "ead": 102040760,
+ "rwa": 102040760,
  "addOns": [
   {
    "assetClass": "Interest rate",

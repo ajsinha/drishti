@@ -1,30 +1,30 @@
 {
  "balanceId": "COLL-VERDANT-NY",
- "held": 2344758,
+ "held": 4645733,
  "posted": 0,
- "net": 2344758,
+ "net": 4645733,
  "asOf": "2026-09-30",
  "positions": [
   {
    "asset": "United States Treasury 2036",
    "direction": "Held",
-   "marketValue": 781586,
+   "marketValue": 1548578,
    "haircut": 0.01,
-   "value": 773770
+   "value": 1533092
   },
   {
    "asset": "Orbital Telecom SA 2031",
    "direction": "Held",
-   "marketValue": 781586,
+   "marketValue": 1548578,
    "haircut": 0.01,
-   "value": 773770
+   "value": 1533092
   },
   {
    "asset": "Halcyon Shipping plc 2036",
    "direction": "Held",
-   "marketValue": 781586,
+   "marketValue": 1548578,
    "haircut": 0.02,
-   "value": 765954
+   "value": 1517606
   }
  ],
  "csa": "CSA-VERDANT",

@@ -402,14 +402,15 @@ What happens to each part of the document (with the banking packs enabled, which
 
 | Path | Candidates (score) | Kept? | Why |
 |---|---|---|---|
-| `$.legs` (2 objects × 21 fields) | tabs 0.90, table 0.57 | **tabs**, main | LegsRule: 2–4 similar objects with 5+ fields |
-| `$.legs[0].cashflows` (7 rows) | table 0.62 | **table**, main | arrays inside the first leg are visited too; titled *Cashflows · Legs 1* |
+| `$.legs` (2 objects × 21 fields, each holding `cashflows`, whose rows hold `fixings`) | tabs with `panels:` 0.92 (deep LegsRule), table 0.57 | **tabs**, main | LegsRule (deep): a short list of records that hold lists of their own; the tab holds a kv of the leg's fields (`terms`) and a tree table of its cashflows (`children: "@.fixings"`) |
+| `$.legs[0].cashflows` (7 rows) | none | | not visited: the leg tabs already hold each leg's cashflows (for legs without lists of their own the first leg's arrays are still offered, titled *Cashflows · Legs 1*) |
 | `$.schedule` (35 rows) | ladder 0.72, table 0.65 | **ladder**, main | dated rows in order; the last (`#index == 34`) is lit |
 | `$.pnlHistory` (20 rows) | ladder 0.72, table 0.65 | **ladder**, main | same; `pnl` is *signed money*, so the column gets `signed0`, a tone and a total |
+| `$.pnlExplain` (8 rows) | table 0.63 | **table**, main | three scalar fields: not a label and an amount, so no bars |
 | `$.sensitivities` (7 rows of `bucket`, `dv01`) | line 0.82, table 0.62, hbar 0.45 | **line**, right | `bucket` values are tenors (`3M` … `7Y`); `dv01` is not money to the core hints, so the line keeps 0.82 and bars only get 0.45 |
 | `$.execution` (8 scalars) | kv 0.55 | **kv**, main | more than 6 scalars: main column |
 | `$.clearing` (7 scalars) | kv 0.55 | **kv**, main | sixth and last main panel |
-| `$.regulatory`, `$.valuation` | kv 0.55 | dropped | the main column is full (6); ties are kept in the order proposed |
+| `$.regulatory`, `$.valuation` | kv 0.55 | dropped | the main column is full (6: schedule, P&L history, P&L explain, legs, execution, clearing); ties are kept in the order proposed |
 | `$.terms` (4), `$.lifecycle` (6) | kv 0.55 | **kv**, right | with the line, the three right-column panels |
 | `$.confirmation`, `$.settlementInstructions` | kv 0.55 | dropped | the right column is full (3) |
 | `$.counterparty` | none | | an object of just `id` and `name` is a reference, not a panel; it gives the title's `with` |
@@ -557,6 +558,7 @@ section and links back to it).
 | Rule | Recognises | Proposes | Where | Score |
 |---|---|---|---|---|
 | `LegsRule` | a top-level array of 2–4 objects whose first element has at least 5 fields (legs, tranches) | `tabs`, one per element, each an inferred `kv` | main | 0.90 |
+| `LegsRule` (deep) | a top-level array of 1–8 objects, the first with at least 4 fields, where the elements hold arrays of objects of their own (a trade's legs, each with `cashflows`, whose rows may hold `fixings`) | `tabs`, one per element, with `panels:`: a `kv` of the element's own fields (`terms`) and a `table` for each list it holds (rows `@.<list>`); when some rows hold a list again, that table is a tree (`children`, `expand: 1`) with the columns of both kinds of row and no totals | main | 0.92 |
 | `TermStructureRule` | 3 or more objects with a text field matching the tenor pattern (`1M`, `5Y`, `Q3`, `H1`) and numbers | `area` with up to 4 series (two or more numbers), or `line` (one number) | area: main; line: right | area 0.85; line 0.82, or 0.50 when the number is money-like |
 | `DistributionRule` | 2–12 objects with exactly two scalar fields, label + number | `hbar` | right | 0.80 when the number is money-like, else 0.45 |
 | `TimeSeriesRule` | 3 or more objects whose first field is an ISO date, in date order | `ladder`, latest row highlighted | main | 0.72 |

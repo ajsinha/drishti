@@ -617,7 +617,8 @@ panels:
 You should see *Terms* (`Fixed rate 4.0829%`, `Day count ACT/365F`, the curve as a link) and two boxes side by side,
 `Leg 1 · Receive fixed 4.0829%` (`Rate 4.0829%`, `PV +52,387,405`) and `Leg 2 · Pay AONIA compounded`
 (`Rate AONIA + 0.0000%`, `PV −50,511,542`). With `layout: tabs` (the default) they would be tabs instead. The
-`body` is a panel without an `id`; only its columns are used, and it must be a `kv`.
+`body` is a panel without an `id`; only its columns are used, and it must be a `kv`. To put whole panels in each tab (the leg's terms and a table of
+its own cashflows, a tree when they hold fixings), use `panels:` instead: [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
 
 ### 4.3 Cashflows with totals and "more"
 

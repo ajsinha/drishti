@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-KESTREL",
- "total": 5420199,
- "posted": 5257593,
- "received": 5528603,
+ "total": 5239960,
+ "posted": 5082761,
+ "received": 5344759,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 2439090
+   "im": 2357982
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 650424
+   "im": 628795
   },
   {
    "riskClass": "Equity",
-   "im": 975636
+   "im": 943193
   },
   {
    "riskClass": "Commodity",
-   "im": 433616
+   "im": 419197
   },
   {
    "riskClass": "FX",
-   "im": 921434
+   "im": 890793
   }
  ],
  "nettingSet": "NS-KESTREL-FRA",

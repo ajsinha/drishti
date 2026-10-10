@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-VERDANT-NY",
- "replacementCost": 1267792,
+ "replacementCost": 2511911,
  "addOn": 42543288,
  "multiplier": 1.0,
- "ead": 61335512,
- "rwa": 61335512,
+ "ead": 63077278,
+ "rwa": 63077278,
  "addOns": [
   {
    "assetClass": "Interest rate",

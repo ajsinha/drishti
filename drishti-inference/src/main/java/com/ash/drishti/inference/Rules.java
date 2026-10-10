@@ -56,7 +56,7 @@ public final class Rules {
         o.fields().forEach((k, v) -> {
             if (v instanceof DataNode.Arr a) {
                 visit.accept("$." + k, a);
-                if (a.size() > 0 && a.size() <= 4 && a.get(0) instanceof DataNode.Obj first) {
+                if (a.size() > 0 && a.size() <= 4 && !deep(a) && a.get(0) instanceof DataNode.Obj first) {
                     first.fields().forEach((k2, v2) -> {
                         if (v2 instanceof DataNode.Arr inner) {
                             visit.accept("$." + k + "[0]." + k2, inner);
@@ -65,6 +65,50 @@ public final class Rules {
                 }
             }
         });
+    }
+
+    /** Most elements one list may have to be shown as a tab each. */
+    static final int TAB_MAX = 8;
+
+    /** The names of the lists of objects an element holds ({@code cashflows} of a leg, {@code fixings} of a cashflow). */
+    static List<String> listsIn(DataNode element) {
+        List<String> out = new ArrayList<>();
+        if (element instanceof DataNode.Obj o) {
+            o.fields().forEach((k, v) -> {
+                if (v instanceof DataNode.Arr inner && objects(inner)) {
+                    out.add(k);
+                }
+            });
+        }
+        return out;
+    }
+
+    /** The lists of objects any of the first {@link #SCAN} elements holds, in order of first appearance (a fixed leg has no fixings, a floating one has). */
+    static List<String> listsIn(DataNode.Arr elements) {
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
+        for (int i = 0; i < Math.min(elements.size(), SCAN); i++) {
+            out.addAll(listsIn(elements.get(i)));
+        }
+        return new ArrayList<>(out);
+    }
+
+    /** All the objects of the lists called {@code name} in the first {@link #SCAN} elements, as one list: the rows to infer columns from. */
+    static DataNode.Arr gather(DataNode.Arr elements, String name) {
+        List<DataNode> rows = new ArrayList<>();
+        for (int i = 0; i < Math.min(elements.size(), SCAN); i++) {
+            if (elements.get(i).get(name) instanceof DataNode.Arr inner) {
+                inner.elements().stream().limit(SCAN).forEach(rows::add);
+            }
+        }
+        return new DataNode.Arr(rows);
+    }
+
+    /** Elements looked at when a list of lists is read for its shape. */
+    static final int SCAN = 50;
+
+    /** A short list of records that each hold lists of their own (a trade's legs, each with cashflows): one tab per record. */
+    static boolean deep(DataNode.Arr a) {
+        return objects(a) && a.size() <= TAB_MAX && !listsIn(a).isEmpty() && a.get(0).size() >= 4;
     }
 
     static boolean objects(DataNode.Arr a) {
@@ -103,7 +147,13 @@ public final class Rules {
             int[] order = {0};
             o.fields().forEach((k, v) -> {
                 order[0]++;
-                if (v instanceof DataNode.Arr a && a.size() >= 2 && a.size() <= 4 && objects(a) && a.get(0).size() >= 5) {
+                if (!(v instanceof DataNode.Arr a)) {
+                    return;
+                }
+                if (deep(a)) {
+                    out.add(new Candidate(deepTabs(c, k, a), 0.92, name(), a.size() + " records with lists of their own: one tab each, "
+                            + "their terms and a table of each list", "$." + k, order[0] * 10));
+                } else if (a.size() >= 2 && a.size() <= 4 && objects(a) && a.get(0).size() >= 5) {
                     Panel body = new Panel("body", PanelKind.KV, null, null, null, Area.MAIN, true,
                             c.columns().forObject(a.get(0), "@."), null, Map.of(), INFERRED);
                     Map<String, Object> opts = new LinkedHashMap<>();
@@ -115,6 +165,38 @@ public final class Rules {
                             "$." + k, order[0] * 10));
                 }
             });
+        }
+
+        /** Tabs over the list: a kv of each element's own fields, then a table for each list it holds (a tree when those hold lists too). */
+        private static Panel deepTabs(RuleContext c, String k, DataNode.Arr a) {
+            String one = Semantics.humanize(k).replaceAll("s$", "");
+            Map<String, Object> opts = new LinkedHashMap<>();
+            opts.put("each", "$." + k);
+            opts.put("tabTitle", "'" + one + " ' + (#index + 1)");
+            List<Panel> parts = new ArrayList<>();
+            parts.add(new Panel("terms", PanelKind.KV, "Terms", null, null, Area.MAIN, true, c.columns().forObject(a.get(0), "@."), null,
+                    Map.of(), INFERRED));
+            for (String list : listsIn(a)) {
+                DataNode.Arr rows = gather(a, list);
+                List<Column> cols = new ArrayList<>(c.columns().forRows(rows));
+                Map<String, Object> table = PanelRecipes.table("@." + list, cols);
+                List<String> below = rows.size() == 0 ? List.of() : listsIn(rows);
+                if (!below.isEmpty()) {                                   // some rows hold a list again: a tree, rows open to their children
+                    for (Column extra : c.columns().forRows(gather(rows, below.get(0)))) {
+                        if (cols.stream().noneMatch(x -> x.bind().equals(extra.bind()))) {
+                            cols.add(extra);
+                        }
+                    }
+                    cols.replaceAll(x -> new Column(x.label(), x.bind(), x.fmt(), x.tone(), false, x.link()));   // the leaves are another kind of row: no totals
+                    table.remove("totalLabel");
+                    table.put("children", "@." + below.get(0));
+                    table.put("expand", 1);
+                }
+                parts.add(new Panel(slug(list), PanelKind.TABLE, Semantics.humanize(list), null, null, Area.MAIN, true, cols, null, table,
+                        INFERRED));
+            }
+            return new Panel(slug(k), PanelKind.TABS, Semantics.humanize(k), null, null, Area.MAIN, true, List.of(), null, opts,
+                    INFERRED, parts);
         }
     }
 

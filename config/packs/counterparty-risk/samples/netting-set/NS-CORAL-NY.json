@@ -1,8 +1,8 @@
 {
  "nettingSetId": "NS-CORAL-NY",
  "tradeCount": 25,
- "netMtm": -48748718,
- "collateral": -30493645,
+ "netMtm": -48485563,
+ "collateral": -30329034,
  "eePeak": 32277460,
  "pfePeak": 73339836,
  "limit": 146000000.0,
@@ -205,17 +205,6 @@
    "mtm": 1564064
   },
   {
-   "tradeId": "MX-20000087",
-   "product": "Interest rate floor",
-   "assetClass": "Rates",
-   "currency": "AUD",
-   "book": "BOOK-RATES-3",
-   "notional": 101000000.0,
-   "maturity": "2026-10-07",
-   "maturityBucket": "0-1Y",
-   "mtm": -1482791
-  },
-  {
    "tradeId": "MX-20000155",
    "product": "Target redemption note (rates)",
    "assetClass": "Rates",
@@ -271,17 +260,6 @@
    "mtm": -490007
   },
   {
-   "tradeId": "MX-20000082",
-   "product": "Interest rate cap",
-   "assetClass": "Rates",
-   "currency": "GBP",
-   "book": "BOOK-RATES-2",
-   "notional": 34000000.0,
-   "maturity": "2026-10-07",
-   "maturityBucket": "0-1Y",
-   "mtm": 453010
-  },
-  {
    "tradeId": "END-1000067",
    "product": "Gas swing option",
    "assetClass": "Commodity",
@@ -301,7 +279,7 @@
    "notional": 30000000.0,
    "maturity": "2027-09-23",
    "maturityBucket": "0-1Y",
-   "mtm": 346028
+   "mtm": -309546
   },
   {
    "tradeId": "END-1000068",
@@ -313,6 +291,17 @@
    "maturity": "2030-07-18",
    "maturityBucket": "2-5Y",
    "mtm": -143212
+  },
+  {
+   "tradeId": "MX-20000082",
+   "product": "Interest rate cap",
+   "assetClass": "Rates",
+   "currency": "GBP",
+   "book": "BOOK-RATES-2",
+   "notional": 34000000.0,
+   "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
+   "mtm": -111052
   },
   {
    "tradeId": "CLY-3000006",
@@ -335,12 +324,23 @@
    "maturity": "2030-11-27",
    "maturityBucket": "2-5Y",
    "mtm": -6560
+  },
+  {
+   "tradeId": "MX-20000087",
+   "product": "Interest rate floor",
+   "assetClass": "Rates",
+   "currency": "AUD",
+   "book": "BOOK-RATES-3",
+   "notional": 101000000.0,
+   "maturity": "2026-10-07",
+   "maturityBucket": "0-1Y",
+   "mtm": 0
   }
  ],
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": -55766302
+   "mtm": -55503147
   },
   {
    "asset": "Money market",
@@ -375,7 +375,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 97497
+   "netMtm": 96971
   }
  }
 }

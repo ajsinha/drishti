@@ -38,9 +38,9 @@ for leg in doc["legs"]:
         if cf.get("status") == "Settled" or yrs(cf["payDate"]) <= 0:
             continue
         amount = cf["amount"]
-        if leg["type"] == "FLOAT" and yrs(cf["accrualStart"]) > 0:                # not fixed yet: project it
-            fwd = proj.forward(yrs(cf["accrualStart"]), yrs(cf["accrualEnd"]))
-            amount = sign * cf["notional"] * (fwd + (cf.get("spread") or 0)) * cf["yearFraction"]
+        if leg["type"] == "FLOAT" and cf.get("type", "Interest") == "Interest" and yrs(cf["periodStart"]) > 0:                # not fixed yet: project it
+            fwd = proj.forward(yrs(cf["periodStart"]), yrs(cf["periodEnd"]))
+            amount = sign * cf["notional"] * (fwd + (cf.get("spread") or 0)) * cf["accrualFactor"]
         t = yrs(cf["payDate"])
         flows.append({"leg": leg["leg"], "type": leg["type"], "payDate": cf["payDate"], "years": t, "booked": cf["amount"],
                       "repriced": amount, "df": disc.df(t), "pv": amount * disc.df(t), "booked pv": cf.get("pv")})

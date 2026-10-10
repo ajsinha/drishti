@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-TOKAI-NY",
  "tradeCount": 15,
- "netMtm": 1885392,
- "collateral": 1415784,
- "eePeak": 3355655,
- "pfePeak": 7653866,
- "limit": 12000000.0,
- "utilisation": 0.6378,
- "cva": -5659,
+ "netMtm": 2940674,
+ "collateral": 2208220,
+ "eePeak": 3515079,
+ "pfePeak": 8004599,
+ "limit": 13000000.0,
+ "utilisation": 0.6157,
+ "cva": -5952,
  "profile": [
   {
    "tenor": "0",
-   "ee": 1329865,
-   "pfe": 3701128
+   "ee": 1592711,
+   "pfe": 4279389
   },
   {
    "tenor": "1M",
-   "ee": 1101708,
-   "pfe": 2701658
+   "ee": 1359135,
+   "pfe": 3267997
   },
   {
    "tenor": "3M",
-   "ee": 1526856,
-   "pfe": 3630508
+   "ee": 1773777,
+   "pfe": 4173734
   },
   {
    "tenor": "6M",
-   "ee": 1949839,
-   "pfe": 4561071
+   "ee": 2181800,
+   "pfe": 5071385
   },
   {
    "tenor": "1Y",
-   "ee": 2537131,
-   "pfe": 5853113
+   "ee": 2741836,
+   "pfe": 6303464
   },
   {
    "tenor": "2Y",
-   "ee": 3355655,
-   "pfe": 7653866
+   "ee": 3515079,
+   "pfe": 8004599
   },
   {
    "tenor": "3Y",
-   "ee": 2333890,
-   "pfe": 5286983
+   "ee": 2458050,
+   "pfe": 5560134
   },
   {
    "tenor": "5Y",
-   "ee": 2141192,
-   "pfe": 4822798
+   "ee": 2216499,
+   "pfe": 4988473
   },
   {
    "tenor": "7Y",
-   "ee": 1765097,
-   "pfe": 3962751
+   "ee": 1810773,
+   "pfe": 4063238
   },
   {
    "tenor": "10Y",
-   "ee": 38548,
-   "pfe": 84805
+   "ee": 60123,
+   "pfe": 132272
   }
  ],
  "trades": [
@@ -104,17 +104,6 @@
    "maturity": "2026-12-18",
    "maturityBucket": "0-1Y",
    "mtm": -1329064
-  },
-  {
-   "tradeId": "MX-20000089",
-   "product": "Interest rate floor",
-   "assetClass": "Rates",
-   "currency": "AUD",
-   "book": "BOOK-RATES-3",
-   "notional": 100000000.0,
-   "maturity": "2028-10-24",
-   "maturityBucket": "2-5Y",
-   "mtm": -1112942
   },
   {
    "tradeId": "CLY-3000010",
@@ -216,6 +205,17 @@
    "mtm": -99778
   },
   {
+   "tradeId": "MX-20000089",
+   "product": "Interest rate floor",
+   "assetClass": "Rates",
+   "currency": "AUD",
+   "book": "BOOK-RATES-3",
+   "notional": 100000000.0,
+   "maturity": "2028-10-24",
+   "maturityBucket": "2-5Y",
+   "mtm": -57660
+  },
+  {
    "tradeId": "END-1000080",
    "product": "Weather derivative (HDD/CDD)",
    "assetClass": "Commodity",
@@ -230,7 +230,7 @@
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": 4967228
+   "mtm": 6022510
   },
   {
    "asset": "Credit",
@@ -261,7 +261,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 3770
+   "netMtm": 5881
   }
  }
 }

@@ -108,3 +108,14 @@ def test_chart_and_aggregate_kinds_export_their_numbers():
     assert panel_rows(g)[1] == [["node", "A", "", "a", ""], ["edge", "A", "A", "", ""]]
     h = {"kind": "histogram", "data": {"bins": [{"from": 0, "to": 1, "count": 4}]}}
     assert panel_rows(h) == (["From", "To", "Count"], [[0, 1, 4]])
+
+
+def test_tabs_that_hold_panels_export_every_cell_with_its_tab_and_panel():
+    kv = {"kind": "kv", "title": "Leg terms", "data": {"fields": [{"label": "Index", "text": "WTI"}]}}
+    flows = {"kind": "table", "title": "Cashflows", "data": {"columns": ["Date", "Rate"], "numeric": [False, True], "rows": [
+        {"cells": [{"text": "2026-10-01"}, {"text": "72.50"}], "children": [{"cells": [{"text": "2026-10-01"}, {"text": "72.00"}]}]}]}}
+    tabs = {"kind": "tabs", "data": {"tabs": [{"title": "Leg 2", "fields": [], "panels": [kv, flows]}]}}
+    head, rows = panel_rows(tabs)
+    assert head == ["Tab", "Panel", "Row", "Field", "Value"]
+    assert rows == [["Leg 2", "Leg terms", "", "Index", "WTI"], ["Leg 2", "Cashflows", 1, "Date", "2026-10-01"], ["Leg 2", "Cashflows", 1, "Rate", 72.5],
+                    ["Leg 2", "Cashflows", 2, "Date", "2026-10-01"], ["Leg 2", "Cashflows", 2, "Rate", 72.0]]

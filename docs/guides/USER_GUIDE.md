@@ -36,6 +36,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
 | [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
 | [Controls on a screen](#controls-on-a-screen-choose-what-a-panel-shows) | Dropdowns, date ranges and search that a screen offers: pick a leg or a period and only the panels that depend on it move; the choice is in the address |
+| [A deep trade](#a-deep-trade-legs-cashflows-and-fixings) | A tab per leg; each leg's terms and cashflows, and a floating cashflow that opens to its fixings; live, and on a phone |
 | [Filter a table like Excel](#filter-a-table-like-excel) | A funnel in every column heading: tick values or filter by a condition, in the address, with `Alt+Shift+X` to clear |
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
 | [About this page](#about-this-page) | `?`: what the page is, what each number means, where the data came from, why it looks like this |
@@ -546,6 +547,41 @@ search over it never finds anything. Controls only choose; they never change dat
 **Not yet.** The Pivot tab and CSV download of a panel read **every** row, not the ones the controls leave; a share you *send* to people, a
 picture of it and a scheduled export do not carry the choices (a copied link does). Authors add controls in the workbench's
 [Controls tab](SCREEN_DESIGNER.md#the-controls-tab); the Sutra's side of it is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls).
+
+## A deep trade: legs, cashflows and fixings
+
+Real trades are not flat. A swap has **legs**, each leg has **cashflows**, and each floating cashflow has **fixings**: the
+observations of the rate or price that set it. The trading pack's swaps, basis and cross-currency swaps, caps and floors, swaptions and
+commodity swaps are all held that way, and their screens show it. Open `TRD END-1000013` (a commodity swap with three legs: a fixed price,
+the average of an index, and a fee).
+
+![A commodity swap: Legs has a tab per leg; the index leg's tab shows its terms, then a table of its monthly cashflows with the first one opened to its daily fixings](img/deep/01-commodity.jpg)
+
+- **A tab per leg.** `Leg 1 · Pay fixed 4.87 USD/lb`, `Leg 2 · Receive COMEX Copper settle monthly average`, `Leg 3 · Pay fee 0.018 USD/lb`: as many tabs as the
+  trade has legs (a cap has one, some commodity swaps four). Click a tab, or Tab to it and press Enter.
+- **The leg's terms** come first: pay or receive, the index, the spread, the day count, the reset and payment frequency, the business-day convention, the
+  calendar, the currency, the notional and the leg's present value.
+- **Its cashflows** follow, one row for each period: start, end, pay date, accrual factor, rate, amount, discount factor, PV and status
+  (`Settled`, `Fixed`, `Projected`).
+- **Floating cashflows open to their fixings.** A row with a ▸ has fixings: press it (or Enter or Space on it) and the fixings show under the
+  cashflow, indented: the fixing date, the index, its tenor, the rate and where it came from (the exchange's settlement once fixed, `Forward curve`
+  while still projected). A fixed cashflow has no ▸. The box above the table filters rows and keeps the cashflows whose fixings match.
+- **It is live.** While you watch, a projected fixing moves; its cell changes in place, the tab you were on stays, and the cashflows you opened stay open.
+- **Export.** The download link of the panel's heading saves every cell with its tab, panel and row, as CSV.
+
+A vanilla interest-rate swap, `TRD MX-20000001`, reads the same way with two legs; the floating leg's cashflows open to the fixings of their monthly
+sub-periods:
+
+![A swap: Leg 2, the floating leg, with its first cashflow opened to two monthly fixings](img/deep/02-swap.jpg)
+
+On a phone the tabs scroll along one line, the terms stack, and the table scrolls sideways inside its own box; the ▸ buttons are 44 px targets.
+
+![The same commodity swap on a phone: the index leg's cashflow table with the first cashflow opened to its fixings](img/deep/03-phone.jpg)
+
+The same layout is what you get from **inference** for any document that holds lists inside a short list of records, even with no Sutra written
+for it ([Inference](../architecture/INFERENCE.md#the-rules)). To build such a screen see
+[Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab) and
+[Modelling deep documents](PACK_DEVELOPER_GUIDE.md#modelling-deep-documents-legs-cashflows-and-fixings).
 
 ## Reading a view
 

@@ -342,7 +342,7 @@ strip itself from the top-scoring scalars (at most 8). A `Linked entities` panel
 
 | Rule (`Rules.java`) | Detects | Proposes |
 |---|---|---|
-| `LegsRule` | 2–4 structurally similar objects with many fields (legs, tranches) | `tabs` of `kv` |
+| `LegsRule` | 2–4 structurally similar objects with many fields (legs, tranches); or 1–8 records that hold lists of their own (legs with cashflows with fixings) | `tabs` of `kv`; or `tabs` with `panels:` (a `kv` and a table or tree table per list) |
 | `HomogeneousArrayRule` | array of objects sharing most keys | `table`; numeric columns right-aligned; totals for amount-like columns |
 | `TermStructureRule` | array keyed by tenor-like values (`1M`, `5Y`, dates) with one numeric | `line` chart |
 | `DistributionRule` | small map/array label → number | `hbar` |

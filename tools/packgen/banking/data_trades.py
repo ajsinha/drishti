@@ -30,6 +30,7 @@ from samplegen.curves import Curve  # noqa: E402
 from samplegen.dates import Calendar, add_months, iso, tenor_years  # noqa: E402
 
 import booking as BK  # noqa: E402
+import data_deep as D  # noqa: E402
 import data_market as M  # noqa: E402
 import data_names as N  # noqa: E402
 import taxonomy as T  # noqa: E402
@@ -162,19 +163,22 @@ def rates_legs(p, trade_id, notional, ccy, start, mat, direction_pay, r, terms):
         leg["rateType"] = leg["type"].title()
         leg.setdefault("index", None)
         leg.setdefault("spread", 0.0)
+        leg["legId"] = f"{trade_id}-L{leg['leg']}"
+        D.fixings_for(D.modernise(leg), ccy)
     return [leg1, leg2]
 
 
-def schedule_rows(p, notional, start: date, mat: date, legs, r, ccy):
+def schedule_rows(p, notional, start: date, mat: date, legs, r, ccy, limit=40):
     kind = p.schedule
     rows = []
     if kind == "cashflows" and legs:
         for leg in legs:
             for f in leg["cashflows"]:
-                rows.append({"payDate": f["payDate"], "leg": leg["leg"], "type": leg["type"].title(), "rate": f["rate"], "amount": f["amount"],
+                rows.append({"payDate": f["payDate"], "leg": leg["leg"], "type": f["type"] if f.get("type") not in (None, "Interest") else leg["type"].title(),
+                             "rate": f["rate"], "amount": f["amount"],
                              "pv": f["pv"], "status": f["status"]})
         rows.sort(key=lambda x: x["payDate"])
-        return rows[:40]
+        return rows[:limit]
     dates = []
     d = start
     step = 3 if kind in ("fixings", "observations") else 6 if kind in ("coupons", "amortization") else 12
@@ -344,9 +348,14 @@ def build() -> dict[str, dict]:
             cp = "SUMMIT" if p.listed else r.choice(BILATERAL)
             trader = r.choice(traders_of(desk))
             pay = r.random() < 0.5
-            legs = rates_legs(p, tid, notional, ccy, start, mat, pay, r, terms) if p.legs and p.asset in ("Rates", "Inflation") and \
-                p.schedule in ("cashflows", "amortization") else []
-            if legs:
+            deep = D.build(p, tid, notional, ccy, start, mat, pay, terms, ctx, trade_date)   # legs, cashflows and fixings of the deep products
+            if deep:
+                start, mat, trade_date = deep.get("effective", start), deep.get("maturity", mat), deep.get("trade_date", trade_date)
+            legs = deep["legs"] if deep else rates_legs(p, tid, notional, ccy, start, mat, pay, r, terms) \
+                if p.legs and p.asset in ("Rates", "Inflation") and p.schedule in ("cashflows", "amortization") else []
+            if deep:
+                mtm = deep["mtm"]
+            elif legs:
                 mtm = round(sum(leg["pv"] for leg in legs))
             else:
                 mtm = round(notional * r.gauss(0, 0.012))
@@ -378,8 +387,11 @@ def build() -> dict[str, dict]:
                                 "currency": ccy, "notional": notional}
                                for n, (lab, rt, idx, rate) in enumerate([("performance", "Performance", ctx.get("equity") if p.asset == "Equity" else ctx["commodity"] if p.asset == "Commodity" else ctx["infl"], None),
                                                                         (N.CCY[ccy][3] + " + spread", "Float", N.CCY[ccy][3], round(M.zero_curve(ccy, "OIS")[3] / 100, 6))])]
+            if deep and deep.get("exercise"):
+                doc["exercise"] = deep["exercise"]
             if p.schedule:
-                doc["schedule"] = schedule_rows(p, notional, start, mat, legs, r, ccy)
+                doc["schedule"] = deep["schedule"] if deep and deep.get("schedule") else \
+                    schedule_rows(p, notional, start, mat, legs, r, ccy, 80 if deep else 40)
                 future = [i for i, row in enumerate(doc["schedule"]) if (row.get("payDate") or row.get("date") or row.get("fixingDate") or "") > iso(N.AS_OF)]
                 doc["nextIndex"] = future[0] if future else -1
             doc["pnlHistory"] = B.pnl_history(tid, N.AS_OF, mtm)
@@ -401,6 +413,9 @@ def build() -> dict[str, dict]:
             doc["lifecycle"]["timeline"] = timeline(tid, doc, cal, mat, cleared)
             doc["_meta"] = {"source": SOURCE[p.asset], "generation": 1, "live": p.family in ("swap", "future", "option", "linear"),
                             "walk": {"mtm": max(500, round(abs(mtm) * 0.002 + notional * 1e-5))}}
+            tick = D.live_fixing(legs) if legs else None
+            if tick:                                            # the demo also moves a fixing deep in the document
+                doc["_meta"]["walk"][tick[0]] = tick[1]
             trades[tid] = doc
     return trades
 

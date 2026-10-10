@@ -80,6 +80,7 @@ public final class HelpChecks {
         if (p.body() != null) {
             collect(p.body(), ids);
         }
+        p.parts().forEach(part -> collect(part, ids));
     }
 
     /** Coverage of the fields {@code s} shows that some sample document holds (all of them when there are no samples). */

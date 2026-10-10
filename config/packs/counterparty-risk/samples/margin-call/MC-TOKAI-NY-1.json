@@ -3,9 +3,9 @@
  "callDate": "2026-09-30",
  "marginType": "Variation",
  "direction": "We call",
- "amount": 87000.0,
+ "amount": 136000.0,
  "status": "Agreed",
- "disputeAmount": 9000.0,
+ "disputeAmount": 14000.0,
  "events": [
   {
    "at": "2026-09-30 09:05",

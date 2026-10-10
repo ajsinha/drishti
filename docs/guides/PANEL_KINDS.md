@@ -46,6 +46,7 @@ Every box on a Drishti screen is a **panel**, and every panel is one of twenty-o
 | a list of similar rows | `table` | `tabs` when there are more than four |
 | a list where one row matters most (the next payment) | `ladder` | `table`: a ladder highlights rows and never hides any |
 | two to four similar objects (legs, tranches) | `tabs` | `table`: tabs show each object's own fields |
+| objects that each hold lists of their own (a trade's legs, each with cashflows, each with fixings) | `tabs` with `panels:` | one flat table: the legs' tables differ and the nesting is lost |
 | points along an axis (tenors, dates) | `line` | `hbar` when the order of the axis matters |
 | several bands over one axis against a limit | `area` | several `line` panels |
 | a few labelled amounts | `hbar` | `waterfall` when the amounts add up to something |
@@ -295,19 +296,19 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
 ### tabs
 
-Two to four similar objects, each in its own tab with the fields of a body panel (`kind: kv`) evaluated per element. `layout: columns` puts them side by side instead.
+One tab for each element of a list, whatever the count: the fields of a body panel (`kind: kv`) evaluated per element, and, with `panels:`, whole panels (a kv, a table, a tree table) read against that element. `layout: columns` puts them side by side instead.
 
 ![A tabs panel](img/panels/kind-tabs.jpg)
 
-- **Use it when:** Legs, tranches, netting sets: a few objects with the same fields.
-- **Not when:** More than about four: `table`. The `body` takes the size of its panel (`span` there is `DRS-2030`).
-- **Key options:** `each` (required), `tabTitle` (an expression per element), `layout` (`tabs` or `columns`), and the `body`. Every option and its values: [reference](RACHANA_REFERENCE.md#tabs).
-- **Empty when** there are no elements, or every tab is blank.
-- **Masked:** a masked cell in a tab reads `•••`.
+- **Use it when:** Legs, tranches, netting sets: a few objects with the same fields; or objects that each carry a list (a leg's cashflows) you want to read inside the object's own tab.
+- **Not when:** Dozens of elements: `table`. The `body` and the `panels` take the size of their tabs panel (`span` there is `DRS-2030`).
+- **Key options:** `each` (required), `tabTitle` (an expression per element), `layout` (`tabs` or `columns`), the `body`, and `panels` (what each tab holds). Every option and its values: [reference](RACHANA_REFERENCE.md#tabs).
+- **Empty when** there are no elements, or every tab is blank (no field with a value and no panel with data).
+- **Masked:** a masked cell in a tab, or in a panel inside it, reads `•••`.
 - **No access:** with a `source` the user may not open it shows *No access to curve* (the kind it names) and no values.
-- **Live:** re-rendered; the selected tab survives.
-- **Phone:** tabs wrap onto lines and `columns` stack.
-- **CSV:** Tab, Field, Value.
+- **Live:** re-rendered, panels inside the tabs with it; the selected tab survives, and so do the rows of a tree table the reader opened.
+- **Phone:** tabs scroll along one line and `columns` stack; a table inside a tab scrolls sideways in its own box.
+- **CSV:** Tab, Field, Value; with `panels:`, Tab, Panel, Row, Field, Value (one line per cell, a tree table's rows each followed by their children).
 
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
@@ -324,6 +325,35 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
         - { label: Agreement, bind: "@.agreement" }
         - { label: Trades, bind: "@.trades" }
         - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+```
+
+A deep trade: a tab per leg, each with the leg's terms and its cashflows as a tree table that opens to the fixings
+(the [User guide](USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings) shows it, the
+[Rachana reference](RACHANA_REFERENCE.md#tabs) lists every option):
+
+```yaml
+  - id: legs
+    kind: tabs
+    title: Legs
+    each: $.legs
+    tabTitle: "'Leg ' + @.leg + ' · ' + @.label"
+    panels:
+      - id: leg-terms
+        kind: kv
+        title: Leg terms
+        columns:
+          - { label: Pay/receive, bind: "@.payReceive" }
+          - { label: Index, bind: "@.index" }
+      - id: leg-cashflows
+        kind: table
+        title: Cashflows and fixings
+        rows: "@.cashflows"
+        children: "@.fixings"
+        expand: 1
+        columns:
+          - { label: Period start / fixing, bind: "coalesce(@.periodStart, @.fixingDate)", fmt: date }
+          - { label: Rate, bind: "@.rate", fmt: pct4 }
+          - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
 ```
 
 ### pivot

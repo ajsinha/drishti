@@ -1,52 +1,52 @@
 {
  "resultId": "FRTB-RATES-1",
  "book": "BOOK-RATES-1",
- "deltaCharge": 7883819,
- "vegaCharge": 1349194,
- "curvatureCharge": 932843,
- "total": 10165856,
+ "deltaCharge": 7872997,
+ "vegaCharge": 1347342,
+ "curvatureCharge": 931563,
+ "total": 10151902,
  "sensitivities": [
   {
    "riskClass": "GIRR",
    "bucket": "1",
    "measure": "Delta",
-   "value": -651149
+   "value": -650255
   },
   {
    "riskClass": "GIRR",
    "bucket": "1",
    "measure": "Vega",
-   "value": 29712
+   "value": 29671
   },
   {
    "riskClass": "GIRR",
    "bucket": "2",
    "measure": "Delta",
-   "value": 91051
+   "value": 90926
   },
   {
    "riskClass": "GIRR",
    "bucket": "2",
    "measure": "Vega",
-   "value": 288041
+   "value": 287645
   },
   {
    "riskClass": "GIRR",
    "bucket": "3",
    "measure": "Delta",
-   "value": 297298
+   "value": 296890
   },
   {
    "riskClass": "GIRR",
    "bucket": "3",
    "measure": "Vega",
-   "value": 335115
+   "value": 334655
   }
  ],
  "byClass": [
   {
    "riskClass": "GIRR",
-   "charge": 10165856
+   "charge": 10151902
   }
  ],
  "approach": "FRTB standardised (SBM)",

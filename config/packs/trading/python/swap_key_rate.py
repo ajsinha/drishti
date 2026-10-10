@@ -40,9 +40,9 @@ def pv(disc, proj):
             if cf.get("status") == "Settled" or t <= 0:
                 continue
             amount = cf["amount"]
-            if leg["type"] == "FLOAT" and yrs(cf["accrualStart"]) > 0:
-                fwd = proj.forward(yrs(cf["accrualStart"]), yrs(cf["accrualEnd"]))
-                amount = sign * cf["notional"] * (fwd + (cf.get("spread") or 0)) * cf["yearFraction"]
+            if leg["type"] == "FLOAT" and cf.get("type", "Interest") == "Interest" and yrs(cf["periodStart"]) > 0:
+                fwd = proj.forward(yrs(cf["periodStart"]), yrs(cf["periodEnd"]))
+                amount = sign * cf["notional"] * (fwd + (cf.get("spread") or 0)) * cf["accrualFactor"]
             total += amount * disc.df(t)
     return total
 

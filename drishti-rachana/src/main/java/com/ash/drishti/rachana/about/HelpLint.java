@@ -109,6 +109,7 @@ public final class HelpLint {
         if (p.body() != null) {
             panel(p.body(), out);
         }
+        p.parts().forEach(part -> panel(part, out));
     }
 
     static void fields(String expr, Set<String> out) {

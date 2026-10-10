@@ -3,20 +3,9 @@
  "name": "Commodities · book 3",
  "deskName": "Commodities",
  "tradeCount": 31,
- "mtm": -19078473,
+ "mtm": -13270944,
  "dv01": 0,
  "topTrades": [
-  {
-   "tradeId": "END-1000015",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-3",
-   "notional": 171000000.0,
-   "maturity": "2028-02-11",
-   "maturityBucket": "1-2Y",
-   "mtm": -4133232
-  },
   {
    "tradeId": "END-1000044",
    "product": "Commodity spread option",
@@ -115,6 +104,17 @@
    "maturity": "2026-10-07",
    "maturityBucket": "0-1Y",
    "mtm": 1269696
+  },
+  {
+   "tradeId": "END-1000089",
+   "product": "Freight forward agreement",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-3",
+   "notional": 227000000.0,
+   "maturity": "2028-05-22",
+   "maturityBucket": "1-2Y",
+   "mtm": -1248401
   }
  ],
  "desk": "DESK-COMM",

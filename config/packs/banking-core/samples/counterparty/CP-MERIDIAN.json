@@ -6,7 +6,7 @@
  "sector": "Insurance",
  "country": "US",
  "type": "Insurer",
- "netMtm": 7734831,
+ "netMtm": 28149163,
  "pfePeak": 128505251,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-MERIDIAN-NY",
    "agreement": "AGR-MERIDIAN-ISDA",
    "trades": 16,
-   "netMtm": 3215612
+   "netMtm": 23629944
   },
   {
    "id": "NS-MERIDIAN-TKY",

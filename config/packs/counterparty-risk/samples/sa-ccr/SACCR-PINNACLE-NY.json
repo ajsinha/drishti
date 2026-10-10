@@ -1,14 +1,14 @@
 {
  "calcId": "SACCR-PINNACLE-NY",
- "replacementCost": 6055490,
- "addOn": 61840329,
+ "replacementCost": 7357617,
+ "addOn": 62195829,
  "multiplier": 1.0,
- "ead": 95054146,
- "rwa": 95054146,
+ "ead": 97374824,
+ "rwa": 97374824,
  "addOns": [
   {
    "assetClass": "Interest rate",
-   "addOn": 2530329
+   "addOn": 2885829
   },
   {
    "assetClass": "Credit",
@@ -23,7 +23,7 @@
   {
    "assetClass": "Interest rate",
    "hedgingSet": "USD",
-   "effectiveNotional": 202587671,
+   "effectiveNotional": 273687671,
    "sf": 0.005
   },
   {

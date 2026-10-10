@@ -8,14 +8,14 @@
  "family": "swap",
  "status": "Live",
  "direction": "Receive fixed",
- "tradeDate": "2024-10-24",
- "effectiveDate": "2024-10-28",
- "maturityDate": "2028-12-18",
+ "tradeDate": "2026-07-06",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2027-01-31",
  "currency": "USD",
  "notional": 142000000.0,
- "mtm": -648320,
+ "mtm": 622129,
  "mtmCurrency": "USD",
- "pnl1d": 19849,
+ "pnl1d": -18228,
  "counterparty": {
   "id": "CP-HALCYON",
   "name": "Halcyon Shipping plc"
@@ -28,291 +28,1782 @@
  "commodityCurve": "CMDC-CORN",
  "discountCurve": "CRV-USD-OIS",
  "terms": {
-  "fixedPrice": 1400.6,
-  "quantityPerPeriod": 57200,
+  "fixedPrice": 405.87,
+  "quantityPerPeriod": 6800.0,
   "averaging": "Monthly"
  },
  "risk": {
-  "delta": -919739
+  "delta": -764372
  },
  "sensitivities": [
   {
    "bucket": "Spot",
-   "delta": -43797
+   "delta": -36399
   },
   {
    "bucket": "1M",
-   "delta": -87594
+   "delta": -72797
   },
   {
    "bucket": "3M",
-   "delta": -131391
+   "delta": -109196
   },
   {
    "bucket": "6M",
-   "delta": -175188
+   "delta": -145595
   },
   {
    "bucket": "1Y",
-   "delta": -218985
+   "delta": -181993
   },
   {
    "bucket": "2Y",
-   "delta": -262783
+   "delta": -218392
   }
  ],
  "legs": [
   {
    "leg": 1,
-   "label": "Receive performance",
-   "payReceive": "Receive",
-   "rateType": "Performance",
-   "index": "CORN",
-   "rate": null,
+   "label": "Pay fixed 405.87 USc/bu",
+   "payer": true,
+   "type": "FIXED",
+   "notional": 2759916,
+   "rate": 405.87,
+   "index": null,
    "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
    "currency": "USD",
-   "notional": 142000000.0
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 6800.0,
+   "quantityUnit": "bu",
+   "priceUnit": "USc/bu",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Fixed price",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 6800.0,
+     "rate": 405.87,
+     "accrualFactor": 1.0,
+     "amount": -2759916.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "type": "Fixed price",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 6800.0,
+     "rate": 405.87,
+     "accrualFactor": 1.0,
+     "amount": -2759916.0,
+     "discountFactor": 0.999298,
+     "pv": -2757978.18,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Fixed price",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 6800.0,
+     "rate": 405.87,
+     "accrualFactor": 1.0,
+     "amount": -2759916.0,
+     "discountFactor": 0.996295,
+     "pv": -2749690.0,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Fixed price",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 6800.0,
+     "rate": 405.87,
+     "accrualFactor": 1.0,
+     "amount": -2759916.0,
+     "discountFactor": 0.993205,
+     "pv": -2741163.42,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Fixed price",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 6800.0,
+     "rate": 405.87,
+     "accrualFactor": 1.0,
+     "amount": -2759916.0,
+     "discountFactor": 0.990031,
+     "pv": -2732402.59,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Fixed price",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 6800.0,
+     "rate": 405.87,
+     "accrualFactor": 1.0,
+     "amount": -2759916.0,
+     "discountFactor": 0.987267,
+     "pv": -2724775.08,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Fixed",
+   "legId": "END-1000016-L1",
+   "payReceive": "Pay",
+   "pv": -13706009.27,
+   "projectedFlows": 0
   },
   {
    "leg": 2,
-   "label": "Pay SOFR + spread",
-   "payReceive": "Pay",
-   "rateType": "Float",
-   "index": "SOFR",
-   "rate": 0.036215,
+   "label": "Receive CBOT Corn settle monthly average",
+   "payer": false,
+   "type": "FLOAT",
+   "notional": 2845800,
+   "index": "CBOT Corn settle",
    "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
+   "averaging": "Monthly",
+   "resetFrequency": "Daily",
    "currency": "USD",
-   "notional": 142000000.0
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 6800.0,
+   "quantityUnit": "bu",
+   "priceUnit": "USc/bu",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Index average",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 6800.0,
+     "rate": 413.1352,
+     "accrualFactor": 1.0,
+     "amount": 2809319.36,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-08-03",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 420.95,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-04",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 420.33,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-05",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 419.71,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-06",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 419.09,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-07",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 418.46,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-10",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 416.58,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-11",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 415.95,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-12",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 415.33,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-13",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 414.72,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-14",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 414.11,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-17",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 412.34,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-18",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 411.77,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-19",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 411.21,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-20",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 410.66,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-21",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 410.13,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-24",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 408.63,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-25",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 408.17,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-26",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 407.72,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-27",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 407.29,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-28",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 406.89,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-31",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.8,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Index average",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 6800.0,
+     "rate": 404.9276,
+     "accrualFactor": 1.0,
+     "amount": 2753507.68,
+     "discountFactor": 0.999298,
+     "pv": 2751574.36,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-01",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.49,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-02",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.2,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-03",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 404.93,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-04",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 404.69,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-08",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 403.98,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-09",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 403.87,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-10",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 403.79,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-11",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 403.74,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-14",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 403.74,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-15",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 403.8,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-16",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 403.88,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-17",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 403.99,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-18",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 404.13,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-21",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 404.7,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-22",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 404.95,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-23",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.22,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-24",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.51,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-25",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.83,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-28",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 406.93,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-29",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 407.34,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-30",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 407.77,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Index average",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 6800.0,
+     "rate": 417.0852,
+     "accrualFactor": 1.0,
+     "amount": 2836179.36,
+     "discountFactor": 0.996295,
+     "pv": 2825670.79,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-10-01",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 408.22,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-02",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 408.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-05",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 410.22,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-06",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 410.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-07",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 411.31,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-08",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 411.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-09",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 412.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-13",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 414.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-14",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 415.52,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-15",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 416.15,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-16",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 416.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-19",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 418.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-20",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 419.37,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-21",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 420.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-22",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 420.65,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-23",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 421.29,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-26",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 423.17,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-27",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 423.78,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-28",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 424.38,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-29",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 424.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-30",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 425.55,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Index average",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 6800.0,
+     "rate": 431.4942,
+     "accrualFactor": 1.0,
+     "amount": 2934160.56,
+     "discountFactor": 0.993205,
+     "pv": 2914224.06,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-11-02",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 427.2,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-03",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 427.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-04",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 428.23,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-05",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 428.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-06",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 429.18,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-09",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 430.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-10",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 430.85,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-12",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 431.55,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-13",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 431.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-16",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 432.66,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-17",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 432.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-18",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.06,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-19",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.22,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-20",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-23",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.58,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-24",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.61,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-25",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.6,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-27",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.51,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-30",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.17,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 5,
+     "type": "Index average",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 6800.0,
+     "rate": 427.1305,
+     "accrualFactor": 1.0,
+     "amount": 2904487.4,
+     "discountFactor": 0.990031,
+     "pv": 2875532.77,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-12-01",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 433.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-02",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 432.8,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-03",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 432.58,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-04",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 432.34,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-07",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 431.45,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-08",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 431.11,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-09",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 430.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-10",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 430.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-11",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 429.94,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-14",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 428.59,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-15",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 428.11,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-16",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 427.6,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-17",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 427.08,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-18",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 426.55,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-21",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 424.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-22",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 424.28,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-23",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 423.69,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-24",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 423.09,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-28",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 420.62,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-29",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 419.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-30",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 419.36,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-31",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 418.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 6,
+     "type": "Index average",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 6800.0,
+     "rate": 410.0363,
+     "accrualFactor": 1.0,
+     "amount": 2788246.84,
+     "discountFactor": 0.987267,
+     "pv": 2752745.19,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-01-04",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 416.24,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-05",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 415.63,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-06",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 415.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-07",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 414.43,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-08",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 413.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-11",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 412.15,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-12",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 411.61,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-13",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 411.09,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-14",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 410.58,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-15",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 410.09,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-19",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 408.3,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-20",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 407.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-21",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 407.53,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-22",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 407.18,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-25",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 406.27,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-26",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 406.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-27",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-28",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.59,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-29",
+       "index": "CBOT Corn settle",
+       "tenor": "1D",
+       "rate": 405.41,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Float",
+   "legId": "END-1000016-L2",
+   "payReceive": "Receive",
+   "pv": 14119747.17,
+   "projectedFlows": 4
+  },
+  {
+   "leg": 3,
+   "label": "Pay fee 1.531 USc/bu",
+   "payer": true,
+   "type": "FEE",
+   "notional": 10411,
+   "rate": 1.531,
+   "index": null,
+   "spread": 0.0,
+   "currency": "USD",
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 6800.0,
+   "quantityUnit": "bu",
+   "priceUnit": "USc/bu",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Fee",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 6800.0,
+     "rate": 1.531,
+     "accrualFactor": 1.0,
+     "amount": -10410.8,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "type": "Fee",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 6800.0,
+     "rate": 1.531,
+     "accrualFactor": 1.0,
+     "amount": -10410.8,
+     "discountFactor": 0.999298,
+     "pv": -10403.49,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Fee",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 6800.0,
+     "rate": 1.531,
+     "accrualFactor": 1.0,
+     "amount": -10410.8,
+     "discountFactor": 0.996295,
+     "pv": -10372.23,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Fee",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 6800.0,
+     "rate": 1.531,
+     "accrualFactor": 1.0,
+     "amount": -10410.8,
+     "discountFactor": 0.993205,
+     "pv": -10340.06,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Fee",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 6800.0,
+     "rate": 1.531,
+     "accrualFactor": 1.0,
+     "amount": -10410.8,
+     "discountFactor": 0.990031,
+     "pv": -10307.02,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Fee",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 6800.0,
+     "rate": 1.531,
+     "accrualFactor": 1.0,
+     "amount": -10410.8,
+     "discountFactor": 0.987267,
+     "pv": -10278.24,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Fee",
+   "legId": "END-1000016-L3",
+   "payReceive": "Pay",
+   "pv": -51701.04,
+   "projectedFlows": 0
+  },
+  {
+   "leg": 4,
+   "label": "Receive location differential +7.702 USc/bu",
+   "payer": false,
+   "type": "DIFFERENTIAL",
+   "notional": 52374,
+   "rate": 7.702,
+   "index": null,
+   "spread": 0.0,
+   "currency": "USD",
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 6800.0,
+   "quantityUnit": "bu",
+   "priceUnit": "USc/bu",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Differential",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 6800.0,
+     "rate": 7.702,
+     "accrualFactor": 1.0,
+     "amount": 52373.6,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "type": "Differential",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 6800.0,
+     "rate": 7.702,
+     "accrualFactor": 1.0,
+     "amount": 52373.6,
+     "discountFactor": 0.999298,
+     "pv": 52336.83,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Differential",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 6800.0,
+     "rate": 7.702,
+     "accrualFactor": 1.0,
+     "amount": 52373.6,
+     "discountFactor": 0.996295,
+     "pv": 52179.55,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Differential",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 6800.0,
+     "rate": 7.702,
+     "accrualFactor": 1.0,
+     "amount": 52373.6,
+     "discountFactor": 0.993205,
+     "pv": 52017.74,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Differential",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 6800.0,
+     "rate": 7.702,
+     "accrualFactor": 1.0,
+     "amount": 52373.6,
+     "discountFactor": 0.990031,
+     "pv": 51851.49,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Differential",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 6800.0,
+     "rate": 7.702,
+     "accrualFactor": 1.0,
+     "amount": 52373.6,
+     "discountFactor": 0.987267,
+     "pv": 51706.75,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Differential",
+   "legId": "END-1000016-L4",
+   "payReceive": "Receive",
+   "pv": 260092.36,
+   "projectedFlows": 0
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2025-01-28",
-   "period": "2025-01-28..2025-04-28",
-   "index": "SOFR",
-   "rate": 0.041924,
-   "payoff": 245802.0,
+   "payDate": "2026-09-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 405.87,
+   "amount": -2759916.0,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 413.1352,
+   "amount": 2809319.36,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 1.531,
+   "amount": -10410.8,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-08",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 7.702,
+   "amount": 52373.6,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-10-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 405.87,
+   "amount": -2759916.0,
+   "pv": -2757978.18,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-04-28",
-   "period": "2025-04-28..2025-07-28",
-   "index": "SOFR",
-   "rate": 0.039204,
-   "payoff": 149242.0,
+   "payDate": "2026-10-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 404.9276,
+   "amount": 2753507.68,
+   "pv": 2751574.36,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-07-28",
-   "period": "2025-07-28..2025-10-28",
-   "index": "SOFR",
-   "rate": 0.039829,
-   "payoff": 171429.5,
+   "payDate": "2026-10-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 1.531,
+   "amount": -10410.8,
+   "pv": -10403.49,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-10-28",
-   "period": "2025-10-28..2026-01-28",
-   "index": "SOFR",
-   "rate": 0.036539,
-   "payoff": 54634.5,
+   "payDate": "2026-10-07",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 7.702,
+   "amount": 52373.6,
+   "pv": 52336.83,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-01-28",
-   "period": "2026-01-28..2026-04-28",
-   "index": "SOFR",
-   "rate": 0.026099,
-   "payoff": 0.0,
+   "payDate": "2026-11-06",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 405.87,
+   "amount": -2759916.0,
+   "pv": -2749690.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-04-28",
-   "period": "2026-04-28..2026-07-28",
-   "index": "SOFR",
-   "rate": 0.038202,
-   "payoff": 113671.0,
+   "payDate": "2026-11-06",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 417.0852,
+   "amount": 2836179.36,
+   "pv": 2825670.79,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2026-11-06",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 1.531,
+   "amount": -10410.8,
+   "pv": -10372.23,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-07-28",
-   "period": "2026-07-28..2026-10-28",
-   "index": "SOFR",
-   "rate": 0.04952,
-   "payoff": 515460.0,
+   "payDate": "2026-11-06",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 7.702,
+   "amount": 52373.6,
+   "pv": 52179.55,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-10-28",
-   "period": "2026-10-28..2027-01-28",
-   "index": "SOFR",
-   "rate": 0.023715,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2026-12-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 405.87,
+   "amount": -2759916.0,
+   "pv": -2741163.42,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-01-28",
-   "period": "2027-01-28..2027-04-28",
-   "index": "SOFR",
-   "rate": 0.044422,
-   "payoff": 334481.0,
-   "status": "Pending"
+   "payDate": "2026-12-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 431.4942,
+   "amount": 2934160.56,
+   "pv": 2914224.06,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2027-04-28",
-   "period": "2027-04-28..2027-07-28",
-   "index": "SOFR",
-   "rate": 0.032277,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2026-12-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 1.531,
+   "amount": -10410.8,
+   "pv": -10340.06,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-07-28",
-   "period": "2027-07-28..2027-10-28",
-   "index": "SOFR",
-   "rate": 0.035049,
-   "payoff": 1739.5,
-   "status": "Pending"
+   "payDate": "2026-12-07",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 7.702,
+   "amount": 52373.6,
+   "pv": 52017.74,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-10-28",
-   "period": "2027-10-28..2028-01-28",
-   "index": "SOFR",
-   "rate": 0.038458,
-   "payoff": 122759.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 405.87,
+   "amount": -2759916.0,
+   "pv": -2732402.59,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-01-28",
-   "period": "2028-01-28..2028-04-28",
-   "index": "SOFR",
-   "rate": 0.02459,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 427.1305,
+   "amount": 2904487.4,
+   "pv": 2875532.77,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2028-04-28",
-   "period": "2028-04-28..2028-07-28",
-   "index": "SOFR",
-   "rate": 0.029561,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 1.531,
+   "amount": -10410.8,
+   "pv": -10307.02,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-07-28",
-   "period": "2028-07-28..2028-10-28",
-   "index": "SOFR",
-   "rate": 0.024023,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 7.702,
+   "amount": 52373.6,
+   "pv": 51851.49,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-10-28",
-   "period": "2028-10-28..2029-01-28",
-   "index": "SOFR",
-   "rate": 0.040493,
-   "payoff": 195001.5,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 405.87,
+   "amount": -2759916.0,
+   "pv": -2724775.08,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-12-18",
-   "period": "2028-12-18..2029-03-18",
-   "index": "SOFR",
-   "rate": 0.020406,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 410.0363,
+   "amount": 2788246.84,
+   "pv": 2752745.19,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-02-05",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 1.531,
+   "amount": -10410.8,
+   "pv": -10278.24,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-02-05",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 7.702,
+   "amount": 52373.6,
+   "pv": 51706.75,
+   "status": "Fixed"
   }
  ],
- "nextIndex": 7,
+ "nextIndex": 4,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -21999
+   "pnl": -21110
   },
   {
    "date": "2026-09-04",
-   "pnl": 41990
+   "pnl": 40294
   },
   {
    "date": "2026-09-07",
-   "pnl": -12482
+   "pnl": -11977
   },
   {
    "date": "2026-09-08",
-   "pnl": -15284
+   "pnl": -14666
   },
   {
    "date": "2026-09-09",
-   "pnl": 5141
+   "pnl": 4933
   },
   {
    "date": "2026-09-10",
-   "pnl": 1130
+   "pnl": 1084
   },
   {
    "date": "2026-09-11",
-   "pnl": -15051
+   "pnl": -14443
   },
   {
    "date": "2026-09-14",
-   "pnl": -5335
+   "pnl": -5120
   },
   {
    "date": "2026-09-15",
-   "pnl": 23558
+   "pnl": 22607
   },
   {
    "date": "2026-09-16",
-   "pnl": -8261
+   "pnl": -7927
   },
   {
    "date": "2026-09-17",
-   "pnl": -31746
+   "pnl": -30463
   },
   {
    "date": "2026-09-18",
-   "pnl": -2856
+   "pnl": -2741
   },
   {
    "date": "2026-09-21",
-   "pnl": -10980
+   "pnl": -10537
   },
   {
    "date": "2026-09-22",
-   "pnl": 37008
+   "pnl": 35513
   },
   {
    "date": "2026-09-23",
-   "pnl": 11982
+   "pnl": 11498
   },
   {
    "date": "2026-09-24",
-   "pnl": -3476
+   "pnl": -3335
   },
   {
    "date": "2026-09-25",
-   "pnl": -7023
+   "pnl": -6739
   },
   {
    "date": "2026-09-28",
-   "pnl": -13430
+   "pnl": -12888
   },
   {
    "date": "2026-09-29",
-   "pnl": -4491
+   "pnl": -4310
   },
   {
    "date": "2026-09-30",
-   "pnl": -22754
+   "pnl": -21835
   }
  ],
  "execution": {
-  "tradeDate": "2024-10-24",
-  "executionTimestamp": "2024-10-24T11:17:31.166Z",
+  "tradeDate": "2026-07-06",
+  "executionTimestamp": "2026-07-06T11:17:31.166Z",
   "venue": "Voice",
   "venueMic": "XOFF",
   "executionType": "Voice",
@@ -328,42 +1819,42 @@
     "version": 1,
     "event": "New",
     "reason": "Trade captured",
-    "at": "2024-10-24T09:34:00Z",
+    "at": "2026-07-06T09:34:00Z",
     "by": "stp.gateway"
    }
   ],
   "sourceSystem": "Endur",
-  "createdAt": "2024-10-24T09:34:00Z",
-  "lastModifiedAt": "2024-10-24T09:34:00Z",
+  "createdAt": "2026-07-06T09:34:00Z",
+  "lastModifiedAt": "2026-07-06T09:34:00Z",
   "lastModifiedBy": "stp.gateway",
   "timeline": [
    {
-    "date": "2024-10-24",
+    "date": "2026-07-06",
     "event": "Booked",
     "status": "Done",
     "description": "Captured in Endur by TRDR-TBRENNAN: receive fixed Commodity swap"
    },
    {
-    "date": "2024-10-24",
+    "date": "2026-07-06",
     "event": "Confirmed",
     "status": "Matched",
     "description": "Matched on DTCC CTM (DT455445718)"
    },
    {
-    "date": "2026-07-28",
+    "date": "2026-09-08",
     "event": "Cash settled",
     "status": "Settled",
     "description": "USD payment settled",
-    "amount": 515460.0
+    "amount": 52373.6
    },
    {
-    "date": "2026-10-28",
+    "date": "2026-10-07",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
    },
    {
-    "date": "2028-12-18",
+    "date": "2027-01-31",
     "event": "Maturity",
     "status": "Scheduled",
     "description": "Final payment and close-out"
@@ -374,7 +1865,7 @@
   "status": "Confirmed",
   "method": "DTCC CTM",
   "platformId": "DT455445718",
-  "matched": "2024-10-24 11:26",
+  "matched": "2026-07-06 11:26",
   "affirmedBy": "Counterparty ops",
   "breaks": []
  },
@@ -408,8 +1899,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": -648320,
-  "cleanPv": -648320.0,
+  "npv": 622129,
+  "cleanPv": 622129.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Multi-curve OIS discounting",
@@ -423,36 +1914,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": -668169,
+   "pnl": 640357,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": -6830
+   "pnl": -6272
   },
   {
    "step": "Roll-down",
-   "pnl": 3449
+   "pnl": 3167
   },
   {
    "step": "Rates delta",
-   "pnl": 25669
+   "pnl": -14958
   },
   {
    "step": "FX delta",
-   "pnl": -2449
+   "pnl": -2249
   },
   {
    "step": "Vol (vega)",
-   "pnl": 370
+   "pnl": 340
   },
   {
    "step": "Theta",
-   "pnl": 769
+   "pnl": 707
   },
   {
    "step": "Unexplained",
-   "pnl": -1129
+   "pnl": 1037
   }
  ],
  "_meta": {
@@ -460,7 +1951,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 2717
+   "mtm": 2664,
+   "legs.1.cashflows.2.fixings.20.rate": 1.7022
   }
  }
 }

@@ -84,7 +84,7 @@ public final class LayoutPacker {
     }
 
     private static Panel withKey(Panel p, String key) {
-        return new Panel(p.id(), p.kind(), p.title(), key, p.code(), p.area(), p.infer(), p.columns(), p.body(), p.options(), p.location());
+        return new Panel(p.id(), p.kind(), p.title(), key, p.code(), p.area(), p.infer(), p.columns(), p.body(), p.options(), p.location(), p.parts());
     }
 
     private static List<Candidate> pick(Iterable<Candidate> all, Area area, int max) {

@@ -6,7 +6,7 @@
  "sector": "Banking",
  "country": "JP",
  "type": "Bank",
- "netMtm": -3186086,
+ "netMtm": -2130804,
  "pfePeak": 58835538,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-TOKAI-NY",
    "agreement": "AGR-TOKAI-ISDA",
    "trades": 15,
-   "netMtm": 1885392
+   "netMtm": 2940674
   },
   {
    "id": "NS-TOKAI-TKY",

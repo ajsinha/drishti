@@ -74,7 +74,6 @@
    "rate": 0.04379,
    "dayCount": "ACT/365F",
    "frequency": "Annual",
-   "businessDay": "Mod. following",
    "calendar": "GBLO",
    "paymentLag": "2 business days",
    "rollConvention": "10",
@@ -82,81 +81,87 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2026-04-07",
-     "accrualEnd": "2026-11-10",
      "payDate": "2026-11-12",
      "notional": 17000000.0,
      "rate": 0.04379,
-     "yearFraction": 0.594521,
      "amount": -442578.93,
-     "df": 0.995514,
      "pv": -440593.43,
-     "status": "Fixed"
+     "status": "Fixed",
+     "periodStart": "2026-04-07",
+     "periodEnd": "2026-11-10",
+     "accrualFactor": 0.594521,
+     "discountFactor": 0.995514,
+     "type": "Interest"
     },
     {
      "n": 2,
-     "accrualStart": "2026-11-10",
-     "accrualEnd": "2027-11-10",
      "payDate": "2027-11-12",
      "notional": 17000000.0,
      "rate": 0.04379,
-     "yearFraction": 1.0,
      "amount": -744430.0,
-     "df": 0.958497,
      "pv": -713533.57,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-11-10",
+     "periodEnd": "2027-11-10",
+     "accrualFactor": 1.0,
+     "discountFactor": 0.958497,
+     "type": "Interest"
     },
     {
      "n": 3,
-     "accrualStart": "2027-11-10",
-     "accrualEnd": "2028-11-10",
      "payDate": "2028-11-14",
      "notional": 17000000.0,
      "rate": 0.04379,
-     "yearFraction": 1.00274,
      "amount": -746469.53,
-     "df": 0.922971,
      "pv": -688969.74,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-11-10",
+     "periodEnd": "2028-11-10",
+     "accrualFactor": 1.00274,
+     "discountFactor": 0.922971,
+     "type": "Interest"
     },
     {
      "n": 4,
-     "accrualStart": "2028-11-10",
-     "accrualEnd": "2029-11-12",
      "payDate": "2029-11-14",
      "notional": 17000000.0,
      "rate": 0.04379,
-     "yearFraction": 1.005479,
      "amount": -748509.07,
-     "df": 0.887808,
      "pv": -664532.66,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-11-10",
+     "periodEnd": "2029-11-12",
+     "accrualFactor": 1.005479,
+     "discountFactor": 0.887808,
+     "type": "Interest"
     },
     {
      "n": 5,
-     "accrualStart": "2029-11-12",
-     "accrualEnd": "2030-11-11",
      "payDate": "2030-11-13",
      "notional": 17000000.0,
      "rate": 0.04379,
-     "yearFraction": 0.99726,
      "amount": -742390.47,
-     "df": 0.851723,
      "pv": -632310.7,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-11-12",
+     "periodEnd": "2030-11-11",
+     "accrualFactor": 0.99726,
+     "discountFactor": 0.851723,
+     "type": "Interest"
     },
     {
      "n": 6,
-     "accrualStart": "2030-11-11",
-     "accrualEnd": "2031-11-10",
      "payDate": "2031-11-12",
      "notional": 17000000.0,
      "rate": 0.04379,
-     "yearFraction": 0.99726,
      "amount": -742390.47,
-     "df": 0.815987,
      "pv": -605780.96,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2030-11-11",
+     "periodEnd": "2031-11-10",
+     "accrualFactor": 0.99726,
+     "discountFactor": 0.815987,
+     "type": "Interest"
     }
    ],
    "pv": -3745721.06,
@@ -164,7 +169,9 @@
    "payReceive": "Pay",
    "rateType": "Fixed",
    "index": null,
-   "spread": 0.0
+   "spread": 0.0,
+   "legId": "MX-20000038-L1",
+   "businessDayConvention": "Mod. following"
   },
   {
    "leg": 2,
@@ -177,7 +184,6 @@
    "spread": 0.0,
    "dayCount": "ACT/360",
    "frequency": "Quarterly",
-   "businessDay": "Mod. following",
    "calendar": "GBLO",
    "paymentLag": "2 business days",
    "compounding": "Compounded in arrears",
@@ -187,376 +193,1024 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2026-04-07",
-     "accrualEnd": "2026-05-11",
      "fixingDate": "2026-05-07",
      "payDate": "2026-05-13",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.038376,
      "spread": 0.0,
-     "yearFraction": 0.094444,
      "amount": 61614.8,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-04-07",
+     "periodEnd": "2026-05-11",
+     "accrualFactor": 0.094444,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-04-07",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038377,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-05-07",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038369,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 2,
-     "accrualStart": "2026-05-11",
-     "accrualEnd": "2026-08-10",
      "fixingDate": "2026-08-06",
      "payDate": "2026-08-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.038497,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 165430.16,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-05-11",
+     "periodEnd": "2026-08-10",
+     "accrualFactor": 0.252778,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-05-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038515,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-06-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038503,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-07-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038472,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 3,
-     "accrualStart": "2026-08-10",
-     "accrualEnd": "2026-11-10",
      "fixingDate": "2026-11-06",
      "payDate": "2026-11-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.037724,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 163891.81,
-     "df": 0.995514,
      "pv": 163156.56,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-08-10",
+     "periodEnd": "2026-11-10",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.995514,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-08-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037724,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037722,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037726,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 4,
-     "accrualStart": "2026-11-10",
-     "accrualEnd": "2027-02-10",
      "fixingDate": "2027-02-08",
      "payDate": "2027-02-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.037802,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 164228.56,
-     "df": 0.985989,
      "pv": 161927.55,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-11-10",
+     "periodEnd": "2027-02-10",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.985989,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-11-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037783,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037807,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037816,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 5,
-     "accrualStart": "2027-02-10",
-     "accrualEnd": "2027-05-10",
      "fixingDate": "2027-05-06",
      "payDate": "2027-05-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.037667,
      "spread": 0.0,
-     "yearFraction": 0.247222,
      "amount": 158306.65,
-     "df": 0.976893,
      "pv": 154648.69,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-02-10",
+     "periodEnd": "2027-05-10",
+     "accrualFactor": 0.247222,
+     "discountFactor": 0.976893,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-02-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.03758,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037699,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037715,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 6,
-     "accrualStart": "2027-05-10",
-     "accrualEnd": "2027-08-10",
      "fixingDate": "2027-08-06",
      "payDate": "2027-08-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.03745,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 162697.82,
-     "df": 0.967633,
      "pv": 157431.85,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-05-10",
+     "periodEnd": "2027-08-10",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.967633,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-05-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037422,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037438,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037489,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 7,
-     "accrualStart": "2027-08-10",
-     "accrualEnd": "2027-11-10",
      "fixingDate": "2027-11-08",
      "payDate": "2027-11-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.037304,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 162063.02,
-     "df": 0.958497,
      "pv": 155336.84,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-08-10",
+     "periodEnd": "2027-11-10",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.958497,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-08-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037284,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-09-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037296,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-10-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037332,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 8,
-     "accrualStart": "2027-11-10",
-     "accrualEnd": "2028-02-10",
      "fixingDate": "2028-02-08",
      "payDate": "2028-02-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.037189,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 161566.78,
-     "df": 0.949279,
      "pv": 153371.91,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-11-10",
+     "periodEnd": "2028-02-10",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.949279,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-11-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037177,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-12-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037194,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-01-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037196,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 9,
-     "accrualStart": "2028-02-10",
-     "accrualEnd": "2028-05-10",
      "fixingDate": "2028-05-08",
      "payDate": "2028-05-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.037042,
      "spread": 0.0,
-     "yearFraction": 0.25,
      "amount": 157426.42,
-     "df": 0.940762,
      "pv": 148100.87,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-02-10",
+     "periodEnd": "2028-05-10",
+     "accrualFactor": 0.25,
+     "discountFactor": 0.940762,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-02-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.03706,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-03-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037037,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-04-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037029,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 10,
-     "accrualStart": "2028-05-10",
-     "accrualEnd": "2028-08-10",
      "fixingDate": "2028-08-08",
      "payDate": "2028-08-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.036901,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 160315.82,
-     "df": 0.931785,
      "pv": 149379.83,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-05-10",
+     "periodEnd": "2028-08-10",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.931785,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-05-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.036926,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-06-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.036913,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-07-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.036864,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 11,
-     "accrualStart": "2028-08-10",
-     "accrualEnd": "2028-11-10",
      "fixingDate": "2028-11-08",
      "payDate": "2028-11-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.037316,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 162118.45,
-     "df": 0.922971,
      "pv": 149630.63,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-08-10",
+     "periodEnd": "2028-11-10",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.922971,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-08-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037346,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-09-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.03733,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-10-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037273,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 12,
-     "accrualStart": "2028-11-10",
-     "accrualEnd": "2029-02-12",
      "fixingDate": "2029-02-08",
      "payDate": "2029-02-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.038057,
      "spread": 0.0,
-     "yearFraction": 0.261111,
      "amount": 168929.79,
-     "df": 0.914081,
      "pv": 154415.48,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-11-10",
+     "periodEnd": "2029-02-12",
+     "accrualFactor": 0.261111,
+     "discountFactor": 0.914081,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-11-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038099,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-12-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038045,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-01-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038031,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-02-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038017,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 13,
-     "accrualStart": "2029-02-12",
-     "accrualEnd": "2029-05-10",
      "fixingDate": "2029-05-08",
      "payDate": "2029-05-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.038187,
      "spread": 0.0,
-     "yearFraction": 0.241667,
      "amount": 156886.43,
-     "df": 0.90553,
      "pv": 142065.37,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-02-12",
+     "periodEnd": "2029-05-10",
+     "accrualFactor": 0.241667,
+     "discountFactor": 0.90553,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2029-02-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038267,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-03-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038154,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-04-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038144,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 14,
-     "accrualStart": "2029-05-10",
-     "accrualEnd": "2029-08-10",
      "fixingDate": "2029-08-08",
      "payDate": "2029-08-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.038341,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 166568.49,
-     "df": 0.896742,
      "pv": 149368.97,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-05-10",
+     "periodEnd": "2029-08-10",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.896742,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2029-05-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038333,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-06-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038336,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-07-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038354,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 15,
-     "accrualStart": "2029-08-10",
-     "accrualEnd": "2029-11-12",
      "fixingDate": "2029-11-08",
      "payDate": "2029-11-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.039317,
      "spread": 0.0,
-     "yearFraction": 0.261111,
      "amount": 174524.19,
-     "df": 0.887808,
      "pv": 154944.05,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-08-10",
+     "periodEnd": "2029-11-12",
+     "accrualFactor": 0.261111,
+     "discountFactor": 0.887808,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2029-08-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.039297,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-09-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.039306,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-10-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.039346,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-11-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.039359,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 16,
-     "accrualStart": "2029-11-12",
-     "accrualEnd": "2030-02-11",
      "fixingDate": "2030-02-07",
      "payDate": "2030-02-13",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.040603,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 174480.79,
-     "df": 0.878787,
      "pv": 153331.42,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-11-12",
+     "periodEnd": "2030-02-11",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.878787,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2029-11-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.040573,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-12-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.040611,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-01-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.040625,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 17,
-     "accrualStart": "2030-02-11",
-     "accrualEnd": "2030-05-10",
      "fixingDate": "2030-05-08",
      "payDate": "2030-05-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.041016,
      "spread": 0.0,
-     "yearFraction": 0.244444,
      "amount": 170444.05,
-     "df": 0.869863,
      "pv": 148263.01,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2030-02-11",
+     "periodEnd": "2030-05-10",
+     "accrualFactor": 0.244444,
+     "discountFactor": 0.869863,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2030-02-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.04092,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-03-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.041054,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-04-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.041069,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 18,
-     "accrualStart": "2030-05-10",
-     "accrualEnd": "2030-08-12",
      "fixingDate": "2030-08-08",
      "payDate": "2030-08-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.041457,
      "spread": 0.0,
-     "yearFraction": 0.261111,
      "amount": 184022.7,
-     "df": 0.860742,
      "pv": 158396.07,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2030-05-10",
+     "periodEnd": "2030-08-12",
+     "accrualFactor": 0.261111,
+     "discountFactor": 0.860742,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2030-05-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.041443,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-06-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.041452,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-07-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.041475,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-08-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.041479,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 19,
-     "accrualStart": "2030-08-12",
-     "accrualEnd": "2030-11-11",
      "fixingDate": "2030-11-07",
      "payDate": "2030-11-13",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.041884,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 179983.73,
-     "df": 0.851723,
      "pv": 153296.2,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2030-08-12",
+     "periodEnd": "2030-11-11",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.851723,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2030-08-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.041872,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-09-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.04188,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-10-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.0419,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 20,
-     "accrualStart": "2030-11-11",
-     "accrualEnd": "2031-02-10",
      "fixingDate": "2031-02-06",
      "payDate": "2031-02-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.042311,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 181818.43,
-     "df": 0.842708,
      "pv": 153219.78,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2030-11-11",
+     "periodEnd": "2031-02-10",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.842708,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2030-11-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042321,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-12-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042309,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-01-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042303,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 21,
-     "accrualStart": "2031-02-10",
-     "accrualEnd": "2031-05-12",
      "fixingDate": "2031-05-08",
      "payDate": "2031-05-14",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.042738,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 183653.33,
-     "df": 0.833699,
      "pv": 153111.61,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2031-02-10",
+     "periodEnd": "2031-05-12",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.833699,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2031-02-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042826,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-03-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042709,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-04-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042693,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-05-10",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042636,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 22,
-     "accrualStart": "2031-05-12",
-     "accrualEnd": "2031-08-11",
      "fixingDate": "2031-08-07",
      "payDate": "2031-08-13",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.043165,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 185488.43,
-     "df": 0.824699,
      "pv": 152972.08,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2031-05-12",
+     "periodEnd": "2031-08-11",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.824699,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2031-05-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.043194,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-06-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.043178,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-07-12",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.043122,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 23,
-     "accrualStart": "2031-08-11",
-     "accrualEnd": "2031-11-10",
      "fixingDate": "2031-11-06",
      "payDate": "2031-11-12",
      "notional": 17000000.0,
      "index": "SONIA",
      "rate": 0.04229,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 181730.39,
-     "df": 0.815987,
      "pv": 148289.63,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2031-08-11",
+     "periodEnd": "2031-11-10",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.815987,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2031-08-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042314,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-09-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.0423,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-10-11",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.042255,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     }
    ],
    "pv": 3214658.4,
    "payReceive": "Receive",
-   "rateType": "Float"
+   "rateType": "Float",
+   "legId": "MX-20000038-L2",
+   "businessDayConvention": "Mod. following",
+   "resetFrequency": "Monthly"
   }
  ],
  "schedule": [
@@ -871,7 +1525,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 1232
+   "mtm": 1232,
+   "legs.1.cashflows.2.fixings.2.rate": 0.000151
   }
  }
 }

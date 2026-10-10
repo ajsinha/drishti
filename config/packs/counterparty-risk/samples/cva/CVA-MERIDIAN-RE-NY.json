@@ -2,7 +2,7 @@
  "resultId": "CVA-MERIDIAN-RE-NY",
  "cva": -42012,
  "dva": 14704,
- "fva": -67927,
+ "fva": -70400,
  "kva": -183925,
  "cs01": -756,
  "components": [
@@ -16,7 +16,7 @@
   },
   {
    "name": "FVA",
-   "amount": -67927
+   "amount": -70400
   },
   {
    "name": "KVA",

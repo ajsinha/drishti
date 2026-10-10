@@ -1,53 +1,53 @@
 {
  "resultId": "CVA-RHEINTAL-NY",
- "cva": -45584,
- "dva": 11966,
- "fva": -2447,
- "kva": -182013,
- "cs01": -821,
+ "cva": -44852,
+ "dva": 11774,
+ "fva": -294,
+ "kva": -179738,
+ "cs01": -807,
  "components": [
   {
    "name": "CVA",
-   "amount": -45584
+   "amount": -44852
   },
   {
    "name": "DVA",
-   "amount": 11966
+   "amount": 11774
   },
   {
    "name": "FVA",
-   "amount": -2447
+   "amount": -294
   },
   {
    "name": "KVA",
-   "amount": -182013
+   "amount": -179738
   }
  ],
  "sensitivities": [
   {
    "factor": "Counterparty spread",
    "bump": "+1 bp",
-   "delta": -821
+   "delta": -807
   },
   {
    "factor": "USD rates",
    "bump": "+1 bp",
-   "delta": 182
+   "delta": 179
   },
   {
    "factor": "EUR rates",
    "bump": "+1 bp",
-   "delta": 91
+   "delta": 90
   },
   {
    "factor": "FX vol",
    "bump": "+1 vol",
-   "delta": -1368
+   "delta": -1346
   },
   {
    "factor": "Recovery",
    "bump": "+1%",
-   "delta": 775
+   "delta": 762
   }
  ],
  "nettingSet": "NS-RHEINTAL-NY",

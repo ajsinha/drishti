@@ -1,53 +1,53 @@
 {
  "resultId": "CVA-VERDANT-NY",
- "cva": -669306,
- "dva": 12778,
- "fva": -4335,
- "kva": -231554,
- "cs01": -12048,
+ "cva": -694711,
+ "dva": 13263,
+ "fva": -8589,
+ "kva": -236726,
+ "cs01": -12505,
  "components": [
   {
    "name": "CVA",
-   "amount": -669306
+   "amount": -694711
   },
   {
    "name": "DVA",
-   "amount": 12778
+   "amount": 13263
   },
   {
    "name": "FVA",
-   "amount": -4335
+   "amount": -8589
   },
   {
    "name": "KVA",
-   "amount": -231554
+   "amount": -236726
   }
  ],
  "sensitivities": [
   {
    "factor": "Counterparty spread",
    "bump": "+1 bp",
-   "delta": -12048
+   "delta": -12505
   },
   {
    "factor": "USD rates",
    "bump": "+1 bp",
-   "delta": 2677
+   "delta": 2779
   },
   {
    "factor": "EUR rates",
    "bump": "+1 bp",
-   "delta": 1339
+   "delta": 1389
   },
   {
    "factor": "FX vol",
    "bump": "+1 vol",
-   "delta": -20079
+   "delta": -20841
   },
   {
    "factor": "Recovery",
    "bump": "+1%",
-   "delta": 11378
+   "delta": 11810
   }
  ],
  "nettingSet": "NS-VERDANT-NY",

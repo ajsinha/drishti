@@ -13,9 +13,9 @@
  "maturityDate": "2027-09-23",
  "currency": "CHF",
  "notional": 30000000.0,
- "mtm": 346028,
+ "mtm": -309546,
  "mtmCurrency": "USD",
- "pnl1d": -7107,
+ "pnl1d": -14470,
  "counterparty": {
   "id": "CP-CORAL",
   "name": "Coral Bay Municipal Authority"
@@ -34,94 +34,200 @@
   "premium": 854406.0
  },
  "risk": {
-  "dv01": -4408,
-  "vega": -88672
+  "dv01": -5272,
+  "vega": -78132
  },
  "sensitivities": [
   {
    "bucket": "3M",
-   "dv01": -441,
-   "vega": -8867
+   "dv01": -527,
+   "vega": -7813
   },
   {
    "bucket": "6M",
-   "dv01": -882,
-   "vega": -17734
+   "dv01": -1054,
+   "vega": -15626
   },
   {
    "bucket": "1Y",
-   "dv01": -1322,
-   "vega": -26602
+   "dv01": -1582,
+   "vega": -23440
   },
   {
    "bucket": "2Y",
-   "dv01": -1763,
-   "vega": -35469
+   "dv01": -2109,
+   "vega": -31253
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Sell floor 1.3742% on TERM-SARON-6M",
+   "payer": true,
+   "type": "FLOORLETS",
+   "currency": "CHF",
+   "notional": 30000000.0,
+   "index": "TERM-SARON-6M",
+   "spread": 0.0,
+   "strike": 0.013742,
+   "dayCount": "ACT/360",
+   "frequency": "Semi-annual",
+   "resetFrequency": "Semi-annual",
+   "businessDayConvention": "Mod. following",
+   "calendar": "EUTA",
+   "paymentLag": "2 business days",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Floorlet",
+     "periodStart": "2025-11-03",
+     "periodEnd": "2026-03-23",
+     "fixingDate": "2025-10-30",
+     "payDate": "2026-03-25",
+     "notional": 30000000.0,
+     "index": "TERM-SARON-6M",
+     "strike": 0.013742,
+     "rate": 0.004063,
+     "accrualFactor": 0.388889,
+     "volatilityBp": null,
+     "amount": -112921.67,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-10-30",
+       "index": "TERM-SARON-6M",
+       "tenor": "6M",
+       "rate": 0.004063,
+       "source": "Refinitiv SARON term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Floorlet",
+     "periodStart": "2026-03-23",
+     "periodEnd": "2026-09-23",
+     "fixingDate": "2026-03-19",
+     "payDate": "2026-09-25",
+     "notional": 30000000.0,
+     "index": "TERM-SARON-6M",
+     "strike": 0.013742,
+     "rate": 0.004017,
+     "accrualFactor": 0.511111,
+     "volatilityBp": null,
+     "amount": -149116.67,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-03-19",
+       "index": "TERM-SARON-6M",
+       "tenor": "6M",
+       "rate": 0.004017,
+       "source": "Refinitiv SARON term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Floorlet",
+     "periodStart": "2026-09-23",
+     "periodEnd": "2027-03-23",
+     "fixingDate": "2026-09-21",
+     "payDate": "2027-03-25",
+     "notional": 30000000.0,
+     "index": "TERM-SARON-6M",
+     "strike": 0.013742,
+     "rate": 0.003788,
+     "accrualFactor": 0.502778,
+     "volatilityBp": null,
+     "amount": -150139.5,
+     "discountFactor": 0.998488,
+     "pv": -149912.44,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-21",
+       "index": "TERM-SARON-6M",
+       "tenor": "6M",
+       "rate": 0.003788,
+       "source": "Refinitiv SARON term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Floorlet",
+     "periodStart": "2027-03-23",
+     "periodEnd": "2027-09-23",
+     "fixingDate": "2027-03-19",
+     "payDate": "2027-09-27",
+     "notional": 30000000.0,
+     "index": "TERM-SARON-6M",
+     "strike": 0.013742,
+     "rate": 0.003401,
+     "accrualFactor": 0.511111,
+     "volatilityBp": 88.0,
+     "amount": -160156.28,
+     "discountFactor": 0.996735,
+     "pv": -159633.35,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-03-19",
+       "index": "TERM-SARON-6M",
+       "tenor": "6M",
+       "rate": 0.003401,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Option",
+   "payReceive": "Pay",
+   "legId": "MX-20000085-L1",
+   "pv": -309545.79,
+   "projectedFlows": 1
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2026-02-03",
-   "period": "2026-02-03..2026-05-03",
-   "index": "SARON",
-   "rate": 0.022002,
-   "payoff": 0.0,
+   "fixingDate": "2025-10-30",
+   "period": "2025-11-03..2026-03-23",
+   "index": "TERM-SARON-6M",
+   "rate": 0.004063,
+   "payoff": -112921.67,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-05-03",
-   "period": "2026-05-03..2026-08-03",
-   "index": "SARON",
-   "rate": 0.035164,
-   "payoff": 1230.0,
+   "fixingDate": "2026-03-19",
+   "period": "2026-03-23..2026-09-23",
+   "index": "TERM-SARON-6M",
+   "rate": 0.004017,
+   "payoff": -149116.67,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-08-03",
-   "period": "2026-08-03..2026-11-03",
-   "index": "SARON",
-   "rate": 0.030912,
-   "payoff": 0.0,
+   "fixingDate": "2026-09-21",
+   "period": "2026-09-23..2027-03-23",
+   "index": "TERM-SARON-6M",
+   "rate": 0.003788,
+   "payoff": -150139.5,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-11-03",
-   "period": "2026-11-03..2027-02-03",
-   "index": "SARON",
-   "rate": 0.03676,
-   "payoff": 13200.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-02-03",
-   "period": "2027-02-03..2027-05-03",
-   "index": "SARON",
-   "rate": 0.032537,
-   "payoff": 0.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-05-03",
-   "period": "2027-05-03..2027-08-03",
-   "index": "SARON",
-   "rate": 0.021816,
-   "payoff": 0.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-08-03",
-   "period": "2027-08-03..2027-11-03",
-   "index": "SARON",
-   "rate": 0.030076,
-   "payoff": 0.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-09-23",
-   "period": "2027-09-23..2027-12-23",
-   "index": "SARON",
-   "rate": 0.047017,
-   "payoff": 90127.5,
+   "fixingDate": "2027-03-19",
+   "period": "2027-03-23..2027-09-23",
+   "index": "TERM-SARON-6M",
+   "rate": 0.003401,
+   "payoff": -160156.28,
    "status": "Pending"
   }
  ],
@@ -129,83 +235,83 @@
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -1104
+   "pnl": -987
   },
   {
    "date": "2026-09-04",
-   "pnl": -4674
+   "pnl": -4181
   },
   {
    "date": "2026-09-07",
-   "pnl": -3249
+   "pnl": -2906
   },
   {
    "date": "2026-09-08",
-   "pnl": 19557
+   "pnl": 17495
   },
   {
    "date": "2026-09-09",
-   "pnl": 39722
+   "pnl": 35534
   },
   {
    "date": "2026-09-10",
-   "pnl": 17048
+   "pnl": 15250
   },
   {
    "date": "2026-09-11",
-   "pnl": 11761
+   "pnl": 10521
   },
   {
    "date": "2026-09-14",
-   "pnl": -6314
+   "pnl": -5648
   },
   {
    "date": "2026-09-15",
-   "pnl": -2542
+   "pnl": -2274
   },
   {
    "date": "2026-09-16",
-   "pnl": -175
+   "pnl": -157
   },
   {
    "date": "2026-09-17",
-   "pnl": 7658
+   "pnl": 6851
   },
   {
    "date": "2026-09-18",
-   "pnl": -7690
+   "pnl": -6879
   },
   {
    "date": "2026-09-21",
-   "pnl": -8576
+   "pnl": -7672
   },
   {
    "date": "2026-09-22",
-   "pnl": 15778
+   "pnl": 14115
   },
   {
    "date": "2026-09-23",
-   "pnl": -5208
+   "pnl": -4659
   },
   {
    "date": "2026-09-24",
-   "pnl": 324
+   "pnl": 289
   },
   {
    "date": "2026-09-25",
-   "pnl": -10477
+   "pnl": -9372
   },
   {
    "date": "2026-09-28",
-   "pnl": -4521
+   "pnl": -4045
   },
   {
    "date": "2026-09-29",
-   "pnl": 11714
+   "pnl": 10479
   },
   {
    "date": "2026-09-30",
-   "pnl": 5198
+   "pnl": 4650
   }
  ],
  "execution": {
@@ -220,7 +326,7 @@
  },
  "lifecycle": {
   "status": "Live",
-  "version": 1,
+  "version": 2,
   "events": [
    {
     "version": 1,
@@ -228,11 +334,18 @@
     "reason": "Trade captured",
     "at": "2025-10-31T09:44:00Z",
     "by": "mo.amend"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2025-12-03T09:44:00Z",
+    "by": "mo.amend"
    }
   ],
-  "sourceSystem": "Calypso",
+  "sourceSystem": "Murex",
   "createdAt": "2025-10-31T09:44:00Z",
-  "lastModifiedAt": "2025-10-31T09:44:00Z",
+  "lastModifiedAt": "2025-12-03T09:44:00Z",
   "lastModifiedBy": "mo.amend",
   "timeline": [
    {
@@ -248,6 +361,12 @@
     "description": "Matched on MarkitWire (MA412670379)"
    },
    {
+    "date": "2025-12-03",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by mo.amend)"
+   },
+   {
     "date": "2026-01-23",
     "event": "Partially terminated",
     "status": "Done",
@@ -255,14 +374,14 @@
     "amount": 3000000
    },
    {
-    "date": "2026-08-03",
+    "date": "2026-09-21",
     "event": "Cash settled",
     "status": "Settled",
     "description": "CHF payment settled",
-    "amount": 0.0
+    "amount": -150139.5
    },
    {
-    "date": "2026-11-03",
+    "date": "2027-03-19",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
@@ -313,8 +432,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": 346028,
-  "cleanPv": 346028.0,
+  "npv": -309546,
+  "cleanPv": -309546.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Black / Bachelier",
@@ -329,36 +448,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": 353135,
+   "pnl": -295076,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": 650
+   "pnl": 1323
   },
   {
    "step": "Roll-down",
-   "pnl": -86
+   "pnl": -176
   },
   {
    "step": "Rates delta",
-   "pnl": -5849
+   "pnl": -11907
   },
   {
    "step": "FX delta",
-   "pnl": 1893
+   "pnl": 3855
   },
   {
    "step": "Vol (vega)",
-   "pnl": -1547
+   "pnl": -3150
   },
   {
    "step": "Theta",
-   "pnl": -1839
+   "pnl": -3744
   },
   {
    "step": "Unexplained",
-   "pnl": -329
+   "pnl": -671
   }
  ],
  "_meta": {
@@ -366,7 +485,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 992
+   "mtm": 919,
+   "legs.0.cashflows.3.fixings.0.rate": 5e-05
   }
  }
 }

@@ -43,6 +43,24 @@ def plain(text):
     return int(value) if not frac else value
 
 
+def _tab_cells(tabs):
+    """Every cell of tabs that hold panels: [tab, panel, row, field, value]; a tree table lists each row then the rows under it."""
+    out = []
+    for t in tabs:
+        title = t.get("title", "")
+        out += [[title, "", "", c.get("label", ""), plain(c.get("text"))] for c in t.get("fields", [])]
+        for q in t.get("panels", []):
+            head, rows = panel_rows(q)
+            name = q.get("title") or q.get("id", "")
+            if not head:
+                continue
+            if head == ["Field", "Value"]:
+                out += [[title, name, "", r[0], r[1]] for r in rows]
+            else:
+                out += [[title, name, i, h, v] for i, r in enumerate(rows, 1) for h, v in zip(head, r)]
+    return out
+
+
 def panel_rows(panel: dict) -> tuple[list[str], list[list]]:
     """Header and rows for one panel of a view model; ([], []) when the panel has nothing to export."""
     d = panel.get("data") or {}
@@ -59,6 +77,8 @@ def panel_rows(panel: dict) -> tuple[list[str], list[list]]:
     if "fields" in d:                                                    # kv, status
         return ["Field", "Value"], [[c.get("label", ""), plain(c.get("text"))] for c in d["fields"]]
     if "tabs" in d:
+        if any(t.get("panels") for t in d["tabs"]):                       # tabs that hold panels: one line per cell, tab and panel first
+            return ["Tab", "Panel", "Row", "Field", "Value"], _tab_cells(d["tabs"])
         return ["Tab", "Field", "Value"], [[t.get("title", ""), c.get("label", ""), plain(c.get("text"))] for t in d["tabs"] for c in t.get("fields", [])]
     if "z" in d:                                                         # surface: a row per y, a column per x
         return [""] + list(d.get("x", [])), [[y] + list(row) for y, row in zip(d.get("y", []), d.get("z", []))]

@@ -158,6 +158,7 @@ public class DesignAboutService {
         if (p.body() != null) {
             collect(p.body(), ids);
         }
+        p.parts().forEach(part -> collect(part, ids));
     }
 
     private EntityDocument document(Principal who, StoredDesign d, SampleInfo info, Predicate<String> mayOpen) {

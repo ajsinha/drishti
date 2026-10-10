@@ -101,6 +101,17 @@ def check(docs: dict) -> list[str]:
         total = sum(t["mtm"] for t in docs["trade"].values() if t["nettingSet"] == ns)
         if total != d["netMtm"]:
             problems.append(f"netting-set/{ns}: netMtm {d['netMtm']} != sum of trades {total}")
+    for id_, d in docs.get("trade", {}).items():                       # deep trades: legs add up, a cashflow's rate lies among its fixings
+        for leg in d.get("legs", []):
+            flows = leg.get("cashflows")
+            if not flows:
+                continue
+            if abs(sum(f["pv"] for f in flows) - leg["pv"]) > 0.05:
+                problems.append(f"trade/{id_}: leg {leg['leg']} pv {leg['pv']} != sum of its cashflows")
+            for f in flows:
+                rates = [x["rate"] for x in f.get("fixings", [])]
+                if rates and not min(rates) - 1e-6 <= f["rate"] <= max(rates) + 1e-6:
+                    problems.append(f"trade/{id_}: leg {leg['leg']} cashflow {f['n']} rate {f['rate']} is outside its fixings {min(rates)}..{max(rates)}")
     for spec in T.KINDS:
         need = {m for s in spec.strip for m in PATH.findall(s[1])} | {m for p in spec.panels for path in p.paths() for m in PATH.findall(path)}
         for id_, d in docs.get(spec.kind, {}).items():

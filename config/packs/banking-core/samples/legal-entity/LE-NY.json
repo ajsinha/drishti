@@ -30,25 +30,25 @@
   {
    "book": "BOOK-RATES-1",
    "desk": "Rates · Swaps and options",
-   "var": 6016760,
-   "pnl": -2955503,
-   "mtm": 177369313,
+   "var": 6008500,
+   "pnl": -2663607,
+   "mtm": 194752511,
    "trades": 49
   },
   {
    "book": "BOOK-RATES-2",
    "desk": "Rates · Swaps and options",
-   "var": 5359063,
-   "pnl": 2498705,
-   "mtm": -66175404,
+   "var": 5428468,
+   "pnl": 4252344,
+   "mtm": -53757622,
    "trades": 54
   },
   {
    "book": "BOOK-RATES-3",
    "desk": "Rates · Swaps and options",
-   "var": 5239711,
-   "pnl": 2554310,
-   "mtm": 21656655,
+   "var": 5322198,
+   "pnl": 2539687,
+   "mtm": 20771882,
    "trades": 53
   },
   {
@@ -78,25 +78,25 @@
   {
    "book": "BOOK-COMM-1",
    "desk": "Commodities",
-   "var": 7085796,
-   "pnl": -180316,
-   "mtm": 11845271,
+   "var": 7224074,
+   "pnl": -113161,
+   "mtm": 7191610,
    "trades": 28
   },
   {
    "book": "BOOK-COMM-2",
    "desk": "Commodities",
-   "var": 6657067,
-   "pnl": -102729,
-   "mtm": 20548795,
+   "var": 6653852,
+   "pnl": -200480,
+   "mtm": 23033724,
    "trades": 31
   },
   {
    "book": "BOOK-COMM-3",
    "desk": "Commodities",
-   "var": 5057823,
-   "pnl": 132159,
-   "mtm": -19078473,
+   "var": 4840686,
+   "pnl": 214178,
+   "mtm": -13270944,
    "trades": 31
   },
   {

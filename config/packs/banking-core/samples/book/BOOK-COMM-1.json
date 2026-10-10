@@ -3,20 +3,9 @@
  "name": "Commodities · book 1",
  "deskName": "Commodities",
  "tradeCount": 28,
- "mtm": 11845271,
+ "mtm": 7191610,
  "dv01": 0,
  "topTrades": [
-  {
-   "tradeId": "END-1000014",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-1",
-   "notional": 231000000.0,
-   "maturity": "2034-07-03",
-   "maturityBucket": "5-10Y",
-   "mtm": 4646776
-  },
   {
    "tradeId": "END-1000052",
    "product": "Calendar spread",
@@ -104,6 +93,17 @@
    "maturity": "2028-02-14",
    "maturityBucket": "1-2Y",
    "mtm": -1422464
+  },
+  {
+   "tradeId": "END-1000014",
+   "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
+   "notional": 231000000.0,
+   "maturity": "2027-07-31",
+   "maturityBucket": "0-1Y",
+   "mtm": -1277334
   },
   {
    "tradeId": "END-1000042",

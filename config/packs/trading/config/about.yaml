@@ -68,6 +68,16 @@ vocabulary:
   capFrequency: { term: "Caplet frequency", means: "The period of the individual options (caplets) the cap is made of." }
   floorFrequency: { term: "Floorlet frequency", means: "The period of the individual options (floorlets) the floor is made of." }
   exerciseFrequency: { term: "Exercise frequency", means: "How often a Bermudan option can be exercised." }
+  businessDayConvention: { term: "Business-day convention", means: "How a date that falls on a holiday is moved, for example to the following or modified-following business day." }
+  calendar: { term: "Holiday calendar", means: "The calendar of the financial centres whose holidays the leg's dates avoid, for example USNY or GBLO." }
+  periodStart: { term: "Period start", means: "The first day of the period the cash flow accrues over." }
+  periodEnd: { term: "Period end", means: "The last day of the period the cash flow accrues over." }
+  accrualFactor: { term: "Accrual factor", means: "The length of the period as a fraction of a year on the leg's day-count basis; the rate times it times the notional is the amount." }
+  discountFactor: { term: "Discount factor", means: "What one unit paid on the pay date is worth today on the discount curve of the leg's currency; the amount times it is the present value." }
+  tenor: { term: "Tenor", means: "The length of the period the fixed rate or price covers, for example 3M for a three-month term rate or 1D for a daily settlement." }
+  source: { term: "Fixing source", means: "Where the fixing came from: the publisher of the rate or price once it is fixed, or the forward curve while it is still projected." }
+  quantityUnit: { term: "Quantity unit", means: "The unit the commodity quantity is measured in, for example bbl or MMBtu." }
+  paymentLag: { term: "Payment lag", means: "How long after a period ends the cash flow is paid." }
   businessDay: { term: "Business-day convention", means: "How a date that falls on a holiday is moved, for example to the following or modified-following business day." }
   compounding: { term: "Compounding", means: "How the interest on the floating leg builds up within a period, for example by compounding the daily overnight rate." }
   coupon: { term: "Coupon", means: "The interest rate the bond pays on its face amount.", unit: "% a year" }

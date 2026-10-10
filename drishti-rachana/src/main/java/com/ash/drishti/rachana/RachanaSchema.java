@@ -124,6 +124,8 @@ public final class RachanaSchema {
         common.put("on-select", Map.of("type", "object", "description", "A click on a row or bar sets a control: {filter: [panel ids], by: <control id>, field: <row field>}"));
         common.put("columns", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/column")));
         common.put("body", Map.of("$ref", "#/$defs/panel"));
+        common.put("panels", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/panel"),
+                "description", "tabs only: panels shown inside each tab (kv, status, table, ladder, hbar, markdown, metric), read with @ as the tab's element"));
         List<Object> perKind = new ArrayList<>();
         Map<String, Object> allOptions = new LinkedHashMap<>(common);
         for (PanelKind k : PanelKind.values()) {

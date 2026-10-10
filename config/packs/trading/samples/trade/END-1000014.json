@@ -8,14 +8,14 @@
  "family": "swap",
  "status": "Live",
  "direction": "Receive fixed",
- "tradeDate": "2024-06-06",
- "effectiveDate": "2024-06-10",
- "maturityDate": "2034-07-03",
+ "tradeDate": "2026-06-23",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2027-07-31",
  "currency": "USD",
  "notional": 231000000.0,
- "mtm": 4646776,
+ "mtm": -1277334,
  "mtmCurrency": "USD",
- "pnl1d": -119472,
+ "pnl1d": -14240,
  "counterparty": {
   "id": "CP-LUMEN",
   "name": "Lumen Semiconductor AG"
@@ -28,347 +28,3354 @@
  "commodityCurve": "CMDC-WTI",
  "discountCurve": "CRV-USD-OIS",
  "terms": {
-  "fixedPrice": 1567.42,
-  "quantityPerPeriod": 97898,
+  "fixedPrice": 73.54,
+  "quantityPerPeriod": 68800.0,
   "averaging": "Monthly"
  },
  "risk": {
-  "delta": -842766
+  "delta": -1549693
  },
  "sensitivities": [
   {
    "bucket": "Spot",
-   "delta": -40132
+   "delta": -73795
   },
   {
    "bucket": "1M",
-   "delta": -80263
+   "delta": -147590
   },
   {
    "bucket": "3M",
-   "delta": -120395
+   "delta": -221385
   },
   {
    "bucket": "6M",
-   "delta": -160527
+   "delta": -295180
   },
   {
    "bucket": "1Y",
-   "delta": -200659
+   "delta": -368975
   },
   {
    "bucket": "2Y",
-   "delta": -240790
+   "delta": -442769
   }
  ],
  "legs": [
   {
    "leg": 1,
-   "label": "Receive performance",
-   "payReceive": "Receive",
-   "rateType": "Performance",
-   "index": "WTI",
-   "rate": null,
+   "label": "Pay fixed 73.54 USD/bbl",
+   "payer": true,
+   "type": "FIXED",
+   "notional": 5059552,
+   "rate": 73.54,
+   "index": null,
    "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
    "currency": "USD",
-   "notional": 231000000.0
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 68800.0,
+   "quantityUnit": "bbl",
+   "priceUnit": "USD/bbl",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Fixed price",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "type": "Fixed price",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.999298,
+     "pv": -5055999.53,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Fixed price",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.996295,
+     "pv": -5040805.43,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Fixed price",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.993205,
+     "pv": -5025174.28,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Fixed price",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.990031,
+     "pv": -5009113.68,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Fixed price",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.987267,
+     "pv": -4995130.72,
+     "status": "Fixed"
+    },
+    {
+     "n": 7,
+     "type": "Fixed price",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.984516,
+     "pv": -4981208.37,
+     "status": "Fixed"
+    },
+    {
+     "n": 8,
+     "type": "Fixed price",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.98129,
+     "pv": -4964885.27,
+     "status": "Fixed"
+    },
+    {
+     "n": 9,
+     "type": "Fixed price",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.978378,
+     "pv": -4950154.86,
+     "status": "Fixed"
+    },
+    {
+     "n": 10,
+     "type": "Fixed price",
+     "periodStart": "2027-05-01",
+     "periodEnd": "2027-05-31",
+     "payDate": "2027-06-07",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.975386,
+     "pv": -4935017.33,
+     "status": "Fixed"
+    },
+    {
+     "n": 11,
+     "type": "Fixed price",
+     "periodStart": "2027-06-01",
+     "periodEnd": "2027-06-30",
+     "payDate": "2027-07-08",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.972411,
+     "pv": -4919964.55,
+     "status": "Fixed"
+    },
+    {
+     "n": 12,
+     "type": "Fixed price",
+     "periodStart": "2027-07-01",
+     "periodEnd": "2027-07-31",
+     "payDate": "2027-08-06",
+     "quantity": 68800.0,
+     "rate": 73.54,
+     "accrualFactor": 1.0,
+     "amount": -5059552.0,
+     "discountFactor": 0.969643,
+     "pv": -4905959.21,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Fixed",
+   "legId": "END-1000014-L1",
+   "payReceive": "Pay",
+   "pv": -54783413.23,
+   "projectedFlows": 0
   },
   {
    "leg": 2,
-   "label": "Pay SOFR + spread",
-   "payReceive": "Pay",
-   "rateType": "Float",
-   "index": "SOFR",
-   "rate": 0.036215,
+   "label": "Receive NYMEX WTI crude oil settle monthly average",
+   "payer": false,
+   "type": "FLOAT",
+   "notional": 4895120,
+   "index": "NYMEX WTI crude oil settle",
    "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
+   "averaging": "Monthly",
+   "resetFrequency": "Daily",
    "currency": "USD",
-   "notional": 231000000.0
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 68800.0,
+   "quantityUnit": "bbl",
+   "priceUnit": "USD/bbl",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Index average",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 68800.0,
+     "rate": 70.2381,
+     "accrualFactor": 1.0,
+     "amount": 4832381.28,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-08-03",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.57,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.46,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-05",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.36,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-06",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.25,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-07",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.14,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-10",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.82,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-11",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.72,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-12",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.61,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-13",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.51,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.4,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-17",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.1,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-18",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.01,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.91,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-20",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.82,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.73,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-24",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.47,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-25",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.39,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-26",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.32,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-27",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.24,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.18,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-31",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.99,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Index average",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 68800.0,
+     "rate": 68.8419,
+     "accrualFactor": 1.0,
+     "amount": 4736322.72,
+     "discountFactor": 0.999298,
+     "pv": 4732997.2,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-01",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.94,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.89,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-03",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.84,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.8,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.68,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.66,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-10",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.65,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-11",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.64,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.64,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-15",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.65,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.66,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-17",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.68,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-18",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.71,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.8,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.85,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.89,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-24",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.94,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-25",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.0,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.18,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-29",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.25,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-30",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.33,
+       "source": "NYMEX settlement",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Index average",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 68800.0,
+     "rate": 70.909,
+     "accrualFactor": 1.0,
+     "amount": 4878539.2,
+     "discountFactor": 0.996295,
+     "pv": 4860463.31,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-10-01",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.4,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.48,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-05",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-06",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.83,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-07",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.12,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-13",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.54,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.64,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-15",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.75,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.19,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-20",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.3,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.41,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.52,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.62,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-26",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.94,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-27",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.15,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-29",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.25,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-30",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Index average",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 68800.0,
+     "rate": 73.3584,
+     "accrualFactor": 1.0,
+     "amount": 5047057.92,
+     "discountFactor": 0.993205,
+     "pv": 5012765.09,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-11-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.63,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-03",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.8,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-05",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-06",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.18,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-10",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.25,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-12",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.37,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-13",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.42,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.56,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-17",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.59,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-18",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.62,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.65,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-20",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.67,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-24",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-25",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-27",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-30",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.64,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 5,
+     "type": "Index average",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 68800.0,
+     "rate": 72.6168,
+     "accrualFactor": 1.0,
+     "amount": 4996035.84,
+     "discountFactor": 0.990031,
+     "pv": 4946230.71,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-12-01",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.62,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.58,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-03",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.54,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.5,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-07",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.29,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.23,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-10",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.16,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-11",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.1,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-15",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.78,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-17",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.61,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-18",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.52,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.23,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.13,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-24",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.51,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-29",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.4,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-30",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.3,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-31",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.19,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 6,
+     "type": "Index average",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 68800.0,
+     "rate": 69.7116,
+     "accrualFactor": 1.0,
+     "amount": 4796158.08,
+     "discountFactor": 0.987267,
+     "pv": 4735090.49,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-01-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-05",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.66,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-06",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.56,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-07",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.36,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-11",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.07,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-12",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-13",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.8,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-15",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.42,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-20",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.29,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.23,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-25",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.07,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-26",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-27",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.95,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-29",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 7,
+     "type": "Index average",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 68800.0,
+     "rate": 69.1889,
+     "accrualFactor": 1.0,
+     "amount": 4760196.32,
+     "discountFactor": 0.984516,
+     "pv": 4686488.0,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-02-01",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.85,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-03",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-05",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.9,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-10",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-11",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.96,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-12",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 68.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.17,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-17",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.23,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-18",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.29,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.57,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.65,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-24",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-25",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.81,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-26",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.9,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 8,
+     "type": "Index average",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 68800.0,
+     "rate": 71.7083,
+     "accrualFactor": 1.0,
+     "amount": 4933531.04,
+     "discountFactor": 0.98129,
+     "pv": 4841222.22,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-03-01",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.18,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.28,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-03",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.38,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.48,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-05",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.58,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.9,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-10",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.12,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-11",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.23,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-12",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.34,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-15",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.67,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-17",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-18",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.1,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.4,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.5,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-24",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.6,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-25",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-26",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-29",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-30",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.13,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-31",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.21,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 9,
+     "type": "Index average",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 68800.0,
+     "rate": 73.7359,
+     "accrualFactor": 1.0,
+     "amount": 5073029.92,
+     "discountFactor": 0.978378,
+     "pv": 4963341.37,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-04-01",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.28,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-05",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.55,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-06",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.6,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-07",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.65,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-12",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-13",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-15",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-20",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.9,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-26",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-27",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.69,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-29",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.64,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-30",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.59,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 10,
+     "type": "Index average",
+     "periodStart": "2027-05-01",
+     "periodEnd": "2027-05-31",
+     "payDate": "2027-06-07",
+     "quantity": 68800.0,
+     "rate": 72.2895,
+     "accrualFactor": 1.0,
+     "amount": 4973517.6,
+     "discountFactor": 0.975386,
+     "pv": 4851100.56,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-05-03",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.4,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.34,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-05",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.27,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-06",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.19,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-07",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 73.11,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-10",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-11",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-12",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.68,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-13",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.58,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.49,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-17",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.19,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-18",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 72.09,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-20",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-24",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.45,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-25",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.34,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-26",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.24,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-27",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.13,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 11,
+     "type": "Index average",
+     "periodStart": "2027-06-01",
+     "periodEnd": "2027-06-30",
+     "payDate": "2027-07-08",
+     "quantity": 68800.0,
+     "rate": 69.6105,
+     "accrualFactor": 1.0,
+     "amount": 4789202.4,
+     "discountFactor": 0.972411,
+     "pv": 4657073.59,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-06-01",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.62,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.52,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-03",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.42,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-04",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.32,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-07",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-10",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.81,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-11",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.52,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-15",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.4,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-17",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.18,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.14,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.12,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-24",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.09,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-25",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.08,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-29",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-30",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 12,
+     "type": "Index average",
+     "periodStart": "2027-07-01",
+     "periodEnd": "2027-07-31",
+     "payDate": "2027-08-06",
+     "quantity": 68800.0,
+     "rate": 69.9067,
+     "accrualFactor": 1.0,
+     "amount": 4809580.96,
+     "discountFactor": 0.969643,
+     "pv": 4663576.54,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-07-01",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.06,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-02",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.08,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-06",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.18,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-07",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.21,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-08",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.26,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-09",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.3,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-12",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-13",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.53,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-14",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.59,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-15",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.66,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-16",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-19",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 69.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-20",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.06,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-21",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.15,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-22",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.24,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-23",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.34,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-26",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.63,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-27",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-28",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-29",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 70.94,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-30",
+       "index": "NYMEX WTI crude oil settle",
+       "tenor": "1D",
+       "rate": 71.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Float",
+   "legId": "END-1000014-L2",
+   "payReceive": "Receive",
+   "pv": 52950349.08,
+   "projectedFlows": 10
+  },
+  {
+   "leg": 3,
+   "label": "Pay fee 0.122 USD/bbl",
+   "payer": true,
+   "type": "FEE",
+   "notional": 8394,
+   "rate": 0.122,
+   "index": null,
+   "spread": 0.0,
+   "currency": "USD",
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 68800.0,
+   "quantityUnit": "bbl",
+   "priceUnit": "USD/bbl",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Fee",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "type": "Fee",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.999298,
+     "pv": -8387.71,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Fee",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.996295,
+     "pv": -8362.5,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Fee",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.993205,
+     "pv": -8336.57,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Fee",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.990031,
+     "pv": -8309.92,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Fee",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.987267,
+     "pv": -8286.73,
+     "status": "Fixed"
+    },
+    {
+     "n": 7,
+     "type": "Fee",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.984516,
+     "pv": -8263.63,
+     "status": "Fixed"
+    },
+    {
+     "n": 8,
+     "type": "Fee",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.98129,
+     "pv": -8236.55,
+     "status": "Fixed"
+    },
+    {
+     "n": 9,
+     "type": "Fee",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.978378,
+     "pv": -8212.11,
+     "status": "Fixed"
+    },
+    {
+     "n": 10,
+     "type": "Fee",
+     "periodStart": "2027-05-01",
+     "periodEnd": "2027-05-31",
+     "payDate": "2027-06-07",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.975386,
+     "pv": -8187.0,
+     "status": "Fixed"
+    },
+    {
+     "n": 11,
+     "type": "Fee",
+     "periodStart": "2027-06-01",
+     "periodEnd": "2027-06-30",
+     "payDate": "2027-07-08",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.972411,
+     "pv": -8162.03,
+     "status": "Fixed"
+    },
+    {
+     "n": 12,
+     "type": "Fee",
+     "periodStart": "2027-07-01",
+     "periodEnd": "2027-07-31",
+     "payDate": "2027-08-06",
+     "quantity": 68800.0,
+     "rate": 0.122,
+     "accrualFactor": 1.0,
+     "amount": -8393.6,
+     "discountFactor": 0.969643,
+     "pv": -8138.8,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Fee",
+   "legId": "END-1000014-L3",
+   "payReceive": "Pay",
+   "pv": -90883.55,
+   "projectedFlows": 0
+  },
+  {
+   "leg": 4,
+   "label": "Receive location differential +0.868 USD/bbl",
+   "payer": false,
+   "type": "DIFFERENTIAL",
+   "notional": 59718,
+   "rate": 0.868,
+   "index": null,
+   "spread": 0.0,
+   "currency": "USD",
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 68800.0,
+   "quantityUnit": "bbl",
+   "priceUnit": "USD/bbl",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Differential",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "type": "Differential",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.999298,
+     "pv": 59676.47,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Differential",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.996295,
+     "pv": 59497.13,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Differential",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.993205,
+     "pv": 59312.64,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Differential",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.990031,
+     "pv": 59123.07,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Differential",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.987267,
+     "pv": 58958.03,
+     "status": "Fixed"
+    },
+    {
+     "n": 7,
+     "type": "Differential",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.984516,
+     "pv": 58793.7,
+     "status": "Fixed"
+    },
+    {
+     "n": 8,
+     "type": "Differential",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.98129,
+     "pv": 58601.04,
+     "status": "Fixed"
+    },
+    {
+     "n": 9,
+     "type": "Differential",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.978378,
+     "pv": 58427.17,
+     "status": "Fixed"
+    },
+    {
+     "n": 10,
+     "type": "Differential",
+     "periodStart": "2027-05-01",
+     "periodEnd": "2027-05-31",
+     "payDate": "2027-06-07",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.975386,
+     "pv": 58248.5,
+     "status": "Fixed"
+    },
+    {
+     "n": 11,
+     "type": "Differential",
+     "periodStart": "2027-06-01",
+     "periodEnd": "2027-06-30",
+     "payDate": "2027-07-08",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.972411,
+     "pv": 58070.84,
+     "status": "Fixed"
+    },
+    {
+     "n": 12,
+     "type": "Differential",
+     "periodStart": "2027-07-01",
+     "periodEnd": "2027-07-31",
+     "payDate": "2027-08-06",
+     "quantity": 68800.0,
+     "rate": 0.868,
+     "accrualFactor": 1.0,
+     "amount": 59718.4,
+     "discountFactor": 0.969643,
+     "pv": 57905.53,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Differential",
+   "legId": "END-1000014-L4",
+   "payReceive": "Receive",
+   "pv": 646614.12,
+   "projectedFlows": 0
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2024-09-10",
-   "period": "2024-09-10..2024-12-10",
-   "index": "SOFR",
-   "rate": 0.021243,
-   "payoff": 0.0,
+   "payDate": "2026-09-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 70.2381,
+   "amount": 4832381.28,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-08",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-10-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -5055999.53,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2024-12-10",
-   "period": "2024-12-10..2025-03-10",
-   "index": "SOFR",
-   "rate": 0.034628,
-   "payoff": 0.0,
+   "payDate": "2026-10-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 68.8419,
+   "amount": 4736322.72,
+   "pv": 4732997.2,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-03-10",
-   "period": "2025-03-10..2025-06-10",
-   "index": "SOFR",
-   "rate": 0.040208,
-   "payoff": 300762.0,
+   "payDate": "2026-10-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8387.71,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-06-10",
-   "period": "2025-06-10..2025-09-10",
-   "index": "SOFR",
-   "rate": 0.040776,
-   "payoff": 333564.0,
+   "payDate": "2026-10-07",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 59676.47,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-09-10",
-   "period": "2025-09-10..2025-12-10",
-   "index": "SOFR",
-   "rate": 0.04916,
-   "payoff": 817740.0,
+   "payDate": "2026-11-06",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -5040805.43,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-12-10",
-   "period": "2025-12-10..2026-03-10",
-   "index": "SOFR",
-   "rate": 0.045939,
-   "payoff": 631727.25,
+   "payDate": "2026-11-06",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 70.909,
+   "amount": 4878539.2,
+   "pv": 4860463.31,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2026-11-06",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8362.5,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-03-10",
-   "period": "2026-03-10..2026-06-10",
-   "index": "SOFR",
-   "rate": 0.027163,
-   "payoff": 0.0,
+   "payDate": "2026-11-06",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 59497.13,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-06-10",
-   "period": "2026-06-10..2026-09-10",
-   "index": "SOFR",
-   "rate": 0.031853,
-   "payoff": 0.0,
+   "payDate": "2026-12-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -5025174.28,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-09-10",
-   "period": "2026-09-10..2026-12-10",
-   "index": "SOFR",
-   "rate": 0.045929,
-   "payoff": 631149.75,
+   "payDate": "2026-12-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 73.3584,
+   "amount": 5047057.92,
+   "pv": 5012765.09,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2026-12-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8336.57,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-12-10",
-   "period": "2026-12-10..2027-03-10",
-   "index": "SOFR",
-   "rate": 0.026233,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2026-12-07",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 59312.64,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-03-10",
-   "period": "2027-03-10..2027-06-10",
-   "index": "SOFR",
-   "rate": 0.040047,
-   "payoff": 291464.25,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -5009113.68,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-06-10",
-   "period": "2027-06-10..2027-09-10",
-   "index": "SOFR",
-   "rate": 0.0486,
-   "payoff": 785400.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 72.6168,
+   "amount": 4996035.84,
+   "pv": 4946230.71,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2027-09-10",
-   "period": "2027-09-10..2027-12-10",
-   "index": "SOFR",
-   "rate": 0.028382,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8309.92,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-12-10",
-   "period": "2027-12-10..2028-03-10",
-   "index": "SOFR",
-   "rate": 0.039145,
-   "payoff": 239373.75,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 59123.07,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-03-10",
-   "period": "2028-03-10..2028-06-10",
-   "index": "SOFR",
-   "rate": 0.045049,
-   "payoff": 580329.75,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -4995130.72,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-06-10",
-   "period": "2028-06-10..2028-09-10",
-   "index": "SOFR",
-   "rate": 0.030205,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 69.7116,
+   "amount": 4796158.08,
+   "pv": 4735090.49,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2028-09-10",
-   "period": "2028-09-10..2028-12-10",
-   "index": "SOFR",
-   "rate": 0.024526,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8286.73,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-12-10",
-   "period": "2028-12-10..2029-03-10",
-   "index": "SOFR",
-   "rate": 0.026508,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 58958.03,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2029-03-10",
-   "period": "2029-03-10..2029-06-10",
-   "index": "SOFR",
-   "rate": 0.022605,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-03-05",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -4981208.37,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2029-06-10",
-   "period": "2029-06-10..2029-09-10",
-   "index": "SOFR",
-   "rate": 0.031693,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-03-05",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 69.1889,
+   "amount": 4760196.32,
+   "pv": 4686488.0,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2029-09-10",
-   "period": "2029-09-10..2029-12-10",
-   "index": "SOFR",
-   "rate": 0.026916,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-03-05",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8263.63,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2029-12-10",
-   "period": "2029-12-10..2030-03-10",
-   "index": "SOFR",
-   "rate": 0.042122,
-   "payoff": 411295.5,
-   "status": "Pending"
+   "payDate": "2027-03-05",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 58793.7,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2030-03-10",
-   "period": "2030-03-10..2030-06-10",
-   "index": "SOFR",
-   "rate": 0.023835,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-04-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -4964885.27,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2030-06-10",
-   "period": "2030-06-10..2030-09-10",
-   "index": "SOFR",
-   "rate": 0.028495,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-04-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 71.7083,
+   "amount": 4933531.04,
+   "pv": 4841222.22,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-04-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8236.55,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-04-07",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 58601.04,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-05-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -4950154.86,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-05-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 73.7359,
+   "amount": 5073029.92,
+   "pv": 4963341.37,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-05-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8212.11,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-05-07",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 58427.17,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-06-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -4935017.33,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-06-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 72.2895,
+   "amount": 4973517.6,
+   "pv": 4851100.56,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-06-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8187.0,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-06-07",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 58248.5,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-07-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -4919964.55,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-07-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 69.6105,
+   "amount": 4789202.4,
+   "pv": 4657073.59,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-07-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8162.03,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-07-08",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 58070.84,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-08-06",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 73.54,
+   "amount": -5059552.0,
+   "pv": -4905959.21,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-08-06",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 69.9067,
+   "amount": 4809580.96,
+   "pv": 4663576.54,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-08-06",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.122,
+   "amount": -8393.6,
+   "pv": -8138.8,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-08-06",
+   "leg": 4,
+   "type": "Differential",
+   "rate": 0.868,
+   "amount": 59718.4,
+   "pv": 57905.53,
+   "status": "Fixed"
   }
  ],
- "nextIndex": 9,
+ "nextIndex": 4,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -124795
+   "pnl": -34304
   },
   {
    "date": "2026-09-04",
-   "pnl": -160330
+   "pnl": -44073
   },
   {
    "date": "2026-09-07",
-   "pnl": 55718
+   "pnl": 15316
   },
   {
    "date": "2026-09-08",
-   "pnl": -36016
+   "pnl": -9900
   },
   {
    "date": "2026-09-09",
-   "pnl": 43634
+   "pnl": 11994
   },
   {
    "date": "2026-09-10",
-   "pnl": -104139
+   "pnl": -28626
   },
   {
    "date": "2026-09-11",
-   "pnl": -31261
+   "pnl": -8593
   },
   {
    "date": "2026-09-14",
-   "pnl": 40830
+   "pnl": 11223
   },
   {
    "date": "2026-09-15",
-   "pnl": 180784
+   "pnl": 49695
   },
   {
    "date": "2026-09-16",
-   "pnl": 36651
+   "pnl": 10075
   },
   {
    "date": "2026-09-17",
-   "pnl": 137457
+   "pnl": 37785
   },
   {
    "date": "2026-09-18",
-   "pnl": -60727
+   "pnl": -16693
   },
   {
    "date": "2026-09-21",
-   "pnl": -119307
+   "pnl": -32796
   },
   {
    "date": "2026-09-22",
-   "pnl": -1588
+   "pnl": -436
   },
   {
    "date": "2026-09-23",
-   "pnl": 232194
+   "pnl": 63827
   },
   {
    "date": "2026-09-24",
-   "pnl": -211935
+   "pnl": -58258
   },
   {
    "date": "2026-09-25",
-   "pnl": -817
+   "pnl": -225
   },
   {
    "date": "2026-09-28",
-   "pnl": 11882
+   "pnl": 3266
   },
   {
    "date": "2026-09-29",
-   "pnl": -29870
+   "pnl": -8211
   },
   {
    "date": "2026-09-30",
-   "pnl": -221079
+   "pnl": -60772
   }
  ],
  "execution": {
-  "tradeDate": "2024-06-06",
-  "executionTimestamp": "2024-06-06T14:43:52.171Z",
+  "tradeDate": "2026-06-23",
+  "executionTimestamp": "2026-06-23T14:43:52.171Z",
   "venue": "CME Globex",
   "venueMic": "XCME",
   "executionType": "Electronic",
@@ -378,48 +3385,61 @@
  },
  "lifecycle": {
   "status": "Live",
-  "version": 1,
+  "version": 2,
   "events": [
    {
     "version": 1,
     "event": "New",
     "reason": "Trade captured",
-    "at": "2024-06-06T09:14:00Z",
+    "at": "2026-06-23T09:14:00Z",
     "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-07-30T09:14:00Z",
+    "by": "stp.gateway"
    }
   ],
-  "sourceSystem": "Summit",
-  "createdAt": "2024-06-06T09:14:00Z",
-  "lastModifiedAt": "2024-06-06T09:14:00Z",
-  "lastModifiedBy": "fo.capture",
+  "sourceSystem": "Calypso",
+  "createdAt": "2026-06-23T09:14:00Z",
+  "lastModifiedAt": "2026-07-30T09:14:00Z",
+  "lastModifiedBy": "stp.gateway",
   "timeline": [
    {
-    "date": "2024-06-06",
+    "date": "2026-06-23",
     "event": "Booked",
     "status": "Done",
     "description": "Captured in Endur by TRDR-TBRENNAN: receive fixed Commodity swap"
    },
    {
-    "date": "2024-06-06",
+    "date": "2026-06-23",
     "event": "Confirmed",
     "status": "Matched",
     "description": "Matched on DTCC CTM (DT879256011)"
    },
    {
-    "date": "2026-09-10",
+    "date": "2026-07-30",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by stp.gateway)"
+   },
+   {
+    "date": "2026-09-08",
     "event": "Cash settled",
     "status": "Settled",
     "description": "USD payment settled",
-    "amount": 631149.75
+    "amount": 59718.4
    },
    {
-    "date": "2026-12-10",
+    "date": "2026-10-07",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
    },
    {
-    "date": "2034-07-03",
+    "date": "2027-07-31",
     "event": "Maturity",
     "status": "Scheduled",
     "description": "Final payment and close-out"
@@ -430,7 +3450,7 @@
   "status": "Confirmed",
   "method": "DTCC CTM",
   "platformId": "DT879256011",
-  "matched": "2024-06-06 12:49",
+  "matched": "2026-06-23 12:49",
   "affirmedBy": "Counterparty ops",
   "breaks": []
  },
@@ -464,8 +3484,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": 4646776,
-  "cleanPv": 4646776.0,
+  "npv": -1277334,
+  "cleanPv": -1277334.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Multi-curve OIS discounting",
@@ -479,36 +3499,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": 4766248,
+   "pnl": -1263094,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": -20121
+   "pnl": -2398
   },
   {
    "step": "Roll-down",
-   "pnl": 12229
+   "pnl": 1458
   },
   {
    "step": "Rates delta",
-   "pnl": -106432
+   "pnl": -12686
   },
   {
    "step": "FX delta",
-   "pnl": 52
+   "pnl": 6
   },
   {
    "step": "Vol (vega)",
-   "pnl": -1142
+   "pnl": -136
   },
   {
    "step": "Theta",
-   "pnl": 2291
+   "pnl": 273
   },
   {
    "step": "Unexplained",
-   "pnl": -6349
+   "pnl": -757
   }
  ],
  "_meta": {
@@ -516,7 +3536,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 11604
+   "mtm": 4865,
+   "legs.1.cashflows.2.fixings.20.rate": 0.2894
   }
  }
 }

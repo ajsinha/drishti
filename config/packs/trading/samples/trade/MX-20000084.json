@@ -13,9 +13,9 @@
  "maturityDate": "2026-10-07",
  "currency": "EUR",
  "notional": 182000000.0,
- "mtm": 3578990,
+ "mtm": 0,
  "mtmCurrency": "USD",
- "pnl1d": -309785,
+ "pnl1d": 0,
  "counterparty": {
   "id": "CP-ALDERSHOT",
   "name": "Aldershot Pension Trust"
@@ -34,173 +34,279 @@
   "premium": 68516.0
  },
  "risk": {
-  "dv01": 20075,
-  "vega": 393846
+  "dv01": 21018,
+  "vega": 601946
  },
  "sensitivities": [
   {
    "bucket": "3M",
-   "dv01": 3346,
-   "vega": 65641
+   "dv01": 3503,
+   "vega": 100324
   },
   {
    "bucket": "6M",
-   "dv01": 6692,
-   "vega": 131282
+   "dv01": 7006,
+   "vega": 200649
   },
   {
    "bucket": "1Y",
-   "dv01": 10038,
-   "vega": 196923
+   "dv01": 10509,
+   "vega": 300973
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Buy cap 2.8856% on TERM-ESTR-6M",
+   "payer": false,
+   "type": "CAPLETS",
+   "currency": "EUR",
+   "notional": 182000000.0,
+   "index": "TERM-ESTR-6M",
+   "spread": 0.0,
+   "strike": 0.028856,
+   "dayCount": "ACT/360",
+   "frequency": "Semi-annual",
+   "resetFrequency": "Semi-annual",
+   "businessDayConvention": "Mod. following",
+   "calendar": "EUTA",
+   "paymentLag": "2 business days",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Caplet",
+     "periodStart": "2024-10-21",
+     "periodEnd": "2025-04-07",
+     "fixingDate": "2024-10-17",
+     "payDate": "2025-04-09",
+     "notional": 182000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.028856,
+     "rate": 0.01976,
+     "accrualFactor": 0.466667,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2024-10-17",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.01976,
+       "source": "Refinitiv ESTR term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Caplet",
+     "periodStart": "2025-04-07",
+     "periodEnd": "2025-10-07",
+     "fixingDate": "2025-04-03",
+     "payDate": "2025-10-09",
+     "notional": 182000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.028856,
+     "rate": 0.020615,
+     "accrualFactor": 0.508333,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-04-03",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.020615,
+       "source": "Refinitiv ESTR term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Caplet",
+     "periodStart": "2025-10-07",
+     "periodEnd": "2026-04-07",
+     "fixingDate": "2025-10-03",
+     "payDate": "2026-04-09",
+     "notional": 182000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.028856,
+     "rate": 0.019961,
+     "accrualFactor": 0.505556,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-10-03",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.019961,
+       "source": "Refinitiv ESTR term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Caplet",
+     "periodStart": "2026-04-07",
+     "periodEnd": "2026-10-07",
+     "fixingDate": "2026-04-01",
+     "payDate": "2026-10-09",
+     "notional": 182000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.028856,
+     "rate": 0.019988,
+     "accrualFactor": 0.508333,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 0.999524,
+     "pv": 0.0,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-04-01",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.019988,
+       "source": "Refinitiv ESTR term",
+       "status": "Fixed"
+      }
+     ]
+    }
+   ],
+   "rateType": "Option",
+   "payReceive": "Receive",
+   "legId": "MX-20000084-L1",
+   "pv": 0.0,
+   "projectedFlows": 0
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2025-01-21",
-   "period": "2025-01-21..2025-04-21",
-   "index": "ESTR",
-   "rate": 0.024925,
+   "fixingDate": "2024-10-17",
+   "period": "2024-10-21..2025-04-07",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.01976,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-04-21",
-   "period": "2025-04-21..2025-07-21",
-   "index": "ESTR",
-   "rate": 0.044599,
-   "payoff": 436754.5,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2025-07-21",
-   "period": "2025-07-21..2025-10-21",
-   "index": "ESTR",
-   "rate": 0.04278,
-   "payoff": 353990.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2025-10-21",
-   "period": "2025-10-21..2026-01-21",
-   "index": "ESTR",
-   "rate": 0.030379,
+   "fixingDate": "2025-04-03",
+   "period": "2025-04-07..2025-10-07",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.020615,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-01-21",
-   "period": "2026-01-21..2026-04-21",
-   "index": "ESTR",
-   "rate": 0.027716,
+   "fixingDate": "2025-10-03",
+   "period": "2025-10-07..2026-04-07",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.019961,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-04-21",
-   "period": "2026-04-21..2026-07-21",
-   "index": "ESTR",
-   "rate": 0.039535,
-   "payoff": 206342.5,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-07-21",
-   "period": "2026-07-21..2026-10-21",
-   "index": "ESTR",
-   "rate": 0.048779,
-   "payoff": 626944.5,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-10-07",
-   "period": "2026-10-07..2027-01-07",
-   "index": "ESTR",
-   "rate": 0.031192,
+   "fixingDate": "2026-04-01",
+   "period": "2026-04-07..2026-10-07",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.019988,
    "payoff": 0.0,
-   "status": "Pending"
+   "status": "Fixed"
   }
  ],
- "nextIndex": 7,
+ "nextIndex": -1,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -142387
+   "pnl": -3978
   },
   {
    "date": "2026-09-04",
-   "pnl": 43593
+   "pnl": 1218
   },
   {
    "date": "2026-09-07",
-   "pnl": 64113
+   "pnl": 1791
   },
   {
    "date": "2026-09-08",
-   "pnl": -117738
+   "pnl": -3290
   },
   {
    "date": "2026-09-09",
-   "pnl": 29000
+   "pnl": 810
   },
   {
    "date": "2026-09-10",
-   "pnl": -33328
+   "pnl": -931
   },
   {
    "date": "2026-09-11",
-   "pnl": -30348
+   "pnl": -848
   },
   {
    "date": "2026-09-14",
-   "pnl": -145002
+   "pnl": -4051
   },
   {
    "date": "2026-09-15",
-   "pnl": 64627
+   "pnl": 1806
   },
   {
    "date": "2026-09-16",
-   "pnl": -99802
+   "pnl": -2789
   },
   {
    "date": "2026-09-17",
-   "pnl": -187942
+   "pnl": -5251
   },
   {
    "date": "2026-09-18",
-   "pnl": -132106
+   "pnl": -3691
   },
   {
    "date": "2026-09-21",
-   "pnl": 112802
+   "pnl": 3152
   },
   {
    "date": "2026-09-22",
-   "pnl": -98285
+   "pnl": -2746
   },
   {
    "date": "2026-09-23",
-   "pnl": 52945
+   "pnl": 1479
   },
   {
    "date": "2026-09-24",
-   "pnl": -18894
+   "pnl": -528
   },
   {
    "date": "2026-09-25",
-   "pnl": -180444
+   "pnl": -5042
   },
   {
    "date": "2026-09-28",
-   "pnl": 82039
+   "pnl": 2292
   },
   {
    "date": "2026-09-29",
-   "pnl": 54221
+   "pnl": 1515
   },
   {
    "date": "2026-09-30",
-   "pnl": 67785
+   "pnl": 1894
   }
  ],
  "execution": {
@@ -215,7 +321,7 @@
  },
  "lifecycle": {
   "status": "Live",
-  "version": 2,
+  "version": 1,
   "events": [
    {
     "version": 1,
@@ -223,19 +329,12 @@
     "reason": "Trade captured",
     "at": "2024-10-17T13:00:00Z",
     "by": "mo.amend"
-   },
-   {
-    "version": 2,
-    "event": "Amendment",
-    "reason": "Notional corrected",
-    "at": "2025-06-16T13:00:00Z",
-    "by": "fo.capture"
    }
   ],
-  "sourceSystem": "Murex",
+  "sourceSystem": "Endur",
   "createdAt": "2024-10-17T13:00:00Z",
-  "lastModifiedAt": "2025-06-16T13:00:00Z",
-  "lastModifiedBy": "fo.capture",
+  "lastModifiedAt": "2024-10-17T13:00:00Z",
+  "lastModifiedBy": "mo.amend",
   "timeline": [
    {
     "date": "2024-10-17",
@@ -250,23 +349,11 @@
     "description": "Matched on MarkitWire (MA182065966)"
    },
    {
-    "date": "2025-06-16",
-    "event": "Amended",
-    "status": "Done",
-    "description": "Notional corrected (version 2, by fo.capture)"
-   },
-   {
-    "date": "2026-07-21",
+    "date": "2026-04-01",
     "event": "Cash settled",
     "status": "Settled",
     "description": "EUR payment settled",
-    "amount": 626944.5
-   },
-   {
-    "date": "2026-10-07",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
+    "amount": 0.0
    },
    {
     "date": "2026-10-07",
@@ -314,8 +401,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": 3578990,
-  "cleanPv": 3578990.0,
+  "npv": 0,
+  "cleanPv": 0.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Black / Bachelier",
@@ -330,36 +417,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": 3888775,
+   "pnl": 0,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": 21430
+   "pnl": 69
   },
   {
    "step": "Roll-down",
-   "pnl": 70791
+   "pnl": 229
   },
   {
    "step": "Rates delta",
-   "pnl": -309826
+   "pnl": 43
   },
   {
    "step": "FX delta",
-   "pnl": -34683
+   "pnl": -112
   },
   {
    "step": "Vol (vega)",
-   "pnl": -3017
+   "pnl": -10
   },
   {
    "step": "Theta",
-   "pnl": -67913
+   "pnl": -219
   },
   {
    "step": "Unexplained",
-   "pnl": 13433
+   "pnl": 0
   }
  ],
  "_meta": {
@@ -367,7 +454,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 8978
+   "mtm": 1820
   }
  }
 }

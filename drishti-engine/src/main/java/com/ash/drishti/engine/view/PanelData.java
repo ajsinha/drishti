@@ -83,7 +83,21 @@ public sealed interface PanelData {
      */
     record Tabs(String layout, List<Tab> tabs) implements PanelData {}
 
-    record Tab(String title, List<Cell> fields) {}
+    /**
+     * @param title the tab's heading
+     * @param fields the tab's own fields (the tabs panel's {@code body})
+     * @param panels the panels inside the tab ({@code panels:}), bound with {@code @} the tab's element; absent without any
+     */
+    record Tab(String title, List<Cell> fields, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ViewModel.PanelView> panels) {
+
+        public Tab {
+            panels = panels == null ? List.of() : panels;
+        }
+
+        public Tab(String title, List<Cell> fields) {
+            this(title, fields, List.of());
+        }
+    }
 
     /**
      * {@code line} and {@code area}.

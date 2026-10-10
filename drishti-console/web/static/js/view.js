@@ -53,7 +53,8 @@
       h.addEventListener('click', function () {
         heads.forEach(function (x, k) {
           x.classList.toggle('on', k === i); x.setAttribute('aria-selected', k === i ? 'true' : 'false');
-          root.getElementById(x.getAttribute('aria-controls')).hidden = k !== i;
+          var pane = box.querySelector('[id="' + x.getAttribute('aria-controls') + '"]');   // root may be one panel (a live repaint), which has no getElementById
+          if (pane) { pane.hidden = k !== i; }
         });
       });
     });

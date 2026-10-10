@@ -8,14 +8,14 @@
  "family": "swap",
  "status": "Live",
  "direction": "Receive fixed",
- "tradeDate": "2024-10-25",
- "effectiveDate": "2024-10-28",
- "maturityDate": "2027-01-29",
+ "tradeDate": "2026-07-15",
+ "effectiveDate": "2026-08-03",
+ "maturityDate": "2027-04-30",
  "currency": "USD",
  "notional": 57000000.0,
- "mtm": 48886,
+ "mtm": 1494618,
  "mtmCurrency": "USD",
- "pnl1d": -2645,
+ "pnl1d": -115902,
  "counterparty": {
   "id": "CP-KESTREL",
   "name": "Kestrel Global Macro Fund"
@@ -28,235 +28,2343 @@
  "commodityCurve": "CMDC-SOY",
  "discountCurve": "CRV-USD-OIS",
  "terms": {
-  "fixedPrice": 2375.67,
-  "quantityPerPeriod": 95611,
+  "fixedPrice": 1057.08,
+  "quantityPerPeriod": 4700.0,
   "averaging": "Calendar-month"
  },
  "risk": {
-  "delta": -383008
+  "delta": -330145
  },
  "sensitivities": [
   {
    "bucket": "Spot",
-   "delta": -18238
+   "delta": -15721
   },
   {
    "bucket": "1M",
-   "delta": -36477
+   "delta": -31442
   },
   {
    "bucket": "3M",
-   "delta": -54715
+   "delta": -47164
   },
   {
    "bucket": "6M",
-   "delta": -72954
+   "delta": -62885
   },
   {
    "bucket": "1Y",
-   "delta": -91192
+   "delta": -78606
   },
   {
    "bucket": "2Y",
-   "delta": -109431
+   "delta": -94327
   }
  ],
  "legs": [
   {
    "leg": 1,
-   "label": "Receive performance",
-   "payReceive": "Receive",
-   "rateType": "Performance",
-   "index": "SOY",
-   "rate": null,
+   "label": "Receive fixed 1,057.08 USc/bu",
+   "payer": false,
+   "type": "FIXED",
+   "notional": 4968276,
+   "rate": 1057.08,
+   "index": null,
    "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
    "currency": "USD",
-   "notional": 57000000.0
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 4700.0,
+   "quantityUnit": "bu",
+   "priceUnit": "USc/bu",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Fixed price",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "type": "Fixed price",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 0.999298,
+     "pv": 4964787.62,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Fixed price",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 0.996295,
+     "pv": 4949867.62,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Fixed price",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 0.993205,
+     "pv": 4934518.46,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Fixed price",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 0.990031,
+     "pv": 4918747.6,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Fixed price",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 0.987267,
+     "pv": 4905016.9,
+     "status": "Fixed"
+    },
+    {
+     "n": 7,
+     "type": "Fixed price",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 0.984516,
+     "pv": 4891345.72,
+     "status": "Fixed"
+    },
+    {
+     "n": 8,
+     "type": "Fixed price",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 0.98129,
+     "pv": 4875317.09,
+     "status": "Fixed"
+    },
+    {
+     "n": 9,
+     "type": "Fixed price",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 4700.0,
+     "rate": 1057.08,
+     "accrualFactor": 1.0,
+     "amount": 4968276.0,
+     "discountFactor": 0.978378,
+     "pv": 4860852.43,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Fixed",
+   "legId": "END-1000017-L1",
+   "payReceive": "Receive",
+   "pv": 39300453.44,
+   "projectedFlows": 0
   },
   {
    "leg": 2,
-   "label": "Pay SOFR + spread",
-   "payReceive": "Pay",
-   "rateType": "Float",
-   "index": "SOFR",
-   "rate": 0.036215,
+   "label": "Pay CBOT Soybeans settle monthly average",
+   "payer": true,
+   "type": "FLOAT",
+   "notional": 4756400,
+   "index": "CBOT Soybeans settle",
    "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
+   "averaging": "Calendar-month",
+   "resetFrequency": "Daily",
    "currency": "USD",
-   "notional": 57000000.0
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 4700.0,
+   "quantityUnit": "bu",
+   "priceUnit": "USc/bu",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Index average",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 4700.0,
+     "rate": 999.0281,
+     "accrualFactor": 1.0,
+     "amount": -4695432.07,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-08-03",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1017.93,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-04",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1016.44,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-05",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1014.93,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-06",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1013.42,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-07",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1011.9,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-10",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1007.35,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-11",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1005.84,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-12",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1004.34,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-13",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1002.86,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-14",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1001.39,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-17",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 997.1,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-18",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 995.72,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-19",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 994.37,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-20",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 993.05,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-21",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 991.76,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-24",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 988.13,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-25",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 987.01,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-26",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 985.93,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-27",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 984.9,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-28",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 983.92,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-31",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 981.3,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Index average",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 4700.0,
+     "rate": 979.1786,
+     "accrualFactor": 1.0,
+     "amount": -4602139.42,
+     "discountFactor": 0.999298,
+     "pv": -4598908.11,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-01",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 980.53,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-02",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.83,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-03",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.18,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-04",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 978.6,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-08",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 976.89,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-09",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 976.63,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-10",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 976.43,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-11",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 976.3,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-14",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 976.31,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-15",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 976.44,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-16",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 976.64,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-17",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 976.91,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-18",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 977.25,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-21",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 978.64,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-22",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.23,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-23",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.88,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-24",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 980.59,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-25",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 981.37,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-28",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 984.02,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-29",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 985.02,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-30",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 986.06,
+       "source": "CBOT settlement",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Index average",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 4700.0,
+     "rate": 1008.5771,
+     "accrualFactor": 1.0,
+     "amount": -4740312.37,
+     "discountFactor": 0.996295,
+     "pv": -4722748.64,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-10-01",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 987.15,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-02",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 988.29,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-05",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 991.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-06",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 993.28,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-07",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 994.62,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-08",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 995.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-09",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 997.4,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-13",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1003.27,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-14",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1004.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-15",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1006.32,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-16",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1007.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-19",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1012.54,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-20",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1014.1,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-21",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1015.65,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-22",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1017.2,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-23",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1018.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-26",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1023.28,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-27",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1024.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-28",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1026.22,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-29",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1027.64,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-30",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1029.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Index average",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 4700.0,
+     "rate": 1043.4226,
+     "accrualFactor": 1.0,
+     "amount": -4904086.22,
+     "discountFactor": 0.993205,
+     "pv": -4870764.83,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-11-02",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1033.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-03",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1034.31,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-04",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1035.52,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-05",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1036.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-06",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1037.83,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-09",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1040.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-10",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1041.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-12",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1043.55,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-13",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1044.31,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-16",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1046.23,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-17",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1046.75,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-18",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1047.2,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-19",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1047.59,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-20",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1047.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-23",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1048.48,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-24",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1048.53,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-25",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1048.52,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-27",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1048.3,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-30",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1047.47,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 5,
+     "type": "Index average",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 4700.0,
+     "rate": 1032.87,
+     "accrualFactor": 1.0,
+     "amount": -4854489.0,
+     "discountFactor": 0.990031,
+     "pv": -4806094.94,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-12-01",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1047.06,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-02",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1046.59,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-03",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1046.06,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-04",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1045.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-07",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1043.31,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-08",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1042.48,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-09",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1041.6,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-10",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1040.66,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-11",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1039.67,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-14",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1036.4,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-15",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1035.23,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-16",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1034.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-17",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1032.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-18",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1031.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-21",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1027.39,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-22",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1025.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-23",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1024.55,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-24",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1023.09,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-28",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1017.12,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-29",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1015.6,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-30",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1014.09,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-31",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1012.57,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 6,
+     "type": "Index average",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 4700.0,
+     "rate": 991.5316,
+     "accrualFactor": 1.0,
+     "amount": -4660198.52,
+     "discountFactor": 0.987267,
+     "pv": -4600862.05,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-01-04",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1006.54,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-05",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1005.06,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-06",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1003.6,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-07",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1002.16,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-08",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1000.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-11",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 996.64,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-12",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 995.34,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-13",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 994.07,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-14",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 992.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-15",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 991.65,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-19",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 987.34,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-20",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 986.39,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-21",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 985.48,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-22",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 984.63,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-25",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 982.43,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-26",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 981.82,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-27",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 981.26,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-28",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 980.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-29",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 980.34,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 7,
+     "type": "Index average",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 4700.0,
+     "rate": 984.1121,
+     "accrualFactor": 1.0,
+     "amount": -4625326.87,
+     "discountFactor": 0.984516,
+     "pv": -4553706.91,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-02-01",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.45,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-02",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.28,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-03",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.19,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-04",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.15,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-05",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.19,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-08",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.69,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-09",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 979.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-10",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 980.36,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-11",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 980.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-12",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 981.29,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-16",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 983.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-17",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 984.69,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-18",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 985.55,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-19",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 986.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-22",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 989.51,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-23",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 990.63,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-24",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 991.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-25",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 992.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-26",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 994.24,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 8,
+     "type": "Index average",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 4700.0,
+     "rate": 1019.9365,
+     "accrualFactor": 1.0,
+     "amount": -4793701.55,
+     "discountFactor": 0.98129,
+     "pv": -4704009.01,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-03-01",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 998.21,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-02",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 999.6,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-03",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1001.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-04",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1002.47,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-05",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1003.94,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-08",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1008.46,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-09",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1010.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-10",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1011.55,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-11",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1013.1,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-12",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1014.66,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-15",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1019.33,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-16",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1020.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-17",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1022.41,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-18",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1023.94,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-19",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1025.44,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-22",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1029.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-23",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1031.25,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-24",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1032.64,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-25",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1033.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-26",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1035.31,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-29",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1039.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-30",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1040.18,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-31",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1041.29,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 9,
+     "type": "Index average",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 4700.0,
+     "rate": 1048.7845,
+     "accrualFactor": 1.0,
+     "amount": -4929287.15,
+     "discountFactor": 0.978378,
+     "pv": -4822706.59,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-04-01",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1042.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-02",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1043.36,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-05",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1046.07,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-06",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1046.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-07",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1047.59,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-08",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1048.26,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-09",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1048.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-12",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1050.32,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-13",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1050.68,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-14",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1050.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-15",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1051.19,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-16",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1051.35,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-19",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1051.42,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-20",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1051.31,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-21",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1051.13,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-22",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1050.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-23",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1050.58,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-26",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1049.26,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-27",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1048.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-28",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1048.07,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-29",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1047.39,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-30",
+       "index": "CBOT Soybeans settle",
+       "tenor": "1D",
+       "rate": 1046.64,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Float",
+   "legId": "END-1000017-L2",
+   "payReceive": "Pay",
+   "pv": -37679801.08,
+   "projectedFlows": 7
+  },
+  {
+   "leg": 3,
+   "label": "Pay fee 3.390 USc/bu",
+   "payer": true,
+   "type": "FEE",
+   "notional": 15933,
+   "rate": 3.39,
+   "index": null,
+   "spread": 0.0,
+   "currency": "USD",
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 4700.0,
+   "quantityUnit": "bu",
+   "priceUnit": "USc/bu",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Fee",
+     "periodStart": "2026-08-01",
+     "periodEnd": "2026-08-31",
+     "payDate": "2026-09-08",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled"
+    },
+    {
+     "n": 2,
+     "type": "Fee",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 0.999298,
+     "pv": -15921.81,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Fee",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 0.996295,
+     "pv": -15873.97,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Fee",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 0.993205,
+     "pv": -15824.74,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Fee",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 0.990031,
+     "pv": -15774.17,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Fee",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 0.987267,
+     "pv": -15730.13,
+     "status": "Fixed"
+    },
+    {
+     "n": 7,
+     "type": "Fee",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 0.984516,
+     "pv": -15686.29,
+     "status": "Fixed"
+    },
+    {
+     "n": 8,
+     "type": "Fee",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 0.98129,
+     "pv": -15634.89,
+     "status": "Fixed"
+    },
+    {
+     "n": 9,
+     "type": "Fee",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 4700.0,
+     "rate": 3.39,
+     "accrualFactor": 1.0,
+     "amount": -15933.0,
+     "discountFactor": 0.978378,
+     "pv": -15588.5,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Fee",
+   "legId": "END-1000017-L3",
+   "payReceive": "Pay",
+   "pv": -126034.5,
+   "projectedFlows": 0
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2025-01-28",
-   "period": "2025-01-28..2025-04-28",
-   "index": "SOFR",
-   "rate": 0.028338,
-   "payoff": 0.0,
+   "payDate": "2026-09-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 999.0281,
+   "amount": -4695432.07,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-09-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": 0.0,
+   "status": "Settled"
+  },
+  {
+   "payDate": "2026-10-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 4964787.62,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-04-28",
-   "period": "2025-04-28..2025-07-28",
-   "index": "SOFR",
-   "rate": 0.031267,
-   "payoff": 0.0,
+   "payDate": "2026-10-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 979.1786,
+   "amount": -4602139.42,
+   "pv": -4598908.11,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-07-28",
-   "period": "2025-07-28..2025-10-28",
-   "index": "SOFR",
-   "rate": 0.042808,
-   "payoff": 111264.0,
+   "payDate": "2026-10-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": -15921.81,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-10-28",
-   "period": "2025-10-28..2026-01-28",
-   "index": "SOFR",
-   "rate": 0.03885,
-   "payoff": 54862.5,
+   "payDate": "2026-11-06",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 4949867.62,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-01-28",
-   "period": "2026-01-28..2026-04-28",
-   "index": "SOFR",
-   "rate": 0.031455,
-   "payoff": 0.0,
+   "payDate": "2026-11-06",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 1008.5771,
+   "amount": -4740312.37,
+   "pv": -4722748.64,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2026-11-06",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": -15873.97,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-04-28",
-   "period": "2026-04-28..2026-07-28",
-   "index": "SOFR",
-   "rate": 0.024149,
-   "payoff": 0.0,
+   "payDate": "2026-12-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 4934518.46,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-07-28",
-   "period": "2026-07-28..2026-10-28",
-   "index": "SOFR",
-   "rate": 0.026165,
-   "payoff": 0.0,
+   "payDate": "2026-12-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 1043.4226,
+   "amount": -4904086.22,
+   "pv": -4870764.83,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2026-12-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": -15824.74,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-10-28",
-   "period": "2026-10-28..2027-01-28",
-   "index": "SOFR",
-   "rate": 0.027199,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 4918747.6,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-01-28",
-   "period": "2027-01-28..2027-04-28",
-   "index": "SOFR",
-   "rate": 0.049277,
-   "payoff": 203447.25,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 1032.87,
+   "amount": -4854489.0,
+   "pv": -4806094.94,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2027-01-29",
-   "period": "2027-01-29..2027-04-29",
-   "index": "SOFR",
-   "rate": 0.04382,
-   "payoff": 125685.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": -15774.17,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-02-05",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 4905016.9,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-02-05",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 991.5316,
+   "amount": -4660198.52,
+   "pv": -4600862.05,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-02-05",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": -15730.13,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-03-05",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 4891345.72,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-03-05",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 984.1121,
+   "amount": -4625326.87,
+   "pv": -4553706.91,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-03-05",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": -15686.29,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-04-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 4875317.09,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-04-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 1019.9365,
+   "amount": -4793701.55,
+   "pv": -4704009.01,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-04-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": -15634.89,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-05-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 1057.08,
+   "amount": 4968276.0,
+   "pv": 4860852.43,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-05-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 1048.7845,
+   "amount": -4929287.15,
+   "pv": -4822706.59,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-05-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 3.39,
+   "amount": -15933.0,
+   "pv": -15588.5,
+   "status": "Fixed"
   }
  ],
- "nextIndex": 7,
+ "nextIndex": 3,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -5837
+   "pnl": -87235
   },
   {
    "date": "2026-09-04",
-   "pnl": 1292
+   "pnl": 19312
   },
   {
    "date": "2026-09-07",
-   "pnl": -2538
+   "pnl": -37929
   },
   {
    "date": "2026-09-08",
-   "pnl": -2293
+   "pnl": -34267
   },
   {
    "date": "2026-09-09",
-   "pnl": 557
+   "pnl": 8321
   },
   {
    "date": "2026-09-10",
-   "pnl": 2748
+   "pnl": 41076
   },
   {
    "date": "2026-09-11",
-   "pnl": 508
+   "pnl": 7587
   },
   {
    "date": "2026-09-14",
-   "pnl": -4707
+   "pnl": -70357
   },
   {
    "date": "2026-09-15",
-   "pnl": -743
+   "pnl": -11110
   },
   {
    "date": "2026-09-16",
-   "pnl": 1542
+   "pnl": 23040
   },
   {
    "date": "2026-09-17",
-   "pnl": 2253
+   "pnl": 33678
   },
   {
    "date": "2026-09-18",
-   "pnl": 3127
+   "pnl": 46743
   },
   {
    "date": "2026-09-21",
-   "pnl": 1601
+   "pnl": 23922
   },
   {
    "date": "2026-09-22",
-   "pnl": 1701
+   "pnl": 25417
   },
   {
    "date": "2026-09-23",
-   "pnl": 1422
+   "pnl": 21247
   },
   {
    "date": "2026-09-24",
-   "pnl": -1189
+   "pnl": -17770
   },
   {
    "date": "2026-09-25",
-   "pnl": -5739
+   "pnl": -85780
   },
   {
    "date": "2026-09-28",
-   "pnl": -1231
+   "pnl": -18406
   },
   {
    "date": "2026-09-29",
-   "pnl": -384
+   "pnl": -5741
   },
   {
    "date": "2026-09-30",
-   "pnl": 955
+   "pnl": 14279
   }
  ],
  "execution": {
-  "tradeDate": "2024-10-25",
-  "executionTimestamp": "2024-10-25T11:59:23.173Z",
+  "tradeDate": "2026-07-15",
+  "executionTimestamp": "2026-07-15T11:59:23.173Z",
   "venue": "Voice",
   "venueMic": "XOFF",
   "executionType": "Voice",
@@ -272,42 +2380,42 @@
     "version": 1,
     "event": "New",
     "reason": "Trade captured",
-    "at": "2024-10-25T09:05:00Z",
+    "at": "2026-07-15T09:05:00Z",
     "by": "mo.amend"
    }
   ],
   "sourceSystem": "Endur",
-  "createdAt": "2024-10-25T09:05:00Z",
-  "lastModifiedAt": "2024-10-25T09:05:00Z",
+  "createdAt": "2026-07-15T09:05:00Z",
+  "lastModifiedAt": "2026-07-15T09:05:00Z",
   "lastModifiedBy": "mo.amend",
   "timeline": [
    {
-    "date": "2024-10-25",
+    "date": "2026-07-15",
     "event": "Booked",
     "status": "Done",
     "description": "Captured in Endur by TRDR-FROSSI: receive fixed Commodity swap"
    },
    {
-    "date": "2024-10-25",
+    "date": "2026-07-15",
     "event": "Confirmed",
     "status": "Matched",
     "description": "Matched on DTCC CTM (DT954197736)"
    },
    {
-    "date": "2026-07-28",
+    "date": "2026-09-08",
     "event": "Cash settled",
     "status": "Settled",
     "description": "USD payment settled",
-    "amount": 0.0
+    "amount": -15933.0
    },
    {
-    "date": "2026-10-28",
+    "date": "2026-10-07",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
    },
    {
-    "date": "2027-01-29",
+    "date": "2027-04-30",
     "event": "Maturity",
     "status": "Scheduled",
     "description": "Final payment and close-out"
@@ -318,7 +2426,7 @@
   "status": "Confirmed",
   "method": "DTCC CTM",
   "platformId": "DT954197736",
-  "matched": "2024-10-25 12:08",
+  "matched": "2026-07-15 12:08",
   "affirmedBy": "Counterparty ops",
   "breaks": []
  },
@@ -352,8 +2460,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": 48886,
-  "cleanPv": 48886.0,
+  "npv": 1494618,
+  "cleanPv": 1494618.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Multi-curve OIS discounting",
@@ -367,36 +2475,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": 51531,
+   "pnl": 1610520,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": -787
+   "pnl": -34489
   },
   {
    "step": "Roll-down",
-   "pnl": 205
+   "pnl": 8974
   },
   {
    "step": "Rates delta",
-   "pnl": -2472
+   "pnl": -108280
   },
   {
    "step": "FX delta",
-   "pnl": 191
+   "pnl": 8376
   },
   {
    "step": "Vol (vega)",
-   "pnl": 30
+   "pnl": 1293
   },
   {
    "step": "Theta",
-   "pnl": 82
+   "pnl": 3594
   },
   {
    "step": "Unexplained",
-   "pnl": 106
+   "pnl": 4630
   }
  ],
  "_meta": {
@@ -404,7 +2512,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 668
+   "mtm": 3559,
+   "legs.1.cashflows.2.fixings.20.rate": 4.11616
   }
  }
 }

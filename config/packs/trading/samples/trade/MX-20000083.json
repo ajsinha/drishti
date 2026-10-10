@@ -13,9 +13,9 @@
  "maturityDate": "2027-09-09",
  "currency": "EUR",
  "notional": 158000000.0,
- "mtm": 1821498,
+ "mtm": 3,
  "mtmCurrency": "USD",
- "pnl1d": -52792,
+ "pnl1d": 0,
  "counterparty": {
   "id": "CP-NORTHBRIDGE",
   "name": "Northbridge Capital LLP"
@@ -34,194 +34,320 @@
   "premium": 1155760.0
  },
  "risk": {
-  "dv01": 30378,
-  "vega": 537514
+  "dv01": 33381,
+  "vega": 484430
  },
  "sensitivities": [
   {
    "bucket": "3M",
-   "dv01": 3038,
-   "vega": 53751
+   "dv01": 3338,
+   "vega": 48443
   },
   {
    "bucket": "6M",
-   "dv01": 6076,
-   "vega": 107503
+   "dv01": 6676,
+   "vega": 96886
   },
   {
    "bucket": "1Y",
-   "dv01": 9113,
-   "vega": 161254
+   "dv01": 10014,
+   "vega": 145329
   },
   {
    "bucket": "2Y",
-   "dv01": 12151,
-   "vega": 215006
+   "dv01": 13352,
+   "vega": 193772
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Buy cap 4.2846% on TERM-ESTR-6M",
+   "payer": false,
+   "type": "CAPLETS",
+   "currency": "EUR",
+   "notional": 158000000.0,
+   "index": "TERM-ESTR-6M",
+   "spread": 0.0,
+   "strike": 0.042846,
+   "dayCount": "ACT/360",
+   "frequency": "Semi-annual",
+   "resetFrequency": "Semi-annual",
+   "businessDayConvention": "Mod. following",
+   "calendar": "EUTA",
+   "paymentLag": "2 business days",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Caplet",
+     "periodStart": "2025-05-30",
+     "periodEnd": "2025-09-09",
+     "fixingDate": "2025-05-28",
+     "payDate": "2025-09-11",
+     "notional": 158000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.042846,
+     "rate": 0.020407,
+     "accrualFactor": 0.283333,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-05-28",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.020407,
+       "source": "Refinitiv ESTR term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Caplet",
+     "periodStart": "2025-09-09",
+     "periodEnd": "2026-03-09",
+     "fixingDate": "2025-09-05",
+     "payDate": "2026-03-11",
+     "notional": 158000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.042846,
+     "rate": 0.020016,
+     "accrualFactor": 0.502778,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-09-05",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.020016,
+       "source": "Refinitiv ESTR term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Caplet",
+     "periodStart": "2026-03-09",
+     "periodEnd": "2026-09-09",
+     "fixingDate": "2026-03-05",
+     "payDate": "2026-09-11",
+     "notional": 158000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.042846,
+     "rate": 0.020553,
+     "accrualFactor": 0.511111,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-03-05",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.020553,
+       "source": "Refinitiv ESTR term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Caplet",
+     "periodStart": "2026-09-09",
+     "periodEnd": "2027-03-09",
+     "fixingDate": "2026-09-07",
+     "payDate": "2027-03-11",
+     "notional": 158000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.042846,
+     "rate": 0.019728,
+     "accrualFactor": 0.502778,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 0.991328,
+     "pv": 0.0,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-07",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.019728,
+       "source": "Refinitiv ESTR term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 5,
+     "type": "Caplet",
+     "periodStart": "2027-03-09",
+     "periodEnd": "2027-09-09",
+     "fixingDate": "2027-03-05",
+     "payDate": "2027-09-13",
+     "notional": 158000000.0,
+     "index": "TERM-ESTR-6M",
+     "strike": 0.042846,
+     "rate": 0.019794,
+     "accrualFactor": 0.511111,
+     "volatilityBp": 88.0,
+     "amount": 3.22,
+     "discountFactor": 0.98129,
+     "pv": 3.16,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-03-05",
+       "index": "TERM-ESTR-6M",
+       "tenor": "6M",
+       "rate": 0.019794,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Option",
+   "payReceive": "Receive",
+   "legId": "MX-20000083-L1",
+   "pv": 3.16,
+   "projectedFlows": 1
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2025-08-30",
-   "period": "2025-08-30..2025-11-30",
-   "index": "ESTR",
-   "rate": 0.024816,
+   "fixingDate": "2025-05-28",
+   "period": "2025-05-30..2025-09-09",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.020407,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-11-30",
-   "period": "2025-11-30..2026-02-28",
-   "index": "ESTR",
-   "rate": 0.042797,
-   "payoff": 307981.5,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-02-28",
-   "period": "2026-02-28..2026-05-28",
-   "index": "ESTR",
-   "rate": 0.040604,
-   "payoff": 221358.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-05-28",
-   "period": "2026-05-28..2026-08-28",
-   "index": "ESTR",
-   "rate": 0.039517,
-   "payoff": 178421.5,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-08-28",
-   "period": "2026-08-28..2026-11-28",
-   "index": "ESTR",
-   "rate": 0.028357,
+   "fixingDate": "2025-09-05",
+   "period": "2025-09-09..2026-03-09",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.020016,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-11-28",
-   "period": "2026-11-28..2027-02-28",
-   "index": "ESTR",
-   "rate": 0.045886,
-   "payoff": 429997.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-02-28",
-   "period": "2027-02-28..2027-05-28",
-   "index": "ESTR",
-   "rate": 0.021451,
+   "fixingDate": "2026-03-05",
+   "period": "2026-03-09..2026-09-09",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.020553,
    "payoff": 0.0,
-   "status": "Pending"
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-05-28",
-   "period": "2027-05-28..2027-08-28",
-   "index": "ESTR",
-   "rate": 0.030059,
+   "fixingDate": "2026-09-07",
+   "period": "2026-09-09..2027-03-09",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.019728,
    "payoff": 0.0,
-   "status": "Pending"
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-08-28",
-   "period": "2027-08-28..2027-11-28",
-   "index": "ESTR",
-   "rate": 0.030616,
-   "payoff": 0.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-09-09",
-   "period": "2027-09-09..2027-12-09",
-   "index": "ESTR",
-   "rate": 0.044045,
-   "payoff": 357277.5,
+   "fixingDate": "2027-03-05",
+   "period": "2027-03-09..2027-09-09",
+   "index": "TERM-ESTR-6M",
+   "rate": 0.019794,
+   "payoff": 3.22,
    "status": "Pending"
   }
  ],
- "nextIndex": 5,
+ "nextIndex": 4,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -39089
+   "pnl": -2146
   },
   {
    "date": "2026-09-04",
-   "pnl": -52291
+   "pnl": -2871
   },
   {
    "date": "2026-09-07",
-   "pnl": 8773
+   "pnl": 482
   },
   {
    "date": "2026-09-08",
-   "pnl": 16206
+   "pnl": 890
   },
   {
    "date": "2026-09-09",
-   "pnl": -2333
+   "pnl": -128
   },
   {
    "date": "2026-09-10",
-   "pnl": 28535
+   "pnl": 1567
   },
   {
    "date": "2026-09-11",
-   "pnl": -17954
+   "pnl": -986
   },
   {
    "date": "2026-09-14",
-   "pnl": 81197
+   "pnl": 4458
   },
   {
    "date": "2026-09-15",
-   "pnl": 26508
+   "pnl": 1455
   },
   {
    "date": "2026-09-16",
-   "pnl": -49655
+   "pnl": -2726
   },
   {
    "date": "2026-09-17",
-   "pnl": -25576
+   "pnl": -1404
   },
   {
    "date": "2026-09-18",
-   "pnl": -66307
+   "pnl": -3640
   },
   {
    "date": "2026-09-21",
-   "pnl": -37132
+   "pnl": -2039
   },
   {
    "date": "2026-09-22",
-   "pnl": 15978
+   "pnl": 877
   },
   {
    "date": "2026-09-23",
-   "pnl": 53922
+   "pnl": 2960
   },
   {
    "date": "2026-09-24",
-   "pnl": -24712
+   "pnl": -1357
   },
   {
    "date": "2026-09-25",
-   "pnl": -217119
+   "pnl": -11920
   },
   {
    "date": "2026-09-28",
-   "pnl": -55362
+   "pnl": -3039
   },
   {
    "date": "2026-09-29",
-   "pnl": 2541
+   "pnl": 140
   },
   {
    "date": "2026-09-30",
-   "pnl": -67997
+   "pnl": -3733
   }
  ],
  "execution": {
@@ -236,7 +362,7 @@
  },
  "lifecycle": {
   "status": "Live",
-  "version": 2,
+  "version": 1,
   "events": [
    {
     "version": 1,
@@ -244,19 +370,12 @@
     "reason": "Trade captured",
     "at": "2025-05-28T10:28:00Z",
     "by": "fo.capture"
-   },
-   {
-    "version": 2,
-    "event": "Amendment",
-    "reason": "Notional corrected",
-    "at": "2025-12-07T10:28:00Z",
-    "by": "mo.amend"
    }
   ],
-  "sourceSystem": "Summit",
+  "sourceSystem": "Endur",
   "createdAt": "2025-05-28T10:28:00Z",
-  "lastModifiedAt": "2025-12-07T10:28:00Z",
-  "lastModifiedBy": "mo.amend",
+  "lastModifiedAt": "2025-05-28T10:28:00Z",
+  "lastModifiedBy": "fo.capture",
   "timeline": [
    {
     "date": "2025-05-28",
@@ -271,20 +390,14 @@
     "description": "Matched on MarkitWire (MA789357422)"
    },
    {
-    "date": "2025-12-07",
-    "event": "Amended",
-    "status": "Done",
-    "description": "Notional corrected (version 2, by mo.amend)"
-   },
-   {
-    "date": "2026-08-28",
+    "date": "2026-09-07",
     "event": "Cash settled",
     "status": "Settled",
     "description": "EUR payment settled",
     "amount": 0.0
    },
    {
-    "date": "2026-11-28",
+    "date": "2027-03-05",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
@@ -335,8 +448,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": 1821498,
-  "cleanPv": 1821498.0,
+  "npv": 3,
+  "cleanPv": 3.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Black / Bachelier",
@@ -351,36 +464,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": 1874290,
+   "pnl": 3,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": 20854
+   "pnl": 395
   },
   {
    "step": "Roll-down",
-   "pnl": 10410
+   "pnl": 197
   },
   {
    "step": "Rates delta",
-   "pnl": -78480
+   "pnl": -449
   },
   {
    "step": "FX delta",
-   "pnl": -4597
+   "pnl": -87
   },
   {
    "step": "Vol (vega)",
-   "pnl": 40146
+   "pnl": 760
   },
   {
    "step": "Theta",
-   "pnl": -43067
+   "pnl": -816
   },
   {
    "step": "Unexplained",
-   "pnl": 1942
+   "pnl": 0
   }
  ],
  "_meta": {
@@ -388,7 +501,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 5223
+   "mtm": 1580,
+   "legs.0.cashflows.4.fixings.0.rate": 7.9e-05
   }
  }
 }

@@ -1,30 +1,30 @@
 {
  "balanceId": "COLL-RHEINTAL-NY",
- "held": 1491652,
- "posted": 0,
- "net": 1491652,
+ "held": 0,
+ "posted": 159276,
+ "net": -159276,
  "asOf": "2026-09-30",
  "positions": [
   {
    "asset": "Meridian Financial Group 2031",
-   "direction": "Held",
-   "marketValue": 497217,
+   "direction": "Posted",
+   "marketValue": 53092,
    "haircut": 0.02,
-   "value": 487273
+   "value": 52030
   },
   {
    "asset": "Lumen Semiconductor AG 2036",
-   "direction": "Held",
-   "marketValue": 497217,
+   "direction": "Posted",
+   "marketValue": 53092,
    "haircut": 0.005,
-   "value": 494731
+   "value": 52827
   },
   {
    "asset": "Halcyon Shipping plc 2031",
-   "direction": "Held",
-   "marketValue": 497217,
+   "direction": "Posted",
+   "marketValue": 53092,
    "haircut": 0.02,
-   "value": 487273
+   "value": 52030
   }
  ],
  "csa": "CSA-RHEINTAL",

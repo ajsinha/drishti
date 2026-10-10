@@ -16,7 +16,7 @@
 rachana: 1
 sutra: cmd-swap
 version: 1
-description: Fixed price against the average of a floating index.
+description: "Fixed price against the average of a floating index, with a fee and, on some trades, a location differential: three or four legs."
 match: { kind: trade, where: "$.productType == 'CMD_SWAP'", priority: 10 }
 title: { pill: Commodity · Commodity swap, id: $.tradeId, with: "link($.counterparty.id, 'counterparty', $.counterparty.name)" }
 strip:
@@ -44,37 +44,64 @@ panels:
     kind: tabs
     title: Legs
     each: $.legs
-    layout: columns
     tabTitle: "'Leg ' + @.leg + ' · ' + @.label"
-    body:
-      kind: kv
-      columns:
-        - { label: Pay/receive, bind: "@.payReceive" }
-        - { label: Rate type, bind: "@.rateType" }
-        - { label: Index, bind: "@.index" }
-        - { label: Rate, bind: "@.rate", fmt: pct4 }
-        - { label: Spread, bind: "@.spread", fmt: bp1 }
-        - { label: Frequency, bind: "@.frequency" }
-        - { label: Day count, bind: "@.dayCount" }
-        - { label: Currency, bind: "@.currency" }
-        - { label: Notional, bind: "@.notional", fmt: amount0 }
+    panels:
+      - id: leg-terms
+        kind: kv
+        title: Leg terms
+        columns:
+          - { label: Pay/receive, bind: "@.payReceive" }
+          - { label: Leg type, bind: "@.type" }
+          - { label: Index, bind: "@.index" }
+          - { label: Price, bind: "@.rate", fmt: price2 }
+          - { label: Quantity, bind: "@.quantity", fmt: amount0 }
+          - { label: Per, bind: "@.quantityUnit" }
+          - { label: Frequency, bind: "@.frequency" }
+          - { label: Resets, bind: "@.resetFrequency" }
+          - { label: Business day, bind: "@.businessDayConvention" }
+          - { label: Calendar, bind: "@.calendar" }
+          - { label: Payment lag, bind: "@.paymentLag" }
+          - { label: Currency, bind: "@.currency" }
+          - { label: Notional, bind: "@.notional", fmt: amount0 }
+          - { label: Leg PV, bind: "@.pv", fmt: signed0, tone: sign }
+      - id: leg-cashflows
+        kind: table
+        title: Cashflows and fixings
+        rows: "@.cashflows"
+        children: "@.fixings"
+        expand: 1
+        columns:
+          - { label: Period start / fixing, bind: "coalesce(@.periodStart, @.fixingDate)", fmt: date }
+          - { label: Period end, bind: "@.periodEnd", fmt: date }
+          - { label: Pay date, bind: "@.payDate", fmt: date }
+          - { label: Type, bind: "coalesce(@.type, @.index)" }
+          - { label: Accrual, bind: "@.accrualFactor" }
+          - { label: Rate, bind: "@.rate", fmt: price2 }
+          - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
+          - { label: DF, bind: "@.discountFactor", fmt: df4 }
+          - { label: PV, bind: "@.pv", fmt: signed0, tone: sign }
+          - { label: Status, bind: "@.status", tone: status }
+          - { label: Tenor, bind: "@.tenor" }
+          - { label: Source, bind: "@.source" }
   - id: schedule
-    kind: table
-    title: Fixings
-    code: FIX
+    kind: ladder
+    title: Cashflows
+    code: CF
     key: F3
     rows: $.schedule
+    highlight: "#index == $.nextIndex"
     pivot:
-      rows: [status]
-      values: [{ field: payoff, agg: sum }, { field: payoff, agg: count }]
-      filters: [index]
+      rows: [type]
+      columns: [leg]
+      values: [{ field: pv, agg: sum }, { field: amount, agg: sum }]
+      filters: [payDate]
     columns:
-      - { label: Fixing date, bind: "@.fixingDate", fmt: date }
-      - { label: Period, bind: "@.period" }
-      - { label: Index, bind: "@.index" }
+      - { label: Pay date, bind: "@.payDate", fmt: date }
+      - { label: Leg, bind: "@.leg" }
+      - { label: Type, bind: "@.type" }
       - { label: Rate, bind: "@.rate", fmt: pct4 }
-      - { label: Payoff, bind: "@.payoff", fmt: signed0, tone: sign, total: true }
-      - { label: Status, bind: "@.status", tone: status }
+      - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
+      - { label: PV, bind: "@.pv", fmt: signed0, tone: sign, total: true }
   - id: explain
     kind: waterfall
     title: "P&L explain (USD, opening to closing MTM)"

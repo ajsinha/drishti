@@ -13,9 +13,9 @@
  "maturityDate": "2026-10-07",
  "currency": "AUD",
  "notional": 101000000.0,
- "mtm": -1482791,
+ "mtm": 0,
  "mtmCurrency": "USD",
- "pnl1d": 1699,
+ "pnl1d": 0,
  "counterparty": {
   "id": "CP-CORAL",
   "name": "Coral Bay Municipal Authority"
@@ -34,136 +34,202 @@
   "premium": 91923.0
  },
  "risk": {
-  "dv01": -4489,
-  "vega": -72694
+  "dv01": -4291,
+  "vega": -146190
  },
  "sensitivities": [
   {
    "bucket": "3M",
-   "dv01": -1496,
-   "vega": -24231
+   "dv01": -1430,
+   "vega": -48730
   },
   {
    "bucket": "6M",
-   "dv01": -2993,
-   "vega": -48463
+   "dv01": -2861,
+   "vega": -97460
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Sell floor 2.6260% on TERM-AONIA-6M",
+   "payer": true,
+   "type": "FLOORLETS",
+   "currency": "AUD",
+   "notional": 101000000.0,
+   "index": "TERM-AONIA-6M",
+   "spread": 0.0,
+   "strike": 0.02626,
+   "dayCount": "ACT/360",
+   "frequency": "Semi-annual",
+   "resetFrequency": "Semi-annual",
+   "businessDayConvention": "Mod. following",
+   "calendar": "GBLO",
+   "paymentLag": "2 business days",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Floorlet",
+     "periodStart": "2025-10-29",
+     "periodEnd": "2026-04-07",
+     "fixingDate": "2025-10-27",
+     "payDate": "2026-04-09",
+     "notional": 101000000.0,
+     "index": "TERM-AONIA-6M",
+     "strike": 0.02626,
+     "rate": 0.037138,
+     "accrualFactor": 0.444444,
+     "volatilityBp": null,
+     "amount": -0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-10-27",
+       "index": "TERM-AONIA-6M",
+       "tenor": "6M",
+       "rate": 0.037138,
+       "source": "Refinitiv AONIA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Floorlet",
+     "periodStart": "2026-04-07",
+     "periodEnd": "2026-10-07",
+     "fixingDate": "2026-04-01",
+     "payDate": "2026-10-09",
+     "notional": 101000000.0,
+     "index": "TERM-AONIA-6M",
+     "strike": 0.02626,
+     "rate": 0.036506,
+     "accrualFactor": 0.508333,
+     "volatilityBp": null,
+     "amount": -0.0,
+     "discountFactor": 0.999117,
+     "pv": -0.0,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-04-01",
+       "index": "TERM-AONIA-6M",
+       "tenor": "6M",
+       "rate": 0.036506,
+       "source": "Refinitiv AONIA term",
+       "status": "Fixed"
+      }
+     ]
+    }
+   ],
+   "rateType": "Option",
+   "payReceive": "Pay",
+   "legId": "MX-20000087-L1",
+   "pv": 0.0,
+   "projectedFlows": 0
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2026-01-29",
-   "period": "2026-01-29..2026-04-29",
-   "index": "AONIA",
-   "rate": 0.043862,
-   "payoff": 223765.5,
+   "fixingDate": "2025-10-27",
+   "period": "2025-10-29..2026-04-07",
+   "index": "TERM-AONIA-6M",
+   "rate": 0.037138,
+   "payoff": -0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-04-29",
-   "period": "2026-04-29..2026-07-29",
-   "index": "AONIA",
-   "rate": 0.023773,
-   "payoff": 0.0,
+   "fixingDate": "2026-04-01",
+   "period": "2026-04-07..2026-10-07",
+   "index": "TERM-AONIA-6M",
+   "rate": 0.036506,
+   "payoff": -0.0,
    "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-07-29",
-   "period": "2026-07-29..2026-10-29",
-   "index": "AONIA",
-   "rate": 0.021447,
-   "payoff": 0.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-10-07",
-   "period": "2026-10-07..2027-01-07",
-   "index": "AONIA",
-   "rate": 0.021498,
-   "payoff": 0.0,
-   "status": "Pending"
   }
  ],
- "nextIndex": 3,
+ "nextIndex": -1,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": 11538
+   "pnl": 778
   },
   {
    "date": "2026-09-04",
-   "pnl": 63476
+   "pnl": 4281
   },
   {
    "date": "2026-09-07",
-   "pnl": 52082
+   "pnl": 3512
   },
   {
    "date": "2026-09-08",
-   "pnl": 4760
+   "pnl": 321
   },
   {
    "date": "2026-09-09",
-   "pnl": 9579
+   "pnl": 646
   },
   {
    "date": "2026-09-10",
-   "pnl": 46737
+   "pnl": 3152
   },
   {
    "date": "2026-09-11",
-   "pnl": 12697
+   "pnl": 856
   },
   {
    "date": "2026-09-14",
-   "pnl": 49704
+   "pnl": 3352
   },
   {
    "date": "2026-09-15",
-   "pnl": 41309
+   "pnl": 2786
   },
   {
    "date": "2026-09-16",
-   "pnl": -40905
+   "pnl": -2759
   },
   {
    "date": "2026-09-17",
-   "pnl": -39463
+   "pnl": -2661
   },
   {
    "date": "2026-09-18",
-   "pnl": 13920
+   "pnl": 939
   },
   {
    "date": "2026-09-21",
-   "pnl": -32118
+   "pnl": -2166
   },
   {
    "date": "2026-09-22",
-   "pnl": 19948
+   "pnl": 1345
   },
   {
    "date": "2026-09-23",
-   "pnl": -90121
+   "pnl": -6078
   },
   {
    "date": "2026-09-24",
-   "pnl": 16309
+   "pnl": 1100
   },
   {
    "date": "2026-09-25",
-   "pnl": -92861
+   "pnl": -6263
   },
   {
    "date": "2026-09-28",
-   "pnl": -4829
+   "pnl": -326
   },
   {
    "date": "2026-09-29",
-   "pnl": 52728
+   "pnl": 3556
   },
   {
    "date": "2026-09-30",
-   "pnl": 216
+   "pnl": 15
   }
  ],
  "execution": {
@@ -178,7 +244,7 @@
  },
  "lifecycle": {
   "status": "Live",
-  "version": 2,
+  "version": 1,
   "events": [
    {
     "version": 1,
@@ -186,19 +252,12 @@
     "reason": "Trade captured",
     "at": "2025-10-27T10:54:00Z",
     "by": "mo.ops"
-   },
-   {
-    "version": 2,
-    "event": "Amendment",
-    "reason": "Notional corrected",
-    "at": "2026-03-27T10:54:00Z",
-    "by": "stp.gateway"
    }
   ],
-  "sourceSystem": "Endur",
+  "sourceSystem": "Summit",
   "createdAt": "2025-10-27T10:54:00Z",
-  "lastModifiedAt": "2026-03-27T10:54:00Z",
-  "lastModifiedBy": "stp.gateway",
+  "lastModifiedAt": "2025-10-27T10:54:00Z",
+  "lastModifiedBy": "mo.ops",
   "timeline": [
    {
     "date": "2025-10-27",
@@ -213,23 +272,11 @@
     "description": "Matched on MarkitWire (MA578930467)"
    },
    {
-    "date": "2026-03-27",
-    "event": "Amended",
-    "status": "Done",
-    "description": "Notional corrected (version 2, by stp.gateway)"
-   },
-   {
-    "date": "2026-07-29",
+    "date": "2026-04-01",
     "event": "Cash settled",
     "status": "Settled",
     "description": "AUD payment settled",
-    "amount": 0.0
-   },
-   {
-    "date": "2026-10-07",
-    "event": "Next payment",
-    "status": "Pending",
-    "description": "Scheduled; settlement instructions confirmed"
+    "amount": -0.0
    },
    {
     "date": "2026-10-07",
@@ -277,8 +324,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": -1482791,
-  "cleanPv": -1482791.0,
+  "npv": 0,
+  "cleanPv": 0.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Black / Bachelier",
@@ -293,36 +340,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": -1484490,
+   "pnl": 0,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": 203
+   "pnl": 120
   },
   {
    "step": "Roll-down",
-   "pnl": 267
+   "pnl": 157
   },
   {
    "step": "Rates delta",
-   "pnl": 1277
+   "pnl": -200
   },
   {
    "step": "FX delta",
-   "pnl": -92
+   "pnl": -54
   },
   {
    "step": "Vol (vega)",
-   "pnl": 48
+   "pnl": 28
   },
   {
    "step": "Theta",
-   "pnl": -86
+   "pnl": -51
   },
   {
    "step": "Unexplained",
-   "pnl": 82
+   "pnl": 0
   }
  ],
  "_meta": {
@@ -330,7 +377,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 3976
+   "mtm": 1010
   }
  }
 }

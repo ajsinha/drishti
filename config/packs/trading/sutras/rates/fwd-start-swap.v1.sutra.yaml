@@ -46,20 +46,44 @@ panels:
     kind: tabs
     title: Legs
     each: $.legs
-    layout: columns
     tabTitle: "'Leg ' + @.leg + ' · ' + @.label"
-    body:
-      kind: kv
-      columns:
-        - { label: Pay/receive, bind: "@.payReceive" }
-        - { label: Rate type, bind: "@.rateType" }
-        - { label: Index, bind: "@.index" }
-        - { label: Rate, bind: "@.rate", fmt: pct4 }
-        - { label: Spread, bind: "@.spread", fmt: bp1 }
-        - { label: Frequency, bind: "@.frequency" }
-        - { label: Day count, bind: "@.dayCount" }
-        - { label: Currency, bind: "@.currency" }
-        - { label: Notional, bind: "@.notional", fmt: amount0 }
+    panels:
+      - id: leg-terms
+        kind: kv
+        title: Leg terms
+        columns:
+          - { label: Pay/receive, bind: "@.payReceive" }
+          - { label: Rate type, bind: "@.rateType" }
+          - { label: Index, bind: "@.index" }
+          - { label: Fixed rate, bind: "@.rate", fmt: pct4 }
+          - { label: Spread, bind: "@.spread", fmt: bp1 }
+          - { label: Frequency, bind: "@.frequency" }
+          - { label: Resets, bind: "@.resetFrequency" }
+          - { label: Day count, bind: "@.dayCount" }
+          - { label: Business day, bind: "@.businessDayConvention" }
+          - { label: Calendar, bind: "@.calendar" }
+          - { label: Currency, bind: "@.currency" }
+          - { label: Notional, bind: "@.notional", fmt: amount0 }
+          - { label: Leg PV, bind: "@.pv", fmt: signed0, tone: sign }
+      - id: leg-cashflows
+        kind: table
+        title: Cashflows and fixings
+        rows: "@.cashflows"
+        children: "@.fixings"
+        expand: 1
+        columns:
+          - { label: Period start / fixing, bind: "coalesce(@.periodStart, @.fixingDate)", fmt: date }
+          - { label: Period end, bind: "@.periodEnd", fmt: date }
+          - { label: Pay date, bind: "@.payDate", fmt: date }
+          - { label: Type, bind: "coalesce(@.type, @.index)" }
+          - { label: Accrual, bind: "@.accrualFactor", fmt: df4 }
+          - { label: Rate, bind: "@.rate", fmt: pct4 }
+          - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
+          - { label: DF, bind: "@.discountFactor", fmt: df4 }
+          - { label: PV, bind: "@.pv", fmt: signed0, tone: sign }
+          - { label: Status, bind: "@.status", tone: status }
+          - { label: Tenor, bind: "@.tenor" }
+          - { label: Source, bind: "@.source" }
   - id: schedule
     kind: ladder
     title: Cashflows

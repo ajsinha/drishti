@@ -279,7 +279,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 |---|---|---|---|---|---|
 | Commodity future | `CMD_FUTURE` | future | — | `commodity-curve` | Delta |
 | Commodity forward | `CMD_FORWARD` | linear | — | `commodity-curve`, `ir-curve` | Delta |
-| Commodity swap | `CMD_SWAP` | swap | fixings | `commodity-curve`, `ir-curve` | Delta |
+| Commodity swap | `CMD_SWAP` | swap | cashflows | `commodity-curve`, `ir-curve` | Delta |
 | Commodity basis swap | `CMD_BASIS_SWAP` | swap | fixings | `commodity-curve`, `ir-curve` | Delta |
 | Option on commodity future | `CMD_FUT_OPTION` | option | — | `commodity-curve`, `commodity-vol-surface` | Delta, Gamma, Vega |
 | Average price option (APO) | `CMD_APO` | exotic | fixings | `commodity-curve`, `commodity-vol-surface` | Delta, Vega |
@@ -297,7 +297,7 @@ The trading pack covers **125 products** in ten asset classes. Each has its own 
 
 **Commodity forward** (`CMD_FORWARD`): OTC agreement to buy or sell at a fixed price. Terms: `forwardPrice` (Forward price), `quantity` (Quantity), `deliveryMonth` (Delivery).
 
-**Commodity swap** (`CMD_SWAP`): Fixed price against the average of a floating index. Terms: `fixedPrice` (Fixed price), `quantityPerPeriod` (Quantity per period), `averaging` (Averaging).
+**Commodity swap** (`CMD_SWAP`): Fixed price against the average of a floating index, with a fee and, on some trades, a location differential: three or four legs. Terms: `fixedPrice` (Fixed price), `quantityPerPeriod` (Quantity per period), `averaging` (Averaging).
 
 **Commodity basis swap** (`CMD_BASIS_SWAP`): Floating against floating on two locations or grades. Terms: `spread` (Spread), `location` (Locations).
 

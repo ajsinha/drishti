@@ -1,30 +1,30 @@
 {
  "balanceId": "COLL-HALCYON-NY",
- "held": 41572438,
+ "held": 38688007,
  "posted": 0,
- "net": 41572438,
+ "net": 38688007,
  "asOf": "2026-09-30",
  "positions": [
   {
    "asset": "Novatek Devices Inc. 2036",
    "direction": "Held",
-   "marketValue": 13857479,
+   "marketValue": 12896002,
    "haircut": 0.02,
-   "value": 13580329
+   "value": 12638082
   },
   {
    "asset": "Kaizen Motors Corp. 2031",
    "direction": "Held",
-   "marketValue": 13857479,
+   "marketValue": 12896002,
    "haircut": 0.005,
-   "value": 13788192
+   "value": 12831522
   },
   {
    "asset": "Halcyon Shipping plc 2036",
    "direction": "Held",
-   "marketValue": 13857479,
+   "marketValue": 12896002,
    "haircut": 0.02,
-   "value": 13580329
+   "value": 12638082
   }
  ],
  "csa": "CSA-HALCYON",

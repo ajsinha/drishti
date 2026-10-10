@@ -6,7 +6,7 @@
  "sector": "Asset management",
  "country": "US",
  "type": "Hedge fund",
- "netMtm": -14555626,
+ "netMtm": -9402257,
  "pfePeak": 114582147,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-PINNACLE-NY",
    "agreement": "AGR-PINNACLE-ISDA",
    "trades": 23,
-   "netMtm": 23965549
+   "netMtm": 29118918
   },
   {
    "id": "NS-PINNACLE-TKY",

@@ -10,12 +10,12 @@
  "direction": "Buy",
  "tradeDate": "2026-05-08",
  "effectiveDate": "2026-05-11",
- "maturityDate": "2027-09-24",
+ "maturityDate": "2031-02-28",
  "currency": "AUD",
  "notional": 23000000.0,
- "mtm": 348358,
+ "mtm": 3203297,
  "mtmCurrency": "USD",
- "pnl1d": -20405,
+ "pnl1d": 233748,
  "counterparty": {
   "id": "CP-CASCADIA",
   "name": "Cascadia Airlines Inc."
@@ -37,106 +37,1588 @@
   "premium": 1135086.0
  },
  "risk": {
-  "dv01": 2941,
-  "vega": 74423
+  "dv01": 2907,
+  "vega": 72541
  },
  "sensitivities": [
   {
    "bucket": "3M",
-   "dv01": 490,
-   "vega": 12404
+   "dv01": 484,
+   "vega": 12090
   },
   {
    "bucket": "6M",
-   "dv01": 980,
-   "vega": 24808
+   "dv01": 969,
+   "vega": 24180
   },
   {
    "bucket": "1Y",
-   "dv01": 1470,
-   "vega": 37212
+   "dv01": 1454,
+   "vega": 36270
   }
  ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Pay fixed 2.0326%",
+   "payer": true,
+   "type": "FIXED",
+   "currency": "AUD",
+   "notional": 23000000.0,
+   "rate": 0.020326,
+   "dayCount": "30/360",
+   "frequency": "Semi-annual",
+   "calendar": "GBLO",
+   "paymentLag": "2 business days",
+   "rollConvention": "4",
+   "stub": "None",
+   "cashflows": [
+    {
+     "n": 1,
+     "payDate": "2031-09-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -235047.61,
+     "pv": -192680.88,
+     "status": "Projected",
+     "periodStart": "2031-03-03",
+     "periodEnd": "2031-09-04",
+     "accrualFactor": 0.502778,
+     "discountFactor": 0.819753,
+     "type": "Interest"
+    },
+    {
+     "n": 2,
+     "payDate": "2032-03-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -233749.0,
+     "pv": -187489.77,
+     "status": "Projected",
+     "periodStart": "2031-09-04",
+     "periodEnd": "2032-03-04",
+     "accrualFactor": 0.5,
+     "discountFactor": 0.802099,
+     "type": "Interest"
+    },
+    {
+     "n": 3,
+     "payDate": "2032-09-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -236346.21,
+     "pv": -185432.34,
+     "status": "Projected",
+     "periodStart": "2032-03-04",
+     "periodEnd": "2032-09-06",
+     "accrualFactor": 0.505556,
+     "discountFactor": 0.784579,
+     "type": "Interest"
+    },
+    {
+     "n": 4,
+     "payDate": "2033-03-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -231151.79,
+     "pv": -177411.07,
+     "status": "Projected",
+     "periodStart": "2032-09-06",
+     "periodEnd": "2033-03-04",
+     "accrualFactor": 0.494444,
+     "discountFactor": 0.767509,
+     "type": "Interest"
+    },
+    {
+     "n": 5,
+     "payDate": "2033-09-07",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -235047.61,
+     "pv": -176384.57,
+     "status": "Projected",
+     "periodStart": "2033-03-04",
+     "periodEnd": "2033-09-05",
+     "accrualFactor": 0.502778,
+     "discountFactor": 0.750421,
+     "type": "Interest"
+    },
+    {
+     "n": 6,
+     "payDate": "2034-03-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -235047.61,
+     "pv": -172628.19,
+     "status": "Projected",
+     "periodStart": "2033-09-05",
+     "periodEnd": "2034-03-06",
+     "accrualFactor": 0.502778,
+     "discountFactor": 0.734439,
+     "type": "Interest"
+    },
+    {
+     "n": 7,
+     "payDate": "2034-09-06",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -231151.79,
+     "pv": -166157.76,
+     "status": "Projected",
+     "periodStart": "2034-03-06",
+     "periodEnd": "2034-09-04",
+     "accrualFactor": 0.494444,
+     "discountFactor": 0.718825,
+     "type": "Interest"
+    },
+    {
+     "n": 8,
+     "payDate": "2035-03-07",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -235047.61,
+     "pv": -165349.43,
+     "status": "Projected",
+     "periodStart": "2034-09-04",
+     "periodEnd": "2035-03-05",
+     "accrualFactor": 0.502778,
+     "discountFactor": 0.703472,
+     "type": "Interest"
+    },
+    {
+     "n": 9,
+     "payDate": "2035-09-06",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -232450.39,
+     "pv": -159994.4,
+     "status": "Projected",
+     "periodStart": "2035-03-05",
+     "periodEnd": "2035-09-04",
+     "accrualFactor": 0.497222,
+     "discountFactor": 0.688295,
+     "type": "Interest"
+    },
+    {
+     "n": 10,
+     "payDate": "2036-03-06",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -233749.0,
+     "pv": -157419.87,
+     "status": "Projected",
+     "periodStart": "2035-09-04",
+     "periodEnd": "2036-03-04",
+     "accrualFactor": 0.5,
+     "discountFactor": 0.673457,
+     "type": "Interest"
+    },
+    {
+     "n": 11,
+     "payDate": "2036-09-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -233749.0,
+     "pv": -153936.42,
+     "status": "Projected",
+     "periodStart": "2036-03-04",
+     "periodEnd": "2036-09-04",
+     "accrualFactor": 0.5,
+     "discountFactor": 0.658554,
+     "type": "Interest"
+    },
+    {
+     "n": 12,
+     "payDate": "2037-03-06",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -233749.0,
+     "pv": -150729.44,
+     "status": "Projected",
+     "periodStart": "2036-09-04",
+     "periodEnd": "2037-03-04",
+     "accrualFactor": 0.5,
+     "discountFactor": 0.644835,
+     "type": "Interest"
+    },
+    {
+     "n": 13,
+     "payDate": "2037-09-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -233749.0,
+     "pv": -147472.13,
+     "status": "Projected",
+     "periodStart": "2037-03-04",
+     "periodEnd": "2037-09-04",
+     "accrualFactor": 0.5,
+     "discountFactor": 0.6309,
+     "type": "Interest"
+    },
+    {
+     "n": 14,
+     "payDate": "2038-03-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -233749.0,
+     "pv": -144364.47,
+     "status": "Projected",
+     "periodStart": "2037-09-04",
+     "periodEnd": "2038-03-04",
+     "accrualFactor": 0.5,
+     "discountFactor": 0.617605,
+     "type": "Interest"
+    },
+    {
+     "n": 15,
+     "payDate": "2038-09-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -236346.21,
+     "pv": -142836.59,
+     "status": "Projected",
+     "periodStart": "2038-03-04",
+     "periodEnd": "2038-09-06",
+     "accrualFactor": 0.505556,
+     "discountFactor": 0.604353,
+     "type": "Interest"
+    },
+    {
+     "n": 16,
+     "payDate": "2039-03-08",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -231151.79,
+     "pv": -136743.11,
+     "status": "Projected",
+     "periodStart": "2038-09-06",
+     "periodEnd": "2039-03-04",
+     "accrualFactor": 0.494444,
+     "discountFactor": 0.591573,
+     "type": "Interest"
+    },
+    {
+     "n": 17,
+     "payDate": "2039-09-07",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -235047.61,
+     "pv": -136069.93,
+     "status": "Projected",
+     "periodStart": "2039-03-04",
+     "periodEnd": "2039-09-05",
+     "accrualFactor": 0.502778,
+     "discountFactor": 0.578904,
+     "type": "Interest"
+    },
+    {
+     "n": 18,
+     "payDate": "2040-03-07",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -233749.0,
+     "pv": -132430.81,
+     "status": "Projected",
+     "periodStart": "2039-09-05",
+     "periodEnd": "2040-03-05",
+     "accrualFactor": 0.5,
+     "discountFactor": 0.566551,
+     "type": "Interest"
+    },
+    {
+     "n": 19,
+     "payDate": "2040-09-06",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -232450.39,
+     "pv": -128864.82,
+     "status": "Projected",
+     "periodStart": "2040-03-05",
+     "periodEnd": "2040-09-04",
+     "accrualFactor": 0.497222,
+     "discountFactor": 0.554376,
+     "type": "Interest"
+    },
+    {
+     "n": 20,
+     "payDate": "2041-03-06",
+     "notional": 23000000.0,
+     "rate": 0.020326,
+     "amount": -233749.0,
+     "pv": -126825.13,
+     "status": "Projected",
+     "periodStart": "2040-09-04",
+     "periodEnd": "2041-03-04",
+     "accrualFactor": 0.5,
+     "discountFactor": 0.54257,
+     "type": "Interest"
+    }
+   ],
+   "pv": -3141221.13,
+   "accrued": 0.0,
+   "businessDayConvention": "Mod. following",
+   "projectedFlows": 20,
+   "legId": "MX-20000100-L1",
+   "payReceive": "Pay",
+   "rateType": "Fixed",
+   "index": null,
+   "spread": 0.0
+  },
+  {
+   "leg": 2,
+   "label": "Receive TERM-AONIA-3M",
+   "payer": false,
+   "type": "FLOAT",
+   "currency": "AUD",
+   "notional": 23000000.0,
+   "index": "TERM-AONIA-3M",
+   "spread": 0.0,
+   "dayCount": "ACT/360",
+   "frequency": "Quarterly",
+   "resetFrequency": "Quarterly",
+   "businessDayConvention": "Mod. following",
+   "calendar": "GBLO",
+   "paymentLag": "2 business days",
+   "compounding": "Simple average of the fixings",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Interest",
+     "periodStart": "2031-03-03",
+     "periodEnd": "2031-06-04",
+     "fixingDate": "2031-02-27",
+     "payDate": "2031-06-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.045106,
+     "spread": 0.0,
+     "accrualFactor": 0.258333,
+     "amount": 268002.9,
+     "discountFactor": 0.82955,
+     "pv": 222321.92,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2031-02-27",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.045105,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2031-05-30",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.045168,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Interest",
+     "periodStart": "2031-06-04",
+     "periodEnd": "2031-09-04",
+     "fixingDate": "2031-06-02",
+     "payDate": "2031-09-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.045748,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 268896.58,
+     "discountFactor": 0.819753,
+     "pv": 220428.66,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2031-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.045748,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Interest",
+     "periodStart": "2031-09-04",
+     "periodEnd": "2031-12-04",
+     "fixingDate": "2031-09-02",
+     "payDate": "2031-12-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043707,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 254107.64,
+     "discountFactor": 0.810823,
+     "pv": 206036.38,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2031-09-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043707,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Interest",
+     "periodStart": "2031-12-04",
+     "periodEnd": "2032-03-04",
+     "fixingDate": "2031-12-02",
+     "payDate": "2032-03-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043018,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 250101.87,
+     "discountFactor": 0.802099,
+     "pv": 200606.39,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2031-12-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043018,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 5,
+     "type": "Interest",
+     "periodStart": "2032-03-04",
+     "periodEnd": "2032-06-04",
+     "fixingDate": "2032-03-02",
+     "payDate": "2032-06-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043297,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 254490.14,
+     "discountFactor": 0.793318,
+     "pv": 201891.72,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2032-03-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043297,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 6,
+     "type": "Interest",
+     "periodStart": "2032-06-04",
+     "periodEnd": "2032-09-06",
+     "fixingDate": "2032-06-02",
+     "payDate": "2032-09-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043572,
+     "spread": 0.0,
+     "accrualFactor": 0.261111,
+     "amount": 261673.81,
+     "discountFactor": 0.784579,
+     "pv": 205303.85,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2032-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043574,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2032-09-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043478,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 7,
+     "type": "Interest",
+     "periodStart": "2032-09-06",
+     "periodEnd": "2032-12-06",
+     "fixingDate": "2032-09-02",
+     "payDate": "2032-12-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043853,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 254956.47,
+     "discountFactor": 0.775976,
+     "pv": 197840.18,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2032-09-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043853,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 8,
+     "type": "Interest",
+     "periodStart": "2032-12-06",
+     "periodEnd": "2033-03-04",
+     "fixingDate": "2032-12-02",
+     "payDate": "2033-03-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.044115,
+     "spread": 0.0,
+     "accrualFactor": 0.244444,
+     "amount": 248024.33,
+     "discountFactor": 0.767509,
+     "pv": 190360.89,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2032-12-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.044115,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 9,
+     "type": "Interest",
+     "periodStart": "2033-03-04",
+     "periodEnd": "2033-06-06",
+     "fixingDate": "2033-03-02",
+     "payDate": "2033-06-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.044395,
+     "spread": 0.0,
+     "accrualFactor": 0.261111,
+     "amount": 266615.23,
+     "discountFactor": 0.758896,
+     "pv": 202333.31,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2033-03-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.044397,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2033-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.044292,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 10,
+     "type": "Interest",
+     "periodStart": "2033-06-06",
+     "periodEnd": "2033-09-05",
+     "fixingDate": "2033-06-02",
+     "payDate": "2033-09-07",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.044676,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 259741.3,
+     "discountFactor": 0.750421,
+     "pv": 194915.22,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2033-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.044676,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 11,
+     "type": "Interest",
+     "periodStart": "2033-09-05",
+     "periodEnd": "2033-12-05",
+     "fixingDate": "2033-09-01",
+     "payDate": "2033-12-07",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043087,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 250503.03,
+     "discountFactor": 0.742345,
+     "pv": 185959.61,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2033-09-01",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043087,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 12,
+     "type": "Interest",
+     "periodStart": "2033-12-05",
+     "periodEnd": "2034-03-06",
+     "fixingDate": "2033-12-01",
+     "payDate": "2034-03-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042576,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 247532.71,
+     "discountFactor": 0.734439,
+     "pv": 181797.74,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2033-12-01",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042578,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2034-03-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042405,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 13,
+     "type": "Interest",
+     "periodStart": "2034-03-06",
+     "periodEnd": "2034-06-05",
+     "fixingDate": "2034-03-02",
+     "payDate": "2034-06-07",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042682,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 248148.41,
+     "discountFactor": 0.7266,
+     "pv": 180304.52,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2034-03-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042682,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 14,
+     "type": "Interest",
+     "periodStart": "2034-06-05",
+     "periodEnd": "2034-09-04",
+     "fixingDate": "2034-06-01",
+     "payDate": "2034-09-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042783,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 248735.61,
+     "discountFactor": 0.718825,
+     "pv": 178797.45,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2034-06-01",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042783,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 15,
+     "type": "Interest",
+     "periodStart": "2034-09-04",
+     "periodEnd": "2034-12-04",
+     "fixingDate": "2034-08-31",
+     "payDate": "2034-12-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042884,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 249322.81,
+     "discountFactor": 0.711116,
+     "pv": 177297.51,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2034-08-31",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042884,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 16,
+     "type": "Interest",
+     "periodStart": "2034-12-04",
+     "periodEnd": "2035-03-05",
+     "fixingDate": "2034-11-30",
+     "payDate": "2035-03-07",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.04298,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 249881.33,
+     "discountFactor": 0.703472,
+     "pv": 175784.54,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2034-11-30",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042982,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2035-03-01",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042806,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 17,
+     "type": "Interest",
+     "periodStart": "2035-03-05",
+     "periodEnd": "2035-06-04",
+     "fixingDate": "2035-03-01",
+     "payDate": "2035-06-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043087,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 250503.03,
+     "discountFactor": 0.695892,
+     "pv": 174323.17,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2035-03-01",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043087,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 18,
+     "type": "Interest",
+     "periodStart": "2035-06-04",
+     "periodEnd": "2035-09-04",
+     "fixingDate": "2035-05-31",
+     "payDate": "2035-09-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043191,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 253867.1,
+     "discountFactor": 0.688295,
+     "pv": 174735.41,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2035-05-31",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043191,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 19,
+     "type": "Interest",
+     "periodStart": "2035-09-04",
+     "periodEnd": "2035-12-04",
+     "fixingDate": "2035-08-31",
+     "payDate": "2035-12-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.04329,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 251683.25,
+     "discountFactor": 0.680844,
+     "pv": 171357.04,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2035-08-31",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.04329,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 20,
+     "type": "Interest",
+     "periodStart": "2035-12-04",
+     "periodEnd": "2036-03-04",
+     "fixingDate": "2035-11-30",
+     "payDate": "2036-03-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043392,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 252276.27,
+     "discountFactor": 0.673457,
+     "pv": 169897.19,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2035-11-30",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043392,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 21,
+     "type": "Interest",
+     "periodStart": "2036-03-04",
+     "periodEnd": "2036-06-04",
+     "fixingDate": "2036-02-29",
+     "payDate": "2036-06-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043496,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 255659.82,
+     "discountFactor": 0.666053,
+     "pv": 170282.95,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2036-02-29",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043496,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 22,
+     "type": "Interest",
+     "periodStart": "2036-06-04",
+     "periodEnd": "2036-09-04",
+     "fixingDate": "2036-06-02",
+     "payDate": "2036-09-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043599,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 256265.23,
+     "discountFactor": 0.658554,
+     "pv": 168764.58,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2036-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043599,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 23,
+     "type": "Interest",
+     "periodStart": "2036-09-04",
+     "periodEnd": "2036-12-04",
+     "fixingDate": "2036-09-02",
+     "payDate": "2036-12-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042733,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 248444.91,
+     "discountFactor": 0.651525,
+     "pv": 161868.15,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2036-09-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042733,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 24,
+     "type": "Interest",
+     "periodStart": "2036-12-04",
+     "periodEnd": "2037-03-04",
+     "fixingDate": "2036-12-02",
+     "payDate": "2037-03-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042451,
+     "spread": 0.0,
+     "accrualFactor": 0.25,
+     "amount": 244093.25,
+     "discountFactor": 0.644835,
+     "pv": 157399.77,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2036-12-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042451,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 25,
+     "type": "Interest",
+     "periodStart": "2037-03-04",
+     "periodEnd": "2037-06-04",
+     "fixingDate": "2037-03-02",
+     "payDate": "2037-06-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042494,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 249770.29,
+     "discountFactor": 0.637757,
+     "pv": 159292.81,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2037-03-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042494,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 26,
+     "type": "Interest",
+     "periodStart": "2037-06-04",
+     "periodEnd": "2037-09-04",
+     "fixingDate": "2037-06-02",
+     "payDate": "2037-09-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042532,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 249993.64,
+     "discountFactor": 0.6309,
+     "pv": 157720.87,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2037-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042532,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 27,
+     "type": "Interest",
+     "periodStart": "2037-09-04",
+     "periodEnd": "2037-12-04",
+     "fixingDate": "2037-09-02",
+     "payDate": "2037-12-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042568,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 247485.62,
+     "discountFactor": 0.624183,
+     "pv": 154476.3,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2037-09-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042568,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 28,
+     "type": "Interest",
+     "periodStart": "2037-12-04",
+     "periodEnd": "2038-03-04",
+     "fixingDate": "2037-12-02",
+     "payDate": "2038-03-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042603,
+     "spread": 0.0,
+     "accrualFactor": 0.25,
+     "amount": 244967.25,
+     "discountFactor": 0.617605,
+     "pv": 151292.91,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2037-12-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042603,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 29,
+     "type": "Interest",
+     "periodStart": "2038-03-04",
+     "periodEnd": "2038-06-04",
+     "fixingDate": "2038-03-02",
+     "payDate": "2038-06-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042646,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 250663.71,
+     "discountFactor": 0.610946,
+     "pv": 153141.98,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2038-03-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042646,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 30,
+     "type": "Interest",
+     "periodStart": "2038-06-04",
+     "periodEnd": "2038-09-06",
+     "fixingDate": "2038-06-02",
+     "payDate": "2038-09-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042681,
+     "spread": 0.0,
+     "accrualFactor": 0.261111,
+     "amount": 256320.69,
+     "discountFactor": 0.604353,
+     "pv": 154908.23,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2038-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042685,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2038-09-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042478,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 31,
+     "type": "Interest",
+     "periodStart": "2038-09-06",
+     "periodEnd": "2038-12-06",
+     "fixingDate": "2038-09-02",
+     "payDate": "2038-12-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042722,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 248380.96,
+     "discountFactor": 0.597896,
+     "pv": 148506.07,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2038-09-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042722,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 32,
+     "type": "Interest",
+     "periodStart": "2038-12-06",
+     "periodEnd": "2039-03-04",
+     "fixingDate": "2038-12-02",
+     "payDate": "2039-03-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042751,
+     "spread": 0.0,
+     "accrualFactor": 0.244444,
+     "amount": 240355.62,
+     "discountFactor": 0.591573,
+     "pv": 142187.84,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2038-12-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042751,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 33,
+     "type": "Interest",
+     "periodStart": "2039-03-04",
+     "periodEnd": "2039-06-06",
+     "fixingDate": "2039-03-02",
+     "payDate": "2039-06-08",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042795,
+     "spread": 0.0,
+     "accrualFactor": 0.261111,
+     "amount": 257005.19,
+     "discountFactor": 0.585172,
+     "pv": 150392.29,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2039-03-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042799,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2039-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042591,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 34,
+     "type": "Interest",
+     "periodStart": "2039-06-06",
+     "periodEnd": "2039-09-05",
+     "fixingDate": "2039-06-02",
+     "payDate": "2039-09-07",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042836,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 249043.74,
+     "discountFactor": 0.578904,
+     "pv": 144172.35,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2039-06-02",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042836,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 35,
+     "type": "Interest",
+     "periodStart": "2039-09-05",
+     "periodEnd": "2039-12-05",
+     "fixingDate": "2039-09-01",
+     "payDate": "2039-12-07",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042874,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 249264.67,
+     "discountFactor": 0.572697,
+     "pv": 142753.12,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2039-09-01",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042874,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 36,
+     "type": "Interest",
+     "periodStart": "2039-12-05",
+     "periodEnd": "2040-03-05",
+     "fixingDate": "2039-12-01",
+     "payDate": "2040-03-07",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042912,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 249485.6,
+     "discountFactor": 0.566551,
+     "pv": 141346.4,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2039-12-01",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042912,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 37,
+     "type": "Interest",
+     "periodStart": "2040-03-05",
+     "periodEnd": "2040-06-04",
+     "fixingDate": "2040-03-01",
+     "payDate": "2040-06-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.04295,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 249706.53,
+     "discountFactor": 0.560466,
+     "pv": 139952.11,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2040-03-01",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.04295,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 38,
+     "type": "Interest",
+     "periodStart": "2040-06-04",
+     "periodEnd": "2040-09-04",
+     "fixingDate": "2040-05-31",
+     "payDate": "2040-09-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.042991,
+     "spread": 0.0,
+     "accrualFactor": 0.255556,
+     "amount": 252691.54,
+     "discountFactor": 0.554376,
+     "pv": 140086.02,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2040-05-31",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.042991,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 39,
+     "type": "Interest",
+     "periodStart": "2040-09-04",
+     "periodEnd": "2040-12-04",
+     "fixingDate": "2040-08-31",
+     "payDate": "2040-12-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043027,
+     "spread": 0.0,
+     "accrualFactor": 0.252778,
+     "amount": 250154.2,
+     "discountFactor": 0.548411,
+     "pv": 137187.27,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2040-08-31",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043027,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 40,
+     "type": "Interest",
+     "periodStart": "2040-12-04",
+     "periodEnd": "2041-03-04",
+     "fixingDate": "2040-11-30",
+     "payDate": "2041-03-06",
+     "notional": 23000000.0,
+     "index": "TERM-AONIA-3M",
+     "rate": 0.043062,
+     "spread": 0.0,
+     "accrualFactor": 0.25,
+     "amount": 247606.5,
+     "discountFactor": 0.54257,
+     "pv": 134343.79,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2040-11-30",
+       "index": "TERM-AONIA-3M",
+       "tenor": "3M",
+       "rate": 0.043062,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "pv": 6822368.51,
+   "projectedFlows": 40,
+   "legId": "MX-20000100-L2",
+   "payReceive": "Receive",
+   "rateType": "Float"
+  }
+ ],
+ "exercise": {
+  "style": "European",
+  "expiryDate": "2031-02-28",
+  "noticeDate": "2031-02-26",
+  "settlement": "Physical",
+  "premium": 1135086.0,
+  "premiumPayDate": "2026-05-12",
+  "volatilityBp": 88.0,
+  "forwardSwapRate": 0.044146,
+  "underlyingTenor": "10Y",
+  "underlyingStart": "2031-03-03",
+  "underlyingMaturity": "2041-03-04",
+  "status": "Open"
+ },
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -6472
+   "pnl": -59515
   },
   {
    "date": "2026-09-04",
-   "pnl": -8965
+   "pnl": -82439
   },
   {
    "date": "2026-09-07",
-   "pnl": -9628
+   "pnl": -88536
   },
   {
    "date": "2026-09-08",
-   "pnl": 12746
+   "pnl": 117208
   },
   {
    "date": "2026-09-09",
-   "pnl": -8184
+   "pnl": -75258
   },
   {
    "date": "2026-09-10",
-   "pnl": -1351
+   "pnl": -12424
   },
   {
    "date": "2026-09-11",
-   "pnl": -5800
+   "pnl": -53329
   },
   {
    "date": "2026-09-14",
-   "pnl": 10565
+   "pnl": 97150
   },
   {
    "date": "2026-09-15",
-   "pnl": 5040
+   "pnl": 46346
   },
   {
    "date": "2026-09-16",
-   "pnl": -18527
+   "pnl": -170364
   },
   {
    "date": "2026-09-17",
-   "pnl": 884
+   "pnl": 8129
   },
   {
    "date": "2026-09-18",
-   "pnl": -6188
+   "pnl": -56899
   },
   {
    "date": "2026-09-21",
-   "pnl": 1612
+   "pnl": 14824
   },
   {
    "date": "2026-09-22",
-   "pnl": 1355
+   "pnl": 12457
   },
   {
    "date": "2026-09-23",
-   "pnl": 12664
+   "pnl": 116455
   },
   {
    "date": "2026-09-24",
-   "pnl": 6733
+   "pnl": 61915
   },
   {
    "date": "2026-09-25",
-   "pnl": -15814
+   "pnl": -145412
   },
   {
    "date": "2026-09-28",
-   "pnl": 3831
+   "pnl": 35227
   },
   {
    "date": "2026-09-29",
-   "pnl": -10074
+   "pnl": -92636
   },
   {
    "date": "2026-09-30",
-   "pnl": -5600
+   "pnl": -51491
   }
  ],
  "execution": {
@@ -192,7 +1674,7 @@
     "description": "Notional corrected (version 2, by mo.ops)"
    },
    {
-    "date": "2027-09-24",
+    "date": "2031-02-28",
     "event": "Maturity",
     "status": "Scheduled",
     "description": "Final payment and close-out"
@@ -237,8 +1719,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": 348358,
-  "cleanPv": 348358.0,
+  "npv": 3203297,
+  "cleanPv": 3203297.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Black / Bachelier",
@@ -253,36 +1735,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": 368763,
+   "pnl": 2969549,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": 4484
+   "pnl": 51362
   },
   {
    "step": "Roll-down",
-   "pnl": 2239
+   "pnl": 25643
   },
   {
    "step": "Rates delta",
-   "pnl": -12405
+   "pnl": 318161
   },
   {
    "step": "FX delta",
-   "pnl": 2279
+   "pnl": 26103
   },
   {
    "step": "Vol (vega)",
-   "pnl": -8579
+   "pnl": -98275
   },
   {
    "step": "Theta",
-   "pnl": -8107
+   "pnl": -92864
   },
   {
    "step": "Unexplained",
-   "pnl": -316
+   "pnl": 3618
   }
  ],
  "_meta": {
@@ -290,7 +1772,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 927
+   "mtm": 6637,
+   "legs.1.cashflows.0.fixings.1.rate": 0.000181
   }
  }
 }

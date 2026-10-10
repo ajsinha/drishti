@@ -3,8 +3,8 @@
  "name": "Rates · Swaps and options · book 3",
  "deskName": "Rates · Swaps and options",
  "tradeCount": 53,
- "mtm": 21656655,
- "dv01": -990250,
+ "mtm": 20771882,
+ "dv01": -984338,
  "topTrades": [
   {
    "tradeId": "MX-20000007",

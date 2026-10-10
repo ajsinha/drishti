@@ -122,7 +122,7 @@ class ExplainGlossaryTest {
         JsonNode e = explain("masked", "var/VAR-COMM");
         JsonNode v = term(e, "var99");
         assertThat(v.path("masked").asBoolean()).isTrue();
-        assertThat(e.path("glossary").toString()).doesNotContain("11.0m", "10959317");
+        assertThat(e.path("glossary").toString()).doesNotContain("10.9m", "10949577");
     }
 
     @Test

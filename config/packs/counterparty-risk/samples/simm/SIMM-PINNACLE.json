@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-PINNACLE",
- "total": 8326951,
- "posted": 8077142,
- "received": 8493490,
+ "total": 8020542,
+ "posted": 7779926,
+ "received": 8180953,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 3747128
+   "im": 3609244
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 999234
+   "im": 962465
   },
   {
    "riskClass": "Equity",
-   "im": 1498851
+   "im": 1443698
   },
   {
    "riskClass": "Commodity",
-   "im": 666156
+   "im": 641643
   },
   {
    "riskClass": "FX",
-   "im": 1415582
+   "im": 1363492
   }
  ],
  "nettingSet": "NS-PINNACLE-FRA",

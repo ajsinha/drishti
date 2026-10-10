@@ -50,4 +50,9 @@ public record BindContext(
             Map<EntityRef, EntityDocument> linked, java.util.Set<EntityRef> pending) {
         this(doc, layout, fingerprint, eval, links, linked, pending, java.util.Set.of());
     }
+
+    /** The same binding read in another evaluation context (a tab's element is {@code @}). */
+    public BindContext withEval(EvalContext next) {
+        return new BindContext(doc, layout, fingerprint, next, links, linked, pending, denied);
+    }
 }

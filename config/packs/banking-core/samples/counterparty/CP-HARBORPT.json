@@ -6,7 +6,7 @@
  "sector": "Banking",
  "country": "US",
  "type": "Bank",
- "netMtm": 16899864,
+ "netMtm": 24049570,
  "pfePeak": 205058358,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-HARBORPT-NY",
    "agreement": "AGR-HARBORPT-ISDA",
    "trades": 14,
-   "netMtm": 26195845
+   "netMtm": 33345551
   },
   {
    "id": "NS-HARBORPT-TKY",

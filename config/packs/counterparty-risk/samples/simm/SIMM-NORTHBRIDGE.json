@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-NORTHBRIDGE",
- "total": 8412550,
- "posted": 8160174,
- "received": 8580801,
+ "total": 8266830,
+ "posted": 8018825,
+ "received": 8432167,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 3785648
+   "im": 3720074
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 1009506
+   "im": 992020
   },
   {
    "riskClass": "Equity",
-   "im": 1514259
+   "im": 1488029
   },
   {
    "riskClass": "Commodity",
-   "im": 673004
+   "im": 661346
   },
   {
    "riskClass": "FX",
-   "im": 1430134
+   "im": 1405361
   }
  ],
  "nettingSet": "NS-NORTHBRIDGE-FRA",

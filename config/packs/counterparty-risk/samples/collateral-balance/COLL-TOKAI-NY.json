@@ -1,30 +1,30 @@
 {
  "balanceId": "COLL-TOKAI-NY",
- "held": 1415784,
+ "held": 2208220,
  "posted": 0,
- "net": 1415784,
+ "net": 2208220,
  "asOf": "2026-09-30",
  "positions": [
   {
    "asset": "Halcyon Shipping plc 2036",
    "direction": "Held",
-   "marketValue": 471928,
+   "marketValue": 736073,
    "haircut": 0.02,
-   "value": 462489
+   "value": 721352
   },
   {
    "asset": "Meridian Financial Group 2031",
    "direction": "Held",
-   "marketValue": 471928,
+   "marketValue": 736073,
    "haircut": 0.005,
-   "value": 469568
+   "value": 732393
   },
   {
    "asset": "Kaizen Motors Corp. 2036",
    "direction": "Held",
-   "marketValue": 471928,
+   "marketValue": 736073,
    "haircut": 0.02,
-   "value": 462489
+   "value": 721352
   }
  ],
  "csa": "CSA-TOKAI",

@@ -6,7 +6,7 @@
  "sector": "Government",
  "country": "NO",
  "type": "Sovereign fund",
- "netMtm": 39170046,
+ "netMtm": 43062593,
  "pfePeak": 82685600,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-AURORA-NY",
    "agreement": "AGR-AURORA-ISDA",
    "trades": 21,
-   "netMtm": 41166765
+   "netMtm": 45059312
   }
  ],
  "kyc": {

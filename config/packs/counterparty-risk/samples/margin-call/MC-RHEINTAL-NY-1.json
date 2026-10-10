@@ -2,8 +2,8 @@
  "callId": "MC-RHEINTAL-NY-1",
  "callDate": "2026-09-30",
  "marginType": "Variation",
- "direction": "We call",
- "amount": 93000.0,
+ "direction": "They call",
+ "amount": 11000.0,
  "status": "Agreed",
  "disputeAmount": 0,
  "events": [

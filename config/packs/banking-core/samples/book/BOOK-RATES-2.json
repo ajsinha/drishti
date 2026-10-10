@@ -3,8 +3,8 @@
  "name": "Rates · Swaps and options · book 2",
  "deskName": "Rates · Swaps and options",
  "tradeCount": 54,
- "mtm": -66175404,
- "dv01": 62881,
+ "mtm": -53757622,
+ "dv01": 66229,
  "topTrades": [
   {
    "tradeId": "MX-20000035",
@@ -27,6 +27,17 @@
    "maturity": "2035-12-03",
    "maturityBucket": "5-10Y",
    "mtm": -29328960
+  },
+  {
+   "tradeId": "MX-20000099",
+   "product": "European swaption",
+   "assetClass": "Rates",
+   "currency": "GBP",
+   "book": "BOOK-RATES-2",
+   "notional": 236000000.0,
+   "maturity": "2029-06-05",
+   "maturityBucket": "2-5Y",
+   "mtm": 22882900
   },
   {
    "tradeId": "MX-20000004",
@@ -71,17 +82,6 @@
    "maturity": "2030-05-01",
    "maturityBucket": "2-5Y",
    "mtm": 6871958
-  },
-  {
-   "tradeId": "MX-20000024",
-   "product": "Cross-currency swap (non-MtM)",
-   "assetClass": "Rates",
-   "currency": "CAD",
-   "book": "BOOK-RATES-2",
-   "notional": 169000000.0,
-   "maturity": "2029-10-09",
-   "maturityBucket": "2-5Y",
-   "mtm": 5804007
   },
   {
    "tradeId": "MX-20000045",

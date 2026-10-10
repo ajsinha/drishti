@@ -1,66 +1,77 @@
 {
  "nettingSetId": "NS-MERIDIAN-NY",
  "tradeCount": 16,
- "netMtm": 3215612,
- "collateral": 2809208,
- "eePeak": 29369672,
- "pfePeak": 65997529,
- "limit": 126000000.0,
- "utilisation": 0.5238,
- "cva": -51428,
+ "netMtm": 23629944,
+ "collateral": 20643483,
+ "eePeak": 29818019,
+ "pfePeak": 67182007,
+ "limit": 128000000.0,
+ "utilisation": 0.5249,
+ "cva": -53893,
  "profile": [
   {
    "tenor": "0",
-   "ee": 2473661,
-   "pfe": 7305454
+   "ee": 5053718,
+   "pfe": 12981579
   },
   {
    "tenor": "1M",
-   "ee": 4677316,
-   "pfe": 12143083
+   "ee": 7204178,
+   "pfe": 17702179
   },
   {
    "tenor": "3M",
-   "ee": 7793731,
-   "pfe": 18999196
+   "ee": 10217470,
+   "pfe": 24331423
   },
   {
    "tenor": "6M",
-   "ee": 10800638,
-   "pfe": 25607303
+   "ee": 13077530,
+   "pfe": 30616466
   },
   {
    "tenor": "1Y",
-   "ee": 15083708,
-   "pfe": 35030057
+   "ee": 17093058,
+   "pfe": 39450628
   },
   {
    "tenor": "2Y",
-   "ee": 19918773,
-   "pfe": 45560100
+   "ee": 21717285,
+   "pfe": 49537476
   },
   {
    "tenor": "3Y",
-   "ee": 22613543,
-   "pfe": 51367931
+   "ee": 23832275,
+   "pfe": 54049143
   },
   {
    "tenor": "5Y",
-   "ee": 29062560,
-   "pfe": 65555770
+   "ee": 29801759,
+   "pfe": 67182007
   },
   {
    "tenor": "7Y",
-   "ee": 29369672,
-   "pfe": 65997529
+   "ee": 29818019,
+   "pfe": 66983892
   },
   {
    "tenor": "10Y",
-   "ee": 33360,
-   "pfe": 73391
+   "ee": 245144,
+   "pfe": 539316
   }
  ],
  "trades": [
+  {
+   "tradeId": "MX-20000099",
+   "product": "European swaption",
+   "assetClass": "Rates",
+   "currency": "GBP",
+   "book": "BOOK-RATES-2",
+   "notional": 236000000.0,
+   "maturity": "2029-06-05",
+   "maturityBucket": "2-5Y",
+   "mtm": 22882900
+  },
   {
    "tradeId": "MX-20000059",
    "product": "Constant maturity swap",
@@ -71,17 +82,6 @@
    "maturity": "2033-02-25",
    "maturityBucket": "5-10Y",
    "mtm": 8653471
-  },
-  {
-   "tradeId": "MX-20000099",
-   "product": "European swaption",
-   "assetClass": "Rates",
-   "currency": "GBP",
-   "book": "BOOK-RATES-2",
-   "notional": 236000000.0,
-   "maturity": "2027-12-03",
-   "maturityBucket": "1-2Y",
-   "mtm": 3985722
   },
   {
    "tradeId": "END-1000072",
@@ -126,17 +126,6 @@
    "maturity": "2028-11-17",
    "maturityBucket": "2-5Y",
    "mtm": -1725172
-  },
-  {
-   "tradeId": "MX-20000020",
-   "product": "Cross-currency swap (non-MtM)",
-   "assetClass": "Rates",
-   "currency": "JPY",
-   "book": "BOOK-RATES-1",
-   "notional": 143000000.0,
-   "maturity": "2032-03-29",
-   "maturityBucket": "5-10Y",
-   "mtm": -1325556
   },
   {
    "tradeId": "BBG-60000072",
@@ -227,6 +216,17 @@
    "mtm": -242239
   },
   {
+   "tradeId": "MX-20000020",
+   "product": "Cross-currency swap (non-MtM)",
+   "assetClass": "Rates",
+   "currency": "JPY",
+   "book": "BOOK-RATES-1",
+   "notional": 143000000.0,
+   "maturity": "2032-03-29",
+   "maturityBucket": "5-10Y",
+   "mtm": 191598
+  },
+  {
    "tradeId": "END-1000083",
    "product": "Weather derivative (HDD/CDD)",
    "assetClass": "Commodity",
@@ -241,7 +241,7 @@
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": 9833225
+   "mtm": 30247557
   },
   {
    "asset": "Commodity",
@@ -272,7 +272,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 6431
+   "netMtm": 47259
   }
  }
 }

@@ -6,7 +6,7 @@
  "sector": "Airlines",
  "country": "CA",
  "type": "Corporate",
- "netMtm": 13129269,
+ "netMtm": 15984208,
  "pfePeak": 88610865,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-CASCADIA-NY",
    "agreement": "AGR-CASCADIA-ISDA",
    "trades": 18,
-   "netMtm": 13850938
+   "netMtm": 16705877
   },
   {
    "id": "NS-CASCADIA-TKY",
