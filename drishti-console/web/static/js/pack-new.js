@@ -66,6 +66,8 @@
     }
     if (n === 3) {
       if (!NAME_RE.test(S.pack.name)) { say('The pack name is lower-case letters, digits and "-".', true); return false; }
+      var clash = S.plan ? Object.keys(S.plan.conflicts.kinds || {}) : [];
+      if (clash.length) { say('Another pack on the server already defines the kind ' + clash.join(', ') + ', and unrelated packs may not share a kind: go back to step 2 and rename it on its card.', true); return false; }
       if (S.plan && S.plan.conflicts.mnemonics.length) { say('A mnemonic is already used by another pack: ' + S.plan.conflicts.mnemonics.join(', ') + '.', true); return false; }
     }
     if (n === 4 && !(S.jobView && S.jobView.state === 'done')) { say('The preview is not finished.', true); return false; }

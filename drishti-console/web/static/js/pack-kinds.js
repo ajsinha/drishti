@@ -90,6 +90,11 @@
     if (files.length) { src.push('data ' + files.map(function (f) { return f.name + ' (' + U.num(f.rows) + ' rows, ' + U.num(f.sampled) + ' sampled)'; }).join(', ')); }
     else { src.push('no data: synthetic samples from the schema'); }
     c.appendChild(el('p', { class: 'pk-src text-muted-d', text: src.join(' · ') + ' · kind taken from ' + (k.kindWhy || 'the data file name') }));
+    var owner = (plan.conflicts.kinds || {})[k.kind];
+    if (owner) {
+      c.classList.add('pk-needs');
+      c.appendChild(el('p', { class: 'pk-warn', role: 'alert', text: 'The pack "' + owner + '" on the server already defines the kind "' + k.kind + '". If this new pack is "' + owner + '" itself (a new version), that is fine; two unrelated packs may not define the same kind, so otherwise rename this kind below.' }));
+    }
     if (k.description) { c.appendChild(el('p', { class: 'pk-desc', text: k.description })); }
 
     var grid = el('div', { class: 'pk-grid' });

@@ -33,7 +33,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import drishti as D  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-FIX = ROOT / "drishti-console" / "tests" / "fixtures" / "schemas"
+FIX = ROOT / "docs" / "guides" / "examples" / "schemas"
 HAVE_JAR = bool(os.environ.get("DRISHTI_JAR") or glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")))
 
 

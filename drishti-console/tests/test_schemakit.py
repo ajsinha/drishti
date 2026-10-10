@@ -28,7 +28,7 @@ sys.path.insert(0, str(CORE))
 from schemakit import build, decorate, plan as P, synth  # noqa: E402
 from schemakit.resolve import Resolver, SchemaDoc, SchemaError, parse_text  # noqa: E402
 
-FIX = pathlib.Path(__file__).parent / "fixtures" / "schemas"
+FIX = pathlib.Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples" / "schemas"
 
 DRAFT = """rachana: 1
 sutra: trade-auto

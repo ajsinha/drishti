@@ -31,7 +31,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 
-FIX = pathlib.Path(__file__).parent / "fixtures" / "schemas"
+FIX = pathlib.Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples" / "schemas"
 TOOLS = CONSOLE.parent / "tools"
 
 
@@ -42,8 +42,19 @@ def _free_port() -> int:
 
 
 class AuthorBackend(FakeBackend):
+    installed: list = []                                       # the packs the server "has": none unless a test says
+
     async def _send(self, method, path, ident, **kw):          # the inbox count the top bar asks for
         return {"unread": 0}
+
+    async def packs(self, ident=None):
+        return [{"name": p["name"], "version": "1.0.0", "title": p["name"], "description": "", "console": {}, "assigned": True, "active": True, "kinds": p["kinds"]}
+                for p in self.installed]
+
+    async def admin(self, method, path, ident, body=None, **params):
+        if path == "/packs":
+            return [{"name": p["name"], "kinds": p["kinds"], "mnemonics": p.get("mnemonics", [])} for p in self.installed]
+        return await super().admin(method, path, ident, body, **params)
 
     async def studio_settings(self, ident=None):
         return {"save": True, "author": True, "review": False, "approve": False}
@@ -173,6 +184,41 @@ def test_the_whole_flow_three_schemas_and_a_folder_to_a_downloaded_bundle(browse
     assert "sg-browser/tests/book-default/sample-synthetic-1.json" in names
     assert not problems, problems
     page.close()
+
+
+def test_a_kind_another_pack_defines_must_be_renamed_before_going_on(browser, pack_console):
+    url, backend = pack_console
+    backend.installed = [{"name": "zzpack", "kinds": ["widget"], "mnemonics": ["WID"]}]
+    try:
+        page = browser.new_page()
+        page.goto(url + "/build/pack/new")
+        page.locator("summary:has-text('Paste a schema')").click()
+        page.fill("[data-paste]", json.dumps({"title": "Widget", "type": "object", "required": ["widgetId"], "properties": {"widgetId": {"type": "string"}}}))
+        page.click("[data-paste-add]")
+        page.click("[data-next]")
+        page.locator(".pk-card").first.wait_for()
+        assert 'The pack "zzpack" on the server already defines the kind "widget"' in page.locator(".pk-card").inner_text()
+        page.click("[data-next]")
+        page.fill("#pkp-name", "gadget-pack")
+        page.locator("#pkp-name").dispatch_event("change")
+        page.locator("[data-pack-form] .pk-grid").first.wait_for()
+        page.click("[data-next]")
+        assert "already defines the kind widget" in page.locator("[data-msg]").inner_text()
+        assert page.locator("[data-step='3']").is_visible()
+        page.click("[data-go='2']")
+        page.fill("input[data-focus^=name-]", "gadget")
+        page.locator("input[data-focus^=name-]").dispatch_event("change")
+        page.locator(".pk-card h3:has-text('gadget'), .pk-card h3:has-text('Widget')").first.wait_for()
+        page.wait_for_function("() => !document.querySelector('.pk-card').innerText.includes('already defines')")
+        page.click("[data-next]")
+        assert page.locator("[data-step='3']").is_visible()
+        page.fill("#pkp-name", "gadget-pack")
+        page.locator("#pkp-name").dispatch_event("change")
+        page.click("[data-next]")
+        page.locator(".pk-item").first.wait_for(timeout=20000)
+        page.close()
+    finally:
+        backend.installed = []
 
 
 def test_a_big_jsonl_file_is_streamed_and_sampled_not_uploaded(browser, pack_console, tmp_path):

@@ -114,23 +114,38 @@ def check_request(body: dict, lim: WizardLimits) -> tuple[list, dict, dict]:
     return out_schemas, samples, {}
 
 
-async def existing_packs(backend, ident, packs_state) -> tuple[set, set]:
-    """(pack names, mnemonics) already in use on the server: the packs this user can see, and, for an administrator, every installed pack."""
-    names, mnemonics = set(), set()
+async def existing_packs(backend, ident, packs_state) -> dict:
+    """{pack name: {"mnemonics": set, "kinds": set}} for the packs on the server: those this user can see and, for an administrator, every installed pack."""
+    out: dict = {}
+
+    def add(name, mnemonics, kinds):
+        e = out.setdefault(name, {"mnemonics": set(), "kinds": set()})
+        e["mnemonics"] |= {str(m).upper() for m in mnemonics}
+        e["kinds"] |= {k for k in kinds if isinstance(k, str)}
     try:
         for p in await packs_state.assigned(backend, ident):
-            names.add(p["name"])
-            mnemonics |= set((p.get("mnemonics") or {}).keys())
+            add(p["name"], (p.get("mnemonics") or {}).keys(), p.get("kinds") or [])
     except Exception:           # noqa: BLE001 - the server being away only means fewer conflicts are found
         pass
     if getattr(ident, "is_admin", False):
         try:
             for p in await backend.admin("GET", "/packs", ident):
-                names.add(p.get("name"))
-                mnemonics |= {str(m).upper() for m in (p.get("mnemonics") or [])}
+                add(p.get("name"), p.get("mnemonics") or [], p.get("kinds") or [])
         except Exception:       # noqa: BLE001
             pass
-    return names, mnemonics
+    return out
+
+
+def others(existing: dict, own: str) -> tuple[set, dict]:
+    """(mnemonics, {kind: pack}) used by packs other than ``own``: a new version of a pack keeps its own mnemonics and kinds."""
+    mnemonics, kinds = set(), {}
+    for name, e in existing.items():
+        if name == own:
+            continue
+        mnemonics |= e["mnemonics"]
+        for k in e["kinds"]:
+            kinds.setdefault(k, name)
+    return mnemonics, kinds
 
 
 def assign(samples: dict, kinds: list, kind_of: dict) -> tuple[dict, dict]:
@@ -151,7 +166,9 @@ async def plan_object(body: dict, lim: WizardLimits, backend, ident, packs_state
     pack = body.get("pack") if isinstance(body.get("pack"), dict) else {}
     overrides = body.get("overrides") if isinstance(body.get("overrides"), dict) else {}
     kind_of = body.get("kindOf") if isinstance(body.get("kindOf"), dict) else {}
-    names, taken = await existing_packs(backend, ident, packs_state)
+    existing = await existing_packs(backend, ident, packs_state)
+    taken, other_kinds = others(existing, str(pack.get("name") or ""))
+    names = set(existing)
     settings = {"samples": max(1, min(int(body.get("samples") or 5), 20)), "strip_max": max(1, min(int(body.get("strip") or 6), 12))}
     try:
         first = P.make_plan(schemas)
@@ -162,16 +179,18 @@ async def plan_object(body: dict, lim: WizardLimits, backend, ident, packs_state
     for k in ("name", "code", "title", "description", "version", "connector"):
         if pack.get(k):
             plan.pack[k] = str(pack[k])
-    return plan, samples, file_kind, names, taken
+    return plan, samples, file_kind, names, taken, other_kinds
 
 
 async def make_plan(body: dict, lim: WizardLimits, backend, ident, packs_state) -> dict:
-    plan, samples, file_kind, names, taken = await plan_object(body, lim, backend, ident, packs_state)
+    plan, samples, file_kind, names, taken, other_kinds = await plan_object(body, lim, backend, ident, packs_state)
     if plan.sutra_count > lim.max_sutras:
         raise WizardError(413, f"{plan.sutra_count} Sutras; at most {lim.max_sutras} per pack (builder.pack_max_sutras): choose a less detailed match column", "DRS-5005")
     out = plan.to_dict()
     out["files"] = [{"name": n, "rows": s["rows"], "sampled": len(s["docs"]), "bytes": s["bytes"], "kind": file_kind.get(n, "")} for n, s in samples.items()]
-    out["conflicts"] = {"packName": plan.pack["name"] in names, "mnemonics": sorted({k.mnemonic for k in plan.kinds} & taken),
+    own = plan.pack["name"]
+    out["conflicts"] = {"packName": own in names, "mnemonics": sorted({k.mnemonic for k in plan.kinds} & taken),
+                        "kinds": {k.kind: other_kinds[k.kind] for k in plan.kinds if other_kinds.get(k.kind) not in (None, own)},
                         "nameValid": bool(NAME_RE.fullmatch(plan.pack["name"]))}
     out["limits"] = lim.as_dict()
     return out

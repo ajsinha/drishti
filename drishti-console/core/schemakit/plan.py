@@ -398,7 +398,7 @@ def _is_link_name(name: str, others: dict, own: str) -> bool:
     if not m:
         return False
     stem = norm(singular(m.group(1)))
-    return any(stem in (norm(k), norm(singular(k))) for k in others if k != own)
+    return any(stem in (norm(k), norm(singular(k)), norm(o.orig), norm(singular(o.orig))) for k, o in others.items() if k != own)
 
 
 def find_links(kp: KindPlan, kinds: dict, ov_links: dict) -> None:
@@ -421,11 +421,11 @@ def find_links(kp: KindPlan, kinds: dict, ov_links: dict) -> None:
             m = LINK_NAME.match(f.name)
             if m:
                 stem = norm(singular(m.group(1)))
-                hit = next((k for k in kinds if k != kp.kind and stem in (norm(k), norm(singular(k)))), None)
+                hit = next((k for k, o in kinds.items() if k != kp.kind and stem in (norm(k), norm(singular(k)), norm(o.orig), norm(singular(o.orig)))), None)
                 if hit:
                     target, why = hit, f"named {m.group(1)}{m.group(2)}, and {hit} is a kind in this batch"
             if not target:
-                hit = next((k for k in kinds if k != kp.kind and norm(f.name) in (norm(k), norm(singular(k)))), None)
+                hit = next((k for k, o in kinds.items() if k != kp.kind and norm(f.name) in (norm(k), norm(singular(k)), norm(o.orig), norm(singular(o.orig)))), None)
                 if hit and kinds[hit].key:
                     target, why = hit, f"named like the kind {hit}"
             if not target and kp.samples:

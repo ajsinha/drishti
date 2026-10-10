@@ -23,7 +23,7 @@ import time
 
 import pytest
 
-FIX = pathlib.Path(__file__).parent / "fixtures" / "schemas"
+FIX = pathlib.Path(__file__).resolve().parents[2] / "docs" / "guides" / "examples" / "schemas"
 TOOLS = pathlib.Path(__file__).resolve().parents[2] / "tools"
 JSON = {"Content-Type": "application/json"}
 
@@ -103,7 +103,8 @@ def test_plan_from_schemas_alone(post):
     t = next(k for k in p["kinds"] if k["kind"] == "trade")
     assert t["key"] == "tradeId" and t["match"] == ["productType"] and t["synthetic"] is True and t["origKind"] == "trade"
     assert {(e["from"], e["to"]) for e in p["edges"]} == {("trade", "counterparty"), ("trade", "book"), ("counterparty", "counterparty")}
-    assert p["conflicts"] == {"packName": False, "mnemonics": [], "nameValid": True}
+    assert p["conflicts"] == {"packName": False, "mnemonics": [], "nameValid": True,
+                              "kinds": {"book": "finance", "counterparty": "finance", "trade": "finance"}}      # the repository's finance pack defines them
     assert p["pack"]["name"] == "my-pack" and p["limits"]["sampleDocs"] == 200
 
 
@@ -139,12 +140,24 @@ def test_pack_fields_the_user_typed_win(post):
 
 def test_mnemonic_and_name_conflicts_with_installed_packs(post, backend, monkeypatch):
     async def admin(method, path, ident, body=None, **params):
-        return [{"name": "finance", "mnemonics": ["TRA", "BOO"]}] if path == "/packs" else {}
+        return [{"name": "finance", "mnemonics": ["TRA", "BOO"], "kinds": ["trade", "swap"]}] if path == "/packs" else {}
     monkeypatch.setattr(backend, "admin", admin)
     p = post("/build/pack/api/plan", body(pack={"name": "finance"})).json()
     trade = next(k for k in p["kinds"] if k["kind"] == "trade")
-    assert trade["mnemonic"] != "TRA"                     # a free one was chosen
+    assert trade["mnemonic"] == "TRA"                     # a new version of the same pack keeps its own mnemonics
     assert p["conflicts"]["packName"] is True
+    assert p["conflicts"]["kinds"] == {}                  # ... and its kinds
+    q = post("/build/pack/api/plan", body(pack={"name": "my-bank"})).json()
+    assert next(k for k in q["kinds"] if k["kind"] == "trade")["mnemonic"] != "TRA"      # another pack's: a free one was chosen
+    other = post("/build/pack/api/plan", body(pack={"name": "my-bank"}, overrides={"trade": {"kind": "deal"}})).json()["conflicts"]["kinds"]
+    assert other == {"book": "finance", "counterparty": "finance"}      # two unrelated packs may not define the same kind; the renamed one is free
+
+
+def test_a_renamed_kind_keeps_its_links(post):
+    p = post("/build/pack/api/plan", body(overrides={"trade": {"kind": "deal"}, "counterparty": {"kind": "party"}, "book": {"kind": "ledger"}})).json()
+    deal = next(k for k in p["kinds"] if k["kind"] == "deal")
+    assert {(l["field"], l["to"]) for l in deal["links"]} == {("counterpartyId", "party"), ("bookId", "ledger")}
+    assert deal["origKind"] == "trade"
 
 
 def test_plan_refuses_what_is_over_a_cap_or_not_json(client, post):
