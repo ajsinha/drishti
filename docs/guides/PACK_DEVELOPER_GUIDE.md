@@ -1163,7 +1163,7 @@ format:
 | `source` | the name shown as the source system |
 | `generation` | a version number shown with the source |
 | `live` | `true`: the document ticks while someone watches it |
-| `walk` | `{ field: step }`: top-level numeric fields that random-walk on each tick by a normal draw whose standard deviation is `step` (usually within a step or two, but unbounded); a step of 1 or more keeps whole numbers. No code needed. |
+| `walk` | `{ field: step }`: numeric fields, named at the top level or by a dotted path into the document (`legs.1.cashflows.0.fixings.3.rate`), that random-walk on each tick by a normal draw whose standard deviation is `step` (usually within a step or two, but unbounded); a step of 1 or more keeps whole numbers. No code needed. |
 
 Every catalogue entry must have its file; a missing file stops the demo source from starting. An entry whose path
 would lead outside the pack's `samples/` folder is skipped. The `title` and `subtitle` are what the suggestions
@@ -1182,6 +1182,41 @@ standard-library-only toolkit for that:
 
 `tools/samplegen/test_samplegen.py` checks the library against known values and the finance samples against
 themselves.
+
+## Modelling deep documents: legs, cashflows and fixings
+
+A trading system holds a trade as a tree: the **trade**, its **legs**, each leg's **cashflows**, and each floating cashflow's **fixings**
+(an Endur trade is exactly this; so are tranches with their payments, shipments with their stops and events). Keep that shape in the
+document: a flat list of every cashflow with a leg number loses what belongs to what, and the Sutra can show the nesting directly.
+The banking packs' generator, `tools/packgen/banking/data_deep.py`, is the worked example; its products are the interest rate swap
+(vanilla and the rest of the swap family), basis swap, cross-currency swap, cap and floor, European swaption and the commodity swap.
+
+| Level | Field of the document | Fields it carries |
+|---|---|---|
+| trade | `terms`, `risk`, `exercise` (a swaption's option terms), `schedule` (every cashflow, flat, for the ladder and the Pivot tab) | the usual |
+| `legs[]` | one element per leg: 1 (a cap), 2 (a swap), 3 or 4 (a commodity swap: fixed, index, fee, location differential) | `leg`, `legId`, `label`, `payReceive`, `rateType`, `currency`, `notional`, `index`, `rate`, `spread`, `dayCount`, `frequency`, `resetFrequency`, `businessDayConvention`, `calendar`, `paymentLag`, `pv` |
+| `legs[].cashflows[]` | one element per calculation period, plus the notional exchanges of a cross-currency swap (`type: Initial exchange`, `Final exchange`) | `n`, `type`, `periodStart`, `periodEnd`, `payDate`, `notional` (or `quantity`), `rate`, `spread`, `accrualFactor`, `amount`, `discountFactor`, `pv`, `status` (`Settled`, `Fixed`, `Partially fixed`, `Projected`) |
+| `legs[].cashflows[].fixings[]` | one element per observation of the index in the period: one for a term rate, the monthly sub-periods of an overnight rate compounded, a business day each for a commodity average | `fixingDate`, `index`, `tenor`, `rate`, `source`, `status` (`Fixed` or `Projected`) |
+
+Rules that keep such a document honest (`make_data.py --check` verifies the first and the last):
+
+1. **The numbers add up.** An interest cashflow's `amount` is notional times `(rate + spread)` times `accrualFactor`, and its `rate` is the
+   day-weighted average of its fixings (a commodity cashflow's `rate` is the plain average of its daily fixings and `amount` is quantity
+   times it); `pv` is `amount` times `discountFactor` for an unsettled cashflow and 0 for a settled one; a leg's `pv` is the sum of its
+   cashflows' (checked); the trade's `mtm` is the sum of its legs' (converted to USD when the legs are in different currencies).
+2. **Fixed cashflows simply have no `fixings`.** Do not write an empty list or a null: the table then shows a leaf with no toggle.
+3. **Statuses follow the dates.** A fixing is `Fixed` once its date is on or before the business date and `Projected` after; a cashflow
+   is `Settled` once paid, `Fixed` when all its fixings are, `Partially fixed` when some are, `Projected` when none is.
+4. **Size.** A deep document is bigger than a flat one (a twelve-month commodity swap with daily fixings is about 80 KB, a thirty-year swaption
+   about 110 KB). That is fine for a view; keep the lake's rows to the sizes in the section on large kinds, and the demo lake to the
+   small local sizes.
+5. **A cashflow's rate lies among its fixings** (checked): the sample would otherwise show a rate that none of its observations support.
+
+Show it with one `tabs` panel with `panels:` (a tab per leg whatever the count, each holding the leg's terms and its cashflows as a tree
+table that opens to the fixings), as in
+[the Rachana reference](RACHANA_REFERENCE.md#panels-inside-a-tab); and make the demo tick a nested cell with a path in `_meta.walk`
+(see *Samples* above). Without a Sutra, inference lays such a document out the same way. For more than a handful of legs, tabs stop being the
+right control: use a `table` of the legs with `children`.
 
 ## Vocabulary: labels, formats and inference hints
 

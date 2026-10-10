@@ -16,6 +16,25 @@
 # Changelog
 
 ## Unreleased
+- **Added:** **tabs hold panels** (Rachana). A `tabs` panel takes `panels:`, a list of panels (`kv`, `status`, `table`, `ladder`, `hbar`, `markdown`, `metric`) shown inside each tab and read
+  with `@` the tab's element, so a tab per leg, whatever the count, can hold the leg's terms and a table whose rows are `@.cashflows` and whose tree children are `@.fixings`: a
+  trade, its legs, their cashflows and their fixings on one screen. Checks: `DRS-2010` (a panel in a tab needs an `id`), `DRS-2023` (a kind a tab cannot hold, tabs in tabs, a Pivot tab,
+  `panels` on another kind), `DRS-2024`, `DRS-2030`. Parser, writer, JSON schema for the workbench, server pipeline, masking, snapshot, CSV export (Tab, Panel, Row, Field, Value),
+  console macros and the element stylesheet. Live patches repaint the whole tabs panel: the selected tab and the opened tree rows stay. Docs: RACHANA_REFERENCE ("Panels inside a tab"),
+  PANEL_KINDS, USER_GUIDE ("A deep trade"), PACK_DEVELOPER_GUIDE ("Modelling deep documents"), INFERENCE.
+- **Added:** inference lays out a short list of records that hold lists of their own (legs with cashflows, cashflows with fixings) as tabs, one per record, each with a kv of the
+  record's fields and a table per list, a tree when those rows hold lists again (a second `LegsRule`, 0.92). The reference swap IRS-48213's inferred layout now has its cashflows in the
+  leg tabs instead of a separate table of the first leg's.
+- **Changed:** the trading pack's samples are deep: interest-rate swaps (all the swap family) have `fixings[]` on their floating cashflows and named their calculation-period fields
+  `periodStart`, `periodEnd`, `accrualFactor`, `discountFactor` (were `accrualStart`, `accrualEnd`, `yearFraction`, `df`) and the leg's `businessDayConvention` (was `businessDay`); the basis
+  swap has two floating legs, the cross-currency swap two floating legs in two currencies with initial and final exchange of notional as cashflows, the cap and floor one leg of
+  caplets or floorlets each with its fixing, the European swaption its option terms (`exercise`) and the underlying swap's legs, and the commodity swap three or four legs (fixed price, index
+  average with daily fixings, fee, sometimes a location differential). MTM of those products is now the sum of their leg PVs, so the netting-set, book and exposure samples that add trade MTM
+  changed with them. `tools/packgen/banking/data_deep.py`; `make_data.py`, `make_sutras.py`, `make_packs.py`, `make_docs.py` `--check` clean; the trading pack's Sutras show a tab per leg.
+- **Added:** the demo source's `_meta.walk` takes a path into the document (`legs.1.cashflows.0.fixings.3.rate`), so a nested cell ticks; the deep samples walk one projected fixing.
+- **Fixed:** after a live update the tabs of a panel did not switch any more (`root.getElementById is not a function`), and a tree table lost the rows the reader had opened.
+- **Tests:** `NestedTabsTest`, `DeepTradeViewTest`, `DemoTickerPathTest`, the inference test for deep documents, `test_export.py`, and `test_deep_trade_browser.py` (Chromium: three and four tabs,
+  a cashflow opening to its fixings, a live tick of a nested cell, opened rows surviving a tick, a phone at 390 px).
 
 ## 1.19.0 — Connectors as files, TLS everywhere, query by form, Elements, no restarts, BI begins (2026-10-10)
 - **Added:** the `BI` command keyword, working like `FORM`: `BI <GO>` the BI home, `BI WORKSPACE`, `BI CATALOGUE`, `BI <report-or-board>` by id or title (several matches open the catalogue searched), type-ahead after `BI ` offering the items the user may open; `RUPAKA` stays as an alias. `BI` is a reserved word beside `RUPAKA` and `FORM`: the pack loader and `drishti pack check` refuse a pack mnemonic named `BI` (no shipped pack uses it). Docs: BI_GUIDE, USER_GUIDE, PACK_DEVELOPER_GUIDE, RUPAKA.md section 4.

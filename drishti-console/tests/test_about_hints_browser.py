@@ -54,7 +54,7 @@ def test_a_strip_label_with_an_entry_is_underlined_focusable_and_explained_on_fo
     assert tip.get_attribute("role") == "tooltip" and dt.get_attribute("aria-describedby") == "aboutTip"
     text = tip.inner_text()
     assert "Value at risk, 99%, 1 day" in text and "Unit: USD" in text and "A loss, written as a positive number." in text
-    for value in ("10.96", "10,96", "11.0m"):                                      # a field's meaning never carries the value on the page
+    for value in ("10.95", "10,95", "10.9m"):                                      # a field's meaning never carries the value on the page
         assert value not in text, text
     page.keyboard.press("Escape")
     assert tip.is_hidden() and page.evaluate("document.activeElement.getAttribute('data-gloss')") == "var99"

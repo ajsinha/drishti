@@ -130,8 +130,8 @@ class AskEndToEndTest {
         ask("mia", "masked", "var/VAR-COMM", "How big is VaR?").andExpect(status().isOk());
         String user = json.readTree(MODEL.last().body()).path("messages").path(1).path("content").asText();
         assertThat(user).contains("•••");                          // the mask is what the model saw
-        assertThat(fullText).contains("11.0m");                                   // the figure an unmasked caller sees
-        assertThat(user).doesNotContain("11.0m").doesNotContain("58%");           // ... and the masked caller's prompt has neither it nor what derives from it
+        assertThat(fullText).contains("10.9m");                                   // the figure an unmasked caller sees
+        assertThat(user).doesNotContain("10.9m").doesNotContain("58%");           // ... and the masked caller's prompt has neither it nor what derives from it
     }
 
     @Test

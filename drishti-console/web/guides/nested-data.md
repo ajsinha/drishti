@@ -150,6 +150,35 @@ everything nested inside it:
 You should see two columns. *Leg 1 · Receive fixed 4.0829%*: Index *Fixed*, Periods *7*, Next payment
 *2027-06-29*. *Leg 2 · Pay AONIA compounded*: Index *AONIA*, Periods *28*, Next payment *2026-12-30*.
 
+A tab can hold whole panels as well, with `panels:`; each is read with `@` the tab's element. Here a table of the leg's own cashflows
+sits under its terms, in a tab for every leg whatever their number:
+
+```yaml
+- id: legs
+  kind: tabs
+  title: Legs
+  each: $.legs
+  tabTitle: "'Leg ' + @.leg + ' · ' + @.label"
+  panels:
+    - id: leg-terms
+      kind: kv
+      columns:
+        - { label: Index, bind: "coalesce(@.index, 'Fixed')" }
+        - { label: Leg PV, bind: "@.pv", fmt: signed0, tone: sign }
+    - id: leg-cashflows
+      kind: table
+      rows: "@.cashflows"
+      children: "@.fixings"          # a cashflow that has fixings opens to them (omit this for a plain table)
+      columns:
+        - { label: Pay date, bind: "@.payDate", fmt: date }
+        - { label: Amount, bind: "@.amount", fmt: signed0, tone: sign }
+```
+
+You should see two tabs, *Leg 1 · Receive fixed 4.0829%* and *Leg 2 · Pay AONIA compounded*, each with its terms and its own cashflow table
+(7 rows and 28). `children` makes a table a tree: a row whose `@.fixings` is a list gets a ▸ that opens them. A panel inside a tab is a
+`kv`, `status`, `table`, `ladder`, `hbar`, `markdown` or `metric`, needs an `id`, and cannot have `span`, `height` or a Pivot tab.
+[Panels inside a tab](/help/rachana-reference#panels-inside-a-tab) lists the rules.
+
 ## 6. A whole Sutra over a nested trade
 
 This Sutra is an operations view of any trade: who, where, what the regulator sees, where cash settles,

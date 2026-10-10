@@ -174,7 +174,7 @@ public final class Rules {
             opts.put("each", "$." + k);
             opts.put("tabTitle", "'" + one + " ' + (#index + 1)");
             List<Panel> parts = new ArrayList<>();
-            parts.add(new Panel("terms", PanelKind.KV, null, null, null, Area.MAIN, true, c.columns().forObject(a.get(0), "@."), null,
+            parts.add(new Panel("terms", PanelKind.KV, "Terms", null, null, Area.MAIN, true, c.columns().forObject(a.get(0), "@."), null,
                     Map.of(), INFERRED));
             for (String list : listsIn(a)) {
                 DataNode.Arr rows = gather(a, list);

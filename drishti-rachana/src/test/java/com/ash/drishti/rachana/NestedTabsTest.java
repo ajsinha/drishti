@@ -133,4 +133,10 @@ class NestedTabsTest {
             assertThat(e.problems()).anyMatch(p -> p.code().equals("DRS-2023") && p.message().contains("only 'tabs'"));
         }
     }
+
+    @Test
+    void theWorkbenchSchemaOffersPanelsOnEveryPanel() {
+        var schema = RachanaSchema.build(List.of("date"), List.of("trade"));
+        assertThat(schema.toString()).contains("panels=").contains("tabs only: panels shown inside each tab");
+    }
 }

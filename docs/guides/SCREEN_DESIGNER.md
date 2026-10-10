@@ -406,7 +406,7 @@ The `waterfall`'s `sum` names the step that is the total; the `hbar` panel draws
 
 ![A group graph, tabs per netting set and linked entities](img/designer/37-family-relationships.jpg)
 
-`tabs` makes one tab per element of `each`; its body is a panel of its own (edit it in the YAML tab: a panel inside a tabs body is not a canvas target). Exercise: change `tabTitle` to another expression.
+`tabs` makes one tab per element of `each`; its body, and the `panels:` it may hold (a table of each leg's cashflows, say), are panels of their own (edit them in the YAML tab: a panel inside a tab is not a canvas target). Exercise: change `tabTitle` to another expression.
 
 ### Operations, timeline and ladder: [operations-status](examples/operations-status.md)
 

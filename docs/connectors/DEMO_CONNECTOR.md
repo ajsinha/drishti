@@ -278,7 +278,10 @@ the whole connector, so a run's sequence of draws is repeatable but depends on w
 is the standard deviation, not a bound). A step of 1 or more rounds the result to a whole number; a smaller step keeps
 the step's own precision: the result is rounded to two more decimal places than the step has (at least two), so a step
 of 0.0004 keeps six decimals and a step of 0.3 keeps three. A named field that is missing or not a number is left
-alone. Nested fields cannot be walked.
+alone. A field may also be a **path into the document**: `legs.1.cashflows.0.fixings.3.rate` is the rate of the fourth fixing of the first cashflow of the
+second leg (names step into objects, whole numbers into lists, counting from 0). A path that leaves the document, or ends at something that is not a
+number, is left alone. The trading pack's deep trades use it to move one still-projected fixing, so a nested cell ticks (the walked path is the last
+entry of the sample's `_meta.walk`).
 
 **Without `walk`**, four kinds have built-in walks (written for the finance pack's mockups):
 
