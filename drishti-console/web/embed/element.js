@@ -243,6 +243,9 @@ export class DrishtiView extends HTMLElement {
       head = t.innerHTML;
     }
     const main = panels.filter((p) => p.area !== 'right'), right = panels.filter((p) => p.area === 'right');
+    const sameRef = this.#view && this.#view.ref && this.#view.ref.kind === data.ref.kind && this.#view.ref.id === data.ref.id;
+    const zoomed = sameRef && this.#mods && this.#mods.zoom && this.#mods.zoom.current();      // a repaint of the same entity (a refresh) keeps a zoomed panel zoomed
+    const focused = !!root.activeElement;
     this.#dispose();
     root.querySelectorAll('.view, .about.side').forEach((v) => v.remove());
     const view = document.createElement('div');
@@ -254,6 +257,7 @@ export class DrishtiView extends HTMLElement {
       + right.map((p) => p.html).join('') + '</aside></div>');
     root.appendChild(view);
     this.#mods = boot(this, view, this.server, () => this.reload());
+    if (zoomed && this.#mods.zoom) { this.#mods.zoom.zoom(zoomed, focused); }
   }
   absolutise(root) {                                // console-relative links that are not entities open the console in a new tab
     root.querySelectorAll('a[href^="/"]').forEach((a) => {

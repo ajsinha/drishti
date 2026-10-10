@@ -54,5 +54,25 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
 export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'charts', 'tables', 'tree-rows', 'pivot', 'about', 'about-hints', 'zoom'];
 export const chartLibs = (server) => memo('charts:' + server, async () => {
   await script(server + API + '/echarts.js');
+  quietDispose();
   for (const n of ENHANCERS) { await script(server + API + '/js/' + n + '.js'); }
 });
+
+/** ECharts' SVG painter empties its root and its <svg> with `innerHTML = ''` when a chart is disposed, which a Trusted Types host refuses: a
+ *  violation report on every repaint, and the dispose stops half-way. Each instance's dispose is wrapped as it is created: the setter of those
+ *  elements is silenced for the call and the chart's box is emptied with textContent. */
+function quietDispose() {
+  const e = window.echarts;
+  if (!e || e.__quiet) { return; }
+  e.__quiet = true;
+  const init = e.init, silent = { configurable: true, get: () => '', set: () => {} };
+  e.init = function () {
+    const chart = init.apply(this, arguments), dispose = chart.dispose;
+    chart.dispose = function () {
+      const dom = chart.getDom(), els = dom ? [dom, ...dom.querySelectorAll('svg')] : [];
+      els.forEach((el) => { try { Object.defineProperty(el, 'innerHTML', silent); } catch (x) { /* none */ } });
+      try { return dispose.apply(chart, arguments); } finally { els.forEach((el) => { delete el.innerHTML; }); dom && (dom.textContent = ''); }
+    };
+    return chart;
+  };
+}
