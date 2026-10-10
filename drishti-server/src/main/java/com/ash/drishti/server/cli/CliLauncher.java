@@ -141,6 +141,12 @@ public final class CliLauncher {
         all.addAll(names);
         java.util.Map<String, String> out = new java.util.LinkedHashMap<>();
         out.put("drishti.packs.enabled", String.join(",", all));
+        // a command-line check never writes the site's connector files (config/connectors): it gets a private folder
+        // unless one is named (drishti.sources.connectors-dir or DRISHTI_CONNECTORS_DIR)
+        if (System.getProperty("drishti.sources.connectors-dir") == null && System.getenv("DRISHTI_CONNECTORS_DIR") == null) {
+            out.put("drishti.sources.connectors-dir", java.nio.file.Path.of(System.getProperty("java.io.tmpdir"),
+                    "drishti-cli-connectors-" + ProcessHandle.current().pid()).toString());
+        }
         if (outside != null) {
             out.put("drishti.packs.installed-dir", outside.toString());
         }
