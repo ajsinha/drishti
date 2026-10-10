@@ -105,10 +105,11 @@ class TokenScopeTest {
         user("ari", "author");
         user("rae", "approver");
         user("pat", "author");
+        user("scope-admin", "admin");  // its own admin: the seeded development admin is shared with tests that change it
         String authorApprove = token("ari", "author", "{\"name\":\"a\",\"days\":30,\"scopes\":[\"design:approve\"]}");
         String approverApprove = token("rae", "approver", "{\"name\":\"a\",\"days\":30,\"scopes\":[\"design:approve\"]}");
         String authorPacks = token("pat", "author", "{\"name\":\"p\",\"days\":30,\"scopes\":[\"packs:admin\"]}");
-        String adminPacks = token("drishti-dev-admin", "admin", "{\"name\":\"p\",\"days\":30,\"scopes\":[\"packs:admin\"]}");
+        String adminPacks = token("scope-admin", "admin", "{\"name\":\"p\",\"days\":30,\"scopes\":[\"packs:admin\"]}");
         // the scope opens the door; the role behind it decides
         assertThat(code(authorApprove, "POST", "/api/v1/sutras/proposals/nope/approve")).isEqualTo(403);
         assertThat(code(approverApprove, "POST", "/api/v1/sutras/proposals/nope/approve")).isNotIn(401, 403);   // unknown proposal, not a refusal
