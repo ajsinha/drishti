@@ -460,6 +460,15 @@ verify, "lift the data from Delta", update and rollback steps filled in with you
 [CLI_GUIDE.md, Quickest path](CLI_GUIDE.md#quickest-path-pack-make).
 
 ## 17. Deploy from Admin → Packs, connectors, history and roll back
+### 16.1 From JSON Schema: `pack make --schema` and Build → New pack
+
+When what you have is **JSON Schema** (and perhaps JSON Lines), `pack make --schema` makes the same folder (pack, bundle, configuration overlay, scripts,
+`MANIFEST.json`, `README.txt`), and **Build → New pack** makes the same bundle in the browser, with a preview of every Sutra, then hands it to
+**Admin → Packs → Deploy archive** (section 17.1): checked, previewed, confirmed, rolled back there. The bundle is byte-for-byte the format of `pack bundle`, so every step of
+sections 4 to 10 applies unchanged. Schemas alone give a pack that serves its samples (no connector, no data); with real documents the folder also has the dated store. A generated pack
+names its sources by logical connector name only. Rules and pictures: [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md).
+
+## 17. Deploy from Admin → Packs, change a data source, history and roll back
 
 Sections 3 to 10 deploy by **copying files**: no server, no token. When the server is running and you are an administrator you can do the same
 from the browser (or the terminal) and get four things the copy does not give you: the server **checks the archive first**, shows you **what it

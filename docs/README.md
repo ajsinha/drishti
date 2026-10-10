@@ -219,6 +219,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | Guide | Read this when… |
 |---|---|
+| [SCHEMA_TO_PACK.md](guides/SCHEMA_TO_PACK.md) | you have JSON Schema (and perhaps JSON Lines) and want a whole pack: the rules, the `x-drishti-*` annotations, Build → New pack, the command line |
 | [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
 | [nested-data.md](../drishti-console/web/guides/nested-data.md) | your documents hold lists inside lists |
 | [impact.md](../drishti-console/web/guides/impact.md) | you use or configure F8 impact |

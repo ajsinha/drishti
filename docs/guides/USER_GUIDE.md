@@ -95,7 +95,7 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
-| **Build** | Create | *New screen* (`/build/new`), *My designs* (`/build`), *Examples* |
+| **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
 | | Learn | *Screen designer guide*, *Sutra guide*, *Rachana reference*, *Build a pack* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |

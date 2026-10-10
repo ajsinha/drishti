@@ -965,7 +965,7 @@ line of a Sutra to get completion and checking as you type. Sutra Studio uses th
 
 | Method | Path | Notes |
 |---|---|---|
-| `GET` | `/studio/settings` | `{save, review, approve}`: may the caller save, is review on, may the caller approve |
+| `GET` | `/studio/settings` | `{save, review, approve, author}`: may the caller save, is review on, may the caller approve, does the caller's role have the author power (whether or not saving is switched on) |
 | `POST` | `/studio/preview` | as-of. Body `{yaml, kind, id}` renders an unsaved Sutra against a real entity; or `{yaml, kind, id, document}` against pasted JSON. Answers a `ViewModel`; `422 DRS-2001`/`DRS-2002` with `problems` if the Sutra is bad; `400 DRS-5001` when `yaml` or `kind` is missing or not text, `id` is missing without a `document`, or the body is not a JSON object |
 | `GET` | `/studio/inferred/{kind}/{id}?name=` | as-of. A starter Sutra (`text/yaml`, beginning `rachana: 1`) from what inference makes of the entity; name defaults to `<kind>-custom` |
 | `POST` | `/studio/inferred` | body `{kind, id, document, name}`: the same (`text/yaml`) from pasted JSON (`422 DRS-1005` if `document` is not a JSON object) |

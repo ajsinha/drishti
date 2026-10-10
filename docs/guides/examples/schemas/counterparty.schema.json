@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Counterparty",
+  "description": "A legal entity the bank trades with.",
+  "type": "object",
+  "required": ["id", "name", "rating"],
+  "definitions": {
+    "address": {
+      "type": "object",
+      "properties": {
+        "city": {"type": "string"},
+        "country": {"type": "string", "description": "ISO 3166 country code."}
+      }
+    }
+  },
+  "properties": {
+    "id": {"type": "string", "description": "The counterparty code."},
+    "name": {"type": "string", "description": "Legal name."},
+    "rating": {"type": "string", "enum": ["AAA", "AA", "A", "BBB", "BB"], "description": "Internal credit rating."},
+    "limit": {"type": "number", "description": "Approved exposure limit in USD.", "x-drishti-unit": "USD"},
+    "headOffice": {"$ref": "#/definitions/address"},
+    "parentId": {"type": "string", "x-drishti-link": "counterparty"},
+    "email": {"type": "string", "format": "email"}
+  }
+}

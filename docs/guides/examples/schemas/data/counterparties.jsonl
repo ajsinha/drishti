@@ -1,0 +1,5 @@
+{"id": "CPT-0001", "name": "Counterparty 1", "rating": "AAA", "limit": 1000000.0}
+{"id": "CPT-0002", "name": "Counterparty 2", "rating": "AA", "limit": 2000000.0}
+{"id": "CPT-0003", "name": "Counterparty 3", "rating": "A", "limit": 3000000.0}
+{"id": "CPT-0004", "name": "Counterparty 4", "rating": "BBB", "limit": 4000000.0}
+{"id": "CPT-0005", "name": "Counterparty 5", "rating": "BB", "limit": 5000000.0}

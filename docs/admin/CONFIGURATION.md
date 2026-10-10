@@ -1779,6 +1779,17 @@ read by both programs, so one set of variables configures both halves.
 | `builder.max_file_mb` | `5` | Largest single file; a larger one is left out and reported, the rest are shaped. |
 | `builder.max_total_mb` | `25` | All files together; over it the upload is refused. |
 | `builder.studio_kind` | `sample` | The kind a new Design and the workbench preview a brought document as (a pasted document has no kind of its own). |
+| `builder.pack_sample_docs` | `200` | **Build → New pack** (`/build/pack/new`, [Schema to pack](../guides/SCHEMA_TO_PACK.md)): documents the browser keeps per data file and sends to the console. A sample, never the file. |
+| `builder.pack_read_max_rows` | `500000` | The most rows per file the page may be told to read (the page streams the file and keeps a sample; memory holds only the sample). |
+| `builder.pack_read_max_mb` | `1024` | The most MB per file the page may be told to read before it stops the file and says so. |
+| `builder.pack_max_files` | `200` | Schema and data files in one plan. Over it: `413 DRS-5005`. |
+| `builder.pack_max_docs` | `5000` | Sampled documents in one plan request. |
+| `builder.pack_max_schema_kb` | `512` | The largest single schema file. |
+| `builder.pack_max_sutras` | `200` | Sutras one generated pack may have (a match column with many values makes many). |
+| `builder.pack_jobs_per_user` | `3` | Preview jobs one person may have running at once, and kept after they finish. Over it: `429 DRS-5005`. |
+| `builder.pack_job_ttl_min` | `60` | Minutes a finished preview (with its bundle) is kept in memory for the person who started it. |
+| `builder.pack_draft_concurrency` | `4` | Sutras drafted at once against the server (`POST /api/v1/builder/design`, one per Sutra). |
+| `builder.tools_dir` | `../tools` | The repository's `tools/` folder, relative to `drishti-console/`: the console imports `packbundle.py` from it to make the bundle in the format of `pack bundle`. The console image copies that one file; without it the page plans and previews but cannot build a bundle (`501`). |
 
 `config/workspaces.yaml` holds the console's own starter workspaces (`templates`, none by default; packs add theirs)
 and `blank`, what a new workspace starts as (*New workspace* on `/w`): a `layout` (`2col`, `3col`, `2x2`, `1+2`) and one
