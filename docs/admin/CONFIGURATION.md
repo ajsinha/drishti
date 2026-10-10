@@ -1230,6 +1230,29 @@ A 404 answer means "not held here". Any other status below 400 is the document (
 are parsed; redirects are not followed; an empty body is an empty document, found); 400 or more is a failed read.
 Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
 
+### `tls.*` — TLS for connectors
+
+Every connector that connects to a server over the network reads its TLS settings from these keys (Kafka, ActiveMQ and
+RabbitMQ today; the others are being moved to them). Every key is optional. Passwords are `${ENV}` placeholders or `…-password-file` paths,
+never written in a document. Full reference, with every source form, the openssl/keytool commands and rotation:
+[TLS.md](../connectors/TLS.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `tls.enabled` | `false` | Use TLS (a connector whose address says so, `amqps://`, `ssl://`, Kafka `security.protocol: SSL`, uses it without this; `true` against a plain address is a start-up error). |
+| `tls.ca-file` | none | Trust: a PEM file with one or many CA certificates (or the PEM text). |
+| `tls.truststore`, `tls.truststore-password`, `tls.truststore-type` | none, none, detected | Trust: a PKCS12 or JKS truststore. |
+| `tls.trust-jvm-default` | `true` unless a CA or truststore is given | Also trust the JVM's authorities (merged with the CA or store). |
+| `tls.cert-file`, `tls.key-file`, `tls.key-password` | none | Client identity (mutual TLS) from PEM: certificate chain, private key (PKCS#8, PKCS#1 RSA, SEC1 EC, or encrypted PKCS#8), key password. |
+| `tls.keystore`, `tls.keystore-password`, `tls.keystore-type`, `tls.key-alias` | none, none, detected, the only key | Client identity from a PKCS12 or JKS keystore (use this or the PEM pair). |
+| `tls.protocols` | `TLSv1.3,TLSv1.2` | Protocol versions offered. |
+| `tls.cipher-suites` | the JVM's | Cipher suites. |
+| `tls.verify-hostname` | `true` | Check the server's name against its certificate; `false` warns at every start. |
+| `tls.insecure-trust-all` | `false` | Accept any certificate; refused unless the environment has `DRISHTI_ALLOW_INSECURE_TLS=true` (development only). |
+
+Each `…-password` has a `…-password-file` twin. A wrong file or password stops the connector at start with the setting, the
+file and the reason; a certificate within 30 days of expiry adds a sentence to the source's health text.
+
 ### `kafka` — a live stream
 
 | Setting | Default | Meaning |
@@ -1241,7 +1264,15 @@ Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
 | `cache-mb` | `256` | Recently read documents kept in memory. |
 | `search` | `true` | Keep identifiers for type-ahead. |
 | `poll-ms` | `200` | Consumer poll interval. |
-| `client.<property>` | none | Any Kafka consumer property, e.g. `client.security.protocol: SASL_SSL`. |
+| `client.<property>` | none | Any Kafka consumer property, e.g. `client.security.protocol: SASL_SSL`; applied last, so it wins over the security settings below. |
+| `flavour` | `apache` | `confluent` is the Confluent Cloud preset (`SASL_SSL`, `PLAIN` with `api-key` / `api-secret`, `client.dns.lookup=use_all_dns_ips`, tuned timeouts). |
+| `security.protocol` | inferred | `PLAINTEXT`, `SSL`, `SASL_PLAINTEXT` or `SASL_SSL`; with the [`tls.*`](#tls--tls-for-connectors) settings for the TLS part. |
+| `sasl.mechanism` | none | `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER` or `GSSAPI`. |
+| `sasl.username`, `sasl.password` (or `-file`) | none | PLAIN and SCRAM credentials (`api-key`, `api-secret` on Confluent Cloud). |
+| `sasl.oauth.token-endpoint`, `sasl.oauth.client-id`, `sasl.oauth.client-secret`, `sasl.oauth.scope` | none | OAUTHBEARER, OIDC client credentials. |
+| `sasl.kerberos.principal`, `sasl.kerberos.keytab`, `sasl.kerberos.use-ticket-cache`, `sasl.kerberos.service-name`, `sasl.kerberos.krb5-conf` | none, none, `false`, `kafka`, the JVM's | GSSAPI (Kerberos). |
+| `value-format` | `string`, or `confluent` with a registry | `confluent`: also read the Confluent wire format (JSON Schema, Avro). |
+| `schema-registry.url`, `schema-registry.basic-auth`, `schema-registry.bearer-token`, `schema-registry.timeout-ms`, `schema-registry.tls.*` | none, none, none, `10000`, the JVM's trust | The Schema Registry the Avro schema ids are resolved against. |
 | `disk-cache.enabled` | `false` | Also write every message to a RocksDB store on local disk. |
 | `disk-cache.root` / `disk-cache.dir` | `./data/cache` / `<root>/<connector>` | Where the store lives. |
 | `disk-cache.max-gb` | `10` | Size budget. |
@@ -1250,7 +1281,8 @@ Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
 
 Only a null value (a tombstone), or an envelope with `"doc": null`, deletes; an empty value does not. A delete is
 pushed to open views (they say the entity was deleted, and when) and takes the id out of type-ahead at once. Full detail:
-[KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md).
+[KAFKA_CONNECTOR.md](../connectors/KAFKA_CONNECTOR.md); security in
+[its section 11](../connectors/KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent).
 
 ### `activemq` and `rabbitmq` — message queues
 
@@ -1263,7 +1295,9 @@ message once.
 | `max-redeliveries` | activemq | `-1` | Redeliveries of a message the state store could not keep before the broker dead-letters it; `-1` is without limit. |
 | `destinations` | activemq | empty | `queue:trades,topic:quotes`; a bare name is a queue. Topics use durable subscriptions, which stay on the broker after a topic is removed here. Each idle destination costs a 50 ms wait per polling loop. |
 | `user`, `password`, `client-id` | activemq | none, none, `drishti-<source-name>` | |
-| `uri` | rabbitmq | `amqp://guest:guest@localhost:5672/%2f` | |
+| `uri` | rabbitmq | `amqp://guest:guest@localhost:5672/%2f` | `amqps://…:5671/…` connects over TLS. |
+| `auth-mechanism` | rabbitmq | `plain` | `external` logs in with the client certificate (needs `amqps://` and a client identity). |
+| `tls.*` | both | none | TLS for `ssl://` (ActiveMQ) and `amqps://` (RabbitMQ) endpoints: [`tls.*`](#tls--tls-for-connectors). |
 | `queues` | rabbitmq | empty | `trades,quotes`, all on one channel. Empty: `UP`, consuming nothing. |
 | `declare` | rabbitmq | `true` | Declare the queues durable. |
 | `bind.<queue>` | rabbitmq | none | `exchange:routing.key` to bind a declared queue. |
@@ -1493,6 +1527,7 @@ Packs declare their connectors in `pack.yaml` with placeholders, so you switch t
 | `DRISHTI_DELTA_ROOT` | `./data/delta` | every shipped pack | Root of every pack's Delta Lake connector. |
 | `DRISHTI_DELTA_ENGINE` | `native` | every Delta connector without its own `engine` | `native`, `hadoop` or `auto` (see [`delta`](#delta--delta-lake)). |
 | `DRISHTI_LAKE_ENABLED` | `true` | every shipped pack | Switch every pack's data connector off (the demo samples still answer). Leave it `true` with the `postgres`, `aerospike` or `duckdb` profile: those profiles change the plugin of the same connectors, and this switch would turn them off too. |
+| `DRISHTI_ALLOW_INSECURE_TLS` | unset | every connector with `tls.*` | Must be `true` for a connector to run with `tls.insecure-trust-all: true` (development only). |
 | `DRISHTI_STREAM_TRADING` | `false` | trading | Turn on the `trading-stream` Kafka connector. |
 | `DRISHTI_KAFKA_BOOTSTRAP` | `localhost:9092` | trading | Its brokers. |
 | `DRISHTI_TRADING_TOPIC` | `drishti.trading.trades` | trading | Its topic. |
@@ -1725,6 +1760,7 @@ Server (S), console (C), or both.
 | Variable | Used by | Sets |
 |---|---|---|
 | `DRISHTI_PORT` | S | `server.port` |
+| `DRISHTI_ALLOW_INSECURE_TLS` | S | allows a connector's `tls.insecure-trust-all` ([`tls.*`](#tls--tls-for-connectors)) |
 | `DRISHTI_PACKS` | S | `drishti.packs.enabled` |
 | `DRISHTI_PACKS_DIR` | S, C | `drishti.packs.dir`, `packs.dir` |
 | `DRISHTI_DEFAULT_PACKS` | S | `drishti.packs.default-for-users` |

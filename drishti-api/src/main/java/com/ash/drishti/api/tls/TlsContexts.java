@@ -240,7 +240,7 @@ public final class TlsContexts {
         }
         throw new TlsException(p + "key-file '" + s.keyFile() + "' does not match the certificate in " + p + "cert-file '" + s.certFile()
                 + "' (its first certificate, " + leaf.getSubjectX500Principal().getName() + "): the key is for another certificate. "
-                + "Compare: openssl x509 -noout -modulus -in cert.pem | openssl md5; openssl rsa -noout -modulus -in key.pem | openssl md5");
+                + "Compare: openssl x509 -noout -pubkey -in cert.pem | openssl md5; openssl pkey -pubout -in key.pem | openssl md5");
     }
 
     private static KeyManager[] keyManagers(PrivateKey key, List<X509Certificate> chain, String p) {

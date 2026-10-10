@@ -41,7 +41,7 @@ connectors, which keep their own copy because a queue cannot be replayed, are in
 8. [Start, catching up, and restarts](#8-start-catching-up-and-restarts)
 9. [Outages and reconnection](#9-outages-and-reconnection)
 10. [Scale](#10-scale)
-11. [Security](#11-security)
+11. [Security: TLS, SASL and Confluent](#11-security-tls-sasl-and-confluent)
 12. [Limits and trade-offs](#12-limits-and-trade-offs)
 13. [Diagnosing](#13-diagnosing)
 14. [Settings](#14-settings)
@@ -222,6 +222,12 @@ drishti:
           client.sasl.mechanism: SCRAM-SHA-512
           client.sasl.jaas.config: "${KAFKA_JAAS}"
 ```
+
+The `client.<property>` form passes Kafka's own properties through and always works. The connector also has first-class
+security settings (`security.protocol`, `tls.*`, `sasl.*`, PEM and PKCS12/JKS files, Confluent Cloud, Schema Registry)
+that check the files at start and say what is wrong; the same cluster there is
+`security.protocol: SASL_SSL`, `sasl.mechanism: SCRAM-SHA-512`, `sasl.username`, `sasl.password: "${KAFKA_PASSWORD}"` and
+`tls.ca-file` ([section 11](#11-security-tls-sasl-and-confluent)).
 
 Give a Kafka connector `kinds:`. Its manifest lists `kind`, every `kind.<topic>` and every kind it has seen in a
 message; an envelope connector with no `kinds` serves *every* kind until its first message, so it is asked (and
@@ -456,28 +462,413 @@ Each server reads every partition in full and keeps its own index, so the broker
 They share the client id `drishti-<source-name>` unless you set `client.client.id`; broker quotas keyed by client id
 are then shared between them.
 
-## 11. Security
+## 11. Security: TLS, SASL and Confluent
 
-Every `client.<property>` setting is passed to both consumers as the Kafka property `<property>`, so the connector
-speaks whatever your cluster requires:
+The connector speaks to Apache Kafka and to Confluent (Cloud and Platform) over every transport Kafka offers: plaintext,
+TLS, SASL over plaintext, SASL over TLS. There are two ways to set it up, and they combine:
+
+- **First-class settings** (this section): `security.protocol`, `tls.*` (the [shared TLS module](TLS.md)), `sasl.*`,
+  `flavour`, `schema-registry.*`. Drishti checks them at start, reads the certificate files itself (PEM, PKCS12, JKS),
+  names the file and the reason when one is wrong, and translates them to Kafka client properties.
+- **`client.<property>`**: any Kafka consumer property, passed through as `<property>`. It is applied **last** and
+  **wins** over everything the first-class settings produce, so any Kafka property the first-class settings do not cover
+  can still be set, and any value they choose can be overridden.
+
+```
+connector defaults  <  flavour preset  <  first-class settings (security.protocol, tls.*, sasl.*)  <  client.<property>
+```
+
+### 11.1 Which setup is mine?
+
+| Your cluster | Use | Example |
+|---|---|---|
+| Apache Kafka, TLS, brokers on a private CA | `security.protocol: SSL`, `tls.ca-file` | [A](#a-apache-kafka-ssl-with-a-pem-ca) |
+| Apache Kafka, TLS, Java stores (PKCS12/JKS) | `tls.truststore` | [B](#b-apache-kafka-ssl-with-a-pkcs12-or-jks-truststore) |
+| Apache Kafka, brokers require a client certificate | `tls.cert-file`/`tls.key-file` or `tls.keystore` | [C](#c-mutual-tls-mtls) |
+| Apache Kafka, user name and password over TLS | `SASL_SSL` + `SCRAM-SHA-512` (or `PLAIN`) | [D](#d-sasl_ssl-with-scram) |
+| An identity provider issues tokens (Keycloak, Okta, Entra ID) | `SASL_SSL` + `OAUTHBEARER` | [E](#e-oauthbearer-oidc-client-credentials) |
+| Kerberos / Active Directory | `SASL_SSL` + `GSSAPI` | [F](#f-kerberos-gssapi) |
+| Confluent Cloud | `flavour: confluent` + API key and secret | [G](#g-confluent-cloud-with-api-keys) |
+| Confluent Platform on-premises (mTLS, Schema Registry) | `flavour: confluent`, `security.protocol: SSL` | [H](#h-confluent-platform-on-premises-mtls-and-schema-registry) |
+| a dev broker, no security | nothing (`PLAINTEXT`) | the defaults |
+
+Kafka listeners differ in what they ask of a client. Use the listener's own port: a `SASL_SSL` listener cannot be read
+with `SSL`, and the connector fails with a timeout, not a message, if the protocol is wrong
+([11.9](#119-common-errors-and-fixes)). Ask the cluster operator for the **listener's security protocol and its SASL
+mechanism**; they are in the broker's `listeners` and `sasl.enabled.mechanisms`.
+
+### 11.2 Settings
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `flavour` | `apache` | `apache`, or `confluent` for the preset in [11.4](#114-the-confluent-flavour). |
+| `security.protocol` | inferred | `PLAINTEXT`, `SSL`, `SASL_PLAINTEXT` or `SASL_SSL`. Absent: `SASL_SSL` if `sasl.mechanism` is set and TLS is wanted (`tls.enabled: true`), `SASL_PLAINTEXT` with a mechanism and no TLS, `SSL` with `tls.enabled`, else `PLAINTEXT`. Always write it down in production. |
+| `tls.*` | | The shared settings, [TLS.md](TLS.md#1-the-settings), used when the protocol is `SSL` or `SASL_SSL`. |
+| `sasl.mechanism` | none (`PLAIN` with the Confluent flavour) | `PLAIN`, `SCRAM-SHA-256`, `SCRAM-SHA-512`, `OAUTHBEARER` or `GSSAPI`. |
+| `sasl.username`, `sasl.password` (`sasl.password-file`) | | PLAIN and SCRAM. Confluent Cloud calls them `api-key` and `api-secret`, accepted as aliases. |
+| `sasl.oauth.token-endpoint` | | OAUTHBEARER: the identity provider's token URL. |
+| `sasl.oauth.client-id`, `sasl.oauth.client-secret` (`-file`) | | OAUTHBEARER: the client-credentials pair. |
+| `sasl.oauth.scope` | none | OAUTHBEARER: the scope to request. |
+| `sasl.kerberos.principal` | | GSSAPI: e.g. `drishti@BANK.EXAMPLE`. |
+| `sasl.kerberos.keytab` | | GSSAPI: the keytab file. |
+| `sasl.kerberos.use-ticket-cache` | `false` | GSSAPI: use the ticket from `kinit` instead of a keytab. |
+| `sasl.kerberos.service-name` | `kafka` | GSSAPI: the brokers' service name. |
+| `sasl.kerberos.krb5-conf` | the JVM's | GSSAPI: path of `krb5.conf` (sets `java.security.krb5.conf` if the JVM has none yet). |
+| `value-format` | `string`; `confluent` when `schema-registry.url` is set | `confluent` also reads the Confluent wire format ([11.5](#115-schema-registry-and-the-confluent-wire-format)). |
+| `schema-registry.url` | none | The registry's `https://` (or `http://`) URL. |
+| `schema-registry.basic-auth` (`-file`) | none | `${SR_KEY}:${SR_SECRET}`. |
+| `schema-registry.bearer-token` (`-file`) | none | A bearer token instead of basic auth. |
+| `schema-registry.timeout-ms` | `10000` | Connect and read timeout for a registry call. |
+| `schema-registry.tls.*` | the JVM's trust | The same keys as `tls.*`, for the registry. |
+
+Secrets are written as `${ENV}` placeholders or `…-file` paths, never inline
+([TLS.md, section 4](TLS.md#4-passwords-never-go-in-a-document)). The first-class settings also check each other and
+refuse a contradiction at start: `sasl.mechanism` with `security.protocol: SSL`; `tls.enabled: true` with `PLAINTEXT`; a
+SASL protocol without a mechanism; a mechanism without its credentials.
+
+### 11.3 What each setting becomes
+
+This is exactly what the connector hands to the Kafka client (the property names are Kafka's; you can set the same ones by
+hand with `client.`).
+
+| You write | Kafka property |
+|---|---|
+| `security.protocol: X` | `security.protocol=X` |
+| `tls.verify-hostname` (default true / `false`) | `ssl.endpoint.identification.algorithm=https` / the empty string |
+| `tls.protocols: TLSv1.3,TLSv1.2` | `ssl.enabled.protocols=TLSv1.3,TLSv1.2`, `ssl.protocol=TLSv1.3` (or `TLSv1.2` when 1.3 is not listed) |
+| `tls.cipher-suites` | `ssl.cipher.suites` |
+| `tls.ca-file` | `ssl.truststore.type=PEM`, `ssl.truststore.certificates=<the certificates>` |
+| `tls.truststore` alone | `ssl.truststore.location`, `.password`, `.type` (the store is handed to Kafka as it is) |
+| `tls.ca-file` with `tls.truststore`, or with `tls.trust-jvm-default: true` | one merged PEM set: `ssl.truststore.type=PEM`, `ssl.truststore.certificates` (Kafka cannot merge sources itself) |
+| only the JVM default trust | no truststore property: Kafka uses the JVM's |
+| `tls.cert-file` + `tls.key-file` | `ssl.keystore.type=PEM`, `ssl.keystore.certificate.chain`, `ssl.keystore.key` (re-written as unencrypted PKCS#8 whatever the file's format was, so PKCS#1, SEC1 and encrypted keys all work) |
+| `tls.keystore` | `ssl.keystore.location`, `.password`, `.type`, `ssl.key.password` (as it is) |
+| `tls.keystore` with `tls.key-alias` | the chosen key and chain as PEM (Kafka's own settings cannot choose an alias) |
+| `sasl.mechanism` | `sasl.mechanism` |
+| PLAIN | `sasl.jaas.config=…plain.PlainLoginModule required username="…" password="…";` |
+| SCRAM | `sasl.jaas.config=…scram.ScramLoginModule required username="…" password="…";` |
+| OAUTHBEARER | `sasl.oauthbearer.token.endpoint.url`, `sasl.login.callback.handler.class=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginCallbackHandler`, `sasl.jaas.config=…OAuthBearerLoginModule required clientId="…" clientSecret="…" scope="…";` |
+| GSSAPI | `sasl.kerberos.service.name`, `sasl.jaas.config=com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab="…" principal="…";` |
+
+`tls.insecure-trust-all` is not available for Kafka (the client builds its own TLS): use `tls.ca-file`, and
+`tls.verify-hostname: false` if the names do not match.
+
+### 11.4 The Confluent flavour
+
+`flavour: confluent` is a preset for Confluent Cloud. It sets, before your own settings:
+
+| Property | Value | Why |
+|---|---|---|
+| `security.protocol` | `SASL_SSL` | Confluent Cloud only listens on it |
+| `sasl.mechanism` | `PLAIN` | the API key and secret are the user name and password |
+| `client.dns.lookup` | `use_all_dns_ips` | Cloud endpoints resolve to several addresses |
+| `request.timeout.ms` | `30000` | Confluent's recommended client value |
+| `session.timeout.ms` | `45000` | Confluent's recommended client value |
+| `reconnect.backoff.max.ms` | `10000` | keeps reconnects prompt after a blip |
+
+Everything else is as for Apache. Any of them is overridden by setting it: `security.protocol: SSL` for a Confluent
+Platform cluster with mutual TLS ([example H](#h-confluent-platform-on-premises-mtls-and-schema-registry)), or
+`client.request.timeout.ms: 60000`.
+
+### 11.5 Schema Registry and the Confluent wire format
+
+Confluent's serializers write each message as a **zero byte, a 4-byte schema id, then the payload**. A plain string
+deserializer would hand that to the JSON parser and every message would be skipped. With `schema-registry.url` set (or
+`value-format: confluent`), the connector recognises the format by its first byte, finds out what the id means, and turns
+the message back into JSON text, the same text the rest of the connector reads:
+
+| The registry says the schema is | What the connector does |
+|---|---|
+| **JSON Schema** | strips the 5 bytes; the rest is the JSON document |
+| **Avro** | fetches the writer schema by id from the registry (once; it is cached for good, a schema never changes under its id), decodes the payload with it (Apache Avro), and writes the record as JSON: unions are their value, enums their symbol, arrays and maps as JSON, `bytes` and `fixed` as base64 text; logical types appear as their underlying value (a timestamp-millis is a number, a decimal is its base64 bytes) |
+| **Protobuf** | not supported yet: the message is skipped and logged |
+
+Values that are not in the wire format (they do not start with a zero byte) are plain JSON text as before, so a topic that
+mixes both is read correctly. Without `schema-registry.url`, only JSON Schema payloads can be stripped (a zero byte, an
+id, then `{` or `[`); an Avro message there is skipped and logged with the hint to set the registry.
+
+**A message that cannot be read is skipped, never treated as a delete.** An unknown schema id, a registry that refused the
+credentials, a damaged payload or a Protobuf message is logged (the first ten, then every thousandth, with the reason) and
+the entity keeps its previous state. Keys are always plain strings.
+
+The registry is called over HTTPS with `schema-registry.basic-auth` (Confluent Cloud: the registry's own key and secret,
+which are **not** the Kafka API key) or a `schema-registry.bearer-token`, and `schema-registry.tls.*` for a private CA or
+mutual TLS:
 
 ```yaml
 settings:
-  bootstrap-servers: kafka1.bank.example:9093
-  client.security.protocol: SASL_SSL
-  client.sasl.mechanism: SCRAM-SHA-512
-  client.sasl.jaas.config: "${KAFKA_JAAS}"          # org.apache.kafka.common.security.scram.ScramLoginModule required username="…" password="…";
-  client.ssl.truststore.location: /etc/drishti/kafka-truststore.p12
-  client.ssl.truststore.type: PKCS12
-  client.ssl.truststore.password: "${KAFKA_TRUSTSTORE_PASSWORD}"
+  schema-registry.url: https://schema-registry.bank.example:8081
+  schema-registry.basic-auth: "${SR_KEY}:${SR_SECRET}"
+  schema-registry.tls.ca-file: /etc/drishti/tls/ca.pem
 ```
 
-- Keep secrets in the environment (`${KAFKA_JAAS}`); Health and `/api/v1/sources` do not show settings.
-- Mutual TLS: add `client.ssl.keystore.location`, `client.ssl.keystore.type` and `client.ssl.keystore.password`.
-- **ACLs:** the connector needs `Describe` and `Read` on its topics. It joins no consumer group and commits nothing,
-  so it needs no group ACL.
-- `client.enable.auto.commit` is overridden only if you set it; leave it alone. The deserializers are set by the
-  connector; overriding them breaks it.
+Limits: Avro schema *references* (a schema that imports another subject) are not followed; a message written with a
+schema that has references is skipped and logged. Subject name strategies do not matter (the id identifies the schema).
+The connector reads; it never registers schemas.
+
+### 11.6 Examples
+
+Each example is a complete site entry (`application.local.yaml`; in a pack, the same `settings:` under the connector).
+Placeholders such as `${KAFKA_PASSWORD}` are environment variables of the server process.
+
+#### A. Apache Kafka, SSL with a PEM CA
+
+Brokers present certificates issued by your private CA; no client certificate is asked for.
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      risk-stream:
+        plugin: kafka
+        kinds: [netting-set]
+        settings:
+          bootstrap-servers: kafka1.bank.example:9093,kafka2.bank.example:9093
+          topics: risk.envelopes
+          security.protocol: SSL
+          tls.ca-file: /etc/drishti/tls/ca-bundle.pem        # one or many CA certificates
+```
+
+#### B. Apache Kafka, SSL with a PKCS12 or JKS truststore
+
+```yaml
+          security.protocol: SSL
+          tls.truststore: /etc/drishti/tls/truststore.p12
+          tls.truststore-password: "${KAFKA_TRUSTSTORE_PASSWORD}"
+          # tls.truststore-type: JKS          # only if the file name does not say; PKCS12 and JKS are detected
+```
+
+To trust the private CA **and** the public ones (a cluster behind a public certificate for some brokers and a private one
+for others): add `tls.trust-jvm-default: true`.
+
+#### C. Mutual TLS (mTLS)
+
+The brokers require a client certificate (`ssl.client.auth=required`). With **PEM files**:
+
+```yaml
+          security.protocol: SSL
+          tls.ca-file: /etc/drishti/tls/ca.pem
+          tls.cert-file: /etc/drishti/tls/client.pem          # the certificate, then any intermediates
+          tls.key-file: /etc/drishti/tls/client.key           # PKCS#8, PKCS#1 RSA, SEC1 EC, or encrypted PKCS#8
+          tls.key-password: "${CLIENT_KEY_PASSWORD}"          # only for an encrypted key
+```
+
+With **Java stores**:
+
+```yaml
+          security.protocol: SSL
+          tls.truststore: /etc/drishti/tls/truststore.jks
+          tls.truststore-password: "${KAFKA_TRUSTSTORE_PASSWORD}"
+          tls.keystore: /etc/drishti/tls/client.p12
+          tls.keystore-password: "${KAFKA_KEYSTORE_PASSWORD}"
+          tls.key-alias: drishti                              # only if the keystore holds several keys
+```
+
+The broker maps the certificate to a principal (`ssl.principal.mapping.rules`, by default the whole subject
+`CN=drishti`): grant that principal the ACLs of [11.8](#118-acls).
+
+#### D. SASL_SSL with SCRAM
+
+```yaml
+          security.protocol: SASL_SSL
+          sasl.mechanism: SCRAM-SHA-512                       # or SCRAM-SHA-256, or PLAIN
+          sasl.username: drishti
+          sasl.password: "${KAFKA_PASSWORD}"                  # or sasl.password-file: /run/secrets/kafka-password
+          tls.ca-file: /etc/drishti/tls/ca.pem
+```
+
+SCRAM users are created on the brokers (`kafka-configs.sh --alter --add-config 'SCRAM-SHA-512=[password=…]' --entity-type
+users --entity-name drishti`). `SASL_PLAINTEXT` (no TLS) is the same without the `tls.*` keys and is for networks you
+trust completely: the password travels as SCRAM proofs, but the messages are readable.
+
+#### E. OAUTHBEARER (OIDC client credentials)
+
+Drishti asks the identity provider for a token with its client id and secret and presents it to Kafka; it renews it before
+it expires.
+
+```yaml
+          security.protocol: SASL_SSL
+          sasl.mechanism: OAUTHBEARER
+          sasl.oauth.token-endpoint: https://idp.bank.example/realms/prod/protocol/openid-connect/token
+          sasl.oauth.client-id: drishti
+          sasl.oauth.client-secret: "${KAFKA_OAUTH_SECRET}"
+          sasl.oauth.scope: kafka                             # optional
+          tls.ca-file: /etc/drishti/tls/ca.pem
+```
+
+The token endpoint is itself HTTPS. If its certificate is from a private CA, the JVM must trust it
+(`-Djavax.net.ssl.trustStore=…` in `JAVA_TOOL_OPTIONS`), or pass Kafka's own settings for that call through
+`client.<property>`. Kafka 3.9.1 and later only call token endpoints on an allow-list; the connector adds the configured endpoint to the JVM property
+`org.apache.kafka.sasl.oauthbearer.allowed.urls` for you (set the property yourself to a longer comma-separated list if
+several connectors use different providers).
+
+#### F. Kerberos (GSSAPI)
+
+```yaml
+          security.protocol: SASL_SSL
+          sasl.mechanism: GSSAPI
+          sasl.kerberos.principal: drishti@BANK.EXAMPLE
+          sasl.kerberos.keytab: /etc/drishti/drishti.keytab
+          sasl.kerberos.service-name: kafka                   # the brokers' primary; "kafka" by default
+          sasl.kerberos.krb5-conf: /etc/krb5.conf             # optional; the JVM reads one krb5.conf per process
+          tls.ca-file: /etc/drishti/tls/ca.pem
+```
+
+The keytab must be readable by the server's user (`chmod 400`). The broker host name you put in `bootstrap-servers` must
+be the one in the broker's service principal (`kafka/kafka1.bank.example@BANK.EXAMPLE`) and must resolve forward and
+back. To use a ticket from `kinit` instead of a keytab: `sasl.kerberos.use-ticket-cache: true` and no keytab; you must
+renew the ticket yourself, so use a keytab in production. Clock skew over 5 minutes fails authentication.
+
+#### G. Confluent Cloud with API keys
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      risk-stream:
+        plugin: kafka
+        kinds: [netting-set]
+        settings:
+          flavour: confluent
+          bootstrap-servers: pkc-xxxxx.us-east-1.aws.confluent.cloud:9092
+          api-key: "${CONFLUENT_API_KEY}"
+          api-secret: "${CONFLUENT_API_SECRET}"
+          topics: risk.envelopes
+          # Avro or JSON Schema values in Schema Registry:
+          schema-registry.url: https://psrc-xxxxx.us-east-1.aws.confluent.cloud
+          schema-registry.basic-auth: "${CONFLUENT_SR_KEY}:${CONFLUENT_SR_SECRET}"
+```
+
+Confluent Cloud's certificates are from a public CA, so no `tls.*` is needed. The Kafka API key and the Schema Registry
+key are different keys; both are created in the Cloud console. Give the Kafka key `READ` on the topics (and `DESCRIBE`).
+
+#### H. Confluent Platform on-premises: mTLS and Schema Registry
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      risk-stream:
+        plugin: kafka
+        kinds: [netting-set]
+        settings:
+          flavour: confluent
+          security.protocol: SSL                               # overrides the preset's SASL_SSL
+          bootstrap-servers: cp-kafka1.bank.example:9093,cp-kafka2.bank.example:9093
+          topics: risk.envelopes
+          tls.ca-file: /etc/drishti/tls/ca.pem
+          tls.cert-file: /etc/drishti/tls/client.pem
+          tls.key-file: /etc/drishti/tls/client.key
+          schema-registry.url: https://cp-schema-registry.bank.example:8081
+          schema-registry.tls.ca-file: /etc/drishti/tls/ca.pem
+          schema-registry.tls.cert-file: /etc/drishti/tls/client.pem   # if the registry requires a client certificate
+          schema-registry.tls.key-file: /etc/drishti/tls/client.key
+```
+
+With the preset, the PLAIN mechanism is only used when the protocol is a `SASL_` one, so overriding the protocol to `SSL`
+needs no `api-key`.
+
+### 11.7 Verifying a setup
+
+**Before Drishti**, from the machine it runs on, check that the broker's certificate and your client certificate work.
+These runs are against a local test listener with the CA of [TLS.md](TLS.md#7-making-and-converting-certificates-and-keys):
+
+```
+$ openssl s_client -connect kafka1.bank.example:9093 -servername kafka1.bank.example -CAfile ca.pem \
+    -cert client.pem -key client-pkcs8.key -verify_hostname kafka1.bank.example -verify_return_error </dev/null
+depth=1 CN=Example Internal CA
+depth=0 CN=kafka1.bank.example
+subject=CN=kafka1.bank.example
+issuer=CN=Example Internal CA
+Verification: OK
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Verify return code: 0 (ok)
+```
+
+The failures you meet, as `s_client` prints them:
+
+```
+verify error:num=62:hostname mismatch                                     # the certificate does not carry that name
+Verify return code: 62 (hostname mismatch)
+
+verify error:num=19:self-signed certificate in certificate chain           # the CA is not known: give -CAfile
+Verify return code: 19 (self-signed certificate in certificate chain)
+
+tlsv13 alert certificate required ... SSL alert number 116                 # mTLS listener, no client certificate sent
+```
+
+Then **with Kafka's own tools**, using the same files, to separate a cluster problem from a Drishti one. Write
+`client.properties`:
+
+```
+security.protocol=SASL_SSL
+sasl.mechanism=SCRAM-SHA-512
+sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="drishti" password="…";
+ssl.truststore.type=PEM
+ssl.truststore.location=/etc/drishti/tls/ca.pem
+```
+
+```
+$ kafka-topics.sh --bootstrap-server kafka1.bank.example:9094 --command-config client.properties --list
+$ kafka-console-consumer.sh --bootstrap-server kafka1.bank.example:9094 --consumer.config client.properties \
+    --topic risk.envelopes --from-beginning --max-messages 1
+```
+
+**Then Drishti:** Admin → Health shows the source `UP` (`UP (catching up)` while it reads the topic), and Admin → Packs →
+Data source → *Test connection* reports a start-up error with the file and reason
+([TLS.md, section 8](TLS.md#8-start-up-checks-and-their-messages)). Within 30 days of a certificate's expiry the health
+text says so: `UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days (2026-10-22))`.
+
+The connector's TLS and SASL paths are tested against a real Apache Kafka 3.9 broker in Docker with two secured
+listeners (`KafkaSecureBrokerTest`): mutual TLS with PEM files, with a PKCS12 keystore and JKS truststore, and with a
+merged trust and a keystore alias; `SASL_SSL` with SCRAM-SHA-512; and the refusals (a wrong SCRAM password, no client
+certificate, an untrusted CA). The property translation for every other combination, and the wire-format decoding with
+recorded bytes, are unit tests (`KafkaSecurityTest`, `ConfluentValueDeserializerTest`). OAUTHBEARER, Kerberos, Confluent
+Cloud and a live Schema Registry were not run against real services: their properties are the ones Kafka documents for
+each, built and validated by the Kafka client's own configuration parser in the tests.
+
+### 11.8 ACLs
+
+The connector needs `Describe` and `Read` on its topics. It joins no consumer group and commits nothing, so it needs no
+group ACL. For example:
+
+```
+kafka-acls.sh --bootstrap-server … --command-config admin.properties --add --allow-principal User:drishti \
+  --operation Read --operation Describe --topic risk.envelopes
+```
+
+### 11.9 Common errors and fixes
+
+| What you see (health text or log) | Cause | Fix |
+|---|---|---|
+| `DOWN: TimeoutException: Timed out waiting for a node assignment` / `Bootstrap broker … disconnected` | the protocol does not match the listener's (SSL against PLAINTEXT, or the reverse), a wrong port, or a firewall | check `security.protocol` against the listener; the port is the listener's own |
+| `SSL handshake failed` ... `PKIX path building failed … unable to find valid certification path` | the brokers' certificate is not trusted | `tls.ca-file` / `tls.truststore`; with a private CA the public ones are not trusted unless `tls.trust-jvm-default: true` |
+| `No subject alternative DNS name matching kafka1.bank.example found` | the certificate does not carry the host name you put in `bootstrap-servers` (or in the broker's `advertised.listeners`, which the client is told to connect to after the first call) | re-issue with the names as SANs; or `tls.verify-hostname: false` as a last resort |
+| `Failed authentication with … (SSL handshake failed)` plus `Received fatal alert: bad_certificate` / `certificate_unknown` | mTLS: the broker does not trust your client certificate | the client certificate's CA must be in the broker's truststore |
+| `Authentication failed during authentication due to invalid credentials with SASL mechanism SCRAM-SHA-512` | wrong user or password, or the user has no credential for that mechanism | check `sasl.username`, `sasl.password`, and that the user was created for SCRAM-SHA-512 (captured from a real broker) |
+| `Unsupported SASL mechanism` / `SaslAuthenticationException … mechanism` | the listener does not enable that mechanism | use one in the broker's `sasl.enabled.mechanisms` |
+| `TopicAuthorizationException: Not authorized to access topics: [risk.envelopes]` | the principal has no ACL | [11.8](#118-acls); with mTLS the principal is the certificate subject |
+| `tls.key-file … does not match the certificate in tls.cert-file …` and the other [start-up messages](TLS.md#8-start-up-checks-and-their-messages) | a file or password | fix the named setting |
+| `tls.insecure-trust-all is not supported for Kafka` | the setting is for the other connectors | `tls.ca-file`, and `tls.verify-hostname: false` if names mismatch |
+| `sasl.mechanism OAUTHBEARER needs sasl.oauth.token-endpoint, …` | a missing OAuth setting | all three of endpoint, id and secret are required |
+| OAuth: `The URL … is not allowed` / `allowed.urls` | Kafka's token-endpoint allow-list | the connector adds its endpoint; check no other component overwrote `org.apache.kafka.sasl.oauthbearer.allowed.urls` |
+| Kerberos: `Cannot locate default realm` / `Server not found in Kerberos database` | no `krb5.conf` for the JVM, or the broker name is not its service principal's host | `sasl.kerberos.krb5-conf`; use the exact broker host name |
+| Kerberos: `Clock skew too great` | the clocks differ by more than 5 minutes | fix NTP |
+| the connector is `UP` but no entity appears and the log says `a message in the Confluent wire format could not be read (… )` | Schema Registry: Protobuf, an unknown id, or refused credentials | see the reason; `schema-registry.basic-auth` is the registry's key, not the Kafka one |
+| `the schema registry refused the credentials (HTTP 401)` | wrong registry credentials | `schema-registry.basic-auth: ${SR_KEY}:${SR_SECRET}` |
+| `schema id N needs schema-registry.url (only JSON Schema payloads can be read without it)` | an Avro message and no registry configured | set `schema-registry.url` |
+
+Everything not about security (offsets, topics that do not exist, slow catch-up) is in [section 13](#13-diagnosing).
+
+### 11.10 Good practice
+
+- Keep secrets in the environment or in mounted files; Health and `/api/v1/sources` do not show settings.
+- Give the connector its own principal with read-only ACLs on its topics.
+- Prefer SCRAM-SHA-512 or OAUTHBEARER over PLAIN; use PLAIN only over TLS (Confluent Cloud's API keys are the one common
+  case).
+- Rotate certificates before expiry ([TLS.md, section 10](TLS.md#10-rotation)); the health text warns 30 days ahead.
+- `client.enable.auto.commit` is overridden only if you set it; leave it alone. The deserializers are set by the connector;
+  overriding them breaks it.
 
 ## 12. Limits and trade-offs
 
@@ -504,7 +895,7 @@ settings:
 | `failedToStart` names the connector with a client message | a client configuration error (unresolvable `bootstrap-servers`, a bad `client.*` property) | fix the setting; restart |
 | health stays `DOWN: not started` | no broker answered yet (the first metadata request waits up to 30 s) | check `bootstrap-servers` and the network |
 | `DOWN: IllegalStateException: topic … has no partitions yet (reconnecting)` | the topic does not exist and the broker does not create topics | create it (compacted, keyed) |
-| `DOWN: TimeoutException: … (reconnecting)` behind TLS or SASL | missing `client.*` security settings, or a wrong advertised listener | copy the properties your other consumers use, prefixed `client.`; check the broker's advertised listeners |
+| `DOWN: TimeoutException: … (reconnecting)` behind TLS or SASL | missing security settings, or a wrong advertised listener | set `security.protocol` and the TLS/SASL settings of your listener ([section 11](#11-security-tls-sasl-and-confluent)); check the broker's advertised listeners |
 | `DOWN: no connection to the broker (reconnecting)` | the broker has been unreachable for 10 s | bring it back; the connector resumes by itself |
 | health stays `UP (catching up)` | a large or uncompacted topic | wait; watch `indexedEntities`; compact the topic or use `mode: ticks` |
 | Health shows the connector stale | nothing new for `stale-after` | check the producer; `lastUpdate` is the newest message's timestamp |
@@ -532,7 +923,9 @@ On a `kafka` connector (`drishti.sources.connectors.<name>.settings`):
 | `search` | `true` | keep ids for type-ahead (state mode only) |
 | `poll-ms` | `200` | consumer poll interval in milliseconds |
 | `source-name` | `kafka` (a named connector: its name) | provenance source, Health name, client id `drishti-<source-name>` |
-| `client.<property>` | none | any Kafka consumer property, for both consumers |
+| `client.<property>` | none | any Kafka consumer property, for both consumers; applied last, so it wins over the security settings below |
+| `flavour`, `security.protocol`, `tls.*`, `sasl.*` | `apache`, inferred | TLS, SASL and the Confluent preset; see [section 11](#11-security-tls-sasl-and-confluent) |
+| `value-format`, `schema-registry.*` | `string` | Confluent wire format and Schema Registry; see [section 11.5](#115-schema-registry-and-the-confluent-wire-format) |
 | `disk-cache.enabled` | `false` | write each message to a RocksDB store on local disk (state mode only) |
 | `disk-cache.root` | `./data/cache` | parent of the default folder |
 | `disk-cache.dir` | `<disk-cache.root>/<source-name>` | the store's folder |
@@ -541,7 +934,7 @@ On a `kafka` connector (`drishti.sources.connectors.<name>.settings`):
 | `disk-cache.zone` | `America/New_York` | the zone of `reset-at` |
 | `stale-after` | none | engine setting: Health marks the connector stale after this long without a new message |
 
-Set by the connector and not to be overridden: `key.deserializer` and `value.deserializer` (`StringDeserializer`),
+Set by the connector and not to be overridden: `key.deserializer` and `value.deserializer` (a string deserializer; with the Confluent wire format, one that also strips and decodes it),
 `enable.auto.commit` (`false`), `client.id` (`drishti-<source-name>`; the reader `drishti-<source-name>-reader`, with
 `max.poll.records` 1). Fixed in the code: 10 s without a broker connection before health says so, 30 s to list a
 topic's partitions, 5 s for a cold read, supervisor backoff 1 s to 30 s.
