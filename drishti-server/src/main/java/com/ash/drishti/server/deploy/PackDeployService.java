@@ -99,11 +99,13 @@ public final class PackDeployService {
     private final JsonCodec codec;
     private final DeployHistory history;
     private final Map<String, Staged> staged = new ConcurrentHashMap<>();
+    private final com.ash.drishti.packs.ConnectorFiles connectorFiles;
     private final ReentrantLock lock = new ReentrantLock();
 
     public PackDeployService(Environment env, DeployProperties props, RegistryProperties registryProps, PackRegistry running,
             ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer,
-            JsonCodec codec) {
+            JsonCodec codec, com.ash.drishti.packs.ConnectorFiles connectorFiles) {
+        this.connectorFiles = connectorFiles;
         this.installed = Path.of(env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")).toAbsolutePath().normalize();
         this.packsDir = Path.of(env.getProperty("drishti.packs.dir", "./packs")).toAbsolutePath().normalize();
         this.props = props;
@@ -179,6 +181,7 @@ public final class PackDeployService {
             out.put("extends", meta.get("extends") instanceof List<?> l ? l : List.of());
             out.put("kinds", meta.get("kinds") instanceof List<?> l ? l : List.of());
             checks.add(Check.ok("pack.yaml", name + " " + version));
+            out.put("connectors", connectorsOf(meta, name, version, ex.root()));
             manifestCheck(ex, name, version, checks);
             if (checks.stream().anyMatch(c -> !c.ok())) {
                 return finish(out, checks, null, null);
@@ -278,6 +281,47 @@ public final class PackDeployService {
                 && !Files.isRegularFile(installed.resolve(p).resolve("pack.yaml")) && !Files.isRegularFile(packsDir.resolve(p).resolve("pack.yaml"))).toList();
         checks.add(missing.isEmpty() ? Check.ok("dependencies", parents.isEmpty() ? "extends no other pack" : "extends " + String.join(", ", parents) + ": available")
                 : Check.fail("dependencies", "extends " + String.join(", ", missing) + ", which is neither loaded nor on disk; deploy that pack first"));
+    }
+
+    /** The connectors the staged pack names: which already exist at the site, and which are missing (with whether the pack suggests one). */
+    private Map<String, Object> connectorsOf(Map<String, Object> meta, String name, String version, Path root) {
+        com.ash.drishti.packs.Pack pack = new com.ash.drishti.packs.Pack(name, version, String.valueOf(meta.getOrDefault("title", name)), "", root, meta);
+        List<Map<String, Object>> rows = new java.util.ArrayList<>();
+        List<String> missing = new java.util.ArrayList<>();
+        for (String c : pack.connectorRefs()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            Object plugin = pack.connectorTemplates().containsKey(c) ? pack.connectorTemplates().get(c).get("plugin") : null;
+            boolean exists = connectorFiles.exists(c) || running.packs().stream().anyMatch(p -> p.connectorTemplates().containsKey(c));
+            row.put("name", c);
+            row.put("exists", exists);
+            row.put("template", pack.connectorTemplates().containsKey(c));
+            row.put("plugin", plugin);
+            rows.add(row);
+            if (!exists) {
+                missing.add(c);
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("names", rows);
+        out.put("missing", missing);
+        out.put("creatable", missing.stream().filter(m -> pack.connectorTemplates().containsKey(m)).toList());
+        out.put("directory", connectorFiles.dir().toString());
+        return out;
+    }
+
+    /** Writes connector files from the staged pack's templates for the connectors that do not exist yet; returns the names created. */
+    public List<String> createConnectors(String uploadId) {
+        Staged s = staged.get(uploadId);
+        if (s == null) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no such upload (it may have expired); upload the archive again");
+        }
+        try {
+            Map<String, Object> meta = PackDiffer.load(s.root()).meta();
+            com.ash.drishti.packs.Pack pack = new com.ash.drishti.packs.Pack(s.name(), s.version(), s.name(), "", s.root(), meta);
+            return com.ash.drishti.packs.ConnectorBootstrap.run(List.of(pack), connectorFiles, null, true).generated();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /** The difference from the running version (or the copy on disk when the pack is not loaded). */

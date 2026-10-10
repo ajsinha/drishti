@@ -48,6 +48,8 @@ public final class SourceRegistry implements AutoCloseable {
     private final Map<String, java.util.concurrent.locks.ReentrantLock> locks = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, ConnectorStatus> statuses = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, SourcesProperties.ConnectorSettings> applied = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Connector names in the order first seen (configuration order is the read order, and a restart keeps its place). */
+    private final java.util.List<String> order = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     /**
      * Where a named connector stands.
@@ -128,6 +130,7 @@ public final class SourceRegistry implements AutoCloseable {
         enabled.forEach(p -> settings.put(p, props.settingsFor(p.manifest().name()).settings()));
         props.connectors().forEach((name, c) -> {
             applied.put(name, c);
+            order.add(name);
             if (!c.enabled()) {
                 statuses.put(name, new ConnectorStatus("DISABLED", null, java.time.Instant.now()));
                 return;
@@ -224,13 +227,27 @@ public final class SourceRegistry implements AutoCloseable {
     }
 
     private synchronized void swap(String name, SourcePlugin next) {
+        if (next != null && !order.contains(name)) {
+            order.add(name);
+        }
         Map<String, SourcePlugin> m = new LinkedHashMap<>(plugins);
         if (next == null) {
             m.remove(name);
         } else {
             m.put(name, next);
         }
-        plugins = Collections.unmodifiableMap(m);
+        Map<String, SourcePlugin> sorted = new LinkedHashMap<>();
+        m.forEach((k, v) -> {
+            if (!order.contains(k)) {
+                sorted.put(k, v);                    // plugins that run as themselves come first
+            }
+        });
+        order.forEach(k -> {
+            if (m.containsKey(k)) {
+                sorted.put(k, m.get(k));
+            }
+        });
+        plugins = Collections.unmodifiableMap(sorted);
     }
 
     /**
@@ -257,7 +274,13 @@ public final class SourceRegistry implements AutoCloseable {
                 failures.put(name, e.getMessage());
                 return status(name, "FAILED", e.getMessage());
             }
-            Map<String, String> own = ownSettings(name, c);
+            Map<String, String> own;
+            try {
+                own = ownSettings(name, c);
+            } catch (IllegalStateException e) {
+                failures.put(name, e.getMessage());
+                return status(name, "FAILED", e.getMessage());
+            }
             try {
                 instance.start(new EngineSourceContext(own, codec, scheduler, reader));
             } catch (Exception e) {

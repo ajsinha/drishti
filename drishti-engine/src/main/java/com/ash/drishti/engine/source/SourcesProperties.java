@@ -46,6 +46,7 @@ public record SourcesProperties(
         this(routes, defaultRoute, plugins, fetchTimeout, pluginDir, connectors, null, null, null, null, null);
     }
 
+    @org.springframework.boot.context.properties.bind.ConstructorBinding
     public SourcesProperties {
         routes = routes == null ? Map.of() : Map.copyOf(routes);
         plugins = plugins == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(plugins));

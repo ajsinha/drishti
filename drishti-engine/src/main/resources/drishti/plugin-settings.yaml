@@ -18,6 +18,8 @@
 # A plugin with `tls: true` also offers the shared tls.* section.
 common:
   - { name: source-name, desc: "The name documents carry as their provenance (default: the connector's name)", group: general }
+  - { name: "mode.*", desc: "Per-kind read mode (mode.<kind>)", group: mapping }
+  - { name: domain, desc: "The data domain (folder, schema or key prefix) the connector reads", group: connection }
   - { name: stale-after, type: duration, desc: "Mark the source stale when it has received nothing for this long (15m, 2h, 1d)", group: general }
 tls:
   - { name: tls.enabled, type: boolean, default: "false", desc: "Use TLS for this connector", group: tls }
@@ -95,6 +97,9 @@ plugins:
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
   iceberg:
     settings:
+      - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
+      - { name: warehouse, desc: "REST catalog warehouse", group: connection }
+      - { name: credential, secret: true, desc: "REST catalog credential: ${ENV_VAR} or file:/path", group: connection }
       - { name: root, type: path, desc: "Warehouse root", group: connection }
       - { name: uri, desc: "Catalog URI", group: connection }
       - { name: catalog, desc: "Catalog name", group: connection }

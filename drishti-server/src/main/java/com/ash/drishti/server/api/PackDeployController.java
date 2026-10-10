@@ -114,6 +114,15 @@ public class PackDeployController {
         return out;
     }
 
+    /** Creates, from the staged pack's templates, the connector files the pack names that do not exist yet. */
+    @PostMapping("/deploy/{id}/connectors")
+    public Map<String, Object> createConnectors(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        List<String> created = deploy.createConnectors(id);
+        created.forEach(n -> audit.record(p.user(), "connector-generated", n, "created from the template of an uploaded pack, before deploying it"));
+        return Map.of("created", created);
+    }
+
     /** Throws a verified upload away. */
     @DeleteMapping("/deploy/{id}")
     public Map<String, Object> discard(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

@@ -40,8 +40,9 @@ public class DeployConfiguration {
 
     @Bean
     public PackDeployService packDeployService(ConfigurableEnvironment env, DeployProperties props, RegistryProperties registryProps, PackRegistry running,
-            ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer, JsonCodec codec) {
-        return new PackDeployService(env, props, registryProps, running, build, sutras, pipeline, shapes, designer, codec);
+            ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer, JsonCodec codec,
+            com.ash.drishti.packs.ConnectorFiles connectorFiles) {
+        return new PackDeployService(env, props, registryProps, running, build, sutras, pipeline, shapes, designer, codec, connectorFiles);
     }
 
     @Bean
