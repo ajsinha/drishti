@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 
 from fastapi import APIRouter, Query, Request
 
@@ -34,9 +35,31 @@ def _problem(e: BackendError) -> JSONResponse:
     return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
 
 
+async def form_suggestions(request: Request, pack: str | None, kind: str | None, spaced: bool) -> list:
+    """Type-ahead for ``FORM <pack> <kind>``: only packs the person may open, and only kinds they may open in that pack."""
+    from routes.common import packs
+    me = ident(request)
+    if kind is None and not (pack and spaced):          # still typing the pack's name
+        want = (pack or "").lower()
+        return [{"mnemonic": "FORM", "title": p["title"], "subtitle": f"search {p['name']} with a form", "complete": f"FORM {p['name']} ",
+                 "href": f"/form/{p['name']}", "type": "form"}
+                for p in await packs(request) if p.get("active", True) and p.get("kinds") and (not want or want in p["name"].lower() or want in p["title"].lower())]
+    try:
+        info = await request.app.state.backend.form(pack or "", "", me)
+    except BackendError:
+        return []
+    want = (kind or "").lower()
+    return [{"mnemonic": "FORM", "title": k["label"], "subtitle": f"{info['title']} · {k['kind']}", "complete": f"FORM {info['pack']} {k['kind']}",
+             "href": f"/form/{info['pack']}?kind={k['kind']}", "type": "form"}
+            for k in info["kinds"] if not want or want in k["kind"].lower() or want in k["label"].lower()]
+
+
 @router.get("/suggest")
 async def suggest(request: Request, q: str = "", limit: int | None = None):
     """The command line's dropdown; without a limit the server's own (drishti.commands.suggest-limit, 25) applies."""
+    typed = re.match(r"(?i)^\s*form(?:\s+(\S*))?(?:\s+(\S*))?\s*$", q.replace("<GO>", ""))
+    if typed:                                                  # the reserved word FORM: packs you may open, then their kinds
+        return await form_suggestions(request, typed.group(1), typed.group(2), q.endswith(" "))
     try:
         return await request.app.state.backend.suggest(q, ident(request), limit)
     except BackendError as e:

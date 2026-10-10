@@ -57,6 +57,7 @@ async def pin(request: Request, kind: str, id_: str):
 _SEARCH = re.compile(r"(?is)^\s*\S+\s+(where|order\s+by|limit)\s+.+")
 
 
+FORM_WORD = "FORM"        # a reserved command word: query by form (routes/form_routes.py)
 RUPAKA = "RUPAKA"         # a reserved command word: the BI page (a pack cannot define a mnemonic with this name)
 
 
@@ -66,6 +67,11 @@ async def go(request: Request, q: str = ""):
         if request.app.state.templates.env.globals.get("BI_POC"):
             return RedirectResponse("/bi/poc", status_code=303)
         return RedirectResponse(f"/t?error={quote('Rupaka (business intelligence) is not switched on in this console (bi.poc_enabled).')}", status_code=303)
+    words = q.replace("<GO>", "").replace("<go>", "").split()
+    if words and words[0].upper() == FORM_WORD:                    # reserved too: FORM <pack> [kind] opens the pack's search form
+        if len(words) == 1:
+            return RedirectResponse("/form", status_code=303)
+        return RedirectResponse(f"/form/{quote(words[1])}" + (f"?kind={quote(words[2])}" if len(words) > 2 else ""), status_code=303)
     if _SEARCH.match(q.replace("<GO>", "")):
         return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)
     try:

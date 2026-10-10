@@ -166,6 +166,14 @@ class BackendClient:
         """Structured search: TRD where mtm > 1m order by mtm desc limit 50."""
         return await self._get("/search", ident, q=q)
 
+    async def form(self, pack: str, kind: str = "", ident=None) -> dict:
+        """The search form of a pack's kind (query by form): its fields, declared or inferred, and the kinds you may open."""
+        return await self._get(f"/forms/{quote(pack, safe='')}", ident, **({"kind": kind} if kind else {}))
+
+    async def form_compile(self, pack: str, kind: str, body: dict, ident=None) -> dict:
+        """The form's criteria as a command of the search grammar: ``{command}``."""
+        return await self._send("POST", f"/forms/{quote(pack, safe='')}/{quote(kind, safe='')}/compile", ident, json=body)
+
     async def series(self, kind: str, id_: str, path: str, days: int, ident=None) -> dict:
         """One field over the last ``days`` business days (oldest first)."""
         where, q = entity_path(kind, id_)

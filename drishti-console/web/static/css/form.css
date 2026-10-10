@@ -1,0 +1,58 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Query by form (FORM <pack>). Theme tokens only; the phone layout stacks every field and keeps touch targets at 44px. */
+.qf-help { margin-left: .4rem; font-size: .9em; color: var(--d-muted); }
+.qf-help:hover { color: var(--d-accent); }
+.qf-kinds { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0; }
+.qf-kind-on { border-color: var(--d-accent); color: var(--d-accent); }
+.qf { margin: .6rem 0 1rem; }
+.qf-note { font-size: .82rem; margin: .2rem 0 .5rem; }
+.qf-group { border: 1px solid var(--d-border); border-radius: 8px; padding: .5rem .8rem .8rem; margin: 0 0 .8rem; background: var(--d-surface); }
+.qf-group legend { font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--d-muted); width: auto; padding: 0 .4rem; margin: 0; float: none; }
+.qf-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: .7rem 1.2rem; }
+.qf-field { min-width: 0; }
+.qf-label { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; font-size: .82rem; font-weight: 600; margin: 0 0 .15rem; }
+.qf-req { color: var(--d-bad); }
+.qf-slow { font-weight: 400; font-size: .7rem; padding: 0 .35rem; border: 1px solid var(--d-border); border-radius: 999px; color: var(--d-muted); }
+.qf-in { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.qf-in select, .qf-in input[type="text"], .qf-in input[type="date"], .qf-in textarea, .qf-result-opts select {
+  background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .5rem; min-height: 32px; font: inherit; }
+.qf-in select:focus, .qf-in input:focus, .qf-in textarea:focus, .qf-result-opts select:focus { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.qf-in .qf-v { flex: 1 1 9rem; min-width: 0; }
+.qf-in .qf-v2 { flex: 1 1 7rem; min-width: 0; }
+.qf-in textarea.qf-v { flex: 1 1 100%; resize: vertical; }
+.qf-v2[hidden] { display: none; }
+.qf-case, .qf-chk { display: inline-flex; align-items: center; gap: .35rem; font-size: .82rem; font-weight: 400; margin: 0; cursor: pointer; }
+.qf-enum, .qf-bool { display: flex; flex-wrap: wrap; gap: .3rem .9rem; max-height: 9.5rem; overflow-y: auto; padding: .2rem .1rem; flex: 1 1 100%; }
+.qf-fhelp { font-size: .76rem; margin: .15rem 0 0; }
+.qf-result-opts { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; align-items: center; margin: .4rem 0; font-size: .85rem; }
+.qf-ro { display: inline-flex; align-items: center; gap: .4rem; margin: 0; }
+.qf-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .6rem 0; }
+.qf-keys { font-size: .75rem; }
+.qf-command { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .4rem 0 .8rem; padding: .5rem .7rem; border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-bg-2); }
+.qf-cmd-l { font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; color: var(--d-muted); }
+.qf-cmd { flex: 1 1 20rem; overflow-wrap: anywhere; color: var(--d-ink); background: transparent; padding: 0; }
+.qf-keep { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin: .8rem 0; }
+.qf-saved, .qf-packs { padding-left: 1.1rem; } .qf-saved li, .qf-packs li { margin: .3rem 0; }
+@media (max-width: 600px) {
+  .qf-fields { grid-template-columns: 1fr; }
+  .qf-in select, .qf-in input[type="text"], .qf-in input[type="date"], .qf-in textarea, .qf-result-opts select, .qf-actions .btn, .qf-keep .btn, .qf-keep input,
+  .qf-case, .qf-chk, .qf-help, .qf-kinds .chip { min-height: 44px; }
+  .qf-chk, .qf-case { padding: .2rem .3rem; }
+  .qf-chk input, .qf-case input { min-width: 22px; min-height: 22px; }
+  .qf-keys { display: none; }
+}
+@media print { .qf, .qf-keep { display: none; } }

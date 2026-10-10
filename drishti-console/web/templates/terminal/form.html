@@ -1,0 +1,136 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% set OPS = {'equals': 'equals', 'contains': 'contains', 'starts': 'starts with', 'regex': 'matches regex', '=': '=', '>': '>', '<': '<', '>=': '≥', '<=': '≤',
+              'between': 'between', 'on': 'on', 'relative': 'relative', 'before': 'before', 'after': 'after', 'in': 'is one of', 'is': 'is'} %}
+{% block title %}Search {{ info.title }} with a form · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/form.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text='FORM ' ~ info.pack %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="adm search qf-page">
+  <h1>{{ info.title }} <span class="role mono">FORM {{ info.pack }}</span>
+    <a class="qf-help" href="/help/context/form" title="Help: search with a form" aria-label="Help: search with a form"><i class="bi bi-question-circle" aria-hidden="true"></i></a></h1>
+  {% if info.kinds | length > 1 %}
+  <nav class="qf-kinds" aria-label="Kinds you can search">{% for k in info.kinds %}
+    <a class="chip{{ ' qf-kind-on' if k.kind == info.kind }}" href="/form/{{ info.pack | urlencode }}?kind={{ k.kind | urlencode }}"{% if k.kind == info.kind %} aria-current="page"{% endif %}>{{ k.label }}
+      <span class="mono">{{ k.mnemonic }}</span></a>{% endfor %}</nav>
+  {% endif %}
+  <form class="qf" method="get" action="/form/{{ info.pack | urlencode }}" data-qform autocomplete="off">
+    <input type="hidden" name="kind" value="{{ info.kind }}"><input type="hidden" name="run" value="1">
+    {% if info.form.inferred %}<p class="qf-note text-muted-d">{{ info.pack }} does not declare a form for {{ info.kind | replace('-', ' ') }}, so these fields are inferred from its search columns and Sutra.</p>{% endif %}
+    {% if not any_indexed %}<p class="qf-note text-muted-d">No field of this kind is kept as an indexed column: every search reads the documents.</p>{% endif %}
+    {% for g in view.groups %}
+    <fieldset class="qf-group"{% if g.name %} aria-label="{{ g.name }}"{% endif %}>{% if g.name %}<legend>{{ g.name }}</legend>{% endif %}
+      <div class="qf-fields">{% for f in g.fields %}
+      <div class="qf-field qf-t-{{ f.type }}" data-field="{{ f.path }}" data-type="{{ f.type }}">
+        <label class="qf-label" for="{{ f.id }}">{{ f.label }}{% if f.required %} <span class="qf-req" title="Required" aria-hidden="true">*</span>{% endif %}
+          {% if any_indexed and not f.indexed %}<span class="qf-slow" title="Not an indexed column: the documents are read to answer this">slower: not indexed</span>{% endif %}</label>
+        <div class="qf-in">
+        {% if f.operators | length > 1 %}
+          <select class="qf-op" name="op.{{ f.path }}" aria-label="{{ f.label }}: how to compare">{% for o in f.operators %}
+            <option value="{{ o }}"{{ ' selected' if o == f.op }}>{{ OPS.get(o, o) }}</option>{% endfor %}</select>
+        {% else %}<input type="hidden" name="op.{{ f.path }}" value="{{ f.operators[0] }}">{% endif %}
+        {% if f.type == 'text' %}
+          <input id="{{ f.id }}" class="qf-v mono" type="text" name="v.{{ f.path }}" value="{{ f.held[0] if f.held }}" spellcheck="false"{{ ' required' if f.required }}>
+          <label class="qf-case"><input type="checkbox" name="cs.{{ f.path }}" value="1"{{ ' checked' if f.cs }}> Match case</label>
+        {% elif f.type in ('number', 'amount') %}
+          <input id="{{ f.id }}" class="qf-v mono" type="text" inputmode="decimal" name="v.{{ f.path }}" value="{{ f.held[0] if f.held }}" placeholder="{{ '250k, 1.5m, 2bn' if f.type == 'amount' else '' }}" spellcheck="false"{{ ' required' if f.required }}>
+          <input class="qf-v2 mono" type="text" inputmode="decimal" name="v2.{{ f.path }}" value="{{ f.held2 }}" placeholder="and" aria-label="{{ f.label }}: upper bound" spellcheck="false"{{ ' hidden' if f.op != 'between' }}>
+        {% elif f.type == 'date' %}
+          <input id="{{ f.id }}" class="qf-v mono" type="{{ 'text' if f.op == 'relative' else 'date' }}" name="v.{{ f.path }}" value="{{ f.held[0] if f.held }}" list="qf-presets"{{ ' required' if f.required }}>
+          <input class="qf-v2 mono" type="date" name="v2.{{ f.path }}" value="{{ f.held2 }}" aria-label="{{ f.label }}: end date"{{ ' hidden' if f.op != 'between' }}>
+        {% elif f.type == 'enum' %}
+          <div id="{{ f.id }}" class="qf-enum" role="group" aria-label="{{ f.label }}">{% for v in f['values'] %}
+            <label class="qf-chk"><input type="checkbox" name="v.{{ f.path }}" value="{{ v }}"{{ ' checked' if v in f.held }}> <span>{{ v }}</span></label>{% endfor %}
+            {% if not f['values'] %}<span class="text-muted-d">no values known yet</span>{% endif %}</div>
+        {% elif f.type == 'id' %}
+          <textarea id="{{ f.id }}" class="qf-v mono" name="v.{{ f.path }}" rows="2" placeholder="one or many: paste a list (spaces, commas or lines); MX-2* is any id starting MX-2" spellcheck="false">{{ f.held | join('\n') }}</textarea>
+        {% elif f.type == 'bool' %}
+          <div id="{{ f.id }}" class="qf-bool" role="radiogroup" aria-label="{{ f.label }}">{% for val, text in [('any', 'Any'), ('true', 'Yes'), ('false', 'No')] %}
+            <label class="qf-chk"><input type="radio" name="v.{{ f.path }}" value="{{ val }}"{{ ' checked' if (f.held[0] if f.held else 'any') == val }}> <span>{{ text }}</span></label>{% endfor %}</div>
+        {% endif %}
+        </div>
+        {% if f.help %}<p class="qf-fhelp text-muted-d">{{ f.help }}</p>{% endif %}
+      </div>{% endfor %}</div>
+    </fieldset>{% endfor %}
+    <datalist id="qf-presets">{% for p in presets %}<option value="{{ p }}">{% endfor %}</datalist>
+    <div class="qf-result-opts">
+      <label class="qf-ro">Sort by <select name="order"><option value="">the source's order</option>{% for f in sortable %}
+        <option value="{{ f.path }}"{{ ' selected' if q.get('order') == f.path }}>{{ f.label }}</option>{% endfor %}</select></label>
+      <label class="qf-chk"><input type="checkbox" name="desc" value="1"{{ ' checked' if q.get('desc') in ('1', 'on', 'true') }}> <span>Descending</span></label>
+      <label class="qf-ro">Show <select name="limit">{% for n in limits %}
+        <option value="{{ n }}"{{ ' selected' if (q.get('limit') or settings.get('searchLimit') or 100) | string == n | string }}>{{ n }}</option>{% endfor %}</select> results</label>
+    </div>
+    <div class="qf-actions">
+      <button type="submit" class="btn btn-sm btn-primary qf-go">Search</button>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-qf-clear title="Clear every field (Esc)">Clear</button>
+      <span class="qf-keys text-muted-d">Enter searches · Esc clears</span>
+    </div>
+  </form>
+
+  {% if error %}
+    <p class="asof-banner" role="alert" data-qf-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> <span class="mono">{{ drs_message(error.code, error.detail) }}</span></p>
+  {% endif %}
+  {% if command %}
+  <section class="qf-command" aria-label="The search this form made">
+    <span class="qf-cmd-l">The search this form made</span>
+    <code class="mono qf-cmd" data-qf-command>{{ command }}</code>
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-qf-copy="{{ command }}" title="Copy the search; paste it into the command line or the search box"><i class="bi bi-clipboard" aria-hidden="true"></i> Copy</button>
+    <a class="lnk" href="/s?q={{ command | urlencode }}" title="Edit this search as text">Edit as text</a>
+  </section>
+  {% endif %}
+  {% if data %}
+    <div class="cmp-sum">
+      <span><b>{{ data.matched }}</b> of {{ data.scanned }} {{ data.kind | replace('-', ' ') }}{{ '' if data.scanned == 1 else 's' }} match{% if data.matched > rows | length %}; the first {{ rows | length }} are shown{% endif %}</span>
+      <span class="text-muted-d mono">{{ data.elapsedMs }} ms</span>
+      {% if rows %}<a class="lnk" href="/export/search.csv?q={{ command | urlencode }}" title="Download the results as CSV"><i class="bi bi-download" aria-hidden="true"></i> CSV</a>{% endif %}
+      {% if data.partial and not data.failed %}<span class="text-muted-d"><i class="bi bi-exclamation-circle" aria-hidden="true"></i> results may be incomplete</span>{% endif %}
+    </div>
+    {% if data.failed %}<div class="asof-banner srch-failed" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+      Incomplete: {{ data.failed | length }} source{{ 's' if data.failed | length > 1 }} could not be read.
+      <ul class="mono">{% for f in data.failed %}<li><b>{{ f.source }}</b>: {{ f.reason }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if rows %}
+    <section class="pnl" data-panel="results"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl" aria-label="Results">
+      <thead><tr><th>{{ data.mnemonic or data.kind }}</th>{% if titled %}<th>Title</th>{% endif %}
+        {% for c in data.columns %}<th class="{{ 'num' if rows and rows[0].cells[loop.index0][1] else '' }}" title="{{ c }}">{{ data.labels[c] }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for r in rows %}
+        <tr><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id | urlencode }}">{{ r.ref.id }}</a></td>{% if titled %}<td>{{ r.title }}</td>{% endif %}
+          {% for text, number in r.cells %}<td class="{{ 'num ' if number else '' }}mono">{{ text }}</td>{% endfor %}</tr>
+      {% endfor %}</tbody></table></div></div></section>
+    <div class="qf-keep">
+      <form class="srch-watch" method="post" action="/s/watch">
+        <input type="hidden" name="q" value="{{ command }}"><label for="qfWatch" class="visually-hidden">Monitor name</label>
+        <input id="qfWatch" name="name" class="mono" value="{{ (data.mnemonic or data.kind) ~ ' search' }}" maxlength="64">
+        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Save the first 50 results as a monitor and watch them live"><i class="bi bi-list-columns" aria-hidden="true"></i> Watch as a monitor</button>
+      </form>
+      <a class="btn btn-sm btn-outline-secondary" href="/reports?q={{ command | urlencode }}" title="Run this search on a schedule and deliver it as CSV"><i class="bi bi-clock" aria-hidden="true"></i> Schedule a report</a>
+      <form class="srch-watch" data-qf-save="{{ address }}">
+        <label for="qfName" class="visually-hidden">Name for this search</label>
+        <input id="qfName" name="name" class="mono" placeholder="name this search" maxlength="64" required>
+        <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-bookmark" aria-hidden="true"></i> Save as named search</button>
+        <span class="text-muted-d" data-qf-saved role="status"></span>
+      </form>
+      <button type="button" class="btn btn-sm btn-outline-secondary" data-qf-share="{{ address }}" title="Copy a link that opens this form with these criteria"><i class="bi bi-link-45deg" aria-hidden="true"></i> Share link</button>
+    </div>
+    {% else %}<p class="text-muted-d">Nothing matches.</p>{% endif %}
+  {% endif %}
+  {% if saved %}<h2 class="ws-h">Your saved searches</h2>
+  <ul class="qf-saved">{% for s in saved %}<li><a class="lnk" href="{{ s.path }}">{{ s.name }}</a></li>{% endfor %}</ul>{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/form.js?v={{ ASSET_V }}"></script>{% endblock %}
