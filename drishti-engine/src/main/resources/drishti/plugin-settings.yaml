@@ -203,7 +203,7 @@ plugins:
       - { name: dirs, type: list, desc: "Sample folders", group: connection }
       - { name: ticking, type: boolean, desc: "Tick values for live demos", group: tuning }
       - { name: tick-ms, type: int, desc: "Tick interval", group: tuning }
-  feeds:
+  feed:
     tls: true
     settings:
       - { name: url, desc: "Feed URL", group: connection }

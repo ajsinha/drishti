@@ -198,6 +198,10 @@ public final class SourceRouter {
                         + (asOf.businessDate() == null ? "" : " for " + asOf.businessDate()) + " and does not list " + ref);
             }
         }
+        String routed = props.routes().get(ref.kind());
+        if (routed != null && registry.plugin(routed).isEmpty()) {
+            throw noSource(ref.kind());                 // the connector the pack routes this kind to is not there: say that, not just "nothing holds it"
+        }
         throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no source holds " + ref);
     }
 

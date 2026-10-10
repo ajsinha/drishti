@@ -16,8 +16,11 @@
 /* Admin → Connectors. Colours come from the theme tokens (light, dark, high contrast); every state also has its word, and added/removed
    diff lines carry a + or - so they read without colour. */
 .conn-name .mono { font-weight: 600; }
-.conn-health { margin-left: .3rem; }
-.conn-problem { font-size: .85rem; max-width: 28rem; }
+.conn-kinds { max-width: 16rem; overflow-wrap: anywhere; white-space: normal; }
+.conn-health { display: block; max-width: 18rem; overflow-wrap: anywhere; font-size: .85rem; }
+[data-list] th, [data-list] td { white-space: normal; }
+[data-list] td.conn-used { max-width: 14rem; }
+.conn-problem { font-size: .85rem; max-width: 22rem; white-space: normal; }
 .conn-used div { white-space: normal; }
 .conn-dialog { width: min(1000px, 96vw); max-height: 94vh; overflow: auto; }
 .conn-confirm { width: min(560px, 94vw); }
@@ -64,3 +67,4 @@
   .conn-dialog .ds-actions .btn-pill, .conn-confirm .ds-actions .btn-pill, .adm-bar .btn-pill, .adm-bar select { flex: 1 1 100%; min-height: 44px; }
 }
 @media (pointer: coarse) { .conn-dialog .fk, .adm-actions .fk, .conn-tabs [role="tab"] { min-height: 44px; } }
+.conn-dialog td .fk + .fk { margin-left: .6rem; }

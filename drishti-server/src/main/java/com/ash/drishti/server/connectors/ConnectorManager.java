@@ -489,10 +489,11 @@ public final class ConnectorManager {
             out.add(status.state().equals("IDLE") ? "not configured: " + status.problem() : status.problem());
         }
         if (applicationDefined.contains(name)) {
-            out.add("also defined in the server's own configuration (deprecated); its values override this file after a restart");
-        }
-        if (!files.exists(name) && !fileProblems.containsKey(name) && applicationDefined.contains(name)) {
-            out.add("defined in application.yaml (deprecated); save it to create " + name + ".yaml");
+            if (files.exists(name) || fileProblems.containsKey(name)) {
+                out.add("also defined in the server's own configuration (deprecated); its values override this file after a restart");
+            } else {
+                out.add("defined in application.yaml (deprecated); save it to create " + name + ".yaml");
+            }
         }
         return out;
     }
@@ -613,7 +614,7 @@ public final class ConnectorManager {
         packs.packs().forEach(p -> known.addAll(p.kinds()));
         for (String k : d.kinds()) {
             if (!known.isEmpty() && !known.contains(k)) {
-                out.add(new Problem("warning", "kinds", "kind '" + k + "' is not owned by a loaded pack (loaded kinds: " + String.join(", ", known) + ")"));
+                out.add(new Problem("warning", "kinds", "kind '" + k + "' is not owned by a loaded pack (loaded: " + String.join(", ", known.stream().limit(8).toList()) + (known.size() > 8 ? ", and " + (known.size() - 8) + " more" : "") + ")"));
             }
         }
         boolean on = d.isEnabled();

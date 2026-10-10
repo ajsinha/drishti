@@ -67,7 +67,15 @@ def cmd_list(cli, a, extra) -> int:
         cli.say_json({**res, "connectors": rows})
         return 0
     print(f"{len(rows)} connector(s) in {res['directory']}   (watching: {res['watch']})")
-    _table([[c["name"], c["origin"], c.get("plugin") or "", ",".join(c.get("kinds") or []), c["state"].lower(),
+    def kinds(c):
+        k = c.get("kinds") or []
+        return ",".join(k[:3]) + (f" +{len(k) - 3}" if len(k) > 3 else "")
+
+    def state(c):
+        h = str(c.get("health") or "")
+        return c["state"].lower() + (f" ({h.split(':')[0].split()[0]})" if h and not h.startswith("UP") else "")
+
+    _table([[c["name"], c["origin"], c.get("plugin") or "", kinds(c), state(c),
              ",".join(u["pack"] for u in c.get("usedBy") or []), "; ".join(c.get("problems") or [])] for c in rows],
            ["name", "origin", "plugin", "kinds", "state", "used by", "problems"])
     for n in res.get("misnamed") or []:
