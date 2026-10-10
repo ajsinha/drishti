@@ -35,6 +35,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [The command line](#the-command-line) | Opening an entity, suggestions, what an error means |
 | [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
 | [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
+| [Filter a table like Excel](#filter-a-table-like-excel) | A funnel in every column heading: tick values or filter by a condition, in the address, with `Alt+Shift+X` to clear |
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
 | [About this page](#about-this-page) | `?`: what the page is, what each number means, where the data came from, why it looks like this |
 | [Layout mode](#layout-mode-arrange-a-view-your-way) | `Alt+L`: drag, resize and hide panels for yourself; promote your layout to the Sutra |
@@ -350,12 +351,14 @@ there is nowhere to go.
   trades above 200 million.
 - A pick list or search holds the rows the server sent (100 by default); sorting and filtering work on those. For
   all of a kind, sort or filter on the server instead: `TRD where notional > 200m order by notional desc`.
+- For Excel-style filtering (tick values, conditions, dates, top 10) use the funnel in each heading: [Filter a table like Excel](#filter-a-table-like-excel).
 - Live tables keep their sort and filters when they update.
 
 | Control | Does |
 |---|---|
 | `«` `‹` `›` `»` | First, previous, next and last page. Buttons that lead nowhere are greyed |
 | `1–25 of 99 · page 1 of 4` | Which rows you are looking at |
+| `7 of 35 rows (filtered)` | With a filter on: the rows that match, of all the table holds |
 | `▲` `▼` | Select the previous / next row, turning the page when needed |
 | *rows per page* | 25, 50, 100 or 250. Your choice is **remembered in this browser** and applies to every table, at once |
 
@@ -378,6 +381,112 @@ Worked example:
 
 Tables that update live (a monitor, a ticking table inside a view) keep their page and selection when
 their rows change.
+
+## Filter a table like Excel
+
+Every column heading of every table, matrix (a table with rows that open) and pivot has a **funnel** button, and its menu
+works as Excel's AutoFilter does: tick the values you want, or filter by a condition, in as many columns as you like.
+Nothing is written anywhere: it only decides which rows you see. The *Filter rows* box above still searches every cell, and
+both apply together.
+
+![The filter menu of the Type column: sort, a condition box, a search box and the values with how many rows have each](img/colfilter/01-menu.jpg)
+
+Point at a heading (on a phone the funnel is always shown, and 44 pixels wide) and press the funnel, or focus it with `Tab`
+and press `Enter` or `Space`. The menu has, from the top:
+
+- **Sort**: *A→Z* and *Z→A* for text, *smallest→largest* for numbers (`1.5m`, `−30,205,543`, `12%` sort as values),
+  *oldest→newest* for dates. Clicking the heading itself still cycles the sort.
+- **A condition**, offered by what the column holds (the type is read from its cells: a column that is at least 80% numbers is
+  a number column, likewise dates written `2026-10-14`; anything else is text):
+
+  | Type | Conditions |
+  |---|---|
+  | Numbers | equals, does not equal, greater than, greater than or equal to, less than, less than or equal to, between, **top N** and **bottom N** (N is a box, 10 to begin with), above average, below average. A value may be written `1m`, `250k`, `12%` |
+  | Dates | today, yesterday, this week (Monday to Sunday), last week, this month, last month, last 7 days, last 30 days, between, before, after. They count from today in your browser's calendar |
+  | Text | equals, does not equal, contains, does not contain, begins with, ends with (any case) |
+
+- **A search box over the values**: it lists the column's distinct values with **how many rows** have each one. Typing narrows
+  the list and, as in Excel, leaves just those values ticked. *(Select all)* ticks or clears the values in view. *(Blanks)* is
+  the rows whose cell is empty.
+- **OK**, **Cancel** (or `Esc`) and **Clear** (removes this column's filter). A column uses either its ticked values or its
+  condition, not both: choosing a condition sets the ticks aside, ticking a value clears the condition.
+
+![A condition chosen: Amount greater than 1m](img/colfilter/02-condition.jpg)
+
+The list of a column shows only the values that the **other** columns' filters leave, so it answers "what is left?". A list
+longer than 500 values shows the first 500 and says so; search to reach the rest.
+
+![The same table filtered on two columns: a filled funnel on each, "7 of 35 rows (filtered)" and Clear filters](img/colfilter/03-filtered.jpg)
+
+**What you see when a filter is on**
+
+- the column's funnel is **filled and amber**; its tooltip says what it does (*Filtered: Greater than 1m*, *Filtered: 2 values:
+  Equity, FX*, *Between 2026-01-01 and 2026-03-31*, *Top 10*);
+- the pager reads `7 of 35 rows (filtered)` (the total is the rows the table holds, before any filter) and a **Clear filters**
+  button appears next to the *Filter rows* box. A screen reader is told the same, politely, whenever the count changes;
+- filters across columns **combine** (a row must pass all of them); paging, the sort and the zoomed table's *Fit* page size work on
+  the rows that remain;
+- **live tables keep their filters.** When a live update replaces the table, the filters are applied to the new rows again: a row
+  that stops matching leaves, one that starts matching appears. A menu you have open stays open and applies to the new table.
+
+**Clear everything.** *Clear filters* (in the heading), or `Alt`+`Shift`+`X` while a table has the focus, clears the column
+filters, the *Filter rows* box and the per-column text boxes of that panel. (`Alt`+`Shift`+`X` with the focus outside any panel clears
+every table on the page.)
+
+**Share and reload.** Column filters are part of the address: `?f.<panel id>.<column heading>=<filter>`, for example
+`/v/trade/MX-20000001?f.schedule.Type=in:Fixed&f.schedule.Amount=gt:1m`. Reload, send the link, or open the snapshot and the same rows
+are shown. The filter is written compactly:
+
+| In the address | Means |
+|---|---|
+| `in:Fixed,Float` | the ticked values (`,` and `~` inside a value are written `%2C` and `%7E`); `~b` in the list is *(Blanks)*, `~m` is *(masked)* |
+| `eq:5` `ne:5` `gt:1m` `ge:` `lt:` `le:` | number or text comparisons |
+| `bt:100k~1m` | between (two values joined by `~`) |
+| `top:10` `bot:10` `avga` `avgb` | top / bottom N, above / below average |
+| `today` `yest` `thisweek` `lastweek` `thismonth` `lastmonth` `last7` `last30` `bf:2026-10-01` `af:2026-10-01` | dates |
+| `ct:x` `nc:x` `bw:x` `ew:x` | contains, does not contain, begins with, ends with |
+
+A filter that names a column or panel that is not there is ignored. Inside `<drishti-view>` the filters are kept in the page's
+memory only (the host's address is not touched). **Remembering** a user's filters between visits is **off**: nothing is stored unless
+the page sets `data-remember-filters="on"` on `<body>` or this browser has `localStorage['drishti.rememberFilters'] = 'on'`; then the
+filters of a table return when the address has none.
+
+**Masked values.** If a column hides values from you (shown as `•••`), the menu never lists a masked value: all of them are one
+entry, **(masked)**, with a count, and you can tick it to see those rows (which still show `•••`). A masked cell never satisfies a
+condition (not even *does not equal*) and sorts after the rest. Row rules (which rows exist for you) apply before any of this.
+
+**Matrices (rows that open).** A table whose rows have children filters its **rows of every level**: a row stays when it matches,
+and so do its parents, shown open, so you can see where a match sits; a parent that does not match itself stays only because
+something under it does. The count reads `2 of 7 rows (filtered)` (matches only). While a filter is on the ▸ ▾ buttons are held
+open; clear it to open and close rows again. Sorting is not offered in a matrix, to keep the order of the hierarchy.
+
+**Pivots.** A pivot panel by one field is a table: its heading cells (the field, each column) filter its rows. A pivot by several
+fields, drawn as nested groups, and the **Pivot tab** over a table keep their own tools: the tab's **Filters** zone filters the
+*source* fields before the rows are grouped (see [The Pivot tab](#the-pivot-tab-slice-a-table-your-way)), which is the Excel
+pivot's report filter; the table's column filters do not reach into the tab.
+
+**Large tables.** Every table today holds the rows the server sent (100 for a pick list), and a filter works on those; a
+last line "*n* more rows" says when there are more. Nothing is paged by the server, so there is no server-side filter yet. When a
+table is paged by the server the same filters will go to it as the address's `f.` values, and the page raises the
+`drishti:column-filter` event for it to do so; until then, for all of a kind, filter in the query:
+`TRD where notional > 200m`.
+
+**On a phone.**
+
+![The menu on a phone: finger-sized buttons, the list scrolls inside the menu](img/colfilter/04-phone.jpg)
+
+The funnel is always shown and 44 pixels wide; the menu fits the screen (its list scrolls inside it) and every row, button and box
+in it is at least 44 pixels high.
+
+| Key | Does |
+|---|---|
+| `Enter` / `Space` on a heading's funnel | Open its menu; the focus moves into it |
+| `Tab` / `Shift`+`Tab` | Move within the menu (it does not leave until closed) |
+| `↓` `↑` `Home` `End` in the list | Move between *(Select all)* and the values (from the search box, `↓` enters the list); `Space` ticks |
+| letters in the list | Jump to the next value that begins with what you type |
+| `Enter` | OK |
+| `Esc` | Cancel and close the menu, and nothing more: a zoomed panel or a drawer stays; a second `Esc` leaves them |
+| `Alt`+`Shift`+`X` | Clear all filters of the panel that has the focus |
 
 ## Reading a view
 
@@ -861,8 +970,9 @@ keys than shown*); a search's drill-down shows 50 rows a page. An administrator 
 | `Enter` | Open the highlighted suggestion, or run the command (`<GO>`). In a table: open the selected row |
 | `PgUp` `PgDn` | In a selected table: move the selection a page up or down |
 | `Home` `End` | In a selected table: select the first or last row |
-| `Esc` | Close the suggestions, a menu, the raw JSON drawer, About this page or Calc; then restore a [zoomed panel](#zoom-a-panel) |
+| `Esc` | Close the suggestions, a menu (a column's filter menu included), the raw JSON drawer, About this page or Calc; then restore a [zoomed panel](#zoom-a-panel) |
 | `Z` | On a focused panel: [zoom](#zoom-a-panel) it, or restore it; `Shift`+`Z` also asks for full screen |
+| `Alt`+`Shift`+`X` | Clear all [column filters](#filter-a-table-like-excel) (and the filter box) of the panel that has the focus |
 | `F1` | Help for the page you are on. On a view it opens [About this page](#about-this-page); `F1` again goes to the guide |
 | `?` | On a view (focus not in a text field): open or close [About this page](#about-this-page) |
 | `F2`–`F6` | Jump to the panel that shows that key in its header |

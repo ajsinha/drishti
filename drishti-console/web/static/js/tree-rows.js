@@ -15,7 +15,8 @@
  */
 /* Expandable rows (PANEL_KINDS.md, Tree rows).
    1. A table or ladder whose Sutra says children: (table.tbl-tree): the ▸/▾ button of a row opens and closes the rows under
-      it, any number of levels deep; the filter box keeps the ancestors of the rows that match.
+      it, any number of levels deep; the filter box and the column filters (colfilter.js) keep the rows that match and the
+      ancestors of those rows: a parent shows, open, when any row below it matches.
    2. A pivot by a list of fields (div.pv-tree-host): the nested rows are drawn by the Pivot tab's grid (pivot-grid.js, the
       same ▸/▾ groups and subtotals) from the panel's own data, so there is one renderer for collapsible row groups.
    Both are plain buttons, so Tab, Enter and Space work; the state is aria-expanded. Live updates replace panels: new ones
@@ -25,25 +26,32 @@
   var me = document.currentScript, reg0 = window.drishtiModules || {};
   var E = reg0.pivotEngine || window.drishtiPivotEngine, G = reg0.pivotGrid || window.drishtiPivotGrid;
 
+  var treeState = {};                                      // a tree's filters by panel, so a live patch that replaces the table keeps them
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
 
   // ---- table rows with children -----------------------------------------------------------------------------------
-  function treeTable(t) {
+  function treeTable(t, root, scope) {
     var body = t.tBodies[0];
     if (!body) { return; }
-    var rows = Array.prototype.slice.call(body.rows), q = '';
+    var rows = Array.prototype.slice.call(body.rows), q = '', CF = reg0.colFilter, ctl = null;
+    var heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
+    var count = null, clearBtn = null, lastLive = '';
+    function cellText(r, i) { var c = r.cells[i]; return c ? c.textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').trim() : ''; }
     rows.forEach(function (r) {
       r.__depth = +r.getAttribute('data-depth');
       var b = r.querySelector('.tr-tog');
       r.__open = !!b && b.getAttribute('aria-expanded') === 'true';
       r.__text = r.textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').toLowerCase();
     });
-    function paint() {
-      var hit = [];
-      if (q) {                                             // a match, and every ancestor of a match (shown open)
-        hit = rows.map(function (r) { return r.__text.indexOf(q) >= 0; });
+    function textHit(r) { return !q || r.__text.indexOf(q) >= 0; }
+    function paint(say) {
+      var hit = [], real = [], on = !!q || !!(ctl && ctl.active());
+      if (ctl) { ctl.prepare(); }
+      if (on) {                                            // a match, and every ancestor of a match (shown open)
+        real = rows.map(function (r) { return textHit(r) && (!ctl || ctl.pass(r)); });
+        hit = real.slice();
         rows.forEach(function (r, i) {
-          if (r.__text.indexOf(q) < 0) { return; }
+          if (!real[i]) { return; }
           for (var j = i - 1, need = r.__depth - 1; j >= 0 && need >= 0; j--) {
             if (rows[j].__depth === need) { hit[j] = true; need--; }
           }
@@ -51,9 +59,9 @@
       }
       var parentOpen = [true];                             // per depth: is the nearest row above at this depth open and shown?
       rows.forEach(function (r, i) {
-        var d = r.__depth, visible = q ? hit[i] : (d === 0 || parentOpen[d - 1] === true);
+        var d = r.__depth, visible = on ? hit[i] : (d === 0 || parentOpen[d - 1] === true);
         r.hidden = !visible;
-        var open = q ? hasKept(i, hit) : r.__open;
+        var open = on ? hasKept(i, hit) : r.__open;
         parentOpen[d] = visible && open;
         var b = r.querySelector('.tr-tog');
         if (b) {
@@ -63,14 +71,20 @@
         }
       });
       t.setAttribute('data-shown', String(rows.filter(function (r) { return !r.hidden; }).length));
+      var matched = real.filter(Boolean).length, text = on ? matched + ' of ' + rows.length + ' rows (filtered)' : rows.length + ' rows';
+      if (count) { count.textContent = on ? text : ''; }
+      if (clearBtn) { clearBtn.hidden = !on; }
+      if (say === true && CF && text !== lastLive) { CF.say(root, text); }
+      lastLive = text;
     }
     function hasKept(i, hit) {                             // a row is shown open while a row below it (deeper) is kept
       var d = rows[i].__depth;
-      return i + 1 < rows.length && rows[i + 1].__depth > d && hit[i + 1] === true;
+      for (var j = i + 1; j < rows.length && rows[j].__depth > d; j++) { if (hit[j] === true) { return true; } }
+      return false;
     }
     body.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('.tr-tog');
-      if (!b || q) { return; }
+      if (!b || q || (ctl && ctl.active())) { return; }
       var r = b.closest('tr');
       r.__open = !r.__open;
       paint();
@@ -81,8 +95,26 @@
       var wrap = t.closest('.tbl-wrap') || t.parentNode;
       var box = el('input', 'tbl-q tr-q');
       box.type = 'search'; box.placeholder = 'Filter rows'; box.setAttribute('aria-label', 'Filter rows');
-      box.addEventListener('input', function () { q = box.value.trim().toLowerCase(); paint(); });
-      wrap.parentNode.insertBefore(box, wrap);
+      box.addEventListener('input', function () { q = box.value.trim().toLowerCase(); paint(true); });
+      var bar = el('div', 'tr-bar');
+      count = el('span', 'tr-count mono'); count.setAttribute('aria-hidden', 'true');
+      clearBtn = el('button', 'fk tbl-pg-b tbl-clear', '✕ Clear filters'); clearBtn.type = 'button'; clearBtn.hidden = true;
+      clearBtn.title = 'Clear all filters on this table (Alt+Shift+X)';
+      t.__tblClear = function () { q = ''; box.value = ''; if (ctl) { ctl.clear(true); } paint(true); };
+      clearBtn.addEventListener('click', t.__tblClear);
+      bar.appendChild(box); bar.appendChild(clearBtn); bar.appendChild(count);
+      wrap.parentNode.insertBefore(bar, wrap);
+      if (CF && heads.length) {
+        var panel = t.closest('[data-panel], section[id], .pnl'), pid = panel && (panel.getAttribute('data-panel') || panel.id) || 'tree';
+        var n = panel ? Array.prototype.indexOf.call(panel.querySelectorAll('table.tbl'), t) : 0;
+        var kk = scope + '|' + pid + '|tree' + n;
+        var st = treeState[kk] || (treeState[kk] = { f: {} });
+        ctl = CF.attach({
+          id: kk, key: pid + (n > 0 ? '~' + (n + 1) : ''), table: t, root: root, heads: heads, state: st, useUrl: root === document,
+          rows: function () { return rows; }, text: cellText, base: textHit, sort: null,
+          onChange: function () { paint(true); }
+        });
+      }
     }
     paint();
   }
@@ -149,12 +181,12 @@
   }
 
   /** init(root, options): expandable rows under root (the document or a ShadowRoot), now and as panels are swapped in. */
-  function init(root) {
+  function init(root, options) {
     function scan(node) {
       if (!node.querySelectorAll) { return; }
       var tables = Array.prototype.slice.call(node.querySelectorAll('table.tbl-tree:not([data-tree-ready])'));
       if (node.matches && node.matches('table.tbl-tree:not([data-tree-ready])')) { tables.push(node); }
-      tables.forEach(function (t) { t.setAttribute('data-tree-ready', ''); treeTable(t); });
+      tables.forEach(function (t) { t.setAttribute('data-tree-ready', ''); treeTable(t, root, (options && options.scope) || location.pathname); });
       var hosts = Array.prototype.slice.call(node.querySelectorAll('.pv-tree-host:not([data-tree-ready])'));
       if (node.matches && node.matches('.pv-tree-host:not([data-tree-ready])')) { hosts.push(node); }
       hosts.forEach(pivotTree);

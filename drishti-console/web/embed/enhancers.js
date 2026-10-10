@@ -60,7 +60,7 @@ export function boot(host, view, server, reload) {
   m.view = start('view', root, { glUrl: null });
   m.charts = start('charts', root);        // an entity click is a hidden link click: it reaches the element's own link handler
   m.tables = start('tables', root, { scope: server + '|' + kind + '/' + id });
-  m.tree = start('treeRows', root);
+  m.tree = start('treeRows', root, { scope: server + '|' + kind + '/' + id });
   m.zoom = start('zoom', root);
   m.pivot = start('pivot', root, { fetch: fetcher, url: toUrl, save: false, exports: false });
   m.about = start('about', root, { fetch: fetcher, guideKey: false, reload, setHtml });

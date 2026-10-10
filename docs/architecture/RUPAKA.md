@@ -345,6 +345,18 @@ begins with, ends with, does not contain); sort ascending and descending. Filter
 column shows a funnel; one key clears them all. Column filters are part of the view state (URL, shares) and become a
 report's visual-level filters in Rūpaka. They extend today's single *Filter rows* box, which stays as the quick search.
 
+**As built (delivery 1).** The column filters are in the terminal (`static/js/colfilter.js`, called by `tables.js` and `tree-rows.js`;
+`colfilter.css`; also inside `<drishti-view>`). Decisions taken: the checklist lists only the values the other columns' filters leave,
+with counts; a column uses its ticked values or one condition; a masked value (`•••`) is never listed, all masked cells are one
+*(masked)* entry and never satisfy a condition; types are detected from the cells (80% numbers or ISO dates); in a matrix a row
+matches on its own cells and its ancestors stay open; the URL form is `?f.<panel>.<column heading>=in:a,b | gt:1m | bt:1~9 | top:10 |
+today ...` (`~b` Blanks, `~m` masked) and is written with `history.replaceState`; remembering per user is off (a `<body
+data-remember-filters="on">` or a browser flag turns it on); `Alt+Shift+X` clears a panel's filters. Not yet built: a server-paged
+table (none exists today: every table holds the rows the server sent), so the filter runs in the browser and every change is
+announced as the table event `drishti:column-filter` ({panel, filters in the URL form}) for a server-side pager to take; a column
+filter on the nested-group pivot and in the Pivot tab (its own Filters zone filters source fields before grouping, the Excel report
+filter); `controls:` and `ctl.*` (delivery 2). Rūpaka's visual-level filters will reuse `matches()` and the URL form.
+
 **Safety and access.** Controls only select or filter; they never write. Options and filters are expressions in the closed
 language, never code. Masks apply: a dropdown or a filter checklist never lists a masked value to a reader without `raw`,
 and row rules decide which values exist at all. Every control works from the keyboard (the checklist with arrows, space

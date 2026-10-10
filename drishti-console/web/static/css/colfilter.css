@@ -1,0 +1,55 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Excel-style column filters (colfilter.js; RUPAKA.md 8.1): the funnel in a column heading and the menu behind it. */
+.cf-btn { display: inline-flex; align-items: center; justify-content: center; margin-left: .3rem; padding: 0 .2rem; min-width: 24px; min-height: 24px;
+  background: transparent; border: 0; border-radius: 4px; color: var(--d-muted); cursor: pointer; vertical-align: middle; opacity: 0; font-size: .85em; }
+table.tbl th:hover .cf-btn, table.tbl th:focus-within .cf-btn, .cf-btn.cf-on, .cf-btn[aria-expanded="true"], .cf-btn:focus-visible { opacity: 1; }
+.cf-btn:hover { color: var(--d-ink); background: var(--d-highlight); }
+.cf-btn.cf-on { color: var(--d-accent); }
+@media (hover: none), (pointer: coarse) { .cf-btn { opacity: 1; } }
+@media (pointer: coarse) { .cf-btn { min-width: 44px; min-height: 44px; } }
+.cf-menu { position: fixed; z-index: 2000; width: min(21rem, calc(100vw - 16px)); display: flex; flex-direction: column; gap: .45rem; padding: .6rem; overflow-y: auto;
+  background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 8px; box-shadow: var(--d-shadow); font-size: .85rem; font-weight: 400; text-align: left; }
+.cf-sort { display: flex; flex-direction: column; gap: .15rem; }
+.cf-act { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .25rem .6rem; text-align: left; cursor: pointer; font: inherit; min-height: 28px; }
+.cf-act:hover { border-color: var(--d-accent); }
+.cf-act[aria-pressed="true"] { border-color: var(--d-accent); color: var(--d-accent); }
+.cf-ok { background: var(--d-accent); color: var(--d-on-accent); border-color: var(--d-accent); text-align: center; }
+.cf-cond { display: flex; flex-wrap: wrap; gap: .3rem; }
+.cf-cond select, .cf-cond input, .cf-q { flex: 1 1 100%; min-width: 0; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .2rem .4rem; font: inherit; min-height: 28px; }
+.cf-cond input:not([hidden]) { flex: 1 1 8rem; }
+.cf-err { color: var(--d-bad); min-height: 0; }
+.cf-err:empty { display: none; }
+.cf-list { overflow-y: auto; max-height: 14rem; border: 1px solid var(--d-border); border-radius: 4px; background: var(--d-bg-2); }
+.cf-item { display: flex; align-items: center; gap: .4rem; padding: .15rem .4rem; cursor: pointer; margin: 0; }
+.cf-item[hidden] { display: none; }
+.cf-item:hover { background: var(--d-highlight); }
+.cf-all { border-bottom: 1px solid var(--d-border); }
+.cf-t { flex: 1; overflow-wrap: anywhere; }
+.cf-n { color: var(--d-muted); font-size: .8em; }
+.cf-sp .cf-t { font-style: italic; }
+.cf-more { color: var(--d-muted); font-size: .8em; }
+.cf-more:empty { display: none; }
+.cf-foot { display: flex; gap: .4rem; }
+.cf-foot .cf-act { flex: 1; text-align: center; }
+.tbl-clear { color: var(--d-accent); }
+.tbl-clear[hidden] { display: none; }
+.tr-bar { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin: 0 0 .4rem; }
+.tr-bar .tr-q { margin: 0; }
+.tr-count { color: var(--d-muted); font-size: .8rem; }
+@media (pointer: coarse) { .cf-item { min-height: 44px; } .cf-act, .cf-cond select, .cf-cond input, .cf-q { min-height: 44px; } .cf-item input { min-width: 24px; min-height: 24px; } }
+@media print { .cf-btn, .cf-menu, .tbl-clear { display: none !important; } }
+.cf-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

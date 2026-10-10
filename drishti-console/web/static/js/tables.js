@@ -16,6 +16,9 @@
 /* Every table sorts, filters, pages and can be walked with the keyboard.
    - Sort: click a column heading (again to reverse, a third time to restore the server's order). Numbers, amounts
      (1.5m, 250k, −30,205,543), percentages and dates sort as values, text alphabetically.
+   - Column filters (colfilter.js, Excel's AutoFilter): a funnel in every column heading opens a menu to sort, to tick the column's
+     distinct values (with counts, Select all, Blanks) or to filter by a condition for its type (numbers, dates, text). They
+     combine across columns, are part of the address (?f.<panel>.<column>=...), and Alt+Shift+X clears them all.
    - Filter: the box in the table's heading matches any cell; the funnel shows a box per column, where a number
      column also takes >, <, >= and <= (">1m"). It is on every table (table and ladder panels, pick lists, admin
      lists), in the panel's heading bar or a strip above a table without one; a Sutra turns it off with search: false.
@@ -27,6 +30,7 @@
 (function () {
   'use strict';
   var me = document.currentScript;
+  var CF = (window.drishtiModules || {}).colFilter;     // column filters; loaded before this script
   var SIZES = [25, 50, 100, 250];
   var MIN_FIT = 5;
   var KEY = 'drishti.tableRows';
@@ -35,6 +39,7 @@
   function init(root, options) {
   options = options || {};
   var scope = options.scope || location.pathname;
+  var inDoc = root === document;
   var state = {};                      // a table's key -> its view state, so a re-rendered table keeps its place
 
   function size() {
@@ -45,6 +50,14 @@
     return scope + '|' + (panel && (panel.getAttribute('data-panel') || panel.id) || '') + '|' +
       Array.prototype.indexOf.call(root.querySelectorAll('table.tbl'), t);
   }
+  /** The table's name in the address: its panel's id, and ~2, ~3 for a panel's further tables. */
+  function urlKey(t) {
+    var panel = t.closest('[data-panel], section[id], .pnl');
+    var id = panel && (panel.getAttribute('data-panel') || panel.id);
+    if (!id) { return 't' + Array.prototype.indexOf.call(root.querySelectorAll('table.tbl'), t); }
+    var n = Array.prototype.indexOf.call(panel.querySelectorAll('table.tbl'), t);
+    return id + (n > 0 ? '~' + (n + 1) : '');
+  }
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
   function button(label, title, fn) {
     var b = el('button', 'fk tbl-pg-b', label);
@@ -54,21 +67,8 @@
   }
   function cellText(r, i) { var c = r.cells[i]; return c ? c.textContent.replace(/\s+/g, ' ').trim() : ''; }
 
-  // A cell as a sortable value: a number (amounts with k/m/bn, signs, separators, %), a date, or text.
-  var MULT = { k: 1e3, m: 1e6, mm: 1e6, bn: 1e9, b: 1e9, tn: 1e12 };
-  function value(text) {
-    var t = text.replace(/[−–]/g, '-').replace(/,/g, '').replace(/\s/g, '');
-    var m = t.match(/^([+-]?)(\d+(?:\.\d+)?)(k|m|mm|bn|b|tn)?(%|bp)?$/i);
-    if (m) { var n = parseFloat(m[2]) * (m[3] ? MULT[m[3].toLowerCase()] : 1); return { n: m[1] === '-' ? -n : n }; }
-    if (/^\d{4}-\d{2}-\d{2}/.test(t)) { return { n: Date.parse(t.slice(0, 10)) }; }
-    return { s: text.toLowerCase() };
-  }
-  function compare(a, b) {
-    if (a.n != null && b.n != null) { return a.n - b.n; }
-    if (a.n != null) { return -1; }
-    if (b.n != null) { return 1; }
-    return a.s < b.s ? -1 : a.s > b.s ? 1 : 0;
-  }
+  // A cell as a sortable value: a number (amounts with k/m/bn, signs, separators, %), a date, or text (colfilter.js).
+  var value = CF.value, compare = CF.compare;
   // A column filter: "abc" contains (any case); ">1m", "<=0", "=5" compare numbers.
   function passes(text, q) {
     var m = q.match(/^\s*(>=|<=|>|<|=)\s*(.+)$/);
@@ -87,7 +87,7 @@
     var original = Array.prototype.slice.call(body.rows);            // the server's order, restored on a third click
     var heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
     var k = keyOf(t);
-    var st = state[k] || (state[k] = { page: 0, sel: -1, col: -1, dir: 0, q: '', cols: {}, open: false });
+    var st = state[k] || (state[k] = { page: 0, sel: -1, col: -1, dir: 0, q: '', cols: {}, open: false, f: {} });
 
     function all() { return Array.prototype.slice.call(body.rows); }
     function visible() { return all().filter(function (r) { return !r.__out; }); }
@@ -96,8 +96,8 @@
     function sort() {
       var rows = original.slice();
       if (st.col >= 0 && st.dir) {
-        var keyed = rows.map(function (r, i) { return { r: r, v: value(cellText(r, st.col)), i: i }; });
-        keyed.sort(function (a, b) { return st.dir * compare(a.v, b.v) || a.i - b.i; });
+        var keyed = rows.map(function (r, i) { var t = cellText(r, st.col); return { r: r, v: value(t), i: i, blank: t === '' ? 1 : 0 }; });
+        keyed.sort(function (a, b) { return a.blank - b.blank || st.dir * compare(a.v, b.v) || a.i - b.i; });          // blank cells last, whichever way
         rows = keyed.map(function (x) { return x.r; });
       }
       rows.forEach(function (r) { body.appendChild(r); });
@@ -113,24 +113,37 @@
         if (st.col !== i) { st.col = i; st.dir = 1; } else { st.dir = st.dir === 1 ? -1 : st.dir === -1 ? 0 : 1; }
         st.sel = -1; st.page = 0; sort(); render();
       }
-      h.addEventListener('click', cycle);
-      h.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycle(); } });
+      h.addEventListener('click', function (e) { if (!e.target.closest('.cf-btn')) { cycle(); } });
+      h.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.cf-btn')) { e.preventDefault(); cycle(); } });
     });
 
     // ---- filtering ---------------------------------------------------------------------------------------------
     var filterRow = null;
-    function filter() {
-      all().forEach(function (r) {
-        var out = false;
-        if (st.q) {
-          var any = false;
-          for (var i = 0; i < r.cells.length; i++) { if (passes(cellText(r, i), st.q)) { any = true; break; } }
-          out = !any;
-        }
-        Object.keys(st.cols).forEach(function (c) { if (!out && st.cols[c] && !passes(cellText(r, +c), st.cols[c])) { out = true; } });
-        r.__out = out;
-      });
+    function textOut(r) {                                  // the quick search and the per-column text boxes
+      if (st.q) {
+        var any = false;
+        for (var i = 0; i < r.cells.length; i++) { if (passes(cellText(r, i), st.q)) { any = true; break; } }
+        if (!any) { return true; }
+      }
+      return Object.keys(st.cols).some(function (c) { return st.cols[c] && !passes(cellText(r, +c), st.cols[c]); });
     }
+    function filter() {
+      ctl.prepare();
+      all().forEach(function (r) { r.__out = textOut(r) || !ctl.pass(r); });
+    }
+    function filtered() { return !!st.q || ctl.active() || Object.keys(st.cols).some(function (c) { return st.cols[c]; }); }
+    var ctl = t.hasAttribute('data-no-search') ? { prepare: function () {}, pass: function () { return true; }, active: function () { return false; }, clear: function () {} } : CF.attach({
+      id: k, key: urlKey(t), table: t, root: root, heads: heads, state: st, useUrl: inDoc,
+      rows: all, text: cellText, base: function (r) { return !textOut(r); },
+      sort: function (i, dir) { st.col = i; st.dir = dir; st.sel = -1; st.page = 0; sort(); render(); },
+      sorted: function () { return { col: st.col, dir: st.dir }; },
+      onChange: function () { st.page = 0; st.sel = -1; filter(); render(true); }
+    });
+    t.__tblClear = function () {
+      st.q = ''; quick.value = ''; Object.keys(st.cols).forEach(function (c) { delete st.cols[c]; });
+      if (filterRow) { filterRow.querySelectorAll('input').forEach(function (x) { x.value = ''; }); }
+      ctl.clear(true); st.page = 0; st.sel = -1; filter(); render(true);
+    };
     function columnFilters(show) {
       st.open = show;
       if (!show) { if (filterRow) { filterRow.remove(); filterRow = null; } return; }
@@ -140,7 +153,7 @@
         var td = el('th'), inp = el('input', 'tbl-filter-in mono');
         inp.type = 'search'; inp.placeholder = 'filter'; inp.value = st.cols[i] || '';
         inp.setAttribute('aria-label', 'Filter ' + (h.textContent || 'column ' + (i + 1)).trim());
-        inp.addEventListener('input', function () { st.cols[i] = inp.value.trim(); st.page = 0; st.sel = -1; filter(); render(); });
+        inp.addEventListener('input', function () { st.cols[i] = inp.value.trim(); st.page = 0; st.sel = -1; filter(); render(true); });
         inp.addEventListener('click', function (e) { e.stopPropagation(); });
         td.appendChild(inp); filterRow.appendChild(td);
       });
@@ -152,7 +165,7 @@
     var quick = el('input', 'tbl-pg-q mono');
     quick.type = 'search'; quick.placeholder = 'Filter rows'; quick.value = st.q;
     quick.setAttribute('aria-label', 'Filter the rows of this table');
-    var funnel = button('⧩', 'Filter by column', function () { columnFilters(!st.open); funnel.classList.toggle('on', st.open); });
+    var funnel = button('⧩', 'Type a filter under each column heading (text, or >1m)', function () { columnFilters(!st.open); funnel.classList.toggle('on', st.open); });
     var sizeSel = el('select', 'tbl-pg-size');
     sizeSel.setAttribute('aria-label', 'Rows per page');
     SIZES.forEach(function (n) { var o = el('option', null, n + ' rows'); o.value = n; sizeSel.appendChild(o); });
@@ -163,7 +176,8 @@
     var fitOn = false, fitN = null, picked = null;
     function perPage() { return picked || fitN || size(); }
     function pages() { return Math.max(1, Math.ceil(visible().length / perPage())); }
-    function render() {
+    var clearBtn = null, lastLive = '';
+    function render(say) {
       var vis = visible(), per = perPage(), n = pages();
       st.page = Math.min(Math.max(0, st.page), n - 1);
       all().forEach(function (r) { r.hidden = true; r.classList.remove('tbl-sel'); r.setAttribute('aria-selected', 'false'); });
@@ -172,8 +186,13 @@
         if (i === st.sel) { r.classList.add('tbl-sel'); r.setAttribute('aria-selected', 'true'); }
       });
       var total = all().length, from = vis.length ? st.page * per + 1 : 0, to = Math.min(vis.length, (st.page + 1) * per);
-      info.textContent = from + '–' + to + ' of ' + vis.length + (vis.length !== total ? ' (filtered from ' + total + ')' : '')
+      var isF = filtered();
+      info.textContent = (isF ? vis.length + ' of ' + total + ' rows (filtered)' : from + '–' + to + ' of ' + vis.length)
         + (n > 1 ? ' · page ' + (st.page + 1) + ' of ' + n : '');
+      if (clearBtn) { clearBtn.hidden = !isF; }
+      var live = isF ? vis.length + ' of ' + total + ' rows (filtered)' : total + ' rows';
+      if (say === true && live !== lastLive) { CF.say(root, live); }
+      lastLive = live;
       bar.querySelectorAll('[data-pg=back]').forEach(function (b) { b.disabled = st.page === 0; });
       bar.querySelectorAll('[data-pg=fwd]').forEach(function (b) { b.disabled = st.page >= n - 1; });
     }
@@ -204,7 +223,9 @@
     var searchable = !t.hasAttribute('data-no-search');           // every table, unless its Sutra says search: false
     var nav = el('span', 'tbl-pg-nav');
     [first, prev, info, next, last].forEach(function (x) { nav.appendChild(x); });
-    if (searchable) { bar.appendChild(quick); bar.appendChild(funnel); }
+    clearBtn = button('Clear filters', 'Clear all filters on this table (Alt+Shift+X)', function () { t.__tblClear(); });
+    clearBtn.classList.add('tbl-clear'); clearBtn.textContent = '✕ Clear filters'; clearBtn.hidden = true;
+    if (searchable) { bar.appendChild(quick); bar.appendChild(funnel); bar.appendChild(clearBtn); }
     [nav, up, down, sizeSel].forEach(function (x) { bar.appendChild(x); });
     var wrap = t.closest('.tbl-wrap') || t;
     var head = panel && panel.querySelector(':scope > .pnl-h');
@@ -217,7 +238,7 @@
       wrap.parentNode.insertBefore(bar, wrap);      // a strip above the table (pick lists, admin lists, tabs)
     }
 
-    quick.addEventListener('input', function () { st.q = quick.value.trim(); st.page = 0; st.sel = -1; filter(); render(); });
+    quick.addEventListener('input', function () { st.q = quick.value.trim(); st.page = 0; st.sel = -1; filter(); render(true); });
     sizeSel.addEventListener('change', function () {
       if (fitOn) {                                        // zoomed: a pick holds until restore and is not remembered; "Fit" goes back to the measured size
         reflow(function () { picked = sizeSel.value === 'fit' ? null : parseInt(sizeSel.value, 10); });
@@ -350,6 +371,15 @@
     fitAll(on);
   }
   root.addEventListener('drishti:table-fit', onFit);
+  // Alt+Shift+X clears every filter of the panel that has the focus (or of every table, when the focus is elsewhere)
+  function onClearKey(e) {
+    if (!(e.altKey && e.shiftKey) || e.ctrlKey || e.metaKey || !(e.code === 'KeyX' || e.key === 'X' || e.key === 'x')) { return; }
+    var tg = (e.composedPath && e.composedPath()[0]) || e.target, p = tg && tg.closest && tg.closest('.pnl, section[data-panel]');
+    e.preventDefault();
+    CF.close();
+    Array.prototype.forEach.call((p || root).querySelectorAll('table.tbl'), function (x) { if (x.__tblClear) { x.__tblClear(); } });
+  }
+  root.addEventListener('keydown', onClearKey);
   zoomFit = !!zoomedPanel();                      // zoomed from the link before this ran
   scan(root);
   if (zoomFit) { fitAll(true); }
@@ -358,7 +388,7 @@
     list.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) { scan(n); } }); });
   });
   mo.observe(root === document ? document.body : root, { childList: true, subtree: true });
-  return { scan: scan, dispose: function () { mo.disconnect(); root.removeEventListener('drishti:table-fit', onFit); unwatchFit(); if (fitTimer) { clearTimeout(fitTimer); } } };
+  return { scan: scan, dispose: function () { mo.disconnect(); root.removeEventListener('drishti:table-fit', onFit); root.removeEventListener('keydown', onClearKey); CF.close(); unwatchFit(); if (fitTimer) { clearTimeout(fitTimer); } } };
   }
   var reg = (window.drishtiModules = window.drishtiModules || {});
   reg.tables = { init: init };
