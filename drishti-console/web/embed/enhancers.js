@@ -36,7 +36,7 @@ function drawerHtml(base, kind, id) {
  * Starts the enhancers on `host`'s shadow root for a freshly painted `.view`; returns the handles (for dispose) or {}.
  * @param host the <drishti-view>; @param view its `.view` element; @param server the console's base URL; @param reload a function that reloads the host
  */
-export function boot(host, view, server, reload) {
+export function boot(host, view, server, reload, extra = {}) {
   const root = host.shadowRoot, reg = window.drishtiModules || {};
   const kind = view.getAttribute('data-kind'), id = view.getAttribute('data-id');
   const base = server + API;
@@ -62,6 +62,14 @@ export function boot(host, view, server, reload) {
   m.tables = start('tables', root, { scope: server + '|' + kind + '/' + id });
   m.tree = start('treeRows', root, { scope: server + '|' + kind + '/' + id });
   m.zoom = start('zoom', root);
+  if (view.hasAttribute('data-controls')) {          // the Sutra's controls: a change asks the console for only the panels that read it (never the host page's address)
+    m.controls = start('controls', root, {
+      view, urlState: false, scope: kind, initial: extra.controls || '', setHtml,
+      panelsUrl: (q) => base + '/views/' + encodeURIComponent(kind) + '/' + ID_PATH(id) + '/panels?' + q,
+      fetchJson: async (u) => { const r = await fetcher(u); if (!r.ok) { throw new Error('HTTP ' + r.status); } return r.json(); },
+      afterSwap: (fresh) => { host.absolutise(fresh); m.view && m.view.enhance(fresh); m.charts && m.charts.draw(); m.hints && m.hints.refresh(); }
+    });
+  }
   m.pivot = start('pivot', root, { fetch: fetcher, url: toUrl, save: false, exports: false });
   m.about = start('about', root, { fetch: fetcher, guideKey: false, reload, setHtml });
   m.hints = m.about ? start('aboutHints', root, { about: m.about, open: (h) => window.open(h.startsWith('/') ? server + h : h, '_blank', 'noopener') }) : null;
@@ -79,7 +87,7 @@ export function boot(host, view, server, reload) {
 
 /** Ends what `boot` started: observers, listeners and chart instances. */
 export function dispose(mods, root) {
-  if (mods) { for (const k of ['zoom', 'pivot', 'tree', 'tables', 'about', 'hints', 'charts', 'view']) { mods[k] && mods[k].dispose && mods[k].dispose(); } }
+  if (mods) { for (const k of ['controls', 'zoom', 'pivot', 'tree', 'tables', 'about', 'hints', 'charts', 'view']) { mods[k] && mods[k].dispose && mods[k].dispose(); } }
   const e = window.echarts;
   if (e && root) { root.querySelectorAll('.chart, .xchart, .surface').forEach((el) => { const c = e.getInstanceByDom(el); c && !c.isDisposed() && c.dispose(); }); }
 }

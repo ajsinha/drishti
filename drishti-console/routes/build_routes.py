@@ -24,7 +24,7 @@ import logging
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
-from core import builder, designs, partial, sutra_diff
+from core import builder, controls, designs, partial, sutra_diff
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
@@ -302,11 +302,30 @@ async def _salvage(request: Request, id_: str, yaml_text: str, error: str, sampl
     return out
 
 
+@router.get("/designs/{id_}/preview/panels")
+async def preview_panels(request: Request, id_: str, sample: str = "", panels: str = ""):
+    """Some panels of the Design's preview as ready HTML, built with the controls' values (``?panels=schedule&ctl.legs=1``): what the
+    Controls tab's small preview asks for when a control changes, and the controls themselves (options and values as the server resolved
+    them). The same answer as the page's ``/v/<kind>/<id>/panels``, for a Design's sample."""
+    ctl = controls.from_query(request.query_params)
+    params = {"sample": sample or None, **({"panels": ",".join(p for p in panels.split(",") if p) or "-"} if panels else {}), **ctl}
+    try:
+        vm = await request.app.state.backend.designs("GET", f"/{id_}/preview", ident(request), **params)
+    except BackendError as e:
+        return _error(e)
+    env = request.app.state.templates.env
+    module = env.get_template("_macros/panels.html").module
+    parts = env.get_template("_macros/view.html").module
+    return {"panels": [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": str(module.panel(p, True))} for p in vm.get("panels") or []],
+            "strip": str(parts.strip(vm)).strip(), "controls": vm.get("controls") or [], "selects": vm.get("selects") or []}
+
+
 @router.get("/designs/{id_}/preview")
 async def preview(request: Request, id_: str, sample: str = ""):
     """The Design's Sutra against one of its samples, as Studio draws it. A stored entity the user may not open is a 403 'no access'."""
+    ctl = controls.from_query(request.query_params)
     try:
-        vm = await request.app.state.backend.designs("GET", f"/{id_}/preview", ident(request), sample=sample or None)
+        vm = await request.app.state.backend.designs("GET", f"/{id_}/preview", ident(request), sample=sample or None, **ctl)
     except BackendError as e:
         if e.code == "DRS-2002":
             try:
@@ -317,7 +336,7 @@ async def preview(request: Request, id_: str, sample: str = ""):
             if got["checkProblems"]:
                 return {"sample": sample, **got}
         return _error(e)
-    return {"previewHtml": _html(request, vm), "sample": sample}
+    return {"previewHtml": _html(request, vm), "sample": sample, "controls": vm.get("controls") or [], "selects": vm.get("selects") or []}
 
 
 @router.post("/designs/{id_}/autodesign")

@@ -37,6 +37,7 @@ from core.csrf import BodyError, json_body
 from core.embed import EmbedError
 from core.embed_stream import StreamGuard
 from core.embed_wire import compress
+from core import controls
 from routes import api_routes
 
 router = APIRouter(prefix="/embed/v1", include_in_schema=False)
@@ -174,7 +175,7 @@ async def echarts_js(request: Request):
 
 # The console's own enhancer scripts, root-scoped (static/js; ELEMENTS.md section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
-ENHANCERS = ("view", "charts", "colfilter", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom")
+ENHANCERS = ("view", "charts", "colfilter", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "controls")
 
 
 @router.get("/js/{name}.js")
@@ -242,6 +243,27 @@ def _render(request: Request, vm: dict, asof: str = "live") -> tuple[str, list, 
     return head, panels, [banners] if banners else []
 
 
+@router.get("/views/{kind}/{id_:path}/panels")
+async def panels_fragment(request: Request, kind: str, id_: str, panels: str = ""):
+    """Some panels of a view as ready HTML, built with the controls' values (``?panels=cashflows&ctl.legs=1``): what the element asks for when
+    a reader changes a control. Also the strip and the controls (a cascading child's options may have moved). As the console's own
+    ``/v/<kind>/<id>/panels``, for the embed caller's masked identity."""
+    try:
+        me, _claims = await identity(request)
+    except EmbedError as e:
+        return await refuse(request, e.status, e.code, e.detail, e.retry_after)
+    ctl = controls.from_query(request.query_params)
+    ids = [p for p in panels.split(",") if p and p != "-"] if panels else None
+    try:
+        vm = await request.app.state.backend.view(kind, id_, me, controls=ctl, panels=ids)
+    except BackendError as e:
+        return await refuse(request, e.page_status, e.code, e.detail, e.retry_after)
+    parts = request.app.state.templates.env.get_template("_macros/view.html").module
+    out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": str(parts.panels([p], True)).strip()} for p in vm.get("panels", [])]
+    body = {"panels": out, "strip": str(parts.strip(vm)).strip(), "controls": vm.get("controls") or []}
+    return await reply(request, json.dumps(body, ensure_ascii=False), "application/json")
+
+
 @router.get("/views/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str):
     """The initial view: the head, the strip and every panel as the console's own macros render them, plus the channel key."""
@@ -250,8 +272,9 @@ async def view(request: Request, kind: str, id_: str):
         me, _claims = await identity(request)
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
+    ctl = controls.from_query(request.query_params)
     try:
-        vm = await request.app.state.backend.view(kind, id_, me)
+        vm = await request.app.state.backend.view(kind, id_, me, **({"controls": ctl} if ctl else {}))
     except BackendError as e:
         return await refuse(request, e.page_status, e.code, e.detail, e.retry_after)
     asof = getattr(request.state, "asof", "live")
@@ -260,7 +283,7 @@ async def view(request: Request, kind: str, id_: str):
     live = bool(prov.get("live")) and asof == "live"
     masked = int(prov.get("masked") or 0)            # counted by the server (provenance.masked), not from the markup
     body = {"api": API, "ref": vm["ref"], "mnemonic": vm.get("mnemonic"), "title": vm["title"], "head": head, "strip": vm.get("strip", []),
-            "banners": banners, "panels": panels, "provenance": prov,
+            "banners": banners, "panels": panels, "provenance": prov, "controls": vm.get("controls") or [], "selects": vm.get("selects") or [],
             "masked": {"count": masked, "panels": list(prov.get("maskedPanels") or [])},
             "subscribe": f"view:{vm['ref']['kind']}/{vm['ref']['id']}" if live else None,
             "asOf": asof, "timings": {"console": round((time.perf_counter() - started) * 1000, 1)}}

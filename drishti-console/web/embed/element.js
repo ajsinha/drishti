@@ -26,15 +26,15 @@ import { setHtml, fragment } from './sanitize.js';
 import { boot, dispose } from './enhancers.js';
 import * as frames from './frames.js';
 
-const ATTRS = ['kind', 'entity', 'as-of', 'known-at', 'theme', 'density', 'header', 'live', 'server', 'panels', 'panel', 'label'];
-const RELOAD = new Set(['kind', 'entity', 'as-of', 'known-at', 'header', 'live', 'server', 'panels']);      // `panel` is reserved (<drishti-panel>), `theme`/`density`/`label` need no load
+const ATTRS = ['kind', 'entity', 'as-of', 'known-at', 'theme', 'density', 'header', 'live', 'server', 'panels', 'panel', 'label', 'controls'];
+const RELOAD = new Set(['kind', 'entity', 'as-of', 'known-at', 'header', 'live', 'server', 'panels', 'controls']);      // `panel` is reserved (<drishti-panel>), `theme`/`density`/`label` need no load
 const instances = new Set();
 
 export class DrishtiView extends HTMLElement {
   static get observedAttributes() { return ATTRS; }
   #seq = 0; #subs = 0; #ctrl = null; #unsub = null; #state = 'idle'; #gen = 0; #queued = false; #mods = null; #io = null;
   #hiddenTimer = null; #away = false; #paused = false; #retry = null; #retries = 0; #ready = null; #deleted = false; #view = null; #lastError = null;
-  #html = new Map(); #rs = 0; #gap = false; #cleanup = false; #offToken = null; #slots = {};
+  #html = new Map(); #rs = 0; #gap = false; #cleanup = false; #offToken = null; #slots = {}; #subKey = ''; #ctlQuery = null;
 
   constructor() {
     super();
@@ -47,6 +47,7 @@ export class DrishtiView extends HTMLElement {
     }
     this.shadowRoot.addEventListener('click', (e) => this.#click(e));
     this.shadowRoot.addEventListener('keydown', (e) => { if (e.key === 'Enter') { this.#click(e); } });
+    this.shadowRoot.addEventListener('drishti:controls', (e) => this.#controlsChanged(e));
   }
   get kind() { return this.getAttribute('kind') || ''; } set kind(v) { this.#attr('kind', v); }
   get entity() { return this.getAttribute('entity') || ''; } set entity(v) { this.#attr('entity', v); }
@@ -55,6 +56,8 @@ export class DrishtiView extends HTMLElement {
   get theme() { return this.getAttribute('theme') || 'light'; } set theme(v) { this.#attr('theme', v); }
   get density() { return this.getAttribute('density') || ''; } set density(v) { this.#attr('density', v); }
   get server() { return (this.getAttribute('server') || cfg.server).replace(/\/$/, ''); }
+  /** The controls' values as `legs=2&when=2026-10-01..2026-12-31` (the Sutra's `ctl.<id>`); the attribute sets them, a reader's change updates this. */
+  get controls() { return this.#ctlQuery != null ? this.#ctlQuery.replace(/(^|&)ctl\./g, '$1') : (this.getAttribute('controls') || ''); } set controls(v) { this.#attr('controls', v); }
   get state() { return this.#state; }
   get view() { return this.#view; }
   get lastError() { return this.#lastError; }
@@ -177,6 +180,8 @@ export class DrishtiView extends HTMLElement {
       const params = new URLSearchParams();
       if (this.asOf !== 'live') { params.set('asOf', this.asOf); }
       if (this.knownAt) { params.set('knownAt', this.knownAt); }
+      this.#ctlQuery = null;
+      for (const [k, v] of new URLSearchParams(this.getAttribute('controls') || '')) { params.set(k.startsWith('ctl.') ? k : 'ctl.' + k, v); }
       const url = this.server + API + '/views/' + encodeURIComponent(this.kind) + '/' + this.entity.split('/').map(encodeURIComponent).join('/') + (params.size ? '?' + params : '');
       const res = await authed(url, {}, ctrl.signal);
       if (seq !== this.#seq) { return; }
@@ -203,7 +208,8 @@ export class DrishtiView extends HTMLElement {
       this.#setState(live ? 'live' : 'static');
       this.#emit('loaded', { ref: data.ref, generation: this.#gen, title: data.title, live });
       if (data.masked && data.masked.count > 0) { this.#emit('masked', data.masked); }
-      if (live && !keepSub && !this.#paused) { this.#subscribe(data.subscribe, this.#subs); }
+      this.#subKey = data.subscribe || '';
+      if (live && !keepSub && !this.#paused) { this.#subscribe(this.#keyWithControls(), this.#subs); }
     } catch (e) {
       if (e && e.name === 'AbortError') { return; }
       if (seq !== this.#seq) { return; }
@@ -215,6 +221,15 @@ export class DrishtiView extends HTMLElement {
     const ms = Math.min(cfg.retryMaxMs, cfg.retryMinMs * 2 ** this.#retries++) * (0.8 + Math.random() * 0.4);
     this.#retry = setTimeout(() => this.#load({ keepSub: false }), ms);
     if (this.#view) { this.#setState('reconnecting'); }
+  }
+  /** The subscription key with the controls' values (`view:trade/T1?ctl.legs=2`), so every frame keeps the reader's choices. */
+  #keyWithControls() {
+    const q = this.#ctlQuery != null ? this.#ctlQuery : [...new URLSearchParams(this.getAttribute('controls') || '')].map(([k, v]) => encodeURIComponent(k.startsWith('ctl.') ? k : 'ctl.' + k) + '=' + encodeURIComponent(v)).join('&');
+    return this.#subKey + (q ? '?' + q : '');
+  }
+  #controlsChanged(e) {                              // a control moved: its values go to the host (the event bubbles out) and the live subscription is built with them
+    this.#ctlQuery = (e.detail && e.detail.query) || '';
+    if (this.#unsub && this.#subKey) { this.#unsub(); this.#unsub = null; this.#subs++; this.#subscribe(this.#keyWithControls(), this.#subs); }
   }
   #subscribe(key, epoch) {
     const mine = () => epoch === this.#subs;                // a refresh keeps the subscription; a reload, pause or teardown ends its epoch
@@ -235,7 +250,8 @@ export class DrishtiView extends HTMLElement {
     if (!ref || this.#deleted) { return; }
     const ok = () => id === this.#rs && seq === this.#seq && subs === this.#subs;
     try {
-      const url = this.server + API + '/views/' + encodeURIComponent(this.kind) + '/' + this.entity.split('/').map(encodeURIComponent).join('/');
+      const rp = new URLSearchParams(this.#keyWithControls().split('?')[1] || '');
+      const url = this.server + API + '/views/' + encodeURIComponent(this.kind) + '/' + this.entity.split('/').map(encodeURIComponent).join('/') + (rp.size ? '?' + rp : '');
       const res = await authed(url, {});
       if (!ok()) { return; }
       if (!res.ok) { return this.refresh(); }
@@ -287,11 +303,12 @@ export class DrishtiView extends HTMLElement {
     view.className = 'view'; view.setAttribute('part', 'view'); view.setAttribute('data-view', ''); view.setAttribute('role', 'region');
     view.setAttribute('aria-label', this.getAttribute('label') || data.title.id);
     view.tabIndex = -1;                             // a click inside gives the focus to the element, so its keys (?) work and the host page's do not
+    if ((data.controls || []).length) { view.setAttribute('data-controls', JSON.stringify(data.controls)); view.setAttribute('data-selects', JSON.stringify(data.selects || [])); }
     view.setAttribute('data-kind', data.ref.kind); view.setAttribute('data-id', data.ref.id); view.setAttribute('data-generation', String((data.provenance || {}).generation || 0));
     setHtml(view, head + '<div class="vgrid"><div class="vmain">' + main.map((p) => p.html).join('') + '</div><aside class="vright" aria-label="Context">'
       + right.map((p) => p.html).join('') + '</aside></div>');
     root.appendChild(view);
-    this.#mods = boot(this, view, this.server, () => this.reload());
+    this.#mods = boot(this, view, this.server, () => this.reload(), { controls: this.controls });
     this.#html = new Map(panels.map((p) => [p.id, p.html]));
     this.#emit('paint', { ref: data.ref, generation: (data.provenance || {}).generation || 0 });
     if (zoomed && this.#mods.zoom) { this.#mods.zoom.zoom(zoomed, focused); }

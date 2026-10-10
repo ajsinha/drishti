@@ -289,3 +289,7 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wbf-preview .qf-fields { grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); }
 .wb-form-diff { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .6rem; }
 @media (pointer: coarse) { .wbf-in, .wbf-chip { min-height: 44px; } .wbf-card .btn-pill { min-width: 44px; min-height: 44px; } }
+/* the Controls tab's small preview: the real controls over the panels that read them */
+.wbc-preview { border: 1px solid var(--d-border); border-radius: 8px; padding: .5rem; background: var(--d-surface); min-height: 4rem; }
+.wbc-preview .vgrid { display: block; padding: .4rem 0 0; }
+.wbc-preview .vhead { padding: 0; }

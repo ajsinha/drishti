@@ -75,13 +75,14 @@
 
   WB.model = function (text) {
     var root = window.drishtiYaml.parse(unwrap(text || ''));
-    var out = { panels: [], title: {}, strip: [], keys: {}, match: {}, ids: [] };
+    var out = { panels: [], title: {}, strip: [], keys: {}, match: {}, controls: [], ids: [] };
     if (!root || root.t !== 'map') { return out; }
     var pick = function (k) { var e = entry(root, k); return e ? js(e.value) : null; };
     out.title = pick('title') || {};
     out.strip = pick('strip') || [];
     out.keys = pick('keys') || {};
     out.match = pick('match') || {};
+    out.controls = pick('controls') || [];
     var ps = entry(root, 'panels');
     if (ps && ps.value && ps.value.t === 'seq') {
       ps.value.items.forEach(function (n) {

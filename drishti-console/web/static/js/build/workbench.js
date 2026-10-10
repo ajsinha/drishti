@@ -58,7 +58,7 @@ store.state.baseMoved = init.baseMoved || null;
     if (name === 'yaml' || split) { yaml.refresh(); }
     if (name === 'summary') { summarise(); }
   });
-  var right = tabs($('[data-right-tabs]'), function (name) { if (name === 'versions' && versions) { versions.refresh(); } if (name === 'about' && about) { about.show(); } if (name === 'form' && form) { form.show(); } });
+  var right = tabs($('[data-right-tabs]'), function (name) { if (name === 'versions' && versions) { versions.refresh(); } if (name === 'about' && about) { about.show(); } if (name === 'form' && form) { form.show(); } if (name === 'controls' && controls) { controls.show(); } });
   $('[data-split]').addEventListener('click', function (e) {
     split = !split; e.currentTarget.setAttribute('aria-pressed', split ? 'true' : 'false'); $('[data-centre]').classList.toggle('wb-split', split);
     centre.show(centre.current()); yaml.refresh();
@@ -70,7 +70,7 @@ store.state.baseMoved = init.baseMoved || null;
   store.on('doc', function (x) { if (x.changed && centre.current() === 'summary') { summarise(); } });
 
   // ---- the parts ---------------------------------------------------------------------------------------------------------------
-  var canvas, inspector, actions, data, versions, about, form;
+  var canvas, inspector, actions, data, versions, about, form, controls;
   var schemaP = fetch('/studio/schema').then(function (r) { return r.json(); });
   var toastTimer = 0;
   function toast(text, label, run) {
@@ -101,6 +101,7 @@ store.state.baseMoved = init.baseMoved || null;
   WB.Problems($('[data-problems]'), $('[data-problem-count]'), store, { gotoLine: gotoLine, gotoPanel: gotoPanel, gotoAbout: function (line) { right.show('about'); about.goto(line); } });
   about = WB.About($('[data-about]'), store);
   form = WB.FormTab($('[data-form]'), store);
+  controls = WB.ControlsTab($('[data-controls-tab]'), store);
   var tests = WB.Tests($('[data-tests]'), store, { gotoPanel: gotoPanel });
   versions = WB.Versions($('[data-versions]'), store, init.base || '');
   var ship = WB.Ship(root, store, { yaml: yaml });
@@ -195,14 +196,14 @@ store.state.baseMoved = init.baseMoved || null;
   });
   // an edit still waiting for its pause is sent before F1 or a link takes the page away (UX-22); Escape in the inspector goes back to the panel (UX-10)
   function held() {
-    var p = [yaml.flush(), inspector.flush(), notes.flush(), about.flush(), form.flush()];
+    var p = [yaml.flush(), inspector.flush(), notes.flush(), about.flush(), form.flush(), controls.flush()];
     return Promise.all(p);
   }
   window.drishtiBeforeLeave = held;
   document.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a[href]');
     if (!a || a.target === '_blank' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.shiftKey || /^#|^javascript:/.test(a.getAttribute('href'))) { return; }
-    if (!inspector.pending() && !yaml.pending() && !notes.pending() && !about.pending() && !form.pending()) { return; }
+    if (!inspector.pending() && !yaml.pending() && !notes.pending() && !about.pending() && !form.pending() && !controls.pending()) { return; }
     e.preventDefault(); var href = a.href; held().then(function () { window.location.href = href; }, function () { window.location.href = href; });
   }, true);
   $('[data-inspector]').addEventListener('keydown', function (e) {
@@ -213,5 +214,5 @@ store.state.baseMoved = init.baseMoved || null;
   if (init.tab === 'split') { $('[data-split]').click(); centre.show('design'); } else if (init.tab) { centre.show(init.tab); }
   data.paint(); paintBar();
   store.refresh().then(function () { tests.later(); about.later(); if (init.notice) { store.emit('say', init.notice, true); } });
-  window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, about: about, form: form, saving: saving, ship: ship, commands: commands };
+  window.drishtiWorkbench = { store: store, canvas: canvas, actions: actions, tabs: { centre: centre, right: right }, tests: tests, versions: versions, about: about, form: form, controls: controls, saving: saving, ship: ship, commands: commands };
 })();

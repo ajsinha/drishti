@@ -54,9 +54,11 @@ export function panel(root, p, mods, absolutise) {
   const chosen = old.querySelector('[role="tab"][aria-selected="true"]');
   const fresh = fragment(p.html.trim()).firstElementChild;
   if (!fresh) { return null; }
+  const keep = mods && mods.controls ? mods.controls.keepHeader(old) : null;       // a header's controls stay (and keep their focus) through a tick
   const mine = /^(c-(span|h)-\d+|pnl-off)$/;
   fresh.className = fresh.className.split(/\s+/).filter((c) => !mine.test(c)).concat(old.className.split(/\s+/).filter((c) => mine.test(c))).join(' ');
   old.replaceWith(fresh);
+  keep && keep(fresh);
   absolutise(fresh);
   return { fresh, chosen: chosen && chosen.id };
 }

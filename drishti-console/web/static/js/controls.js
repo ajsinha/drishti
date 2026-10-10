@@ -47,6 +47,8 @@
     if (!defs.length) { return null; }
     var byId = {}, ui = {}, cur = {}, touched = {}, undo = [], pending = {}, timer = 0, token = 0, ctl = null, status, memo = options.scope || '';
     var urlState = options.urlState !== false && root === document;
+    var PFX = options.idPrefix || 'p-';                // the panels' id prefix (the workbench's small preview rewrites the ids it draws)
+    var rewrite = options.rewrite || function (h) { return h; };
     defs.forEach(function (d) { byId[d.id] = d; cur[d.id] = d.value || ''; });
     function on(t, type, fn, opt) { t.addEventListener(type, fn, opt); undo.push(function () { t.removeEventListener(type, fn, opt); }); }
 
@@ -74,7 +76,7 @@
     }
     function holder(d) {
       if (d.placement === 'header' && d.panel) {
-        var h = view.querySelector('#p-' + CSS.escape(d.panel) + ' .pnl-h');
+        var h = view.querySelector('#' + PFX + CSS.escape(d.panel) + ' .pnl-h');
         if (h) { var box = h.querySelector('.ctl-head') || h.insertBefore(el('span', 'ctl-head', null, { role: 'group', 'aria-label': 'Controls of this panel' }), h.querySelector('.pnl-code')); return box; }
       }
       return bar(d.placement === 'side' ? 'side' : 'strip');
@@ -245,7 +247,7 @@
       var ids = Object.keys(pending); pending = {}; timer = 0;
       var parts = {};
       ids.forEach(function (id) { (byId[id].reads || []).forEach(function (p) { parts[p] = true; }); });
-      document.dispatchEvent(new CustomEvent('drishti:controls', { detail: { query: query(), changed: ids } }));
+      (root === document ? document : root).dispatchEvent(new CustomEvent('drishti:controls', { bubbles: true, composed: true, detail: { query: query(), changed: ids } }));
       if (parts.title) { location.reload(); return; }
       var panels = Object.keys(parts).filter(function (p) { return p !== 'strip'; });
       if (!panels.length && !parts.strip) { reconcileOnly(ids); return; }
@@ -290,12 +292,13 @@
 
     // ---- applying an answer ---------------------------------------------------------------------------------------------------------------
     function swap(p) {
-      var old = view.querySelector('#p-' + CSS.escape(p.id));
+      var old = view.querySelector('#' + PFX + CSS.escape(p.id));
       if (!old) { return false; }
       if (!p.html) { if (window.drishti && p.data) { window.drishti.updateChart(p.id, p.data); } return true; }
       var chosen = old.querySelector('[role="tab"][aria-selected="true"]'), chosenId = chosen ? chosen.id : null;
       var tpl = document.createElement('template');
-      options.setHtml ? options.setHtml(tpl, p.html) : (tpl.innerHTML = p.html.trim());
+      var html = rewrite(p.html);
+      options.setHtml ? options.setHtml(tpl, html) : (tpl.innerHTML = html.trim());
       var fresh = tpl.content.firstElementChild;
       if (!fresh) { return false; }
       var mine = /^(c-(span|h)-\d+|pnl-off)$/;     // the reader's own layout survives
@@ -313,7 +316,7 @@
       var old = view.querySelector('.strip');
       if (!old) { return; }
       var tpl = document.createElement('template');
-      options.setHtml ? options.setHtml(tpl, html) : (tpl.innerHTML = html.trim());
+      options.setHtml ? options.setHtml(tpl, rewrite(html)) : (tpl.innerHTML = rewrite(html).trim());
       if (tpl.content.firstElementChild) { old.replaceWith(tpl.content.firstElementChild); }
     }
     function reconcile(list) {
@@ -382,7 +385,7 @@
       defs.forEach(function (d) { if (d.placement === 'header' && ui[d.id] && !ui[d.id].wrap.isConnected) { place(d); } });
       defs.forEach(function (d) {
         if (d.placement !== 'header' || !d.panel) { return; }
-        var h = view.querySelector('#p-' + CSS.escape(d.panel) + ' .pnl-h');
+        var h = view.querySelector('#' + PFX + CSS.escape(d.panel) + ' .pnl-h');
         if (h && ui[d.id] && !h.contains(ui[d.id].wrap)) { place(d); }
       });
       decoratePicks();
