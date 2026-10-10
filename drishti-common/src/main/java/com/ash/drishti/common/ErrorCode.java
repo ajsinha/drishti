@@ -53,6 +53,10 @@ public enum ErrorCode {
     ASK_TIMEOUT("DRS-4008", 504),
     /** Ask: over the per-user rate or daily budget. */
     ASK_RATE_LIMITED("DRS-4009", 429),
+    /** A regular expression the search refuses: too long, too large once expanded, a feature the linear-time engine does not offer (back-references, look-around), or not valid. */
+    REGEX_REFUSED("DRS-4010", 400),
+    /** A regular expression ran over its time budget on one value. */
+    REGEX_TIMEOUT("DRS-4011", 408),
     BAD_REQUEST("DRS-5001", 400),
     CACHE_NOT_FOUND("DRS-5004", 404),
     FORBIDDEN("DRS-5002", 403),

@@ -31,7 +31,8 @@ public final class Functions {
             Map.entry("fmt", new int[] {2, 2}), Map.entry("coalesce", new int[] {1, 8}), Map.entry("first", new int[] {1, 1}),
             Map.entry("last", new int[] {1, 1}), Map.entry("abs", new int[] {1, 1}), Map.entry("min", new int[] {1, 8}),
             Map.entry("max", new int[] {1, 8}), Map.entry("upper", new int[] {1, 1}), Map.entry("lower", new int[] {1, 1}),
-            Map.entry("contains", new int[] {2, 2}), Map.entry("startsWith", new int[] {2, 2}));
+            Map.entry("contains", new int[] {2, 2}), Map.entry("startsWith", new int[] {2, 2}),
+            Map.entry("matches", new int[] {2, 2}), Map.entry("matchesCase", new int[] {2, 2}));
 
     private static final Map<String, ElFunction> FUNCTIONS = Map.ofEntries(
             Map.entry("link", Functions::link), Map.entry("size", (a, c) -> size(a.get(0))),
@@ -44,7 +45,24 @@ public final class Functions {
             Map.entry("upper", (a, c) -> Values.text(a.get(0)).toUpperCase(Locale.ROOT)),
             Map.entry("lower", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT)),
             Map.entry("contains", (a, c) -> contains(a.get(0), Values.text(a.get(1)))),
-            Map.entry("startsWith", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT).startsWith(Values.text(a.get(1)).toLowerCase(Locale.ROOT))));
+            Map.entry("startsWith", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT).startsWith(Values.text(a.get(1)).toLowerCase(Locale.ROOT))),
+            Map.entry("matches", (a, c) -> matches(a.get(0), Values.text(a.get(1)), true)),
+            Map.entry("matchesCase", (a, c) -> matches(a.get(0), Values.text(a.get(1)), false)));
+
+    private static final java.util.concurrent.ConcurrentHashMap<String, com.ash.drishti.common.SafeRegex> PATTERNS = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * Regular-expression search over text, by the linear-time engine ({@link com.ash.drishti.common.SafeRegex}): a pattern it
+     * refuses raises DRS-4010, one that runs past its time budget DRS-4011. Matches anywhere in the value; null never matches.
+     */
+    private static boolean matches(Object value, String pattern, boolean ignoreCase) {
+        if (PATTERNS.size() > 512) {
+            PATTERNS.clear();
+        }
+        com.ash.drishti.common.SafeRegex re = PATTERNS.computeIfAbsent((ignoreCase ? "i:" : "c:") + pattern,
+                k -> com.ash.drishti.common.SafeRegex.compile(pattern, ignoreCase));
+        return !Values.isNull(value) && re.find(Values.text(value));
+    }
 
     private Functions() {}
 

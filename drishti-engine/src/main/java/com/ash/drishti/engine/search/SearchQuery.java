@@ -59,7 +59,7 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
     private static final Pattern WHERE = Pattern.compile("(?i)^\\s*(\\S+)(?:\\s+where\\s+(.+))?$", Pattern.DOTALL);
     private static final Set<String> KEYWORDS = Set.of("true", "false", "null");
     private static final Set<String> FUNCTIONS = Set.of("link", "size", "sum", "fmt", "coalesce", "first", "last", "abs", "min", "max",
-            "upper", "lower", "contains", "startsWith");
+            "upper", "lower", "contains", "startsWith", "matches", "matchesCase");
 
     /** The document paths ({@code $.a.b}) the condition, the order and the columns read, as written. */
     public Set<String> documentPaths() {
@@ -134,8 +134,8 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
         return text != null && text.matches("(?is)^\\s*\\S+\\s+(where|order\\s+by|limit)\\s+.+");
     }
 
-    private static final Pattern OPERATOR = Pattern.compile("(?i)(!=|<>|<=|>=|==|=|<|>|\\scontains\\s|\\sstartswith\\s)");
-    private static final Pattern STARTS_WITH_OPERATOR = Pattern.compile("(?i)^(!=|<>|<=|>=|==|=|<|>|contains\\s|startswith\\s)");
+    private static final Pattern OPERATOR = Pattern.compile("(?i)(!=|<>|<=|>=|==|=|<|>|\\scontains\\s|\\sstartswith\\s|\\smatches\\s|\\smatchescase\\s)");
+    private static final Pattern STARTS_WITH_OPERATOR = Pattern.compile("(?i)^(!=|<>|<=|>=|==|=|<|>|contains\\s|startswith\\s|matches\\s|matchescase\\s)");
     private static final Pattern SUFFIX = Pattern.compile("(?i)^(order\\s+by|limit)\\s.*");
 
     /**
@@ -289,6 +289,8 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
                     char x = s.charAt(j++);
                     if (x == '\'') {
                         str.append("\\'");
+                    } else if (x == '\\') {
+                        str.append("\\\\");                  // kept: the Rachana-EL lexer reads a doubled backslash as one
                     } else {
                         str.append(x);
                     }
@@ -348,11 +350,17 @@ public record SearchQuery(String head, String condition, String orderBy, boolean
                     case "and" -> out.add("&&");
                     case "or" -> out.add("||");
                     case "not" -> out.add("!");
-                    case "contains", "startswith" -> {
+                    case "contains", "startswith", "matches", "matchescase" -> {
+                        String fn = switch (lower) {
+                            case "contains" -> "contains";
+                            case "startswith" -> "startsWith";
+                            case "matches" -> "matches";
+                            default -> "matchesCase";
+                        };
                         if (call) {
-                            out.add(lower.equals("contains") ? "contains" : "startsWith");
+                            out.add(fn);
                         } else {
-                            infix(out, lower.equals("contains") ? "contains" : "startsWith");
+                            infix(out, fn);
                         }
                     }
                     default -> {
