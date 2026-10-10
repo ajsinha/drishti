@@ -49,7 +49,8 @@ public final class RoleCatalog implements RoleNames {
     public Optional<RoleDefinition> find(String name) {
         SecurityProperties.Role r = builtIn.get(name);
         if (r != null) {
-            return Optional.of(new RoleDefinition(name, "", r.kinds(), r.raw(), r.author(), r.approve(), r.admin(), r.calc(), r.layout(), r.collaborate(), r.compliance(), true, null, ""));
+            return Optional.of(new RoleDefinition(name, "", r.kinds(), r.raw(), r.author(), r.approve(), r.admin(), r.calc(), r.layout(), r.collaborate(), r.compliance(), true, null, "",
+                    r.admin() ? Set.copyOf(RoleDefinition.BI_POWERS) : Set.copyOf(r.bi())));
         }
         return store.find(name);
     }

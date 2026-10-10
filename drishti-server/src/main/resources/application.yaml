@@ -194,6 +194,34 @@ drishti:
         allow:
           - POST /api/v1/sutras/proposals/*/approve
           - POST /api/v1/sutras/proposals/*/reject
+      "[bi:write]":
+        description: "Business intelligence (Rupaka): create, edit, move, propose, withdraw, publish and delete your workspaces' items, restore versions, mark favourites, create workspaces (when the policy lets you). Needs the bi-author power and the workspace role at call time."
+        allow:
+          - POST /api/v1/bi/workspaces
+          - POST /api/v1/bi/workspaces/*/items
+          - POST /api/v1/bi/items/*/open
+          - POST /api/v1/bi/items/*/move
+          - POST /api/v1/bi/items/*/propose
+          - POST /api/v1/bi/items/*/withdraw
+          - POST /api/v1/bi/items/*/publish
+          - POST /api/v1/bi/items/*/versions/*/restore
+          - PUT /api/v1/bi/items/*
+          - PUT /api/v1/bi/items/*/favourite
+          - DELETE /api/v1/bi/items/*
+      "[bi:approve]":
+        description: "Business intelligence: approve or reject proposed items (the approve power, never your own proposal with four-eyes on) and endorse (promote; certify needs bi-steward)."
+        allow:
+          - POST /api/v1/bi/items/*/approve
+          - POST /api/v1/bi/items/*/reject
+          - POST /api/v1/bi/items/*/endorse
+      "[bi:admin]":
+        description: "Business intelligence: change a workspace (settings, members, delete) and the BI settings. Needs the workspace admin role or the bi-admin power at call time."
+        allow:
+          - PUT /api/v1/bi/workspaces/*
+          - DELETE /api/v1/bi/workspaces/*
+          - PUT /api/v1/bi/workspaces/*/members/*
+          - DELETE /api/v1/bi/workspaces/*/members/*
+          - PUT /api/v1/bi/settings
       "[packs:admin]":
         description: "Load, unload, switch on and off, deploy archives, install and roll back packs, and create, change, test and delete connectors (Admin -> Connectors). Needs the admin role."
         allow:
@@ -243,9 +271,9 @@ drishti:
       - "* /api/v1/command/aliases"
     token-write-max-days: 90           # a token with a write scope must expire, within this many days (read tokens: 1-366 or never)
     roles:
-      viewer:  { kinds: ["*"], layout: false }   # packs add domain roles (finance: trader, risk); layout: may arrange views (default true)
-      author:  { kinds: ["*"], raw: true, author: true, calc: true }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
-      approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true }   # reviews proposed Sutras (admins may too)
+      viewer:  { kinds: ["*"], layout: false, bi: [bi] }   # packs add domain roles (finance: trader, risk); layout: may arrange views (default true)
+      author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (PYTHON_CALC.md)
+      approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true }
     oidc:                              # single sign-on (W20): the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}
@@ -409,7 +437,15 @@ drishti:
     columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
   bi:
-    dir: ${DRISHTI_BI_DIR:./config/bi}   # Rupaka files: datasets/, reports/, python/ (config/bi/README.md); never inside a pack
+    enabled: true                    # Rupaka phase 1 (shell and catalogue): false answers DRS-9006 and the console hides the BI menu
+    dir: ${DRISHTI_BI_DIR:./config/bi}   # Rupaka files: datasets/, reports/, boards/, notebooks/, python/ (config/bi/README.md); never inside a pack
+    folder-refresh: 5s               # how often the folder is read again (shipped files appear without a restart)
+    workspace-creation: authors      # who creates shared workspaces: authors (bi-author), stewards (bi-steward), admins (bi-admin); Admin, BI settings changes it at run time
+    max-body-bytes: 262144           # largest YAML body of one item
+    versions-keep: 50                # published versions kept per item
+    usage-days: 30                   # days of views counted as usage
+    recent: 12                       # rows under Recent, Certified and Shared on Home
+    list-limit: 200                  # most rows one catalogue or workspace page returns
     poc:                             # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): throw-away endpoints under /api/v1/bi/poc
       enabled: ${DRISHTI_BI_POC_ENABLED:false}   # off: they answer 404 as if the code were absent
       rows: 10000                    # trades per day in the generated sample lake (at most 10,000: local-safe)

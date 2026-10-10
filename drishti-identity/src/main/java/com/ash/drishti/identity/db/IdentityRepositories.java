@@ -32,6 +32,38 @@ public final class IdentityRepositories {
 
     public interface EmbedApps extends JpaRepository<EmbedAppEntity, String> {}
 
+    public interface BiWorkspaces extends JpaRepository<BiEntities.BiWorkspace, String> {}
+
+    public interface BiMembers extends JpaRepository<BiEntities.BiMember, String> {
+        List<BiEntities.BiMember> findByUsername(String username);
+
+        List<BiEntities.BiMember> findByWorkspace(String workspace);
+
+        void deleteByWorkspace(String workspace);
+    }
+
+    public interface BiItems extends JpaRepository<BiEntities.BiItem, String> {
+        List<BiEntities.BiItem> findByWorkspace(String workspace);
+
+        List<BiEntities.BiItem> findByPublishedVersionGreaterThan(int version);
+    }
+
+    public interface BiVersions extends JpaRepository<BiEntities.BiVersion, String> {
+        List<BiEntities.BiVersion> findByItemIdOrderByVersionDesc(String itemId);
+
+        void deleteByItemId(String itemId);
+    }
+
+    public interface BiUserItems extends JpaRepository<BiEntities.BiUserItem, String> {
+        List<BiEntities.BiUserItem> findByUsername(String username);
+    }
+
+    public interface BiUsages extends JpaRepository<BiEntities.BiUsage, String> {
+        List<BiEntities.BiUsage> findByDayGreaterThanEqual(String day);
+    }
+
+    public interface BiSettings extends JpaRepository<BiEntities.BiSetting, String> {}
+
     public interface ApiTokens extends JpaRepository<ApiTokenEntity, String> {
         List<ApiTokenEntity> findByUsernameOrderByCreatedAtDesc(String username);
 

@@ -1,0 +1,954 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.bi;
+
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.identity.UserService;
+import com.ash.drishti.identity.bi.BiStore;
+import com.ash.drishti.server.governance.GovernanceProperties;
+import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.server.security.PackAccess;
+import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.server.security.RoleCatalog;
+import com.ash.drishti.server.security.SecurityProperties;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+/**
+ * Business intelligence, Rupaka phase 1 (docs/architecture/RUPAKA.md sections 3, 10, 11): workspaces (a personal one per user and shared
+ * ones with the roles viewer, contributor, member and admin), items (typed placeholders: dataset, report, board or notebook, with a YAML
+ * body that is stored and versioned but not run yet), the lifecycle draft, proposed, published (review before publish reuses the
+ * Sutra approver power and four-eyes), endorsement, and the catalogue that shows each person only what its audience lets them see.
+ * Every decision is made here, on the server, from the caller's identity; every change is audited.
+ */
+public final class BiService {
+
+    public static final List<String> KINDS = List.of("dataset", "report", "board", "notebook");
+    public static final List<String> ENDORSEMENTS = List.of("none", "promoted", "certified");
+    private static final Pattern SLUG = Pattern.compile("[a-z][a-z0-9-]{1,47}");
+    private static final Pattern TAG = Pattern.compile("[A-Za-z0-9][A-Za-z0-9 ._:/-]{0,39}");
+    private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
+    private static final String CREATION = "workspace-creation";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    private final BiProperties props;
+    private final BiStore store;
+    private final BiFolder folder;
+    private final BiAccess access;
+    private final AuditLog audit;
+    private final UserService users;
+    private final RoleCatalog roles;
+    private final PackAccess packs;
+    private final Entitlements entitlements;
+    private final GovernanceProperties governance;
+    private final SecurityProperties security;
+
+    public BiService(BiProperties props, BiStore store, BiFolder folder, BiAccess access, AuditLog audit, UserService users, RoleCatalog roles,
+            PackAccess packs, Entitlements entitlements, GovernanceProperties governance, SecurityProperties security) {
+        this.props = props;
+        this.store = store;
+        this.folder = folder;
+        this.access = access;
+        this.audit = audit;
+        this.users = users;
+        this.roles = roles;
+        this.packs = packs;
+        this.entitlements = entitlements;
+        this.governance = governance;
+        this.security = security;
+    }
+
+    // ===================================================================================================================
+    // Who am I
+    // ===================================================================================================================
+    /** The caller's BI powers, personal workspace and whether they may create shared workspaces. */
+    public Map<String, Object> me(Principal p) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        boolean on = props.enabled();
+        m.put("enabled", on);
+        m.put("powers", on ? access.powers(p) : Set.of());
+        m.put("user", p.user());
+        m.put("personalWorkspace", personalId(p.user()));
+        m.put("workspaceCreation", creationPolicy());
+        m.put("mayCreateWorkspace", on && mayCreateWorkspace(p));
+        m.put("kinds", KINDS);
+        m.put("roles", BiAccess.ROLES);
+        return m;
+    }
+
+    private void open(Principal p) {
+        if (!props.enabled()) {
+            throw new DrishtiException(ErrorCode.BI_OFF, "business intelligence is switched off on this server (drishti.bi.enabled)");
+        }
+        access.require(p, BiAccess.BI);
+    }
+
+    // ===================================================================================================================
+    // Settings
+    // ===================================================================================================================
+    public String creationPolicy() {
+        return store.setting(CREATION).filter(v -> List.of("authors", "stewards", "admins").contains(v)).orElse(props.workspaceCreation());
+    }
+
+    public Map<String, Object> settings(Principal p) {
+        open(p);
+        access.require(p, BiAccess.ADMIN);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("workspaceCreation", creationPolicy());
+        m.put("workspaceCreationOptions", List.of("authors", "stewards", "admins"));
+        m.put("fourEyes", governance.fourEyes() && security.enabled());
+        m.put("dir", props.dir());
+        m.put("shippedItems", folder.items().size());
+        m.put("powers", com.ash.drishti.identity.RoleDefinition.BI_POWERS);
+        m.put("roles", roles.all().stream().map(r -> Map.of("name", r.name(), "builtIn", r.builtIn(), "bi", new java.util.TreeSet<>(r.bi()))).toList());
+        return m;
+    }
+
+    public Map<String, Object> setSettings(Principal p, Map<String, Object> body) {
+        open(p);
+        access.require(p, BiAccess.ADMIN);
+        Object policy = body.get("workspaceCreation");
+        if (policy != null) {
+            if (!List.of("authors", "stewards", "admins").contains(String.valueOf(policy))) {
+                throw new DrishtiException(ErrorCode.BI_INVALID, "workspaceCreation is authors, stewards or admins");
+            }
+            store.setSetting(CREATION, String.valueOf(policy));
+            audit.record(p.user(), "bi-settings-changed", "workspace-creation", String.valueOf(policy));
+        }
+        return settings(p);
+    }
+
+    private boolean mayCreateWorkspace(Principal p) {
+        return switch (creationPolicy()) {
+            case "admins" -> access.has(p, BiAccess.ADMIN);
+            case "stewards" -> access.has(p, BiAccess.STEWARD);
+            default -> access.has(p, BiAccess.AUTHOR);
+        };
+    }
+
+    // ===================================================================================================================
+    // Workspaces
+    // ===================================================================================================================
+    /** The id of a user's personal workspace: stable and unique per exact user name. */
+    public static String personalId(String user) {
+        String clean = user.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+        String hash = String.format("%04x", user.hashCode() & 0xffff);
+        return "u-" + (clean.length() > 30 ? clean.substring(0, 30) : clean) + "-" + hash;
+    }
+
+    private BiStore.Workspace personal(Principal p) {
+        String id = personalId(p.user());
+        return store.workspace(id).orElseGet(() -> {
+            BiStore.Workspace w = store.saveWorkspace(new BiStore.Workspace(id, "My workspace", "Drafts only you can see. Move an item to a shared workspace to publish it.",
+                    true, p.user(), false, Instant.now(), p.user()));
+            audit.record(p.user(), "bi-workspace-created", id, "personal");
+            return w;
+        });
+    }
+
+    private BiStore.Workspace workspaceOf(String id) {
+        if (BiFolder.WORKSPACE.equals(id)) {
+            return new BiStore.Workspace(BiFolder.WORKSPACE, "Shipped content", "Read-only content shipped in the BI folder (" + props.dir() + ").", false, "", false, Instant.EPOCH, "");
+        }
+        return store.workspace(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no workspace '" + id + "'"));
+    }
+
+    /** The caller's role in the workspace, or null: the owner of a personal one and a bi-admin are admins; the shipped one is viewable by all. */
+    private String roleIn(BiStore.Workspace w, Principal p) {
+        if (BiFolder.WORKSPACE.equals(w.id())) {
+            return "viewer";
+        }
+        if (w.personal()) {
+            return w.owner().equals(p.user()) ? "admin" : null;
+        }
+        if (access.has(p, BiAccess.ADMIN)) {
+            return "admin";
+        }
+        return store.members(w.id()).stream().filter(m -> m.username().equals(p.user())).map(BiStore.Member::role).findFirst().orElse(null);
+    }
+
+    private String requireRole(BiStore.Workspace w, Principal p, String atLeast, String what) {
+        String role = roleIn(w, p);
+        if (BiAccess.rank(role) < 0) {
+            throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no workspace '" + w.id() + "'");     // existence is not revealed to non-members
+        }
+        if (BiAccess.rank(role) < BiAccess.rank(atLeast)) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "you are a " + role + " of " + w.name() + "; " + what + " needs " + atLeast);
+        }
+        return role;
+    }
+
+    private Map<String, Object> view(BiStore.Workspace w, String role, int items) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", w.id());
+        m.put("name", w.name());
+        m.put("description", w.description());
+        m.put("personal", w.personal());
+        m.put("shipped", BiFolder.WORKSPACE.equals(w.id()));
+        m.put("owner", w.owner());
+        m.put("reviewRequired", w.reviewRequired());
+        m.put("role", role);
+        m.put("items", items);
+        m.put("createdAt", w.createdAt());
+        return m;
+    }
+
+    /** The workspaces the caller can see: their personal one, the ones they belong to (a bi-admin: all) and the shipped one. */
+    public List<Map<String, Object>> workspaces(Principal p) {
+        open(p);
+        List<Map<String, Object>> out = new ArrayList<>();
+        Map<String, Long> counts = store.items().stream().collect(Collectors.groupingBy(BiStore.Item::workspace, Collectors.counting()));
+        BiStore.Workspace mine = personal(p);
+        out.add(view(mine, "admin", counts.getOrDefault(mine.id(), 0L).intValue()));
+        for (BiStore.Workspace w : store.workspaces()) {
+            if (w.personal()) {
+                continue;
+            }
+            String role = roleIn(w, p);
+            if (role != null) {
+                out.add(view(w, role, counts.getOrDefault(w.id(), 0L).intValue()));
+            }
+        }
+        if (!folder.items().isEmpty()) {
+            out.add(view(workspaceOf(BiFolder.WORKSPACE), "viewer", folder.items().size()));
+        }
+        return out;
+    }
+
+    public Map<String, Object> workspace(Principal p, String id) {
+        open(p);
+        BiStore.Workspace w = "me".equals(id) ? personal(p) : workspaceOf(id);
+        String role = requireRole(w, p, "viewer", "opening it");
+        Map<String, Object> m = view(w, role, (BiFolder.WORKSPACE.equals(w.id()) ? folder.items() : store.itemsIn(w.id())).size());
+        if (!w.personal() && !BiFolder.WORKSPACE.equals(w.id())) {
+            m.put("members", store.members(w.id()).stream().map(x -> Map.of("username", x.username(), "role", x.role(), "addedBy", x.addedBy(), "addedAt", x.addedAt())).toList());
+        }
+        return m;
+    }
+
+    public Map<String, Object> createWorkspace(Principal p, Map<String, Object> body) {
+        open(p);
+        if (!mayCreateWorkspace(p)) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "creating shared workspaces needs the " + switch (creationPolicy()) {
+                case "admins" -> BiAccess.ADMIN;
+                case "stewards" -> BiAccess.STEWARD;
+                default -> BiAccess.AUTHOR;
+            } + " power (Admin, BI settings)");
+        }
+        String name = text(body, "name", 80, true);
+        String id = body.get("id") == null ? slug(name) : String.valueOf(body.get("id"));
+        if (!SLUG.matcher(id).matches() || BiFolder.WORKSPACE.equals(id) || id.startsWith("u-")) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "a workspace id is 2-48 of a-z, 0-9 and -, starting with a letter (and not 'shipped' or u-...)");
+        }
+        if (store.workspace(id).isPresent()) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "a workspace '" + id + "' exists already");
+        }
+        BiStore.Workspace w = store.saveWorkspace(new BiStore.Workspace(id, name, text(body, "description", 2000, false), false, p.user(),
+                Boolean.TRUE.equals(body.get("reviewRequired")), Instant.now(), p.user()));
+        store.setMember(new BiStore.Member(id, p.user(), "admin", Instant.now(), p.user()));
+        audit.record(p.user(), "bi-workspace-created", id, "name=" + name);
+        return workspace(p, w.id());
+    }
+
+    public Map<String, Object> updateWorkspace(Principal p, String id, Map<String, Object> body) {
+        open(p);
+        BiStore.Workspace w = shared(id);
+        requireRole(w, p, "admin", "changing its settings");
+        BiStore.Workspace n = new BiStore.Workspace(w.id(), body.containsKey("name") ? text(body, "name", 80, true) : w.name(),
+                body.containsKey("description") ? text(body, "description", 2000, false) : w.description(), false, w.owner(),
+                body.containsKey("reviewRequired") ? Boolean.TRUE.equals(body.get("reviewRequired")) : w.reviewRequired(), w.createdAt(), w.createdBy());
+        store.saveWorkspace(n);
+        audit.record(p.user(), "bi-workspace-updated", id, "name=" + n.name() + " review=" + n.reviewRequired());
+        return workspace(p, id);
+    }
+
+    public void deleteWorkspace(Principal p, String id) {
+        open(p);
+        BiStore.Workspace w = shared(id);
+        requireRole(w, p, "admin", "deleting it");
+        if (!store.itemsIn(id).isEmpty()) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + w.name() + "' still holds items; move or delete them first");
+        }
+        store.deleteWorkspace(id);
+        audit.record(p.user(), "bi-workspace-deleted", id, w.name());
+    }
+
+    private BiStore.Workspace shared(String id) {
+        BiStore.Workspace w = workspaceOf(id);
+        if (w.personal()) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "a personal workspace is private: it has no members and cannot be changed this way");
+        }
+        if (BiFolder.WORKSPACE.equals(id)) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "the shipped workspace is read-only (it is the BI folder)");
+        }
+        return w;
+    }
+
+    public Map<String, Object> setMember(Principal p, String id, String username, String role) {
+        open(p);
+        BiStore.Workspace w = shared(id);
+        requireRole(w, p, "admin", "sharing it");
+        if (!BiAccess.ROLES.contains(role)) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "a workspace role is one of " + BiAccess.ROLES);
+        }
+        if (users.find(username).isEmpty()) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "no user '" + username + "'");
+        }
+        List<BiStore.Member> now = store.members(id);
+        boolean demotesLast = !"admin".equals(role) && now.stream().filter(m -> m.role().equals("admin")).allMatch(m -> m.username().equals(username))
+                && now.stream().anyMatch(m -> m.username().equals(username) && m.role().equals("admin"));
+        if (demotesLast) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + username + "' is the last admin of " + w.name() + "; make someone else an admin first");
+        }
+        store.setMember(new BiStore.Member(id, username, role, Instant.now(), p.user()));
+        audit.record(p.user(), "bi-member-set", id, username + "=" + role);
+        return workspace(p, id);
+    }
+
+    public Map<String, Object> removeMember(Principal p, String id, String username) {
+        open(p);
+        BiStore.Workspace w = shared(id);
+        requireRole(w, p, "admin", "sharing it");
+        List<BiStore.Member> now = store.members(id);
+        if (now.stream().filter(m -> m.role().equals("admin")).allMatch(m -> m.username().equals(username)) && now.stream().anyMatch(m -> m.username().equals(username))) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + username + "' is the last admin of " + w.name());
+        }
+        if (!store.removeMember(id, username)) {
+            throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + username + "' is not a member of " + w.name());
+        }
+        audit.record(p.user(), "bi-member-removed", id, username);
+        return workspace(p, id);
+    }
+
+    // ===================================================================================================================
+    // Items
+    // ===================================================================================================================
+    private BiStore.Item itemOf(String id) {
+        if (BiFolder.isShipped(id)) {
+            return folder.item(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'"));
+        }
+        return store.item(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'"));
+    }
+
+    /** Whether the caller may see the item in the catalogue (published, not personal) because of its audience, ownership or membership. */
+    private boolean visible(BiStore.Item i, Principal p, Set<String> myWorkspaces, Set<String> myPacks, boolean admin) {
+        if (!i.isPublished() || i.workspace().startsWith("u-")) {
+            return false;
+        }
+        if (admin || i.owner().equals(p.user()) || myWorkspaces.contains(i.workspace())) {
+            return true;
+        }
+        if (BiFolder.WORKSPACE.equals(i.workspace()) && i.audienceRoles().isEmpty() && i.audienceUsers().isEmpty() && i.audiencePacks().isEmpty()) {
+            return true;
+        }
+        if (i.audienceUsers().contains(p.user())) {
+            return true;
+        }
+        if (i.audienceRoles().stream().anyMatch(r -> p.roles().contains(r) || p.roles().contains("*"))) {
+            return true;
+        }
+        return i.audiencePacks().stream().anyMatch(myPacks::contains);
+    }
+
+    private Set<String> myWorkspaces(Principal p) {
+        return store.membershipsOf(p.user()).stream().map(BiStore.Member::workspace).collect(Collectors.toSet());
+    }
+
+    private Set<String> myPacks(Principal p) {
+        try {
+            return Set.copyOf(packs.assigned(p.user()));
+        } catch (RuntimeException e) {
+            return Set.of();
+        }
+    }
+
+    private Map<String, Object> view(BiStore.Item i, Principal p, Map<String, BiStore.Mark> marks, Map<String, Integer> views, boolean detail) {
+        BiStore.Workspace w = workspaceOf(i.workspace());
+        String role = roleIn(w, p);
+        boolean shipped = BiFolder.isShipped(i.id());
+        int rank = BiAccess.rank(role);
+        BiStore.Mark mark = marks.get(i.id());
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", i.id());
+        m.put("workspace", i.workspace());
+        m.put("workspaceName", w.name());
+        m.put("personal", w.personal());
+        m.put("kind", i.kind());
+        m.put("title", i.title());
+        m.put("description", i.description());
+        m.put("owner", i.owner());
+        m.put("tags", i.tags());
+        m.put("status", rank >= BiAccess.rank("contributor") || shipped ? i.status() : "published");     // a viewer sees what is published, not drafts in progress
+        m.put("publishedVersion", i.publishedVersion());
+        m.put("endorsement", i.endorsement());
+        m.put("endorsedBy", i.endorsedBy());
+        m.put("audience", Map.of("roles", i.audienceRoles(), "users", i.audienceUsers(), "packs", i.audiencePacks()));
+        m.put("publishedAt", i.publishedAt());
+        m.put("freshness", i.publishedAt() == null ? null : i.publishedAt());
+        m.put("updatedAt", i.updatedAt());
+        m.put("proposedBy", i.proposedBy());
+        m.put("proposedAt", i.proposedAt());
+        m.put("views", views.getOrDefault(i.id(), 0));
+        m.put("viewsDays", props.usageDays());
+        m.put("favourite", mark != null && mark.favourite());
+        m.put("lastOpened", mark == null ? null : mark.lastOpened());
+        m.put("shipped", shipped);
+        m.put("role", role);
+        boolean edit = !shipped && rank >= BiAccess.rank("contributor") && access.has(p, BiAccess.AUTHOR);
+        boolean publish = edit && rank >= BiAccess.rank("member") && !w.personal() && !w.reviewRequired();
+        boolean approve = !shipped && i.status().equals("proposed") && rank >= BiAccess.rank("member") && entitlements.mayApprove(p)
+                && !(fourEyes() && i.proposedBy().equals(p.user()));
+        Map<String, Object> can = new LinkedHashMap<>();
+        can.put("edit", edit);
+        can.put("propose", edit && !w.personal() && !i.status().equals("proposed") && !i.status().equals("published"));
+        can.put("publish", publish && !i.status().equals("published"));
+        can.put("approve", approve);
+        can.put("withdraw", !shipped && i.status().equals("proposed") && (i.proposedBy().equals(p.user()) || rank >= BiAccess.rank("admin")));
+        can.put("promote", !shipped && i.isPublished() && (i.owner().equals(p.user()) || rank >= BiAccess.rank("member")));
+        can.put("certify", !shipped && i.isPublished() && access.has(p, BiAccess.STEWARD));
+        can.put("delete", edit && (rank >= BiAccess.rank("member") || i.owner().equals(p.user())));
+        can.put("move", edit && !i.status().equals("proposed"));
+        m.put("can", can);
+        if (detail) {
+            boolean draft = !shipped && rank >= BiAccess.rank("contributor");
+            String body = draft || shipped ? i.body() : store.version(i.id(), i.publishedVersion()).map(BiStore.Version::body).orElse("");
+            m.put("body", body);
+            m.put("bodyIs", draft ? "draft" : "published");
+            m.put("draftChanges", !shipped && i.isPublished() && !i.status().equals("published"));
+        }
+        return m;
+    }
+
+    private boolean fourEyes() {
+        return governance.fourEyes() && security.enabled();
+    }
+
+    public List<Map<String, Object>> items(Principal p, String workspaceId) {
+        open(p);
+        BiStore.Workspace w = "me".equals(workspaceId) ? personal(p) : workspaceOf(workspaceId);
+        String role = requireRole(w, p, "viewer", "listing it");
+        List<BiStore.Item> all = BiFolder.WORKSPACE.equals(w.id()) ? folder.items() : store.itemsIn(w.id());
+        Map<String, BiStore.Mark> marks = store.marks(p.user());
+        Map<String, Integer> views = store.views(props.usageDays(), Instant.now());
+        boolean members = BiAccess.rank(role) >= BiAccess.rank("viewer") && !w.id().equals(BiFolder.WORKSPACE);
+        return all.stream().filter(i -> !members || BiAccess.rank(role) >= BiAccess.rank("contributor") || i.isPublished())
+                .sorted(Comparator.comparing(BiStore.Item::updatedAt).reversed()).limit(props.listLimit())
+                .map(i -> view(i, p, marks, views, false)).toList();
+    }
+
+    public Map<String, Object> createItem(Principal p, String workspaceId, Map<String, Object> body) {
+        open(p);
+        access.require(p, BiAccess.AUTHOR);
+        BiStore.Workspace w = "me".equals(workspaceId) ? personal(p) : shared0(workspaceId);
+        requireRole(w, p, "contributor", "creating items");
+        String kind = String.valueOf(body.getOrDefault("kind", ""));
+        if (!KINDS.contains(kind)) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "kind is one of " + KINDS);
+        }
+        Instant now = Instant.now();
+        BiStore.Item i = new BiStore.Item("bi-" + randomId(), w.id(), kind, text(body, "title", 200, true), text(body, "description", 2000, false), p.user(),
+                tags(body.get("tags")), checkedBody(body.get("body")), "draft", 0, "none", "", audienceList(body, "audienceRoles", true),
+                audienceList(body, "audienceUsers", false), audienceList(body, "audiencePacks", false), "", null, now, now, p.user(), null, "");
+        store.saveItem(i);
+        audit.record(p.user(), "bi-item-created", i.id(), kind + " '" + i.title() + "' in " + w.id());
+        return item(p, i.id(), false);
+    }
+
+    private BiStore.Workspace shared0(String id) {
+        return workspaceOf(id);
+    }
+
+    /** One item: members of its workspace see the draft too; everyone else the published version, if their audience allows it. */
+    public Map<String, Object> item(Principal p, String id, boolean record) {
+        open(p);
+        BiStore.Item i = readable(p, id);
+        if (record && i.isPublished()) {
+            store.opened(p.user(), i.id(), Instant.now());
+        }
+        return view(i, p, store.marks(p.user()), store.views(props.usageDays(), Instant.now()), true);
+    }
+
+    private BiStore.Item readable(Principal p, String id) {
+        BiStore.Item i = itemOf(id);
+        BiStore.Workspace w = workspaceOf(i.workspace());
+        if (BiAccess.rank(roleIn(w, p)) >= 0 && !BiFolder.WORKSPACE.equals(w.id())) {
+            return i;
+        }
+        if (visible(i, p, myWorkspaces(p), myPacks(p), access.has(p, BiAccess.ADMIN))) {
+            return i;
+        }
+        throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'");
+    }
+
+    private BiStore.Item editable(Principal p, String id, String what) {
+        open(p);
+        access.require(p, BiAccess.AUTHOR);
+        BiStore.Item i = readable(p, id);
+        if (BiFolder.isShipped(id)) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "shipped content is read-only: change the file in the BI folder");
+        }
+        requireRole(workspaceOf(i.workspace()), p, "contributor", what);
+        return i;
+    }
+
+    public Map<String, Object> updateItem(Principal p, String id, Map<String, Object> body) {
+        BiStore.Item i = editable(p, id, "editing items");
+        if (i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is proposed for review; withdraw it to edit");
+        }
+        String newBody = body.containsKey("body") ? checkedBody(body.get("body")) : i.body();
+        boolean bodyChanged = !newBody.equals(i.body());
+        boolean catalogueOnly = !bodyChanged;
+        BiStore.Item n = new BiStore.Item(i.id(), i.workspace(), i.kind(), body.containsKey("title") ? text(body, "title", 200, true) : i.title(),
+                body.containsKey("description") ? text(body, "description", 2000, false) : i.description(), i.owner(),
+                body.containsKey("tags") ? tags(body.get("tags")) : i.tags(), newBody, bodyChanged && i.isPublished() ? "draft" : i.status(), i.publishedVersion(),
+                i.endorsement(), i.endorsedBy(), body.containsKey("audienceRoles") ? audienceList(body, "audienceRoles", true) : i.audienceRoles(),
+                body.containsKey("audienceUsers") ? audienceList(body, "audienceUsers", false) : i.audienceUsers(),
+                body.containsKey("audiencePacks") ? audienceList(body, "audiencePacks", false) : i.audiencePacks(), i.proposedBy(), i.proposedAt(),
+                i.createdAt(), Instant.now(), p.user(), i.publishedAt(), i.publishedBy());
+        store.saveItem(n);
+        audit.record(p.user(), "bi-item-updated", id, (bodyChanged ? "body " : "") + (catalogueOnly ? "catalogue fields" : ""));
+        return item(p, id, false);
+    }
+
+    public void deleteItem(Principal p, String id) {
+        BiStore.Item i = editable(p, id, "deleting items");
+        BiStore.Workspace w = workspaceOf(i.workspace());
+        if (!i.owner().equals(p.user())) {
+            requireRole(w, p, "member", "deleting someone else's item");
+        }
+        store.deleteItem(id);
+        audit.record(p.user(), "bi-item-deleted", id, i.kind() + " '" + i.title() + "'");
+    }
+
+    public Map<String, Object> moveItem(Principal p, String id, String target) {
+        BiStore.Item i = editable(p, id, "moving items");
+        if (i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "withdraw the proposal before moving '" + i.title() + "'");
+        }
+        BiStore.Workspace to = "me".equals(target) ? personal(p) : shared0(target);
+        if (BiFolder.WORKSPACE.equals(to.id())) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "the shipped workspace is read-only");
+        }
+        requireRole(to, p, "contributor", "adding items");
+        BiStore.Item n = new BiStore.Item(i.id(), to.id(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), i.body(), i.status(), i.publishedVersion(),
+                i.endorsement(), i.endorsedBy(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), i.proposedBy(), i.proposedAt(), i.createdAt(),
+                Instant.now(), p.user(), i.publishedAt(), i.publishedBy());
+        store.saveItem(n);
+        audit.record(p.user(), "bi-item-moved", id, i.workspace() + " -> " + to.id());
+        return item(p, id, false);
+    }
+
+    // -- lifecycle: draft, proposed, published -------------------------------------------------------------------------
+    public Map<String, Object> propose(Principal p, String id, String note) {
+        BiStore.Item i = editable(p, id, "proposing");
+        BiStore.Workspace w = workspaceOf(i.workspace());
+        if (w.personal()) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "move the item to a shared workspace before proposing it");
+        }
+        if (i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is proposed already");
+        }
+        if (i.status().equals("published")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
+        }
+        store.saveItem(withStatus(i, "proposed", p.user(), Instant.now(), p.user()));
+        audit.record(p.user(), "bi-item-proposed", id, note(note));
+        return item(p, id, false);
+    }
+
+    public Map<String, Object> withdraw(Principal p, String id) {
+        BiStore.Item i = editable(p, id, "withdrawing");
+        if (!i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is not proposed");
+        }
+        if (!i.proposedBy().equals(p.user())) {
+            requireRole(workspaceOf(i.workspace()), p, "admin", "withdrawing someone else's proposal");
+        }
+        store.saveItem(withStatus(i, "draft", "", null, p.user()));
+        audit.record(p.user(), "bi-item-withdrawn", id, "");
+        return item(p, id, false);
+    }
+
+    public Map<String, Object> approve(Principal p, String id, String note) {
+        open(p);
+        BiStore.Item i = readable(p, id);
+        BiStore.Workspace w = workspaceOf(i.workspace());
+        requireRole(w, p, "member", "approving");
+        if (BiFolder.isShipped(id) || !i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is not waiting for review");
+        }
+        if (!entitlements.mayApprove(p)) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "approving needs the approve power on a role (the same as approving Sutras)");
+        }
+        if (fourEyes() && i.proposedBy().equals(p.user())) {
+            throw new DrishtiException(ErrorCode.BI_FOUR_EYES, "four-eyes: " + p.user() + " proposed this and may not approve it");
+        }
+        audit.record(p.user(), "bi-item-approved", id, "proposed by " + i.proposedBy() + "; " + note(note));
+        return publishNow(p, i, "approved: " + note(note));
+    }
+
+    public Map<String, Object> reject(Principal p, String id, String reason) {
+        open(p);
+        BiStore.Item i = readable(p, id);
+        requireRole(workspaceOf(i.workspace()), p, "member", "rejecting");
+        if (BiFolder.isShipped(id) || !i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is not waiting for review");
+        }
+        if (!entitlements.mayApprove(p)) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "rejecting needs the approve power on a role");
+        }
+        if (fourEyes() && i.proposedBy().equals(p.user())) {
+            throw new DrishtiException(ErrorCode.BI_FOUR_EYES, "four-eyes: " + p.user() + " proposed this; withdraw it instead of rejecting it");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "say why it is rejected");
+        }
+        store.saveItem(withStatus(i, "draft", "", null, p.user()));
+        audit.record(p.user(), "bi-item-rejected", id, "proposed by " + i.proposedBy() + "; " + note(reason));
+        return item(p, id, false);
+    }
+
+    public Map<String, Object> publish(Principal p, String id, String note) {
+        BiStore.Item i = editable(p, id, "publishing");
+        BiStore.Workspace w = workspaceOf(i.workspace());
+        if (w.personal()) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "personal drafts are private: move the item to a shared workspace to publish it");
+        }
+        requireRole(w, p, "member", "publishing");
+        if (w.reviewRequired()) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, w.name() + " requires review before publishing: propose the item and let a second person approve it");
+        }
+        if (i.status().equals("published")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
+        }
+        return publishNow(p, i, note(note));
+    }
+
+    private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note) {
+        int version = i.publishedVersion() + 1;
+        Instant now = Instant.now();
+        store.addVersion(new BiStore.Version(i.id(), version, i.body(), note, p.user(), now), props.versionsKeep());
+        store.saveItem(new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), i.body(), "published", version,
+                i.endorsement(), i.endorsedBy(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), "", null, i.createdAt(), now, p.user(), now, p.user()));
+        audit.record(p.user(), "bi-item-published", i.id(), "version " + version + "; " + note);
+        return item(p, i.id(), false);
+    }
+
+    private BiStore.Item withStatus(BiStore.Item i, String status, String proposedBy, Instant proposedAt, String actor) {
+        return new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), i.body(), status, i.publishedVersion(),
+                i.endorsement(), i.endorsedBy(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), proposedBy, proposedAt, i.createdAt(), Instant.now(), actor,
+                i.publishedAt(), i.publishedBy());
+    }
+
+    // -- versions -----------------------------------------------------------------------------------------------------
+    public List<Map<String, Object>> versions(Principal p, String id) {
+        open(p);
+        BiStore.Item i = readable(p, id);
+        if (BiFolder.isShipped(id)) {
+            return List.of(Map.of("version", 1, "note", "shipped file", "createdBy", "", "createdAt", i.updatedAt(), "current", true));
+        }
+        return store.versions(id).stream().map(v -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("version", v.version());
+            m.put("note", v.note());
+            m.put("createdBy", v.createdBy());
+            m.put("createdAt", v.createdAt());
+            m.put("current", v.version() == i.publishedVersion());
+            return m;
+        }).toList();
+    }
+
+    public Map<String, Object> version(Principal p, String id, int n) {
+        open(p);
+        BiStore.Item i = readable(p, id);
+        if (BiFolder.isShipped(id)) {
+            if (n != 1) {
+                throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "shipped content has one version");
+            }
+            return Map.of("version", 1, "body", i.body());
+        }
+        BiStore.Version v = store.version(id, n).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + i.title() + "' has no version " + n));
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("version", v.version());
+        m.put("note", v.note());
+        m.put("createdBy", v.createdBy());
+        m.put("createdAt", v.createdAt());
+        m.put("body", v.body());
+        return m;
+    }
+
+    /** Makes a past version the draft again (the item then has changes to publish). */
+    public Map<String, Object> restore(Principal p, String id, int n) {
+        BiStore.Item i = editable(p, id, "restoring versions");
+        if (i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "withdraw the proposal before restoring");
+        }
+        BiStore.Version v = store.version(id, n).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + i.title() + "' has no version " + n));
+        store.saveItem(new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), v.body(),
+                n == i.publishedVersion() ? "published" : "draft", i.publishedVersion(), i.endorsement(), i.endorsedBy(), i.audienceRoles(), i.audienceUsers(),
+                i.audiencePacks(), "", null, i.createdAt(), Instant.now(), p.user(), i.publishedAt(), i.publishedBy()));
+        audit.record(p.user(), "bi-item-restored", id, "version " + n);
+        return item(p, id, false);
+    }
+
+    // -- endorsement ----------------------------------------------------------------------------------------------------
+    public Map<String, Object> endorse(Principal p, String id, String level) {
+        open(p);
+        if (!ENDORSEMENTS.contains(level)) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "endorsement is one of " + ENDORSEMENTS);
+        }
+        BiStore.Item i = readable(p, id);
+        if (BiFolder.isShipped(id)) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "shipped content carries its endorsement in its file");
+        }
+        if (!i.isPublished()) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "only published items are endorsed");
+        }
+        BiStore.Workspace w = workspaceOf(i.workspace());
+        boolean steward = access.has(p, BiAccess.STEWARD);
+        boolean owner = i.owner().equals(p.user()) || BiAccess.rank(roleIn(w, p)) >= BiAccess.rank("member");
+        boolean allowed = switch (level) {
+            case "certified" -> steward;
+            case "promoted" -> owner || steward;
+            default -> i.endorsement().equals("certified") ? steward : owner || steward;
+        };
+        if (!allowed) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, level.equals("certified") || i.endorsement().equals("certified")
+                    ? "certifying needs the bi-steward power" : "promoting needs the owner or a member of the workspace");
+        }
+        store.saveItem(new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), i.body(), i.status(), i.publishedVersion(),
+                level, level.equals("none") ? "" : p.user(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), i.proposedBy(), i.proposedAt(), i.createdAt(),
+                i.updatedAt(), i.updatedBy(), i.publishedAt(), i.publishedBy()));
+        audit.record(p.user(), "bi-item-endorsed", id, level);
+        return item(p, id, false);
+    }
+
+    public Map<String, Object> favourite(Principal p, String id, boolean on) {
+        open(p);
+        BiStore.Item i = readable(p, id);
+        store.favourite(p.user(), i.id(), on);
+        return item(p, id, false);
+    }
+
+    // ===================================================================================================================
+    // Catalogue and home
+    // ===================================================================================================================
+    private List<BiStore.Item> catalogueItems(Principal p) {
+        Set<String> mine = myWorkspaces(p);
+        Set<String> myPacks = myPacks(p);
+        boolean admin = access.has(p, BiAccess.ADMIN);
+        List<BiStore.Item> all = new ArrayList<>(store.published());
+        all.addAll(folder.items());
+        return all.stream().filter(i -> visible(i, p, mine, myPacks, admin)).toList();
+    }
+
+    /** The published items the caller may see, searched, filtered and sorted; certified ones first (unless sorted by title). */
+    public Map<String, Object> catalogue(Principal p, Map<String, String> q) {
+        open(p);
+        List<BiStore.Item> seen = catalogueItems(p);
+        Map<String, BiStore.Mark> marks = store.marks(p.user());
+        Map<String, Integer> views = store.views(props.usageDays(), Instant.now());
+        Map<String, String> workspaceNames = new java.util.HashMap<>();
+        seen.forEach(i -> workspaceNames.computeIfAbsent(i.workspace(), k -> workspaceOf(k).name()));
+        String text = q.getOrDefault("q", "").trim().toLowerCase(Locale.ROOT);
+        List<String> terms = text.isEmpty() ? List.of() : List.of(text.split("\\s+"));
+        long freshSince = q.containsKey("fresh") && !q.get("fresh").isBlank() ? Instant.now().minusSeconds(86_400L * Math.max(1, parse(q.get("fresh")))).toEpochMilli() : Long.MIN_VALUE;
+        List<BiStore.Item> hits = seen.stream()
+                .filter(i -> terms.stream().allMatch(t -> haystack(i, workspaceNames.get(i.workspace())).contains(t)))
+                .filter(i -> blank(q, "kind") || i.kind().equals(q.get("kind")))
+                .filter(i -> blank(q, "workspace") || i.workspace().equals(q.get("workspace")))
+                .filter(i -> blank(q, "owner") || i.owner().equals(q.get("owner")))
+                .filter(i -> blank(q, "endorsement") || i.endorsement().equals(q.get("endorsement")))
+                .filter(i -> blank(q, "tag") || i.tags().contains(q.get("tag")))
+                .filter(i -> blank(q, "pack") || i.audiencePacks().contains(q.get("pack")))
+                .filter(i -> i.publishedAt() != null && i.publishedAt().toEpochMilli() >= freshSince)
+                .toList();
+        String sort = q.getOrDefault("sort", "use");
+        Comparator<BiStore.Item> byTitle = Comparator.comparing(BiStore.Item::title, String.CASE_INSENSITIVE_ORDER);
+        Comparator<BiStore.Item> order = switch (sort) {
+            case "date" -> Comparator.comparing((BiStore.Item i) -> i.publishedAt() == null ? Instant.EPOCH : i.publishedAt()).reversed().thenComparing(byTitle);
+            case "title" -> byTitle;
+            default -> Comparator.comparingInt((BiStore.Item i) -> views.getOrDefault(i.id(), 0)).reversed().thenComparing(byTitle);
+        };
+        if (!"title".equals(sort)) {
+            order = Comparator.comparing((BiStore.Item i) -> i.endorsement().equals("certified") ? 0 : 1).thenComparing(order);
+        }
+        int limit = Math.min(props.listLimit(), Math.max(1, q.containsKey("limit") ? parse(q.get("limit")) : props.listLimit()));
+        List<Map<String, Object>> rows = hits.stream().sorted(order).limit(limit).map(i -> view(i, p, marks, views, false)).toList();
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("total", hits.size());
+        out.put("items", rows);
+        out.put("facets", Map.of("kind", count(seen, i -> List.of(i.kind())), "workspace", count(seen, i -> List.of(i.workspace())), "owner", count(seen, i -> List.of(i.owner())),
+                "endorsement", count(seen, i -> List.of(i.endorsement())), "tag", count(seen, BiStore.Item::tags), "pack", count(seen, BiStore.Item::audiencePacks)));
+        out.put("workspaceNames", workspaceNames);
+        return out;
+    }
+
+    /** Home: recent, favourites, certified for you, shared with me. */
+    public Map<String, Object> home(Principal p) {
+        open(p);
+        List<BiStore.Item> seen = catalogueItems(p);
+        Map<String, BiStore.Mark> marks = store.marks(p.user());
+        Map<String, Integer> views = store.views(props.usageDays(), Instant.now());
+        Set<String> mine = myWorkspaces(p);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("recent", seen.stream().filter(i -> marks.containsKey(i.id()) && marks.get(i.id()).lastOpened() != null)
+                .sorted(Comparator.comparing((BiStore.Item i) -> marks.get(i.id()).lastOpened()).reversed()).limit(props.recent()).map(i -> view(i, p, marks, views, false)).toList());
+        out.put("favourites", seen.stream().filter(i -> marks.containsKey(i.id()) && marks.get(i.id()).favourite())
+                .sorted(Comparator.comparing(BiStore.Item::title, String.CASE_INSENSITIVE_ORDER)).limit(props.listLimit()).map(i -> view(i, p, marks, views, false)).toList());
+        out.put("certified", seen.stream().filter(i -> i.endorsement().equals("certified"))
+                .sorted(Comparator.comparingInt((BiStore.Item i) -> views.getOrDefault(i.id(), 0)).reversed().thenComparing(BiStore.Item::title)).limit(props.recent())
+                .map(i -> view(i, p, marks, views, false)).toList());
+        out.put("shared", seen.stream().filter(i -> !i.owner().equals(p.user()) && (mine.contains(i.workspace()) || !i.audienceUsers().isEmpty() && i.audienceUsers().contains(p.user())))
+                .sorted(Comparator.comparing((BiStore.Item i) -> i.publishedAt() == null ? Instant.EPOCH : i.publishedAt()).reversed()).limit(props.recent())
+                .map(i -> view(i, p, marks, views, false)).toList());
+        out.put("counts", Map.of("catalogue", seen.size(), "workspaces", mine.size() + 1));
+        return out;
+    }
+
+    // ===================================================================================================================
+    // Helpers
+    // ===================================================================================================================
+    private static String haystack(BiStore.Item i, String workspaceName) {
+        return (i.title() + " " + i.description() + " " + String.join(" ", i.tags()) + " " + i.owner() + " " + i.kind() + " " + workspaceName).toLowerCase(Locale.ROOT);
+    }
+
+    private static boolean blank(Map<String, String> q, String k) {
+        return q.get(k) == null || q.get(k).isBlank();
+    }
+
+    private static int parse(String s) {
+        try {
+            return Integer.parseInt(s.trim());
+        } catch (NumberFormatException e) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "'" + s + "' is not a whole number");
+        }
+    }
+
+    private static Map<String, Integer> count(Collection<BiStore.Item> items, java.util.function.Function<BiStore.Item, Collection<String>> key) {
+        Map<String, Integer> out = new TreeMap<>();
+        items.forEach(i -> key.apply(i).forEach(k -> out.merge(k, 1, Integer::sum)));
+        return out;
+    }
+
+    private static String note(String s) {
+        return s == null ? "" : s.length() > 500 ? s.substring(0, 500) : s;
+    }
+
+    private static String randomId() {
+        byte[] b = new byte[5];
+        RANDOM.nextBytes(b);
+        return HexFormat.of().formatHex(b);
+    }
+
+    private static String slug(String name) {
+        String s = name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+        s = s.isEmpty() || !Character.isLetter(s.charAt(0)) ? "w-" + s : s;
+        return s.length() > 48 ? s.substring(0, 48) : s;
+    }
+
+    private static String text(Map<String, Object> body, String key, int max, boolean required) {
+        Object v = body.get(key);
+        String s = v == null ? "" : String.valueOf(v).trim();
+        if (required && s.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, key + " is required");
+        }
+        if (s.length() > max) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, key + " is at most " + max + " characters");
+        }
+        return s;
+    }
+
+    private static List<String> strings(Object v) {
+        if (v == null) {
+            return List.of();
+        }
+        List<String> out = new ArrayList<>();
+        if (v instanceof Collection<?> c) {
+            c.forEach(x -> out.add(String.valueOf(x).trim()));
+        } else {
+            for (String part : String.valueOf(v).split("[,\\n]")) {
+                out.add(part.trim());
+            }
+        }
+        return out.stream().filter(s -> !s.isEmpty()).distinct().toList();
+    }
+
+    private static List<String> tags(Object v) {
+        List<String> t = strings(v);
+        if (t.size() > 20 || t.stream().anyMatch(x -> !TAG.matcher(x).matches())) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "at most 20 tags, each 1-40 letters, digits, space or . _ : / -");
+        }
+        return t;
+    }
+
+    private List<String> audienceList(Map<String, Object> body, String key, boolean checkRoles) {
+        List<String> l = strings(body.get(key));
+        if (key.equals("audienceRoles")) {
+            l.stream().filter(r -> !roles.exists(r) && !r.equals("*")).findFirst().ifPresent(r -> {
+                throw new DrishtiException(ErrorCode.BI_INVALID, "audience role '" + r + "' does not exist");
+            });
+        } else if (key.equals("audiencePacks")) {
+            List<String> installed = packs.installed();
+            l.stream().filter(x -> !installed.contains(x)).findFirst().ifPresent(x -> {
+                throw new DrishtiException(ErrorCode.BI_INVALID, "audience pack '" + x + "' is not installed");
+            });
+        } else if (key.equals("audienceUsers")) {
+            l.stream().filter(u -> users.find(u).isEmpty()).findFirst().ifPresent(u -> {
+                throw new DrishtiException(ErrorCode.BI_INVALID, "audience user '" + u + "' does not exist");
+            });
+        }
+        return l;
+    }
+
+    /** A YAML body: size-capped and parsed, never run. An empty body is allowed (a new placeholder). */
+    private String checkedBody(Object v) {
+        String s = v == null ? "" : String.valueOf(v);
+        if (s.getBytes(StandardCharsets.UTF_8).length > props.maxBodyBytes()) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "the body is larger than " + props.maxBodyBytes() + " bytes (drishti.bi.max-body-bytes)");
+        }
+        if (!s.isBlank()) {
+            try {
+                JsonNode n = YAML.readTree(s);
+                if (n != null && !n.isObject() && !n.isMissingNode() && !n.isNull()) {
+                    throw new DrishtiException(ErrorCode.BI_INVALID, "the body is YAML with a mapping at the top (key: value)");
+                }
+            } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+                throw new DrishtiException(ErrorCode.BI_INVALID, "the body is not valid YAML: " + e.getOriginalMessage());
+            }
+        }
+        return s;
+    }
+}

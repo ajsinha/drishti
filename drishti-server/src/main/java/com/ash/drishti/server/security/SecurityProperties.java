@@ -85,9 +85,18 @@ public record SecurityProperties(Boolean enabled, String secret, Duration clockS
      * @param layout may customise layouts (layout mode, personal layouts); true unless set to false (viewer is)
      * @param collaborate may share, comment and mention; true unless set to false
      * @param compliance may place legal holds, export the collaboration record and read any share; false unless set
+     * @param bi business-intelligence powers (Rupaka): any of {@code bi}, {@code bi-author}, {@code bi-steward}, {@code bi-admin}; an administrator holds all
      */
-    public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance) {
+    public record Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance,
+            List<String> bi) {
+
+        public Role(List<String> kinds, Boolean raw, Boolean author, Boolean admin, Boolean approve, Boolean calc, Boolean layout, Boolean collaborate, Boolean compliance) {
+            this(kinds, raw, author, admin, approve, calc, layout, collaborate, compliance, null);
+        }
+
+        @org.springframework.boot.context.properties.bind.ConstructorBinding
         public Role {
+            bi = bi == null ? List.of() : List.copyOf(bi);
             kinds = kinds == null ? List.of() : List.copyOf(kinds);
             raw = raw != null && raw;
             author = author != null && author;

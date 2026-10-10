@@ -46,7 +46,7 @@ public class RoleController {
 
     /** A role as an administrator writes it. */
     public record RoleRequest(String description, List<String> kinds, Boolean raw, Boolean author, Boolean approve, Boolean admin, Boolean calc,
-            Boolean layout, Boolean collaborate, Boolean compliance) {}
+            Boolean layout, Boolean collaborate, Boolean compliance, List<String> bi) {}
 
     private final RoleCatalog roles;
     private final UserService users;
@@ -76,6 +76,7 @@ public class RoleController {
             m.put("layout", r.layout());
             m.put("collaborate", r.collaborate());
             m.put("compliance", r.compliance());
+            m.put("bi", new java.util.TreeSet<>(r.bi()));
             m.put("builtIn", r.builtIn());
             m.put("updatedAt", r.updatedAt());
             m.put("updatedBy", r.updatedBy());
@@ -93,10 +94,14 @@ public class RoleController {
     @PutMapping("/{name}")
     public RoleDefinition save(@PathVariable String name, @RequestBody RoleRequest r, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
+        if (r.bi() != null && !RoleDefinition.BI_POWERS.containsAll(r.bi())) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "bi powers are " + RoleDefinition.BI_POWERS + ", not " + r.bi());
+        }
         List<String> kinds = r.kinds() == null ? List.of() : r.kinds().stream().map(String::trim).filter(k -> !k.isEmpty()).distinct().toList();
         return roles.save(new RoleDefinition(name, r.description(), kinds, Boolean.TRUE.equals(r.raw()), Boolean.TRUE.equals(r.author()),
                 Boolean.TRUE.equals(r.approve()), Boolean.TRUE.equals(r.admin()), Boolean.TRUE.equals(r.calc()), !Boolean.FALSE.equals(r.layout()),
-                !Boolean.FALSE.equals(r.collaborate()), Boolean.TRUE.equals(r.compliance()), false, null, ""), p.user());
+                !Boolean.FALSE.equals(r.collaborate()), Boolean.TRUE.equals(r.compliance()), false, null, "",
+                r.bi() == null ? java.util.Set.of() : new java.util.HashSet<>(r.bi())), p.user());
     }
 
     @DeleteMapping("/{name}")

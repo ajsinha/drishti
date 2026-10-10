@@ -63,7 +63,7 @@ class TokenScopeGuardTest {
         }
         assertThat(checked).as("non-GET endpoints found").isGreaterThan(50);
         assertThat(undeclared).as("add each to token-read-posts, a token-scopes entry or token-never in application.yaml").isEmpty();
-        assertThat(props.tokenScopes()).containsKeys("design:write", "design:approve", "packs:admin");
+        assertThat(props.tokenScopes()).containsKeys("design:write", "design:approve", "packs:admin", "bi:write", "bi:approve", "bi:admin");
         assertThat(props.tokenNever()).noneMatch(p -> p.matches("\\S+ /api/v1/\\*\\*"));   // no blanket never
     }
 }
