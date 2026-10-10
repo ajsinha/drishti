@@ -22,6 +22,8 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.tls.TlsHttp;
+import com.ash.drishti.api.tls.TlsMaterial;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -48,10 +50,15 @@ import java.util.stream.Collectors;
  * {@code ETag} when numeric, else the fetch time), and {@code header.<Name>} for request headers
  * (for example {@code header.Authorization: Bearer ${SERVICE_TOKEN}}). A 404 means "not held here".
  * The HTTP client is shared and safe to call from many virtual threads.
+ *
+ * <p><b>TLS.</b> An {@code https://} {@code base-url} is checked against the JVM's authorities, or against the shared
+ * {@code tls.*} settings ({@link com.ash.drishti.api.tls.TlsSettings}): a private CA ({@code tls.ca-file}), a truststore, and
+ * a client certificate for mutual TLS ({@code tls.cert-file} + {@code tls.key-file}, or {@code tls.keystore}).
  */
 public final class RestSourcePlugin implements SourcePlugin {
 
     private HttpClient http;
+    private TlsMaterial tls;
     private SourceContext context;
     private String baseUrl;
     private String path;
@@ -84,7 +91,9 @@ public final class RestSourcePlugin implements SourcePlugin {
                 headers.put(key.substring(7), v);
             }
         });
-        this.http = HttpClient.newBuilder().connectTimeout(timeout).build();
+        HttpClient.Builder hb = HttpClient.newBuilder().connectTimeout(timeout);
+        this.tls = TlsHttp.material(ctx.settings(), baseUrl, "base-url");      // fails the start, naming the setting and the file
+        this.http = (tls == null ? hb : TlsHttp.apply(hb, tls)).build();
     }
 
     URI uri(EntityRef ref) {
@@ -116,6 +125,6 @@ public final class RestSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        return http == null ? "DOWN: not started" : "UP";
+        return http == null ? "DOWN: not started" : tls == null ? "UP" : tls.annotate("UP", Instant.now());
     }
 }

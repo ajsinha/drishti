@@ -62,7 +62,8 @@ public final class FeedSourcePlugin implements SourcePlugin {
     private static final ObjectMapper JSON = new ObjectMapper();
     private final Map<EntityRef, Feed.Series> series = new ConcurrentHashMap<>();
     private final HitIndex index = new HitIndex();
-    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
+    private HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
+    private com.ash.drishti.api.tls.TlsMaterial tls;
     private Feed feed;
     private SourceContext context;
     private String userAgent = "public-data-feed-connector";
@@ -94,6 +95,15 @@ public final class FeedSourcePlugin implements SourcePlugin {
         this.sourceName = ctx.setting("source-name", ctx.setting("feed", "feed"));
         this.timeoutSeconds = Integer.parseInt(ctx.setting("timeout-seconds", "20"));
         this.userAgent = ctx.setting("user-agent", userAgent);       // the pack sets it (product name and version)
+        String override = ctx.setting("url", "");
+        if (override.startsWith("http") || com.ash.drishti.api.tls.TlsSettings.anyGiven(ctx.settings(), "tls.")) {
+            // an https mirror on a private CA: the shared tls.* settings; the built-in feeds use the JVM's authorities
+            this.tls = com.ash.drishti.api.tls.TlsHttp.material(ctx.settings(), override.isEmpty() ? "https://(the built-in feed)" : override, "url");
+            if (tls != null) {
+                this.http = com.ash.drishti.api.tls.TlsHttp.apply(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10))
+                        .followRedirects(HttpClient.Redirect.NORMAL), tls).build();
+            }
+        }
         refresh();
         long every = Long.parseLong(ctx.setting("refresh-minutes", "60"));
         ctx.scheduler().scheduleWithFixedDelay(this::refresh, every, every, TimeUnit.MINUTES);
@@ -120,7 +130,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
             }
             index.replaceAll(hits);
             fetchedAt = Instant.now();
-            health = "UP";
+            health = tls == null ? "UP" : tls.annotate("UP", Instant.now());
             lastUpdate = java.time.Instant.now();
         } catch (Exception e) {
             health = "DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage();
