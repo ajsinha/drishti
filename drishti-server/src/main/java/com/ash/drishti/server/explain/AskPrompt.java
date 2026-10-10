@@ -117,7 +117,9 @@ public final class AskPrompt {
                     ObjectNode n = ps.addObject();
                     put(n, "id", p.id(), CUT_DATA);
                     put(n, "title", p.title(), CUT_DATA);
-                    put(n, "description", p.description(), CUT_TEXT);
+                    if (values) {
+                        put(n, "description", p.description(), CUT_TEXT);   // rendered over the masked document: a template may print a value
+                    }
                 });
             }
         }
