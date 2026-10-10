@@ -50,6 +50,13 @@ class ArchitectureRulesTest {
             .that().resideInAPackage("com.ash.drishti.engine..")
             .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.server..");
 
+    /** The AI layer depends one way: on the SPI and common only, never on the engine, the identity layer or the server. */
+    @ArchTest
+    static final ArchRule aiLayerDependsOneWay = noClasses()
+            .that().resideInAPackage("com.ash.drishti.ai..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..",
+                    "com.ash.drishti.identity..", "com.ash.drishti.rachana..", "com.ash.drishti.packs..");
+
     @ArchTest
     static final ArchRule controllersOnlyInServer = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.server..")

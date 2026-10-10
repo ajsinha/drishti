@@ -13,14 +13,16 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.explain;
+package com.ash.drishti.ai;
 
-/** Chooses the provider by {@code drishti.explain.ask.api}. Creating one makes no network call. */
-public final class AskProviders {
+/**
+ * The extension point for a transport: one class per {@code transport:} value. Register as a Spring bean or in
+ * {@code META-INF/services/com.ash.drishti.ai.McpClientFactory}.
+ */
+public interface McpClientFactory {
 
-    private AskProviders() {}
+    /** The value of {@code transport:} in an MCP server file: {@code streamable-http}, {@code mock}, ... */
+    String transport();
 
-    public static AskProvider create(AskProperties cfg) {
-        return "anthropic".equals(cfg.api()) ? new AnthropicProvider(cfg) : new OpenAiProvider(cfg);
-    }
+    McpClient create(McpServerConfig config) throws LlmException;
 }

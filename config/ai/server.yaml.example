@@ -1,0 +1,8 @@
+# CONSOLE only (copy to the console's config/ai/server.yaml): delegate every call to the Drishti server's AI API, so keys, policy, masking,
+# limits and audit live in one place. The recommended console provider. The server has no such type (it would list the file as an error).
+type: server
+default-model: default
+models:
+  - name: default                           # the server's own default model
+  - name: corp                              # a server model by its reference
+    id: openai/fast

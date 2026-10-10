@@ -594,6 +594,12 @@ This section is **stage 2** (section 20.1): nothing in it is built in stage 1, B
 
 One provider interface (`AiProvider`: chat with tool calls, embeddings optional) with implementations for
 OpenAI-compatible endpoints, Anthropic, and on-premises models; configured by an administrator, **off** unless turned on.
+
+> **Built (1.18):** this interface now exists as the `drishti-ai` module ([AI_PROVIDERS.md](AI_PROVIDERS.md): `LlmProvider`,
+> `LlmModel`, `EmbeddingModel`, `LlmRegistry`, `LlmPolicy`, one `config/ai/<name>.yaml` per provider, a Spring AI adapter for
+> OpenAI-compatible endpoints, Anthropic, and a mock) with a matching `core/ai/` in the console, plus an MCP client
+> ([MCP_CLIENT.md](MCP_CLIENT.md)). "Ask about this page" already runs on it. The hooks in this table are stage 2 and build on that layer: a hook calls
+> the `LlmGateway` with its own feature name, so masking, audit, limits and "which roles may use which hook" come from the policy.
 Every feature below has a non-AI equivalent that works out of the box.
 
 | Hook | What it does | Guardrails | Without AI |

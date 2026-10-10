@@ -1,0 +1,12 @@
+# Copy to config/mcp/sajha.yaml and set drishti.mcp.enabled=true. SAJHA MCP server (github.com/ajsinha/sajhamcpserver).
+# One /mcp endpoint, Streamable HTTP, both spec eras (Drishti speaks the session-based 2025-11-25 one).
+transport: streamable-http
+url: http://localhost:3002/mcp              # SAJHA's server.port; behind TLS use https:// (and tls.* below)
+timeout: 30s
+headers:
+  X-API-Key: ${SAJHA_API_KEY}               # a SAJHA API key (Admin > API keys); or  Authorization: Bearer ${SAJHA_TOKEN}
+# Anonymous callers see no tools in SAJHA by default, so a key (scoped to the tools it may call) is needed.
+allowed-tools:                              # empty = every tool the key can see (SAJHA lists ~500); list the few Drishti may use
+  - calc_percentage_change
+# tls:
+#   ca-file: /etc/drishti/ca.pem

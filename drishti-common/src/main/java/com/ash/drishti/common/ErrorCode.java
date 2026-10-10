@@ -59,6 +59,18 @@ public enum ErrorCode {
     REGEX_REFUSED("DRS-4010", 400),
     /** A regular expression ran over its time budget on one value. */
     REGEX_TIMEOUT("DRS-4011", 408),
+    /** The AI layer (docs/architecture/AI_PROVIDERS.md) or the MCP client is switched off. */
+    AI_OFF("DRS-4015", 404),
+    /** An AI or MCP call failed at the provider or server (never carries a key or a prompt). */
+    AI_FAILED("DRS-4016", 502),
+    /** An AI or MCP call did not answer in time (same code as {@link #AI_FAILED}). */
+    AI_TIMEOUT("DRS-4016", 504),
+    /** An AI call is over a per-user rate or cost limit. */
+    AI_RATE_LIMITED("DRS-4017", 429),
+    /** The AI policy refuses the call for this user, role or feature. */
+    AI_POLICY("DRS-4018", 403),
+    /** No such model, provider, MCP server or tool. */
+    AI_NOT_FOUND("DRS-4019", 404),
     BAD_REQUEST("DRS-5001", 400),
     CACHE_NOT_FOUND("DRS-5004", 404),
     FORBIDDEN("DRS-5002", 403),

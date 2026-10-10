@@ -22,6 +22,18 @@ backend:
   url: ${DRISHTI_BACKEND_URL:http://127.0.0.1:18480}
   timeout_seconds: 5
   pool_size: 64
+ai:                                  # LLM provider layer (docs/architecture/AI_PROVIDERS.md): OFF by default; no file is read and no model is called while off
+  enabled: ${DRISHTI_AI_ENABLED:false}
+  dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
+  default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
+  redact: []                         # field names masked in every prompt (the same names as the server's drishti.security.redact)
+  policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
+mcp:                                 # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
+  enabled: ${DRISHTI_MCP_ENABLED:false}
+  dir: ${DRISHTI_MCP_DIR:./config/mcp}
+  server_roles: {}                   # server -> roles allowed
+  tool_roles: {}                     # "server/tool" -> roles allowed
+  server_features: {}                # server -> features allowed
 collab:
   # Admin > Collaboration, bridge Test: how long the console waits for the server, which waits for the bridge's own timeout
   # (drishti.collab.bridges.timeout, default 10 s). Keep it longer than that.

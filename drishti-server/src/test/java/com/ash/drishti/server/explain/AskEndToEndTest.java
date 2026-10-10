@@ -182,7 +182,12 @@ class AskEndToEndTest {
     void theAnthropicShapeIsSpokenToo() throws Exception {
         AskProperties c = new AskProperties(true, MODEL.url("/v1/messages"), "anthropic", "fake-claude", "k-9", List.of("p"), null, null, null, null, null, null,
                 Duration.ofSeconds(5), null, null, null, null, null);
-        String text = AskProviders.create(c).complete("SYS", "USER", 50, Duration.ofSeconds(5));
+        var reg = new com.ash.drishti.ai.LlmRegistry(com.ash.drishti.ai.ProviderFactories.discover(List.of()),
+                () -> new com.ash.drishti.ai.ProviderConfigLoader.Loaded(List.of(com.ash.drishti.server.ai.LegacyAsk.provider(c)), java.util.Map.of()), "");
+        reg.reload();
+        String text = new com.ash.drishti.ai.LlmGateway(reg, com.ash.drishti.ai.LlmPolicy.none()).chat(
+                new com.ash.drishti.ai.CallContext("u", java.util.Set.of(), "ask"),
+                com.ash.drishti.ai.ChatRequest.of("ask/ask", "SYS", "USER", 50, Duration.ofSeconds(5))).text();
         assertThat(text).isEqualTo("It is a value-at-risk result.");
         FakeModel.Seen s = MODEL.last();
         assertThat(s.apiKey()).isEqualTo("k-9");

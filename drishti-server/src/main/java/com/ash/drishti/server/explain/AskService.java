@@ -22,7 +22,14 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.explain.ExplainService;
 import com.ash.drishti.engine.explain.PageContext;
 import com.ash.drishti.identity.AccessLog;
+import com.ash.drishti.ai.CallContext;
+import com.ash.drishti.ai.ChatRequest;
+import com.ash.drishti.ai.ChatResponse;
+import com.ash.drishti.ai.LlmException;
+import com.ash.drishti.ai.LlmGateway;
+import com.ash.drishti.server.ai.LegacyAsk;
 import java.security.SecureRandom;
+import java.util.Set;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
@@ -46,16 +53,16 @@ public final class AskService {
 
     private final ExplainService explain;
     private final AskProperties cfg;
-    private final AskProvider provider;
+    private final LlmGateway gateway;
     private final AskRateLimiter limiter;
     private final PackGuides guides;
     private final ObjectProvider<AccessLog> accessLog;
 
-    public AskService(ExplainService explain, AskProperties cfg, AskProvider provider, AskRateLimiter limiter, PackGuides guides,
+    public AskService(ExplainService explain, AskProperties cfg, LlmGateway gateway, AskRateLimiter limiter, PackGuides guides,
             ObjectProvider<AccessLog> accessLog) {
         this.explain = explain;
         this.cfg = cfg;
-        this.provider = provider;
+        this.gateway = gateway;
         this.limiter = limiter;
         this.guides = guides;
         this.accessLog = accessLog;
@@ -91,19 +98,27 @@ public final class AskService {
         AskPrompt.Prompt prompt = AskPrompt.build(ctx, guide, q, cfg, HexFormat.of().formatHex(randomBytes()));
         long t0 = System.nanoTime();
         try {
-            String text = provider.complete(prompt.system(), prompt.user(), cfg.maxAnswerTokens(), cfg.timeout());
-            String answer = cap(text);
+            ChatResponse resp = gateway.chat(new CallContext(caller.user(), Set.of(), "ask"),
+                    ChatRequest.of(modelRef(), prompt.system(), prompt.user(), cfg.maxAnswerTokens(), cfg.timeout()));
+            String answer = cap(resp.text());
             audit(caller.user(), ref, q, "ok", ms(t0));
             if (cfg.logAnswers()) {
                 LOG.info("ask answer user={} ref={}/{}: {}", caller.user(), ref.kind(), ref.id(), answer);
             }
             return new Answer(answer, prompt.sources());
-        } catch (AskProvider.Failure f) {
+        } catch (LlmException f) {
             audit(caller.user(), ref, q, f.timeout() ? "timeout" : "failed", ms(t0));
             LOG.warn("ask failed for {}: {}", caller.user(), f.getMessage());
+            String why = f.kind() == LlmException.Kind.NOT_FOUND ? "Ask has no model configured (drishti.explain.ask.model, or the deprecated endpoint)"
+                    : f.getMessage();
             throw new DrishtiException(f.timeout() ? ErrorCode.ASK_TIMEOUT : ErrorCode.ASK_FAILED,
-                    "Ask is unavailable (" + f.getMessage() + "); the page explanation is complete without it");
+                    "Ask is unavailable (" + why + "); the page explanation is complete without it");
         }
+    }
+
+    /** The logical model Ask asks for: its own deprecated endpoint when one is set, else {@code drishti.explain.ask.model}. */
+    private String modelRef() {
+        return LegacyAsk.configured(cfg) ? LegacyAsk.PROVIDER + "/" + LegacyAsk.MODEL : cfg.model().isEmpty() ? null : cfg.model();
     }
 
     private String cap(String text) {
