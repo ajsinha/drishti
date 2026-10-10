@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.bi.poc;
+package com.ash.drishti.server.bi.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

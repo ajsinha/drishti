@@ -1,0 +1,341 @@
+package com.ash.drishti.server.bi.dataset;
+
+import com.ash.drishti.server.bi.dataset.DatasetParser.Problem;
+import com.ash.drishti.server.bi.dataset.ExprParser.ExprException;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Checks a parsed dataset against itself: relationships join columns that exist and agree in type; calculated columns, measures and row rules
+ * parse, resolve every name, use aggregates where they belong and nowhere else, and measures do not refer to each other in a circle; hierarchies,
+ * masked columns and rollups name real things; features the grammar reserves are refused with DRS-9013. DRS-9010 structure (the parser),
+ * DRS-9011 expressions, DRS-9012 references, DRS-9013 not built.
+ */
+final class DatasetValidator {
+
+    static final String EXPRESSION = "DRS-9011";
+    static final String RELATION = "DRS-9012";
+    static final String NOT_BUILT = "DRS-9013";
+    private static final Set<String> ARITY_1_2 = Set.of("sum", "avg", "min", "max", "distinct", "count");
+
+    private final Dataset ds;
+    private final Resolver resolver;
+    private final List<Problem> out = new ArrayList<>();
+
+    private DatasetValidator(Dataset ds) {
+        this.ds = ds;
+        this.resolver = new Resolver(ds);
+    }
+
+    static List<Problem> validate(Dataset ds) {
+        DatasetValidator v = new DatasetValidator(ds);
+        v.relationships();
+        v.calculatedColumns();
+        v.measures();
+        v.security();
+        v.hierarchies();
+        v.rollups();
+        return v.out;
+    }
+
+    private void err(String code, String path, String message) {
+        out.add(new Problem("error", code, path, message));
+    }
+
+    // ---- relationships -----------------------------------------------------------------------------------------------
+
+    private void relationships() {
+        int i = 0;
+        for (Dataset.Relationship r : ds.relationships()) {
+            String path = "relationships[" + i++ + "]";
+            Dataset.Column from = resolver.column(r.fromTable(), r.fromColumn());
+            Dataset.Column to = resolver.column(r.toTable(), r.toColumn());
+            if (!ds.tables().containsKey(r.fromTable()) || !ds.tables().containsKey(r.toTable())) {
+                err(RELATION, path, "relationship " + r.label() + " names a table the dataset does not have (tables: " + String.join(", ", ds.tables().keySet()) + ")");
+            } else if (from == null || to == null) {
+                err(RELATION, path, "relationship " + r.label() + ": " + (from == null ? r.fromTable() + " has no column '" + r.fromColumn() + "'"
+                        : r.toTable() + " has no column '" + r.toColumn() + "'"));
+            } else if (!from.type().equals(to.type())) {
+                err(RELATION, path, "relationship " + r.label() + " joins " + from.type() + " to " + to.type() + "; make both the same type");
+            } else if (r.fromTable().equals(r.toTable())) {
+                err(RELATION, path, "relationship " + r.label() + " joins a table to itself, which a query cannot follow");
+            }
+            if ("many-to-many".equals(r.cardinality())) {
+                out.add(new Problem("warning", NOT_BUILT, path, "many-to-many relationships are stored but a query joins them as written, which can repeat rows"));
+            }
+        }
+    }
+
+    // ---- calculated columns ------------------------------------------------------------------------------------------
+
+    private void calculatedColumns() {
+        for (Dataset.Table t : ds.tables().values()) {
+            for (Dataset.Column c : t.columns().values()) {
+                if (c.expr() == null) {
+                    continue;
+                }
+                String path = "tables." + t.name() + ".columns." + c.name();
+                Node n = parse(path, c.expr());
+                if (n == null) {
+                    continue;
+                }
+                if (Node.hasAggregate(n)) {
+                    err(EXPRESSION, path, "a calculated column is evaluated for each row and cannot aggregate; put the aggregate in a measure");
+                }
+                Node.walk(n, x -> {
+                    if (x instanceof Node.Ref r) {
+                        try {
+                            Resolver.ColRef ref = resolver.resolve(r.parts(), t.name());
+                            if (!ref.table().equals(t.name())) {
+                                err(EXPRESSION, path, "a calculated column reads its own table; '" + r.text() + "' is in " + ref.table());
+                            } else if (ref.column() != null && resolver.column(t.name(), ref.column()).expr() != null) {
+                                err(EXPRESSION, path, "a calculated column cannot use another calculated column ('" + r.text() + "')");
+                            }
+                        } catch (IllegalArgumentException e) {
+                            err(EXPRESSION, path, e.getMessage());
+                        }
+                    } else if (x instanceof Node.MeasureRef || x instanceof Node.UserRef) {
+                        err(EXPRESSION, path, "a calculated column cannot use measures or the user");
+                    }
+                });
+                calls(path, n);
+            }
+        }
+    }
+
+    // ---- measures ----------------------------------------------------------------------------------------------------
+
+    private void measures() {
+        for (Dataset.Measure m : ds.measures().values()) {
+            String path = "measures." + m.name();
+            if (m.expr() == null) {
+                out.add(new Problem("warning", NOT_BUILT, path, "a Python measure (" + m.python() + ") is stored and not run yet (RUPAKA.md section 13); queries that use it are refused"));
+                continue;
+            }
+            Node n = parse(path, m.expr());
+            if (n == null) {
+                continue;
+            }
+            calls(path, n);
+            if (!Node.hasAggregate(n) && !Node.anyMatch(n, x -> x instanceof Node.MeasureRef)) {
+                err(EXPRESSION, path, "a measure aggregates: use sum(), avg(), min(), max(), count(), distinct(), ratio() or percentile()");
+            }
+            refs(path, n, false, null);
+            cycle(m.name(), new LinkedHashSet<>(), path);
+        }
+    }
+
+    /** Checks function names and arities. */
+    private void calls(String path, Node root) {
+        Node.walk(root, x -> {
+            if (!(x instanceof Node.Call c)) {
+                return;
+            }
+            String f = c.function();
+            int a = c.args().size();
+            if (Node.RESERVED.contains(f)) {
+                err(NOT_BUILT, path, "'" + f + "' is reserved for time intelligence and window functions and is not built yet (RUPAKA.md section 20.2)");
+            } else if (!Node.AGGREGATES.contains(f) && !Node.SCALARS.contains(f)) {
+                err(EXPRESSION, path, "unknown function '" + f + "'; aggregates: " + new java.util.TreeSet<>(Node.AGGREGATES) + ", row functions: " + new java.util.TreeSet<>(Node.SCALARS));
+            } else if (ARITY_1_2.contains(f) && (a < 1 || a > 2)) {
+                err(EXPRESSION, path, f + "(column) or " + f + "(column, condition) takes one or two arguments, not " + a);
+            } else if ("ratio".equals(f) && a != 2) {
+                err(EXPRESSION, path, "ratio(numerator, denominator) takes two arguments, not " + a);
+            } else if ("percentile".equals(f) && (a < 2 || a > 3 || !(c.args().get(1) instanceof Node.Num p) || p.value() < 0 || p.value() > 1)) {
+                err(EXPRESSION, path, "percentile(column, p) takes a number p from 0 to 1, for example percentile(trades.mtm, 0.95)");
+            } else if (Set.of("abs", "upper", "lower", "year", "quarter", "month", "day", "length").contains(f) && a != 1) {
+                err(EXPRESSION, path, f + " takes one argument");
+            } else if (Set.of("contains", "startsWith").contains(f) && a != 2) {
+                err(EXPRESSION, path, f + " takes two arguments");
+            } else if ("if".equals(f) && a != 3) {
+                err(EXPRESSION, path, "if(condition, then, else) takes three arguments");
+            }
+        });
+    }
+
+    /** Every name resolves; a column outside an aggregate is an error in a measure. */
+    private void refs(String path, Node n, boolean inAggregate, String current) {
+        switch (n) {
+            case Node.Ref r -> {
+                try {
+                    Resolver.ColRef ref = resolver.resolve(r.parts(), current);
+                    if (!inAggregate) {
+                        err(EXPRESSION, path, "'" + r.text() + "' is used outside an aggregate; write sum(" + r.text() + ") or similar");
+                    } else if (ref.column() == null && !r.parts().equals(List.of(ref.table()))) {
+                        err(EXPRESSION, path, "'" + r.text() + "' is not a column");
+                    }
+                } catch (IllegalArgumentException e) {
+                    err(EXPRESSION, path, e.getMessage());
+                }
+            }
+            case Node.MeasureRef m -> {
+                if (!ds.measures().containsKey(m.name())) {
+                    err(EXPRESSION, path, "[" + m.name() + "] is not a measure of this dataset (measures: " + String.join(", ", ds.measures().keySet()) + ")");
+                }
+            }
+            case Node.UserRef u -> err(EXPRESSION, path, "user." + u.attribute() + " is for row rules; a measure does not depend on the reader");
+            case Node.Call c -> {
+                boolean agg = Node.AGGREGATES.contains(c.function());
+                if (agg && inAggregate && !"ratio".equals(c.function())) {
+                    err(EXPRESSION, path, "aggregates do not nest: " + c.function() + "() is inside another aggregate");
+                }
+                boolean ratio = "ratio".equals(c.function());
+                for (int i = 0; i < c.args().size(); i++) {
+                    Node a = c.args().get(i);
+                    if (ratio) {
+                        if (!Node.hasAggregate(a) && !Node.anyMatch(a, x -> x instanceof Node.MeasureRef)) {
+                            err(EXPRESSION, path, "ratio() takes two aggregates, for example ratio(sum(trades.mtm), sum(trades.notional))");
+                        }
+                        refs(path, a, false, current);
+                    } else {
+                        refs(path, a, inAggregate || agg, current);
+                    }
+                }
+            }
+            case Node.Bin b -> {
+                refs(path, b.left(), inAggregate, current);
+                refs(path, b.right(), inAggregate, current);
+            }
+            case Node.Un u -> refs(path, u.operand(), inAggregate, current);
+            case Node.In i -> {
+                refs(path, i.value(), inAggregate, current);
+                i.items().forEach(x -> refs(path, x, inAggregate, current));
+            }
+            case Node.Cond c -> {
+                refs(path, c.test(), inAggregate, current);
+                refs(path, c.yes(), inAggregate, current);
+                refs(path, c.no(), inAggregate, current);
+            }
+            default -> { }
+        }
+    }
+
+    private void cycle(String name, Set<String> trail, String path) {
+        if (!trail.add(name)) {
+            err(EXPRESSION, path, "measures refer to each other in a circle: " + String.join(" -> ", trail) + " -> " + name);
+            return;
+        }
+        Dataset.Measure m = ds.measures().get(name);
+        if (m != null && m.expr() != null) {
+            Node n = tryParse(m.expr());
+            if (n != null) {
+                Node.walk(n, x -> {
+                    if (x instanceof Node.MeasureRef r && ds.measures().containsKey(r.name())) {
+                        cycle(r.name(), new LinkedHashSet<>(trail), path);
+                    }
+                });
+            }
+        }
+    }
+
+    // ---- security, hierarchies, rollups ------------------------------------------------------------------------------
+
+    private void security() {
+        int i = 0;
+        for (Dataset.RowRule r : ds.security().rows()) {
+            String path = "security.rows[" + i++ + "]";
+            Node n = parse(path, r.where());
+            if (n == null) {
+                continue;
+            }
+            calls(path, n);
+            if (Node.hasAggregate(n) || Node.anyMatch(n, x -> x instanceof Node.MeasureRef)) {
+                err(EXPRESSION, path, "a row rule is a condition on a row; it cannot aggregate or use measures");
+            }
+            Node.walk(n, x -> {
+                if (x instanceof Node.Ref ref) {
+                    try {
+                        Resolver.ColRef c = resolver.resolve(ref.parts(), null);
+                        if (c.column() == null) {
+                            err(EXPRESSION, path, "'" + ref.text() + "' is a table, not a column");
+                        }
+                    } catch (IllegalArgumentException e) {
+                        err(RELATION, path, e.getMessage());
+                    }
+                } else if (x instanceof Node.UserRef u && !UserAttributes.KNOWN.contains(u.attribute())) {
+                    err(EXPRESSION, path, "user." + u.attribute() + " is not an attribute; use one of " + UserAttributes.KNOWN);
+                }
+            });
+        }
+        for (String m : ds.security().masked()) {
+            if (!maskTargets(m)) {
+                err(RELATION, "security.masked", "'" + m + "' is not a column of the dataset (write column or table.column)");
+            }
+        }
+    }
+
+    private boolean maskTargets(String m) {
+        String[] p = m.split("\\.", -1);
+        if (p.length == 2) {
+            return resolver.column(p[0], p[1]) != null;
+        }
+        return p.length == 1 && ds.tables().keySet().stream().anyMatch(t -> resolver.column(t, m) != null);
+    }
+
+    private void hierarchies() {
+        for (Map.Entry<String, List<String>> h : ds.hierarchies().entrySet()) {
+            for (String level : h.getValue()) {
+                try {
+                    Resolver.ColRef c = resolver.resolve(List.of(level.split("\\.")), null);
+                    if (c.column() == null) {
+                        err(RELATION, "hierarchies." + h.getKey(), "level '" + level + "' is a table, not a column");
+                    }
+                } catch (IllegalArgumentException e) {
+                    err(RELATION, "hierarchies." + h.getKey(), "level '" + level + "': " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    private void rollups() {
+        int i = 0;
+        for (Dataset.Rollup r : ds.rollups()) {
+            String path = "rollups[" + i++ + "]";
+            if (!ds.tables().containsKey(r.table())) {
+                err(RELATION, path, "rollup '" + r.name() + "' names table '" + r.table() + "', which the dataset does not have");
+                continue;
+            }
+            for (String b : r.by()) {
+                Dataset.Column c = resolver.column(r.table(), b);
+                if (c == null) {
+                    err(RELATION, path, "rollup '" + r.name() + "' groups by '" + b + "', which " + r.table() + " does not have");
+                } else if (c.expr() != null) {
+                    err(RELATION, path, "rollup '" + r.name() + "' groups by calculated column '" + b + "'; use stored columns");
+                }
+            }
+            Set<String> seen = new HashSet<>();
+            for (String m : r.measures()) {
+                Dataset.Measure meas = ds.measures().get(m);
+                if (meas == null) {
+                    err(RELATION, path, "rollup '" + r.name() + "' lists measure '" + m + "', which the dataset does not have");
+                } else if (seen.add(m) && !Rollups.eligible(ds, meas, r.table())) {
+                    err(RELATION, path, "rollup '" + r.name() + "' cannot hold measure '" + m + "': a rollup holds sums, counts, minimums, maximums and averages over stored columns of "
+                            + r.table() + " (not distinct, percentile, a condition inside an aggregate, or another table)");
+                }
+            }
+        }
+    }
+
+    // ---- parsing -----------------------------------------------------------------------------------------------------
+
+    private Node parse(String path, String text) {
+        try {
+            return ExprParser.parse(text);
+        } catch (ExprException e) {
+            err(EXPRESSION, path, e.getMessage() + " (at position " + e.position() + " of: " + text + ")");
+            return null;
+        }
+    }
+
+    private static Node tryParse(String text) {
+        try {
+            return ExprParser.parse(text);
+        } catch (ExprException e) {
+            return null;
+        }
+    }
+}
