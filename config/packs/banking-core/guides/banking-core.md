@@ -130,7 +130,7 @@ A trader and their books.
 
 Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 
-**Fields its Sutra reads:** `name`, `holidays`.
+**Fields its Sutra reads:** `name`, `holidays2026`, `holidays2027`, `nextHoliday`, `nextHolidayDate`, `holidays`.
 
 ### Credit support annex (`csa`)
 

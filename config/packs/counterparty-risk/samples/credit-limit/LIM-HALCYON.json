@@ -2,40 +2,40 @@
  "limitId": "LIM-HALCYON",
  "counterpartyName": "Halcyon Shipping plc",
  "measure": "PFE 95 peak",
- "limit": 455000000.0,
- "used": 314159462,
- "utilisation": 0.6905,
+ "limit": 435000000.0,
+ "used": 300591034,
+ "utilisation": 0.691,
  "status": "Within limit",
  "buckets": [
   {
    "bucket": "0-1Y",
-   "limit": 455000000,
-   "used": 267035543,
-   "utilisation": 0.5869
+   "limit": 435000000,
+   "used": 255502379,
+   "utilisation": 0.5874
   },
   {
    "bucket": "1-3Y",
-   "limit": 455000000,
-   "used": 314159462,
-   "utilisation": 0.6905
+   "limit": 435000000,
+   "used": 300591034,
+   "utilisation": 0.691
   },
   {
    "bucket": "3-5Y",
-   "limit": 364000000,
-   "used": 219911623,
-   "utilisation": 0.6042
+   "limit": 348000000,
+   "used": 210413724,
+   "utilisation": 0.6046
   },
   {
    "bucket": "5-10Y",
-   "limit": 273000000,
-   "used": 109955812,
-   "utilisation": 0.4028
+   "limit": 261000000,
+   "used": 105206862,
+   "utilisation": 0.4031
   },
   {
    "bucket": "10Y+",
-   "limit": 182000000,
-   "used": 31415946,
-   "utilisation": 0.1726
+   "limit": 174000000,
+   "used": 30059103,
+   "utilisation": 0.1728
   }
  ],
  "counterparty": "CP-HALCYON",

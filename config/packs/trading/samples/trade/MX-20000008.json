@@ -73,7 +73,6 @@
    "rate": 0.024606,
    "dayCount": "ACT/365F",
    "frequency": "Annual",
-   "businessDay": "Mod. following",
    "calendar": "GBLO",
    "paymentLag": "2 business days",
    "rollConvention": "1",
@@ -81,81 +80,87 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2025-03-31",
-     "accrualEnd": "2025-05-01",
      "payDate": "2025-05-06",
      "notional": 158000000.0,
      "rate": 0.024606,
-     "yearFraction": 0.084932,
      "amount": -330192.3,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-03-31",
+     "periodEnd": "2025-05-01",
+     "accrualFactor": 0.084932,
+     "discountFactor": 1.0,
+     "type": "Interest"
     },
     {
      "n": 2,
-     "accrualStart": "2025-05-01",
-     "accrualEnd": "2026-05-01",
      "payDate": "2026-05-06",
      "notional": 158000000.0,
      "rate": 0.024606,
-     "yearFraction": 1.0,
      "amount": -3887748.0,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-05-01",
+     "periodEnd": "2026-05-01",
+     "accrualFactor": 1.0,
+     "discountFactor": 1.0,
+     "type": "Interest"
     },
     {
      "n": 3,
-     "accrualStart": "2026-05-01",
-     "accrualEnd": "2027-05-04",
      "payDate": "2027-05-06",
      "notional": 158000000.0,
      "rate": 0.024606,
-     "yearFraction": 1.008219,
      "amount": -3919702.09,
-     "df": 0.978574,
      "pv": -3835718.48,
-     "status": "Fixed"
+     "status": "Fixed",
+     "periodStart": "2026-05-01",
+     "periodEnd": "2027-05-04",
+     "accrualFactor": 1.008219,
+     "discountFactor": 0.978574,
+     "type": "Interest"
     },
     {
      "n": 4,
-     "accrualStart": "2027-05-04",
-     "accrualEnd": "2028-05-02",
      "payDate": "2028-05-04",
      "notional": 158000000.0,
      "rate": 0.024606,
-     "yearFraction": 0.99726,
      "amount": -3877096.64,
-     "df": 0.943169,
      "pv": -3656758.61,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-05-04",
+     "periodEnd": "2028-05-02",
+     "accrualFactor": 0.99726,
+     "discountFactor": 0.943169,
+     "type": "Interest"
     },
     {
      "n": 5,
-     "accrualStart": "2028-05-02",
-     "accrualEnd": "2029-05-01",
      "payDate": "2029-05-03",
      "notional": 158000000.0,
      "rate": 0.024606,
-     "yearFraction": 0.99726,
      "amount": -3877096.64,
-     "df": 0.907617,
      "pv": -3518919.57,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-05-02",
+     "periodEnd": "2029-05-01",
+     "accrualFactor": 0.99726,
+     "discountFactor": 0.907617,
+     "type": "Interest"
     },
     {
      "n": 6,
-     "accrualStart": "2029-05-01",
-     "accrualEnd": "2030-05-01",
      "payDate": "2030-05-03",
      "notional": 158000000.0,
      "rate": 0.024606,
-     "yearFraction": 1.0,
      "amount": -3887748.0,
-     "df": 0.870833,
      "pv": -3385578.92,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-05-01",
+     "periodEnd": "2030-05-01",
+     "accrualFactor": 1.0,
+     "discountFactor": 0.870833,
+     "type": "Interest"
     }
    ],
    "pv": -14396975.58,
@@ -163,7 +168,9 @@
    "payReceive": "Pay",
    "rateType": "Fixed",
    "index": null,
-   "spread": 0.0
+   "spread": 0.0,
+   "legId": "MX-20000008-L1",
+   "businessDayConvention": "Mod. following"
   },
   {
    "leg": 2,
@@ -176,7 +183,6 @@
    "spread": 0.0,
    "dayCount": "ACT/360",
    "frequency": "Quarterly",
-   "businessDay": "Mod. following",
    "calendar": "GBLO",
    "paymentLag": "2 business days",
    "compounding": "Compounded in arrears",
@@ -186,344 +192,938 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2025-03-31",
-     "accrualEnd": "2025-05-01",
      "fixingDate": "2025-04-29",
      "payDate": "2025-05-06",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.035413,
      "spread": 0.0,
-     "yearFraction": 0.086111,
      "amount": 481813.54,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-03-31",
+     "periodEnd": "2025-05-01",
+     "accrualFactor": 0.086111,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-03-31",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035415,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-04-30",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035363,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 2,
-     "accrualStart": "2025-05-01",
-     "accrualEnd": "2025-08-01",
      "fixingDate": "2025-07-30",
      "payDate": "2025-08-05",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.035863,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 1448068.24,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-05-01",
+     "periodEnd": "2025-08-01",
+     "accrualFactor": 0.255556,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-05-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035889,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-06-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035874,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-07-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035827,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 3,
-     "accrualStart": "2025-08-01",
-     "accrualEnd": "2025-11-03",
      "fixingDate": "2025-10-30",
      "payDate": "2025-11-05",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.036286,
      "spread": 0.0,
-     "yearFraction": 0.261111,
      "amount": 1496999.09,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-08-01",
+     "periodEnd": "2025-11-03",
+     "accrualFactor": 0.261111,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-08-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036303,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-09-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036293,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-10-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036264,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-11-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036258,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 4,
-     "accrualStart": "2025-11-03",
-     "accrualEnd": "2026-02-02",
      "fixingDate": "2026-01-29",
      "payDate": "2026-02-04",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.035448,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 1415753.73,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-11-03",
+     "periodEnd": "2026-02-02",
+     "accrualFactor": 0.252778,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-11-03",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.03547,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-12-03",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.03544,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-01-03",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035434,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 5,
-     "accrualStart": "2026-02-02",
-     "accrualEnd": "2026-05-01",
      "fixingDate": "2026-04-29",
      "payDate": "2026-05-06",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.035708,
      "spread": 0.0,
-     "yearFraction": 0.244444,
      "amount": 1379122.31,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-02-02",
+     "periodEnd": "2026-05-01",
+     "accrualFactor": 0.244444,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-02-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035679,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-03-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035717,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-04-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035727,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 6,
-     "accrualStart": "2026-05-01",
-     "accrualEnd": "2026-08-03",
      "fixingDate": "2026-07-30",
      "payDate": "2026-08-05",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.036343,
      "spread": 0.0,
-     "yearFraction": 0.261111,
      "amount": 1499350.66,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-05-01",
+     "periodEnd": "2026-08-03",
+     "accrualFactor": 0.261111,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-05-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036313,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-06-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036328,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-07-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036384,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036401,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 7,
-     "accrualStart": "2026-08-03",
-     "accrualEnd": "2026-11-02",
      "fixingDate": "2026-10-29",
      "payDate": "2026-11-04",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.035411,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 1414259.67,
-     "df": 0.996568,
      "pv": 1409406.27,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-08-03",
+     "periodEnd": "2026-11-02",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.996568,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-08-03",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035382,
+       "source": "RBA AONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-03",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035398,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-03",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035454,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 8,
-     "accrualStart": "2026-11-02",
-     "accrualEnd": "2027-02-01",
      "fixingDate": "2027-01-28",
      "payDate": "2027-02-03",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.03584,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 1431402.97,
-     "df": 0.987618,
      "pv": 1413680.01,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-11-02",
+     "periodEnd": "2027-02-01",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.987618,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-11-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035802,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035852,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.035866,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 9,
-     "accrualStart": "2027-02-01",
-     "accrualEnd": "2027-05-04",
      "fixingDate": "2027-04-29",
      "payDate": "2027-05-06",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.036164,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 1460225.88,
-     "df": 0.978574,
      "pv": 1428939.06,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-05-04",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.978574,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-02-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036142,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036176,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036174,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036156,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 10,
-     "accrualStart": "2027-05-04",
-     "accrualEnd": "2027-08-02",
      "fixingDate": "2027-07-29",
      "payDate": "2027-08-04",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.036249,
      "spread": 0.0,
-     "yearFraction": 0.25,
      "amount": 1431834.14,
-     "df": 0.969785,
      "pv": 1388570.61,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-05-04",
+     "periodEnd": "2027-08-02",
+     "accrualFactor": 0.25,
+     "discountFactor": 0.969785,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-05-04",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036249,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-04",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036251,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-04",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036247,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 11,
-     "accrualStart": "2027-08-02",
-     "accrualEnd": "2027-11-01",
      "fixingDate": "2027-10-28",
      "payDate": "2027-11-03",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.03647,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 1456574.9,
-     "df": 0.960924,
      "pv": 1399658.43,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-08-02",
+     "periodEnd": "2027-11-01",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.960924,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-08-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036492,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-09-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036481,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-10-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036436,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 12,
-     "accrualStart": "2027-11-01",
-     "accrualEnd": "2028-02-01",
      "fixingDate": "2028-01-28",
      "payDate": "2028-02-03",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.036742,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 1483541.42,
-     "df": 0.951985,
      "pv": 1412308.53,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-11-01",
+     "periodEnd": "2028-02-01",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.951985,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-11-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036785,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-12-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036729,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-01-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036713,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 13,
-     "accrualStart": "2028-02-01",
-     "accrualEnd": "2028-05-02",
      "fixingDate": "2028-04-27",
      "payDate": "2028-05-04",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.03697,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 1476530.82,
-     "df": 0.943169,
      "pv": 1392618.58,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-02-01",
+     "periodEnd": "2028-05-02",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.943169,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-02-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.037033,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-03-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036947,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-04-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036935,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-05-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.036902,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 14,
-     "accrualStart": "2028-05-02",
-     "accrualEnd": "2028-08-01",
      "fixingDate": "2028-07-28",
      "payDate": "2028-08-03",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.037199,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 1485670.63,
-     "df": 0.934382,
      "pv": 1388184.13,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-05-02",
+     "periodEnd": "2028-08-01",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.934382,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-05-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.037214,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-06-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.037204,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-07-02",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.037178,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 15,
-     "accrualStart": "2028-08-01",
-     "accrualEnd": "2028-11-01",
      "fixingDate": "2028-10-30",
      "payDate": "2028-11-03",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.037741,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 1523908.21,
-     "df": 0.92545,
      "pv": 1410301.39,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-08-01",
+     "periodEnd": "2028-11-01",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.92545,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-08-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.037738,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-09-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.037738,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-10-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.037748,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 16,
-     "accrualStart": "2028-11-01",
-     "accrualEnd": "2029-02-01",
      "fixingDate": "2029-01-30",
      "payDate": "2029-02-05",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.03867,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 1561409.12,
-     "df": 0.916195,
      "pv": 1430555.16,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-11-01",
+     "periodEnd": "2029-02-01",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.916195,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-11-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.038646,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-12-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.038676,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-01-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.038687,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 17,
-     "accrualStart": "2029-02-01",
-     "accrualEnd": "2029-05-01",
      "fixingDate": "2029-04-27",
      "payDate": "2029-05-03",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.039097,
      "spread": 0.0,
-     "yearFraction": 0.247222,
      "amount": 1527166.91,
-     "df": 0.907617,
      "pv": 1386082.95,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-02-01",
+     "periodEnd": "2029-05-01",
+     "accrualFactor": 0.247222,
+     "discountFactor": 0.907617,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2029-02-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.039006,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-03-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.039131,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-04-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.039147,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 18,
-     "accrualStart": "2029-05-01",
-     "accrualEnd": "2029-08-01",
      "fixingDate": "2029-07-30",
      "payDate": "2029-08-03",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.039536,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 1596394.43,
-     "df": 0.898536,
      "pv": 1434418.5,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-05-01",
+     "periodEnd": "2029-08-01",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.898536,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2029-05-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.03951,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-06-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.039525,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-07-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.039573,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 19,
-     "accrualStart": "2029-08-01",
-     "accrualEnd": "2029-11-01",
      "fixingDate": "2029-10-30",
      "payDate": "2029-11-05",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.040404,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 1631440.06,
-     "df": 0.889141,
      "pv": 1450581.04,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-08-01",
+     "periodEnd": "2029-11-01",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.889141,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2029-08-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.040386,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-09-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.040398,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-10-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.040428,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 20,
-     "accrualStart": "2029-11-01",
-     "accrualEnd": "2030-02-01",
      "fixingDate": "2030-01-30",
      "payDate": "2030-02-05",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.041742,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 1685430.89,
-     "df": 0.879751,
      "pv": 1482759.05,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2029-11-01",
+     "periodEnd": "2030-02-01",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.879751,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2029-11-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.041735,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-12-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.041746,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-01-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.041746,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 21,
-     "accrualStart": "2030-02-01",
-     "accrualEnd": "2030-05-01",
      "fixingDate": "2030-04-29",
      "payDate": "2030-05-03",
      "notional": 158000000.0,
      "index": "AONIA",
      "rate": 0.042359,
      "spread": 0.0,
-     "yearFraction": 0.247222,
      "amount": 1654587.99,
-     "df": 0.870833,
      "pv": 1440869.68,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2030-02-01",
+     "periodEnd": "2030-05-01",
+     "accrualFactor": 0.247222,
+     "discountFactor": 0.870833,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2030-02-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.042403,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-03-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.042345,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-04-01",
+       "index": "AONIA",
+       "tenor": "1M",
+       "rate": 0.042332,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     }
    ],
    "pv": 21268933.39,
    "payReceive": "Receive",
-   "rateType": "Float"
+   "rateType": "Float",
+   "legId": "MX-20000008-L2",
+   "businessDayConvention": "Mod. following",
+   "resetFrequency": "Monthly"
   }
  ],
  "schedule": [

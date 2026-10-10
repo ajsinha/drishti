@@ -1,30 +1,30 @@
 {
  "balanceId": "COLL-MERIDIAN-RE-NY",
  "held": 0,
- "posted": 35835815,
- "net": -35835815,
+ "posted": 37140405,
+ "net": -37140405,
  "asOf": "2026-09-30",
  "positions": [
   {
    "asset": "Novatek Devices Inc. 2036",
    "direction": "Posted",
-   "marketValue": 11945272,
+   "marketValue": 12380135,
    "haircut": 0.02,
-   "value": 11706367
+   "value": 12132532
   },
   {
    "asset": "Helix Pharmaceuticals Inc. 2031",
    "direction": "Posted",
-   "marketValue": 11945272,
+   "marketValue": 12380135,
    "haircut": 0.005,
-   "value": 11885546
+   "value": 12318234
   },
   {
    "asset": "Meridian Financial Group 2036",
    "direction": "Posted",
-   "marketValue": 11945272,
+   "marketValue": 12380135,
    "haircut": 0.005,
-   "value": 11885546
+   "value": 12318234
   }
  ],
  "csa": "CSA-MERIDIAN-RE",

@@ -2,7 +2,7 @@
  "resultId": "CVA-CORAL-NY",
  "cva": -24107,
  "dva": 16875,
- "fva": -58498,
+ "fva": -58183,
  "kva": -293359,
  "cs01": -434,
  "components": [
@@ -16,7 +16,7 @@
   },
   {
    "name": "FVA",
-   "amount": -58498
+   "amount": -58183
   },
   {
    "name": "KVA",

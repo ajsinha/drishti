@@ -1,20 +1,20 @@
 {
  "resultId": "STR-INFL-SURGE-RATES",
  "scenarioName": "Inflation surprise",
- "pnl": -26393520,
- "limit": -67000000.0,
+ "pnl": -26574996,
+ "limit": -67500000.0,
  "byBook": [
   {
    "book": "BOOK-RATES-1",
-   "pnl": -12390516
+   "pnl": -12373507
   },
   {
    "book": "BOOK-RATES-2",
-   "pnl": -7866060
+   "pnl": -7967933
   },
   {
    "book": "BOOK-RATES-3",
-   "pnl": -6136944
+   "pnl": -6233556
   }
  ],
  "scenario": "SCN-INFL-SURGE",

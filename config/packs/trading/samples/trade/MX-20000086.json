@@ -13,9 +13,9 @@
  "maturityDate": "2027-02-26",
  "currency": "JPY",
  "notional": 140000000.0,
- "mtm": -1130652,
+ "mtm": 37699,
  "mtmCurrency": "USD",
- "pnl1d": -11449,
+ "pnl1d": -942,
  "counterparty": {
   "id": "CP-AURORA",
   "name": "Aurora Sovereign Wealth Fund"
@@ -34,157 +34,351 @@
   "premium": 882154.0
  },
  "risk": {
-  "dv01": 16896,
-  "vega": 242551
+  "dv01": 16390,
+  "vega": 239906
  },
  "sensitivities": [
   {
    "bucket": "3M",
-   "dv01": 2816,
-   "vega": 40425
+   "dv01": 2732,
+   "vega": 39984
   },
   {
    "bucket": "6M",
-   "dv01": 5632,
-   "vega": 80850
+   "dv01": 5463,
+   "vega": 79969
   },
   {
    "bucket": "1Y",
-   "dv01": 8448,
-   "vega": 121276
+   "dv01": 8195,
+   "vega": 119953
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Buy floor 0.5377% on TERM-TONA-3M",
+   "payer": false,
+   "type": "FLOORLETS",
+   "currency": "JPY",
+   "notional": 140000000.0,
+   "index": "TERM-TONA-3M",
+   "spread": 0.0,
+   "strike": 0.005377,
+   "dayCount": "ACT/360",
+   "frequency": "Quarterly",
+   "resetFrequency": "Quarterly",
+   "businessDayConvention": "Mod. following",
+   "calendar": "JPTO",
+   "paymentLag": "2 business days",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Floorlet",
+     "periodStart": "2025-10-09",
+     "periodEnd": "2025-11-26",
+     "fixingDate": "2025-10-07",
+     "payDate": "2025-11-28",
+     "notional": 140000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.005377,
+     "rate": 0.005852,
+     "accrualFactor": 0.133333,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-10-07",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.005852,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Floorlet",
+     "periodStart": "2025-11-26",
+     "periodEnd": "2026-02-26",
+     "fixingDate": "2025-11-24",
+     "payDate": "2026-03-02",
+     "notional": 140000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.005377,
+     "rate": 0.005377,
+     "accrualFactor": 0.255556,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-11-24",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.005377,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Floorlet",
+     "periodStart": "2026-02-26",
+     "periodEnd": "2026-05-26",
+     "fixingDate": "2026-02-24",
+     "payDate": "2026-05-28",
+     "notional": 140000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.005377,
+     "rate": 0.005932,
+     "accrualFactor": 0.247222,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-02-24",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.005932,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Floorlet",
+     "periodStart": "2026-05-26",
+     "periodEnd": "2026-08-26",
+     "fixingDate": "2026-05-22",
+     "payDate": "2026-08-28",
+     "notional": 140000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.005377,
+     "rate": 0.006335,
+     "accrualFactor": 0.255556,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-05-22",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.006335,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 5,
+     "type": "Floorlet",
+     "periodStart": "2026-08-26",
+     "periodEnd": "2026-11-26",
+     "fixingDate": "2026-08-24",
+     "payDate": "2026-11-30",
+     "notional": 140000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.005377,
+     "rate": 0.005451,
+     "accrualFactor": 0.255556,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 0.999073,
+     "pv": 0.0,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-08-24",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.005451,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 6,
+     "type": "Floorlet",
+     "periodStart": "2026-11-26",
+     "periodEnd": "2027-02-26",
+     "fixingDate": "2026-11-24",
+     "payDate": "2027-03-02",
+     "notional": 140000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.005377,
+     "rate": 0.006041,
+     "accrualFactor": 0.255556,
+     "volatilityBp": 88.0,
+     "amount": 37792.05,
+     "discountFactor": 0.997525,
+     "pv": 37698.52,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-11-24",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.006041,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Option",
+   "payReceive": "Receive",
+   "legId": "MX-20000086-L1",
+   "pv": 37698.52,
+   "projectedFlows": 1
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2026-01-09",
-   "period": "2026-01-09..2026-04-09",
-   "index": "TONA",
-   "rate": 0.034286,
+   "fixingDate": "2025-10-07",
+   "period": "2025-10-09..2025-11-26",
+   "index": "TERM-TONA-3M",
+   "rate": 0.005852,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-04-09",
-   "period": "2026-04-09..2026-07-09",
-   "index": "TONA",
-   "rate": 0.037779,
-   "payoff": 97265.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-07-09",
-   "period": "2026-07-09..2026-10-09",
-   "index": "TONA",
-   "rate": 0.029617,
+   "fixingDate": "2025-11-24",
+   "period": "2025-11-26..2026-02-26",
+   "index": "TERM-TONA-3M",
+   "rate": 0.005377,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-10-09",
-   "period": "2026-10-09..2027-01-09",
-   "index": "TONA",
-   "rate": 0.026866,
+   "fixingDate": "2026-02-24",
+   "period": "2026-02-26..2026-05-26",
+   "index": "TERM-TONA-3M",
+   "rate": 0.005932,
    "payoff": 0.0,
-   "status": "Pending"
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-01-09",
-   "period": "2027-01-09..2027-04-09",
-   "index": "TONA",
-   "rate": 0.031256,
+   "fixingDate": "2026-05-22",
+   "period": "2026-05-26..2026-08-26",
+   "index": "TERM-TONA-3M",
+   "rate": 0.006335,
    "payoff": 0.0,
-   "status": "Pending"
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-02-26",
-   "period": "2027-02-26..2027-05-26",
-   "index": "TONA",
-   "rate": 0.025836,
+   "fixingDate": "2026-08-24",
+   "period": "2026-08-26..2026-11-26",
+   "index": "TERM-TONA-3M",
+   "rate": 0.005451,
    "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-11-24",
+   "period": "2026-11-26..2027-02-26",
+   "index": "TERM-TONA-3M",
+   "rate": 0.006041,
+   "payoff": 37792.05,
    "status": "Pending"
   }
  ],
- "nextIndex": 3,
+ "nextIndex": 5,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -8456
+   "pnl": -748
   },
   {
    "date": "2026-09-04",
-   "pnl": -6262
+   "pnl": -554
   },
   {
    "date": "2026-09-07",
-   "pnl": 25102
+   "pnl": 2220
   },
   {
    "date": "2026-09-08",
-   "pnl": 6315
+   "pnl": 559
   },
   {
    "date": "2026-09-09",
-   "pnl": 203
+   "pnl": 18
   },
   {
    "date": "2026-09-10",
-   "pnl": 23572
+   "pnl": 2085
   },
   {
    "date": "2026-09-11",
-   "pnl": -26126
+   "pnl": -2311
   },
   {
    "date": "2026-09-14",
-   "pnl": 29439
+   "pnl": 2604
   },
   {
    "date": "2026-09-15",
-   "pnl": -43303
+   "pnl": -3830
   },
   {
    "date": "2026-09-16",
-   "pnl": -51096
+   "pnl": -4519
   },
   {
    "date": "2026-09-17",
-   "pnl": -80781
+   "pnl": -7145
   },
   {
    "date": "2026-09-18",
-   "pnl": 6252
+   "pnl": 553
   },
   {
    "date": "2026-09-21",
-   "pnl": -7321
+   "pnl": -648
   },
   {
    "date": "2026-09-22",
-   "pnl": 27361
+   "pnl": 2420
   },
   {
    "date": "2026-09-23",
-   "pnl": 1299
+   "pnl": 115
   },
   {
    "date": "2026-09-24",
-   "pnl": 10019
+   "pnl": 886
   },
   {
    "date": "2026-09-25",
-   "pnl": -28407
+   "pnl": -2512
   },
   {
    "date": "2026-09-28",
-   "pnl": 23359
+   "pnl": 2066
   },
   {
    "date": "2026-09-29",
-   "pnl": 25200
+   "pnl": 2229
   },
   {
    "date": "2026-09-30",
-   "pnl": 20282
+   "pnl": 1794
   }
  ],
  "execution": {
@@ -227,14 +421,14 @@
     "description": "Matched on MarkitWire (MA221949936)"
    },
    {
-    "date": "2026-07-09",
+    "date": "2026-08-24",
     "event": "Cash settled",
     "status": "Settled",
     "description": "JPY payment settled",
     "amount": 0.0
    },
    {
-    "date": "2026-10-09",
+    "date": "2026-11-24",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
@@ -285,8 +479,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": -1130652,
-  "cleanPv": -1130652.0,
+  "npv": 37699,
+  "cleanPv": 37699.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Black / Bachelier",
@@ -301,36 +495,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": -1119203,
+   "pnl": 38641,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": -3059
+   "pnl": -267
   },
   {
    "step": "Roll-down",
-   "pnl": 1371
+   "pnl": 120
   },
   {
    "step": "Rates delta",
-   "pnl": -35
+   "pnl": 55
   },
   {
    "step": "FX delta",
-   "pnl": -73
+   "pnl": -6
   },
   {
    "step": "Vol (vega)",
-   "pnl": -7140
+   "pnl": -624
   },
   {
    "step": "Theta",
-   "pnl": -2567
+   "pnl": -224
   },
   {
    "step": "Unexplained",
-   "pnl": 54
+   "pnl": 4
   }
  ],
  "_meta": {
@@ -338,7 +532,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 3661
+   "mtm": 1475
   }
  }
 }

@@ -6,21 +6,21 @@
   {
    "id": "BOOK-COMM-1",
    "trades": 28,
-   "mtm": 11845271
+   "mtm": 7191610
   },
   {
    "id": "BOOK-COMM-2",
    "trades": 31,
-   "mtm": 20548795
+   "mtm": 23033724
   },
   {
    "id": "BOOK-COMM-3",
    "trades": 31,
-   "mtm": -19078473
+   "mtm": -13270944
   }
  ],
- "var99": 10959317,
- "mtm": 13315593,
+ "var99": 10949577,
+ "mtm": 16954390,
  "legalEntity": "LE-NY",
  "varResult": "VAR-COMM",
  "assetClasses": [
@@ -60,14 +60,14 @@
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "swap",
-   "mtm": 4646776
+   "mtm": -1277334
   },
   {
    "tradeId": "END-1000016",
    "book": "BOOK-COMM-1",
    "currency": "USD",
    "family": "swap",
-   "mtm": -648320
+   "mtm": 622129
   },
   {
    "tradeId": "END-1000027",
@@ -277,14 +277,14 @@
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
-   "mtm": 48886
+   "mtm": 1494618
   },
   {
    "tradeId": "END-1000018",
    "book": "BOOK-COMM-2",
    "currency": "USD",
    "family": "swap",
-   "mtm": 127504
+   "mtm": 1166701
   },
   {
    "tradeId": "END-1000019",
@@ -452,14 +452,14 @@
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
-   "mtm": -1134050
+   "mtm": -19804
   },
   {
    "tradeId": "END-1000015",
    "book": "BOOK-COMM-3",
    "currency": "USD",
    "family": "swap",
-   "mtm": -4133232
+   "mtm": 560051
   },
   {
    "tradeId": "END-1000020",

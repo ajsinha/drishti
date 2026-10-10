@@ -1,13 +1,13 @@
 {
  "nettingSetId": "NS-KESTREL-NY",
  "tradeCount": 22,
- "netMtm": -6803082,
- "collateral": -4303641,
- "eePeak": 11915032,
- "pfePeak": 28319371,
- "limit": 56000000.0,
- "utilisation": 0.5057,
- "cva": -68634,
+ "netMtm": -4760710,
+ "collateral": -3011633,
+ "eePeak": 12930720,
+ "pfePeak": 30733435,
+ "limit": 60000000.0,
+ "utilisation": 0.5122,
+ "cva": -69030,
  "profile": [
   {
    "tenor": "0",
@@ -26,8 +26,8 @@
   },
   {
    "tenor": "6M",
-   "ee": 11915032,
-   "pfe": 28319371
+   "ee": 12930720,
+   "pfe": 30733435
   },
   {
    "tenor": "1Y",
@@ -82,17 +82,6 @@
    "maturity": "2030-05-01",
    "maturityBucket": "2-5Y",
    "mtm": 6871958
-  },
-  {
-   "tradeId": "MX-20000079",
-   "product": "Interest rate cap",
-   "assetClass": "Rates",
-   "currency": "JPY",
-   "book": "BOOK-RATES-3",
-   "notional": 190000000.0,
-   "maturity": "2028-06-29",
-   "maturityBucket": "1-2Y",
-   "mtm": -2636721
   },
   {
    "tradeId": "CLY-3000028",
@@ -150,15 +139,15 @@
    "mtm": 1991433
   },
   {
-   "tradeId": "MX-20000017",
-   "product": "Basis swap (float/float)",
-   "assetClass": "Rates",
-   "currency": "GBP",
-   "book": "BOOK-RATES-2",
-   "notional": 189000000.0,
-   "maturity": "2027-05-25",
+   "tradeId": "END-1000017",
+   "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-2",
+   "notional": 57000000.0,
+   "maturity": "2027-04-30",
    "maturityBucket": "0-1Y",
-   "mtm": 1857281
+   "mtm": 1494618
   },
   {
    "tradeId": "CLY-3000041",
@@ -194,6 +183,28 @@
    "mtm": -752009
   },
   {
+   "tradeId": "MX-20000017",
+   "product": "Basis swap (float/float)",
+   "assetClass": "Rates",
+   "currency": "GBP",
+   "book": "BOOK-RATES-2",
+   "notional": 189000000.0,
+   "maturity": "2027-05-25",
+   "maturityBucket": "0-1Y",
+   "mtm": -631587
+  },
+  {
+   "tradeId": "MX-20000018",
+   "product": "Basis swap (float/float)",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-1",
+   "notional": 103000000.0,
+   "maturity": "2030-09-25",
+   "maturityBucket": "2-5Y",
+   "mtm": 588449
+  },
+  {
    "tradeId": "MX-20000106",
    "product": "Bermudan swaption",
    "assetClass": "Rates",
@@ -203,17 +214,6 @@
    "maturity": "2028-10-25",
    "maturityBucket": "2-5Y",
    "mtm": 514934
-  },
-  {
-   "tradeId": "MX-20000081",
-   "product": "Interest rate cap",
-   "assetClass": "Rates",
-   "currency": "AUD",
-   "book": "BOOK-RATES-1",
-   "notional": 26000000.0,
-   "maturity": "2027-05-14",
-   "maturityBucket": "0-1Y",
-   "mtm": 282246
   },
   {
    "tradeId": "WSS-1500112",
@@ -236,17 +236,6 @@
    "maturity": "2027-07-08",
    "maturityBucket": "0-1Y",
    "mtm": -209787
-  },
-  {
-   "tradeId": "MX-20000018",
-   "product": "Basis swap (float/float)",
-   "assetClass": "Rates",
-   "currency": "USD",
-   "book": "BOOK-RATES-1",
-   "notional": 103000000.0,
-   "maturity": "2030-09-25",
-   "maturityBucket": "2-5Y",
-   "mtm": -142545
   },
   {
    "tradeId": "MX-20000109",
@@ -282,17 +271,6 @@
    "mtm": 55694
   },
   {
-   "tradeId": "END-1000017",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-2",
-   "notional": 57000000.0,
-   "maturity": "2027-01-29",
-   "maturityBucket": "0-1Y",
-   "mtm": 48886
-  },
-  {
    "tradeId": "CLY-3000024",
    "product": "CDS index option",
    "assetClass": "Credit",
@@ -302,6 +280,28 @@
    "maturity": "2027-02-24",
    "maturityBucket": "0-1Y",
    "mtm": -4024
+  },
+  {
+   "tradeId": "MX-20000081",
+   "product": "Interest rate cap",
+   "assetClass": "Rates",
+   "currency": "AUD",
+   "book": "BOOK-RATES-1",
+   "notional": 26000000.0,
+   "maturity": "2027-05-14",
+   "maturityBucket": "0-1Y",
+   "mtm": 23
+  },
+  {
+   "tradeId": "MX-20000079",
+   "product": "Interest rate cap",
+   "assetClass": "Rates",
+   "currency": "JPY",
+   "book": "BOOK-RATES-3",
+   "notional": 190000000.0,
+   "maturity": "2028-06-29",
+   "maturityBucket": "1-2Y",
+   "mtm": 16
   }
  ],
  "byAsset": [
@@ -310,12 +310,12 @@
    "mtm": -2527551
   },
   {
-   "asset": "Commodity",
-   "mtm": -2161311
+   "asset": "Rates",
+   "mtm": -1131621
   },
   {
-   "asset": "Rates",
-   "mtm": -1728261
+   "asset": "Commodity",
+   "mtm": -715579
   },
   {
    "asset": "Credit",
@@ -342,7 +342,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 13606
+   "netMtm": 9521
   }
  }
 }

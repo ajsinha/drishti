@@ -1,20 +1,20 @@
 {
  "resultId": "STR-RATES-UP200-RATES",
  "scenarioName": "Parallel rates +200 bp",
- "pnl": -40048686,
- "limit": -67000000.0,
+ "pnl": -40437281,
+ "limit": -67500000.0,
  "byBook": [
   {
    "book": "BOOK-RATES-1",
-   "pnl": -12302555
+   "pnl": -12285667
   },
   {
    "book": "BOOK-RATES-2",
-   "pnl": -11217380
+   "pnl": -11362656
   },
   {
    "book": "BOOK-RATES-3",
-   "pnl": -16528751
+   "pnl": -16788958
   }
  ],
  "scenario": "SCN-RATES-UP200",

@@ -13,9 +13,9 @@
  "maturityDate": "2027-05-14",
  "currency": "AUD",
  "notional": 26000000.0,
- "mtm": 282246,
+ "mtm": 23,
  "mtmCurrency": "USD",
- "pnl1d": -5797,
+ "pnl1d": 0,
  "counterparty": {
   "id": "CP-KESTREL",
   "name": "Kestrel Global Macro Fund"
@@ -34,86 +34,200 @@
   "premium": 1187215.0
  },
  "risk": {
-  "dv01": 3356,
-  "vega": 41002
+  "dv01": 3727,
+  "vega": 59250
  },
  "sensitivities": [
   {
    "bucket": "3M",
-   "dv01": 336,
-   "vega": 4100
+   "dv01": 373,
+   "vega": 5925
   },
   {
    "bucket": "6M",
-   "dv01": 671,
-   "vega": 8200
+   "dv01": 745,
+   "vega": 11850
   },
   {
    "bucket": "1Y",
-   "dv01": 1007,
-   "vega": 12301
+   "dv01": 1118,
+   "vega": 17775
   },
   {
    "bucket": "2Y",
-   "dv01": 1342,
-   "vega": 16401
+   "dv01": 1491,
+   "vega": 23700
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Buy cap 4.4882% on TERM-AONIA-6M",
+   "payer": false,
+   "type": "CAPLETS",
+   "currency": "AUD",
+   "notional": 26000000.0,
+   "index": "TERM-AONIA-6M",
+   "spread": 0.0,
+   "strike": 0.044882,
+   "dayCount": "ACT/360",
+   "frequency": "Semi-annual",
+   "resetFrequency": "Semi-annual",
+   "businessDayConvention": "Mod. following",
+   "calendar": "GBLO",
+   "paymentLag": "2 business days",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Caplet",
+     "periodStart": "2025-10-29",
+     "periodEnd": "2025-11-14",
+     "fixingDate": "2025-10-27",
+     "payDate": "2025-11-18",
+     "notional": 26000000.0,
+     "index": "TERM-AONIA-6M",
+     "strike": 0.044882,
+     "rate": 0.037138,
+     "accrualFactor": 0.044444,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-10-27",
+       "index": "TERM-AONIA-6M",
+       "tenor": "6M",
+       "rate": 0.037138,
+       "source": "Refinitiv AONIA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Caplet",
+     "periodStart": "2025-11-14",
+     "periodEnd": "2026-05-14",
+     "fixingDate": "2025-11-12",
+     "payDate": "2026-05-18",
+     "notional": 26000000.0,
+     "index": "TERM-AONIA-6M",
+     "strike": 0.044882,
+     "rate": 0.036585,
+     "accrualFactor": 0.502778,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-11-12",
+       "index": "TERM-AONIA-6M",
+       "tenor": "6M",
+       "rate": 0.036585,
+       "source": "Refinitiv AONIA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Caplet",
+     "periodStart": "2026-05-14",
+     "periodEnd": "2026-11-16",
+     "fixingDate": "2026-05-12",
+     "payDate": "2026-11-18",
+     "notional": 26000000.0,
+     "index": "TERM-AONIA-6M",
+     "strike": 0.044882,
+     "rate": 0.037041,
+     "accrualFactor": 0.516667,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 0.995194,
+     "pv": 0.0,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-05-12",
+       "index": "TERM-AONIA-6M",
+       "tenor": "6M",
+       "rate": 0.037041,
+       "source": "Refinitiv AONIA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Caplet",
+     "periodStart": "2026-11-16",
+     "periodEnd": "2027-05-14",
+     "fixingDate": "2026-11-12",
+     "payDate": "2027-05-18",
+     "notional": 26000000.0,
+     "index": "TERM-AONIA-6M",
+     "strike": 0.044882,
+     "rate": 0.036198,
+     "accrualFactor": 0.497222,
+     "volatilityBp": 88.0,
+     "amount": 23.04,
+     "discountFactor": 0.9774,
+     "pv": 22.52,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-11-12",
+       "index": "TERM-AONIA-6M",
+       "tenor": "6M",
+       "rate": 0.036198,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Option",
+   "payReceive": "Receive",
+   "legId": "MX-20000081-L1",
+   "pv": 22.52,
+   "projectedFlows": 1
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2026-01-29",
-   "period": "2026-01-29..2026-04-29",
-   "index": "AONIA",
-   "rate": 0.038438,
-   "payoff": 22347.0,
-   "status": "Fixed"
-  },
-  {
-   "fixingDate": "2026-04-29",
-   "period": "2026-04-29..2026-07-29",
-   "index": "AONIA",
-   "rate": 0.023091,
+   "fixingDate": "2025-10-27",
+   "period": "2025-10-29..2025-11-14",
+   "index": "TERM-AONIA-6M",
+   "rate": 0.037138,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-07-29",
-   "period": "2026-07-29..2026-10-29",
-   "index": "AONIA",
-   "rate": 0.046018,
-   "payoff": 71617.0,
+   "fixingDate": "2025-11-12",
+   "period": "2025-11-14..2026-05-14",
+   "index": "TERM-AONIA-6M",
+   "rate": 0.036585,
+   "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-10-29",
-   "period": "2026-10-29..2027-01-29",
-   "index": "AONIA",
-   "rate": 0.030919,
+   "fixingDate": "2026-05-12",
+   "period": "2026-05-14..2026-11-16",
+   "index": "TERM-AONIA-6M",
+   "rate": 0.037041,
    "payoff": 0.0,
-   "status": "Pending"
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-01-29",
-   "period": "2027-01-29..2027-04-29",
-   "index": "AONIA",
-   "rate": 0.024085,
-   "payoff": 0.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-04-29",
-   "period": "2027-04-29..2027-07-29",
-   "index": "AONIA",
-   "rate": 0.027904,
-   "payoff": 0.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-05-14",
-   "period": "2027-05-14..2027-08-14",
-   "index": "AONIA",
-   "rate": 0.046352,
-   "payoff": 73788.0,
+   "fixingDate": "2026-11-12",
+   "period": "2026-11-16..2027-05-14",
+   "index": "TERM-AONIA-6M",
+   "rate": 0.036198,
+   "payoff": 23.04,
    "status": "Pending"
   }
  ],
@@ -121,83 +235,83 @@
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": 6987
+   "pnl": 2476
   },
   {
    "date": "2026-09-04",
-   "pnl": 24464
+   "pnl": 8668
   },
   {
    "date": "2026-09-07",
-   "pnl": 8490
+   "pnl": 3008
   },
   {
    "date": "2026-09-08",
-   "pnl": 1722
+   "pnl": 610
   },
   {
    "date": "2026-09-09",
-   "pnl": -955
+   "pnl": -338
   },
   {
    "date": "2026-09-10",
-   "pnl": -804
+   "pnl": -285
   },
   {
    "date": "2026-09-11",
-   "pnl": 4989
+   "pnl": 1768
   },
   {
    "date": "2026-09-14",
-   "pnl": -5619
+   "pnl": -1991
   },
   {
    "date": "2026-09-15",
-   "pnl": 4920
+   "pnl": 1743
   },
   {
    "date": "2026-09-16",
-   "pnl": -16793
+   "pnl": -5950
   },
   {
    "date": "2026-09-17",
-   "pnl": -15345
+   "pnl": -5437
   },
   {
    "date": "2026-09-18",
-   "pnl": -755
+   "pnl": -268
   },
   {
    "date": "2026-09-21",
-   "pnl": 2887
+   "pnl": 1023
   },
   {
    "date": "2026-09-22",
-   "pnl": 6441
+   "pnl": 2282
   },
   {
    "date": "2026-09-23",
-   "pnl": -4177
+   "pnl": -1480
   },
   {
    "date": "2026-09-24",
-   "pnl": -1855
+   "pnl": -657
   },
   {
    "date": "2026-09-25",
-   "pnl": 15582
+   "pnl": 5521
   },
   {
    "date": "2026-09-28",
-   "pnl": -6575
+   "pnl": -2330
   },
   {
    "date": "2026-09-29",
-   "pnl": 14278
+   "pnl": 5059
   },
   {
    "date": "2026-09-30",
-   "pnl": 4010
+   "pnl": 1421
   }
  ],
  "execution": {
@@ -240,14 +354,14 @@
     "description": "Matched on MarkitWire (MA816615993)"
    },
    {
-    "date": "2026-07-29",
+    "date": "2026-05-12",
     "event": "Cash settled",
     "status": "Settled",
     "description": "AUD payment settled",
-    "amount": 71617.0
+    "amount": 0.0
    },
    {
-    "date": "2026-10-29",
+    "date": "2026-11-12",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
@@ -298,8 +412,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": 282246,
-  "cleanPv": 282246.0,
+  "npv": 23,
+  "cleanPv": 23.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Black / Bachelier",
@@ -314,36 +428,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": 288043,
+   "pnl": 23,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": -945
+   "pnl": -163
   },
   {
    "step": "Roll-down",
-   "pnl": -477
+   "pnl": -82
   },
   {
    "step": "Rates delta",
-   "pnl": -3163
+   "pnl": 513
   },
   {
    "step": "FX delta",
-   "pnl": -1202
+   "pnl": -207
   },
   {
    "step": "Vol (vega)",
-   "pnl": 3451
+   "pnl": 595
   },
   {
    "step": "Theta",
-   "pnl": -3800
+   "pnl": -656
   },
   {
    "step": "Unexplained",
-   "pnl": 339
+   "pnl": 0
   }
  ],
  "_meta": {
@@ -351,7 +465,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 824
+   "mtm": 500
   }
  }
 }

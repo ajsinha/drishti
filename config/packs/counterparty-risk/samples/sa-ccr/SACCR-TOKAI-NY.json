@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-TOKAI-NY",
- "replacementCost": 469608,
+ "replacementCost": 732454,
  "addOn": 14886082,
  "multiplier": 1.0,
- "ead": 21497966,
- "rwa": 10748983,
+ "ead": 21865951,
+ "rwa": 10932976,
  "addOns": [
   {
    "assetClass": "Interest rate",

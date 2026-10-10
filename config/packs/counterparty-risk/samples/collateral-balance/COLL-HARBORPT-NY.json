@@ -1,30 +1,30 @@
 {
  "balanceId": "COLL-HARBORPT-NY",
- "held": 24420387,
+ "held": 31085512,
  "posted": 0,
- "net": 24420387,
+ "net": 31085512,
  "asOf": "2026-09-30",
  "positions": [
   {
    "asset": "Solaris Energy Corp. 2036",
    "direction": "Held",
-   "marketValue": 8140129,
+   "marketValue": 10361837,
    "haircut": 0.02,
-   "value": 7977326
+   "value": 10154600
   },
   {
    "asset": "Federal Republic of Germany 2031",
    "direction": "Held",
-   "marketValue": 8140129,
+   "marketValue": 10361837,
    "haircut": 0.005,
-   "value": 8099428
+   "value": 10310028
   },
   {
    "asset": "Meridian Financial Group 2031",
    "direction": "Held",
-   "marketValue": 8140129,
+   "marketValue": 10361837,
    "haircut": 0.02,
-   "value": 7977326
+   "value": 10154600
   }
  ],
  "csa": "CSA-HARBORPT",

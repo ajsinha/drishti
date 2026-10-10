@@ -1,20 +1,20 @@
 {
  "resultId": "STR-EM-CRISIS-RATES",
  "scenarioName": "Emerging-market crisis",
- "pnl": -61275836,
- "limit": -67000000.0,
+ "pnl": -61829797,
+ "limit": -67500000.0,
  "byBook": [
   {
    "book": "BOOK-RATES-1",
-   "pnl": -18985720
+   "pnl": -18959657
   },
   {
    "book": "BOOK-RATES-2",
-   "pnl": -30710756
+   "pnl": -31108490
   },
   {
    "book": "BOOK-RATES-3",
-   "pnl": -11579360
+   "pnl": -11761650
   }
  ],
  "scenario": "SCN-EM-CRISIS",

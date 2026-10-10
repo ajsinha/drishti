@@ -6,7 +6,7 @@
  "sector": "Insurance",
  "country": "BM",
  "type": "Insurer",
- "netMtm": -57911656,
+ "netMtm": -59972379,
  "pfePeak": 162569103,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-MERIDIAN-RE-NY",
    "agreement": "AGR-MERIDIAN-RE-ISDA",
    "trades": 19,
-   "netMtm": -56606054
+   "netMtm": -58666777
   }
  ],
  "kyc": {

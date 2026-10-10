@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-AURORA-NY",
- "replacementCost": 9139548,
- "addOn": 75612986,
+ "replacementCost": 10003743,
+ "addOn": 57566630,
  "multiplier": 1.0,
- "ead": 118653548,
- "rwa": 23730710,
+ "ead": 94598522,
+ "rwa": 18919704,
  "addOns": [
   {
    "assetClass": "Interest rate",
@@ -16,7 +16,7 @@
   },
   {
    "assetClass": "Commodity",
-   "addOn": 49726849
+   "addOn": 31680493
   }
  ],
  "hedgingSets": [
@@ -65,7 +65,7 @@
   {
    "assetClass": "Commodity",
    "hedgingSet": "USD",
-   "effectiveNotional": 276260274,
+   "effectiveNotional": 176002740,
    "sf": 0.18
   }
  ],

@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-AURORA",
- "total": 6493056,
- "posted": 6298264,
- "received": 6622917,
+ "total": 5958417,
+ "posted": 5779664,
+ "received": 6077585,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 2921875
+   "im": 2681288
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 779167
+   "im": 715010
   },
   {
    "riskClass": "Equity",
-   "im": 1168750
+   "im": 1072515
   },
   {
    "riskClass": "Commodity",
-   "im": 519444
+   "im": 476673
   },
   {
    "riskClass": "FX",
-   "im": 1103820
+   "im": 1012931
   }
  ],
  "nettingSet": "NS-AURORA-FRA",

@@ -59,7 +59,6 @@
    "rate": 0.029565,
    "dayCount": "ACT/360",
    "frequency": "Annual",
-   "businessDay": "Mod. following",
    "calendar": "GBLO",
    "paymentLag": "2 business days",
    "rollConvention": "5",
@@ -67,42 +66,45 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2024-05-15",
-     "accrualEnd": "2024-11-05",
      "payDate": "2024-11-07",
      "notional": 243000000.0,
      "rate": 0.029565,
-     "yearFraction": 0.483333,
      "amount": -3472409.25,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2024-05-15",
+     "periodEnd": "2024-11-05",
+     "accrualFactor": 0.483333,
+     "discountFactor": 1.0,
+     "type": "Interest"
     },
     {
      "n": 2,
-     "accrualStart": "2024-11-05",
-     "accrualEnd": "2025-11-05",
      "payDate": "2025-11-07",
      "notional": 243000000.0,
      "rate": 0.029565,
-     "yearFraction": 1.013889,
      "amount": -7284076.88,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2024-11-05",
+     "periodEnd": "2025-11-05",
+     "accrualFactor": 1.013889,
+     "discountFactor": 1.0,
+     "type": "Interest"
     },
     {
      "n": 3,
-     "accrualStart": "2025-11-05",
-     "accrualEnd": "2026-11-05",
      "payDate": "2026-11-09",
      "notional": 243000000.0,
      "rate": 0.029565,
-     "yearFraction": 1.013889,
      "amount": -7284076.88,
-     "df": 0.995826,
      "pv": -7253673.88,
-     "status": "Fixed"
+     "status": "Fixed",
+     "periodStart": "2025-11-05",
+     "periodEnd": "2026-11-05",
+     "accrualFactor": 1.013889,
+     "discountFactor": 0.995826,
+     "type": "Interest"
     }
    ],
    "pv": -7253673.88,
@@ -110,7 +112,9 @@
    "payReceive": "Pay",
    "rateType": "Fixed",
    "index": null,
-   "spread": 0.0
+   "spread": 0.0,
+   "legId": "MX-20000164-L1",
+   "businessDayConvention": "Mod. following"
   },
   {
    "leg": 2,
@@ -123,7 +127,6 @@
    "spread": 0.0,
    "dayCount": "ACT/360",
    "frequency": "Quarterly",
-   "businessDay": "Mod. following",
    "calendar": "GBLO",
    "paymentLag": "2 business days",
    "compounding": "Compounded in arrears",
@@ -133,168 +136,449 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2024-05-15",
-     "accrualEnd": "2024-08-05",
      "fixingDate": "2024-08-01",
      "payDate": "2024-08-07",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.037667,
      "spread": 0.0,
-     "yearFraction": 0.227778,
      "amount": 2084868.45,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2024-05-15",
+     "periodEnd": "2024-08-05",
+     "accrualFactor": 0.227778,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2024-05-15",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037666,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2024-06-15",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037665,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2024-07-15",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037671,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 2,
-     "accrualStart": "2024-08-05",
-     "accrualEnd": "2024-11-05",
      "fixingDate": "2024-11-01",
      "payDate": "2024-11-07",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.038413,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 2385447.3,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2024-08-05",
+     "periodEnd": "2024-11-05",
+     "accrualFactor": 0.255556,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2024-08-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038395,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2024-09-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038406,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2024-10-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038438,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 3,
-     "accrualStart": "2024-11-05",
-     "accrualEnd": "2025-02-05",
      "fixingDate": "2025-02-03",
      "payDate": "2025-02-07",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.038345,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 2381224.5,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2024-11-05",
+     "periodEnd": "2025-02-05",
+     "accrualFactor": 0.255556,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2024-11-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038336,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2024-12-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038349,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-01-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038349,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 4,
-     "accrualStart": "2025-02-05",
-     "accrualEnd": "2025-05-06",
      "fixingDate": "2025-05-01",
      "payDate": "2025-05-08",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.03769,
      "spread": 0.0,
-     "yearFraction": 0.25,
      "amount": 2289667.5,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-02-05",
+     "periodEnd": "2025-05-06",
+     "accrualFactor": 0.25,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-02-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037733,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-03-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037677,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-04-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037665,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-05-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037618,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 5,
-     "accrualStart": "2025-05-06",
-     "accrualEnd": "2025-08-05",
      "fixingDate": "2025-08-01",
      "payDate": "2025-08-07",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.038266,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": 2350489.05,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-05-06",
+     "periodEnd": "2025-08-05",
+     "accrualFactor": 0.252778,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-05-06",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038292,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-06-06",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038278,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-07-06",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038227,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 6,
-     "accrualStart": "2025-08-05",
-     "accrualEnd": "2025-11-05",
      "fixingDate": "2025-11-03",
      "payDate": "2025-11-07",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.038481,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 2389670.1,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-08-05",
+     "periodEnd": "2025-11-05",
+     "accrualFactor": 0.255556,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-08-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.03851,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-09-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038494,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-10-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038439,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 7,
-     "accrualStart": "2025-11-05",
-     "accrualEnd": "2026-02-05",
      "fixingDate": "2026-02-03",
      "payDate": "2026-02-09",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.037674,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 2339555.4,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2025-11-05",
+     "periodEnd": "2026-02-05",
+     "accrualFactor": 0.255556,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2025-11-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037709,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-12-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037663,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-01-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037651,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 8,
-     "accrualStart": "2026-02-05",
-     "accrualEnd": "2026-05-05",
      "fixingDate": "2026-04-30",
      "payDate": "2026-05-07",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.038065,
      "spread": 0.0,
-     "yearFraction": 0.247222,
      "amount": 2286754.88,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-02-05",
+     "periodEnd": "2026-05-05",
+     "accrualFactor": 0.247222,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-02-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038093,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-03-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038052,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-04-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038053,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 9,
-     "accrualStart": "2026-05-05",
-     "accrualEnd": "2026-08-05",
      "fixingDate": "2026-08-03",
      "payDate": "2026-08-07",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.038586,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 2396190.6,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-05-05",
+     "periodEnd": "2026-08-05",
+     "accrualFactor": 0.255556,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-05-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.03857,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-06-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.038577,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-07-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.03861,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 10,
-     "accrualStart": "2026-08-05",
-     "accrualEnd": "2026-11-05",
      "fixingDate": "2026-11-03",
      "payDate": "2026-11-09",
      "notional": 243000000.0,
      "index": "SONIA",
      "rate": 0.037715,
      "spread": 0.0,
-     "yearFraction": 0.255556,
      "amount": 2342091.25,
-     "df": 0.995826,
      "pv": 2332315.6,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-08-05",
+     "periodEnd": "2026-11-05",
+     "accrualFactor": 0.255556,
+     "discountFactor": 0.995826,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-08-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.03769,
+       "source": "BoE SONIA",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037703,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-05",
+       "index": "SONIA",
+       "tenor": "1M",
+       "rate": 0.037752,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     }
    ],
    "pv": 2332315.6,
    "payReceive": "Receive",
-   "rateType": "Float"
+   "rateType": "Float",
+   "legId": "MX-20000164-L2",
+   "businessDayConvention": "Mod. following",
+   "resetFrequency": "Monthly"
   }
  ],
  "schedule": [

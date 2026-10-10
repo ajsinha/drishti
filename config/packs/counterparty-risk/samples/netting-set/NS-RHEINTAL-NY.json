@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-RHEINTAL-NY",
  "tradeCount": 16,
- "netMtm": 2038918,
- "collateral": 1491652,
- "eePeak": 20034547,
- "pfePeak": 45503215,
- "limit": 76000000.0,
- "utilisation": 0.5987,
- "cva": -45584,
+ "netMtm": -244893,
+ "collateral": -159276,
+ "eePeak": 19776037,
+ "pfePeak": 44934493,
+ "limit": 75000000.0,
+ "utilisation": 0.5991,
+ "cva": -44852,
  "profile": [
   {
    "tenor": "0",
-   "ee": 3035332,
-   "pfe": 8920443
+   "ee": 2488066,
+   "pfe": 7716458
   },
   {
    "tenor": "1M",
-   "ee": 5418259,
-   "pfe": 14034256
+   "ee": 4882276,
+   "pfe": 12855095
   },
   {
    "tenor": "3M",
-   "ee": 8970459,
-   "pfe": 21849097
+   "ee": 8456350,
+   "pfe": 20718058
   },
   {
    "tenor": "6M",
-   "ee": 12318797,
-   "pfe": 29193653
+   "ee": 11835836,
+   "pfe": 28131140
   },
   {
    "tenor": "1Y",
-   "ee": 16671111,
-   "pfe": 38707057
+   "ee": 16333100,
+   "pfe": 37974458
   },
   {
    "tenor": "2Y",
-   "ee": 16498799,
-   "pfe": 37726320
+   "ee": 16291599,
+   "pfe": 37281505
   },
   {
    "tenor": "3Y",
-   "ee": 20034547,
-   "pfe": 45503215
+   "ee": 19776037,
+   "pfe": 44934493
   },
   {
    "tenor": "5Y",
-   "ee": 10823957,
-   "pfe": 24409017
+   "ee": 10667162,
+   "pfe": 24064070
   },
   {
    "tenor": "7Y",
-   "ee": 11644334,
-   "pfe": 26163185
+   "ee": 11549234,
+   "pfe": 25953964
   },
   {
    "tenor": "10Y",
-   "ee": 44922,
-   "pfe": 98829
+   "ee": 0,
+   "pfe": 0
   }
  ],
  "trades": [
@@ -71,6 +71,17 @@
    "maturity": "2027-09-13",
    "maturityBucket": "0-1Y",
    "mtm": 4718731
+  },
+  {
+   "tradeId": "MX-20000101",
+   "product": "European swaption",
+   "assetClass": "Rates",
+   "currency": "EUR",
+   "book": "BOOK-RATES-3",
+   "notional": 126000000.0,
+   "maturity": "2028-11-24",
+   "maturityBucket": "2-5Y",
+   "mtm": -4346962
   },
   {
    "tradeId": "END-1000044",
@@ -104,17 +115,6 @@
    "maturity": "2027-01-25",
    "maturityBucket": "0-1Y",
    "mtm": -2192641
-  },
-  {
-   "tradeId": "MX-20000101",
-   "product": "European swaption",
-   "assetClass": "Rates",
-   "currency": "EUR",
-   "book": "BOOK-RATES-3",
-   "notional": 126000000.0,
-   "maturity": "2027-07-08",
-   "maturityBucket": "0-1Y",
-   "mtm": -2063151
   },
   {
    "tradeId": "CLY-3000023",
@@ -240,16 +240,16 @@
  ],
  "byAsset": [
   {
-   "asset": "Rates",
-   "mtm": 3625427
-  },
-  {
    "asset": "Commodity",
    "mtm": -2564695
   },
   {
    "asset": "Credit",
    "mtm": 1926024
+  },
+  {
+   "asset": "Rates",
+   "mtm": 1341616
   },
   {
    "asset": "Money market",
@@ -276,7 +276,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 4077
+   "netMtm": 1000
   }
  }
 }

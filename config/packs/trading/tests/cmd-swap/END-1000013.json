@@ -8,14 +8,14 @@
  "family": "swap",
  "status": "Live",
  "direction": "Pay fixed",
- "tradeDate": "2025-05-09",
- "effectiveDate": "2025-05-12",
- "maturityDate": "2031-09-11",
+ "tradeDate": "2026-08-27",
+ "effectiveDate": "2026-09-01",
+ "maturityDate": "2027-08-31",
  "currency": "USD",
  "notional": 208000000.0,
- "mtm": -1134050,
+ "mtm": -19804,
  "mtmCurrency": "USD",
- "pnl1d": 4601,
+ "pnl1d": -1368,
  "counterparty": {
   "id": "CP-HARBORPT",
   "name": "Harbor Point Bank"
@@ -28,347 +28,3060 @@
  "commodityCurve": "CMDC-COPPER",
  "discountCurve": "CRV-USD-OIS",
  "terms": {
-  "fixedPrice": 2426.26,
-  "quantityPerPeriod": 71902,
+  "fixedPrice": 4.87,
+  "quantityPerPeriod": 71900.0,
   "averaging": "Calendar-month"
  },
  "risk": {
-  "delta": 1355412
+  "delta": 972352
  },
  "sensitivities": [
   {
    "bucket": "Spot",
-   "delta": 64543
+   "delta": 46302
   },
   {
    "bucket": "1M",
-   "delta": 129087
+   "delta": 92605
   },
   {
    "bucket": "3M",
-   "delta": 193630
+   "delta": 138907
   },
   {
    "bucket": "6M",
-   "delta": 258174
+   "delta": 185210
   },
   {
    "bucket": "1Y",
-   "delta": 322717
+   "delta": 231512
   },
   {
    "bucket": "2Y",
-   "delta": 387261
+   "delta": 277815
   }
  ],
  "legs": [
   {
    "leg": 1,
-   "label": "Pay performance",
-   "payReceive": "Pay",
-   "rateType": "Performance",
-   "index": "COPPER",
-   "rate": null,
+   "label": "Pay fixed 4.87 USD/lb",
+   "payer": true,
+   "type": "FIXED",
+   "notional": 350153,
+   "rate": 4.87,
+   "index": null,
    "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
    "currency": "USD",
-   "notional": 208000000.0
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 71900.0,
+   "quantityUnit": "lb",
+   "priceUnit": "USD/lb",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Fixed price",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.999298,
+     "pv": -349907.15,
+     "status": "Fixed"
+    },
+    {
+     "n": 2,
+     "type": "Fixed price",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.996295,
+     "pv": -348855.62,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Fixed price",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.993205,
+     "pv": -347773.84,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Fixed price",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.990031,
+     "pv": -346662.35,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Fixed price",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.987267,
+     "pv": -345694.64,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Fixed price",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.984516,
+     "pv": -344731.13,
+     "status": "Fixed"
+    },
+    {
+     "n": 7,
+     "type": "Fixed price",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.98129,
+     "pv": -343601.46,
+     "status": "Fixed"
+    },
+    {
+     "n": 8,
+     "type": "Fixed price",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.978378,
+     "pv": -342582.03,
+     "status": "Fixed"
+    },
+    {
+     "n": 9,
+     "type": "Fixed price",
+     "periodStart": "2027-05-01",
+     "periodEnd": "2027-05-31",
+     "payDate": "2027-06-07",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.975386,
+     "pv": -341534.41,
+     "status": "Fixed"
+    },
+    {
+     "n": 10,
+     "type": "Fixed price",
+     "periodStart": "2027-06-01",
+     "periodEnd": "2027-06-30",
+     "payDate": "2027-07-08",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.972411,
+     "pv": -340492.67,
+     "status": "Fixed"
+    },
+    {
+     "n": 11,
+     "type": "Fixed price",
+     "periodStart": "2027-07-01",
+     "periodEnd": "2027-07-31",
+     "payDate": "2027-08-06",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.969643,
+     "pv": -339523.41,
+     "status": "Fixed"
+    },
+    {
+     "n": 12,
+     "type": "Fixed price",
+     "periodStart": "2027-08-01",
+     "periodEnd": "2027-08-31",
+     "payDate": "2027-09-08",
+     "quantity": 71900.0,
+     "rate": 4.87,
+     "accrualFactor": 1.0,
+     "amount": -350153.0,
+     "discountFactor": 0.966511,
+     "pv": -338426.63,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Fixed",
+   "legId": "END-1000013-L1",
+   "payReceive": "Pay",
+   "pv": -4129785.34,
+   "projectedFlows": 0
   },
   {
    "leg": 2,
-   "label": "Receive SOFR + spread",
-   "payReceive": "Receive",
-   "rateType": "Float",
-   "index": "SOFR",
-   "rate": 0.036215,
+   "label": "Receive COMEX Copper settle monthly average",
+   "payer": false,
+   "type": "FLOAT",
+   "notional": 349434,
+   "index": "COMEX Copper settle",
    "spread": 0.0,
-   "frequency": "Quarterly",
-   "dayCount": "ACT/360",
+   "averaging": "Calendar-month",
+   "resetFrequency": "Daily",
    "currency": "USD",
-   "notional": 208000000.0
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 71900.0,
+   "quantityUnit": "lb",
+   "priceUnit": "USD/lb",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Index average",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 71900.0,
+     "rate": 4.7029,
+     "accrualFactor": 1.0,
+     "amount": 338138.51,
+     "discountFactor": 0.999298,
+     "pv": 337901.09,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-01",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-03",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-10",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-11",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-14",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-15",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-17",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-18",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.69,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-21",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-24",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-25",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-28",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-29",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "COMEX settlement",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Index average",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 71900.0,
+     "rate": 4.8433,
+     "accrualFactor": 1.0,
+     "amount": 348233.27,
+     "discountFactor": 0.996295,
+     "pv": 346943.0,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-10-01",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.75,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-05",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-06",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-07",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.78,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.78,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-13",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.82,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-14",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.83,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-15",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.83,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-20",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-21",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-26",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-27",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-28",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-29",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.94,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.94,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Index average",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 71900.0,
+     "rate": 5.0111,
+     "accrualFactor": 1.0,
+     "amount": 360298.09,
+     "discountFactor": 0.993205,
+     "pv": 357850.0,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-11-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.96,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-03",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-05",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-06",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-10",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-12",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-13",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-17",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-18",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-20",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-24",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-25",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-27",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Index average",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 71900.0,
+     "rate": 4.96,
+     "accrualFactor": 1.0,
+     "amount": 356624.0,
+     "discountFactor": 0.990031,
+     "pv": 353068.84,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-12-01",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-03",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-07",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-10",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-11",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-14",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-15",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-17",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.96,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-18",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.95,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-21",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-24",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-28",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-29",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-31",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 5,
+     "type": "Index average",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 71900.0,
+     "rate": 4.7621,
+     "accrualFactor": 1.0,
+     "amount": 342394.99,
+     "discountFactor": 0.987267,
+     "pv": 338035.41,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-01-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.83,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-05",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.83,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-06",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.82,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-07",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.81,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.81,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-11",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-12",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.78,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-13",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-14",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-15",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-20",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-21",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-25",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-26",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-27",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-28",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-01-29",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 6,
+     "type": "Index average",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 71900.0,
+     "rate": 4.7247,
+     "accrualFactor": 1.0,
+     "amount": 339705.93,
+     "discountFactor": 0.984516,
+     "pv": 334445.82,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-02-01",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-03",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-05",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.7,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-10",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-11",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-12",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.71,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-17",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-18",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.75,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-24",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-25",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-26",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 7,
+     "type": "Index average",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 71900.0,
+     "rate": 4.8983,
+     "accrualFactor": 1.0,
+     "amount": 352187.77,
+     "discountFactor": 0.98129,
+     "pv": 345598.16,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-03-01",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.8,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-03",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.81,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.81,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-05",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.82,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.85,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-10",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-11",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-12",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-15",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.9,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.9,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-17",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-18",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.95,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.95,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-24",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.96,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-25",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-26",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-29",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-31",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 8,
+     "type": "Index average",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 71900.0,
+     "rate": 5.0377,
+     "accrualFactor": 1.0,
+     "amount": 362210.63,
+     "discountFactor": 0.978378,
+     "pv": 354378.95,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-04-01",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-05",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-06",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-07",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-12",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-13",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-14",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-15",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-20",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-21",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-26",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-27",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-28",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-29",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 9,
+     "type": "Index average",
+     "periodStart": "2027-05-01",
+     "periodEnd": "2027-05-31",
+     "payDate": "2027-06-07",
+     "quantity": 71900.0,
+     "rate": 4.937,
+     "accrualFactor": 1.0,
+     "amount": 354970.3,
+     "discountFactor": 0.975386,
+     "pv": 346233.14,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-05-03",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.01,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-05",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-06",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-07",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-10",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-11",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.97,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-12",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.96,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-13",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.96,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-14",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.95,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-17",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-18",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.92,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-20",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-21",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.9,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-24",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-25",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-26",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.87,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-27",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.86,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-28",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.85,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 10,
+     "type": "Index average",
+     "periodStart": "2027-06-01",
+     "periodEnd": "2027-06-30",
+     "payDate": "2027-07-08",
+     "quantity": 71900.0,
+     "rate": 4.7552,
+     "accrualFactor": 1.0,
+     "amount": 341898.88,
+     "discountFactor": 0.972411,
+     "pv": 332466.27,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-06-01",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.82,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.82,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-03",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.81,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.8,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-07",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.78,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-10",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.77,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-11",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-14",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.75,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-15",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-17",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-21",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-24",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-25",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-28",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-29",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 11,
+     "type": "Index average",
+     "periodStart": "2027-07-01",
+     "periodEnd": "2027-07-31",
+     "payDate": "2027-08-06",
+     "quantity": 71900.0,
+     "rate": 4.7748,
+     "accrualFactor": 1.0,
+     "amount": 343308.12,
+     "discountFactor": 0.969643,
+     "pv": 332886.32,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-07-01",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.72,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-06",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-07",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-08",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.73,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-12",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.74,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-13",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.75,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-14",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.75,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-15",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.76,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.78,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-20",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-21",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.79,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-22",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.8,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.8,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-26",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.82,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-27",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.83,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-28",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.84,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-29",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.85,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-07-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.85,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 12,
+     "type": "Index average",
+     "periodStart": "2027-08-01",
+     "periodEnd": "2027-08-31",
+     "payDate": "2027-09-08",
+     "quantity": 71900.0,
+     "rate": 4.9709,
+     "accrualFactor": 1.0,
+     "amount": 357407.71,
+     "discountFactor": 0.966511,
+     "pv": 345438.39,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-08-02",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-03",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.88,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-04",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.89,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-05",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.9,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-06",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.91,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-09",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-10",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.93,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-11",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.94,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-12",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.95,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-13",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.96,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-16",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-17",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.98,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-18",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 4.99,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-19",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-20",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.0,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-23",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-24",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.02,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-25",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-26",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.03,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-27",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.04,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-30",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-31",
+       "index": "COMEX Copper settle",
+       "tenor": "1D",
+       "rate": 5.05,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Float",
+   "legId": "END-1000013-L2",
+   "payReceive": "Receive",
+   "pv": 4125245.39,
+   "projectedFlows": 11
+  },
+  {
+   "leg": 3,
+   "label": "Pay fee 0.018 USD/lb",
+   "payer": true,
+   "type": "FEE",
+   "notional": 1294,
+   "rate": 0.018,
+   "index": null,
+   "spread": 0.0,
+   "currency": "USD",
+   "dayCount": "Actual",
+   "frequency": "Monthly",
+   "businessDayConvention": "Following",
+   "calendar": "USNY",
+   "paymentLag": "5 business days",
+   "quantity": 71900.0,
+   "quantityUnit": "lb",
+   "priceUnit": "USD/lb",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Fee",
+     "periodStart": "2026-09-01",
+     "periodEnd": "2026-09-30",
+     "payDate": "2026-10-07",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.999298,
+     "pv": -1293.29,
+     "status": "Fixed"
+    },
+    {
+     "n": 2,
+     "type": "Fee",
+     "periodStart": "2026-10-01",
+     "periodEnd": "2026-10-31",
+     "payDate": "2026-11-06",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.996295,
+     "pv": -1289.4,
+     "status": "Fixed"
+    },
+    {
+     "n": 3,
+     "type": "Fee",
+     "periodStart": "2026-11-01",
+     "periodEnd": "2026-11-30",
+     "payDate": "2026-12-07",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.993205,
+     "pv": -1285.41,
+     "status": "Fixed"
+    },
+    {
+     "n": 4,
+     "type": "Fee",
+     "periodStart": "2026-12-01",
+     "periodEnd": "2026-12-31",
+     "payDate": "2027-01-08",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.990031,
+     "pv": -1281.3,
+     "status": "Fixed"
+    },
+    {
+     "n": 5,
+     "type": "Fee",
+     "periodStart": "2027-01-01",
+     "periodEnd": "2027-01-31",
+     "payDate": "2027-02-05",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.987267,
+     "pv": -1277.72,
+     "status": "Fixed"
+    },
+    {
+     "n": 6,
+     "type": "Fee",
+     "periodStart": "2027-02-01",
+     "periodEnd": "2027-02-28",
+     "payDate": "2027-03-05",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.984516,
+     "pv": -1274.16,
+     "status": "Fixed"
+    },
+    {
+     "n": 7,
+     "type": "Fee",
+     "periodStart": "2027-03-01",
+     "periodEnd": "2027-03-31",
+     "payDate": "2027-04-07",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.98129,
+     "pv": -1269.98,
+     "status": "Fixed"
+    },
+    {
+     "n": 8,
+     "type": "Fee",
+     "periodStart": "2027-04-01",
+     "periodEnd": "2027-04-30",
+     "payDate": "2027-05-07",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.978378,
+     "pv": -1266.22,
+     "status": "Fixed"
+    },
+    {
+     "n": 9,
+     "type": "Fee",
+     "periodStart": "2027-05-01",
+     "periodEnd": "2027-05-31",
+     "payDate": "2027-06-07",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.975386,
+     "pv": -1262.34,
+     "status": "Fixed"
+    },
+    {
+     "n": 10,
+     "type": "Fee",
+     "periodStart": "2027-06-01",
+     "periodEnd": "2027-06-30",
+     "payDate": "2027-07-08",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.972411,
+     "pv": -1258.49,
+     "status": "Fixed"
+    },
+    {
+     "n": 11,
+     "type": "Fee",
+     "periodStart": "2027-07-01",
+     "periodEnd": "2027-07-31",
+     "payDate": "2027-08-06",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.969643,
+     "pv": -1254.91,
+     "status": "Fixed"
+    },
+    {
+     "n": 12,
+     "type": "Fee",
+     "periodStart": "2027-08-01",
+     "periodEnd": "2027-08-31",
+     "payDate": "2027-09-08",
+     "quantity": 71900.0,
+     "rate": 0.018,
+     "accrualFactor": 1.0,
+     "amount": -1294.2,
+     "discountFactor": 0.966511,
+     "pv": -1250.86,
+     "status": "Fixed"
+    }
+   ],
+   "rateType": "Fee",
+   "legId": "END-1000013-L3",
+   "payReceive": "Pay",
+   "pv": -15264.08,
+   "projectedFlows": 0
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2025-08-12",
-   "period": "2025-08-12..2025-11-12",
-   "index": "SOFR",
-   "rate": 0.03882,
-   "payoff": 198640.0,
+   "payDate": "2026-10-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -349907.15,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2025-11-12",
-   "period": "2025-11-12..2026-02-12",
-   "index": "SOFR",
-   "rate": 0.046078,
-   "payoff": 576056.0,
+   "payDate": "2026-10-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.7029,
+   "amount": 338138.51,
+   "pv": 337901.09,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-02-12",
-   "period": "2026-02-12..2026-05-12",
-   "index": "SOFR",
-   "rate": 0.037306,
-   "payoff": 119912.0,
+   "payDate": "2026-10-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1293.29,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-05-12",
-   "period": "2026-05-12..2026-08-12",
-   "index": "SOFR",
-   "rate": 0.048304,
-   "payoff": 691808.0,
+   "payDate": "2026-11-06",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -348855.62,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-08-12",
-   "period": "2026-08-12..2026-11-12",
-   "index": "SOFR",
-   "rate": 0.029247,
-   "payoff": 0.0,
+   "payDate": "2026-11-06",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.8433,
+   "amount": 348233.27,
+   "pv": 346943.0,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2026-11-06",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1289.4,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-11-12",
-   "period": "2026-11-12..2027-02-12",
-   "index": "SOFR",
-   "rate": 0.037265,
-   "payoff": 117780.0,
-   "status": "Pending"
+   "payDate": "2026-12-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -347773.84,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-02-12",
-   "period": "2027-02-12..2027-05-12",
-   "index": "SOFR",
-   "rate": 0.021626,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2026-12-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 5.0111,
+   "amount": 360298.09,
+   "pv": 357850.0,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2027-05-12",
-   "period": "2027-05-12..2027-08-12",
-   "index": "SOFR",
-   "rate": 0.034965,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2026-12-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1285.41,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-08-12",
-   "period": "2027-08-12..2027-11-12",
-   "index": "SOFR",
-   "rate": 0.028296,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -346662.35,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2027-11-12",
-   "period": "2027-11-12..2028-02-12",
-   "index": "SOFR",
-   "rate": 0.049483,
-   "payoff": 753116.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.96,
+   "amount": 356624.0,
+   "pv": 353068.84,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2028-02-12",
-   "period": "2028-02-12..2028-05-12",
-   "index": "SOFR",
-   "rate": 0.030178,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-01-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1281.3,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-05-12",
-   "period": "2028-05-12..2028-08-12",
-   "index": "SOFR",
-   "rate": 0.041855,
-   "payoff": 356460.0,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -345694.64,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2028-08-12",
-   "period": "2028-08-12..2028-11-12",
-   "index": "SOFR",
-   "rate": 0.02407,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.7621,
+   "amount": 342394.99,
+   "pv": 338035.41,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2028-11-12",
-   "period": "2028-11-12..2029-02-12",
-   "index": "SOFR",
-   "rate": 0.044694,
-   "payoff": 504088.0,
-   "status": "Pending"
+   "payDate": "2027-02-05",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1277.72,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2029-02-12",
-   "period": "2029-02-12..2029-05-12",
-   "index": "SOFR",
-   "rate": 0.029806,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-03-05",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -344731.13,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2029-05-12",
-   "period": "2029-05-12..2029-08-12",
-   "index": "SOFR",
-   "rate": 0.04091,
-   "payoff": 307320.0,
-   "status": "Pending"
+   "payDate": "2027-03-05",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.7247,
+   "amount": 339705.93,
+   "pv": 334445.82,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2029-08-12",
-   "period": "2029-08-12..2029-11-12",
-   "index": "SOFR",
-   "rate": 0.045469,
-   "payoff": 544388.0,
-   "status": "Pending"
+   "payDate": "2027-03-05",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1274.16,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2029-11-12",
-   "period": "2029-11-12..2030-02-12",
-   "index": "SOFR",
-   "rate": 0.022356,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-04-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -343601.46,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2030-02-12",
-   "period": "2030-02-12..2030-05-12",
-   "index": "SOFR",
-   "rate": 0.033516,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-04-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.8983,
+   "amount": 352187.77,
+   "pv": 345598.16,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2030-05-12",
-   "period": "2030-05-12..2030-08-12",
-   "index": "SOFR",
-   "rate": 0.0214,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-04-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1269.98,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2030-08-12",
-   "period": "2030-08-12..2030-11-12",
-   "index": "SOFR",
-   "rate": 0.028909,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-05-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -342582.03,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2030-11-12",
-   "period": "2030-11-12..2031-02-12",
-   "index": "SOFR",
-   "rate": 0.035185,
-   "payoff": 9620.0,
-   "status": "Pending"
+   "payDate": "2027-05-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 5.0377,
+   "amount": 362210.63,
+   "pv": 354378.95,
+   "status": "Projected"
   },
   {
-   "fixingDate": "2031-02-12",
-   "period": "2031-02-12..2031-05-12",
-   "index": "SOFR",
-   "rate": 0.031501,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-05-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1266.22,
+   "status": "Fixed"
   },
   {
-   "fixingDate": "2031-05-12",
-   "period": "2031-05-12..2031-08-12",
-   "index": "SOFR",
-   "rate": 0.030251,
-   "payoff": 0.0,
-   "status": "Pending"
+   "payDate": "2027-06-07",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -341534.41,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-06-07",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.937,
+   "amount": 354970.3,
+   "pv": 346233.14,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-06-07",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1262.34,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-07-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -340492.67,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-07-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.7552,
+   "amount": 341898.88,
+   "pv": 332466.27,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-07-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1258.49,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-08-06",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -339523.41,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-08-06",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.7748,
+   "amount": 343308.12,
+   "pv": 332886.32,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-08-06",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1254.91,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-09-08",
+   "leg": 1,
+   "type": "Fixed price",
+   "rate": 4.87,
+   "amount": -350153.0,
+   "pv": -338426.63,
+   "status": "Fixed"
+  },
+  {
+   "payDate": "2027-09-08",
+   "leg": 2,
+   "type": "Index average",
+   "rate": 4.9709,
+   "amount": 357407.71,
+   "pv": 345438.39,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2027-09-08",
+   "leg": 3,
+   "type": "Fee",
+   "rate": 0.018,
+   "amount": -1294.2,
+   "pv": -1250.86,
+   "status": "Fixed"
   }
  ],
- "nextIndex": 5,
+ "nextIndex": 0,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -17588
+   "pnl": -1551
   },
   {
    "date": "2026-09-04",
-   "pnl": -6667
+   "pnl": -588
   },
   {
    "date": "2026-09-07",
-   "pnl": 26841
+   "pnl": 2367
   },
   {
    "date": "2026-09-08",
-   "pnl": 21783
+   "pnl": 1921
   },
   {
    "date": "2026-09-09",
-   "pnl": -35071
+   "pnl": -3093
   },
   {
    "date": "2026-09-10",
-   "pnl": -15915
+   "pnl": -1403
   },
   {
    "date": "2026-09-11",
-   "pnl": 28876
+   "pnl": 2546
   },
   {
    "date": "2026-09-14",
-   "pnl": -9282
+   "pnl": -818
   },
   {
    "date": "2026-09-15",
-   "pnl": 34787
+   "pnl": 3067
   },
   {
    "date": "2026-09-16",
-   "pnl": 44890
+   "pnl": 3958
   },
   {
    "date": "2026-09-17",
-   "pnl": 65566
+   "pnl": 5782
   },
   {
    "date": "2026-09-18",
-   "pnl": -23368
+   "pnl": -2061
   },
   {
    "date": "2026-09-21",
-   "pnl": 21123
+   "pnl": 1863
   },
   {
    "date": "2026-09-22",
-   "pnl": 81710
+   "pnl": 7205
   },
   {
    "date": "2026-09-23",
-   "pnl": -36922
+   "pnl": -3256
   },
   {
    "date": "2026-09-24",
-   "pnl": -10338
+   "pnl": -912
   },
   {
    "date": "2026-09-25",
-   "pnl": 18528
+   "pnl": 1634
   },
   {
    "date": "2026-09-28",
-   "pnl": -25414
+   "pnl": -2241
   },
   {
    "date": "2026-09-29",
-   "pnl": 29694
+   "pnl": 2618
   },
   {
    "date": "2026-09-30",
-   "pnl": -11862
+   "pnl": -1046
   }
  ],
  "execution": {
-  "tradeDate": "2025-05-09",
-  "executionTimestamp": "2025-05-09T12:31:22.659Z",
+  "tradeDate": "2026-08-27",
+  "executionTimestamp": "2026-08-27T12:31:22.659Z",
   "venue": "CME Globex",
   "venueMic": "XCME",
   "executionType": "Electronic",
@@ -384,42 +3097,35 @@
     "version": 1,
     "event": "New",
     "reason": "Trade captured",
-    "at": "2025-05-09T09:41:00Z",
+    "at": "2026-08-27T09:41:00Z",
     "by": "mo.ops"
    }
   ],
   "sourceSystem": "Summit",
-  "createdAt": "2025-05-09T09:41:00Z",
-  "lastModifiedAt": "2025-05-09T09:41:00Z",
+  "createdAt": "2026-08-27T09:41:00Z",
+  "lastModifiedAt": "2026-08-27T09:41:00Z",
   "lastModifiedBy": "mo.ops",
   "timeline": [
    {
-    "date": "2025-05-09",
+    "date": "2026-08-27",
     "event": "Booked",
     "status": "Done",
     "description": "Captured in Endur by TRDR-TBRENNAN: pay fixed Commodity swap"
    },
    {
-    "date": "2025-05-09",
+    "date": "2026-08-27",
     "event": "Confirmed",
     "status": "Matched",
     "description": "Matched on DTCC CTM (DT543377438)"
    },
    {
-    "date": "2026-08-12",
-    "event": "Cash settled",
-    "status": "Settled",
-    "description": "USD payment settled",
-    "amount": 0.0
-   },
-   {
-    "date": "2026-11-12",
+    "date": "2026-10-07",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
    },
    {
-    "date": "2031-09-11",
+    "date": "2027-08-31",
     "event": "Maturity",
     "status": "Scheduled",
     "description": "Final payment and close-out"
@@ -430,7 +3136,7 @@
   "status": "Confirmed",
   "method": "DTCC CTM",
   "platformId": "DT543377438",
-  "matched": "2025-05-09 12:16",
+  "matched": "2026-08-27 12:16",
   "affirmedBy": "Counterparty ops",
   "breaks": []
  },
@@ -464,8 +3170,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": -1134050,
-  "cleanPv": -1134050.0,
+  "npv": -19804,
+  "cleanPv": -19804.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Multi-curve OIS discounting",
@@ -479,36 +3185,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": -1138651,
+   "pnl": -18436,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": -1562
+   "pnl": -464
   },
   {
    "step": "Roll-down",
-   "pnl": 444
+   "pnl": 132
   },
   {
    "step": "Rates delta",
-   "pnl": 5467
+   "pnl": -1183
   },
   {
    "step": "FX delta",
-   "pnl": 447
+   "pnl": 133
   },
   {
    "step": "Vol (vega)",
-   "pnl": 41
+   "pnl": 12
   },
   {
    "step": "Theta",
-   "pnl": -115
+   "pnl": -34
   },
   {
    "step": "Unexplained",
-   "pnl": -121
+   "pnl": 36
   }
  ],
  "_meta": {
@@ -516,7 +3222,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 4348
+   "mtm": 2120
   }
  }
 }

@@ -6,8 +6,8 @@
  "sector": "Agriculture",
  "country": "BR",
  "type": "Corporate",
- "netMtm": 16833283,
- "pfePeak": 57888512,
+ "netMtm": 20378377,
+ "pfePeak": 59181408,
  "nettingSets": [
   {
    "id": "NS-VERDANT-FRA",
@@ -25,7 +25,7 @@
    "id": "NS-VERDANT-NY",
    "agreement": "AGR-VERDANT-ISDA",
    "trades": 24,
-   "netMtm": 3612550
+   "netMtm": 7157644
   },
   {
    "id": "NS-VERDANT-TKY",

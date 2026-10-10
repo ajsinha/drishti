@@ -2,40 +2,40 @@
  "limitId": "LIM-AURORA",
  "counterpartyName": "Aurora Sovereign Wealth Fund",
  "measure": "PFE 95 peak",
- "limit": 203000000.0,
- "used": 152342452,
- "utilisation": 0.7505,
+ "limit": 204000000.0,
+ "used": 153240529,
+ "utilisation": 0.7512,
  "status": "Within limit",
  "buckets": [
   {
    "bucket": "0-1Y",
-   "limit": 203000000,
-   "used": 129491084,
-   "utilisation": 0.6379
+   "limit": 204000000,
+   "used": 130254450,
+   "utilisation": 0.6385
   },
   {
    "bucket": "1-3Y",
-   "limit": 203000000,
-   "used": 152342452,
-   "utilisation": 0.7505
+   "limit": 204000000,
+   "used": 153240529,
+   "utilisation": 0.7512
   },
   {
    "bucket": "3-5Y",
-   "limit": 162400000,
-   "used": 106639716,
-   "utilisation": 0.6566
+   "limit": 163200000,
+   "used": 107268370,
+   "utilisation": 0.6573
   },
   {
    "bucket": "5-10Y",
-   "limit": 121800000,
-   "used": 53319858,
-   "utilisation": 0.4378
+   "limit": 122400000,
+   "used": 53634185,
+   "utilisation": 0.4382
   },
   {
    "bucket": "10Y+",
-   "limit": 81200000,
-   "used": 15234245,
-   "utilisation": 0.1876
+   "limit": 81600000,
+   "used": 15324053,
+   "utilisation": 0.1878
   }
  ],
  "counterparty": "CP-AURORA",

@@ -6,7 +6,7 @@
  "sector": "Asset management",
  "country": "KY",
  "type": "Hedge fund",
- "netMtm": -9729091,
+ "netMtm": -7686719,
  "pfePeak": 98784506,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-KESTREL-NY",
    "agreement": "AGR-KESTREL-ISDA",
    "trades": 22,
-   "netMtm": -6803082
+   "netMtm": -4760710
   }
  ],
  "kyc": {

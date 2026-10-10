@@ -2,9 +2,9 @@
  "calcId": "SACCR-CORAL-NY",
  "replacementCost": 0,
  "addOn": 65528911,
- "multiplier": 0.8704,
- "ead": 79850910,
- "rwa": 15970182,
+ "multiplier": 0.8711,
+ "ead": 79915128,
+ "rwa": 15983026,
  "addOns": [
   {
    "assetClass": "Interest rate",

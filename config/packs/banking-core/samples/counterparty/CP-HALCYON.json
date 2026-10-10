@@ -6,7 +6,7 @@
  "sector": "Shipping",
  "country": "GR",
  "type": "Corporate",
- "netMtm": 71248112,
+ "netMtm": 66874016,
  "pfePeak": 124873575,
  "nettingSets": [
   {
@@ -19,7 +19,7 @@
    "id": "NS-HALCYON-NY",
    "agreement": "AGR-HALCYON-ISDA",
    "trades": 24,
-   "netMtm": 63042540
+   "netMtm": 58668444
   },
   {
    "id": "NS-HALCYON-TKY",

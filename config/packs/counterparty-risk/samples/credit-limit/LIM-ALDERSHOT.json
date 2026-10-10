@@ -3,39 +3,39 @@
  "counterpartyName": "Aldershot Pension Trust",
  "measure": "PFE 95 peak",
  "limit": 338000000.0,
- "used": 225503261,
- "utilisation": 0.6672,
+ "used": 225619495,
+ "utilisation": 0.6675,
  "status": "Within limit",
  "buckets": [
   {
    "bucket": "0-1Y",
    "limit": 338000000,
-   "used": 191677772,
-   "utilisation": 0.5671
+   "used": 191776571,
+   "utilisation": 0.5674
   },
   {
    "bucket": "1-3Y",
    "limit": 338000000,
-   "used": 225503261,
-   "utilisation": 0.6672
+   "used": 225619495,
+   "utilisation": 0.6675
   },
   {
    "bucket": "3-5Y",
    "limit": 270400000,
-   "used": 157852283,
-   "utilisation": 0.5838
+   "used": 157933646,
+   "utilisation": 0.5841
   },
   {
    "bucket": "5-10Y",
    "limit": 202800000,
-   "used": 78926141,
-   "utilisation": 0.3892
+   "used": 78966823,
+   "utilisation": 0.3894
   },
   {
    "bucket": "10Y+",
    "limit": 135200000,
-   "used": 22550326,
-   "utilisation": 0.1668
+   "used": 22561950,
+   "utilisation": 0.1669
   }
  ],
  "counterparty": "CP-ALDERSHOT",

@@ -1,20 +1,20 @@
 {
  "resultId": "STR-GFC2008-RATES",
  "scenarioName": "Global financial crisis 2008",
- "pnl": -72972910,
- "limit": -67000000.0,
+ "pnl": -73602586,
+ "limit": -67500000.0,
  "byBook": [
   {
    "book": "BOOK-RATES-1",
-   "pnl": -27901281
+   "pnl": -27862980
   },
   {
    "book": "BOOK-RATES-2",
-   "pnl": -14891342
+   "pnl": -15084199
   },
   {
    "book": "BOOK-RATES-3",
-   "pnl": -30180287
+   "pnl": -30655407
   }
  ],
  "scenario": "SCN-GFC2008",

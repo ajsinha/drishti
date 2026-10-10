@@ -1,30 +1,30 @@
 {
  "balanceId": "COLL-MERIDIAN-NY",
- "held": 2809208,
+ "held": 20643483,
  "posted": 0,
- "net": 2809208,
+ "net": 20643483,
  "asOf": "2026-09-30",
  "positions": [
   {
    "asset": "Granite Building Materials plc 2031",
    "direction": "Held",
-   "marketValue": 936403,
+   "marketValue": 6881161,
    "haircut": 0.01,
-   "value": 927039
+   "value": 6812349
   },
   {
    "asset": "Lumen Semiconductor AG 2036",
    "direction": "Held",
-   "marketValue": 936403,
+   "marketValue": 6881161,
    "haircut": 0.01,
-   "value": 927039
+   "value": 6812349
   },
   {
    "asset": "Kaizen Motors Corp. 2031",
    "direction": "Held",
-   "marketValue": 936403,
+   "marketValue": 6881161,
    "haircut": 0.02,
-   "value": 917675
+   "value": 6743538
   }
  ],
  "csa": "CSA-MERIDIAN",

@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-HALCYON-NY",
  "tradeCount": 24,
- "netMtm": 63042540,
- "collateral": 41572438,
- "eePeak": 44579885,
- "pfePeak": 100865072,
- "limit": 179000000.0,
- "utilisation": 0.5635,
- "cva": -2428596,
+ "netMtm": 58668444,
+ "collateral": 38688007,
+ "eePeak": 38615736,
+ "pfePeak": 87296644,
+ "limit": 155000000.0,
+ "utilisation": 0.5632,
+ "cva": -2298009,
  "profile": [
   {
    "tenor": "0",
-   "ee": 25959513,
-   "pfe": 61157628
+   "ee": 24469848,
+   "pfe": 57880365
   },
   {
    "tenor": "1M",
-   "ee": 28519277,
-   "pfe": 65986471
+   "ee": 27060325,
+   "pfe": 62776778
   },
   {
    "tenor": "3M",
-   "ee": 33073444,
-   "pfe": 75987615
+   "ee": 31674034,
+   "pfe": 72908911
   },
   {
    "tenor": "6M",
-   "ee": 34774116,
-   "pfe": 79300868
+   "ee": 30929180,
+   "pfe": 70394709
   },
   {
    "tenor": "1Y",
-   "ee": 39035532,
-   "pfe": 88667496
+   "ee": 34296980,
+   "pfe": 77795381
   },
   {
    "tenor": "2Y",
-   "ee": 44579885,
-   "pfe": 100865072
+   "ee": 38615736,
+   "pfe": 87296644
   },
   {
    "tenor": "3Y",
-   "ee": 38273900,
-   "pfe": 86232844
+   "ee": 37570233,
+   "pfe": 84684774
   },
   {
    "tenor": "5Y",
-   "ee": 24757385,
-   "pfe": 55506360
+   "ee": 24330589,
+   "pfe": 54567408
   },
   {
    "tenor": "7Y",
-   "ee": 25557070,
-   "pfe": 57256741
+   "ee": 25298205,
+   "pfe": 56687238
   },
   {
    "tenor": "10Y",
-   "ee": 1762373,
-   "pfe": 3877221
+   "ee": 1640094,
+   "pfe": 3608207
   }
  ],
  "trades": [
@@ -93,17 +93,6 @@
    "maturity": "2033-05-06",
    "maturityBucket": "5-10Y",
    "mtm": 22777888
-  },
-  {
-   "tradeId": "MX-20000024",
-   "product": "Cross-currency swap (non-MtM)",
-   "assetClass": "Rates",
-   "currency": "CAD",
-   "book": "BOOK-RATES-2",
-   "notional": 169000000.0,
-   "maturity": "2029-10-09",
-   "maturityBucket": "2-5Y",
-   "mtm": 5804007
   },
   {
    "tradeId": "CLY-3000035",
@@ -244,9 +233,9 @@
    "currency": "USD",
    "book": "BOOK-COMM-1",
    "notional": 142000000.0,
-   "maturity": "2028-12-18",
-   "maturityBucket": "2-5Y",
-   "mtm": -648320
+   "maturity": "2027-01-31",
+   "maturityBucket": "0-1Y",
+   "mtm": 622129
   },
   {
    "tradeId": "MX-20000038",
@@ -315,6 +304,17 @@
    "mtm": 192680
   },
   {
+   "tradeId": "MX-20000024",
+   "product": "Cross-currency swap (non-MtM)",
+   "assetClass": "Rates",
+   "currency": "CAD",
+   "book": "BOOK-RATES-2",
+   "notional": 169000000.0,
+   "maturity": "2029-10-09",
+   "maturityBucket": "2-5Y",
+   "mtm": 159462
+  },
+  {
    "tradeId": "END-1000084",
    "product": "Weather derivative (HDD/CDD)",
    "assetClass": "Commodity",
@@ -329,11 +329,15 @@
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": 70007776
+   "mtm": 64363231
   },
   {
    "asset": "Credit",
    "mtm": -7334652
+  },
+  {
+   "asset": "Commodity",
+   "mtm": 2222304
   },
   {
    "asset": "Fixed income",
@@ -342,10 +346,6 @@
   {
    "asset": "Money market",
    "mtm": 1091389
-  },
-  {
-   "asset": "Commodity",
-   "mtm": 951855
   }
  ],
  "counterparty": "CP-HALCYON",
@@ -364,7 +364,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 126085
+   "netMtm": 117336
   }
  }
 }

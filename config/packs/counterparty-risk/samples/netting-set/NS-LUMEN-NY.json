@@ -1,13 +1,13 @@
 {
  "nettingSetId": "NS-LUMEN-NY",
  "tradeCount": 15,
- "netMtm": -32179190,
- "collateral": -16674907,
- "eePeak": 17707220,
- "pfePeak": 39792471,
- "limit": 57000000.0,
- "utilisation": 0.6981,
- "cva": -34595,
+ "netMtm": -38103300,
+ "collateral": -19744717,
+ "eePeak": 6404973,
+ "pfePeak": 15223191,
+ "limit": 22000000.0,
+ "utilisation": 0.692,
+ "cva": -6493,
  "profile": [
   {
    "tenor": "0",
@@ -31,28 +31,28 @@
   },
   {
    "tenor": "1Y",
-   "ee": 8897000,
-   "pfe": 20685525
+   "ee": 3075800,
+   "pfe": 7151235
   },
   {
    "tenor": "2Y",
-   "ee": 11978389,
-   "pfe": 27411206
+   "ee": 3745969,
+   "pfe": 8572232
   },
   {
    "tenor": "3Y",
-   "ee": 11712128,
-   "pfe": 26611931
+   "ee": 1629513,
+   "pfe": 3702529
   },
   {
    "tenor": "5Y",
-   "ee": 14984115,
-   "pfe": 33802691
+   "ee": 1967516,
+   "pfe": 4438523
   },
   {
    "tenor": "7Y",
-   "ee": 17707220,
-   "pfe": 39792471
+   "ee": 2305772,
+   "pfe": 5181636
   },
   {
    "tenor": "10Y",
@@ -95,17 +95,6 @@
    "mtm": 4754624
   },
   {
-   "tradeId": "END-1000014",
-   "product": "Commodity swap",
-   "assetClass": "Commodity",
-   "currency": "USD",
-   "book": "BOOK-COMM-1",
-   "notional": 231000000.0,
-   "maturity": "2034-07-03",
-   "maturityBucket": "5-10Y",
-   "mtm": 4646776
-  },
-  {
    "tradeId": "MX-20000047",
    "product": "Accreting swap",
    "assetClass": "Rates",
@@ -115,6 +104,17 @@
    "maturity": "2033-10-10",
    "maturityBucket": "5-10Y",
    "mtm": 2201547
+  },
+  {
+   "tradeId": "END-1000014",
+   "product": "Commodity swap",
+   "assetClass": "Commodity",
+   "currency": "USD",
+   "book": "BOOK-COMM-1",
+   "notional": 231000000.0,
+   "maturity": "2027-07-31",
+   "maturityBucket": "0-1Y",
+   "mtm": -1277334
   },
   {
    "tradeId": "CLY-3000009",
@@ -238,7 +238,7 @@
   },
   {
    "asset": "Commodity",
-   "mtm": 4513444
+   "mtm": -1410666
   }
  ],
  "counterparty": "CP-LUMEN",
@@ -257,7 +257,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 64358
+   "netMtm": 76206
   }
  }
 }

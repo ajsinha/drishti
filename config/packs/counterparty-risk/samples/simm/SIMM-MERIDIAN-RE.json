@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-MERIDIAN-RE",
- "total": 12293008,
- "posted": 11924218,
- "received": 12538868,
+ "total": 12128150,
+ "posted": 11764306,
+ "received": 12370713,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 5531854
+   "im": 5457668
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 1475161
+   "im": 1455378
   },
   {
    "riskClass": "Equity",
-   "im": 2212741
+   "im": 2183067
   },
   {
    "riskClass": "Commodity",
-   "im": 983441
+   "im": 970252
   },
   {
    "riskClass": "FX",
-   "im": 2089811
+   "im": 2061786
   }
  ],
  "nettingSet": "NS-MERIDIAN-RE-FRA",

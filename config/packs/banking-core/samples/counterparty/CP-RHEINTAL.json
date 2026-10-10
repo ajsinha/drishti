@@ -6,7 +6,7 @@
  "sector": "Banking",
  "country": "DE",
  "type": "Bank",
- "netMtm": 3644639,
+ "netMtm": 1360828,
  "pfePeak": 123219335,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-RHEINTAL-NY",
    "agreement": "AGR-RHEINTAL-ISDA",
    "trades": 16,
-   "netMtm": 2038918
+   "netMtm": -244893
   },
   {
    "id": "NS-RHEINTAL-TKY",

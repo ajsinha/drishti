@@ -1,63 +1,63 @@
 {
  "nettingSetId": "NS-PINNACLE-NY",
  "tradeCount": 23,
- "netMtm": 23965549,
- "collateral": 17910059,
- "eePeak": 23169180,
- "pfePeak": 52017121,
- "limit": 85000000.0,
- "utilisation": 0.612,
- "cva": -153332,
+ "netMtm": 29118918,
+ "collateral": 21761301,
+ "eePeak": 23395456,
+ "pfePeak": 52514927,
+ "limit": 86000000.0,
+ "utilisation": 0.6106,
+ "cva": -157913,
  "profile": [
   {
    "tenor": "0",
-   "ee": 7814250,
-   "pfe": 18776675
+   "ee": 9116377,
+   "pfe": 21641355
   },
   {
    "tenor": "1M",
-   "ee": 9530360,
-   "pfe": 22525517
+   "ee": 10854340,
+   "pfe": 25459360
   },
   {
    "tenor": "3M",
-   "ee": 11910906,
-   "pfe": 27759569
+   "ee": 13218492,
+   "pfe": 30657344
   },
   {
    "tenor": "6M",
-   "ee": 14065901,
-   "pfe": 32486820
+   "ee": 15334313,
+   "pfe": 35298414
   },
   {
    "tenor": "1Y",
-   "ee": 16946420,
-   "pfe": 38810925
+   "ee": 18129218,
+   "pfe": 41434167
   },
   {
    "tenor": "2Y",
-   "ee": 18456746,
-   "pfe": 41911566
+   "ee": 19326712,
+   "pfe": 43832579
   },
   {
    "tenor": "3Y",
-   "ee": 19366509,
-   "pfe": 43797544
+   "ee": 19981590,
+   "pfe": 45150723
   },
   {
    "tenor": "5Y",
-   "ee": 20776164,
-   "pfe": 46771998
+   "ee": 21149229,
+   "pfe": 47592742
   },
   {
    "tenor": "7Y",
-   "ee": 23169180,
-   "pfe": 52017121
+   "ee": 23395456,
+   "pfe": 52514927
   },
   {
    "tenor": "10Y",
-   "ee": 497065,
-   "pfe": 1093543
+   "ee": 603950,
+   "pfe": 1328690
   }
  ],
  "trades": [
@@ -71,28 +71,6 @@
    "maturity": "2035-03-07",
    "maturityBucket": "5-10Y",
    "mtm": 25398239
-  },
-  {
-   "tradeId": "MX-20000098",
-   "product": "European swaption",
-   "assetClass": "Rates",
-   "currency": "USD",
-   "book": "BOOK-RATES-2",
-   "notional": 81000000.0,
-   "maturity": "2026-10-07",
-   "maturityBucket": "0-1Y",
-   "mtm": -2691901
-  },
-  {
-   "tradeId": "MX-20000097",
-   "product": "European swaption",
-   "assetClass": "Rates",
-   "currency": "USD",
-   "book": "BOOK-RATES-1",
-   "notional": 160000000.0,
-   "maturity": "2026-10-07",
-   "maturityBucket": "0-1Y",
-   "mtm": -2322720
   },
   {
    "tradeId": "END-1000056",
@@ -161,6 +139,17 @@
    "mtm": -996256
   },
   {
+   "tradeId": "MX-20000088",
+   "product": "Interest rate floor",
+   "assetClass": "Rates",
+   "currency": "CHF",
+   "book": "BOOK-RATES-2",
+   "notional": 37000000.0,
+   "maturity": "2027-04-28",
+   "maturityBucket": "0-1Y",
+   "mtm": 707908
+  },
+  {
    "tradeId": "MX-20000110",
    "product": "American swaption",
    "assetClass": "Rates",
@@ -181,6 +170,17 @@
    "maturity": "2027-05-03",
    "maturityBucket": "0-1Y",
    "mtm": -567489
+  },
+  {
+   "tradeId": "MX-20000098",
+   "product": "European swaption",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-2",
+   "notional": 81000000.0,
+   "maturity": "2029-09-25",
+   "maturityBucket": "2-5Y",
+   "mtm": -522885
   },
   {
    "tradeId": "MX-20000144",
@@ -227,17 +227,6 @@
    "mtm": -287615
   },
   {
-   "tradeId": "MX-20000088",
-   "product": "Interest rate floor",
-   "assetClass": "Rates",
-   "currency": "CHF",
-   "book": "BOOK-RATES-2",
-   "notional": 37000000.0,
-   "maturity": "2027-04-28",
-   "maturityBucket": "0-1Y",
-   "mtm": 203454
-  },
-  {
    "tradeId": "END-1000085",
    "product": "Freight forward agreement",
    "assetClass": "Commodity",
@@ -247,6 +236,17 @@
    "maturity": "2028-04-13",
    "maturityBucket": "1-2Y",
    "mtm": 176045
+  },
+  {
+   "tradeId": "MX-20000097",
+   "product": "European swaption",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-1",
+   "notional": 160000000.0,
+   "maturity": "2028-07-26",
+   "maturityBucket": "1-2Y",
+   "mtm": 157179
   },
   {
    "tradeId": "CLY-3000002",
@@ -318,7 +318,7 @@
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": 23729246
+   "mtm": 28882615
   },
   {
    "asset": "Commodity",
@@ -349,7 +349,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 47931
+   "netMtm": 58237
   }
  }
 }

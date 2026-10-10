@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-HALCYON",
- "total": 15190360,
- "posted": 14734649,
- "received": 15494167,
+ "total": 14736701,
+ "posted": 14294600,
+ "received": 15031435,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 6835662
+   "im": 6631515
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 1822843
+   "im": 1768404
   },
   {
    "riskClass": "Equity",
-   "im": 2734265
+   "im": 2652606
   },
   {
    "riskClass": "Commodity",
-   "im": 1215229
+   "im": 1178936
   },
   {
    "riskClass": "FX",
-   "im": 2582361
+   "im": 2505239
   }
  ],
  "nettingSet": "NS-HALCYON-LDN",

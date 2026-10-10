@@ -1,8 +1,8 @@
 {
  "nettingSetId": "NS-MERIDIAN-RE-NY",
  "tradeCount": 19,
- "netMtm": -56606054,
- "collateral": -35835815,
+ "netMtm": -58666777,
+ "collateral": -37140405,
  "eePeak": 20461182,
  "pfePeak": 45981301,
  "limit": 71000000.0,
@@ -106,17 +106,6 @@
    "mtm": 4717154
   },
   {
-   "tradeId": "MX-20000019",
-   "product": "Cross-currency swap (non-MtM)",
-   "assetClass": "Rates",
-   "currency": "USD",
-   "book": "BOOK-RATES-3",
-   "notional": 192000000.0,
-   "maturity": "2029-02-12",
-   "maturityBucket": "2-5Y",
-   "mtm": 4154362
-  },
-  {
    "tradeId": "CLY-3000013",
    "product": "Index tranche",
    "assetClass": "Credit",
@@ -148,6 +137,17 @@
    "maturity": "2027-07-29",
    "maturityBucket": "0-1Y",
    "mtm": 2344329
+  },
+  {
+   "tradeId": "MX-20000019",
+   "product": "Cross-currency swap (non-MtM)",
+   "assetClass": "Rates",
+   "currency": "USD",
+   "book": "BOOK-RATES-3",
+   "notional": 192000000.0,
+   "maturity": "2029-02-12",
+   "maturityBucket": "2-5Y",
+   "mtm": 2093639
   },
   {
    "tradeId": "BBG-60000063",
@@ -274,7 +274,7 @@
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": -66792263
+   "mtm": -68852986
   },
   {
    "asset": "Credit",
@@ -309,7 +309,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 113212
+   "netMtm": 117333
   }
  }
 }

@@ -1,29 +1,29 @@
 {
  "calcId": "SIMM-TOKAI",
- "total": 3515496,
- "posted": 3410031,
- "received": 3585806,
+ "total": 3431074,
+ "posted": 3328142,
+ "received": 3499695,
  "version": "ISDA SIMM 2.7",
  "riskClasses": [
   {
    "riskClass": "Interest rate",
-   "im": 1581973
+   "im": 1543983
   },
   {
    "riskClass": "Credit qualifying",
-   "im": 421860
+   "im": 411729
   },
   {
    "riskClass": "Equity",
-   "im": 632789
+   "im": 617593
   },
   {
    "riskClass": "Commodity",
-   "im": 281240
+   "im": 274486
   },
   {
    "riskClass": "FX",
-   "im": 597634
+   "im": 583283
   }
  ],
  "nettingSet": "NS-TOKAI-FRA",

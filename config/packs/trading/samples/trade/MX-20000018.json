@@ -13,9 +13,9 @@
  "maturityDate": "2030-09-25",
  "currency": "USD",
  "notional": 103000000.0,
- "mtm": -142545,
+ "mtm": 588449,
  "mtmCurrency": "USD",
- "pnl1d": -1008,
+ "pnl1d": 4162,
  "counterparty": {
   "id": "CP-KESTREL",
   "name": "Kestrel Global Macro Fund"
@@ -65,495 +65,817 @@
  "legs": [
   {
    "leg": 1,
-   "label": "Pay fixed 3.8400%",
+   "label": "Pay TERM-SOFR-3M",
    "payer": true,
-   "type": "FIXED",
+   "type": "FLOAT",
    "currency": "USD",
    "notional": 103000000.0,
-   "rate": 0.0384,
+   "index": "TERM-SOFR-3M",
+   "spread": 0.0,
    "dayCount": "ACT/360",
-   "frequency": "Annual",
-   "businessDay": "Mod. following",
+   "frequency": "Semi-annual",
+   "resetFrequency": "Quarterly",
+   "businessDayConvention": "Mod. following",
    "calendar": "USNY",
    "paymentLag": "2 business days",
-   "rollConvention": "25",
-   "stub": "None",
+   "compounding": "Simple average of the fixings",
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2025-01-24",
-     "accrualEnd": "2025-09-25",
-     "payDate": "2025-09-29",
+     "type": "Interest",
+     "periodStart": "2025-01-24",
+     "periodEnd": "2025-03-25",
+     "fixingDate": "2025-01-22",
+     "payDate": "2025-03-27",
      "notional": 103000000.0,
-     "rate": 0.0384,
-     "yearFraction": 0.677778,
-     "amount": -2680746.67,
-     "df": 1.0,
+     "index": "TERM-SOFR-3M",
+     "rate": 0.037516,
+     "spread": 0.0,
+     "accrualFactor": 0.166667,
+     "amount": -644024.67,
+     "discountFactor": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-01-22",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.037516,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 2,
-     "accrualStart": "2025-09-25",
-     "accrualEnd": "2026-09-25",
-     "payDate": "2026-09-29",
+     "type": "Interest",
+     "periodStart": "2025-03-25",
+     "periodEnd": "2025-09-25",
+     "fixingDate": "2025-03-21",
+     "payDate": "2025-09-29",
      "notional": 103000000.0,
-     "rate": 0.0384,
-     "yearFraction": 1.013889,
-     "amount": -4010133.33,
-     "df": 1.0,
+     "index": "TERM-SOFR-3M",
+     "rate": 0.037226,
+     "spread": 0.0,
+     "accrualFactor": 0.511111,
+     "amount": -1959742.09,
+     "discountFactor": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-03-21",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.037332,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-06-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.03712,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 3,
-     "accrualStart": "2026-09-25",
-     "accrualEnd": "2027-09-27",
-     "payDate": "2027-09-29",
+     "type": "Interest",
+     "periodStart": "2025-09-25",
+     "periodEnd": "2026-03-25",
+     "fixingDate": "2025-09-23",
+     "payDate": "2026-03-27",
      "notional": 103000000.0,
-     "rate": 0.0384,
-     "yearFraction": 1.019444,
-     "amount": -4032106.67,
-     "df": 0.964527,
-     "pv": -3889076.49,
-     "status": "Fixed"
+     "index": "TERM-SOFR-3M",
+     "rate": 0.036945,
+     "spread": 0.0,
+     "accrualFactor": 0.502778,
+     "amount": -1913225.86,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-09-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.036543,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2025-12-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.037351,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 4,
-     "accrualStart": "2027-09-27",
-     "accrualEnd": "2028-09-25",
-     "payDate": "2028-09-27",
+     "type": "Interest",
+     "periodStart": "2026-03-25",
+     "periodEnd": "2026-09-25",
+     "fixingDate": "2026-03-23",
+     "payDate": "2026-09-29",
      "notional": 103000000.0,
-     "rate": 0.0384,
-     "yearFraction": 1.011111,
-     "amount": -3999146.67,
-     "df": 0.931196,
-     "pv": -3723989.79,
-     "status": "Projected"
+     "index": "TERM-SOFR-3M",
+     "rate": 0.036893,
+     "spread": 0.0,
+     "accrualFactor": 0.511111,
+     "amount": -1942211.49,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-03-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.037267,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-06-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.036519,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 5,
-     "accrualStart": "2028-09-25",
-     "accrualEnd": "2029-09-25",
-     "payDate": "2029-09-27",
+     "type": "Interest",
+     "periodStart": "2026-09-25",
+     "periodEnd": "2027-03-25",
+     "fixingDate": "2026-09-23",
+     "payDate": "2027-03-29",
      "notional": 103000000.0,
-     "rate": 0.0384,
-     "yearFraction": 1.013889,
-     "amount": -4010133.33,
-     "df": 0.898119,
-     "pv": -3601575.94,
-     "status": "Projected"
+     "index": "TERM-SOFR-3M",
+     "rate": 0.036668,
+     "spread": 0.0,
+     "accrualFactor": 0.502778,
+     "amount": -1898908.0,
+     "discountFactor": 0.982167,
+     "pv": -1865044.0,
+     "status": "Partially fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.03726,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-12-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.03607,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 6,
-     "accrualStart": "2029-09-25",
-     "accrualEnd": "2030-09-25",
+     "type": "Interest",
+     "periodStart": "2027-03-25",
+     "periodEnd": "2027-09-27",
+     "fixingDate": "2027-03-23",
+     "payDate": "2027-09-29",
+     "notional": 103000000.0,
+     "index": "TERM-SOFR-3M",
+     "rate": 0.035628,
+     "spread": 0.0,
+     "accrualFactor": 0.516667,
+     "amount": -1896021.14,
+     "discountFactor": 0.964527,
+     "pv": -1828763.93,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-03-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035772,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035494,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-09-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035199,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 7,
+     "type": "Interest",
+     "periodStart": "2027-09-27",
+     "periodEnd": "2028-03-27",
+     "fixingDate": "2027-09-23",
+     "payDate": "2028-03-29",
+     "notional": 103000000.0,
+     "index": "TERM-SOFR-3M",
+     "rate": 0.035176,
+     "spread": 0.0,
+     "accrualFactor": 0.505556,
+     "amount": -1831692.49,
+     "discountFactor": 0.947603,
+     "pv": -1735716.96,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-09-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035293,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-12-22",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035059,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 8,
+     "type": "Interest",
+     "periodStart": "2028-03-27",
+     "periodEnd": "2028-09-25",
+     "fixingDate": "2028-03-23",
+     "payDate": "2028-09-27",
+     "notional": 103000000.0,
+     "index": "TERM-SOFR-3M",
+     "rate": 0.034703,
+     "spread": 0.0,
+     "accrualFactor": 0.505556,
+     "amount": -1807078.92,
+     "discountFactor": 0.931196,
+     "pv": -1682744.85,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2028-03-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.034822,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-06-23",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.034582,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 9,
+     "type": "Interest",
+     "periodStart": "2028-09-25",
+     "periodEnd": "2029-03-26",
+     "fixingDate": "2028-09-21",
+     "payDate": "2029-03-28",
+     "notional": 103000000.0,
+     "index": "TERM-SOFR-3M",
+     "rate": 0.035737,
+     "spread": 0.0,
+     "accrualFactor": 0.505556,
+     "amount": -1860896.14,
+     "discountFactor": 0.91459,
+     "pv": -1701956.44,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2028-09-21",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035675,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-12-21",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.0358,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-03-22",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035678,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 10,
+     "type": "Interest",
+     "periodStart": "2029-03-26",
+     "periodEnd": "2029-09-25",
+     "fixingDate": "2029-03-22",
+     "payDate": "2029-09-27",
+     "notional": 103000000.0,
+     "index": "TERM-SOFR-3M",
+     "rate": 0.035912,
+     "spread": 0.0,
+     "accrualFactor": 0.508333,
+     "amount": -1880308.49,
+     "discountFactor": 0.898119,
+     "pv": -1688740.31,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2029-03-22",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035877,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-06-22",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.035948,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 11,
+     "type": "Interest",
+     "periodStart": "2029-09-25",
+     "periodEnd": "2030-03-25",
+     "fixingDate": "2029-09-21",
+     "payDate": "2030-03-27",
+     "notional": 103000000.0,
+     "index": "TERM-SOFR-3M",
+     "rate": 0.038131,
+     "spread": 0.0,
+     "accrualFactor": 0.502778,
+     "amount": -1974669.08,
+     "discountFactor": 0.881132,
+     "pv": -1739944.87,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2029-09-21",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.037906,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-12-21",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.038359,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 12,
+     "type": "Interest",
+     "periodStart": "2030-03-25",
+     "periodEnd": "2030-09-25",
+     "fixingDate": "2030-03-21",
      "payDate": "2030-09-27",
      "notional": 103000000.0,
-     "rate": 0.0384,
-     "yearFraction": 1.013889,
-     "amount": -4010133.33,
-     "df": 0.863855,
-     "pv": -3464172.75,
-     "status": "Projected"
+     "index": "TERM-SOFR-3M",
+     "rate": 0.03893,
+     "spread": 0.0,
+     "accrualFactor": 0.511111,
+     "amount": -2049421.9,
+     "discountFactor": 0.863855,
+     "pv": -1770402.86,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2030-03-21",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.038739,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2030-06-21",
+       "index": "TERM-SOFR-3M",
+       "tenor": "3M",
+       "rate": 0.03912,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     }
    ],
-   "pv": -14678814.97,
-   "accrued": 0.0,
+   "pv": -14013314.22,
+   "projectedFlows": 8,
+   "legId": "MX-20000018-L1",
    "payReceive": "Pay",
-   "rateType": "Fixed",
-   "index": null,
-   "spread": 0.0
+   "rateType": "Float"
   },
   {
    "leg": 2,
-   "label": "Receive SOFR + 12 bp compounded",
+   "label": "Receive TERM-SOFR-6M + 12.5 bp",
    "payer": false,
    "type": "FLOAT",
    "currency": "USD",
    "notional": 103000000.0,
-   "index": "SOFR",
+   "index": "TERM-SOFR-6M",
    "spread": 0.00125,
    "dayCount": "ACT/360",
-   "frequency": "Quarterly",
-   "businessDay": "Mod. following",
+   "frequency": "Semi-annual",
+   "resetFrequency": "Semi-annual",
+   "businessDayConvention": "Mod. following",
    "calendar": "USNY",
    "paymentLag": "2 business days",
-   "compounding": "Compounded in arrears",
-   "observation": "Lookback 2 business days, no observation shift",
-   "nextReset": "2026-09-30",
-   "projectedFlows": 16,
+   "compounding": "Simple average of the fixings",
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2025-01-24",
-     "accrualEnd": "2025-03-25",
-     "fixingDate": "2025-03-21",
+     "type": "Interest",
+     "periodStart": "2025-01-24",
+     "periodEnd": "2025-03-25",
+     "fixingDate": "2025-01-22",
      "payDate": "2025-03-27",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.036932,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.037916,
      "spread": 0.00125,
-     "yearFraction": 0.166667,
-     "amount": 655457.67,
-     "df": 1.0,
+     "accrualFactor": 0.166667,
+     "amount": 672349.67,
+     "discountFactor": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-01-22",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.037916,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 2,
-     "accrualStart": "2025-03-25",
-     "accrualEnd": "2025-06-25",
-     "fixingDate": "2025-06-23",
-     "payDate": "2025-06-27",
+     "type": "Interest",
+     "periodStart": "2025-03-25",
+     "periodEnd": "2025-09-25",
+     "fixingDate": "2025-03-21",
+     "payDate": "2025-09-29",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.03672,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.037732,
      "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 999454.78,
-     "df": 1.0,
+     "accrualFactor": 0.511111,
+     "amount": 2052185.73,
+     "discountFactor": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-03-21",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.037732,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 3,
-     "accrualStart": "2025-06-25",
-     "accrualEnd": "2025-09-25",
+     "type": "Interest",
+     "periodStart": "2025-09-25",
+     "periodEnd": "2026-03-25",
      "fixingDate": "2025-09-23",
-     "payDate": "2025-09-29",
+     "payDate": "2026-03-27",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.036143,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.036943,
      "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 984266.86,
-     "df": 1.0,
+     "accrualFactor": 0.502778,
+     "amount": 1977866.94,
+     "discountFactor": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-09-23",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.036943,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 4,
-     "accrualStart": "2025-09-25",
-     "accrualEnd": "2025-12-26",
-     "fixingDate": "2025-12-23",
-     "payDate": "2025-12-30",
+     "type": "Interest",
+     "periodStart": "2026-03-25",
+     "periodEnd": "2026-09-25",
+     "fixingDate": "2026-03-23",
+     "payDate": "2026-09-29",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.036951,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.037667,
      "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 1005535.21,
-     "df": 1.0,
+     "accrualFactor": 0.511111,
+     "amount": 2048763.84,
+     "discountFactor": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-03-23",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.037667,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 5,
-     "accrualStart": "2025-12-26",
-     "accrualEnd": "2026-03-25",
-     "fixingDate": "2026-03-23",
-     "payDate": "2026-03-27",
+     "type": "Interest",
+     "periodStart": "2026-09-25",
+     "periodEnd": "2027-03-25",
+     "fixingDate": "2026-09-23",
+     "payDate": "2027-03-29",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.036867,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.03766,
      "spread": 0.00125,
-     "yearFraction": 0.247222,
-     "amount": 970607.05,
-     "df": 1.0,
-     "pv": 0.0,
-     "status": "Settled"
+     "accrualFactor": 0.502778,
+     "amount": 2014997.58,
+     "discountFactor": 0.982167,
+     "pv": 1979063.31,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-23",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.03766,
+       "source": "CME Term SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 6,
-     "accrualStart": "2026-03-25",
-     "accrualEnd": "2026-06-25",
-     "fixingDate": "2026-06-23",
-     "payDate": "2026-06-29",
+     "type": "Interest",
+     "periodStart": "2027-03-25",
+     "periodEnd": "2027-09-27",
+     "fixingDate": "2027-03-23",
+     "payDate": "2027-09-29",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.036119,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.035789,
      "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 983635.12,
-     "df": 1.0,
-     "pv": 0.0,
-     "status": "Settled"
+     "accrualFactor": 0.516667,
+     "amount": 1971070.37,
+     "discountFactor": 0.964527,
+     "pv": 1901150.96,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-03-23",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.035795,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-09-23",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.035199,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 7,
-     "accrualStart": "2026-06-25",
-     "accrualEnd": "2026-09-25",
-     "fixingDate": "2026-09-23",
-     "payDate": "2026-09-29",
+     "type": "Interest",
+     "periodStart": "2027-09-27",
+     "periodEnd": "2028-03-27",
+     "fixingDate": "2027-09-23",
+     "payDate": "2028-03-29",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.03686,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.035332,
      "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 1003139.89,
-     "df": 1.0,
-     "pv": 0.0,
-     "status": "Settled"
+     "accrualFactor": 0.505556,
+     "amount": 1904906.03,
+     "discountFactor": 0.947603,
+     "pv": 1805094.32,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-09-23",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.035332,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 8,
-     "accrualStart": "2026-09-25",
-     "accrualEnd": "2026-12-28",
-     "fixingDate": "2026-12-23",
-     "payDate": "2026-12-30",
+     "type": "Interest",
+     "periodStart": "2028-03-27",
+     "periodEnd": "2028-09-25",
+     "fixingDate": "2028-03-23",
+     "payDate": "2028-09-27",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.03624,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.034856,
      "spread": 0.00125,
-     "yearFraction": 0.261111,
-     "amount": 1008272.44,
-     "df": 0.990922,
-     "pv": 999119.3,
-     "status": "Projected"
+     "accrualFactor": 0.505556,
+     "amount": 1880119.66,
+     "discountFactor": 0.931196,
+     "pv": 1750760.09,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2028-03-23",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.034856,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 9,
-     "accrualStart": "2026-12-28",
-     "accrualEnd": "2027-03-25",
-     "fixingDate": "2027-03-23",
-     "payDate": "2027-03-29",
+     "type": "Interest",
+     "periodStart": "2028-09-25",
+     "periodEnd": "2029-03-26",
+     "fixingDate": "2028-09-21",
+     "payDate": "2029-03-28",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.036061,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.035897,
      "spread": 0.00125,
-     "yearFraction": 0.241667,
-     "amount": 928731.71,
-     "df": 0.982167,
-     "pv": 912169.26,
-     "status": "Projected"
+     "accrualFactor": 0.505556,
+     "amount": 1934315.97,
+     "discountFactor": 0.91459,
+     "pv": 1769105.47,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2028-09-21",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.035898,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2029-03-22",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.035678,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 10,
-     "accrualStart": "2027-03-25",
-     "accrualEnd": "2027-06-25",
-     "fixingDate": "2027-06-23",
-     "payDate": "2027-06-29",
+     "type": "Interest",
+     "periodStart": "2029-03-26",
+     "periodEnd": "2029-09-25",
+     "fixingDate": "2029-03-22",
+     "payDate": "2029-09-27",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.035772,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.036076,
      "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 974489.82,
-     "df": 0.973273,
-     "pv": 948444.76,
-     "status": "Projected"
+     "accrualFactor": 0.508333,
+     "amount": 1954327.15,
+     "discountFactor": 0.898119,
+     "pv": 1755217.86,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2029-03-22",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.036076,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 11,
-     "accrualStart": "2027-06-25",
-     "accrualEnd": "2027-09-27",
-     "fixingDate": "2027-09-23",
-     "payDate": "2027-09-29",
+     "type": "Interest",
+     "periodStart": "2029-09-25",
+     "periodEnd": "2030-03-25",
+     "fixingDate": "2029-09-21",
+     "payDate": "2030-03-27",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.035494,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.038314,
      "spread": 0.00125,
-     "yearFraction": 0.261111,
-     "amount": 988216.4,
-     "df": 0.964527,
-     "pv": 953161.59,
-     "status": "Projected"
+     "accrualFactor": 0.502778,
+     "amount": 2048865.7,
+     "discountFactor": 0.881132,
+     "pv": 1805321.91,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2029-09-21",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.038314,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 12,
-     "accrualStart": "2027-09-27",
-     "accrualEnd": "2027-12-27",
-     "fixingDate": "2027-12-22",
-     "payDate": "2027-12-29",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.035293,
-     "spread": 0.00125,
-     "yearFraction": 0.252778,
-     "amount": 951444.99,
-     "df": 0.955999,
-     "pv": 909580.74,
-     "status": "Projected"
-    },
-    {
-     "n": 13,
-     "accrualStart": "2027-12-27",
-     "accrualEnd": "2028-03-27",
-     "fixingDate": "2028-03-23",
-     "payDate": "2028-03-29",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.035059,
-     "spread": 0.00125,
-     "yearFraction": 0.252778,
-     "amount": 945337.97,
-     "df": 0.947603,
-     "pv": 895804.93,
-     "status": "Projected"
-    },
-    {
-     "n": 14,
-     "accrualStart": "2028-03-27",
-     "accrualEnd": "2028-06-26",
-     "fixingDate": "2028-06-22",
-     "payDate": "2028-06-28",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.034822,
-     "spread": 0.00125,
-     "yearFraction": 0.252778,
-     "amount": 939176.26,
-     "df": 0.939336,
-     "pv": 882201.87,
-     "status": "Projected"
-    },
-    {
-     "n": 15,
-     "accrualStart": "2028-06-26",
-     "accrualEnd": "2028-09-25",
-     "fixingDate": "2028-09-21",
-     "payDate": "2028-09-27",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.034585,
-     "spread": 0.00125,
-     "yearFraction": 0.252778,
-     "amount": 933014.91,
-     "df": 0.931196,
-     "pv": 868819.85,
-     "status": "Projected"
-    },
-    {
-     "n": 16,
-     "accrualStart": "2028-09-25",
-     "accrualEnd": "2028-12-26",
-     "fixingDate": "2028-12-21",
-     "payDate": "2028-12-28",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.035678,
-     "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 972029.89,
-     "df": 0.922776,
-     "pv": 896965.65,
-     "status": "Projected"
-    },
-    {
-     "n": 17,
-     "accrualStart": "2028-12-26",
-     "accrualEnd": "2029-03-26",
-     "fixingDate": "2029-03-22",
-     "payDate": "2029-03-28",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.035801,
-     "spread": 0.00125,
-     "yearFraction": 0.25,
-     "amount": 954054.03,
-     "df": 0.91459,
-     "pv": 872567.99,
-     "status": "Projected"
-    },
-    {
-     "n": 18,
-     "accrualStart": "2029-03-26",
-     "accrualEnd": "2029-06-25",
-     "fixingDate": "2029-06-21",
-     "payDate": "2029-06-27",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.035874,
-     "spread": 0.00125,
-     "yearFraction": 0.252778,
-     "amount": 966576.88,
-     "df": 0.90637,
-     "pv": 876076.41,
-     "status": "Projected"
-    },
-    {
-     "n": 19,
-     "accrualStart": "2029-06-25",
-     "accrualEnd": "2029-09-25",
-     "fixingDate": "2029-09-21",
-     "payDate": "2029-09-27",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.035949,
-     "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 979163.35,
-     "df": 0.898119,
-     "pv": 879404.96,
-     "status": "Projected"
-    },
-    {
-     "n": 20,
-     "accrualStart": "2029-09-25",
-     "accrualEnd": "2029-12-26",
-     "fixingDate": "2029-12-21",
-     "payDate": "2029-12-28",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.037911,
-     "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 1030814.3,
-     "df": 0.88949,
-     "pv": 916899.11,
-     "status": "Projected"
-    },
-    {
-     "n": 21,
-     "accrualStart": "2029-12-26",
-     "accrualEnd": "2030-03-25",
+     "type": "Interest",
+     "periodStart": "2030-03-25",
+     "periodEnd": "2030-09-25",
      "fixingDate": "2030-03-21",
-     "payDate": "2030-03-27",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.038359,
-     "spread": 0.00125,
-     "yearFraction": 0.247222,
-     "amount": 1008594.52,
-     "df": 0.881132,
-     "pv": 888705.29,
-     "status": "Projected"
-    },
-    {
-     "n": 22,
-     "accrualStart": "2030-03-25",
-     "accrualEnd": "2030-06-25",
-     "fixingDate": "2030-06-21",
-     "payDate": "2030-06-27",
-     "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.038739,
-     "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 1052607.71,
-     "df": 0.872493,
-     "pv": 918392.66,
-     "status": "Projected"
-    },
-    {
-     "n": 23,
-     "accrualStart": "2030-06-25",
-     "accrualEnd": "2030-09-25",
-     "fixingDate": "2030-09-23",
      "payDate": "2030-09-27",
      "notional": 103000000.0,
-     "index": "SOFR",
-     "rate": 0.03912,
+     "index": "TERM-SOFR-6M",
+     "rate": 0.039123,
      "spread": 0.00125,
-     "yearFraction": 0.255556,
-     "amount": 1062626.74,
-     "df": 0.863855,
-     "pv": 917955.16,
-     "status": "Projected"
+     "accrualFactor": 0.511111,
+     "amount": 2125414.16,
+     "discountFactor": 0.863855,
+     "pv": 1836049.13,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2030-03-21",
+       "index": "TERM-SOFR-6M",
+       "tenor": "6M",
+       "rate": 0.039123,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     }
    ],
-   "pv": 14536269.53,
+   "pv": 14601763.05,
+   "projectedFlows": 7,
+   "legId": "MX-20000018-L2",
    "payReceive": "Receive",
    "rateType": "Float"
   }
@@ -561,28 +883,28 @@
  "schedule": [
   {
    "payDate": "2025-03-27",
-   "leg": 2,
+   "leg": 1,
    "type": "Float",
-   "rate": 0.036932,
-   "amount": 655457.67,
+   "rate": 0.037516,
+   "amount": -644024.67,
    "pv": 0.0,
    "status": "Settled"
   },
   {
-   "payDate": "2025-06-27",
+   "payDate": "2025-03-27",
    "leg": 2,
    "type": "Float",
-   "rate": 0.03672,
-   "amount": 999454.78,
+   "rate": 0.037916,
+   "amount": 672349.67,
    "pv": 0.0,
    "status": "Settled"
   },
   {
    "payDate": "2025-09-29",
    "leg": 1,
-   "type": "Fixed",
-   "rate": 0.0384,
-   "amount": -2680746.67,
+   "type": "Float",
+   "rate": 0.037226,
+   "amount": -1959742.09,
    "pv": 0.0,
    "status": "Settled"
   },
@@ -590,17 +912,17 @@
    "payDate": "2025-09-29",
    "leg": 2,
    "type": "Float",
-   "rate": 0.036143,
-   "amount": 984266.86,
+   "rate": 0.037732,
+   "amount": 2052185.73,
    "pv": 0.0,
    "status": "Settled"
   },
   {
-   "payDate": "2025-12-30",
-   "leg": 2,
+   "payDate": "2026-03-27",
+   "leg": 1,
    "type": "Float",
-   "rate": 0.036951,
-   "amount": 1005535.21,
+   "rate": 0.036945,
+   "amount": -1913225.86,
    "pv": 0.0,
    "status": "Settled"
   },
@@ -608,26 +930,17 @@
    "payDate": "2026-03-27",
    "leg": 2,
    "type": "Float",
-   "rate": 0.036867,
-   "amount": 970607.05,
-   "pv": 0.0,
-   "status": "Settled"
-  },
-  {
-   "payDate": "2026-06-29",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.036119,
-   "amount": 983635.12,
+   "rate": 0.036943,
+   "amount": 1977866.94,
    "pv": 0.0,
    "status": "Settled"
   },
   {
    "payDate": "2026-09-29",
    "leg": 1,
-   "type": "Fixed",
-   "rate": 0.0384,
-   "amount": -4010133.33,
+   "type": "Float",
+   "rate": 0.036893,
+   "amount": -1942211.49,
    "pv": 0.0,
    "status": "Settled"
   },
@@ -635,273 +948,237 @@
    "payDate": "2026-09-29",
    "leg": 2,
    "type": "Float",
-   "rate": 0.03686,
-   "amount": 1003139.89,
+   "rate": 0.037667,
+   "amount": 2048763.84,
    "pv": 0.0,
    "status": "Settled"
   },
   {
-   "payDate": "2026-12-30",
-   "leg": 2,
+   "payDate": "2027-03-29",
+   "leg": 1,
    "type": "Float",
-   "rate": 0.03624,
-   "amount": 1008272.44,
-   "pv": 999119.3,
-   "status": "Projected"
+   "rate": 0.036668,
+   "amount": -1898908.0,
+   "pv": -1865044.0,
+   "status": "Partially fixed"
   },
   {
    "payDate": "2027-03-29",
    "leg": 2,
    "type": "Float",
-   "rate": 0.036061,
-   "amount": 928731.71,
-   "pv": 912169.26,
-   "status": "Projected"
-  },
-  {
-   "payDate": "2027-06-29",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.035772,
-   "amount": 974489.82,
-   "pv": 948444.76,
-   "status": "Projected"
-  },
-  {
-   "payDate": "2027-09-29",
-   "leg": 1,
-   "type": "Fixed",
-   "rate": 0.0384,
-   "amount": -4032106.67,
-   "pv": -3889076.49,
+   "rate": 0.03766,
+   "amount": 2014997.58,
+   "pv": 1979063.31,
    "status": "Fixed"
   },
   {
    "payDate": "2027-09-29",
-   "leg": 2,
+   "leg": 1,
    "type": "Float",
-   "rate": 0.035494,
-   "amount": 988216.4,
-   "pv": 953161.59,
+   "rate": 0.035628,
+   "amount": -1896021.14,
+   "pv": -1828763.93,
    "status": "Projected"
   },
   {
-   "payDate": "2027-12-29",
+   "payDate": "2027-09-29",
    "leg": 2,
    "type": "Float",
-   "rate": 0.035293,
-   "amount": 951444.99,
-   "pv": 909580.74,
+   "rate": 0.035789,
+   "amount": 1971070.37,
+   "pv": 1901150.96,
+   "status": "Projected"
+  },
+  {
+   "payDate": "2028-03-29",
+   "leg": 1,
+   "type": "Float",
+   "rate": 0.035176,
+   "amount": -1831692.49,
+   "pv": -1735716.96,
    "status": "Projected"
   },
   {
    "payDate": "2028-03-29",
    "leg": 2,
    "type": "Float",
-   "rate": 0.035059,
-   "amount": 945337.97,
-   "pv": 895804.93,
-   "status": "Projected"
-  },
-  {
-   "payDate": "2028-06-28",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.034822,
-   "amount": 939176.26,
-   "pv": 882201.87,
+   "rate": 0.035332,
+   "amount": 1904906.03,
+   "pv": 1805094.32,
    "status": "Projected"
   },
   {
    "payDate": "2028-09-27",
    "leg": 1,
-   "type": "Fixed",
-   "rate": 0.0384,
-   "amount": -3999146.67,
-   "pv": -3723989.79,
+   "type": "Float",
+   "rate": 0.034703,
+   "amount": -1807078.92,
+   "pv": -1682744.85,
    "status": "Projected"
   },
   {
    "payDate": "2028-09-27",
    "leg": 2,
    "type": "Float",
-   "rate": 0.034585,
-   "amount": 933014.91,
-   "pv": 868819.85,
+   "rate": 0.034856,
+   "amount": 1880119.66,
+   "pv": 1750760.09,
    "status": "Projected"
   },
   {
-   "payDate": "2028-12-28",
-   "leg": 2,
+   "payDate": "2029-03-28",
+   "leg": 1,
    "type": "Float",
-   "rate": 0.035678,
-   "amount": 972029.89,
-   "pv": 896965.65,
+   "rate": 0.035737,
+   "amount": -1860896.14,
+   "pv": -1701956.44,
    "status": "Projected"
   },
   {
    "payDate": "2029-03-28",
    "leg": 2,
    "type": "Float",
-   "rate": 0.035801,
-   "amount": 954054.03,
-   "pv": 872567.99,
-   "status": "Projected"
-  },
-  {
-   "payDate": "2029-06-27",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.035874,
-   "amount": 966576.88,
-   "pv": 876076.41,
+   "rate": 0.035897,
+   "amount": 1934315.97,
+   "pv": 1769105.47,
    "status": "Projected"
   },
   {
    "payDate": "2029-09-27",
    "leg": 1,
-   "type": "Fixed",
-   "rate": 0.0384,
-   "amount": -4010133.33,
-   "pv": -3601575.94,
+   "type": "Float",
+   "rate": 0.035912,
+   "amount": -1880308.49,
+   "pv": -1688740.31,
    "status": "Projected"
   },
   {
    "payDate": "2029-09-27",
    "leg": 2,
    "type": "Float",
-   "rate": 0.035949,
-   "amount": 979163.35,
-   "pv": 879404.96,
+   "rate": 0.036076,
+   "amount": 1954327.15,
+   "pv": 1755217.86,
    "status": "Projected"
   },
   {
-   "payDate": "2029-12-28",
-   "leg": 2,
+   "payDate": "2030-03-27",
+   "leg": 1,
    "type": "Float",
-   "rate": 0.037911,
-   "amount": 1030814.3,
-   "pv": 916899.11,
+   "rate": 0.038131,
+   "amount": -1974669.08,
+   "pv": -1739944.87,
    "status": "Projected"
   },
   {
    "payDate": "2030-03-27",
    "leg": 2,
    "type": "Float",
-   "rate": 0.038359,
-   "amount": 1008594.52,
-   "pv": 888705.29,
-   "status": "Projected"
-  },
-  {
-   "payDate": "2030-06-27",
-   "leg": 2,
-   "type": "Float",
-   "rate": 0.038739,
-   "amount": 1052607.71,
-   "pv": 918392.66,
+   "rate": 0.038314,
+   "amount": 2048865.7,
+   "pv": 1805321.91,
    "status": "Projected"
   },
   {
    "payDate": "2030-09-27",
    "leg": 1,
-   "type": "Fixed",
-   "rate": 0.0384,
-   "amount": -4010133.33,
-   "pv": -3464172.75,
+   "type": "Float",
+   "rate": 0.03893,
+   "amount": -2049421.9,
+   "pv": -1770402.86,
    "status": "Projected"
   },
   {
    "payDate": "2030-09-27",
    "leg": 2,
    "type": "Float",
-   "rate": 0.03912,
-   "amount": 1062626.74,
-   "pv": 917955.16,
+   "rate": 0.039123,
+   "amount": 2125414.16,
+   "pv": 1836049.13,
    "status": "Projected"
   }
  ],
- "nextIndex": 9,
+ "nextIndex": 8,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": 6500
+   "pnl": 26832
   },
   {
    "date": "2026-09-04",
-   "pnl": -1863
+   "pnl": -7691
   },
   {
    "date": "2026-09-07",
-   "pnl": 4627
+   "pnl": 19100
   },
   {
    "date": "2026-09-08",
-   "pnl": -2454
+   "pnl": -10132
   },
   {
    "date": "2026-09-09",
-   "pnl": -335
+   "pnl": -1385
   },
   {
    "date": "2026-09-10",
-   "pnl": 241
+   "pnl": 994
   },
   {
    "date": "2026-09-11",
-   "pnl": -3877
+   "pnl": -16004
   },
   {
    "date": "2026-09-14",
-   "pnl": -1478
+   "pnl": -6101
   },
   {
    "date": "2026-09-15",
-   "pnl": -8677
+   "pnl": -35821
   },
   {
    "date": "2026-09-16",
-   "pnl": -9241
+   "pnl": -38150
   },
   {
    "date": "2026-09-17",
-   "pnl": -5530
+   "pnl": -22830
   },
   {
    "date": "2026-09-18",
-   "pnl": 8554
+   "pnl": 35314
   },
   {
    "date": "2026-09-21",
-   "pnl": -3613
+   "pnl": -14914
   },
   {
    "date": "2026-09-22",
-   "pnl": -4993
+   "pnl": -20611
   },
   {
    "date": "2026-09-23",
-   "pnl": -3180
+   "pnl": -13126
   },
   {
    "date": "2026-09-24",
-   "pnl": -20
+   "pnl": -84
   },
   {
    "date": "2026-09-25",
-   "pnl": 3259
+   "pnl": 13452
   },
   {
    "date": "2026-09-28",
-   "pnl": -214
+   "pnl": -883
   },
   {
    "date": "2026-09-29",
-   "pnl": -3018
+   "pnl": -12457
   },
   {
    "date": "2026-09-30",
-   "pnl": -362
+   "pnl": -1495
   }
  ],
  "execution": {
@@ -955,10 +1232,10 @@
     "event": "Cash settled",
     "status": "Settled",
     "description": "USD payment settled",
-    "amount": 1003139.89
+    "amount": 2048763.84
    },
    {
-    "date": "2026-12-30",
+    "date": "2027-03-29",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
@@ -1009,8 +1286,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": -142545,
-  "cleanPv": -142545.0,
+  "npv": 588449,
+  "cleanPv": 588449.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Multi-curve OIS discounting",
@@ -1025,36 +1302,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": -141537,
+   "pnl": 584287,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": 333
+   "pnl": 1376
   },
   {
    "step": "Roll-down",
-   "pnl": 13
+   "pnl": 54
   },
   {
    "step": "Rates delta",
-   "pnl": -1348
+   "pnl": 2659
   },
   {
    "step": "FX delta",
-   "pnl": -8
+   "pnl": -33
   },
   {
    "step": "Vol (vega)",
-   "pnl": 1
+   "pnl": 3
   },
   {
    "step": "Theta",
-   "pnl": 13
+   "pnl": 54
   },
   {
    "step": "Unexplained",
-   "pnl": -12
+   "pnl": 49
   }
  ],
  "_meta": {
@@ -1062,7 +1339,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 1315
+   "mtm": 2207
   }
  }
 }

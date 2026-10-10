@@ -6,7 +6,7 @@
  "sector": "Government",
  "country": "US",
  "type": "Municipality",
- "netMtm": -50322832,
+ "netMtm": -50059677,
  "pfePeak": 73339836,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-CORAL-NY",
    "agreement": "AGR-CORAL-ISDA",
    "trades": 25,
-   "netMtm": -48748718
+   "netMtm": -48485563
   },
   {
    "id": "NS-CORAL-TKY",

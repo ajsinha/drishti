@@ -13,9 +13,9 @@
  "maturityDate": "2028-06-29",
  "currency": "JPY",
  "notional": 190000000.0,
- "mtm": -2636721,
+ "mtm": 16,
  "mtmCurrency": "USD",
- "pnl1d": 83998,
+ "pnl1d": 0,
  "counterparty": {
   "id": "CP-KESTREL",
   "name": "Kestrel Global Macro Fund"
@@ -34,207 +34,541 @@
   "premium": 1131707.0
  },
  "risk": {
-  "dv01": 39787,
-  "vega": 350752
+  "dv01": 42033,
+  "vega": 681949
  },
  "sensitivities": [
   {
    "bucket": "3M",
-   "dv01": 2652,
-   "vega": 23383
+   "dv01": 2802,
+   "vega": 45463
   },
   {
    "bucket": "6M",
-   "dv01": 5305,
-   "vega": 46767
+   "dv01": 5604,
+   "vega": 90927
   },
   {
    "bucket": "1Y",
-   "dv01": 7957,
-   "vega": 70150
+   "dv01": 8407,
+   "vega": 136390
   },
   {
    "bucket": "2Y",
-   "dv01": 10610,
-   "vega": 93534
+   "dv01": 11209,
+   "vega": 181853
   },
   {
    "bucket": "3Y",
-   "dv01": 13262,
-   "vega": 116917
+   "dv01": 14011,
+   "vega": 227316
+  }
+ ],
+ "legs": [
+  {
+   "leg": 1,
+   "label": "Buy cap 4.7883% on TERM-TONA-3M",
+   "payer": false,
+   "type": "CAPLETS",
+   "currency": "JPY",
+   "notional": 190000000.0,
+   "index": "TERM-TONA-3M",
+   "spread": 0.0,
+   "strike": 0.047883,
+   "dayCount": "ACT/360",
+   "frequency": "Quarterly",
+   "resetFrequency": "Quarterly",
+   "businessDayConvention": "Mod. following",
+   "calendar": "JPTO",
+   "paymentLag": "2 business days",
+   "cashflows": [
+    {
+     "n": 1,
+     "type": "Caplet",
+     "periodStart": "2025-12-17",
+     "periodEnd": "2025-12-29",
+     "fixingDate": "2025-12-15",
+     "payDate": "2026-01-05",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.005847,
+     "accrualFactor": 0.033333,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-12-15",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.005847,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "type": "Caplet",
+     "periodStart": "2025-12-29",
+     "periodEnd": "2026-03-30",
+     "fixingDate": "2025-12-25",
+     "payDate": "2026-04-01",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.006242,
+     "accrualFactor": 0.252778,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2025-12-25",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.006242,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 3,
+     "type": "Caplet",
+     "periodStart": "2026-03-30",
+     "periodEnd": "2026-06-29",
+     "fixingDate": "2026-03-26",
+     "payDate": "2026-07-01",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.005969,
+     "accrualFactor": 0.252778,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 1.0,
+     "pv": 0.0,
+     "status": "Settled",
+     "fixings": [
+      {
+       "fixingDate": "2026-03-26",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.005969,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 4,
+     "type": "Caplet",
+     "periodStart": "2026-06-29",
+     "periodEnd": "2026-09-29",
+     "fixingDate": "2026-06-25",
+     "payDate": "2026-10-01",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.005355,
+     "accrualFactor": 0.255556,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 0.999985,
+     "pv": 0.0,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-06-25",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.005355,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 5,
+     "type": "Caplet",
+     "periodStart": "2026-09-29",
+     "periodEnd": "2026-12-29",
+     "fixingDate": "2026-09-25",
+     "payDate": "2027-01-04",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.006163,
+     "accrualFactor": 0.252778,
+     "volatilityBp": null,
+     "amount": 0.0,
+     "discountFactor": 0.998503,
+     "pv": 0.0,
+     "status": "Fixed",
+     "fixings": [
+      {
+       "fixingDate": "2026-09-25",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.006163,
+       "source": "Refinitiv TONA term",
+       "status": "Fixed"
+      }
+     ]
+    },
+    {
+     "n": 6,
+     "type": "Caplet",
+     "periodStart": "2026-12-29",
+     "periodEnd": "2027-03-29",
+     "fixingDate": "2026-12-25",
+     "payDate": "2027-03-31",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.006268,
+     "accrualFactor": 0.25,
+     "volatilityBp": 88.0,
+     "amount": 0.0,
+     "discountFactor": 0.997003,
+     "pv": 0.0,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2026-12-25",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.006268,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 7,
+     "type": "Caplet",
+     "periodStart": "2027-03-29",
+     "periodEnd": "2027-06-29",
+     "fixingDate": "2027-03-25",
+     "payDate": "2027-07-01",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.006506,
+     "accrualFactor": 0.255556,
+     "volatilityBp": 88.0,
+     "amount": 0.0,
+     "discountFactor": 0.995347,
+     "pv": 0.0,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-03-25",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.006506,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 8,
+     "type": "Caplet",
+     "periodStart": "2027-06-29",
+     "periodEnd": "2027-09-29",
+     "fixingDate": "2027-06-25",
+     "payDate": "2027-10-01",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.006877,
+     "accrualFactor": 0.255556,
+     "volatilityBp": 88.0,
+     "amount": 0.0,
+     "discountFactor": 0.993599,
+     "pv": 0.0,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-06-25",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.006877,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 9,
+     "type": "Caplet",
+     "periodStart": "2027-09-29",
+     "periodEnd": "2027-12-29",
+     "fixingDate": "2027-09-27",
+     "payDate": "2028-01-04",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.007346,
+     "accrualFactor": 0.252778,
+     "volatilityBp": 88.0,
+     "amount": 0.16,
+     "discountFactor": 0.991671,
+     "pv": 0.16,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-09-27",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.007346,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 10,
+     "type": "Caplet",
+     "periodStart": "2027-12-29",
+     "periodEnd": "2028-03-29",
+     "fixingDate": "2027-12-27",
+     "payDate": "2028-03-31",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.007759,
+     "accrualFactor": 0.252778,
+     "volatilityBp": 88.0,
+     "amount": 2.22,
+     "discountFactor": 0.989811,
+     "pv": 2.2,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2027-12-27",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.007759,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    },
+    {
+     "n": 11,
+     "type": "Caplet",
+     "periodStart": "2028-03-29",
+     "periodEnd": "2028-06-29",
+     "fixingDate": "2028-03-27",
+     "payDate": "2028-07-03",
+     "notional": 190000000.0,
+     "index": "TERM-TONA-3M",
+     "strike": 0.047883,
+     "rate": 0.008173,
+     "accrualFactor": 0.255556,
+     "volatilityBp": 88.0,
+     "amount": 13.73,
+     "discountFactor": 0.9877,
+     "pv": 13.56,
+     "status": "Projected",
+     "fixings": [
+      {
+       "fixingDate": "2028-03-27",
+       "index": "TERM-TONA-3M",
+       "tenor": "3M",
+       "rate": 0.008173,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
+    }
+   ],
+   "rateType": "Option",
+   "payReceive": "Receive",
+   "legId": "MX-20000079-L1",
+   "pv": 15.92,
+   "projectedFlows": 6
   }
  ],
  "schedule": [
   {
-   "fixingDate": "2026-03-17",
-   "period": "2026-03-17..2026-06-17",
-   "index": "TONA",
-   "rate": 0.021684,
+   "fixingDate": "2025-12-15",
+   "period": "2025-12-17..2025-12-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.005847,
    "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-06-17",
-   "period": "2026-06-17..2026-09-17",
-   "index": "TONA",
-   "rate": 0.044102,
-   "payoff": 432345.0,
+   "fixingDate": "2025-12-25",
+   "period": "2025-12-29..2026-03-30",
+   "index": "TERM-TONA-3M",
+   "rate": 0.006242,
+   "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-09-17",
-   "period": "2026-09-17..2026-12-17",
-   "index": "TONA",
-   "rate": 0.039508,
-   "payoff": 214130.0,
+   "fixingDate": "2026-03-26",
+   "period": "2026-03-30..2026-06-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.005969,
+   "payoff": 0.0,
    "status": "Fixed"
   },
   {
-   "fixingDate": "2026-12-17",
-   "period": "2026-12-17..2027-03-17",
-   "index": "TONA",
-   "rate": 0.02087,
+   "fixingDate": "2026-06-25",
+   "period": "2026-06-29..2026-09-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.005355,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-09-25",
+   "period": "2026-09-29..2026-12-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.006163,
+   "payoff": 0.0,
+   "status": "Fixed"
+  },
+  {
+   "fixingDate": "2026-12-25",
+   "period": "2026-12-29..2027-03-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.006268,
    "payoff": 0.0,
    "status": "Pending"
   },
   {
-   "fixingDate": "2027-03-17",
-   "period": "2027-03-17..2027-06-17",
-   "index": "TONA",
-   "rate": 0.045534,
-   "payoff": 500365.0,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-06-17",
-   "period": "2027-06-17..2027-09-17",
-   "index": "TONA",
-   "rate": 0.025604,
+   "fixingDate": "2027-03-25",
+   "period": "2027-03-29..2027-06-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.006506,
    "payoff": 0.0,
    "status": "Pending"
   },
   {
-   "fixingDate": "2027-09-17",
-   "period": "2027-09-17..2027-12-17",
-   "index": "TONA",
-   "rate": 0.040793,
-   "payoff": 275167.5,
-   "status": "Pending"
-  },
-  {
-   "fixingDate": "2027-12-17",
-   "period": "2027-12-17..2028-03-17",
-   "index": "TONA",
-   "rate": 0.023482,
+   "fixingDate": "2027-06-25",
+   "period": "2027-06-29..2027-09-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.006877,
    "payoff": 0.0,
    "status": "Pending"
   },
   {
-   "fixingDate": "2028-03-17",
-   "period": "2028-03-17..2028-06-17",
-   "index": "TONA",
-   "rate": 0.020414,
-   "payoff": 0.0,
+   "fixingDate": "2027-09-27",
+   "period": "2027-09-29..2027-12-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.007346,
+   "payoff": 0.16,
    "status": "Pending"
   },
   {
-   "fixingDate": "2028-06-17",
-   "period": "2028-06-17..2028-09-17",
-   "index": "TONA",
-   "rate": 0.039066,
-   "payoff": 193135.0,
+   "fixingDate": "2027-12-27",
+   "period": "2027-12-29..2028-03-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.007759,
+   "payoff": 2.22,
    "status": "Pending"
   },
   {
-   "fixingDate": "2028-06-29",
-   "period": "2028-06-29..2028-09-29",
-   "index": "TONA",
-   "rate": 0.027134,
-   "payoff": 0.0,
+   "fixingDate": "2028-03-27",
+   "period": "2028-03-29..2028-06-29",
+   "index": "TERM-TONA-3M",
+   "rate": 0.008173,
+   "payoff": 13.73,
    "status": "Pending"
   }
  ],
- "nextIndex": 3,
+ "nextIndex": 5,
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -75288
+   "pnl": -2855
   },
   {
    "date": "2026-09-04",
-   "pnl": 48713
+   "pnl": 1847
   },
   {
    "date": "2026-09-07",
-   "pnl": 146780
+   "pnl": 5567
   },
   {
    "date": "2026-09-08",
-   "pnl": -86557
+   "pnl": -3283
   },
   {
    "date": "2026-09-09",
-   "pnl": -94744
+   "pnl": -3593
   },
   {
    "date": "2026-09-10",
-   "pnl": -47255
+   "pnl": -1792
   },
   {
    "date": "2026-09-11",
-   "pnl": 13268
+   "pnl": 503
   },
   {
    "date": "2026-09-14",
-   "pnl": -31640
+   "pnl": -1200
   },
   {
    "date": "2026-09-15",
-   "pnl": 22538
+   "pnl": 855
   },
   {
    "date": "2026-09-16",
-   "pnl": -4398
+   "pnl": -167
   },
   {
    "date": "2026-09-17",
-   "pnl": 127842
+   "pnl": 4849
   },
   {
    "date": "2026-09-18",
-   "pnl": 23281
+   "pnl": 883
   },
   {
    "date": "2026-09-21",
-   "pnl": -51562
+   "pnl": -1956
   },
   {
    "date": "2026-09-22",
-   "pnl": 155000
+   "pnl": 5879
   },
   {
    "date": "2026-09-23",
-   "pnl": -52641
+   "pnl": -1996
   },
   {
    "date": "2026-09-24",
-   "pnl": -210048
+   "pnl": -7966
   },
   {
    "date": "2026-09-25",
-   "pnl": 9442
+   "pnl": 358
   },
   {
    "date": "2026-09-28",
-   "pnl": -134572
+   "pnl": -5104
   },
   {
    "date": "2026-09-29",
-   "pnl": 84003
+   "pnl": 3186
   },
   {
    "date": "2026-09-30",
-   "pnl": -29828
+   "pnl": -1131
   }
  ],
  "execution": {
@@ -249,7 +583,7 @@
  },
  "lifecycle": {
   "status": "Live",
-  "version": 1,
+  "version": 2,
   "events": [
    {
     "version": 1,
@@ -257,11 +591,18 @@
     "reason": "Trade captured",
     "at": "2025-12-15T12:01:00Z",
     "by": "fo.capture"
+   },
+   {
+    "version": 2,
+    "event": "Amendment",
+    "reason": "Notional corrected",
+    "at": "2026-01-06T12:01:00Z",
+    "by": "fo.capture"
    }
   ],
-  "sourceSystem": "Murex",
+  "sourceSystem": "Calypso",
   "createdAt": "2025-12-15T12:01:00Z",
-  "lastModifiedAt": "2025-12-15T12:01:00Z",
+  "lastModifiedAt": "2026-01-06T12:01:00Z",
   "lastModifiedBy": "fo.capture",
   "timeline": [
    {
@@ -277,14 +618,20 @@
     "description": "Matched on MarkitWire (MA507196821)"
    },
    {
-    "date": "2026-09-17",
+    "date": "2026-01-06",
+    "event": "Amended",
+    "status": "Done",
+    "description": "Notional corrected (version 2, by fo.capture)"
+   },
+   {
+    "date": "2026-09-25",
     "event": "Cash settled",
     "status": "Settled",
     "description": "JPY payment settled",
-    "amount": 214130.0
+    "amount": 0.0
    },
    {
-    "date": "2026-12-17",
+    "date": "2026-12-25",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
@@ -335,8 +682,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": -2636721,
-  "cleanPv": -2636721.0,
+  "npv": 16,
+  "cleanPv": 16.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Black / Bachelier",
@@ -351,36 +698,36 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": -2720719,
+   "pnl": 16,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": 5199
+   "pnl": 62
   },
   {
    "step": "Roll-down",
-   "pnl": 4260
+   "pnl": 51
   },
   {
    "step": "Rates delta",
-   "pnl": -14988
+   "pnl": -1193
   },
   {
    "step": "FX delta",
-   "pnl": 4702
+   "pnl": 56
   },
   {
    "step": "Vol (vega)",
-   "pnl": 97560
+   "pnl": 1161
   },
   {
    "step": "Theta",
-   "pnl": -11476
+   "pnl": -137
   },
   {
    "step": "Unexplained",
-   "pnl": -1259
+   "pnl": 0
   }
  ],
  "_meta": {
@@ -388,7 +735,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 7173
+   "mtm": 1900
   }
  }
 }

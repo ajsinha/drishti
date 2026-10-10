@@ -59,7 +59,6 @@
    "rate": 0.03348,
    "dayCount": "ACT/360",
    "frequency": "Annual",
-   "businessDay": "Mod. following",
    "calendar": "USNY",
    "paymentLag": "2 business days",
    "rollConvention": "24",
@@ -67,42 +66,45 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2026-03-19",
-     "accrualEnd": "2026-04-24",
      "payDate": "2026-04-28",
      "notional": 249000000.0,
      "rate": 0.03348,
-     "yearFraction": 0.1,
      "amount": 833652.0,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-03-19",
+     "periodEnd": "2026-04-24",
+     "accrualFactor": 0.1,
+     "discountFactor": 1.0,
+     "type": "Interest"
     },
     {
      "n": 2,
-     "accrualStart": "2026-04-24",
-     "accrualEnd": "2027-04-26",
      "payDate": "2027-04-28",
      "notional": 249000000.0,
      "rate": 0.03348,
-     "yearFraction": 1.019444,
      "amount": 8498619.0,
-     "df": 0.97925,
      "pv": 8322271.45,
-     "status": "Fixed"
+     "status": "Fixed",
+     "periodStart": "2026-04-24",
+     "periodEnd": "2027-04-26",
+     "accrualFactor": 1.019444,
+     "discountFactor": 0.97925,
+     "type": "Interest"
     },
     {
      "n": 3,
-     "accrualStart": "2027-04-26",
-     "accrualEnd": "2028-04-24",
      "payDate": "2028-04-26",
      "notional": 249000000.0,
      "rate": 0.03348,
-     "yearFraction": 1.011111,
      "amount": 8429148.0,
-     "df": 0.945045,
      "pv": 7965927.78,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-04-26",
+     "periodEnd": "2028-04-24",
+     "accrualFactor": 1.011111,
+     "discountFactor": 0.945045,
+     "type": "Interest"
     }
    ],
    "pv": 16288199.23,
@@ -110,7 +112,9 @@
    "payReceive": "Receive",
    "rateType": "Fixed",
    "index": null,
-   "spread": 0.0
+   "spread": 0.0,
+   "legId": "MX-20000165-L1",
+   "businessDayConvention": "Mod. following"
   },
   {
    "leg": 2,
@@ -123,7 +127,6 @@
    "spread": 0.0,
    "dayCount": "ACT/360",
    "frequency": "Quarterly",
-   "businessDay": "Mod. following",
    "calendar": "USNY",
    "paymentLag": "2 business days",
    "compounding": "Compounded in arrears",
@@ -133,152 +136,406 @@
    "cashflows": [
     {
      "n": 1,
-     "accrualStart": "2026-03-19",
-     "accrualEnd": "2026-04-24",
      "fixingDate": "2026-04-22",
      "payDate": "2026-04-28",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.036218,
      "spread": 0.0,
-     "yearFraction": 0.1,
      "amount": -901828.2,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-03-19",
+     "periodEnd": "2026-04-24",
+     "accrualFactor": 0.1,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-03-19",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036219,
+       "source": "NY Fed SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-04-19",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036212,
+       "source": "NY Fed SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 2,
-     "accrualStart": "2026-04-24",
-     "accrualEnd": "2026-07-24",
      "fixingDate": "2026-07-22",
      "payDate": "2026-07-28",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.037055,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": -2332303.46,
-     "df": 1.0,
      "pv": 0.0,
-     "status": "Settled"
+     "status": "Settled",
+     "periodStart": "2026-04-24",
+     "periodEnd": "2026-07-24",
+     "accrualFactor": 0.252778,
+     "discountFactor": 1.0,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-04-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.037039,
+       "source": "NY Fed SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-05-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.037061,
+       "source": "NY Fed SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-06-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.037065,
+       "source": "NY Fed SOFR",
+       "status": "Fixed"
+      }
+     ]
     },
     {
      "n": 3,
-     "accrualStart": "2026-07-24",
-     "accrualEnd": "2026-10-26",
      "fixingDate": "2026-10-22",
      "payDate": "2026-10-28",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.036169,
      "spread": 0.0,
-     "yearFraction": 0.261111,
      "amount": -2351617.78,
-     "df": 0.997194,
      "pv": -2345020.16,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-07-24",
+     "periodEnd": "2026-10-26",
+     "accrualFactor": 0.261111,
+     "discountFactor": 0.997194,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-07-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036172,
+       "source": "NY Fed SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-08-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.03617,
+       "source": "NY Fed SOFR",
+       "status": "Fixed"
+      },
+      {
+       "fixingDate": "2026-09-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036166,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-10-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036144,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 4,
-     "accrualStart": "2026-10-26",
-     "accrualEnd": "2027-01-25",
      "fixingDate": "2027-01-21",
      "payDate": "2027-01-27",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.036196,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": -2278213.19,
-     "df": 0.988154,
      "pv": -2251226.41,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2026-10-26",
+     "periodEnd": "2027-01-25",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.988154,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2026-10-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036205,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-11-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036202,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2026-12-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036181,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 5,
-     "accrualStart": "2027-01-25",
-     "accrualEnd": "2027-04-26",
      "fixingDate": "2027-04-22",
      "payDate": "2027-04-28",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.03598,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": -2264623.16,
-     "df": 0.97925,
      "pv": -2217631.91,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-01-25",
+     "periodEnd": "2027-04-26",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.97925,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-01-25",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.036033,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-02-25",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.03602,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-03-25",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035894,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-04-25",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035878,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 6,
-     "accrualStart": "2027-04-26",
-     "accrualEnd": "2027-07-26",
      "fixingDate": "2027-07-22",
      "payDate": "2027-07-28",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.035671,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": -2245178.97,
-     "df": 0.970501,
      "pv": -2178947.35,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-04-26",
+     "periodEnd": "2027-07-26",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.970501,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-04-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035714,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-05-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035658,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-06-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035641,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 7,
-     "accrualStart": "2027-07-26",
-     "accrualEnd": "2027-10-25",
      "fixingDate": "2027-10-21",
      "payDate": "2027-10-27",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.035421,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": -2229445.92,
-     "df": 0.961889,
      "pv": -2144479.93,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-07-26",
+     "periodEnd": "2027-10-25",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.961889,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-07-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035434,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-08-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.03542,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-09-26",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035407,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 8,
-     "accrualStart": "2027-10-25",
-     "accrualEnd": "2028-01-24",
      "fixingDate": "2028-01-20",
      "payDate": "2028-01-26",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.035223,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": -2216967.52,
-     "df": 0.953402,
      "pv": -2113660.92,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2027-10-25",
+     "periodEnd": "2028-01-24",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.953402,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2027-10-25",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.03523,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-11-25",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035224,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2027-12-25",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035215,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     },
     {
      "n": 9,
-     "accrualStart": "2028-01-24",
-     "accrualEnd": "2028-04-24",
      "fixingDate": "2028-04-20",
      "payDate": "2028-04-26",
      "notional": 249000000.0,
      "index": "SOFR",
      "rate": 0.034986,
      "spread": 0.0,
-     "yearFraction": 0.252778,
      "amount": -2202071.11,
-     "df": 0.945045,
      "pv": -2081057.23,
-     "status": "Projected"
+     "status": "Projected",
+     "periodStart": "2028-01-24",
+     "periodEnd": "2028-04-24",
+     "accrualFactor": 0.252778,
+     "discountFactor": 0.945045,
+     "type": "Interest",
+     "fixings": [
+      {
+       "fixingDate": "2028-01-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.034965,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-02-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.03497,
+       "source": "Forward curve",
+       "status": "Projected"
+      },
+      {
+       "fixingDate": "2028-03-24",
+       "index": "SOFR",
+       "tenor": "1M",
+       "rate": 0.035022,
+       "source": "Forward curve",
+       "status": "Projected"
+      }
+     ]
     }
    ],
    "pv": -15332023.91,
    "payReceive": "Pay",
-   "rateType": "Float"
+   "rateType": "Float",
+   "legId": "MX-20000165-L2",
+   "businessDayConvention": "Mod. following",
+   "resetFrequency": "Monthly"
   }
  ],
  "schedule": [

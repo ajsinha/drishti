@@ -1,30 +1,30 @@
 {
  "balanceId": "COLL-KESTREL-NY",
  "held": 0,
- "posted": 4303641,
- "net": -4303641,
+ "posted": 3011633,
+ "net": -3011633,
  "asOf": "2026-09-30",
  "positions": [
   {
    "asset": "Verdant Agri Holdings 2031",
    "direction": "Posted",
-   "marketValue": 1434547,
+   "marketValue": 1003878,
    "haircut": 0.02,
-   "value": 1405856
+   "value": 983800
   },
   {
    "asset": "Cascadia Airlines Inc. 2036",
    "direction": "Posted",
-   "marketValue": 1434547,
+   "marketValue": 1003878,
    "haircut": 0.01,
-   "value": 1420202
+   "value": 993839
   },
   {
    "asset": "Lumen Semiconductor AG 2031",
    "direction": "Posted",
-   "marketValue": 1434547,
+   "marketValue": 1003878,
    "haircut": 0.005,
-   "value": 1427374
+   "value": 998859
   }
  ],
  "csa": "CSA-KESTREL",

@@ -6,21 +6,21 @@
   {
    "id": "BOOK-RATES-1",
    "trades": 49,
-   "mtm": 177369313
+   "mtm": 194752511
   },
   {
    "id": "BOOK-RATES-2",
    "trades": 54,
-   "mtm": -66175404
+   "mtm": -53757622
   },
   {
    "id": "BOOK-RATES-3",
    "trades": 53,
-   "mtm": 21656655
+   "mtm": 20771882
   }
  ],
- "var99": 9611218,
- "mtm": 132850564,
+ "var99": 9690002,
+ "mtm": 161766771,
  "legalEntity": "LE-NY",
  "varResult": "VAR-RATES",
  "assetClasses": [
@@ -60,28 +60,28 @@
    "book": "BOOK-RATES-1",
    "currency": "GBP",
    "family": "swap",
-   "mtm": -5360345
+   "mtm": -459026
   },
   {
    "tradeId": "MX-20000018",
    "book": "BOOK-RATES-1",
    "currency": "USD",
    "family": "swap",
-   "mtm": -142545
+   "mtm": 588449
   },
   {
    "tradeId": "MX-20000020",
    "book": "BOOK-RATES-1",
    "currency": "JPY",
    "family": "swap",
-   "mtm": -1325556
+   "mtm": 191598
   },
   {
    "tradeId": "MX-20000022",
    "book": "BOOK-RATES-1",
    "currency": "USD",
    "family": "swap",
-   "mtm": 378599
+   "mtm": 3450337
   },
   {
    "tradeId": "MX-20000027",
@@ -207,35 +207,35 @@
    "book": "BOOK-RATES-1",
    "currency": "AUD",
    "family": "option",
-   "mtm": 282246
+   "mtm": 23
   },
   {
    "tradeId": "MX-20000083",
    "book": "BOOK-RATES-1",
    "currency": "EUR",
    "family": "option",
-   "mtm": 1821498
+   "mtm": 3
   },
   {
    "tradeId": "MX-20000085",
    "book": "BOOK-RATES-1",
    "currency": "CHF",
    "family": "option",
-   "mtm": 346028
+   "mtm": -309546
   },
   {
    "tradeId": "MX-20000086",
    "book": "BOOK-RATES-1",
    "currency": "JPY",
    "family": "option",
-   "mtm": -1130652
+   "mtm": 37699
   },
   {
    "tradeId": "MX-20000090",
    "book": "BOOK-RATES-1",
    "currency": "JPY",
    "family": "option",
-   "mtm": -1266905
+   "mtm": -1029330
   },
   {
    "tradeId": "MX-20000091",
@@ -256,14 +256,14 @@
    "book": "BOOK-RATES-1",
    "currency": "USD",
    "family": "option",
-   "mtm": -2322720
+   "mtm": 157179
   },
   {
    "tradeId": "MX-20000102",
    "book": "BOOK-RATES-1",
    "currency": "USD",
    "family": "option",
-   "mtm": -1632251
+   "mtm": 4403209
   },
   {
    "tradeId": "MX-20000106",
@@ -403,28 +403,28 @@
    "book": "BOOK-RATES-2",
    "currency": "GBP",
    "family": "swap",
-   "mtm": 1992970
+   "mtm": -213692
   },
   {
    "tradeId": "MX-20000017",
    "book": "BOOK-RATES-2",
    "currency": "GBP",
    "family": "swap",
-   "mtm": 1857281
+   "mtm": -631587
   },
   {
    "tradeId": "MX-20000021",
    "book": "BOOK-RATES-2",
    "currency": "CHF",
    "family": "swap",
-   "mtm": 204436
+   "mtm": 491353
   },
   {
    "tradeId": "MX-20000024",
    "book": "BOOK-RATES-2",
    "currency": "CAD",
    "family": "swap",
-   "mtm": 5804007
+   "mtm": 159462
   },
   {
    "tradeId": "MX-20000025",
@@ -571,28 +571,28 @@
    "book": "BOOK-RATES-2",
    "currency": "AUD",
    "family": "option",
-   "mtm": -2197753
+   "mtm": -9348
   },
   {
    "tradeId": "MX-20000082",
    "book": "BOOK-RATES-2",
    "currency": "GBP",
    "family": "option",
-   "mtm": 453010
+   "mtm": -111052
   },
   {
    "tradeId": "MX-20000084",
    "book": "BOOK-RATES-2",
    "currency": "EUR",
    "family": "option",
-   "mtm": 3578990
+   "mtm": 0
   },
   {
    "tradeId": "MX-20000088",
    "book": "BOOK-RATES-2",
    "currency": "CHF",
    "family": "option",
-   "mtm": 203454
+   "mtm": 707908
   },
   {
    "tradeId": "MX-20000096",
@@ -606,21 +606,21 @@
    "book": "BOOK-RATES-2",
    "currency": "USD",
    "family": "option",
-   "mtm": -2691901
+   "mtm": -522885
   },
   {
    "tradeId": "MX-20000099",
    "book": "BOOK-RATES-2",
    "currency": "GBP",
    "family": "option",
-   "mtm": 3985722
+   "mtm": 22882900
   },
   {
    "tradeId": "MX-20000100",
    "book": "BOOK-RATES-2",
    "currency": "AUD",
    "family": "option",
-   "mtm": 348358
+   "mtm": 3203297
   },
   {
    "tradeId": "MX-20000103",
@@ -781,28 +781,28 @@
    "book": "BOOK-RATES-3",
    "currency": "EUR",
    "family": "swap",
-   "mtm": -21546
+   "mtm": 68704
   },
   {
    "tradeId": "MX-20000014",
    "book": "BOOK-RATES-3",
    "currency": "EUR",
    "family": "swap",
-   "mtm": 489888
+   "mtm": -777511
   },
   {
    "tradeId": "MX-20000019",
    "book": "BOOK-RATES-3",
    "currency": "USD",
    "family": "swap",
-   "mtm": 4154362
+   "mtm": 2093639
   },
   {
    "tradeId": "MX-20000023",
    "book": "BOOK-RATES-3",
    "currency": "USD",
    "family": "swap",
-   "mtm": 1359599
+   "mtm": 821699
   },
   {
    "tradeId": "MX-20000026",
@@ -928,21 +928,21 @@
    "book": "BOOK-RATES-3",
    "currency": "JPY",
    "family": "option",
-   "mtm": -2636721
+   "mtm": 16
   },
   {
    "tradeId": "MX-20000087",
    "book": "BOOK-RATES-3",
    "currency": "AUD",
    "family": "option",
-   "mtm": -1482791
+   "mtm": 0
   },
   {
    "tradeId": "MX-20000089",
    "book": "BOOK-RATES-3",
    "currency": "AUD",
    "family": "option",
-   "mtm": -1112942
+   "mtm": -57660
   },
   {
    "tradeId": "MX-20000093",
@@ -970,7 +970,7 @@
    "book": "BOOK-RATES-3",
    "currency": "EUR",
    "family": "option",
-   "mtm": -2063151
+   "mtm": -4346962
   },
   {
    "tradeId": "MX-20000104",
