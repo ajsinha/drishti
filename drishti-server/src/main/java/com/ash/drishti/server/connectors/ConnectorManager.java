@@ -1038,8 +1038,8 @@ public final class ConnectorManager {
         String e = error.toLowerCase(java.util.Locale.ROOT);
         if (e.contains("pkix path building failed") || e.contains("unable to find valid certification path") || e.contains("unknown ca")
                 || e.contains("certificate_unknown") || e.contains("self-signed") || e.contains("self signed")) {
-            return "The server's certificate is not trusted. Put the certificate authority that signed it into the truststore (tls.truststore.path and its password) "
-                    + "or, for a private authority, point tls.truststore.path at a store that contains it.";
+            return "The server's certificate is not trusted. Put the certificate authority that signed it in tls.ca-file (a PEM file) "
+                    + "or tls.truststore (a PKCS12 or JKS store with tls.truststore-password).";
         }
         if (e.contains("no subject alternative names") || e.contains("hostname") && e.contains("verif") || e.contains("certificate doesn't match")) {
             return "The certificate does not name the host you connect to. Connect using a name the certificate carries, or have a certificate issued for this name.";

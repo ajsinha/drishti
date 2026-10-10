@@ -11,13 +11,15 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-# Example: MongoDB over TLS. The connection string carries no credentials; they come from the environment.
-plugin: mongodb
-kinds: [position]
+# Example: ActiveMQ Classic over an ssl:// transport, trusting a private CA, with a user name and password from the
+# environment. Copy to config/connectors/activemq-ssl.yaml. See docs/connectors/ACTIVEMQ_CONNECTOR.md.
+plugin: activemq
+kinds: [order]
+description: Orders from ActiveMQ over SSL
 settings:
-  uri: mongodb://mongo.example.com:27017/?tls=true
-  database: drishti
-  collection: positions
+  broker-url: failover:(ssl://activemq.example.com:61617)?initialReconnectDelay=1000
+  destinations: [queue:orders]
+  user: drishti
+  password: ${ACTIVEMQ_PASSWORD}
   tls:
-    truststore: /etc/drishti/tls/ca.p12
-    truststore-password: ${MONGO_TRUSTSTORE_PASSWORD}
+    ca-file: /etc/drishti/tls/ca.pem

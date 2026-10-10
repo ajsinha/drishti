@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.api.tls;
 
+import com.ash.drishti.api.SettingSpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +98,50 @@ public record TlsSettings(
                 keyPassword, list(get.apply("protocols"), DEFAULT_PROTOCOLS), list(get.apply("cipher-suites"), List.of()),
                 bool(get.apply("verify-hostname"), true, prefix + "verify-hostname"),
                 bool(get.apply("insecure-trust-all"), false, prefix + "insecure-trust-all"));
+    }
+
+    /**
+     * The keys {@link #parse} reads, as form/validator specs under {@code prefix}. The connector settings catalogue takes its
+     * {@code tls.*} section from here, so the Admin form cannot drift from what the code reads (a test compares this list with
+     * the record's components). Passwords are secrets, each with its {@code -file} twin.
+     */
+    public static List<SettingSpec> settingSpecs(String prefix) {
+        String g = "tls";
+        List<SettingSpec> out = new ArrayList<>();
+        out.add(new SettingSpec(prefix + "enabled", "boolean", false, "false",
+                "Use TLS. A connector whose address already says so (amqps://, ssl://) uses it without this; true against a plain address is a start-up error", false, g));
+        out.add(new SettingSpec(prefix + "ca-file", "path", false, null,
+                "Trust: a PEM file of one or many CA certificates, or the PEM text itself", false, g));
+        out.add(new SettingSpec(prefix + "truststore", "path", false, null, "Trust: a PKCS12 or JKS truststore", false, g));
+        out.add(new SettingSpec(prefix + "truststore-password", "string", false, null,
+                "Truststore password: ${ENV} placeholder, or use truststore-password-file", true, g));
+        out.add(new SettingSpec(prefix + "truststore-password-file", "path", false, null,
+                "File whose first line is the truststore password", false, g));
+        out.add(new SettingSpec(prefix + "truststore-type", "enum:PKCS12|JKS", false, "detected", "Truststore format", false, g));
+        out.add(new SettingSpec(prefix + "trust-jvm-default", "boolean", false, "true when no ca-file or truststore",
+                "Also trust the JVM's public authorities (true beside ca-file or truststore merges them)", false, g));
+        out.add(new SettingSpec(prefix + "cert-file", "path", false, null,
+                "Client identity (mutual TLS): PEM certificate chain, leaf first", false, g));
+        out.add(new SettingSpec(prefix + "key-file", "path", false, null,
+                "Client identity: PEM private key (PKCS#8, PKCS#1 RSA, SEC1 EC, or encrypted PKCS#8)", false, g));
+        out.add(new SettingSpec(prefix + "key-password", "string", false, null,
+                "Password of an encrypted PEM key or of the key in a keystore: ${ENV} placeholder, or key-password-file", true, g));
+        out.add(new SettingSpec(prefix + "key-password-file", "path", false, null, "File whose first line is the key password", false, g));
+        out.add(new SettingSpec(prefix + "keystore", "path", false, null,
+                "Client identity: a PKCS12 or JKS keystore (use this or cert-file with key-file)", false, g));
+        out.add(new SettingSpec(prefix + "keystore-password", "string", false, null,
+                "Keystore password: ${ENV} placeholder, or use keystore-password-file", true, g));
+        out.add(new SettingSpec(prefix + "keystore-password-file", "path", false, null,
+                "File whose first line is the keystore password", false, g));
+        out.add(new SettingSpec(prefix + "keystore-type", "enum:PKCS12|JKS", false, "detected", "Keystore format", false, g));
+        out.add(new SettingSpec(prefix + "key-alias", "string", false, "the only key", "Which key of the keystore to present", false, g));
+        out.add(new SettingSpec(prefix + "protocols", "list", false, "TLSv1.3,TLSv1.2", "Protocol versions offered", false, g));
+        out.add(new SettingSpec(prefix + "cipher-suites", "list", false, "the JVM's", "Cipher suites offered", false, g));
+        out.add(new SettingSpec(prefix + "verify-hostname", "boolean", false, "true",
+                "Check the server's name against its certificate (false logs a warning at every start)", false, g));
+        out.add(new SettingSpec(prefix + "insecure-trust-all", "boolean", false, "false",
+                "Do not check the server certificate; development only, refused unless DRISHTI_ALLOW_INSECURE_TLS=true", false, g));
+        return List.copyOf(out);
     }
 
     /** True when any key is given under the prefix, whether or not {@code enabled} is set. */

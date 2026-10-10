@@ -83,10 +83,8 @@ description: Trading lake         # optional, free text
 settings:                         # the plugin's settings; nesting is flattened to the dotted keys the plugin reads
   root: ${DRISHTI_DELTA_ROOT:./data/delta}
   domain: trading
-  tls:                            # tls: {truststore: {path: x}} is the setting tls.truststore.path
-    truststore:
-      path: /etc/drishti/tls/ca.p12
-      password: ${LAKE_TRUSTSTORE_PASSWORD}
+  tls:                            # tls: {ca-file: x} is the setting tls.ca-file
+    ca-file: /etc/drishti/tls/ca.pem
 ```
 
 - Only these top-level keys are allowed (`plugin`, `enabled`, `kinds`, `description`, `settings`, and an optional `name`); anything
@@ -157,10 +155,12 @@ settings:
   topics: [trades]
   kind: trade
   id-field: tradeId
+  security.protocol: SSL
   tls:
-    enabled: true
-    truststore: { path: /etc/drishti/tls/ca.p12, password: ${KAFKA_TRUSTSTORE_PASSWORD} }
-    keystore:   { path: /etc/drishti/tls/client.p12, password: ${KAFKA_KEYSTORE_PASSWORD} }
+    truststore: /etc/drishti/tls/ca.p12
+    truststore-password: ${KAFKA_TRUSTSTORE_PASSWORD}
+    keystore: /etc/drishti/tls/client.p12
+    keystore-password: ${KAFKA_KEYSTORE_PASSWORD}
 ```
 
 **A folder of JSON Lines** (a site connector no pack suggests, `site-quotes.yaml`):
@@ -211,18 +211,33 @@ A literal value, a default inside the reference (`${X:fallback}`) and a password
 `?password=…`) are **refused** by Admin → Connectors, the API and the CLI with the reason and the name to use. A hand-edited file that
 breaks this still loads (so a running site is not stopped by an edit), and the page shows a note on the connector.
 
-**TLS.** Plugins that talk to a server over the network support a shared `tls.*` block, which the form shows as a **TLS** section:
+**TLS.** Plugins that talk to a server over the network read one shared set of `tls.*` settings, and the form shows them as a **TLS**
+section. The form's list is not typed by hand: it is generated from the class that reads the keys (`TlsSettings`), and a test fails if
+the two ever differ. The full reference, with every key, the formats and the start-up messages, is [TLS.md](TLS.md); the keys are:
 
 | Setting | Meaning |
 |---|---|
-| `tls.enabled` | Use TLS for this connector. |
-| `tls.truststore.path`, `.password`, `.type` | The CA certificates to trust (PKCS12, JKS or PEM). |
-| `tls.keystore.path`, `.password`, `.type` | The client certificate, for mutual TLS. |
+| `tls.enabled` | Use TLS (a connector whose address already says so, such as `amqps://`, does not need it). |
+| `tls.ca-file` | A PEM file of one or many CA certificates to trust (or the PEM text). |
+| `tls.truststore`, `tls.truststore-password`, `tls.truststore-type` | A PKCS12 or JKS truststore instead of, or beside, the PEM file. |
+| `tls.trust-jvm-default` | Also trust the public authorities the JVM knows. |
+| `tls.cert-file`, `tls.key-file`, `tls.key-password` | The client certificate and key in PEM form, for mutual TLS. |
+| `tls.keystore`, `tls.keystore-password`, `tls.keystore-type`, `tls.key-alias` | The client identity as a PKCS12 or JKS keystore. |
+| `tls.protocols`, `tls.cipher-suites` | Protocol versions and cipher suites offered. |
 | `tls.verify-hostname` | Check that the certificate names the host (default on). |
+| `tls.insecure-trust-all` | Development only; refused unless `DRISHTI_ALLOW_INSECURE_TLS=true`. |
 
-The block is carried by the file; what each plugin does with it is described by the plugin that reads it. **Test connection**
-turns a TLS failure into words: an untrusted certificate points you at `tls.truststore.path`, a name mismatch tells you to connect by
-a name the certificate carries, an expired certificate says so, and a wrong store password points at the reference.
+Every password has a `-file` twin (`tls.keystore-password-file: /run/secrets/ks`) that reads the first line of a file; the twin names
+a path, so it is not itself a secret. A password written in a file is an environment reference or a `file:` reference, as above.
+The Kafka connector also has `flavour`, `security.protocol`, `sasl.*` and `schema-registry.*` (with `schema-registry.tls.*` for the
+registry's own certificate); the form lists them in a **Security** and a **Schema Registry** section.
+
+**Test connection** turns a TLS failure into words: an untrusted certificate points you at `tls.ca-file` or `tls.truststore`, a name
+mismatch tells you to connect by a name the certificate carries, an expired certificate says so, and a wrong store password points at
+the reference. Ready-made secure files are in [`config/connectors.examples/other/`](../../config/connectors.examples/other):
+`kafka-mtls-pem.yaml` (Kafka, PEM client certificate), `kafka-confluent-cloud.yaml` (Confluent Cloud with Schema Registry),
+`rabbitmq-external.yaml` (`amqps://`, the certificate is the log-in), `activemq-ssl.yaml` (`ssl://`), and the PKCS12 forms in
+`trading-stream.yaml`, `orders-queue.yaml`, `ops-events.yaml`, `positions-mongo.yaml` and `pricing-api.yaml`.
 
 ## 6. How packs and files fit together
 

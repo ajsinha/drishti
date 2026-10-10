@@ -11,14 +11,17 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-# Example: a RabbitMQ queue of orders over TLS (amqps).
+# Example: RabbitMQ over amqps:// where the client certificate is the log-in (the EXTERNAL mechanism; the broker needs the
+# rabbitmq_auth_mechanism_ssl plugin). No user name or password. Copy to config/connectors/rabbitmq-external.yaml.
+# See docs/connectors/RABBITMQ_CONNECTOR.md.
 plugin: rabbitmq
 kinds: [order]
-description: Orders from the order-management broker
+description: Orders from RabbitMQ, logged in by certificate
 settings:
-  uri: amqps://oms-broker.example.com:5671/drishti
+  uri: amqps://rabbit.example.com:5671/%2f
+  auth-mechanism: external
   queues: [orders]
   tls:
-    enabled: true
-    truststore: /etc/drishti/tls/ca.p12
-    truststore-password: ${RABBIT_TRUSTSTORE_PASSWORD}
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key

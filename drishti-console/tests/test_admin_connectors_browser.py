@@ -45,8 +45,8 @@ PLUGINS = [
     {"name": "jdbc", "tls": True, "declared": True, "settings": [
         _spec("url", "string", True, None, "JDBC URL"), _spec("user", description="Database user"), _spec("password", secret=True, description="Database password"),
         _spec("pool-size", "int", False, "4", "Connections", group="tuning"),
-        _spec("tls.enabled", "boolean", False, "false", "Use TLS", group="tls"), _spec("tls.truststore.path", "path", False, None, "Truststore", group="tls"),
-        _spec("tls.truststore.password", secret=True, description="Truststore password", group="tls")]},
+        _spec("tls.enabled", "boolean", False, "false", "Use TLS", group="tls"), _spec("tls.ca-file", "path", False, None, "Trust: a PEM file of CA certificates", group="tls"),
+        _spec("tls.truststore-password", secret=True, description="Truststore password", group="tls")]},
 ]
 
 
@@ -228,7 +228,7 @@ def test_create_test_save_edit_disable_delete(browser, conn_console):
     assert dlg.locator("[data-f-plugin] option").all_inner_texts() == ["file", "jdbc"]
     assert dlg.locator("[data-setting='root']").count() == 1                                      # the default plugin's own fields
     dlg.locator("[data-f-plugin]").select_option("jdbc")
-    for s in ("url", "user", "password", "pool-size", "tls.enabled", "tls.truststore.path", "tls.truststore.password"):
+    for s in ("url", "user", "password", "pool-size", "tls.enabled", "tls.ca-file", "tls.truststore-password"):
         assert dlg.locator(f"[data-setting='{s}']").count() == 1, s
     assert dlg.locator("[data-group='tls'] legend").inner_text() == "TLS"                         # a TLS section because the plugin supports TLS
     assert dlg.locator("[data-setting='root']").count() == 0                                      # and the file plugin's fields are gone

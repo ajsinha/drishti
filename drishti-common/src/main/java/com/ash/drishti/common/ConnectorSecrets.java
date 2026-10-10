@@ -32,7 +32,7 @@ public final class ConnectorSecrets {
 
     private static final Pattern SECRET_KEY = Pattern.compile(
             "(?i).*(password|passwd|secret|token|api[-_.]?key|access[-_.]?key|private[-_.]?key|credential).*");
-    private static final Pattern ENV_ONLY = Pattern.compile("\\$\\{[A-Za-z_][A-Za-z0-9_]*}");
+    private static final Pattern ENV_ONLY = Pattern.compile("\\$\\{[A-Za-z_][A-Za-z0-9_]*}(:\\$\\{[A-Za-z_][A-Za-z0-9_]*})*");   // one reference, or KEY:SECRET references
     private static final Pattern URL_PASSWORD = Pattern.compile("(?i)(password|pwd)=(?!\\$\\{)[^&;]+|://[^/@\\s:]+:(?!\\$\\{)[^/@\\s]+@");
     private static final String FILE = "file:";
 
@@ -40,7 +40,8 @@ public final class ConnectorSecrets {
 
     /** True for a setting name that holds a credential, whatever the plugin. */
     public static boolean secretKey(String key) {
-        return SECRET_KEY.matcher(key).matches();
+        // a "-file" twin (tls.keystore-password-file) holds the path of the secret, not the secret
+        return !key.endsWith("-file") && SECRET_KEY.matcher(key).matches();
     }
 
     /** True for an environment reference or a {@code file:} reference. */

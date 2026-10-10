@@ -17,6 +17,7 @@ package com.ash.drishti.engine.source;
 
 import com.ash.drishti.api.SettingSpec;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.tls.TlsSettings;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -54,7 +55,7 @@ public final class SettingCatalogue {
     public SettingCatalogue(List<SourcePlugin> discovered) {
         Map<String, Object> doc = load();
         List<SettingSpec> common = specs(doc.get("common"));
-        List<SettingSpec> tls = specs(doc.get("tls"));
+        List<SettingSpec> tls = TlsSettings.settingSpecs("tls.");       // generated from the class that reads them
         @SuppressWarnings("unchecked")
         Map<String, Object> plugins = doc.get("plugins") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
         for (SourcePlugin p : discovered) {
@@ -70,6 +71,14 @@ public final class SettingCatalogue {
             List<SettingSpec> all = new ArrayList<>(own);
             if (supportsTls) {
                 tls.stream().filter(t -> all.stream().noneMatch(a -> a.name().equals(t.name()))).forEach(all::add);
+                if (plugins.get(name) instanceof Map<?, ?> entry && entry.get("tls-prefixes") instanceof List<?> prefixes) {
+                    for (Object prefix : prefixes) {
+                        for (SettingSpec t : TlsSettings.settingSpecs(String.valueOf(prefix))) {
+                            all.add(new SettingSpec(t.name(), t.type(), t.required(), t.defaultValue(), t.description(), t.secret(),
+                                    String.valueOf(prefix).replace(".tls.", "")));
+                        }
+                    }
+                }
             }
             if (declared) {
                 common.stream().filter(c -> all.stream().noneMatch(a -> a.name().equals(c.name()))).forEach(all::add);

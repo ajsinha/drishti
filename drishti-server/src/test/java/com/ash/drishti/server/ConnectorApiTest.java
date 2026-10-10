@@ -178,7 +178,7 @@ class ConnectorApiTest {
                 .andExpect(jsonPath("$.plugins[?(@.name=='jdbc')].tls").value(hasItem(true)))
                 .andExpect(jsonPath("$.plugins[?(@.name=='jdbc')].settings[?(@.name=='password')].secret").value(hasItem(true)))
                 .andExpect(jsonPath("$.plugins[?(@.name=='jdbc')].settings[?(@.name=='url')].required").value(hasItem(true)))
-                .andExpect(jsonPath("$.plugins[?(@.name=='jdbc')].settings[?(@.name=='tls.truststore.path')].group").value(hasItem("tls")))
+                .andExpect(jsonPath("$.plugins[?(@.name=='jdbc')].settings[?(@.name=='tls.ca-file')].group").value(hasItem("tls")))
                 .andExpect(jsonPath("$.plugins[?(@.name=='file')].tls").value(hasItem(false)));
     }
 

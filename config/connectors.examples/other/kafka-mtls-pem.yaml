@@ -11,12 +11,11 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-# Example: a Kafka topic of trades over TLS with a client certificate (mutual TLS), PKCS12 stores. Copy to
-# config/connectors/trading-stream.yaml and name it in a pack (connectors: [trading-stream]; routes: {trade: trading-stream}).
-# Passwords are environment references. The PEM form is in kafka-mtls-pem.yaml. See docs/connectors/TLS.md.
+# Example: Kafka over mutual TLS with PEM files (a private CA, cert-manager or Vault). The key may be encrypted: its password is
+# an environment reference or a file. Copy to config/connectors/kafka-mtls-pem.yaml. See docs/connectors/KAFKA_CONNECTOR.md.
 plugin: kafka
 kinds: [trade]
-description: Live trades from the trading Kafka cluster
+description: Trades over mutual TLS, PEM certificates
 settings:
   bootstrap-servers: kafka-1.example.com:9093,kafka-2.example.com:9093
   topics: [trades]
@@ -24,7 +23,7 @@ settings:
   id-field: tradeId
   security.protocol: SSL
   tls:
-    truststore: /etc/drishti/tls/ca.p12
-    truststore-password: ${KAFKA_TRUSTSTORE_PASSWORD}
-    keystore: /etc/drishti/tls/client.p12
-    keystore-password: ${KAFKA_KEYSTORE_PASSWORD}
+    ca-file: /etc/drishti/tls/ca-bundle.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+    key-password-file: /run/secrets/kafka-client-key-password
