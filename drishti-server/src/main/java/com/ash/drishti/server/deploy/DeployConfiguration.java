@@ -25,7 +25,6 @@ import com.ash.drishti.engine.source.SourcesProperties;
 import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.server.registry.RegistryProperties;
-import java.nio.file.Path;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.info.BuildProperties;
