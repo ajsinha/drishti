@@ -1888,6 +1888,7 @@ is decided by the server (`drishti.rachana.studio-save`).
 |---|---|---|
 | `layouts.enabled` | `true` (`DRISHTI_LAYOUTS_ENABLED`) | Off: no view offers layout mode and saved personal layouts are not applied, whatever roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way)). |
 | `layouts.min_span` | `3` | The narrowest width, in columns of the 12-column grid (1 to 12), that layout mode lets a user give a panel. |
+| `form.collapse_on_submit` | `true` | `FORM <pack>`: after a search, fold the form to a one-line summary of its criteria so the results get the space (Alt+F or the summary opens it again). |
 
 ### `live`
 
