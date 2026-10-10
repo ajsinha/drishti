@@ -31,8 +31,8 @@
    "book": "BOOK-RATES-1",
    "desk": "Rates · Swaps and options",
    "var": 6016760,
-   "pnl": -2955541,
-   "mtm": 177368451,
+   "pnl": -2955503,
+   "mtm": 177369313,
    "trades": 49
   },
   {
@@ -47,8 +47,8 @@
    "book": "BOOK-RATES-3",
    "desk": "Rates · Swaps and options",
    "var": 5239711,
-   "pnl": 2554297,
-   "mtm": 21656450,
+   "pnl": 2554310,
+   "mtm": 21656655,
    "trades": 53
   },
   {

@@ -21,7 +21,10 @@ match: { kind: calendar, priority: 10 }
 title: { pill: Market data · Holiday calendar, id: $.calendarId }
 strip:
   - { label: Name, bind: $.name }
-  - { label: Holidays (2026), bind: size($.holidays), emphasis: true }
+  - { label: Holidays 2026, bind: $.holidays2026, emphasis: true }
+  - { label: Holidays 2027, bind: $.holidays2027 }
+  - { label: Next holiday, bind: $.nextHoliday }
+  - { label: "On", bind: $.nextHolidayDate, fmt: date }
 panels:
   - id: holidays
     kind: table
@@ -30,6 +33,8 @@ panels:
     rows: $.holidays
     columns:
       - { label: Date, bind: "@.date", fmt: date }
+      - { label: Day, bind: "@.weekday" }
       - { label: Holiday, bind: "@.name" }
+      - { label: Observed, bind: "@.observed" }
   - { id: built, kind: provenance, title: How this view was built }
 keys: { F8: impact, F9: raw }

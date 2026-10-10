@@ -6,7 +6,7 @@
  "sector": "Pensions",
  "country": "GB",
  "type": "Pension fund",
- "netMtm": 13812754,
+ "netMtm": 13813616,
  "pfePeak": 145548971,
  "nettingSets": [
   {
@@ -25,7 +25,7 @@
    "id": "NS-ALDERSHOT-NY",
    "agreement": "AGR-ALDERSHOT-ISDA",
    "trades": 22,
-   "netMtm": 18471892
+   "netMtm": 18472754
   },
   {
    "id": "NS-ALDERSHOT-TKY",

@@ -1,7 +1,7 @@
 {
  "resultId": "STR-RATES-TWIST-RATES",
  "scenarioName": "Bear steepener 2s10s +75 bp",
- "pnl": -18522151,
+ "pnl": -18522152,
  "limit": -67000000.0,
  "byBook": [
   {
@@ -14,7 +14,7 @@
   },
   {
    "book": "BOOK-RATES-3",
-   "pnl": -5825696
+   "pnl": -5825697
   }
  ],
  "scenario": "SCN-RATES-TWIST",

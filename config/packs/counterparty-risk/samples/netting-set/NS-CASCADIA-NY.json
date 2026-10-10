@@ -222,7 +222,7 @@
    "currency": "AUD",
    "book": "BOOK-CREDIT-3",
    "notional": 77000000.0,
-   "maturity": "2026-12-28",
+   "maturity": "2026-12-29",
    "maturityBucket": "0-1Y",
    "mtm": -244202
   },

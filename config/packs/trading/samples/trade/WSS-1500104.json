@@ -10,7 +10,7 @@
  "direction": "Short",
  "tradeDate": "2026-09-25",
  "effectiveDate": "2026-09-28",
- "maturityDate": "2026-12-28",
+ "maturityDate": "2026-12-29",
  "currency": "AUD",
  "notional": 36000000.0,
  "mtm": 70858,
@@ -165,7 +165,7 @@
     "description": "Matched on DTCC CTM (DT899356705)"
    },
    {
-    "date": "2026-12-28",
+    "date": "2026-12-29",
     "event": "Maturity",
     "status": "Scheduled",
     "description": "Final payment and close-out"

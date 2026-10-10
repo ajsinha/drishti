@@ -13,9 +13,9 @@
  "maturityDate": "2032-06-25",
  "currency": "AUD",
  "notional": 242000000.0,
- "mtm": 1875863,
+ "mtm": 1876068,
  "mtmCurrency": "USD",
- "pnl1d": 126986,
+ "pnl1d": 126999,
  "counterparty": {
   "id": "CP-MERIDIAN-RE",
   "name": "Meridian Reinsurance Ltd"
@@ -285,22 +285,22 @@
     {
      "n": 6,
      "accrualStart": "2026-09-25",
-     "accrualEnd": "2026-12-28",
+     "accrualEnd": "2026-12-29",
      "fixingDate": "2026-12-23",
-     "payDate": "2026-12-30",
+     "payDate": "2026-12-31",
      "notional": 242000000.0,
      "index": "AONIA",
-     "rate": 0.035665,
+     "rate": 0.035669,
      "spread": 0.0,
-     "yearFraction": 0.261111,
-     "amount": -2253619.99,
-     "df": 0.991063,
-     "pv": -2233479.41,
+     "yearFraction": 0.263889,
+     "amount": -2277885.79,
+     "df": 0.990965,
+     "pv": -2257304.24,
      "status": "Projected"
     },
     {
      "n": 7,
-     "accrualStart": "2026-12-28",
+     "accrualStart": "2026-12-29",
      "accrualEnd": "2027-03-25",
      "fixingDate": "2027-03-23",
      "payDate": "2027-03-31",
@@ -308,10 +308,10 @@
      "index": "AONIA",
      "rate": 0.036082,
      "spread": 0.0,
-     "yearFraction": 0.241667,
-     "amount": -2110166.9,
+     "yearFraction": 0.238889,
+     "amount": -2085921.16,
      "df": 0.982099,
-     "pv": -2072393.59,
+     "pv": -2048581.87,
      "status": "Projected"
     },
     {
@@ -349,22 +349,22 @@
     {
      "n": 10,
      "accrualStart": "2027-09-27",
-     "accrualEnd": "2027-12-28",
+     "accrualEnd": "2027-12-27",
      "fixingDate": "2027-12-22",
      "payDate": "2027-12-30",
      "notional": 242000000.0,
      "index": "AONIA",
-     "rate": 0.036651,
+     "rate": 0.036648,
      "spread": 0.0,
-     "yearFraction": 0.255556,
-     "amount": -2266670.88,
+     "yearFraction": 0.252778,
+     "amount": -2241840.9,
      "df": 0.955382,
-     "pv": -2165537.37,
+     "pv": -2141815.24,
      "status": "Projected"
     },
     {
      "n": 11,
-     "accrualStart": "2027-12-28",
+     "accrualStart": "2027-12-27",
      "accrualEnd": "2028-03-27",
      "fixingDate": "2028-03-23",
      "payDate": "2028-03-29",
@@ -372,10 +372,10 @@
      "index": "AONIA",
      "rate": 0.036879,
      "spread": 0.0,
-     "yearFraction": 0.25,
-     "amount": -2231155.17,
+     "yearFraction": 0.252778,
+     "amount": -2255984.07,
      "df": 0.946653,
-     "pv": -2112130.53,
+     "pv": -2135634.89,
      "status": "Projected"
     },
     {
@@ -651,7 +651,7 @@
      "status": "Projected"
     }
    ],
-   "pv": -50511541.51,
+   "pv": -50511336.85,
    "payReceive": "Pay",
    "rateType": "Float"
   }
@@ -712,12 +712,12 @@
    "status": "Settled"
   },
   {
-   "payDate": "2026-12-30",
+   "payDate": "2026-12-31",
    "leg": 2,
    "type": "Float",
-   "rate": 0.035665,
-   "amount": -2253619.99,
-   "pv": -2233479.41,
+   "rate": 0.035669,
+   "amount": -2277885.79,
+   "pv": -2257304.24,
    "status": "Projected"
   },
   {
@@ -725,8 +725,8 @@
    "leg": 2,
    "type": "Float",
    "rate": 0.036082,
-   "amount": -2110166.9,
-   "pv": -2072393.59,
+   "amount": -2085921.16,
+   "pv": -2048581.87,
    "status": "Projected"
   },
   {
@@ -760,9 +760,9 @@
    "payDate": "2027-12-30",
    "leg": 2,
    "type": "Float",
-   "rate": 0.036651,
-   "amount": -2266670.88,
-   "pv": -2165537.37,
+   "rate": 0.036648,
+   "amount": -2241840.9,
+   "pv": -2141815.24,
    "status": "Projected"
   },
   {
@@ -770,8 +770,8 @@
    "leg": 2,
    "type": "Float",
    "rate": 0.036879,
-   "amount": -2231155.17,
-   "pv": -2112130.53,
+   "amount": -2255984.07,
+   "pv": -2135634.89,
    "status": "Projected"
   },
   {
@@ -977,7 +977,7 @@
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": -54496
+   "pnl": -54502
   },
   {
    "date": "2026-09-04",
@@ -985,75 +985,75 @@
   },
   {
    "date": "2026-09-07",
-   "pnl": -72422
+   "pnl": -72430
   },
   {
    "date": "2026-09-08",
-   "pnl": -39923
+   "pnl": -39927
   },
   {
    "date": "2026-09-09",
-   "pnl": 2583
+   "pnl": 2584
   },
   {
    "date": "2026-09-10",
-   "pnl": 22209
+   "pnl": 22211
   },
   {
    "date": "2026-09-11",
-   "pnl": -25397
+   "pnl": -25400
   },
   {
    "date": "2026-09-14",
-   "pnl": 13021
+   "pnl": 13022
   },
   {
    "date": "2026-09-15",
-   "pnl": -80923
+   "pnl": -80932
   },
   {
    "date": "2026-09-16",
-   "pnl": -24143
+   "pnl": -24146
   },
   {
    "date": "2026-09-17",
-   "pnl": -32555
+   "pnl": -32559
   },
   {
    "date": "2026-09-18",
-   "pnl": -58020
+   "pnl": -58027
   },
   {
    "date": "2026-09-21",
-   "pnl": -55528
+   "pnl": -55534
   },
   {
    "date": "2026-09-22",
-   "pnl": -11782
+   "pnl": -11783
   },
   {
    "date": "2026-09-23",
-   "pnl": -38140
+   "pnl": -38145
   },
   {
    "date": "2026-09-24",
-   "pnl": 23018
+   "pnl": 23021
   },
   {
    "date": "2026-09-25",
-   "pnl": 41842
+   "pnl": 41847
   },
   {
    "date": "2026-09-28",
-   "pnl": -86167
+   "pnl": -86177
   },
   {
    "date": "2026-09-29",
-   "pnl": 15823
+   "pnl": 15825
   },
   {
    "date": "2026-09-30",
-   "pnl": -7365
+   "pnl": -7366
   }
  ],
  "execution": {
@@ -1122,7 +1122,7 @@
     "amount": -2232213.38
    },
    {
-    "date": "2026-12-30",
+    "date": "2026-12-31",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
@@ -1177,8 +1177,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": 1875863,
-  "cleanPv": 1875863.0,
+  "npv": 1876068,
+  "cleanPv": 1876068.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Multi-curve OIS discounting",
@@ -1193,32 +1193,32 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": 1748877,
+   "pnl": 1749069,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": -11426
+   "pnl": -11427
   },
   {
    "step": "Roll-down",
-   "pnl": 11390
+   "pnl": 11391
   },
   {
    "step": "Rates delta",
-   "pnl": 132686
+   "pnl": 132700
   },
   {
    "step": "FX delta",
-   "pnl": -2391
+   "pnl": -2392
   },
   {
    "step": "Vol (vega)",
-   "pnl": 5004
+   "pnl": 5005
   },
   {
    "step": "Theta",
-   "pnl": -8685
+   "pnl": -8686
   },
   {
    "step": "Unexplained",

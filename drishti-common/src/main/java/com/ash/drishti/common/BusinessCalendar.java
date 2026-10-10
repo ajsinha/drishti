@@ -35,7 +35,7 @@ public final class BusinessCalendar {
 
     private static final Set<String> KNOWN = Set.of("USNY", "GBLO", "EUTA", "JPTO", "WEEKENDS");
     private final List<String> centers;
-    private final Map<Integer, Set<LocalDate>> cache = new ConcurrentHashMap<>();
+    private final Map<Integer, java.util.SortedMap<LocalDate, String>> cache = new ConcurrentHashMap<>();
 
     private BusinessCalendar(List<String> centers) {
         this.centers = centers;
@@ -84,30 +84,66 @@ public final class BusinessCalendar {
 
     /** The holidays of {@code year} (weekdays only), sorted. */
     public Set<LocalDate> holidays(int year) {
+        return holidayNames(year).keySet();
+    }
+
+    /**
+     * The holidays of {@code year} (weekdays only), sorted, each with its name; a substitute day carries
+     * "(observed)". Where joint centres share a day the names are joined with " / ".
+     */
+    public java.util.SortedMap<LocalDate, String> holidayNames(int year) {
         return cache.computeIfAbsent(year, y -> {
-            TreeSet<LocalDate> out = new TreeSet<>();
-            centers.forEach(c -> out.addAll(centre(c, y)));
-            out.removeIf(d -> d.getDayOfWeek().getValue() > 5);
-            return java.util.Collections.unmodifiableSet(out);
+            java.util.TreeMap<LocalDate, String> out = new java.util.TreeMap<>();
+            centers.forEach(c -> centre(c, y).forEach(h -> {
+                if (h.day().getDayOfWeek().getValue() <= 5) {
+                    out.merge(h.day(), h.label(), (x, z) -> x.equals(z) ? x : x + " / " + z);
+                }
+            }));
+            return java.util.Collections.unmodifiableSortedMap(out);
         });
     }
 
-    private static Set<LocalDate> centre(String c, int y) {
+    /** A holiday kept on {@code day}; {@code nominal} is the date it falls on before any weekend substitution. */
+    private record Holiday(LocalDate day, String name, LocalDate nominal) {
+        String label() {
+            return day.equals(nominal) ? name : name + " (observed)";
+        }
+    }
+
+    private static Holiday fixed(int y, int m, int d, String name) {
+        LocalDate n = LocalDate.of(y, m, d);
+        return new Holiday(n, name, n);
+    }
+
+    private static Holiday obs(int y, int m, int d, String name) {
+        LocalDate n = LocalDate.of(y, m, d);
+        return new Holiday(observed(n), name, n);
+    }
+
+    private static Holiday rule(LocalDate d, String name) {
+        return new Holiday(d, name, d);
+    }
+
+    private static List<Holiday> centre(String c, int y) {
         LocalDate e = easter(y);
         return switch (c) {
-            case "USNY" -> Set.of(observed(LocalDate.of(y, 1, 1)), nth(y, Month.JANUARY, DayOfWeek.MONDAY, 3),
-                    nth(y, Month.FEBRUARY, DayOfWeek.MONDAY, 3), last(y, Month.MAY, DayOfWeek.MONDAY), observed(LocalDate.of(y, 6, 19)),
-                    observed(LocalDate.of(y, 7, 4)), nth(y, Month.SEPTEMBER, DayOfWeek.MONDAY, 1), nth(y, Month.OCTOBER, DayOfWeek.MONDAY, 2),
-                    observed(LocalDate.of(y, 11, 11)), nth(y, Month.NOVEMBER, DayOfWeek.THURSDAY, 4), observed(LocalDate.of(y, 12, 25)));
-            case "GBLO" -> Set.of(observed(LocalDate.of(y, 1, 1)), e.minusDays(2), e.plusDays(1), nth(y, Month.MAY, DayOfWeek.MONDAY, 1),
-                    last(y, Month.MAY, DayOfWeek.MONDAY), last(y, Month.AUGUST, DayOfWeek.MONDAY), observed(LocalDate.of(y, 12, 25)),
-                    boxingDay(y));
-            case "EUTA" -> Set.of(LocalDate.of(y, 1, 1), e.minusDays(2), e.plusDays(1), LocalDate.of(y, 5, 1), LocalDate.of(y, 12, 25),
-                    LocalDate.of(y, 12, 26));
-            case "JPTO" -> Set.of(LocalDate.of(y, 1, 1), LocalDate.of(y, 1, 2), LocalDate.of(y, 1, 3), LocalDate.of(y, 2, 11),
-                    LocalDate.of(y, 4, 29), LocalDate.of(y, 5, 3), LocalDate.of(y, 5, 4), LocalDate.of(y, 5, 5), LocalDate.of(y, 11, 3),
-                    LocalDate.of(y, 11, 23), LocalDate.of(y, 12, 31));
-            default -> Set.of();
+            case "USNY" -> List.of(obs(y, 1, 1, "New Year's Day"), rule(nth(y, Month.JANUARY, DayOfWeek.MONDAY, 3), "Martin Luther King Jr. Day"),
+                    rule(nth(y, Month.FEBRUARY, DayOfWeek.MONDAY, 3), "Presidents' Day"), rule(last(y, Month.MAY, DayOfWeek.MONDAY), "Memorial Day"),
+                    obs(y, 6, 19, "Juneteenth"), obs(y, 7, 4, "Independence Day"), rule(nth(y, Month.SEPTEMBER, DayOfWeek.MONDAY, 1), "Labor Day"),
+                    rule(nth(y, Month.OCTOBER, DayOfWeek.MONDAY, 2), "Columbus Day"), obs(y, 11, 11, "Veterans Day"),
+                    rule(nth(y, Month.NOVEMBER, DayOfWeek.THURSDAY, 4), "Thanksgiving Day"), obs(y, 12, 25, "Christmas Day"));
+            case "GBLO" -> List.of(obs(y, 1, 1, "New Year's Day"), rule(e.minusDays(2), "Good Friday"), rule(e.plusDays(1), "Easter Monday"),
+                    rule(nth(y, Month.MAY, DayOfWeek.MONDAY, 1), "Early May Bank Holiday"),
+                    rule(last(y, Month.MAY, DayOfWeek.MONDAY), "Spring Bank Holiday"),
+                    rule(last(y, Month.AUGUST, DayOfWeek.MONDAY), "Summer Bank Holiday"), obs(y, 12, 25, "Christmas Day"),
+                    new Holiday(boxingDay(y), "Boxing Day", LocalDate.of(y, 12, 26)));
+            case "EUTA" -> List.of(fixed(y, 1, 1, "New Year's Day"), rule(e.minusDays(2), "Good Friday"), rule(e.plusDays(1), "Easter Monday"),
+                    fixed(y, 5, 1, "Labour Day"), fixed(y, 12, 25, "Christmas Day"), fixed(y, 12, 26, "Boxing Day (St Stephen's Day)"));
+            case "JPTO" -> List.of(fixed(y, 1, 1, "New Year's Day"), fixed(y, 1, 2, "Bank Holiday (New Year)"),
+                    fixed(y, 1, 3, "Bank Holiday (New Year)"), fixed(y, 2, 11, "National Foundation Day"), fixed(y, 4, 29, "Showa Day"),
+                    fixed(y, 5, 3, "Constitution Memorial Day"), fixed(y, 5, 4, "Greenery Day"), fixed(y, 5, 5, "Children's Day"),
+                    fixed(y, 11, 3, "Culture Day"), fixed(y, 11, 23, "Labour Thanksgiving Day"), fixed(y, 12, 31, "Year-End Bank Holiday"));
+            default -> List.of();
         };
     }
 

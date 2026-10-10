@@ -6,7 +6,7 @@
   {
    "id": "BOOK-RATES-1",
    "trades": 49,
-   "mtm": 177368451
+   "mtm": 177369313
   },
   {
    "id": "BOOK-RATES-2",
@@ -16,11 +16,11 @@
   {
    "id": "BOOK-RATES-3",
    "trades": 53,
-   "mtm": 21656450
+   "mtm": 21656655
   }
  ],
- "var99": 9611219,
- "mtm": 132849497,
+ "var99": 9611218,
+ "mtm": 132850564,
  "legalEntity": "LE-NY",
  "varResult": "VAR-RATES",
  "assetClasses": [
@@ -60,7 +60,7 @@
    "book": "BOOK-RATES-1",
    "currency": "GBP",
    "family": "swap",
-   "mtm": -5361207
+   "mtm": -5360345
   },
   {
    "tradeId": "MX-20000018",
@@ -753,7 +753,7 @@
    "book": "BOOK-RATES-3",
    "currency": "AUD",
    "family": "swap",
-   "mtm": 1875863
+   "mtm": 1876068
   },
   {
    "tradeId": "MX-20000005",

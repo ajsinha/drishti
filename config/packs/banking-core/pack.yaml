@@ -360,9 +360,18 @@ form:
   - path: name
     label: Name
     type: text
-  - path: holidays
-    label: Holidays
+  - path: holidays2026
+    label: Holidays2026
     type: number
+  - path: holidays2027
+    label: Holidays2027
+    type: number
+  - path: nextHoliday
+    label: Next holiday
+    type: text
+  - path: nextHolidayDate
+    label: Next holiday date
+    type: date
   csa:
   - path: csaId
     label: Csa id

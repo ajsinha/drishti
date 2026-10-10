@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-CASCADIA-NY",
  "replacementCost": 2156787,
- "addOn": 68726795,
+ "addOn": 68716247,
  "multiplier": 1.0,
- "ead": 99237014,
- "rwa": 99237014,
+ "ead": 99222247,
+ "rwa": 99222247,
  "addOns": [
   {
    "assetClass": "Interest rate",
@@ -12,7 +12,7 @@
   },
   {
    "assetClass": "Credit",
-   "addOn": 34061233
+   "addOn": 34050685
   },
   {
    "assetClass": "Commodity",
@@ -53,7 +53,7 @@
   {
    "assetClass": "Credit",
    "hedgingSet": "AUD",
-   "effectiveNotional": 137224658,
+   "effectiveNotional": 137013699,
    "sf": 0.05
   },
   {

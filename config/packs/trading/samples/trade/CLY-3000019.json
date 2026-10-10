@@ -10,7 +10,7 @@
  "direction": "Sell",
  "tradeDate": "2024-12-05",
  "effectiveDate": "2024-12-09",
- "maturityDate": "2026-12-28",
+ "maturityDate": "2026-12-29",
  "currency": "AUD",
  "notional": 77000000.0,
  "mtm": -244202,
@@ -176,7 +176,7 @@
     "description": "Matched on MarkitWire (MA696496024)"
    },
    {
-    "date": "2026-12-28",
+    "date": "2026-12-29",
     "event": "Maturity",
     "status": "Scheduled",
     "description": "Final payment and close-out"

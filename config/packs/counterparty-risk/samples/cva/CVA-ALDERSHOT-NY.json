@@ -1,14 +1,14 @@
 {
  "resultId": "CVA-ALDERSHOT-NY",
- "cva": -12348,
+ "cva": -12349,
  "dva": 6483,
- "fva": -22166,
- "kva": -170225,
+ "fva": -22167,
+ "kva": -170227,
  "cs01": -222,
  "components": [
   {
    "name": "CVA",
-   "amount": -12348
+   "amount": -12349
   },
   {
    "name": "DVA",
@@ -16,11 +16,11 @@
   },
   {
    "name": "FVA",
-   "amount": -22166
+   "amount": -22167
   },
   {
    "name": "KVA",
-   "amount": -170225
+   "amount": -170227
   }
  ],
  "sensitivities": [
