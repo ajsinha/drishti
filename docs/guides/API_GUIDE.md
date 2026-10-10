@@ -1523,10 +1523,73 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-8004 | 429 | embed rate limit | over the host application's or the user's call rate, or the application's token requests per minute; `Retry-After` says when |
 | DRS-8005 | 400 | kind not allowed | the host application may not show this kind (its `kinds` list) |
 | DRS-8006 | 410 | embed contract gone | the element's contract version is no longer served (raised by the console, not the server) |
+| DRS-9001 | 404 | BI not found | Business intelligence: no such workspace, item or version, or the caller may not know it exists (workspaces they do not belong to and items outside their audience answer this, never 403) |
+| DRS-9002 | 403 | BI not allowed | Business intelligence: the caller lacks the BI power (`bi`, `bi-author`, `bi-steward`, `bi-admin`) or the workspace role the action needs; the detail says which |
+| DRS-9003 | 422 | BI invalid | Business intelligence: a name, kind, body (not YAML, not a mapping, over `drishti.bi.max-body-bytes`), tag, audience (unknown role, user or pack), endorsement or setting that is not valid; also an unknown power on a role |
+| DRS-9004 | 409 | BI conflict | Business intelligence: the state forbids it: workspace id taken, nothing new to publish, already proposed, edit while proposed, personal workspace (private: cannot publish, be shared or deleted this way), last admin, workspace not empty, shipped content is read-only |
+| DRS-9005 | 403 | BI four-eyes | Business intelligence: with `drishti.governance.four-eyes` on (and security on), the proposer may not approve or reject their own proposal |
+| DRS-9006 | 403 | BI off | Business intelligence is switched off on this server (`drishti.bi.enabled`) |
 
 `DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
 unknown `rachana:` version); see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes).
+
+## Business intelligence (Rupaka): `/api/v1/bi`
+
+Phase 1 of Drishti Rūpaka ([BI_GUIDE.md](BI_GUIDE.md), [RUPAKA.md](../architecture/RUPAKA.md)): workspaces, typed items with a YAML body
+(stored and versioned, **not executed**), publish and review, endorsement and the catalogue. There is no admin path: the BI powers on the
+caller's roles and the workspace roles decide every call, from the identity on the request. A caller without the `bi` power gets `403 DRS-9002`
+on every call; with `drishti.bi.enabled` off, `403 DRS-9006`. Items and workspaces the caller may not see answer `404 DRS-9001`. Writes by a
+personal token need the scopes `bi:write`, `bi:approve` and `bi:admin` (the table under [tokens](#personal-api-tokens)). Every change is audited
+(`bi-*`). Bodies are JSON; an item's `body` is a YAML string (at most `drishti.bi.max-body-bytes`, a mapping at the top, or empty).
+Item ids are `bi-<10 hex>` (shipped files: `file:<kind>:<name>`); `me` stands for the caller's personal workspace.
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/bi/me` | `{enabled, powers, user, personalWorkspace, workspaceCreation, mayCreateWorkspace, kinds, roles}` |
+| `GET` | `/bi/home` | `{recent, favourites, certified, shared, counts}`: lists of item cards the caller may open |
+| `GET` | `/bi/catalogue` | published items the caller may open. Query: `q` (every word must match title, description, tags, owner, kind or workspace name), `kind`, `workspace`, `owner`, `endorsement` (`none`, `promoted`, `certified`), `tag`, `pack`, `fresh` (published within N days), `sort` (`use` default, `date`, `title`), `limit`. Answer `{total, items, facets, workspaceNames}`; certified first unless `sort=title` |
+| `GET` `PUT` | `/bi/settings` | `{workspaceCreation: authors\|stewards\|admins, fourEyes, dir, shippedItems, powers, roles}`; `PUT {workspaceCreation}`; needs `bi-admin` |
+| `GET` `POST` | `/bi/workspaces` | the caller's workspaces (personal, member of, shipped; a `bi-admin` sees all shared) with `role` and `items`; `POST {name, description?, id?, reviewRequired?}` creates a shared one (`201`; the caller becomes its admin; the policy decides who may) |
+| `GET` `PUT` `DELETE` | `/bi/workspaces/{id}` | one workspace with `members`; `PUT {name?, description?, reviewRequired?}` and `DELETE` (empty workspaces only; `204`) need the workspace admin |
+| `PUT` `DELETE` | `/bi/workspaces/{id}/members/{user}` | `PUT {role: viewer\|contributor\|member\|admin}` adds or changes a member; `DELETE` removes one; never the last admin (`409`) |
+| `GET` `POST` | `/bi/workspaces/{id}/items` | the items the caller may see in it; `POST {kind: dataset\|report\|board\|notebook, title, description?, tags?, body?, audienceRoles?, audienceUsers?, audiencePacks?}` creates a draft (`201`; contributor and `bi-author`) |
+| `GET` `PUT` `DELETE` | `/bi/items/{id}` | the item card with `body` (the draft for contributors and above, else the published version), `bodyIs`, `draftChanges` and `can{edit, propose, publish, approve, withdraw, promote, certify, delete, move}`; `PUT` takes any of the create fields; `DELETE` is `204` |
+| `POST` | `/bi/items/{id}/open` | as `GET`, and counts a view and a Recent entry (published items) |
+| `POST` | `/bi/items/{id}/propose` `/withdraw` `/approve` `/reject` | review: `{note}` or `{reason}` (required to reject); approve needs a workspace member with the `approve` power |
+| `POST` | `/bi/items/{id}/publish` | `{note?}`: the next version; not in a personal workspace, not when the workspace requires review |
+| `POST` | `/bi/items/{id}/move` | `{workspace}`: move to another workspace (`me` for personal) |
+| `POST` | `/bi/items/{id}/endorse` | `{level: none\|promoted\|certified}` on a published item |
+| `PUT` | `/bi/items/{id}/favourite` | `{on: true\|false}` for the caller |
+| `GET` | `/bi/items/{id}/versions`, `/versions/{n}` | the published versions (newest first), one with its `body` |
+| `POST` | `/bi/items/{id}/versions/{n}/restore` | makes version `n` the draft |
+
+A catalogue answer, as the server sent it for a reader (trimmed):
+
+```
+$ curl -s -H "Authorization: Bearer $TOKEN" "$SERVER/api/v1/bi/catalogue?q=exposure"
+{"total": 1, "items": [{"id": "bi-cd5f8b2cc5", "workspace": "rates-desk", "workspaceName": "Rates Desk", "kind": "board",
+  "title": "Counterparty exposure", "description": "Live exposure by counterparty against limits", "owner": "ann", "tags": ["exposure", "credit"],
+  "status": "published", "publishedVersion": 1, "endorsement": "promoted", "endorsedBy": "ann", "audience": {"roles": ["bi-reader"], "users": [], "packs": []},
+  "publishedAt": "2026-10-10T20:26:22.088Z", "views": 0, "viewsDays": 30, "favourite": false, "shipped": false, "role": "viewer",
+  "can": {"edit": false, "propose": false, "publish": false, "approve": false, "withdraw": false, "promote": false, "certify": false, "delete": false, "move": false}}],
+ "facets": {"kind": {"board": 1, "dataset": 1, "report": 3}, "endorsement": {"certified": 1, "none": 2, "promoted": 2}, "...": "..."},
+ "workspaceNames": {"rates-desk": "Rates Desk", "shipped": "Shipped content"}}
+```
+
+and the refusals, with their codes:
+
+```
+$ curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}' "$SERVER/api/v1/bi/items/bi-27def70913/publish"
+{"type":"about:blank","title":"bi forbidden","status":403,"detail":"DRS-9002 cat does not hold the bi-author power (an administrator grants it on a role)","instance":"/api/v1/bi/items/bi-27def70913/publish","code":"DRS-9002"}
+$ curl -s -H "Authorization: Bearer $NOBI_TOKEN" "$SERVER/api/v1/bi/home"
+{"type":"about:blank","title":"bi forbidden","status":403,"detail":"DRS-9002 nobi does not hold the bi power (an administrator grants it on a role)","instance":"/api/v1/bi/home","code":"DRS-9002"}
+```
+
+Roles carry the BI powers: `GET` and `PUT /admin/role-definitions/{name}` have a `bi` list (`bi`, `bi-author`, `bi-steward`, `bi-admin`; an
+unknown name is `422 DRS-9003`; a `PUT` that does not name `bi` keeps the powers the role had). From the console the same calls are under
+`/bi/api/...` (same-origin JSON, passed on under the signed-in user). The command line wraps the reads and publish:
+[CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka).
 
 ## Embedding views in another web application
 
@@ -1648,6 +1711,9 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
 | `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
 | `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_LOADS.md](DATA_LOADS.md)) | the roles that open the kind (an administrator needs no more) |
+| `bi:write` | Business intelligence: `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
+| `bi:approve` | `POST /bi/items/{id}/approve`, `/reject` and `/endorse` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
+| `bi:admin` | `PUT` and `DELETE /bi/workspaces/{id}`, `PUT` and `DELETE /bi/workspaces/{id}/members/{user}`, `PUT /bi/settings` | workspace admin, or `bi-admin` |
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`) | `admin` |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by

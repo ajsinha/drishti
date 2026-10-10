@@ -69,6 +69,8 @@
     <tr class="hl-row-down"><td class="mono">{{ name }}</td><td><span class="hl-badge hl-bad">NOT LOADED</span></td><td colspan="4"></td><td class="hl-err">{{ why }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
 
+{% if h.bi and h.bi.problems %}<p class="hl-err" role="alert"><b>BI folder</b> ({{ h.bi.watch }}): {% for b in h.bi.problems %}<span class="mono">{{ b.file }}</span>: {{ b.message }}{{ ' (the last good version is kept)' if b.keptLastGood }}{{ '; ' if not loop.last }}{% endfor %}</p>{% endif %}
+
 {% if h.overrides %}
 <details class="hl-over"><summary>{{ h.overrides | length }} inherited definition{{ 's' if h.overrides | length > 1 }} overridden by a more specific pack</summary>
   <ul class="mono cmp-path">{% for o in h.overrides %}<li>{{ o }}</li>{% endfor %}</ul></details>

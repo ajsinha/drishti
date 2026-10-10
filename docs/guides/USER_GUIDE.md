@@ -88,7 +88,7 @@ takes you back where you were; *Open the terminal* goes to the terminal instead.
 free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box with its **Live** button.
 Below 1100 pixels wide they move to a line of their own.
 
-**Then four menus.** Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then four menus** (five with **BI**, below). Below 1280 pixels they show as icons only. Each opens a wide panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -96,12 +96,19 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
+| **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
 | | Learn | *Screen designer guide*, *Sutra guide*, *Rachana reference*, *Build a pack* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
 | | Operations | *Packs*, *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
+
+**BI and the `RUPAKA` keyword.** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Build**, and the reserved command
+word `RUPAKA` goes there from the command line, in any case: `RUPAKA <GO>` the BI home, `RUPAKA WORKSPACE <GO>` your personal workspace, `RUPAKA CATALOGUE <GO>` the
+catalogue, `RUPAKA <report> <GO>` a published item by id or title (type-ahead completes after `RUPAKA `). Without the power the menu is not there and `RUPAKA <GO>`
+says what is missing. No pack can define a mnemonic with that name. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
+[BI_GUIDE.md](BI_GUIDE.md).
 
 **On the right:** round tools, from left to right.
 

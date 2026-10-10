@@ -137,7 +137,19 @@ public enum ErrorCode {
     /** Embedded views: the kind is not one this host application may show. */
     EMBED_KIND("DRS-8005", 400),
     /** Embedded views: the element's contract version is no longer served (raised by the console). */
-    EMBED_VERSION_GONE("DRS-8006", 410);
+    EMBED_VERSION_GONE("DRS-8006", 410),
+    /** Business intelligence (Rupaka): no such workspace, item or version, or the caller may not know it exists. */
+    BI_NOT_FOUND("DRS-9001", 404),
+    /** Business intelligence: the caller lacks the BI power, or the workspace role, the action needs (the reason says which). */
+    BI_FORBIDDEN("DRS-9002", 403),
+    /** Business intelligence: a name, kind, body, audience, tag or endorsement that is not valid. */
+    BI_INVALID("DRS-9003", 422),
+    /** Business intelligence: the item or workspace is in a state that forbids this (name taken, already proposed, personal workspace cannot publish or be shared). */
+    BI_CONFLICT("DRS-9004", 409),
+    /** Business intelligence: with four-eyes on, nobody approves their own proposal. */
+    BI_FOUR_EYES("DRS-9005", 403),
+    /** Business intelligence is switched off on this server (drishti.bi.enabled). */
+    BI_OFF("DRS-9006", 403);
 
     private final String code;
     private final int httpStatus;

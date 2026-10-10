@@ -126,8 +126,11 @@ class AuthGate(BaseHTTPMiddleware):
                 info = await request.app.state.business_dates.info(request.app.state.backend, request.state.identity, "live")
             request.state.business_date = info
         request.state.settings = None
+        request.state.bi_me = None
         if request.state.identity is not None and not path.startswith(("/static/", PYODIDE, EMBED, "/api/", "/healthz", "/readyz")):
             request.state.settings = await request.app.state.user_settings.get(request.app.state.backend, request.state.identity)
+            if request.app.state.bi_on and not path.startswith("/bi/api/"):
+                request.state.bi_me = await request.app.state.bi_me.get(request.app.state.backend, request.state.identity)
             try:
                 request.state.pack_switcher = await request.app.state.packs.assigned(request.app.state.backend, request.state.identity)
             except Exception:  # noqa: BLE001 - the switcher is a convenience; never fail a page for it
@@ -246,6 +249,10 @@ def create_app(settings: Settings) -> FastAPI:
     from core.settings import UserSettings
 
     app.state.user_settings = UserSettings()
+    from core.bi import BiMe
+
+    app.state.bi_me = BiMe()
+    app.state.bi_on = str(settings.get("bi.enabled", True)).lower() in ("true", "1", "yes", "on")      # false: no BI menu, no /bi pages
     console_dir = WEB.parent
     docs_dir = Path(settings.get("help.docs_dir", "../docs"))
     from core.packs import Packs
@@ -313,6 +320,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(connector_routes.router)
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)
+    if app.state.bi_on:
+        from routes import bi_routes
+
+        app.include_router(bi_routes.router)
     if str(settings.get("bi.poc_enabled", False)).lower() in ("true", "1", "yes", "on"):   # off by default: no /bi/poc paths exist otherwise
         from routes import bi_poc_routes
 

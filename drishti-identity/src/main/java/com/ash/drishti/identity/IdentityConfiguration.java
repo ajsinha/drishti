@@ -132,6 +132,14 @@ public class IdentityConfiguration {
         }
     }
 
+    /** Business intelligence (Rupaka): workspaces, items, versions and marks in the identity database. */
+    @Bean
+    public com.ash.drishti.identity.bi.BiStore biStore(IdentityRepositories.BiWorkspaces workspaces, IdentityRepositories.BiMembers members,
+            IdentityRepositories.BiItems items, IdentityRepositories.BiVersions versions, IdentityRepositories.BiUserItems marks,
+            IdentityRepositories.BiUsages usage, IdentityRepositories.BiSettings settings, TransactionTemplate identityTransactions) {
+        return new com.ash.drishti.identity.bi.BiStore(workspaces, members, items, versions, marks, usage, settings, identityTransactions);
+    }
+
     @Bean
     public RoleStore roleStore(IdentityRepositories.Roles roles, TransactionTemplate identityTransactions, JpaAuditLog auditLog) {
         return new RoleStore(roles, identityTransactions, auditLog);

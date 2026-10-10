@@ -1849,6 +1849,48 @@ deleted orders-lake (its text is kept in the connector folder's .history)
 the server's answer unchanged. Errors: `DRS-5031` invalid (422), `DRS-5032` stale version, existing file without `--if-match`, or in use without `--confirm`
 (409), `DRS-5033` no such connector (404); see [API_GUIDE.md](API_GUIDE.md#connectors-apiv1adminconnectors).
 
+### `bi`: workspaces and the catalogue (Rupaka)
+
+Business intelligence over REST ([BI_GUIDE.md](BI_GUIDE.md), [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi)), as the token's user sees it: the
+server shows only what that person may open. Reads need no scope; `publish` needs a token with `bi:write` (and the user the `bi-author` power and the member role).
+
+```
+drishti.py bi workspace list|get [ID]                      the workspaces you may open; one with its members and items ('me' is your personal one)
+drishti.py bi catalogue list [--q T] [--kind K] [--workspace W] [--owner O] [--endorsement E] [--tag T] [--sort use|date|title] [--fresh DAYS] [--limit N]
+drishti.py bi catalogue get ID [--body]                    one item (--body also prints its YAML)
+drishti.py bi catalogue publish ID [--note TEXT]           publish the draft as the next version
+```
+
+All take `--json`, `--server`, `--token-file` and `--user` like the other REST commands. With a review-required workspace, `publish` answers `403 DRS-9002`; propose
+and approve in the BI page. Real output from a scratch server with a reader's token:
+
+```
+$ drishti.py bi workspace list
+id                            role          items  name
+u-cat-7fd6                    admin             0  My workspace  [personal]
+rates-desk                    viewer            4  Rates Desk
+shipped                       viewer            2  Shipped content
+$ drishti.py bi catalogue list
+id                           kind     endorsed  status    ver  title
+bi-27def70913                report   certified published v1   Desk P&L  (Rates Desk, ann)
+bi-cd5f8b2cc5                board    promoted  published v1   Counterparty exposure  (Rates Desk, ann)
+file:report:liquidity-daily  report   promoted  published v1   Liquidity daily  (Shipped content, treasury)
+bi-0185621d8e                report   none      published v1   Risk ladder  (Rates Desk, ann)
+file:dataset:trades          dataset  none      published v1   Trades (shipped)  (Shipped content, treasury)
+5 item(s)
+$ drishti.py bi catalogue get bi-27def70913 --body
+bi-27def70913   report   certified published v1   Desk P&L  (Rates Desk, ann)
+  Daily P&L by book and trader, with the day's movers
+  tags: pnl, daily   views: 0   audience: {'users': [], 'roles': ['bi-reader', 'bi-steward'], 'packs': []}
+pages:
+  - title: Overview
+
+$ drishti.py bi catalogue publish bi-27def70913 --note x
+drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author power (an administrator grants it on a role)
+```
+
+`drishti.py pack check` also refuses a pack that defines a mnemonic named `RUPAKA` or `FORM` (reserved command words).
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,

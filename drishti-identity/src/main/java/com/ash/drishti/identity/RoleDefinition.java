@@ -35,11 +35,23 @@ import java.util.List;
  * @param builtIn defined in configuration or a pack (read-only in the UI) rather than by an administrator
  * @param updatedAt last change (null for built-in roles)
  * @param updatedBy who made it (empty for built-in roles)
+ * @param bi business-intelligence powers held ({@link #BI_POWERS}); each one above {@code bi} also needs {@code bi} to open the page
  */
 public record RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve,
-        boolean admin, boolean calc, boolean layout, boolean collaborate, boolean compliance, boolean builtIn, Instant updatedAt, String updatedBy) {
+        boolean admin, boolean calc, boolean layout, boolean collaborate, boolean compliance, boolean builtIn, Instant updatedAt, String updatedBy,
+        java.util.Set<String> bi) {
+
+    /** The business-intelligence powers (Rupaka): open BI, author, steward (certify), administer BI settings. */
+    public static final List<String> BI_POWERS = List.of("bi", "bi-author", "bi-steward", "bi-admin");
+
+    /** A role without business-intelligence powers. */
+    public RoleDefinition(String name, String description, List<String> kinds, boolean raw, boolean author, boolean approve, boolean admin,
+            boolean calc, boolean layout, boolean collaborate, boolean compliance, boolean builtIn, Instant updatedAt, String updatedBy) {
+        this(name, description, kinds, raw, author, approve, admin, calc, layout, collaborate, compliance, builtIn, updatedAt, updatedBy, java.util.Set.of());
+    }
 
     public RoleDefinition {
+        bi = bi == null ? java.util.Set.of() : java.util.Set.copyOf(bi);
         description = description == null ? "" : description;
         kinds = kinds == null ? List.of() : List.copyOf(kinds);
         updatedBy = updatedBy == null ? "" : updatedBy;

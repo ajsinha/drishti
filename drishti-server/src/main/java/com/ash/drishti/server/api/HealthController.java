@@ -61,10 +61,13 @@ public class HealthController {
     private final List<String> overrides;
     private final com.ash.drishti.server.loads.ExpectationService expectations;
     private final com.ash.drishti.server.connectors.ConnectorManager connectors;
+    private final com.ash.drishti.server.bi.BiFolder biFolder;
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
-            org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors) {
+            org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
+            com.ash.drishti.server.bi.BiFolder biFolder) {
+        this.biFolder = biFolder;
         this.expectations = expectations;
         this.connectors = connectors;
         this.overrides = org.springframework.boot.context.properties.bind.Binder.get(env)
@@ -147,6 +150,8 @@ public class HealthController {
                 "by", d.by() + " " + d.zone(), "line", d.line())).toList());
         out.put("overrides", overrides);
         out.put("connectors", connectors.healthSummary());
+        out.put("bi", Map.of("watch", biFolder.watchState(), "shippedItems", biFolder.items().size(), "problems", biFolder.problems().stream()
+                .map(x -> Map.of("file", x.file(), "message", x.message(), "keptLastGood", x.keptLastGood())).toList()));
         out.put("live", Map.of("streams", slots.open(), "topics", hub.topicCount(), "frames", live.frames(), "droppedFrames", live.droppedFrames(),
                 "p50Ms", live.percentile(50), "p99Ms", live.percentile(99)));
         return out;

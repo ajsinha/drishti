@@ -1,0 +1,37 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Catalogue{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><h1>Catalogue</h1>
+  <p class="text-muted-d">Every published item you may open. Certified items come first. <kbd>/</kbd> searches.</p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<form class="bi-filters" data-catalogue-form role="search" aria-label="Search the catalogue" autocomplete="off">
+  <label class="bi-find"><span class="visually-hidden">Search</span>
+    <input type="search" name="q" class="studio-in" placeholder="Search title, description, tags, owner" data-search></label>
+  <label>Kind<select name="kind" class="studio-select" data-filter="kind"><option value="">any</option></select></label>
+  <label>Workspace<select name="workspace" class="studio-select" data-filter="workspace"><option value="">any</option></select></label>
+  <label>Owner<select name="owner" class="studio-select" data-filter="owner"><option value="">any</option></select></label>
+  <label>Endorsement<select name="endorsement" class="studio-select" data-filter="endorsement"><option value="">any</option></select></label>
+  <label>Tag<select name="tag" class="studio-select" data-filter="tag"><option value="">any</option></select></label>
+  <label>Updated<select name="fresh" class="studio-select"><option value="">any time</option><option value="1">last day</option><option value="7">last week</option><option value="30">last 30 days</option></select></label>
+  <label>Sort<select name="sort" class="studio-select"><option value="use">most used</option><option value="date">newest</option><option value="title">title</option></select></label>
+  <button type="button" class="btn-pill btn-ghost" data-clear>Clear</button>
+</form>
+<p class="bi-count" data-count role="status" aria-live="polite"></p>
+<div class="bi-cards" data-cards></div>
+<p class="bi-empty" data-empty hidden>Nothing matches. Clear a filter, or check the spelling.</p>
+{% endblock %}

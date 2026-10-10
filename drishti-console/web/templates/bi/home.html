@@ -1,0 +1,32 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "bi/shell.html" %}
+{% block bi_title %}BI home{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><h1>Business intelligence</h1>
+  <p class="text-muted-d">What you opened lately, what you starred, what is certified for you and what was shared with you. Type <span class="mono">RUPAKA &lt;GO&gt;</span> from anywhere to come back here.</p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<div class="bi-sections" data-home>
+  <section class="bi-sec" data-sec="recent" aria-labelledby="hRecent"><h2 id="hRecent"><i class="bi bi-clock-history" aria-hidden="true"></i> Recent</h2>
+    <div class="bi-cards" data-cards></div><p class="bi-empty" data-empty hidden>Nothing opened yet. Open something from the <a href="/bi/catalogue">catalogue</a>.</p></section>
+  <section class="bi-sec" data-sec="favourites" aria-labelledby="hFav"><h2 id="hFav"><i class="bi bi-star" aria-hidden="true"></i> Favourites</h2>
+    <div class="bi-cards" data-cards></div><p class="bi-empty" data-empty hidden>No favourites. Use the star on any item.</p></section>
+  <section class="bi-sec" data-sec="certified" aria-labelledby="hCert"><h2 id="hCert"><i class="bi bi-patch-check" aria-hidden="true"></i> Certified for you</h2>
+    <div class="bi-cards" data-cards></div><p class="bi-empty" data-empty hidden>Nothing certified is open to you yet. A steward certifies published items.</p></section>
+  <section class="bi-sec" data-sec="shared" aria-labelledby="hShared"><h2 id="hShared"><i class="bi bi-people" aria-hidden="true"></i> Shared with me</h2>
+    <div class="bi-cards" data-cards></div><p class="bi-empty" data-empty hidden>Nothing shared with you yet.</p></section>
+</div>
+{% endblock %}

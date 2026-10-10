@@ -1,0 +1,47 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Item{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><div class="bi-title-row"><h1 data-title>Item</h1>
+    <button type="button" class="btn-pill btn-ghost bi-starbtn" data-favourite aria-pressed="false" aria-label="Favourite"><i class="bi bi-star" aria-hidden="true"></i></button></div>
+  <p class="text-muted-d" data-desc></p>
+  <p class="bi-facts" data-meta></p>
+  <p class="bi-badges" data-badges></p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<div class="bi-actions" data-actions></div>
+<section class="bi-sec" aria-labelledby="iBody"><h2 id="iBody">Body <small class="bi-soon" data-body-is></small></h2>
+  <p class="text-muted-d">The YAML of this item. Phase 1 stores, versions and publishes it; it is not run or drawn yet.</p>
+  <pre class="bi-body mono" data-body tabindex="0"></pre></section>
+<form class="bi-form" data-edit hidden aria-label="Edit the item">
+  <h2>Edit</h2>
+  <label>Title<input name="title" class="studio-in" required maxlength="200" autocomplete="off"></label>
+  <label>Description<input name="description" class="studio-in" maxlength="2000" autocomplete="off"></label>
+  <label>Tags (comma separated)<input name="tags" class="studio-in" autocomplete="off"></label>
+  <fieldset class="bi-audience"><legend>Audience (who sees it in the catalogue besides the workspace's members)</legend>
+    <label>Roles<input name="audienceRoles" class="studio-in" autocomplete="off" placeholder="viewer, risk"></label>
+    <label>Users<input name="audienceUsers" class="studio-in" autocomplete="off"></label>
+    <label>Packs<input name="audiencePacks" class="studio-in" autocomplete="off" placeholder="finance"></label></fieldset>
+  <label>Body (YAML)<textarea name="body" class="studio-in mono" rows="12" spellcheck="false"></textarea></label>
+  <button type="submit" class="btn-pill btn-accent">Save draft</button>
+</form>
+<section class="bi-sec" aria-labelledby="iVer"><h2 id="iVer">Versions</h2>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-versions data-plain>
+    <caption class="visually-hidden">Published versions</caption>
+    <thead><tr><th scope="col">Version</th><th scope="col">Published</th><th scope="col">By</th><th scope="col">Note</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody></tbody></table></div>
+  <p class="bi-empty" data-empty-versions hidden>Not published yet.</p></section>
+{% endblock %}

@@ -363,3 +363,37 @@ CREATE TABLE IF NOT EXISTS drishti_embed_app (
     updated_by            VARCHAR(255) NOT NULL DEFAULT '',
     last_used_at          TIMESTAMP WITH TIME ZONE
 );
+
+-- Business intelligence (Rupaka, docs/architecture/RUPAKA.md): workspaces, members, items, versions, per-user marks, usage, settings.
+CREATE TABLE IF NOT EXISTS drishti_bi_workspace (
+    id VARCHAR(255) PRIMARY KEY, name VARCHAR(255) NOT NULL, description TEXT NOT NULL DEFAULT '', personal BOOLEAN NOT NULL, owner VARCHAR(255) NOT NULL DEFAULT '',
+    review_required BOOLEAN NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL, created_by VARCHAR(255) NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS drishti_bi_member (
+    id VARCHAR(255) PRIMARY KEY, workspace VARCHAR(255) NOT NULL, username VARCHAR(255) NOT NULL, role VARCHAR(255) NOT NULL, added_at TIMESTAMP WITH TIME ZONE NOT NULL, added_by VARCHAR(255) NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS ix_bi_member_user ON drishti_bi_member (username);
+CREATE TABLE IF NOT EXISTS drishti_bi_item (
+    id VARCHAR(255) PRIMARY KEY, workspace VARCHAR(255) NOT NULL, kind VARCHAR(255) NOT NULL, title VARCHAR(255) NOT NULL, description TEXT NOT NULL DEFAULT '', owner VARCHAR(255) NOT NULL,
+    tags TEXT NOT NULL DEFAULT '', body TEXT NOT NULL DEFAULT '', status VARCHAR(255) NOT NULL, published_version INTEGER NOT NULL DEFAULT 0,
+    endorsement VARCHAR(255) NOT NULL DEFAULT 'none', endorsed_by VARCHAR(255) NOT NULL DEFAULT '', audience_roles TEXT NOT NULL DEFAULT '', audience_users TEXT NOT NULL DEFAULT '',
+    audience_packs TEXT NOT NULL DEFAULT '', proposed_by VARCHAR(255) NOT NULL DEFAULT '', proposed_at TIMESTAMP WITH TIME ZONE, created_at TIMESTAMP WITH TIME ZONE NOT NULL, updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_by VARCHAR(255) NOT NULL DEFAULT '', published_at TIMESTAMP WITH TIME ZONE, published_by VARCHAR(255) NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS ix_bi_item_workspace ON drishti_bi_item (workspace);
+CREATE TABLE IF NOT EXISTS drishti_bi_version (
+    id VARCHAR(255) PRIMARY KEY, item_id VARCHAR(255) NOT NULL, version INTEGER NOT NULL, body TEXT NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '',
+    created_by VARCHAR(255) NOT NULL DEFAULT '', created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_bi_version_item ON drishti_bi_version (item_id);
+CREATE TABLE IF NOT EXISTS drishti_bi_user_item (
+    id VARCHAR(255) PRIMARY KEY, username VARCHAR(255) NOT NULL, item_id VARCHAR(255) NOT NULL, favourite BOOLEAN NOT NULL, last_opened TIMESTAMP WITH TIME ZONE, opens INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS ix_bi_user_item_user ON drishti_bi_user_item (username);
+CREATE TABLE IF NOT EXISTS drishti_bi_usage (
+    id VARCHAR(255) PRIMARY KEY, item_id VARCHAR(255) NOT NULL, day VARCHAR(255) NOT NULL, views INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS ix_bi_usage_item ON drishti_bi_usage (item_id);
+CREATE TABLE IF NOT EXISTS drishti_bi_setting (
+    name VARCHAR(255) PRIMARY KEY, value TEXT NOT NULL DEFAULT ''
+);

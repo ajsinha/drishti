@@ -62,12 +62,38 @@ FORM_WORD = "FORM"        # a reserved command word: query by form (routes/form_
 RUPAKA = "RUPAKA"         # a reserved command word: the BI page (a pack cannot define a mnemonic with this name)
 
 
+async def rupaka(request: Request, rest: str):
+    """``RUPAKA <GO>`` the BI home; ``RUPAKA WORKSPACE`` my workspace; ``RUPAKA CATALOGUE`` the catalogue; ``RUPAKA <report>`` a published report
+    by id or title (one match opens it, several open the catalogue searched for what was typed). Any case."""
+    if not request.app.state.bi_on or not (getattr(request.state, "bi_me", None) or {}).get("enabled"):
+        why = ("Rupaka (business intelligence) is not available to you: it needs the bi power on one of your roles, and BI switched on."
+               if request.app.state.bi_on else "Rupaka (business intelligence) is switched off in this console (bi.enabled).")
+        return RedirectResponse(f"/t?error={quote(why)}", status_code=303)
+    word = rest.upper()
+    if not rest:
+        return RedirectResponse("/bi", status_code=303)
+    if word in ("WORKSPACE", "WORKSPACES"):
+        return RedirectResponse("/bi/w/me", status_code=303)
+    if word in ("CATALOGUE", "CATALOG"):
+        return RedirectResponse("/bi/catalogue", status_code=303)
+    if word in ("SETTINGS",):
+        return RedirectResponse("/admin/bi", status_code=303)
+    try:
+        found = (await request.app.state.backend.bi("GET", "/catalogue", ident(request), q=rest)).get("items") or []
+    except BackendError:
+        found = []
+    exact = [i for i in found if i["id"].lower() == rest.lower() or i["title"].lower() == rest.lower()]
+    pick = exact[0] if exact else found[0] if len(found) == 1 else None
+    if pick:
+        return RedirectResponse(f"/bi/i/{quote(pick['id'], safe=':')}", status_code=303)
+    return RedirectResponse(f"/bi/catalogue?q={quote(rest)}", status_code=303)
+
+
 @router.get("/go")
 async def go(request: Request, q: str = ""):
-    if q.replace("<GO>", "").replace("<go>", "").strip().upper() == RUPAKA:        # reserved (RUPAKA.md section 4), whatever packs define
-        if request.app.state.templates.env.globals.get("BI_POC"):
-            return RedirectResponse("/bi/poc", status_code=303)
-        return RedirectResponse(f"/t?error={quote('Rupaka (business intelligence) is not switched on in this console (bi.poc_enabled).')}", status_code=303)
+    typed = q.replace("<GO>", "").replace("<go>", "").strip()
+    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() == RUPAKA:        # reserved (RUPAKA.md section 4), whatever packs define
+        return await rupaka(request, typed.split(None, 1)[1].strip() if " " in typed else "")
     words = q.replace("<GO>", "").replace("<go>", "").split()
     if words and words[0].upper() == FORM_WORD:                    # reserved too: FORM <pack> [kind] opens the pack's search form
         if len(words) == 1:

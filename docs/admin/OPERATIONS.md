@@ -748,6 +748,16 @@ You should see `HTTP/2 200`.
   exactly that URL with the identity provider. Without it the console builds the URL from the request, which behind
   a proxy may come out as `http://127.0.0.1:17480/...`.
 
+### 8.5 The BI folder is live
+
+The BI folder (`drishti.bi.dir`, default `./config/bi`) is watched like the packs and the connector files (`drishti.bi.watch`: `auto`, `poll`, `off`;
+polling every `drishti.bi.folder-refresh`, 5 s). Copy a `*.report.yaml`, `*.dataset.yaml`, `*.board.yaml` or `*.notebook.yaml` file in and it is in the catalogue
+within seconds; edit it and the item moves to its next version; delete it and it is removed (an open page says so). A file that does not parse keeps its last good
+version and is reported with its message in Admin, BI settings and in the Health document (`bi`: `watch`, `shippedItems`, `problems`), so a bad deploy of a BI file
+never takes content away. On a shared network folder where file events do not arrive the polling covers it; use `poll` there. No restart is needed for any of it
+([BI_GUIDE.md](../guides/BI_GUIDE.md#10-shipped-content-settings-and-the-command-line)). Workspaces, items and versions made in the BI page live in the identity
+database: back it up with the rest ([section 10](#10-backups-and-restore)).
+
 ## 9. Production checklist
 
 Work through this list for every shared installation. Each item says how to check it.

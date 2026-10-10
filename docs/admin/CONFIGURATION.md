@@ -186,7 +186,7 @@ Everything the product owner puts in files lives in one of two places, both rela
 |---|---|---|
 | `config/connectors/` | `drishti.sources.connectors-dir` (`DRISHTI_CONNECTORS_DIR`) | One file per connector ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). |
 | `config/packs/` | `drishti.packs.dir` (`DRISHTI_PACKS_DIR`) | The domain packs. |
-| `config/bi/` | `drishti.bi.dir` (`DRISHTI_BI_DIR`) | Rupaka (BI) files: `datasets/`, `reports/`, `python/` (`config/bi/README.md`). |
+| `config/bi/` | `drishti.bi.dir` (`DRISHTI_BI_DIR`) | Rupaka (BI) files: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/` (`config/bi/README.md`); shipped files are read-only items of the catalogue ([BI_GUIDE.md](../guides/BI_GUIDE.md)). |
 | `data/` | `drishti.data.dir` (`DRISHTI_DATA_DIR`) | Everything written at run time. |
 
 `drishti.data.dir` is the umbrella for every runtime path. Each of these defaults to a folder under it, and each keeps its own
@@ -284,7 +284,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_SUTRA_FOUR_EYES` | `drishti.governance.four-eyes` | `true` | Nobody approves their own proposal (with security on). |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
-| `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `python/`. Never inside a pack. |
+| `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PACKS_SAMPLES` | `drishti.packs.samples` | `visible` | Who sees sample packs: `visible`, `developers` (author or admin) or `hidden`; Admin → Packs can override it. |
@@ -325,7 +325,8 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_OIDC_REDIRECT_URI` | `auth.oidc.redirect_uri` | empty | The redirect URI; empty: `<console>/auth/oidc/callback`. |
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | Live subscriptions one browser may hold. |
 | `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
-| `DRISHTI_BI_POC_ENABLED` | `bi.poc_enabled` | `false` | Rupaka phase 0 proof of concept: the `/bi/poc` page, its top-bar entry and `RUPAKA <GO>`. |
+| `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | Rupaka phase 1: the BI top-bar menu, the `/bi` pages and the `RUPAKA` keyword. The server has its own switch, `drishti.bi.enabled`. |
+| `DRISHTI_BI_POC_ENABLED` | `bi.poc_enabled` | `false` | Rupaka phase 0 proof of concept: the `/bi/poc` page, an administrators-only entry under the BI menu. (`RUPAKA <GO>` opens the BI home, not this page.) |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_AI_ENABLED` | `ai.enabled` | `false` | Turn on the console's own LLM provider layer (the recommended provider is `type: server`, which delegates to the server so keys stay there). |
@@ -976,11 +977,30 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
 [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
 
-### `drishti.bi` — where Rupaka files live
+### `drishti.bi` — Rupaka (business intelligence), phase 1: the shell and the catalogue
+
+Workspaces, items, versions and the catalogue ([BI_GUIDE.md](../guides/BI_GUIDE.md)). Content lives in the identity database; the BI folder holds
+shipped, read-only files. The BI powers are granted on roles, see below.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The folder of BI files: `datasets/<id>.dataset.yaml`, `reports/<id>.report.yaml`, `python/`. Not inside a pack. See `config/bi/README.md` and [RUPAKA.md](../architecture/RUPAKA.md), "Where BI files live". |
+| `enabled` | `true` | The BI endpoints answer. Off: `403 DRS-9006`, and the console (which asks the server) hides the BI menu. |
+| `dir` | `./config/bi` (`DRISHTI_BI_DIR`) | The BI folder: `datasets/<id>.dataset.yaml`, `reports/<id>.report.yaml`, `boards/<id>.board.yaml`, `notebooks/<id>.notebook.yaml`, `python/`. Shipped files appear as published, read-only items of the workspace *Shipped content*. Not inside a pack. See `config/bi/README.md` and [RUPAKA.md](../architecture/RUPAKA.md), "Where BI files live". |
+| `watch` | `auto` | How the BI folder is watched, live, with no restart: `auto` (file events with a polling safety net), `poll`, or `off` (the folder is read on the first request after `folder-refresh`). A file added appears, a file changed becomes the next version, a file deleted goes; a bad file keeps its last good version and is listed in Admin, BI settings and on Health. |
+| `folder-refresh` | `5s` | The polling interval of the watcher (with `watch: off`, how long one read is reused). |
+| `workspace-creation` | `authors` | Who creates shared workspaces: `authors` (`bi-author`), `stewards` (`bi-steward`) or `admins` (`bi-admin` only). An administrator can change it at run time in Admin, BI settings (kept in the identity database; it then overrides this). |
+| `max-body-bytes` | `262144` | The largest YAML body one item may hold (`422 DRS-9003` above it). |
+| `versions-keep` | `50` | Published versions kept per item; the oldest go first. |
+| `usage-days` | `30` | Days of views counted as an item's usage (at most 365). |
+| `recent` | `12` | Rows under Recent, Certified and Shared on Home. |
+| `list-limit` | `200` | Most rows one catalogue or workspace list returns (at most 2000). |
+
+**BI powers on roles.** Under `drishti.security.roles.<role>` the key `bi` is a list of `bi`, `bi-author`, `bi-steward`, `bi-admin`
+(see [USER_MANAGEMENT.md](USER_MANAGEMENT.md#bi-powers-rupaka)); the built-in `viewer` holds `[bi]`, `author` and `approver` hold
+`[bi, bi-author]`, `admin` holds all four. A role defined in Admin, Roles gets its powers from Admin, BI settings. Review before publish reuses
+`drishti.governance.four-eyes` and the `approve` power.
+
+**Console.** `bi.enabled` (`DRISHTI_BI_ENABLED`, default `true`) switches the BI menu, the `/bi` pages and the `RUPAKA` keyword on or off in the console.
 
 ### `drishti.bi.poc` — Rupaka phase 0 proof of concept
 

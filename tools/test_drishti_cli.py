@@ -49,7 +49,7 @@ def run(*argv, env=None):
 class Wiring(unittest.TestCase):
     COMMANDS = [("sutra", c) for c in ("shape", "design", "lint", "test", "preview", "gen")] + \
                [("pack", c) for c in ("new", "check", "about-check", "publish", "keygen", "verify", "install")] + \
-               [("data", "ingest"), ("data", "load"), ("data", "landed"), ("data", "loads"),("server", "smoke"), ("view", "get"), ("view", "explain"), ("server", "health"), ("server", "packs"), ("docs", "shots")] + \
+               [("data", "ingest"), ("data", "load"), ("data", "landed"), ("data", "loads"),("server", "smoke"), ("view", "get"), ("view", "explain"), ("server", "health"), ("server", "packs"), ("docs", "shots"), ("bi", "workspace"), ("bi", "catalogue")] + \
                [("design", c) for c in ("list", "create", "get", "save", "check", "propose", "approve", "reject", "proposals", "export", "import",
                                         "bind", "autodesign", "delete")]
 
@@ -142,6 +142,15 @@ class Tools(unittest.TestCase):
         self.assertEqual(1, code)
         self.assertIn("'ghost' is not one of the pack's kinds", err)
         self.assertIn("ingest.trade: needs key", err)
+
+    def test_pack_check_refuses_a_reserved_command_word_as_a_mnemonic(self):
+        for word in ("RUPAKA", "rupaka", "FORM"):
+            (self.pack / "pack.yaml").write_text(f"pack: my-pack\nkinds: [trade]\nmnemonics:\n  {word}: {{kind: trade}}\n")
+            code, _, err = run("pack", "check", self.pack, *self.jvm(), env=self.env)
+            self.assertEqual(1, code, word)
+            self.assertIn(f"mnemonics.{word}: '{word}' is a reserved command word", err)
+        (self.pack / "pack.yaml").write_text("pack: my-pack\nkinds: [trade]\nmnemonics:\n  TRD: {kind: trade}\n")
+        self.assertEqual(0, run("pack", "check", self.pack, *self.jvm(), env=self.env)[0])
 
     def test_pack_check_needs_a_pack_folder(self):
         self.assertEqual(2, run("pack", "check", self.tmp, *self.jvm(), env=self.env)[0])
