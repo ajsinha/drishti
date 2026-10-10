@@ -29,6 +29,22 @@ export function strip(root, p) {
   return true;
 }
 
+/** The strip of a fresh view, set into the one on screen cell by cell: only the cells whose text, tone or link differ are touched.
+    Returns the indexes that changed. */
+export function syncStrip(root, headHtml) {
+  const t = document.createElement('template');
+  setHtml(t, (headHtml || '').trim());
+  const fresh = t.content.querySelectorAll('.strip-i dd'), live = root.querySelectorAll('.strip-i dd'), changed = [];
+  fresh.forEach((n, i) => {
+    const dd = live[i];
+    if (!dd || (dd.innerHTML === n.innerHTML && dd.className.replace(/\s*\bflash\b/, '') === n.className)) { return; }
+    setHtml(dd, n.innerHTML); dd.className = n.className;
+    dd.classList.remove('flash'); void dd.offsetWidth; dd.classList.add('flash');
+    changed.push(i);
+  });
+  return changed;
+}
+
 /** A panel: in place when the patch carries only data (a chart), else replaced with the new markup, keeping the grid classes and the chosen tab.
     Returns the new panel element, or null. */
 export function panel(root, p, mods, absolutise) {

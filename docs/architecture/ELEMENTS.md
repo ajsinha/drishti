@@ -266,7 +266,8 @@ All are `CustomEvent`s dispatched on the element, `bubbles: true, composed: true
 
 | Event | `detail` | Cancellable | When |
 |---|---|---|---|
-| `drishti:loaded` | `{ref: {kind, id}, generation, title, live}` | no | a view was painted (first load, reload, refresh, reconnect) |
+| `drishti:loaded` | `{ref: {kind, id}, generation, title, live}` | no | a view was loaded and painted (first load, reload, refresh) |
+| `drishti:paint` | `{ref: {kind, id}, generation}` | no | the shadow root was rebuilt (every `loaded` is preceded by one; a live resync after the stream's first look or a reconnect is a `tick`, not a `paint`: [7.3a](#73a-live-updates-in-the-element-what-repaints-and-what-patches)) |
 | `drishti:tick` | `{generation, seq, latencyMs, changed: {strip: [index], panels: [id]}}` | no | a live frame was applied |
 | `drishti:navigate` | `{kind, id, href, panel, source: "link" \| "chart" \| "graph"}` | **yes** | the user activated a linked entity. Default (not cancelled): set `entity` (and `kind`) and reload in place. `href` is the absolute console URL, for a host that prefers to open the console |
 | `drishti:error` | `{code, status, detail, fatal, retryInMs}` | no | a DRS code from [section 6.7](#67-errors); `fatal: false` while the element retries by itself |
@@ -572,6 +573,25 @@ must have the page's origin, so the console's worker cannot be used, and the hos
 **Decision 3:** one connection per page in version 1 (not per browser), and the console served over **HTTP/2** for
 embedding, where the six-connections-per-site limit of HTTP/1.1 (QA finding UX-01) does not apply. Recommended. A
 host-served SharedWorker (`DrishtiElements.useWorker('/drishti-worker.js')`) can come later for hosts on HTTP/1.1.
+
+### 7.3a Live updates in the element: what repaints and what patches
+
+A repaint (`drishti:paint`: dispose every enhancer, rebuild the shadow root, boot again) happens only for a real reason:
+the first load, `entity`/`kind`/`as-of`/`known-at`/`header`/`panels`/`live`/`server` changing, `refresh()` or `reload()`
+called by the host, the entity coming back after a deletion, and the Retry after an error. Even then a zoomed panel of the
+same entity stays zoomed. Everything else is a patch applied in place, so scroll, selection, focus and zoom stay:
+
+| Event from the stream | What the element does |
+|---|---|
+| `frame` (every tick) | strip cells and whole panels are patched; chart data is updated in place; `drishti:tick` |
+| first `view` of a subscription, newer than the fetched page | the page is a moment old, so the element fetches the view again and applies only the differences (strip cells, changed panels) as patches: a `tick`, no `paint` |
+| `view` equal to or older than the page | ignored |
+| `view` after a reconnect (`reconnected`) | the same resync, then ticks continue; no `paint` |
+| `deleted` / `restored` | the banner / a reload of the entity (the one repaint a deletion causes) |
+
+The console's own page (`live.js`) does the same: the first `view` after load only turns the badge to Live. There are no
+periodic `view` events: the stream sends one per subscription and then frames. Measured over ten seconds of ticks in
+Chromium, Firefox and WebKit (`test_a_live_element_paints_once_and_then_only_patches`): one `drishti:paint` per element.
 
 ### 7.4 Charts in a shadow root
 
