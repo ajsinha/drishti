@@ -42,7 +42,7 @@ Contents
 1. [Positioning against Power BI](#1-positioning-against-power-bi)
 2. [Principles](#2-principles)
 3. [Concepts](#3-concepts)
-4. [Entering BI: the top bar, `RUPAKA <GO>` and URLs](#4-entering-bi-the-top-bar-rupaka-go-and-urls)
+4. [Entering BI: the top bar, `BI <GO>` and URLs](#4-entering-bi-the-top-bar-bi-go-and-urls)
 5. [The BI page](#5-the-bi-page)
 6. [Datasets: the semantic model](#6-datasets-the-semantic-model)
 7. [The query engine](#7-the-query-engine)
@@ -117,15 +117,15 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 | **Endorsement** | `promoted` (an owner says it is good) or `certified` (a data steward says it is authoritative) | Promoted / Certified |
 | **Refresh** | For cached tables: a schedule, a data-load signal (`POST /api/v1/packs/{pack}/loads`), or both | Scheduled refresh |
 
-## 4. Entering BI: the top bar, `RUPAKA <GO>` and URLs
+## 4. Entering BI: the top bar, `BI <GO>` and URLs
 
 - **Top bar.** A new item **BI** (icon `bar-chart-line`) between **Views** and **Build**, with a menu: *BI home*, *My
   workspace*, *Catalogue*, *New report*, *Datasets*, and the user's three most recent reports. Shown to anyone with the
   `bi` power (section 11); admins see *BI settings* in Admin.
-- **Command line.** `RUPAKA <GO>` opens the BI home page. `RUPAKA <report-id> <GO>` opens a report (type-ahead offers
-  report titles and ids the user may open, as it offers entity ids today). `RUPAKA WORKSPACE <GO>` opens my workspace and
-  `RUPAKA CATALOGUE <GO>` the catalogue (type-ahead completes both after `RUPAKA `). `RUPAKA` is a reserved keyword: a pack
-  cannot define a mnemonic with that name (pack checks refuse it), and case does not matter (`rupaka <GO>` works).
+- **Command line.** `BI <GO>` opens the BI home page (`RUPAKA` is kept as an alias for every form below). `BI <report-or-board> <GO>` opens a report (type-ahead offers
+  report titles and ids the user may open, as it offers entity ids today). `BI WORKSPACE <GO>` opens my workspace and
+  `BI CATALOGUE <GO>` the catalogue (type-ahead completes both after `BI `). `BI` and `RUPAKA` are reserved keywords: a pack
+  cannot define a mnemonic with either name (pack checks refuse it), and case does not matter (`rupaka <GO>` and `bi <GO>` work).
 - **URLs.** `/bi` (home), `/bi/w/<workspace>` , `/bi/r/<report>[/<page>]`, `/bi/d/<dataset>`, `/bi/catalogue`,
   `/bi/design/<draft>`; filters and bookmarks in the query string (`?f=region:EMEA`) so a link reproduces what was seen.
 - **A separate shell.** The BI page shares the top bar, sign-in, themes, inbox and help with the terminal, but has its
@@ -796,5 +796,5 @@ changes (so suggestions can arrive as diffs).
 | 3 | Streaming grid engine | Perspective; Drishti's own table panel only | **Perspective** for live and large grids (Apache-2.0, WebAssembly), Drishti panels for the rest |
 | 4 | Exploration component | Graphic Walker; PygWalker in Pyodide | **Graphic Walker** directly; PygWalker inside Calc for Python users |
 | 5 | Python runner host | inside the console process; worker subprocesses of the console; a separate service | **Worker subprocesses of the console, started on demand**: no extra deployment, and a runaway transform never stalls the web process; a separate service only when load measurements call for it |
-| 6 | Command keyword for BI | `BI`; `RUP`; `RUPAKA` | **`RUPAKA`** (reserved; the product owner's choice), with `RUPAKA WORKSPACE` and `RUPAKA CATALOGUE` |
+| 6 | Command keyword for BI | `BI`; `RUP`; `RUPAKA` | **`BI`** (reserved, as is `RUPAKA`, kept as an alias), with `BI WORKSPACE` and `BI CATALOGUE` |
 | 7 | Product name in the UI | "BI"; "Rūpaka" | **"BI"** in the top bar, "Drishti Rūpaka" in documentation and marketing |

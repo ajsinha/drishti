@@ -104,10 +104,10 @@ you are on is highlighted.
 | | Operations | *Packs*, *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
 
-**BI and the `RUPAKA` keyword.** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Build**, and the reserved command
-word `RUPAKA` goes there from the command line, in any case: `RUPAKA <GO>` the BI home, `RUPAKA WORKSPACE <GO>` your personal workspace, `RUPAKA CATALOGUE <GO>` the
-catalogue, `RUPAKA <report> <GO>` a published item by id or title (type-ahead completes after `RUPAKA `). Without the power the menu is not there and `RUPAKA <GO>`
-says what is missing. No pack can define a mnemonic with that name. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
+**BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Build**, and the reserved command
+word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
+catalogue, `BI <report-or-board> <GO>` a published item by id or title (type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
+says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA` or `FORM`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md).
 
 **On the right:** round tools, from left to right.

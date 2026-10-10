@@ -203,3 +203,21 @@ def test_bi_can_be_switched_off_in_the_console():
     client = TestClient(app)
     assert client.get("/bi").status_code == 404 and 'href="/bi/catalogue"' not in client.get("/t").text
     assert go(client, "RUPAKA").headers["location"].startswith("/t?error=")
+
+
+def test_bi_is_the_keyword_and_rupaka_its_alias(bi):
+    client, _ = bi
+    for typed in ("BI <GO>", "bi", "  Bi  "):
+        assert go(client, typed).headers["location"] == "/bi"
+    assert go(client, "BI WORKSPACE <GO>").headers["location"] == "/bi/w/me"
+    assert go(client, "bi catalogue").headers["location"] == "/bi/catalogue"
+    assert go(client, "BI bi-1 <GO>").headers["location"] == "/bi/i/bi-1"
+    assert go(client, "bi desk p&l").headers["location"] == "/bi/i/bi-1"
+    word = client.get("/api/suggest", params={"q": "b"}).json()
+    assert word[0]["mnemonic"] == "BI" and word[0]["complete"] == "BI "
+    pages = client.get("/api/suggest", params={"q": "BI "}).json()
+    assert [p["href"] for p in pages[:3]] == ["/bi", "/bi/w/me", "/bi/catalogue"] and pages[0]["complete"] == "BI"
+    rep = client.get("/api/suggest", params={"q": "bi desk"}).json()
+    assert rep[0]["href"] == "/bi/i/bi-1" and rep[0]["complete"] == "BI Desk P&L"
+    none, _ = make(powers=())
+    assert none.get("/api/suggest", params={"q": "bi "}).json() == []

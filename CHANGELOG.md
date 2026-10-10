@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Added:** the `BI` command keyword, working like `FORM`: `BI <GO>` the BI home, `BI WORKSPACE`, `BI CATALOGUE`, `BI <report-or-board>` by id or title (several matches open the catalogue searched), type-ahead after `BI ` offering the items the user may open; `RUPAKA` stays as an alias. `BI` is a reserved word beside `RUPAKA` and `FORM`: the pack loader and `drishti pack check` refuse a pack mnemonic named `BI` (no shipped pack uses it). Docs: BI_GUIDE, USER_GUIDE, PACK_DEVELOPER_GUIDE, RUPAKA.md section 4.
 - **Changed:** query by form: an enum field with more than 6 values (asset class, product type, book, desk, currency) is one **multi-select dropdown** the size of a select
   instead of a wall of tick boxes: a summary ("All", "REPO", "3 selected: ABS, REPO, +1"), a search box, *Select all* / *Clear*, keyboard, 44 px rows on touch; up to 6 values stay
   a checkbox row; the address encoding is unchanged. One shared component, `static/js/multiselect.js` ([DEVELOPER_GUIDE 5.8a](docs/guides/DEVELOPER_GUIDE.md)), also draws the

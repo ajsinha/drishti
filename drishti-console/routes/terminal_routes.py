@@ -59,11 +59,11 @@ _SEARCH = re.compile(r"(?is)^\s*\S+\s+(where|order\s+by|limit)\s+.+")
 
 
 FORM_WORD = "FORM"        # a reserved command word: query by form (routes/form_routes.py)
-RUPAKA = "RUPAKA"         # a reserved command word: the BI page (a pack cannot define a mnemonic with this name)
+BI_WORDS = ("BI", "RUPAKA")   # reserved command words: the BI page, RUPAKA being the older alias (a pack cannot define a mnemonic with either name)
 
 
 async def rupaka(request: Request, rest: str):
-    """``RUPAKA <GO>`` the BI home; ``RUPAKA WORKSPACE`` my workspace; ``RUPAKA CATALOGUE`` the catalogue; ``RUPAKA <report>`` a published report
+    """``BI <GO>`` (or RUPAKA) the BI home; ``BI WORKSPACE`` my workspace; ``BI CATALOGUE`` the catalogue; ``BI <report-or-board>`` a published report
     by id or title (one match opens it, several open the catalogue searched for what was typed). Any case."""
     if not request.app.state.bi_on or not (getattr(request.state, "bi_me", None) or {}).get("enabled"):
         why = ("Rupaka (business intelligence) is not available to you: it needs the bi power on one of your roles, and BI switched on."
@@ -92,7 +92,7 @@ async def rupaka(request: Request, rest: str):
 @router.get("/go")
 async def go(request: Request, q: str = ""):
     typed = q.replace("<GO>", "").replace("<go>", "").strip()
-    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() == RUPAKA:        # reserved (RUPAKA.md section 4), whatever packs define
+    if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (RUPAKA.md section 4), whatever packs define
         return await rupaka(request, typed.split(None, 1)[1].strip() if " " in typed else "")
     words = q.replace("<GO>", "").replace("<go>", "").split()
     if words and words[0].upper() == FORM_WORD:                    # reserved too: FORM <pack> [kind] opens the pack's search form
