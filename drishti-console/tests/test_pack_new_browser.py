@@ -206,7 +206,6 @@ def test_a_kind_another_pack_defines_must_be_renamed_before_going_on(browser, pa
         assert "already defines the kind widget" in page.locator("[data-msg]").inner_text()
         assert page.locator("[data-step='3']").is_visible()
         page.click("[data-go='2']")
-        page.wait_for_function("() => !document.querySelector('[data-next]').disabled")   # going back re-plans; a plan landing mid-edit would redraw the card and drop the typed name
         page.fill("input[data-focus^=name-]", "gadget")
         page.locator("input[data-focus^=name-]").dispatch_event("change")
         page.locator(".pk-card h3:has-text('gadget'), .pk-card h3:has-text('Widget')").first.wait_for()
@@ -220,6 +219,42 @@ def test_a_kind_another_pack_defines_must_be_renamed_before_going_on(browser, pa
         page.close()
     finally:
         backend.installed = []
+
+
+def test_typing_during_a_slow_replan_loses_nothing(browser, pack_console):
+    url, backend = pack_console
+    page = browser.new_page()
+    page.goto(url + "/build/pack/new")
+    page.locator("summary:has-text('Paste a schema')").click()
+    page.fill("[data-paste]", json.dumps({"title": "Widget", "type": "object", "required": ["widgetId"], "properties": {"widgetId": {"type": "string"}}}))
+    page.click("[data-paste-add]")
+    page.click("[data-next]")
+    page.locator(".pk-card").first.wait_for()
+    page.click("[data-next]")
+    page.fill("#pkp-name", "slow-pack")
+    page.locator("#pkp-name").dispatch_event("change")
+    page.locator("[data-pack-form] .pk-grid").first.wait_for()
+    release = []
+
+    def slow(route):
+        release.append(route)   # hold the plan until the test lets it go
+
+    page.route("**/build/pack/api/plan", slow)
+    page.click("[data-go='2']")
+    page.wait_for_function("() => document.querySelector('[data-next]').disabled")
+    page.click("input[data-focus^=name-]")
+    page.keyboard.press("End")
+    page.keyboard.type("-typed")
+    for route in list(release):
+        route.continue_()   # the first plan lands while the name field has focus and unsaved text
+    page.wait_for_timeout(500)
+    assert page.locator("input[data-focus^=name-]").input_value().endswith("-typed")
+    assert page.evaluate("() => document.activeElement.getAttribute('data-focus')").startswith("name-")
+    page.unroute("**/build/pack/api/plan")
+    page.locator("input[data-focus^=name-]").dispatch_event("change")
+    page.wait_for_function("() => !document.querySelector('[data-next]').disabled")
+    assert page.locator("input[data-focus^=name-]").input_value().endswith("-typed")
+    page.close()
 
 
 def test_a_big_jsonl_file_is_streamed_and_sampled_not_uploaded(browser, pack_console, tmp_path):
