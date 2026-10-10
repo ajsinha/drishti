@@ -87,6 +87,29 @@ public final class PackLoader {
         return out;
     }
 
+    /** Reads one pack from the first folder that has it; throws {@link IllegalStateException} when none does or the manifest is wrong. */
+    public Pack readOne(List<Path> dirs, String name) {
+        Path dir = dirs.stream().filter(d -> Files.isRegularFile(d.resolve(name).normalize().resolve("pack.yaml"))).findFirst()
+                .orElse(dirs.get(dirs.size() - 1));
+        return read(dir, name, null);
+    }
+
+    /** The names of the pack folders (those holding a {@code pack.yaml}) in the folders, the first folder winning a name. */
+    public static List<String> folders(List<Path> dirs) {
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
+        for (Path d : dirs) {
+            if (!Files.isDirectory(d)) {
+                continue;
+            }
+            try (java.util.stream.Stream<Path> s = Files.list(d)) {
+                s.filter(x -> Files.isRegularFile(x.resolve("pack.yaml"))).map(x -> x.getFileName().toString()).sorted().forEach(out::add);
+            } catch (IOException e) {
+                // an unreadable folder has no packs to offer
+            }
+        }
+        return List.copyOf(out);
+    }
+
     private void visit(List<Path> dirs, String name, Map<String, Pack> done, java.util.Deque<String> path) {
         if (done.containsKey(name)) {
             return;

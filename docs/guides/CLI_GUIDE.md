@@ -108,7 +108,7 @@ Concepts used throughout (each is explained in its own guide; this one only link
 - A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
   `<root>/<domain>/<date>/<kind>.jsonl` files.
 - A pack becomes known to a running server in **three ways**: the server is started with it in `DRISHTI_PACKS` (a restart),
-  an administrator loads it in **Admin → Packs** (the server restarts in place), or it is installed from a registry.
+  an administrator loads it in **Admin → Packs** (it takes effect at once, with no restart), or it is installed from a registry.
   `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
   [PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs) has the rules.
 
@@ -607,7 +607,7 @@ options:
                         java)
   -r, --recursive       read *.jsonl in subfolders too
   --load                afterwards ask the running server to load the pack
-                        (administrator; the server restarts in place)
+                        (administrator; takes effect at once, no restart)
 
 server connection:
   --server SERVER       the server's base URL (default: DRISHTI_SERVER, then
@@ -696,7 +696,7 @@ ok   packs/jsonl-lake/sutras/trade/trade-swap.v1.sutra.yaml (5 samples)
 ```
 
 **`--load --server URL`** asks the running server to load the pack straight away (it calls `POST /api/v1/admin/packs/<name>/load`;
-you must be an administrator, and the server restarts in place). The pack has to be where the server reads packs from: its
+you must be an administrator, and it takes effect at once, with no restart). The pack has to be where the server reads packs from: its
 `drishti.packs.dir` (default `./packs`) or its installed-dir. If `--out` is somewhere else the command says so.
 
 ```bash
@@ -706,7 +706,7 @@ python3 tools/drishti.py pack new data/jsonl --name jsonl-demo --date businessDa
 
 ```text
 ...
-load jsonl-demo: The server restarts in place now; live views reconnect by themselves.
+load jsonl-demo: Applied now; no restart.
 ```
 
 **The `ingest:` block.** `pack new` records which field is each kind's id and which is its business date in `pack.yaml`:
@@ -1414,7 +1414,7 @@ The exit code is 1 unless the status is `OK` (here two sources are down, so `DEG
 `GET /api/v1/admin/health` document.
 
 `server packs list|load|unload|on|off` manage packs. **load** and **unload** edit the overlay file
-(`data/packs/added.yaml`) after the server checks the pack the same way it does at start, then restart the server in place;
+(`data/packs/added.yaml`) after the server checks the pack the same way it does at start, then put the pack to use at once, with no restart;
 **on**/**off** switch a loaded pack for users without a restart. Unloading only works for packs an administrator loaded
 (packs in `DRISHTI_PACKS` stay).
 
@@ -1426,7 +1426,7 @@ usage: drishti.py server packs load [-h] [--server SERVER]
                                     [--timeout TIMEOUT] [--json]
                                     name
 
-load a pack that is on disk (the server restarts in place)
+load a pack that is on disk (it takes effect at once, with no restart)
 
 positional arguments:
   name                  the pack's name
@@ -1599,7 +1599,7 @@ manifest and every file's checksum, the server version it needs, Sutra lint and 
 running version at four levels, breaking first. A `.sha256` file beside the archive (`pack bundle` writes it) is sent too, so the server checks it arrived intact.
 
 - `--preview` stops there and discards the upload: nothing changes.
-- Without it the pack is deployed: the replaced version is kept, the server restarts in place and puts the old files back if it cannot start. A **breaking** change
+- Without it the pack is deployed: the replaced version is kept, the new version is put to use at once (no restart) and the old files are put back if it cannot be used. A **breaking** change
   (a kind or mnemonic removed or renamed) makes the command print the preview and exit 1 until you add `--accept-breaking`.
 - `--wait N` waits up to N seconds for the server to answer again after the restart (exit 1 if it does not).
 - Exit: 0 deployed or previewed; 1 refused by a check, breaking changes not accepted, or the server not back; 2 usage (no such file).
@@ -1630,7 +1630,7 @@ Preview: helpdesk 0.1.0 (loaded) -> 0.2.0 (newer)
 not deployed: 2 breaking change(s); read them above, then run again with --accept-breaking
 $ python3 tools/drishti.py server packs deploy dist/helpdesk-0.2.0.tar.gz --accept-breaking --wait 90
 ...
-deployed helpdesk 0.2.0 (replacing 0.1.0): The server restarts in place now; live views reconnect by themselves.
+deployed helpdesk 0.2.0 (replacing 0.1.0): Applied now; no restart.
 the server is back
 ```
 
@@ -1645,7 +1645,7 @@ $ python3 tools/drishti.py server packs history
   2026-10-05 21:45:13  deploy  helpdesk  0.1.0              anonymous
   kept for rollback, helpdesk: 0.1.0
 $ python3 tools/drishti.py server packs rollback helpdesk --version 0.1.0
-rolled helpdesk back to 0.1.0 (replacing 0.2.0): The server restarts in place now; live views reconnect by themselves.
+rolled helpdesk back to 0.1.0 (replacing 0.2.0): Applied now; no restart.
 ```
 
 **`server packs datasource get PACK`** is the pack's connectors, **read only**: which connectors the pack names, the state of each, the plugin, the kinds
@@ -2114,7 +2114,7 @@ curl -s "http://localhost:18977/api/v1/views/trade/TRD-0050?asOf=2026-10-02" | h
 in the input, and the server picks the new files up on its next rescan.
 
 **Three ways a pack becomes known** to a server (the third is section 10.4): start with `DRISHTI_PACKS=...,jsonl-demo` and a
-restart; `server packs load jsonl-demo` (or **Admin → Packs → Load**; the server restarts in place and remembers it in
+restart; `server packs load jsonl-demo` (or **Admin → Packs → Load**; it takes effect at once, with no restart, and is remembered in
 `data/packs/added.yaml`); install from a registry. See [PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs).
 
 ### 10.2 A CI pipeline: lint, test, JUnit

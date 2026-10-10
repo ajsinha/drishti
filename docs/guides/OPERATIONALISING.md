@@ -61,7 +61,7 @@ release, and because a lake can be terabytes.
 
 | You copied | What happens | What you do |
 |---|---|---|
-| a **new pack** (a name not in `DRISHTI_PACKS`) | nothing: the server loads only the packs it is told to | add it to `DRISHTI_PACKS` and restart, **or** Admin → Packs → **Load** (the server restarts in place and records it in `data/packs/added.yaml`). Details: [PACKS.md, Turning packs on](PACKS.md#turning-packs-on) and its *Load* section |
+| a **new pack** (a name not in `DRISHTI_PACKS`) | nothing: the server loads only the packs it is told to | add it to `DRISHTI_PACKS` and restart, **or** Admin → Packs → **Load** (it takes effect at once, with no restart, and is records it in `data/packs/added.yaml`). Details: [PACKS.md, Turning packs on](PACKS.md#turning-packs-on) and its *Load* section |
 | a **new version of a loaded pack** | the running server still has the old content in memory | Sutra edits show by themselves (hot reload); anything else (pack.yaml, kinds, connectors, config) needs a restart ([PACKS.md, upgrading a pack](PACKS.md)) |
 | **Sutra files** into a loaded pack's `sutras/` | the watcher debounces (250 ms) and reloads | nothing; see `sutraProblems` in Admin → Health if a file is invalid (the last good version stays live) |
 | **data** | the connector sees a new Delta version or a new file at its next refresh | nothing; a new business date appears within a minute |
@@ -501,7 +501,7 @@ back by itself** if it cannot start with the new ones. The archive is the one se
 
    A version that is the same as, or older than, the running one is flagged and still allowed.
 4. **Deploy**. The server swaps the files into `drishti.packs.installed-dir` (the folder that wins over `packs/`), keeps the previous version under
-   `.previous/<pack>/<version>-<time>`, then checks all loaded packs with the new one, **restarts in place** and reloads. A pack that was not loaded is loaded.
+   `.previous/<pack>/<version>-<time>`, then checks all loaded packs with the new one, puts it to use **at once, with no restart**. A pack that was not loaded is loaded.
    If the check fails, or the server cannot start with the new files, the old files are put back and the history says *reverted*; users stay signed in and
    live views reconnect.
 

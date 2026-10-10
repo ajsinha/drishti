@@ -22,31 +22,42 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 
-/** Mnemonic ↔ kind, from {@link CommandsProperties}. Immutable. */
+/** Mnemonic ↔ kind, from {@link CommandsProperties}. Readers see one complete table; a pack change swaps it whole ({@link #replace}). */
 public final class Mnemonics {
 
-    private final Map<String, CommandsProperties.Mnemonic> byCode;
-    private final Map<String, String> codeByKind = new LinkedHashMap<>();
+    private record Table(Map<String, CommandsProperties.Mnemonic> byCode, Map<String, String> codeByKind) {}
+
+    private volatile Table table;
 
     public Mnemonics(CommandsProperties props) {
+        this.table = table(props.mnemonics());
+    }
+
+    private static Table table(Map<String, CommandsProperties.Mnemonic> source) {
         Map<String, CommandsProperties.Mnemonic> m = new TreeMap<>();
-        props.mnemonics().forEach((code, def) -> {
+        Map<String, String> byKind = new LinkedHashMap<>();
+        source.forEach((code, def) -> {
             String c = code.toUpperCase(Locale.ROOT);
             m.put(c, def);
-            codeByKind.putIfAbsent(def.kind(), c);
+            byKind.putIfAbsent(def.kind(), c);
         });
-        this.byCode = Collections.unmodifiableMap(m);
+        return new Table(Collections.unmodifiableMap(m), Collections.unmodifiableMap(byKind));
+    }
+
+    /** Swaps in a new table of mnemonics (packs were loaded, changed or unloaded while the server runs). */
+    public void replace(Map<String, CommandsProperties.Mnemonic> source) {
+        this.table = table(source);
     }
 
     public Optional<CommandsProperties.Mnemonic> of(String code) {
-        return Optional.ofNullable(byCode.get(code.toUpperCase(Locale.ROOT)));
+        return Optional.ofNullable(table.byCode().get(code.toUpperCase(Locale.ROOT)));
     }
 
     public String codeFor(String kind) {
-        return codeByKind.get(kind);
+        return table.codeByKind().get(kind);
     }
 
     public Map<String, CommandsProperties.Mnemonic> all() {
-        return byCode;
+        return table.byCode();
     }
 }

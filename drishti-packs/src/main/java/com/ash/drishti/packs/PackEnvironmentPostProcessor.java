@@ -47,15 +47,27 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir));
         PackSettings overrides = new PackSettings(java.nio.file.Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings")));
         PackLoader loader = new PackLoader(files);
-        List<Pack> packs = loader.load(PackLoader.dirs(dir, env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")),
-                List.copyOf(names));
+        List<java.nio.file.Path> dirs = PackLoader.dirs(dir, env.getProperty("drishti.packs.installed-dir", "./data/packs/installed"));
+        SamplePolicy samples = SamplePolicy.of(env);                                    // hidden: sample packs are not loaded
+        List<Pack> packs = loader.load(dirs, samples.select(dirs, List.copyOf(names), loader));
+        java.util.Set<String> suppressed = new java.util.LinkedHashSet<>();
+        if (samples.hidden()) {                                                          // ... and the connectors only they use do not start
+            suppressed.addAll(SamplePolicy.sampleOnlyConnectors(dirs, loader));
+            packs.forEach(p -> suppressed.removeAll(p.connectorRefs()));
+        }
         // connector files: migrate old per-pack overrides once, write files from the packs' templates where none exist
         ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, overrides,
                 Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")));
         // the packs' own properties are computed after the files exist, so a template is left out where a file stands in for it
         env.getPropertySources().addLast(new MapPropertySource(SOURCE, loader.properties(packs)));
         java.util.Map<String, String> problems = new java.util.LinkedHashMap<>();
-        java.util.Map<String, Object> fileProps = new java.util.LinkedHashMap<>(ConnectorFiles.properties(files.readAll(problems)));
+        java.util.Map<String, ConnectorFiles.Definition> defs = new java.util.LinkedHashMap<>(files.readAll(problems));
+        suppressed.forEach(defs::remove);
+        java.util.Map<String, Object> fileProps = new java.util.LinkedHashMap<>(ConnectorFiles.properties(defs));
+        int si = 0;
+        for (String n : suppressed) {
+            fileProps.put("drishti.sources.connectors-suppressed[" + si++ + "]", n);
+        }
         for (int i = 0; i < boot.messages().size(); i++) {
             fileProps.put("drishti.sources.connectors-bootstrap[" + i + "]", boot.messages().get(i));
         }

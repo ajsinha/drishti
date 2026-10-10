@@ -252,6 +252,7 @@ def build() -> dict[str, dict[str, dict]]:
 
 def spec() -> PB.PackSpec:
     return PB.PackSpec(
+        sample=True,
         code="POLS",
         columns={'candidate': ['name', 'partyName', 'constituency', 'role', 'voteShare'], 'party': ['name', 'position', 'leaderName', 'seats', 'polling'], 'poll': ['pollster', 'fieldwork', 'sample', 'lead', 'moe'], 'bill': ['title', 'sponsorName', 'stage', 'introduced', 'costM'], 'region': ['name', 'populationM', 'medianIncome', 'unemployment'], 'election': ['title', 'date', 'turnout', 'winner', 'majority']},  # key fields shown beside each entity in pick lists
         name="politics-society", title="Politics and society", requires=[], generator="tools/packgen/politics/make.py",

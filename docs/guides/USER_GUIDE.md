@@ -1691,8 +1691,14 @@ if asked anyway. Roles only matter when sign-in is on. More in [USER_MANAGEMENT.
 | Builds on | `banking-core, market-data`, and under it *needed by market-risk, counterparty-risk, …* |
 | Kinds | `1 (TRD)`: the number of kinds and the first four mnemonics |
 | Connectors | `trading-store, trading-stream` |
-| Status | **on**, **off**, or **not loaded** |
+| Status | **on**, **off**, or **not loaded**; under it, the problem if the pack's files could not be used (the last good version keeps running) |
 | Changed | when and by whom it was last switched |
+
+A **Sample** badge beside the title marks a demonstration pack. **Load** and **Unload** take effect at once, with no restart; a pack folder you add,
+edit or delete on the server is picked up the same way (see [PACKS.md](PACKS.md#live-reload-the-packs-folder-is-watched)). Above the table, the
+*Sample packs* section says who sees samples and offers **Hide samples from business users**: only authors and administrators then see sample
+packs, everyone else has them filtered out as if switched off. *Hide samples from everyone* unloads them; *Show samples to everyone* brings them back.
+The choice is saved, applied at once and recorded in the audit log (`pack-samples`).
 
 Switching a pack **off** takes effect for every user at their next click: its kinds cannot be opened, its
 mnemonics and suggestions disappear, and it leaves every pack menu. Switching it **on** brings it all back.
@@ -1717,9 +1723,9 @@ Worked example: take operational risk away for everyone.
 
 **Not loaded** packs are folders on disk that the server did not load at start-up. Press **Load**: the server
 first checks the pack together with the loaded ones (a clash, such as `finance` with the banking packs, is refused
-with the reason and nothing changes), then records it and restarts in its own process. The page says *Restarting
-the server… 4 s* and refreshes when it is back; signed-in users stay signed in and live views reconnect. A pack
-loaded this way shows **Unload**, which takes it back the same way. See
+with the reason and nothing changes), then records it and puts it to use at once: no restart, nobody is signed out, and
+open views carry on. The page confirms and refreshes. A pack loaded this way shows **Unload**, which takes it back the
+same way (not while another loaded pack builds on it). See
 [PACKS.md](PACKS.md#loading-a-pack-while-the-server-runs).
 
 ### Admin → Health: is everything up?

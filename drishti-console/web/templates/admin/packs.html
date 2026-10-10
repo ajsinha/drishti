@@ -27,24 +27,43 @@
     everyone's next click, its kinds cannot be opened, its mnemonics and suggestions disappear, and it leaves every pack menu.
     Switch it on and it all returns. A pack another pack builds on stays on until that one is off; switching a pack on switches on
     what it builds on. The choice is kept across restarts and recorded in the <a href="/admin/audit">audit log</a>.
-    <b>Load</b> brings in a pack that is on disk but not loaded: it is checked with the loaded packs first, then the server restarts
-    in its own process (a few seconds; signed-in users stay signed in and live views reconnect). <b>Unload</b> takes back a pack
-    loaded here. <b>Deploy an archive</b> (below) brings a new version of a pack from a file: it is checked, you see what it changes,
+    <b>Load</b> brings in a pack that is on disk but not loaded: it is checked with the loaded packs first, then it is in use at once,
+    with no restart. <b>Unload</b> takes back a pack loaded here (not while another loaded pack builds on it). The server also watches the
+    packs folder: a pack folder you add is loaded, one you edit is checked and swapped in (a bad edit keeps the last good version and
+    shows its problem here and on <a href="/admin/health">Health</a>), and one you delete is unloaded.
+    <b>Sample</b> packs are demonstrations; once real packs exist, hide them from business users (below). <b>Deploy an archive</b> (below) brings a new version of a pack from a file: it is checked, you see what it changes,
     and only then is it deployed; the version it replaces is kept so you can <b>Roll back</b>. <b>Data source</b> shows the connectors a
     loaded pack reads through, with links to <a href="/admin/connectors">Admin &rarr; Connectors</a>, where they are created, tested and changed.</p>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  {% set sample_names = samples.samples or [] %}
+  {% if sample_names %}
+  <section class="adm-samples" data-samples aria-labelledby="smpTitle">
+    <h2 class="ws-h" id="smpTitle">Sample packs</h2>
+    <p class="text-muted-d">{{ sample_names | length }} sample pack{{ 's' if sample_names | length > 1 }} ({{ sample_names | join(', ') }}).
+      They are now
+      <b data-samples-mode>{% if samples.mode == 'visible' %}visible to everyone{% elif samples.mode == 'developers' %}visible to developers only (authors and administrators){% else %}hidden from everyone and not loaded{% endif %}</b>{% if samples.overridden %}
+      (saved here; configuration says <span class="mono">{{ samples.configured }}</span>){% else %} (from configuration, <span class="mono">drishti.packs.samples</span>){% endif %}.</p>
+    <p class="adm-actions">
+      {% if samples.mode != 'developers' %}<button type="button" class="fk" data-samples-set="developers" title="Only users with the author or admin power see sample packs: their kinds, mnemonics, suggestions, menus, search and examples">Hide samples from business users</button>{% endif %}
+      {% if samples.mode != 'visible' %}<button type="button" class="fk" data-samples-set="visible">Show samples to everyone</button>{% endif %}
+      {% if samples.mode != 'hidden' %}<button type="button" class="fk" data-samples-set="hidden" title="Nobody sees them; they are not loaded and their connectors do not start">Hide samples from everyone</button>{% endif %}
+      {% if samples.overridden %}<button type="button" class="fk" data-samples-set="default" title="Remove the saved setting: the server's configuration decides again">Use the configuration</button>{% endif %}
+    </p>
+  </section>
+  {% endif %}
   <div class="tbl-wrap"><table class="tbl adm-tbl">
     <thead><tr><th>Pack</th><th>What it brings</th><th>Builds on</th><th>Kinds</th><th>Connectors</th><th>Status</th><th>Changed</th><th></th></tr></thead>
     <tbody>
     {% for p in packs %}
       <tr data-pack="{{ p.name }}">
-        <td><b>{{ p.title }}</b><div class="mono text-muted-d">{{ p.name }} {{ p.version }}</div></td>
+        <td><b>{{ p.title }}</b>{% if p.sample %} <span class="st st-warn" data-sample-badge title="A sample pack: a demonstration, shown or hidden by the sample-pack setting">Sample</span>{% endif %}<div class="mono text-muted-d">{{ p.name }} {{ p.version }}</div></td>
         <td class="pk-desc">{{ p.description }}</td>
         <td class="mono">{{ (p.extends or []) | join(', ') or '—' }}{% if p.requiredBy %}<div class="text-muted-d">needed by {{ p.requiredBy | join(', ') }}</div>{% endif %}</td>
         <td class="mono">{% if p.loaded %}{{ (p.kinds or []) | length }}{% if p.mnemonics %} <span class="text-muted-d">({{ p.mnemonics[:4] | join(' ') }}{{ ' …' if p.mnemonics | length > 4 }})</span>{% endif %}{% else %}—{% endif %}</td>
         <td class="mono">{{ (p.connectors or []) | join(', ') or '—' }}</td>
         <td>{% if not p.loaded %}<span class="st" title="On disk; Load it from here, or name it in drishti.packs.enabled (DRISHTI_PACKS)">not loaded</span>
             {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
+            {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{% endif %}
 </td>
         <td class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if p.loaded %}
@@ -52,8 +71,8 @@
             {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
           <button type="button" class="fk" data-datasource title="The connectors this pack reads through, and where to change them (Admin → Connectors)">Data source</button>
           <a class="fk" href="/admin/packs/{{ p.name }}/loads" title="Batches your ETL has announced, what is expected by when, and what is late">Data loads</a>
-          {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from this page: unload it (the server restarts in place)">Unload</button>{% endif %}
-        {% else %}<button type="button" class="fk" data-load="load" title="Check the pack, then restart the server in place to load it">Load</button>{% endif %}</td>
+          {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from this page: unload it now (no restart)">Unload</button>{% endif %}
+        {% else %}<button type="button" class="fk" data-load="load" title="Check the pack with the loaded ones, then load it now (no restart)">Load</button>{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>

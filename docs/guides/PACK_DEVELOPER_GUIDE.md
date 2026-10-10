@@ -621,7 +621,7 @@ An administrator trusts the publisher's key and presses **Install** in *Admin �
 
 ![After Install: installed 0.1.0, loaded 0.1.0, with Roll back](img/packs/02-registry-installed.jpg)
 
-The server checked the archive's SHA-256 and signature, unpacked it, and restarted in place; the pack is on
+The server checked the archive's SHA-256 and signature, unpacked it, and put to use at once, without a restart; the pack is on
 (`helpdesk 0.1.0` in the pack list):
 
 ![The helpdesk row of Admin → Packs after the install](img/packs/02b-helpdesk-pack-row.jpg)
@@ -1434,7 +1434,7 @@ drishti:
 **4. Install.** Admin → Packs shows **From the registry**: every pack version, its publisher (*trusted* or *not
 trusted*), and what is installed and loaded here. **Install** downloads the archive and checks its SHA-256, its
 signature, that its files stay inside the pack, and that its `pack.yaml` names the same pack and version. Only then
-is it unpacked into `data/packs/installed/<name>/` and loaded (the server restarts in place). Installing another
+is it unpacked into `data/packs/installed/<name>/` and loaded (it takes effect at once, with no restart). Installing another
 version upgrades; the replaced version is kept and **Roll back** puts it back.
 
 Installed packs are looked for before the shipped ones (`drishti.packs.dir`), so an installed `trading` 1.1.0

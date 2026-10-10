@@ -126,7 +126,7 @@ public class HealthController {
         String hotReload = sutras.hotReload();          // STOPPED: the Sutra watcher ended, edits are not picked up until a restart
         List<com.ash.drishti.server.loads.ExpectationService.State> dataLate = expectations.attention(java.time.Instant.now());
         String overall = sources.isEmpty() || down == sources.size() ? "DOWN"
-                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") || !connectors.fileProblems().isEmpty() ? "DEGRADED"
+                : down > 0 || degraded > 0 || stale > 0 || !failures.isEmpty() || packProblems > 0 || !packs.problems().isEmpty() || !dataLate.isEmpty() || hotReload.startsWith("STOPPED") || !connectors.fileProblems().isEmpty() ? "DEGRADED"
                 : "OK";   // stale: behind its stale-after; degraded: a connector that cannot read some of its data
         out.put("status", overall);
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
@@ -135,6 +135,13 @@ public class HealthController {
         out.put("sources", sources);
         out.put("failedToStart", failures);
         out.put("packs", packRows);
+        Map<String, String> loadedNames = new LinkedHashMap<>();
+        packs.problems().forEach((n, m) -> {
+            if (packRows.stream().noneMatch(r -> n.equals(r.get("name")))) {
+                loadedNames.put(n, m);                                          // a pack on disk that could not be loaded
+            }
+        });
+        out.put("packsNotLoaded", loadedNames);
         out.put("sutras", Map.of("hotReload", hotReload, "problemFiles", sutras.problems().size()));
         out.put("dataLate", dataLate.stream().map(d -> Map.of("pack", d.pack(), "kind", d.kind(), "businessDate", d.businessDate().toString(), "state", d.state(),
                 "by", d.by() + " " + d.zone(), "line", d.line())).toList());
@@ -176,7 +183,10 @@ public class HealthController {
             row.put("connectorsDown", connectorsDown);
             row.put("connectorsOff", connectorsMissing);
             row.put("connectorsNotConfigured", notConfigured);
-            row.put("status", !broken.isEmpty() || !connectorsDown.isEmpty() || !notConfigured.isEmpty() ? "DEGRADED" : "OK");
+            String problem = packs.problems().get(pack.name());                 // a bad edit: the last good version keeps running
+            row.put("problem", problem);
+            row.put("sample", pack.sample());
+            row.put("status", !broken.isEmpty() || !connectorsDown.isEmpty() || !notConfigured.isEmpty() || problem != null ? "DEGRADED" : "OK");
             out.add(row);
         }
         return out;

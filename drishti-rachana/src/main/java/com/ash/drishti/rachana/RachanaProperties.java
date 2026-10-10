@@ -75,6 +75,12 @@ public record RachanaProperties(
         return new ElLimits(maxExpressionDepth, maxExpressionLength);
     }
 
+    /** The same settings with other pack Sutra directories (packs were loaded, changed or unloaded while the server runs). */
+    public RachanaProperties withPackDirs(List<String> newPackDirs) {
+        return new RachanaProperties(dirs, hotReload, reloadDebounce, formatsFile, expressionCacheSize, studioSave, newPackDirs, packFormatsFiles,
+                maxExpressionDepth, maxExpressionLength, watch, pollInterval);
+    }
+
     /** Site directories, then pack directories. */
     public List<String> allDirs() {
         List<String> all = new java.util.ArrayList<>(dirs);

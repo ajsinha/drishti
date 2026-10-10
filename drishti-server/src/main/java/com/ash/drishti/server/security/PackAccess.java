@@ -45,9 +45,14 @@ public final class PackAccess {
     private final PackRegistry registry;
     private final UserService users;
     private final PreferenceStore prefs;
-    private final List<String> defaults;
+    private final List<String> configuredDefaults;
     private final com.ash.drishti.identity.PackStateStore states;
-    private final Map<String, String> kindOwner = new HashMap<>();
+    /** kind -> owning pack, rebuilt when the registry's set of packs changes. */
+    private record Owners(long version, Map<String, String> byKind) {}
+    private volatile Owners owners = new Owners(-1, Map.of());
+    /** Who sees sample packs, and who counts as a developer (author or admin power): see {@link #sampleVisible}. */
+    private volatile com.ash.drishti.packs.SamplePolicy samples = new com.ash.drishti.packs.SamplePolicy("visible", null);
+    private volatile java.util.function.Predicate<String> developer = u -> true;
     private final ObjectMapper json = new ObjectMapper();
 
     public PackAccess(PackRegistry registry, UserService users, PreferenceStore prefs, List<String> defaults,
@@ -56,10 +61,53 @@ public final class PackAccess {
         this.states = states;
         this.users = users;
         this.prefs = prefs;
-        this.defaults = defaults == null || defaults.isEmpty() ? installed() : List.copyOf(defaults);
-        for (Pack p : registry.packs()) {
-            p.kinds().forEach(k -> kindOwner.put(k, p.name()));
+        this.configuredDefaults = defaults == null ? List.of() : List.copyOf(defaults);
+    }
+
+    /** The configured default packs for users with no choice made, or everything installed when none are configured. */
+    private List<String> defaults() {
+        return configuredDefaults.isEmpty() ? installed() : configuredDefaults;
+    }
+
+    private Map<String, String> kindOwner() {
+        Owners o = owners;
+        long v = registry.version();
+        if (o.version() != v) {
+            Map<String, String> m = new HashMap<>();
+            for (Pack p : registry.packs()) {
+                p.kinds().forEach(k -> m.put(k, p.name()));
+            }
+            o = new Owners(v, m);
+            owners = o;
         }
+        return o.byKind();
+    }
+
+    /** Sets who sees sample packs and who counts as a developer (the author or admin power). */
+    public void samples(com.ash.drishti.packs.SamplePolicy policy, java.util.function.Predicate<String> developer) {
+        this.samples = policy;
+        this.developer = developer;
+    }
+
+    public com.ash.drishti.packs.SamplePolicy samplePolicy() {
+        return samples;
+    }
+
+    /**
+     * False when the pack is a sample and this user may not see samples: always in {@code hidden} mode, and for anyone
+     * without the author or admin power in {@code developers} mode ({@code user} null: the public, who are not developers).
+     * Filtered here, on the server, exactly as a pack an administrator switched off.
+     */
+    public boolean sampleVisible(String user, String pack) {
+        Pack p = registry.packs().stream().filter(x -> x.name().equals(pack)).findFirst().orElse(null);
+        if (p == null || !p.sample()) {
+            return true;
+        }
+        return switch (samples.mode()) {
+            case com.ash.drishti.packs.SamplePolicy.HIDDEN -> false;
+            case com.ash.drishti.packs.SamplePolicy.DEVELOPERS -> user != null && developer.test(user);
+            default -> true;
+        };
     }
 
     public List<String> installed() {
@@ -68,8 +116,17 @@ public final class PackAccess {
 
     /** An enabled pack whose code ({@code MKT}) or name ({@code market-data}) is {@code text}, ignoring case. */
     public java.util.Optional<String> byCodeOrName(String text) {
+        return byCodeOrName(null, text, false);
+    }
+
+    /** As {@link #byCodeOrName(String)}, leaving out sample packs the user may not see. */
+    public java.util.Optional<String> byCodeOrName(String user, String text) {
+        return byCodeOrName(user, text, true);
+    }
+
+    private java.util.Optional<String> byCodeOrName(String user, String text, boolean forUser) {
         String t = text == null ? "" : text.trim();
-        return registry.packs().stream().filter(p -> states.enabled(p.name()))
+        return registry.packs().stream().filter(p -> states.enabled(p.name())).filter(p -> !forUser || sampleVisible(user, p.name()))
                 .filter(p -> p.name().equalsIgnoreCase(t) || (!p.code().isEmpty() && p.code().equalsIgnoreCase(t))).map(Pack::name).findFirst();
     }
 
@@ -128,8 +185,8 @@ public final class PackAccess {
     /** Packs an admin made available to the user, limited to what is installed and enabled. */
     public List<String> assigned(String user) {
         Set<String> chosen = users.find(user).map(User::packs).orElse(null);
-        List<String> base = chosen == null ? defaults : List.copyOf(chosen);
-        return enabled().stream().filter(base::contains).toList();
+        List<String> base = chosen == null ? defaults() : List.copyOf(chosen);
+        return enabled().stream().filter(base::contains).filter(p -> sampleVisible(user, p)).toList();
     }
 
     /** Packs the user chose to see: the saved choice within what is assigned, or everything assigned. */
@@ -179,13 +236,18 @@ public final class PackAccess {
      * by one that is.
      */
     public boolean kindAllowed(String user, String kind) {
-        String owner = kindOwner.get(kind);
+        String owner = kindOwner().get(kind);
         return owner == null || (states.enabled(owner) && effective(user).contains(owner));
+    }
+
+    /** The pack that owned the kind until it was unloaded while the server ran, or null. */
+    public String removedOwner(String kind) {
+        return registry.removedOwner(kind);
     }
 
     /** The pack that owns the kind, or null when no pack does. */
     public String ownerOf(String kind) {
-        return kindOwner.get(kind);
+        return kindOwner().get(kind);
     }
 
     /**
@@ -193,7 +255,7 @@ public final class PackAccess {
      * the user has it switched on; kinds no pack owns are always reachable. A switched-off pack for everyone is not reachable.
      */
     public boolean kindAssigned(String user, String kind) {
-        String owner = kindOwner.get(kind);
+        String owner = kindOwner().get(kind);
         if (owner == null) {
             return true;
         }
