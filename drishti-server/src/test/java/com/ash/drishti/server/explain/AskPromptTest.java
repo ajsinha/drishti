@@ -55,6 +55,17 @@ class AskPromptTest {
     }
 
     @Test
+    void labelsOnlySendsNoRenderedValueFromTheSummaryTheStripOrAPanelDescription() {
+        PageContext base = ctx("VAR-1 is 10.96M USD", "The loss.");
+        PageContext.About about = new PageContext.About(base.about().pack(), "VaR result", "VAR-1 is 10.96M USD", "desc",
+                List.of(new PageContext.PanelAbout("pnl", "P&L", "a day below -10.9m is an exception")));
+        PageContext withPanel = new PageContext(base.ref(), base.mnemonic(), "en", 3, null, about, base.glossary(), base.data(), base.layout(), null, null, null);
+        String labels = AskPrompt.build(withPanel, null, "q", cfg("labels-only", 24), ID).user();
+        assertThat(labels).doesNotContain("10.9").doesNotContain("renderedSummary").doesNotContain("below -").contains("\"pnl\"").contains("P&L");
+        assertThat(AskPrompt.build(withPanel, null, "q", cfg("shown", 24), ID).user()).contains("below -10.9m");
+    }
+
+    @Test
     void valuesAreSentOnlyWhenTheAdministratorAllowsThemAndTheyAreTheCallersOwnMaskedText() {
         String user = AskPrompt.build(ctx("VAR-1 is 10.96M USD, trader •••", "The loss."), null, "q", cfg("shown", 24), ID).user();
         assertThat(user).contains("10.96M USD").contains("•••").contains("bad value 4242424");
