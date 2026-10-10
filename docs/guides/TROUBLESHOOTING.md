@@ -781,7 +781,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   runs, health says `DOWN: … PKIX path building failed` or `No subject alternative DNS name matching …`.
 - **Cause:** a file, a password or a pairing is wrong (the connector checks them at start), the server's certificate is not
   signed by an authority the connector trusts, or its name is not in the certificate.
-- **Check:** `openssl s_client -connect host:port -servername host -CAfile ca.pem -verify_hostname host </dev/null` shows
+- **Check:** `openssl s_client -connect host:port -servername host -CAfile ca.pem -verify_hostname host < /dev/null` shows
   whether the chain and the name pass (`Verification: OK`). The exact messages and what each means:
   [TLS.md, sections 8 and 11](../connectors/TLS.md#8-start-up-checks-and-their-messages).
 - **Fix:** put the issuing CA in `tls.ca-file` or `tls.truststore`; re-issue the server certificate with its names as SANs

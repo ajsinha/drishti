@@ -297,6 +297,63 @@ Interactions: cross-filter and cross-highlight between visuals on a page; drill-
 to another page with filters carried; *Show as table*; *Show the rows* (a table of the underlying rows, masked); *Open in
 terminal* on any row whose key is a Drishti kind.
 
+### 8.1 Interactive Sutras and slicers: controls, view state and filters
+
+The terminal's Sutras and Rūpaka's reports share **one model of interaction**, so it is built once and works in both.
+
+**Controls.** A Sutra or a report page declares `controls:`; each is placed in the strip, a panel header or a side bar.
+
+| Kind | Use | Options from |
+|---|---|---|
+| `dropdown`, `multi-select` | a leg, a currency, desks | a fixed list; the record's own data (`$.legs[*].id`); a dataset column (distinct values the reader may see); a lookup kind |
+| cascading | region → country → book: options depend on another control | an expression over the parent control's value |
+| `toggle`, `segmented` | Pay / Receive / Both | a fixed list |
+| `date`, `date-range` | a business date; paid between; relative ranges (`next-90d`, `this-month`, `ytd`) | the calendar of the pack |
+| `number-range`, `slider`, `top-n` | notional between; the top 10 | bounds from data or fixed |
+| `search` | contains, across chosen columns | the columns named |
+
+A control has an `id`, a `label`, `options`, a `default`, `remember: user | none` and `required`. Its value is read in the
+closed expression language as `ctl.<id>`. Illustrative (the syntax is settled in phase 0a):
+
+```yaml
+controls:
+  - { id: leg, kind: dropdown, label: Leg, options: "$.legs[*].id", default: first }
+  - { id: when, kind: date-range, label: Paid between, default: next-90d }
+panels:
+  - id: cashflows
+    kind: table
+    rows: "$.legs[?(@.id == ctl.leg)].cashflows"
+    where: "@.payDate within ctl.when"
+    title: "Cashflows · leg {ctl.leg}"
+```
+
+**Behaviour.**
+- Changing a control re-renders only the panels whose expressions read it; the rest do not move.
+- **Live data stays live:** each new frame is filtered through the current control values before it reaches the screen.
+- **View state is in the URL** (`?ctl.leg=L2&ctl.when=2026-10-01..2026-12-31`), so a link, a share, a snapshot and a
+  subscription reproduce exactly what was seen; `remember: user` restores the last choice for that Sutra or report.
+- **Cross-filtering:** a panel may declare `on-select: { filter: [cashflows], by: leg }`, so clicking a row or a chart bar
+  sets a control; in Rūpaka every visual cross-filters its page by default, as Power BI's visuals do.
+- **Where filtering runs:** in the browser for panels already loaded in full; on the server (the query or the source) for
+  large tables and datasets, with the same expression, so the results are the same either way.
+
+**Excel-style column filters on every table** (no Sutra needed). Each column header of a table, matrix or pivot has a
+filter menu, as in Excel's AutoFilter: a searchable checklist of distinct values with counts, *(Select all)* and
+*(Blanks)*; number conditions (equals, not equal, greater, less, between, top 10 / bottom 10, above or below average);
+date conditions (today, this week, this month, last 7 days, between, before, after); text conditions (equals, contains,
+begins with, ends with, does not contain); sort ascending and descending. Filters combine across columns; a filtered
+column shows a funnel; one key clears them all. Column filters are part of the view state (URL, shares) and become a
+report's visual-level filters in Rūpaka. They extend today's single *Filter rows* box, which stays as the quick search.
+
+**Safety and access.** Controls only select or filter; they never write. Options and filters are expressions in the closed
+language, never code. Masks apply: a dropdown or a filter checklist never lists a masked value to a reader without `raw`,
+and row rules decide which values exist at all. Every control works from the keyboard (the checklist with arrows, space
+and type-ahead), at 44 px on touch screens, and is announced to screen readers.
+
+**Order of delivery.** (1) Excel-style column filters on every table, matrix and pivot in the terminal (useful at once, no
+grammar change); (2) `controls:` and `ctl.*` in Sutras, with URL view state; (3) cross-filtering; (4) the same model as
+Rūpaka slicers and the visual, page and report filters of the designer.
+
 ## 9. The designer
 
 Power BI authors find the same panes in the same places:
@@ -553,6 +610,7 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 | Phase | What | Size | Done when |
 |---|---|---|---|
 | 0 | **Proof of concept**: Perspective live grid fed by Drishti's live path; masked Arrow out of a server DuckDB query; DuckDB-Wasm slicing it; CSP and size measured | M | a page shows a live pivot at target rates and a cached query under target, with masks proven |
+| 0a | **Interactive Sutras** (section 8.1): Excel-style column filters on every table, then `controls:` and `ctl.*` with URL view state, then cross-filtering | M | a desk filters a trade's cashflows by leg and date from a dropdown, and any table by column filters, by mouse, keyboard and touch |
 | 1 | **Shell and catalogue**: BI top bar item, `RUPAKA <GO>`, `/bi` home, catalogue, workspaces (personal and shared), powers, audit | M | a published report appears for its audience only |
 | 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows |
 | 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test) |
@@ -571,7 +629,7 @@ The work is done in three stages, in this order; each is complete and useful on 
 
 | Stage | Scope | Phases | AI |
 |---|---|---|---|
-| **1. BI** | Everything in this document except section 14: datasets, the query engine and its layers, reports, the designer, workspaces and catalogue, streaming BI, Python interfaces, distribution, the analyst workbench | 0 to 7 and 9 above | **none**: no feature depends on a language model, and none is built |
+| **1. BI** | Everything in this document except section 14, starting with interactive Sutras (8.1): datasets, the query engine and its layers, reports, the designer, workspaces and catalogue, streaming BI, Python interfaces, distribution, the analyst workbench | 0, 0a, 1 to 7 and 9 above | **none**: no feature depends on a language model, and none is built |
 | **2. Generative AI driven BI** | Section 14: the provider interface (off by default) and the BI hooks: report from words, ask the data, explain this number, narrative summaries, designer copilot, dataset helper | A1 provider interface, guardrails, audit and cost limits (M); A2 report from words and designer copilot (M); A3 ask the data and explain this number (M); A4 narratives and dataset helper (S) | optional, administrator-enabled; every hook has a non-AI equivalent from stage 1 |
 | **3. Generative AI driven UI** | The terminal and BI screens themselves composed from words: a Sutra or a workspace generated from a request and the data's shape, dynamic forms (the Rūpaka SRS's GenUI), conversational navigation, layouts that adapt to the task; all validated by the same schemas and published through the same review | designed after stage 2, from what stage 2 teaches | optional, as stage 2 |
 
