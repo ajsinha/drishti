@@ -42,8 +42,13 @@ public final class QueryService implements AutoCloseable {
     /** A dataset ready to query: the id it is stored under, its layer key, the parsed model and a fingerprint of its text. */
     public record Loaded(String id, String key, Dataset dataset, String hash) {}
 
-    /** The reader: roles and attributes for the row rules, the masks, whether rules apply at all (security on). */
-    public record Caller(String user, Set<String> roles, boolean enforce, Map<String, List<Object>> attributes, SqlCompiler.Masks masks) {}
+    /** The reader: roles and attributes for the row rules, the masks, whether rules apply at all (security on), and the tables over kinds they may not open. */
+    public record Caller(String user, Set<String> roles, boolean enforce, Map<String, List<Object>> attributes, SqlCompiler.Masks masks, Set<String> denied) {
+
+        public Caller(String user, Set<String> roles, boolean enforce, Map<String, List<Object>> attributes, SqlCompiler.Masks masks) {
+            this(user, roles, enforce, attributes, masks, Set.of());
+        }
+    }
 
     /** What was done, for the preview and the access log. */
     public record Meta(String layer, String rollup, int rows, double millis, boolean cached, List<String> dates, List<String> tables, List<String> masked,
@@ -153,7 +158,8 @@ public final class QueryService implements AutoCloseable {
             }
         }
         List<String> matched = ds.dataset().security().rows().stream().filter(r -> who.roles().contains(r.role())).map(r -> r.role() + "=" + r.where()).sorted().toList();
-        return ds.key() + "|" + ds.hash() + "|g" + layers.generation(ds.key()) + "|" + q + "|rows:" + who.enforce() + matched + who.attributes() + "|masked:" + masked;
+        return ds.key() + "|" + ds.hash() + "|g" + layers.generation(ds.key()) + "|" + q + "|rows:" + who.enforce() + matched + who.attributes() + "|masked:" + masked
+                + "|denied:" + new java.util.TreeSet<>(who.denied());
     }
 
     private Result run(Loaded ds, QueryRequest q, Caller who, boolean explain) {
@@ -164,17 +170,27 @@ public final class QueryService implements AutoCloseable {
         SqlCompiler.Plan plan = probe.plan(q, reader);
         plan.tables().forEach(t -> modes.add(d.tables().get(t).mode()));
         if (modes.contains("direct")) {
+            for (String t : plan.tables()) {
+                if (who.denied().contains(t)) {
+                    throw new DrishtiException(ErrorCode.QUERY_MASKED, "you may not open kind '" + d.tables().get(t).kind() + "' (table " + t + ")");
+                }
+            }
             return direct(ds, q, plan, reader, who, explain);
         }
         List<String> warnings = new ArrayList<>();
         Map<String, Layers.Layer> cols = new LinkedHashMap<>();
         for (String t : plan.tables()) {
             Dataset.Table table = d.tables().get(t);
+            if (who.denied().contains(t)) {
+                cols.put(t, new Layers.Layer(List.of(), List.of(), 0));
+                warnings.add("you may not open " + table.kind() + ": " + t + " has no rows for you");
+                continue;
+            }
             Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : layers.columns(ds.key(), table, q.from(), q.to());
             cols.put(t, layer);
             warnings.addAll(layer.warnings());
         }
-        Dataset.Rollup rollup = "columns".equals(q.layer()) ? null : route(d, plan, q);
+        Dataset.Rollup rollup = "columns".equals(q.layer()) || plan.tables().stream().anyMatch(who.denied()::contains) ? null : route(d, plan, q);
         if ("rollup".equals(q.layer()) && rollup == null) {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "no rollup of this dataset can answer the query (layer: rollup was asked for)");
         }

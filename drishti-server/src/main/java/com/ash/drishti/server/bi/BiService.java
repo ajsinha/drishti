@@ -365,7 +365,7 @@ public final class BiService {
 
     /** Whether the caller may see the item in the catalogue (published, not personal) because of its audience, ownership or membership. */
     private boolean visible(BiStore.Item i, Principal p, Set<String> myWorkspaces, Set<String> myPacks, boolean admin) {
-        if (!i.isPublished() || i.workspace().startsWith("u-")) {
+        if (!i.isPublished() || i.workspace().startsWith("u-") || hiddenSample(i, p)) {
             return false;
         }
         if (admin || i.owner().equals(p.user()) || myWorkspaces.contains(i.workspace())) {
@@ -501,8 +501,55 @@ public final class BiService {
         return view(i, p, store.marks(p.user()), store.views(props.usageDays(), Instant.now()), true);
     }
 
+    /** Sample content (a shipped file with {@code sample: true}) is hidden from those who may not see sample packs. */
+    private boolean hiddenSample(BiStore.Item i, Principal p) {
+        return i.tags().contains(BiFolder.SAMPLE_TAG) && BiFolder.isShipped(i.id()) && !packs.samplesVisible(p.user());
+    }
+
+    /** The item for a caller who may read it (the dataset service's gate): the same rules as {@link #item}, without a view being counted. */
+    public BiStore.Item readableItem(Principal p, String id) {
+        open(p);
+        return readable(p, id);
+    }
+
+    /** The caller must hold the BI power (BI itself is on, they hold {@code bi}, and the higher one when asked); DRS-9002 otherwise. */
+    public void requirePower(Principal p, String power) {
+        open(p);
+        if (!BiAccess.BI.equals(power)) {
+            access.require(p, power);
+        }
+    }
+
+    /** The body of an item as this caller reads it: the working draft for those who may edit, else the published version. */
+    public String bodyFor(Principal p, BiStore.Item i) {
+        boolean shipped = BiFolder.isShipped(i.id());
+        boolean draft = !shipped && BiAccess.rank(roleIn(workspaceOf(i.workspace()), p)) >= BiAccess.rank("contributor");
+        return draft || shipped ? i.body() : publishedBody(i);
+    }
+
+    /** The body everyone with access reads: the shipped file, or the published version. */
+    public String publishedBody(BiStore.Item i) {
+        return BiFolder.isShipped(i.id()) ? i.body() : store.version(i.id(), i.publishedVersion()).map(BiStore.Version::body).orElse("");
+    }
+
+    /** The published dataset items the caller may see. */
+    public List<BiStore.Item> datasetItems(Principal p) {
+        open(p);
+        return catalogueItems(p).stream().filter(i -> "dataset".equals(i.kind())).toList();
+    }
+
+    /** Every published dataset, whoever may read it (no caller): what a data-load signal concerns. */
+    public List<BiStore.Item> allDatasets() {
+        List<BiStore.Item> all = new ArrayList<>(store.published());
+        all.addAll(folder.items());
+        return all.stream().filter(i -> "dataset".equals(i.kind())).toList();
+    }
+
     private BiStore.Item readable(Principal p, String id) {
         BiStore.Item i = itemOf(id);
+        if (hiddenSample(i, p)) {
+            throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'");
+        }
         BiStore.Workspace w = workspaceOf(i.workspace());
         int rank = BiAccess.rank(roleIn(w, p));
         if (rank >= 0 && !BiFolder.WORKSPACE.equals(w.id()) && (i.isPublished() || rank >= BiAccess.rank("contributor"))) {
@@ -660,6 +707,12 @@ public final class BiService {
     }
 
     private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note) {
+        if ("dataset".equals(i.kind()) && !i.body().isBlank()) {
+            com.ash.drishti.server.bi.dataset.DatasetParser.Result r = com.ash.drishti.server.bi.dataset.DatasetParser.parse(i.body());
+            if (!r.ok()) {
+                throw new DrishtiException(ErrorCode.DATASET_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError() + " (check it on its dataset page)");
+            }
+        }
         int version = i.publishedVersion() + 1;
         Instant now = Instant.now();
         store.addVersion(new BiStore.Version(i.id(), version, i.body(), note, p.user(), now), props.versionsKeep());

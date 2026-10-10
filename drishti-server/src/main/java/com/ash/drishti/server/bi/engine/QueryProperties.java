@@ -25,13 +25,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param latestTtl how long "the latest business date" of a table is trusted before the source is asked again
  * @param eagerRebuild rebuild a layer's date right away when a data-load signal lands (else on the next query)
  * @param liveTtl how long a live table's snapshot is served before the current state is read again
- * @param liveMaxRows most entities a live table snapshot holds
  * @param admission how long a query waits for a slot before it is refused as busy
+ * @param inferSample most values of a column the relationship finder looks at
+ * @param inferMinMatch the share of a column's values that must be found in the other table's keys for a relationship to be proposed
  */
 @ConfigurationProperties("drishti.bi.query")
 public record QueryProperties(String storeDir, Duration timeout, Integer maxRows, Long maxBytes, Integer maxConcurrent, Integer maxConcurrentPerUser,
         Integer jsonMaxRows, Integer cacheEntries, Long cacheMaxBytes, Duration cacheTtl, String memoryLimit, Integer threads, Integer scanBatchRows,
-        Integer recordReadMax, Duration recordReadBudget, Duration latestTtl, Boolean eagerRebuild, Duration liveTtl, Integer liveMaxRows, Duration admission) {
+        Integer recordReadMax, Duration recordReadBudget, Duration latestTtl, Boolean eagerRebuild, Duration liveTtl, Duration admission, Integer inferSample, Double inferMinMatch) {
 
     public QueryProperties {
         storeDir = storeDir == null || storeDir.isBlank() ? "./data/bi-store" : storeDir;
@@ -52,8 +53,9 @@ public record QueryProperties(String storeDir, Duration timeout, Integer maxRows
         latestTtl = positive(latestTtl, Duration.ofSeconds(30));
         eagerRebuild = eagerRebuild == null || eagerRebuild;
         liveTtl = positive(liveTtl, Duration.ofSeconds(5));
-        liveMaxRows = liveMaxRows == null || liveMaxRows <= 0 ? 20_000 : liveMaxRows;
         admission = positive(admission, Duration.ofSeconds(2));
+        inferSample = inferSample == null || inferSample <= 0 ? 5_000 : inferSample;
+        inferMinMatch = inferMinMatch == null || inferMinMatch <= 0 || inferMinMatch > 1 ? 0.8 : inferMinMatch;
     }
 
     private static Duration positive(Duration d, Duration dflt) {
@@ -62,6 +64,6 @@ public record QueryProperties(String storeDir, Duration timeout, Integer maxRows
 
     /** Defaults for tests and embedded use. */
     public static QueryProperties defaults(String storeDir) {
-        return new QueryProperties(storeDir, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new QueryProperties(storeDir, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 }

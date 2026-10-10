@@ -55,6 +55,8 @@ public final class BiFolder implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(BiFolder.class);
     /** The id of the virtual workspace that holds the folder's items. */
     public static final String WORKSPACE = "shipped";
+    /** The tag a shipped file with {@code sample: true} carries; the sample-visibility setting hides tagged items from those who may not see samples. */
+    public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Map<String, String> KINDS = Map.of("datasets", "dataset", "reports", "report", "boards", "board", "notebooks", "notebook");
 
@@ -202,8 +204,13 @@ public final class BiFolder implements AutoCloseable {
         String name = file.getFileName().toString();
         name = name.substring(0, name.length() - ("." + kind + ".yaml").length());
         String endorsement = root.path("endorsement").asText("none");
+        List<String> tags = strings(root.path("tags"));
+        if (root.path("sample").asBoolean(false) && !tags.contains(SAMPLE_TAG)) {
+            tags = new ArrayList<>(tags);
+            tags.add(SAMPLE_TAG);                                    // sample content is hidden from business users as sample packs are
+        }
         return new BiStore.Item("file:" + kind + ":" + name, WORKSPACE, kind, root.path("title").asText(name), root.path("description").asText(""),
-                root.path("owner").asText("shipped"), strings(root.path("tags")), text, "published", 1,
+                root.path("owner").asText("shipped"), tags, text, "published", 1,
                 List.of("none", "promoted", "certified").contains(endorsement) ? endorsement : "none", root.path("endorsedBy").asText(""),
                 strings(root.path("audience").path("roles")), strings(root.path("audience").path("users")), strings(root.path("audience").path("packs")),
                 "", null, modified, modified, "", modified, "");
