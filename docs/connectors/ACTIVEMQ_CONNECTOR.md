@@ -596,19 +596,155 @@ last message received, rejected messages included.
 
 ## 14. Security
 
+### 14.1 Credentials, permissions, the state store
+
 - **Credentials.** `user` and `password` are passed to the connection factory. Keep them out of files:
   `password: ${AMQ_PASSWORD}` with the variable set where the server runs. Health and `/api/v1/sources` never show
   settings. Do not put credentials in `broker-url`: the URL appears in health while connecting.
-- **TLS.** Use the `ssl://` transport inside the failover URL:
-  `failover:(ssl://mq1.bank.example:61617,ssl://mq2.bank.example:61617)`. The connector uses the plain
-  `ActiveMQConnectionFactory`, so TLS uses the JVM's default key and trust stores: start the server with
-  `-Djavax.net.ssl.trustStore=… -Djavax.net.ssl.trustStorePassword=…`, and for client certificates
-  `-Djavax.net.ssl.keyStore=… -Djavax.net.ssl.keyStorePassword=…`. There are no TLS settings on the connector itself.
 - **Broker permissions.** The user needs to read (consume) its queues; for topics with durable subscriptions also to
   create them (ActiveMQ's `admin` right on the topic, plus `ActiveMQ.Advisory.>` as usual for OpenWire clients).
 - **The state store** holds every document in plain (LZ4-compressed) form on local disk: protect the folder like the
   data itself (file permissions, encrypted volume).
 - **Entitlements** apply on top as for every connector: the server redacts what it serves.
+
+### 14.2 TLS: `ssl://` with the shared `tls.*` settings
+
+A `broker-url` with `ssl://` endpoints (OpenWire over TLS, ActiveMQ's `ssl://…:61617` connector), alone or inside
+`failover:(…)`, makes the connector connect over TLS, with the settings every connector shares:
+[TLS.md](TLS.md#1-the-settings). You can give it a private CA as a PEM file or a PKCS12/JKS truststore, a client certificate as
+PEM files or a keystore, and switch hostname verification off. No JVM-wide `-Djavax.net.ssl.*` properties are needed (they
+still apply to anything you leave unset, such as the default trust).
+
+What the connector does for you:
+
+- builds the TLS context at start and fails with the file and the reason if a file, a password or a key is wrong
+  ([TLS.md, section 8](TLS.md#8-start-up-checks-and-their-messages));
+- uses ActiveMQ's `ActiveMQSslConnectionFactory` with that context for every endpoint of the URL;
+- verifies the host name (the broker's certificate must carry the name in the URL as a subject alternative name), and with
+  `tls.verify-hostname: false` adds `socket.verifyHostName=false` to every `ssl://` endpoint and logs a warning at start;
+- adds to health a note when a certificate it was given expires within 30 days:
+  `UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days (2026-10-22))`;
+- puts the reason in health while it cannot connect, including the cause chain:
+  `DOWN: JMSException: Could not connect to broker URL: ssl://mq1.bank.example:61617. Reason: … ; caused by SSLHandshakeException: PKIX path building failed … (reconnecting)`.
+
+A `tls.enabled: true` against a `tcp://` URL is refused at start (`tls.enabled is true but broker-url has no ssl://
+endpoint`) instead of connecting in the clear.
+
+**Not covered.** AMQP to ActiveMQ (`amqp+ssl://`) is a different client and is not part of this connector (it speaks
+OpenWire). `tls.protocols` and `tls.cipher-suites` are validated but the OpenWire client takes its protocol versions and
+suites from the JVM (`jdk.tls.client.protocols`, `jdk.tls.client.cipherSuites`); the JVM default is TLS 1.3 and 1.2.
+
+#### Broker side (for reference)
+
+The broker needs a keystore with its certificate (names as SANs) and, for mutual TLS, a truststore with the CA of the
+client certificates. This `activemq.xml` is the one the integration test uses (ActiveMQ Classic 6.1.7):
+
+```xml
+<broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
+  <sslContext>
+    <sslContext keyStore="file:${activemq.conf}/broker.p12" keyStoreType="PKCS12" keyStorePassword="…"
+                trustStore="file:${activemq.conf}/truststore.p12" trustStoreType="PKCS12" trustStorePassword="…"/>
+  </sslContext>
+  <transportConnectors>
+    <transportConnector name="mutual" uri="ssl://0.0.0.0:61617?needClientAuth=true"/>   <!-- client certificate required -->
+    <transportConnector name="server-only" uri="ssl://0.0.0.0:61618"/>                  <!-- server certificate only -->
+  </transportConnectors>
+</broker>
+```
+
+#### Examples
+
+**A. A private CA (PEM), user and password**
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      limits-mq:
+        plugin: activemq
+        kinds: [credit-limit]
+        settings:
+          broker-url: "failover:(ssl://mq1.bank.example:61617,ssl://mq2.bank.example:61617)?initialReconnectDelay=1000&maxReconnectDelay=30000"
+          user: ${AMQ_USER}
+          password: ${AMQ_PASSWORD}
+          destinations: queue:limits
+          kind.limits: credit-limit
+          id-field.limits: limitId
+          tls.ca-file: /etc/drishti/tls/ca.pem                 # one or many CA certificates
+```
+
+**B. A Java truststore (PKCS12 or JKS)**
+
+```yaml
+          broker-url: "failover:(ssl://mq1.bank.example:61617)"
+          tls.truststore: /etc/drishti/tls/truststore.p12
+          tls.truststore-password: "${AMQ_TRUSTSTORE_PASSWORD}"
+```
+
+**C. Mutual TLS with PEM files** (the broker connector has `needClientAuth=true`)
+
+```yaml
+          broker-url: "failover:(ssl://mq1.bank.example:61617)"
+          tls.ca-file: /etc/drishti/tls/ca.pem
+          tls.cert-file: /etc/drishti/tls/client.pem           # certificate, then intermediates
+          tls.key-file: /etc/drishti/tls/client.key            # PKCS#8, PKCS#1 RSA, SEC1 EC, or encrypted PKCS#8
+          tls.key-password: "${CLIENT_KEY_PASSWORD}"           # only for an encrypted key
+```
+
+**D. Mutual TLS with Java stores**
+
+```yaml
+          broker-url: "failover:(ssl://mq1.bank.example:61617)"
+          tls.truststore: /etc/drishti/tls/truststore.jks
+          tls.truststore-password: "${AMQ_TRUSTSTORE_PASSWORD}"
+          tls.keystore: /etc/drishti/tls/client.p12
+          tls.keystore-password: "${AMQ_KEYSTORE_PASSWORD}"
+          tls.key-alias: drishti                               # only if the keystore holds several keys
+```
+
+With a client certificate the user and password may still be needed: the certificate secures the channel, the
+credentials log in (unless the broker's `jaasCertificateAuthenticationPlugin` maps the certificate to a user).
+
+**E. The broker's name does not match its certificate** (a short-term bridge only)
+
+```yaml
+          tls.verify-hostname: false      # warns at every start; fix the certificate instead
+```
+
+### 14.3 Verifying
+
+From the Drishti host, before the connector:
+
+```
+$ openssl s_client -connect mq1.bank.example:61617 -servername mq1.bank.example -CAfile ca.pem \
+    -cert client.pem -key client-pkcs8.key -verify_hostname mq1.bank.example -verify_return_error </dev/null
+Verification: OK
+Verify return code: 0 (ok)
+```
+
+(`hostname mismatch`, `self-signed certificate in certificate chain` and `tlsv13 alert certificate required` are what the
+failures print; see [KAFKA_CONNECTOR.md, 11.7](KAFKA_CONNECTOR.md#117-verifying-a-setup) for the captured output.) Then
+Admin → Health shows the source `UP`.
+
+The connector is tested over `ssl://` against ActiveMQ Classic 6.1.7 in Docker (`ActiveMqTlsTest`): the whole message
+contract runs through a listener that requires a client certificate (PEM files), PKCS12 and JKS stores work, a client
+without a certificate and a broker whose CA is not trusted are refused with the reason in health, a wrong host name is
+refused and `tls.verify-hostname: false` lets it through, and misconfigurations fail at start.
+
+### 14.4 Common errors and fixes
+
+With a `failover:(…)` URL the client retries inside the transport and the log carries the reason; to see it in health,
+point a test connector at one plain `ssl://host:61617` URL (no `failover:`) for a minute.
+
+| Health or log text | Cause | Fix |
+|---|---|---|
+| `tls.enabled is true but broker-url has no ssl:// endpoint` | TLS wanted, URL is `tcp://` | use `ssl://host:61617` (the broker's SSL connector port) |
+| `…caused by SSLHandshakeException: PKIX path building failed` | the broker's certificate is not trusted | add its CA: `tls.ca-file` / `tls.truststore` |
+| `…caused by CertificateException: No subject alternative DNS name matching mq1.bank.example found` | hostname mismatch | re-issue the broker certificate with the name, or `tls.verify-hostname: false` |
+| `DOWN: JMSException: Could not connect to broker URL … Reason: java.net.SocketException: Connection or outbound has closed` (no other cause) | the broker closed the handshake: it wants a client certificate, or does not trust yours | set `tls.cert-file` + `tls.key-file` (or `tls.keystore`); the client certificate's CA must be in the broker's `trustStore` |
+| `Connection reset` / `SSLException: Unsupported or unrecognized SSL message` | TLS sent to a plain `tcp://` connector (61616) | use the `ssl://` connector's port |
+| `User name [x] or password is invalid` | credentials | `user` / `password` |
+| start-up messages naming a file | a file or a password is wrong | [TLS.md, section 8](TLS.md#8-start-up-checks-and-their-messages) |
 
 ## 15. Diagnosing
 
@@ -642,8 +778,9 @@ On an `activemq` connector (`drishti.sources.connectors.<name>.settings`, or `dr
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `broker-url` | `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000` (health shows `failover:(tcp://localhost:61616)`) | OpenWire URL; `failover:(…)` reconnects by itself |
+| `broker-url` | `failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000` (health shows `failover:(tcp://localhost:61616)`) | OpenWire URL; `failover:(…)` reconnects by itself; `ssl://` endpoints use TLS ([section 14.2](#142-tls-ssl-with-the-shared-tls-settings)) |
 | `max-redeliveries` | `-1` | redeliveries of a message the state store could not keep before the broker dead-letters it; `-1`: without limit |
+| `tls.*` | none | TLS for `ssl://` endpoints: a private CA, truststore, client certificate, hostname check; see [section 14.2](#142-tls-ssl-with-the-shared-tls-settings) and [TLS.md](TLS.md#1-the-settings) |
 | `user` | none | broker user |
 | `password` | none | broker password |
 | `destinations` | empty (required: the connector stays `DOWN` without it) | comma list: `queue:<name>`, `topic:<name>`, or `<name>` (a queue) |

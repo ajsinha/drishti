@@ -542,20 +542,144 @@ and views of its entities carry a banner ([CONFIGURATION.md](../admin/CONFIGURAT
 
 ## 12. Security
 
+### 12.1 Credentials, permissions, the state store
+
 - **Credentials** are in the URI: `amqp://<user>:<password>@<host>:<port>/<vhost>`. URL-encode special characters in
   the password and the vhost (`%2f` is the default vhost `/`). Keep the whole URI in the environment
-  (`uri: ${RABBIT_URI}`); health and `/api/v1/sources` never show settings.
-- **TLS**: `amqps://host:5671/vhost`. The client (amqp-client 5.36) then uses the JVM's default `SSLContext` with
-  **hostname verification on**: the server certificate must chain to the JVM's trust store and match the host name.
-  To trust a private CA, or to present a client certificate, set the JVM's standard properties when starting the
-  server: `-Djavax.net.ssl.trustStore=… -Djavax.net.ssl.trustStorePassword=…`, and `-Djavax.net.ssl.keyStore=…
-  -Djavax.net.ssl.keyStorePassword=…`. The connector has no settings of its own for certificates, and no setting for
-  SASL EXTERNAL (certificate-based login); the login is the URI's user and password (PLAIN).
+  (`uri: ${RABBIT_URI}`); health and `/api/v1/sources` never show settings. (With certificate login,
+  [12.3](#123-logging-in-with-the-client-certificate-external), there are none.)
 - **Permissions** the user needs on the vhost: *configure* on the queues (only with `declare: true`), *write* on the
   queues and *read* on the exchange (to bind, with `bind.<queue>`), and *read* on the queues (to consume). With
   `declare: false`, read on the queues is enough.
 - **The state store** holds every document in plain (LZ4-compressed) form on local disk: protect `state.root` as you
   would the source data.
+
+### 12.2 TLS: `amqps://` with the shared `tls.*` settings
+
+An `amqps://` URI (port 5671) connects over TLS, with the settings every connector shares:
+[TLS.md](TLS.md#1-the-settings): a private CA as a PEM file or a PKCS12/JKS truststore, a client certificate as PEM files or a
+keystore, hostname verification (on by default), protocols and cipher suites. No JVM-wide `-Djavax.net.ssl.*` properties
+are needed.
+
+What the connector does:
+
+- builds the TLS context at start and fails with the file and the reason if a file, a password or a key is wrong
+  ([TLS.md, section 8](TLS.md#8-start-up-checks-and-their-messages));
+- hands it to the AMQP client for the connection and for every automatic reconnection, and applies `tls.protocols`,
+  `tls.cipher-suites` and the hostname check to the socket;
+- with no `tls.*` settings an `amqps://` URI trusts the JVM's authorities and checks the host name, as before;
+- adds to health a note when a certificate it was given expires within 30 days:
+  `UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days (2026-10-22))`;
+- refuses `tls.enabled: true` with an `amqp://` URI at start (`tls.enabled is true but uri is not amqps:// (the TLS port
+  is 5671)`) instead of connecting in the clear.
+
+**A. A private CA (PEM), user and password**
+
+```yaml
+drishti:
+  sources:
+    connectors:
+      collateral-mq:
+        plugin: rabbitmq
+        kinds: [collateral-call]
+        settings:
+          uri: ${RABBIT_URI}                    # amqps://drishti:…@rabbit.bank.example:5671/collateral
+          queues: collateral.calls
+          kind.collateral.calls: collateral-call
+          id-field.collateral.calls: callId
+          tls.ca-file: /etc/drishti/tls/ca.pem
+```
+
+**B. A Java truststore**
+
+```yaml
+          uri: ${RABBIT_URI}
+          tls.truststore: /etc/drishti/tls/truststore.p12
+          tls.truststore-password: "${RABBIT_TRUSTSTORE_PASSWORD}"
+```
+
+**C. Mutual TLS, user and password still log in** (the broker verifies the certificate; the URI's credentials authenticate)
+
+```yaml
+          uri: ${RABBIT_URI}
+          tls.ca-file: /etc/drishti/tls/ca.pem
+          tls.cert-file: /etc/drishti/tls/client.pem
+          tls.key-file: /etc/drishti/tls/client.key        # PKCS#8, PKCS#1 RSA, SEC1 EC, or encrypted (tls.key-password)
+```
+
+or with a keystore: `tls.keystore: /etc/drishti/tls/client.p12`, `tls.keystore-password: "${RABBIT_KEYSTORE_PASSWORD}"`,
+and `tls.key-alias` if it holds several keys.
+
+### 12.3 Logging in with the client certificate (EXTERNAL)
+
+With `auth-mechanism: external` the connector logs in with its client certificate instead of a user name and password
+(SASL EXTERNAL). The URI carries no credentials:
+
+```yaml
+          uri: amqps://rabbit.bank.example:5671/collateral
+          auth-mechanism: external              # plain (the default) uses the URI's user and password
+          tls.ca-file: /etc/drishti/tls/ca.pem
+          tls.cert-file: /etc/drishti/tls/client.pem
+          tls.key-file: /etc/drishti/tls/client.key
+```
+
+It is refused at start, with the reason, when there is no `amqps://` URI or no client certificate (`auth-mechanism:
+external logs in with a client certificate: set tls.cert-file and tls.key-file, or tls.keystore`).
+
+The broker needs the `rabbitmq_auth_mechanism_ssl` plugin and a user for the certificate. This is the configuration the
+integration test uses (RabbitMQ 4.1):
+
+```
+# /etc/rabbitmq/enabled_plugins
+[rabbitmq_auth_mechanism_ssl].
+
+# /etc/rabbitmq/rabbitmq.conf
+listeners.ssl.default = 5671
+ssl_options.cacertfile = /etc/rabbitmq/certs/ca.pem
+ssl_options.certfile   = /etc/rabbitmq/certs/server.pem
+ssl_options.keyfile    = /etc/rabbitmq/certs/server.key
+ssl_options.verify = verify_peer
+ssl_options.fail_if_no_peer_cert = true
+auth_mechanisms.1 = PLAIN
+auth_mechanisms.2 = EXTERNAL
+ssl_cert_login_from = common_name            # the user is the certificate's CN
+```
+
+```
+$ rabbitmqctl add_user drishti "$(openssl rand -hex 16)"          # the password is never used with EXTERNAL
+$ rabbitmqctl set_permissions -p collateral drishti "" "" ".*"      # read on the queues (declare: false); see 12.1
+```
+
+### 12.4 Verifying
+
+```
+$ openssl s_client -connect rabbit.bank.example:5671 -servername rabbit.bank.example -CAfile ca.pem \
+    -cert client.pem -key client-pkcs8.key -verify_hostname rabbit.bank.example -verify_return_error </dev/null
+Verification: OK
+Verify return code: 0 (ok)
+```
+
+(The failure outputs, `hostname mismatch`, `self-signed certificate in certificate chain` and `tlsv13 alert certificate
+required`, are shown in [KAFKA_CONNECTOR.md, 11.7](KAFKA_CONNECTOR.md#117-verifying-a-setup).) Then Admin → Health shows
+the source `UP`. `rabbitmq-diagnostics listeners` on the broker shows the `amqp/ssl` listener on 5671.
+
+The connector is tested over `amqps://` against RabbitMQ 4.1 in Docker (`RabbitMqTlsTest`): the whole message contract runs
+through a listener that requires a client certificate, logging in with EXTERNAL; user name and password over TLS work; a
+wrong password, a broker whose CA is not trusted and a wrong host name are refused with the reason in health, and
+`tls.verify-hostname: false` lets the host name through; misconfigurations fail at start.
+
+### 12.5 Common errors and fixes
+
+| Health or log text | Cause | Fix |
+|---|---|---|
+| `tls.enabled is true but uri is not amqps://` | TLS wanted, URI is `amqp://` | `amqps://host:5671/vhost` (the TLS port) |
+| `DOWN: SSLHandshakeException: PKIX path building failed … (retrying)` | the broker's certificate is not trusted | `tls.ca-file` / `tls.truststore` with its CA |
+| `DOWN: SSLHandshakeException: No subject alternative DNS name matching … found` | the name in the URI is not in the certificate | re-issue with the name as a SAN, or `tls.verify-hostname: false` |
+| `DOWN: … Received fatal alert: certificate_required` / `bad_certificate` | the broker demands a client certificate (`fail_if_no_peer_cert`) | `tls.cert-file` + `tls.key-file`, or `tls.keystore` |
+| `DOWN: AuthenticationFailureException: ACCESS_REFUSED` | a wrong user or password; with EXTERNAL, no user named like the certificate's CN, or the auth-mechanism-ssl plugin is not enabled | check the URI; `rabbitmqctl list_users`; enable `rabbitmq_auth_mechanism_ssl` and `auth_mechanisms.* = EXTERNAL` |
+| `DOWN: … Connection reset` / `Remote host terminated the handshake` | TLS to a plain port (5672), or the reverse | `amqps://` with 5671; `amqp://` with 5672 |
+| `auth-mechanism 'x' is not plain or external` | a typo | `plain` or `external` |
+| start-up messages naming a file | a file or a password is wrong | [TLS.md, section 8](TLS.md#8-start-up-checks-and-their-messages) |
 
 ## 13. Diagnosing
 
@@ -595,6 +719,8 @@ Read by `RabbitMqSourcePlugin`:
 | Setting | Default | Meaning |
 |---|---|---|
 | `uri` | `amqp://guest:guest@localhost:5672/%2f` | AMQP URI with user, password, host, port and vhost; `amqps://` for TLS (port 5671 by default) |
+| `auth-mechanism` | `plain` | `plain` (the URI's user and password) or `external` (log in with the client certificate; [section 12.3](#123-logging-in-with-the-client-certificate-external)) |
+| `tls.*` | none | TLS for `amqps://`: a private CA, truststore, client certificate, hostname check; see [section 12.2](#122-tls-amqps-with-the-shared-tls-settings) and [TLS.md](TLS.md#1-the-settings) |
 | `queues` | empty | comma list of queues to consume; empty means the connector connects and consumes nothing |
 | `declare` | `true` | declare each queue durable (no arguments) and bind it; `false` uses existing queues and ignores `bind.*` |
 | `bind.<queue>` | none | `exchange:routing.key`; split at the first `:`; only with `declare: true` |
@@ -645,7 +771,7 @@ seen or been configured with).
    `state.reset-at` for intraday state.
 6. Keep `state.durability: sync` unless the feed is faster than the disk can sync and producers resend state; give the
    process enough memory (`cache-mb` plus the id structures) to avoid an out-of-memory kill.
-7. Keep the URI in the environment; use `amqps://` with a trust store that holds the broker's CA.
+7. Keep the URI in the environment; use `amqps://` with `tls.ca-file` or `tls.truststore` holding the broker's CA ([section 12.2](#122-tls-amqps-with-the-shared-tls-settings)).
 8. Set `stale-after` to the longest quiet period that is normal for the feed.
 9. Keep history in a dated store for the same kinds ([section 10](#10-history-rabbitmq-with-a-lake)).
 10. Check Admin → Health: `UP`, `received` growing, `rejected` flat, `stateMb` well under `budgetMb`, `evicted` flat;

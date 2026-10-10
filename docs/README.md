@@ -120,6 +120,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Serve documents kept as JSON objects in S3, MinIO or another S3-compatible store | [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) |
 | Read entities from an in-house HTTP/JSON service, one request per view | [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) |
 | Show live entities from Kafka topics, with history from a lake | [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) |
+| Connect a connector over TLS: private CA, PEM or PKCS12/JKS files, mutual TLS, Confluent Cloud, SASL | [TLS.md](connectors/TLS.md), [KAFKA_CONNECTOR.md › Security](connectors/KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent) |
 | Show live entities from ActiveMQ queues or topics | [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) |
 | Show live entities from RabbitMQ queues | [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) |
 | Serve public rates and FX (NY Fed SOFR, ECB €STR and FX, US Treasury, FRED) | [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) |
@@ -184,7 +185,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) | you run Drishti on Redis: key layout, zstd dictionaries, column chunks, live pub/sub, TTL, sizing, measurements |
 | [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) | you serve documents from S3 or an S3-compatible store: the key layout, listing and caching, credentials, cost of large buckets |
 | [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) | you read entities from an HTTP/JSON service: paths, headers, generations, timeouts, what it cannot do, load on the service |
-| [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) | you serve live entities from Kafka: state and ticks modes, the index and disk cache, offsets, ordering, restarts, reconnection, pairing with a lake |
+| [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) | you serve live entities from Kafka: state and ticks modes, the index and disk cache, offsets, ordering, restarts, reconnection, pairing with a lake; TLS, SASL, Confluent and Schema Registry |
+| [TLS.md](connectors/TLS.md) | a connector must talk TLS: the shared `tls.*` settings, PEM, PKCS12 and JKS, mutual TLS, converting certificates, expiry warnings, rotation, troubleshooting |
 | [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) | you serve live entities from ActiveMQ: queues and durable topics, the state store, its durability and disk budget, acknowledgement, failover, sizing |
 | [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) | you serve live entities from RabbitMQ: queues and bindings, prefetch and acknowledgement, the state store, its durability and disk budget, recovery, sizing |
 | [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) | you switch on the public feeds: each source's URL and parsing, entities and ids, schedules, history, offline mirrors |

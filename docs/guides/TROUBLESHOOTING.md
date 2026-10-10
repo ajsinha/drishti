@@ -33,7 +33,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Search](#search) | DRS-4004, empty results, partial results |
 | [Studio and Sutras](#studio-and-sutras) | Save disabled, an edit has no effect, `.sutra.md` files after an upgrade, approval refused |
 | [Packs](#packs) | mnemonics missing, a pack switched off, *not loaded*, cannot switch off, generated files out of date |
-| [Connectors](#connectors) | a connector is idle, a connector failed to start |
+| [Connectors](#connectors) | a connector is idle, a connector failed to start, TLS errors and certificate expiry, schema-registry messages skipped |
 | [Monitoring endpoints](#monitoring-endpoints) | `/actuator/prometheus` answers 401 or 403, `/api/docs` answers 401 |
 | [Alerts](#alerts-and-monitors) | an alert never fires |
 | [Development](#development) | licence header test fails |
@@ -772,6 +772,40 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 - **What you see:** Admin → Health says **DEGRADED**, and `failedToStart` names the connector with a reason.
 - **Fix:** follow [runbooks/source-down.md](../admin/runbooks/source-down.md), step 2.
+
+### A connector will not connect over TLS, or stops at start with a `tls.` message
+
+- **What you see:** the log, Admin → Packs → Data source → *Test connection*, or the source's health text names a
+  setting and a file: `tls.keystore '…/client.p12': wrong password (tls.keystore-password), or the file is damaged`,
+  `tls.key-file '…' does not match the certificate in tls.cert-file '…'`, `tls.ca-file '…': file not found`; or, while it
+  runs, health says `DOWN: … PKIX path building failed` or `No subject alternative DNS name matching …`.
+- **Cause:** a file, a password or a pairing is wrong (the connector checks them at start), the server's certificate is not
+  signed by an authority the connector trusts, or its name is not in the certificate.
+- **Check:** `openssl s_client -connect host:port -servername host -CAfile ca.pem -verify_hostname host </dev/null` shows
+  whether the chain and the name pass (`Verification: OK`). The exact messages and what each means:
+  [TLS.md, sections 8 and 11](../connectors/TLS.md#8-start-up-checks-and-their-messages).
+- **Fix:** put the issuing CA in `tls.ca-file` or `tls.truststore`; re-issue the server certificate with its names as SANs
+  (last resort `tls.verify-hostname: false`, which warns at every start); give the client certificate and key for mutual
+  TLS. Per connector: [Kafka](../connectors/KAFKA_CONNECTOR.md#119-common-errors-and-fixes),
+  [ActiveMQ](../connectors/ACTIVEMQ_CONNECTOR.md#144-common-errors-and-fixes),
+  [RabbitMQ](../connectors/RABBITMQ_CONNECTOR.md#125-common-errors-and-fixes).
+
+### A health text says "TLS certificate … expires in N days"
+
+- **What you see:** `UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days (2026-10-22))` in Admin → Health.
+- **Cause:** a certificate the connector was given (its client certificate or its CA) is within 30 days of its end date.
+  The source is still up; this is the warning.
+- **Fix:** rotate it and restart the source ([TLS.md, section 10](../connectors/TLS.md#10-rotation)).
+
+### A Kafka connector skips every message of a topic written with a schema registry
+
+- **What you see:** the connector is `UP` but no entity appears, and the server log says `a message in the Confluent wire
+  format could not be read (…)`.
+- **Cause:** the values start with Confluent's five-byte header (a zero byte and a schema id). Without
+  `schema-registry.url` an Avro message cannot be decoded; Protobuf is not supported; or the registry refused the
+  credentials (they are the registry's key, not the Kafka one).
+- **Fix:** set `schema-registry.url` and `schema-registry.basic-auth: ${SR_KEY}:${SR_SECRET}`
+  ([KAFKA_CONNECTOR.md, 11.5](../connectors/KAFKA_CONNECTOR.md#115-schema-registry-and-the-confluent-wire-format)).
 
 ## Monitoring endpoints
 

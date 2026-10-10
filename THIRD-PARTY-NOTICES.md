@@ -35,3 +35,4 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | CPython, numpy, pandas, scipy, statsmodels, matplotlib and their dependencies (inside Pyodide) | PSF-2.0, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, PSF-based (matplotlib); see each package |
 | Delta Kernel, Apache Parquet (parquet-java), snappy-java, AWS SDK for Java 2.x and Apache HttpClient 5 (the Delta connector and its native engine, `drishti-deltalake`) | Apache-2.0 |
 | zstd-jni (Parquet pages compressed with ZSTD) | BSD-2-Clause |
+| Apache Avro (decodes Schema Registry messages in the Kafka connector, `drishti-plugin-kafka`), with Apache Commons Compress | Apache-2.0 |

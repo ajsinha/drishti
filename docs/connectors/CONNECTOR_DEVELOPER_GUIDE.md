@@ -36,13 +36,14 @@ guide links there instead of repeating them.
 4. [The SourcePlugin SPI](#the-sourceplugin-spi)
 5. [Registration and discovery](#registration-and-discovery)
 6. [Configuration binding](#configuration-binding)
-7. [Reconnecting and failures](#reconnecting-and-failures)
-8. [Testing with drishti-testkit](#testing-with-drishti-testkit)
-9. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
-10. [The shipped connectors](#the-shipped-connectors)
-11. [Combining connectors](#combining-connectors)
-12. [Operating connectors](#operating-connectors)
-13. [Troubleshooting](#troubleshooting)
+7. [TLS for a connector: the shared module](#tls-for-a-connector-the-shared-module)
+8. [Reconnecting and failures](#reconnecting-and-failures)
+9. [Testing with drishti-testkit](#testing-with-drishti-testkit)
+10. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
+11. [The shipped connectors](#the-shipped-connectors)
+12. [Combining connectors](#combining-connectors)
+13. [Operating connectors](#operating-connectors)
+14. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -579,6 +580,66 @@ Rules worth knowing when you write a plugin:
 
 ---
 
+## TLS for a connector: the shared module
+
+A connector that connects to a server over the network gets TLS from one shared module in the plugin API,
+`com.ash.drishti.api.tls` in `drishti-api` (pure JDK; no Spring, no extra dependency), so that every connector offers the
+same settings, the same source forms and the same start-up messages. Operators learn the `tls.*` keys once:
+[TLS.md](TLS.md). A connector that opens a TLS connection should use it instead of the JVM-wide `javax.net.ssl.*` properties.
+
+| Class | What it is |
+|---|---|
+| `TlsSettings` | a record parsed from the connector's settings under a prefix (`TlsSettings.from(ctx.settings())` for `tls.`; `TlsSettings.parse(settings, "other.tls.")` for a second endpoint). Resolves `${ENV}` placeholders and `…-file` password files; its `toString` never prints a secret. |
+| `TlsContexts.build(settings)` | validates everything and returns a `TlsMaterial`; throws `TlsException` (a `RuntimeException`) whose message names the setting, the file and the reason. |
+| `TlsMaterial` | the result: `sslContext()`, `keyManagers()` (null when there is no client identity), `trustManagers()`, `sslParameters()` (protocols, cipher suites, and `HTTPS` endpoint identification when hostname verification is on), `socketFactory()`; the raw parts for a library that wants PEM or a key store instead (`clientKey()`, `clientChain()`, `trusted()`, `usesJvmDefaultTrust()`); `certificates()` with their expiry; `warnings()`; `annotate(health, now)`. |
+| `Secrets` | `Secrets.get(settings, key)` and `Secrets.secret(settings, key)` for any setting that may hold a secret (`${ENV}` placeholders, the `-file` twin). Use it for connector-specific credentials too. |
+| `PemReader` | PEM certificates and private keys (PKCS#8, encrypted PKCS#8, PKCS#1 RSA, SEC1 EC) if you need them on their own. |
+
+**Using it in a connector** (the three steps every shipped connector follows):
+
+```java
+@Override
+public void start(SourceContext ctx) {
+    TlsSettings tls = TlsSettings.from(ctx.settings());
+    boolean secure = tls.enabled() || ctx.setting("url", "").startsWith("https:");     // whatever your address says
+    if (tls.enabled() && !secure) {
+        throw new TlsException("tls.enabled is true but url is not https://");         // never a silent downgrade
+    }
+    this.tlsMaterial = secure ? TlsContexts.build(tls) : null;                          // fails the start with the file and the reason
+    ...
+}
+
+// when you create a client:
+client.sslContext(tlsMaterial.sslContext());                  // or tlsMaterial.socketFactory(), or keyManagers()/trustManagers()
+socket.setSSLParameters(tlsMaterial.sslParameters());         // protocols, ciphers, the hostname check: on every SSLSocket/SSLEngine
+
+@Override
+public String health() {
+    return tlsMaterial == null ? current : tlsMaterial.annotate(current, Instant.now());   // "UP (TLS certificate … expires in 12 days …)"
+}
+```
+
+Rules the shipped connectors follow, which a new one should too:
+
+1. **Build at start**, so a wrong file or password stops the connector with a clear message
+   instead of failing at the first connection. Build once; reuse the material for reconnections.
+2. **Never downgrade.** `tls.enabled: true` against a plain address is an error.
+3. **Apply `sslParameters()` to every socket or engine**, not only the context: hostname verification, protocols and
+   cipher suites live there. A library that takes only an `SSLContext` and cannot take parameters needs its own
+   hostname option (ActiveMQ's `socket.verifyHostName`).
+4. **Do not log or show secrets**; `TlsSettings.toString()` and `TlsMaterial.warnings()` carry none.
+5. **Wrap `annotate` around `health()`** so an expiring certificate reaches Admin → Health.
+6. **Test with generated certificates**: `drishti-testkit` has `TestPki` (a CA and certificates made at test time with the
+   JDK alone, written as PEM in every key format, PKCS12 or JKS, with chosen validity), so tests need neither keytool nor
+   openssl. The shipped connectors' tests (`KafkaSecureBrokerTest`, `ActiveMqTlsTest`, `RabbitMqTlsTest`) run a real
+   broker in Docker with them; `TlsContextsTest` covers the module itself.
+7. **Document the keys** by pointing at [TLS.md](TLS.md) and showing a complete example for your protocol.
+
+Where a client library builds its own TLS from properties (Kafka), translate from the `TlsMaterial` raw parts: see
+`KafkaSecurity` in `drishti-plugin-kafka`, which hands Kafka the PEM text it understands.
+
+---
+
 ## Reconnecting and failures
 
 Every connector recovers from an outage without a restart of Drishti, and starts even when its store is down. Your
@@ -932,7 +993,7 @@ connectors:
 **Layout.** Messages are an envelope `{kind, id, doc}`, or whole documents with `kind` and `id-field`; a tombstone
 deletes. **Loader:** none for production; `tools/samplegen/stream.py` replays and ticks the samples. **Limits:**
 undated; reads every partition from the beginning (the topic is the state), so a restart replays it; `mode: ticks`
-keeps nothing and only pushes. → full reference: [KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md)
+keeps nothing and only pushes. **Security:** `security.protocol`, `tls.*` ([TLS.md](TLS.md)), `sasl.*` (PLAIN, SCRAM, OAUTHBEARER, GSSAPI), `flavour: confluent` and the Schema Registry; `client.<property>` passes any Kafka property and wins. → full reference: [KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md)
 
 ### `activemq`
 
@@ -1140,10 +1201,11 @@ settings:
   user: ${DESK_DB_USER:drishti}             # with a default
   header.Authorization: "Bearer ${CRM_TOKEN}"
   client.sasl.jaas.config: "${KAFKA_JAAS}"
+  tls.keystore-password: "${CLIENT_KEYSTORE_PASSWORD}"   # tls.* settings: see TLS.md; …-password-file also works
 ```
 
 Spring leaves a placeholder it cannot resolve as it is, so with the variable unset the connector receives the text
-`${DESK_DB_PASSWORD}` and its connection fails; give a default (`${X:}` for empty) where empty is acceptable.
+`${DESK_DB_PASSWORD}` and its connection fails (the `tls.*` settings and the other settings read through the shared module's `Secrets` resolve `${NAME}` from the environment themselves and name a variable that is not set); give a default (`${X:}` for empty) where empty is acceptable.
 Health and `/api/v1/sources` do not show settings. Prefer the AWS credential chain (instance roles) to `access-key`
 and `secret-key` for S3 and S3A.
 
