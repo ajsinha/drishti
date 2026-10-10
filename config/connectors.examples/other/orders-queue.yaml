@@ -20,6 +20,5 @@ settings:
   queues: [orders]
   tls:
     enabled: true
-    truststore:
-      path: /etc/drishti/tls/ca.p12
-      password: ${RABBIT_TRUSTSTORE_PASSWORD}
+    truststore: /etc/drishti/tls/ca.p12
+    truststore-password: ${RABBIT_TRUSTSTORE_PASSWORD}

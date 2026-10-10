@@ -43,6 +43,8 @@ is explained there in [section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-deriv
 12. [Settings](#12-settings)
 13. [Checklist for production](#13-checklist-for-production)
 
+Also: [Security: TLS, certificate log-in and credentials](#security-tls-certificate-log-in-and-credentials) (before *As a connector file*).
+
 ---
 
 ## 1. The problem
@@ -441,6 +443,91 @@ ids now:
 | loader: `max connections … would be exceeded` | an old loader with the client's default of 100 connections | use the current loader (256 connections per node) |
 | error 22 `operation not allowed at this time` in logs | too many concurrent scans on the cluster | the connector already limits itself to two; check other scanning clients |
 | `stop writes` / out of space while loading | the namespace's storage is too small | file or device storage, sized by [section 7](#7-seven-years-sizing-and-aerospike-with-delta-lake) |
+
+## Security: TLS, certificate log-in and credentials
+
+Aerospike is reached over TLS with the shared `tls.*` settings ([TLS.md](TLS.md)), and can log in with the client certificate
+(`pki`). TLS in the server is an **Enterprise Edition** feature; the Community Edition container the repository's tests use has
+none, so for this connector the wiring is covered by unit tests and the live check is the manual procedure below.
+
+| Setting | Meaning for Aerospike |
+|---|---|
+| `tls.enabled: true` | TLS on. (An Aerospike address does not say whether TLS is used, so `tls.*` keys or `tls-name` without it are a start-up error.) |
+| `tls.ca-file` / `tls.truststore` (+ `-password`) | Trust the cluster's CA. |
+| `tls.cert-file` + `tls.key-file` (+ `tls.key-password`), or `tls.keystore` (+ `tls.keystore-password`) | The client certificate, for a server with `tls-authenticate-client` and for `pki` log-in. |
+| `tls-name` | The name the server certificate carries (the server's `tls-name`). The client checks it against the certificate. Default: each host's own name from `hosts`. A host can carry its own as `host:tls-name:port`. |
+| `tls.verify-hostname: false` | No name is given to the client, so none is checked (a warning at every start). |
+| `tls.protocols`, `tls.cipher-suites` | Handed to the client's TLS policy. |
+| `auth-mode` | `internal` (the default: `user` and `password`), `external` (LDAP), or `pki` (the certificate is the log-in: leave `user` and `password` out; needs a client certificate). |
+| `user`, `password` | As before; `password` is an `${ENV}` placeholder or a `file:` reference. |
+
+### A complete file
+
+Mutual TLS with certificate log-in (`config/connectors/aerospike-tls.yaml`):
+
+```yaml
+plugin: aerospike
+kinds: [trade]
+description: Trades in Aerospike over mutual TLS
+settings:
+  hosts: as-1.example.com:4333,as-2.example.com:4333
+  namespace: drishti
+  tls-name: aerospike.example.com
+  auth-mode: pki
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+```
+
+With a password instead of a certificate, drop `auth-mode`, the `cert-file` and `key-file` lines, and add `user: drishti` and
+`password: ${AEROSPIKE_PASSWORD}`.
+
+### Manual procedure against an Enterprise server
+
+These are Aerospike's documented settings, not run in this repository (the Enterprise image needs a feature-key file).
+
+1. On each node, in `aerospike.conf`, name the certificate and open a TLS port:
+
+```
+network {
+    service { address any; tls-port 4333; tls-name aerospike.example.com; tls-authenticate-client any }
+    tls aerospike.example.com {
+        cert-file /etc/aerospike/ssl/server.pem
+        key-file  /etc/aerospike/ssl/server.key
+        ca-file   /etc/aerospike/ssl/ca.pem
+    }
+}
+security { }
+```
+
+2. For `pki` log-in, enable security and create a user named by the certificate's common name with PKI authentication
+   (`asadm`: `enable; manage acl create user drishti authentication PKI roles read`), and have the node accept PKI users.
+3. Check the server with the client tool:
+
+```
+asadm --tls-enable --tls-cafile /etc/drishti/tls/ca.pem --tls-certfile /etc/drishti/tls/client.pem --tls-keyfile /etc/drishti/tls/client.key \
+  --tls-name aerospike.example.com -h as-1.example.com -p 4333 -e "info namespace"
+openssl s_client -connect as-1.example.com:4333 -CAfile /etc/drishti/tls/ca.pem -verify_return_error < /dev/null
+```
+
+4. Start the connector. Health `UP` means it connected; `DOWN: not connected to Aerospike` means it did not, and the log has
+   the client's reason.
+
+What the unit tests (`AerospikeTlsTest`) pin: the client policy carries the module's SSL context, protocol versions and cipher
+suites; every host gets `tls-name`, or its own name, or none with `tls.verify-hostname: false`; `auth-mode: pki` refuses to
+start without a client certificate; and the start-up errors below.
+
+### Common errors
+
+| Message | Cause and fix |
+|---|---|
+| `tls.* (or tls-name) is set but tls.enabled is not true: set tls.enabled: true to connect over TLS` | The keys are there but TLS is not switched on. |
+| `auth-mode: pki logs in with a client certificate: set tls.enabled: true and tls.cert-file with tls.key-file, or tls.keystore` | `pki` without TLS or a client certificate. |
+| `auth-mode 'ldap' is not internal, external or pki` | A mistyped mode. |
+| `tls.ca-file '/etc/drishti/nope.pem': file not found` | A wrong path. |
+| health `DOWN: not connected to Aerospike` with a handshake failure in the log | The certificate's name differs from `tls-name`, the CA is not in `tls.ca-file`, or the port is the plain `service` port instead of the `tls-port`. |
 
 ## As a connector file
 

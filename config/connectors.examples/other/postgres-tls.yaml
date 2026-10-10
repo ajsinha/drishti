@@ -1,0 +1,27 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: PostgreSQL over verified TLS with a private CA, logging in by password. The driver is configured through the shared
+# tls.* settings (sslmode becomes verify-full, so the server name is checked). Copy to config/connectors/postgres-tls.yaml.
+# See docs/connectors/POSTGRES_CONNECTOR.md, section Security.
+plugin: jdbc
+kinds: [trade]
+description: Trades in PostgreSQL, verified TLS
+settings:
+  url: jdbc:postgresql://db.example.com:5432/drishti
+  user: drishti
+  password: ${DRISHTI_DB_PASSWORD}
+  table: entities
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem

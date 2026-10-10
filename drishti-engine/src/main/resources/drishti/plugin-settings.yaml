@@ -15,21 +15,14 @@
 # The settings of the shipped source plugins, for the connector form and validator (Admin -> Connectors).
 # A plugin that overrides SourcePlugin#settingSpecs() wins over its entry here. Fields: name (a trailing .* covers a
 # subtree), type (string|int|boolean|duration|path|list|enum:a|b), required, default, desc, secret, group.
-# A plugin with `tls: true` also offers the shared tls.* section.
+# A plugin with `tls: true` also offers the shared tls.* section, which is NOT written here: it is generated from
+# TlsSettings.settingSpecs (drishti-api), the class that reads the keys, so the form cannot drift from the code. A plugin
+# with a second TLS endpoint lists its prefix under `tls-prefixes` (kafka: schema-registry.tls.).
 common:
   - { name: source-name, desc: "The name documents carry as their provenance (default: the connector's name)", group: general }
   - { name: "mode.*", desc: "Per-kind read mode (mode.<kind>)", group: mapping }
   - { name: domain, desc: "The data domain (folder, schema or key prefix) the connector reads", group: connection }
   - { name: stale-after, type: duration, desc: "Mark the source stale when it has received nothing for this long (15m, 2h, 1d)", group: general }
-tls:
-  - { name: tls.enabled, type: boolean, default: "false", desc: "Use TLS for this connector", group: tls }
-  - { name: tls.truststore.path, type: path, desc: "Truststore holding the CA certificates to trust (JKS or PKCS12)", group: tls }
-  - { name: tls.truststore.password, secret: true, desc: "Truststore password: ${ENV_VAR} or file:/path", group: tls }
-  - { name: tls.truststore.type, type: "enum:PKCS12|JKS|PEM", default: PKCS12, desc: "Truststore format", group: tls }
-  - { name: tls.keystore.path, type: path, desc: "Client keystore for mutual TLS", group: tls }
-  - { name: tls.keystore.password, secret: true, desc: "Keystore password: ${ENV_VAR} or file:/path", group: tls }
-  - { name: tls.keystore.type, type: "enum:PKCS12|JKS|PEM", default: PKCS12, desc: "Keystore format", group: tls }
-  - { name: tls.verify-hostname, type: boolean, default: "true", desc: "Check the server certificate names the host", group: tls }
 plugins:
   jdbc:
     tls: true
@@ -70,6 +63,7 @@ plugins:
       - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
   delta:
+    tls: true
     settings:
       - { name: root, required: true, type: path, desc: "Lake root (folder, or s3://bucket/prefix)", group: connection }
       - { name: domain, desc: "Domain folder under the root", group: connection }
@@ -96,6 +90,7 @@ plugins:
       - { name: s3.access-key, secret: true, desc: "S3 access key: ${ENV_VAR} or file:/path", group: s3 }
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
   iceberg:
+    tls: true
     settings:
       - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
       - { name: warehouse, desc: "REST catalog warehouse", group: connection }
@@ -126,8 +121,10 @@ plugins:
       - { name: set, desc: "Set", group: connection }
       - { name: domain, desc: "Domain", group: connection }
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
-      - { name: user, desc: "User", group: connection }
+      - { name: user, desc: "User (leave out with auth-mode: pki)", group: connection }
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
+      - { name: auth-mode, type: "enum:internal|external|pki", desc: "pki logs in with the client certificate (tls.cert-file + tls.key-file, or tls.keystore)", group: security }
+      - { name: tls-name, desc: "The name the server certificate carries (the server's tls-name); default: each host's own name", group: security }
       - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
       - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
@@ -146,6 +143,8 @@ plugins:
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
       - { name: doc-format, desc: "Document format", group: mapping }
       - { name: read-preference, desc: "Read preference", group: connection }
+      - { name: auth-mechanism, type: "enum:x509", desc: "x509 logs in with the client certificate (needs tls.enabled and tls.cert-file + tls.key-file, or tls.keystore)", group: security }
+      - { name: x509-user, desc: "The certificate subject to log in as (default: the server derives it from the certificate)", group: security }
       - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
       - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
@@ -221,6 +220,7 @@ plugins:
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
       - { name: generation-header, desc: "Response header carrying the data generation", group: mapping }
       - { name: timeout-ms, type: int, desc: "Request timeout", group: tuning }
+      - { name: "header.*", desc: "A request header: header.<Name> (header.Authorization: Bearer ${SERVICE_TOKEN})", group: connection }
   s3:
     tls: true
     settings:
@@ -247,7 +247,34 @@ plugins:
       - { name: poll-ms, type: int, desc: "Poll interval", group: tuning }
       - { name: cache-mb, type: int, desc: "Cache size", group: tuning }
       - { name: "disk-cache.*", desc: "On-disk cache (enabled, dir, max-gb, ...)", group: tuning }
-      - { name: "security.*", desc: "Kafka security settings (protocol, SASL)", group: security }
+      - { name: "client.*", desc: "Any Kafka client property (client.max.poll.records); applied last, wins over everything above", group: tuning }
+      - { name: value-format, type: "enum:string|confluent", desc: "string (default), or confluent to read the Confluent wire format (implied by schema-registry.url)", group: mapping }
+      - { name: flavour, type: "enum:apache|confluent", default: apache, desc: "confluent: Confluent Cloud defaults (SASL PLAIN with api-key and api-secret, DNS lookup of all addresses)", group: security }
+      - { name: security.protocol, type: "enum:PLAINTEXT|SSL|SASL_PLAINTEXT|SASL_SSL", desc: "Inferred when absent: tls.enabled and a SASL mechanism give SASL_SSL", group: security }
+      - { name: sasl.mechanism, type: "enum:PLAIN|SCRAM-SHA-256|SCRAM-SHA-512|OAUTHBEARER|GSSAPI", desc: "SASL mechanism (confluent flavour defaults to PLAIN)", group: security }
+      - { name: sasl.username, desc: "SASL user name (PLAIN, SCRAM); Confluent Cloud: the API key", group: security }
+      - { name: sasl.password, secret: true, desc: "SASL password (PLAIN, SCRAM): ${ENV} placeholder or sasl.password-file", group: security }
+      - { name: sasl.password-file, type: path, desc: "File whose first line is the SASL password", group: security }
+      - { name: api-key, desc: "Confluent Cloud API key (same as sasl.username)", group: security }
+      - { name: api-secret, secret: true, desc: "Confluent Cloud API secret (same as sasl.password): ${ENV} placeholder or api-secret-file", group: security }
+      - { name: api-secret-file, type: path, desc: "File whose first line is the Confluent Cloud API secret", group: security }
+      - { name: sasl.oauth.token-endpoint, desc: "OAUTHBEARER token endpoint URL", group: security }
+      - { name: sasl.oauth.client-id, desc: "OAUTHBEARER client id", group: security }
+      - { name: sasl.oauth.client-secret, secret: true, desc: "OAUTHBEARER client secret: ${ENV} placeholder or sasl.oauth.client-secret-file", group: security }
+      - { name: sasl.oauth.client-secret-file, type: path, desc: "File whose first line is the OAUTHBEARER client secret", group: security }
+      - { name: sasl.oauth.scope, desc: "OAUTHBEARER scope", group: security }
+      - { name: sasl.kerberos.principal, desc: "GSSAPI principal", group: security }
+      - { name: sasl.kerberos.keytab, type: path, desc: "GSSAPI keytab file", group: security }
+      - { name: sasl.kerberos.service-name, default: kafka, desc: "GSSAPI broker service name", group: security }
+      - { name: sasl.kerberos.use-ticket-cache, type: boolean, default: "false", desc: "GSSAPI: use the ticket cache instead of a keytab", group: security }
+      - { name: sasl.kerberos.krb5-conf, type: path, desc: "Path of krb5.conf", group: security }
+      - { name: schema-registry.url, desc: "Confluent Schema Registry URL (http:// or https://); reads Avro, Protobuf and JSON Schema payloads", group: schema-registry }
+      - { name: schema-registry.basic-auth, secret: true, desc: "KEY:SECRET for the registry: ${SR_KEY}:${SR_SECRET}, or schema-registry.basic-auth-file", group: schema-registry }
+      - { name: schema-registry.basic-auth-file, type: path, desc: "File whose first line is KEY:SECRET", group: schema-registry }
+      - { name: schema-registry.bearer-token, secret: true, desc: "Bearer token for the registry (not with basic-auth): ${ENV} placeholder or schema-registry.bearer-token-file", group: schema-registry }
+      - { name: schema-registry.bearer-token-file, type: path, desc: "File whose first line is the bearer token", group: schema-registry }
+      - { name: schema-registry.timeout-ms, type: int, default: "10000", desc: "Registry request timeout", group: schema-registry }
+    tls-prefixes: ["schema-registry.tls."]
   activemq:
     tls: true
     settings:
@@ -261,6 +288,7 @@ plugins:
     tls: true
     settings:
       - { name: uri, required: true, desc: "amqp:// or amqps:// URI (credentials as ${ENV} references)", group: connection }
+      - { name: auth-mechanism, type: "enum:plain|external", default: plain, desc: "external logs in with the client certificate (needs amqps:// and tls.cert-file or tls.keystore)", group: security }
       - { name: queues, type: list, required: true, desc: "Queues to read", group: connection }
       - { name: "bind.*", desc: "Queue bindings", group: connection }
       - { name: declare, type: boolean, desc: "Declare queues at start", group: connection }

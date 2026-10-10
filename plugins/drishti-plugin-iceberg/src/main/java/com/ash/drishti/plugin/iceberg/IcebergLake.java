@@ -76,6 +76,11 @@ public interface IcebergLake extends Closeable {
     default void close() throws IOException {
     }
 
+    /** The TLS material of the object store ({@code tls.*}), or null: its certificates' expiry is shown in health. */
+    default com.ash.drishti.api.tls.TlsMaterial tls() {
+        return null;
+    }
+
     static IcebergLake of(Map<String, String> settings) {
         String domain = settings.getOrDefault("domain", "").trim();
         if (domain.contains("..") || domain.startsWith("/")) {
@@ -83,6 +88,11 @@ public interface IcebergLake extends Closeable {
         }
         Configuration conf = hadoop(settings);
         String catalog = settings.getOrDefault("catalog", "hadoop").trim();
+        if (!catalog.equalsIgnoreCase("rest") && com.ash.drishti.api.tls.TlsSettings.anyGiven(settings, "tls.")) {
+            throw new com.ash.drishti.api.tls.TlsException("tls.* applies to a REST catalog's object store: Hadoop's S3A, which reads path-based "
+                    + "tables, has no setting for a private CA. Use catalog: rest, or import the CA into the JVM's truststore "
+                    + "(-Djavax.net.ssl.trustStore=...)");
+        }
         if (catalog.equalsIgnoreCase("rest")) {
             return RestLake.open(settings, domain, conf);
         }
@@ -194,10 +204,20 @@ public interface IcebergLake extends Closeable {
         private final Namespace namespace;
         private final String uri;
 
-        private RestLake(RESTCatalog catalog, Namespace namespace, String uri) {
+        private final com.ash.drishti.api.tls.TlsMaterial tls;
+        private final String tlsId;
+
+        private RestLake(RESTCatalog catalog, Namespace namespace, String uri, com.ash.drishti.api.tls.TlsMaterial tls, String tlsId) {
             this.catalog = catalog;
             this.namespace = namespace;
             this.uri = uri;
+            this.tls = tls;
+            this.tlsId = tlsId;
+        }
+
+        @Override
+        public com.ash.drishti.api.tls.TlsMaterial tls() {
+            return tls;
         }
 
         static RestLake open(Map<String, String> s, String domain, Configuration conf) {
@@ -229,11 +249,31 @@ public interface IcebergLake extends Closeable {
                     props.put(k.substring(8), v);
                 }
             });
+            String tlsId = null;
+            com.ash.drishti.api.tls.TlsMaterial tls = null;
+            if (com.ash.drishti.api.tls.TlsSettings.anyGiven(s, "tls.")) {
+                // the object store's private CA / client certificate: S3FileIO is our subclass, with the module's trust
+                com.ash.drishti.api.tls.TlsSettings ts = com.ash.drishti.api.tls.TlsSettings.from(s);
+                String endpoint = s.getOrDefault("s3.endpoint", "");
+                if (!endpoint.regionMatches(true, 0, "https://", 0, 8)) {
+                    throw new com.ash.drishti.api.tls.TlsException("tls.* is set but s3.endpoint is not https:// (" + (endpoint.isBlank() ? "not set" : endpoint)
+                            + "): tls.* secures the object store's endpoint");
+                }
+                tls = com.ash.drishti.api.tls.TlsContexts.build(ts);
+                tlsId = TlsS3FileIO.register(tls);
+                props.putIfAbsent("io-impl", TlsS3FileIO.class.getName());
+                props.put(TlsS3FileIO.ID, tlsId);
+                if (uri.regionMatches(true, 0, "https://", 0, 8)) {
+                    java.lang.System.getLogger("com.ash.drishti.plugin.iceberg").log(java.lang.System.Logger.Level.WARNING,
+                            "iceberg: tls.* secures the object store; the REST catalog's own https connection ({0}) uses the JVM's truststore "
+                                    + "(Iceberg's REST client has no TLS setting)", uri);
+                }
+            }
             RESTCatalog catalog = new RESTCatalog();
             catalog.setConf(conf);
             catalog.initialize(s.getOrDefault("source-name", "drishti"), props);
             String ns = s.getOrDefault("namespace", "").isBlank() ? domain : s.get("namespace");
-            return new RestLake(catalog, ns.isBlank() ? Namespace.empty() : Namespace.of(ns.split("\\.")), uri);
+            return new RestLake(catalog, ns.isBlank() ? Namespace.empty() : Namespace.of(ns.split("\\.")), uri, tls, tlsId);
         }
 
         @Override
@@ -283,6 +323,7 @@ public interface IcebergLake extends Closeable {
 
         @Override
         public void close() throws IOException {
+            TlsS3FileIO.unregister(tlsId);
             catalog.close();
         }
     }

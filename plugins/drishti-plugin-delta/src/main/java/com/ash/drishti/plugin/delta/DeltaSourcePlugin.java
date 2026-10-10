@@ -598,6 +598,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (!lake.reachable()) {
             return "DOWN: cannot reach " + lake.describe() + " (" + engineName + ")";
         }
+        String tlsNote = lake.tls() == null ? "" : lake.tls().expiryNote(java.time.Instant.now());
         if (tables.isEmpty()) {
             return "DOWN: no Delta tables under " + lake.describe() + " (" + engineName + ")";
         }
@@ -620,6 +621,6 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             // it serves, but reads of these tables and dates failed the last time they were tried: say which, and why
             return "DEGRADED: cannot read " + problems.summary(5) + " (" + engineName + laidOut + ")";
         }
-        return "UP (" + engineName + laidOut + ")";
+        return "UP (" + engineName + laidOut + (tlsNote.isEmpty() ? "" : "; " + tlsNote) + ")";
     }
 }

@@ -87,4 +87,9 @@ record NativeLake(String base, NativeEngine engine, Storage storage) implements 
     public void close() {
         engine.close();
     }
+
+    @Override
+    public com.ash.drishti.api.tls.TlsMaterial tls() {
+        return engine.tls();
+    }
 }

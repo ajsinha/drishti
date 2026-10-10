@@ -112,6 +112,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
     private final AtomicLong reads = new AtomicLong();
     private final AtomicLong dayReads = new AtomicLong();
     private MongoClient client;
+    private com.ash.drishti.api.tls.TlsMaterial tls;
     private MongoCollection<RawBsonDocument> docs;
     private MongoCollection<BsonDocument> rows;
     private MongoDatabase database;
@@ -163,10 +164,15 @@ public final class MongoSourcePlugin implements SourcePlugin {
             }
         });
         int timeout = Integer.parseInt(ctx.setting("connect-timeout-ms", "3000"));
-        MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(new ConnectionString(ctx.setting("uri", "mongodb://localhost:27017")))
+        String uri = ctx.setting("uri", "mongodb://localhost:27017");
+        MongoTls.Plan tlsPlan = MongoTls.plan(ctx.settings(), uri, System::getenv);   // fails the start, naming the setting and the file
+        this.tls = tlsPlan.tls();
+        MongoClientSettings.Builder builder = MongoClientSettings.builder().applyConnectionString(new ConnectionString(uri))
                 .readPreference(ReadPreference.valueOf(ctx.setting("read-preference", "primary")))
                 .applyToClusterSettings(b -> b.serverSelectionTimeout(timeout, TimeUnit.MILLISECONDS))
-                .applyToSocketSettings(b -> b.connectTimeout(timeout, TimeUnit.MILLISECONDS)).build();
+                .applyToSocketSettings(b -> b.connectTimeout(timeout, TimeUnit.MILLISECONDS));
+        MongoTls.apply(builder, tlsPlan);
+        MongoClientSettings settings = builder.build();
         // the client connects in the background: start even when the server is not reachable yet (health says so)
         this.client = MongoClients.create(settings);
         this.database = client.getDatabase(ctx.setting("database", "drishti"));
@@ -507,10 +513,12 @@ public final class MongoSourcePlugin implements SourcePlugin {
             return "DOWN: no documents in " + database.getName() + "." + collection;
         }
         if (!missingIndexes.isEmpty()) {
-            return "UP (not laid out: missing index " + String.join(", ", missingIndexes) + "; dates, ids and searches scan the collection)";
+            String up = "UP (not laid out: missing index " + String.join(", ", missingIndexes) + "; dates, ids and searches scan the collection)";
+            return tls == null ? up : tls.annotate(up, java.time.Instant.now());
         }
-        return narrow || promoted.isEmpty() ? "UP"
+        String up = narrow || promoted.isEmpty() ? "UP"
                 : "UP (no " + MongoLayout.columnsCollection(collection) + " collection: a day's columns are read from the documents, 3 to 4 times slower)";
+        return tls == null ? up : tls.annotate(up, java.time.Instant.now());
     }
 
     @Override

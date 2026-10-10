@@ -1,0 +1,27 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: a Delta Lake on S3-compatible storage behind a certificate from a private CA. tls.* is read by the native engine (the
+# default). Copy to config/connectors/delta-private-ca.yaml. See docs/connectors/DELTA_CONNECTOR.md, section Security.
+plugin: delta
+kinds: [customer]
+description: Customer tables in the data lake over TLS
+settings:
+  root: s3://lake-prod/delta
+  domain: customer
+  s3.endpoint: https://minio.example.com:9000
+  s3.region: us-east-1
+  s3.access-key: ${LAKE_ACCESS_KEY}
+  s3.secret-key: ${LAKE_SECRET_KEY}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem

@@ -25,6 +25,10 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.tls.TlsContexts;
+import com.ash.drishti.api.tls.TlsException;
+import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.tls.TlsSettings;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.InputStream;
@@ -72,6 +76,7 @@ public final class S3SourcePlugin implements SourcePlugin {
 
     private static final Pattern DATE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
     private S3Client s3;
+    private TlsMaterial tls;
     private String bucket;
     private String prefix;
     private String sourceName;
@@ -102,9 +107,13 @@ public final class S3SourcePlugin implements SourcePlugin {
         String p = ctx.setting("prefix", "");
         this.prefix = p.isEmpty() || p.endsWith("/") ? p : p + "/";
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
-        S3ClientBuilder b = S3Client.builder().region(Region.of(ctx.setting("region", "us-east-1")))
-                .httpClientBuilder(UrlConnectionHttpClient.builder().connectionTimeout(Duration.ofSeconds(5)).socketTimeout(Duration.ofSeconds(20)));
         String endpoint = ctx.setting("endpoint", "");
+        this.tls = tlsMaterial(ctx.settings(), endpoint);          // fails the start, naming the setting and the file
+        UrlConnectionHttpClient.Builder http = UrlConnectionHttpClient.builder().connectionTimeout(Duration.ofSeconds(5)).socketTimeout(Duration.ofSeconds(20));
+        if (tls != null) {
+            http.tlsTrustManagersProvider(tls::trustManagers).tlsKeyManagersProvider(tls::keyManagers);
+        }
+        S3ClientBuilder b = S3Client.builder().region(Region.of(ctx.setting("region", "us-east-1"))).httpClientBuilder(http);
         if (!endpoint.isBlank()) {
             b.endpointOverride(URI.create(endpoint)).forcePathStyle(Boolean.parseBoolean(ctx.setting("path-style", "true")));
         }
@@ -117,6 +126,34 @@ public final class S3SourcePlugin implements SourcePlugin {
         rescan();
         long every = Long.parseLong(ctx.setting("rescan-seconds", "60"));
         ctx.scheduler().scheduleWithFixedDelay(this::rescan, every, every, TimeUnit.SECONDS);
+    }
+
+    /**
+     * The TLS material for this endpoint, or null for plain HTTP or the SDK's own defaults. An {@code https://} endpoint, or
+     * {@code tls.*} against the default AWS endpoint, builds the shared module's context (a private CA for MinIO, Ceph or an
+     * internal gateway; a client certificate for a gateway that asks for one). The SDK's URL-connection client always checks the
+     * host name, so {@code tls.verify-hostname: false} is refused here rather than silently ignored.
+     */
+    static TlsMaterial tlsMaterial(java.util.Map<String, String> settings, String endpoint) {
+        TlsSettings ts = TlsSettings.from(settings);
+        if (endpoint.isBlank()) {
+            if (!TlsSettings.anyGiven(settings, "tls.")) {
+                return null;                                      // AWS itself: the SDK's defaults
+            }
+        } else if (!endpoint.regionMatches(true, 0, "https://", 0, 8)) {
+            if (ts.enabled()) {
+                throw new TlsException("tls.enabled is true but endpoint is not https:// (" + endpoint + ")");
+            }
+            if (TlsSettings.anyGiven(settings, "tls.")) {
+                throw new TlsException("tls.* is set but endpoint is not https:// (" + endpoint + "): use an https:// endpoint");
+            }
+            return null;
+        }
+        if (!ts.verifyHostname()) {
+            throw new TlsException("tls.verify-hostname: false is not supported by the s3 connector (the AWS client always checks the host "
+                    + "name): give the endpoint a name the certificate carries, or use a certificate with the endpoint's name as a SAN");
+        }
+        return TlsContexts.build(ts);
     }
 
     /** Lists the dated folders and every object, for dated reads and search; keeps the last good listing on failure. */
@@ -226,7 +263,10 @@ public final class S3SourcePlugin implements SourcePlugin {
     @Override
     public String health() {
         String e = listingError != null ? listingError : lastError;
-        return e == null ? "UP" : "DOWN: " + e + " (retrying)";
+        if (e != null) {
+            return "DOWN: " + e + " (retrying)";
+        }
+        return tls == null ? "UP" : tls.annotate("UP", java.time.Instant.now());
     }
 
     @Override

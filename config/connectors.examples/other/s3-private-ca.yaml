@@ -1,0 +1,27 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: S3-compatible storage (MinIO, Ceph) behind a certificate from a private CA. Keys are references. Copy to
+# config/connectors/s3-private-ca.yaml. See docs/connectors/S3_CONNECTOR.md, section Security.
+plugin: s3
+kinds: [trade]
+description: Documents in MinIO over TLS
+settings:
+  bucket: drishti
+  prefix: risk
+  endpoint: https://minio.example.com:9000
+  region: us-east-1
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem

@@ -455,10 +455,62 @@ the connector uses that key and `secret-key` as static credentials, with no sess
 must come through the chain. Never write a key in a YAML file; use `${S3_ACCESS_KEY}` placeholders
 ([CONNECTOR_DEVELOPER_GUIDE.md, Secrets](CONNECTOR_DEVELOPER_GUIDE.md#secrets)). Health and `/api/v1/sources` never show settings.
 
-**TLS.** AWS endpoints are HTTPS. With `endpoint`, the scheme you write is used: write `https://` in production
-(`http://localhost:9000` is for a local MinIO). The server's JVM trust store decides which certificates are trusted;
-for a store with a private certificate authority, add the authority to that trust store (or start the JVM with
-`-Djavax.net.ssl.trustStore=…`).
+**TLS.** AWS endpoints are HTTPS, checked against the JVM's authorities. With `endpoint`, the scheme you write is used: write
+`https://` in production (`http://localhost:9000` is for a local MinIO). A store with a **private certificate authority**
+(MinIO, Ceph, an internal gateway) is configured on the connector itself with the shared `tls.*` settings
+([TLS.md](TLS.md)): no change to the JVM's truststore, and each connector can use its own CA. The details, with a complete file,
+are in [the TLS section below](#tls-for-the-s3-connector).
+
+### TLS for the S3 connector
+
+| Setting | Meaning |
+|---|---|
+| `endpoint: https://minio.example.com:9000` | TLS on. Without `endpoint` (AWS itself) `tls.*` still applies if given. |
+| `tls.ca-file` / `tls.truststore` (+ `tls.truststore-password`) | Trust a private CA (add `tls.trust-jvm-default: true` to keep the public ones too). |
+| `tls.cert-file` + `tls.key-file` (+ `tls.key-password`), or `tls.keystore` (+ `tls.keystore-password`) | A client certificate, for a gateway that asks for one. |
+| `tls.verify-hostname: false` | **Not supported**: the AWS client always checks the host name. The connector refuses it at start and says so; give the endpoint a name the certificate carries. |
+| `tls.protocols`, `tls.cipher-suites` | Checked at start; the AWS URL-connection client takes the JVM's protocol versions. |
+
+`tls.*` against an `http://` endpoint is a start-up error (`tls.* is set but endpoint is not https:// (http://minio:9000): use an
+https:// endpoint`), never a silent downgrade.
+
+A complete file, MinIO on a private CA (`config/connectors/s3-private-ca.yaml`):
+
+```yaml
+plugin: s3
+kinds: [trade]
+description: Documents in MinIO over TLS
+settings:
+  bucket: drishti
+  prefix: risk
+  endpoint: https://minio.example.com:9000
+  region: us-east-1
+  access-key: ${MINIO_ACCESS_KEY}
+  secret-key: ${MINIO_SECRET_KEY}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem
+```
+
+Serving MinIO over TLS: put the certificate and key in its certs folder (`public.crt`, `private.key`; the CA, if the certificate
+has an issuer chain, goes in the certificate file after the leaf) and start it: `docker run -v /etc/minio/certs:/root/.minio/certs
+minio/minio server /data`. Check from the command line:
+
+```
+curl --cacert /etc/drishti/tls/ca.pem https://minio.example.com:9000/minio/health/live
+AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... aws --endpoint-url https://minio.example.com:9000 --ca-bundle /etc/drishti/tls/ca.pem s3 ls s3://drishti/risk/
+```
+
+Errors, captured from the connector's test against an HTTPS endpoint that requires a client certificate:
+
+| Health text or message | Cause and fix |
+|---|---|
+| `DOWN: ... PKIX path building failed ... (retrying)` | The endpoint's certificate is not signed by a CA in `tls.ca-file`. |
+| `DOWN: ... (retrying)` with a handshake or connection-reset reason | The endpoint requires a client certificate (`tls.cert-file`, `tls.key-file`). |
+| `tls.verify-hostname: false is not supported by the s3 connector (the AWS client always checks the host name): give the endpoint a name the certificate carries, or use a certificate with the endpoint's name as a SAN` | A name mismatch cannot be switched off for this client; re-issue the certificate with the endpoint's name. |
+| `tls.enabled is true but endpoint is not https:// (http://minio:9000)` | Use the store's `https://` address. |
+| `tls.ca-file '/etc/drishti/nope.pem': file not found` | A wrong path. |
+
+With a certificate under 30 days from expiry the health text carries it: `UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`.
 
 **Addressing.** With `endpoint`, requests use path-style addressing (`https://minio.bank.example/risk-docs/eod/…`)
 unless `path-style: false`; without `endpoint` the SDK uses AWS's virtual-hosted style and `path-style` is ignored.

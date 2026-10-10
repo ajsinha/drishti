@@ -21,6 +21,7 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisCredentials;
 import io.lettuce.core.RedisCredentialsProvider;
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.SslOptions;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.cluster.ClusterClientOptions;
@@ -31,6 +32,7 @@ import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
 import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.codec.StringCodec;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
+import com.ash.drishti.api.tls.TlsMaterial;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -67,9 +69,17 @@ final class RedisConnection implements AutoCloseable {
 
     /** Connects (throws when Redis cannot be reached); {@code user}/{@code password} override the URI's credentials. */
     static RedisConnection open(String uris, boolean cluster, String user, String password, Duration timeout) {
+        return open(uris, cluster, user, password, timeout, null);
+    }
+
+    /** As above over TLS when {@code tls} is given ({@link RedisTls}): the trust, the client certificate and the protocols come from it. */
+    static RedisConnection open(String uris, boolean cluster, String user, String password, Duration timeout, TlsMaterial tls) {
         List<RedisURI> nodes = Arrays.stream(uris.split(",")).map(String::trim).filter(s -> !s.isEmpty()).map(s -> {
             RedisURI u = RedisURI.create(s.contains("://") ? s : "redis://" + s);
             u.setTimeout(timeout);
+            if (tls != null) {
+                RedisTls.apply(u, tls);
+            }
             if (password != null) {
                 u.setCredentialsProvider(RedisCredentialsProvider.from(() -> RedisCredentials.just(user, password)));
             }
@@ -81,6 +91,7 @@ final class RedisConnection implements AutoCloseable {
         if (cluster || nodes.size() > 1) {
             RedisClusterClient c = RedisClusterClient.create(nodes);
             c.setOptions(ClusterClientOptions.builder()
+                    .sslOptions(tls == null ? SslOptions.builder().build() : RedisTls.options(tls))
                     .topologyRefreshOptions(ClusterTopologyRefreshOptions.builder().enablePeriodicRefresh(Duration.ofMinutes(1))
                             .enableAllAdaptiveRefreshTriggers().build())
                     .build());
@@ -93,7 +104,7 @@ final class RedisConnection implements AutoCloseable {
             }
         }
         RedisClient c = RedisClient.create(nodes.get(0));
-        c.setOptions(ClientOptions.builder().autoReconnect(true).build());
+        c.setOptions(ClientOptions.builder().autoReconnect(true).sslOptions(tls == null ? SslOptions.builder().build() : RedisTls.options(tls)).build());
         try {
             StatefulRedisConnection<byte[], byte[]> conn = c.connect(ByteArrayCodec.INSTANCE);
             return new RedisConnection(c, conn, conn.async(), false, describe(uris));

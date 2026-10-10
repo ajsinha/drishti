@@ -118,6 +118,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
     private volatile Instant lastUpdate;
     private SourceContext context;
     private String uri;
+    private com.ash.drishti.api.tls.TlsMaterial tls;
     private boolean cluster;
     private String user;
     private String password;
@@ -148,6 +149,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
             // installed but not pointed at a Redis: idle, rather than a live source that serves every kind and fails
             throw new com.ash.drishti.api.PluginNotConfigured("redis needs settings.uri (redis://host:6379)");
         }
+        this.tls = RedisTls.material(ctx.settings(), uri, System::getenv);       // fails the start, naming the file and the reason
         this.cluster = Boolean.parseBoolean(ctx.setting("cluster", "false"));
         this.user = ctx.setting("user", null);
         this.password = ctx.setting("password", null);
@@ -189,7 +191,7 @@ public final class RedisSourcePlugin implements SourcePlugin {
         connecting.lock();
         try {
             if (redis == null) {
-                redis = RedisConnection.open(uri, cluster, user, password, timeout);
+                redis = RedisConnection.open(uri, cluster, user, password, timeout, tls);
                 if (live) {
                     listen(redis);
                 }
@@ -766,7 +768,8 @@ public final class RedisSourcePlugin implements SourcePlugin {
                 }
             }
         });
-        return notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
+        String up = notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
+        return tls == null ? up : tls.annotate(up, java.time.Instant.now());
     }
 
     /** Health when the store is down, else null. */

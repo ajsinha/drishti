@@ -48,6 +48,8 @@ measured size per document and per index entry, or **extrapolations** from the b
 12. [Settings](#12-settings)
 13. [Checklist for production](#13-checklist-for-production)
 
+Also: [Security: TLS, certificate log-in and credentials](#security-tls-certificate-log-in-and-credentials) (before *As a connector file*).
+
 ---
 
 ## 1. The problem
@@ -501,6 +503,101 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns` and reload |
 | the first search on a past day is slow | that day's columns are being read | expected once per day per `columns-seconds`; raise `read-threads` |
 | `dayReads` keeps growing | `columns-cache-mb` too small for the days in use | raise `columns-cache-mb` |
+
+## Security: TLS, certificate log-in and credentials
+
+MongoDB is reached over TLS with the shared `tls.*` settings ([TLS.md](TLS.md)), and can log in with the client certificate
+(`MONGODB-X509`). TLS is on when `tls.enabled: true`, or the URI says so (`tls=true`, `ssl=true`, a `mongodb+srv://` address).
+
+| Setting | Meaning for MongoDB |
+|---|---|
+| `tls.enabled: true` | TLS on. `tls.*` keys without this, or without `tls=true` in the URI, are a start-up error (the connection would otherwise be plain text); `tls.enabled: true` beside `tls=false` in the URI is one too. |
+| `tls.ca-file` or `tls.truststore` | Trust a private CA (without either, the JVM's authorities). |
+| `tls.cert-file` + `tls.key-file`, or `tls.keystore` | The client certificate, for `net.tls.mode: requireTLS` with `tlsCAFile`, and for x.509 log-in. |
+| `tls.verify-hostname: false` | Check the chain but not the name (the driver's `tlsAllowInvalidHostnames`). |
+| `auth-mechanism: x509` | Log in with the client certificate. The user is the certificate's subject, which must exist in the `$external` database. Needs a client certificate. |
+| `x509-user` | The subject to log in as, when the server should not derive it. |
+| `tls.protocols`, `tls.cipher-suites` | Checked at start; the driver takes the protocol versions from the JVM (`jdk.tls.client.protocols`), so they cannot narrow them. |
+| `uri` credentials | `mongodb://user:${MONGO_PASSWORD}@...` is refused as a literal; give the password as an `${ENV}` reference as before. |
+
+### Two complete files
+
+TLS on a private CA with a user name and password in the URI's environment reference (`config/connectors/positions-mongo.yaml`):
+
+```yaml
+plugin: mongodb
+kinds: [position]
+settings:
+  uri: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo.example.com:27017/?authSource=admin
+  database: drishti
+  collection: positions
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+```
+
+The client certificate as the log-in, no password (`config/connectors/mongodb-x509.yaml`):
+
+```yaml
+plugin: mongodb
+kinds: [position]
+description: Positions in MongoDB, certificate log-in
+settings:
+  uri: mongodb://mongo-1.example.com:27017,mongo-2.example.com:27017/?replicaSet=rs0
+  database: drishti
+  collection: positions
+  auth-mechanism: x509
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+```
+
+### The server side
+
+As in the integration test (`MongoTlsTest`, against `mongo:7`): `mongod` reads one file holding the server certificate and key.
+
+```
+cat server.pem server.key > server-full.pem
+mongod --bind_ip_all --tlsMode requireTLS --tlsCertificateKeyFile /tls/server-full.pem --tlsCAFile /tls/ca.pem
+```
+
+`--tlsCAFile` makes the server validate any client certificate presented; add `--tlsAllowConnectionsWithoutCertificates` when
+only some clients use one, and leave it out to require one from every client. For x.509 log-in create the user, named by the
+certificate's subject, in `$external`. Read the subject from the certificate in RFC 2253 form, then create the user:
+
+```
+openssl x509 -noout -subject -nameopt RFC2253 -in /etc/drishti/tls/client.pem
+mongosh --tls --tlsCAFile ca.pem --tlsCertificateKeyFile client-full.pem "mongodb://mongo.example.com:27017" --eval \
+  'db.getSiblingDB("$external").runCommand({createUser: "CN=drishti", roles: [{role: "readWrite", db: "drishti"}]})'
+```
+
+(`client-full.pem` is `cat client.pem client.key`.) The subject the server sees must match exactly, including the order of its
+parts: `CN=drishti,OU=risk,O=Example` is a different user from `CN=drishti`.
+
+### Checking it from the command line
+
+```
+mongosh --tls --tlsCAFile /etc/drishti/tls/ca.pem --tlsCertificateKeyFile client-full.pem \
+  "mongodb://mongo.example.com:27017/?authMechanism=MONGODB-X509&authSource=%24external" --eval 'db.runCommand({connectionStatus: 1})'
+```
+
+With the connector up, health shows the expiry once a certificate has under 30 days left:
+`UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`.
+
+### Common errors
+
+The health text of the integration test's connector, against a real `mongod` (shortened where marked).
+
+| Health text | Cause and fix |
+|---|---|
+| `DOWN: cannot reach MongoDB (Timed out while waiting for a server ... caused by {javax.net.ssl.SSLHandshakeException: (certificate_unknown) PKIX path building failed: ...unable to find valid certification path to requested target}` | The server certificate is not signed by a CA in `tls.ca-file`. |
+| `DOWN: cannot reach MongoDB (Timed out while waiting for a server ... exception={com.mongodb.MongoSocketReadException: Prematurely reached end of stream}}` | The connector spoke plain text to a `requireTLS` server. Set `tls.enabled: true`. |
+| `DOWN: cannot reach MongoDB (Exception authenticating)` | x.509 log-in refused: the certificate's subject does not exist as a user in `$external`, or differs from the one created. |
+| `tls.* is set but TLS is not switched on: set tls.enabled: true (or put tls=true in the uri)` | `tls.*` keys with a plain URI. |
+| `tls.enabled is true but the uri says tls=false (or ssl=false): remove one of them` | The two contradict. |
+| `auth-mechanism: x509 logs in with a client certificate: switch TLS on (tls.enabled: true) and set tls.cert-file and tls.key-file, or tls.keystore` | x.509 without TLS or a client certificate. |
 
 ## As a connector file
 

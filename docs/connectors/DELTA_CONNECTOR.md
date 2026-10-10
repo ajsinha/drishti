@@ -46,6 +46,8 @@ storage: [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
 15. [Checklist for production](#15-checklist-for-production)
 16. [Engines: native and Hadoop](#16-engines-native-and-hadoop)
 
+Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
+
 ---
 
 ## 1. The problem
@@ -615,6 +617,68 @@ when it was; a document search says `"partial": true` with a smaller `scanned`.
 | Health: `DEGRADED: cannot read trade 2026-09-30: …` | the last read of that table and date failed: pages in a codec the engine does not decompress (BROTLI, LZO), a page that does not decode, a truncated or missing Parquet file, or (`trade log`) a log missing a commit | the reason says which; codecs: [section 16](#16-engines-native-and-hadoop); a damaged file: restore it or rewrite the date. Health turns `UP` once a read of the date succeeds or the table gets a new version |
 | a view fails with `DRS-1003 … failed reading` while other dates open | that date's files cannot be read (see the row above); the view does not fall back to another store's data | as above |
 | searches say `partial: true` with `failed: [{"source": "trading-store", …}]` | a date or the table's ids could not be read; the type-ahead keeps the ids it listed before | as above; the reason is in the answer and in Health |
+
+## Security: TLS and credentials
+
+A lake on an S3-compatible store (MinIO, Ceph, an internal gateway) with a certificate from a **private CA** is configured on the
+connector with the shared `tls.*` settings ([TLS.md](TLS.md)). They are read by the **native engine** (the default,
+[section 16](#16-engines-native-and-hadoop)), which reaches S3 through the AWS SDK:
+
+| Setting | Meaning |
+|---|---|
+| `s3.endpoint: https://minio.example.com:9000` | TLS on. `tls.*` against a missing or `http://` endpoint is a start-up error (`tls.* is set but s3.endpoint is not https://: set s3.endpoint to the store's https:// address`). |
+| `tls.ca-file` / `tls.truststore` (+ `tls.truststore-password`) | Trust a private CA (add `tls.trust-jvm-default: true` to keep the public ones too). |
+| `tls.cert-file` + `tls.key-file` (+ `tls.key-password`), or `tls.keystore` (+ `tls.keystore-password`) | A client certificate, for a gateway that asks for one. |
+| `tls.verify-hostname: false` | The chain is verified, the name is not (a warning at every start). |
+| `tls.protocols`, `tls.cipher-suites` | Handed to the HTTP client. |
+| `s3.access-key`, `s3.secret-key` | As before: `${ENV}` placeholders or `file:` references, or the AWS credential chain. |
+
+With `engine: hadoop` (Hadoop's S3A) a private CA cannot be given per connector: S3A has no setting for one. `tls.*` with that engine is
+refused at start (`tls.* is read by the native engine only: Hadoop's S3A has no setting for a private CA. Set engine: native, or
+import the CA into the JVM's truststore (-Djavax.net.ssl.trustStore=...)`); an `https://` endpoint with a public certificate works
+with either engine.
+
+### A complete file
+
+`config/connectors/delta-private-ca.yaml`:
+
+```yaml
+plugin: delta
+kinds: [customer]
+description: Customer tables in the data lake over TLS
+settings:
+  root: s3://lake-prod/delta
+  domain: customer
+  s3.endpoint: https://minio.example.com:9000
+  s3.region: us-east-1
+  s3.access-key: ${LAKE_ACCESS_KEY}
+  s3.secret-key: ${LAKE_SECRET_KEY}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem
+```
+
+### Checking it
+
+```
+curl --cacert /etc/drishti/tls/ca.pem https://minio.example.com:9000/minio/health/live
+openssl s_client -connect minio.example.com:9000 -CAfile /etc/drishti/tls/ca.pem -verify_return_error < /dev/null
+```
+
+Health is `UP (engine: native)`; once a certificate has under 30 days left it reads
+`UP (engine: native; TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`. The integration test of the S3
+reader (`S3StorageTlsTest`) runs the engine's S3 storage against an HTTPS endpoint that requires a client certificate, and shows the
+refusals: an untrusted server (`PKIX path building failed ... unable to find valid certification path to requested target`),
+a missing client certificate, and a host name the certificate does not carry.
+
+### Common errors
+
+| Message | Cause and fix |
+|---|---|
+| `tls.* is set but s3.endpoint is not https://: set s3.endpoint to the store's https:// address` | `tls.*` with no endpoint or an `http://` one. |
+| `tls.enabled is true but s3.endpoint is not https:// (not set)` | The same, with `tls.enabled`. |
+| `tls.* is read by the native engine only: ...` | `engine: hadoop` with `tls.*`. |
+| `tls.ca-file '/etc/drishti/nope.pem': file not found` | A wrong path. |
+| `PKIX path building failed: ... unable to find valid certification path to requested target` in the table's problem text | The store's certificate is not signed by a CA in `tls.ca-file`. |
 
 ## As a connector file
 

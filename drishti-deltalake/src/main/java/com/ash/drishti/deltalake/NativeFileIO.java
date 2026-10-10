@@ -46,6 +46,11 @@ public final class NativeFileIO implements FileIO {
     private volatile S3Storage s3;
     private final NativeCodecs codecs;
 
+    /** The TLS material of the S3 endpoint, or null. */
+    public com.ash.drishti.api.tls.TlsMaterial tls() {
+        return s3Settings.tls();
+    }
+
     /**
      * @param s3Settings how to reach S3 when a path asks for it
      * @param conf Kernel's tuning keys ({@code delta.kernel.default.parquet.reader.batch-size}, …), as for Hadoop

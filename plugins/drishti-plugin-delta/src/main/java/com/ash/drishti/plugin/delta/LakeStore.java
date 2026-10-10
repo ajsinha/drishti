@@ -54,6 +54,11 @@ public interface LakeStore extends AutoCloseable {
     @Override
     default void close() {}
 
+    /** The TLS material of the object store's endpoint ({@code tls.*}), or null: its certificates' expiry is shown in health. */
+    default com.ash.drishti.api.tls.TlsMaterial tls() {
+        return null;
+    }
+
     /**
      * The lake at {@code root}, read by the engine the settings choose ({@link EngineKind}).
      *
@@ -72,6 +77,10 @@ public interface LakeStore extends AutoCloseable {
     static LakeStore of(String root, String domain, Map<String, String> settings, EngineKind engine) {
         if (domain.contains("..") || domain.startsWith("/") || domain.startsWith("\\")) {
             throw new IllegalArgumentException("domain escapes the Delta root: " + domain);
+        }
+        if (engine == EngineKind.HADOOP && com.ash.drishti.api.tls.TlsSettings.anyGiven(settings, "tls.")) {
+            throw new com.ash.drishti.api.tls.TlsException("tls.* is read by the native engine only: Hadoop's S3A has no setting for a private CA. "
+                    + "Set engine: native, or import the CA into the JVM's truststore (-Djavax.net.ssl.trustStore=...)");
         }
         return engine == EngineKind.NATIVE ? NativeLake.open(root, domain, settings) : HadoopLake.open(root, domain, settings);
     }

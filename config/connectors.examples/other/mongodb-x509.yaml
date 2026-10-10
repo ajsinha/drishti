@@ -1,0 +1,29 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: MongoDB over TLS where the client certificate is the log-in (MONGODB-X509). The certificate's subject must exist as a
+# user in the $external database. No user name or password. Copy to config/connectors/mongodb-x509.yaml.
+# See docs/connectors/MONGODB_CONNECTOR.md, section Security.
+plugin: mongodb
+kinds: [position]
+description: Positions in MongoDB, certificate log-in
+settings:
+  uri: mongodb://mongo-1.example.com:27017,mongo-2.example.com:27017/?replicaSet=rs0
+  database: drishti
+  collection: positions
+  auth-mechanism: x509
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key

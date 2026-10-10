@@ -64,8 +64,8 @@ def start_servers(work: Path) -> list:
         encoding="utf-8")
     (conns / "ledger-db.yaml").write_text(
         f"plugin: jdbc\nkinds: [ledger-entry]\ndescription: The ledger database (down on purpose)\nsettings:\n  url: jdbc:postgresql://127.0.0.1:{DEAD_DB}/ledger\n  user: drishti\n"
-        "  password: ${LEDGER_DB_PASSWORD}\n  table: ledger.entities\n  tls:\n    enabled: true\n    truststore:\n      path: /etc/drishti/tls/ca.p12\n"
-        "      password: ${LEDGER_TRUSTSTORE_PASSWORD}\n", encoding="utf-8")
+        "  password: ${LEDGER_DB_PASSWORD}\n  table: ledger.entities\n  tls:\n    enabled: true\n    ca-file: /etc/drishti/tls/ca.pem\n"
+        "    truststore-password: ${LEDGER_TRUSTSTORE_PASSWORD}\n", encoding="utf-8")
     (work / "application.local.yaml").write_text("drishti:\n  sources:\n    connectors:\n      legacy-feed:\n        plugin: file\n        settings: { root: ./data/legacy }\n", encoding="utf-8")
     for d in ("data/legacy", "data/desk-quotes", "delta"):
         (work / d).mkdir(parents=True, exist_ok=True)
@@ -120,8 +120,8 @@ def new_form(c: Ctx):
     d.locator("[data-setting='user']").fill("drishti")
     d.locator("[data-setting='password']").fill("${ORDERS_DB_PASSWORD}")
     d.locator("[data-setting='tls.enabled']").select_option("true")
-    d.locator("[data-setting='tls.truststore.path']").fill("/etc/drishti/tls/ca.p12")
-    d.locator("[data-setting='tls.truststore.password']").fill("${ORDERS_TRUSTSTORE_PASSWORD}")
+    d.locator("[data-setting='tls.ca-file']").fill("/etc/drishti/tls/ca.pem")
+    d.locator("[data-setting='tls.truststore-password']").fill("${ORDERS_TRUSTSTORE_PASSWORD}")
     c.page.wait_for_timeout(500)
     c.page.evaluate("() => { const d = document.querySelector('[data-edit-dialog]'); d.scrollTop = 0; }")
     c.save("02-new-connector-form.jpg", "[data-edit-dialog]")

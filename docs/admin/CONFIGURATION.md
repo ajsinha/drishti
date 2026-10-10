@@ -1207,6 +1207,8 @@ drishti:
           s3.secret-key: ${LAKE_SECRET_KEY}
 ```
 
+TLS to an S3-compatible store on a private CA: the shared [`tls.*`](#tls--tls-for-connectors) settings with `s3.endpoint: https://...`, read by the native engine ([DELTA_CONNECTOR.md, Security](../connectors/DELTA_CONNECTOR.md#security-tls-and-credentials)); refused with `engine: hadoop`.
+
 ### `jdbc` — a database
 
 The JDBC driver jar goes on the class path or in `plugin-dir`.
@@ -1245,6 +1247,8 @@ drishti:
             (SELECT MAX(business_date) FROM trades WHERE trade_id = :id AND business_date <= :asOf)
 ```
 
+TLS for `jdbc:postgresql://`: the shared [`tls.*`](#tls--tls-for-connectors) settings (`tls.enabled: true` plus a CA, optionally a client certificate), handed to the driver as `sslmode=verify-full` (or `require` with `tls.verify-hostname: false`); the mapping, and the options for MySQL, SQL Server and Oracle, are in [POSTGRES_CONNECTOR.md, Security](../connectors/POSTGRES_CONNECTOR.md#security-tls-and-credentials).
+
 ### `file` — JSON or CSV files on disk
 
 Layout: `<root>/<kind>/<id>.json` (or `.csv`), and dated `<root>/<yyyy-MM-dd>/<kind>/<id>.json`.
@@ -1271,10 +1275,12 @@ A 404 answer means "not held here". Any other status below 400 is the document (
 are parsed; redirects are not followed; an empty body is an empty document, found); 400 or more is a failed read.
 Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
 
+TLS: an `https://` `base-url` with the shared [`tls.*`](#tls--tls-for-connectors) settings for a private CA or mutual TLS ([REST_CONNECTOR.md, TLS](../connectors/REST_CONNECTOR.md#tls-for-the-rest-connector)).
+
 ### `tls.*` — TLS for connectors
 
-Every connector that connects to a server over the network reads its TLS settings from these keys (Kafka, ActiveMQ and
-RabbitMQ today; the others are being moved to them). Every key is optional. Passwords are `${ENV}` placeholders or `…-password-file` paths,
+Every connector that connects to a server over the network reads its TLS settings from these keys (Kafka, ActiveMQ,
+RabbitMQ, Redis, REST, the feeds, S3, MongoDB, PostgreSQL, Aerospike, Delta and Iceberg; the matrix is in [TLS.md](../connectors/TLS.md#connector-matrix)). Every key is optional. Passwords are `${ENV}` placeholders or `…-password-file` paths,
 never written in a document. Full reference, with every source form, the openssl/keytool commands and rotation:
 [TLS.md](../connectors/TLS.md).
 
@@ -1383,6 +1389,8 @@ There is no `mode.<kind>`: a picked date reads the newest date folder on or befo
 `kinds`, the kinds served are those of the last successful listing, and an empty listing serves every kind. Connect
 (5 s) and socket (20 s) timeouts are fixed in the code. Full detail: [S3_CONNECTOR.md](../connectors/S3_CONNECTOR.md).
 
+TLS: an `https://` `endpoint` with the shared [`tls.*`](#tls--tls-for-connectors) settings for a private CA or a client certificate (`tls.verify-hostname: false` is refused here; [S3_CONNECTOR.md, TLS](../connectors/S3_CONNECTOR.md#tls-for-the-s3-connector)).
+
 ### `iceberg` — Apache Iceberg
 
 Path-based tables or a REST catalog (Polaris, Snowflake Open Catalog, Glue), in the same layout as Delta Lake. Design,
@@ -1414,6 +1422,8 @@ loading and maintenance: [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.
 | `reverse-index` | `true` | `false` turns reverse lookups off |
 | `source-name` | the connector's name | the name shown in provenance and Health |
 | `stale-after` | none | warn when no new data arrived for this long (engine setting) |
+
+TLS for a REST catalog's object store on a private CA: the shared [`tls.*`](#tls--tls-for-connectors) settings with `s3.endpoint: https://...` ([ICEBERG_CONNECTOR.md, Security](../connectors/ICEBERG_CONNECTOR.md#security-tls-and-credentials)); refused with `catalog: hadoop`.
 
 ### `duckdb` — one embedded DuckDB file
 
@@ -1461,6 +1471,8 @@ A document per entity per business day, in a collection per data domain. Design,
 | `max-load-rows`, `reverse-index` | `200000`, `true` | the most documents a reverse lookup reads without promoted fields; `false` turns reverse lookups off |
 | `connect-timeout-ms` | `3000` | connection and server-selection timeout |
 
+TLS and certificate log-in: `tls.enabled: true` (or `tls=true` in the `uri`) with the shared [`tls.*`](#tls--tls-for-connectors) settings, and `auth-mechanism: x509` (optionally `x509-user`) to log in with the client certificate ([MONGODB_CONNECTOR.md, Security](../connectors/MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials)).
+
 ### `redis`
 
 Today and recent days in memory, with live updates; history behind it in Delta Lake. Design, sizing and every option:
@@ -1479,6 +1491,8 @@ Today and recent days in memory, with live updates; history behind it in Delta L
 | `max-load-rows`, `reverse-index` | `200000`, `true` | the most documents a reverse lookup reads without promoted fields; `false` turns reverse lookups off |
 | `live` | `true` | subscribe to `<domain>:changes` and push changed entities to open views |
 | `timeout-ms` | `5000` | connect and command timeout |
+
+TLS: a `rediss://` `uri` with the shared [`tls.*`](#tls--tls-for-connectors) settings for a private CA or a client certificate; the Lettuce `verifyPeer` URI option still works, deprecated ([REDIS_CONNECTOR.md, Security](../connectors/REDIS_CONNECTOR.md#security-tls-and-credentials)).
 
 ### `aerospike`
 
@@ -1509,6 +1523,8 @@ and [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
 Retention is the records' time to live, set by the loader (`tools/load-aerospike.sh --ttl-days N`); the connector
 has no retention setting.
 
+TLS and certificate log-in: `tls.enabled: true` with the shared [`tls.*`](#tls--tls-for-connectors) settings, `tls-name` (the name the server certificate carries; default each host's name), `auth-mode: pki` to log in with the client certificate. The server's TLS is Enterprise Edition ([AEROSPIKE_CONNECTOR.md, Security](../connectors/AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials)).
+
 ### `feed` — public data feeds
 
 One connector per feed (the market-data pack declares them, all off by default).
@@ -1528,6 +1544,8 @@ keeps the last good data (`DOWN: the feed returned no data (serving the last dat
 with no rows replaces its data with none and stays `UP`. A purge clears the data, then
 refetches. `stale-after` does not notice a publisher that stopped publishing, since every successful parse counts as
 new data. Full detail: [FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md).
+
+TLS for a mirror on a private CA: `url: https://...` with the shared [`tls.*`](#tls--tls-for-connectors) settings ([FEEDS_CONNECTOR.md, Security](../connectors/FEEDS_CONNECTOR.md#10-security)).
 
 ### `derived` — kinds computed from other kinds
 

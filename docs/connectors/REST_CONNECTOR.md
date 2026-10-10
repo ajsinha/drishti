@@ -371,18 +371,65 @@ is down does not stop the connector from starting.
   value is acceptable. Headers are fixed at start: a token that expires needs a restart (or a long-lived service
   token). There is no OAuth client flow in the plugin.
 - **Settings are not shown** by health or `/api/v1/sources`.
-- **TLS.** An `https://` base URL uses the JVM's default TLS context: certificates are checked against the JVM's trust
-  store, and the host name is verified. A service with an internal certificate authority needs that CA in the trust
-  store the server runs with (`-Djavax.net.ssl.trustStore=/etc/drishti/truststore.p12
-  -Djavax.net.ssl.trustStorePassword=…`). Client certificates (mutual TLS) come from `-Djavax.net.ssl.keyStore` and
-  `-Djavax.net.ssl.keyStorePassword`. These properties apply to the whole server, not one connector; the plugin has
-  no TLS settings of its own.
+- **TLS.** An `https://` base URL is checked against the JVM's authorities and the host name, unless the connector's own
+  `tls.*` settings say otherwise ([TLS.md](TLS.md)): `tls.ca-file` or `tls.truststore` for a service on a private CA,
+  `tls.cert-file` + `tls.key-file` (or `tls.keystore`) when the service asks for a client certificate, `tls.verify-hostname:
+  false` to check the chain but not the name. Each connector has its own, so two services can use two CAs. `tls.*` against an
+  `http://` URL is a start-up error, never a silent downgrade. The details are in [the TLS section below](#tls-for-the-rest-connector).
+  The `-Djavax.net.ssl.*` JVM properties still apply when the connector has no `tls.*` of its own.
 - **Proxies.** The client uses the JVM's default proxy selector: `-Dhttps.proxyHost`, `-Dhttps.proxyPort`,
   `-Dhttp.nonProxyHosts`.
 - **What leaves the server.** The kind and id of every entity a user opens (and every linked entity of the kind) are
   sent to the service in the URL. Entitlements and redaction are applied by the Drishti server to what it shows; the
   service sees the requests Drishti makes on users' behalf, with the connector's credentials, not the user's.
 - **Ids in URLs** are encoded, so an id cannot change the path or add query parameters.
+
+### TLS for the REST connector
+
+| Setting | Meaning |
+|---|---|
+| `base-url: https://host/api` | TLS on, checked against the JVM's authorities and the host name. |
+| `tls.ca-file` / `tls.truststore` (+ `-password`) | Trust a private CA instead (add `tls.trust-jvm-default: true` to also keep the public ones). |
+| `tls.cert-file` + `tls.key-file` (+ `tls.key-password`), or `tls.keystore` (+ `tls.keystore-password`) | The client certificate for mutual TLS. |
+| `tls.verify-hostname: false` | The chain is verified, the name is not (a warning at every start). |
+| `tls.protocols`, `tls.cipher-suites` | Handed to the HTTP client. |
+| `tls.insecure-trust-all` | Development only; refused unless `DRISHTI_ALLOW_INSECURE_TLS=true`. |
+
+A complete file, mutual TLS to a service on a private CA (`config/connectors/rest-mtls.yaml`):
+
+```yaml
+plugin: rest
+kinds: [price]
+description: Prices from the pricing API over mutual TLS
+settings:
+  base-url: https://pricing.example.com/api
+  header.Authorization: Bearer ${PRICING_TOKEN}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+```
+
+Check the service the way the connector will meet it:
+
+```
+curl --cacert /etc/drishti/tls/ca.pem --cert /etc/drishti/tls/client.pem --key /etc/drishti/tls/client.key https://pricing.example.com/api/price/EURUSD
+openssl s_client -connect pricing.example.com:443 -CAfile /etc/drishti/tls/ca.pem -verify_return_error < /dev/null
+```
+
+While the connector is up, health reads `UP`; once a certificate has under 30 days left it reads
+`UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`.
+
+Errors, captured from the connector's test against an HTTPS server that requires a client certificate:
+
+| Message | Cause and fix |
+|---|---|
+| `tls.enabled is true but base-url is not https:// (http://h:80/api)` | Use an `https://` URL. |
+| `tls.* is set but base-url is not https:// (http://h:80/api): use an https:// address` | `tls.*` keys with an `http://` URL. |
+| `tls.ca-file '/etc/drishti/nope.pem': file not found` | A wrong path; the message names the setting and the file. |
+| `javax.net.ssl.SSLHandshakeException: (certificate_unknown) PKIX path building failed: ... unable to find valid certification path to requested target` | The service certificate is not signed by a CA in `tls.ca-file`. |
+| `java.io.IOException: HTTP/1.1 header parser received no bytes`, caused by `java.net.SocketException: Connection reset` | The service closed the connection: typically it requires a client certificate and none was configured. |
+| `No subject alternative names matching IP address 127.0.0.2 found` | The URL's host is not one the certificate names. |
 
 ## 11. Diagnosing
 

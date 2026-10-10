@@ -64,9 +64,17 @@ public final class S3Storage implements Storage, AutoCloseable {
     }
 
     private static S3Client client(S3Settings s) {
+        Apache5HttpClient.Builder http = Apache5HttpClient.builder().maxConnections(64).connectionTimeout(Duration.ofSeconds(10))
+                .socketTimeout(Duration.ofSeconds(60));
+        if (s.tls() != null) {
+            // the shared module's trust, client certificate, protocols and cipher suites; the name check stays unless turned off
+            var p = s.tls().sslParameters();
+            http.tlsSocketStrategy(new org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy(s.tls().sslContext(), p.getProtocols(),
+                    p.getCipherSuites(), org.apache.hc.core5.reactor.ssl.SSLBufferMode.STATIC,
+                    s.tls().settings().verifyHostname() ? null : org.apache.hc.client5.http.ssl.NoopHostnameVerifier.INSTANCE));
+        }
         S3ClientBuilder b = S3Client.builder()
-                .httpClientBuilder(Apache5HttpClient.builder().maxConnections(64).connectionTimeout(Duration.ofSeconds(10))
-                        .socketTimeout(Duration.ofSeconds(60)))
+                .httpClientBuilder(http)
                 // S3-compatible stores do not all speak the SDK's newer default checksums
                 .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
                 .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED)

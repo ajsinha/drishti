@@ -21,6 +21,5 @@ settings:
   password: ${ACTIVEMQ_PASSWORD}
   tls:
     enabled: true
-    truststore:
-      path: /etc/drishti/tls/ca.p12
-      password: ${ACTIVEMQ_TRUSTSTORE_PASSWORD}
+    truststore: /etc/drishti/tls/ca.p12
+    truststore-password: ${ACTIVEMQ_TRUSTSTORE_PASSWORD}

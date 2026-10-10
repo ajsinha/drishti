@@ -422,7 +422,7 @@ class ConnectorManagerTest {
 
         Map<String, Object> tls = manager.test("probe-x", "plugin: fake\nsettings:\n  url: db://tls\n");
         assertThat(tls).containsEntry("ok", false);
-        assertThat(tls.get("hint").toString()).contains("certificate is not trusted").contains("tls.truststore.path");
+        assertThat(tls.get("hint").toString()).contains("certificate is not trusted").contains("tls.ca-file");
 
         assertThat(manager.test("probe-x", "plugin: fake\nsettings:\n  url: ${NOT_SET_ANYWHERE}\n").get("error").toString()).contains("environment variable that is not set");
         assertThat(manager.test("probe-x", "plugin: nosuch\n").get("error").toString()).contains("no plugin named 'nosuch'");
@@ -443,9 +443,9 @@ class ConnectorManagerTest {
         build(dir, PACK, null, null, Map.of());
         String typed = "# my comment\nplugin: fake\nsettings: {url: u}\n";
         assertThat(manager.textOf("x", Map.of("text", typed), "ann")).isEqualTo(typed);
-        String rendered = manager.textOf("x", Map.of("plugin", "fake", "enabled", true, "kinds", List.of("trade"), "settings", Map.of("url", "u", "tls", Map.of("truststore", Map.of("path", "/ca"))), "description", "d"), "ann");
-        assertThat(rendered).contains("Written from Admin -> Connectors by ann").contains("plugin: fake").contains("truststore:");
+        String rendered = manager.textOf("x", Map.of("plugin", "fake", "enabled", true, "kinds", List.of("trade"), "settings", Map.of("url", "u", "tls", Map.of("ca-file", "/ca")), "description", "d"), "ann");
+        assertThat(rendered).contains("Written from Admin -> Connectors by ann").contains("plugin: fake").contains("ca-file: ");
         ConnectorFiles.Definition d = files.parse("x", rendered);
-        assertThat(d.settings()).containsEntry("tls.truststore.path", "/ca").containsEntry("url", "u");
+        assertThat(d.settings()).containsEntry("tls.ca-file", "/ca").containsEntry("url", "u");
     }
 }
