@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 final class OpChecks {
 
     /** Keys any panel takes besides its kind's options (the parser's own list, without {@code id} and {@code kind}). */
-    static final Set<String> COMMON = Set.of("title", "key", "code", "area", "infer", "columns", "body", "description", Panel.SPAN, Panel.HEIGHT);
+    static final Set<String> COMMON = Set.of("title", "key", "code", "area", "infer", "columns", "body", "panels", "description", Panel.SPAN, Panel.HEIGHT);
     static final Pattern ID = Pattern.compile("[A-Za-z][A-Za-z0-9_-]{0,63}");
 
     private OpChecks() {}

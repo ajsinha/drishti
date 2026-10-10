@@ -70,6 +70,7 @@ public final class ControlReads {
         if (p.body() != null) {
             ids.addAll(panel(p.body()));
         }
+        p.parts().forEach(part -> ids.addAll(panel(part)));
         return ids;
     }
 

@@ -83,10 +83,11 @@ public final class LayoutMerger {
                 why.put(p.id(), "ColumnInference: " + cols.size() + " fields from " + p.option("rows").get());
             }
         }
-        if (cols == p.columns() && body == p.body()) {
+        List<Panel> parts = p.parts().stream().map(x -> fill(x, doc, why)).toList();
+        if (cols == p.columns() && body == p.body() && parts.equals(p.parts())) {
             return p;
         }
-        return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), cols, body, p.options(), p.location());
+        return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), cols, body, p.options(), p.location(), parts);
     }
 
     private Panel fillBody(Panel tabs, DataNode doc, Map<String, String> why) {
@@ -121,14 +122,16 @@ public final class LayoutMerger {
 
     private static Panel labelled(Panel p) {
         boolean missing = p.columns().stream().anyMatch(c -> c.label() == null)
-                || p.body() != null && p.body().columns().stream().anyMatch(c -> c.label() == null);
+                || p.body() != null && p.body().columns().stream().anyMatch(c -> c.label() == null)
+                || !p.parts().isEmpty();
         if (!missing) {
             return p;
         }
         Panel body = p.body() == null ? null : labelled(p.body());
         List<Column> cols = p.columns().stream().map(c -> c.label() != null ? c
                 : new Column(labelOf(c.bind()), c.bind(), c.fmt(), c.tone(), c.total(), c.link())).toList();
-        return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), cols, body, p.options(), p.location());
+        return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), cols, body, p.options(), p.location(),
+                p.parts().stream().map(LayoutMerger::labelled).toList());
     }
 
     private DataNode rows(String expr, DataNode doc) {

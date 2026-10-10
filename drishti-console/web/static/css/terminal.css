@@ -100,6 +100,9 @@ body.terminal { font-size: 14px; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
 .col-box { border: 1px solid var(--d-border); border-radius: 5px; padding: .6rem .8rem; }
 .col-box h4 { font-size: .9rem; font-weight: 700; margin: 0 0 .4rem; }
+.tab-part { margin: .2rem 0 .9rem; }
+.tab-part-h { font-size: .85rem; font-weight: 700; margin: .5rem 0 .3rem; color: var(--d-muted); }
+.tab-part .tbl-wrap { overflow-x: auto; }
 .rows, .prov { margin: 0; }
 .rows > div, .prov > div { display: flex; justify-content: space-between; gap: 1rem; padding: .18rem 0; }
 .rows dt, .prov dt { color: var(--d-muted); font-weight: 400; }

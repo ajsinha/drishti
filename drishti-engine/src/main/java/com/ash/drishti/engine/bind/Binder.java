@@ -438,7 +438,11 @@ public final class Binder {
                     fields.add(cell(col, rc, null));
                 }
             }
-            tabs.add(new PanelData.Tab(Values.text(eval(tabTitle, rc)), fields));
+            List<PanelView> inside = new ArrayList<>(p.parts().size());
+            for (Panel part : p.parts()) {
+                inside.add(bind(part, c.withEval(rc)));       // a panel in a tab reads the tab's element as @
+            }
+            tabs.add(new PanelData.Tab(Values.text(eval(tabTitle, rc)), fields, inside));
         }
         return new PanelData.Tabs(p.option("layout").orElse("tabs"), tabs);
     }

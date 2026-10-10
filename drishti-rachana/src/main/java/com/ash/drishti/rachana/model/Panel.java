@@ -31,6 +31,7 @@ import java.util.Optional;
  * @param infer let the inference engine complete this panel (columns, fields)
  * @param columns explicit columns, possibly empty
  * @param body the nested panel for {@code tabs}, or null
+ * @param parts the panels shown inside each tab of a {@code tabs} panel ({@code panels:}), bound with {@code @} the tab's element; empty otherwise
  * @param options kind-specific options (strings are Rachana-EL where the kind says so), and the layout sizes
  *     {@code span} and {@code height} every top-level panel may set
  * @param location where it was declared
@@ -46,10 +47,18 @@ public record Panel(
         List<Column> columns,
         Panel body,
         Map<String, Object> options,
-        SourceLocation location) {
+        SourceLocation location,
+        List<Panel> parts) {
+
+    /** A panel with no nested panels. */
+    public Panel(String id, PanelKind kind, String title, String key, String code, Area area, boolean infer, List<Column> columns,
+            Panel body, Map<String, Object> options, SourceLocation location) {
+        this(id, kind, title, key, code, area, infer, columns, body, options, location, List.of());
+    }
 
     public Panel {
         columns = List.copyOf(columns);
+        parts = parts == null ? List.of() : List.copyOf(parts);
         options = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(options));
     }
 

@@ -269,12 +269,24 @@ public final class ExplainService {
             note(labels, panels, view.title().with(), "Title", "title");
         }
         for (PanelView p : view.panels()) {
+            maskedIn(labels, panels, p);
+        }
+        List<PageContext.MaskedField> out = new ArrayList<>();
+        labels.forEach((key, label) -> out.add(new PageContext.MaskedField(key, label, List.copyOf(panels.get(key)))));
+        return out;
+    }
+
+    private static void maskedIn(Map<String, String> labels, Map<String, Set<String>> panels, PanelView p) {
+        {
             if (p.denied() != null || p.data() == null) {
-                continue;
+                return;
             }
             switch (p.data()) {
                 case PanelData.Fields f -> f.fields().forEach(c -> note(labels, panels, c, c.label(), p.id()));
-                case PanelData.Tabs t -> t.tabs().forEach(tab -> tab.fields().forEach(c -> note(labels, panels, c, c.label(), p.id())));
+                case PanelData.Tabs t -> t.tabs().forEach(tab -> {
+                    tab.fields().forEach(c -> note(labels, panels, c, c.label(), p.id()));
+                    tab.panels().forEach(x -> maskedIn(labels, panels, x));       // a panel inside a tab hides what the reader may not see
+                });
                 case PanelData.Table t -> {
                     t.rows().forEach(r -> rowCells(labels, panels, t.columns(), r, p.id()));
                     if (t.total() != null) {
@@ -288,9 +300,6 @@ public final class ExplainService {
                 default -> { }
             }
         }
-        List<PageContext.MaskedField> out = new ArrayList<>();
-        labels.forEach((key, label) -> out.add(new PageContext.MaskedField(key, label, List.copyOf(panels.get(key)))));
-        return out;
     }
 
     private static void rowCells(Map<String, String> labels, Map<String, Set<String>> panels, List<String> columns,

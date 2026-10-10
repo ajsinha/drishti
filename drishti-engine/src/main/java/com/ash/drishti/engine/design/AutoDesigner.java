@@ -466,7 +466,7 @@ public final class AutoDesigner {
                 o.put(Panel.SPAN, span);
             }
             o.put(Panel.HEIGHT, height);
-            return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), p.columns(), p.body(), o, p.location());
+            return new Panel(p.id(), p.kind(), p.title(), p.key(), p.code(), p.area(), p.infer(), p.columns(), p.body(), o, p.location(), p.parts());
         }
 
         Map<String, List<PanelChoice>> alternatives() {

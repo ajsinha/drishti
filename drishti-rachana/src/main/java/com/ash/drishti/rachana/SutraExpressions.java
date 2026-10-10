@@ -149,6 +149,7 @@ public final class SutraExpressions {
         if (p.body() != null) {
             panel(p.body(), out);
         }
+        p.parts().forEach(part -> panel(part, out));
     }
 
     private void expr(String src, SourceLocation at, Run out) {

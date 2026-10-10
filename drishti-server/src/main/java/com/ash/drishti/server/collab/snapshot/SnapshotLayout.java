@@ -249,6 +249,9 @@ public final class SnapshotLayout {
             PanelData.Tab tab = t.tabs().get(i);
             pen.text(M + 6, y + 12, fit(nz(tab.title()), width - 2 * M - 12, 12), 12, true, GREY);
             y = fields(pen, y + ROW, tab.fields() == null ? List.of() : tab.fields(), 6);
+            for (PanelView part : tab.panels() == null ? List.<PanelView>of() : tab.panels()) {
+                y = panel(pen, part, y);
+            }
         }
         return y;
     }

@@ -127,6 +127,12 @@ public final class SutraWriter {
                 }
             }
         }
+        if (!p.parts().isEmpty()) {
+            y.append(ind).append("panels:\n");
+            for (Panel part : p.parts()) {
+                panel(y, part, ind + "  - ", ind + "    ");
+            }
+        }
     }
 
     private static String value(Object v) {

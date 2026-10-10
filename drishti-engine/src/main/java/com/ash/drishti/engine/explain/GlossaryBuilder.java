@@ -92,7 +92,10 @@ final class GlossaryBuilder {
                     note(key, c, c.label(), p.id());
                 }
             }
-            case PanelData.Tabs t -> t.tabs().forEach(tab -> tab.fields().forEach(c -> note(GlossaryResolver.normalise(c.path()), c, c.label(), p.id())));
+            case PanelData.Tabs t -> t.tabs().forEach(tab -> {
+                tab.fields().forEach(c -> note(GlossaryResolver.normalise(c.path()), c, c.label(), p.id()));
+                tab.panels().stream().filter(x -> x.denied() == null && x.data() != null).forEach(this::panel);
+            });
             case PanelData.Metric m -> note(m.value() == null ? null : GlossaryResolver.normalise(m.value().path()), m.value(),
                     m.value() == null ? null : m.value().label(), p.id());
             case PanelData.Table t -> table(p.id(), def, t);
