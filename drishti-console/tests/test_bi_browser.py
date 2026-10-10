@@ -134,6 +134,7 @@ def test_home_shows_certified_recent_favourites_and_shared(stack, browser):
     expect(page.locator('[data-sec="shared"] .bi-card').first).to_be_visible()        # cat is a viewer of Rates Desk
     certified.first.locator("a").click()
     page.wait_for_url("**/bi/i/*")
+    expect(page.locator("[data-meta]")).to_contain_text("owner")                      # the item has loaded: its buttons are wired
     page.click("[data-favourite]")
     expect(page.locator("[data-favourite]")).to_have_attribute("aria-pressed", "true")
     page.goto(CONSOLE_URL + "/bi")
