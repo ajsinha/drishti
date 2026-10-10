@@ -662,6 +662,21 @@ def _inside(h, sel):
                 " return {l: b.left - a.left, r: a.right - b.right, t: b.top - a.top, b: a.bottom - b.bottom, w: b.width, hw: a.width}; })()" % sel)
 
 
+def _press_zoom(btn):
+    """Clicks a panel's zoom button until it reads pressed. The element repaints the view when the stream's first look is newer than the
+    page it fetched (a refresh), and a click whose mouse-down and mouse-up straddle that swap is lost, as for a person; click again."""
+    for _ in range(6):
+        if btn.get_attribute("aria-pressed") == "true":
+            return
+        btn.click()
+        try:
+            expect(btn).to_have_attribute("aria-pressed", "true", timeout=1500)
+            return
+        except AssertionError:
+            continue
+    expect(btn).to_have_attribute("aria-pressed", "true")
+
+
 def test_a_zoomed_panel_fills_the_elements_own_box_and_leaves_the_host_page_alone(host):
     h = host()
     h.open()
@@ -670,8 +685,7 @@ def test_a_zoomed_panel_fills_the_elements_own_box_and_leaves_the_host_page_alon
     expect(btn).to_be_visible(timeout=15000)
     expect(btn).to_have_attribute("aria-pressed", "false")
     pid = h.js(f"{SR}.querySelector('section[data-panel] .pnl-zoom-btn').closest('section').id")
-    btn.click()
-    expect(btn).to_have_attribute("aria-pressed", "true")
+    _press_zoom(btn)
     box = _inside(h, "#" + pid)
     assert abs(box["l"]) <= 1 and abs(box["r"]) <= 1 and abs(box["t"]) <= 1 and box["b"] >= -1, box      # fills the element's width and starts at its top; never leaves it
     assert box["w"] >= box["hw"] - 2
@@ -683,6 +697,24 @@ def test_a_zoomed_panel_fills_the_elements_own_box_and_leaves_the_host_page_alon
     h.page.locator("body").click(position={"x": 5, "y": 5})
     h.page.keyboard.press("z")                                                  # a key in the host page: not Drishti's
     assert h.js(f"{SR}.querySelectorAll('.pnl-zoom').length") == 0
+
+
+def test_a_repaint_of_the_same_entity_keeps_the_zoomed_panel_zoomed(host):
+    h = host()
+    h.open()
+    btn = h.page.locator("#main").locator("section[data-panel] .pnl-zoom-btn").first
+    expect(btn).to_be_visible(timeout=15000)
+    pid = h.js(f"{SR}.querySelector('section[data-panel] .pnl-zoom-btn').closest('section').id")
+    _press_zoom(btn)
+    n = len(h.events("loaded"))
+    h.js("document.querySelector('#main').refresh()")                           # a full repaint, as a newer first look from the stream does
+    h.until(lambda: len(h.events("loaded")) > n, 15, "the repaint")
+    btn = h.page.locator("#main").locator("#" + pid + " .pnl-zoom-btn")
+    expect(btn).to_have_attribute("aria-pressed", "true")
+    assert h.js(f"{SR}.querySelector('#{pid}').classList.contains('pnl-zoom')") is True
+    assert h.js("document.querySelector('#main').hasAttribute('data-zoomed')") is True
+    h.page.keyboard.press("Escape")
+    expect(btn).to_have_attribute("aria-pressed", "false")
 
 
 def test_a_zoomed_table_fits_the_elements_height_and_restores_its_page_size(host):
@@ -715,8 +747,7 @@ def test_zoom_works_under_a_trusted_types_host_at_phone_width(host):
     btn = h.page.locator("#main section[data-panel] .pnl-zoom-btn").first
     expect(btn).to_be_visible(timeout=15000)
     assert h.js(f"{SR}.querySelector('.pnl-zoom-btn').getBoundingClientRect().width") >= 43.5
-    btn.click()
-    expect(btn).to_have_attribute("aria-pressed", "true")
+    _press_zoom(btn)
     assert h.js("document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 1
     assert h.js("window.__viol") == []
     assert not [c for c in h.console if "TrustedHTML" in c or "TrustedScript" in c or "PAGEERROR" in c], h.console
