@@ -49,6 +49,35 @@
     if (first) { first.focus(); }
   }
 
+  // Hide form / Show form: the criteria stay in the page (only hidden), so Show form brings them back as they were. The state is in the
+  // address (form=hidden or form=shown) and, for this tab, the last choice made by hand is kept: after a Search a form the person
+  // has kept open stays open (the setting form.collapse_on_submit decides for everyone else).
+  var body = document.getElementById('qfBody'), toggle = document.querySelector('[data-qf-toggle]'), brief = document.querySelector('[data-qf-summary]');
+  function folded() { return body.hidden; }
+  function fold(hide, by) {
+    body.hidden = hide; brief.hidden = !hide;
+    toggle.setAttribute('aria-expanded', hide ? 'false' : 'true');
+    toggle.querySelector('[data-qf-toggle-text]').textContent = hide ? 'Show form' : 'Hide form';
+    toggle.title = (hide ? 'Show' : 'Hide') + ' the form (Alt+F)';
+    var icon = toggle.querySelector('i'); if (icon) { icon.className = 'bi bi-chevron-' + (hide ? 'down' : 'up'); }
+    var u = new URL(location.href); u.searchParams.set('form', hide ? 'hidden' : 'shown');
+    history.replaceState(null, '', u.pathname + u.search);
+    if (by) { try { sessionStorage.setItem('drishti.form', hide ? 'hidden' : 'shown'); } catch (e) { /* no storage: the address still carries it */ } }
+    if (by === 'show') { var first = form.querySelector('.qf-field .qf-v, .qf-field input:not([type=hidden])'); if (first) { first.focus(); } }
+    else if (by === 'hide') { toggle.focus(); }
+  }
+  if (form && body && toggle && brief) {
+    toggle.addEventListener('click', function () { fold(!folded(), folded() ? 'show' : 'hide'); });
+    brief.addEventListener('click', function (e) { e.preventDefault(); fold(false, 'show'); });
+    document.addEventListener('keydown', function (e) {
+      if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyF' || e.key === 'f')) { e.preventDefault(); fold(!folded(), folded() ? 'show' : 'hide'); }
+    });
+    form.addEventListener('submit', function () {
+      var kept = ''; try { kept = sessionStorage.getItem('drishti.form') || ''; } catch (e) { kept = ''; }
+      if (kept === 'shown') { var h = document.createElement('input'); h.type = 'hidden'; h.name = 'form'; h.value = 'shown'; form.appendChild(h); }
+    });
+  }
+
   if (form) {
     each(form.querySelectorAll('.qf-field'), function (box) {
       syncField(box);

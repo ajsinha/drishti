@@ -57,6 +57,14 @@ def results(c: Ctx):
     c.save("02-results.jpg", clip={"x": 0, "y": max(0, top["y"] - 24), "width": 1440, "height": 640})
 
 
+@shot("06-form-folded.jpg")
+def folded(c: Ctx):
+    open_form(c, RESULTS, height=1700)
+    c.page.locator("[data-qf-command]").wait_for(timeout=30000)
+    c.page.wait_for_timeout(600)
+    c.save("06-form-folded.jpg", clip={"x": 0, "y": 56, "width": 1440, "height": 560})
+
+
 @shot("03-phone.jpg")
 def phone(c: Ctx):
     open_form(c, "/form/trading?kind=trade", width=390, height=900)

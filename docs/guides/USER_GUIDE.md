@@ -1308,6 +1308,24 @@ console's table: sort by a heading, filter each column with its funnel ([Filter 
 cell opens the view; **Alt+Left** brings you back to the form with your criteria in place and the results again, because everything you filled in is in the
 page's address (`/form/trading?kind=trade&op.mtm=>&v.mtm=1m&run=1`): bookmark it or send it.
 
+### Give the results the room: hide the form
+
+![After Search the form folds to one line of what you asked, above the command and the results](img/form/06-form-folded.jpg)
+
+When results arrive the form folds to **one line of your criteria** (`Trade id in IRS-48213 · Mark to market > 1m · +2 more`) so the table gets the screen.
+Click the line, press **Show form**, or press **Alt+F** to open it again with every box as you left it; **Hide form** (or Alt+F again) folds it. The button
+carries `aria-expanded` and `aria-controls`, and on a phone it is a 44 px target. The state is in the page's address (`&form=hidden` or `&form=shown`), so a
+link or **Alt+←** from a result returns to the form as it was; and in this tab a form you opened by hand stays open for the next Search. An administrator who
+would rather the form stayed open sets `form.collapse_on_submit: false` in `config/application.yaml` (default `true`).
+
+| Key | What it does on the form page |
+|---|---|
+| `Enter` | Search |
+| `Esc` | Clear every field |
+| `Ctrl+Enter` | Search from a list box |
+| `Alt+F` | Hide the form or show it again |
+| `Alt+←` | Back to the form from a result, criteria kept |
+
 ### Keep it: name it, watch it, schedule it, send it
 
 Under the results: **Save as named search** (it appears under *Your saved searches* here and on `FORM`), **Watch as a monitor** (the first 50 results, live),

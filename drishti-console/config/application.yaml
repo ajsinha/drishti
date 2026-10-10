@@ -149,6 +149,8 @@ builder:                     # Build workbench, New (/build/new); docs/architect
   pack_draft_concurrency: 4  # Sutras drafted at once against the server
   tools_dir: ../tools        # the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
+form:                        # query by form (FORM <pack>; docs/guides/USER_GUIDE.md)
+  collapse_on_submit: true   # after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back
 calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc
   enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
 layouts:                     # layout mode (Alt+L): each user's own arrangement of a view's panels; also needs a role with layout

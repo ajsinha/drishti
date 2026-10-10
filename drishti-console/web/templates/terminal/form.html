@@ -31,6 +31,12 @@
   {% endif %}
   <form class="qf" method="get" action="/form/{{ info.pack | urlencode }}" data-qform autocomplete="off">
     <input type="hidden" name="kind" value="{{ info.kind }}"><input type="hidden" name="run" value="1">
+    <div class="qf-bar">
+      <button type="button" class="btn btn-sm btn-outline-secondary qf-toggle" data-qf-toggle aria-expanded="{{ 'false' if folded else 'true' }}" aria-controls="qfBody"
+        title="{{ 'Show' if folded else 'Hide' }} the form (Alt+F)"><i class="bi bi-chevron-{{ 'down' if folded else 'up' }}" aria-hidden="true"></i> <span data-qf-toggle-text>{{ 'Show form' if folded else 'Hide form' }}</span></button>
+      <a class="qf-summary mono" data-qf-summary href="{{ reopen }}" title="Show the form (Alt+F)"{{ ' hidden' if not folded }}>{{ brief or 'no criteria' }}</a>
+    </div>
+    <div class="qf-body" id="qfBody" data-qf-collapse="{{ 'on' if collapse else 'off' }}"{{ ' hidden' if folded }}>
     {% if info.form.inferred %}<p class="qf-note text-muted-d">{{ info.pack }} does not declare a form for {{ info.kind | replace('-', ' ') }}, so these fields are inferred from its search columns and Sutra.</p>{% endif %}
     {% if not any_indexed %}<p class="qf-note text-muted-d">No field of this kind is kept as an indexed column: every search reads the documents.</p>{% endif %}
     {% for g in view.groups %}
@@ -79,6 +85,7 @@
       <button type="submit" class="btn btn-sm btn-primary qf-go">Search</button>
       <button type="button" class="btn btn-sm btn-outline-secondary" data-qf-clear title="Clear every field (Esc)">Clear</button>
       <span class="qf-keys text-muted-d">Enter searches · Esc clears</span>
+    </div>
     </div>
   </form>
 
