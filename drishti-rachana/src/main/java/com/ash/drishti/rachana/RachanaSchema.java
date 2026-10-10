@@ -134,6 +134,11 @@ public final class RachanaSchema {
             if (k.readsData()) {
                 opts.add("source");
             }
+            for (String shared : List.of(com.ash.drishti.rachana.model.Panel.WHERE, com.ash.drishti.rachana.model.Panel.ON_SELECT)) {
+                if (k.accepts(shared)) {
+                    opts.add(shared);       // the row condition and the click-sets-a-control option: accepted by the kind, so offered by its schema
+                }
+            }
             for (String o : opts) {
                 Object schema = o.equals("fmt") ? fmt(formats) : o.equals("tone") ? tone()
                         : o.equals("search") ? Map.of("type", "boolean", "description", "false hides the table's filter")

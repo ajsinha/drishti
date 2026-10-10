@@ -351,7 +351,7 @@
         s.folderProblems.forEach(function (x) { pr.appendChild(h('div', {}, h('b', { class: 'mono', text: x.file }), ': ' + x.message + (x.keptLastGood ? ' (the last good version is kept)' : ''))); });
         var tb = q('[data-roles] tbody'); clear(tb);
         s.roles.forEach(function (r) {
-          var boxes = POWERS.map(function (p) { return h('td', {}, h('input', { type: 'checkbox', 'data-power': p, 'aria-label': r.name + ' ' + p, checked: r.bi.indexOf(p) >= 0, disabled: r.builtIn })); });
+          var boxes = POWERS.map(function (p) { return h('td', {}, h('label', {}, h('input', { type: 'checkbox', 'data-power': p, 'aria-label': r.name + ' ' + p, checked: r.bi.indexOf(p) >= 0, disabled: r.builtIn }))); });
           var save = h('button', { type: 'button', class: 'btn-pill btn-ghost', disabled: r.builtIn }, r.builtIn ? 'built in' : 'Save');
           save.addEventListener('click', function () {
             var on = qa('[data-power]', tr).filter(function (b) { return b.checked; }).map(function (b) { return b.getAttribute('data-power'); });

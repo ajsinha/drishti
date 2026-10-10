@@ -116,12 +116,20 @@ class BiApiTest {
         r.andExpect(status().is(status)).andExpect(jsonPath("$.code").value(code));
     }
 
+    /** The shipped files exist before the context starts, so the folder's first read sees them (no race with its watcher). */
+    static {
+        try {
+            Path reports = Path.of("target/bi-api-folder/reports");
+            Files.createDirectories(reports);
+            Files.writeString(reports.resolve("desk-pnl.report.yaml"), "title: Desk profit (shipped)\ndescription: From the BI folder\ntags: [pnl, desk]\nendorsement: certified\npages: []\n");
+            Files.writeString(reports.resolve("risk-only.report.yaml"), "title: Risk only\naudience:\n  roles: [steward]\n");
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
+
     @BeforeAll
     void setUp() throws Exception {
-        Path reports = Path.of("target/bi-api-folder/reports");
-        Files.createDirectories(reports);
-        Files.writeString(reports.resolve("desk-pnl.report.yaml"), "title: Desk profit (shipped)\ndescription: From the BI folder\ntags: [pnl, desk]\nendorsement: certified\npages: []\n");
-        Files.writeString(reports.resolve("risk-only.report.yaml"), "title: Risk only\naudience:\n  roles: [steward]\n");
         role("writer", List.of("bi", "bi-author"), false);
         role("signoff", List.of("bi", "bi-author"), true);
         role("reader", List.of("bi"), false);
