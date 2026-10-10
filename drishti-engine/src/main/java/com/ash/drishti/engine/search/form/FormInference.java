@@ -102,7 +102,7 @@ public final class FormInference {
         return c.startsWith("$.") ? c.substring(2) : c;
     }
 
-    FieldType typeOf(String path, List<Object> sample) {
+    public FieldType typeOf(String path, List<Object> sample) {
         List<Object> seen = sample.stream().filter(v -> v != null && !String.valueOf(v).isBlank()).toList();
         String last = path.substring(path.lastIndexOf('.') + 1);
         if (!seen.isEmpty()) {

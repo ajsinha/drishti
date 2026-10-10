@@ -36,6 +36,8 @@ public enum ErrorCode {
     PROPOSAL_NOT_FOUND("DRS-2005", 404),
     PROPOSAL_CONFLICT("DRS-2006", 409),
     FOUR_EYES("DRS-2007", 403),
+    /** A search form (the form: section of a pack, or a Design's Form tab) that is not valid YAML or names a field, type or operator wrongly. */
+    FORM_INVALID("DRS-2060", 422),
     EL_SYNTAX("DRS-2101", 422),
     EL_EVAL("DRS-2102", 422),
     INFERENCE_FAILED("DRS-3001", 500),

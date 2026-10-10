@@ -1460,6 +1460,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-2005 | 404 | proposal not found | no Sutra proposal with that id |
 | DRS-2006 | 409 | proposal conflict | the proposal was already decided, or the live Sutra changed after it was proposed |
 | DRS-2007 | 403 | four eyes | the author may not approve their own proposal |
+| DRS-2060 | 422 | form invalid | a search form that is not valid YAML or names a field path, type or operator wrongly; the Form tab lists each problem, `pack check` reports the pack's |
 | DRS-2101 | 422 | el syntax | a Rachana-EL expression does not parse (alert rules, Sutra expressions, search conditions) |
 | DRS-2102 | 422 | el eval | a Rachana-EL expression failed while evaluating |
 | DRS-3001 | 500 | inference failed | reserved: the code exists, but nothing in this release raises it (a document with no Sutra is laid out by inference, which does not fail) |

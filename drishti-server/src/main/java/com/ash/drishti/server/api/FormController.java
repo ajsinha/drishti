@@ -37,6 +37,7 @@ import com.ash.drishti.rachana.about.AboutCatalog;
 import com.ash.drishti.rachana.about.GlossaryEntry;
 import com.ash.drishti.rachana.model.StripItem;
 import com.ash.drishti.rachana.model.Sutra;
+import com.ash.drishti.server.design.FormDefinitions;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
 import com.ash.drishti.server.security.Principal;
@@ -77,10 +78,11 @@ public class FormController {
     private final FormCompiler compiler;
     private final FormInference inference;
     private final SearchProperties searchProps;
+    private final FormDefinitions definitions;
     private final int sampleRows;
 
     public FormController(PackRegistry registry, PackAccess access, Entitlements entitlements, Mnemonics mnemonics, SourceRouter router,
-            StructuredSearch search, SearchProperties searchProps, SutraRegistry sutras, AboutCatalog about, BusinessDates dates,
+            StructuredSearch search, SearchProperties searchProps, FormDefinitions definitions, SutraRegistry sutras, AboutCatalog about, BusinessDates dates,
             @Value("${drishti.search.form.max-values:500}") int maxValues, @Value("${drishti.search.form.max-inferred-fields:14}") int maxInferred,
             @Value("${drishti.search.form.enum-max:12}") int enumMax, @Value("${drishti.search.form.sample-rows:200}") int sampleRows) {
         this.registry = registry;
@@ -90,6 +92,7 @@ public class FormController {
         this.router = router;
         this.search = search;
         this.searchProps = searchProps;
+        this.definitions = definitions;
         this.sutras = sutras;
         this.about = about;
         this.dates = dates;
@@ -111,7 +114,7 @@ public class FormController {
             if (entitlements.mayOpen(principal, k)) {
                 String code = mnemonics.codeFor(k);
                 kinds.add(Map.of("kind", k, "mnemonic", code == null ? k : code,
-                        "label", code == null ? k : mnemonics.of(code).map(m -> m.label()).orElse(k), "declared", declared(p, k).isPresent()));
+                        "label", code == null ? k : mnemonics.of(code).map(m -> m.label()).orElse(k), "declared", definitions.declared(p, k).isPresent()));
             }
         }
         if (kinds.isEmpty()) {
@@ -173,21 +176,9 @@ public class FormController {
                 .orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, "no pack '" + text + "' is switched on for you"));
     }
 
-    private static Optional<FormSpec> declared(Pack p, String kind) {
-        if (!(p.manifest().get("form") instanceof Map<?, ?> m) || m.get(kind) == null) {
-            return Optional.empty();
-        }
-        List<String> problems = new ArrayList<>();
-        FormSpec s = FormSpec.parse(kind, m.get(kind), problems);
-        if (!problems.isEmpty()) {
-            org.slf4j.LoggerFactory.getLogger(FormController.class).warn("pack {}: {}", p.name(), String.join("; ", problems));
-        }
-        return Optional.of(s);
-    }
-
     /** The pack's declared form, else one inferred; enum fields without values get the values found in the data. */
     private FormSpec specOf(Pack p, String kind, AsOf asOf, Principal principal) {
-        Optional<FormSpec> declared = declared(p, kind);
+        Optional<FormSpec> declared = definitions.declared(p, kind);
         Map<String, List<Object>> samples = sample(kind, asOf, principal);
         FormSpec spec = declared.orElseGet(() -> infer(kind, samples));
         List<FormField> fields = new ArrayList<>();

@@ -69,6 +69,11 @@ public final class StoredDesign {
      * it, kept beside the Sutra and exported with the pack fragment. Counted in the quotas like the notes. Empty when none.
      */
     public String about = "";
+    /**
+     * The search form of the Design's kind (the {@code form:} section of the pack's {@code pack.yaml} for that kind: a YAML list of fields),
+     * kept with the Design and proposed with it; "" when the Design does not change the form.
+     */
+    public String form = "";
     public String status = "draft";
     /** A file under a Sutra directory this Design is bound to (development servers only), relative to that directory, or null. */
     public String boundFile;
@@ -98,6 +103,7 @@ public final class StoredDesign {
         c.opsAt = opsAt;
         c.notes = notes;
         c.about = about;
+        c.form = form;
         c.status = status;
         c.boundFile = boundFile;
         c.boundSync = boundSync;
@@ -118,7 +124,7 @@ public final class StoredDesign {
 
     /** The bytes of the Sutra, the notes and the tests (what a Design holds besides its samples). */
     public long textBytes() {
-        return textBytes(sutra, notes, tests) + aboutBytes(about);
+        return textBytes(sutra, notes, tests) + aboutBytes(about) + aboutBytes(form);
     }
 
     public static long aboutBytes(String about) {
