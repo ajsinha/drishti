@@ -413,6 +413,9 @@ def build() -> dict[str, dict]:
             doc["lifecycle"]["timeline"] = timeline(tid, doc, cal, mat, cleared)
             doc["_meta"] = {"source": SOURCE[p.asset], "generation": 1, "live": p.family in ("swap", "future", "option", "linear"),
                             "walk": {"mtm": max(500, round(abs(mtm) * 0.002 + notional * 1e-5))}}
+            tick = D.live_fixing(legs) if legs else None
+            if tick:                                            # the demo also moves a fixing deep in the document
+                doc["_meta"]["walk"][tick[0]] = tick[1]
             trades[tid] = doc
     return trades
 

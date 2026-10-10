@@ -1808,7 +1808,8 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 9954
+   "mtm": 9954,
+   "legs.1.cashflows.0.fixings.1.rate": 8.9e-05
   }
  }
 }

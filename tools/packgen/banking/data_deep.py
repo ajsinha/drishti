@@ -394,6 +394,18 @@ def commodity_swap(tid, ctx, terms, r):
             "trade_date": cal.adjust(first - timedelta(days=r.randint(5, 40)), "PRECEDING")}
 
 
+def live_fixing(legs: list[dict]) -> tuple[str, float] | None:
+    """The path of the fixing a live demo moves (_meta.walk) and its step: the last still-projected fixing of the first floating
+    cashflow that has one. None when no leg has a projected fixing."""
+    for li, leg in enumerate(legs):
+        for ci, cf in enumerate(leg["cashflows"]):
+            fixes = cf.get("fixings") or []
+            for fi in range(len(fixes) - 1, -1, -1):
+                if fixes[fi]["status"] == "Projected":
+                    return f"legs.{li}.cashflows.{ci}.fixings.{fi}.rate", round(max(abs(fixes[fi]["rate"]) * 0.004, 0.00005), 6)
+    return None
+
+
 def build(p, tid: str, notional, ccy, start, mat, pay, terms, ctx, trade_date):
     """The deep legs of product p's trade, or None for a product this module does not build. A dict with legs, mtm and optionally
     schedule, exercise, and the dates (effective, maturity, trade_date) the structure fixes. May fill terms to agree with the legs."""

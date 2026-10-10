@@ -34,8 +34,8 @@ final class DemoTicker {
     }
 
     /**
-     * A moved copy of {@code doc}. A fixture's {@code _meta.walk} ({@code {"field": stepSize}}) walks those top-level
-     * numeric fields, so any pack can make its samples tick without code; the finance kinds below also keep
+     * A moved copy of {@code doc}. A fixture's {@code _meta.walk} ({@code {"field": stepSize}}) walks those numeric fields (top-level
+     * names, or dotted paths such as {@code legs.1.cashflows.0.fixings.0.rate}), so any pack can make its samples tick without code; the finance kinds below also keep
      * dependent values consistent.
      */
     @SuppressWarnings("unchecked")
@@ -43,12 +43,15 @@ final class DemoTicker {
         Map<String, Object> m = (Map<String, Object>) doc.unwrap();
         if (walk instanceof DataNode.Obj w && w.size() > 0) {
             w.fields().forEach((field, step) -> {
-                if (m.get(field) instanceof Number n) {
+                // a field is a top-level name, or a path into the document: legs.1.cashflows.0.fixings.0.rate (a number steps into a list)
+                Map<String, Object> holder = holderOf(m, field);
+                String leaf = field.substring(field.lastIndexOf('.') + 1);
+                if (holder != null && holder.get(leaf) instanceof Number n) {
                     double sd = step.asDouble();
                     double v = n.doubleValue() + gauss(sd);
                     // keep the step's precision: an FX spot walking by 0.0005 must not round back to two decimals and freeze
                     int places = sd <= 0 ? 2 : Math.max(2, (int) Math.ceil(-Math.log10(sd)) + 2);
-                    m.put(field, sd >= 1 ? (Object) Math.round(v) : (Object) round(v, places));
+                    holder.put(leaf, sd >= 1 ? (Object) Math.round(v) : (Object) round(v, places));
                 }
             });
             return DataNode.of(m);
@@ -61,6 +64,23 @@ final class DemoTicker {
             default -> { }
         }
         return DataNode.of(m);
+    }
+
+    /** The map that holds the last step of a dotted path ({@code legs.1.cashflows.0.rate} gives the cashflow), or null when the path leaves the document. */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> holderOf(Map<String, Object> doc, String path) {
+        Object at = doc;
+        String[] steps = path.split("\\.");
+        for (int i = 0; i < steps.length - 1; i++) {
+            if (at instanceof Map<?, ?> map) {
+                at = map.get(steps[i]);
+            } else if (at instanceof List<?> list && steps[i].matches("\\d{1,6}") && Integer.parseInt(steps[i]) < list.size()) {
+                at = list.get(Integer.parseInt(steps[i]));
+            } else {
+                return null;
+            }
+        }
+        return at instanceof Map<?, ?> ? (Map<String, Object>) at : null;
     }
 
     @SuppressWarnings("unchecked")
