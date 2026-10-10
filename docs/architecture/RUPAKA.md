@@ -213,6 +213,24 @@ security:
   them; the designer shows each visual's freshness.
 - **Lineage** is derived: dataset → tables → connectors → plugins → sources, and reports → datasets, shown in the catalogue.
 
+### 6.1 Where the data comes from: the same connectors
+
+Rūpaka reads through the **same connectors as the rest of Drishti, by their logical names**
+(`config/connectors/<name>.yaml`, CONNECTOR_FILES.md): one place for credentials, TLS, health, the Admin → Connectors page
+and the audit of what reads where. There is no BI-only path to the data. What BI adds is two optional connector
+capabilities for reading whole tables instead of one record:
+
+| Access | Used by | Connector interface |
+|---|---|---|
+| One record (`fetch`, `subscribe`) | terminal views, live updates, drill to record | exists |
+| Columns of a kind for a date (`columns`) | searches, derived kinds | exists (Delta's promoted columns) |
+| **Bulk scan**: chosen columns, filters and a date range, as Arrow record batches | the columns layer (7.1), `cached` tables | new, optional: `Optional<ArrowScan> scan(ScanRequest)`; Delta, Parquet, DuckDB and JDBC implement it natively, Kafka returns its current state |
+| **Pushdown**: the compiled SQL runs in the source | `direct` tables over SQL stores | new, optional: `Optional<SqlTarget> sqlTarget()`, an attachable target for the engine |
+
+A connector with neither falls back to record-by-record reads, and the designer warns that a large table will be slow.
+What Rūpaka writes (the columns and rollup layers) goes to a BI store that is itself a configured connector (`bi-store`,
+by default a local Parquet/Delta folder; S3 by configuration), so it is managed like every other source.
+
 ## 7. The query engine
 
 - **Server-side DuckDB** (already a Drishti plugin) is the analytical engine: cached tables are DuckDB tables (on disk,
@@ -306,6 +324,35 @@ Power BI authors find the same panes in the same places:
   alt text, keyboard order) and performance hints (a visual over 1 s).
 - **Explore → visual:** an exploration in Graphic Walker can be saved as a visual in the draft.
 - **Keys and accessibility:** every action has a key; the canvas is operable without a mouse (as layout mode is today).
+
+### 9.1 The analyst's workbench: Power BI and Jupyter in one place
+
+Authors build reports; analysts also want to **slice, look at the raw data and compute**. The **Analyse** view of any
+dataset, report visual or terminal search result gives them, in one tabbed workspace and without leaving the browser:
+
+| Tab | What | Engine |
+|---|---|---|
+| **Slice** | drag fields to rows, columns, values and filters; pivot, sort, filter, top-N, totals; every change instant | DuckDB-Wasm on the extract already received (no server round trip); Perspective for live data |
+| **Data** | the rows as a fast grid (millions virtualised), column profiles (type, nulls, distinct, min/max, histogram), search; a row opens its **JSON document** and its Drishti terminal view | Perspective grid; profiles computed locally |
+| **SQL** | SQL cells over the loaded tables, results as tables or charts | DuckDB-Wasm |
+| **Python** | notebook cells (Python in the browser) over the same tables as `pyarrow` / pandas / polars where available, with plots; `pygwalker.walk(table)` for drag-and-drop exploration | Pyodide in a Web Worker (the runtime Calc bundles), loaded on first use |
+| **Explore** | Graphic Walker drag-and-drop over the tables | Graphic Walker |
+| **Notes** | Markdown cells between the others | the console |
+
+- **One data model across tabs.** The extract is held once as Arrow in the browser; the Slice, Data, SQL, Python and
+  Explore tabs all see the same tables, and a result from any tab can become a new table for the others (`df` in Python
+  appears as a table in SQL).
+- **Local and governed.** Everything runs on the data the server sent for this user: row rules and masks were applied
+  before it arrived, so local analysis cannot reveal more than the user may see. Extract size is capped per dataset
+  (`bi.extract.max-rows`, `max-mb`); a larger question goes back to the server as a query.
+- **From exploration to production.** A Slice becomes a visual in a report draft; a SQL cell becomes a dataset measure or
+  table; a Python cell becomes a **Transform, Measure or Visual** draft (section 13) with its inputs captured as a test
+  fixture, so notebook work turns into reviewed, tested, shared code instead of a lost notebook.
+- **Saved as a notebook.** The whole workspace (cells, layout, the query that made the extract) saves to the user's
+  workspace and can be shared, discussed (Drishti threads) and re-run on today's data.
+- **Nimble.** The Slice and Data tabs open in under a second on a 1 million-row extract; Pyodide (large) and Graphic
+  Walker load only when their tab is first opened, with progress shown; keys for everything (`Shift+Enter` runs a cell,
+  `Alt+1`…`Alt+6` switch tabs).
 
 ## 10. Workspaces, publishing and the catalogue
 
@@ -512,7 +559,7 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 | 6 | **Python**: the interfaces, the server runner and sandbox, browser target, manifests and tests, Calc client and PygWalker | M | a Transform, a Measure and a Visual ship in a pack with tests and run on both targets |
 | 7 | **Distribution**: export, subscriptions, alerts on measures, `<drishti-report>`, phone layouts | M | a subscription email renders per recipient with masks |
 | 8 | **AI hooks**: provider interface and the six hooks, all off by default, guardrails and audit | M | every hook works on, and the product works fully with all off |
-| 9 | **Explore**: Graphic Walker over datasets, save as visual | S | an exploration becomes a visual in a draft |
+| 9 | **Analyse**: the analyst workbench (Slice, Data, SQL, Python, Explore, Notes) over masked extracts, save as notebook, promote cells to visuals, measures and Python interfaces | L | an analyst slices a 1 M-row extract, runs a Python cell on it and turns it into a tested Transform, all in the browser |
 
 Every phase ships with tests (unit, console, browser at phone width), documentation with real captures, and its numbers
 measured, as every Drishti feature does. Phases 0 to 3 are the minimum lovable BI; 4 to 9 make it a Power BI alternative.
