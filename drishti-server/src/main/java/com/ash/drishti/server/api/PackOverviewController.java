@@ -65,7 +65,7 @@ public class PackOverviewController {
 
     @GetMapping("/{name}/overview")
     public Map<String, Object> overview(@PathVariable String name, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        Pack pack = access.byCodeOrName(name).flatMap(n -> registry.packs().stream().filter(p -> p.name().equals(n)).findFirst())
+        Pack pack = access.byCodeOrName(principal.user(), name).flatMap(n -> registry.packs().stream().filter(p -> p.name().equals(n)).findFirst())
                 .orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, "no pack '" + name + "' is switched on"));
         List<Map<String, Object>> kinds = new ArrayList<>();
         for (String kind : pack.kinds()) {

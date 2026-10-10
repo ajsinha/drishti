@@ -45,7 +45,7 @@
           ? '/admin/api/registry/' + encodeURIComponent(name) + (action === 'install' ? '/' + encodeURIComponent(version) + '/install' : '/rollback')
           : '/admin/api/packs/' + encodeURIComponent(name) + '/' + action;
         var verb = { load: 'Load ', unload: 'Unload ', install: 'Install ', rollback: 'Roll back ' }[action];
-        if (!window.confirm(verb + name + (action === 'install' ? ' ' + version : '') + '? The server restarts in place: a few seconds without data.')) { return; }
+        if (!window.confirm(verb + name + (action === 'install' ? ' ' + version : '') + '? It takes effect now, with no restart.')) { return; }
         lmsg.classList.remove('t-bad');
         lmsg.textContent = (action === 'unload' ? 'Unloading ' : 'Checking ') + name + '…';
         fetch(url, { method: 'POST' })
@@ -53,7 +53,7 @@
           .then(function (res) {
             if (!res.ok) { lmsg.textContent = drsMessage(res.body); lmsg.classList.add('t-bad'); return; }
             lmsg.textContent = res.body.note;
-            if (!res.body.restarting) { return; }
+            if (!res.body.restarting) { setTimeout(function () { location.reload(); }, 1200); return; }
             // wait for the server to go and come back, then show the new state
             var seenDown = false, started = Date.now();
             (function poll() {

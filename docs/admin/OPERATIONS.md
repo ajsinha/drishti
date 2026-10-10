@@ -220,6 +220,17 @@ market-data  market-risk  operational-risk  politics-society  retail-banking  tr
 What each pack contains, and how to write your own, is in [PACKS.md](../guides/PACKS.md). Most packs read a Delta Lake under
 `./data/delta`; section 5 shows how to generate sample data for them.
 
+**Changing packs while the server runs.** The packs folder is watched (`DRISHTI_PACKS_WATCH`, default `auto`): copy a new pack folder in and it is
+checked and loaded; edit a `pack.yaml`, `about.yaml` or Sutra and it is checked and swapped in; delete a folder and the pack is unloaded. None of
+this restarts the server. A bad edit keeps the last good version running and shows on **Admin → Packs** and **Health** (DEGRADED). Copy a pack in
+under a dot name and rename it when the copy is done, so a half-copied pack is never looked at (a burst is also debounced). Admin → Packs
+**Load**, **Unload**, archive deploys and registry installs use the same path. Roles, graph, search columns, formats and About pages that a pack
+defines are read at start; the answer to a change that touches them says a restart is needed for those.
+
+**Sample packs.** Four shipped packs (genomics, politics-society, logistics, economics) are marked `sample: true`. Once your own packs exist, set
+`DRISHTI_PACKS_SAMPLES=developers` so only authors and administrators see them, or `hidden` to unload them and stop their connectors; or press
+**Hide samples from business users** in Admin → Packs (saved in `data/packs/samples-mode`, which overrides the variable).
+
 ## 4. Install with Docker Compose
 
 `deploy/compose.yaml` runs the server and the console as two containers. The images run as a non-root user

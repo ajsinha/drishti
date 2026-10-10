@@ -98,10 +98,39 @@ public class SecurityConfiguration {
     @Bean
     public PackAccess packAccess(com.ash.drishti.packs.PackRegistry registry, com.ash.drishti.identity.UserService users,
             com.ash.drishti.identity.PreferenceStore prefs, org.springframework.core.env.Environment env,
-            com.ash.drishti.identity.PackStateStore states) {
+            com.ash.drishti.identity.PackStateStore states, com.ash.drishti.packs.SamplePolicy samples, RoleCatalog roles, SecurityProperties props) {
         String defaults = env.getProperty("drishti.packs.default-for-users", "");
-        return new PackAccess(registry, users, prefs, java.util.Arrays.stream(defaults.split(",")).map(String::trim)
+        PackAccess access = new PackAccess(registry, users, prefs, java.util.Arrays.stream(defaults.split(",")).map(String::trim)
                 .filter(s -> !s.isEmpty()).toList(), states);
+        // a developer has the author or admin power; with security off everyone does
+        access.samples(samples, user -> !props.enabled() || developer(user, users, roles));
+        return access;
+    }
+
+    /**
+     * True when the user holds a role with the author or admin power: by the roles on the request being served when it is
+     * theirs (a sign-in through an identity provider may not be in the user store), else by the roles the user store holds.
+     */
+    private static boolean developer(String user, com.ash.drishti.identity.UserService users, RoleCatalog roles) {
+        java.util.Collection<String> names = null;
+        if (org.springframework.web.context.request.RequestContextHolder.getRequestAttributes()
+                instanceof org.springframework.web.context.request.ServletRequestAttributes sra
+                && sra.getRequest().getAttribute(Principal.ATTRIBUTE) instanceof Principal p && p.user().equals(user)) {
+            names = p.roles();
+        }
+        if (names == null) {
+            names = users.find(user).map(com.ash.drishti.identity.User::roles).orElse(java.util.Set.of());
+        }
+        if (names.contains("*")) {
+            return true;
+        }
+        return names.stream().map(roles::find).anyMatch(r -> r.isPresent() && (r.get().author() || r.get().admin()));
+    }
+
+    /** Who sees the sample packs: {@code drishti.packs.samples}, overridden by the setting saved from Admin → Packs. */
+    @Bean
+    public com.ash.drishti.packs.SamplePolicy samplePolicy(org.springframework.core.env.Environment env) {
+        return com.ash.drishti.packs.SamplePolicy.of(env);
     }
 
     @Bean

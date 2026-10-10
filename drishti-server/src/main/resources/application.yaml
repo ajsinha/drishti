@@ -541,6 +541,16 @@ drishti:
       probe-dates: 3                       # business dates listed per kind by Test connection
       probe-timeout-seconds: 30
     enabled: ${DRISHTI_PACKS:finance}
+    # Sample packs (sample: true in pack.yaml) are demonstrations. visible: everyone sees them; developers: only users with the author
+    # or admin power; hidden: nobody, they are not loaded and their connectors do not start. Admin -> Packs ("Hide samples from business
+    # users") saves a choice that overrides this. Use developers once real packs exist.
+    samples: ${DRISHTI_PACKS_SAMPLES:visible}
+    samples-file: ${DRISHTI_PACKS_SAMPLES_FILE:./data/packs/samples-mode}
+    # The packs folder is watched: a new pack folder is loaded, an edited one re-checked and swapped in, a deleted one unloaded,
+    # with no restart. auto: file events with polling as the safety net; poll: look every `poll`; off: only Admin -> Packs acts.
+    watch: ${DRISHTI_PACKS_WATCH:auto}
+    poll: 5s                               # how often the folders are looked at (also the safety net beside file events)
+    reload-debounce: 750ms                 # a burst of changes is acted on once it has stopped for this long
     # Packs new users get until an admin says otherwise (empty: every installed pack).
     default-for-users: ${DRISHTI_DEFAULT_PACKS:}
   commands:

@@ -81,6 +81,6 @@ class RegistryApiTest {
         assertThat(root.resolve("installed/widgets/pack.yaml")).exists();
         assertThat(Files.readString(root.resolve("added.yaml"))).contains("- widgets");
         mvc.perform(get("/api/v1/admin/registry")).andExpect(jsonPath("$.packs[?(@.name=='widgets')].installedVersion").value(org.hamcrest.Matchers.hasItem("1.0.0")));
-        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='widgets')].loaded").value(org.hamcrest.Matchers.hasItem(false)));
+        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='widgets')].loaded").value(org.hamcrest.Matchers.hasItem(true)));   // installed and in use at once, no restart
     }
 }

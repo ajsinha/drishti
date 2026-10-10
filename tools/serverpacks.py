@@ -187,7 +187,7 @@ def register(cli, ps, srv) -> None:
     p = ps.add_parser("deploy", help="deploy a pack archive: verify, preview the changes, deploy", parents=[srv],
                       description="Uploads a pack archive (.tar.gz from `pack bundle`/`pack make`, or .zip), shows the server's checks (checksums, manifest, path safety, "
                                   "server version, Sutra lint and tests, dependencies, signature) and the difference from the running version, then deploys it: "
-                                  "the previous version is kept, the server restarts in place, and puts the old files back if it cannot start. The archive carries the pack only, never data.",
+                                  "the previous version is kept, the new one is put to use at once (no restart), and the old files are put back if it cannot be used. The archive carries the pack only, never data.",
                       epilog="examples:\n  drishti.py server packs deploy dist/my-bank-1.1.0.tar.gz --preview\n  drishti.py server packs deploy dist/my-bank-1.1.0.tar.gz --accept-breaking --wait 60\n"
                              "Exit 0 deployed (or previewed); 1 refused, breaking changes not accepted, or the server not back; 2 usage.",
                       formatter_class=__import__("argparse").RawDescriptionHelpFormatter)

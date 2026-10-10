@@ -85,6 +85,8 @@ public final class ConnectorManager {
     private final Set<String> applicationDefined;
     private final List<String> bootstrapMessages;
     private final ReentrantLock scanLock = new ReentrantLock();   // file reads and writes: a ReentrantLock, not synchronized (Java 21 pins virtual threads)
+    /** Connectors that must not run: the ones only unloaded packs, or hidden sample packs, used. Their files stay on disk. */
+    private volatile Set<String> suppressed;
     private volatile DirectoryWatcher watcher;
 
     public ConnectorManager(ConnectorFiles files, SourceRegistry registry, SourcesProperties props, PackRegistry packs, ConfigurableEnvironment env,
@@ -100,6 +102,7 @@ public final class ConnectorManager {
         this.probeTimeoutMs = probeTimeoutSeconds * 1000L;
         this.applicationDefined = applicationDefined(env);
         this.bootstrapMessages = indexed(env, "drishti.sources.connectors-bootstrap");
+        this.suppressed = Set.copyOf(indexed(env, "drishti.sources.connectors-suppressed"));
         // what the environment post-processor loaded at start is "seen": only later changes are acted on
         Map<String, String> bad = new LinkedHashMap<>();
         files.readAll(bad).forEach((n, d) -> {
@@ -197,6 +200,31 @@ public final class ConnectorManager {
 
     // -- watching --------------------------------------------------------------------------------------------------
 
+    /** The connectors held back (their files stay); {@link #scan()} stops those running and starts those released. */
+    public Set<String> suppressed() {
+        return suppressed;
+    }
+
+    /** Holds back exactly these connectors: stops the ones now running, and starts the ones no longer held back. */
+    public List<String> suppress(Set<String> names) {
+        scanLock.lock();
+        try {
+            Set<String> before = suppressed;
+            suppressed = Set.copyOf(names);
+            before.stream().filter(n -> !names.contains(n)).forEach(seen::remove);
+            List<String> acted = new ArrayList<>(scan());
+            for (String n : names) {                                  // defined only by a pack's template (no file): stop it directly
+                if (!files.exists(n) && registry.applied(n).isPresent()) {
+                    registry.remove(n);
+                    acted.add(n);
+                }
+            }
+            return acted;
+        } finally {
+            scanLock.unlock();
+        }
+    }
+
     /** Starts watching the folder according to {@code drishti.sources.connectors-watch}. */
     public void startWatching() {
         if (watcher != null) {
@@ -239,6 +267,15 @@ public final class ConnectorManager {
                     continue;
                 }
                 String etag = ConnectorFiles.etag(text);
+                if (suppressed.contains(name)) {
+                    if (registry.applied(name).isPresent() || !etag.equals(seen.get(name))) {
+                        registry.remove(name);
+                        LOG.info("connector {} is held back: only packs that are unloaded or hidden use it", name);
+                        acted.add(name);
+                    }
+                    seen.put(name, etag);
+                    continue;
+                }
                 if (!etag.equals(seen.get(name)) && load(name, text, etag)) {
                     acted.add(name);
                 }

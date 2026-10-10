@@ -109,8 +109,25 @@ async def packs(request: Request):
         history = await request.app.state.backend.admin("GET", "/packs/history", me, limit=30)
     except BackendError:
         history = {"history": [], "kept": {}}
-    return render(request, "admin/packs.html", packs=rows, registry=registry, history=history,
+    try:                                        # who sees the sample packs
+        samples = await request.app.state.backend.admin("GET", "/packs/samples", me)
+    except BackendError:
+        samples = {"mode": "visible", "configured": "visible", "overridden": False, "samples": []}
+    return render(request, "admin/packs.html", packs=rows, registry=registry, history=history, samples=samples,
                   deploy_max_mb=request.app.state.pack_upload_limit // 1048576)
+
+
+@router.post("/api/pack-samples")
+async def set_pack_samples(request: Request):
+    """Hide the sample packs from business users (``developers``), from everyone (``hidden``), or show them (``visible``); ``default``
+    removes the saved setting so the server's ``drishti.packs.samples`` decides. Saved and audited by the server."""
+    body = await json_body(request)
+    try:
+        out = await request.app.state.backend.admin("PUT", "/packs/samples", ident(request), {"mode": str(body.get("mode", ""))})
+    except BackendError as e:
+        return _problem(e)
+    request.app.state.packs.forget_all()        # every user's packs, examples and menus change
+    return out
 
 
 @router.post("/api/packs/deploy")
@@ -284,7 +301,7 @@ async def rollback_pack(request: Request, name: str):
 
 @router.post("/api/packs/{name}/{action}")
 async def load_pack(request: Request, name: str, action: str):
-    """Loads or unloads a pack: the server checks it, records it, and restarts in place."""
+    """Loads or unloads a pack: the server checks it, records it, and applies it now (no restart)."""
     if action not in ("load", "unload"):
         return JSONResponse({"code": "DRS-5001", "detail": "unknown action"}, status_code=400)
     try:

@@ -120,6 +120,11 @@ public final class Entitlements {
     }
 
     public void requireOpen(Principal p, String kind) {
+        String gone = packs.removedOwner(kind);
+        if (gone != null) {
+            throw new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "pack removed: '" + gone + "' provided " + kind
+                    + " entities and was unloaded; its views are unavailable until it is loaded again");
+        }
         if (!mayOpen(p, kind)) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, p.user() + " may not open " + kind + " entities");
         }

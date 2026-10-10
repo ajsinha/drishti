@@ -732,8 +732,8 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 - **Cause:** its folder is in `packs/`, but `DRISHTI_PACKS` did not name it (nor any pack that extends it), so
   the server did not load it.
-- **Fix:** press **Load** on its row: the server checks it, records it in `data/packs/added.yaml` and restarts in
-  place. If it says *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*, the
+- **Fix:** press **Load** on its row: the server checks it, records it in `data/packs/added.yaml` and puts it to use
+  at once, with no restart. If it says *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*, the
   pack clashes with one already loaded (`finance` and the banking packs define the same kinds), and nothing
   changed ([PACKS.md](PACKS.md#the-packs-that-ship)).
 

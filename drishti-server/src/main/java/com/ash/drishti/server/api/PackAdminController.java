@@ -46,8 +46,9 @@ import org.yaml.snakeyaml.Yaml;
  * Admin → Packs: every pack on disk, whether the server loaded it, and whether it is switched on. A loaded pack is
  * switched off or on for everyone at once (its kinds, mnemonics and views disappear or return at the next request).
  * A pack on disk that is not loaded can be <b>loaded</b>: it is checked together with the loaded packs, recorded in the
- * pack overlay ({@code drishti.packs.added}), and the server restarts in its own process to read it, putting the
- * overlay back if it cannot start. A pack loaded that way can be <b>unloaded</b> the same way. Every change is audited.
+ * pack overlay ({@code drishti.packs.added}), and put to use at once, with no restart ({@link com.ash.drishti.server.PackReloader}).
+ * A pack loaded that way can be <b>unloaded</b> the same way, unless another loaded pack extends it. Sample packs are marked, and
+ * "Hide samples from business users" saves who sees them. Every change is audited.
  */
 @RestController
 @RequestMapping("/api/v1/admin/packs")
@@ -64,9 +65,13 @@ public class PackAdminController {
     private final Environment env;
     private final com.ash.drishti.server.PackOverlay overlay;
     private final com.ash.drishti.identity.AuditLog audit;
+    private final com.ash.drishti.server.PackReloader reloader;
+    private final com.ash.drishti.packs.SamplePolicy policy;
 
     public PackAdminController(PackRegistry registry, PackAccess access, PackStateStore states, Entitlements entitlements, Environment env,
-            com.ash.drishti.identity.AuditLog audit) {
+            com.ash.drishti.identity.AuditLog audit, com.ash.drishti.server.PackReloader reloader, com.ash.drishti.packs.SamplePolicy policy) {
+        this.reloader = reloader;
+        this.policy = policy;
         this.registry = registry;
         this.access = access;
         this.states = states;
@@ -77,85 +82,88 @@ public class PackAdminController {
         this.overlay = new com.ash.drishti.server.PackOverlay(Path.of(env.getProperty("drishti.packs.overlay", "./data/packs/added.yaml")));
     }
 
-    /** A loader that reads the packs as the server will at its next start: a template yields to the connector file of its name. */
-    private com.ash.drishti.packs.PackLoader loader() {
-        return new com.ash.drishti.packs.PackLoader(new com.ash.drishti.packs.ConnectorFiles(
-                Path.of(env.getProperty("drishti.sources.connectors-dir", "./config/connectors"))));
-    }
-
-    /** Loads a pack that is on disk but not loaded: checked first, then the server restarts in place to read it. */
-    @org.springframework.web.bind.annotation.PostMapping("/{name}/load")
-    public Map<String, Object> load(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireAdmin(p);
-        if (registry.packs().stream().anyMatch(x -> x.name().equals(name))) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST, "'" + name + "' is already loaded");
-        }
-        List<String> added = new ArrayList<>(overlay.added());
-        added.add(name);
-        return change(added, "pack-loaded", name, p);
-    }
-
-    /** Unloads a pack an administrator loaded (packs named in the site configuration stay). */
-    @org.springframework.web.bind.annotation.PostMapping("/{name}/unload")
-    public Map<String, Object> unload(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        entitlements.requireAdmin(p);
-        List<String> added = new ArrayList<>(overlay.added());
-        if (!added.remove(name)) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST,
-                    "'" + name + "' was not loaded from Admin → Packs; it is in the site configuration (drishti.packs.enabled)");
-        }
-        return change(added, "pack-unloaded", name, p);
-    }
-
-    /**
-     * After a loaded pack's files changed (a registry upgrade or rollback): the same check as at start, then a restart
-     * in place; {@code undo} puts the files back if the check fails or the server cannot start with them.
-     */
-    public Map<String, Object> reload(String action, String name, Principal p, Runnable undo) {
-        java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(java.util.Arrays.stream(
-                env.getProperty("drishti.packs.enabled", "finance").split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
-        names.addAll(overlay.added());
-        try {
-            com.ash.drishti.packs.PackLoader loader = loader();
-            loader.properties(loader.load(com.ash.drishti.packs.PackLoader.dirs(dir.toString(),
-                    env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")), List.copyOf(names)));
-        } catch (RuntimeException e) {
-            undo.run();
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST, "cannot use '" + name + "': " + e.getMessage());
-        }
-        audit.record(p.user(), action, name, "");
-        boolean restarting = com.ash.drishti.server.Restarter.available();
-        com.ash.drishti.server.Restarter.request(action + " " + name + " by " + p.user(), 750, undo);
+    private Map<String, Object> outcome(String name, com.ash.drishti.server.PackReloader.Result r) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("name", name);
-        out.put("restarting", restarting);
-        out.put("note", restarting ? "The server restarts in place now; live views reconnect by themselves."
-                : "Saved; it takes effect when the server next starts.");
+        out.put("added", overlay.added());
+        out.put("restarting", false);
+        out.put("loaded", r.loaded());
+        out.put("reloaded", r.reloaded());
+        out.put("unloaded", r.unloaded());
+        out.put("problems", r.problems());
+        out.put("restartFor", r.restartFor());
+        out.put("note", "Applied now; no restart." + (r.restartFor().isEmpty() ? ""
+                : " Needs a restart to take effect: " + String.join(", ", r.restartFor()) + "."));
         return out;
     }
 
-    private Map<String, Object> change(List<String> added, String action, String name, Principal p) {
-        java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(java.util.Arrays.stream(
-                env.getProperty("drishti.packs.enabled", "finance").split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
-        names.addAll(added);
-        try {                                                   // the same check the server does at start, before anything changes
-            com.ash.drishti.packs.PackLoader loader = loader();
-            loader.properties(loader.load(com.ash.drishti.packs.PackLoader.dirs(dir.toString(),
-                    env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")), List.copyOf(names)));
-        } catch (RuntimeException e) {
-            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST,
-                    "cannot " + (action.equals("pack-loaded") ? "load" : "unload") + " '" + name + "': " + e.getMessage());
-        }
-        List<String> before = overlay.write(added);
-        audit.record(p.user(), action, name, "packs added from Admin → Packs: " + added);
-        boolean restarting = com.ash.drishti.server.Restarter.available();
-        com.ash.drishti.server.Restarter.request(action + " " + name + " by " + p.user(), 750, () -> overlay.write(before));
+    /** Loads a pack that is on disk but not loaded: checked with the loaded packs, then in use at once (no restart). */
+    @org.springframework.web.bind.annotation.PostMapping("/{name}/load")
+    public Map<String, Object> load(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return outcome(name, reloader.load(name, p.user()));
+    }
+
+    /** Unloads a pack an administrator loaded (packs named in the site configuration stay); refused while another loaded pack extends it. */
+    @org.springframework.web.bind.annotation.PostMapping("/{name}/unload")
+    public Map<String, Object> unload(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return outcome(name, reloader.unload(name, p.user()));
+    }
+
+    /**
+     * After a loaded pack's files changed (a deploy, a registry upgrade or rollback): the same check as at start, then the
+     * pack is swapped in without a restart; {@code undo} puts the files back if the check fails.
+     */
+    public Map<String, Object> reload(String action, String name, Principal p, Runnable undo) {
+        return outcome(name, reloader.refresh(name, p.user(), action, undo));
+    }
+
+    /** Who sees sample packs, and which packs are samples. */
+    @GetMapping("/samples")
+    public Map<String, Object> samples(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return samplesState();
+    }
+
+    private Map<String, Object> samplesState() {
         Map<String, Object> out = new LinkedHashMap<>();
-        out.put("name", name);
-        out.put("added", added);
-        out.put("restarting", restarting);
-        out.put("note", restarting ? "The server restarts in place now; live views reconnect by themselves."
-                : "Saved; it takes effect when the server next starts.");
+        out.put("mode", policy.mode());
+        out.put("configured", policy.configured());
+        out.put("overridden", policy.overridden());
+        out.put("modes", com.ash.drishti.packs.SamplePolicy.MODES);
+        List<String> names = new ArrayList<>();
+        for (Map<String, Object> m : onDisk()) {
+            if (Boolean.TRUE.equals(m.get("sample"))) {
+                names.add((String) m.get("name"));
+            }
+        }
+        out.put("samples", names);
+        return out;
+    }
+
+    /** {"mode": "visible" | "developers" | "hidden" | "default"}: "default" removes the saved setting, so drishti.packs.samples decides. */
+    public record Samples(String mode) {}
+
+    /** "Hide samples from business users": saves the mode (overriding the property), applies it now, and audits it. */
+    @PutMapping("/samples")
+    public Map<String, Object> setSamples(@RequestBody Samples s, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        String mode = s.mode() == null ? "" : s.mode().strip().toLowerCase(java.util.Locale.ROOT);
+        String was = policy.mode();
+        if ("default".equals(mode)) {
+            policy.clear();
+        } else if (com.ash.drishti.packs.SamplePolicy.MODES.contains(mode)) {
+            policy.set(mode);
+        } else {
+            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.BAD_REQUEST,
+                    "mode is one of " + com.ash.drishti.packs.SamplePolicy.MODES + " or default, not '" + s.mode() + "'");
+        }
+        audit.record(p.user(), "pack-samples", policy.mode(), "sample packs: " + was + " -> " + policy.mode() + (policy.overridden() ? " (saved)" : " (from configuration)"));
+        com.ash.drishti.server.PackReloader.Result r = reloader.reconcile(p.user(), "sample packs now " + policy.mode(), Set.of());
+        Map<String, Object> out = samplesState();
+        out.put("loaded", r.loaded());
+        out.put("unloaded", r.unloaded());
         return out;
     }
 
@@ -168,6 +176,8 @@ public class PackAdminController {
             Map<String, Object> m = row(pack.name(), pack.title(), pack.description(), pack.version());
             m.put("loaded", true);
             m.put("added", overlay.added().contains(pack.name()));
+            m.put("sample", pack.sample());
+            m.put("problem", registry.problems().get(pack.name()));
             m.put("connectors", pack.connectorRefs());
             m.put("enabled", access.isEnabled(pack.name()));
             m.put("extends", pack.parents());
@@ -185,6 +195,7 @@ public class PackAdminController {
             if (!loaded.contains((String) m.get("name"))) {
                 m.put("loaded", false);
                 m.put("enabled", false);
+                m.put("problem", registry.problems().get((String) m.get("name")));
                 out.add(m);
             }
         }
@@ -222,8 +233,10 @@ public class PackAdminController {
                 try (InputStream in = Files.newInputStream(d.resolve("pack.yaml"))) {
                     Map<String, Object> y = map(new Yaml().load(in));
                     String name = String.valueOf(y.getOrDefault("pack", d.getFileName().toString()));
-                    out.add(row(name, String.valueOf(y.getOrDefault("title", name)), String.valueOf(y.getOrDefault("description", "")),
-                            String.valueOf(y.getOrDefault("version", ""))));
+                    Map<String, Object> r = row(name, String.valueOf(y.getOrDefault("title", name)), String.valueOf(y.getOrDefault("description", "")),
+                            String.valueOf(y.getOrDefault("version", "")));
+                    r.put("sample", Boolean.TRUE.equals(y.get("sample")));
+                    out.add(r);
                 } catch (IOException | RuntimeException e) {
                     out.add(row(d.getFileName().toString(), d.getFileName().toString(), "pack.yaml cannot be read: " + e.getMessage(), ""));
                 }

@@ -293,13 +293,15 @@ Roles work on top of packs: a role lists the kinds it may open (see [Roles and f
 
 ## Loading a pack while the server runs
 
-Admin → Packs → **Load** brings in a pack that is on disk but not loaded, without anyone touching the machine (a pack from a signed registry is
-installed the same way: [the registry](PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing)):
+Admin → Packs → **Load** brings in a pack that is on disk but not loaded, without anyone touching the machine and **without a restart**
+(a pack from a signed registry is installed the same way: [the registry](PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing)).
+Every way a pack changes while the server runs (Load, Unload, a deploy, a registry install or rollback, and an edit in the packs folder, below)
+takes the same path, so they all behave alike:
 
 1. The server runs the same check it runs at start-up on the loaded packs plus the new one (inheritance, clashes, the
-   manifest). A pack that would not load is refused with the reason, and nothing changes.
-2. It records the pack in the **pack overlay**, `data/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY`), a small
-   configuration file the server imports at every start:
+   manifest, the YAML files the pack points at). A pack that would not load is refused with the reason, and nothing changes.
+2. For Load, it records the pack in the **pack overlay**, `data/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY`), a small
+   configuration file the server imports at every start, so the pack is loaded after a restart too:
 
    ```yaml
    drishti:
@@ -308,15 +310,58 @@ installed the same way: [the registry](PACK_DEVELOPER_GUIDE.md#a-signed-pack-reg
          - logistics
    ```
 
-3. It restarts **inside its own process**: the Spring context closes (connectors, caches and live streams too) and
-   is built again from configuration, with the overlay's packs added to `drishti.packs.enabled`. The process id does
-   not change. Sessions survive (they are signed tokens), and open views reconnect by themselves.
-4. If the server cannot start with the new configuration, it puts the overlay back and starts as it was.
+3. It puts the pack to use **now**: its kinds and owners, its mnemonics (and so the command line, type-ahead and menus), its Sutras
+   (re-read, listeners told what changed) and its connectors. A connector template becomes a connector file by the usual rule (written
+   once if no file of that name exists, never overwritten; [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) and the connector
+   starts. The process, its sessions and every open live view carry on.
+4. A few settings are bound when the server starts and are **not** swapped live: roles a pack defines, graph reference patterns and
+   badges, search columns and pivots, formats, semantic hints, About pages and guides, kind routes, and sample data directories. When
+   a change touches them the answer says so (`restartFor`, and the note on the page) and they take effect at the next restart; everything
+   else has already taken effect.
 
-**Unload** does the same in reverse for a pack loaded here; packs named in `DRISHTI_PACKS` stay. Both are audited
-(`pack-loaded`, `pack-unloaded`). The API: `POST /api/v1/admin/packs/{name}/load` and `…/unload`; the answer says
-whether the server is restarting (`"restarting": true`). Only a server started by its `main` (the jar, the
-container) restarts in place; elsewhere (tests) the change waits for the next start.
+**Unload** does the same in reverse for a pack loaded here; packs named in `DRISHTI_PACKS` stay. A pack another loaded pack extends cannot be
+unloaded: unload the dependants first. Unloading stops the connectors only that pack used (their files stay on disk), and a view someone
+has open for one of the pack's kinds says **pack removed** (`DRS-1002`), not an error. Both are audited (`pack-loaded`,
+`pack-unloaded`). The API: `POST /api/v1/admin/packs/{name}/load` and `…/unload`; the answer lists what was `loaded`, `reloaded` and `unloaded`,
+any `problems` by pack, and `restartFor`; `"restarting"` is always `false`.
+
+### Live reload: the packs folder is watched
+
+The server watches `drishti.packs.dir` (and `drishti.packs.installed-dir`) the way it watches Sutras and connector files:
+`drishti.packs.watch` is `auto` (file events, with a poll every `drishti.packs.poll`, 5 s, as the safety net), `poll`, or `off` (only Admin → Packs
+acts). A burst of changes (a copy in progress) is acted on once the folder has been quiet for `drishti.packs.reload-debounce` (750 ms). One reload
+runs at a time.
+
+| What you do in the folder | What happens, with no restart |
+|---|---|
+| **Add** a pack folder (one with a `pack.yaml`) | Checked together with the loaded packs, then loaded and remembered in the overlay. A folder that does not check out is not loaded; Admin → Packs and Health say why, and it is tried again when you change it. |
+| **Edit** `pack.yaml`, `about.yaml`, a Sutra or a sample | Checked again and swapped in: the new mnemonics, kinds, Sutras and connector templates apply; a mnemonic you renamed stops working under its old code. |
+| **Make a bad edit** (invalid YAML, a kind another pack owns, a missing parent) | **The last good version keeps running.** The problem is shown on the pack's row in Admin → Packs and on the Health page (status DEGRADED), and in the audit log (`pack-problem`). Fix the file and the problem clears. |
+| **Delete** a pack folder | The pack is unloaded; connectors only it used stop; open views of its kinds say *pack removed*. If another loaded pack extends it, it is **not** unloaded: the problem says which pack needs it, and it stays as last loaded until that one goes. If `DRISHTI_PACKS` still names a deleted pack the server will not start until that is changed, and the problem says so. |
+
+Each change is audited (`pack-loaded`, `pack-reloaded`, `pack-unloaded`, `pack-problem`). Connectors that only unloaded packs used stay held back until
+a loaded pack names them again; after a restart they follow the usual rule (a connector file runs).
+
+## Sample packs
+
+A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The packs that ship marked so are **genomics**,
+**politics-society**, **logistics** and **economics** (invented data in domains far from capital markets); the banking, markets and risk packs
+are the reference packs real ones build on, and are not samples. Who sees sample packs is the setting `drishti.packs.samples`
+(`DRISHTI_PACKS_SAMPLES`):
+
+| Mode | Who sees sample packs |
+|---|---|
+| `visible` (default) | Everyone with the pack assigned, as any pack. |
+| `developers` | Only users with the **author** or **admin** power. For everyone else the server filters them exactly as a pack an administrator switched off: their kinds cannot be opened, their mnemonics, suggestions, menus, search results, About text, examples and the Build examples that point at their records disappear, and `GET /api/v1/packs` does not list them. |
+| `hidden` | Nobody. Sample packs are not loaded (unless a loaded pack extends one), and the connectors only they use do not start. |
+
+Once your own packs exist, set `developers`: your people see their domain, and your authors still have the samples to learn from.
+
+**From Admin → Packs.** Sample packs carry a **Sample** badge. A *Sample packs* section shows the mode in force and offers **Hide samples from business
+users** (sets `developers`), *Show samples to everyone* and *Hide samples from everyone*. The choice is saved on the server (`data/packs/samples-mode`,
+`DRISHTI_PACKS_SAMPLES_FILE`), **overrides** the property until you press *Use the configuration*, is applied at once (`hidden` unloads the sample packs
+and `visible` brings them back, with no restart) and is audited (`pack-samples`). The API: `GET` and `PUT /api/v1/admin/packs/samples` with
+`{"mode": "visible" | "developers" | "hidden" | "default"}`.
 
 ## Packs and connectors: where a pack reads its data
 
@@ -366,8 +411,8 @@ Three more things live on **Admin → Packs**; each is written up step by step, 
 - **Deploy an archive.** Upload a `.tar.gz` made by `drishti.py pack bundle` or `pack make` (the pack only, never data). The server checks the
   checksums and manifest, that no path leaves the pack folder, the server version it needs, the Sutras (lint and tests), the packs it extends, and an
   optional signature by a trusted publisher; shows what it **changes** from the running version (breaking: kinds or mnemonics removed or renamed;
-  selection; layout; change), and, once you confirm, swaps it into `drishti.packs.installed-dir`, keeps the version it replaces and restarts in place.
-  If the server cannot start with the new files, the old ones are put back.
+  selection; layout; change), and, once you confirm, swaps it into `drishti.packs.installed-dir`, keeps the version it replaces and puts the new version
+  to use at once, with no restart. If the pack cannot be used, the old files are put back.
 - **History and roll back.** Every deployment, rollback and reverted attempt is listed, with the kept versions (`drishti.packs.deploy.keep-versions`, 5)
   and a **Roll back to this** button; `shipped` goes back to the copy that ships with the server.
 - **Data source.** Per loaded pack, a **read-only view** of the connectors it names: each one's state, plugin, the kinds this pack takes from it, and what defines it (a

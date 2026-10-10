@@ -104,6 +104,11 @@ public record Pack(String name, String version, String title, String description
         return out;
     }
 
+    /** True for a sample pack ({@code sample: true} in {@code pack.yaml}): a demonstration, shown or hidden by {@code drishti.packs.samples}. */
+    public boolean sample() {
+        return manifest.get("sample") instanceof Boolean b ? b : "true".equalsIgnoreCase(String.valueOf(manifest.get("sample")));
+    }
+
     public Path resolve(String relative) {
         return dir.resolve(relative).normalize();
     }

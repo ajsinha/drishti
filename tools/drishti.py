@@ -922,7 +922,7 @@ def build_parser() -> argparse.ArgumentParser:
              "example:\n  drishti.py pack make data/jsonl --kind trade --match productType --name my-bank --out build/my-bank\n"
              "Chooses --key and --date itself when you do not (and says why), then runs pack check and pack verify.")
     load_module("packmake", "packmake.py").add_arguments(pm)
-    pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; the server restarts in place)")
+    pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; takes effect at once, no restart)")
     pc = add(k, "check", cmd_pack_check, "pack check: sutra lint + sutra test (with help coverage) on packs, for CI", [jvm, js],
              "examples:\n  drishti.py pack check packs/my-bank --strict --junit build/reports\n  drishti.py pack check packs/a packs/b --json\n"
              "exit: 0 all passed, 1 any failure, 2 usage")
@@ -1028,7 +1028,7 @@ def build_parser() -> argparse.ArgumentParser:
     add(sv, "health", cmd_server_health, "server health: GET /api/v1/admin/health (exit 1 unless the status is OK)", [srv])
     sp = sv.add_parser("packs", help="server packs list|load|unload|on|off", description="Pack management; load, unload, on and off need an administrator.")
     ps = sp.add_subparsers(dest="packs_cmd", metavar="ACTION", required=True)
-    for act, what in (("list", "all packs: loaded, on, added from Admin, kinds"), ("load", "load a pack that is on disk (the server restarts in place)"),
+    for act, what in (("list", "all packs: loaded, on, added from Admin, kinds"), ("load", "load a pack that is on disk (it takes effect at once, with no restart)"),
                       ("unload", "unload a pack an administrator loaded"), ("on", "turn a loaded pack on for users"), ("off", "turn a loaded pack off for users")):
         p = ps.add_parser(act, help=what, description=what, parents=[srv])
         p.set_defaults(func=cmd_server_packs)

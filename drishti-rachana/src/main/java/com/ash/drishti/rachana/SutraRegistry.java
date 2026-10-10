@@ -67,7 +67,7 @@ public final class SutraRegistry implements AutoCloseable {
             Map<String, String> sources, Map<String, Path> fileOf) {}
 
     private final SutraParser parser = new SutraParser();
-    private final RachanaProperties props;
+    private volatile RachanaProperties props;
     private final SutraExpressions expressions;
     private final Map<Path, Sutra> lastGood = new HashMap<>();
     /** Serialises reloads and saves (never taken by readers). A ReentrantLock: both do file I/O, which would pin under synchronized. */
@@ -217,6 +217,17 @@ public final class SutraRegistry implements AutoCloseable {
      */
     public String hotReload() {
         return hotReload;
+    }
+
+    /** Reads the Sutras of a new set of pack directories (most general first) and reloads; listeners hear what changed. */
+    public void setPackDirs(List<String> packDirs) {
+        writeLock.lock();
+        try {
+            props = props.withPackDirs(packDirs);
+            reload0();
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     /** Called with the ids ({@code name@version}) that changed after each reload. */

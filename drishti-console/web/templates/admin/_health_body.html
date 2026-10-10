@@ -62,9 +62,11 @@
       <td class="num mono">{{ p.sutras }}</td>
       <td class="mono cmp-path">{% for c in p.connectors %}<span class="{{ 't-neg' if c in p.connectorsDown else 'text-muted-d' if c in p.connectorsOff else '' }}"
           title="{{ 'down' if c in p.connectorsDown else 'off (disabled or not started)' if c in p.connectorsOff else 'up' }}">{{ c }}</span>{% if not loop.last %}, {% endif %}{% endfor %}</td>
-      <td class="hl-err">{% for b in p.sutraProblems %}<div><span class="mono">{{ b.file }}</span>: {{ b.problems | join('; ') }}</div>{% endfor %}
+      <td class="hl-err">{% if p.problem %}<div>{{ p.problem }}</div>{% endif %}{% for b in p.sutraProblems %}<div><span class="mono">{{ b.file }}</span>: {{ b.problems | join('; ') }}</div>{% endfor %}
         {% if p.connectorsDown %}<div>connector{{ 's' if p.connectorsDown | length > 1 }} down: {{ p.connectorsDown | join(', ') }}</div>{% endif %}</td>
     </tr>{% endfor %}
+    {% for name, why in (h.packsNotLoaded or {}).items() %}
+    <tr class="hl-row-down"><td class="mono">{{ name }}</td><td><span class="hl-badge hl-bad">NOT LOADED</span></td><td colspan="4"></td><td class="hl-err">{{ why }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
 
 {% if h.overrides %}

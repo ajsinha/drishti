@@ -161,7 +161,7 @@
         call('DELETE', '/admin/api/packs/deploy/' + q(rep.uploadId)).then(function () { out.hidden = true; say(msg, 'Discarded. Nothing was changed.'); file.value = ''; up.disabled = true; });
       });
       go.addEventListener('click', function () {
-        if (!window.confirm('Deploy ' + rep.pack + ' ' + rep.version + '? The server restarts in place: a few seconds without data. If it cannot start with the new files, the old ones are put back.')) { return; }
+        if (!window.confirm('Deploy ' + rep.pack + ' ' + rep.version + '? It takes effect now, with no restart. If the pack cannot be used, the old files are put back.')) { return; }
         go.disabled = no.disabled = true;
         say(msg, 'Deploying ' + rep.pack + ' ' + rep.version + '…');
         call('POST', '/admin/api/packs/deploy/' + q(rep.uploadId), { acceptBreaking: !!(ack && ack.checked) }).then(function (r) {
@@ -176,12 +176,27 @@
   root.querySelectorAll('[data-rollback]').forEach(function (b) {
     b.addEventListener('click', function () {
       var row = b.closest('tr'), name = row.getAttribute('data-pack'), version = row.getAttribute('data-version');
-      if (!window.confirm('Roll ' + name + ' back to ' + (version === 'shipped' ? 'the version that ships with the server' : version) + '? The server restarts in place: a few seconds without data.')) { return; }
+      if (!window.confirm('Roll ' + name + ' back to ' + (version === 'shipped' ? 'the version that ships with the server' : version) + '? It takes effect now, with no restart.')) { return; }
       var m = root.querySelector('[data-msg]');
       say(m, 'Rolling ' + name + ' back…');
       call('POST', '/admin/api/packs/' + q(name) + '/rollback', { version: version }).then(function (r) {
         if (!r.ok) { say(m, why(r), true); return; }
         afterChange(m, r.body);
+      });
+    });
+  });
+
+  // ---------------------------------------------------------------------------------------------------------------- sample packs
+  // Who sees the sample packs: saved on the server (it overrides drishti.packs.samples), audited, applied at once.
+  root.querySelectorAll('[data-samples-set]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.getAttribute('data-samples-set'), m = root.querySelector('[data-msg]');
+      if (mode === 'hidden' && !window.confirm('Hide the sample packs from everyone, developers too? They are unloaded and their connectors stop.')) { return; }
+      say(m, 'Saving\u2026');
+      call('POST', '/admin/api/pack-samples', { mode: mode }).then(function (r) {
+        if (!r.ok) { say(m, why(r), true); return; }
+        say(m, 'Saved: sample packs are now ' + r.body.mode + '.');
+        setTimeout(function () { location.reload(); }, 700);
       });
     });
   });

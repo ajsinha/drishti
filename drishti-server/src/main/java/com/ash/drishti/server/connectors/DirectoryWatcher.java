@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * because an event was. The same pattern as the Sutra registry's hot reload. The folder need not exist yet: it is picked
  * up when it appears. One task at a time, on one virtual thread; a task that throws is logged and watching goes on.
  */
-final class DirectoryWatcher implements AutoCloseable {
+public final class DirectoryWatcher implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(DirectoryWatcher.class);
     private static final long DEBOUNCE_MS = 250;
@@ -41,28 +41,34 @@ final class DirectoryWatcher implements AutoCloseable {
     private final String mode;
     private final long pollMs;
     private final Runnable task;
+    private final String threadName;
     private volatile String state = "OFF";
     private volatile WatchService service;
     private Thread thread;
 
-    DirectoryWatcher(Path dir, String mode, long pollMs, Runnable task) {
+    public DirectoryWatcher(Path dir, String mode, long pollMs, Runnable task) {
+        this(dir, mode, pollMs, task, "drishti-connectors-watch");
+    }
+
+    public DirectoryWatcher(Path dir, String mode, long pollMs, Runnable task, String threadName) {
+        this.threadName = threadName;
         this.dir = dir;
         this.mode = mode == null ? "auto" : mode;
         this.pollMs = Math.max(50, pollMs);
         this.task = task;
     }
 
-    String state() {
+    public String state() {
         return state;
     }
 
-    void start() {
+    public void start() {
         if ("off".equalsIgnoreCase(mode)) {
             state = "OFF";
             return;
         }
         state = "poll".equalsIgnoreCase(mode) ? "POLLING" : tryRegister() ? "WATCHING" : "POLLING";
-        thread = Thread.ofVirtual().name("drishti-connectors-watch").start(this::loop);
+        thread = Thread.ofVirtual().name(threadName).start(this::loop);
     }
 
     private boolean tryRegister() {
