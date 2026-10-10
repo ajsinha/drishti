@@ -25,7 +25,7 @@ design adopts and adapts.
 **Power BI** as the benchmark, while keeping what Drishti already does that they do not: live data at
 terminal speed, one grammar for every screen, masks and audit on every value that leaves the server, and a click from
 any number down to the record behind it. BI gets its own place in the product, **the BI page**, separate from the
-streaming terminal, reached from the top bar or by typing `BI <GO>`.
+streaming terminal, reached from the top bar or by typing `RUPAKA <GO>`.
 
 **The decisions in one paragraph.** The server stays the authority on data: queries run on the server (DuckDB over the
 lake and the connectors), results leave as **masked Apache Arrow**, and the browser slices what the user may see without
@@ -42,7 +42,7 @@ Contents
 1. [Positioning against Power BI](#1-positioning-against-power-bi)
 2. [Principles](#2-principles)
 3. [Concepts](#3-concepts)
-4. [Entering BI: the top bar, `BI <GO>` and URLs](#4-entering-bi-the-top-bar-bi-go-and-urls)
+4. [Entering BI: the top bar, `RUPAKA <GO>` and URLs](#4-entering-bi-the-top-bar-rupaka-go-and-urls)
 5. [The BI page](#5-the-bi-page)
 6. [Datasets: the semantic model](#6-datasets-the-semantic-model)
 7. [The query engine](#7-the-query-engine)
@@ -117,14 +117,15 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 | **Endorsement** | `promoted` (an owner says it is good) or `certified` (a data steward says it is authoritative) | Promoted / Certified |
 | **Refresh** | For cached tables: a schedule, a data-load signal (`POST /api/v1/packs/{pack}/loads`), or both | Scheduled refresh |
 
-## 4. Entering BI: the top bar, `BI <GO>` and URLs
+## 4. Entering BI: the top bar, `RUPAKA <GO>` and URLs
 
 - **Top bar.** A new item **BI** (icon `bar-chart-line`) between **Views** and **Build**, with a menu: *BI home*, *My
   workspace*, *Catalogue*, *New report*, *Datasets*, and the user's three most recent reports. Shown to anyone with the
   `bi` power (section 11); admins see *BI settings* in Admin.
-- **Command line.** `BI <GO>` opens the BI home page. `BI <report-id> <GO>` opens a report (type-ahead offers report
-  titles and ids the user may open, as it offers entity ids today). `BIW <GO>` opens my workspace; `BIC <GO>` the
-  catalogue. `BI` is a reserved keyword: a pack cannot define a mnemonic with that name (pack checks refuse it).
+- **Command line.** `RUPAKA <GO>` opens the BI home page. `RUPAKA <report-id> <GO>` opens a report (type-ahead offers
+  report titles and ids the user may open, as it offers entity ids today). `RUPAKA WORKSPACE <GO>` opens my workspace and
+  `RUPAKA CATALOGUE <GO>` the catalogue (type-ahead completes both after `RUPAKA `). `RUPAKA` is a reserved keyword: a pack
+  cannot define a mnemonic with that name (pack checks refuse it), and case does not matter (`rupaka <GO>` works).
 - **URLs.** `/bi` (home), `/bi/w/<workspace>` , `/bi/r/<report>[/<page>]`, `/bi/d/<dataset>`, `/bi/catalogue`,
   `/bi/design/<draft>`; filters and bookmarks in the query string (`?f=region:EMEA`) so a link reproduces what was seen.
 - **A separate shell.** The BI page shares the top bar, sign-in, themes, inbox and help with the terminal, but has its
@@ -475,7 +476,7 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 | Phase | What | Size | Done when |
 |---|---|---|---|
 | 0 | **Proof of concept**: Perspective live grid fed by Drishti's live path; masked Arrow out of a server DuckDB query; DuckDB-Wasm slicing it; CSP and size measured | M | a page shows a live pivot at target rates and a cached query under target, with masks proven |
-| 1 | **Shell and catalogue**: BI top bar item, `BI <GO>`, `/bi` home, catalogue, workspaces (personal and shared), powers, audit | M | a published report appears for its audience only |
+| 1 | **Shell and catalogue**: BI top bar item, `RUPAKA <GO>`, `/bi` home, catalogue, workspaces (personal and shared), powers, audit | M | a published report appears for its audience only |
 | 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows |
 | 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test) |
 | 4 | **Publishing and governance**: review before publish, versions, endorsement, lineage, impact of dataset changes, pack bundles for environments | M | certified content and lineage shown; deployment by bundle with rollback |
@@ -497,5 +498,5 @@ measured, as every Drishti feature does. Phases 0 to 3 are the minimum lovable B
 | 3 | Streaming grid engine | Perspective; Drishti's own table panel only | **Perspective** for live and large grids (Apache-2.0, WebAssembly), Drishti panels for the rest |
 | 4 | Exploration component | Graphic Walker; PygWalker in Pyodide | **Graphic Walker** directly; PygWalker inside Calc for Python users |
 | 5 | Python runner host | inside the console process; worker subprocesses of the console; a separate service | **Worker subprocesses of the console, started on demand**: no extra deployment, and a runaway transform never stalls the web process; a separate service only when load measurements call for it |
-| 6 | Mnemonic for BI | `BI`; `RUP` | **`BI`** (reserved), plus `BIW` and `BIC` |
+| 6 | Command keyword for BI | `BI`; `RUP`; `RUPAKA` | **`RUPAKA`** (reserved; the product owner's choice), with `RUPAKA WORKSPACE` and `RUPAKA CATALOGUE` |
 | 7 | Product name in the UI | "BI"; "Rūpaka" | **"BI"** in the top bar, "Drishti Rūpaka" in documentation and marketing |
