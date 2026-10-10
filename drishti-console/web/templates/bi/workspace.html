@@ -18,10 +18,10 @@
 {% block bi_main %}
 <header class="bi-head"><h1 data-ws-name>Workspace</h1>
   <p class="text-muted-d" data-ws-desc></p>
-  <p class="bi-meta" data-ws-meta></p></header>
+  <p class="bi-facts" data-ws-meta></p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
 <section class="bi-sec" aria-labelledby="wItems"><h2 id="wItems">Items</h2>
-  <div class="tbl-wrap"><table class="tbl bi-tbl" data-items>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-items data-plain>
     <caption class="visually-hidden">Items in this workspace</caption>
     <thead><tr><th scope="col">Title</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col">Version</th><th scope="col">Endorsement</th><th scope="col">Updated</th></tr></thead>
     <tbody></tbody></table></div>
@@ -36,7 +36,7 @@
   </form>
 </section>
 <section class="bi-sec" data-members-section hidden aria-labelledby="wMembers"><h2 id="wMembers">Members</h2>
-  <div class="tbl-wrap"><table class="tbl bi-tbl" data-members>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-members data-plain>
     <caption class="visually-hidden">Members and their roles</caption>
     <thead><tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Added by</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
     <tbody></tbody></table></div>
@@ -47,7 +47,7 @@
   </form>
 </section>
 <section class="bi-sec" data-settings-section hidden aria-labelledby="wSettings"><h2 id="wSettings">Settings</h2>
-  <label class="bi-check"><input type="checkbox" data-review> Require review before publishing</label>
+  <label class="bi-checkrow"><input type="checkbox" data-review> Require review before publishing</label>
   <button type="button" class="btn-pill btn-ghost bi-danger" data-delete-workspace>Delete workspace</button>
 </section>
 {% endblock %}

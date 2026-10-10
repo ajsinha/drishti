@@ -439,7 +439,8 @@ drishti:
   bi:
     enabled: true                    # Rupaka phase 1 (shell and catalogue): false answers DRS-9006 and the console hides the BI menu
     dir: ${DRISHTI_BI_DIR:./config/bi}   # Rupaka files: datasets/, reports/, boards/, notebooks/, python/ (config/bi/README.md); never inside a pack
-    folder-refresh: 5s               # how often the folder is read again (shipped files appear without a restart)
+    watch: auto                      # watch the BI folder: auto (file events + polling), poll, off. Files added, changed or deleted are picked up live; a bad file keeps its last good version
+    folder-refresh: 5s               # the polling interval (with watch: off, how long a read is reused)
     workspace-creation: authors      # who creates shared workspaces: authors (bi-author), stewards (bi-steward), admins (bi-admin); Admin, BI settings changes it at run time
     max-body-bytes: 262144           # largest YAML body of one item
     versions-keep: 50                # published versions kept per item

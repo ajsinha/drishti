@@ -101,7 +101,7 @@
       h('h3', {}, h('a', { href: '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':') , text: it.title })),
       it.description ? h('p', { class: 'bi-card-desc', text: it.description }) : null,
       h('p', { class: 'bi-card-badges' }, endorsement(it), it.shipped ? badge('shipped', '', 'folder') : null, it.status && it.status !== 'published' ? badge(it.status, 'bi-status') : null,
-        (it.tags || []).slice(0, 4).map(function (t) { return badge(t, 'bi-tag'); })),
+        (it.tags || []).slice(0, 4).map(function (t) { return badge(t, 'bi-tagchip', 'tag'); })),
       h('p', { class: 'bi-card-meta', text: meta.join(' · ') + ' · ' + fresh + (it.views ? ' · ' + it.views + ' views' : '') }));
   }
   function fillCards(box, items, onChange) {
@@ -263,7 +263,7 @@
       q('[data-meta]').textContent = [it.kind, 'in ' + it.workspaceName, 'owner ' + it.owner, it.publishedVersion ? 'published v' + it.publishedVersion + ' ' + ago(it.publishedAt) : 'not published', it.views + ' views in ' + it.viewsDays + ' days'].join(' · ');
       var badges = q('[data-badges]'); clear(badges);
       [endorsement(it), it.shipped ? badge('shipped, read-only', '', 'folder') : null, badge(it.status, 'bi-status'), it.draftChanges ? badge('draft changes not published', 'bi-status') : null,
-        it.status === 'proposed' ? badge('proposed by ' + it.proposedBy, 'bi-status') : null].concat((it.tags || []).map(function (t) { return badge(t, 'bi-tag'); }))
+        it.status === 'proposed' ? badge('proposed by ' + it.proposedBy, 'bi-status') : null].concat((it.tags || []).map(function (t) { return badge(t, 'bi-tagchip', 'tag'); }))
         .forEach(function (b) { if (b) { badges.appendChild(b); badges.appendChild(document.createTextNode(' ')); } });
       var star = q('[data-favourite]');
       star.setAttribute('aria-pressed', it.favourite ? 'true' : 'false'); clear(star); star.appendChild(icon(it.favourite ? 'star-fill' : 'star'));
@@ -346,7 +346,9 @@
     function load() {
       api('GET', '/settings').then(function (s) {
         q('[data-policy]').elements.workspaceCreation.value = s.workspaceCreation;
-        q('[data-facts]').textContent = 'Four-eyes on reviews: ' + (s.fourEyes ? 'on' : 'off') + '. BI folder: ' + s.dir + ' (' + s.shippedItems + ' shipped item' + (s.shippedItems === 1 ? '' : 's') + ').';
+        q('[data-facts]').textContent = 'Four-eyes on reviews: ' + (s.fourEyes ? 'on' : 'off') + '. BI folder: ' + s.dir + ' (' + s.shippedItems + ' shipped item' + (s.shippedItems === 1 ? '' : 's') + '), watching: ' + s.watch + '.';
+        var pr = q('[data-problems]'); clear(pr); pr.hidden = !s.folderProblems.length;
+        s.folderProblems.forEach(function (x) { pr.appendChild(h('div', {}, h('b', { class: 'mono', text: x.file }), ': ' + x.message + (x.keptLastGood ? ' (the last good version is kept)' : ''))); });
         var tb = q('[data-roles] tbody'); clear(tb);
         s.roles.forEach(function (r) {
           var boxes = POWERS.map(function (p) { return h('td', {}, h('input', { type: 'checkbox', 'data-power': p, 'aria-label': r.name + ' ' + p, checked: r.bi.indexOf(p) >= 0, disabled: r.builtIn })); });

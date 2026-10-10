@@ -130,6 +130,8 @@ public final class BiService {
         m.put("fourEyes", governance.fourEyes() && security.enabled());
         m.put("dir", props.dir());
         m.put("shippedItems", folder.items().size());
+        m.put("watch", folder.watchState());
+        m.put("folderProblems", folder.problems().stream().map(x -> Map.of("file", x.file(), "message", x.message(), "since", x.since(), "keptLastGood", x.keptLastGood())).toList());
         m.put("powers", com.ash.drishti.identity.RoleDefinition.BI_POWERS);
         m.put("roles", roles.all().stream().map(r -> Map.of("name", r.name(), "builtIn", r.builtIn(), "bi", new java.util.TreeSet<>(r.bi()))).toList());
         return m;
@@ -356,7 +358,7 @@ public final class BiService {
     // ===================================================================================================================
     private BiStore.Item itemOf(String id) {
         if (BiFolder.isShipped(id)) {
-            return folder.item(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'"));
+            return folder.item(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "' (a shipped file deleted from the BI folder is gone)"));
         }
         return store.item(id).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'"));
     }
@@ -502,8 +504,9 @@ public final class BiService {
     private BiStore.Item readable(Principal p, String id) {
         BiStore.Item i = itemOf(id);
         BiStore.Workspace w = workspaceOf(i.workspace());
-        if (BiAccess.rank(roleIn(w, p)) >= 0 && !BiFolder.WORKSPACE.equals(w.id())) {
-            return i;
+        int rank = BiAccess.rank(roleIn(w, p));
+        if (rank >= 0 && !BiFolder.WORKSPACE.equals(w.id()) && (i.isPublished() || rank >= BiAccess.rank("contributor"))) {
+            return i;                                                    // a viewer reads what is published, not drafts in progress
         }
         if (visible(i, p, myWorkspaces(p), myPacks(p), access.has(p, BiAccess.ADMIN))) {
             return i;
@@ -677,7 +680,7 @@ public final class BiService {
         open(p);
         BiStore.Item i = readable(p, id);
         if (BiFolder.isShipped(id)) {
-            return List.of(Map.of("version", 1, "note", "shipped file", "createdBy", "", "createdAt", i.updatedAt(), "current", true));
+            return List.of(Map.of("version", i.publishedVersion(), "note", "the file in the BI folder (version " + i.publishedVersion() + " since the server started)", "createdBy", "", "createdAt", i.updatedAt(), "current", true));
         }
         return store.versions(id).stream().map(v -> {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -694,10 +697,10 @@ public final class BiService {
         open(p);
         BiStore.Item i = readable(p, id);
         if (BiFolder.isShipped(id)) {
-            if (n != 1) {
-                throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "shipped content has one version");
+            if (n != i.publishedVersion()) {
+                throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "shipped content keeps only its current version (" + i.publishedVersion() + ")");
             }
-            return Map.of("version", 1, "body", i.body());
+            return Map.of("version", n, "body", i.body());
         }
         BiStore.Version v = store.version(id, n).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + i.title() + "' has no version " + n));
         Map<String, Object> m = new LinkedHashMap<>();

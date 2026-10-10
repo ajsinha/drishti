@@ -101,7 +101,7 @@ public class RoleController {
         return roles.save(new RoleDefinition(name, r.description(), kinds, Boolean.TRUE.equals(r.raw()), Boolean.TRUE.equals(r.author()),
                 Boolean.TRUE.equals(r.approve()), Boolean.TRUE.equals(r.admin()), Boolean.TRUE.equals(r.calc()), !Boolean.FALSE.equals(r.layout()),
                 !Boolean.FALSE.equals(r.collaborate()), Boolean.TRUE.equals(r.compliance()), false, null, "",
-                r.bi() == null ? java.util.Set.of() : new java.util.HashSet<>(r.bi())), p.user());
+                r.bi() == null ? roles.find(name).map(RoleDefinition::bi).orElse(java.util.Set.of()) : new java.util.HashSet<>(r.bi())), p.user());   // absent: keep, so Admin, Roles never wipes them
     }
 
     @DeleteMapping("/{name}")

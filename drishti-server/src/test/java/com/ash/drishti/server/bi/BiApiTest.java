@@ -152,6 +152,8 @@ class BiApiTest {
         assertThat(ok(call("GET", "/api/v1/bi/me", admin(), null)).path("powers").size()).isEqualTo(4);
         refused(call("GET", "/api/v1/bi/home", nobi(), null), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/catalogue", nobi(), null), 403, "DRS-9002");
+        // saving a role without naming bi (Admin, Roles does) keeps the powers it had
+        call("PUT", "/api/v1/admin/role-definitions/reader", admin(), Map.of("kinds", List.of("*"), "description", "edited elsewhere")).andExpect(status().isOk()).andExpect(jsonPath("$.bi.length()").value(1));
         call("PUT", "/api/v1/admin/role-definitions/typo", admin(), Map.of("kinds", List.of("*"), "bi", List.of("bi-god"))).andExpect(status().is(422))
                 .andExpect(jsonPath("$.code").value("DRS-9003"));
     }
@@ -187,6 +189,8 @@ class BiApiTest {
         assertThat(i.path("status").asText()).isEqualTo("draft");
         assertThat(i.path("can").path("publish").asBoolean()).isTrue();
         refused(call("GET", "/api/v1/bi/items/" + item, sue(), null), 404, "DRS-9001");                    // a draft is for its workspace only
+        refused(call("GET", "/api/v1/bi/items/" + item, cat(), null), 404, "DRS-9001");                    // even a viewer of that workspace reads what is published, not drafts
+        assertThat(ok(call("GET", "/api/v1/bi/workspaces/" + workspace + "/items", cat(), null)).toString()).doesNotContain("Desk P&L");
         assertThat(ok(call("GET", "/api/v1/bi/catalogue", cat(), null)).path("items").toString()).doesNotContain("Desk P&L");
     }
 

@@ -17,9 +17,9 @@
 {% block bi_title %}Item{% endblock %}
 {% block bi_main %}
 <header class="bi-head"><div class="bi-title-row"><h1 data-title>Item</h1>
-    <button type="button" class="btn-pill btn-ghost bi-star" data-favourite aria-pressed="false" aria-label="Favourite"><i class="bi bi-star" aria-hidden="true"></i></button></div>
+    <button type="button" class="btn-pill btn-ghost bi-starbtn" data-favourite aria-pressed="false" aria-label="Favourite"><i class="bi bi-star" aria-hidden="true"></i></button></div>
   <p class="text-muted-d" data-desc></p>
-  <p class="bi-meta" data-meta></p>
+  <p class="bi-facts" data-meta></p>
   <p class="bi-badges" data-badges></p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
 <div class="bi-actions" data-actions></div>
@@ -39,7 +39,7 @@
   <button type="submit" class="btn-pill btn-accent">Save draft</button>
 </form>
 <section class="bi-sec" aria-labelledby="iVer"><h2 id="iVer">Versions</h2>
-  <div class="tbl-wrap"><table class="tbl bi-tbl" data-versions>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-versions data-plain>
     <caption class="visually-hidden">Published versions</caption>
     <thead><tr><th scope="col">Version</th><th scope="col">Published</th><th scope="col">By</th><th scope="col">Note</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
     <tbody></tbody></table></div>

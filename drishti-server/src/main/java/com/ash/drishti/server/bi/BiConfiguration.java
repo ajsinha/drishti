@@ -37,9 +37,9 @@ public class BiConfiguration {
         return new BiAccess(security, roles);
     }
 
-    @Bean
+    @Bean(initMethod = "start", destroyMethod = "close")
     public BiFolder biFolder(BiProperties props) {
-        return new BiFolder(props.dir(), props.folderRefresh());
+        return new BiFolder(props.dir(), props.folderRefresh(), props.watch());
     }
 
     @Bean

@@ -24,7 +24,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @param enabled Rupaka's endpoints answer; off: {@code DRS-9006} (the console then hides the BI menu)
  * @param dir the BI folder with shipped, read-only content: {@code datasets/}, {@code reports/}, {@code boards/}, {@code notebooks/}
- * @param folderRefresh how often the folder is looked at again (shipped files appear without a restart)
+ * @param watch how the folder is watched: {@code auto} (file events with polling as a safety net), {@code poll} or {@code off} (read when
+ *     {@code folderRefresh} has passed, on a request)
+ * @param folderRefresh the polling interval (shipped files appear, change and go without a restart)
  * @param workspaceCreation who may create shared workspaces: {@code authors} (bi-author), {@code stewards} (bi-steward) or {@code admins} (bi-admin only);
  *     an administrator can change it at run time in Admin, BI settings
  * @param maxBodyBytes largest YAML body one item may hold
@@ -34,12 +36,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param listLimit most rows one catalogue or workspace page returns
  */
 @ConfigurationProperties("drishti.bi")
-public record BiProperties(Boolean enabled, String dir, Duration folderRefresh, String workspaceCreation, Integer maxBodyBytes, Integer versionsKeep,
+public record BiProperties(Boolean enabled, String dir, String watch, Duration folderRefresh, String workspaceCreation, Integer maxBodyBytes, Integer versionsKeep,
         Integer usageDays, Integer recent, Integer listLimit) {
 
     public BiProperties {
         enabled = enabled == null || enabled;
         dir = dir == null || dir.isBlank() ? "./config/bi" : dir;
+        watch = watch == null || watch.isBlank() ? "auto" : watch.strip().toLowerCase(java.util.Locale.ROOT);
         folderRefresh = folderRefresh == null || folderRefresh.isNegative() ? Duration.ofSeconds(5) : folderRefresh;
         workspaceCreation = workspaceCreation == null || workspaceCreation.isBlank() ? "authors" : workspaceCreation;
         maxBodyBytes = maxBodyBytes == null || maxBodyBytes <= 0 ? 262_144 : maxBodyBytes;

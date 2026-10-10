@@ -123,7 +123,7 @@ filter to see only what concerns her.
 A role says two things:
 
 1. **Which kinds of entity** its holders may open (`trade`, `counterparty`, … or `*` for every kind).
-2. **Six powers**:
+2. **Six powers** (and, for business intelligence, the four [BI powers](#bi-powers-rupaka)):
 
    | Power | Lets the holder |
    |---|---|
@@ -270,6 +270,27 @@ It is in the identity database (`drishti_access`), kept `drishti.access-log.keep
 asynchronous and never slows a read; if the database cannot keep up, events are dropped and the page says how
 many. The console's own service identity is not recorded. Through the API:
 `GET /api/v1/admin/access?user=&action=&kind=&id=&from=&to=&limit=`.
+
+## BI powers (Rupaka)
+
+Business intelligence ([BI_GUIDE.md](../guides/BI_GUIDE.md)) has four powers of its own, granted on roles beside the six above. They are
+a list, `bi`, on a role: `drishti.security.roles.<role>.bi: [bi, bi-author]` in configuration or a pack, or, for a role you define,
+**Admin → BI settings** (a table of roles with four tick boxes each; built-in roles are read-only there) or the `bi` list of
+`PUT /api/v1/admin/role-definitions/{name}`. Saving a role in **Admin → Roles** keeps the BI powers it has.
+
+| Power | Lets the holder |
+|---|---|
+| `bi` | open BI (the **BI** top-bar menu, `RUPAKA <GO>`, `/bi`), the catalogue and the published items their audience allows; favourites and recents |
+| `bi-author` | create, edit, move, propose and publish items in the workspaces they are a contributor or member of, and create shared workspaces (when the policy is `authors`, the default) |
+| `bi-steward` | **certify** published items (owners only *promote*); create shared workspaces when the policy is `stewards` |
+| `bi-admin` | Admin → BI settings (the workspace policy, powers per role); admin of every shared workspace; always allowed to create workspaces |
+
+A higher power also opens BI, so a role with only `bi-author` sees the catalogue. An administrator (`admin`) holds all four; with security off
+everyone does. The built-in `viewer` holds `bi`, `author` and `approver` hold `bi` and `bi-author`; the roles packs add (`trader`, `risk`,
+`market-risk`, ...) hold **none** until you grant them. A power opens the door; what a person may do in a given workspace is then decided by their **workspace
+role** (viewer, contributor, member, admin) there. Approving a proposal needs the existing `approve` power as well, and with four-eyes on never
+your own proposal. Changes to roles, settings, workspaces, members and items are in the audit log (`role-updated` with `bi=[...]`, `bi-settings-changed`,
+`bi-workspace-*`, `bi-member-*`, `bi-item-*`).
 
 ## Calc
 

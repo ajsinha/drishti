@@ -140,7 +140,7 @@ def absolute(p) -> str:
 
 class ApiError(CliError):
     HINTS = {401: " (no or bad token: set DRISHTI_TOKEN or --token-file)",
-             403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve, packs:admin or loads:write, see CLI_GUIDE)"}
+             403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve, packs:admin, loads:write, bi:write, bi:approve or bi:admin, see CLI_GUIDE)"}
 
     def __init__(self, status: int, code: str | None, detail: str):
         super().__init__(f"the server said {status}{' ' + code if code else ''}: {detail}{self.HINTS.get(status, '')}", 1)
@@ -291,6 +291,19 @@ def check_form_block(pack: pathlib.Path) -> list[str]:
     return load_module("packform", "packform.py").validate(m)
 
 
+RESERVED_WORDS = ("FORM", "RUPAKA")        # command words the console owns (the server's PackLoader.RESERVED_WORDS)
+
+
+def check_reserved_mnemonics(pack: pathlib.Path) -> list[str]:
+    """A pack may not define a mnemonic that is a reserved command word, in any case (RUPAKA.md section 4): the server refuses to load it."""
+    try:
+        m = need_yaml().safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    except OSError:
+        return []
+    return [f"{pack}/pack.yaml: mnemonics.{k}: '{k}' is a reserved command word ({', '.join(RESERVED_WORDS)}): choose another mnemonic"
+            for k in (m.get("mnemonics") or {}) if str(k).upper() in RESERVED_WORDS]
+
+
 def cmd_pack_check(a, extra) -> int:
     junit = pathlib.Path(a.junit).resolve() if a.junit else None
     if junit:
@@ -315,7 +328,7 @@ def cmd_pack_check(a, extra) -> int:
                     print("\n".join(lines[-a.tail:]))
                 if r.returncode and r.stderr.strip() and not any(DIAG.search(x) for x in lines):
                     print(r.stderr.strip()[-800:], file=sys.stderr)        # nothing but engine output to explain the failure: show it
-        entry["packYaml"] = check_ingest_block(pack) + check_form_block(pack)
+        entry["packYaml"] = check_ingest_block(pack) + check_form_block(pack) + check_reserved_mnemonics(pack)
         for pr in entry["packYaml"]:
             print(pr, file=sys.stderr)
         entry["ok"] = all(s["exit"] == 0 for s in entry["steps"].values()) and not entry["packYaml"]
@@ -627,6 +640,75 @@ def cmd_data_loads(a, extra) -> int:
         print("expectations:")
         for s in ex.get("expectations", []):
             print(f"  {s['businessDate']}  {s['kind']:<18}by {s['by']} {s['zone']:<20}{s['state']}")
+    return 0
+
+
+# ------------------------------------------------------------------------------------------------ bi (Rupaka phase 1)
+
+def bi_item_line(i, width: int = 16) -> str:
+    return (f"{i['id']:<{width}}{i['kind']:<9}{(i.get('endorsement') or 'none'):<10}{i.get('status', ''):<10}"
+            f"{('v' + str(i['publishedVersion'])) if i.get('publishedVersion') else '-':<5}{i['title']}  ({i.get('workspaceName') or i.get('workspace')}, {i.get('owner')})")
+
+
+def cmd_bi_workspace(a, extra) -> int:
+    api = Api.from_args(a)
+    if a.action == "list":
+        rows = api.json("GET", "/api/v1/bi/workspaces")
+        if a.json:
+            say_json(rows)
+            return 0
+        print(f"{'id':<30}{'role':<13}{'items':>6}  name")
+        for w in rows:
+            print(f"{w['id']:<30}{w['role']:<13}{w['items']:>6}  {w['name']}{'  [personal]' if w.get('personal') else ''}{'  [review before publish]' if w.get('reviewRequired') else ''}")
+        return 0
+    if not a.id:
+        raise CliError("bi workspace get needs a workspace id (or 'me' for your personal workspace)", 2)
+    w = api.json("GET", f"/api/v1/bi/workspaces/{q(a.id)}")
+    items = api.json("GET", f"/api/v1/bi/workspaces/{q(a.id)}/items")
+    if a.json:
+        say_json({**w, "itemList": items})
+        return 0
+    print(f"{w['name']}  ({w['id']}, your role: {w['role']}){'  review before publish' if w.get('reviewRequired') else ''}")
+    for m in w.get("members") or []:
+        print(f"  member {m['username']:<20}{m['role']}")
+    width = max([len(i["id"]) for i in items] + [14]) + 2
+    for i in items:
+        print("  " + bi_item_line(i, width))
+    return 0
+
+
+def cmd_bi_catalogue(a, extra) -> int:
+    api = Api.from_args(a)
+    if a.action == "list":
+        params = [f"{k}={q(v)}" for k, v in (("q", a.q), ("kind", a.kind), ("workspace", a.workspace), ("owner", a.owner), ("endorsement", a.endorsement), ("tag", a.tag),
+                                              ("sort", a.sort), ("fresh", a.fresh and str(a.fresh)), ("limit", str(a.limit))) if v]
+        r = api.json("GET", "/api/v1/bi/catalogue?" + "&".join(params))
+        if a.json:
+            say_json(r)
+            return 0
+        width = max([len(i["id"]) for i in r["items"]] + [14]) + 2
+        print(f"{'id':<{width}}{'kind':<9}{'endorsed':<10}{'status':<10}{'ver':<5}title")
+        for i in r["items"]:
+            print(bi_item_line(i, width))
+        print(f"{r['total']} item(s)" + (f", showing {len(r['items'])}" if r["total"] > len(r["items"]) else ""))
+        return 0
+    if not a.id:
+        raise CliError(f"bi catalogue {a.action} needs an item id", 2)
+    if a.action == "get":
+        i = api.json("GET", f"/api/v1/bi/items/{q(a.id).replace('%3A', ':')}")
+        if a.json:
+            say_json(i)
+            return 0
+        print(bi_item_line(i))
+        print(f"  {i.get('description') or ''}\n  tags: {', '.join(i.get('tags') or []) or '-'}   views: {i.get('views')}   audience: {i.get('audience')}")
+        if a.body:
+            print(i.get("body") or "")
+        return 0
+    i = api.json("POST", f"/api/v1/bi/items/{q(a.id)}/publish", {"note": a.note or ""})        # publish: needs the bi-author power, a member role, and a token with bi:write
+    if a.json:
+        say_json(i)
+    else:
+        print(f"published {i['title']} as version {i['publishedVersion']}")
     return 0
 
 
@@ -1113,6 +1195,29 @@ def build_parser() -> argparse.ArgumentParser:
                            parents=[srv], formatter_class=argparse.RawDescriptionHelpFormatter, epilog="examples:\n  drishti.py doctor\n  drishti.py doctor --server http://localhost:18480 --token-file ~/.drishti-token")
     dr.add_argument("--java", help="the java binary to check (default: JAVA_HOME, then JDK 21, then the PATH)")
     dr.set_defaults(func=cmd_doctor, cmd=None)
+    # bi (Rupaka phase 1) ------------------------------------------------------------------------------------
+    bi = group("bi", "Business intelligence (Rupaka) over REST: workspaces and the catalogue, as the token's user sees them (a write needs the bi:write scope)")
+    srv_b = server_parent()
+    for noun, func, what in (("workspace", cmd_bi_workspace, "list the workspaces you belong to, or show one with its members and items"),
+                             ("catalogue", cmd_bi_catalogue, "search the catalogue, show an item, or publish one")):
+        sp_b = bi.add_parser(noun, help=f"bi {noun} " + ("list|get" if noun == "workspace" else "list|get|publish"), description=what)
+        ab = sp_b.add_subparsers(dest="action", metavar="ACTION", required=True)
+        for act in (("list", "get") if noun == "workspace" else ("list", "get", "publish")):
+            p = ab.add_parser(act, help=f"bi {noun} {act}", description=f"bi {noun} {act}: " + {"list": ("the workspaces you may open" if noun == "workspace" else "published items you may open, certified first, then by --sort"), "get": "one in detail", "publish": "publish the draft as the next version (a member of its workspace; with review required, propose it in the page)"}[act],
+                              parents=[srv_b], epilog=f"examples:\n  drishti.py bi {noun} {act}" + (" rates-desk" if act != "list" else ""), formatter_class=argparse.RawDescriptionHelpFormatter)
+            p.set_defaults(func=func)
+            if act != "list":
+                p.add_argument("id", nargs="?", help="the workspace id (or 'me') / the item id")
+            if noun == "catalogue" and act == "list":
+                for flag in ("q", "kind", "workspace", "owner", "endorsement", "tag", "sort"):
+                    p.add_argument("--" + flag, help=f"filter by {flag}" if flag != "sort" else "use (default), date or title")
+                p.add_argument("--fresh", type=int, help="published within this many days")
+                p.add_argument("--limit", type=int, default=50, help="most items listed (default 50)")
+            if noun == "catalogue" and act == "get":
+                p.add_argument("--body", action="store_true", help="also print the YAML body")
+            if noun == "catalogue" and act == "publish":
+                p.add_argument("--note", help="why this version")
+
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):
         p = add(vw, name, cmd_view, f"view {name}: {what}", [srv], f"examples:\n  drishti.py view {name} trade/BBG-60000001\n  drishti.py view {name} trade/BBG-60000001 --date 2026-10-02")

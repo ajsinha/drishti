@@ -723,6 +723,24 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 Every phase ships with tests (unit, console, browser at phone width), documentation with real captures, and its numbers
 measured, as every Drishti feature does. Phases 0 to 3 are the minimum lovable BI; 4 to 9 make it a Power BI alternative.
 
+### 20.0 Phase 1, as built
+
+Phase 1 (shell and catalogue) is built; the user guide is [BI_GUIDE.md](../guides/BI_GUIDE.md). **Built:** the **BI** top-bar menu (people with the `bi` power) and the reserved
+`RUPAKA` keyword (`RUPAKA <GO>`, `RUPAKA <report> <GO>`, `RUPAKA WORKSPACE`, `RUPAKA CATALOGUE`, `RUPAKA SETTINGS`, any case, with type-ahead; the pack loader and
+`pack check` refuse a pack mnemonic named `RUPAKA` or `FORM`); the shell at `/bi`, `/bi/w/<workspace>`, `/bi/catalogue`, `/bi/workspaces`, `/bi/i/<item>` with its own layout
+(left rail Home, Catalogue, My workspace, Workspaces, Datasets, Designer, Explore; keys `/`, `g h`, `g c`, `g w`, `?`), working at 390 px with 44 px targets in every theme;
+workspaces (personal per user, shared with roles viewer, contributor, member, admin; a creation policy; optional review before publish); catalogue entries (title, description,
+owner, workspace, tags, audience of roles, users and packs, endorsement promoted and certified, freshness, 30-day views); **items as typed placeholders** (`dataset`, `report`,
+`board`, `notebook`) whose YAML body is stored, versioned and published but **not executed**; the lifecycle draft, proposed, published with version history and restore, review
+reusing the `approve` power and four-eyes; Home (recent, favourites, certified for you, shared with me) and the Catalogue (search, filters, sort, certified first), with audience and
+role checks on the server; storage in the identity database (SQLite or PostgreSQL) and **shipped, read-only content in `drishti.bi.dir`, watched live** (`drishti.bi.watch`: added,
+changed and deleted files are picked up with no restart; a bad file keeps its last good version and is reported in Admin, BI settings and on Health); the powers `bi`, `bi-author`,
+`bi-steward`, `bi-admin` on roles and Admin, BI settings; the API `/api/v1/bi/**` with token scopes `bi:write`, `bi:approve`, `bi:admin`; an audit event for every change; DRS-9001 to
+DRS-9006; `drishti.py bi workspace|catalogue list|get|publish`. **Not built, and not faked:** datasets, the query engine and everything of phases 2 to 9; the Datasets, Designer and
+Explore rail entries are placeholders; "what changed since your last visit" on Home; searching by fields used and filtering by live or cached; the version diff; a workspace as a pack
+bundle; dataset lineage and impact; per-entry export rules and classification tags (section 11 controls that need data); `Analyse in BI`. The shipped-file version number counts changes
+since the server started and only the current body is kept.
+
 ### 20.1 Three stages
 
 The work is done in three stages, in this order; each is complete and useful on its own.

@@ -318,3 +318,51 @@ def test_the_admin_page_sets_powers_and_the_workspace_policy(stack, browser):
     adm.locator('[data-role="bi-reader"] [data-power="bi-author"]').uncheck()
     adm.click('[data-role="bi-reader"] button')
     expect(adm.locator("[data-msg]")).to_contain_text("Saved the BI powers of bi-reader")
+
+
+def test_the_bi_folder_is_live_a_file_added_changed_and_deleted_needs_no_restart(stack, browser):
+    import time
+
+    folder = stack.tmp / "server" / "config" / "bi" / "reports"
+    f = folder / "live-demo.report.yaml"
+    page = sign_in(browser, "cat")
+    page.goto(CONSOLE_URL + "/bi/catalogue")
+    expect(page.locator(".bi-card").first).to_be_visible()
+    f.write_text("title: Live demo\ndescription: dropped into the folder\n")
+    page.fill("[data-search]", "live demo")
+    deadline = time.time() + 20
+    while time.time() < deadline and page.locator(".bi-card h3", has_text="Live demo").count() == 0:
+        page.fill("[data-search]", "")
+        page.fill("[data-search]", "live demo")
+        page.wait_for_timeout(700)
+    expect(page.locator(".bi-card h3").first).to_have_text("Live demo")
+    page.locator(".bi-card h3 a").first.click()
+    page.wait_for_url("**/bi/i/file:report:live-demo")
+    expect(page.locator("[data-meta]")).to_contain_text("published v1")
+    f.write_text("title: Live demo two\ndescription: changed on disk\n")
+    deadline = time.time() + 20
+    while time.time() < deadline and "Live demo two" not in page.locator("[data-title]").inner_text():
+        page.reload()
+        page.wait_for_timeout(700)
+    expect(page.locator("[data-title]")).to_have_text("Live demo two")
+    expect(page.locator("[data-meta]")).to_contain_text("published v2")
+    f.write_text("title: [broken\n")                                                          # a bad edit: the last good version stays
+    admin = browser.new_context().new_page()
+    admin.goto(CONSOLE_URL + "/login?next=/admin/bi")
+    admin.fill("#lu", "drishti-dev-admin")
+    admin.fill("#lp", "drishti-dev-admin123")
+    admin.click("button[type=submit]")
+    deadline = time.time() + 20
+    while time.time() < deadline and not admin.locator("[data-problems]:not([hidden])").count():
+        admin.reload()
+        admin.wait_for_timeout(700)
+    expect(admin.locator("[data-problems]")).to_contain_text("live-demo.report.yaml")
+    expect(admin.locator("[data-problems]")).to_contain_text("last good version is kept")
+    page.reload()
+    expect(page.locator("[data-title]")).to_have_text("Live demo two")
+    f.unlink()                                                                               # deleted: open pages say it is gone
+    deadline = time.time() + 20
+    while time.time() < deadline and "gone" not in (page.locator("[data-msg]").inner_text() or ""):
+        page.reload()
+        page.wait_for_timeout(700)
+    expect(page.locator("[data-msg]")).to_contain_text("gone")

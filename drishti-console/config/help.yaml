@@ -34,6 +34,7 @@ categories:
       - { slug: layout-mode, title: "Layout mode · arrange a view", icon: grid-3x3-gap, summary: "Alt+L: drag, resize and hide a view's panels for yourself, kept as your layout of its Sutra; authors promote it for review." }
       - { slug: pivot-tab, title: "The Pivot tab · slice a table", icon: table, summary: "Where a Sutra or pack offers it: drag fields into rows, columns, values and filters; totals, drill-down, chart, Excel; saved for you." }
       - { slug: python-calc, doc: guides/PYTHON_CALC.md, title: "Calc · Python on any view", icon: filetype-py, summary: "Alt+C: Python in your browser on the screen you are on. The drishti module, tables and charts, packs' snippets, roles, limits." }
+      - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka) · the BI page", icon: bar-chart-line, summary: "RUPAKA <GO> and the BI menu, the catalogue, workspaces with roles, typed items, publish and review, certify, audiences, shipped files and BI settings: what phase 1 builds and what is still ahead." }
       - { slug: using-the-terminal, doc: guides/USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
   - id: layouts
     name: Layouts, Rachana and Sutras
@@ -138,6 +139,7 @@ moved:                      # retired guides: the address keeps working and land
   sutra-studio: screen-designer
 contextual:
   landing: using-the-terminal
+  bi: bi-guide
   terminal: using-the-terminal
   view: using-the-terminal
   studio: screen-designer

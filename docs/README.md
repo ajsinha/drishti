@@ -37,6 +37,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Get it running in ten minutes | [QUICKSTART.md](guides/QUICKSTART.md) |
 | Install and start it with every step explained | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
 | Tell Drishti a batch of data has landed (API, CLI, Airflow, cron, DishtaYantra), flag late data | [DATA_LOADS.md](guides/DATA_LOADS.md) | why Drishti does not ingest, the load API and CLI, expectations and late data, the Data loads page, the token scope, recipes |
+| Open business intelligence: `RUPAKA <GO>`, the catalogue, workspaces, publish and review, certify | [BI_GUIDE.md](guides/BI_GUIDE.md) | what phase 1 builds (and not), the BI menu and keyword, the four powers, workspace roles, items and versions, audiences, shipped files, BI settings, the CLI |
 | Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) | the offline path: artifacts and where each goes, `pack bundle|verify|deploy|rollback`, CI, permissions, Docker and Kubernetes, troubleshooting |
 | Install and run it on Windows (PowerShell, no Hadoop) | [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load|landed|loads`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes, running it from PyCharm |
 | [WINDOWS.md](guides/WINDOWS.md) |

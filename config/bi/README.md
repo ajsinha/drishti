@@ -23,9 +23,16 @@ describes data (Sutras, links, vocabulary); BI content may combine kinds from ma
 config/bi/
   datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures
   reports/    <id>.report.yaml    pages of visuals over datasets: filters, bookmarks, drill-through, theme
+  boards/     <id>.board.yaml     a live board (stored in phase 1, not run)
+  notebooks/  <id>.notebook.yaml  an analyst notebook (stored in phase 1, not run)
   python/                         typed Python implementations (transforms, measures, visuals) and their manifests and tests
 ```
 
 See `docs/architecture/RUPAKA.md` (sections 6, 8 and 13, and "Where BI files live") for the formats, and
 `docs/architecture/RUPAKA_POC.md` for what the phase 0 proof of concept does with this folder today (it lists the
-dataset files it finds). The folders may be empty: nothing here is required for the rest of Drishti to run.
+dataset files it finds). Phase 1 reads the four kinds of file as read-only, published items of the catalogue (workspace "Shipped content"): the keys `title`, `description`,
+`owner`, `tags`, `endorsement` (none, promoted, certified) and `audience` (`roles`, `users`, `packs`) describe the entry, and the whole file is its body (stored, not run).
+The folder is **watched live** (`drishti.bi.watch`: auto, poll, off): add a file and it appears, change it and it becomes the next version, delete it and it goes; a file that
+does not parse keeps its last good version and shows as a problem in Admin, BI settings and on Health. No restart. See `docs/guides/BI_GUIDE.md`.
+
+The folders may be empty: nothing here is required for the rest of Drishti to run.
