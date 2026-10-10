@@ -42,20 +42,33 @@ public record Sutra(
         List<Panel> panels,
         Map<String, String> keys,
         SourceLocation location,
-        String description) {
+        String description,
+        List<Control> controls) {
 
     public static final int MAX_STRIP = 8;
 
     /** A Sutra without a description. */
     public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,
             Map<String, String> keys, SourceLocation location) {
-        this(name, version, domain, match, title, strip, panels, keys, location, null);
+        this(name, version, domain, match, title, strip, panels, keys, location, null, List.of());
+    }
+
+    /** A Sutra without controls. */
+    public Sutra(String name, int version, String domain, Match match, Title title, List<StripItem> strip, List<Panel> panels,
+            Map<String, String> keys, SourceLocation location, String description) {
+        this(name, version, domain, match, title, strip, panels, keys, location, description, List.of());
     }
 
     public Sutra {
         strip = List.copyOf(strip);
         panels = List.copyOf(panels);
         keys = Map.copyOf(keys);
+        controls = controls == null ? List.of() : List.copyOf(controls);
+    }
+
+    /** The control named {@code id}, if the Sutra declares one. */
+    public java.util.Optional<Control> control(String id) {
+        return controls.stream().filter(c -> c.id().equals(id)).findFirst();
     }
 
     public String id() {

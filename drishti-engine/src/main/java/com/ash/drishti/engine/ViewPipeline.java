@@ -26,6 +26,8 @@ import com.ash.drishti.common.Fingerprint;
 import com.ash.drishti.common.ShapeFingerprinter;
 import com.ash.drishti.engine.bind.BindContext;
 import com.ash.drishti.engine.bind.Binder;
+import com.ash.drishti.engine.control.ControlResolver;
+import com.ash.drishti.engine.control.ControlValues;
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceFailures;
 import com.ash.drishti.engine.source.SourceRouter;
@@ -119,6 +121,7 @@ public final class ViewPipeline {
     private final Cache<LayoutKey, EffectiveLayout> layouts;
     private final Cache<GenKey, Fingerprint> fingerprints;
     private final BusinessDates dates;
+    private final ControlResolver controls;
 
     /** The zone business dates and "known at" times are read in (what the console's top bar shows times in). */
     public java.time.ZoneId businessZone() {
@@ -130,6 +133,7 @@ public final class ViewPipeline {
             Formats formats, Mnemonics mnemonics, ExecutorService bindPool, EngineProperties props, BusinessDates dates) {
         this.router = router;
         this.dates = dates;
+        this.controls = new ControlResolver(el, dates, router, graph.linkBudget());
         this.matcher = matcher;
         this.merger = merger;
         this.fingerprinter = fingerprinter;
@@ -164,6 +168,29 @@ public final class ViewPipeline {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
         return assemble(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact, mayOpen).view();
+    }
+
+    /** A view with the control values of the request ({@code ctl.leg=L2}); see {@link ControlValues}. */
+    public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values) {
+        long t0 = System.nanoTime();
+        EntityDocument doc = fetch(ref, asOf);
+        return assemble(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen, values).view();
+    }
+
+    /** A stored entity with an unsaved Sutra and the control values of the request. */
+    public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
+            ControlValues values) {
+        long t0 = System.nanoTime();
+        EntityDocument doc = fetch(ref, asOf);
+        return assemble(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact, mayOpen, values).view();
+    }
+
+    /** A supplied document and Sutra (a Design's sample) built with the control values of the request. */
+    public Built builtPreview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
+            ControlValues values) {
+        long t0 = System.nanoTime();
+        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact,
+                mayOpen, values);
     }
 
     /** A view of a document supplied by the caller (Studio sample JSON), with a given or matched Sutra. */
@@ -318,6 +345,12 @@ public final class ViewPipeline {
         return assemble(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact, mayOpen).view();
     }
 
+    /** Builds a view from a document already in hand with the control values a live stream was opened with. */
+    public ViewModel build(EntityDocument doc, long t0, long tFetched, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
+            ControlValues values) {
+        return assemble(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact, mayOpen, values).view();
+    }
+
     /**
      * The title of {@code doc}'s view as the caller may see it: the matched Sutra's (or the inferred layout's) title bound
      * to the document with the caller's field masks. The type-ahead describes entities with it for callers with masks.
@@ -340,6 +373,11 @@ public final class ViewPipeline {
 
     private Built assemble(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf,
             UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+        return assemble(doc, t0, tFetched, sutra, cached, asOf, redact, mayOpen, ControlValues.NONE);
+    }
+
+    private Built assemble(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf,
+            UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values) {
         EntityRef ref = doc.ref();
         boolean current = dates.isCurrent(asOf);
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate()),
@@ -350,7 +388,8 @@ public final class ViewPipeline {
         long tLayout = System.nanoTime();
 
         EntityDocument seen = seen(doc, redact);                      // values: as the caller may see them
-        EvalContext eval = EvalContext.of(seen.data(), formats);
+        ControlResolver.Resolved resolved = controls.resolve(layout.sutra(), EvalContext.of(seen.data(), formats), values, asOf, mayOpen);
+        EvalContext eval = resolved.apply(EvalContext.of(seen.data(), formats));   // ctl.<id>: the controls' values for this build
         List<LinkRef> links = catalog.discover(seen.data(), ref);
         Set<EntityRef> wanted = new LinkedHashSet<>();
         Set<EntityRef> denied = new HashSet<>();
@@ -360,7 +399,7 @@ public final class ViewPipeline {
             }
         });
         for (Panel p : layout.sutra().panels()) {
-            if (p.kind().readsData()) {
+            if (p.kind().readsData() && values.builds(p.id())) {
                 binder.chartSource(p, eval).ifPresent(src -> {
                     if (mayOpen.test(src.kind())) {
                         wanted.add(src);
@@ -387,7 +426,9 @@ public final class ViewPipeline {
         BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
-            futures.add(CompletableFuture.supplyAsync(() -> binder.bind(p, ctx), bindPool));
+            if (values.builds(p.id())) {                          // a control changed: only the panels that read it are built
+                futures.add(CompletableFuture.supplyAsync(() -> binder.bind(p, ctx), bindPool));
+            }
         }
         List<PanelView> panels = futures.stream().map(CompletableFuture::join).toList();
         Sutra s = layout.sutra();
@@ -421,9 +462,21 @@ public final class ViewPipeline {
                         pv.businessDate() == null ? null : pv.businessDate().toString(),
                         fresh.lastUpdate() == null ? null : fresh.lastUpdate().toString(),
                         fresh.staleAfter() == null ? null : fresh.staleAfter().toString(), fresh.stale() && current,
-                        s.version() > 0 ? s.name() : null, hidden.count(), hidden.panels()), timings);
+                        s.version() > 0 ? s.name() : null, hidden.count(), hidden.panels()), timings).withControls(resolved.views(), selects(s));
         return new Built(view, doc, seen, sutra, layout, current,
                 new LinkCounts(linked.size(), pending.size(), denied.size(), graph.linkBudget().toMillis()));
+    }
+
+    /** The panels of {@code s} whose rows or bars set a control when clicked. */
+    private static List<ViewModel.SelectView> selects(Sutra s) {
+        List<ViewModel.SelectView> out = new ArrayList<>();
+        for (Panel p : s.panels()) {
+            if (p.options().get(Panel.ON_SELECT) instanceof Map<?, ?> m && m.get("by") instanceof String by) {
+                List<String> filter = m.get("filter") instanceof List<?> l ? l.stream().map(String::valueOf).toList() : List.of();
+                out.add(new ViewModel.SelectView(p.id(), by, filter));
+            }
+        }
+        return out;
     }
 
     private EntityDocument fetch(EntityRef ref, AsOf asOf) {

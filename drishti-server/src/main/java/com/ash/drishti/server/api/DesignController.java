@@ -324,7 +324,16 @@ public class DesignController {
      */
     @GetMapping("/{id}/preview")
     public Object preview(@PathVariable String id, @RequestParam(required = false) String sample,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal who) throws IOException {
+            @RequestAttribute(Principal.ATTRIBUTE) Principal who, jakarta.servlet.http.HttpServletRequest request) throws IOException {
+        return preview(id, sample, who, com.ash.drishti.engine.control.ControlValues.of(request.getParameterMap()));
+    }
+
+    /** As the endpoint, with the control values the workbench's preview was given ({@code ctl.leg=L2}). */
+    Object preview(String id, String sample, Principal who) throws IOException {
+        return preview(id, sample, who, com.ash.drishti.engine.control.ControlValues.NONE);
+    }
+
+    private Object preview(String id, String sample, Principal who, com.ash.drishti.engine.control.ControlValues controls) throws IOException {
         StoredDesign d = designs.get(who.user(), id);
         if (d.sutra == null || d.sutra.isBlank()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "this design has no Sutra yet: start from auto-design, an existing Sutra or an empty one");
@@ -340,12 +349,13 @@ public class DesignController {
             if (!mayOpen.test(info.refKind())) {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, Entitlements.DENIED + ": you may not open " + info.refKind() + " entities");
             }
-            return entitlements.restrict(who, pipeline.preview(s, EntityRef.of(info.refKind(), info.refId()), AsOf.LATEST, entitlements.redactor(who), mayOpen));
+            return entitlements.restrict(who, pipeline.preview(s, EntityRef.of(info.refKind(), info.refId()), AsOf.LATEST,
+                    entitlements.redactor(who), mayOpen, controls));
         }
         String json = designs.sample(who.user(), id, info.name());
         EntityDocument doc = new EntityDocument(EntityRef.of(d.kind, "SAMPLE"), codec.read(json),
                 new com.ash.drishti.api.Provenance("design sample JSON", 0, java.time.Instant.now(), false));
-        return entitlements.restrict(who, pipeline.preview(Optional.of(s), doc, entitlements.redactor(who), mayOpen));
+        return entitlements.restrict(who, pipeline.builtPreview(Optional.of(s), doc, entitlements.redactor(who), mayOpen, controls).view());
     }
 
     /** Drafts a Sutra from the Design's samples (as {@code /builder/design}), keeps it as the Design's Sutra (a new revision) and returns the draft with its {@code rev}. */

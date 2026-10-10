@@ -58,6 +58,10 @@ public record Panel(
     /** The panel's height in grid rows ({@code height: 8}); absent: as tall as its content. */
     public static final String HEIGHT = "height";
     public static final int MAX_SPAN = 12;
+    /** A row or a bar that sets a control when clicked: {@code { filter: [panel ids], by: <control id>, field: <row field> }}. */
+    public static final String ON_SELECT = "on-select";
+    /** A condition on each row, read with the controls: {@code where: "oneOf(@.leg, ctl.legs)"}. */
+    public static final String WHERE = "where";
     public static final int MAX_HEIGHT = 24;
 
     /** The interactive pivot a table or ladder opts into ({@code pivot: true} or a mapping); see {@link PivotSpec}. */

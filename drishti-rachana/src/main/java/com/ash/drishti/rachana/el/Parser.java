@@ -226,7 +226,11 @@ final class Parser {
                 next();
                 String name = expect(Type.IDENT, "a field name").text();
                 path = path == null ? null : path + "." + name;
-                e = node(new Expr.Field(e, name, path), e);
+                e = e instanceof Expr.Each || e instanceof Expr.Pluck ? node(new Expr.Pluck(e, name), e) : node(new Expr.Field(e, name, path), e);
+            } else if (t.type() == Type.LBRACKET && tokens.get(p + 1).is(Type.OP, "*") && tokens.get(p + 2).type() == Type.RBRACKET) {
+                p += 3;                                          // [*]: every element; a field after it is that field of each
+                e = node(new Expr.Each(e), e);
+                path = null;
             } else if (t.type() == Type.LBRACKET) {
                 next();
                 Expr idx = expr();
@@ -287,6 +291,11 @@ final class Parser {
                 return new Expr.Lit(null);
             default:
                 break;
+        }
+        if ("ctl".equals(t.text()) && peek().type() == Type.DOT && tokens.get(p + 1).type() == Type.IDENT
+                && tokens.get(p + 2).type() != Type.LPAREN) {
+            next();                                              // ctl.<id>: the value of a control, never a field of the data
+            return new Expr.Ctl(next().text());
         }
         if (peek().type() != Type.LPAREN) {
             return new Expr.Field(new Expr.RowOrRoot(), t.text(), null);

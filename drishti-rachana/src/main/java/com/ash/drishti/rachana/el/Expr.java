@@ -62,6 +62,47 @@ public interface Expr {
         }
     }
 
+    /** {@code target[*]}: the elements of a list (a field after it, {@code $.legs[*].id}, is that field of each). */
+    record Each(Expr target) implements Expr {
+        public Object eval(EvalContext c) {
+            Object t = target.eval(c);
+            return Values.masked(t) ? Values.mask() : t instanceof DataNode.Arr ? t : DataNode.missing();
+        }
+
+        public void paths(Consumer<String> sink) {
+            target.paths(sink);
+        }
+    }
+
+    /** {@code list[*].name}: the field of every element, as a list. */
+    record Pluck(Expr list, String name) implements Expr {
+        public Object eval(EvalContext c) {
+            Object t = list.eval(c);
+            if (Values.masked(t)) {
+                return Values.mask();
+            }
+            if (!(t instanceof DataNode.Arr a)) {
+                return DataNode.missing();
+            }
+            List<DataNode> out = new ArrayList<>(a.size());
+            for (int i = 0; i < a.size(); i++) {
+                out.add(a.get(i).get(name));
+            }
+            return new DataNode.Arr(out);
+        }
+
+        public void paths(Consumer<String> sink) {
+            list.paths(sink);
+        }
+    }
+
+    /** {@code ctl.<id>}: the current value of a control of the Sutra (null when the context carries none). */
+    record Ctl(String name) implements Expr {
+        public Object eval(EvalContext c) {
+            return c == null ? null : c.ctl().get(name);
+        }
+    }
+
     record Index() implements Expr {
         public Object eval(EvalContext c) {
             return (long) c.index();

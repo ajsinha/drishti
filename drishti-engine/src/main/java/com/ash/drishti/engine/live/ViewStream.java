@@ -20,6 +20,7 @@ import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.Subscription;
 import com.ash.drishti.engine.ViewPipeline;
+import com.ash.drishti.engine.control.ControlValues;
 import com.ash.drishti.engine.view.ViewModel;
 import java.time.Duration;
 import java.time.Instant;
@@ -57,6 +58,7 @@ public final class ViewStream implements AutoCloseable {
     private final Consumer<Frame> sink;
     private final UnaryOperator<DataNode> redact;
     private final java.util.function.Predicate<String> mayOpen;
+    private final ControlValues controls;
     private final List<Subscription> subscriptions = new ArrayList<>();
     private final AtomicReference<ViewModel> shown = new AtomicReference<>();
     private final AtomicReference<EntityDocument> latestMain = new AtomicReference<>();
@@ -81,6 +83,14 @@ public final class ViewStream implements AutoCloseable {
     public ViewStream(EntityRef ref, ViewModel initial, List<EntityRef> sources, TopicHub hub, ViewPipeline pipeline,
             ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink, UnaryOperator<DataNode> redact,
             java.util.function.Predicate<String> mayOpen) {
+        this(ref, initial, sources, hub, pipeline, executor, metrics, sink, redact, mayOpen, ControlValues.NONE);
+    }
+
+    /** As above, and every rebuild applies the control values the stream was opened with ({@code ctl.leg=L2}): a tick keeps the filter. */
+    public ViewStream(EntityRef ref, ViewModel initial, List<EntityRef> sources, TopicHub hub, ViewPipeline pipeline,
+            ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink, UnaryOperator<DataNode> redact,
+            java.util.function.Predicate<String> mayOpen, ControlValues controls) {
+        this.controls = controls;
         this.mayOpen = mayOpen;
         this.ref = ref;
         this.redact = redact;
@@ -131,8 +141,8 @@ public final class ViewStream implements AutoCloseable {
                     }
                     continue;
                 }
-                ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime(), redact, mayOpen)
-                        : pipeline.view(ref, com.ash.drishti.api.AsOf.LATEST, redact, mayOpen);
+                ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime(), redact, mayOpen, controls)
+                        : pipeline.view(ref, com.ash.drishti.api.AsOf.LATEST, redact, mayOpen, controls);
                 ViewModel before = shown.getAndSet(next);
                 List<Patch> patches = differ.diff(before, next);
                 if (gone) {

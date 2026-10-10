@@ -19,6 +19,7 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityHit;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.ViewPipeline;
+import com.ash.drishti.engine.control.ControlValues;
 import com.ash.drishti.engine.command.RecentEntities;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.security.Entitlements;
@@ -51,10 +52,11 @@ public class ViewController {
 
     @GetMapping("/{kind}/{id}")
     public ViewModel view(@PathVariable String kind, @PathVariable String id, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal, jakarta.servlet.http.HttpServletRequest request) {
         entitlements.requireOpen(principal, kind);
         EntityRef ref = EntityRef.of(kind, id);
-        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k))));
+        ViewModel v = entitlements.restrict(principal, timer.record(() -> pipeline.view(ref, asOf, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k),
+                ControlValues.of(request.getParameterMap()))));
         String subtitle = v.title().pill() == null ? kind : v.title().pill().replace("Trade · ", "")
                 + (v.title().with() == null ? "" : " · " + v.title().with().text());
         recents.touch(principal.user(), new EntityHit(ref, v.title().id(), subtitle));

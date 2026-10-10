@@ -96,7 +96,9 @@ public class StudioController {
     }
 
     @PostMapping("/studio/preview")
-    public ViewModel preview(@RequestBody PreviewRequest req, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+    public ViewModel preview(@RequestBody PreviewRequest req, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal,
+            jakarta.servlet.http.HttpServletRequest request) {
+        com.ash.drishti.engine.control.ControlValues controls = com.ash.drishti.engine.control.ControlValues.of(request.getParameterMap());
         boolean pasted = req.document() != null && !req.document().isNull();
         if (req.yaml() == null) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "'yaml' is required: the Sutra text to preview");
@@ -111,12 +113,12 @@ public class StudioController {
         java.util.function.Predicate<String> mayOpen = k -> entitlements.mayOpen(principal, k);
         if (pasted) {
             // designing is open to every signed-in user: the kind of a pasted document is a label, not a permission
-            return entitlements.restrict(principal, pipeline.preview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document()),
-                    entitlements.redactor(principal), mayOpen));
+            return entitlements.restrict(principal, pipeline.builtPreview(java.util.Optional.of(s), pasted(req.kind(), req.id(), req.document()),
+                    entitlements.redactor(principal), mayOpen, controls).view());
         }
         entitlements.requireOpen(principal, req.kind());   // a stored entity is data, not design
         return entitlements.restrict(principal,
-                pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf, entitlements.redactor(principal), mayOpen));
+                pipeline.preview(s, EntityRef.of(req.kind(), req.id()), asOf, entitlements.redactor(principal), mayOpen, controls));
     }
 
     @GetMapping(path = "/studio/inferred/{kind}/{id}", produces = "text/yaml")

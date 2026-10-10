@@ -28,6 +28,9 @@ strip:
   - { label: DV01 (USD), bind: $.risk.dv01, fmt: signed0, tone: sign }
   - { label: Status, bind: $.status, tone: status }
   - { label: Book, bind: "link($.book, 'book')" }
+controls:
+  - { id: legs, kind: multi-select, label: Legs, options: "$.legs[*].leg", default: all, placement: header, panel: schedule, remember: user }
+  - { id: when, kind: date-range, label: Paid between, placement: header, panel: schedule }
 panels:
   - id: terms
     kind: kv
@@ -61,10 +64,11 @@ panels:
         - { label: Notional, bind: "@.notional", fmt: amount0 }
   - id: schedule
     kind: ladder
-    title: Cashflows
+    title: "Cashflows${ctl.when ? ' · paid ' + ctl.when : ''}"
     code: CF
     key: F3
     rows: $.schedule
+    where: "oneOf(@.leg, ctl.legs) && within(@.payDate, ctl.when)"
     highlight: "#index == $.nextIndex"
     pivot:
       rows: [type]

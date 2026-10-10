@@ -51,7 +51,7 @@ final class SutraBuilder {
     private static final Pattern FKEY = Pattern.compile("F([1-9]|1[0-2])");
     private static final int LANGUAGE = SutraParser.LANGUAGE;
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
-            "description", "notes");
+            "description", "notes", "controls");
     private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "description",
             Panel.SPAN, Panel.HEIGHT);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
@@ -118,6 +118,9 @@ final class SutraBuilder {
                 panels.add(panel);
             }
         }
+        ControlsReader controlsReader = new ControlsReader(file, problems);
+        List<com.ash.drishti.rachana.model.Control> controls = controlsReader.read(m.get("controls"), ids);
+        controlsReader.checkSelects(panels, controls);
         Map<String, String> keyMap = new LinkedHashMap<>();
         PNode k = m.get("keys");
         if (k != null) {
@@ -141,7 +144,7 @@ final class SutraBuilder {
             return null;
         }
         return new Sutra(name, version, text(m.get("domain"), domain), match, title, strip, panels, keyMap, loc(root),
-                text(m.get("description"), null));
+                text(m.get("description"), null), controls);
     }
 
     private Match match(PNode n, PNode root) {

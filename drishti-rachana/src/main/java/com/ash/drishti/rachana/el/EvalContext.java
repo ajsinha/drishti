@@ -28,13 +28,29 @@ import com.ash.drishti.rachana.format.Formats;
  * @param index position of the row, or -1
  * @param formats named formats
  */
-public record EvalContext(DataNode root, Object row, int index, Formats formats) {
+public record EvalContext(DataNode root, Object row, int index, Formats formats, java.util.Map<String, Object> ctl) {
+
+    public EvalContext {
+        ctl = ctl == null ? java.util.Map.of() : ctl;
+    }
+
+    public EvalContext(DataNode root, Object row, int index, Formats formats) {
+        this(root, row, index, formats, java.util.Map.of());
+    }
 
     public static EvalContext of(DataNode root, Formats formats) {
         return new EvalContext(root, null, -1, formats);
     }
 
     public EvalContext withRow(Object row, int index) {
-        return new EvalContext(root, row, index, formats);
+        return new EvalContext(root, row, index, formats, ctl);
+    }
+
+    /**
+     * The same context with the values of a Sutra's controls, read in expressions as {@code ctl.<id>}: text for most kinds, a
+     * list of text for a multi-select, a whole number for top-n, {@code from..to} text for a range.
+     */
+    public EvalContext withControls(java.util.Map<String, Object> values) {
+        return new EvalContext(root, row, index, formats, values);
     }
 }

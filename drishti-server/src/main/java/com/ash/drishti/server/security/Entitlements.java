@@ -329,6 +329,6 @@ public final class Entitlements {
         if (t.with() != null && t.with().link() != null && !mayOpen(p, t.with().link().kind())) {
             t = new ViewModel.TitleView(t.pill(), t.id(), new ViewModel.Cell(null, t.with().text(), null, null, false, null));
         }
-        return new ViewModel(v.ref(), v.mnemonic(), t, v.strip(), panels, keys, v.provenance(), v.timings());
+        return new ViewModel(v.ref(), v.mnemonic(), t, v.strip(), panels, keys, v.provenance(), v.timings(), v.controls(), v.selects());
     }
 }

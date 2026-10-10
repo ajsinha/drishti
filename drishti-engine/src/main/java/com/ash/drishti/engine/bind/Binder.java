@@ -197,6 +197,78 @@ public final class Binder {
         return first[0];
     }
 
+    /**
+     * The rows of {@code all} the panel's {@code where} keeps ({@code where: "within(@.payDate, ctl.when)"}, with {@code @} the row):
+     * the indexes in {@code all}, or null when the panel has no {@code where}. A row whose condition is masked or fails is left out.
+     */
+    int[] originals(Panel p, DataNode all, EvalContext ctx) {
+        if (!(p.options().get(Panel.WHERE) instanceof String where) || where.isBlank()) {
+            return null;
+        }
+        Expr cond = el.compile(where);
+        int[] kept = new int[all.size()];
+        int n = 0;
+        for (int i = 0; i < all.size(); i++) {
+            boolean ok;
+            try {
+                ok = Values.truthy(cond.eval(ctx.withRow(all.get(i), i)));
+            } catch (RuntimeException e) {
+                ok = false;
+            }
+            if (ok) {
+                kept[n++] = i;
+            }
+        }
+        return java.util.Arrays.copyOf(kept, n);
+    }
+
+    private static DataNode keep(DataNode all, int[] origin) {
+        List<DataNode> kept = new ArrayList<>(origin.length);
+        for (int i : origin) {
+            kept.add(all.get(i));
+        }
+        return new DataNode.Arr(kept);
+    }
+
+    /** {@code rows} with the panel's {@code where} applied (see {@link #originals}). */
+    DataNode where(Panel p, DataNode rows, EvalContext ctx) {
+        int[] origin = originals(p, rows, ctx);
+        return origin == null ? rows : keep(rows, origin);
+    }
+
+    /** The table's {@code limit}: a number, or an expression ({@code ctl.top} of a top-n control); no limit when it reads as nothing. */
+    private int limitOf(Panel p, EvalContext ctx) {
+        Object l = p.options().get("limit");
+        if (l instanceof Number n) {
+            return n.intValue();
+        }
+        if (l instanceof String s) {
+            try {
+                double d = Values.number(eval(s, ctx));
+                return Double.isNaN(d) || d < 1 ? Integer.MAX_VALUE : (int) Math.min(d, Integer.MAX_VALUE);
+            } catch (RuntimeException e) {
+                return Integer.MAX_VALUE;
+            }
+        }
+        return Integer.MAX_VALUE;
+    }
+
+    /** The row field a click on the panel's rows sets in a control ({@code on-select}: {@code field}, else the control's id), or null. */
+    private static String pickField(Panel p) {
+        if (p.options().get(Panel.ON_SELECT) instanceof Map<?, ?> m && m.get("by") instanceof String by) {
+            return m.get("field") instanceof String f ? f : by;
+        }
+        return null;
+    }
+
+    private static String pick(DataNode row, String field) {
+        if (field == null) {
+            return null;
+        }
+        DataNode v = row.get(field);
+        return v.isMasked() || v.asText() == null || v.asText().isEmpty() ? null : v.asText();
+    }
+
     private DataNode node(Object v) {
         return v instanceof DataNode n ? n : DataNode.missing();
     }
@@ -231,9 +303,12 @@ public final class Binder {
     }
 
     private PanelData table(Panel p, BindContext c) {
-        DataNode rows = node(eval(p.option("rows").orElseThrow(), c.eval()));
+        DataNode all = node(eval(p.option("rows").orElseThrow(), c.eval()));
+        int[] origin = originals(p, all, c.eval());                        // rows left after the panel's where, as indexes in the data
+        DataNode rows = origin == null ? all : keep(all, origin);
         String rowsPath = pathOf(p.option("rows").get());
-        int limit = p.options().get("limit") instanceof Number n ? n.intValue() : Integer.MAX_VALUE;
+        int limit = limitOf(p, c.eval());
+        String pickField = pickField(p);
         List<Column> cols = p.columns();
         List<String> headers = cols.stream().map(Column::label).toList();
         List<Boolean> numeric = cols.stream().map(col -> col.fmt() != null && !col.fmt().equals("date") && !col.fmt().equals("text")).toList();
@@ -244,7 +319,7 @@ public final class Binder {
         String childrenExpr = p.option("children").orElse(null);
         int[] budget = {limits.treeRows()};
         for (int i = 0; i < rows.size(); i++) {
-            EvalContext rc = c.eval().withRow(rows.get(i), i);
+            EvalContext rc = c.eval().withRow(rows.get(i), origin == null ? i : origin[i]);   // #index counts the data's rows, not the shown ones
             for (int k = 0; k < cols.size() && childrenExpr == null; k++) {
                 if (cols.get(k).total() && !masked[k]) {
                     Object x = el.compile(cols.get(k).bind()).eval(rc);
@@ -256,7 +331,7 @@ public final class Binder {
             if (i >= limit) {
                 continue;
             }
-            String rowPath = rowsPath == null ? null : rowsPath + "[" + i + "]";
+            String rowPath = rowsPath == null ? null : rowsPath + "[" + (origin == null ? i : origin[i]) + "]";
             if (childrenExpr != null) {
                 PanelData.Row tree = treeRow(cols, rc, rowPath, childrenExpr, highlight, totals, masked, i < limit, 0, budget);
                 if (tree != null) {
@@ -269,7 +344,7 @@ public final class Binder {
                 cells.add(cell(col, rc, null));
             }
             boolean hl = highlight != null && Values.truthy(eval(highlight, rc));
-            out.add(new PanelData.Row(cells, hl, rowPath));
+            out.add(new PanelData.Row(cells, hl, rowPath, null, pick(rows.get(i), pickField)));
         }
         PanelData.Row total = null;
         if (cols.stream().anyMatch(Column::total)) {
@@ -409,7 +484,7 @@ public final class Binder {
             data = EvalContext.of(d.data(), formats);
             source = linkView(src.get().kind(), src.get().id());
         }
-        DataNode rows = node(eval(p.option("rows").orElse("points"), data));
+        DataNode rows = where(p, node(eval(p.option("rows").orElse("points"), data)), data);
         String x = p.option("x").orElse("tenor");
         String y = p.option("y").orElse("value");
         List<String> xs = new ArrayList<>();
@@ -431,7 +506,7 @@ public final class Binder {
     }
 
     private PanelData area(Panel p, BindContext c) {
-        DataNode rows = node(eval(p.option("rows").orElseThrow(), c.eval()));
+        DataNode rows = where(p, node(eval(p.option("rows").orElseThrow(), c.eval())), c.eval());
         String x = p.option("x").orElse("tenor");
         List<String> xs = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
@@ -455,7 +530,7 @@ public final class Binder {
     }
 
     private PanelData bars(Panel p, BindContext c) {
-        DataNode rows = node(eval(p.option("rows").orElseThrow(), c.eval()));
+        DataNode rows = where(p, node(eval(p.option("rows").orElseThrow(), c.eval())), c.eval());
         String label = p.option("label").orElse("label");
         String value = p.option("value").orElse("value");
         String fmt = p.option("fmt").orElse(null);
@@ -538,7 +613,7 @@ public final class Binder {
     }
 
     private PanelData surface(Panel p, BindContext c) {
-        DataNode rows = node(eval(p.option("rows").orElseThrow(), c.eval()));
+        DataNode rows = where(p, node(eval(p.option("rows").orElseThrow(), c.eval())), c.eval());
         String y = p.option("y").orElseThrow();
         List<Column> cols = p.columns();
         List<String> ys = new ArrayList<>();

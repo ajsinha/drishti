@@ -31,6 +31,8 @@ import java.util.Map;
  * @param keys function keys
  * @param provenance how the view was built
  * @param timings stage timings in milliseconds (fetch, layout, bind, links, total)
+ * @param controls the Sutra's controls with their options and current values (empty when it declares none)
+ * @param selects the panels whose rows or bars set a control when clicked
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ViewModel(
@@ -41,7 +43,63 @@ public record ViewModel(
         List<PanelView> panels,
         List<KeyView> keys,
         Provenance provenance,
-        Map<String, Double> timings) {
+        Map<String, Double> timings,
+        @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ControlView> controls,
+        @JsonInclude(JsonInclude.Include.NON_EMPTY) List<SelectView> selects) {
+
+    public ViewModel {
+        controls = controls == null ? List.of() : List.copyOf(controls);
+        selects = selects == null ? List.of() : List.copyOf(selects);
+    }
+
+    /** A view without controls. */
+    public ViewModel(Ref ref, String mnemonic, TitleView title, List<Cell> strip, List<PanelView> panels, List<KeyView> keys,
+            Provenance provenance, Map<String, Double> timings) {
+        this(ref, mnemonic, title, strip, panels, keys, provenance, timings, List.of(), List.of());
+    }
+
+    /** The same view with its controls and selects. */
+    public ViewModel withControls(List<ControlView> controls, List<SelectView> selects) {
+        return new ViewModel(ref, mnemonic, title, strip, panels, keys, provenance, timings, controls, selects);
+    }
+
+    /** One option of a control: the value that is set and the text shown. */
+    public record Opt(String value, String label) {}
+
+    /**
+     * A control as the reader sees it: what it is, the options they may pick (never a masked value), its value now and the panels
+     * that read it (only those are rebuilt when it changes).
+     *
+     * @param id the control's id ({@code ctl.<id>})
+     * @param kind {@code dropdown}, {@code multi-select}, {@code cascading}, {@code toggle}, {@code segmented}, {@code date},
+     *     {@code date-range}, {@code number-range}, {@code top-n} or {@code search}
+     * @param label the text beside it
+     * @param placement {@code strip}, {@code header} or {@code side}
+     * @param panel the panel whose header holds it, for {@code header}
+     * @param parent the control a cascading one depends on
+     * @param options the choices (a date-range's are its presets, resolved on the calendar)
+     * @param value the current value (a range is {@code from..to}; empty when none)
+     * @param values the current choices of a multi-select
+     * @param required whether it cannot be cleared
+     * @param remember whether the reader's last choice is kept
+     * @param min a number range's lower bound (from the data or fixed), or null
+     * @param max its upper bound
+     * @param reads ids of the panels (and {@code strip} or {@code title}) whose expressions read it
+     * @param truncated whether the options were cut at the limit
+     */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public record ControlView(String id, String kind, String label, String placement, String panel, String parent, List<Opt> options,
+            String value, List<String> values, boolean required, boolean remember, String min, String max, List<String> reads,
+            boolean truncated) {}
+
+    /**
+     * A panel whose click sets a control: a table row sets {@code by} to the value of its {@code field}; a bar sets it to its label.
+     *
+     * @param panel the panel clicked
+     * @param by the control set
+     * @param filter the panels the author says it filters (those that read the control are rebuilt)
+     */
+    public record SelectView(String panel, String by, List<String> filter) {}
 
     /** An entity address as sent to clients. */
     public record Ref(String kind, String id) {}

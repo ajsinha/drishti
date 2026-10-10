@@ -18,6 +18,8 @@ package com.ash.drishti.rachana;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.el.ElException;
 import com.ash.drishti.rachana.model.Column;
+import com.ash.drishti.rachana.model.Control;
+import com.ash.drishti.rachana.model.ControlRules;
 import com.ash.drishti.rachana.model.Panel;
 import com.ash.drishti.rachana.model.PanelKind;
 import com.ash.drishti.rachana.model.SourceLocation;
@@ -35,16 +37,16 @@ public final class SutraExpressions {
 
     /** Per panel kind, the options that hold expressions (the rest are field names or literals). */
     static final Map<PanelKind, Set<String>> EL_OPTIONS = Map.ofEntries(
-            Map.entry(PanelKind.KV, Set.of("rows")), Map.entry(PanelKind.TABLE, Set.of("rows", "moreLabel", "children")),
-            Map.entry(PanelKind.TABS, Set.of("each", "tabTitle")), Map.entry(PanelKind.LINE, Set.of("rows", "source", "mark")),
-            Map.entry(PanelKind.AREA, Set.of("rows", "limit")), Map.entry(PanelKind.HBAR, Set.of("rows")),
-            Map.entry(PanelKind.LADDER, Set.of("rows", "highlight", "children")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),
+            Map.entry(PanelKind.KV, Set.of("rows")), Map.entry(PanelKind.TABLE, Set.of("rows", "where", "limit", "moreLabel", "children")),
+            Map.entry(PanelKind.TABS, Set.of("each", "tabTitle")), Map.entry(PanelKind.LINE, Set.of("rows", "where", "source", "mark")),
+            Map.entry(PanelKind.AREA, Set.of("where", "rows", "limit")), Map.entry(PanelKind.HBAR, Set.of("where", "rows")),
+            Map.entry(PanelKind.LADDER, Set.of("rows", "where", "highlight", "children")), Map.entry(PanelKind.GAUGE, Set.of("value", "max")),
             Map.entry(PanelKind.LINKS, Set.of()), Map.entry(PanelKind.STATUS, Set.of()),
-            Map.entry(PanelKind.PROVENANCE, Set.of()), Map.entry(PanelKind.MARKDOWN, Set.of()), Map.entry(PanelKind.SURFACE, Set.of("rows")),
-            Map.entry(PanelKind.WATERFALL, Set.of("rows")), Map.entry(PanelKind.HISTOGRAM, Set.of("rows")),
-            Map.entry(PanelKind.SCATTER, Set.of("rows")), Map.entry(PanelKind.CANDLESTICK, Set.of("rows")),
-            Map.entry(PanelKind.GRAPH, Set.of("nodes", "edges")), Map.entry(PanelKind.TIMELINE, Set.of("rows")),
-            Map.entry(PanelKind.PIVOT, Set.of("rows")), Map.entry(PanelKind.METRIC, Set.of("value", "delta")));
+            Map.entry(PanelKind.PROVENANCE, Set.of()), Map.entry(PanelKind.MARKDOWN, Set.of()), Map.entry(PanelKind.SURFACE, Set.of("where", "rows")),
+            Map.entry(PanelKind.WATERFALL, Set.of("where", "rows")), Map.entry(PanelKind.HISTOGRAM, Set.of("where", "rows")),
+            Map.entry(PanelKind.SCATTER, Set.of("where", "rows")), Map.entry(PanelKind.CANDLESTICK, Set.of("where", "rows")),
+            Map.entry(PanelKind.GRAPH, Set.of("nodes", "edges")), Map.entry(PanelKind.TIMELINE, Set.of("where", "rows")),
+            Map.entry(PanelKind.PIVOT, Set.of("where", "rows")), Map.entry(PanelKind.METRIC, Set.of("value", "delta")));
 
     /** The expression options of a panel kind: its own, and {@code source} for every kind that reads data. */
     static Set<String> expressionOptions(PanelKind kind) {
@@ -62,6 +64,25 @@ public final class SutraExpressions {
         return message == null ? "" : message.replaceFirst("^DRS-\\d+\\s*:?\\s*", "");
     }
 
+    /** The problems of one check, and the control ids the Sutra declares (for {@code ctl.<id>} references). */
+    private static final class Run extends ArrayList<SutraProblem> {
+        private static final long serialVersionUID = 1L;
+        private final transient Set<String> declared;
+
+        Run(Set<String> declared) {
+            this.declared = declared;
+        }
+
+        void references(String src, SourceLocation at) {
+            for (String id : ControlRules.references(src)) {
+                if (!declared.contains(id)) {
+                    add(new SutraProblem("DRS-2036", "'ctl." + id + "' reads a control the Sutra does not declare"
+                            + (declared.isEmpty() ? " (it has no controls:)" : " (it has " + String.join(", ", new java.util.TreeSet<>(declared)) + ")"), at));
+                }
+            }
+        }
+    }
+
     private final ElCompiler compiler;
 
     public SutraExpressions(ElCompiler compiler) {
@@ -70,7 +91,12 @@ public final class SutraExpressions {
 
     /** Compiles every expression in {@code s}; returns the problems (empty when all compile). */
     public List<SutraProblem> check(Sutra s) {
-        List<SutraProblem> out = new ArrayList<>();
+        Run out = new Run(s.controls().stream().map(Control::id).collect(java.util.stream.Collectors.toSet()));
+        s.controls().forEach(c -> {
+            expr(c.from(), c.location(), out);
+            expr(c.min(), c.location(), out);
+            expr(c.max(), c.location(), out);
+        });
         expr(s.match().where(), s.location(), out);
         if (s.title() != null) {
             expr(s.title().id(), s.location(), out);
@@ -86,7 +112,7 @@ public final class SutraExpressions {
         return out;
     }
 
-    private void panel(Panel p, List<SutraProblem> out) {
+    private void panel(Panel p, Run out) {
         template(p.title(), p.location(), out);
         for (Column c : p.columns()) {
             expr(c.bind(), p.location(), out);
@@ -121,10 +147,11 @@ public final class SutraExpressions {
         }
     }
 
-    private void expr(String src, SourceLocation at, List<SutraProblem> out) {
+    private void expr(String src, SourceLocation at, Run out) {
         if (src == null) {
             return;
         }
+        out.references(src, at);
         try {
             compiler.compile(src);
         } catch (ElException e) {
@@ -132,10 +159,11 @@ public final class SutraExpressions {
         }
     }
 
-    private void template(String src, SourceLocation at, List<SutraProblem> out) {
+    private void template(String src, SourceLocation at, Run out) {
         if (src == null) {
             return;
         }
+        out.references(src, at);
         try {
             compiler.template(src);
         } catch (ElException e) {

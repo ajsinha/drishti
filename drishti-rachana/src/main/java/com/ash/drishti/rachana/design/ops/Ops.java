@@ -53,17 +53,18 @@ public final class Ops {
         }
     }
 
-    private static final Map<String, Set<String>> FIELDS = Map.of(
-            "addPanel", Set.of("op", "id", "kind", "at", "options"),
-            "move", Set.of("op", "panel", "area", "before", "after", "span", "height"),
-            "setOption", Set.of("op", "panel", "option", "value"),
-            "bind", Set.of("op", "panel", "path", "role"),
-            "remove", Set.of("op", "panel"),
-            "setTitle", Set.of("op", "title"),
-            "setStrip", Set.of("op", "items"),
-            "setKeys", Set.of("op", "keys"),
-            "setMatch", Set.of("op", "match"),
-            "text", Set.of("op", "yaml"));
+    private static final Map<String, Set<String>> FIELDS = Map.ofEntries(
+            Map.entry("addPanel", Set.of("op", "id", "kind", "at", "options")),
+            Map.entry("move", Set.of("op", "panel", "area", "before", "after", "span", "height")),
+            Map.entry("setOption", Set.of("op", "panel", "option", "value")),
+            Map.entry("bind", Set.of("op", "panel", "path", "role")),
+            Map.entry("remove", Set.of("op", "panel")),
+            Map.entry("setTitle", Set.of("op", "title")),
+            Map.entry("setStrip", Set.of("op", "items")),
+            Map.entry("setControls", Set.of("op", "items")),
+            Map.entry("setKeys", Set.of("op", "keys")),
+            Map.entry("setMatch", Set.of("op", "match")),
+            Map.entry("text", Set.of("op", "yaml")));
     private static final Set<String> AT = Set.of("area", "before", "after", "span", "height");
     private static final ObjectMapper JSON = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .configure(DeserializationFeature.USE_LONG_FOR_INTS, true);
@@ -121,6 +122,7 @@ public final class Ops {
             case "remove" -> new Remove(text(i, n, "panel", true));
             case "setTitle" -> new SetTitle((Map<String, Object>) map(i, n, "title", true));
             case "setStrip" -> new SetStrip(items(i, n));
+            case "setControls" -> new SetControls(items(i, n));
             case "setKeys" -> new SetKeys((Map<String, Object>) map(i, n, "keys", true));
             case "setMatch" -> new SetMatch((Map<String, Object>) map(i, n, "match", true));
             default -> new Text(text(i, n, "yaml", true));
@@ -173,12 +175,12 @@ public final class Ops {
     private static List<Map<String, Object>> items(int i, JsonNode n) {
         JsonNode v = n.get("items");
         if (v == null || !v.isArray()) {
-            throw new FormatException(i, "'setStrip' needs \"items\" (a list of objects)");
+            throw new FormatException(i, "'" + n.path("op").asText() + "' needs \"items\" (a list of objects)");
         }
         List<Map<String, Object>> out = new ArrayList<>();
         for (JsonNode x : v) {
             if (!x.isObject()) {
-                throw new FormatException(i, "each strip item must be an object such as {\"label\":\"PV\",\"bind\":\"$.pv\"}");
+                throw new FormatException(i, "each item must be an object such as {\"label\":\"PV\",\"bind\":\"$.pv\"} (a strip item) or {\"id\":\"leg\",\"kind\":\"dropdown\"} (a control)");
             }
             out.add((Map<String, Object>) java(x));
         }

@@ -69,6 +69,9 @@ public final class RachanaSchema {
         p.put("strip", Map.of("type", "array", "maxItems", 8, "description", "Up to eight fields in the header strip",
                 "items", object(Map.of("label", text("Defaults to the field's name"), "bind", text(EL),
                         "fmt", fmt(formats), "tone", tone(), "emphasis", Map.of("type", "boolean")), List.of("bind"))));
+        p.put("controls", Map.of("type", "array", "maxItems", com.ash.drishti.rachana.model.ControlRules.MAX_CONTROLS,
+                "description", "Controls the reader sets: dropdowns, date ranges, search. Their values are read as ctl.<id> in expressions",
+                "items", controlSchema()));
         p.put("panels", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/panel")));
         Map<String, Object> keys = new LinkedHashMap<>();
         KEYS.forEach(k -> keys.put(k, text(EL + ", or impact or raw")));
@@ -81,6 +84,26 @@ public final class RachanaSchema {
                 .forEach(e -> fns.put(e.getKey(), Map.of("min", e.getValue()[0], "max", e.getValue()[1])));
         s.put("x-rachana-functions", fns);
         return s;
+    }
+
+    private static Map<String, Object> controlSchema() {
+        Map<String, Object> c = new LinkedHashMap<>();
+        c.put("id", Map.of("type", "string", "pattern", "^" + com.ash.drishti.rachana.model.ControlRules.ID_PATTERN + "$",
+                "description", "Read as ctl.<id>"));
+        c.put("kind", Map.of("type", "string", "enum", java.util.Arrays.stream(com.ash.drishti.rachana.model.ControlKind.values())
+                .map(com.ash.drishti.rachana.model.ControlKind::id).toList()));
+        c.put("label", text("The text beside the control"));
+        c.put("options", Map.of("description", "A list of values or {value, label}, an expression over the record ($.legs[*].id), or {kind: <entity kind>}",
+                "oneOf", List.of(Map.of("type", "array"), Map.of("type", "string"), Map.of("type", "object"))));
+        c.put("default", Map.of("description", "A value, first, all, today, or a relative range such as next-90d"));
+        c.put("remember", Map.of("type", "string", "enum", List.of("user", "none")));
+        c.put("required", Map.of("type", "boolean"));
+        c.put("placement", Map.of("type", "string", "enum", List.of("strip", "header", "side")));
+        c.put("panel", text("The panel whose header holds the control (placement: header)"));
+        c.put("parent", text("The control a cascading control depends on"));
+        c.put("min", Map.of("description", "Lower bound of a number-range: a number or an expression over the record"));
+        c.put("max", Map.of("description", "Upper bound of a number-range"));
+        return object(c, List.of("id", "kind"));
     }
 
     private static Map<String, Object> panel(Collection<String> formats) {
@@ -97,6 +120,8 @@ public final class RachanaSchema {
         common.put("height", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_HEIGHT,
                 "description", "Height in grid rows of 2.5rem (default: as tall as the content)"));
         common.put("infer", Map.of("type", "boolean", "description", "Let inference fill the columns"));
+        common.put("where", text(EL + " that must be true for a row to be shown (it may read ctl.<id>)"));
+        common.put("on-select", Map.of("type", "object", "description", "A click on a row or bar sets a control: {filter: [panel ids], by: <control id>, field: <row field>}"));
         common.put("columns", Map.of("type", "array", "items", Map.of("$ref", "#/$defs/column")));
         common.put("body", Map.of("$ref", "#/$defs/panel"));
         List<Object> perKind = new ArrayList<>();

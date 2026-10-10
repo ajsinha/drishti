@@ -20,6 +20,7 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.engine.ViewPipeline;
+import com.ash.drishti.engine.control.ControlValues;
 import com.ash.drishti.engine.live.Frame;
 import com.ash.drishti.engine.live.LiveMetrics;
 import com.ash.drishti.engine.live.LiveProperties;
@@ -87,7 +88,8 @@ public class StreamController {
 
     @GetMapping(path = "/views/{kind}/{id}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(@PathVariable String kind, @PathVariable String id, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
+            @RequestAttribute(Principal.ATTRIBUTE) Principal principal, jakarta.servlet.http.HttpServletRequest request) {
+        ControlValues controls = ControlValues.of(request.getParameterMap());
         entitlements.requireOpen(principal, kind);
         LiveStreamSlots.Slot slot = slots.tryAcquire();   // taken first and atomically: concurrent requests cannot overshoot the cap
         if (slot == null) {
@@ -97,7 +99,7 @@ public class StreamController {
         var redact = entitlements.redactor(principal);           // the first view and every rebuild: as the caller may see it
         ViewModel initial;
         try {
-            initial = pipeline.view(ref, asOf, redact, k -> entitlements.mayOpen(principal, k));
+            initial = pipeline.view(ref, asOf, redact, k -> entitlements.mayOpen(principal, k), controls);
         } catch (RuntimeException e) {
             slot.release();
             throw e;
@@ -124,7 +126,7 @@ public class StreamController {
                     recents.forget(ref);              // the command line stops offering a deleted entity as recent
                 }
                 box.offer(f);
-            }, redact, k -> entitlements.mayOpen(principal, k));
+            }, redact, k -> entitlements.mayOpen(principal, k), controls);
         } catch (RuntimeException e) {
             slot.release();
             throw e;

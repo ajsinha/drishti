@@ -32,7 +32,8 @@ public final class Functions {
             Map.entry("last", new int[] {1, 1}), Map.entry("abs", new int[] {1, 1}), Map.entry("min", new int[] {1, 8}),
             Map.entry("max", new int[] {1, 8}), Map.entry("upper", new int[] {1, 1}), Map.entry("lower", new int[] {1, 1}),
             Map.entry("contains", new int[] {2, 2}), Map.entry("startsWith", new int[] {2, 2}),
-            Map.entry("matches", new int[] {2, 2}), Map.entry("matchesCase", new int[] {2, 2}));
+            Map.entry("matches", new int[] {2, 2}), Map.entry("matchesCase", new int[] {2, 2}),
+            Map.entry("within", new int[] {2, 2}), Map.entry("oneOf", new int[] {2, 2}));
 
     private static final Map<String, ElFunction> FUNCTIONS = Map.ofEntries(
             Map.entry("link", Functions::link), Map.entry("size", (a, c) -> size(a.get(0))),
@@ -47,7 +48,9 @@ public final class Functions {
             Map.entry("contains", (a, c) -> contains(a.get(0), Values.text(a.get(1)))),
             Map.entry("startsWith", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT).startsWith(Values.text(a.get(1)).toLowerCase(Locale.ROOT))),
             Map.entry("matches", (a, c) -> matches(a.get(0), Values.text(a.get(1)), true)),
-            Map.entry("matchesCase", (a, c) -> matches(a.get(0), Values.text(a.get(1)), false)));
+            Map.entry("matchesCase", (a, c) -> matches(a.get(0), Values.text(a.get(1)), false)),
+            Map.entry("within", (a, c) -> within(a.get(0), Values.text(a.get(1)))),
+            Map.entry("oneOf", (a, c) -> oneOf(a.get(0), a.get(1))));
 
     private static final java.util.concurrent.ConcurrentHashMap<String, com.ash.drishti.common.SafeRegex> PATTERNS = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -65,6 +68,49 @@ public final class Functions {
     }
 
     private Functions() {}
+
+    /**
+     * {@code within(value, range)}: the value lies in a {@code from..to} range (a date-range or number-range control; either end
+     * may be empty, and an empty range holds everything). Numbers compare as numbers, anything else as text, so ISO dates order.
+     */
+    private static boolean within(Object value, String range) {
+        int cut = range.indexOf("..");
+        String from = cut < 0 ? range.trim() : range.substring(0, cut).trim();
+        String to = cut < 0 ? "" : range.substring(cut + 2).trim();
+        if (from.isEmpty() && to.isEmpty()) {
+            return true;
+        }
+        Object v = Values.simplify(value);
+        if (v == null) {
+            return false;
+        }
+        double x = Values.number(v);
+        boolean numeric = !Double.isNaN(x) && (from.isEmpty() || !Double.isNaN(Values.number(from)))
+                && (to.isEmpty() || !Double.isNaN(Values.number(to)));
+        if (numeric) {
+            return (from.isEmpty() || x >= Values.number(from)) && (to.isEmpty() || x <= Values.number(to));
+        }
+        String t = Values.text(v);
+        String day = t.length() > 10 && t.charAt(10) == 'T' ? t.substring(0, 10) : t;     // a timestamp is compared by its date
+        return (from.isEmpty() || day.compareTo(from) >= 0) && (to.isEmpty() || day.compareTo(to) <= 0);
+    }
+
+    /** {@code oneOf(value, list)}: the value is one of a multi-select control's choices; nothing chosen holds everything. */
+    private static boolean oneOf(Object value, Object choices) {
+        Object list = Values.simplify(choices);
+        if (list instanceof DataNode n && n.type() == com.ash.drishti.api.NodeType.ARRAY) {
+            if (n.size() == 0) {
+                return true;
+            }
+            for (int i = 0; i < n.size(); i++) {
+                if (Values.equal(value, n.get(i))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return list == null || Values.text(list).isEmpty() || Values.equal(value, list);
+    }
 
     /** Case-insensitive: text contains the part, or a list has an element that does. */
     private static boolean contains(Object where, String part) {

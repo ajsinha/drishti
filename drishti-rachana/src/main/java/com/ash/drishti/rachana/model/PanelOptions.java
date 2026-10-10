@@ -73,14 +73,18 @@ public final class PanelOptions {
     /** Why {@code value} is not valid for {@code option} of {@code kind} panels; empty when it is. */
     public static Optional<String> problem(PanelKind kind, String option, Object value) {
         String what = "option '" + option + "' of '" + kind.id() + "' panels";
+        if (Panel.WHERE.equals(option) && !(value instanceof String)) {
+            return Optional.of(what + " is a condition written as text (such as oneOf(@.leg, ctl.legs)), not '" + value + "'");
+        }
         if (LIST_EXPRESSIONS.contains(option) && !(value instanceof String)) {
             return Optional.of(what + " is an expression written as text (such as $.cashflows), not '" + value + "'");
         }
         if (kind == PanelKind.MARKDOWN && option.equals("text") && !(value instanceof String)) {
             return Optional.of(what + " is text (a template with ${expression} parts), not '" + value + "'");
         }
-        if (kind == PanelKind.TABLE && option.equals("limit") && !(value instanceof Long n && n >= 1 && n <= Integer.MAX_VALUE)) {
-            return Optional.of(what + " must be a whole number of rows, 1 or more, not '" + value + "'");
+        if (kind == PanelKind.TABLE && option.equals("limit") && !(value instanceof Long n && n >= 1 && n <= Integer.MAX_VALUE)
+                && !(value instanceof String s && s.contains("ctl."))) {
+            return Optional.of(what + " must be a whole number of rows, 1 or more (or an expression over a top-n control, ctl.top), not '" + value + "'");
         }
         if (option.equals("expand") && (kind == PanelKind.PIVOT || kind == PanelKind.TABLE || kind == PanelKind.LADDER)
                 && !(value instanceof Long n && n >= 1 && n <= Integer.MAX_VALUE || "all".equals(value))) {

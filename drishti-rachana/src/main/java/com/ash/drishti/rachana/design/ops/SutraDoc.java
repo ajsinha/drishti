@@ -35,7 +35,7 @@ import java.util.Map;
 final class SutraDoc {
 
     /** Top-level keys in their conventional order: a key that is absent goes before the first later key that is present. */
-    private static final List<String> TOP_ORDER = List.of("rachana", "sutra", "version", "domain", "description", "match", "title", "strip",
+    private static final List<String> TOP_ORDER = List.of("rachana", "sutra", "version", "domain", "description", "match", "title", "strip", "controls",
             "panels", "keys", "notes");
 
     private final SutraParser parser = new SutraParser();
@@ -179,7 +179,7 @@ final class SutraDoc {
 
     private static List<String> render(String key, Object value) {
         List<String> out = new ArrayList<>();
-        if (value instanceof List<?> l && "strip".equals(key)) {
+        if (value instanceof List<?> l && ("strip".equals(key) || "controls".equals(key))) {
             out.add(key + ":");
             l.forEach(o -> out.add("  - " + YamlText.flow(o)));
         } else if (value instanceof Map<?, ?> m && "keys".equals(key)) {

@@ -66,7 +66,8 @@ final class ChartBinder {
 
     private DataNode list(Panel p, String option, BindContext c) {
         Object v = binder.eval(p.option(option).orElseThrow(), c.eval());
-        return v instanceof DataNode n ? n : DataNode.missing();
+        DataNode n = v instanceof DataNode d ? d : DataNode.missing();
+        return "rows".equals(option) ? binder.where(p, n, c.eval()) : n;
     }
 
     /** A row's value: an expression over the row when {@code spec} reads like one, else a field or dotted path. */

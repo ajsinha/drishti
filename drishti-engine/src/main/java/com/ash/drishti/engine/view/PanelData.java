@@ -61,11 +61,17 @@ public sealed interface PanelData {
      * @param highlight draw this row highlighted
      * @param path document path of the row, for live patches
      * @param children the rows nested under this one (Sutra {@code children}), each with its own children; absent for a leaf
+     * @param pick the value a click on the row sets in a control ({@code on-select}); absent when the panel does not select
      */
-    record Row(List<Cell> cells, boolean highlight, String path, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Row> children) {
+    record Row(List<Cell> cells, boolean highlight, String path, @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Row> children,
+            @JsonInclude(JsonInclude.Include.NON_NULL) String pick) {
+
+        public Row(List<Cell> cells, boolean highlight, String path, List<Row> children) {
+            this(cells, highlight, path, children, null);
+        }
 
         public Row(List<Cell> cells, boolean highlight, String path) {
-            this(cells, highlight, path, null);
+            this(cells, highlight, path, null, null);
         }
     }
 

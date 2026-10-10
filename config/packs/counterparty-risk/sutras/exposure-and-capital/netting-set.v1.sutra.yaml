@@ -28,6 +28,10 @@ strip:
   - { label: Limit, bind: $.limit, fmt: compact }
   - { label: Utilisation, bind: $.utilisation, fmt: pct0 }
   - { label: CVA, bind: $.cva, fmt: signed0, tone: sign }
+controls:
+  - { id: asset, kind: dropdown, label: Asset class, options: "$.byAsset[*].asset", placement: header, panel: trades }
+  - { id: product, kind: multi-select, label: Product, options: "$.trades[*].product", placement: header, panel: trades }
+  - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }
 panels:
   - id: exposure
     kind: area
@@ -42,10 +46,12 @@ panels:
       - { label: PFE 95, value: pfe, tone: accent }
   - id: trades
     kind: table
-    title: Member trades
+    title: "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}"
     code: TRD
     key: F3
     rows: $.trades
+    where: "(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product)"
+    limit: ctl.top
     pivot:
       fields: [product, assetClass, currency, book, maturityBucket, { field: maturity, label: Maturity date }, { field: notional, fmt: compact }, { field: mtm, label: MTM (USD), fmt: signed0 }, tradeId]
       rows: [product]
@@ -63,6 +69,7 @@ panels:
     title: Net MTM by asset class
     area: right
     rows: $.byAsset
+    on-select: { by: asset, field: asset, filter: [trades] }
     label: asset
     value: mtm
     fmt: signed0
