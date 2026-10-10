@@ -414,6 +414,21 @@ and type-ahead), at 44 px on touch screens, and is announced to screen readers.
 grammar change); (2) `controls:` and `ctl.*` in Sutras, with URL view state; (3) cross-filtering; (4) the same model as
 Rūpaka slicers and the visual, page and report filters of the designer.
 
+### 8.2 Forms: the same criteria in the terminal and in BI
+
+`FORM <pack> <GO>` (query by form, built in the terminal) and Rūpaka's filters are one model. A pack's `form:` section
+(fields, types, operators, defaults, groups) is the **filter vocabulary** of its kinds:
+
+- **Reports.** A report page may declare a *form panel*: the same typed inputs (text with regex, number and amount ranges,
+  business-date ranges, enums, id lists), placed as the page's filter pane. Submitting it sets the page's filters; it is
+  a control set (section 8.1) whose values compile to the dataset query's predicates, with row rules and masks applied.
+- **Datasets.** A dataset table built from a pack kind inherits that kind's form fields as its default filters and slicers;
+  the dataset may rename, hide or add fields.
+- **Designers.** The Sutra designer's *Form* tab and the BI designer's *Filters* pane edit the same field model (type,
+  operators, label, default, required, group), so a field defined once is offered in both.
+- **Drill.** A form's results grid opens the record's Sutra view on its key, and a BI visual's *Show the rows* opens the
+  same grid, so the two paths meet.
+
 ## 9. The designer
 
 Power BI authors find the same panes in the same places:
@@ -670,7 +685,7 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 | Phase | What | Size | Done when |
 |---|---|---|---|
 | 0 | **Proof of concept**: Perspective live grid fed by Drishti's live path; masked Arrow out of a server DuckDB query; DuckDB-Wasm slicing it; CSP and size measured | M | a page shows a live pivot at target rates and a cached query under target, with masks proven |
-| 0a | **Interactive Sutras** (section 8.1): Excel-style column filters on every table, then `controls:` and `ctl.*` with URL view state, then cross-filtering | M | a desk filters a trade's cashflows by leg and date from a dropdown, and any table by column filters, by mouse, keyboard and touch |
+| 0a | **Interactive Sutras** (sections 8.1, 8.2; query by form is built first, in the terminal): Excel-style column filters on every table, then `controls:` and `ctl.*` with URL view state, then cross-filtering | M | a desk filters a trade's cashflows by leg and date from a dropdown, and any table by column filters, by mouse, keyboard and touch |
 | 1 | **Shell and catalogue**: BI top bar item, `RUPAKA <GO>`, `/bi` home, catalogue, workspaces (personal and shared), powers, audit | M | a published report appears for its audience only |
 | 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows |
 | 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test) |
