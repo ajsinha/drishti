@@ -17,7 +17,8 @@
 {% block title %}Sign in · {{ PRODUCT }}{% endblock %}
 {% block content %}
 <div class="login">
-  {% if not AUTH_ENABLED %}<div class="login-box">
+  {# sign-in is off only when neither passwords nor single sign-on are on; an error (a cancelled SSO) always shows the form #}
+  {% if not AUTH_ENABLED and not request.app.state.oidc.enabled and not error %}<div class="login-box">
     <h1>Sign in</h1>
     <p class="pnl-note" role="status" data-sign-in-off>Sign-in is off on this server, so there is nothing to sign in to: you already act as the development user.</p>
     <a class="btn-pill btn-accent" href="/t">Open the terminal</a>
