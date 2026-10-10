@@ -79,7 +79,7 @@ def test_small_files_images_ranges_and_clients_that_do_not_ask_are_served_as_the
         assert "content-encoding" not in r.headers and r.content == (root / name).read_bytes()
     r = client.get("/static/big.js", headers={"accept-encoding": "gzip", "range": "bytes=0-9"})
     assert r.status_code == 206 and "content-encoding" not in r.headers and r.content == (root / "big.js").read_bytes()[:10]
-    assert "content-encoding" not in client.get("/static/big.js").headers
+    assert "content-encoding" not in client.get("/static/big.js", headers={"accept-encoding": "identity"}).headers
 
 
 def test_the_validator_names_the_representation(site):

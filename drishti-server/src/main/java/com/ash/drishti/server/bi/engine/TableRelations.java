@@ -14,7 +14,7 @@ import java.util.List;
  * query. Calculated columns are added here, in a wrapping select, so a measure sees them like stored ones. Two kinds: over the columns layer's
  * Parquet files, and over a SQL store's table (pushdown).
  */
-final class TableRelations {
+public final class TableRelations {
 
     private TableRelations() {}
 
@@ -30,7 +30,7 @@ final class TableRelations {
     }
 
     /** The layer's files as the table; no files means no rows (an empty table of the right columns), never an error. */
-    static SqlCompiler.Source cached(Dataset ds, Dataset.Table t, List<Path> files, Dialect d) {
+    public static SqlCompiler.Source cached(Dataset ds, Dataset.Table t, List<Path> files, Dialect d) {
         String inner;
         if (files.isEmpty()) {
             List<String> cols = new ArrayList<>();

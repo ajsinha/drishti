@@ -18,7 +18,15 @@ package com.ash.drishti.server.bi.poc;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.server.bi.dataset.Dataset;
+import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
+import com.ash.drishti.server.bi.engine.Dialect;
+import com.ash.drishti.server.bi.engine.DuckDbEngine;
+import com.ash.drishti.server.bi.engine.QueryProperties;
+import com.ash.drishti.server.bi.engine.QueryRequest;
+import com.ash.drishti.server.bi.engine.SqlCompiler;
+import com.ash.drishti.server.bi.engine.TableRelations;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,7 +47,9 @@ import java.util.stream.Stream;
 import org.duckdb.DuckDBConnection;
 
 /**
- * RUPAKA PHASE 0 PROOF OF CONCEPT. The server's analytical engine in miniature: an embedded DuckDB over a small sample lake
+ * RUPAKA PHASE 0 PROOF OF CONCEPT. Since phase 2 the typed and rollup queries of {@link #run} are compiled and run by the real engine
+ * ({@link com.ash.drishti.server.bi.engine.SqlCompiler} and {@link DuckDbEngine}, the same code a dataset query uses); the JSON layout and the
+ * layout comparison keep the POC's own SQL, because the engine has no JSON-document layer on purpose. The server's analytical engine in miniature: an embedded DuckDB over a small sample lake
  * of Parquet files (a JSON document column plus typed columns, and a pre-aggregated rollup), answering one fixed,
  * parameterised aggregation (group by up to {@code max-group-by} of the dimensions: sum notional, sum mtm, count) and
  * returning it as Arrow IPC bytes. Field masks are applied by column: a masked dimension reads the mask in every row (and is
@@ -93,6 +103,9 @@ public final class PocQueryService implements AutoCloseable {
      */
     public Answer run(Query q, Predicate<String> masked) {
         validate(q, masked);
+        if (q.layout() != Layout.JSON) {
+            return viaEngine(q, masked);
+        }
         long t0 = System.nanoTime();
         Built built = build(q, masked);
         List<ArrowIpcWriter.Column> columns = new ArrayList<>();
@@ -129,6 +142,63 @@ public final class PocQueryService implements AutoCloseable {
         List<String> hidden = new ArrayList<>();
         Stream.concat(q.groupBy().stream(), MEASURES.stream()).filter(masked).forEach(hidden::add);
         return new Answer(arrow, rows, (System.nanoTime() - t0) / 1e6, hidden, q.layout());
+    }
+
+    private static final String DIMS = "      desk: string\n      currency: string\n      productType: string\n      side: string\n      trader: string\n      book: string\n      notional: decimal\n      mtm: decimal\n";
+    private DuckDbEngine engine;
+
+    /**
+     * The typed and rollup layouts through the real engine: the POC lake's Parquet files are the table, the query is compiled by the dataset
+     * compiler (masks, bound values, grouping) and run by the engine; the answer is the same Arrow stream as before.
+     */
+    private Answer viaEngine(Query q, Predicate<String> masked) {
+        try {
+            connection().close();                                   // makes sure the lake exists
+        } catch (SQLException | IOException e) {
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the POC lake could not be made: " + e.getMessage());
+        }
+        boolean rollup = q.layout() == Layout.ROLLUP;
+        Dataset ds = DatasetParser.parse("dataset: poc\ntables:\n  trades:\n    source: { kind: poc }\n    columns:\n" + DIMS + (rollup ? "      n: integer\n      date: date\n" : "")
+                + "measures:\n  notional: { expr: \"sum(trades.notional)\" }\n  mtm: { expr: \"sum(trades.mtm)\" }\n  trades: { expr: \""
+                + (rollup ? "sum(trades.n)" : "count(trades)") + "\" }\n").dataset();
+        List<java.nio.file.Path> files = new ArrayList<>();
+        if (rollup) {
+            files.add(lake.resolve("rollup").resolve("rollup.parquet"));
+        } else {
+            try (Stream<Path> days = Files.list(lake.resolve("trades"))) {
+                days.filter(d -> q.date() == null || d.getFileName().toString().equals("date=" + q.date())).sorted().forEach(d -> files.add(d.resolve("trades.parquet")));
+            } catch (IOException e) {
+                throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the POC lake could not be read: " + e.getMessage());
+            }
+        }
+        List<QueryRequest.Filter> filters = new ArrayList<>();
+        if (q.filterColumn() != null) {
+            filters.add(new QueryRequest.Filter("trades." + q.filterColumn(), "eq", List.of(q.filterValue())));
+        }
+        if (rollup && q.date() != null) {
+            filters.add(new QueryRequest.Filter("trades.date", "eq", List.of(q.date())));
+        }
+        QueryRequest request = new QueryRequest(q.groupBy().stream().map(d -> "trades." + d).toList(), List.of("notional", "mtm", "trades"), filters, null, null, List.of(), null, "columns");
+        SqlCompiler.Masks masks = (t, c) -> masked.test(c);
+        SqlCompiler.Reader reader = new SqlCompiler.Reader(false, java.util.Set.of(), java.util.Map.of(), masks);
+        SqlCompiler compiler = new SqlCompiler(ds, Dialect.DUCKDB);
+        SqlCompiler.Compiled c = compiler.compile(compiler.plan(request, reader), reader, java.util.Map.of("trades", TableRelations.cached(ds, ds.tables().get("trades"), files, Dialect.DUCKDB)), 10_000, null);
+        long t0 = System.nanoTime();
+        com.ash.drishti.server.bi.engine.AnalyticEngine.Answer a = engine().query(c.sql(), c.params(), 10_000, java.time.Duration.ofSeconds(30));
+        List<ArrowIpcWriter.Column> cols = new ArrayList<>();
+        for (ArrowIpcWriter.Column col : a.columns()) {
+            cols.add(new ArrowIpcWriter.Column(col.name().startsWith("trades.") ? col.name().substring(7) : col.name(), col.kind(), col.values()));
+        }
+        List<String> hidden = new ArrayList<>();
+        Stream.concat(q.groupBy().stream(), MEASURES.stream()).filter(masked).forEach(hidden::add);
+        return new Answer(ArrowIpcWriter.write(cols, a.rows()), a.rows(), (System.nanoTime() - t0) / 1e6, hidden, q.layout());
+    }
+
+    private synchronized DuckDbEngine engine() {
+        if (engine == null) {
+            engine = new DuckDbEngine(QueryProperties.defaults(lake.resolve("engine").toString()));
+        }
+        return engine;
     }
 
     private record Built(String sql, List<String> params, List<String> names, List<ArrowIpcWriter.Kind> kinds) {}
@@ -409,6 +479,9 @@ public final class PocQueryService implements AutoCloseable {
 
     @Override
     public synchronized void close() {
+        if (engine != null) {
+            engine.close();
+        }
         if (root != null) {
             try {
                 root.close();
