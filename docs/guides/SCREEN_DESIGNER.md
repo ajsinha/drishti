@@ -229,6 +229,27 @@ The **About** tab (right pane, after Versions) is the pack's `config/about.yaml`
 
 **Not live.** About text authored here is evidence and a draft: *Submit for review* and approval make the **Sutra** live, not the About text, because packs are loaded by administrators. To make the text live, put the exported `config/about.yaml` in the pack ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); until then the drawer on a live view shows what the pack says. The preview in the tab shows yours over the pack's.
 
+### The Form tab
+
+The **Form** tab (right pane, after About) is the **search form** of the design's kind: what `FORM <pack>` shows people who search it ([Search with a form](USER_GUIDE.md#search-with-a-form-form-pack)).
+It is the `form:` section of `pack.yaml` for that kind, kept with the design.
+
+![The Form tab: the fields of the samples as buttons, a card for each form field, the YAML and the preview](img/form/05-designer-form-tab.jpg)
+
+- **Add from the palette.** *Fields in the samples* lists the scalar fields of the design's samples (two levels deep), each with the type its values suggest (`weightKg` an amount, `departed` a date, `reefer` yes/no).
+  Click one, or focus it and press Enter, to add it to the form; a field already in the form is greyed.
+- **Cards.** Each form field is a card: label, type, group, default, help, the **operators** it offers (the first stays the default; at least one) and *Required* / *Hidden*. Changing the type
+  keeps the operators that still suit it.
+- **Reorder.** Drag a card by its handle, press the ↑ or ↓ button, or focus the card and press **Alt+Up** or **Alt+Down**; **Delete** on a focused card removes it. If any field has an `order`, the order is renumbered to match.
+- **YAML, both ways.** Open *YAML* under the cards: it is the same list, written as you edit the cards. Edit the text instead and, once it reads without problems, the cards follow;
+  while it has problems (`DRS-2060`, each naming the field and what is allowed) the cards keep the last form that read and the problems are listed under them.
+- **Preview.** Under the YAML is the form as people will see it (types, operators, groups, help), over the fields now in the cards. Nothing is searched.
+- **Starter** writes a form from the samples; **Use the form in force** copies the kind's form as the server has it now (the pack's own, or one approved before).
+- **Keep it, undo it.** After a pause the text is kept as **a step of the design's log**, like About text: it gets a revision and **Undo / Redo** cover it.
+- **Review.** *Submit for review* sends the form with the Sutra. The reviewer's page shows **Search form of <kind>** with the form in force and the proposed form side by side.
+  On approval the proposed form is in force at once, kept on the server in front of the pack's own `form:` until the pack carries the change (copy it into the pack's `form:` or its generator,
+  then `pack check`); *Revert* is deleting the kept form. With no review configured the form is in force when you propose. A form change needs a Sutra to travel with: propose the design as usual.
+
 ## 10. Problems
 
 ![The Problems tab: a refused edit with its line, and what the light check found](img/designer/14-problems.jpg)

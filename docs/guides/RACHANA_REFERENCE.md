@@ -1682,6 +1682,8 @@ The set is closed (`Functions.java`); a name outside it is a compile error
 | `lower(text)` | 1 | lower case |
 | `contains(where, part)` | 2 | **case-insensitive**: true when the text contains `part`, or when `where` is a list with an element that does (nested lists are searched) |
 | `startsWith(text, prefix)` | 2 | **case-insensitive** prefix test |
+| `matches(text, pattern)` | 2 | **case-insensitive** regular-expression test, matching anywhere in the text (anchor with `^` and `$`). The pattern is run by a linear-time engine, so no pattern can take exponential time: classes `[a-z]` `\d` `\w` `\s`, groups `( )` and `(?: )`, alternation `\|`, `* + ? {n,m}`, `^`, `$`, a leading `(?i)`. Back-references, look-around, atomic groups, possessive quantifiers and `\b` are refused (`DRS-4010`), as is a pattern over 200 characters; a value is cut to 8,192 characters and a match over 50 ms is `DRS-4011`. In a search: `TRD where counterparty.name matches '^Mer.*n$'` |
+| `matchesCase(text, pattern)` | 2 | `matches`, but upper and lower case differ |
 
 Examples against `MX-20000001`:
 
