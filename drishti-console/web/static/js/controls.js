@@ -99,25 +99,20 @@
         set = function () { s.value = cur[d.id]; };
       } else if (d.kind === 'multi-select') {
         wrap = el('div', 'ctl ctl-multi', null, { 'data-ctl': d.id });
-        var det = el('details', 'ctl-pop'), sum = el('summary', 'ctl-sum', null, { id: id, 'aria-label': (d.label || d.id) + ' choices' });
-        var box = el('div', 'ctl-list', null, { role: 'group', 'aria-label': d.label || d.id });
+        var det = el('details', 'ctl-pop'), sum = el('summary', 'ctl-sum', null, { id: id });
         var boxes = [];
+        det.appendChild(sum);
         (d.options || []).forEach(function (o) {
-          var l = el('label', 'ctl-item'), c = el('input', null, null, { type: 'checkbox', value: o.value });
-          l.appendChild(c); l.appendChild(el('span', null, o.label || o.value)); box.appendChild(l); boxes.push(c);
-          c.addEventListener('change', function () { change(d.id, boxes.filter(function (x) { return x.checked; }).map(function (x) { return x.value; }).join(',')); });
+          var l = el('label', 'ctl-item'), c = el('input', null, null, { type: 'checkbox', value: o.value, 'data-text': o.label || o.value });
+          l.appendChild(c); l.appendChild(el('span', null, o.label || o.value)); det.appendChild(l); boxes.push(c);
         });
-        var all = el('button', 'ctl-act', 'All', { type: 'button' }), none = el('button', 'ctl-act', 'None', { type: 'button' });
-        all.addEventListener('click', function () { change(d.id, boxes.map(function (x) { return x.value; }).join(',')); });
-        none.addEventListener('click', function () { change(d.id, ''); });
-        var acts = el('div', 'ctl-acts'); acts.appendChild(all); acts.appendChild(none);
-        det.appendChild(sum); det.appendChild(acts); det.appendChild(box);
-        det.addEventListener('keydown', function (e) { if (e.key === 'Escape' && det.open) { det.open = false; sum.focus(); e.stopPropagation(); } });
+        var ms = reg.multiselect.decorate(det, { label: d.label || d.id, boxes: boxes, onChange: function () {
+          change(d.id, boxes.filter(function (x) { return x.checked; }).map(function (x) { return x.value; }).join(',')); } });
         wrap.appendChild(el('span', 'ctl-l', d.label || d.id, { id: id + '-l' })); wrap.appendChild(det); focusEl = sum;
         set = function () {
           var chosen = cur[d.id] ? cur[d.id].split(',') : [];
           boxes.forEach(function (x) { x.checked = chosen.indexOf(x.value) >= 0; });
-          sum.textContent = !chosen.length || chosen.length === boxes.length ? 'All (' + boxes.length + ')' : chosen.length <= 2 ? chosen.join(', ') : chosen.length + ' of ' + boxes.length;
+          ms.refresh();
         };
       } else if (d.kind === 'toggle' && (d.options || []).length === 2) {
         var sw = el('button', 'ctl-switch', null, { type: 'button', role: 'switch', id: id });

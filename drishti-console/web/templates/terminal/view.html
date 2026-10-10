@@ -133,7 +133,7 @@
 <script src="/static/js/discussion-view.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/discussion.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/zoom.js?v={{ ASSET_V }}"></script>
-{% if vm.controls %}<script src="/static/js/controls.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if vm.controls %}<script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/controls.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
 <script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}

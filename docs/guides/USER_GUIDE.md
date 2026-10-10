@@ -35,6 +35,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [The command line](#the-command-line) | Opening an entity, suggestions, what an error means |
 | [Pick lists](#pick-lists-when-a-command-names-several-entities) | `TRD MX-200000`, `CPTY north`, `TRD productType=Revolver`, `TRD` |
 | [Tables: paging and the keyboard](#tables-sorting-filtering-paging-and-the-keyboard) | The pager, ▲ ▼, and the keys that walk a table |
+| [Controls on a screen](#controls-on-a-screen-choose-what-a-panel-shows) | Dropdowns, date ranges and search that a screen offers: pick a leg or a period and only the panels that depend on it move; the choice is in the address |
 | [Filter a table like Excel](#filter-a-table-like-excel) | A funnel in every column heading: tick values or filter by a condition, in the address, with `Alt+Shift+X` to clear |
 | [Reading a view](#reading-a-view) | Title, strip, panels, links, provenance |
 | [About this page](#about-this-page) | `?`: what the page is, what each number means, where the data came from, why it looks like this |
@@ -487,6 +488,57 @@ in it is at least 44 pixels high.
 | `Enter` | OK |
 | `Esc` | Cancel and close the menu, and nothing more: a zoomed panel or a drawer stays; a second `Esc` leaves them |
 | `Alt`+`Shift`+`X` | Clear all filters of the panel that has the focus |
+
+## Controls on a screen: choose what a panel shows
+
+Some screens offer **controls**: a dropdown, a list of boxes to tick, a pair of dates, a search box. They are the Sutra's own (its author put
+them where they help), and they are different from the funnels of [Filter a table like Excel](#filter-a-table-like-excel): a funnel filters
+what a table already holds; a control changes what the *panel shows*, and it can change a title, a total, a chart and the rows together. Two
+screens that ship with them: an interest-rate swap (`TRD MX-20000001 <GO>`: its **Cashflows** by leg and by date range) and a netting set
+(`NS-MERIDIAN-RE-NY`: its **Member trades** by asset class, product and how many to show).
+
+![The cashflows of a swap with the controls Legs (open: All, None, a box per leg) and Paid between (two dates and a presets list) in the panel's header](img/controls/01-header.jpg)
+
+**Using them.** A control sits under the strip, in a panel's header or in a bar at the side of the screen, with its label. Change one and
+**only the panels that read it** are rebuilt, in place (you keep your place, your zoom and your other filters); the rest of the screen does not
+move, and a line for screen readers says what was updated. On the swap, the date presets (*Next 90 days*, *This month*, *Year to date* ...)
+fill both dates for you; either date may be left empty (*from the start*, *to the end*).
+
+| Control | How |
+|---|---|
+| a **dropdown** (also *cascading*: the second one's choices follow the first) | Pick a value; *(all)* clears it |
+| a **list of boxes** (multi-select) | `Enter` or `Space` on its button opens the list; tick boxes, or *All* / *None*; `Esc` closes it. Nothing ticked means everything |
+| a **switch** or **buttons** | Click, or `Space`; with buttons the arrow keys move and choose |
+| **dates**, a **number range** | Type or pick; the panel follows when you leave the box (numbers: when you pause) |
+| **Show 10 / 25 / 50** (top-n) | Pick how many rows |
+| **Find** (search) | Type; the panel follows when you pause |
+
+![The same swap with leg 2 only and the next 90 days: the panel's title says what it shows, and the address carries both choices](img/controls/02-filtered.jpg)
+
+**The address remembers.** What you set is written to the address: `.../v/trade/MX-20000001?ctl.legs=2&ctl.when=2026-10-09..2027-01-06`
+(a relative choice such as *Next 90 days* is written as the dates it meant). Send the link, bookmark it or press **Share**: whoever opens it sees
+the same panels with the same controls. A control you have not touched is not in the address, so it starts at the author's default. A control
+the author marked *remember* (Legs on the swap) also comes back as you last left it **in this browser** the next time you open the screen
+with no address values; another browser, or another person, starts from the defaults.
+
+**Click a row or a bar to choose.** On the netting set, *Net MTM by asset class* is a chart you can click: a click (or `Enter` on the focused bar)
+sets **Asset class** and the *Member trades* table follows; the chosen bar is marked, and a second click on it clears the choice. The same
+works on rows of a table where the author set it up. Everything a click does, the control does too.
+
+![The netting set with Rates chosen by clicking its bar: the member trades are Rates only, with their title, and the chosen bar is marked](img/controls/03-cross-filter.jpg)
+
+**Live screens keep your choice.** When the screen ticks, every update is built with your controls, so a filtered table stays filtered.
+
+**On a phone.** Controls stack one to a row, each at least 44 pixels high, and the page does not scroll sideways; the list of boxes opens under its button.
+
+![The swap's cashflows on a phone: Legs open, Paid between with two date boxes, the table below](img/controls/04-phone.jpg)
+
+**What you may see.** A control offers only values you may see: for a field your role does not show (`•••`), a dropdown lists nothing, and a
+search over it never finds anything. Controls only choose; they never change data.
+
+**Not yet.** The Pivot tab and CSV download of a panel read **every** row, not the ones the controls leave; a share you *send* to people, a
+picture of it and a scheduled export do not carry the choices (a copied link does). Authors add controls in the workbench's
+[Controls tab](SCREEN_DESIGNER.md#the-controls-tab); the Sutra's side of it is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls).
 
 ## Reading a view
 
@@ -1286,7 +1338,8 @@ pick one to switch forms. `FORM` alone lists the packs you can search with a for
 | text (a name, a description) | a box, an operator and *Match case* | equals, contains, starts with, matches a regular expression (case is ignored unless you tick *Match case*) |
 | a number or an amount | one box, or two for *between* | `=`, between, `>`, `<`, `≥`, `≤`; amounts take `250k`, `1.5m`, `2bn` |
 | a date | a date picker, two for *between*, or text for *relative* | on, between, before, after, or a range on the business-day calendar: `last 5 business days`, `next 10 business days`, `last 30 days`, `this week`, `month to date`, `year to date` |
-| one of a few values (book, currency) | a tick box for each value the data holds | is one of the ticked values |
+| one of a few values (up to 6: direction, status) | a row of tick boxes, one for each value the data holds | is one of the ticked values |
+| one of many values (asset class, product type, book, desk, currency) | **one dropdown the size of a select**, showing "All", the one value, or "3 selected: ABS, REPO, +1"; open it (`Enter` or `Space`) for a search box (type to filter), *Select all* / *Clear* (they act on the values the search leaves), and a tick box per value (`↓` `↑` move, `Space` ticks, a letter jumps, `Enter` or `Esc` closes). 44 pixels a row on a touch screen | is one of the ticked values; the address is the same as for tick boxes (`v.productType=BOND&v.productType=REPO`) |
 | an identifier | a box to paste a list: spaces, commas or lines | is one of them; `MX-2*` is any id starting `MX-2` |
 | yes or no | Any, Yes, No | is |
 

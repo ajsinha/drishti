@@ -218,3 +218,49 @@ def test_the_form_stays_open_when_the_person_kept_it_open_and_on_a_phone_the_tog
     pg.wait_for_selector("[data-qf-command]")
     assert pg.locator("#qfBody").is_visible() and "form=shown" in pg.url
     ctx.close()
+
+
+def test_an_enum_with_many_values_is_one_dropdown_with_search_and_the_url_stays_the_same(page, url, be):
+    page.goto(url + "/form/trading", wait_until="load")
+    box = page.locator("details.ms-box").first
+    assert page.locator("details.ms-box").count() == 1                                   # nine values: a dropdown; the book (three) stays a checkbox row
+    assert page.locator('[name="v.book"]').count() == 3 and page.locator(".qf-enum input[name='v.book']").first.is_visible()
+    sum_ = box.locator("summary")
+    assert sum_.inner_text() == "All" and box.locator(".ms-pop").is_hidden()
+    sum_.focus()
+    page.keyboard.press("Enter")                                                         # opens by keyboard; the search box has the focus
+    assert box.evaluate("d => d.open") and page.evaluate("document.activeElement.classList.contains('ms-q')")
+    page.keyboard.type("bond")                                                           # type to filter
+    assert box.locator(".ms-item:not([hidden])").all_inner_texts() == ["BOND", "PUTTABLE_BOND"]
+    page.keyboard.press("ArrowDown")
+    page.keyboard.press("Space")                                                         # toggles the focused option
+    assert sum_.inner_text() == "BOND"
+    box.get_by_role("button", name="Select all").click()                                 # only the options the search leaves
+    assert sum_.inner_text() == "2 selected: BOND, PUTTABLE_BOND"
+    box.locator(".ms-q").fill("")
+    box.locator(".ms-q").press("Escape")                                                 # Esc closes and returns to the summary
+    assert not box.evaluate("d => d.open") and page.evaluate("document.activeElement.tagName") == "SUMMARY"
+    box.locator("summary").click()
+    box.locator("input[value=REPO]").check()
+    assert sum_.inner_text() == "3 selected: BOND, PUTTABLE_BOND, +1"
+    box.locator("input[value=REPO]").press("Enter")
+    page.get_by_role("button", name="Search").first.click() if page.get_by_role("button", name="Search").count() else page.keyboard.press("Enter")
+    page.wait_for_url("**/form/trading?**")
+    assert "v.productType=BOND" in page.url and "v.productType=PUTTABLE_BOND" in page.url and "v.productType=REPO" in page.url        # the criteria encoding is unchanged
+    page.locator(".qf-toggle").click()                                                                                                   # the criteria fold away after a search
+    assert page.locator("details.ms-box summary").inner_text().startswith("3 selected")                                                  # and the page comes back as chosen
+    box = page.locator("details.ms-box").first
+    box.locator("summary").click()
+    box.get_by_role("button", name="Clear").click()
+    assert box.locator("summary").inner_text() == "All"
+
+
+def test_the_dropdown_has_finger_sized_rows_on_a_phone(browser, url):
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, bypass_csp=True)
+    pg = ctx.new_page()
+    pg.goto(url + "/form/trading", wait_until="load")
+    pg.locator("details.ms-box summary").tap()
+    small = pg.evaluate("[...document.querySelectorAll('details.ms-box .ms-item, details.ms-box .ms-act, details.ms-box .ms-q, details.ms-box summary')].filter(e => e.offsetParent && e.getBoundingClientRect().height < 43.5).length")
+    assert small == 0
+    assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+    ctx.close()

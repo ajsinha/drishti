@@ -130,7 +130,7 @@ def test_the_help_centre_serves_the_guide_with_its_pictures(client):
     page = client.get("/help/screen-designer")
     assert page.status_code == 200 and "Screen designer" in page.text and "data-unavailable" not in page.text
     srcs = re.findall(r'<img[^>]*\bsrc="([^"]+)"', page.text)
-    srcs = [s for s in srcs if "/img/form/" not in s]                    # the Form tab's picture is made by the form guide's script
+    srcs = [s for s in srcs if "/img/form/" not in s and "/img/controls/" not in s]     # the Form and Controls tabs' pictures are made by their own guides' scripts
     assert len(srcs) == len(pictures()) and all(s.startswith("/help/files/guides/img/designer/") for s in srcs)
     for s in srcs:
         r = client.get(s)

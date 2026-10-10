@@ -229,6 +229,29 @@ The **About** tab (right pane, after Versions) is the pack's `config/about.yaml`
 
 **Not live.** About text authored here is evidence and a draft: *Submit for review* and approval make the **Sutra** live, not the About text, because packs are loaded by administrators. To make the text live, put the exported `config/about.yaml` in the pack ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#about-text-and-glossary)); until then the drawer on a live view shows what the pack says. The preview in the tab shows yours over the pack's.
 
+### The Controls tab
+
+The **Controls** tab (beside *About* and *Form*) edits the Sutra's `controls:` section: dropdowns over the record's own data, date and number
+ranges, a top-n, a search box ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls)). It is a part of the Sutra, so the YAML tab shows the
+same text, and every change is a step of the design's log: undo, redo and revisions cover it, and proposing the design sends it to review with the Sutra.
+
+![The Controls tab: a card per control (id, kind, label, options, default, placement, panel, remember, required), the YAML, and the controls working over the previewed sample](img/controls/05-workbench.jpg)
+
+- **Add** a control: pick its kind next to *Add control* (or `Enter` on the button). *Starter* adds a search box to the header of the first table.
+- **Cards.** Each control is a card: **Id** (what panels read as `ctl.<id>`), **Kind**, **Label**, **Options** (one field: `a, b, c`, or an
+  expression over the record such as `$.legs[*].leg`, or `kind: customer` for the ids of an entity kind), **Default**, **Placement** (strip, header
+  of a panel, side) with the **Panel**, **Remember per reader**, **Required**; a cascading control has a **Parent** (an earlier control), a number
+  range **Min** and **Max**. Drag a card by its handle, or focus it and press `Alt+↑` / `Alt+↓` (the buttons do the same); `Delete` removes it. A
+  card's fields are named for screen readers by the control's id as you type it.
+- **YAML.** Under the cards, *YAML* holds the same controls as a list, one flow mapping a line. Edit either: the cards write the text, and typed text
+  that reads rebuilds the cards (while you edit a card, your card wins).
+- **Keeping.** After a pause the controls go to the server as **one** operation (`setControls`), checked as the Sutra is: a mistake is listed under
+  the cards with its code (`DRS-2034` to `DRS-2039`) and in **Problems**, and the Sutra keeps its last good controls.
+- **Try them.** *Try them on the sample* draws the panels that read a control, from the previewed sample, with the **real controls** (the console's
+  own): change one and the panels follow, exactly as for a reader. Options come from the sample; switch sample under *Data* to try another.
+  Panels read a control in `rows`, `where`, `limit` and `title` (`where: oneOf(@.leg, ctl.legs)`): set those in the inspector or the YAML tab.
+  The canvas keeps showing the screen as it is without a choice made.
+
 ### The Form tab
 
 The **Form** tab (right pane, after About) is the **search form** of the design's kind: what `FORM <pack>` shows people who search it ([Search with a form](USER_GUIDE.md#search-with-a-form-form-pack)).

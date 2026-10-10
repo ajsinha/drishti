@@ -119,7 +119,7 @@ What the server does with a file, in order (`SutraRegistry`, `SutraParser`, `Sut
    are allowed). A leading `---` is fine.
 3. `rachana:` must be present and be a language version this server reads (today: `1`). Otherwise `DRS-2009`.
 4. The rest is checked against the grammar below. Every problem is collected (not just the first) with its
-   location: `DRS-2010` to `DRS-2031`. Parsing is strict: an unknown key is an error (`DRS-2011`), never
+   location: `DRS-2010` to `DRS-2039`. Parsing is strict: an unknown key is an error (`DRS-2011`), never
    silently ignored, so a typo such as `pannels:` cannot pass unnoticed.
 5. Every Rachana-EL expression and template is compiled. A typo is `DRS-2101`, reported against the file at
    load time, not when someone opens a view. So is an expression beyond the [size limits](#size-limits) (nested
@@ -466,6 +466,7 @@ You should see, previewing this block against `MX-20000001` in the workbench:
 | `match` | yes | mapping | | `{kind, where?, priority?}`: `kind` and `where` are text, `priority` a whole number (`DRS-2012` otherwise, as for `kind: 42` or `priority: high`); see [Matching](#matching-choosing-a-sutra-for-a-document). |
 | `title` | | mapping | `{id: $.id}` | `{pill?, id, with?}`: a title written out names its `id` (`DRS-2010` otherwise); see [Title](#title). |
 | `strip` | | list | empty | Up to **8** header figures; see [Strip](#strip). |
+| `controls` | | list | empty | Up to **12** controls the reader sets (dropdowns, date ranges, search ...), read in expressions as `ctl.<id>`; see [Controls](#controls). |
 | `panels` | | list | empty | The panels, in order; see [Panels](#panels). |
 | `keys` | | mapping | empty | Function key → action; see [Function keys](#function-keys). |
 
@@ -1392,6 +1393,136 @@ works as for any panel.
 The runnable version is the [metric example](examples/metric.md); its catalogue entry is
 [PANEL_KINDS.md](PANEL_KINDS.md#metric).
 
+## Controls
+
+A Sutra may declare **controls**: dropdowns, date ranges, a search box. The reader sets them on the screen; panels read their values in
+expressions as `ctl.<id>`, so the same Sutra shows an interest-rate swap's cashflows for one leg, or the netting set's trades for one
+asset class. Controls only choose: they never write. The model is the one of
+[RUPAKA.md section 8.1](../architecture/RUPAKA.md#81-interactive-sutras-and-slicers-controls-view-state-and-filters), built once for the terminal.
+
+```yaml
+controls:
+  - { id: legs, kind: multi-select, label: Legs, options: "$.legs[*].leg", default: all, placement: header, panel: schedule, remember: user }
+  - { id: when, kind: date-range, label: Paid between, placement: header, panel: schedule }
+panels:
+  - id: schedule
+    kind: ladder
+    title: "Cashflows${ctl.when ? ' · paid ' + ctl.when : ''}"
+    rows: $.schedule
+    where: "oneOf(@.leg, ctl.legs) && within(@.payDate, ctl.when)"
+    columns: [ ... ]
+```
+
+That is the shipped `irs-fixfloat` Sutra (trading pack). Open `TRD MX-20000001 <GO>`: the Cashflows header holds *Legs* and *Paid between*;
+the address `.../v/trade/MX-20000001?ctl.legs=1&ctl.when=2026-10-01..2027-06-30` shows leg 1's cashflows in that range. The server answers
+(`GET /api/v1/views/trade/MX-20000001?ctl.legs=1&ctl.when=2026-10-01..2027-06-30&panels=schedule`, trimmed):
+
+```json
+{"controls": [
+  {"id": "legs", "kind": "multi-select", "label": "Legs", "placement": "header", "panel": "schedule",
+   "options": [{"value": "1", "label": "1"}, {"value": "2", "label": "2"}], "value": "1", "values": ["1"],
+   "required": false, "remember": true, "reads": ["schedule"]},
+  {"id": "when", "kind": "date-range", "label": "Paid between", "placement": "header", "panel": "schedule",
+   "value": "2026-10-01..2027-06-30", "required": false, "remember": false, "reads": ["schedule"]}],
+ "panels": [{"id": "schedule", "title": "Cashflows · paid 2026-10-01..2027-06-30", "data": {"rows": [
+   {"cells": [{"label": "Pay date", "text": "2027-06-29"}, {"label": "Leg", "text": "1"}, "..."], "path": "$.schedule[8]"}]}}]}
+```
+
+### The keys of a control
+
+| Key | Required | Meaning |
+|---|---|---|
+| `id` | yes | The name read as `ctl.<id>`: a letter, then letters, digits and underscores, at most 32 (`DRS-2034`); unique (`DRS-2035`). `ctl` itself is reserved |
+| `kind` | yes | `dropdown`, `multi-select`, `cascading`, `toggle`, `segmented`, `date`, `date-range`, `number-range`, `top-n` or `search` (`DRS-2034` otherwise) |
+| `label` | | The text beside the control (the id when absent) |
+| `options` | for `dropdown`, `multi-select`, `cascading`, `toggle`, `segmented`, `top-n` | A list of values (`[Pay, Receive]`, or `{ value, label }` items), **or** an expression over the record (`"$.legs[*].leg"`; a list of records offers their `id`), **or** `{ kind: counterparty }`, the ids of that entity kind the sources list (at most 500; only when the reader may open the kind). More than 500 are cut and the control says so. Kinds that take no options refuse them (`DRS-2034`) |
+| `default` | | The value to start from: a value, `first`, `all` (a multi-select), or for dates a relative token (below). It must fit the kind (`DRS-2039`). A `top-n`, `toggle` and `segmented` control always has a value: its first option when no default is given |
+| `remember` | | `user` keeps the reader's last choice (per browser and sign-in, see below); `none` (the default) does not |
+| `required` | | `true`: the reader cannot clear it (a dropdown has no *(all)* entry) |
+| `placement` | | `strip` (default: under the title, with the strip), `header` (in a panel's header; needs `panel: <panel id>`, `DRS-2034` otherwise) or `side` (a bar at the side of the page) |
+| `parent` | for `cascading` | The control whose value the options depend on; it must be declared **before** this one (`DRS-2037`) |
+| `min`, `max` | | A `number-range`'s bounds: a number or an expression over the record (`"max($.legs[*].notional)"`) |
+
+At most 12 controls; an unknown key is `DRS-2011`.
+
+### The kinds, and what `ctl.<id>` holds
+
+| Kind | Drawn as | `ctl.<id>` |
+|---|---|---|
+| `dropdown` | a select with an *(all)* entry (unless `required`) | the chosen value as text; empty when none |
+| `multi-select` | a button over a checklist with *All* and *None* | a **list** of the chosen values; empty when none, which `oneOf` treats as everything |
+| `cascading` | a select whose options follow its `parent` | as a dropdown; its `options` read `ctl.<parent>`: `"$.countries[?(@.region == ctl.region)][*].id"` |
+| `toggle` | a switch for two options, buttons for more | the chosen option |
+| `segmented` | joined buttons (arrow keys move and choose) | the chosen option |
+| `date` | a date input | an ISO date as text, or empty |
+| `date-range` | two date inputs and a presets list | `from..to` as text (either end may be empty), empty when none |
+| `number-range` | two number inputs | `min..max` as text |
+| `top-n` | a select of the options | a whole number; a table's `limit: ctl.top` shows that many rows |
+| `search` | a search box (applied when the reader pauses) | the text |
+
+Relative dates are read on the **business date of the request** (today, or the date picked in the top bar) and the server's business calendar
+(`drishti.business-date.calendar`; not a calendar per pack): `today`, `yesterday`, `previous-business-day`, `this-week`, `this-month`,
+`last-month`, `next-month`, `this-quarter`, `this-year`, `ytd`, `mtd`, `next-90d`, `last-30d` (calendar days; the first day counted is the
+business date) and `next-5bd`, `last-3bd` (business days on the calendar). A `date-range` offers presets (today, next 7 / 30 / 90 days, last
+30 days, this month, last month, this quarter, year to date) resolved the same way, and always **holds the resolved range** (`next-90d`
+becomes `2026-10-09..2027-01-06`), so a link reproduces what was seen.
+
+### Reading a control
+
+`ctl.<id>` is an expression like any other, in the places that read the record: a panel's `rows`, `where`, `limit`, `title` (as `${ctl.id}`), a
+column or strip `bind`, a control's own `options`, `min` and `max`. A reference to a control the Sutra does not declare is `DRS-2036`. Three
+panel options are for controls:
+
+| Option | On | Meaning |
+|---|---|---|
+| `where` | every kind with `rows` except `kv` | A condition on each row, with `@` the row and `#index` its place in the *data*: only rows for which it is true are shown, drawn and added up (`total: true` sums what is shown). A row whose condition fails or is masked is left out. Not text: `DRS-2029` |
+| `limit` | `table` | Besides a whole number, an expression: `limit: ctl.top`. Reads as no limit when it is empty |
+| `on-select` | `table`, `ladder`, `hbar` | `{ by: <control id>, field: <row field>, filter: [panel ids] }`: a click (or Enter) on a row, or on a bar, sets the control `by` to the row's `field` (default: the control's id) or to the bar's label; clicking the same one again clears it. `by` must be a control and `filter` must list panels of the Sutra (`DRS-2038`) |
+
+Two functions read the values ([Functions](#functions)): `within(@.payDate, ctl.when)` and `oneOf(@.leg, ctl.legs)`. For a dropdown with an
+*(all)* entry write `(ctl.asset == '' || @.assetClass == ctl.asset)`, as the shipped `netting-set` Sutra does:
+
+```yaml
+controls:
+  - { id: asset, kind: dropdown, label: Asset class, options: "$.byAsset[*].asset", placement: header, panel: trades }
+  - { id: product, kind: multi-select, label: Product, options: "$.trades[*].product", placement: header, panel: trades }
+  - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }
+panels:
+  - id: trades
+    kind: table
+    title: "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}"
+    rows: $.trades
+    where: "(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product)"
+    limit: ctl.top
+  - id: byAsset
+    kind: hbar
+    rows: $.byAsset
+    on-select: { by: asset, field: asset, filter: [trades] }
+```
+
+### Where the values live
+
+- **The address.** `?ctl.legs=1&ctl.when=2026-10-01..2027-06-30`: the console writes a control's value there once the reader has set it (a
+  control left at its default is not written), a link opens the screen with the same values, and the Share button's link carries them.
+- **The server.** `GET /api/v1/views/{kind}/{id}?ctl.<id>=...` builds the view with the values; a value that is not among a control's options is
+  replaced by its default. `&panels=a,b` builds **only those panels** (`panels=-` none); the view always carries `controls`, each with its
+  options, its value now and `reads`: the panels (and `strip`, `title`) whose expressions read it, directly or through a cascading child. The
+  panel rows are computed by the same expression the browser's request carries; nothing is filtered in the browser.
+- **Live.** A stream opened with the values (`.../stream?ctl.legs=1`) builds every frame with them, so a tick keeps the filter; the console
+  moves its subscription when a control changes.
+- **Remembering.** `remember: user` stores the choice in the browser (`localStorage`, per signed-in user and Sutra) and applies it when the
+  address has no value for the control. The server has no per-user store for view preferences yet, so it is per browser, not per account.
+- **Masks.** Options are read from the record **as the caller may see it**: a masked value is never an option, so a dropdown cannot show a
+  reader without `raw` a value they may not see, and a `where` or a search over a masked field never matches (a search cannot probe it). A
+  lookup of a kind the reader may not open lists nothing.
+
+### What is not built yet
+
+A `slider` kind, options from a dataset column (a Rūpaka dataset), the Sutra-level view `title:` reading a control (a panel's `title` does; a
+control that the view `title` reads reloads the page), a Pivot tab and a CSV export that follow the controls (they read every row), and
+control values stored with a *sent* share, a snapshot picture or a scheduled subscription (they pin the business date and generation; the
+values travel with a copied link only).
+
 ## Function keys
 
 Function keys come from two places:
@@ -1549,6 +1680,8 @@ the view renders.
 | `title.pill`, a panel's `title`, `markdown.text` | template: text with `${expression}` parts |
 | strip `bind`, column `bind`, status field `bind` | expression |
 | `rows`, `each`, `tabTitle`, `moreLabel`, `highlight`, `source`, `mark`, area `limit`, gauge `value`/`max` | expression |
+| `where` (a panel's row condition), a table's `limit` that reads a control (`ctl.top`) | expression (see [Controls](#controls)) |
+| a control's `options` (when text), `min`, `max` | expression over the record, which may read `ctl.<parent>` |
 | `keys` entries starting with `link(` | expression |
 | alert rules (`when`, `message`) | expression, template (see [LIVE.md](../architecture/LIVE.md#monitors-and-alerts)) |
 
@@ -1659,6 +1792,8 @@ Against `MX-20000001`:
 | `$.schedule[?@.leg == 1 && @.amount > 0]` | the fixed leg's positive flows (a list, for `rows:`) |
 | `$.schedule[$.nextIndex].payDate` | `2026-12-30` |
 | `$.nothing.at.all` | empty |
+| `$.legs[*].label` | `[Receive fixed 4.0829%, Pay AONIA compounded]`: **projection**, the field of every element as a list (what a control's `options` read; `[*]` first, then `.field`) |
+| `ctl.leg` | the value of the control `leg` (see [Controls](#controls)); `ctl` is reserved and is never a field of the data |
 
 ### Functions
 
@@ -1684,6 +1819,8 @@ The set is closed (`Functions.java`); a name outside it is a compile error
 | `startsWith(text, prefix)` | 2 | **case-insensitive** prefix test |
 | `matches(text, pattern)` | 2 | **case-insensitive** regular-expression test, matching anywhere in the text (anchor with `^` and `$`). The pattern is run by a linear-time engine, so no pattern can take exponential time: classes `[a-z]` `\d` `\w` `\s`, groups `( )` and `(?: )`, alternation `\|`, `* + ? {n,m}`, `^`, `$`, a leading `(?i)`. Back-references, look-around, atomic groups, possessive quantifiers and `\b` are refused (`DRS-4010`), as is a pattern over 200 characters; a value is cut to 8,192 characters and a match over 50 ms is `DRS-4011`. In a search: `TRD where counterparty.name matches '^Mer.*n$'` |
 | `matchesCase(text, pattern)` | 2 | `matches`, but upper and lower case differ |
+| `within(value, range)` | 2 | true when `value` lies in a `from..to` range (what a `date-range` or `number-range` control holds; either end may be empty and an empty range holds everything): numbers compare as numbers, anything else as text, so ISO dates order, and a timestamp is compared by its date. A missing or masked value is never within |
+| `oneOf(value, list)` | 2 | true when `value` equals an element of `list` (what a `multi-select` control holds); **nothing chosen (an empty list, or an empty text) holds everything**. A masked value is never one of them |
 
 Examples against `MX-20000001`:
 
@@ -1733,8 +1870,9 @@ compare  = sum { ("<" | "<=" | ">" | ">=") sum } ;
 sum      = product { ("+" | "-") product } ;
 product  = unary { ("*" | "/" | "%") unary } ;
 unary    = ("!" | "-") unary | postfix ;
-postfix  = primary { "." ident | "[" expr "]" | "[?" expr "]" } ;
+postfix  = primary { "." ident | "[" expr "]" | "[?" expr "]" | "[*]" } ;     (* a "." ident after "[*]" takes that field of each element *)
 primary  = number | string | "true" | "false" | "null" | "$" | "@" | "#index"
+         | "ctl" "." ident                                                  (* the value of a control *)
          | ident "(" [ expr { "," expr } ] ")" | ident | "(" expr ")" ;
 ```
 
@@ -1807,6 +1945,12 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2031` | `'pivot' is true, false, or a mapping of fields, rows, columns, values, filters, heat, chart, totals; not 'yes please'`, `pivot rows name 'desk', which is not one of its fields (currency, mtm, product)`, `pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'`, `pivot value 'show' must be one of value, pctRow, pctColumn, pctTotal, not 'pctBook'`, `pivot field 'a' is in both rows and columns`, `a pivot has at most 4 row fields and 4 column fields`, `a pivot shows at most 6 values, found 7`, `pivot field '$.book' is not a field path (letters, digits, _ and dots); for an expression write { field: name, bind: <expression> }`, `pivot field 'a' is listed twice`, `unknown key 'colour' in pivot`, `pivot 'chart' must be one of bar, line, heatmap, not 'pie'`, `pivot 'heat' is true or false, not 'maybe'`, `a pivot filter keeps either 'values' or a range ('min', 'max'), not both`, `pivot 'fields' is a non-empty list of field paths (or { field, bind, label, fmt })` | a `pivot:` the Pivot tab cannot use | use the names its fields have, the values listed, or `pivot: true` ([the option](#pivot-a-pivot-tab-on-a-table-or-ladder)) |
 | `DRS-2032` | `the file could not be loaded: <reason>` (for example `it is nested too deeply to read (StackOverflowError)`) | a failure while reading the file that none of the other checks foresee; the server log has the stack trace | simplify the file; if it looks valid, report the log entry. The other Sutras load and hot reload carries on |
 | `DRS-2033` | `duplicate key 'version' (first written at line 3): YAML would keep only the last, so write each key once`, `a second YAML document (after '---'): a Sutra file holds exactly one, and the rest would be ignored`, `YAML tag '!panel' is not allowed in a Sutra: write the value plainly` | YAML that is valid but would not be read as written: a key twice in one mapping, a second document, a tag other than the core ones (`!!str`, `!!int`, …) | write each key once, one document per file, no tags |
+| `DRS-2034` | `unknown control kind 'slider'; expected one of dropdown, multi-select, ...`, `a dropdown control needs 'options': a list, an expression such as $.legs[*].id, or { kind: <entity kind> }`, `control id '9x' must be a letter, then letters, digits and underscores`, `a search control takes no 'options'`, `placement must be strip, header or side`, `a control placed in a panel header names the panel`, `remember is user or none`, `a Sutra has at most 12 controls` | a control that is not well formed | follow the message; the keys are in [Controls](#controls) |
+| `DRS-2035` | `duplicate control id 'legs'` | two controls with one id | rename one |
+| `DRS-2036` | `'ctl.leg' reads a control the Sutra does not declare (it has legs, when)` | an expression or template reads `ctl.<id>` for an id with no control | declare the control or fix the name |
+| `DRS-2037` | `a cascading control names the control it depends on: parent: <control id>`, `control 'country' depends on 'region', which must be a control declared before it` | a cascading control without a parent, or a parent that is missing or later | declare the parent first |
+| `DRS-2038` | `on-select of panel 'byAsset': 'by' must name one of the Sutra's controls (asset, product), not 'x'`, `on-select ... filters panel 'ghost', which the Sutra does not have`, `on-select ... has no key 'colour'` | an `on-select` that names nothing real | `{ by: <control id>, filter: [panel ids], field: <row field> }` |
+| `DRS-2039` | `default of control 'when': 'soon' is not a range (2026-10-01..2026-12-31) or a relative one (next-90d, last-30d, this-month, ytd)`, `'7' is not one of its options (5)` | a default the control cannot hold | a value among the options, `first`, `all`, a date or a relative token |
 | `DRS-2040` | `unknown key 'titel' in kind 'var' (expected title, about, guide, glossary or panels)`, `the file must start with 'about: 1' (the schema version)`, `the file is not valid YAML: …` | a pack's `config/about.yaml` ([About text](../architecture/CONTEXT_HELP.md)) has an unknown key, a wrong or missing version, a wrongly shaped entry, a duplicate key or broken YAML | fix the line named; only that entry is left out, the view is never affected |
 | `DRS-2041` | `kind 'stranger' belongs to neither this pack nor a pack it extends` | an about file writes about a kind its pack (or a pack it extends) does not own | name a kind from the pack's `kinds:` or a parent's, or move the entry to the pack that owns the kind |
 | `DRS-2042` | `the template does not compile: …` | an `about` template (a kind's or a panel's) has a `${...}` expression that does not compile | fix the expression; the line and column are those of the text in the file |

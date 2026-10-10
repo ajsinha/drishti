@@ -39,8 +39,10 @@ def form(c: Ctx):
     open_form(c, "/form/trading?kind=trade", height=1100)
     c.page.locator('[name="op.notional"]').select_option(">=")
     c.page.fill('[name="v.notional"]', "100m")
-    c.page.locator('[name="v.currency"][value="EUR"]').check()
-    c.page.locator('[name="v.currency"][value="USD"]').check()
+    cur = c.page.locator("details.ms-box", has=c.page.locator('[name="v.currency"]'))
+    cur.locator("summary").click()                       # a long list of values is one dropdown: search, Select all, Clear, a box per value
+    cur.locator('[name="v.currency"][value="EUR"]').check()
+    cur.locator('[name="v.currency"][value="USD"]').check()
     c.page.fill('[name="v.counterparty.name"]', "bank")
     c.page.locator('[name="op.counterparty.name"]').select_option("contains")
     c.page.locator('[name="op.maturityDate"]').select_option("relative")

@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """The workbench's Controls tab in a real browser over a real server: reached by keyboard alone, a control added and set from its card, the YAML
 following the cards and the cards following typed YAML, reordered by Alt+Down, the controls kept as one step of the log (undo brings the old
 ones back), a mistake located, and the small preview working the controls (the console's own controls.js) over the sample.
@@ -51,6 +65,8 @@ def test_add_control_from_a_card_see_the_yaml_and_try_it_on_the_sample(live_cons
     # a panel reads it; the small preview works the control over the sample
     page.evaluate("""() => window.drishtiWorkbench.store.send([{ op: 'setOption', panel: 'cf', option: 'where', value: 'oneOf(@.leg, ctl.legs)' }], 'Condition set')""")
     wait(page, "window.drishtiWorkbench.store.state.yaml.indexOf('ctl.legs') >= 0")
+    page.locator("#wbTabProb").click()                                                              # a Sutra that reads its controls has no problems
+    assert page.locator("[data-problem-count]").is_hidden(), page.locator("[data-problems]").inner_text()
     page.locator("#wbTabCtl").click()
     page.evaluate("window.drishtiWorkbench.controls.preview()")
     page.locator("[data-ctl-preview] [data-ctl='legs'] summary").wait_for(timeout=20000)

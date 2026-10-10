@@ -652,7 +652,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 ### A Sutra edit has no effect
 
 - **Check:** `curl -s http://localhost:18480/api/v1/sutras/problems` should print `{}`. Anything else lists the
-  file, line, column and code (`DRS-2001` YAML syntax, `DRS-2009` no `rachana: 1`, `DRS-2010`–`DRS-2031` grammar, `DRS-2032` the file
+  file, line, column and code (`DRS-2001` YAML syntax, `DRS-2009` no `rachana: 1`, `DRS-2010`–`DRS-2039` grammar (`DRS-2034`–`DRS-2039`: controls), `DRS-2032` the file
   could not be read at all, `DRS-2033` a key written twice, a second YAML document or a YAML tag, `DRS-2101` expression
   syntax or an expression past the size limits).
 - **Check:** as an admin, `GET /api/v1/admin/health` should show `"sutras": {"hotReload": "WATCHING", …}`. `STOPPED: <reason>`
@@ -910,7 +910,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-1003` / `DRS-1004` | a source failed / timed out (a console page answers 504 for a timeout, 502 for a failed source) |
 | `DRS-2001` / `DRS-2002` / `DRS-2003` | Sutra parse error / invalid / not found |
 | `DRS-2005` / `DRS-2006` / `DRS-2007` | proposal not found / stale / four eyes |
-| `DRS-2004`, `DRS-2009`–`DRS-2031` | a Sutra file failed a check: each code is explained in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
+| `DRS-2004`, `DRS-2009`–`DRS-2039` | a Sutra file failed a check: each code is explained in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |
 | `DRS-2032` | a Sutra file could not be read at all (the log has the stack trace); the rest load |
 | `DRS-2033` | a Sutra's YAML has a key written twice, a second document or a tag |
 | `DRS-2040`–`DRS-2044` | a pack's `config/about.yaml` has a problem (unknown key or bad version, kind not in the pack's lineage, a template that does not compile, `use` with no vocabulary entry, a text over the cap); listed by `GET /api/v1/sutras/problems` as `<pack>/about.yaml`; the entry is left out and the page is unaffected; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes) |

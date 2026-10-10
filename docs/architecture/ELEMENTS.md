@@ -237,6 +237,7 @@ importing twice is harmless.
 | `live` | `auto`, `off` | `auto` | `off` loads once and never subscribes |
 | `locale` | a BCP 47 tag | the browser's | pack text (`?locale=` of About) |
 | `label` | text | the view's title | the element's accessible name (`role="region"`) |
+| `controls` | `legs=2&when=2026-10-01..2026-12-31` | none | the values of the Sutra's [controls](RUPAKA.md#81-interactive-sutras-and-slicers-controls-view-state-and-filters) (`ctl.<id>`; the prefix is optional): the view is built with them, and a change reloads. The element draws the controls itself inside its shadow root; a reader's change updates the property (below) and never touches the host page's address |
 
 Attributes are reflected to properties of the same name in camelCase (`asOf`, `knownAt`).
 
@@ -248,6 +249,7 @@ Attributes are reflected to properties of the same name in camelCase (`asOf`, `k
 | `state` | read-only string | `idle`, `loading`, `live`, `static`, `reconnecting`, `paused`, `deleted`, `error` (the state machine, [section 7](#7-loading-reloading-refreshing-reconnecting)) |
 | `view` | read-only object | `{ref, title, generation, provenance, panels: [{id, kind, title}]}` once loaded |
 | `lastError` | read-only `{code, status, detail}` or null | |
+| `controls` | string | the controls' values now, as the attribute writes them (`legs=2`): what the reader set, or the attribute's value until they do |
 | `theme`, `density` | string | the attributes of the same name |
 
 ### 5.4 Methods
@@ -271,6 +273,7 @@ All are `CustomEvent`s dispatched on the element, `bubbles: true, composed: true
 | `drishti:tick` | `{generation, seq, latencyMs, changed: {strip: [index], panels: [id]}}` | no | a live frame was applied |
 | `drishti:navigate` | `{kind, id, href, panel, source: "link" \| "chart" \| "graph"}` | **yes** | the user activated a linked entity. Default (not cancelled): set `entity` (and `kind`) and reload in place. `href` is the absolute console URL, for a host that prefers to open the console |
 | `drishti:error` | `{code, status, detail, fatal, retryInMs}` | no | a DRS code from [section 6.7](#67-errors); `fatal: false` while the element retries by itself |
+| `drishti:controls` | `{query: "ctl.legs=2&ctl.when=...", changed: [id]}` | no | a reader changed a control (also dispatched by the console page on `document`). The element asks the console for only the panels that read it (`GET .../panels`, [6.8](#68-get-embedv1viewskindidpanels--some-panels-with-controls)), moves its live subscription to `view:kind/id?ctl.…` and updates `controls`. `drishti:controls-done` (`{changed, panels, ms}`) follows when the panels are in |
 | `drishti:masked` | `{count, panels: [id]}` | no | the view the user is shown has masked fields (after load and when it changes) |
 | `drishti:state` | `{state, previous}` | no | every state change (drives a host's own live indicator) |
 | `drishti:token-needed` | `{reason: "missing" \| "refused" \| "provider-failed"}` | no | there is no token provider, the server refused the token twice, or the provider threw/rejected: the host signs the user in again and sets `tokenProvider` (an element in `error` after a 401 reloads by itself when the provider is set) |
@@ -398,7 +401,8 @@ CORS ([section 10](#10-security-threats-and-answers)). Every response says its c
 
 ### 6.1 `GET /embed/v1/views/{kind}/{id}` — the initial view
 
-Query: `asOf`, `knownAt`, `panels` (ids), `header` (`full|strip|none`), `locale`. The console asks the server for the
+Query: `asOf`, `knownAt`, `panels` (ids), `header` (`full|strip|none`), `locale`, and `ctl.<id>` (the values of the Sutra's controls, as in
+`GET /api/v1/views/{kind}/{id}?ctl.legs=2`). The console asks the server for the
 ViewModel (`backend.view`, the same call `/v/{kind}/{id}` makes), renders the frame parts and each panel with the
 existing macros, and answers:
 
@@ -421,6 +425,8 @@ existing macros, and answers:
                  "fetchedAt": "2026-10-01T01:01:40.877Z", "live": true, "businessDate": null, "stale": false, "masked": 2},
   "masked": {"count": 2, "panels": ["parties"]},
   "subscribe": "view:trade/END-1000008",
+  "controls": [{"id": "legs", "kind": "multi-select", "placement": "header", "panel": "schedule", "value": "2", "reads": ["schedule"], "...": "..."}],
+  "selects": [{"panel": "byleg", "by": "legs", "filter": ["schedule"]}],
   "assets": {"css": "/elements/1.0.0/drishti-view.css", "charts": "/elements/1.0.0/charts.js", "echarts": "/static/vendor/echarts/echarts.min.js?v=…"},
   "timings": {"fetch": 0.09, "layout": 0.13, "links": 0.21, "bind": 0.15, "total": 0.57, "render": 1.8}
 }
@@ -467,6 +473,18 @@ The HTML fragment `GET /v/{kind}/{id}/about` returns today (`terminal/_about.htm
 
 The rows the Pivot tab works on (`/api/pivot/records/…` today, the server's `…/panels/{panel}/records`), so pivots work
 in the element; arrangements live in the element's memory only (no `PUT /saved`).
+
+### 6.8 `GET /embed/v1/views/{kind}/{id}/panels` — some panels, with controls
+
+`?panels=schedule,legs&ctl.legs=1`: the panels named, as ready HTML built with the controls' values (`panels=-`: none), the strip, and the
+`controls` (their options and values as the server resolved them: a cascading child's options move with its parent). The server builds only
+those panels (`GET /api/v1/views/{kind}/{id}?panels=...`); the document is fetched and the layout resolved each time. What the element asks
+for when a reader changes a control; the same answer as the console's own `GET /v/{kind}/{id}/panels`, for the embed caller's masked
+identity. Measured on a warm local server, `MX-20000001`: the whole view 17.0 ms and 12.8 KB; `panels=schedule` 10.1 ms and 5.5 KB; no panel
+8.2 ms and 2.5 KB.
+
+The element's controls are `static/js/controls.js` started on its shadow root (a `controls` enhancer, allow-listed in `routes/embed_routes.py`);
+its sheet is `css/controls.css`, part of `drishti-view.css`. Tested in Chromium, Firefox and WebKit: `drishti-console/tests/test_embed_controls_browser.py`.
 
 ### 6.6 `GET /embed/v1/resolve?text=…` — a typed command to an entity
 

@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Controls inside <drishti-view> (ELEMENTS.md, RUPAKA.md 8.1) in Chromium, Firefox and WebKit, against a host application on another origin and a
 real scratch server (the stack of test_embed_elements_browser.py, which this file reuses: ports 18969/17969/17968 by default; set
 DRISHTI_ELEMENTS_SERVER_PORT, DRISHTI_ELEMENTS_CONSOLE_PORT and DRISHTI_ELEMENTS_HOST_PORT to run it beside another run).

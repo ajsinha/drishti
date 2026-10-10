@@ -23,6 +23,8 @@ FIELDS = [
     {"path": "counterparty.name", "label": "Counterparty", "type": "text", "operators": ["equals", "contains", "starts", "regex"], "group": "Identity",
      "indexed": False, "help": "The legal name."},
     {"path": "book", "label": "Book", "type": "enum", "operators": ["in"], "values": ["BOOK-FI-1", "BOOK-FI-2", "BOOK-CREDIT-1"], "group": "Where", "indexed": True},
+    {"path": "productType", "label": "Product type", "type": "enum", "operators": ["in"], "group": "Where", "indexed": True,
+     "values": ["ABS", "BOND", "CDS", "FRA", "FUTURE", "IRS", "PUTTABLE_BOND", "REPO", "SWAPTION"]},
     {"path": "mtm", "label": "Mark to market", "type": "amount", "operators": ["=", "between", ">", "<"], "group": "Money", "indexed": True},
     {"path": "maturityDate", "label": "Maturity", "type": "date", "operators": ["on", "between", "relative", "before", "after"], "group": "Money", "indexed": True},
     {"path": "isActive", "label": "Active", "type": "bool", "operators": ["is"], "group": "Money", "indexed": True},
