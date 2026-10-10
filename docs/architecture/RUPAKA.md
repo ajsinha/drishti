@@ -94,7 +94,7 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 1. **The server decides what leaves.** Every query runs with the user's identity on the server; row rules and masks are
    applied before a row is sent. The browser analyses only what that user may see. No raw lake access from browsers.
 2. **One grammar.** Datasets, reports, boards and workspaces are Rachana documents: versioned, validated by schema, tested,
-   reviewed, diffed and shipped in packs like Sutras. Nothing is code that can run arbitrary instructions.
+   reviewed, diffed and shipped from the BI folder (`config/bi`, below) like Sutras. Nothing is code that can run arbitrary instructions.
 3. **Live is the default, not a special mode.** Any visual over a live source updates as the source changes, at the frame
    rate the viewer can read.
 4. **Every number has a way down.** From a total to the rows behind it, and from a row to its Drishti terminal view.
@@ -164,7 +164,7 @@ keys. All of it works at phone width (section 15).
 
 ## 6. Datasets: the semantic model
 
-A dataset is a YAML document (`bi/datasets/<id>.dataset.yaml` in a pack, or in a workspace store):
+A dataset is a YAML document (`<drishti.bi.dir>/datasets/<id>.dataset.yaml`, by default `config/bi/datasets/`, or in a workspace store):
 
 ```yaml
 rachana: 1
@@ -256,6 +256,29 @@ never bind to connectors directly.
   masks apply per kind. Lineage lists every pack and connector behind a model, so switching a pack off shows the reports
   it affects first.
 
+## Where BI files live
+
+BI content has one home, the **BI folder**: `drishti.bi.dir` (environment variable `DRISHTI_BI_DIR`), `./config/bi` by default,
+relative to the server's working directory. It sits beside the other two things a site owns, `config/connectors/` (the
+connectors) and `config/packs/` (the packs); runtime output goes under `data/` (`drishti.data.dir`).
+
+```
+config/bi/
+  README.md
+  datasets/   <id>.dataset.yaml   section 6
+  reports/    <id>.report.yaml    section 8
+  python/                         section 13: typed implementations, their manifests and tests
+```
+
+- **Never inside a pack.** A pack describes data (kinds, Sutras, links, vocabulary). A dataset may combine kinds from several
+  packs and a report several datasets, so BI content is deployed, versioned and switched on by itself; a pack does not mention
+  BI, and switching a pack off never deletes a report (the visuals over its kinds say they have no rows).
+- **Datasets name connectors** by logical name ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), as packs do.
+- **Workspace drafts and published versions** live in the identity database (section 21, decision 1); the folder holds the
+  reviewed content shipped with a site.
+- The folders may be empty or absent. Phase 0 reads the folder only to list the dataset files it finds (the `bench` answer's
+  `biDir` and `biDatasets`; see [RUPAKA_POC.md](RUPAKA_POC.md)).
+
 ## 7. The query engine
 
 - **Server-side DuckDB** (already a Drishti plugin) is the analytical engine: cached tables are DuckDB tables (on disk,
@@ -303,7 +326,7 @@ The phase 0 POC measures the JSON, columns and rollup paths side by side (RUPAKA
 
 ## 8. Reports and visuals
 
-A report is `bi/reports/<id>.report.yaml`: pages, each a 12-column grid of visuals; filters at report, page and visual
+A report is `<drishti.bi.dir>/reports/<id>.report.yaml` (by default `config/bi/reports/`): pages, each a 12-column grid of visuals; filters at report, page and visual
 level; bookmarks; drill-through targets; a theme.
 
 | Visual | Engine | Notes |
@@ -523,9 +546,9 @@ class Source(Protocol):
     def batches(self, params: dict): ...          # an iterator of pa.RecordBatch
 ```
 
-- Implementations live in a pack's `bi/python/` package (or a workspace's, for drafts), registered in YAML by dotted name
+- Implementations live in the BI folder's `python/` package (`config/bi/python/`; or a workspace's, for drafts), registered in YAML by dotted name
   (`risk.measures.pnl_attribution`), with a `manifest` of parameters, required packages and the execution targets it supports.
-- Each implementation ships **tests** (inputs and expected outputs as small Arrow files) that the pack check runs.
+- Each implementation ships **tests** (inputs and expected outputs as small Arrow files) that the BI check runs.
 
 ### 13.2 Where it runs: one interface, two targets
 
@@ -680,7 +703,7 @@ changes (so suggestions can arrive as diffs).
 
 | # | Decision | Options | Recommendation |
 |---|---|---|---|
-| 1 | Where BI documents live | identity database; files in packs; both | **Both**: packs for shipped content (reviewed, versioned in git), the database for workspace drafts and published versions |
+| 1 | Where BI documents live | identity database; files in the BI folder; both | **Both**: the BI folder `config/bi` for shipped content (reviewed, versioned in git, never inside a pack), the database for workspace drafts and published versions |
 | 2 | The measure language | extend Rachana-EL; adopt a DAX subset | **Extend Rachana-EL**: one closed language, already validated and documented; a DAX mapping table for authors |
 | 3 | Streaming grid engine | Perspective; Drishti's own table panel only | **Perspective** for live and large grids (Apache-2.0, WebAssembly), Drishti panels for the rest |
 | 4 | Exploration component | Graphic Walker; PygWalker in Pyodide | **Graphic Walker** directly; PygWalker inside Calc for Python users |

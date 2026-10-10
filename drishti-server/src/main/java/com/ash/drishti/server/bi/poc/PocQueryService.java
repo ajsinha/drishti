@@ -254,8 +254,23 @@ public final class PocQueryService implements AutoCloseable {
         out.put("runs", runs);
         out.put("tradesPerDay", props.rows());
         out.put("days", props.days());
+        out.put("biDir", Path.of(props.biDir()).toAbsolutePath().normalize().toString());
+        out.put("biDatasets", biFiles("datasets", ".dataset.yaml"));
         out.put("heapDeltaBytes", rt.totalMemory() - rt.freeMemory() - heap0);
         return out;
+    }
+
+    /** The Rupaka files of one kind under {@code drishti.bi.dir} (datasets/, reports/): their names, sorted; none when the folder is absent. */
+    private List<String> biFiles(String sub, String suffix) {
+        Path dir = Path.of(props.biDir()).resolve(sub);
+        if (!java.nio.file.Files.isDirectory(dir)) {
+            return List.of();
+        }
+        try (java.util.stream.Stream<Path> s = java.nio.file.Files.list(dir)) {
+            return s.map(p -> p.getFileName().toString()).filter(n -> n.endsWith(suffix)).sorted().toList();
+        } catch (java.io.IOException e) {
+            return List.of();
+        }
     }
 
     private int timed(Built b) {
