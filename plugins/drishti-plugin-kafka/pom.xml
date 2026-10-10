@@ -30,6 +30,16 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>org.apache.kafka</groupId><artifactId>kafka-clients</artifactId></dependency>
+    <!-- Avro: decodes Confluent-wire-format messages (Schema Registry). Apache-2.0; its file codecs (snappy, xz, zstd) are not needed
+         for decoding a single message and are left out -->
+    <dependency>
+      <groupId>org.apache.avro</groupId><artifactId>avro</artifactId><version>${avro.version}</version>
+      <exclusions>
+        <exclusion><groupId>org.xerial.snappy</groupId><artifactId>snappy-java</artifactId></exclusion>
+        <exclusion><groupId>org.tukaani</groupId><artifactId>xz</artifactId></exclusion>
+        <exclusion><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId></exclusion>
+      </exclusions>
+    </dependency>
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>

@@ -110,8 +110,47 @@ public final class KafkaSourcePlugin implements SourcePlugin {
     private volatile boolean caughtUp;
     private volatile boolean running = true;
     private volatile boolean closed;
+    private com.ash.drishti.api.tls.TlsMaterial tls;
+    private org.apache.kafka.common.serialization.Deserializer<String> valueDeserializer = new StringDeserializer();
     private String defaultKind;
     private String defaultIdField = "id";
+
+    /**
+     * The consumer properties: the connector's own, then the security settings translated to Kafka properties, then every
+     * {@code client.<property>} setting, which wins over both.
+     */
+    static Properties consumerProperties(Map<String, String> settings, String sourceName, KafkaSecurity.Result security) {
+        Properties p = new Properties();
+        String bootstrap = settings.get("bootstrap-servers");
+        p.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrap == null || bootstrap.isBlank() ? "localhost:9092" : bootstrap);
+        p.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        p.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+        p.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        p.put(ConsumerConfig.CLIENT_ID_CONFIG, "drishti-" + sourceName);
+        security.properties().forEach(p::put);
+        settings.forEach((k, v) -> {
+            if (k.startsWith("client.")) {
+                p.put(k.substring(7), v);
+            }
+        });
+        return p;
+    }
+
+    /**
+     * The value deserializer: plain text, or (with {@code schema-registry.url} or {@code value-format: confluent}) text that also
+     * reads the Confluent wire format, see {@link ConfluentValueDeserializer}.
+     */
+    private static org.apache.kafka.common.serialization.Deserializer<String> valueDeserializer(java.util.Map<String, String> settings) {
+        String format = settings.getOrDefault("value-format", "").strip().toLowerCase(java.util.Locale.ROOT);
+        boolean registry = settings.get("schema-registry.url") != null && !settings.get("schema-registry.url").isBlank();
+        if (format.equals("string") || (format.isEmpty() && !registry)) {
+            return new StringDeserializer();
+        }
+        if (!format.isEmpty() && !format.equals("confluent")) {
+            throw new IllegalStateException("value-format '" + format + "' is not string or confluent");
+        }
+        return new ConfluentValueDeserializer(registry ? new SchemaRegistryClient(settings) : null);
+    }
 
     @Override
     public PluginManifest manifest() {
@@ -140,17 +179,10 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 idFieldOfTopic.put(k.substring(9), v);
             }
         });
-        Properties p = new Properties();
-        p.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ctx.setting("bootstrap-servers", "localhost:9092"));
-        p.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        p.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        p.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
-        p.put(ConsumerConfig.CLIENT_ID_CONFIG, "drishti-" + sourceName);
-        ctx.settings().forEach((k, v) -> {
-            if (k.startsWith("client.")) {
-                p.put(k.substring(7), v);
-            }
-        });
+        KafkaSecurity.Result security = KafkaSecurity.translate(ctx.settings());
+        Properties p = consumerProperties(ctx.settings(), sourceName, security);
+        this.tls = security.tls();
+        this.valueDeserializer = valueDeserializer(ctx.settings());
         consumerProps = p;                           // the consumer is created (and re-created) by the supervisor
         this.ticksOnly = "ticks".equals(ctx.setting("mode", "state"));
         this.searchable = !ticksOnly && Boolean.parseBoolean(ctx.setting("search", "true"));
@@ -174,7 +206,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
             rp.putAll(p);
             rp.put(ConsumerConfig.CLIENT_ID_CONFIG, "drishti-" + sourceName + "-reader");
             rp.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, "1");
-            reader = new KafkaConsumer<>(rp);
+            reader = new KafkaConsumer<>(rp, new StringDeserializer(), valueDeserializer);
         }
         long pollMs = Long.parseLong(ctx.setting("poll-ms", "200"));
         loop = Thread.ofVirtual().name("drishti-kafka-" + sourceName).start(() -> supervise(topics, pollMs));
@@ -190,7 +222,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
         while (running) {
             KafkaConsumer<String, String> c;
             try {
-                c = new KafkaConsumer<>(consumerProps);
+                c = new KafkaConsumer<>(consumerProps, new StringDeserializer(), valueDeserializer);
             } catch (RuntimeException e) {
                 health.set("DOWN: " + e.getMessage() + " (retrying)");
                 if (!pause(backoff)) {
@@ -595,7 +627,8 @@ public final class KafkaSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        return health.get();
+        String h = health.get();
+        return tls == null ? h : tls.annotate(h, Instant.now());
     }
 
     @Override

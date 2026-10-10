@@ -84,4 +84,14 @@ public record TlsMaterial(
                     : "";
         }).orElse("");
     }
+
+    /**
+     * A health text with the expiry note added when a certificate expires within {@link #WARN_DAYS} days (or has expired):
+     * {@code UP (TLS certificate CN=drishti (tls.cert-file) expires in 12 days (2026-10-22))}. A health text that is not up
+     * is returned as it is.
+     */
+    public String annotate(String health, Instant now) {
+        String note = expiryNote(now);
+        return note.isEmpty() || health == null || !health.startsWith("UP") ? health : health + " (" + note + ")";
+    }
 }

@@ -15,16 +15,10 @@
  */
 package com.ash.drishti.api.tls;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The TLS settings of one connector, read from its settings under a prefix (normally {@code tls.}). Every connector reads
@@ -71,7 +65,6 @@ public record TlsSettings(
 
     public static final List<String> DEFAULT_PROTOCOLS = List.of("TLSv1.3", "TLSv1.2");
     public static final String ALLOW_INSECURE_ENV = "DRISHTI_ALLOW_INSECURE_TLS";
-    private static final Pattern ENV_REF = Pattern.compile("^\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::([^}]*))?}$");
 
     /** TLS off. */
     public static TlsSettings disabled() {
@@ -90,17 +83,17 @@ public record TlsSettings(
     public static TlsSettings parse(Map<String, String> settings, String prefix, Function<String, String> env) {
         Function<String, String> get = key -> {
             String v = settings.get(prefix + key);
-            return v == null || v.isBlank() ? null : expand(v.strip(), env, prefix + key);
+            return v == null || v.isBlank() ? null : Secrets.expand(v.strip(), env, prefix + key);
         };
         boolean enabled = bool(get.apply("enabled"), false, prefix + "enabled");
         String ca = get.apply("ca-file");
         String ts = get.apply("truststore");
         boolean trustJvm = bool(get.apply("trust-jvm-default"), ca == null && ts == null, prefix + "trust-jvm-default");
         String ks = get.apply("keystore");
-        String keyPassword = secret(get, settings, prefix, "key-password", env);
-        return new TlsSettings(prefix, enabled, ca, ts, secret(get, settings, prefix, "truststore-password", env),
+        String keyPassword = Secrets.secret(get, prefix, "key-password");
+        return new TlsSettings(prefix, enabled, ca, ts, Secrets.secret(get, prefix, "truststore-password"),
                 get.apply("truststore-type"), trustJvm, get.apply("cert-file"), get.apply("key-file"), ks,
-                secret(get, settings, prefix, "keystore-password", env), get.apply("keystore-type"), get.apply("key-alias"),
+                Secrets.secret(get, prefix, "keystore-password"), get.apply("keystore-type"), get.apply("key-alias"),
                 keyPassword, list(get.apply("protocols"), DEFAULT_PROTOCOLS), list(get.apply("cipher-suites"), List.of()),
                 bool(get.apply("verify-hostname"), true, prefix + "verify-hostname"),
                 bool(get.apply("insecure-trust-all"), false, prefix + "insecure-trust-all"));
@@ -109,39 +102,6 @@ public record TlsSettings(
     /** True when any key is given under the prefix, whether or not {@code enabled} is set. */
     public static boolean anyGiven(Map<String, String> settings, String prefix) {
         return settings.keySet().stream().anyMatch(k -> k.startsWith(prefix));
-    }
-
-    /** The password under {@code key}: the inline value (after {@code ${ENV}}), or the first line of the {@code key-file} file. */
-    private static String secret(Function<String, String> get, Map<String, String> settings, String prefix, String key,
-                                 Function<String, String> env) {
-        String file = get.apply(key + "-file");
-        if (file != null) {
-            Path p = Path.of(file);
-            try {
-                String text = Files.readString(p, StandardCharsets.UTF_8);
-                int nl = text.indexOf('\n');
-                return (nl < 0 ? text : text.substring(0, nl)).stripTrailing().replace("\r", "");
-            } catch (IOException e) {
-                throw new TlsException(prefix + key + "-file '" + file + "': cannot read the password file ("
-                        + (Files.exists(p) ? e.getMessage() : "file not found") + ")", e);
-            }
-        }
-        return get.apply(key);
-    }
-
-    private static String expand(String value, Function<String, String> env, String key) {
-        Matcher m = ENV_REF.matcher(value);
-        if (!m.matches()) {
-            return value;
-        }
-        String v = env.apply(m.group(1));
-        if (v != null && !v.isEmpty()) {
-            return v;
-        }
-        if (m.group(2) != null) {
-            return m.group(2);
-        }
-        throw new TlsException(key + ": the environment variable " + m.group(1) + " is not set");
     }
 
     private static boolean bool(String v, boolean fallback, String key) {
