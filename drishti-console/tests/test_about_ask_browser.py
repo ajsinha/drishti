@@ -41,7 +41,7 @@ class FakeModel:
 
         class Handler(BaseHTTPRequestHandler):
             def do_POST(self):
-                body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))) or b"{}")
+                body = json.loads(self._body() or b"{}")
                 outer.requests.append(body)
                 if outer.fail:
                     self.send_response(500)
@@ -53,6 +53,18 @@ class FakeModel:
                 self.send_header("Content-Length", str(len(out)))
                 self.end_headers()
                 self.wfile.write(out)
+
+            def _body(self) -> bytes:                       # Spring AI's client sends the body chunked (no Content-Length)
+                if "chunked" in (self.headers.get("Transfer-Encoding") or "").lower():
+                    data = b""
+                    while True:
+                        size = int(self.rfile.readline().strip().split(b";")[0] or b"0", 16)
+                        if size == 0:
+                            self.rfile.readline()
+                            return data
+                        data += self.rfile.read(size)
+                        self.rfile.readline()
+                return self.rfile.read(int(self.headers.get("Content-Length", "0")))
 
             def log_message(self, *args):
                 pass
