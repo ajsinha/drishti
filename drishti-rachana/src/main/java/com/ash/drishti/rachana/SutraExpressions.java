@@ -65,18 +65,22 @@ public final class SutraExpressions {
     }
 
     /** The problems of one check, and the control ids the Sutra declares (for {@code ctl.<id>} references). */
-    private static final class Run extends ArrayList<SutraProblem> {
-        private static final long serialVersionUID = 1L;
-        private final transient Set<String> declared;
+    private static final class Run {
+        private final List<SutraProblem> problems = new ArrayList<>();
+        private final Set<String> declared;
 
         Run(Set<String> declared) {
             this.declared = declared;
         }
 
+        void add(SutraProblem p) {
+            problems.add(p);
+        }
+
         void references(String src, SourceLocation at) {
             for (String id : ControlRules.references(src)) {
                 if (!declared.contains(id)) {
-                    add(new SutraProblem("DRS-2036", "'ctl." + id + "' reads a control the Sutra does not declare"
+                    problems.add(new SutraProblem("DRS-2036", "'ctl." + id + "' reads a control the Sutra does not declare"
                             + (declared.isEmpty() ? " (it has no controls:)" : " (it has " + String.join(", ", new java.util.TreeSet<>(declared)) + ")"), at));
                 }
             }
@@ -109,7 +113,7 @@ public final class SutraExpressions {
                 expr(a, s.location(), out);
             }
         });
-        return out;
+        return out.problems;
     }
 
     private void panel(Panel p, Run out) {
