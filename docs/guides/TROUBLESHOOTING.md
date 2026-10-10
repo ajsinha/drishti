@@ -204,6 +204,39 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   address (`http://<ip>:17480`; `hostname -I` lists them), and, for anything beyond a trial, turn security on first (see
   [OPERATIONS.md](../admin/OPERATIONS.md)).
 
+## Things that failed to load or lost their connection
+
+Packs, connectors, AI providers and MCP servers that fail are **tried again by themselves** (exponential backoff: 5 s, 10 s, 20 s, ... up to 5 min), so most
+problems clear on their own once the cause is fixed. Admin → Packs, Connectors and AI and the Health page show *failed — next retry in Ns (attempt k)* and the last
+error on the row ([Retries](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself)).
+
+### A pack is "not loaded" and the problem names another pack
+
+A kind, mnemonic or role that two packs both define is refused for the one that came second, and the first keeps running. Remove or rename the clash in either
+pack (or unload the other); you do not need to touch the refused pack's folder or restart: it is checked again when the folder changes and on the retry schedule, and it loads as soon as
+the clash is gone. To check now, press **Retry now** on Admin → Packs (`POST /api/v1/admin/retry/packs`). If it never retries, `drishti.packs.watch` is `off` (that is the timer): use Retry now.
+
+### A connector is FAILED and "next retry in 5 min" does not change
+
+The error was classed **permanent** (credentials refused or a setting that is wrong, three times in a row), so it is tried only every `drishti.retry.connectors.max`. Fix the
+settings in the connector file (saving starts the count again) or press **Retry now** after you fixed the cause (`POST /api/v1/admin/retry/connectors?name=<connector>`).
+
+### A connector shows "connection lost" although the store is up
+
+The plugin reports `DOWN` in its health. After three looks it is started afresh; if it still says DOWN the plugin cannot reach the store from this machine. Test the connection from
+Admin → Connectors (Test connection shows the plugin's own message).
+
+### An AI provider shows ERROR, an MCP server shows DOWN
+
+ERROR: the provider or server could not be set up (type or transport not installed, an `${ENV}` value not set); fix it and it is built again by itself, or press **Retry now** on Admin → AI.
+DOWN: the last call failed; the MCP client is closed and connected afresh on the schedule, and a provider is simply tried again by the next call. With `drishti.ai.watch: off` (or
+`drishti.mcp.watch: off`) the folder is not looked at and nothing is retried: use Retry now.
+
+### Too many retry lines in the log
+
+The log gets the first failure and failures number 2, 4, 8, ... of each thing, never one line per try. To retry less often, raise `drishti.retry.max`
+(per area: `drishti.retry.connectors.max`); to stop retrying, set `drishti.retry.enabled: false` ([CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings)).
+
 ## Signing in
 
 ### There is no sign-in page, and no users or roles apply

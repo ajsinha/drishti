@@ -65,15 +65,23 @@ async def packs(request: Request) -> list:
 
 
 async def library(request: Request):
-    """The help library for the enabled packs, built once per set of packs."""
+    """The help library for the enabled packs, built once per set of packs and per version of the catalogue file: a pack that is loaded,
+    unloaded or upgraded, or an edit of ``config/help.yaml``, gives a new library on the next request (no restart)."""
     from core.guides import Library
 
     current = await packs(request)
-    key = tuple(p["name"] for p in current)
+    console_dir = Path(__file__).resolve().parent.parent
+    catalogue = console_dir / "config" / "help.yaml"
+    try:
+        stamp = catalogue.stat().st_mtime_ns
+    except OSError:
+        stamp = 0
+    key = (tuple((p["name"], str(p.get("version", ""))) for p in current), stamp)
     libs = request.app.state.libraries
     if key not in libs:
-        console_dir = Path(__file__).resolve().parent.parent
-        libs[key] = Library(console_dir, console_dir / "config" / "help.yaml", request.app.state.docs_dir, current)
+        for old in [k for k in libs if k != key]:
+            del libs[old]                                  # only the current library is kept
+        libs[key] = Library(console_dir, catalogue, request.app.state.docs_dir, current)
     return libs[key]
 
 

@@ -73,10 +73,11 @@ public class AiController {
     private final Entitlements entitlements;
     private final AuditLog audit;
 
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private com.ash.drishti.server.RetryService retry;
+    private final com.ash.drishti.server.RetryService retry;
 
-    public AiController(AiProperties ai, McpProperties mcp, LlmGateway gateway, McpGateway mcpGateway, Entitlements entitlements, AuditLog audit) {
+    public AiController(AiProperties ai, McpProperties mcp, LlmGateway gateway, McpGateway mcpGateway, Entitlements entitlements, AuditLog audit,
+            com.ash.drishti.server.RetryService retry) {
+        this.retry = retry;
         this.ai = ai;
         this.mcp = mcp;
         this.gateway = gateway;
@@ -95,8 +96,8 @@ public class AiController {
         out.put("types", reg.types());
         out.put("defaultModel", ai.defaultModel());
         List<Map<String, Object>> providers = new ArrayList<>();
-        Map<String, Map<String, Object>> aiRetry = retry == null ? Map.of() : retry.ai();
-        Map<String, Map<String, Object>> mcpRetry = retry == null ? Map.of() : retry.mcp();
+        Map<String, Map<String, Object>> aiRetry = retry.ai();
+        Map<String, Map<String, Object>> mcpRetry = retry.mcp();
         for (LlmRegistry.Entry e : reg.entries()) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("name", e.config().name());

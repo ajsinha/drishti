@@ -53,6 +53,18 @@ allowed-tools: [calc_percentage_change]    # empty = all the server lists; other
 tls: {ca-file: /etc/drishti/ca.pem}        # the shared tls.* keys
 ```
 
+A server is **connected on first use**. Two things can go wrong, and both are retried by themselves (`drishti.retry.mcp.*`, defaults: 5 s,
+doubling, up to 5 min, jitter; the console has `retry.mcp.*`):
+
+- the file is fine but the server cannot be set up (its transport is not installed, a header's `${ENV}` is not set): Admin -> AI lists it **ERROR**
+  with *failed - next retry in Ns (attempt k)* and builds it again on the schedule;
+- the connection was lost (the last call failed, so the server shows **DOWN**): it is listed the same way, and when its retry is due the
+  client is closed and connected afresh (a new handshake). When that works the server is **UP** again and the line disappears; open
+  tool lists simply work on the next call. Calls made while it is down are still attempted (they are not held back).
+
+**Retry now** (Admin -> AI, `POST /api/v1/admin/retry/mcp`, admin, audited as `mcp-retry-now`) reconnects at once. Failures are logged and
+audited on attempts 1, 2, 4, 8, ... (`mcp-retry-failed`) and recoveries always (`mcp-recovered`). The console's MCP client does the same with `retry.mcp.*`.
+
 ## 3. Policy (`drishti.mcp.*`)
 
 | Setting | Meaning |

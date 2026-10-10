@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * <p>Immutable once built; {@link #reload()} swaps in a whole new state, so readers always see a consistent catalogue.
  * Thread-safe.
  */
-public final class AboutCatalog implements AboutSource {
+public final class AboutCatalog implements AboutSource, com.ash.drishti.common.LiveSettings {
 
     private static final Logger LOG = LoggerFactory.getLogger(AboutCatalog.class);
 
@@ -50,7 +50,7 @@ public final class AboutCatalog implements AboutSource {
 
     private record Snapshot(Map<String, AboutText> byKind, Map<String, Map<String, AboutText>> byLocale, Map<String, List<SutraProblem>> problems) {}
 
-    private final AboutProperties props;
+    private volatile AboutProperties props;
     private final AboutParser parser;
     private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
     private final AtomicLong revision = new AtomicLong();
@@ -90,6 +90,27 @@ public final class AboutCatalog implements AboutSource {
         return Optional.ofNullable(core.get(name));
     }
 
+    /** Packs changed: the loaded packs' about files, as the pack loader now lists them, are read again. A file that does not read is a problem entry, never a failed reload. */
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        AboutProperties fresh = org.springframework.boot.context.properties.bind.Binder.get(candidate).bind("drishti.about", AboutProperties.class)
+                .orElseGet(() -> new AboutProperties(null, null, null));
+        return () -> {
+            lock.lock();
+            try {
+                this.props = new AboutProperties(fresh.packs(), props.maxText(), props.maxRendered());
+                load();
+            } finally {
+                lock.unlock();
+            }
+        };
+    }
+
+    /** The loaded packs as the about catalogue sees them (most specific first). */
+    public List<AboutProperties.PackSource> sources() {
+        return props.packs();
+    }
+
     /** Reads every pack's about file again. */
     public void reload() {
         lock.lock();
@@ -101,11 +122,12 @@ public final class AboutCatalog implements AboutSource {
     }
 
     private void load() {
+        List<AboutProperties.PackSource> packs = props.packs();
         Map<String, AboutProperties.PackSource> byName = new LinkedHashMap<>();
-        props.packs().forEach(p -> byName.put(p.name(), p));
+        packs.forEach(p -> byName.put(p.name(), p));
         List<Loaded> loaded = new ArrayList<>();
         Map<String, List<SutraProblem>> problems = new LinkedHashMap<>();
-        for (AboutProperties.PackSource p : props.packs()) {
+        for (AboutProperties.PackSource p : packs) {
             if (p.file() == null || !Files.isRegularFile(Path.of(p.file()))) {
                 continue;
             }

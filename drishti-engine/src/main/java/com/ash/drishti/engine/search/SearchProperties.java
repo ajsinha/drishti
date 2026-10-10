@@ -34,9 +34,21 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *     the pivot as JSON ({@code {"fields": [...], "rows": [...], ...}}); packs declare them ({@code pivot:} in pack.yaml)
  */
 @ConfigurationProperties("drishti.search")
-public record SearchProperties(Integer maxScan, Duration budget, Map<String, List<String>> columns, Map<String, String> pivot) {
+public final class SearchProperties implements com.ash.drishti.common.LiveSettings {
 
     private static final ObjectMapper JSON = new ObjectMapper();
+
+    /** The settings as one unit: swapped whole when packs change, so a search sees the old columns and pivots or the new, never both. */
+    private record State(Integer maxScan, Duration budget, Map<String, List<String>> columns, Map<String, String> pivot) {
+        State {
+            maxScan = maxScan == null || maxScan <= 0 ? 20_000 : maxScan;
+            budget = budget == null ? Duration.ofSeconds(3) : budget;
+            columns = columns == null ? Map.of() : Map.copyOf(columns);
+            pivot = pivot == null ? Map.of() : Map.copyOf(pivot);
+        }
+    }
+
+    private volatile State state;
 
     public SearchProperties(Integer maxScan, Duration budget) {
         this(maxScan, budget, null, null);
@@ -47,16 +59,43 @@ public record SearchProperties(Integer maxScan, Duration budget, Map<String, Lis
     }
 
     @org.springframework.boot.context.properties.bind.ConstructorBinding
-    public SearchProperties {
-        maxScan = maxScan == null || maxScan <= 0 ? 20_000 : maxScan;
-        budget = budget == null ? Duration.ofSeconds(3) : budget;
-        columns = columns == null ? Map.of() : Map.copyOf(columns);
-        pivot = pivot == null ? Map.of() : Map.copyOf(pivot);
+    public SearchProperties(Integer maxScan, Duration budget, Map<String, List<String>> columns, Map<String, String> pivot) {
+        this.state = new State(maxScan, budget, columns, pivot);
+    }
+
+    /** At most this many entities of the kind are read per search. */
+    public Integer maxScan() {
+        return state.maxScan();
+    }
+
+    /** The time a search may take to list and read them. */
+    public Duration budget() {
+        return state.budget();
+    }
+
+    public Map<String, List<String>> columns() {
+        return state.columns();
+    }
+
+    public Map<String, String> pivot() {
+        return state.pivot();
+    }
+
+    /** Packs changed: the columns and pivots they declare are read again (the limits stay as the site set them). */
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        SearchProperties fresh = org.springframework.boot.context.properties.bind.Binder.get(candidate).bind("drishti.search", SearchProperties.class)
+                .orElseGet(() -> new SearchProperties(null, null));
+        State next = new State(fresh.maxScan(), fresh.budget(), fresh.columns(), fresh.pivot());
+        for (String kind : next.pivot().keySet()) {                 // a pivot that cannot be read refuses the reload, not the next search
+            new SearchProperties(null, null, next.columns(), next.pivot()).pivotOf(kind);
+        }
+        return () -> state = next;
     }
 
     /** The key fields of a kind as document paths ({@code $.productType}); empty when its pack names none. */
     public List<String> columnsOf(String kind) {
-        return columns.getOrDefault(kind, List.of()).stream().map(String::trim).filter(c -> !c.isEmpty())
+        return state.columns().getOrDefault(kind, List.of()).stream().map(String::trim).filter(c -> !c.isEmpty())
                 .map(c -> c.startsWith("$") ? c : "$." + c).toList();
     }
 
@@ -65,7 +104,8 @@ public record SearchProperties(Integer maxScan, Duration budget, Map<String, Lis
      * false). A declaration that cannot be read is a {@link IllegalArgumentException} naming the problems.
      */
     public Optional<PivotSpec> pivotOf(String kind) {
-        String raw = pivot.get(kind);
+        State st = state;
+        String raw = st.pivot().get(kind);
         if (raw == null || raw.isBlank()) {
             return Optional.empty();
         }

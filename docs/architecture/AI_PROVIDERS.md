@@ -79,6 +79,19 @@ The provider name is the file name without its extension (or `name:`). A model i
 `openai/fast`); a bare name works when only one provider has it. The registry default is `drishti.ai.default-model`
 (`DRISHTI_AI_DEFAULT_MODEL`), else the only chat model there is.
 
+### A provider that cannot be set up is retried
+
+A file that is well formed can still give a provider that cannot be built (its type is not installed, a setting the type needs is
+wrong, an `${ENV}` key is not set). It is listed in Admin -> AI as **ERROR** and **tried again by itself**: after `drishti.retry.ai.initial`
+(5 s), then twice as long each time, never longer than `drishti.retry.ai.max` (5 min), with jitter. The row says
+*failed - next retry in 20 s (attempt 3)* and the last error; an error that retrying cannot fix (a missing key, an unknown type, three
+refusals in a row) is retried only every `max`. A provider that was built is not tested until a call is made: if a call fails it
+shows **DOWN** until the next call goes through (every call is attempted afresh; there is no circuit breaker that holds calls back).
+A file that cannot be read (bad YAML, a literal key) is read again at every look at the folder (`drishti.ai.poll-ms`), so it clears the moment it is fixed.
+**Retry now** (Admin -> AI, `POST /api/v1/admin/retry/ai`, admin, audited as `ai-retry-now`; an API token needs the `packs:admin` scope) builds
+every failing provider at once. Failures are logged and audited on attempts 1, 2, 4, 8, ... (`ai-retry-failed`) and a recovery always
+(`ai-recovered`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings), `drishti.retry.*` and `drishti.retry.ai.*`.
+
 ### Types shipped
 
 | `type` | Backed by | Settings beyond the common ones |
@@ -184,6 +197,11 @@ when `drishti.ai.enabled` is false, and log a warning at start. A provider file 
 |---|---|
 | `openai`, `anthropic`, `mock` | the same three types, same file format and keys (`tls.ca-file`, `tls.cert-file`, `tls.key-file` for TLS) |
 | - | **`server`**: delegates to the server's `POST /api/v1/ai/chat` with the signed-in identity; keys, policy, masking, limits and audit stay on the server. **The recommended console provider.** The model `id` is the server's `provider/model`; omit it for the server's default. |
+
+The console's layer follows its folders too, with no restart: a supervisor looks at `ai.dir` and `mcp.dir` every `ai.poll_seconds` (5), reloads
+when a file changed, and retries what failed with `retry.*` / `retry.ai.*` / `retry.mcp.*` (the console's equivalents of `drishti.retry.*`; same schedule, same
+rules). Admin -> AI shows the *failed - next retry in Ns (attempt k)* line for the console's providers and servers as it does for the server's, and its Retry now
+button tries both layers at once.
 
 Settings (`drishti-console/config/application.yaml`): `ai.enabled` (`DRISHTI_AI_ENABLED`, false), `ai.dir` (`DRISHTI_AI_DIR`),
 `ai.default_model`, `ai.redact` (the field names to mask), `ai.policy.*` (same meaning as above). Console code calls

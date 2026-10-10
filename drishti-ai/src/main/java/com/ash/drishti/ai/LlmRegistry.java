@@ -75,6 +75,7 @@ public final class LlmRegistry implements AutoCloseable {
     /** A provider that cannot be built (missing type, bad settings) is built again on the {@code drishti.retry.ai} schedule, not at every look. */
     private final com.ash.drishti.common.RetryBoard retry;
     private final java.util.concurrent.locks.ReentrantLock reloadLock = new java.util.concurrent.locks.ReentrantLock();
+    private String lastSummary = "";
 
     public LlmRegistry(List<ProviderFactory> factories, Supplier<ProviderConfigLoader.Loaded> source, String defaultModel) {
         this(factories, source, defaultModel, com.ash.drishti.common.RetryPolicy.defaults());
@@ -156,7 +157,11 @@ public final class LlmRegistry implements AutoCloseable {
                 e.provider().close();
             }
         }
-        LOG.info("ai registry: {} provider(s), {} usable, {} file error(s)", entries.size(), entries.values().stream().filter(Entry::usable).count(), errors.size());
+        String summary = entries.size() + " provider(s), " + entries.values().stream().filter(Entry::usable).count() + " usable, " + errors.size() + " file error(s)";
+        if (!summary.equals(lastSummary)) {                         // the folder is looked at every few seconds: say it when it changed
+            LOG.info("ai registry: {}", summary);
+            lastSummary = summary;
+        }
     }
 
     public List<String> types() {

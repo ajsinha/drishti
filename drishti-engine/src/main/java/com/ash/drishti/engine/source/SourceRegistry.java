@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * ({@code drishti.sources.connectors}), each a fresh instance of its plugin. Plugins start in parallel on virtual threads; a
  * plugin that fails to start is logged and left out rather than failing the application.
  */
-public final class SourceRegistry implements AutoCloseable {
+public final class SourceRegistry implements AutoCloseable, com.ash.drishti.common.LiveSettings {
 
     private static final Logger LOG = LoggerFactory.getLogger(SourceRegistry.class);
 
@@ -114,6 +114,9 @@ public final class SourceRegistry implements AutoCloseable {
     /** Plugins that run as themselves (not through a connector file) and failed to start: the instance and the settings to start it with. */
     private final Map<String, Map<String, String>> plainSettings = new java.util.concurrent.ConcurrentHashMap<>();
     private final Map<String, SourcePlugin> plainInstances = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Plugins that run as themselves, with the settings they were started with (so a pack that changes them can restart just those). */
+    private final Map<String, Map<String, String>> plainApplied = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, SourcePlugin> plainAll = new java.util.concurrent.ConcurrentHashMap<>();
     /** Connectors whose failure is a lost connection (health says DOWN) rather than a start that failed. */
     private final java.util.Set<String> lost = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private final java.util.concurrent.atomic.AtomicLong sweeps = new java.util.concurrent.atomic.AtomicLong();
@@ -158,6 +161,12 @@ public final class SourceRegistry implements AutoCloseable {
                 retry.failed(name, String.valueOf(e.getMessage()), true);
             }
         });
+        for (SourcePlugin p : enabled) {
+            if (!applied.containsKey(p.manifest().name())) {
+                plainApplied.put(p.manifest().name(), settings.get(p));
+                plainAll.put(p.manifest().name(), p);
+            }
+        }
         try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<?>> starts = new ArrayList<>();
             for (SourcePlugin p : enabled) {
@@ -231,12 +240,8 @@ public final class SourceRegistry implements AutoCloseable {
             }
             int attempt = retry.status(name).map(com.ash.drishti.common.RetryTracker.Status::attempt).orElse(1);
             retry.failed(name, "connection lost: " + h, false);
-            if (attempt % 3 == 0 && applied.containsKey(name)) {          // still down after a few looks: start it afresh
-                lost.remove(name);
+            if (attempt % 3 == 0 && applied.containsKey(name)) {          // still down after a few looks: start it afresh (it stays listed until it answers)
                 applyLocked(name, applied.get(name));
-                if (retry.failing(name)) {
-                    lost.add(name);
-                }
             }
             return;
         }
@@ -296,6 +301,45 @@ public final class SourceRegistry implements AutoCloseable {
                 retry.failed(name, "connection lost: " + h, false);
             }
         }
+    }
+
+    /**
+     * Packs changed their settings for a plugin that runs as itself (the sample-data folders of the demo plugin, for one): the
+     * plugins whose settings differ now are restarted, one at a time, each taken out of routing while it restarts; the others are
+     * not touched. A plugin that fails to start is listed and retried like any connector.
+     */
+    @Override
+    public Runnable prepare(org.springframework.core.env.Environment candidate) {
+        Map<String, SourcesProperties.PluginSettings> fresh = org.springframework.boot.context.properties.bind.Binder.get(candidate)
+                .bind("drishti.sources.plugins", org.springframework.boot.context.properties.bind.Bindable.mapOf(String.class, SourcesProperties.PluginSettings.class))
+                .orElse(Map.of());
+        Map<String, Map<String, String>> next = new LinkedHashMap<>();
+        plainApplied.keySet().forEach(n -> next.put(n, fresh.getOrDefault(n, new SourcesProperties.PluginSettings(true, Map.of())).settings()));
+        return () -> next.forEach((name, own) -> {
+            if (!own.equals(plainApplied.get(name))) {
+                restartPlain(name, own);
+            }
+        });
+    }
+
+    private void restartPlain(String name, Map<String, String> own) {
+        SourcePlugin p = plainAll.get(name);
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            if (plugins.get(name) != null) {
+                swap(name, null);
+                unregister(name, p);
+                closeQuietly(p);
+            }
+            plainApplied.put(name, own);
+            plainSettings.put(name, own);
+            plainInstances.put(name, p);
+        } finally {
+            lock.unlock();
+        }
+        retry.forget(name);
+        startPlain(name);
     }
 
     /** Retry state of a connector that is failing, or empty. */
@@ -447,7 +491,9 @@ public final class SourceRegistry implements AutoCloseable {
             swap(name, instance);
             failures.remove(name);
             LOG.info("connector {} started ({})", name, c.plugin());
-            retry.succeeded(name);
+            if (!lost.contains(name)) {
+                retry.succeeded(name);                          // a lost connection is cleared when the plugin says it is up, not by the restart
+            }
             return status(name, "RUNNING", null);
         } finally {
             lock.unlock();

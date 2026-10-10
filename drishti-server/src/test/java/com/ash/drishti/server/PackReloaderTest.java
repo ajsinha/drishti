@@ -108,6 +108,11 @@ class PackReloaderTest {
     @Autowired SutraRegistry sutras;
     @Autowired ConnectorManager connectors;
     @Autowired SamplePolicy samples;
+    @Autowired com.ash.drishti.server.security.RoleCatalog roles;
+    @Autowired com.ash.drishti.engine.search.SearchProperties search;
+    @Autowired com.ash.drishti.graph.ReferenceCatalog references;
+    @Autowired com.ash.drishti.rachana.format.Formats formats;
+    @Autowired com.ash.drishti.rachana.about.AboutCatalog about;
 
     /** Writes a small pack: a kind, a mnemonic, a Sutra, and a connector template named {@code <name>-feed}. */
     private static void write(String name, String title, List<String> extend, List<String> kinds, String mnemonic, boolean connector, boolean sample)
@@ -235,6 +240,54 @@ class PackReloaderTest {
         until("one of them loaded and the other reported", () -> registry.problems().size() == 1 && names().size() == 2);
         assertThat(registry.problems().values().iterator().next()).contains("widget");
         assertThat(names()).contains("alpha");                                                   // what was loaded keeps running
+    }
+
+    @Test
+    void rolesLinksSearchColumnsFormatsAndAboutFollowAPackWithoutARestart() throws Exception {
+        Path pack = Files.createDirectories(root.resolve("packs/delta/config"));
+        Files.writeString(pack.resolve("formats.yaml"), "formats:\n  gizmo-fmt: {type: number, decimals: 2}\n");
+        Files.writeString(pack.resolve("about.yaml"), "about:\n  kinds:\n    gizmo:\n      what: A gizmo.\n");
+        String manifest = "pack: delta\nversion: 1.0.0\ntitle: Delta\nextends: []\nkinds: [gizmo]\nmnemonics:\n  GZM: {kind: gizmo, label: Gizmo}\n"
+                + "roles:\n  gizmo-reader: {kinds: [gizmo]}\n" + "columns:\n  gizmo: [size, colour]\n" + "graph:\n  fields:\n    gizmoRef: {kind: gizmo, label: Gizmo}\n"
+                + "formats: config/formats.yaml\nabout: config/about.yaml\n";
+        Files.writeString(root.resolve("packs/delta/pack.yaml"), manifest);
+        until("the pack", () -> pack("delta") != null);
+        assertThat(registry.problems()).isEmpty();
+        assertThat(roles.find("gizmo-reader")).isPresent();                                       // roles
+        assertThat(roles.find("gizmo-reader").get().kinds()).containsExactly("gizmo");
+        assertThat(search.columnsOf("gizmo")).containsExactly("$.size", "$.colour");              // search columns
+        assertThat(references.kindOfField("gizmoRef")).contains("gizmo");                         // link graph
+        assertThat(formats.has("gizmo-fmt")).isTrue();                                            // formats
+        assertThat(about.sources()).extracting(s -> s.name()).contains("delta");                  // About pages
+
+        Files.writeString(root.resolve("packs/delta/pack.yaml"), manifest.replace("[size, colour]", "[colour]").replace("kinds: [gizmo]\n    gizmoRef", "x")
+                .replace("roles:\n  gizmo-reader: {kinds: [gizmo]}", "roles:\n  gizmo-reader: {kinds: [gizmo, widget]}"));        // edited
+        until("the new columns and role", () -> search.columnsOf("gizmo").equals(List.of("$.colour"))
+                && roles.find("gizmo-reader").map(r -> r.kinds().size()).orElse(0) == 2);
+
+        remove("delta");                                                                          // removed
+        until("delta to be gone", () -> pack("delta") == null);
+        assertThat(roles.find("gizmo-reader")).isEmpty();
+        assertThat(search.columnsOf("gizmo")).isEmpty();
+        assertThat(references.kindOfField("gizmoRef")).isEmpty();
+        assertThat(formats.has("gizmo-fmt")).isFalse();
+        assertThat(about.sources()).extracting(s -> s.name()).doesNotContain("delta");
+    }
+
+    @Test
+    void settingsThatCannotBeBuiltRefuseTheWholeChangeAndTheLastGoodStaysUntilItIsFixed() throws Exception {
+        Files.createDirectories(root.resolve("packs/delta"));
+        String good = "pack: delta\nversion: 1.0.0\ntitle: Delta\nextends: []\nkinds: [gizmo]\nmnemonics:\n  GZM: {kind: gizmo, label: Gizmo}\n"
+                + "columns:\n  gizmo: [size]\n";
+        Files.writeString(root.resolve("packs/delta/pack.yaml"), good);
+        until("delta", () -> pack("delta") != null && search.columnsOf("gizmo").equals(List.of("$.size")));
+        Files.writeString(root.resolve("packs/delta/pack.yaml"), good.replace("[size]", "[size, colour]") + "graph:\n  badges:\n    gizmo: \"$.size +\"\n");
+        until("the change to be refused", () -> registry.problems().containsKey("(all)"));
+        assertThat(registry.problems().get("(all)")).contains("nothing was changed");
+        assertThat(search.columnsOf("gizmo")).containsExactly("$.size");                         // the columns of the same edit were not swapped either
+        assertThat(pack("delta").title()).isEqualTo("Delta");
+        Files.writeString(root.resolve("packs/delta/pack.yaml"), good.replace("[size]", "[size, colour]"));        // fixed
+        until("the fix", () -> search.columnsOf("gizmo").size() == 2 && !registry.problems().containsKey("(all)"));
     }
 
     @Test

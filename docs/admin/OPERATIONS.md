@@ -227,8 +227,39 @@ What each pack contains, and how to write your own, is in [PACKS.md](../guides/P
 checked and loaded; edit a `pack.yaml`, `about.yaml` or Sutra and it is checked and swapped in; delete a folder and the pack is unloaded. None of
 this restarts the server. A bad edit keeps the last good version running and shows on **Admin → Packs** and **Health** (DEGRADED). Copy a pack in
 under a dot name and rename it when the copy is done, so a half-copied pack is never looked at (a burst is also debounced). Admin → Packs
-**Load**, **Unload**, archive deploys and registry installs use the same path. Roles, graph, search columns, formats and About pages that a pack
-defines are read at start; the answer to a change that touches them says a restart is needed for those.
+**Load**, **Unload**, archive deploys and registry installs use the same path. Everything a pack contributes follows: its kinds, mnemonics and Sutras,
+and also the roles it defines, the link graph, search columns and pivots, formats, semantic hints, About pages, kind routes and the demo connector's
+sample folders; they are built first and swapped in together or not at all (see *What changes live* below). A pack that was refused is looked at again by
+itself (see *Retries* in section 13).
+
+### What changes live (no restart)
+
+Drishti is meant to run for months. Anything you can write as a file or set on an Admin page is noticed while the server runs; only the
+application's own configuration (`application.yaml` and the environment, which Spring binds at start) needs a restart.
+
+| Artifact | Where it lives | How a change is noticed | What happens on a bad edit |
+|---|---|---|---|
+| **Pack** (`pack.yaml`, `about.yaml`, `config/formats.yaml`, `config/semantics.yaml`, `samples/`) and a new or deleted pack folder | `config/packs/`, `data/packs/installed/` | the folder is watched (`drishti.packs.watch`, events with a poll every `drishti.packs.poll`, 5 s), debounced; Admin → Packs Load / Unload, deploys and registry installs take the same path | the **last good version keeps running**; the problem is on the pack's row and on Health, audited (`pack-problem`); a refused pack is retried by itself (*Retries*) |
+| What a pack contributes: **roles, link graph, search columns and pivots, formats, semantic hints, About pages, kind routes, demo sample folders** | the same `pack.yaml` and its files | built from the new packs first and swapped in one at a time, in the same reload; cached view layouts are dropped last | if any of them cannot be built the whole change is refused (`(all)` problem) and nothing is swapped |
+| **Sutras** (`*.sutra.yaml`) | pack `sutras/` and the site's Sutra folders | watched, within about a second | the previous version of that Sutra stays; the problem is at `/api/v1/sutras/problems` and on Health |
+| **Connector files** | `config/connectors/` | watched (`drishti.sources.connectors-watch`, poll every 5 s); only the connector whose file changed restarts | the last good configuration keeps running; the bad file is listed; a connector that cannot start is retried |
+| **AI provider files** and **MCP server files** (server) | `config/ai/`, `config/mcp/` | watched (`drishti.ai.watch`, `drishti.mcp.watch`; poll `drishti.ai.poll-ms`, 5 s) | the file is listed with its reason (Admin → AI) and the other files load; a provider that cannot be built is retried |
+| **AI provider and MCP server files** (console) | the console's `config/ai/`, `config/mcp/` | a supervisor looks every `ai.poll_seconds` (5 s) | the same as on the server |
+| **Admin switches**: pack on/off, sample-pack mode, roles and users, API tokens, embedded applications registered in Admin → Embedding, collaboration settings | the identity database and `data/` | at once | refused at save with the reason |
+| **Data loads** (expectations, who is told) | the pack's `loads:` section and the override files written from the Data loads page | read at each use | refused at save |
+| **Console catalogues**: the help library (`config/help.yaml`, pack guides), workspace templates, the competitive page | the console's `config/` | the help library is rebuilt when a loaded pack's version or `help.yaml` changes; the others are read at each request | an unreadable file is reported on that page; nothing else is affected |
+| **BI artifacts** (`config/bi`) | `config/bi/` | being built with the Rupaka work (phase 1) on the same retry and reload utilities ([DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md#510-retry-and-live-reload-utilities)) | see [RUPAKA.md](../architecture/RUPAKA.md) |
+
+What does **not** change live, and why:
+
+- **`application.yaml` and environment variables** of the server and the console (ports, TLS, the token secret, OIDC, the identity database URL, `drishti.packs.enabled`,
+  security and limits): Spring binds them once. Change them and restart.
+- **A pack named in `drishti.packs.enabled`** cannot be unloaded from Admin (it is site configuration); deleting its folder is reported and the server will not start until the name
+  is taken out.
+- **Connector values taken from environment variables** (`${NAME}` inside a connector file): the file is live, the variable is read at start.
+- **Extra plugin jars** in `drishti.sources.plugin-dir`: a new plugin type is discovered at start (a connector *file* for an installed plugin is live).
+- **Chat bridge URLs and secrets** and **embedded applications declared in configuration** (the GitOps list, read-only in Admin → Embedding): read at start.
+- **Python code** of the console and **Java code** of the server: a new build.
 
 **Sample packs.** Four shipped packs (genomics, politics-society, logistics, economics) are marked `sample: true`. Once your own packs exist, set
 `DRISHTI_PACKS_SAMPLES=developers` so only authors and administrators see them, or `hidden` to unload them and stop their connectors; or press
@@ -494,7 +525,8 @@ read by those templates and by `${NAME:default}` references inside connector fil
 `drishti.py connector apply`). The folder is watched (`drishti.sources.connectors-watch`, default `auto`, with a poll every 5 s as
 a safety net): only the connector whose file changed is restarted, and reads in flight get `connectors-drain` (3 s) to finish.
 Every earlier text of a file is kept in `config/connectors/.history/` and can be restored from the page. A change to an environment
-variable that a file refers to still needs a restart of the server, because variables are read at start-up.
+variable that a file refers to still needs a restart of the server, because variables are read at start-up. A connector that fails to start,
+or whose plugin reports `DOWN` later, is retried by itself ([Retries](#retries-what-failed-is-tried-again-by-itself)).
 
 **Reading a bad-file problem.** A file that cannot be read (bad YAML, an unknown top-level key, a `name:` that differs from the file
 name, a credential written in clear, an unset `${VARIABLE}` without a default, a plugin that is not installed) does not stop the
@@ -1411,6 +1443,66 @@ frames per second, and JVM heap used.
 | Lake maintenance failed | the job's exit code is 1, or a `"event": "failed"` line | the `error` in that line |
 | Message state store cannot write | an ActiveMQ or RabbitMQ connector's health ends `(messages are not acknowledged and come again)` | free or grow the disk under `state.root` |
 | Message state store full | a health `UP (state store over its budget: …)`, or `evicted` rising in Admin → Caches | raise `state.max-gb` and the disk |
+
+### Retries: what failed is tried again by itself
+
+Anything that failed to load or lost its connection is tried again without anyone pressing a button, so it works as soon as the cause is
+fixed: a pack refused for a conflict loads after the other pack is removed, a connector loads when its database comes up, an AI provider
+or an MCP server comes back when its endpoint does. One mechanism serves all four (`RetryPolicy`, `RetryTracker` and `RetryBoard` in
+`drishti-common`; the console has the same in `core/retry.py`):
+
+| Area | What is retried | When it is looked at |
+|---|---|---|
+| **Packs** (`drishti.retry.packs.*`) | a pack refused (a clash, a missing `extends`, a bad file, a setting that cannot be used) or kept at its last good version | when the packs folder, the connector files, the sample-pack switch or the overlay change, **and** on the schedule below. Needs `drishti.packs.watch` other than `off` (that is the timer); otherwise use Retry now |
+| **Connectors** (`drishti.retry.connectors.*`) | a connector that failed to start (`FAILED`), and a running one whose plugin reports `DOWN` (it is started afresh after a few looks if it stays down) | on the schedule. A recovered connector serves again at once and open live views read the new instance on their next refresh |
+| **AI providers** (`drishti.retry.ai.*`) | a provider that cannot be built (type not installed, a setting wrong) | on the schedule (the folder is looked at every `drishti.ai.poll-ms`) |
+| **MCP servers** (`drishti.retry.mcp.*`) | a server that cannot be set up, and one whose last call failed (**DOWN**): closed and connected afresh | on the schedule |
+
+**The schedule** is exponential backoff with jitter: `initial` 5 s, `factor` 2, `max` 5 min, `jitter` 0.2 (each wait varies by up to 20 %), so the waits are
+about 5 s, 10 s, 20 s, 40 s, 80 s, 160 s, 300 s, 300 s, ... A failure that waiting cannot fix (bad settings, credentials refused) is first tried like any other; when
+the same kind of error comes `permanent-after` (3) times in a row it is classed **permanent** and slowed to one try every `max`. Pressing Retry now, or saving the file, starts again.
+`drishti.retry.enabled: false` turns the timer off; a per-area key (`drishti.retry.mcp.max: 1m`) overrides the general one. All keys:
+[CONFIGURATION.md](CONFIGURATION.md#retry-settings).
+
+**What you see.** Admin → Packs, Connectors and AI and the Health page show on the row of anything that is failing: *failed — next retry in 8 s
+(attempt 3)* and the last error. Health lists them all, and the API returns the same (excerpt of a real server whose database was not up and whose pack clashed with another):
+
+```
+$ curl -s http://localhost:18984/api/v1/admin/retry
+{"packs":{"gamma":{"attempt":3,"nextRetryInSeconds":8,"nextRetryAt":"2026-10-10T20:56:08.085720248Z",
+   "lastError":"kind widget is defined by both pack 'beta' and pack 'gamma' (not loaded)","permanent":false,"failingSince":"2026-10-10T20:55:55.726017159Z"}},
+ "connectors":{"site-db":{"attempt":3,"nextRetryInSeconds":8,"lastError":"connection lost: DOWN: cannot reach Redis at redis://127.0.0.1:19996: Unable to connect to 127.0.0.1/<unresolved>:19996; ...","permanent":false}},
+ "ai":{"lab":{"attempt":3,"nextRetryInSeconds":30,"lastError":"no provider type 'nosuchtype' is installed (have: [openai, anthropic, mock])","permanent":true}},
+ "mcp":{},"policy":{"enabled":true,"factor":2.0,"max":"PT30S","initial":"PT2S"}}
+```
+
+**Retry now.** A button on those pages, or `POST /api/v1/admin/retry/{packs|connectors|ai|mcp|all}` (`?name=` for one connector). It needs the admin role and is audited
+(`pack-retry-now`, `connector-retry-now`, `ai-retry-now`, `mcp-retry-now`); a personal API token needs the `packs:admin` scope. The answer is what was tried and the new state:
+
+```
+$ curl -s -X POST http://localhost:18984/api/v1/admin/retry/packs
+{"packs":{"loaded":[],"problems":{"gamma":"kind widget is defined by both pack 'beta' and pack 'gamma' (not loaded)"}},"retry":{ ...as above, attempt now 4... }}
+$ rm -r config/packs/beta                      # the conflict goes; gamma's own folder is untouched
+$ curl -s http://localhost:18984/api/v1/admin/packs | jq -r '.[] | [.name, .loaded] | @tsv'
+alpha	true
+gamma	true
+```
+
+**Logs and audit, without spam.** The log gets the first failure and then failures number 2, 4, 8, ... of each thing, and always the recovery; the audit log gets the same
+events (`pack-retry-failed`, `connector-retry-failed`, `ai-retry-failed`, `mcp-retry-failed`, and `pack-recovered`, `connector-recovered`, `ai-recovered`,
+`mcp-recovered`). Real lines from that server:
+
+```
+WARN  RetryBoard : pack 'gamma' failed (first time): kind widget is defined by both pack 'beta' and pack 'gamma' (not loaded); next try ...
+WARN  RetryBoard : pack 'gamma' failed (attempt 2): kind widget is defined by both pack 'beta' and pack 'gamma' (not loaded); next try ...
+WARN  RetryBoard : pack 'gamma' failed (attempt 4): ...
+INFO  PackReloader : packs reloaded: loaded [gamma], reloaded [], unloaded [beta], problems {}
+INFO  RetryBoard : pack 'gamma' recovered after 4 failed attempt(s); it was: kind widget is defined by both pack 'beta' and pack 'gamma' (not loaded)
+```
+
+Before this change, only a file edit re-evaluated anything: a pack refused for a reason outside its own folder, a connector whose database was down at start, or an
+AI provider or MCP server that failed stayed failed until someone edited a file or restarted the server. Calls to an AI provider or MCP server are always attempted
+(there is no circuit breaker that holds calls back); the retry makes the state shown on Admin → AI honest and reconnects MCP sessions.
 
 ## 14. Logs
 

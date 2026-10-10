@@ -61,13 +61,13 @@ public class HealthController {
     private final List<String> overrides;
     private final com.ash.drishti.server.loads.ExpectationService expectations;
     private final com.ash.drishti.server.connectors.ConnectorManager connectors;
-
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    private com.ash.drishti.server.RetryService retry;
+    private final com.ash.drishti.server.RetryService retry;
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
-            org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors) {
+            org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
+            com.ash.drishti.server.RetryService retry) {
+        this.retry = retry;
         this.expectations = expectations;
         this.connectors = connectors;
         this.overrides = org.springframework.boot.context.properties.bind.Binder.get(env)
@@ -146,9 +146,7 @@ public class HealthController {
             }
         });
         out.put("packsNotLoaded", loadedNames);
-        if (retry != null) {
-            out.put("retry", retry.snapshot());
-        }
+        out.put("retry", retry.snapshot());
         out.put("sutras", Map.of("hotReload", hotReload, "problemFiles", sutras.problems().size()));
         out.put("dataLate", dataLate.stream().map(d -> Map.of("pack", d.pack(), "kind", d.kind(), "businessDate", d.businessDate().toString(), "state", d.state(),
                 "by", d.by() + " " + d.zone(), "line", d.line())).toList());

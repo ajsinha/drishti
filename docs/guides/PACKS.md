@@ -314,16 +314,19 @@ takes the same path, so they all behave alike:
    (re-read, listeners told what changed) and its connectors. A connector template becomes a connector file by the usual rule (written
    once if no file of that name exists, never overwritten; [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) and the connector
    starts. The process, its sessions and every open live view carry on.
-4. A few settings are bound when the server starts and are **not** swapped live: roles a pack defines, graph reference patterns and
-   badges, search columns and pivots, formats, semantic hints, About pages and guides, kind routes, and sample data directories. When
-   a change touches them the answer says so (`restartFor`, and the note on the page) and they take effect at the next restart; everything
-   else has already taken effect.
+4. It puts the settings a pack contributes to use **now** too: the roles it defines (a signed-in user's kinds follow at the next call),
+   the link graph (reference patterns, fields, badges, impact), search columns and pivots, formats, semantic hints, About pages and
+   guides, kind routes and the sample-data folders of the demo connector. Each of these is built first from the new packs: if one cannot
+   be used (a badge that does not compile, a format file that is not YAML, a pivot that does not read) the whole change is refused with
+   the reason and nothing is swapped, so the last good packs keep running. When all are ready they are swapped in one after another
+   inside the one reload that runs at a time, and the cached view layouts are dropped last: a request sees the old settings or the new
+   ones, never a mixture. Nothing needs a restart (`restartFor` in the answer is always empty).
 
 **Unload** does the same in reverse for a pack loaded here; packs named in `DRISHTI_PACKS` stay. A pack another loaded pack extends cannot be
 unloaded: unload the dependants first. Unloading stops the connectors only that pack used (their files stay on disk), and a view someone
 has open for one of the pack's kinds says **pack removed** (`DRS-1002`), not an error. Both are audited (`pack-loaded`,
 `pack-unloaded`). The API: `POST /api/v1/admin/packs/{name}/load` and `…/unload`; the answer lists what was `loaded`, `reloaded` and `unloaded`,
-any `problems` by pack, and `restartFor`; `"restarting"` is always `false`.
+any `problems` by pack, and `restartFor` (kept for compatibility, always empty); `"restarting"` is always `false`.
 
 ### Live reload: the packs folder is watched
 
@@ -334,10 +337,30 @@ runs at a time.
 
 | What you do in the folder | What happens, with no restart |
 |---|---|
-| **Add** a pack folder (one with a `pack.yaml`) | Checked together with the loaded packs, then loaded and remembered in the overlay. A folder that does not check out is not loaded; Admin → Packs and Health say why, and it is tried again when you change it. |
+| **Add** a pack folder (one with a `pack.yaml`) | Checked together with the loaded packs, then loaded and remembered in the overlay. A folder that does not check out is not loaded; Admin → Packs and Health say why, and it is tried again when you change it **and** by itself (below). |
 | **Edit** `pack.yaml`, `about.yaml`, a Sutra or a sample | Checked again and swapped in: the new mnemonics, kinds, Sutras and connector templates apply; a mnemonic you renamed stops working under its old code. |
 | **Make a bad edit** (invalid YAML, a kind another pack owns, a missing parent) | **The last good version keeps running.** The problem is shown on the pack's row in Admin → Packs and on the Health page (status DEGRADED), and in the audit log (`pack-problem`). Fix the file and the problem clears. |
 | **Delete** a pack folder | The pack is unloaded; connectors only it used stop; open views of its kinds say *pack removed*. If another loaded pack extends it, it is **not** unloaded: the problem says which pack needs it, and it stays as last loaded until that one goes. If `DRISHTI_PACKS` still names a deleted pack the server will not start until that is changed, and the problem says so. |
+
+### A pack that was refused is tried again by itself
+
+A pack can be refused (a clash over a kind or mnemonic with another pack, an `extends` that is not loaded, a bad file, a setting that
+cannot be used) for a reason that later goes away without anyone touching the pack's own folder: the pack it clashed with is
+unloaded or deleted, the pack it extends is added, the sample-pack switch changes, a connector file appears. So the server does not wait for the
+folder to change. Every pack that is refused, or kept at its last good version, is listed as **failing** and checked again
+
+- as soon as something it may depend on changes (the packs folder, the connector files, the sample-pack switch, the overlay), and
+- on a schedule with exponential backoff: after `drishti.retry.packs.initial` (5 s), then twice as long each time, never longer than
+  `drishti.retry.packs.max` (5 min), with jitter. An error that retrying cannot fix (the same refusal about a missing setting or
+  refused credentials three times in a row, `permanent-after`) is looked at only every `max`.
+
+Admin → Packs and Health show it on the pack's row: *failed — next retry in 20 s (attempt 3)* and the last error. **Retry now** (Admin
+→ Packs, or `POST /api/v1/admin/retry/packs`; admin role, audited as `pack-retry-now`; an API token needs the `packs:admin` scope) checks at
+once. When a pack loads because its blocker went away, the audit log has `pack-loaded` (actor `retry`) and `pack-recovered`; failures are
+audited as `pack-retry-failed`, only on attempts 1, 2, 4, 8, … so a pack that stays broken for a day does not fill the log. The settings
+are in [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings) and the whole behaviour in
+[OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself). With `drishti.packs.watch: off` nothing looks at the
+folder on a timer, and so nothing retries either: use Retry now.
 
 Each change is audited (`pack-loaded`, `pack-reloaded`, `pack-unloaded`, `pack-problem`). Connectors that only unloaded packs used stay held back until
 a loaded pack names them again; after a restart they follow the usual rule (a connector file runs).
@@ -458,14 +481,15 @@ The same answer as JSON: `curl -s localhost:18480/api/v1/packs/MKT/overview`. A 
    them pointing at nothing.
 2. Replace the folder `config/packs/<name>/` with the new version (for a repository checkout: `git pull`).
 3. If it adds packs it extends, nothing else is needed: parents load with their child.
-4. Restart the server. Watch its log for the pack loader's refusals (a kind now owned by two packs, a clash
-   with an unrelated pack).
+4. No restart is needed: the server notices the new folder within the poll interval and checks it with the loaded packs (or press
+   Admin → Packs → Retry now). Watch Admin → Packs and the log for the pack loader's refusals (a kind now owned by two packs, a clash
+   with an unrelated pack); a refused pack keeps its last good version and is tried again by itself.
 5. Check *Admin → Health*: the pack shows its new version, `sutraProblems` is empty, and its connectors are
    up and none is *not configured* (a new version may name a connector this site has no file for yet: create it in Admin → Connectors).
    Existing connector files are not changed by an upgrade. Check *Admin → Packs*: a pack switched off before the upgrade stays off (the switch is kept by name).
 6. Open one of its example commands from `/t`.
 
-**Removing a pack:** take it out of `DRISHTI_PACKS` and restart. Saved monitors, workspaces and alert rules that
+**Removing a pack:** delete its folder (or Unload it in Admin → Packs if it was loaded there); if `DRISHTI_PACKS` names it, take it out and restart. Saved monitors, workspaces and alert rules that
 refer to its kinds stay saved, but those entities cannot be opened until the pack returns. To hide a
 pack without a restart, switch it off in *Admin → Packs* instead.
 

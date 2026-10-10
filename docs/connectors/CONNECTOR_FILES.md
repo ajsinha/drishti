@@ -373,6 +373,30 @@ $ drishti.py connector list
 taken out of routing at once, stays open for `connectors-drain` (3 s) so reads in flight finish on it, then closes; the new one
 starts after. Connectors you did not touch are not interrupted. A connector's place in the read order is kept across restarts.
 
+### A connector that fails to start, or loses its connection, is retried
+
+A file that is fine can still not start: the store is down, the network is not up yet, a credential is refused. The connector is then
+`FAILED` and **tried again by itself**, without anyone touching the file: after `drishti.retry.connectors.initial` (5 s), then twice
+as long each time up to `drishti.retry.connectors.max` (5 min), with 20 % jitter. When the store comes up the connector starts
+and serves; open live views read through the router and pick the new instance up on their next refresh, no one reloads anything. The same
+goes for a connector that was running and whose plugin now reports `DOWN` (its `health()`): it is listed as *connection lost*, looked at on the schedule,
+and if it is still down after a few looks it is started afresh. Errors retrying cannot fix (the plugin is not installed, a setting
+refers to an unset variable, credentials refused three times in a row) are classed **permanent** and retried only every `max`. A connector that is
+`IDLE` (installed, not configured) is not retried: it needs a setting, and saving the file starts it.
+
+```
+WARN  connector 'site-quotes' failed (first time): connection refused; next try 2026-10-10T14:02:05Z
+WARN  connector 'site-quotes' failed (attempt 2): connection refused; next try 2026-10-10T14:02:20Z
+INFO  connector site-quotes started (file)
+INFO  connector 'site-quotes' recovered after 3 failed attempt(s); it was: connection refused
+```
+
+The log writes failures 1, 2, 4, 8, ... and always the recovery, so an hour of outage is a handful of lines. Admin → Connectors and Health show
+*failed — next retry in 20 s (attempt 3)* with the last error on the connector's row; **Retry now** (a button there and on Health,
+`POST /api/v1/admin/retry/connectors[?name=site-quotes]`, admin role, audited as `connector-retry-now`, token scope `packs:admin`) tries at once.
+Saving the file starts the count again. Failures and recoveries are audited (`connector-retry-failed`, `connector-recovered`). All settings:
+[CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings); the overview: [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
+
 What is **not** live: a connector defined in the server's own configuration (`application.yaml`, deprecated) and a change of
 `connectors-dir` itself; both need a restart.
 
@@ -593,7 +617,7 @@ The panel itself is now a **view** of the pack's connectors with links to Admin 
 | `'password' refers to an environment variable that is not set` | Set the variable in the server's environment, or give a default for a non-secret value. The last good configuration keeps running. |
 | `a credential is never written into a connector file` | Use `${ENV_VAR}` or `file:/path`. |
 | `no plugin named 'x'` | The plugin is not installed; `drishti.py connector plugins` lists them. |
-| A connector is `FAILED` | The plugin could not start; the message is the plugin's. **Test connection** shows it with a hint. |
+| A connector is `FAILED` | The plugin could not start; the message is the plugin's. **Test connection** shows it with a hint. It is retried by itself (*failed — next retry in Ns (attempt k)*, [above](#a-connector-that-fails-to-start-or-loses-its-connection-is-retried)); fix the cause and it starts, or press **Retry now**. |
 | A file in the folder is ignored | Its name breaks the rule (listed on the page and in the log). |
 | Edits are not picked up | `connectors-watch: off`, or `watch` is `STOPPED`; check Health and the log, or restart. |
 | `DRS-1011` | A pack routes a kind to a connector with no file: create it ([section 6](#a-pack-names-a-connector-nobody-defined)). |
