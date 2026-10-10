@@ -1,0 +1,53 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Workspace{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><h1 data-ws-name>Workspace</h1>
+  <p class="text-muted-d" data-ws-desc></p>
+  <p class="bi-meta" data-ws-meta></p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<section class="bi-sec" aria-labelledby="wItems"><h2 id="wItems">Items</h2>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-items>
+    <caption class="visually-hidden">Items in this workspace</caption>
+    <thead><tr><th scope="col">Title</th><th scope="col">Kind</th><th scope="col">Status</th><th scope="col">Version</th><th scope="col">Endorsement</th><th scope="col">Updated</th></tr></thead>
+    <tbody></tbody></table></div>
+  <p class="bi-empty" data-empty hidden>No items yet.</p>
+  <form class="bi-form" data-new-item hidden aria-label="New item">
+    <h3>New item</h3>
+    <label>Kind<select name="kind" class="studio-select"><option value="report">report</option><option value="dataset">dataset</option><option value="board">board</option><option value="notebook">notebook</option></select></label>
+    <label>Title<input name="title" class="studio-in" required maxlength="200" autocomplete="off"></label>
+    <label>Description<input name="description" class="studio-in" maxlength="2000" autocomplete="off"></label>
+    <button type="submit" class="btn-pill btn-accent">Create item</button>
+    <p class="text-muted-d">Phase 1 stores the item with a YAML body, versions and publishes it; datasets, reports and boards are not run yet.</p>
+  </form>
+</section>
+<section class="bi-sec" data-members-section hidden aria-labelledby="wMembers"><h2 id="wMembers">Members</h2>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-members>
+    <caption class="visually-hidden">Members and their roles</caption>
+    <thead><tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Added by</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody></tbody></table></div>
+  <form class="bi-form bi-inline" data-add-member hidden aria-label="Add a member">
+    <label>User<input name="user" class="studio-in" required autocomplete="off" placeholder="username"></label>
+    <label>Role<select name="role" class="studio-select"><option>viewer</option><option>contributor</option><option>member</option><option>admin</option></select></label>
+    <button type="submit" class="btn-pill btn-accent">Add or change</button>
+  </form>
+</section>
+<section class="bi-sec" data-settings-section hidden aria-labelledby="wSettings"><h2 id="wSettings">Settings</h2>
+  <label class="bi-check"><input type="checkbox" data-review> Require review before publishing</label>
+  <button type="button" class="btn-pill btn-ghost bi-danger" data-delete-workspace>Delete workspace</button>
+</section>
+{% endblock %}

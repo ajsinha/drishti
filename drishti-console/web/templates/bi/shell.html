@@ -1,0 +1,58 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The BI page shell (RUPAKA.md section 5): the shared top bar and sign-in, then its own layout: a left rail and a wide canvas. No F-key footer.
+   Pages fill `bi_main`; everything dynamic is drawn by static/js/bi.js from the same-origin JSON (/bi/api/...). #}
+{% extends "base.html" %}
+{% block title %}{% block bi_title %}BI{% endblock %} · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal bi-body{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}">{% endblock %}
+{% block footer %}{% endblock %}
+{% block content %}
+{% macro rail_link(href, icon, label, key, soon='') -%}
+  <a href="{{ href }}" class="bi-rail-link{% if soon %} bi-rail-soon{% endif %}"{% if bi_page == key %} aria-current="page"{% endif %}>
+    <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span>{{ label }}</span>{% if soon %}<small class="bi-soon">{{ soon }}</small>{% endif %}</a>
+{%- endmacro %}
+<div class="bi-shell">
+  <nav class="bi-rail" aria-label="Business intelligence">
+    {{ rail_link('/bi', 'house', 'Home', 'home') }}
+    {{ rail_link('/bi/catalogue', 'collection', 'Catalogue', 'catalogue') }}
+    <a href="/bi/w/me" class="bi-rail-link"{% if bi_page == 'workspace' and workspace == 'me' %} aria-current="page"{% endif %}><i class="bi bi-person-workspace" aria-hidden="true"></i><span>My workspace</span></a>
+    {{ rail_link('/bi/workspaces', 'diagram-3', 'Workspaces', 'workspaces') }}
+    {{ rail_link('/bi/datasets', 'hdd-stack', 'Datasets', 'datasets', 'phase 2') }}
+    {{ rail_link('/bi/designer', 'bounding-box', 'Designer', 'designer', 'phase 3') }}
+    {{ rail_link('/bi/explore', 'binoculars', 'Explore', 'explore', 'phase 9') }}
+    <button type="button" class="bi-rail-link bi-rail-keys" data-bi-keys><i class="bi bi-keyboard" aria-hidden="true"></i><span>Keys <kbd>?</kbd></span></button>
+  </nav>
+  <section class="bi-canvas" id="biCanvas" data-bi-page="{{ bi_page }}" data-workspace="{{ workspace | default('') }}" data-item="{{ item | default('') }}"
+           data-user="{{ me.user if me else '' }}">
+    {% block bi_main %}{% endblock %}
+  </section>
+</div>
+<dialog class="bi-keys" id="biKeys" aria-labelledby="biKeysH">
+  <h2 id="biKeysH">Keys in BI</h2>
+  <dl>
+    <dt><kbd>/</kbd></dt><dd>Search the catalogue</dd>
+    <dt><kbd>g</kbd> <kbd>h</kbd></dt><dd>Home</dd>
+    <dt><kbd>g</kbd> <kbd>c</kbd></dt><dd>Catalogue</dd>
+    <dt><kbd>g</kbd> <kbd>w</kbd></dt><dd>My workspace</dd>
+    <dt><kbd>?</kbd></dt><dd>This list</dd>
+    <dt><kbd>Esc</kbd></dt><dd>Close this list</dd>
+  </dl>
+  <form method="dialog"><button class="btn-pill btn-accent" autofocus>Close</button></form>
+</dialog>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script>{% endblock %}

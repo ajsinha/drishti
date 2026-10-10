@@ -54,14 +54,44 @@ async def form_suggestions(request: Request, pack: str | None, kind: str | None,
             for k in info["kinds"] if not want or want in k["kind"].lower() or want in k["label"].lower()]
 
 
+RUPAKA = "RUPAKA"
+BI_ENTRIES = (("", "BI home", "Recent, favourites, certified, shared with me", "/bi"), ("WORKSPACE", "My workspace", "Your drafts and the workspaces you belong to", "/bi/w/me"),
+              ("CATALOGUE", "Catalogue", "Every published report and board you may open", "/bi/catalogue"))
+
+
+async def rupaka_suggestions(request: Request, word: str, rest: str | None) -> list:
+    """Type-ahead for the reserved word ``RUPAKA``: its three pages, then published reports whose id or title matches, only for people who hold the bi power."""
+    me = ident(request)
+    if not request.app.state.bi_on or not (await request.app.state.bi_me.get(request.app.state.backend, me)).get("enabled"):
+        return []
+    want = (rest or "").strip().lower()
+    out = [{"mnemonic": RUPAKA, "title": title, "subtitle": sub, "complete": f"{RUPAKA} {key}".strip(), "href": href, "type": "bi"}
+           for key, title, sub, href in BI_ENTRIES if rest is None or not want or key.lower().startswith(want)]
+    if rest is not None and want:
+        try:
+            found = (await request.app.state.backend.bi("GET", "/catalogue", me, q=want, limit=8)).get("items") or []
+        except BackendError:
+            found = []
+        out += [{"mnemonic": RUPAKA, "title": i["title"], "subtitle": f"{i['kind']} · {i['workspaceName']} · {i['owner']}", "complete": f"{RUPAKA} {i['title']}",
+                 "href": f"/bi/i/{i['id']}", "type": "bi"} for i in found]
+    return out
+
+
 @router.get("/suggest")
 async def suggest(request: Request, q: str = "", limit: int | None = None):
     """The command line's dropdown; without a limit the server's own (drishti.commands.suggest-limit, 25) applies."""
+    bi = re.match(r"(?is)^\s*(rupaka)(?:\s+(.*))?$", q.replace("<GO>", ""))
+    if bi:                                                     # the reserved word RUPAKA: the BI pages and the reports you may open
+        return await rupaka_suggestions(request, bi.group(1), bi.group(2))
+    keyword = []
+    if re.match(r"(?i)^\s*(r|ru|rup|rupa|rupak)\s*$", q.replace("<GO>", "")) and await rupaka_suggestions(request, "", None):    # the first letters of it: offer the keyword
+        keyword = [{"mnemonic": RUPAKA, "title": "Rupaka: business intelligence", "subtitle": "RUPAKA <GO> opens the BI home; RUPAKA CATALOGUE, RUPAKA WORKSPACE",
+                    "complete": f"{RUPAKA} ", "href": "/bi", "type": "bi"}]
     typed = re.match(r"(?i)^\s*form(?:\s+(\S*))?(?:\s+(\S*))?\s*$", q.replace("<GO>", ""))
     if typed:                                                  # the reserved word FORM: packs you may open, then their kinds
         return await form_suggestions(request, typed.group(1), typed.group(2), q.endswith(" "))
     try:
-        return await request.app.state.backend.suggest(q, ident(request), limit)
+        return keyword + await request.app.state.backend.suggest(q, ident(request), limit)
     except BackendError as e:
         return _problem(e)
 

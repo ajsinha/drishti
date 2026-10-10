@@ -490,6 +490,16 @@ class BackendClient:
                     yield event, "\n".join(data)
                     event, data = None, []
 
+    # -- Rupaka phase 1: the BI shell and catalogue (docs/architecture/RUPAKA.md) ---------------------------------------------
+    async def bi(self, method: str, path: str, ident, body: dict | None = None, **params):
+        """``/api/v1/bi/...`` as the signed-in user: the server decides what they may see and do, every time."""
+        kw: dict = {}
+        if params:
+            kw["params"] = params
+        if body is not None:
+            kw["json"] = body
+        return await self._send(method, "/bi" + path, ident, **kw)
+
     # -- Rupaka phase 0 proof of concept (docs/architecture/RUPAKA_POC.md) -------------------------------------
     async def poc_query(self, body: dict, ident):
         """The proof of concept's masked aggregation: ``(Arrow IPC stream bytes, response headers)``."""

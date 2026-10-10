@@ -49,6 +49,9 @@ def duckdb_base(static: Path) -> str:
 async def page(request: Request):
     from core.app import WEB
 
+    if not ident(request).is_admin:                      # reachable for administrators only, under the BI menu
+        return render(request, "admin/forbidden.html", status_code=403)
+
     return render(request, "bi/poc.html", screen="bi-poc", perspective=PERSPECTIVE, duckdb=duckdb_base(WEB / "static"))
 
 

@@ -46,10 +46,18 @@
       ('/help/rachana-reference', 'book', 'Rachana reference', 'Every key, panel option, format and problem code', None),
       ('/help/pack-developer-guide', 'box-seam', 'Pack developer guide', 'Bring a new domain in, step by step', None)])]),
 ] %}
-{% if BI_POC %}{% set MENU = MENU + [
-  ('BI', 'bar-chart-line', [
-    ('Rupaka (proof of concept)', [
-      ('/bi/poc', 'speedometer2', 'BI proof of concept', 'Phase 0: Perspective live grid, a masked Arrow extract sliced in the browser. Also: RUPAKA <GO>', '/bi/poc')])])] %}{% endif %}
+{% if bi_me and bi_me.enabled %}
+{% set BI_COLS = [('Rupaka: business intelligence', [
+      ('/bi', 'house', 'BI home', 'Recent, favourites, certified for you, shared with me. Also: RUPAKA <GO>', '/bi'),
+      ('/bi/w/me', 'person-workspace', 'My workspace', 'Your drafts, and the shared workspaces you belong to. Also: RUPAKA WORKSPACE', '/bi/w/'),
+      ('/bi/catalogue', 'collection', 'Catalogue', 'Every published report and board you may open. Also: RUPAKA CATALOGUE', '/bi/catalogue')])] %}
+{% set ns_bi = namespace(recent=[]) %}{% for r in bi_me.recent %}{% set ns_bi.recent = ns_bi.recent + [('/bi/i/' ~ r.id, 'clock-history', r.title, r.kind ~ ' you opened recently', '/bi/i/' ~ r.id)] %}{% endfor %}
+{% if ns_bi.recent %}{% set BI_COLS = BI_COLS + [('Recent', ns_bi.recent)] %}{% endif %}
+{% if 'bi-admin' in bi_me.powers or (me and me.is_admin and BI_POC) %}{% set BI_COLS = BI_COLS + [('Administer', (
+      [('/admin/bi', 'sliders', 'BI settings', 'Powers per role, who creates workspaces', '/admin/bi')] if 'bi-admin' in bi_me.powers else []) + (
+      [('/bi/poc', 'speedometer2', 'Proof of concept', 'Phase 0: Perspective live grid, a masked Arrow extract (admins; bi.poc_enabled)', '/bi/poc')] if (me and me.is_admin and BI_POC) else []))] %}{% endif %}
+{% set MENU = MENU[:1] + [('BI', 'bar-chart-line', BI_COLS)] + MENU[1:] %}
+{% endif %}
 {% if me and me.is_admin %}{% set MENU = MENU + [
   ('Admin', 'shield-lock', [
     ('People & access', [

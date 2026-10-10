@@ -21,6 +21,7 @@ from fastapi.testclient import TestClient
 from conftest import CONSOLE
 from core.app import POC_STYLE_HASHES, create_app
 from core.config import load_settings
+from bi_backend import BiBackend
 from poc_backend import PocBackend
 
 
@@ -30,6 +31,7 @@ def on():
     settings.as_dict().setdefault("bi", {})["poc_enabled"] = True
     app = create_app(settings)
     app.state.backend = PocBackend()
+    app.state.backend.bi = BiBackend().bi                # phase 1: the BI menu (where the proof of concept sits, for administrators) needs the bi power
     return TestClient(app)
 
 
@@ -39,7 +41,7 @@ def test_it_is_off_by_default(client):
     top = client.get("/t").text
     assert "/bi/poc" not in top and "bar-chart-line" not in top
     r = client.get("/go", params={"q": "RUPAKA <GO>"}, follow_redirects=False)
-    assert r.status_code == 303 and r.headers["location"].startswith("/t?error=") and "not%20switched%20on" in r.headers["location"]
+    assert r.status_code == 303 and r.headers["location"].startswith("/t?error=") and "bi%20power" in r.headers["location"]       # phase 1: BI is a feature of its own
 
 
 def test_the_page_and_the_top_bar_entry_exist_when_on(on):
@@ -49,10 +51,10 @@ def test_the_page_and_the_top_bar_entry_exist_when_on(on):
     assert 'href="/bi/poc"' in on.get("/t").text and "bar-chart-line" in on.get("/t").text
 
 
-def test_rupaka_go_opens_it_in_any_case_and_form(on):
+def test_rupaka_go_opens_the_bi_home_not_the_proof_of_concept(on):
     for q in ("RUPAKA", "rupaka", "RUPAKA <GO>", "  Rupaka  "):
         r = on.get("/go", params={"q": q}, follow_redirects=False)
-        assert r.status_code == 303 and r.headers["location"] == "/bi/poc", q
+        assert r.status_code == 303 and r.headers["location"] == "/bi", q
 
 
 def test_the_libraries_load_on_this_page_only(on):

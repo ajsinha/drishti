@@ -1,0 +1,97 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Rupaka phase 1: the BI shell, home, catalogue, workspaces and items. Colours come from the theme tokens (dark, light, high contrast); every state also has its word. */
+.bi-shell { display: grid; grid-template-columns: 13.5rem minmax(0, 1fr); gap: 1.25rem; width: 100%; max-width: 100rem; margin: 0 auto; padding: 1rem 1.25rem 2rem; box-sizing: border-box; }
+.bi-rail { display: flex; flex-direction: column; gap: .15rem; position: sticky; top: 4.5rem; align-self: start; }
+.bi-rail-link { display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem; border-radius: var(--d-radius); color: var(--d-ink); text-decoration: none; background: none; border: 0; font: inherit; text-align: left; cursor: pointer; min-height: 2.4rem; }
+.bi-rail-link:hover { background: var(--d-highlight); }
+.bi-rail-link[aria-current="page"] { background: var(--d-accent-tint); color: var(--d-accent-strong); font-weight: 600; box-shadow: inset 3px 0 0 var(--d-accent); }
+.bi-rail-link:focus-visible, .bi-card a:focus-visible, .bi-fav:focus-visible { outline: 2px solid var(--d-link); outline-offset: 2px; }
+.bi-rail-soon { color: var(--d-muted); }
+.bi-soon { margin-left: auto; font-size: .72rem; color: var(--d-muted); border: 1px solid var(--d-border); border-radius: 999px; padding: 0 .45rem; white-space: nowrap; }
+h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
+.bi-rail-keys { margin-top: .75rem; color: var(--d-muted); }
+.bi-rail-keys kbd, .bi-keys kbd { font-family: var(--d-font-mono); border: 1px solid var(--d-border); border-bottom-width: 2px; border-radius: 4px; padding: 0 .35rem; font-size: .8rem; background: var(--d-surface-2); color: var(--d-ink); }
+.bi-canvas { min-width: 0; }
+.bi-head { display: flex; flex-direction: column; gap: .3rem; }
+.bi-head h1 { font-size: 1.6rem; margin: 0 0 .25rem; padding: 0; line-height: 1.2; }
+.bi-head h1::before, .bi-head h1::after { content: none; }
+.bi-head p { margin: 0 0 .5rem; }
+.bi-title-row { display: flex; align-items: center; gap: .75rem; }
+.bi-meta, .bi-count { color: var(--d-muted); margin: .25rem 0 .75rem; }
+.bi-msg { min-height: 1.4rem; margin: .25rem 0; color: var(--d-ok); }
+.bi-msg.bi-bad { color: var(--d-bad); font-weight: 600; }
+.bi-sec { margin: 1.25rem 0; }
+.bi-sec h2 { font-size: 1.1rem; margin: 0 0 .6rem; display: flex; align-items: center; gap: .45rem; }
+.bi-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .85rem; }
+.bi-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .8rem .9rem; display: flex; flex-direction: column; gap: .35rem; min-width: 0; }
+.bi-card:hover { border-color: var(--d-accent); }
+.bi-card header { display: flex; align-items: center; justify-content: space-between; gap: .5rem; color: var(--d-muted); font-size: .85rem; }
+.bi-card h3 { font-size: 1.02rem; margin: 0; overflow-wrap: anywhere; }
+.bi-card h3 a { color: var(--d-ink); text-decoration: none; }
+.bi-card h3 a:hover { color: var(--d-link); text-decoration: underline; }
+.bi-card-desc { margin: 0; color: var(--d-muted); font-size: .9rem; overflow-wrap: anywhere; }
+.bi-card-meta { margin: 0; color: var(--d-muted); font-size: .8rem; overflow-wrap: anywhere; }
+.bi-card-badges, .bi-badges { margin: 0; display: flex; flex-wrap: wrap; gap: .3rem; }
+.bi-badge { display: inline-flex; align-items: center; gap: .25rem; font-size: .75rem; border: 1px solid var(--d-border); border-radius: 999px; padding: .05rem .5rem; color: var(--d-ink); background: var(--d-surface-2); }
+.bi-certified { border-color: var(--d-ok); color: var(--d-ok); font-weight: 600; }
+.bi-promoted { border-color: var(--d-warn); color: var(--d-warn); }
+.bi-status { color: var(--d-muted); }
+.bi-fav, .bi-star { background: none; border: 1px solid transparent; color: var(--d-accent); cursor: pointer; border-radius: 6px; padding: .15rem .4rem; font-size: 1rem; min-width: 2rem; min-height: 2rem; }
+.bi-fav:hover, .bi-star:hover { border-color: var(--d-border); }
+.bi-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .6rem; align-items: end; margin: .5rem 0 .75rem; }
+.bi-filters label { display: flex; flex-direction: column; gap: .2rem; font-size: .8rem; color: var(--d-muted); }
+.bi-filters .bi-search { grid-column: 1 / -1; position: relative; }
+.bi-filters .bi-search input { width: 100%; box-sizing: border-box; }
+.bi-form { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .9rem 1rem; margin: 1rem 0; display: flex; flex-direction: column; gap: .6rem; max-width: 46rem; }
+.bi-form[hidden], .bi-shell [hidden], .bi-sec[hidden] { display: none !important; }
+.bi-form label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: var(--d-muted); }
+.bi-form input:not([type="checkbox"]), .bi-form textarea, .bi-form select { box-sizing: border-box; max-width: 100%; }
+.bi-form h2, .bi-form h3 { margin: 0; font-size: 1.05rem; }
+.bi-inline { flex-direction: row; align-items: flex-end; flex-wrap: wrap; }
+.bi-check { flex-direction: row !important; align-items: center; gap: .5rem !important; color: var(--d-ink) !important; }
+.bi-audience { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .7rem; display: grid; gap: .5rem; }
+.bi-audience legend { font-size: .85rem; color: var(--d-muted); padding: 0 .3rem; float: none; width: auto; margin: 0; }
+.bi-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .75rem 0; }
+.bi-note { min-width: 14rem; flex: 1 1 14rem; }
+.bi-body { background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .75rem; max-height: 26rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.bi-danger { color: var(--d-bad) !important; border-color: var(--d-bad) !important; }
+.bi-empty, .bi-placeholder { color: var(--d-muted); padding: .75rem 0; }
+.bi-placeholder { border: 1px dashed var(--d-border); border-radius: var(--d-radius); padding: 1rem; }
+.bi-tbl th[scope="row"] { text-align: left; font-weight: 600; }
+.bi-keys { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: 1rem 1.25rem; max-width: min(26rem, 94vw); }
+.bi-keys::backdrop { background: rgba(0, 0, 0, .5); }
+.bi-keys dl { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1rem; margin: 0 0 1rem; }
+.bi-keys dd { margin: 0; }
+@media (pointer: coarse) {
+  .bi-rail-link, .bi-fav, .bi-star, .bi-shell .btn-pill, .bi-shell .studio-in, .bi-shell .studio-select, .bi-shell .bi-check input { min-height: 44px; }
+  .bi-fav, .bi-star { min-width: 44px; }
+  .bi-card h3 a, .bi-tbl th[scope="row"] a { display: inline-flex; align-items: center; min-height: 44px; }
+  .bi-shell .bi-check input { min-width: 44px; }
+}
+@media (max-width: 760px) {
+  .bi-shell { grid-template-columns: minmax(0, 1fr); padding: .6rem .7rem 1.5rem; gap: .6rem; }
+  .bi-rail { position: static; flex-direction: row; overflow-x: auto; gap: .25rem; padding-bottom: .3rem; border-bottom: 1px solid var(--d-border); -webkit-overflow-scrolling: touch; }
+  .bi-rail-link { flex: 0 0 auto; white-space: nowrap; min-height: 44px; padding: .4rem .65rem; }
+  .bi-rail-link[aria-current="page"] { box-shadow: inset 0 -3px 0 var(--d-accent); }
+  .bi-rail-keys { display: none; }
+  .bi-soon { margin-left: .25rem; }
+  .bi-cards { grid-template-columns: minmax(0, 1fr); }
+  .bi-filters { grid-template-columns: 1fr 1fr; }
+  .bi-shell input, .bi-shell textarea, .bi-shell select { font-size: 16px; }
+  .bi-actions .btn-pill, .bi-form .btn-pill { width: 100%; }
+  .bi-note { flex-basis: 100%; }
+}

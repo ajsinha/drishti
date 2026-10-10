@@ -50,6 +50,7 @@ def render(request: Request, template: str, status_code: int = 200, **context: A
     context.setdefault("asof", getattr(request.state, "asof", "live"))
     context.setdefault("known_at", getattr(request.state, "known_at", None))
     context.setdefault("settings", getattr(request.state, "settings", None) or {})
+    context.setdefault("bi_me", getattr(request.state, "bi_me", None) or {})
     context.setdefault("business_date", getattr(request.state, "business_date", None) or {})
     return templates.TemplateResponse(request, template, context, status_code=status_code)
 
