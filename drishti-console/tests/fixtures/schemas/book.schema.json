@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Book",
+  "description": "A trading book: the unit risk and profit are reported on.",
+  "type": "object",
+  "allOf": [{"$ref": "#/$defs/audited"}],
+  "required": ["bookId", "desk"],
+  "$defs": {
+    "audited": {
+      "type": "object",
+      "properties": {
+        "createdBy": {"type": "string"},
+        "createdAt": {"type": "string", "format": "date-time"}
+      }
+    }
+  },
+  "properties": {
+    "bookId": {"type": "string", "description": "Book code."},
+    "desk": {"type": "string", "enum": ["Rates", "FX", "Credit"], "description": "The desk the book belongs to."},
+    "tradeCount": {"type": "integer", "description": "Number of live trades."},
+    "dv01": {"type": "number", "description": "Rate sensitivity per basis point."},
+    "businessDate": {"type": "string", "format": "date"}
+  }
+}

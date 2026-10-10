@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Instrument",
+  "description": "A tradable instrument; the fields depend on its type.",
+  "type": "object",
+  "required": ["instrumentId", "type"],
+  "properties": {
+    "instrumentId": {"type": "string"},
+    "name": {"type": "string", "description": "Display name."},
+    "type": {"type": "string"}
+  },
+  "oneOf": [
+    {
+      "title": "Bond",
+      "properties": {
+        "type": {"const": "BOND"},
+        "coupon": {"type": "number", "description": "Annual coupon rate.", "x-drishti-format": "pct2"},
+        "maturity": {"type": "string", "format": "date"}
+      },
+      "required": ["coupon", "maturity"]
+    },
+    {
+      "title": "Equity",
+      "properties": {
+        "type": {"const": "EQUITY"},
+        "ticker": {"type": "string"},
+        "dividendYield": {"type": "number", "description": "Trailing yield."}
+      },
+      "required": ["ticker"]
+    }
+  ],
+  "discriminator": {"propertyName": "type"}
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/trade.schema.json",
+  "title": "Trade",
+  "description": "A bilateral derivative trade between the bank and a counterparty, booked in one book.",
+  "type": "object",
+  "required": ["tradeId", "counterpartyId", "bookId", "status", "notional", "currency", "tradeDate"],
+  "$defs": {
+    "money": {"type": "number", "description": "An amount in the trade currency.", "x-drishti-format": "amount2"},
+    "leg": {
+      "type": "object",
+      "title": "Leg",
+      "required": ["legType", "rate"],
+      "properties": {
+        "legType": {"enum": ["FIXED", "FLOAT"], "description": "Whether the leg pays a fixed or a floating rate."},
+        "rate": {"type": "number", "minimum": 0, "maximum": 0.2, "description": "The leg rate as a fraction.", "x-drishti-format": "pct2"},
+        "pv": {"$ref": "#/$defs/money", "title": "Present value"}
+      }
+    }
+  },
+  "properties": {
+    "tradeId": {"type": "string", "description": "The trade identifier.", "examples": ["TRD-0001"]},
+    "counterpartyId": {"type": "string", "description": "The counterparty the trade is with."},
+    "bookId": {"type": "string", "description": "The book the trade sits in."},
+    "status": {"type": "string", "enum": ["PENDING", "LIVE", "MATURED", "CANCELLED"], "description": "Where the trade is in its life."},
+    "productType": {"type": "string", "enum": ["IRS", "FXS", "FUT"], "x-drishti-match": true, "description": "The kind of product."},
+    "notional": {"$ref": "#/$defs/money", "title": "Notional", "x-drishti-unit": "USD"},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$", "description": "ISO currency of the notional."},
+    "tradeDate": {"type": "string", "format": "date", "description": "The day the trade was agreed."},
+    "executedAt": {"type": "string", "format": "date-time"},
+    "mtm": {"type": "number", "description": "Mark to market in the book currency.", "x-drishti-format": "signed0"},
+    "terms": {
+      "type": "object",
+      "title": "Terms",
+      "properties": {
+        "spread": {"type": "number", "description": "Spread over the index, in basis points."},
+        "index": {"type": "string", "enum": ["SOFR", "EURIBOR"]}
+      }
+    },
+    "legs": {"type": "array", "title": "Legs", "items": {"$ref": "#/$defs/leg"}},
+    "curve": {
+      "type": "object",
+      "title": "Discount curve",
+      "description": "Discount factor by tenor.",
+      "additionalProperties": {"type": "number"},
+      "x-drishti-keys": ["1M", "3M", "1Y", "5Y"]
+    },
+    "notes": {"type": "string", "description": "Free text from the trader."}
+  }
+}

@@ -38,6 +38,19 @@ DATE_PREFERRED = ("businessdate", "business_date", "asof", "asofdate", "as_of", 
 DATE_PRESENCE = 0.95
 
 
+def _schemapack():
+    """tools/schemapack.py, imported by path (this module is itself loaded by path, so its folder is not on sys.path)."""
+    import importlib.util
+    import sys
+    if "schemapack" in sys.modules:
+        return sys.modules["schemapack"]
+    spec = importlib.util.spec_from_file_location("schemapack", pathlib.Path(__file__).with_name("schemapack.py"))
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["schemapack"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
 class MakeError(Exception):
     def __init__(self, message: str, code: int = 2):
         super().__init__(message)
@@ -296,9 +309,9 @@ def readme_text(v: dict) -> str:
 # ----------------------------------------------------------------------------------------------- the command
 
 def add_arguments(p: argparse.ArgumentParser) -> None:
-    p.add_argument("inputs", type=pathlib.Path, nargs="+", help="folder(s) of *.jsonl and/or single .jsonl file(s)")
-    p.add_argument("--kind", required=True, help="the kind of every document (e.g. trade)")
-    p.add_argument("--match", required=True, metavar="COL[,COL]", help="column(s) whose values split the kind: one Sutra per combination (e.g. productType)")
+    p.add_argument("inputs", type=pathlib.Path, nargs="*", help="folder(s) of *.jsonl and/or single .jsonl file(s); optional with --schema")
+    p.add_argument("--kind", help="the kind of every document (e.g. trade); needed without --schema")
+    p.add_argument("--match", metavar="COL[,COL]", help="column(s) whose values split the kind: one Sutra per combination (e.g. productType); needed without --schema")
     p.add_argument("--name", required=True, help="pack name (lower-case letters, digits, '-')")
     p.add_argument("--key", help="the id field (default: auto-detected: present and unique in every document, <kind>Id/id first)")
     p.add_argument("--date", help="the business-date field (default: auto-detected; none found: no dated store)")
@@ -313,12 +326,24 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
     p.add_argument("--java", help="java binary (default: JAVA_HOME, then JDK 21, then java)")
     p.add_argument("-r", "--recursive", action="store_true", help="read *.jsonl in subfolders too")
+    _schemapack().add_schema_arguments(p)
+    p.add_argument("--code", help="with --schema: the pack code typed alone to open the pack (default: initials of the name)")
+    p.add_argument("--description", help="with --schema: the pack description")
+    p.add_argument("--connector", help="with --schema: the logical connector name for dated kinds (default <name>-store)")
 
 
 def make(a, cli) -> int:
     """Runs the whole flow; `cli` is the drishti.py module (for pack_from_jsonl, pack check, bundle and verify)."""
     if not NAME_RE.fullmatch(a.name):
         raise MakeError("--name is lower-case letters, digits and '-'")
+    if a.schema:
+        sp = _schemapack()
+        try:
+            return sp.make(a, cli)
+        except sp.SchemaPackError as e:
+            raise MakeError(str(e), e.code) from None
+    if not a.inputs or not a.kind or not a.match:
+        raise MakeError("without --schema, give the JSON Lines folder, --kind and --match (or give --schema)")
     if not re.fullmatch(r"[0-9A-Za-z][0-9A-Za-z._-]*", a.version):
         raise MakeError("--version is a plain version such as 1.0.0")
     out = (a.out or pathlib.Path("build") / f"{a.name}-{a.version}").resolve()

@@ -206,6 +206,14 @@ def q(s: str) -> str:
 # ------------------------------------------------------------------------------------------------ sutra
 
 def cmd_sutra(a, extra: list[str]) -> int:
+    if a.sutra_cmd == "design" and getattr(a, "schema", None):
+        SP = load_module("schemapack", "schemapack.py")
+        try:
+            return SP.design(a, sys.modules[__name__])
+        except SP.SchemaPackError as e:
+            raise CliError(str(e), e.code) from None
+    if not a.paths:
+        raise CliError(f"sutra {a.sutra_cmd}: give the PATH to work on (or, for design, --schema FILE...)")
     args = [a.sutra_cmd, *[absolute(p) for p in a.paths]]
     for flag, val in (("--out", a.out), ("--junit", a.junit), ("--samples", a.samples)):
         if val:
@@ -882,13 +890,19 @@ def build_parser() -> argparse.ArgumentParser:
                               ("preview", "render samples; --out writes HTML snapshots", "a pack folder or .sutra.yaml")):
         p = add(s, name, cmd_sutra, f"sutra {name}: {what}", [jvm], SUTRA_EXAMPLES)
         p.set_defaults(sutra_cmd=name)
-        p.add_argument("paths", nargs="+", metavar="PATH", help=paths)
+        p.add_argument("paths", nargs="*", metavar="PATH", help=paths)
         p.add_argument("--out", help="write results (and for design, the Sutra) here")
         p.add_argument("--junit", help="write a JUnit XML report to this file")
         p.add_argument("--strict", action="store_true", help="lint: help warnings (DRS-2045 to 2047) fail the run")
         p.add_argument("--samples", help="JSON samples to use instead of the pack's tests/ folder or the Sutra's sibling .json")
         p.add_argument("--kind", help="design: the kind to name the Sutra for")
         p.add_argument("--each", action="store_true", help="design: one Sutra per subfolder of .json samples")
+        if name == "design":
+            load_module("schemapack", "schemapack.py").add_schema_arguments(p)
+            p.add_argument("--key", help="with --schema: the id field, FIELD or kind=FIELD,kind2=FIELD2 (default: from the schema)")
+            p.add_argument("--date", help="with --schema: the business-date field, FIELD or kind=FIELD,...")
+            p.add_argument("--match", help="with --schema: fields that split a kind into one Sutra per value (a,b or kind=a,b;kind2=c)")
+            p.add_argument("--count", type=int, default=5, help="with --schema: samples per Sutra (default 5)")
     g = add(s, "gen", cmd_sutra_gen, "sutra gen: one Sutra per group of JSON Lines documents, with samples (tools/sutragen.py)", [],
             "example:\n  drishti.py sutra gen data/jsonl --key trade=tradeId --match trade=productType --out build/sutras")
     g.add_argument("inputs", type=pathlib.Path, nargs="+", help="folders of *.jsonl and/or single .jsonl files")
