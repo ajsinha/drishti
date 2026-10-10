@@ -30,13 +30,18 @@
     <a href="/admin/packs/{{ d.pack }}/loads">Data loads</a></li>{% endfor %}</ul></div></section>
 {% endif %}
 
+{% from "_macros/retry.html" import retry_note, retry_button %}
+{% set failing = ((h.retry or {}).get('packs', {}) | length) + ((h.retry or {}).get('connectors', {}) | length) + ((h.retry or {}).get('ai', {}) | length) + ((h.retry or {}).get('mcp', {}) | length) %}
+{% if failing %}<section class="pnl" aria-label="Retries" data-retries><div class="pnl-b"><p><b>{{ failing }}</b> thing{{ 's' if failing > 1 }} failed and will be tried again by themselves
+  (packs {{ (h.retry.packs | length) }}, connectors {{ (h.retry.connectors | length) }}, AI providers {{ (h.retry.ai | length) }}, MCP servers {{ (h.retry.mcp | length) }}).
+  {{ retry_button('all', 'Retry all now') }}</p></div></section>{% endif %}
 <h2 class="ws-h">Connectors</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
   <thead><tr><th>Connector</th><th>Status</th><th>Last update</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th></tr></thead>
   <tbody>{% for s in h.sources %}{% set r = s.reads %}
     <tr class="{{ 'hl-row-down' if s.status == 'DOWN' else '' }}">
       <td class="mono">{{ s.name }}<div class="cmp-path">{{ [('live' if s.live else ''), ('dated' if s.dated else ''), ('search' if s.search else '')] | select | join(' · ') }}</div></td>
-      <td><span class="hl-badge hl-{{ tone[s.status] }}">{{ s.status }}</span>{% if s.status != 'UP' %}<div class="cmp-path">{{ s.health }}</div>{% endif %}</td>
+      <td><span class="hl-badge hl-{{ tone[s.status] }}">{{ s.status }}</span>{% if s.status != 'UP' %}<div class="cmp-path">{{ s.health }}</div>{% endif %}{{ retry_note(s.retry) }}</td>
       <td class="mono{% if s.stale %} t-warn{% endif %}" title="{% if s.staleAfter %}stale after {{ s.staleAfter }}{% else %}no stale-after set{% endif %}">{{ (s.lastUpdate or '—')[:19] | replace('T', ' ') }}{% if s.stale %}<div class="cmp-path">behind: no new data within {{ s.staleAfter }}</div>{% endif %}</td>
       <td title="{{ s.kinds | join(', ') }}">{{ s.kinds | length }}</td>
       <td class="num mono">{{ r.reads or 0 }}{% if r.reads %}<div class="cmp-path">{{ r.found }} found · {{ r.notHeld }} not held</div>{% endif %}</td>
@@ -47,7 +52,7 @@
       <td class="mono cmp-path">{% for k, v in (s.cache or {}).items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</td>
     </tr>{% endfor %}
     {% for name, why in (h.failedToStart or {}).items() %}
-    <tr class="hl-row-down"><td class="mono">{{ name }}</td><td><span class="hl-badge hl-bad">FAILED</span></td><td colspan="7" class="hl-err">did not start: {{ why }}</td></tr>{% endfor %}
+    <tr class="hl-row-down"><td class="mono">{{ name }}</td><td><span class="hl-badge hl-bad">FAILED</span></td><td colspan="7" class="hl-err">did not start: {{ why }}{{ retry_note((h.retry or {}).get('connectors', {}).get(name)) }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
 
 <h2 class="ws-h">Packs</h2>
@@ -66,7 +71,7 @@
         {% if p.connectorsDown %}<div>connector{{ 's' if p.connectorsDown | length > 1 }} down: {{ p.connectorsDown | join(', ') }}</div>{% endif %}</td>
     </tr>{% endfor %}
     {% for name, why in (h.packsNotLoaded or {}).items() %}
-    <tr class="hl-row-down"><td class="mono">{{ name }}</td><td><span class="hl-badge hl-bad">NOT LOADED</span></td><td colspan="4"></td><td class="hl-err">{{ why }}</td></tr>{% endfor %}
+    <tr class="hl-row-down"><td class="mono">{{ name }}</td><td><span class="hl-badge hl-bad">NOT LOADED</span></td><td colspan="4"></td><td class="hl-err">{{ why }}{{ retry_note((h.retry or {}).get('packs', {}).get(name)) }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
 
 {% if h.overrides %}

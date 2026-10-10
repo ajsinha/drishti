@@ -195,7 +195,7 @@ drishti:
           - POST /api/v1/sutras/proposals/*/approve
           - POST /api/v1/sutras/proposals/*/reject
       "[packs:admin]":
-        description: "Load, unload, switch on and off, deploy archives, install and roll back packs, and create, change, test and delete connectors (Admin -> Connectors). Needs the admin role."
+        description: "Load, unload, switch on and off, deploy archives, install and roll back packs, and create, change, test and delete connectors (Admin -> Connectors), and Retry now for packs, connectors, AI providers and MCP servers. Needs the admin role."
         allow:
           - POST /api/v1/admin/packs/*/load
           - POST /api/v1/admin/packs/*/unload
@@ -209,6 +209,7 @@ drishti:
           - DELETE /api/v1/admin/connectors/*
           - POST /api/v1/admin/connectors/**
           - POST /api/v1/admin/registry/**
+          - POST /api/v1/admin/retry/*
       "[loads:write]":
         description: "Announce that a batch of data has landed (or failed) for a pack: Drishti then refreshes, verifies, checks alerts and tells the people the pack names. Only for packs your roles reach; needs no admin role."
         allow:
@@ -291,6 +292,14 @@ drishti:
       views-per-minute: 600                   # calls per host application (the default for a new registration)
       views-per-user-per-minute: 60           # calls per user (the default for a new registration)
     apps: []                                  # host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/admin/CONFIGURATION.md
+  retry:                             # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): packs refused, connectors, AI providers, MCP servers
+    enabled: true
+    initial: 5s                      # wait before the first retry
+    factor: 2.0                      # each further wait is this many times the one before
+    max: 5m                          # no wait is longer than this
+    jitter: 0.2                      # each wait varies by up to this fraction either way
+    permanent-after: 3               # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
+    # packs: {initial: 2s}           # drishti.retry.<area>.<key> overrides any of these for one area: packs, connectors, ai, mcp
   ai:                                # LLM provider layer (docs/architecture/AI_PROVIDERS.md): OFF by default; no file is read and no model is called while off
     enabled: ${DRISHTI_AI_ENABLED:false}
     dir: ${DRISHTI_AI_DIR:./config/ai}        # one YAML per provider: type, base-url, api-key as ${ENV}, models with logical names

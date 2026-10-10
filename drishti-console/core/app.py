@@ -18,6 +18,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -195,7 +196,11 @@ def create_app(settings: Settings) -> FastAPI:
             app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 5)),
                                                             int(settings.get("backend.pool_size", 64))) for s in catalogue.all()},
                                        catalogue.default)
+        ai = getattr(app.state, "ai", None)
+        watcher = asyncio.create_task(ai.supervise()) if ai is not None and (ai.enabled or ai.mcp_enabled) else None
         yield
+        if watcher is not None:
+            watcher.cancel()
         for client in (app.state.backend.each() if isinstance(app.state.backend, Switch) else [app.state.backend]):
             close = getattr(client, "aclose", None)
             if close:

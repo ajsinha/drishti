@@ -38,4 +38,11 @@ public class PackReloadConfiguration {
         r.start();
         return r;
     }
+
+    /** What is failing and being retried, across packs, connectors, AI providers and MCP servers; and Retry now. */
+    @Bean
+    public RetryService retryService(PackReloader packs, com.ash.drishti.engine.source.SourceRegistry sources, com.ash.drishti.ai.LlmRegistry llm,
+            com.ash.drishti.ai.McpRegistry mcp, AuditLog audit) {
+        return new RetryService(packs, sources, llm, mcp, audit);
+    }
 }

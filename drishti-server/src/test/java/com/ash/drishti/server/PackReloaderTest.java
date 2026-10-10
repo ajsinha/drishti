@@ -49,6 +49,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.packs.enabled=alpha",
         "drishti.packs.watch=poll", "drishti.packs.poll=200ms", "drishti.packs.reload-debounce=100ms",
+        "drishti.retry.packs.initial=300ms", "drishti.retry.packs.max=1s", "drishti.retry.packs.jitter=0",
         "drishti.identity.database-url=jdbc:sqlite:target/packreload-${random.uuid}/identity.db"})
 class PackReloaderTest {
 
@@ -234,6 +235,35 @@ class PackReloaderTest {
         until("one of them loaded and the other reported", () -> registry.problems().size() == 1 && names().size() == 2);
         assertThat(registry.problems().values().iterator().next()).contains("widget");
         assertThat(names()).contains("alpha");                                                   // what was loaded keeps running
+    }
+
+    @Test
+    void aRefusedPackIsListedForRetryAndLoadsWhenTheConflictIsRemovedWithoutAnyChangeInItsOwnFolder() throws Exception {
+        write("beta", "Beta", List.of(), List.of("widget"), "WGT", false, false);
+        write("gamma", "Gamma", List.of(), List.of("widget"), "GAM", false, false);              // clashes with beta over the kind
+        until("one loaded and one refused", () -> registry.problems().size() == 1 && names().size() == 2);
+        String refused = registry.problems().keySet().iterator().next();
+        String loaded = refused.equals("beta") ? "gamma" : "beta";
+        until("the refused pack to be listed for retry", () -> reloader.retryStatus().containsKey(refused));
+        var st = reloader.retryStatus().get(refused);
+        assertThat(st.get("lastError").toString()).contains("widget");
+        assertThat((Long) st.get("nextRetryInSeconds")).isGreaterThanOrEqualTo(0L);
+        until("it to be tried again on the schedule", () -> ((Integer) reloader.retryStatus().get(refused).get("attempt")) >= 3);
+        assertThat(names()).doesNotContain(refused);
+        remove(loaded);                                                                          // the conflict goes; the refused folder is untouched
+        until("the refused pack to load", () -> pack(refused) != null && pack(loaded) == null);
+        until("the problem and its retry to clear", () -> registry.problems().isEmpty() && reloader.retryStatus().isEmpty());
+    }
+
+    @Test
+    void retryNowTriesAtOnceAndIsAudited() throws Exception {
+        write("beta", "Beta", List.of(), List.of("widget"), "WGT", false, false);
+        write("gamma", "Gamma", List.of(), List.of("widget"), "GAM", false, false);
+        until("one refused", () -> registry.problems().size() == 1 && !reloader.retryStatus().isEmpty());
+        int before = (Integer) reloader.retryStatus().values().iterator().next().get("attempt");
+        reloader.retryNow("test-admin");
+        assertThat((Integer) reloader.retryStatus().values().iterator().next().get("attempt")).isGreaterThan(before);
+        assertThat(registry.problems()).hasSize(1);                                              // still a real conflict
     }
 
     @Test

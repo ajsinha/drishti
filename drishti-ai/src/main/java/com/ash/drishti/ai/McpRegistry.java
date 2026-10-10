@@ -56,8 +56,16 @@ public final class McpRegistry implements AutoCloseable {
     private final Supplier<McpServerConfigLoader.Loaded> source;
     private final Map<String, McpClientFactory> factories = new LinkedHashMap<>();
     private final AtomicReference<Snapshot> snap = new AtomicReference<>(new Snapshot(Map.of(), Map.of()));
+    /** Servers that could not be set up, or whose last call failed: set up again / reconnected on the {@code drishti.retry.mcp} schedule. */
+    private final com.ash.drishti.common.RetryBoard retry;
+    private final java.util.concurrent.locks.ReentrantLock reloadLock = new java.util.concurrent.locks.ReentrantLock();
 
     public McpRegistry(List<McpClientFactory> factories, Supplier<McpServerConfigLoader.Loaded> source) {
+        this(factories, source, com.ash.drishti.common.RetryPolicy.defaults());
+    }
+
+    public McpRegistry(List<McpClientFactory> factories, Supplier<McpServerConfigLoader.Loaded> source, com.ash.drishti.common.RetryPolicy policy) {
+        this.retry = new com.ash.drishti.common.RetryBoard("mcp server", policy);
         factories.forEach(f -> this.factories.putIfAbsent(f.transport().toLowerCase(java.util.Locale.ROOT), f));
         this.source = source;
     }
@@ -68,30 +76,107 @@ public final class McpRegistry implements AutoCloseable {
         return all;
     }
 
-    public synchronized void reload() {
+    /** Retry state of the servers that failed to set up or lost their connection. */
+    public com.ash.drishti.common.RetryBoard retry() {
+        return retry;
+    }
+
+    /** Admin "Retry now": servers that failed to set up are set up again, and servers whose last call failed reconnect, at once. */
+    public int retryNow() {
+        int n = retry.retryAllNow();
+        reload();
+        return n;
+    }
+
+    /**
+     * Reads the folder again and sets up the servers (a server refused earlier, with the same file, waits for its retry time).
+     * Then every server whose last call failed is reconnected when its retry time has come. No lock is held while connecting.
+     */
+    public void reload() {
+        reloadLock.lock();
+        try {
+            reloadLocked();
+        } finally {
+            reloadLock.unlock();
+        }
+        probeDown();
+    }
+
+    private void reloadLocked() {
         McpServerConfigLoader.Loaded l = source.get();
         Snapshot old = snap.get();
         Map<String, Entry> entries = new TreeMap<>();
+        java.util.Set<String> names = new java.util.HashSet<>();
         for (McpServerConfig c : l.servers()) {
-            State st = old.entries().containsKey(c.name()) ? old.entries().get(c.name()).state() : new State();
+            names.add(c.name());
+            Entry prev = old.entries().get(c.name());
+            State st = prev != null ? prev.state() : new State();
             if (!c.enabled()) {
+                retry.forget(c.name());
                 entries.put(c.name(), new Entry(c, null, null, st));
                 continue;
             }
+            if (prev != null && prev.error() != null && prev.config().equals(c) && retry.failing(c.name())
+                    && (!retry.policy().enabled() || !retry.due().contains(c.name()))) {
+                entries.put(c.name(), prev);
+                continue;
+            }
+            if (prev != null && !prev.config().equals(c)) {
+                retry.forget(c.name());
+            }
             McpClientFactory f = factories.get(c.transport().toLowerCase(java.util.Locale.ROOT));
             if (f == null) {
-                entries.put(c.name(), new Entry(c, null, "no MCP transport '" + c.transport() + "' is installed (have: " + factories.keySet() + ")", st));
+                String why = "no MCP transport '" + c.transport() + "' is installed (have: " + factories.keySet() + ")";
+                retry.failed(c.name(), why, true);
+                entries.put(c.name(), new Entry(c, null, why, st));
                 continue;
             }
             try {
                 entries.put(c.name(), new Entry(c, f.create(c), null, st));
+                if (prev == null || prev.error() != null) {
+                    retry.succeeded(c.name());                    // it was refused before; a lost connection is cleared by a reconnect, not by a rebuild
+                }
             } catch (RuntimeException e) {
-                LOG.warn("mcp server {} not loaded: {}", c.name(), e.getMessage());
+                retry.failed(c.name(), String.valueOf(e.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(e));
                 entries.put(c.name(), new Entry(c, null, e.getMessage(), st));
             }
         }
+        retry.statuses().keySet().stream().filter(k -> !names.contains(k)).forEach(retry::forget);
         snap.set(new Snapshot(Map.copyOf(entries), Map.copyOf(l.errors())));
-        old.entries().values().stream().filter(e -> e.client() != null).forEach(e -> e.client().close());
+        old.entries().values().stream().filter(e -> e.client() != null && entries.get(e.config().name()) != e).forEach(e -> e.client().close());
+    }
+
+    /** A server whose last call failed is listed as failing; when its retry is due it is closed and connected afresh. */
+    private void probeDown() {
+        if (!retry.policy().enabled()) {
+            return;
+        }
+        for (Entry e : entries()) {
+            String name = e.config().name();
+            if (!e.usable()) {
+                continue;
+            }
+            State s = e.state();
+            if (s.lastWasFailure) {
+                if (!retry.failing(name)) {
+                    retry.failed(name, "connection lost: " + s.lastError, com.ash.drishti.common.RetryPolicy.looksPermanent(s.lastError));
+                }
+                if (retry.due().contains(name)) {
+                    try {
+                        e.client().close();
+                        e.client().connect();
+                        s.lastWasFailure = false;
+                        s.lastOk = Instant.now();
+                        retry.succeeded(name);
+                    } catch (RuntimeException ex) {
+                        s.lastError = String.valueOf(ex.getMessage());
+                        retry.failed(name, "connection lost: " + s.lastError, com.ash.drishti.common.RetryPolicy.looksPermanent(ex));
+                    }
+                }
+            } else if (e.error() == null) {
+                retry.succeeded(name);                        // a call went through since: recovered
+            }
+        }
     }
 
     public List<Entry> entries() {

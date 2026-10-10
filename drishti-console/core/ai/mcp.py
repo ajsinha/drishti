@@ -25,6 +25,7 @@ from typing import Protocol
 
 import httpx
 
+from core import retry as retrymod
 from core.ai import config as cfgmod
 from core.ai.providers.base import map_http_error
 from core.ai.policy import MASK, PromptMasker
@@ -301,8 +302,9 @@ class McpEntry:
 
 
 class McpRegistry:
-    def __init__(self, source, runtime, factories: dict | None = None):
+    def __init__(self, source, runtime, factories: dict | None = None, retry: retrymod.RetryBoard | None = None):
         self._source, self._runtime = source, runtime
+        self.retry = retry or retrymod.RetryBoard("mcp server", retrymod.RetryPolicy())
         self._factories = factories if factories is not None else TRANSPORTS
         self._entries: dict[str, McpEntry] = {}
         self.file_errors: dict[str, str] = {}
@@ -311,20 +313,59 @@ class McpRegistry:
         configs, errors = self._source()
         entries = {}
         for c in configs:
-            old = self._entries.get(c["name"])
+            name = c["name"]
+            old = self._entries.get(name)
+            if old and old.error and old.config == c and self.retry.failing(name) and (not self.retry.policy.enabled or name not in self.retry.due()):
+                entries[name] = old                          # refused before, same file, not yet time to try again
+                continue
+            if old and old.config != c:
+                self.retry.forget(name)
             e = McpEntry(c, None, None, *( (old.calls, old.failures, old.last_error, old.last_was_failure) if old else () ))
             f = self._factories.get(c["transport"].lower())
             if not c["enabled"]:
-                pass
+                self.retry.forget(name)
             elif f is None:
                 e.error = f"no MCP transport '{c['transport']}' is installed (have: {sorted(self._factories)})"
+                self.retry.failed(name, e.error, True)
             else:
                 try:
                     e.client = f(c, self._runtime)
+                    if old is None or old.error:
+                        self.retry.succeeded(name)           # a lost connection is cleared by a reconnect, not by a rebuild
                 except LlmError as ex:
                     e.error = ex.message
-            entries[c["name"]] = e
+                    self.retry.failed(name, ex.message, retrymod.looks_permanent(ex.message))
+            entries[name] = e
+        for k in list(self.retry.statuses()):
+            if not k.startswith("file ") and k not in entries:
+                self.retry.forget(k)
+        from core.ai.registry import _track_files
+
+        _track_files(self.retry, errors)
         self._entries, self.file_errors = entries, dict(errors)
+
+    async def probe_down(self) -> None:
+        """A server whose last call failed is listed as failing; when its retry is due it is closed and connected afresh."""
+        if not self.retry.policy.enabled:
+            return
+        for e in self.entries():
+            name = e.config["name"]
+            if not e.usable:
+                continue
+            if e.last_was_failure:
+                if not self.retry.failing(name):
+                    self.retry.failed(name, f"connection lost: {e.last_error}", retrymod.looks_permanent(e.last_error))
+                if name in self.retry.due():
+                    try:
+                        await e.client.aclose()
+                        await e.client.connect()
+                        e.last_was_failure = False
+                        self.retry.succeeded(name)
+                    except Exception as ex:                  # noqa: BLE001  (any failure to connect is a failed attempt)
+                        e.last_error = getattr(ex, "message", None) or str(ex)
+                        self.retry.failed(name, f"connection lost: {e.last_error}", retrymod.looks_permanent(e.last_error))
+            elif not e.error:
+                self.retry.succeeded(name)
 
     def entries(self) -> list[McpEntry]:
         return sorted(self._entries.values(), key=lambda e: e.config["name"])

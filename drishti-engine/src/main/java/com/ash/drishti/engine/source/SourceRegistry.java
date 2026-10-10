@@ -109,8 +109,21 @@ public final class SourceRegistry implements AutoCloseable {
         reader.router = router;
     }
     private final ScheduledExecutorService scheduler;
+    /** Connectors that failed to start or lost their connection: tried again on the {@code drishti.retry.connectors} schedule. */
+    private final com.ash.drishti.common.RetryBoard retry;
+    /** Plugins that run as themselves (not through a connector file) and failed to start: the instance and the settings to start it with. */
+    private final Map<String, Map<String, String>> plainSettings = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, SourcePlugin> plainInstances = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Connectors whose failure is a lost connection (health says DOWN) rather than a start that failed. */
+    private final java.util.Set<String> lost = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final java.util.concurrent.atomic.AtomicLong sweeps = new java.util.concurrent.atomic.AtomicLong();
 
     public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec) {
+        this(discovered, props, codec, com.ash.drishti.common.RetryPolicy.defaults());
+    }
+
+    public SourceRegistry(List<SourcePlugin> discovered, SourcesProperties props, JsonCodec codec, com.ash.drishti.common.RetryPolicy policy) {
+        this.retry = new com.ash.drishti.common.RetryBoard("connector", policy);
         this.discovered = List.copyOf(discovered);
         this.codec = codec;
         this.props = props;
@@ -142,6 +155,7 @@ public final class SourceRegistry implements AutoCloseable {
             } catch (IllegalStateException e) {
                 failures.put(name, e.getMessage());
                 statuses.put(name, new ConnectorStatus("FAILED", e.getMessage(), java.time.Instant.now()));
+                retry.failed(name, String.valueOf(e.getMessage()), true);
             }
         });
         try (var exec = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -172,8 +186,12 @@ public final class SourceRegistry implements AutoCloseable {
                     failures.put(p.manifest().name(), String.valueOf(cause.getMessage()));
                     if (applied.containsKey(p.manifest().name())) {
                         statuses.put(p.manifest().name(), new ConnectorStatus("FAILED", String.valueOf(cause.getMessage()), java.time.Instant.now()));
+                    } else {
+                        plainSettings.put(p.manifest().name(), settings.get(p));
+                        plainInstances.put(p.manifest().name(), p);
                     }
                     LOG.error("source plugin {} failed to start", p.manifest().name(), cause);
+                    retry.failed(p.manifest().name(), String.valueOf(cause.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(cause));
                 }
             }
         }
@@ -183,6 +201,125 @@ public final class SourceRegistry implements AutoCloseable {
             }
         });
         this.plugins = Collections.unmodifiableMap(started);
+        scheduler.scheduleWithFixedDelay(this::sweep, 1, 1, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    /** One pass of the retry timer (every second): retries what is due, and every few seconds looks for connections that were lost. */
+    private void sweep() {
+        try {
+            if (retry.policy().enabled()) {
+                for (String name : retry.due()) {
+                    retryOne(name);
+                }
+                if (sweeps.incrementAndGet() % Math.max(1, retry.policy().initial().toSeconds()) == 0) {
+                    watchHealth();
+                }
+            }
+        } catch (RuntimeException e) {
+            LOG.warn("connector retry pass failed; it runs again in a second", e);
+        }
+    }
+
+    private void retryOne(String name) {
+        if (lost.contains(name)) {
+            SourcePlugin p = plugins.get(name);
+            String h = p == null ? "DOWN" : healthOf(p);
+            if (!h.startsWith("DOWN")) {
+                lost.remove(name);
+                retry.succeeded(name);
+                return;
+            }
+            int attempt = retry.status(name).map(com.ash.drishti.common.RetryTracker.Status::attempt).orElse(1);
+            retry.failed(name, "connection lost: " + h, false);
+            if (attempt % 3 == 0 && applied.containsKey(name)) {          // still down after a few looks: start it afresh
+                lost.remove(name);
+                applyLocked(name, applied.get(name));
+                if (retry.failing(name)) {
+                    lost.add(name);
+                }
+            }
+            return;
+        }
+        if (applied.containsKey(name)) {
+            applyLocked(name, applied.get(name));
+        } else if (plainInstances.containsKey(name)) {
+            startPlain(name);
+        } else {
+            retry.forget(name);
+        }
+    }
+
+    private void startPlain(String name) {
+        SourcePlugin p = plainInstances.get(name);
+        Map<String, String> own = plainSettings.get(name);
+        var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            closeQuietly(p);
+            p.start(new EngineSourceContext(own, codec, scheduler, reader));
+            register(p, own);
+            swap(name, p);
+            failures.remove(name);
+            plainInstances.remove(name);
+            plainSettings.remove(name);
+            LOG.info("source plugin started: {}", name);
+            retry.succeeded(name);
+        } catch (com.ash.drishti.api.PluginNotConfigured e) {
+            retry.forget(name);
+        } catch (Exception e) {
+            failures.put(name, String.valueOf(e.getMessage()));
+            retry.failed(name, String.valueOf(e.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(e));
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private static String healthOf(SourcePlugin p) {
+        try {
+            String h = p.health();
+            return h == null ? "UP" : h;
+        } catch (RuntimeException e) {
+            return "DOWN: " + e.getMessage();
+        }
+    }
+
+    /** A running connector whose plugin says DOWN has lost its connection: it is listed as failing and looked at on the schedule. */
+    private void watchHealth() {
+        for (var e : plugins.entrySet()) {
+            String name = e.getKey();
+            if (!applied.containsKey(name) || retry.failing(name)) {
+                continue;
+            }
+            String h = healthOf(e.getValue());
+            if (h.startsWith("DOWN")) {
+                lost.add(name);
+                retry.failed(name, "connection lost: " + h, false);
+            }
+        }
+    }
+
+    /** Retry state of a connector that is failing, or empty. */
+    public Optional<com.ash.drishti.common.RetryTracker.Status> retryStatus(String name) {
+        return retry.status(name);
+    }
+
+    /** Admin "Retry now": the connector (or, with null, every failing one) is tried at once, on the calling thread. Returns how many. */
+    public int retryNow(String name) {
+        List<String> names = name == null ? new ArrayList<>(retry.statuses().keySet()) : retry.failing(name) ? List.of(name) : List.of();
+        for (String n : names) {
+            retry.retryNow(n);
+            retryOne(n);
+        }
+        return names.size();
+    }
+
+    /** Hears every failure and recovery, for the audit log. */
+    public void retryListener(com.ash.drishti.common.RetryBoard.Listener l) {
+        retry.listener(l);
+    }
+
+    public com.ash.drishti.common.RetryPolicy retryPolicy() {
+        return retry.policy();
     }
 
     /** A fresh instance of the connector's plugin, named and limited to its kinds. */
@@ -258,6 +395,12 @@ public final class SourceRegistry implements AutoCloseable {
      * @return the state it ends in
      */
     public ConnectorStatus apply(String name, SourcesProperties.ConnectorSettings c) {
+        retry.forget(name);                                   // new settings: the count starts again
+        lost.remove(name);
+        return applyLocked(name, c);
+    }
+
+    private ConnectorStatus applyLocked(String name, SourcesProperties.ConnectorSettings c) {
         var lock = locks.computeIfAbsent(name, k -> new java.util.concurrent.locks.ReentrantLock());
         lock.lock();
         try {
@@ -265,6 +408,7 @@ public final class SourceRegistry implements AutoCloseable {
             applied.put(name, c);
             if (!c.enabled()) {
                 failures.remove(name);
+                retry.forget(name);
                 return status(name, "DISABLED", null);
             }
             SourcePlugin instance;
@@ -272,6 +416,7 @@ public final class SourceRegistry implements AutoCloseable {
                 instance = instantiate(name, c);
             } catch (IllegalStateException e) {
                 failures.put(name, e.getMessage());
+                retry.failed(name, String.valueOf(e.getMessage()), true);
                 return status(name, "FAILED", e.getMessage());
             }
             Map<String, String> own;
@@ -279,6 +424,7 @@ public final class SourceRegistry implements AutoCloseable {
                 own = ownSettings(name, c);
             } catch (IllegalStateException e) {
                 failures.put(name, e.getMessage());
+                retry.failed(name, String.valueOf(e.getMessage()), true);
                 return status(name, "FAILED", e.getMessage());
             }
             try {
@@ -287,16 +433,21 @@ public final class SourceRegistry implements AutoCloseable {
                 closeQuietly(instance);
                 if (e instanceof com.ash.drishti.api.PluginNotConfigured) {
                     failures.remove(name);
+                    retry.forget(name);
                     return status(name, "IDLE", e.getMessage());
                 }
                 failures.put(name, String.valueOf(e.getMessage()));
-                LOG.error("connector {} failed to start", name, e);
+                if (!retry.failing(name)) {
+                    LOG.error("connector {} failed to start", name, e);
+                }
+                retry.failed(name, String.valueOf(e.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(e));
                 return status(name, "FAILED", String.valueOf(e.getMessage()));
             }
             register(instance, own);
             swap(name, instance);
             failures.remove(name);
             LOG.info("connector {} started ({})", name, c.plugin());
+            retry.succeeded(name);
             return status(name, "RUNNING", null);
         } finally {
             lock.unlock();
@@ -312,6 +463,8 @@ public final class SourceRegistry implements AutoCloseable {
             applied.remove(name);
             statuses.remove(name);
             failures.remove(name);
+            retry.forget(name);
+            lost.remove(name);
         } finally {
             lock.unlock();
         }

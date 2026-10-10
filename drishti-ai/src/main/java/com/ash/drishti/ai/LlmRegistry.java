@@ -72,8 +72,17 @@ public final class LlmRegistry implements AutoCloseable {
     private final Map<String, ProviderFactory> factories = new LinkedHashMap<>();
     private final String defaultModel;
     private final AtomicReference<Snapshot> snap = new AtomicReference<>(new Snapshot(Map.of(), Map.of(), Instant.EPOCH));
+    /** A provider that cannot be built (missing type, bad settings) is built again on the {@code drishti.retry.ai} schedule, not at every look. */
+    private final com.ash.drishti.common.RetryBoard retry;
+    private final java.util.concurrent.locks.ReentrantLock reloadLock = new java.util.concurrent.locks.ReentrantLock();
 
     public LlmRegistry(List<ProviderFactory> factories, Supplier<ProviderConfigLoader.Loaded> source, String defaultModel) {
+        this(factories, source, defaultModel, com.ash.drishti.common.RetryPolicy.defaults());
+    }
+
+    public LlmRegistry(List<ProviderFactory> factories, Supplier<ProviderConfigLoader.Loaded> source, String defaultModel,
+            com.ash.drishti.common.RetryPolicy policy) {
+        this.retry = new com.ash.drishti.common.RetryBoard("ai provider", policy);
         for (ProviderFactory f : factories) {
             this.factories.putIfAbsent(f.type().toLowerCase(java.util.Locale.ROOT), f);
         }
@@ -81,32 +90,69 @@ public final class LlmRegistry implements AutoCloseable {
         this.defaultModel = defaultModel == null ? "" : defaultModel.strip();
     }
 
-    public synchronized void reload() {
+    public void reload() {
+        reloadLock.lock();
+        try {
+            reloadLocked();
+        } finally {
+            reloadLock.unlock();
+        }
+    }
+
+    /** Retry state of the providers that could not be built: attempt, next retry, last error. */
+    public com.ash.drishti.common.RetryBoard retry() {
+        return retry;
+    }
+
+    /** Admin "Retry now": every provider that failed to build is built again at once. Returns how many were failing. */
+    public int retryNow() {
+        int n = retry.retryAllNow();
+        reload();
+        return n;
+    }
+
+    private void reloadLocked() {
         ProviderConfigLoader.Loaded loaded = source.get();
+        java.util.Set<String> names = new java.util.HashSet<>();
         Map<String, Entry> entries = new TreeMap<>();
         Map<String, String> errors = new TreeMap<>(loaded.errors());
         Snapshot old = snap.get();
         for (ProviderConfig c : loaded.providers()) {
-            State state = old.entries().containsKey(c.name()) ? old.entries().get(c.name()).state() : new State();
+            names.add(c.name());
+            Entry prev = old.entries().get(c.name());
+            State state = prev != null ? prev.state() : new State();
             if (!c.enabled()) {
+                retry.forget(c.name());
                 entries.put(c.name(), new Entry(c, null, null, state));
                 continue;
             }
+            if (prev != null && prev.error() != null && prev.config().equals(c) && retry.failing(c.name())
+                    && (!retry.policy().enabled() || !retry.due().contains(c.name()))) {
+                entries.put(c.name(), prev);                    // refused before, same file, not yet time to try again
+                continue;
+            }
+            if (prev != null && !prev.config().equals(c)) {
+                retry.forget(c.name());                          // the file changed: a fresh start
+            }
             ProviderFactory f = factories.get(c.type().toLowerCase(java.util.Locale.ROOT));
             if (f == null) {
-                entries.put(c.name(), new Entry(c, null, "no provider type '" + c.type() + "' is installed (have: " + factories.keySet() + ")", state));
+                String why = "no provider type '" + c.type() + "' is installed (have: " + factories.keySet() + ")";
+                retry.failed(c.name(), why, true);
+                entries.put(c.name(), new Entry(c, null, why, state));
                 continue;
             }
             try {
                 entries.put(c.name(), new Entry(c, f.create(c), null, state));
+                retry.succeeded(c.name());
             } catch (RuntimeException e) {
-                LOG.warn("ai provider {} not loaded: {}", c.name(), e.getMessage());
+                retry.failed(c.name(), String.valueOf(e.getMessage()), com.ash.drishti.common.RetryPolicy.looksPermanent(e));
                 entries.put(c.name(), new Entry(c, null, e.getMessage(), state));
             }
         }
+        retry.statuses().keySet().stream().filter(k -> !names.contains(k)).forEach(retry::forget);
         snap.set(new Snapshot(Map.copyOf(entries), Map.copyOf(errors), Instant.now()));
         for (Entry e : old.entries().values()) {
-            if (e.provider() != null) {
+            if (e.provider() != null && entries.get(e.config().name()) != e) {
                 e.provider().close();
             }
         }

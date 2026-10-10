@@ -88,7 +88,7 @@ public class AiConfiguration {
                 all.add(LegacyAsk.provider(ask));
             }
             return new ProviderConfigLoader.Loaded(all, errors);
-        }, ai.defaultModel());
+        }, ai.defaultModel(), com.ash.drishti.common.RetryPolicy.of(env::getProperty, "ai"));
         registry.reload();
         return registry;
     }
@@ -124,7 +124,8 @@ public class AiConfiguration {
     @Bean(destroyMethod = "close")
     McpRegistry mcpRegistry(McpProperties mcp, Environment env, ObjectProvider<McpClientFactory> beans) {
         McpRegistry r = new McpRegistry(McpRegistry.discover(beans.orderedStream().toList()), () -> mcp.enabled()
-                ? McpServerConfigLoader.load(Path.of(mcp.dir()), env::getProperty) : new McpServerConfigLoader.Loaded(List.of(), Map.of()));
+                ? McpServerConfigLoader.load(Path.of(mcp.dir()), env::getProperty) : new McpServerConfigLoader.Loaded(List.of(), Map.of()),
+                com.ash.drishti.common.RetryPolicy.of(env::getProperty, "mcp"));
         r.reload();
         return r;
     }

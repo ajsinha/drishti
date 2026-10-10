@@ -26,6 +26,7 @@ ai:                                  # LLM provider layer (docs/architecture/AI_
   enabled: ${DRISHTI_AI_ENABLED:false}
   dir: ${DRISHTI_AI_DIR:./config/ai}          # one YAML per provider; the recommended console provider is type: server (keys stay on the server)
   default_model: ${DRISHTI_AI_DEFAULT_MODEL:} # provider/model, or a model name only one provider has
+  poll_seconds: 5                    # how often config/ai and config/mcp are looked at: a changed file is picked up with no restart
   redact: []                         # field names masked in every prompt (the same names as the server's drishti.security.redact)
   policy: {mask_redacted: true, audit: true, per_user_per_minute: 0, per_user_per_day: 0, cost_per_user_per_day: 0, mask_patterns: [], features: {}}
 mcp:                                 # MCP client (docs/architecture/MCP_CLIENT.md): OFF by default
@@ -34,6 +35,14 @@ mcp:                                 # MCP client (docs/architecture/MCP_CLIENT.
   server_roles: {}                   # server -> roles allowed
   tool_roles: {}                     # "server/tool" -> roles allowed
   server_features: {}                # server -> features allowed
+retry:                               # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): the console's AI providers and MCP servers
+  enabled: ${DRISHTI_RETRY_ENABLED:true}
+  initial: ${DRISHTI_RETRY_INITIAL:5s}      # wait before the first retry
+  factor: 2.0                        # each further wait is this many times the one before
+  max: ${DRISHTI_RETRY_MAX:5m}              # no wait is longer than this
+  jitter: 0.2                        # each wait varies by up to this fraction either way
+  permanent_after: 3                 # a failure waiting cannot fix (refused credentials, bad settings) seen this often in a row is retried only every max
+  # ai: {initial: 2s}  and  mcp: {max: 1m}  override any of these for one area
 collab:
   # Admin > Collaboration, bridge Test: how long the console waits for the server, which waits for the bridge's own timeout
   # (drishti.collab.bridges.timeout, default 10 s). Keep it longer than that.

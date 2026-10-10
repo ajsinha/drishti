@@ -20,6 +20,7 @@
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
+{% from "_macros/retry.html" import retry_note, retry_button %}
 <div class="adm" data-pack-admin>
   <h1>Packs</h1>
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
@@ -63,7 +64,7 @@
         <td class="mono">{{ (p.connectors or []) | join(', ') or '—' }}</td>
         <td>{% if not p.loaded %}<span class="st" title="On disk; Load it from here, or name it in drishti.packs.enabled (DRISHTI_PACKS)">not loaded</span>
             {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
-            {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{% endif %}
+            {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{{ retry_note(p.retry) }}{% endif %}
 </td>
         <td class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if p.loaded %}
@@ -156,4 +157,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script>{% endblock %}

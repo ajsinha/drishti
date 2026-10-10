@@ -77,8 +77,8 @@ public class EngineConfiguration {
     }
 
     @Bean(destroyMethod = "close")
-    public SourceRegistry sourceRegistry(SourcesProperties props, JsonCodec codec) {
-        return new SourceRegistry(new PluginDiscovery().discover(props.pluginDir()), props, codec);
+    public SourceRegistry sourceRegistry(SourcesProperties props, JsonCodec codec, org.springframework.core.env.Environment env) {
+        return new SourceRegistry(new PluginDiscovery().discover(props.pluginDir()), props, codec, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "connectors"));
     }
 
     @Bean

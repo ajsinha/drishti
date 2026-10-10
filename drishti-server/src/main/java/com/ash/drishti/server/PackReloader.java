@@ -104,6 +104,9 @@ public final class PackReloader implements AutoCloseable {
     private final Set<String> candidates = new LinkedHashSet<>();
     private final List<DirectoryWatcher> watchers = new ArrayList<>();
     private volatile String lastRun = "";
+    /** Packs that are refused or kept at their last version are looked at again on this schedule even when no file changed. */
+    private final com.ash.drishti.common.RetryBoard retry;
+    private String retryContext = "";
 
     public PackReloader(ConfigurableEnvironment env, PackRegistry registry, ConnectorManager connectors, SutraRegistry sutras, Mnemonics mnemonics,
             PackOverlay overlay, AuditLog audit, SamplePolicy samples) {
@@ -124,6 +127,20 @@ public final class PackReloader implements AutoCloseable {
         this.pollMs = duration(env.getProperty("drishti.packs.poll", "5s")).toMillis();
         this.debounceMs = duration(env.getProperty("drishti.packs.reload-debounce", "750ms")).toMillis();
         this.seen = fingerprints();
+        this.retry = new com.ash.drishti.common.RetryBoard("pack", com.ash.drishti.common.RetryPolicy.of(env::getProperty, "packs"));
+        this.retry.listener(new com.ash.drishti.common.RetryBoard.Listener() {
+            @Override
+            public void failed(String area, String key, com.ash.drishti.common.RetryTracker.Status s, boolean logged) {
+                if (logged) {
+                    audit.record("system", "pack-retry-failed", key, "attempt " + s.attempt() + ": " + s.lastError());
+                }
+            }
+
+            @Override
+            public void recovered(String area, String key, int failures, String lastError) {
+                audit.record("system", "pack-recovered", key, "loaded after " + failures + " failed attempt(s); it was: " + lastError);
+            }
+        });
     }
 
     private static Duration duration(String text) {
@@ -180,6 +197,7 @@ public final class PackReloader implements AutoCloseable {
         try {
             Map<String, String> now = fingerprints();
             if (now.equals(seen)) {
+                retryRefused();
                 return;
             }
             for (int i = 0; i < 40; i++) {                           // debounce: wait until the folders stop changing
@@ -208,8 +226,85 @@ public final class PackReloader implements AutoCloseable {
             if (r.changed() || !r.problems().isEmpty()) {
                 LOG.info("packs reloaded: loaded {}, reloaded {}, unloaded {}, problems {}", r.loaded(), r.reloaded(), r.unloaded(), r.problems());
             }
+            syncRetry(true);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    // -- retrying what was refused ---------------------------------------------------------------------------------
+
+    /**
+     * Nothing changed in the pack folders, but a pack may still be refused (a conflict with another pack, a missing {@code extends},
+     * a missing connector, a failed validation) for a reason that lies elsewhere and has since gone. Called with the lock held:
+     * when a refused pack's retry is due, or anything it depends on changed (the connector files, the sample-pack switch, the
+     * administrator's overlay), everything is evaluated again with the usual rules.
+     */
+    private void retryRefused() {
+        syncRetry(false);
+        String ctx = context();
+        if (!ctx.equals(retryContext)) {
+            retryContext = ctx;
+            retry.retryAllNow();
+        }
+        if (retry.policy().enabled() && !retry.due().isEmpty()) {
+            Result r = reconcile("retry", "automatic retry of refused packs", Set.of(), true);
+            if (r.changed()) {
+                LOG.info("packs retried: loaded {}, reloaded {}, unloaded {}", r.loaded(), r.reloaded(), r.unloaded());
+            }
+            syncRetry(true);
+        }
+    }
+
+    /** Brings the retry board in line with the registry's problems; {@code ran} says a reconcile has just looked at them again. */
+    private void syncRetry(boolean ran) {
+        Map<String, String> problems = Map.copyOf(registry.problems());
+        problems.forEach((n, m) -> {
+            if (!retry.failing(n) || ran) {
+                retry.failed(n, m, com.ash.drishti.common.RetryPolicy.looksPermanent(m));
+            }
+        });
+        retry.statuses().keySet().stream().filter(n -> !problems.containsKey(n)).forEach(retry::succeeded);
+    }
+
+    /** What a refused pack may be waiting for: connector files, the sample-pack switch and the overlay. */
+    private String context() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(samples.hidden()).append('|').append(overlay.added()).append('|');
+        try (Stream<Path> s = Files.list(connectors.files().dir())) {
+            s.sorted().forEach(f -> {
+                try {
+                    sb.append(f.getFileName()).append(':').append(Files.size(f)).append(':').append(Files.getLastModifiedTime(f).toMillis()).append(';');
+                } catch (IOException e) {
+                    sb.append(f.getFileName()).append(";");
+                }
+            });
+        } catch (IOException e) {
+            sb.append("-");
+        }
+        return sb.toString();
+    }
+
+    /** For Admin and Health: each refused pack with its attempt, seconds to the next retry and last error. */
+    public Map<String, Map<String, Object>> retryStatus() {
+        Map<String, Map<String, Object>> out = new TreeMap<>();
+        java.time.Instant now = java.time.Instant.now();
+        retry.statuses().forEach((k, v) -> out.put(k, com.ash.drishti.common.RetryBoard.describe(v, now)));
+        return out;
+    }
+
+    /** Admin "Retry now": looks at every refused pack again at once. Audited by the caller's actor. */
+    public Result retryNow(String actor) {
+        lock.lock();
+        try {
+            syncRetry(false);
+            int n = retry.retryAllNow();
+            audit.record(actor, "pack-retry-now", "packs", n + " refused pack(s) retried");
+            Result r = reconcile(actor, "retry now", Set.of(), true);
+            syncRetry(true);
+            return r;
         } finally {
             lock.unlock();
         }
