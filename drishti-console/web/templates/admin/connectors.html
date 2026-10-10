@@ -1,0 +1,131 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Connectors · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-embedding.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-connectors.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm" data-connectors data-kinds="{{ (listing.knownKinds or []) | join(',') }}" data-directory="{{ listing.directory }}">
+  {% with tab='connectors' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Connectors <a class="emb-help" href="/help/connector-files" aria-label="Help: connector files and this page" title="Help: connector files and this page">?</a></h1>
+  <p class="text-muted-d">Where {{ PRODUCT }} reads its data. Each connector is one file in <span class="mono">{{ listing.directory }}</span>, and the file name is the
+    connector's name; packs refer to connectors by that name. A saved change restarts only that connector, in place, and the previous text is kept so you can
+    restore it. Watching the folder: <span class="mono">{{ listing.watch }}</span>, so a file you edit by hand is picked up too.
+    <span class="mono">n</span> creates a connector, <span class="mono">/</span> focuses the filter.
+    See <a href="/help/connector-files">Connector files</a>.</p>
+  {% if listing.deprecated %}<p class="adm-warn" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    {{ listing.deprecated | length }} connector{{ '' if listing.deprecated | length == 1 else 's' }} still {{ 'is' if listing.deprecated | length == 1 else 'are' }} defined in the server's own
+    configuration (application.yaml or a profile): <span class="mono">{{ listing.deprecated | join(', ') }}</span>. That works but is deprecated; open one and save it to
+    create its file, then remove it from application.yaml.</p>{% endif %}
+  {% if listing.misnamed %}<p class="adm-warn" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    Not loaded, because the name is not a connector name (lower case letters, digits and hyphens, ending <span class="mono">.yaml</span>):
+    <span class="mono">{{ listing.misnamed | join(', ') }}</span>.</p>{% endif %}
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <div class="adm-bar">
+    <input class="studio-in" type="search" data-filter placeholder="Filter by name, plugin, kind or pack" aria-label="Filter the connectors" autocomplete="off">
+    <label class="visually-hidden" for="connState">Show connectors in state</label>
+    <select class="studio-in" id="connState" data-state-filter>
+      <option value="">Any status</option><option value="RUNNING">Running</option><option value="DISABLED">Disabled</option>
+      <option value="FAILED">Failed</option><option value="problem">With a problem</option></select>
+    <label class="visually-hidden" for="connOrigin">Show connectors from</label>
+    <select class="studio-in" id="connOrigin" data-origin-filter>
+      <option value="">Any origin</option><option value="file">File</option><option value="pack">Pack</option><option value="application">application.yaml</option></select>
+    <button type="button" class="btn-pill btn-accent" data-new>New connector</button>
+  </div>
+  <div class="tbl-wrap"><table class="tbl adm-tbl" data-list>
+    <caption class="visually-hidden">Connectors, where each is defined and how it is doing</caption>
+    <thead><tr><th scope="col">Connector</th><th scope="col">Origin</th><th scope="col">Plugin</th><th scope="col">Kinds</th><th scope="col">Status</th>
+      <th scope="col">Used by</th><th scope="col">Changed</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody data-rows>{% for c in connectors %}
+      <tr data-conn="{{ c.name }}" data-state="{{ c.state }}" data-origin="{{ c.origin }}" data-problem="{{ 'yes' if c.problems else 'no' }}">
+        <th scope="row" class="conn-name"><span class="mono">{{ c.name }}</span>{% if c.description %}<br><span class="text-muted-d">{{ c.description }}</span>{% endif %}</th>
+        <td><span class="st{{ '' if c.origin == 'file' else ' st-warn' }}" title="{{ {'file': 'Defined by its file in the connectors folder', 'pack': 'Defined by a pack; no file yet', 'application': 'Defined in the server\'s own configuration (deprecated)'}[c.origin] }}">{{ c.origin }}</span></td>
+        <td class="mono">{{ c.plugin or '—' }}</td>
+        <td class="mono">{{ c.kinds | join(', ') if c.kinds else '—' }}</td>
+        <td><span class="st {{ {'RUNNING': 'st-ok', 'FAILED': 'st-bad', 'DISABLED': '', 'IDLE': 'st-warn', 'NOT_LOADED': 'st-warn'}.get(c.state, '') }}">{{ {'RUNNING': 'running', 'FAILED': 'failed', 'DISABLED': 'disabled', 'IDLE': 'idle', 'NOT_LOADED': 'not started'}.get(c.state, c.state | lower) }}</span>
+          {% if c.health %}<span class="text-muted-d conn-health">{{ c.health }}</span>{% endif %}
+          {% for p in c.problems %}<div class="t-bad conn-problem">{{ p }}</div>{% endfor %}</td>
+        <td class="conn-used">{% for u in c.usedBy %}<div><span class="mono">{{ u.pack }}</span>{% if u.kinds %} <span class="text-muted-d">{{ u.kinds | join(', ') }}</span>{% endif %}</div>{% else %}<span class="text-muted-d">no pack</span>{% endfor %}</td>
+        <td class="mono">{{ when_local(c.updated) if c.updated else '—' }}</td>
+        <td class="adm-actions"><button type="button" class="fk" data-edit aria-label="Edit {{ c.name }}">Edit</button>
+          <button type="button" class="fk" data-toggle="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
+          {% if c.template %}<button type="button" class="fk" data-reset aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
+          {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-delete aria-label="Delete {{ c.name }}">Delete</button>{% endif %}</td></tr>
+    {% else %}<tr data-none><td colspan="8" class="text-muted-d">No connector is defined. Use <b>New connector</b>, or load a pack: a pack that suggests connectors gets a file for each at start.</td></tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="text-muted-d" data-filter-none hidden>No connector matches the filter.</p>
+
+  <dialog class="adm-dialog conn-dialog" data-edit-dialog aria-labelledby="connTitle">
+    <div class="ds-head"><h2 id="connTitle" data-title>Connector</h2>
+      <button type="button" class="btn-pill btn-ghost" data-close aria-label="Close without saving">Close</button></div>
+    <p class="text-muted-d" data-origin-note></p>
+    <div class="conn-tabs" role="tablist" aria-label="Connector editor" data-tabs>
+      <button type="button" role="tab" id="connTabForm" aria-controls="connPaneForm" aria-selected="true" data-tab="form">Form</button>
+      <button type="button" role="tab" id="connTabYaml" aria-controls="connPaneYaml" aria-selected="false" tabindex="-1" data-tab="yaml">YAML</button>
+      <button type="button" role="tab" id="connTabTest" aria-controls="connPaneTest" aria-selected="false" tabindex="-1" data-tab="test">Test</button>
+      <button type="button" role="tab" id="connTabHistory" aria-controls="connPaneHistory" aria-selected="false" tabindex="-1" data-tab="history">History</button>
+    </div>
+    <div role="tabpanel" id="connPaneForm" aria-labelledby="connTabForm" data-pane="form">
+      <div class="conn-grid">
+        <label>Name<input class="studio-in mono" data-f-name maxlength="64" pattern="[a-z0-9][a-z0-9\-]*" autocomplete="off" spellcheck="false" aria-describedby="connNameHelp" placeholder="trading-lake"></label>
+        <label>Plugin<select class="studio-in" data-f-plugin></select></label>
+        <label class="chk conn-on"><input type="checkbox" data-f-enabled checked> Connector is on</label>
+        <label class="conn-wide">Description<input class="studio-in" data-f-description maxlength="200" autocomplete="off"></label>
+      </div>
+      <p class="text-muted-d" id="connNameHelp">Lower case letters, digits and hyphens. The file is <span class="mono" data-file-name>name.yaml</span>; packs refer to the connector by this name.</p>
+      <fieldset class="conn-set" data-kinds-set><legend>Kinds it serves</legend>
+        <div class="conn-chips" data-chips aria-live="polite"></div>
+        <div class="conn-kind-add"><input class="studio-in mono" list="connKinds" data-kind-in placeholder="add a kind" aria-label="Add a kind" autocomplete="off" spellcheck="false">
+          <datalist id="connKinds"></datalist><button type="button" class="fk" data-kind-add>Add kind</button></div>
+        <p class="text-muted-d">Empty: it serves whatever the packs route to it.</p>
+      </fieldset>
+      <div data-groups></div>
+    </div>
+    <div role="tabpanel" id="connPaneYaml" aria-labelledby="connTabYaml" data-pane="yaml" hidden>
+      <label class="visually-hidden" for="connYaml">The connector file as YAML</label>
+      <textarea class="studio-in mono conn-yaml" id="connYaml" data-yaml rows="18" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+      <p class="text-muted-d">Comments are kept as you type them. Both tabs edit the same draft: leaving this tab reads the text into the form.</p>
+    </div>
+    <div role="tabpanel" id="connPaneTest" aria-labelledby="connTabTest" data-pane="test" hidden>
+      <p class="text-muted-d">Starts a throwaway instance on the settings in this draft, asks it what it holds for the kinds it serves, and closes it. Nothing that runs is changed.</p>
+      <div data-test-out aria-live="polite"></div>
+    </div>
+    <div role="tabpanel" id="connPaneHistory" aria-labelledby="connTabHistory" data-pane="history" hidden>
+      <p class="text-muted-d">Every earlier text of this file is kept in <span class="mono">.history/</span>. Pick one to see what changed, or put it back.</p>
+      <div data-history></div>
+      <pre class="conn-diff" data-diff tabindex="0" aria-label="Differences between the chosen version and the current file" hidden></pre>
+    </div>
+    <ul class="conn-problems" data-problems aria-live="polite"></ul>
+    <p class="adm-msg" data-edit-msg role="status" aria-live="polite"></p>
+    <div class="adm-dlg-actions ds-actions">
+      <button type="button" class="btn-pill btn-ghost" data-test>Test connection</button>
+      <button type="button" class="btn-pill btn-accent" data-save>Save</button>
+    </div>
+  </dialog>
+
+  <dialog class="adm-dialog conn-confirm" data-confirm-dialog aria-labelledby="connConfTitle">
+    <h2 id="connConfTitle" data-confirm-title>Are you sure?</h2>
+    <p data-confirm-text></p>
+    <ul data-confirm-uses></ul>
+    <div class="adm-dlg-actions ds-actions"><button type="button" class="btn-pill btn-ghost" data-confirm-no>Keep it as it is</button>
+      <button type="button" class="btn-pill btn-accent emb-danger-btn" data-confirm-yes>Go ahead</button></div>
+  </dialog>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script>{% endblock %}

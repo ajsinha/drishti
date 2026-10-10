@@ -64,6 +64,7 @@ categories:
     blurb: One guide per store or stream Drishti reads from, each with a worked set-up, every setting and its troubleshooting.
     guides:
       - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe, health, settings), testing with the testkit contracts, a worked teaching plugin, and a short summary of each of the 15 plugins; every setting lives in the per-connector docs." }
+      - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: plug, summary: "One YAML file per connector in config/connectors: the format and an example per store, how packs refer to connectors by name, live reload, the Admin page, the CLI, and moving off application.yaml." }
       - { slug: connector-demo, doc: connectors/DEMO_CONNECTOR.md, title: Demo, icon: play-circle, summary: "Every pack's samples, in memory, ticking." }
       - { slug: demo-data, doc: connectors/DEMO_DATA.md, title: Demo data, icon: hdd-stack, summary: "Building the demo book in each store, small to a million trades a day." }
       - { slug: connector-file, doc: connectors/FILE_CONNECTOR.md, title: File, icon: file-earmark, summary: "JSON lines on disk, from a demo to a large book." }

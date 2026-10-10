@@ -70,6 +70,7 @@ public class ConnectorController {
         out.put("misnamed", connectors.misnamed());
         out.put("fileProblems", connectors.fileProblems());
         out.put("deprecated", connectors.applicationDefined());
+        out.put("knownKinds", connectors.knownKinds());
         return out;
     }
 
@@ -137,6 +138,20 @@ public class ConnectorController {
         ConnectorManager.Change c = connectors.setEnabled(name, on, unquote(ifMatch), confirm);
         audit.record(p.user(), on ? "connector-enabled" : "connector-disabled", name, "");
         return withEtag(withWarnings(c));
+    }
+
+    /** The YAML text of the form's fields (the form and the YAML tab edit the same draft): nothing is saved. */
+    @PostMapping("/{name}/render")
+    public Map<String, Object> render(@PathVariable String name, @RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return Map.of("text", connectors.textOf(name, body, p.user()));
+    }
+
+    /** The form's fields of a YAML text, flattened to dotted setting names, with its findings; nothing is saved. */
+    @PostMapping("/{name}/parse")
+    public Map<String, Object> parse(@PathVariable String name, @RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return connectors.parseDraft(name, String.valueOf(body.getOrDefault("text", "")));
     }
 
     /** Checks a draft without saving: errors and warnings per field. */

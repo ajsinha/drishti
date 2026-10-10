@@ -30,8 +30,8 @@
     <b>Load</b> brings in a pack that is on disk but not loaded: it is checked with the loaded packs first, then the server restarts
     in its own process (a few seconds; signed-in users stay signed in and live views reconnect). <b>Unload</b> takes back a pack
     loaded here. <b>Deploy an archive</b> (below) brings a new version of a pack from a file: it is checked, you see what it changes,
-    and only then is it deployed; the version it replaces is kept so you can <b>Roll back</b>. <b>Data source</b> shows where a
-    loaded pack reads its data and lets you change it without touching the pack's files.</p>
+    and only then is it deployed; the version it replaces is kept so you can <b>Roll back</b>. <b>Data source</b> shows the connectors a
+    loaded pack reads through, with links to <a href="/admin/connectors">Admin &rarr; Connectors</a>, where they are created, tested and changed.</p>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <div class="tbl-wrap"><table class="tbl adm-tbl">
     <thead><tr><th>Pack</th><th>What it brings</th><th>Builds on</th><th>Kinds</th><th>Connectors</th><th>Status</th><th>Changed</th><th></th></tr></thead>
@@ -45,12 +45,12 @@
         <td class="mono">{{ (p.connectors or []) | join(', ') or '—' }}</td>
         <td>{% if not p.loaded %}<span class="st" title="On disk; Load it from here, or name it in drishti.packs.enabled (DRISHTI_PACKS)">not loaded</span>
             {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
-            {% if p.dataSourceOverridden %}<span class="st st-warn" title="An administrator override changes this pack's data source (Data source)">data source overridden</span>{% endif %}</td>
+</td>
         <td class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if p.loaded %}
           <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
             {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
-          <button type="button" class="fk" data-datasource title="Where this pack reads its data: see it, test it, change it">Data source</button>
+          <button type="button" class="fk" data-datasource title="The connectors this pack reads through, and where to change them (Admin → Connectors)">Data source</button>
           <a class="fk" href="/admin/packs/{{ p.name }}/loads" title="Batches your ETL has announced, what is expected by when, and what is late">Data loads</a>
           {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from this page: unload it (the server restarts in place)">Unload</button>{% endif %}
         {% else %}<button type="button" class="fk" data-load="load" title="Check the pack, then restart the server in place to load it">Load</button>{% endif %}</td>
@@ -108,11 +108,6 @@
     <p class="text-muted-d" data-ds-intro></p>
     <div data-ds-body></div>
     <p class="adm-msg" data-ds-msg role="status" aria-live="polite"></p>
-    <div class="adm-dlg-actions ds-actions">
-      <button type="button" class="btn-pill btn-ghost" data-ds-reset>Reset to the pack's defaults</button>
-      <button type="button" class="btn-pill btn-ghost" data-ds-test>Test connection</button>
-      <button type="button" class="btn-pill btn-accent" data-ds-save>Save and apply</button>
-    </div>
   </dialog>
 
   {% if registry and registry.configured %}

@@ -29,7 +29,7 @@ def with_admin(backend, monkeypatch, calls, extra=None):
                 return hit
         if path == "/packs":
             return [{"name": "trading", "title": "Trading", "description": "", "version": "1.1.0", "loaded": True, "added": False, "enabled": True,
-                     "extends": [], "requiredBy": [], "kinds": ["trade"], "connectors": ["lake"], "mnemonics": ["TRD"], "dataSourceOverridden": True}]
+                     "extends": [], "requiredBy": [], "kinds": ["trade"], "connectors": ["lake"], "mnemonics": ["TRD"]}]
         if path == "/registry":
             return {"url": "", "configured": False, "packs": []}
         if path == "/packs/history":
@@ -42,8 +42,8 @@ def test_the_page_offers_deploy_history_rollback_and_the_data_source(client, bac
     with_admin(backend, monkeypatch, [])
     page = client.get("/admin/packs").text
     for text in ("Deploy an archive", "data-deploy", 'data-max-mb="50"', "pack only, never data", "History and roll back", "data-rollback", "Roll back to this",
-                 "shipped with the server (0.9.0)", "data-datasource", "data source overridden", "data-ds-dialog", "admin-packs.js", "admin-packs.css",
-                 "from trading-1.1.0.tar.gz", "Test connection", "Reset to the pack"):
+                 "shipped with the server (0.9.0)", "data-datasource", "data-ds-dialog", "admin-packs.js", "admin-packs.css",
+                 "from trading-1.1.0.tar.gz", "Admin &rarr; Connectors"):
         assert text in page, text
     assert 'aria-labelledby="dsTitle"' in page and 'role="status"' in page                      # the dialog is named; messages are announced
 
@@ -102,34 +102,17 @@ def test_confirm_discard_history_and_rollback_are_forwarded(client, backend, mon
     assert rollbacks == [{"version": "1.0.0"}, {}]
 
 
-def test_the_data_source_routes_are_forwarded_and_the_pack_switcher_forgets(client, backend, monkeypatch):
+def test_the_data_source_is_a_read_only_view_and_the_edit_routes_are_gone(client, backend, monkeypatch):
     calls = []
     with_admin(backend, monkeypatch, calls)
-    forgot = []
-    monkeypatch.setattr(client.app.state.packs, "forget_all", lambda: forgot.append(1))
     assert client.get("/admin/api/packs/trading/datasource").status_code == 200
-    edit = {"connectors": {"lake": {"settings": {"root": "/mnt/lake"}}}}
-    assert client.put("/admin/api/packs/trading/datasource", json=edit).status_code == 200
-    assert client.post("/admin/api/packs/trading/datasource/test", json={"connector": "lake", "connectors": edit["connectors"]}).status_code == 200
-    assert client.post("/admin/api/packs/trading/datasource/test", json={}).status_code == 200
-    assert client.delete("/admin/api/packs/trading/datasource", params={"connector": "lake"}).status_code == 200
-    assert client.delete("/admin/api/packs/trading/datasource").status_code == 200
-    seen = [(m, p, b, q) for m, p, b, q in calls if "datasource" in p]
-    assert seen[0][:2] == ("GET", "/packs/trading/datasource")
-    assert seen[1][2] == edit and seen[1][0] == "PUT"
-    assert seen[2][2] == {"connector": "lake", "connectors": edit["connectors"]}
-    assert seen[3][2] == {"connector": None, "connectors": None}
-    assert seen[4][3] == {"connector": "lake"} and seen[5][3] == {}
-    assert len(forgot) == 3                                                      # save and the two resets change what users see; get and test do not
-
-
-def test_data_source_problems_are_shown_not_swallowed(client, backend, monkeypatch):
-    def extra(method, path, body, params):
-        if method == "PUT":
-            raise BackendError(400, "DRS-5001", "the data source is not valid: lake.settings.password: a credential is never stored here")
-    with_admin(backend, monkeypatch, [], extra)
-    r = client.put("/admin/api/packs/trading/datasource", json={"connectors": {"lake": {"settings": {"password": "x"}}}})
-    assert r.status_code == 400 and "never stored here" in r.json()["detail"]
+    assert [(m, p) for m, p, b, q in calls if "datasource" in p] == [("GET", "/packs/trading/datasource")]
+    page = client.get("/admin/packs").text
+    for gone in ("data-ds-save", "data-ds-test", "data-ds-reset", "Test connection", "Save and apply"):
+        assert gone not in page, gone                                                # connectors are changed in Admin -> Connectors
+    assert client.put("/admin/api/packs/trading/datasource", json={"connectors": {}}).status_code in (404, 405)
+    assert client.delete("/admin/api/packs/trading/datasource").status_code in (404, 405)
+    assert client.post("/admin/api/packs/trading/datasource/test", json={}).status_code in (404, 405)
 
 
 def test_deploy_routes_do_not_shadow_the_existing_pack_actions(client, backend, monkeypatch):

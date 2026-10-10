@@ -710,6 +710,30 @@ public final class ConnectorManager {
         return d;
     }
 
+    /** The kinds the loaded packs own, for the kinds picker. */
+    public List<String> knownKinds() {
+        Set<String> known = new TreeSet<>();
+        packs.packs().forEach(p -> known.addAll(p.kinds()));
+        return List.copyOf(known);
+    }
+
+    /** A YAML text as the form's fields, plus its findings (a text that cannot be read comes back as one error). */
+    public Map<String, Object> parseDraft(String name, String text) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        try {
+            ConnectorFiles.Definition d = files.parse(ConnectorFiles.validName(name) ? name : "draft", text);
+            m.put("plugin", d.plugin());
+            m.put("enabled", d.isEnabled());
+            m.put("kinds", d.kinds());
+            m.put("description", d.description());
+            m.put("settings", d.settings());
+            m.put("problems", validate(d, true));
+        } catch (ConnectorFiles.InvalidFile e) {
+            m.put("problems", List.of(new Problem("error", "yaml", e.getMessage())));
+        }
+        return m;
+    }
+
     /** Structured findings for a draft, without saving anything (errors and warnings). */
     public List<Problem> validateText(String name, String text) {
         if (!ConnectorFiles.validName(name)) {
