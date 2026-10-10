@@ -44,6 +44,10 @@
       ('/help/rachana-reference', 'book', 'Rachana reference', 'Every key, panel option, format and problem code', None),
       ('/help/pack-developer-guide', 'box-seam', 'Pack developer guide', 'Bring a new domain in, step by step', None)])]),
 ] %}
+{% if BI_POC %}{% set MENU = MENU + [
+  ('BI', 'bar-chart-line', [
+    ('Rupaka (proof of concept)', [
+      ('/bi/poc', 'speedometer2', 'BI proof of concept', 'Phase 0: Perspective live grid, a masked Arrow extract sliced in the browser. Also: RUPAKA <GO>', '/bi/poc')])])] %}{% endif %}
 {% if me and me.is_admin %}{% set MENU = MENU + [
   ('Admin', 'shield-lock', [
     ('People & access', [

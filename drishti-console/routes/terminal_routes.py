@@ -57,8 +57,15 @@ async def pin(request: Request, kind: str, id_: str):
 _SEARCH = re.compile(r"(?is)^\s*\S+\s+(where|order\s+by|limit)\s+.+")
 
 
+RUPAKA = "RUPAKA"         # a reserved command word: the BI page (a pack cannot define a mnemonic with this name)
+
+
 @router.get("/go")
 async def go(request: Request, q: str = ""):
+    if q.replace("<GO>", "").replace("<go>", "").strip().upper() == RUPAKA:        # reserved (RUPAKA.md section 4), whatever packs define
+        if request.app.state.templates.env.globals.get("BI_POC"):
+            return RedirectResponse("/bi/poc", status_code=303)
+        return RedirectResponse(f"/t?error={quote('Rupaka (business intelligence) is not switched on in this console (bi.poc_enabled).')}", status_code=303)
     if _SEARCH.match(q.replace("<GO>", "")):
         return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)
     try:

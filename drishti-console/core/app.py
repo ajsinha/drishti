@@ -58,10 +58,24 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/calc-worker.js"
 PYODIDE = "/pyodide/"
+# Rupaka phase 0 proof of concept (docs/architecture/RUPAKA_POC.md), only when bi.poc_enabled: /bi/poc, and only it, may compile
+# WebAssembly on its main thread (Perspective's viewer): 'wasm-unsafe-eval', never 'unsafe-eval'. The two vendored workers
+# (Perspective's engine, DuckDB-Wasm) are scripts of this origin with the worker policy above; neither is a blob.
+POC_PAGE = "/bi/poc"
+# Perspective's viewer also writes <style> elements (its shadow roots' own CSS): not allowed by style-src 'self'. These are the SHA-256
+# hashes of the six it writes for the grid and the pivot of Perspective 3.8.0 (measured: the page logs each refused one with its
+# hash); the charts and the settings panel need about eight more (see RUPAKA_POC.md): a new Perspective version means new hashes.
+POC_STYLE_HASHES = ("sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=", "sha256-5ZnN0JqHgS1XbqCOd7qSJmy89TJJwbmeYjC8fPeSuwc=",
+                    "sha256-CjknTzl2uKtf8HzhOg2u184k8XVq0Q32LfRRPUqc0g4=", "sha256-ILUuaTblzLnuV4UciYvrUJkuNlQ570jCEpzE0t/Pe5s=",
+                    "sha256-TlH50xiDI4R2hMVrktT2rsnuNnNdfvL/RTinBMjapl0=", "sha256-rjC4ta+DkxJjU72hK9nIKZxg1UN00ALy4b/FYtZ7KHc=")
+POC_CSP = (CSP.replace("script-src 'self'", "script-src 'self' 'wasm-unsafe-eval'")
+           .replace("style-src 'self'", "style-src 'self' " + " ".join(f"'{h}'" for h in POC_STYLE_HASHES)))
+POC_WORKERS = ("/static/vendor/perspective/3.8.0/perspective/cdn/perspective-server.worker.js",)
+POC_WORKER_SUFFIX = "/duckdb-browser-eh.worker.js"
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
-PROTECTED = ("/t", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox")
+PROTECTED = ("/t", "/bi", "/v/", "/go", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 # all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
@@ -152,7 +166,10 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        response.headers.setdefault("Content-Security-Policy", worker_csp(request.headers.get("host", "")) if path == WORKER else CSP)
+        poc_worker = path in POC_WORKERS or (path.startswith("/static/vendor/duckdb-wasm/") and path.endswith(POC_WORKER_SUFFIX))
+        policy = (worker_csp(request.headers.get("host", "")) if path == WORKER or poc_worker
+                  else POC_CSP if path == POC_PAGE else CSP)
+        response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
@@ -201,6 +218,7 @@ def create_app(settings: Settings) -> FastAPI:
         CLOCK_TZ=settings.get("ui.clock_tz", "America/New_York"),
         CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
         COPYRIGHT=settings.get("ui.copyright", ""),
+        BI_POC=str(settings.get("bi.poc_enabled", False)).lower() in ("true", "1", "yes", "on"),
         ABOUT_PREFETCH=str(settings.get("ui.about_prefetch", True)).lower() not in ("false", "0", "no", "off"),
     )
     from core.asof import to_local
@@ -290,6 +308,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)
     app.include_router(embed_admin_routes.router)
+    if str(settings.get("bi.poc_enabled", False)).lower() in ("true", "1", "yes", "on"):   # off by default: no /bi/poc paths exist otherwise
+        from routes import bi_poc_routes
+
+        app.include_router(bi_poc_routes.router)
     from core.embed import EmbedHosts
 
     app.state.embed = EmbedHosts(settings)

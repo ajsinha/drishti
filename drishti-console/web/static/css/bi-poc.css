@@ -1,0 +1,30 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* RUPAKA PHASE 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): the /bi/poc page only. */
+.poc .poc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .75rem; }
+.poc .poc-stats dl { margin: 0; }
+.poc .poc-stats dt { font-size: .75rem; color: var(--d-muted); font-weight: 400; }
+.poc .poc-stats dd { margin: 0; font-family: var(--d-font-mono); font-size: 1.25rem; color: var(--d-ink); }
+.poc .poc-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin-bottom: .75rem; }
+.poc .poc-bar label { display: inline-flex; align-items: center; gap: .4rem; color: var(--d-muted); }
+.poc .poc-views { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.poc .poc-viewer { display: block; height: 22rem; min-width: 0; border: 1px solid var(--d-border); }
+.poc .poc-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+.poc .tbl-wrap { max-height: 16rem; overflow: auto; }
+@media (max-width: 800px) {
+  .poc .poc-views, .poc .poc-two { grid-template-columns: minmax(0, 1fr); }
+  .poc .poc-viewer { height: 18rem; }
+}

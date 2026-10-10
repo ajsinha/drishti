@@ -153,6 +153,7 @@ drishti:
     token-read-posts:
       - /api/v1/search/pivot/**
       - /api/v1/command
+      - /api/v1/bi/poc/query            # Rupaka phase 0 proof of concept: a read (an Arrow answer), only when drishti.bi.poc.enabled
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
@@ -355,6 +356,16 @@ drishti:
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)
     columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
+  bi:
+    poc:                             # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): throw-away endpoints under /api/v1/bi/poc
+      enabled: ${DRISHTI_BI_POC_ENABLED:false}   # off: they answer 404 as if the code were absent
+      rows: 10000                    # trades per day in the generated sample lake (at most 10,000: local-safe)
+      days: 2                        # days in the sample lake (at most 5)
+      lake-dir: ${DRISHTI_BI_POC_LAKE:}   # where the Parquet sample lake is written (empty: the system temp folder); never under data/
+      max-group-by: 4                # most dimensions one query may group by
+      feed-trades: []                # live demo trades the row feed follows (empty: 24 trades of the trading pack)
+      feed-batch: 100ms              # how often the feed sends the rows that changed
+      bench-runs: 30                 # default runs of the JSON / typed / rollup comparison
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
   explain:                           # About this page (docs/architecture/CONTEXT_HELP.md): GET /api/v1/views/{kind}/{id}/explain

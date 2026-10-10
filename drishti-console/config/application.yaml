@@ -137,3 +137,5 @@ packs:
   dir: ${DRISHTI_PACKS_DIR:../packs}   # the same packs directory the server uses (one variable sets both)
   enabled: finance           # used only when the server cannot be asked which packs are enabled
   deploy_max_mb: 50          # largest pack archive Admin → Packs → Deploy archive takes (the server's drishti.packs.deploy.max-archive-mb refuses the same way, 413)
+bi:                          # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): the /bi/poc page; also needs the server's drishti.bi.poc.enabled
+  poc_enabled: ${DRISHTI_BI_POC_ENABLED:false}   # false: no page, no top-bar entry, no RUPAKA <GO>; /bi/poc answers 404

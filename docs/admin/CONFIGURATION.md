@@ -224,6 +224,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_REPORTS_DIR` | `drishti.reports.folder` | `./data/reports` | Where report files are written. |
 | `DRISHTI_SUTRA_WATCH` | `drishti.rachana.watch` | `auto` | How Sutra hot reload notices edits: `auto` (file events, polling when they are unavailable) or `poll`. |
 | `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
+| `DRISHTI_BI_POC_ENABLED` | `drishti.bi.poc.enabled` | `false` | Rupaka phase 0 proof of concept: switch on the throw-away `/api/v1/bi/poc` endpoints. |
+| `DRISHTI_BI_POC_LAKE` | `drishti.bi.poc.lake-dir` | empty | Where the proof of concept writes its Parquet sample lake (empty: the system temp folder). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -282,6 +284,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_OIDC_REDIRECT_URI` | `auth.oidc.redirect_uri` | empty | The redirect URI; empty: `<console>/auth/oidc/callback`. |
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | Live subscriptions one browser may hold. |
 | `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
+| `DRISHTI_BI_POC_ENABLED` | `bi.poc_enabled` | `false` | Rupaka phase 0 proof of concept: the `/bi/poc` page, its top-bar entry and `RUPAKA <GO>`. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 
@@ -880,6 +883,23 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 
 Which views offer Calc is a pack's choice (`python: { enabled: true }` in `pack.yaml`), not configuration; see
 [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#calc-python-snippets).
+
+### `drishti.bi.poc` — Rupaka phase 0 proof of concept
+
+**Throw-away code**, off by default, that tests the risky parts of the BI design (`docs/architecture/RUPAKA_POC.md`):
+a masked aggregation answered as Apache Arrow from an embedded DuckDB over a generated Parquet sample lake, and a live row
+feed. Endpoints under `/api/v1/bi/poc` exist only while `enabled` is true (otherwise 404). Never switch it on in production.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `false` (`DRISHTI_BI_POC_ENABLED`) | The endpoints exist. The console has its own switch, `bi.poc_enabled`, read from the same variable. |
+| `rows` | `10000` | Trades per day in the sample lake; never more than 10,000. |
+| `days` | `2` | Days in the sample lake; never more than 5. |
+| `lake-dir` | system temp folder (`DRISHTI_BI_POC_LAKE`) | Where the Parquet files are written on first use (and again when `rows` or `days` change). |
+| `max-group-by` | `4` | Most dimensions one query may group by. |
+| `feed-trades` | 24 trades of the trading pack | The live demo trades the row feed follows. |
+| `feed-batch` | `100ms` | How often the feed sends the rows that changed since the last send. |
+| `bench-runs` | `30` | Default runs of `GET /api/v1/bi/poc/bench`, the JSON-column / typed-column / rollup comparison. |
 
 ### `drishti.layouts` — personal layouts
 
