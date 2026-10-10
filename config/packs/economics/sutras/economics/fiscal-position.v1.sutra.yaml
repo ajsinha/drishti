@@ -16,33 +16,46 @@
 rachana: 1
 sutra: fiscal-position
 version: 1
-description: "Government revenue, spending, deficit and debt, and spending by function."
+description: "Government debt and net lending (IMF) with revenue, expense and military spending (World Bank), as shares of GDP."
 match: { kind: fiscal-position, priority: 10 }
 title: { pill: Economics · Fiscal position, id: $.fiscalId }
 strip:
   - { label: Economy, bind: $.economyName }
-  - { label: Revenue / GDP, bind: $.revenue, fmt: pct2 }
-  - { label: Spending / GDP, bind: $.spending, fmt: pct2 }
-  - { label: Balance / GDP, bind: $.balance, fmt: pct2, tone: sign, emphasis: true }
-  - { label: Debt / GDP, bind: $.debt, fmt: pct0 }
-  - { label: Interest / revenue, bind: $.interestBurden, fmt: pct2 }
+  - { label: Debt / GDP, bind: $.debt, fmt: pc1 }
+  - { label: Net lending / GDP, bind: $.balance, fmt: pc2, tone: sign, emphasis: true }
+  - { label: Revenue / GDP, bind: $.revenue, fmt: pc1 }
+  - { label: Expense / GDP, bind: $.spending, fmt: pc1 }
+  - { label: Military / GDP, bind: $.military, fmt: pc2 }
 panels:
-  - id: functions
+  - id: ratios
     kind: hbar
-    title: Spending by function (% of GDP)
+    title: "Central government, % of GDP"
     key: F2
-    rows: $.functions
-    label: function
-    value: share
-    fmt: pct2
+    rows: $.ratios
+    label: item
+    value: value
+    fmt: pc1
   - id: debtPath
     kind: line
-    title: Debt / GDP
+    title: "General government gross debt, % of GDP"
     area: right
     rows: $.debtPath
     x: year
     y: debt
-    fmt: pct0
+    fmt: pc1
+  - id: balancePath
+    kind: line
+    title: "Net lending / borrowing, % of GDP"
+    key: F3
+    rows: $.balancePath
+    x: year
+    y: balance
+    fmt: pc2
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }

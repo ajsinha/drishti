@@ -286,7 +286,7 @@ NSET NS-SUMMIT-NY       netting set: exposure profile, CSA, member trades
 LCR LCR-NY              liquidity coverage ratio
 CUST CUST-100231        retail customer
 GENE GENE-TP53          the TP53 gene
-ECON ECON-US            the US economy
+ECON ECON-USA           the economy of the United States (real World Bank, IMF and CIA data)
 ```
 
 If you mistype a mnemonic, the terminal says `DRS-4001 cannot read command …`. If the id does not

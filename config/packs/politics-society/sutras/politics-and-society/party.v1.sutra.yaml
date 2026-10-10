@@ -16,30 +16,30 @@
 rachana: 1
 sutra: party
 version: 1
-description: "A political party: position, leader, seats, and its polling trend."
+description: "A political party that won seats in the lower chamber at the most recent election, with the chamber's full result."
 match: { kind: party, priority: 10 }
 title: { pill: Politics and society · Party, id: $.partyId }
 strip:
   - { label: Party, bind: $.name, emphasis: true }
-  - { label: Position, bind: $.position }
-  - { label: Leader, bind: $.leaderName }
+  - { label: Country, bind: $.countryName }
   - { label: Seats, bind: $.seats, fmt: amount0 }
-  - { label: Polling, bind: $.polling, fmt: pct0 }
-  - { label: Members, bind: $.members, fmt: amount0 }
+  - { label: "Seat share, %", bind: $.seatShare, fmt: pc1 }
+  - { label: Chamber, bind: $.chamber }
+  - { label: Election, bind: $.electionDate }
 panels:
-  - id: trend
-    kind: line
-    title: Polling average
+  - id: results
+    kind: hbar
+    title: Seats in the chamber
     key: F2
-    rows: $.trend
-    x: month
-    y: share
-    fmt: pct0
-  - id: platform
+    rows: $.results
+    label: party
+    value: seats
+    fmt: amount0
+  - id: source
     kind: kv
-    title: Platform
+    title: Data source and licence
     area: right
-    rows: $.platform
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.jurisdiction, 'jurisdiction')", F8: impact, F9: raw }
+keys: { F7: "link($.election, 'election')", F8: impact, F9: raw }

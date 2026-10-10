@@ -16,32 +16,46 @@
 rachana: 1
 sutra: region
 version: 1
-description: "A region: population, income, unemployment, education, health and how it voted."
+description: "A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it."
 match: { kind: region, priority: 10 }
-title: { pill: Politics and society · Region, id: $.regionId }
+title: { pill: Politics and society · World region, id: $.regionId }
 strip:
   - { label: Region, bind: $.name, emphasis: true }
+  - { label: Countries, bind: $.countries, fmt: amount0 }
   - { label: Population (m), bind: $.populationM, fmt: price2 }
-  - { label: Median income, bind: $.medianIncome, fmt: amount0 }
-  - { label: Unemployment, bind: $.unemployment, fmt: pct2 }
   - { label: Life expectancy, bind: $.lifeExpectancy, fmt: price2 }
+  - { label: "Women in parliament, %", bind: $.womenParliament, fmt: pc1 }
+  - { label: "Internet users, %", bind: $.internet, fmt: pc1 }
 panels:
-  - id: vote
+  - id: governmentTypes
     kind: hbar
-    title: Vote share at the last election
+    title: Government types (number of countries)
     key: F2
-    rows: $.vote
-    label: party
-    value: share
-    fmt: pct0
-  - id: unemploymentTrend
+    rows: $.governmentTypes
+    label: type
+    value: count
+    fmt: amount0
+  - id: lifeTrend
     kind: line
-    title: Unemployment rate
+    title: "Life expectancy at birth, years"
     area: right
-    rows: $.unemploymentTrend
+    rows: $.lifeTrend
     x: year
-    y: rate
-    fmt: pct2
+    y: value
+    fmt: price2
+  - id: internetTrend
+    kind: line
+    title: "Internet users, % of population"
+    key: F3
+    rows: $.internetTrend
+    x: year
+    y: value
+    fmt: pc1
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.jurisdiction, 'jurisdiction')", F8: impact, F9: raw }
+keys: { F7: "link($.memberStates, 'jurisdiction')", F8: impact, F9: raw }

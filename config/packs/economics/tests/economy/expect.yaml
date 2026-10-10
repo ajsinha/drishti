@@ -12,8 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
+
 noErrors: true
-nonEmpty: [growthPath]
-samples:
-  ECON-CN.json: { nonEmpty: [sectors] }
+nonEmpty: [growthPath, sectors]
 help: { about: true }

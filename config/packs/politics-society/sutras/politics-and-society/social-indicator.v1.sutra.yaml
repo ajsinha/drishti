@@ -16,19 +16,20 @@
 rachana: 1
 sutra: social-indicator
 version: 1
-description: "A social statistic by region over time: poverty, trust, housing, education."
+description: "A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law."
 match: { kind: social-indicator, priority: 10 }
 title: { pill: Politics and society · Social indicator, id: $.indicatorId }
 strip:
   - { label: Indicator, bind: $.name, emphasis: true }
   - { label: Latest, bind: $.latest, fmt: price2 }
   - { label: Unit, bind: $.unit }
+  - { label: Year, bind: $.latestYear }
   - { label: Change (5y), bind: $.change5y, fmt: signed2, tone: sign }
   - { label: Source, bind: $.sourceName }
 panels:
   - id: series
     kind: line
-    title: National series
+    title: Series
     key: F2
     rows: $.series
     x: year
@@ -36,12 +37,22 @@ panels:
     fmt: price2
   - id: byRegion
     kind: hbar
-    title: By region (latest)
+    title: Region comparison (latest)
     area: right
     rows: $.byRegion
-    label: region
+    label: country
     value: value
     fmt: price2
+  - id: meaning
+    kind: kv
+    title: What it measures
+    key: F3
+    rows: $.meaning
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.jurisdiction, 'jurisdiction')", F8: impact, F9: raw }

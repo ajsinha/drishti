@@ -95,7 +95,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | If you want to… | Read |
 |---|---|
-| Build a pack, from an empty folder to a working view | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) |
+| Build a pack, from an empty folder to a working view | [REAL_DATA.md](guides/REAL_DATA.md) | you use or refresh the real public data in the economics and politics-society packs: sources, licences, attribution, coverage, the `tools/realdata` tool |
+| [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) |
 | Load packs, switch them off and on, assign them to users | [PACKS.md](guides/PACKS.md#turning-packs-on) |
 | Generate a full pack from Python (Sutras, samples, guide, lake) | [PACK_DEVELOPER_GUIDE.md › Generators](guides/PACK_DEVELOPER_GUIDE.md) |
 | Define a connector as a file, change it without a restart, manage it in Admin → Connectors | [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) |

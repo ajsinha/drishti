@@ -19,5 +19,6 @@ guides:
   title: Politics and society pack
   icon: box-seam
   file: guides/politics-society.md
-  summary: Jurisdictions, parties, candidates, elections, opinion polls, bills, regions
-    and social indicators (fictional polities).
+  summary: 'Real public data on governments and societies for about 200 countries:
+    government type, office holders, elections, parties with seats, and social and
+    governance indicators (CIA World Factbook, World Bank, UNDP).'

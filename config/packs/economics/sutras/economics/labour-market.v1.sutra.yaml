@@ -16,33 +16,39 @@
 rachana: 1
 sutra: labour-market
 version: 1
-description: "Employment, participation, wages and vacancies, and jobs by sector."
+description: "Unemployment, participation, youth and female labour, and employment and output by sector."
 match: { kind: labour-market, priority: 10 }
 title: { pill: Economics · Labour market, id: $.labourId }
 strip:
   - { label: Economy, bind: $.economyName }
-  - { label: Unemployment, bind: $.unemployment, fmt: pct2, emphasis: true }
-  - { label: Participation, bind: $.participation, fmt: pct2 }
-  - { label: Wage growth, bind: $.wageGrowth, fmt: pct2 }
-  - { label: Vacancies per unemployed, bind: $.vacancyRatio, fmt: price2 }
+  - { label: Unemployment, bind: $.unemployment, fmt: pc2, emphasis: true }
+  - { label: Participation, bind: $.participation, fmt: pc1 }
+  - { label: Youth unemployment, bind: $.youthUnemployment, fmt: pc1 }
+  - { label: Employment ratio, bind: $.employmentRatio, fmt: pc1 }
+  - { label: Female participation, bind: $.femaleParticipation, fmt: pc1 }
 panels:
   - id: unemploymentPath
     kind: line
-    title: Unemployment rate
+    title: "Unemployment rate, % of labour force"
     key: F2
     rows: $.unemploymentPath
-    x: month
+    x: year
     y: rate
-    fmt: pct2
+    fmt: pc2
   - id: bySector
     kind: table
-    title: Employment by sector
+    title: Employment and output by sector
     key: F3
     rows: $.bySector
     columns:
       - { label: Sector, bind: "@.sector" }
-      - { label: Jobs (m), bind: "@.jobsM", fmt: price2 }
-      - { label: Change (1y), bind: "@.change", fmt: pct2, tone: sign, total: true }
+      - { label: "Share of jobs, %", bind: "@.employmentShare", fmt: pc1, total: true }
+      - { label: "Share of GDP, %", bind: "@.valueAddedShare", fmt: pc1 }
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }

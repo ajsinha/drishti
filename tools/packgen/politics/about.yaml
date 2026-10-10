@@ -14,119 +14,499 @@
 
 about: 1
 vocabulary:
-  sponsorName: { term: "Sponsor", means: "The legislator who introduced the bill and speaks for it." }
-  partyName: { term: "Party", means: "The political party the person or result belongs to." }
-  share: { term: "Share of the vote", means: "The party's votes as a share of all valid votes cast, or of the respondents who gave a voting intention.", unit: "% of votes" }
-  seats: { term: "Seats", means: "The number of seats in the legislature that the party holds or won." }
+  life_expectancy:
+    term: Life expectancy at birth
+    means: Number of years a newborn would live if prevailing patterns of mortality at the time of birth stayed the same throughout life.
+    unit: years
+  hdi:
+    term: Human Development Index
+    means: Composite of life expectancy, expected and mean years of schooling, and gross national income per capita; 0 is lowest, 1 highest (UNDP).
+    unit: index 0-1
+  fertility:
+    term: Fertility rate
+    means: Births per woman if she lived to the end of her childbearing years and bore children at current age-specific rates.
+    unit: births per woman
+  infant_mortality:
+    term: Infant mortality rate
+    means: Number of infants dying before reaching one year of age, per 1,000 live births.
+    unit: per 1,000 live births
+  under5_mortality:
+    term: Under-5 mortality rate
+    means: Probability per 1,000 that a newborn dies before reaching age five.
+    unit: per 1,000 live births
+  urban:
+    term: Urban population
+    means: People living in urban areas as defined by national statistical offices, as a share of the total population.
+    unit: '% of population'
+  pop_growth:
+    term: Population growth
+    means: Annual percentage change of the mid-year population.
+    unit: '% a year'
+  gini:
+    term: Gini index
+    means: 'Extent to which the distribution of income among households departs from perfect equality: 0 is perfect equality, 100 perfect inequality.'
+    unit: index 0-100
+  poverty:
+    term: Extreme poverty headcount
+    means: Share of the population living below the international poverty line (2021 purchasing power parity prices).
+    unit: '% of population'
+  literacy:
+    term: Adult literacy rate
+    means: Share of people aged 15 and above who can read and write a short simple statement about their everyday life.
+    unit: '% of people 15+'
+  secondary_enrolment:
+    term: Secondary school enrolment
+    means: Total enrolment in secondary education, regardless of age, as a share of the official secondary-school-age population (can exceed 100).
+    unit: '% gross'
+  internet:
+    term: Individuals using the Internet
+    means: Share of the population that used the Internet from any location in the last three months.
+    unit: '% of population'
+  electricity:
+    term: Access to electricity
+    means: Share of the population with access to electricity.
+    unit: '% of population'
+  health_spend:
+    term: Current health expenditure
+    means: Public and private spending on health care, as a share of GDP.
+    unit: '% of GDP'
+  education_spend:
+    term: Government expenditure on education
+    means: General government spending on education, as a share of GDP.
+    unit: '% of GDP'
+  women_parliament:
+    term: Women in national parliament
+    means: Share of parliamentary seats in a single or lower chamber held by women (Inter-Parliamentary Union).
+    unit: '% of seats'
+  wgi_voice:
+    term: Voice and accountability
+    means: Perceptions of the extent to which citizens can participate in selecting their government, and of freedom of expression, association and a free media. Higher is
+      better.
+    unit: index -2.5 to 2.5
+  wgi_stability:
+    term: Political stability and absence of violence
+    means: Perceptions of the likelihood that the government will be destabilised or overthrown by unconstitutional or violent means, including terrorism. Higher is better.
+    unit: index -2.5 to 2.5
+  wgi_effectiveness:
+    term: Government effectiveness
+    means: Perceptions of the quality of public services, the civil service and its independence from political pressure, and policy formulation and implementation. Higher
+      is better.
+    unit: index -2.5 to 2.5
+  wgi_regulatory:
+    term: Regulatory quality
+    means: Perceptions of the government's ability to formulate and implement sound policies and regulations that permit and promote private-sector development. Higher is better.
+    unit: index -2.5 to 2.5
+  wgi_law:
+    term: Rule of law
+    means: 'Perceptions of confidence in and abidance by the rules of society: contract enforcement, property rights, the police and the courts, and the likelihood of crime
+      and violence. Higher is better.'
+    unit: index -2.5 to 2.5
+  wgi_corruption:
+    term: Control of corruption
+    means: Perceptions of the extent to which public power is exercised for private gain, including petty and grand corruption and capture of the state by elites. Higher is
+      better.
+    unit: index -2.5 to 2.5
 kinds:
   jurisdiction:
-    title: "Jurisdiction (fictional)"
-    about: >-
-      ${$.name} is a fictional jurisdiction of ${fmt($.populationM, 'price2')} million people with its capital at ${$.capital}; its ${$.seats} legislative seats are filled by
-      ${lower($.system)} and the government is the ${$.government}. All names and figures are invented.
+    title: Jurisdiction
+    about: ${$.name} is a ${$.governmentType} with its capital at ${$.capital}, per the CIA World Factbook; population ${fmt($.populationM, 'price2')} million.
     guide: politics-society
     glossary:
-      capital: { term: "Capital", means: "The seat of government." }
-      populationM: { term: "Population", means: "The number of residents.", unit: "millions" }
-      system: { term: "Electoral system", means: "The rule that turns votes into seats: first past the post gives each seat to the candidate with most votes in a constituency; proportional systems share seats among parties in line with their votes, often with a minimum vote threshold." }
-      seats: { term: "Seats in the legislature", means: "The total number of seats of the lower house. A party needs more than half of them to govern alone." }
-      government: { term: "Government", means: "The party or coalition that holds office and commands a majority in the legislature." }
-      legislature.party: { term: "Party", means: "A party with seats in the legislature." }
-      legislature.seats: { use: "seats" }
+      name:
+        term: Country
+        means: The country's common name.
+      capital:
+        term: Capital
+        means: The seat of government.
+      governmentType:
+        term: Government type
+        means: The form of government, as the CIA World Factbook describes it.
+      populationM:
+        term: Population
+        means: The number of residents (World Bank, mid-year).
+        unit: millions
+      areaKm2:
+        term: Area
+        means: Total area, land and water.
+        unit: square kilometres
+      currency:
+        term: Currency
+        means: The ISO 4217 code of the currency, from the Factbook exchange-rate entry.
+      legislature.party:
+        term: Party
+        means: A party or group in the lower chamber, as the Factbook lists it.
+      legislature.seats:
+        term: Seats
+        means: The seats the party won at the most recent election.
+      indicators.indicator:
+        term: Indicator
+        means: A society or governance statistic.
+      indicators.value:
+        term: Value
+        means: The latest published value.
+      indicators.year:
+        term: Year
+        means: The year of the value.
+      indicators.unit:
+        term: Unit
+        means: What the value measures.
+      partiesListed.party:
+        term: Party
+        means: A political party as the Factbook publishes the name.
+      profile.officialName:
+        term: Official name
+        means: The conventional long form of the country's name.
+      profile.languages:
+        term: Languages
+        means: The languages spoken and their shares, as published.
+      profile.religions:
+        term: Religions
+        means: The religious affiliations and their shares, as published.
+      profile.legalSystem:
+        term: Legal system
+        means: The legal tradition of the country.
+      profile.suffrage:
+        term: Suffrage
+        means: The voting age and who may vote.
+      profile.independence:
+        term: Independence
+        means: When and from whom the country became independent.
+      profile.nationalHoliday:
+        term: National holiday
+        means: The national day.
+      profile.location:
+        term: Location
+        means: Where the country is.
+      profile.currencyText:
+        term: Currency
+        means: The currency and its exchange-rate basis, as published.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
   party:
-    title: "Political party (fictional)"
-    about: >-
-      The ${$.name} (${lower($.position)}), led by ${$.leaderName}, holds ${$.seats} seats and polls ${fmt($.polling, 'pct0')} in the latest polling average,
-      with ${fmt($.members, 'amount0')} members. The party is fictional.
+    title: Party
+    about: ${$.name} won ${fmt($.seats, 'amount0')} seats (${fmt($.seatShare, 'pc1')}) in the ${$.chamber} of ${$.countryName}.
     guide: politics-society
     glossary:
-      position: { term: "Political position", means: "Where the party sits on the left-right spectrum, or the single cause it is built around." }
-      leaderName: { term: "Leader", means: "The person who leads the party." }
-      seats: { use: "seats" }
-      polling: { term: "Polling average", means: "The party's average share of voting intention in recent polls.", unit: "% of voting intention" }
-      members: { term: "Members", means: "The number of paying members of the party." }
-      trend.share: { term: "Polling share", means: "The party's share of voting intention at the date.", unit: "% of voting intention" }
-      trend.month: { term: "Date", means: "The date the average was taken." }
-  candidate:
-    title: "Candidate or office holder (fictional)"
-    about: >-
-      ${$.name} is the ${lower($.role)} of the ${$.partyName} for ${$.constituency}, in office since ${$.since}; the vote share was ${fmt($.voteShare, 'pct0')}. The person is fictional.
+      name:
+        term: Party
+        means: The party's name as the CIA World Factbook lists it in the election result.
+      countryName:
+        term: Country
+        means: The country the party competes in.
+      seats:
+        term: Seats
+        means: The seats the party won in the chamber at the most recent election.
+      seatShare:
+        term: Seat share
+        means: The party's seats as a share of the seats the Factbook lists.
+        unit: '% of seats'
+      chamber:
+        term: Chamber
+        means: The legislative chamber the result is for.
+      electionDate:
+        term: Election date
+        means: When the most recent election was held, as published.
+      results.party:
+        term: Party
+        means: A party or group in the chamber.
+      results.seats:
+        term: Seats
+        means: The seats it won.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
+  office-holder:
+    title: Office holder
+    about: ${$.countryName}'s ${lower($.role)} is ${$.holder}, as the CIA World Factbook publishes it.
     guide: politics-society
     glossary:
-      partyName: { use: "partyName" }
-      constituency: { term: "Constituency", means: "The area whose voters elect the representative." }
-      role: { term: "Role", means: "The office or function the person holds." }
-      voteShare: { term: "Vote share", means: "The share of the votes in the constituency that the person won at the last election.", unit: "% of votes" }
-      since: { term: "In office since", means: "The date the person took the role." }
-      record.bill: { term: "Bill", means: "The bill that was voted on." }
-      record.vote: { term: "Vote", means: "How the person voted: for, against or abstained." }
-      record.date: { term: "Vote date", means: "The day of the vote." }
+      countryName:
+        term: Country
+        means: The country the office belongs to.
+      role:
+        term: Role
+        means: Chief of state (the ceremonial or constitutional head) or head of government (who leads the executive).
+      holder:
+        term: Holder
+        means: The title and name of the office holder as the Factbook publishes them; surnames are in capitals.
+      since:
+        term: Since
+        means: The date the holder took office, as published.
+      governmentType:
+        term: Government type
+        means: The form of government.
+      mandate.selection:
+        term: Selection
+        means: How the office is filled.
+      mandate.heldOn:
+        term: Most recent election
+        means: When the office was last filled by election, as published.
+      mandate.nextElection:
+        term: Expected next election
+        means: When the next election is due, as published.
+      mandate.results:
+        term: Published results
+        means: The result of the last election, as published.
+      mandate.asPublished:
+        term: As published
+        means: The Factbook's full entry for the office holder.
+      mandate.cabinet:
+        term: Cabinet
+        means: How the cabinet is chosen.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
   election:
-    title: "Election (fictional)"
-    about: >-
-      ${$.title} was held on ${$.date} with ${fmt($.turnout, 'pct0')} turnout under ${lower($.system)}; the ${$.winner} won most seats and the result is
-      "${$.majority}".
+    title: Election
+    about: '${$.title}: held ${$.dateText}; the largest party was ${$.winner}; the next election is expected ${$.nextElection}.'
     guide: politics-society
     glossary:
-      turnout: { term: "Turnout", means: "The share of registered voters who cast a vote.", unit: "% of electorate" }
-      system: { term: "Electoral system", means: "The rule that turns votes into seats, for example first past the post or proportional representation with a threshold." }
-      winner: { term: "Largest party", means: "The party with the most seats. Without a majority it may still have to form a coalition or govern in a minority." }
-      majority: { term: "Result", means: "Whether one party won more than half of the seats (a majority) or none did (a hung legislature, which needs a coalition or minority government)." }
-      results.party: { term: "Party", means: "A party that took part in the election." }
-      results.votes: { term: "Votes", means: "The number of votes the party received." }
-      results.share: { use: "share" }
-      results.seats: { use: "seats" }
-      results.change: { term: "Seat change", means: "The number of seats the party gained or lost against the previous election.", sign: "Positive is a gain." }
-  poll:
-    title: "Opinion poll (fictional)"
-    about: >-
-      ${$.pollster} asked ${fmt($.sample, 'amount0')} people by ${lower($.method)} between ${$.fieldwork}; the result is: ${$.lead}, within a margin of error of ${fmt($.moe, 'pct0')}.
-    guide: politics-society
-    glossary:
-      pollster: { term: "Pollster", means: "The organisation that ran the poll." }
-      fieldwork: { term: "Fieldwork dates", means: "The days on which the interviews were done." }
-      sample: { term: "Sample size", means: "The number of respondents. A larger sample gives a smaller margin of error.", unit: "respondents" }
-      method: { term: "Method", means: "How respondents were reached, such as by telephone or online panel, which affects who answers." }
-      lead: { term: "Lead", means: "The gap between the first and second party, in percentage points." }
-      moe: { term: "Margin of error", means: "The range, up and down, within which the true share is expected to lie in 19 of 20 polls, for a simple random sample.", unit: "percentage points" }
-      shares.party: { use: "partyName" }
-      shares.share: { use: "share" }
-      shares.low: { term: "Lower bound", means: "The share minus the margin of error.", unit: "% of voting intention" }
-      shares.high: { term: "Upper bound", means: "The share plus the margin of error.", unit: "% of voting intention" }
-      shares.change: { term: "Change", means: "The change in the share since the pollster's previous poll.", unit: "percentage points", sign: "Positive is a rise." }
-  bill:
-    title: "Bill (fictional)"
-    about: >-
-      "${$.title}" was introduced on ${$.introduced} by ${$.sponsorName} and is at the ${lower($.stage)} stage; it is estimated to cost ${fmt($.costM, 'amount0')} million over five years.
-    guide: politics-society
-    glossary:
-      sponsorName: { use: "sponsorName" }
-      stage: { term: "Stage", means: "Where the bill is in the legislative process: first reading, committee, second and third reading, then royal assent.", values: { "First reading": "The bill is formally introduced.", "Second reading": "Members debate the principle of the bill.", "Committee": "A committee examines the bill clause by clause.", "Third reading": "The final vote on the amended bill.", "Royal assent": "The head of state signs the bill into law." } }
-      introduced: { term: "Date introduced", means: "The day the bill was first put before the legislature." }
-      costM: { term: "Fiscal cost over five years", means: "The estimated net cost to public finances over five years.", unit: "millions" }
-      stages.date: { term: "Date", means: "The day of the stage." }
-      stages.stage: { term: "Stage", means: "The step of the legislative process." }
-      stages.for: { term: "Votes for", means: "The number of members who voted for the bill at the stage." }
-      stages.against: { term: "Votes against", means: "The number of members who voted against the bill at the stage." }
-      stages.outcome: { term: "Outcome", means: "Whether the bill passed the stage." }
+      title:
+        term: Election
+        means: The country and the chamber or office.
+      dateText:
+        term: Held
+        means: When the most recent election took place, as the Factbook publishes the date.
+      system:
+        term: System
+        means: The electoral system, for example plurality, proportional representation or an electoral college.
+      winner:
+        term: Largest party
+        means: The party with the most seats, or the elected head of state.
+      nextElection:
+        term: Next election
+        means: When the next election is expected, as published.
+      results.party:
+        term: Party
+        means: A party or group.
+      results.seats:
+        term: Seats
+        means: The seats it won.
+      results.share:
+        term: Share of seats
+        means: Its seats as a share of the seats listed.
+        unit: '% of seats'
+      summary.chamber:
+        term: Chamber
+        means: The legislative chamber.
+      summary.seats:
+        term: Seats
+        means: The number of seats and how many are elected.
+      summary.electoralSystem:
+        term: Electoral system
+        means: How votes become seats.
+      summary.term:
+        term: Term
+        means: How long members serve.
+      summary.heldOn:
+        term: Most recent election
+        means: The date, as published.
+      summary.nextElection:
+        term: Expected next election
+        means: The date, as published.
+      summary.women:
+        term: Women in chamber
+        means: The share of seats held by women.
+        unit: '% of seats'
+      summary.selection:
+        term: Selection
+        means: How the head of state is chosen.
+      summary.results:
+        term: Published results
+        means: The result as the Factbook publishes it.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
   region:
-    title: "Region (fictional)"
-    about: >-
-      ${$.name} has ${fmt($.populationM, 'price2')} million people, a median income of ${fmt($.medianIncome, 'amount0')}, unemployment of ${fmt($.unemployment, 'pct2')} and a life expectancy
-      of ${fmt($.lifeExpectancy, 'price2')} years. The region is fictional.
+    title: World region
+    about: ${$.name} has ${fmt($.countries, 'amount0')} countries and ${fmt($.populationM, 'price2')} million people; life expectancy is ${fmt($.lifeExpectancy, 'price2')}
+      years.
     guide: politics-society
     glossary:
-      populationM: { term: "Population", means: "The number of residents.", unit: "millions" }
-      medianIncome: { term: "Median income", means: "The income of the household in the middle of the distribution: half earn more, half less.", unit: "currency a year" }
-      unemployment: { term: "Unemployment rate", means: "The share of people in the labour force who are without work and looking for it.", unit: "% of labour force" }
-      lifeExpectancy: { term: "Life expectancy", means: "The average number of years a newborn is expected to live at current death rates.", unit: "years" }
+      name:
+        term: Region
+        means: A World Bank geographic region.
+      countries:
+        term: Countries
+        means: The number of countries of the region in the pack.
+      populationM:
+        term: Population
+        means: The region's total population (World Bank aggregate).
+        unit: millions
+      lifeExpectancy:
+        term: Life expectancy
+        means: Years a newborn would live at current mortality (World Bank aggregate).
+        unit: years
+      womenParliament:
+        term: Women in parliament
+        means: The share of parliamentary seats held by women (Inter-Parliamentary Union, via the World Bank).
+        unit: '% of seats'
+      internet:
+        term: Internet users
+        means: The share of the population that used the Internet in the last three months.
+        unit: '% of population'
+      governmentTypes.type:
+        term: Government type
+        means: The form of government as the CIA World Factbook words it.
+      governmentTypes.count:
+        term: Countries
+        means: How many countries of the region have this government type.
+      lifeTrend.year:
+        term: Year
+        means: The calendar year.
+      lifeTrend.value:
+        term: Life expectancy
+        means: Years at birth in that year.
+        unit: years
+      internetTrend.year:
+        term: Year
+        means: The calendar year.
+      internetTrend.value:
+        term: Internet users
+        means: Share of the population using the Internet in that year.
+        unit: '% of population'
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
   social-indicator:
-    title: "Social indicator (fictional)"
-    about: >-
-      ${$.name}: the latest national value is ${fmt($.latest, 'price2')} (${$.unit}), a change of ${fmt($.change5y, 'signed2')} over five years. The data is fictional.
+    title: Social indicator
+    about: ${$.name} was ${fmt($.latest, 'price2')} (${$.unit}) in ${$.latestYear}.
     guide: politics-society
     glossary:
-      latest: { term: "Latest value", means: "The most recent national figure for the indicator, in the unit shown." }
-      unit: { term: "Unit", means: "What the value measures, for example a share of households." }
-      change5y: { term: "Change over five years", means: "The latest value minus the value five years earlier, in the same unit as the indicator.", sign: "Positive means the value rose." }
-      sourceName: { term: "Source", means: "The statistical office or survey the series comes from." }
+      name:
+        term: Indicator
+        means: The country and the statistic.
+      latest:
+        term: Latest value
+        means: The most recent published value.
+      unit:
+        term: Unit
+        means: What the value measures.
+      latestYear:
+        term: Year
+        means: The year of the latest value.
+      change5y:
+        term: Change over five years
+        means: The latest value minus the value about five years earlier.
+        sign: Positive is a rise; whether that is good depends on the indicator.
+      sourceName:
+        term: Source
+        means: The dataset the series comes from.
+      series.year:
+        term: Year
+        means: The calendar year.
+      series.value:
+        term: Value
+        means: The published value in that year.
+      byRegion.country:
+        term: Country
+        means: The country, from the same World Bank region.
+      byRegion.value:
+        term: Value
+        means: The latest value (2022 or later) for that country.
+      meaning.indicator:
+        term: Indicator
+        means: The statistic's name.
+      meaning.unit:
+        term: Unit
+        means: What the value measures.
+      meaning.definition:
+        term: Definition
+        means: The source's definition of the statistic.
+      meaning.comparedWith:
+        term: Compared with
+        means: The countries the bar chart compares with.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.

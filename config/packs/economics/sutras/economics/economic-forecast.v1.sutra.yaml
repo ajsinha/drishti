@@ -16,36 +16,44 @@
 rachana: 1
 sutra: economic-forecast
 version: 1
-description: "A forecast for the next two years with baseline, upside and downside scenarios."
+description: "The IMF World Economic Outlook: growth, inflation, unemployment, external balance and debt, outturn and projections to 2031."
 match: { kind: economic-forecast, priority: 10 }
 title: { pill: Economics · Economic forecast, id: $.forecastId }
 strip:
   - { label: Economy, bind: $.economyName }
   - { label: Vintage, bind: $.vintage }
-  - { label: Growth 2027, bind: $.growth2027, fmt: pct2, tone: sign, emphasis: true }
-  - { label: Inflation 2027, bind: $.inflation2027, fmt: pct2 }
-  - { label: Recession probability, bind: $.recessionProbability, fmt: pct0 }
+  - { label: Growth 2027, bind: $.growth2027, fmt: pc2, tone: sign, emphasis: true }
+  - { label: Inflation 2027, bind: $.inflation2027, fmt: pc2 }
+  - { label: Debt / GDP 2030, bind: $.debt2030, fmt: pc1 }
 panels:
-  - id: scenarios
+  - id: projections
     kind: table
-    title: Scenarios
+    title: IMF series by year
     key: F2
-    rows: $.scenarios
+    rows: $.projections
     columns:
-      - { label: Scenario, bind: "@.scenario" }
-      - { label: Weight, bind: "@.weight", fmt: pct0 }
-      - { label: Growth 2026, bind: "@.growth2026", fmt: pct2, tone: sign }
-      - { label: Growth 2027, bind: "@.growth2027", fmt: pct2, tone: sign, total: true }
-      - { label: Inflation 2027, bind: "@.inflation2027", fmt: pct2 }
-      - { label: Unemployment 2027, bind: "@.unemployment2027", fmt: pct2 }
+      - { label: Year, bind: "@.year" }
+      - { label: Basis, bind: "@.basis" }
+      - { label: "Growth, %", bind: "@.growth", fmt: pc2, tone: sign }
+      - { label: "Inflation, %", bind: "@.inflation", fmt: pc2 }
+      - { label: "Unemployment, %", bind: "@.unemployment", fmt: pc2 }
+      - { label: "Current account, % GDP", bind: "@.currentAccount", fmt: pc2, tone: sign }
+      - { label: "Debt, % GDP", bind: "@.debt", fmt: pc1 }
+      - { label: "Net lending, % GDP", bind: "@.netLending", fmt: pc2, tone: sign }
+      - { label: "GDP, USD bn", bind: "@.gdp", fmt: amount0 }
   - id: path
     kind: line
-    title: Baseline quarterly growth
+    title: "Real GDP growth, % a year (to 2031)"
     area: right
     rows: $.path
-    x: quarter
+    x: year
     y: growth
-    fmt: pct2
+    fmt: pc2
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }

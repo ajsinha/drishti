@@ -19,5 +19,6 @@ guides:
   title: Economics pack
   icon: box-seam
   file: guides/economics.md
-  summary: Economies, macro indicators and releases, central-bank decisions, forecasts,
-    trade flows, labour markets, fiscal positions and price baskets.
+  summary: 'Real public economic data for about 200 economies: output, growth, prices,
+    jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts,
+    and World Bank regions and income groups.'

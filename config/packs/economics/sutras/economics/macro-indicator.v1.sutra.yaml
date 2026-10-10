@@ -16,35 +16,35 @@
 rachana: 1
 sutra: macro-indicator
 version: 1
-description: "A released statistic: history and the release calendar with consensus and surprise."
+description: "One headline statistic of one economy: the series, the latest value, the change and the rank among economies."
 match: { kind: macro-indicator, priority: 10 }
 title: { pill: Economics · Macro indicator, id: $.indicatorId }
 strip:
   - { label: Indicator, bind: $.name }
   - { label: Latest, bind: $.latest, fmt: price2, emphasis: true }
   - { label: Unit, bind: $.unit }
+  - { label: Year, bind: $.latestYear }
   - { label: Previous, bind: $.previous, fmt: price2 }
-  - { label: Next release, bind: $.nextRelease, fmt: date }
+  - { label: Rank, bind: $.rank, fmt: amount0 }
 panels:
   - id: history
     kind: line
     title: History
     key: F2
     rows: $.history
-    x: period
+    x: year
     y: value
     fmt: price2
-  - id: releases
-    kind: table
-    title: Recent releases
-    key: F3
-    rows: $.releases
-    columns:
-      - { label: Released, bind: "@.date", fmt: date }
-      - { label: Period, bind: "@.period" }
-      - { label: Actual, bind: "@.actual", fmt: price2, total: true }
-      - { label: Consensus, bind: "@.consensus", fmt: price2 }
-      - { label: Surprise, bind: "@.surprise", fmt: signed2, tone: sign }
+  - id: facts
+    kind: kv
+    title: About this series
+    area: right
+    rows: $.facts
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.economy, 'economy')", F8: impact, F9: raw }

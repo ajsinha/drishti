@@ -90,8 +90,8 @@ command to try. The example ids are real: they exist in the pack's `samples/` fo
 | `operational-risk` | `banking-core` | `LOSS` operational loss event · `RCSA` risk and control assessment · `KRI` key risk indicator · `ISSUE` issue and action · `OPSCN` operational-risk scenario · `VEND` third party (vendor) · `CYBER` cyber incident · `OPCAP` operational-risk capital | `LOSS LOSS-2025-0001` |
 | `retail-banking` | `banking-core` | `CUST` customer · `ACCT` deposit account · `MTG` mortgage · `CARD` card account · `PLN` personal loan · `BRN` branch · `COLC` collections case · `RPF` retail portfolio (IFRS 9) | `CUST CUST-100231` |
 | `genomics` | — | `GENE` gene · `VRNT` variant · `PROT` protein · `PWY` pathway · `SMPL` sample · `SEQ` sequencing run · `EXPR` expression study · `TRIAL` clinical trial | `GENE GENE-TP53` |
-| `politics-society` | — | `JUR` jurisdiction · `PARTY` party · `CAND` candidate · `ELEC` election · `POLL` opinion poll · `BILL` bill · `REGN` region · `SOCI` social indicator (fictional polities) | `ELEC ELEC-KES-2025` |
-| `economics` | — | `ECON` economy · `MACRO` macro indicator · `CBD` central-bank decision · `FCST` economic forecast · `TFLOW` trade flow · `LABR` labour market · `FISC` fiscal position · `CPIB` consumer-price basket | `ECON ECON-US` |
+| `politics-society` | — | `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: CIA World Factbook, World Bank, UNDP; [REAL_DATA](REAL_DATA.md)) | `JUR JUR-IND` |
+| `economics` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group (real public data for about 213 economies: World Bank, IMF, CIA World Factbook; [REAL_DATA](REAL_DATA.md)) | `ECON ECON-IND` |
 | `finance` | — | `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement · `CRV` curve · `CPTY` counterparty · `LIM` credit limit · `CLR` clearing account · `SPEC` contract specification · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings | `TRD IRS-48213` |
 | `logistics` | — | `SHP` shipment · `CTR` container · `VSL` vessel · `PORT` port | `SHP SHP-10042` |
 
@@ -367,8 +367,8 @@ a loaded pack names them again; after a restart they follow the usual rule (a co
 
 ## Sample packs
 
-A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The packs that ship marked so are **genomics**,
-**politics-society**, **logistics** and **economics** (invented data in domains far from capital markets); the banking, markets and risk packs
+A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The packs that ship marked so are **genomics** and **logistics**
+(invented data in domains far from capital markets); **politics-society** and **economics** are not samples: they carry real public data ([REAL_DATA](REAL_DATA.md)); the banking, markets and risk packs
 are the reference packs real ones build on, and are not samples. Who sees sample packs is the setting `drishti.packs.samples`
 (`DRISHTI_PACKS_SAMPLES`):
 

@@ -1,0 +1,178 @@
+[
+ {
+  "page": 1,
+  "pages": 1,
+  "per_page": "400",
+  "total": 296
+ },
+ [
+  {
+   "id": "AFE",
+   "iso2Code": "ZH",
+   "name": "Africa Eastern and Southern",
+   "region": {
+    "id": "NA",
+    "iso2code": "NA",
+    "value": "Aggregates"
+   },
+   "adminregion": {
+    "id": "",
+    "iso2code": "",
+    "value": ""
+   },
+   "incomeLevel": {
+    "id": "NA",
+    "iso2code": "NA",
+    "value": "Aggregates"
+   },
+   "lendingType": {
+    "id": "",
+    "iso2code": "",
+    "value": "Aggregates"
+   },
+   "capitalCity": "",
+   "longitude": "",
+   "latitude": ""
+  },
+  {
+   "id": "HIC",
+   "iso2Code": "XD",
+   "name": "High income",
+   "region": {
+    "id": "NA",
+    "iso2code": "NA",
+    "value": "Aggregates"
+   },
+   "adminregion": {
+    "id": "",
+    "iso2code": "",
+    "value": ""
+   },
+   "incomeLevel": {
+    "id": "NA",
+    "iso2code": "NA",
+    "value": "Aggregates"
+   },
+   "lendingType": {
+    "id": "",
+    "iso2code": "",
+    "value": "Aggregates"
+   },
+   "capitalCity": "",
+   "longitude": "",
+   "latitude": ""
+  },
+  {
+   "id": "IND",
+   "iso2Code": "IN",
+   "name": "India",
+   "region": {
+    "id": "SAS",
+    "iso2code": "8S",
+    "value": "South Asia"
+   },
+   "adminregion": {
+    "id": "SAS",
+    "iso2code": "8S",
+    "value": "South Asia"
+   },
+   "incomeLevel": {
+    "id": "LMC",
+    "iso2code": "XN",
+    "value": "Lower middle income"
+   },
+   "lendingType": {
+    "id": "IBD",
+    "iso2code": "XF",
+    "value": "IBRD"
+   },
+   "capitalCity": "New Delhi",
+   "longitude": "77.225",
+   "latitude": "28.6353"
+  },
+  {
+   "id": "SAS",
+   "iso2Code": "8S",
+   "name": "South Asia",
+   "region": {
+    "id": "NA",
+    "iso2code": "NA",
+    "value": "Aggregates"
+   },
+   "adminregion": {
+    "id": "",
+    "iso2code": "",
+    "value": ""
+   },
+   "incomeLevel": {
+    "id": "NA",
+    "iso2code": "NA",
+    "value": "Aggregates"
+   },
+   "lendingType": {
+    "id": "",
+    "iso2code": "",
+    "value": "Aggregates"
+   },
+   "capitalCity": "",
+   "longitude": "",
+   "latitude": ""
+  },
+  {
+   "id": "USA",
+   "iso2Code": "US",
+   "name": "United States",
+   "region": {
+    "id": "NAC",
+    "iso2code": "XU",
+    "value": "North America"
+   },
+   "adminregion": {
+    "id": "",
+    "iso2code": "",
+    "value": ""
+   },
+   "incomeLevel": {
+    "id": "HIC",
+    "iso2code": "XD",
+    "value": "High income"
+   },
+   "lendingType": {
+    "id": "LNX",
+    "iso2code": "XX",
+    "value": "Not classified"
+   },
+   "capitalCity": "Washington D.C.",
+   "longitude": "-77.032",
+   "latitude": "38.8895"
+  },
+  {
+   "id": "WLD",
+   "iso2Code": "1W",
+   "name": "World",
+   "region": {
+    "id": "NA",
+    "iso2code": "NA",
+    "value": "Aggregates"
+   },
+   "adminregion": {
+    "id": "",
+    "iso2code": "",
+    "value": ""
+   },
+   "incomeLevel": {
+    "id": "NA",
+    "iso2code": "NA",
+    "value": "Aggregates"
+   },
+   "lendingType": {
+    "id": "",
+    "iso2code": "",
+    "value": "Aggregates"
+   },
+   "capitalCity": "",
+   "longitude": "",
+   "latitude": ""
+  }
+ ]
+]

@@ -16,31 +16,52 @@
 rachana: 1
 sutra: jurisdiction
 version: 1
-description: "A country: electoral system, legislature, government and headline social indicators."
+description: "A country: government type, capital, legislature and seats by party, office holders, elections and governance indicators, from the CIA World Factbook, World Bank and UNDP."
 match: { kind: jurisdiction, priority: 10 }
 title: { pill: Politics and society · Jurisdiction, id: $.jurisdictionId }
 strip:
-  - { label: Name, bind: $.name, emphasis: true }
+  - { label: Country, bind: $.name, emphasis: true }
   - { label: Capital, bind: $.capital }
+  - { label: Government, bind: $.governmentType }
   - { label: Population (m), bind: $.populationM, fmt: price2 }
-  - { label: Electoral system, bind: $.system }
-  - { label: Seats, bind: $.seats, fmt: amount0 }
-  - { label: Government, bind: $.government }
+  - { label: Area (km2), bind: $.areaKm2, fmt: amount0 }
+  - { label: Currency, bind: $.currency }
 panels:
   - id: legislature
-    kind: hbar
-    title: Seats in the legislature
+    kind: table
+    title: "Seats by party, lower chamber"
     key: F2
     rows: $.legislature
-    label: party
-    value: seats
-    fmt: amount0
+    columns:
+      - { label: Party, bind: "@.party" }
+      - { label: Seats, bind: "@.seats", fmt: amount0, total: true }
   - id: indicators
-    kind: kv
-    title: Indicators
+    kind: table
+    title: Society and governance (latest)
     key: F3
-    area: right
     rows: $.indicators
+    columns:
+      - { label: Indicator, bind: "@.indicator" }
+      - { label: Value, bind: "@.value", fmt: price2, total: true }
+      - { label: Year, bind: "@.year" }
+      - { label: Unit, bind: "@.unit" }
+  - id: profile
+    kind: kv
+    title: Profile
+    area: right
+    rows: $.profile
+  - id: partiesListed
+    kind: table
+    title: Political parties (as published)
+    key: F4
+    rows: $.partiesListed
+    columns:
+      - { label: Party, bind: "@.party" }
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
-keys: { F7: "link($.lastElection, 'election')", F8: impact, F9: raw }
+keys: { F7: "link($.region, 'region')", F8: impact, F9: raw }

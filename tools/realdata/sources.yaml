@@ -1,0 +1,184 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Sources and indicators for tools/realdata. Everything the fetcher downloads and the normaliser keeps is named here.
+# kind: wdi | wgi (World Bank API sources 2 and 3), imf (DataMapper API), undp (HDR composite-indices CSV).
+# group: economy | labour | fiscal | social | governance -- which pack kind carries the series.
+# scale multiplies the raw value; unit is what the scaled value is in; dp is the display precision.
+years: { first: 2015, last: 2025 }          # World Bank / UNDP window (the last year with data is what each series shows)
+imf_years: { first: 2015, last: 2031 }      # IMF WEO actuals and projections
+sources:
+  wdi:
+    name: "World Bank, World Development Indicators"
+    dataset: "World Development Indicators"
+    url: "https://databank.worldbank.org/source/world-development-indicators"
+    api: "https://api.worldbank.org/v2"
+    licence: "CC BY 4.0"
+    licence_url: "https://datacatalog.worldbank.org/public-licenses#cc-by"
+    attribution: "The World Bank: World Development Indicators (CC BY 4.0)."
+  wgi:
+    name: "World Bank, Worldwide Governance Indicators"
+    dataset: "Worldwide Governance Indicators"
+    url: "https://www.worldbank.org/en/publication/worldwide-governance-indicators"
+    api: "https://api.worldbank.org/v2"
+    licence: "CC BY 4.0"
+    licence_url: "https://datacatalog.worldbank.org/public-licenses#cc-by"
+    attribution: "The World Bank: Worldwide Governance Indicators (CC BY 4.0)."
+  imf:
+    name: "International Monetary Fund, World Economic Outlook (DataMapper)"
+    dataset: "World Economic Outlook"
+    url: "https://www.imf.org/external/datamapper"
+    api: "https://www.imf.org/external/datamapper/api/v1"
+    licence: "IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission"
+    licence_url: "https://www.imf.org/en/About/copyright-and-terms"
+    attribution: "Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper."
+  undp:
+    name: "UNDP, Human Development Report: composite indices time series"
+    dataset: "Human Development Index time series"
+    url: "https://hdr.undp.org/data-center/documentation-and-downloads"
+    csv: "https://hdr.undp.org/sites/default/files/2025_HDR/HDR25_Composite_indices_complete_time_series.csv"
+    licence: "CC BY 3.0 IGO"
+    licence_url: "https://creativecommons.org/licenses/by/3.0/igo/"
+    attribution: "UNDP, Human Development Report 2025 data (CC BY 3.0 IGO)."
+  factbook:
+    name: "CIA, The World Factbook (factbook.json mirror, CC0)"
+    dataset: "The World Factbook"
+    url: "https://www.cia.gov/the-world-factbook/"
+    api: "https://api.github.com/repos/factbook/factbook.json"
+    raw: "https://raw.githubusercontent.com/factbook/factbook.json"
+    licence: "Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0"
+    licence_url: "https://github.com/factbook/factbook.json/blob/master/LICENSE.md"
+    attribution: "Central Intelligence Agency, The World Factbook (public domain)."
+indicators:
+  # ---- economy
+  - { key: gdp, kind: wdi, code: NY.GDP.MKTP.CD, group: economy, name: "GDP, current prices", unit: "USD bn", scale: 1.0e-9, dp: 1,
+      def: "Gross domestic product at purchasers' prices: the sum of gross value added by all resident producers plus product taxes less subsidies, in current US dollars converted at market exchange rates." }
+  - { key: gdp_pc, kind: wdi, code: NY.GDP.PCAP.CD, group: economy, name: "GDP per capita, current prices", unit: "USD", scale: 1, dp: 0,
+      def: "GDP divided by mid-year population, in current US dollars." }
+  - { key: gdp_growth, kind: wdi, code: NY.GDP.MKTP.KD.ZG, group: economy, name: "Real GDP growth", unit: "% a year", scale: 1, dp: 2,
+      def: "Annual percentage growth rate of GDP at market prices based on constant local currency, so inflation is removed." }
+  - { key: inflation, kind: wdi, code: FP.CPI.TOTL.ZG, group: economy, name: "Inflation, consumer prices", unit: "% a year", scale: 1, dp: 2,
+      def: "Annual percentage change in the cost to the average consumer of a basket of goods and services (consumer price index)." }
+  - { key: unemployment, kind: wdi, code: SL.UEM.TOTL.ZS, group: labour, name: "Unemployment rate", unit: "% of labour force", scale: 1, dp: 2,
+      def: "Share of the labour force without work but available for and seeking employment (ILO modelled estimate)." }
+  - { key: population, kind: wdi, code: SP.POP.TOTL, group: economy, name: "Population", unit: "millions", scale: 1.0e-6, dp: 2,
+      def: "Total population: all residents regardless of legal status or citizenship, mid-year estimate." }
+  - { key: current_account, kind: wdi, code: BN.CAB.XOKA.GD.ZS, group: economy, name: "Current account balance", unit: "% of GDP", scale: 1, dp: 2,
+      def: "Net exports of goods and services plus net primary and secondary income, as a share of GDP; negative means the country borrows from abroad." }
+  - { key: reserves, kind: wdi, code: FI.RES.TOTL.CD, group: economy, name: "Total reserves incl. gold", unit: "USD bn", scale: 1.0e-9, dp: 1,
+      def: "Holdings of monetary gold, special drawing rights, reserve position in the IMF and foreign exchange held by monetary authorities, in current US dollars." }
+  - { key: trade, kind: wdi, code: NE.TRD.GNFS.ZS, group: economy, name: "Trade", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Exports plus imports of goods and services as a share of GDP; a measure of openness." }
+  - { key: exports, kind: wdi, code: NE.EXP.GNFS.ZS, group: economy, name: "Exports of goods and services", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Value of all goods and other market services provided to the rest of the world, as a share of GDP." }
+  - { key: imports, kind: wdi, code: NE.IMP.GNFS.ZS, group: economy, name: "Imports of goods and services", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Value of all goods and other market services received from the rest of the world, as a share of GDP." }
+  - { key: fdi, kind: wdi, code: BX.KLT.DINV.WD.GD.ZS, group: economy, name: "Foreign direct investment, net inflows", unit: "% of GDP", scale: 1, dp: 2,
+      def: "Net inflows of investment to acquire a lasting management interest (10 percent or more of voting stock) in a firm in another economy, as a share of GDP." }
+  - { key: co2, kind: wdi, code: EN.GHG.CO2.PC.CE.AR5, group: economy, name: "CO2 emissions per capita", unit: "t CO2e", scale: 1, dp: 2,
+      def: "Carbon dioxide emissions excluding land use, in tonnes of CO2 equivalent per person." }
+  - { key: real_interest, kind: wdi, code: FR.INR.RINR, group: economy, name: "Real interest rate", unit: "% a year", scale: 1, dp: 2,
+      def: "The lending interest rate adjusted for inflation by the GDP deflator." }
+  - { key: agriculture, kind: wdi, code: NV.AGR.TOTL.ZS, group: economy, name: "Agriculture, value added", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Value added of agriculture, forestry and fishing as a share of GDP." }
+  - { key: industry, kind: wdi, code: NV.IND.TOTL.ZS, group: economy, name: "Industry, value added", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Value added of mining, manufacturing, construction, electricity, water and gas as a share of GDP." }
+  - { key: services, kind: wdi, code: NV.SRV.TOTL.ZS, group: economy, name: "Services, value added", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Value added of wholesale and retail trade, transport, government, financial, professional and personal services as a share of GDP." }
+  # ---- labour
+  - { key: lfp, kind: wdi, code: SL.TLF.CACT.ZS, group: labour, name: "Labour force participation rate", unit: "% of population 15+", scale: 1, dp: 1,
+      def: "Share of the population aged 15 and over that supplies labour for the production of goods and services (ILO modelled estimate)." }
+  - { key: youth_unemployment, kind: wdi, code: SL.UEM.1524.ZS, group: labour, name: "Youth unemployment rate", unit: "% of labour force 15-24", scale: 1, dp: 1,
+      def: "Share of the labour force aged 15-24 without work but available for and seeking employment." }
+  - { key: employment_ratio, kind: wdi, code: SL.EMP.TOTL.SP.ZS, group: labour, name: "Employment to population ratio", unit: "% of population 15+", scale: 1, dp: 1,
+      def: "Share of the population aged 15 and over that is employed." }
+  - { key: female_lfp, kind: wdi, code: SL.TLF.CACT.FE.ZS, group: labour, name: "Female labour force participation rate", unit: "% of women 15+", scale: 1, dp: 1,
+      def: "Share of women aged 15 and over that supplies labour for the production of goods and services." }
+  - { key: vulnerable, kind: wdi, code: SL.EMP.VULN.ZS, group: labour, name: "Vulnerable employment", unit: "% of employment", scale: 1, dp: 1,
+      def: "Own-account and contributing family workers as a share of total employment: jobs with the least formal protection." }
+  - { key: emp_agriculture, kind: wdi, code: SL.AGR.EMPL.ZS, group: labour, name: "Employment in agriculture", unit: "% of employment", scale: 1, dp: 1,
+      def: "Share of total employment in agriculture, forestry and fishing." }
+  - { key: emp_industry, kind: wdi, code: SL.IND.EMPL.ZS, group: labour, name: "Employment in industry", unit: "% of employment", scale: 1, dp: 1,
+      def: "Share of total employment in mining, manufacturing, construction and utilities." }
+  - { key: emp_services, kind: wdi, code: SL.SRV.EMPL.ZS, group: labour, name: "Employment in services", unit: "% of employment", scale: 1, dp: 1,
+      def: "Share of total employment in services." }
+  # ---- fiscal
+  - { key: debt, kind: imf, code: GGXWDG_NGDP, group: fiscal, name: "General government gross debt", unit: "% of GDP", scale: 1, dp: 1,
+      def: "All liabilities that require payment of interest or principal by the general government (central, state and local), as a share of GDP." }
+  - { key: net_lending, kind: imf, code: GGXCNL_NGDP, group: fiscal, name: "General government net lending/borrowing", unit: "% of GDP", scale: 1, dp: 2,
+      def: "Revenue minus total expenditure of the general government; negative is a deficit." }
+  - { key: tax_revenue, kind: wdi, code: GC.TAX.TOTL.GD.ZS, group: fiscal, name: "Tax revenue", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Compulsory transfers to the central government for public purposes, as a share of GDP (central government, excluding social contributions)." }
+  - { key: revenue, kind: wdi, code: GC.REV.XGRT.GD.ZS, group: fiscal, name: "Revenue, excluding grants", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Central government cash receipts from taxes, social contributions and other revenue, excluding grants, as a share of GDP." }
+  - { key: expense, kind: wdi, code: GC.XPN.TOTL.GD.ZS, group: fiscal, name: "Expense", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Central government cash payments for operating activities (wages, goods and services, interest, subsidies, transfers), as a share of GDP." }
+  - { key: military, kind: wdi, code: MS.MIL.XPND.GD.ZS, group: fiscal, name: "Military expenditure", unit: "% of GDP", scale: 1, dp: 2,
+      def: "All current and capital spending on the armed forces, as a share of GDP (SIPRI)." }
+  # ---- social
+  - { key: life_expectancy, kind: wdi, code: SP.DYN.LE00.IN, group: social, name: "Life expectancy at birth", unit: "years", scale: 1, dp: 1,
+      def: "Number of years a newborn would live if prevailing patterns of mortality at the time of birth stayed the same throughout life." }
+  - { key: hdi, kind: undp, code: hdi, group: social, name: "Human Development Index", unit: "index 0-1", scale: 1, dp: 3,
+      def: "Composite of life expectancy, expected and mean years of schooling, and gross national income per capita; 0 is lowest, 1 highest (UNDP)." }
+  - { key: fertility, kind: wdi, code: SP.DYN.TFRT.IN, group: social, name: "Fertility rate", unit: "births per woman", scale: 1, dp: 2,
+      def: "Births per woman if she lived to the end of her childbearing years and bore children at current age-specific rates." }
+  - { key: infant_mortality, kind: wdi, code: SP.DYN.IMRT.IN, group: social, name: "Infant mortality rate", unit: "per 1,000 live births", scale: 1, dp: 1,
+      def: "Number of infants dying before reaching one year of age, per 1,000 live births." }
+  - { key: under5_mortality, kind: wdi, code: SH.DYN.MORT, group: social, name: "Under-5 mortality rate", unit: "per 1,000 live births", scale: 1, dp: 1,
+      def: "Probability per 1,000 that a newborn dies before reaching age five." }
+  - { key: urban, kind: wdi, code: SP.URB.TOTL.IN.ZS, group: social, name: "Urban population", unit: "% of population", scale: 1, dp: 1,
+      def: "People living in urban areas as defined by national statistical offices, as a share of the total population." }
+  - { key: pop_growth, kind: wdi, code: SP.POP.GROW, group: social, name: "Population growth", unit: "% a year", scale: 1, dp: 2,
+      def: "Annual percentage change of the mid-year population." }
+  - { key: gini, kind: wdi, code: SI.POV.GINI, group: social, name: "Gini index", unit: "index 0-100", scale: 1, dp: 1,
+      def: "Extent to which the distribution of income among households departs from perfect equality: 0 is perfect equality, 100 perfect inequality." }
+  - { key: poverty, kind: wdi, code: SI.POV.DDAY, group: social, name: "Extreme poverty headcount", unit: "% of population", scale: 1, dp: 1,
+      def: "Share of the population living below the international poverty line (2021 purchasing power parity prices)." }
+  - { key: literacy, kind: wdi, code: SE.ADT.LITR.ZS, group: social, name: "Adult literacy rate", unit: "% of people 15+", scale: 1, dp: 1,
+      def: "Share of people aged 15 and above who can read and write a short simple statement about their everyday life." }
+  - { key: secondary_enrolment, kind: wdi, code: SE.SEC.ENRR, group: social, name: "Secondary school enrolment", unit: "% gross", scale: 1, dp: 1,
+      def: "Total enrolment in secondary education, regardless of age, as a share of the official secondary-school-age population (can exceed 100)." }
+  - { key: internet, kind: wdi, code: IT.NET.USER.ZS, group: social, name: "Individuals using the Internet", unit: "% of population", scale: 1, dp: 1,
+      def: "Share of the population that used the Internet from any location in the last three months." }
+  - { key: electricity, kind: wdi, code: EG.ELC.ACCS.ZS, group: social, name: "Access to electricity", unit: "% of population", scale: 1, dp: 1,
+      def: "Share of the population with access to electricity." }
+  - { key: health_spend, kind: wdi, code: SH.XPD.CHEX.GD.ZS, group: social, name: "Current health expenditure", unit: "% of GDP", scale: 1, dp: 1,
+      def: "Public and private spending on health care, as a share of GDP." }
+  - { key: education_spend, kind: wdi, code: SE.XPD.TOTL.GD.ZS, group: social, name: "Government expenditure on education", unit: "% of GDP", scale: 1, dp: 1,
+      def: "General government spending on education, as a share of GDP." }
+  - { key: women_parliament, kind: wdi, code: SG.GEN.PARL.ZS, group: governance, name: "Women in national parliament", unit: "% of seats", scale: 1, dp: 1,
+      def: "Share of parliamentary seats in a single or lower chamber held by women (Inter-Parliamentary Union)." }
+  # ---- governance (World Bank Worldwide Governance Indicators: estimate, about -2.5 weak to +2.5 strong)
+  - { key: wgi_voice, kind: wgi, code: GOV_WGI_VA.EST, group: governance, name: "Voice and accountability", unit: "index -2.5 to 2.5", scale: 1, dp: 2,
+      def: "Perceptions of the extent to which citizens can participate in selecting their government, and of freedom of expression, association and a free media. Higher is better." }
+  - { key: wgi_stability, kind: wgi, code: GOV_WGI_PV.EST, group: governance, name: "Political stability and absence of violence", unit: "index -2.5 to 2.5", scale: 1, dp: 2,
+      def: "Perceptions of the likelihood that the government will be destabilised or overthrown by unconstitutional or violent means, including terrorism. Higher is better." }
+  - { key: wgi_effectiveness, kind: wgi, code: GOV_WGI_GE.EST, group: governance, name: "Government effectiveness", unit: "index -2.5 to 2.5", scale: 1, dp: 2,
+      def: "Perceptions of the quality of public services, the civil service and its independence from political pressure, and policy formulation and implementation. Higher is better." }
+  - { key: wgi_regulatory, kind: wgi, code: GOV_WGI_RQ.EST, group: governance, name: "Regulatory quality", unit: "index -2.5 to 2.5", scale: 1, dp: 2,
+      def: "Perceptions of the government's ability to formulate and implement sound policies and regulations that permit and promote private-sector development. Higher is better." }
+  - { key: wgi_law, kind: wgi, code: GOV_WGI_RL.EST, group: governance, name: "Rule of law", unit: "index -2.5 to 2.5", scale: 1, dp: 2,
+      def: "Perceptions of confidence in and abidance by the rules of society: contract enforcement, property rights, the police and the courts, and the likelihood of crime and violence. Higher is better." }
+  - { key: wgi_corruption, kind: wgi, code: GOV_WGI_CC.EST, group: governance, name: "Control of corruption", unit: "index -2.5 to 2.5", scale: 1, dp: 2,
+      def: "Perceptions of the extent to which public power is exercised for private gain, including petty and grand corruption and capture of the state by elites. Higher is better." }
+# IMF WEO series used for the forecast kind (projections run to imf_years.last)
+forecast:
+  - { key: f_gdp_growth, code: NGDP_RPCH, name: "Real GDP growth", unit: "% a year", dp: 2 }
+  - { key: f_inflation, code: PCPIPCH, name: "Inflation, average consumer prices", unit: "% a year", dp: 2 }
+  - { key: f_unemployment, code: LUR, name: "Unemployment rate", unit: "% of labour force", dp: 2 }
+  - { key: f_current_account, code: BCA_NGDPD, name: "Current account balance", unit: "% of GDP", dp: 2 }
+  - { key: f_debt, code: GGXWDG_NGDP, name: "General government gross debt", unit: "% of GDP", dp: 1 }
+  - { key: f_net_lending, code: GGXCNL_NGDP, name: "General government net lending/borrowing", unit: "% of GDP", dp: 2 }
+  - { key: f_gdp, code: NGDPD, name: "GDP, current prices", unit: "USD bn", dp: 1 }
+  - { key: f_gdp_pc, code: NGDPDPC, name: "GDP per capita, current prices", unit: "USD", dp: 0 }

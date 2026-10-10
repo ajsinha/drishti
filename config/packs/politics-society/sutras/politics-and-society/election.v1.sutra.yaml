@@ -16,36 +16,35 @@
 rachana: 1
 sutra: election
 version: 1
-description: "A general election: turnout, votes and seats by party, and the regional result."
+description: "The most recent election to a chamber or to the executive, with the system, term, seats by party and the date of the next one."
 match: { kind: election, priority: 10 }
 title: { pill: Politics and society · Election, id: $.electionId }
 strip:
   - { label: Election, bind: $.title }
-  - { label: Date, bind: $.date, fmt: date }
-  - { label: Turnout, bind: $.turnout, fmt: pct0, emphasis: true }
+  - { label: Held, bind: $.dateText }
   - { label: System, bind: $.system }
-  - { label: Largest party, bind: $.winner }
-  - { label: Majority, bind: $.majority }
+  - { label: Largest party, bind: $.winner, emphasis: true }
+  - { label: Next election, bind: $.nextElection }
 panels:
   - id: results
     kind: table
-    title: Results
+    title: Seats by party
     key: F2
     rows: $.results
     columns:
       - { label: Party, bind: "@.party" }
-      - { label: Votes, bind: "@.votes", fmt: amount0 }
-      - { label: Share, bind: "@.share", fmt: pct2, total: true }
       - { label: Seats, bind: "@.seats", fmt: amount0, total: true }
-      - { label: Change, bind: "@.change", fmt: signed0, tone: sign }
-  - id: turnoutByRegion
-    kind: hbar
-    title: Turnout by region
+      - { label: "Share, %", bind: "@.share", fmt: pc1 }
+  - id: summary
+    kind: kv
+    title: Election facts (as published)
     area: right
-    rows: $.turnoutByRegion
-    label: region
-    value: turnout
-    fmt: pct0
+    rows: $.summary
+  - id: source
+    kind: kv
+    title: Data source and licence
+    area: right
+    rows: $.provenance
   - { id: built, kind: provenance, title: How this view was built }
   - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
 keys: { F7: "link($.jurisdiction, 'jurisdiction')", F8: impact, F9: raw }

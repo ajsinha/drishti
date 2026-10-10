@@ -39,3 +39,15 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | Delta Kernel, Apache Parquet (parquet-java), snappy-java, AWS SDK for Java 2.x and Apache HttpClient 5 (the Delta connector and its native engine, `drishti-deltalake`) | Apache-2.0 |
 | zstd-jni (Parquet pages compressed with ZSTD) | BSD-2-Clause |
 | Apache Avro (decodes Schema Registry messages in the Kafka connector, `drishti-plugin-kafka`), with Apache Commons Compress | Apache-2.0 |
+
+## Data bundled in the `economics` and `politics-society` packs
+
+These packs carry published public data (normalised by `tools/realdata`, refreshed with `python3 tools/realdata/realdata.py all`). Every document shows its source,
+dataset, retrieval date and licence in its *Data source and licence* panel. Details and the refresh procedure: [docs/guides/REAL_DATA.md](docs/guides/REAL_DATA.md).
+
+| Data | Licence and attribution |
+|---|---|
+| World Bank, World Development Indicators and Worldwide Governance Indicators (API source 2 and 3) | CC BY 4.0. "The World Bank: World Development Indicators / Worldwide Governance Indicators (CC BY 4.0)." |
+| IMF, World Economic Outlook (DataMapper API), April 2026 edition | IMF Copyright and Terms of Use (https://www.imf.org/en/About/copyright-and-terms): reuse with attribution, changes stated; commercial reuse needs the IMF's permission. "Source: International Monetary Fund, World Economic Outlook database." |
+| UNDP, Human Development Report 2025, Human Development Index time series | CC BY 3.0 IGO. "UNDP, Human Development Report 2025 data (CC BY 3.0 IGO)." |
+| CIA, The World Factbook, through the factbook.json mirror (github.com/factbook/factbook.json) | Public domain (U.S. Government work); the mirror is CC0 1.0. "Central Intelligence Agency, The World Factbook (public domain)." |

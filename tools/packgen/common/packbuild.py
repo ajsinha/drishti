@@ -61,6 +61,8 @@ class PackSpec:
     impact: dict | None = None
     overview: str = ""                              # prose for the overview guide
     external_ids: dict[str, set[str]] = field(default_factory=dict)   # kind -> ids that live in required packs
+    compact_json: bool = False                      # write the sample documents without indentation (large generated packs)
+    form_overrides: dict[str, dict[str, dict]] = field(default_factory=dict)   # kind -> field path -> {type:, label:} replacing the name-derived ones
 
     @property
     def kinds(self) -> list[Kind]:
@@ -102,6 +104,9 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
     if spec.columns:
         m["columns"] = spec.columns
     form = {k.kind: PF.form_from_columns(spec.columns[k.kind], k.id_field) for k in kinds if spec.columns.get(k.kind)}
+    for kind, over in spec.form_overrides.items():
+        for f in form.get(kind, []):
+            f.update(over.get(f["path"], {}))
     if form:                                             # FORM <pack>: the key fields are the form's fields; the id comes first
         m["form"] = form
     if spec.roles:
@@ -155,6 +160,10 @@ def check(spec: PackSpec, docs: dict) -> list[str]:
     return problems
 
 
+def _json(spec: PackSpec, obj) -> str:
+    return json.dumps(obj, ensure_ascii=False, separators=(",", ":")) if spec.compact_json else json.dumps(obj, indent=1, ensure_ascii=False)
+
+
 def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     base = PACKS / spec.name
     out: dict[Path, str] = {}
@@ -165,10 +174,10 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     catalog = []
     for k in spec.kinds:
         for id_, d in sorted(docs.get(k.kind, {}).items()):
-            out[base / "samples" / k.kind / f"{id_}.json"] = json.dumps(d, indent=1, ensure_ascii=False) + "\n"
+            out[base / "samples" / k.kind / f"{id_}.json"] = _json(spec, d) + "\n"
             sub = next((d[f] for f in ("name", "legalEntityName", "scenarioName", "counterpartyName", "security") if isinstance(d.get(f), str)), "")
             catalog.append({"kind": k.kind, "id": id_, "title": id_, "subtitle": f"{k.label}" + (f" · {sub}" if sub else "")})
-    out[base / "samples" / "catalog.json"] = json.dumps(catalog, indent=1, ensure_ascii=False) + "\n"
+    out[base / "samples" / "catalog.json"] = _json(spec, catalog) + "\n"
     out[base / "guides" / f"{spec.name}.md"] = overview(spec, docs)
     help_yaml = yaml.safe_dump({"guides": [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
                                             "file": f"guides/{spec.name}.md", "summary": spec.description}]}, sort_keys=False, allow_unicode=True)
