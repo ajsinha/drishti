@@ -25,7 +25,8 @@ import java.util.Optional;
  * Builds an {@link ArrowScan} from a source's columns ({@link SourcePlugin#columns}): the day-by-day, column-oriented read the sources that
  * promote columns (Delta Lake, DuckDB, PostgreSQL, JSON-lines files) already do for searches, cut into batches with the request's filters
  * applied. It never parses a document. Empty when the source cannot answer every requested path as a column, so the caller reads records
- * instead and says so. A request without dates reads the source's latest day.
+ * instead and says so. A request without dates reads the source's latest day; a request for dates reads only the dates the source holds (a day
+ * a snapshot source answers with an earlier day's rows is skipped, so a range never counts a day twice).
  */
 public final class ColumnScans {
 
@@ -81,6 +82,11 @@ public final class ColumnScans {
                 LocalDate d = days.get(day++);
                 Optional<ColumnSet> set = source.columns(r.kind(), r.paths(), d == null ? AsOf.LATEST : AsOf.of(d));
                 if (set.isEmpty()) {
+                    continue;
+                }
+                // snapshot sources answer a date they do not hold with the latest day before it: that is not this date's data, and a range
+                // would count it once per date. A scan returns a date's own rows only.
+                if (d != null && set.get().businessDate() != null && !d.equals(set.get().businessDate())) {
                     continue;
                 }
                 if (set.get().incomplete() != null) {
