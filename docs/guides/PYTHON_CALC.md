@@ -321,7 +321,7 @@ python:                         # Calc on this pack's kinds (Alt+C on a view)
   dir: python                   # optional: where snippet files are (default python/)
 ```
 
-Snippets can also be files, `packs/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
+Snippets can also be files, `config/packs/<pack>/python/*.py`, read in name order after those in `pack.yaml`. A file starts
 with comment lines naming it; what comes after them is the code (the copyright header above them is not):
 
 ```python
@@ -353,7 +353,7 @@ computes.
 
 The banking ones are written by `tools/packgen/banking/make_packs.py` from their sources,
 `tools/packgen/banking/snippets/<pack>/<name>.py` (read by `calc_snippets.py`; never edit the generated
-`packs/<pack>/python/` files: change the source and run the generator, see
+`config/packs/<pack>/python/` files: change the source and run the generator, see
 [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). A source starts, after its copyright header, with
 
 ```python
@@ -366,7 +366,7 @@ The banking ones are written by `tools/packgen/banking/make_packs.py` from their
 `example` names the sample entity the snippet is checked on in a browser (it is not copied into the pack); the
 generator refuses a source without the four lines or with more than 60 lines of code, and `make_packs.py --check`
 fails when a generated file is stale or has no source. `finance` is hand-written: its files are
-`packs/finance/python/*.py`.
+`config/packs/finance/python/*.py`.
 
 How they are written, so that each runs anywhere:
 
@@ -780,7 +780,7 @@ warm run 6 to 830 ms (median 39 ms; 64 of 87 runs under 100 ms; the slowest read
 ### `finance` (10)
 
 Two inline in `pack.yaml`: *MTM under parallel rate moves* (`trade`, `TRD IRS-48213`) and *Member trades, summed
-from the screen* (`netting-set`, `NS-NORTH-01`, from `view.tables`); and eight files, `packs/finance/python/*.py`
+from the screen* (`netting-set`, `NS-NORTH-01`, from `view.tables`); and eight files, `config/packs/finance/python/*.py`
 (hand-written, not generated):
 
 | Snippet · file | On | Computes | Method |

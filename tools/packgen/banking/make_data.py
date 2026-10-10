@@ -14,7 +14,7 @@
 
 """Writes the banking packs' sample data and, optionally, the Delta Lake the server's connectors read.
 
-    python3 tools/packgen/banking/make_data.py                 write packs/<pack>/samples (the latest business date)
+    python3 tools/packgen/banking/make_data.py                 write config/packs/<pack>/samples (the latest business date)
     python3 tools/packgen/banking/make_data.py --check         verify the data is consistent and the files are current
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta [--days 10]
                                                                 also write data/delta/<domain>/<kind>/ with business-day history,
@@ -42,7 +42,7 @@ import layout
 import taxonomy as T
 
 ROOT = Path(__file__).resolve().parents[3]
-PACKS = ROOT / "packs"
+PACKS = ROOT / "config" / "packs"
 sys.path.insert(0, str(ROOT / "tools"))
 
 LIVE_WALK = {"ir-curve": {"tenY": 0.0003}, "fx-spot": {"mid": 0.0004}, "equity": {"price": 0.3}, "equity-index": {"level": 4.0},

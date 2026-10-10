@@ -626,7 +626,7 @@ never streams.
 
 ### Worked example: making trades live from Kafka
 
-The trading pack declares the connector in `packs/trading/pack.yaml`:
+The trading pack declares the connector in `config/packs/trading/pack.yaml`:
 
 ```yaml
 connectors:

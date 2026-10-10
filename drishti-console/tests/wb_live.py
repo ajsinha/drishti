@@ -115,7 +115,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False):
 
     port = free_port()
     work = work or tmp_path_factory.mktemp("wb-server")
-    for name in ("packs", "config"):                       # the server reads these beside where it runs; its data stays in the scratch directory
+    for name in ("config",):                       # the server reads these beside where it runs; its data stays in the scratch directory
         if (ROOT / name).exists():
             (work / name).symlink_to(ROOT / name)
     env = {"PATH": os.environ.get("PATH", ""), "HOME": str(work), "DRISHTI_PORT": str(port), **extra_env}

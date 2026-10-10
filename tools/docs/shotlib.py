@@ -169,7 +169,7 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
     if not jars:
         sys.exit("build the server first: ./mvnw -o package -DskipTests -pl drishti-server -am")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
-    for name in ("packs", "config"):
+    for name in ("config",):
         if not (work / name).exists() and (ROOT / name).exists():
             (work / name).symlink_to(ROOT / name)
     (work / "sutras").mkdir(exist_ok=True)

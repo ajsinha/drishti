@@ -201,7 +201,7 @@ which the shipped `application.yaml` leaves off (`enabled: ${DRISHTI_ACTIVEMQ_EN
 
 ### 5.1 Pack form
 
-The pack's suggested template, in `packs/<pack>/pack.yaml`, so the connector comes with the pack; the server writes it to `config/connectors/limits-mq.yaml`
+The pack's suggested template, in `config/packs/<pack>/pack.yaml`, so the connector comes with the pack; the server writes it to `config/connectors/limits-mq.yaml`
 at the first start if the site has no such file. Dotted keys (`kind.limits`) are written flat:
 
 ```yaml
@@ -514,9 +514,9 @@ process or connector holds, and the connector fails to start with `cannot open d
 The connector is undated. For history, serve the same kind from a dated connector as well, and let the router choose:
 
 ```yaml
-# packs/counterparty-risk/pack.yaml (sketch)
+# config/packs/counterparty-risk/pack.yaml (sketch)
 connectors:
-  credit-store:  { plugin: delta, settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: credit } }
+  credit-store:  { plugin: delta, settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: credit } }
   limits-mq:     { plugin: activemq, kinds: [credit-limit], settings: { destinations: queue:limits,
                    kind.limits: credit-limit, id-field.limits: limitId } }
 routes:
@@ -904,7 +904,7 @@ Live entities pushed by systems that publish to ActiveMQ Classic (OpenWire) queu
 on a queue and quotes on a topic. All keys are in [section 16](#16-settings).
 
 ```yaml
-# packs/<pack>/pack.yaml: the pack's suggested template (or the same settings as config/connectors/desk-orders.yaml)
+# config/packs/<pack>/pack.yaml: the pack's suggested template (or the same settings as config/connectors/desk-orders.yaml)
 connectors:
   desk-orders:
     plugin: activemq

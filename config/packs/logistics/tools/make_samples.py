@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Generates the logistics pack's sample entities. Run from the repository root:
-python3 packs/logistics/tools/make_samples.py
+python3 config/packs/logistics/tools/make_samples.py
 """
 import json
 import math

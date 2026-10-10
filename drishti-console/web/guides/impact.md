@@ -83,7 +83,7 @@ business date**, with that day's measures. With **Live**, it uses current data.
 Impact needs no code. In `pack.yaml`, under `graph.impact`:
 
 ```yaml
-# packs/counterparty-risk/pack.yaml (excerpt)
+# config/packs/counterparty-risk/pack.yaml (excerpt)
 graph:
   impact:
     follow: [nettingSet, creditLimit]     # roll dependents up through these fields

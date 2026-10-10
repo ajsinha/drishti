@@ -34,7 +34,7 @@ class ConnectorBootstrapTest {
     }
 
     private static final String RISK = "pack: risk\nkinds: [var]\nroutes:\n  var: risk-lake\nconnectors:\n  risk-lake:\n    plugin: delta\n    kinds: [var]\n    settings:\n"
-            + "      root: ${DRISHTI_DELTA_ROOT:./data/delta}\n      domain: risk\n";
+            + "      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n      domain: risk\n";
 
     @Test
     void aTemplateWithNoFileBecomesAFileOnceAndIsNeverOverwritten(@TempDir Path dir) throws Exception {
@@ -45,7 +45,7 @@ class ConnectorBootstrapTest {
         ConnectorFiles.Definition d = files.read("risk-lake");
         assertThat(d.plugin()).isEqualTo("delta");
         assertThat(d.kinds()).containsExactly("var");
-        assertThat(d.settings()).containsEntry("root", "${DRISHTI_DELTA_ROOT:./data/delta}").containsEntry("domain", "risk");
+        assertThat(d.settings()).containsEntry("root", "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}").containsEntry("domain", "risk");
         assertThat(d.text()).contains("Generated at first start").contains("never overwritten");
 
         files.write("risk-lake", "plugin: delta\nsettings:\n  root: /my/lake\n");           // the site edits it

@@ -31,7 +31,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
-ROOT="./data/iceberg"; OPTS=(); TRADES=""; DAYS="3"
+ROOT="${DRISHTI_DATA_DIR:-./data}/iceberg"; OPTS=(); TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { ROOT="$1"; shift; }
 while [[ $# -gt 0 ]]; do
   case "$1" in

@@ -18,7 +18,7 @@ kinds:
 - trade
 description: trading-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
-  root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}
+  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   domain: trading
   layout.trade.columns: tradeId,productType,productName,direction,currency,notional,mtm,pnl1d,maturityDate,tradeDate,book,desk,status,assetClass,counterparty.id,counterparty.name,nettingSet,risk.dv01,sourceSystem
   layout.trade.sort-by: id

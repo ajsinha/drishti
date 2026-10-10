@@ -191,7 +191,7 @@ public final class KafkaSourcePlugin implements SourcePlugin {
                 .weigher((EntityRef ref, EntityDocument d) -> weights.getOrDefault(ref, 4096)).build();
         if (!ticksOnly && Boolean.parseBoolean(ctx.setting("disk-cache.enabled", "false"))) {
             try {
-                String dir = ctx.setting("disk-cache.dir", ctx.setting("disk-cache.root", "./data/cache") + "/" + sourceName);
+                String dir = ctx.setting("disk-cache.dir", ctx.setting("disk-cache.root", com.ash.drishti.api.DataDir.under("cache")) + "/" + sourceName);
                 String at = ctx.setting("disk-cache.reset-at", "02:00");
                 disk = new com.ash.drishti.diskcache.DiskCache(java.nio.file.Path.of(dir),
                         (long) (Double.parseDouble(ctx.setting("disk-cache.max-gb", "10")) * 1024 * 1024 * 1024),

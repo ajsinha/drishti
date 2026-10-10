@@ -78,7 +78,7 @@ def test_the_async_forms_read_without_jspi(drishti_without_jspi):
 def _snippets():
     """Every starter snippet the packs ship: in pack.yaml (python.snippets) and in python/*.py."""
     out = []
-    for manifest in sorted(ROOT.glob("packs/*/pack.yaml")):
+    for manifest in sorted(ROOT.glob("config/packs/*/pack.yaml")):
         py = (yaml.safe_load(manifest.read_text()) or {}).get("python") or {}
         out += [(f"{manifest.parent.name}: {s.get('title')}", s.get("code") or "") for s in py.get("snippets") or []]
         out += [(f"{manifest.parent.name}/{f.name}", f.read_text()) for f in sorted((manifest.parent / "python").glob("*.py"))]

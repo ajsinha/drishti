@@ -17,7 +17,7 @@
   Starts the Drishti server on Windows: Java 21 or newer (production runs 21; 25 also supported), the native Delta engine (no Hadoop, no winutils.exe).
 
 .DESCRIPTION
-  Runs from the Drishti folder (a clone, or a copy holding the server jar, packs\ and data\). Finds the server jar,
+  Runs from the Drishti folder (a clone, or a copy holding the server jar, config\packs\ and data\). Finds the server jar,
   checks that Java is 21 or newer, sets the Delta engine to native and starts the server with -XX:+UseCompactObjectHeaders on Java 25+.
   In the foreground by default (Ctrl+C stops it); with -Background it starts in a window of its own, writes its
   process id to data\server.pid and its log to data\logs\server.log (stop it with -Stop).
@@ -83,7 +83,7 @@ if (-not $Jar) {
     if ($candidates.Count -eq 0) { throw 'No server jar: build it (.\mvnw.cmd -q package -DskipTests) or copy drishti-server-<version>-exec.jar here.' }
     $Jar = ($candidates | Sort-Object LastWriteTime -Descending | Select-Object -First 1).FullName
 }
-if (-not (Test-Path (Join-Path $root 'packs'))) { Write-Warning "No packs\ folder in $root: the server will start without domain packs." }
+if (-not (Test-Path (Join-Path $root 'config\packs'))) { Write-Warning "No config\packs\ folder in $root: the server will start without domain packs." }
 
 $env:DRISHTI_DELTA_ENGINE = $Engine
 $env:DRISHTI_PORT = "$Port"

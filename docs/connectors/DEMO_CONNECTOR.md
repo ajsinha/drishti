@@ -15,7 +15,7 @@
 -->
 # The demo connector: every pack's samples, in memory, ticking
 
-The `demo` connector serves the sample documents that ship inside each enabled pack (`packs/<pack>/samples/`). It
+The `demo` connector serves the sample documents that ship inside each enabled pack (`config/packs/<pack>/samples/`). It
 needs nothing installed: at start it reads every sample into memory, answers reads, type-ahead and reverse lookups from
 there, and moves the numbers of live samples a little every 400 ms while someone watches them. It is the server's
 `default-route`, so a fresh checkout shows working screens before any store is configured. This document explains what
@@ -63,7 +63,7 @@ Every enabled pack that has a `samples/` folder contributes it. The folder holds
 entity:
 
 ```
-packs/finance/samples/
+config/packs/finance/samples/
 ├── catalog.json                 the list of samples: kind, id, title, subtitle
 ├── trade/
 │   ├── IRS-48213.json           one document per entity: <kind>/<id>.json
@@ -471,7 +471,7 @@ The packs supply the directories; the site only switches the connector on or off
 [section 7.3](#73-how-a-field-moves).
 
 Two documents as they are written, the first an FX spot with no `walk` (the built-in walk of its kind applies), the
-second a trade that walks its MTM (`packs/trading/samples/trade/MX-20000001.json`, shortened):
+second a trade that walks its MTM (`config/packs/trading/samples/trade/MX-20000001.json`, shortened):
 
 ```json
 {

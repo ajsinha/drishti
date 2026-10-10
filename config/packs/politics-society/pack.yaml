@@ -111,7 +111,7 @@ connectors:
     - region
     - social-indicator
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: civic
 routes:
   jurisdiction: civic-store

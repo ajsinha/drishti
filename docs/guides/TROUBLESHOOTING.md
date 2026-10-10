@@ -153,11 +153,11 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
 ### The server stops at start-up with "pack '…' not found at …/pack.yaml"
 
-- **Cause:** a name in `DRISHTI_PACKS` has a typo, or the server cannot find the `packs/` folder. The default
-  folder is `./packs`, relative to the directory you start the server from.
+- **Cause:** a name in `DRISHTI_PACKS` has a typo, or the server cannot find the `config/packs/` folder. The default
+  folder is `./config/packs`, relative to the directory you start the server from.
 - **Check:** the message names the exact path it tried, for example
   `pack 'trading-risk' not found at /home/me/drishti/packs/trading-risk/pack.yaml`. Compare it with
-  `ls packs/`.
+  `ls config/packs/`.
 - **Fix:** use the folder names exactly (comma-separated, no spaces needed), and either start the server from
   the repository root or give an absolute folder:
 
@@ -544,7 +544,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
   ```bash
   uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-      --samples packs/finance/samples --root data/delta --domain finance --days 30
+      --samples config/packs/finance/samples --root data/delta --domain finance --days 30
   ```
 
 ### "Latest data on or before … is from …"
@@ -730,7 +730,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### A pack says *not loaded* in Admin → Packs
 
-- **Cause:** its folder is in `packs/`, but `DRISHTI_PACKS` did not name it (nor any pack that extends it), so
+- **Cause:** its folder is in `config/packs/`, but `DRISHTI_PACKS` did not name it (nor any pack that extends it), so
   the server did not load it.
 - **Fix:** press **Load** on its row: the server checks it, records it in `data/packs/added.yaml` and puts it to use
   at once, with no restart. If it says *cannot load 'finance': kind trade is defined by both pack 'trading' and pack 'finance'*, the
@@ -752,7 +752,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   message lists the stale files, and `extra=[…]` lists files the generator did not write.
 - **Fix:** move the change into the generator, run it without `--check`, and commit both
   ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)). To discard a hand edit instead:
-  `git checkout -- packs/<name>/…`.
+  `git checkout -- config/packs/<name>/…`.
 
 ## Connectors
 

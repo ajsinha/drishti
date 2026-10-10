@@ -103,7 +103,7 @@ public final class CliLauncher {
 
     /**
      * The packs behind the paths of a command line (a pack folder, or a Sutra file inside one: the nearest folder holding a
-     * {@code pack.yaml}), added to the enabled packs, so {@code sutra lint|test packs/market-risk} checks market-risk with its
+     * {@code pack.yaml}), added to the enabled packs, so {@code sutra lint|test config/packs/market-risk} checks market-risk with its
      * About text and glossary even when DRISHTI_PACKS names other packs. A pack outside the packs folder is read from its
      * parent folder (as an installed pack). Empty when no path is in a pack.
      */
@@ -111,7 +111,7 @@ public final class CliLauncher {
         java.util.Set<String> names = new java.util.LinkedHashSet<>();
         java.nio.file.Path outside = null;
         java.nio.file.Path packsDir = java.nio.file.Path.of(System.getProperty("drishti.packs.dir",
-                java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS_DIR"), "./packs"))).toAbsolutePath().normalize();
+                java.util.Objects.requireNonNullElse(System.getenv("DRISHTI_PACKS_DIR"), "./config/packs"))).toAbsolutePath().normalize();
         for (String arg : rest) {
             if (arg.startsWith("-")) {
                 continue;

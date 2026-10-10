@@ -139,7 +139,7 @@ trading pack declares them on `trading-store`; the `duckdb` profile (`SPRING_PRO
 connector to the `duckdb` plugin and keeps the pack's settings, so the declaration applies unchanged:
 
 ```yaml
-# packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
 connectors:
   trading-store:
     settings:
@@ -153,7 +153,7 @@ connectors:
 drishti:
   sources:
     connectors:
-      trading-store: { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}",
+      trading-store: { plugin: duckdb, settings: { path: "${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}",
                        memory-limit: "${DRISHTI_DUCKDB_MEMORY:1GB}", table: trading.entities, pool-size: "8" } }
 ```
 
@@ -518,7 +518,7 @@ kinds: [trade]
 description: Trading documents in an embedded DuckDB file
 settings:
   domain: trading
-  path: ${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}
+  path: ${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}
   memory-limit: ${DRISHTI_DUCKDB_MEMORY:1GB}
   table: trading.entities
   pool-size: '8'

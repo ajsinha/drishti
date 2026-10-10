@@ -33,7 +33,7 @@ import org.junit.jupiter.api.io.TempDir;
 class MatchTraceTest {
 
     static final ElCompiler EL = new ElCompiler();
-    static final Formats F = Formats.load(null, List.of("../packs/finance/config/formats.yaml"));
+    static final Formats F = Formats.load(null, List.of("../config/packs/finance/config/formats.yaml"));
 
     @TempDir
     Path dir;
@@ -92,7 +92,7 @@ class MatchTraceTest {
     @Test
     void matchIsUnchangedOverEveryShippedFinanceFixture() throws Exception {
         Path fixtures = ReferenceSutrasTest.FIXTURES;
-        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of("../packs/finance/sutras"), false, null, null, null, null, null, null, null, null), EL);
+        try (SutraRegistry r = new SutraRegistry(new RachanaProperties(List.of("../config/packs/finance/sutras"), false, null, null, null, null, null, null, null, null), EL);
                 Stream<Path> files = Files.walk(fixtures)) {
             SutraMatcher m = new SutraMatcher(r, EL, F);
             int n = 0;

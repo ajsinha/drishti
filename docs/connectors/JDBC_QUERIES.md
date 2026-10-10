@@ -78,7 +78,7 @@ settings:
   columns.trade: SELECT trade_id, mtm, notional, book, netting_set FROM trades WHERE business_date = :asOf
   reverse.trade: SELECT trade_id FROM trades WHERE netting_set = :target AND business_date = :asOf
   query.counterparty: SELECT * FROM counterparties WHERE id = :id
-# packs/<pack>/pack.yaml: the pack names the connector and routes its kinds
+# config/packs/<pack>/pack.yaml: the pack names the connector and routes its kinds
 connectors: [trading-db]
 routes:
   trade: trading-db
@@ -271,7 +271,7 @@ settings:
   reverse.trade: SELECT trade_id FROM trades WHERE netting_set = :target AND business_date = :asOf
   query.counterparty: SELECT * FROM counterparties WHERE id = :id
   ids.counterparty: SELECT id, legal_name FROM counterparties
-# packs/<pack>/pack.yaml: the pack names the connector and routes its kinds
+# config/packs/<pack>/pack.yaml: the pack names the connector and routes its kinds
 connectors: [trading-db]
 routes:
   trade: trading-db

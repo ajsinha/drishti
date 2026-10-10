@@ -313,7 +313,7 @@ def test_vol_estimators_on_a_simulated_path():
 # ---- risk ---------------------------------------------------------------------------------------------------------------
 
 def test_var_and_es_reproduce_the_engine_on_the_sample():
-    doc = json.loads((ROOT / "packs/market-risk/samples/var/VAR-RATES.json").read_text())
+    doc = json.loads((ROOT / "config/packs/market-risk/samples/var/VAR-RATES.json").read_text())
     assert round(q.historical_var(doc["scenarioPnl"], 0.99)) == doc["var99"]
     pnl = np.arange(1, 101) - 50.0
     assert q.historical_var(pnl, 0.95) == 45 and q.expected_shortfall(pnl, 0.95) == 47.0

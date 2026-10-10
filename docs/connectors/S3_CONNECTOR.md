@@ -145,7 +145,7 @@ Only `.json` objects are read. Unlike the `file` connector there is no CSV form 
 A pack suggests the connector as a template in its `pack.yaml`, off until switched on, with the kinds it serves (the server writes it to `config/connectors/risk-docs.yaml` at the first start if the site has none):
 
 ```yaml
-# packs/<pack>/pack.yaml
+# config/packs/<pack>/pack.yaml
 connectors:
   risk-docs:
     plugin: s3

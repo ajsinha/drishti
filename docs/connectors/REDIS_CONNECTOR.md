@@ -184,7 +184,7 @@ The pack declares the fields to promote on the connector that stores the kind, e
 packs' settings, so the same declaration applies:
 
 ```yaml
-# packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
+# config/packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
 connectors:
   trading-store:
     settings:

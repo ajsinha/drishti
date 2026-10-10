@@ -15,7 +15,7 @@
 """The liquidity-risk pack: LCR, NSFR, maturity ladders, HQLA holdings, funding sources, liquidity stress and intraday
 liquidity, per legal entity, generated from the banking packs' data so entities, counterparties and bonds line up.
 
-    python3 tools/packgen/liquidity/make.py            write packs/liquidity-risk
+    python3 tools/packgen/liquidity/make.py            write config/packs/liquidity-risk
     python3 tools/packgen/liquidity/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/liquidity/make.py --lake data/delta
 """

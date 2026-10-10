@@ -167,7 +167,7 @@ drishti/
 ├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, kafka, activemq, rabbitmq, s3
 ├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
-├── packs/<name>/                the 14 domain packs: pack.yaml, Sutras, vocabulary, samples, guides
+├── config/packs/<name>/                the 14 domain packs: pack.yaml, Sutras, vocabulary, samples, guides
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
 ├── tools/                       packgen/ samplegen/ lake/ (pack data and lakes), rachana/, packreg/ (signed packs),
 │                                drill.sh, license_headers.py

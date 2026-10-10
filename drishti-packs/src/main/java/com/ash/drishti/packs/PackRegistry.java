@@ -38,8 +38,8 @@ public final class PackRegistry {
     public PackRegistry(Environment env) {
         String loaded = env.getProperty("drishti.packs.loaded", "");
         List<String> names = Arrays.stream(loaded.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList();
-        this.state = state(new PackLoader().load(PackLoader.dirs(env.getProperty("drishti.packs.dir", "./packs"),
-                env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")), names));
+        this.state = state(new PackLoader().load(PackLoader.dirs(PackPaths.packsDir(env),
+                PackPaths.installedDir(env)), names));
     }
 
     private static State state(List<Pack> packs) {

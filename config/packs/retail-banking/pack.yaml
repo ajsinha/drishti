@@ -106,7 +106,7 @@ connectors:
     - collections-case
     - retail-portfolio
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: retail
 routes:
   customer: retail-store

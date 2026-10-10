@@ -41,7 +41,7 @@ For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECT
 
 Drishti has two programs. The **server** is one Spring Boot 3.5 application on Java 21 or newer, production runs 21 (`drishti-server`),
 built from a Maven reactor of internal modules. The **console** is a FastAPI and Jinja2 web application in
-`drishti-console/` that renders the server's JSON. Industries are **packs** (`packs/`), which are content and
+`drishti-console/` that renders the server's JSON. Industries are **packs** (`config/packs/`), which are content and
 configuration, not code.
 
 ### 1.1 Java modules
@@ -122,7 +122,7 @@ drishti-benchmarks                (inference)
 | Folder | What is in it |
 |---|---|
 | `drishti-console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`, `competitive.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`) |
-| `packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/`, `config/` (formats, semantics, help, workspaces), `guides/`, and `python/` (Calc snippets). Fourteen ship. |
+| `config/packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/`, `config/` (formats, semantics, help, workspaces), `guides/`, and `python/` (Calc snippets). Fourteen ship. |
 | `tools/packgen/` | Pack generators: `banking/` (five banking packs from one taxonomy, with their Calc snippets from `snippets/<pack>/*.py`), `common/packbuild.py` (the shared builder), and one `make.py` per other generated pack (`climate`, `economics`, `genomics`, `liquidity`, `oprisk`, `politics`, `retail`) |
 | `tools/load-delta.sh`, `tools/load-postgres.sh`, `tools/load-aerospike.sh` | Build or load the demo data in each store, small (the samples) to a million trades a day (`--trades N --days D`); see [DEMO_DATA.md](../connectors/DEMO_DATA.md) |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (Delta Lake writer), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for scale tests: `--trades`, `--days`), `stream.py` (Kafka ticker), plus `test_samplegen.py` and `test_layout.py` |
@@ -245,7 +245,7 @@ levels). Named variables such as `DRISHTI_CONSOLE_PORT` and `DRISHTI_BACKEND_URL
 
 ### 2.5 Running the server from source
 
-Build the jar, then start it from the repository root (the server finds `./packs` and `./data` relative to the
+Build the jar, then start it from the repository root (the server finds `./config/packs` and `./data` relative to the
 working directory):
 
 ```bash
@@ -262,7 +262,7 @@ The development loop that works best:
 
 | You changed | Do |
 |---|---|
-| A Sutra under `packs/*/sutras/` or a site Sutra directory | Nothing: `drishti.rachana.hot-reload` reloads it; an invalid edit keeps the last good version |
+| A Sutra under `config/packs/*/sutras/` or a site Sutra directory | Nothing: `drishti.rachana.hot-reload` reloads it; an invalid edit keeps the last good version |
 | Java code | Rebuild the module and the server jar (`./mvnw -q -o -pl drishti-server -am package -DskipTests`), restart the server |
 | `pack.yaml` | Restart the server (packs become properties at start-up) |
 | A console template | Reload the page |
@@ -315,7 +315,7 @@ is a `*.md` file or is a `help.yaml`, the drill runs in docs mode by itself; oth
      the page's state, failed requests and bad responses, and when a failed request is `net::ERR_NETWORK_CHANGED`
      (Chromium cancels requests when Docker changes the network interfaces) it reloads the page once and waits again
      (`wait()` and `should_reload()` in `drishti-console/tests`).
-   - **The Python tool tests**: every generator that supports `--check` (`packs/*/tools/make_*.py`,
+   - **The Python tool tests**: every generator that supports `--check` (`config/packs/*/tools/make_*.py`,
      `tools/packgen/*/make*.py`: generated pack content must match what the generator writes now), the `unittest`
      suites of `tools/`, and, if `uv` is installed, the lake writer and maintenance tests with `deltalake`, `pyarrow` and
      `pyyaml` supplied by `uv run --with`, each under a 10-minute `timeout` (a hung test fails the drill, exit 124).
@@ -1527,7 +1527,7 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
     clears it. If you changed inference code or semantic hints instead, restart, or purge the engine cache from
     *Admin → Caches*.
 14. **A test that reads the repository** (`DocumentedSutrasTest`, `ImperfectDataTest`, the `drishti-it` rules) resolves
-    paths relative to its module (`../docs`, `../packs`). Run Maven from the repository root.
+    paths relative to its module (`../docs`, `../config/packs`). Run Maven from the repository root.
 
 ---
 

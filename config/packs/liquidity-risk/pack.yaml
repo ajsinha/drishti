@@ -89,7 +89,7 @@ connectors:
     - liquidity-stress
     - intraday-liquidity
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: liquidity
 routes:
   lcr: liquidity-store

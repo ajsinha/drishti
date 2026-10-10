@@ -22,13 +22,13 @@ as it is; a running server picks the new trades up within a minute (its search i
 To go back to the 750 sample trades over 10 days: python3 tools/packgen/banking/make_data.py --lake data/delta
 (with uv run --with deltalake --with pyarrow --with pyyaml), which rewrites the whole lake as it was.
 
-The table follows the layout the trading pack declares for trades (packs/trading/pack.yaml, settings.layout.trade;
+The table follows the layout the trading pack declares for trades (config/packs/trading/pack.yaml, settings.layout.trade;
 see samplegen/layout.py): the promoted columns beside id and doc, each business date sorted by id and cut into
 files of file-rows trades (--file-rows overrides it), row groups of row-group-rows. All trade ids are listed and
 sorted first; the workers build each file's documents in slices, and the main process writes one file at a time
 (one append each), so memory holds about two files' rows whatever the size of the book.
 
-The trades are the trading pack's 750 sample trades (packs/trading/samples/trade, written by make_data.py), kept
+The trades are the trading pack's 750 sample trades (config/packs/trading/samples/trade, written by make_data.py), kept
 as they are, and clones of them. Every trade is booked in the system its asset class lives in and carries that
 system's number (tools/packgen/banking/booking.py): Murex MX-… (rates, inflation), Calypso CLY-… (credit), Endur
 END-… (commodities), Imagine IMG-… (equity, structured), Bloomberg TOMS BBG-… (fixed income, securities financing),
@@ -74,7 +74,7 @@ from samplegen.dates import Calendar  # noqa: E402
 from samplegen.lake import business_days, walk  # noqa: E402
 from samplegen.layout import Layout, arrow_table, infer_types, layouts_for_domain, promote, write_file  # noqa: E402
 
-TEMPLATES = ROOT / "packs" / "trading" / "samples" / "trade"
+TEMPLATES = ROOT / "config" / "packs" / "trading" / "samples" / "trade"
 AS_OF = date(2026, 9, 30)                      # the banking lake's newest business date (data_names.AS_OF)
 PLACEHOLDER = "\u0000ID\u0000"
 # amounts that grow with the trade's size; rates, dates, counts and discount factors stay as they are
@@ -217,7 +217,7 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--trades", type=int, default=500_000, help="how many trades (default 500000; the first 750 are the samples)")
     ap.add_argument("--days", type=int, default=3, help="business days of history, ending at --as-of (default 3)")
-    ap.add_argument("--root", default="data/delta", help="the lake whose trade table is replaced (default data/delta)")
+    ap.add_argument("--root", default=__import__("os").environ.get("DRISHTI_DATA_DIR", "data") + "/delta", help="the lake whose trade table is replaced (default data/delta)")
     ap.add_argument("--as-of", default=AS_OF.isoformat(), help=f"the newest business date (default {AS_OF})")
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("--file-rows", type=int, default=None, help="trades per Parquet file (default: the trading pack's layout, file-rows)")

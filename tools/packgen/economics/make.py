@@ -16,7 +16,7 @@
 scenarios, bilateral trade flows, labour markets, fiscal positions and consumer-price baskets. The economies are real;
 the figures are illustrative, not official statistics (the market-data pack's feeds bring real rates).
 
-    python3 tools/packgen/economics/make.py            write packs/economics
+    python3 tools/packgen/economics/make.py            write config/packs/economics
     python3 tools/packgen/economics/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/economics/make.py --lake data/delta
 """

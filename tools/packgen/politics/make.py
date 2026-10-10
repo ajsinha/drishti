@@ -17,7 +17,7 @@ bills and their stages, regions and social indicators. The polities are fictiona
 real politics; the structures (D'Hondt and first-past-the-post seats, poll margins of error, legislative stages) are
 the real ones.
 
-    python3 tools/packgen/politics/make.py            write packs/politics-society
+    python3 tools/packgen/politics/make.py            write config/packs/politics-society
     python3 tools/packgen/politics/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/politics/make.py --lake data/delta
 """

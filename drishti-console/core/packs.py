@@ -14,20 +14,27 @@
 
 """The console side of domain packs: which packs are enabled (asked of the server, the single source of truth)
 and what each contributes to the console: example commands, workspace starters and help guides, read from
-``packs/<name>/``. Cached for a minute; falls back to ``packs.enabled`` when the server is unreachable."""
+``config/packs/<name>/``. Cached for a minute; falls back to ``packs.enabled`` when the server is unreachable."""
 from __future__ import annotations
 
+import logging
 import time
 from pathlib import Path
 
 import yaml
 from core.servers import scoped
 
+log = logging.getLogger(__name__)
+
 
 class Packs:
     def __init__(self, settings, console_dir: Path):
-        d = Path(settings.get("packs.dir", "../packs"))
+        d = Path(settings.get("packs.dir", "../config/packs"))
         self.dir = d if d.is_absolute() else (console_dir / d).resolve()
+        legacy = (console_dir / "../packs").resolve()
+        if not self.dir.is_dir() and legacy.is_dir():        # one release of grace for the old location
+            log.warning("The packs folder %s does not exist; using the old location %s (move it to config/packs).", self.dir, legacy)
+            self.dir = legacy
         self.fallback = [p.strip() for p in str(settings.get("packs.enabled", "finance")).split(",") if p.strip()]
         self._cache: dict[str, tuple[float, list, list]] = {}
 

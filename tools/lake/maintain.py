@@ -251,7 +251,7 @@ def relayout(uri: str, lay: Layout, dates: str | None = None, force: bool = Fals
 
 def relayout_main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="maintain.py relayout", description="rewrite tables into their pack's layout")
-    ap.add_argument("--root", default="data/delta")
+    ap.add_argument("--root", default=__import__("os").environ.get("DRISHTI_DATA_DIR", "data") + "/delta")
     ap.add_argument("--domain", required=True)
     ap.add_argument("--kind", default=None, help="one kind (default: every kind with a layout in the domain)")
     ap.add_argument("--dates", default=None, help="only these business dates: 2026-09-28,2026-09-30 or 2026-09-01..2026-09-30")

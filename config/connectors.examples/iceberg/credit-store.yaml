@@ -22,7 +22,7 @@ kinds:
 - sa-ccr
 description: credit-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
-  root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}
+  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   domain: credit
   catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
   uri: ${DRISHTI_ICEBERG_URI:}

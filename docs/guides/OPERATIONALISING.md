@@ -46,8 +46,8 @@ needs only a shell: `tar` and `cp` are enough to do by hand what `pack deploy` d
 
 | Artifact | What it is | Made by | Goes to (on the server) | Server notices it |
 |---|---|---|---|---|
-| **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`) | one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the **packs folder**: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, default `./packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | `DRISHTI_PACKS` + restart, or Admin → Packs → Load |
-| **Pack folder** `packs/<name>/` | the same content, unpacked (what git holds) | you, `pack new` | the same places, as `<packs folder>/<name>/` | the same |
+| **Pack bundle** `<name>-<version>.tar.gz` (+ `.sha256`) | one pack, versioned, with a manifest of every file's checksum | `pack bundle` | unpacked by `pack deploy` into the **packs folder**: `drishti.packs.dir` (`DRISHTI_PACKS_DIR`, default `./config/packs`) or `drishti.packs.installed-dir` (`./data/packs/installed`, searched first) | `DRISHTI_PACKS` + restart, or Admin → Packs → Load |
+| **Pack folder** `config/packs/<name>/` | the same content, unpacked (what git holds) | you, `pack new` | the same places, as `<packs folder>/<name>/` | the same |
 | **Sutra files** `sutras/**/*.sutra.yaml` | one screen each; inside a pack's `sutras/` or a site folder | `sutra design`, `sutra gen`, the Screen Designer's export | `<pack>/sutras/` (or the site Sutra folder, `drishti.rachana.dirs`) | **hot reload**: seconds, no restart |
 | **`config/about.yaml`** (+ `about.<lang>.yaml`, `help.yaml`, `formats.yaml`) | glossary text and formats of a pack | you | `<pack>/config/` | on pack load / restart; Sutra help follows hot reload |
 | **Delta lake** | the data, `<root>/<domain>/<kind>/business_date=…/` | `data ingest --lake`, `tools/lake/*` | `DRISHTI_DELTA_ROOT` (or `s3a://…`) | the connector re-reads the table version every `refresh-seconds` (10) and rebuilds its index every minute |
@@ -71,7 +71,7 @@ A running server is **never touched** by `pack deploy`. That is deliberate: copy
 ## 3. Make a bundle
 
 ```bash
-python3 tools/drishti.py pack bundle packs/finance --out dist
+python3 tools/drishti.py pack bundle config/packs/finance --out dist
 ```
 
 ```text
@@ -225,10 +225,10 @@ On a server that has only `tar` and `sha256sum`:
 ```bash
 cd /srv/drishti/incoming
 sha256sum -c finance-1.0.1.tar.gz.sha256            # finance-1.0.1.tar.gz: OK
-mkdir -p ../packs/.stage && tar -xzf finance-1.0.1.tar.gz -C ../packs/.stage
-mv ../packs/finance ../backups/finance-1.0.0         # keep the old one (skip on a first deploy)
-mv ../packs/.stage/finance ../packs/finance          # the rename is the switch
-rmdir ../packs/.stage
+mkdir -p ../config/packs/.stage && tar -xzf finance-1.0.1.tar.gz -C ../config/packs/.stage
+mv ../config/packs/finance ../backups/finance-1.0.0         # keep the old one (skip on a first deploy)
+mv ../config/packs/.stage/finance ../config/packs/finance          # the rename is the switch
+rmdir ../config/packs/.stage
 ```
 
 `MANIFEST.json` stays inside the deployed folder, so `pack verify <folder>` can check it any time.
@@ -238,7 +238,7 @@ rmdir ../packs/.stage
 The point of a bundle is that **what you tested is what you ship**. Build once, on CI, and copy the same file through the stages:
 
 ```text
-git (packs/finance, tag v1.0.1)
+git (config/packs/finance, tag v1.0.1)
    │  CI: pack check, pack bundle
    ▼
 finance-1.0.1.tar.gz + .sha256        ← built ONCE, stored as a CI artifact
@@ -261,7 +261,7 @@ All of these are plain text files, so they are copied like anything else.
 
 - **Sutras** (`*.sutra.yaml`) made by `sutra design`, `sutra gen`/`sutragen` or the Screen Designer are ordinary files. Copy them into a pack's `sutras/<folder>/`. On a **running** server they hot-reload ([RACHANA_REFERENCE.md, Editing files on disk](RACHANA_REFERENCE.md#hot-reload-the-workbench-and-governance)): a valid file replaces the old one at once, an invalid one is reported and the last good version stays live, a deleted file's Sutras disappear.
 - **Designer export:** `drishti.py design export <id> -o design.zip` writes a zip of the Sutra and its samples. Unzip it and copy the `.sutra.yaml` into the pack (git first, then the next bundle); or hot-copy it onto a server for an urgent fix, and put the same file into git afterwards so the next bundle contains it.
-- **`config/about.yaml`** (and `about.<lang>.yaml`): copy into `<pack>/config/`. Check it with `pack about-check packs/<name>` before you ship ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)).
+- **`config/about.yaml`** (and `about.<lang>.yaml`): copy into `<pack>/config/`. Check it with `pack about-check config/packs/<name>` before you ship ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md)).
 
 Prefer shipping a Sutra change as a **new bundle** (a version, a checksum, a rollback). Hot-copy is for emergencies, and
 `pack verify <deployed folder>` will then report the drift until you redeploy a bundle.
@@ -285,7 +285,7 @@ while it is half-finished.** Write somewhere else, then make it appear in one st
 
 ```bash
 # 1. produce a day somewhere private (the ingest tool is idempotent per business date)
-python3 tools/drishti.py data ingest --from new-day.jsonl --pack packs/finance --store files --root /srv/stage/files
+python3 tools/drishti.py data ingest --from new-day.jsonl --pack config/packs/finance --store files --root /srv/stage/files
 # 2. copy the date folder next to the others: first under a dot name, then rename (a rename is atomic on one filesystem)
 cp -r /srv/stage/files/finance/2026-10-05 /srv/drishti/files/finance/.2026-10-05.part
 mv /srv/drishti/files/finance/.2026-10-05.part /srv/drishti/files/finance/2026-10-05
@@ -332,12 +332,12 @@ restored finance 1.0.0 from prod/backups/finance-1.0.0-20261005T181007_529311; t
 
 It puts back the **newest** backup (`--version 1.0.0` picks one), keeps the version it replaced (so rolling back is itself
 undoable) and swaps in one rename. Then make the server notice: restart the server; Sutra-only differences
-already hot-reloaded. By hand: `mv packs/finance packs/finance.bad && mv backups/finance-1.0.0-… packs/finance`.
+already hot-reloaded. By hand: `mv config/packs/finance config/packs/finance.bad && mv backups/finance-1.0.0-… config/packs/finance`.
 Data rolls back by `mv files files.new && mv files.old files` (section 8) or, for Delta, by `RESTORE`/time travel on the table.
 
 ## 11. Git as the source of truth, and a CI example
 
-Keep `packs/<name>/` in git, **including** the version bump. A release is a tag. Production is reproducible from the tag:
+Keep `config/packs/<name>/` in git, **including** the version bump. A release is a tag. Production is reproducible from the tag:
 `git checkout v1.0.1 && pack bundle` gives the same bytes. Never edit a deployed folder; change git, build, deploy.
 
 A GitHub Actions job that produces the bundle (adapt the syntax to any CI):
@@ -354,8 +354,8 @@ jobs:
         with: { distribution: temurin, java-version: 21 }
       - uses: astral-sh/setup-uv@v5
       - run: ./mvnw -q -DskipTests package -pl drishti-server -am        # the exec jar that lint and test use
-      - run: uv run --with pyyaml python tools/drishti.py pack check packs/finance --strict --junit build/reports
-      - run: uv run --with pyyaml python tools/drishti.py pack bundle packs/finance --out dist
+      - run: uv run --with pyyaml python tools/drishti.py pack check config/packs/finance --strict --junit build/reports
+      - run: uv run --with pyyaml python tools/drishti.py pack bundle config/packs/finance --out dist
       - run: uv run --with pyyaml python tools/drishti.py pack verify dist/finance-*.tar.gz
       - uses: actions/upload-artifact@v4
         with: { name: finance-bundle, path: "dist/finance-*" }
@@ -430,7 +430,7 @@ More in [WINDOWS.md](WINDOWS.md).
 | `checksum mismatch: <file>` / `file not in the manifest: <file>` | a deployed or unpacked pack was edited by hand | put the change in git and ship a new bundle, or redeploy the bundle |
 | `the bundle needs server >=X but the target is Y` | the bundle was built against a newer server | upgrade the server, or rebuild with `--requires-server` if you know it is compatible |
 | `unsafe entry` | a handmade archive with `..`, absolute paths or links | rebuild it with `pack bundle` |
-| `the pack fails pack check` | lint/test failed before bundling | run `pack check packs/<name>`; fix; `--no-check` only for a diagnosis |
+| `the pack fails pack check` | lint/test failed before bundling | run `pack check config/packs/<name>`; fix; `--no-check` only for a diagnosis |
 | `no drishti-server-*-exec.jar` | verify/bundle need the jar for lint and test | build it, set `DRISHTI_JAR`, or `--no-sutra` on a target that has no Java |
 | deployed, but the old content is served | the server holds the old pack in memory | restart the server |
 | deployed, but the pack is not in Admin → Packs | its name is not in `DRISHTI_PACKS` | add it and restart, or Admin → Packs → Load |
@@ -478,7 +478,7 @@ back by itself** if it cannot start with the new ones. The archive is the one se
 
 ### 17.1 Deploy an archive
 
-1. Build and verify the bundle as in sections 3 and 4 (`drishti.py pack bundle packs/my-bank`).
+1. Build and verify the bundle as in sections 3 and 4 (`drishti.py pack bundle config/packs/my-bank`).
 2. **Admin → Packs → Deploy an archive**: choose the `.tar.gz` (or drop it on the box) and press **Upload and check**. Nothing changes yet.
 
    ![Deploy an archive: the checks the server ran on the upload](img/deploy/01-deploy-checks.jpg)
@@ -509,7 +509,7 @@ back by itself** if it cannot start with the new ones. The archive is the one se
    | **change** | Sutra content, about text or glossary changed | allowed |
 
    A version that is the same as, or older than, the running one is flagged and still allowed.
-4. **Deploy**. The server swaps the files into `drishti.packs.installed-dir` (the folder that wins over `packs/`), keeps the previous version under
+4. **Deploy**. The server swaps the files into `drishti.packs.installed-dir` (the folder that wins over `config/packs/`), keeps the previous version under
    `.previous/<pack>/<version>-<time>`, then checks all loaded packs with the new one, puts it to use **at once, with no restart**. A pack that was not loaded is loaded.
    If the check fails, or the server cannot start with the new files, the old files are put back and the history says *reverted*; users stay signed in and
    live views reconnect.

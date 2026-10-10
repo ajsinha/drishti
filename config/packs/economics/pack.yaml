@@ -115,7 +115,7 @@ connectors:
     - fiscal-position
     - price-basket
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: macro
 routes:
   economy: macro-store

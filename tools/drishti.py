@@ -247,8 +247,8 @@ def cmd_pack_new(a, extra) -> int:
     rc = PFJ.run(a)
     if rc or not a.load:
         return rc
-    out = (a.out or ROOT / "packs" / a.name).resolve()
-    if out.parent != (ROOT / "packs").resolve():
+    out = (a.out or ROOT / "config" / "packs" / a.name).resolve()
+    if out.parent != (ROOT / "config" / "packs").resolve():
         print(f"drishti: --load: the server reads packs from its own packs folder (drishti.packs.dir) or installed-dir; {out} is elsewhere, "
               f"so the server only finds it if that folder is its pack folder.", file=sys.stderr)
     return server_pack_change(a, "load", a.name)
@@ -860,7 +860,7 @@ def jvm_parent() -> argparse.ArgumentParser:
     return p
 
 
-SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint packs/market-risk --strict\n  drishti.py sutra test packs/market-risk --junit build/market-risk.xml\n"
+SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint config/packs/market-risk --strict\n  drishti.py sutra test config/packs/market-risk --junit build/market-risk.xml\n"
                   "  drishti.py sutra shape samples/ --out build\n  drishti.py sutra design samples/ --kind ticket\n"
                   "Unknown options are passed to the Java tool. Exit codes as the Java tool: 0 ok, 1 problems, 2 usage.")
 
@@ -924,7 +924,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("packmake", "packmake.py").add_arguments(pm)
     pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; takes effect at once, no restart)")
     pc = add(k, "check", cmd_pack_check, "pack check: sutra lint + sutra test (with help coverage) on packs, for CI", [jvm, js],
-             "examples:\n  drishti.py pack check packs/my-bank --strict --junit build/reports\n  drishti.py pack check packs/a packs/b --json\n"
+             "examples:\n  drishti.py pack check config/packs/my-bank --strict --junit build/reports\n  drishti.py pack check config/packs/a config/packs/b --json\n"
              "exit: 0 all passed, 1 any failure, 2 usage")
     pc.add_argument("packs", nargs="+", metavar="PACK", help="pack folder(s)")
     pc.add_argument("--strict", action="store_true", help="help warnings (DRS-2045 to 2047: a shown field without glossary text) fail the run")
@@ -935,7 +935,7 @@ def build_parser() -> argparse.ArgumentParser:
     pa.add_argument("packs", nargs="+", metavar="PACK")
     pa.add_argument("--strict", action="store_true", help="placeholder 'TODO' texts in config/about.yaml count as gaps too")
     pp = add(k, "publish", cmd_pack_publish, "pack publish: sign a pack and add it to a registry folder (tools/packreg)", [js],
-             "example:\n  drishti.py pack publish packs/my-bank --registry /srv/registry --key keys/me.pem --publisher me")
+             "example:\n  drishti.py pack publish config/packs/my-bank --registry /srv/registry --key keys/me.pem --publisher me")
     pp.add_argument("pack")
     pp.add_argument("--registry", required=True)
     pp.add_argument("--key", required=True, help="the private key (make one with `pack keygen`)")
@@ -944,7 +944,7 @@ def build_parser() -> argparse.ArgumentParser:
     pg.add_argument("--out", required=True)
     pb = add(k, "bundle", cmd_pack_bundle, "pack bundle: make a versioned, checksummed <name>-<version>.tar.gz (+ .sha256, MANIFEST) to copy to servers", [jvm],
              "Runs `pack check` first (--no-check to skip). The archive is reproducible: the same content gives the same bytes.\n"
-             "example:\n  drishti.py pack bundle packs/my-bank --out dist\nGuide: docs/guides/OPERATIONALISING.md")
+             "example:\n  drishti.py pack bundle config/packs/my-bank --out dist\nGuide: docs/guides/OPERATIONALISING.md")
     pb.add_argument("pack")
     pb.add_argument("--out", metavar="DIR", help="where to write the bundle (default ./dist)")
     pb.add_argument("--requires-server", metavar="VERSION", help="the minimum server version recorded in the manifest (default: this checkout's version)")
@@ -956,7 +956,7 @@ def build_parser() -> argparse.ArgumentParser:
     vparent.add_argument("--server-version", metavar="V", help="the target server's version (default: this checkout's); a bundle that needs a newer one fails")
     vparent.add_argument("--json", action="store_true", help="print the report as JSON")
     pv = add(k, "verify", cmd_pack_verify, "pack verify: check a bundle or pack folder offline (checksums, schema, sutra lint/test, server version); or --registry for a registry's signatures",
-             [jvm, vparent], "examples:\n  drishti.py pack verify dist/my-bank-1.2.0.tar.gz\n  drishti.py pack verify packs/my-bank --no-sutra\n"
+             [jvm, vparent], "examples:\n  drishti.py pack verify dist/my-bank-1.2.0.tar.gz\n  drishti.py pack verify config/packs/my-bank --no-sutra\n"
              "  drishti.py pack verify --registry /srv/registry --publisher me --public-key keys/me.pub")
     pv.add_argument("source", nargs="?", metavar="BUNDLE|FOLDER")
     pv.add_argument("--registry")
@@ -986,8 +986,8 @@ def build_parser() -> argparse.ArgumentParser:
     # data -------------------------------------------------------------------------------------------------
     d = group("data", "Data: ingest your own JSON Lines into a lake or files store; load the demo data into any store")
     add(d, "ingest", cmd_data_ingest, "data ingest: write JSON Lines documents into a Delta lake or the File connector's layout (tools/ingest_jsonl.py)",
-        [IJ.build_parser(add_help=False)], "examples:\n  drishti.py data ingest --from data/new --pack packs/my-bank --lake data/delta\n"
-        "  drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack packs/my-bank --store files --root data/files --dry-run")
+        [IJ.build_parser(add_help=False)], "examples:\n  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta\n"
+        "  drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack config/packs/my-bank --store files --root data/files --dry-run")
     dl = add(d, "load", cmd_data_load, "data load: load the demo data (1,791 sample documents x 10 days, optionally a trade book) into a store (tools/load-<store>.sh)",
              epilog="examples:\n  drishti.py data load --store delta\n  drishti.py data load --store files --trades 10000 --days 3\n"
                     "  drishti.py data load --store postgres jdbc:postgresql://localhost:5433/drishti --trades 10000 --user u --password p\n"

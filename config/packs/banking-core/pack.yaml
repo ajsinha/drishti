@@ -159,7 +159,7 @@ connectors:
     - csa
     - clearing-account
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: reference
       mode.counterparty: effective
       mode.counterparty-group: effective

@@ -92,7 +92,7 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 ## W5 — Rachana-EL & reference Sutras
 - Rachana-EL: lexer → parser → AST → compiled closures (paths, `[?x]` filters, ternary, `link()`, `size()`, arithmetic, concat); EBNF in the reference doc.
 - `Formats` (bundled `formats.yaml`, site override file) and `Tones`; `SutraMatcher` (the Sutra `match` block is the classifier).
-- `packs/finance/sutras/rates/irs-vanilla.v3.sutra.md`, `packs/finance/sutras/fx/fx-swap.v2.sutra.md`, `packs/finance/sutras/commodities/listed-future.v1.sutra.md`, `packs/finance/sutras/credit/netting-set.v1.sutra.md` (all `.sutra.yaml` since 1.11).
+- `config/packs/finance/sutras/rates/irs-vanilla.v3.sutra.md`, `config/packs/finance/sutras/fx/fx-swap.v2.sutra.md`, `config/packs/finance/sutras/commodities/listed-future.v1.sutra.md`, `config/packs/finance/sutras/credit/netting-set.v1.sutra.md` (all `.sutra.yaml` since 1.11).
 - Tests: jqwik property tests for EL; golden `Layout` JSON per reference Sutra.
 
 ## W6 — Inference engine

@@ -134,7 +134,7 @@ def serve(work: Path) -> list:
     packs = work / "packs"
     packs.mkdir()
     for name in QUICKSTART:
-        (packs / name).symlink_to(ROOT / "packs" / name)
+        (packs / name).symlink_to(ROOT / "config" / "packs" / name)
     reg = work / "reg"
     reg.mkdir()
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"

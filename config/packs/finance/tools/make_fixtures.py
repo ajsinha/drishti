@@ -19,7 +19,7 @@ calculation periods with fixings and PVs, execution, lifecycle, confirmation, cl
 settlement and valuation blocks. The values the mockups show are kept exactly; everything else is derived
 consistently from them (the thin trades' fixed rates are solved so their cashflows reprice to their MTM).
 
-Run from the repository root:  python3 packs/finance/tools/make_fixtures.py
+Run from the repository root:  python3 config/packs/finance/tools/make_fixtures.py
 """
 import json
 import math

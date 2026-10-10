@@ -65,11 +65,11 @@ Things worth knowing before you plan an installation:
 - **Both processes keep no session state in memory that matters.** The console's sign-in session is a signed
   cookie, so any console instance can serve any user. You can run several of each behind a load balancer, as long
   as the server instances share the same `data/` directories (users, governance) and the same Sutra directories.
-- **The server's working directory matters.** Every relative path in its configuration (`./packs`, `./sutras`,
+- **The server's working directory matters.** Every relative path in its configuration (`./config/packs`, `./sutras`,
   `./data/...`, `./application.local.yaml`) is resolved from the directory you start it in. Start it from the
   installation directory, or set the paths to absolute values.
 - **The console finds its files relative to itself.** It reads `drishti-console/config/application.yaml`, and its default
-  `packs.dir` (`../packs`) and `help.docs_dir` (`../docs`) are relative to the `drishti-console/` directory, not to the
+  `packs.dir` (`../config/packs`) and `help.docs_dir` (`../docs`) are relative to the `drishti-console/` directory, not to the
   directory you start it in.
 - **The server's `/api/v1/...` endpoints trust the caller completely when security is off.** With
   `drishti.security.enabled: false` (the development default) anyone who can reach port 18480 is an administrator.
@@ -132,9 +132,12 @@ The result:
 /opt/drishti/
 ├── drishti-server.jar           the server
 ├── application.local.yaml       your site settings (optional; create it, see CONFIGURATION.md)
-├── packs/                       domain packs (the server reads ./packs, the console ../packs)
+├── config/
+│   ├── packs/                   domain packs (the server reads ./config/packs, the console ../config/packs)
+│   ├── connectors/              one file per connector (DRISHTI_CONNECTORS_DIR)
+│   └── bi/                      Rupaka (BI) files: datasets/, reports/, python/ (DRISHTI_BI_DIR)
 ├── sutras/                      your own Sutras (drishti.rachana.dirs, default ./sutras)
-├── data/                        everything the server writes: users, governance, caches (section 10)
+├── data/                        everything the server writes: users, governance, caches (DRISHTI_DATA_DIR, section 10)
 ├── docs/                        rendered by the console's help centre
 └── drishti-console/
     ├── run_drishti_web.py
@@ -204,7 +207,7 @@ balancer's readiness check at `/readyz` and a restart policy at `/healthz`.
 
 ### 3.6 Choosing packs
 
-`DRISHTI_PACKS` is a comma-separated list of pack names (directories under `packs/`). Enabling a pack also enables
+`DRISHTI_PACKS` is a comma-separated list of pack names (directories under `config/packs/`). Enabling a pack also enables
 the packs it `extends`. For example `DRISHTI_PACKS=market-risk` brings in `market-data`, `trading` and
 `banking-core` as well. The installed packs are:
 
@@ -248,7 +251,7 @@ docker build -f deploy/server.Dockerfile  -t drishti-server:1.18.0 .   # base im
 docker build -f deploy/console.Dockerfile -t drishti-console:1.18.0 .
 ```
 
-The server image contains the jar and `packs/`. The console image contains the console, `docs/`, `packs/` and the
+The server image contains the jar and `config/packs/`. The console image contains the console, `docs/`, `config/packs/` and the
 licence and release files, so the help centre works without network access.
 
 ### 4.2 Provide the secrets
@@ -348,13 +351,13 @@ uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/bankin
 
 # the finance pack's own lake (domain "finance")
 uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \
-    --samples packs/finance/samples --root data/delta --domain finance --days 10
+    --samples config/packs/finance/samples --root data/delta --domain finance --days 10
 ```
 
 The other generated packs write their lakes the same way, for example
 `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/climate/make.py --lake data/delta`
 (also `genomics`, `politics`, `liquidity`, `oprisk`, `economics`, `retail`). Note that these generators also rewrite
-the pack's own files under `packs/`.
+the pack's own files under `config/packs/`.
 
 ### 5.2 PostgreSQL, Aerospike and Kafka in Docker
 
@@ -443,7 +446,7 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | `DRISHTI_CALENDAR` | `USNY` | `drishti.business-date.calendar` | holiday calendar for the default business date: `USNY`, `GBLO`, `EUTA`, `JPTO`, or joint such as `USNY+GBLO` |
 | `DRISHTI_PACKS` | `finance` | `drishti.packs.enabled` | comma-separated packs to enable |
 | `DRISHTI_PACKS_OVERLAY` | `./data/packs/added.yaml` | `drishti.packs.overlay` | packs loaded from Admin → Packs (written by the server, read at every start); back it up with `data/` |
-| `DRISHTI_PACKS_DIR` | `./packs` | `drishti.packs.dir` | where the packs are. The console reads the same variable, but resolves a relative value from `drishti-console/`; use an absolute path if you set it |
+| `DRISHTI_PACKS_DIR` | `./config/packs` | `drishti.packs.dir` | where the packs are. The console reads the same variable, but resolves a relative value from `drishti-console/`; use an absolute path if you set it |
 | `DRISHTI_DEFAULT_PACKS` | empty (every installed pack) | `drishti.packs.default-for-users` | packs new users get until an admin changes them |
 | `DRISHTI_SUTRAS` | `./sutras` | `drishti.rachana.dirs` | your own Sutra directories, scanned recursively, in addition to the packs' Sutras |
 | `DRISHTI_STUDIO_SAVE` | `false` | `drishti.rachana.studio-save` | let Sutra Studio save files (into the first Sutra directory); only in authoring environments |
@@ -545,7 +548,7 @@ Defined in `drishti-console/config/application.yaml`.
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | `false`, empty, empty | `auth.oidc.*` | single sign-on; the same values as the server's |
 | `DRISHTI_OIDC_CLIENT_SECRET` | empty | `auth.oidc.client_secret` | the client secret (empty for a public client using PKCE alone) |
 | `DRISHTI_OIDC_REDIRECT_URI` | empty (`<console>/auth/oidc/callback`) | `auth.oidc.redirect_uri` | set it to the public HTTPS URL when the console is behind a proxy |
-| `DRISHTI_PACKS_DIR` | `../packs` (relative to `drishti-console/`) | `packs.dir` | the packs (for guides and examples) |
+| `DRISHTI_PACKS_DIR` | `../config/packs` (relative to `drishti-console/`) | `packs.dir` | the packs (for guides and examples) |
 | `DRISHTI_USER` | `ash` | `ui.user` | the acting user when sign-in is off (development only) |
 
 ### 6.7 Docker Compose only
@@ -624,7 +627,7 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
-- `WorkingDirectory` matters: `./packs`, `./data`, `./sutras` and `./application.local.yaml` are found from it.
+- `WorkingDirectory` matters: `./config/packs`, `./data`, `./sutras` and `./application.local.yaml` are found from it.
 - The server shuts down gracefully (`server.shutdown: graceful`): it stops taking requests and lets running ones
   finish, for up to 30 seconds; `TimeoutStopSec=45` gives it that time. Exit code 143 is a normal stop on SIGTERM.
 - Without `-Xmx` the JVM takes a quarter of the machine's memory as its heap ceiling.
@@ -1064,7 +1067,7 @@ working directory unless you changed them.
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
 | `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
 | `data/feeds/` (`DRISHTI_FEEDS`) | files for the file connector | by whoever writes them | |
-| `packs/` | the packs you installed | no, if they come from the release | keep your own packs in version control |
+| `config/packs/` | the packs you installed | no, if they come from the release | keep your own packs in version control |
 
 ### 10.1 A nightly backup
 
@@ -1441,7 +1444,7 @@ User actions (sign-ins, user changes, cache purges, Sutra approvals) are not in 
 2. **Back up** (section 10.1), and keep the old jar: `cp drishti-server.jar drishti-server-$(date +%F).jar`.
 3. **Build or fetch** the new release: `./mvnw -q clean package -DskipTests`.
 4. **Stop** the console and the server: `sudo systemctl stop drishti-console drishti-server`.
-5. **Replace** the jar, `packs/`, `drishti-console/` and `docs/` (keep `drishti-console/.venv` and your
+5. **Replace** the jar, `config/packs/`, `drishti-console/` and `docs/` (keep `drishti-console/.venv` and your
    `drishti-console/config/application.local.yaml`). Re-run `uv pip install --python drishti-console/.venv/bin/python -r
    drishti-console/requirements.txt` in case the console's libraries changed.
 6. **Start** the server, then the console.

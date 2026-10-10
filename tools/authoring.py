@@ -48,7 +48,7 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
     p = add(packs, "regenerate", guarded("packregen", lambda m, a: m.regenerate(a, cli, getattr(a, "_actions", ()))),
             "pack regenerate: regenerate Sutras, about text and tests from new data and three-way merge them into the pack, keeping your edits",
             [PFJ.build_parser(add_help=False), js],
-            "example:\n  drishti.py pack regenerate packs/my-bank data/jsonl --dry-run\n  drishti.py pack regenerate packs/my-bank data/jsonl\n"
+            "example:\n  drishti.py pack regenerate config/packs/my-bank data/jsonl --dry-run\n  drishti.py pack regenerate config/packs/my-bank data/jsonl\n"
             "Options not given are taken from the ones the pack was generated with (stored in <pack>/.generated/). Untouched generated files are refreshed, new\n"
             "groups added, files you edited kept, files edited on both sides merged line by line (conflict markers, listed, exit 1). Needs the jar (like pack new).")
     # the parents' positional `inputs` comes first; this command takes the pack folder before it, and does not require --name (the pack has one)
@@ -64,7 +64,7 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
     # pack diff
     p = add(packs, "diff", guarded("packdiff", lambda m, a: m.run(a, cli)),
             "pack diff: what changed between two pack versions (folders or bundles); kinds and mnemonics removed or renamed are BREAKING", [js],
-            "example:\n  drishti.py pack diff dist/my-bank-1.0.0.tar.gz packs/my-bank --fail-on breaking\n"
+            "example:\n  drishti.py pack diff dist/my-bank-1.0.0.tar.gz config/packs/my-bank --fail-on breaking\n"
             "Levels: breaking (kind or mnemonic removed/renamed), selection (Sutra added/removed, match where/priority changed), layout (data layout), change.\n"
             "Exit 1 when a finding of the --fail-on level exists (breaking by default, any, none).")
     p.add_argument("old", metavar="OLD", help="pack folder, `pack make` folder or bundle (.tar.gz)")
@@ -75,7 +75,7 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
     # pack catalogue
     p = add(packs, "catalogue", guarded("packcatalogue", lambda m, a: m.run(a, cli)),
             "pack catalogue: a readable catalogue of a pack for business review (kinds, fields and glossary, every Sutra, match rules, panels)", [jvm, js],
-            "example:\n  drishti.py pack catalogue packs/my-bank --out build/catalogue --format html --shots\n"
+            "example:\n  drishti.py pack catalogue config/packs/my-bank --out build/catalogue --format html --shots\n"
             "--shots also renders every Sutra's samples with `sutra preview` (HTML snapshots) and links them.")
     p.add_argument("pack", metavar="PACK")
     p.add_argument("--out", metavar="DIR", help="default build/<pack>-catalogue")
@@ -86,12 +86,12 @@ def register(cli, packs, data, add, jvm, js, PFJ) -> None:
     i18n = packs.add_parser("i18n", help="i18n export|import: translate a pack's About text through a CSV", description="Translate config/about.yaml through a spreadsheet; import writes config/about.<lang>.yaml.")
     sub = i18n.add_subparsers(dest="i18n_cmd", metavar="ACTION", required=True)
     e = add(sub, "export", guarded("packi18n", lambda m, a: m.export(a, cli)), "i18n export: write the pack's About texts as CSV (key, source, translation)", [js],
-            "example:\n  drishti.py pack i18n export packs/my-bank --lang fr --out build/fr.csv")
+            "example:\n  drishti.py pack i18n export config/packs/my-bank --lang fr --out build/fr.csv")
     e.add_argument("pack", metavar="PACK")
     e.add_argument("--lang", required=True, help="language tag (fr, de, pt-BR); an existing about.<lang>.yaml prefills the translation column")
     e.add_argument("--out", required=True, metavar="FILE.csv")
     i = add(sub, "import", guarded("packi18n", lambda m, a: m.import_(a, cli)), "i18n import: write config/about.<lang>.yaml from the CSV; reports missing and extra keys", [js],
-            "example:\n  drishti.py pack i18n import packs/my-bank build/fr.csv --lang fr\n"
+            "example:\n  drishti.py pack i18n import config/packs/my-bank build/fr.csv --lang fr\n"
             "Exit 1 on extra keys, changed ${...} expressions or an invalid overlay; missing keys only with --strict (the overlay merges over English key by key).")
     i.add_argument("pack", metavar="PACK")
     i.add_argument("file", metavar="FILE.csv")

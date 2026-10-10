@@ -15,7 +15,7 @@
 """The climate-risk pack: counterparty climate profiles, PCAF financed emissions per book, NGFS scenarios, climate
 stress results, physical-risk assets and the EU-taxonomy green asset ratio, generated from the banking packs' data.
 
-    python3 tools/packgen/climate/make.py            write packs/climate-risk
+    python3 tools/packgen/climate/make.py            write config/packs/climate-risk
     python3 tools/packgen/climate/make.py --check    fail if the pack differs from what would be written
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/climate/make.py --lake data/delta
 """

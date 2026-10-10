@@ -36,7 +36,10 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
-        String dir = env.getProperty("drishti.packs.dir", "./packs");
+        String dir = PackPaths.packsDir(env);
+        if (System.getProperty(com.ash.drishti.api.DataDir.PROPERTY) == null) {           // plugins have no Spring environment: hand them the umbrella
+            System.setProperty(com.ash.drishti.api.DataDir.PROPERTY, PackPaths.dataDir(env));
+        }
         String enabled = env.getProperty("drishti.packs.enabled", "finance");
         java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(
                 Arrays.stream(enabled.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());
@@ -45,9 +48,9 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
                 .orElse(List.of()));
         String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
         ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir));
-        PackSettings overrides = new PackSettings(java.nio.file.Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings")));
+        PackSettings overrides = new PackSettings(java.nio.file.Path.of(PackPaths.settingsDir(env)));
         PackLoader loader = new PackLoader(files);
-        List<java.nio.file.Path> dirs = PackLoader.dirs(dir, env.getProperty("drishti.packs.installed-dir", "./data/packs/installed"));
+        List<java.nio.file.Path> dirs = PackLoader.dirs(dir, PackPaths.installedDir(env));
         SamplePolicy samples = SamplePolicy.of(env);                                    // hidden: sample packs are not loaded
         List<Pack> packs = loader.load(dirs, samples.select(dirs, List.copyOf(names), loader));
         java.util.Set<String> suppressed = new java.util.LinkedHashSet<>();

@@ -78,7 +78,7 @@ connectors:
     - frtb-sensitivity
     - pnl-explain
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
 routes:
   var: risk-store

@@ -19,7 +19,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PLACEHOLDER = re.compile(r"\$\{([A-Za-z0-9_]+)(?::([^}]*))?\}")
+PLACEHOLDER = re.compile(r"\$\{([A-Za-z0-9_]+)(?::((?:[^{}]|\$\{[^}]*\})*))?\}")   # one level of nesting: ${X:${drishti.data.dir}/y}
+DATA_DIR = re.compile(r"\$\{drishti\.data\.dir(?::[^}]*)?\}")                        # documented as its default, ./data (CONFIGURATION.md, "The data folder")
 DOC = (ROOT / "docs" / "admin" / "CONFIGURATION.md").read_text(encoding="utf-8")
 
 
@@ -29,7 +30,7 @@ def _live_placeholders(path: Path) -> list[tuple[str, str | None]]:
         if line.lstrip().startswith("#"):
             continue
         code = re.sub(r"(^|\s)#.*$", "", line)
-        found += [(m.group(1), m.group(2)) for m in PLACEHOLDER.finditer(code)]
+        found += [(m.group(1), None if m.group(2) is None else DATA_DIR.sub("./data", m.group(2))) for m in PLACEHOLDER.finditer(code)]
     return found
 
 

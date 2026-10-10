@@ -180,7 +180,7 @@ ${DRISHTI_RABBITMQ_ENABLED:false}`).
 
 ### 4.1 Pack form
 
-The pack's suggested template, in `packs/<pack>/pack.yaml` (dotted keys written flat, as for every pack setting); the server writes it to
+The pack's suggested template, in `config/packs/<pack>/pack.yaml` (dotted keys written flat, as for every pack setting); the server writes it to
 `config/connectors/margin-mq.yaml` at the first start if the site has no such file:
 
 ```yaml

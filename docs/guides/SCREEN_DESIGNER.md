@@ -527,7 +527,7 @@ my-view/
   README.md                         what is in it and how to load it
 ```
 
-Stored-entity samples are references, not data, so they are not exported; synthetic ones are, and are labelled as such by their names. Put the folder under the server's `packs/`, list it in `DRISHTI_PACKS` (or load it from **Admin → Packs**), and change the stub's title, version and mnemonic first. The exported tests pass `sutra test` unchanged (section 26).
+Stored-entity samples are references, not data, so they are not exported; synthetic ones are, and are labelled as such by their names. Put the folder under the server's `config/packs/`, list it in `DRISHTI_PACKS` (or load it from **Admin → Packs**), and change the stub's title, version and mnemonic first. The exported tests pass `sutra test` unchanged (section 26).
 
 **Import** (*New screen → Or import a pack*) takes a **zip** or a **folder**. Each `*.sutra.yaml` becomes a design of its own, named after the Sutra, with the documents of `tests/<sutra>/` and `samples/<kind>/` as its samples, the README as its notes and `config/about.yaml` (if there is one) as its About text. A Sutra that does not check yet is imported anyway, with a note, so you can fix it in the workbench. Nothing is loaded into the server; this only makes designs, so it is open to everyone.
 
@@ -550,15 +550,15 @@ The link is a secret: anyone who has it can read the Sutra and the operations. *
 Pack authors run the same checks without a browser. The server jar has a `sutra` command that starts no web server and opens no port:
 
 ```sh
-java -jar drishti-server-<version>-exec.jar sutra lint  packs/my-pack
-java -jar drishti-server-<version>-exec.jar sutra test  packs/my-pack --junit target/sutra-tests.xml
-java -jar drishti-server-<version>-exec.jar sutra preview packs/my-pack --out target/snapshots
+java -jar drishti-server-<version>-exec.jar sutra lint  config/packs/my-pack
+java -jar drishti-server-<version>-exec.jar sutra test  config/packs/my-pack --junit target/sutra-tests.xml
+java -jar drishti-server-<version>-exec.jar sutra preview config/packs/my-pack --out target/snapshots
 java -jar drishti-server-<version>-exec.jar sutra shape  samples/*.json --out target/shape
 java -jar drishti-server-<version>-exec.jar sutra design samples/*.json --kind deal --out target/draft
 java -jar drishti-server-<version>-exec.jar sutra design --each samples-by-kind --out target/drafts   # one draft per subfolder
 ```
 
-`test` uses the **same checker as the Tests tab**, with the `packs/<pack>/tests/<sutra>/*.json` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
+`test` uses the **same checker as the Tests tab**, with the `config/packs/<pack>/tests/<sutra>/*.json` + `expect.yaml` convention that the pack fragment export writes. Exit codes: `0` ok, `1` problems, `2` usage. `--junit` writes JUnit XML for your CI's report step; `--out` writes HTML snapshots. The Maven build of this repository runs `sutra test` over every shipped pack that has tests and over the ten documented examples. All the details and a CI example are in [the Sutra command guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci).
 
 ## 27. Binding a design to a file (development servers)
 

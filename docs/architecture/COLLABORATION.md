@@ -613,7 +613,7 @@ drishti:
   collab:
     enabled: true                     # shares, threads, inbox
     store: jpa                        # jpa (identity database) | file
-    dir: ${DRISHTI_COLLAB_DIR:./data/collab}            # the file store, and exports
+    dir: ${DRISHTI_COLLAB_DIR:${drishti.data.dir:./data}/collab}            # the file store, and exports
     console-url: ${DRISHTI_CONSOLE_URL:}                 # links in emails; empty turns email off
     directory:
       scope: shared-packs             # shared-packs | all

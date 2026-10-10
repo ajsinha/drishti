@@ -97,7 +97,7 @@ public final class FileSourcePlugin implements SourcePlugin {
     @Override
     public void start(SourceContext ctx) {
         this.context = ctx;
-        Path base = Path.of(ctx.setting("root", "data/feeds"));
+        Path base = Path.of(ctx.setting("root", com.ash.drishti.api.DataDir.under("feeds")));
         String domain = ctx.setting("domain", "");
         this.root = (domain.isBlank() ? base : base.resolve(domain)).toAbsolutePath().normalize();
         this.idField = ctx.setting("id-field", "id");

@@ -72,9 +72,9 @@ product. Packs and Sutras are configuration read when the server starts (Sutras 
     |            databases, queues, files, services
     |
     +-- CONFIGURATION loaded at start
-    |     packs/<name>/pack.yaml   kinds, mnemonics, links, connectors, routes, roles
-    |     packs/<name>/sutras/**   the layouts      packs/<name>/samples/**   example documents
-    |     packs/<name>/config/about.yaml   what each kind and field means (About this page)
+    |     config/packs/<name>/pack.yaml   kinds, mnemonics, links, connectors, routes, roles
+    |     config/packs/<name>/sutras/**   the layouts      config/packs/<name>/samples/**   example documents
+    |     config/packs/<name>/config/about.yaml   what each kind and field means (About this page)
     |     drishti-server/src/main/resources/application.yaml   drishti.sources, drishti.rachana, ...
     |
  COLLAB    people talking about a view: drishti-server/.../collab  ShareService, ThreadService, InboxService, Audience, NoteText,
@@ -105,13 +105,13 @@ The UI is the separate Python project in `drishti-console/`. The full module lis
 | **Kind** | A type of record: `trade`, `netting-set`, `variant`. | Named in `pack.yaml` `kinds:` |
 | **Entity id** | The name of one record of a kind: `MX-20000001`. An entity is `(kind, id)`. | In the data; recognised by `graph.id-patterns` |
 | **Mnemonic** | The short command for a kind: `TRD` for `trade`. | `pack.yaml` `mnemonics:` |
-| **Pack** | A folder `packs/<name>/` that adds a domain: kinds, mnemonics, links, connectors, Sutras, samples, roles. | `packs/<name>/pack.yaml` |
+| **Pack** | A folder `config/packs/<name>/` that adds a domain: kinds, mnemonics, links, connectors, Sutras, samples, roles. | `config/packs/<name>/pack.yaml` |
 | **Connector** | A named instance of a source plugin: which plugin, its settings, which kinds it serves. | `config/connectors/<name>.yaml` (one file per connector; a pack's `connectors:` is only a template for it) |
 | **Source plugin** | The code that reads one kind of store (`delta`, `kafka`, `jdbc`, `demo`, ...). | `plugins/drishti-plugin-*` |
-| **Sutra** | One layout, written in the Rachana grammar: which records it fits, a title, a strip, panels, keys. | `packs/<name>/sutras/**.sutra.yaml` |
+| **Sutra** | One layout, written in the Rachana grammar: which records it fits, a title, a strip, panels, keys. | `config/packs/<name>/sutras/**.sutra.yaml` |
 | **Link** | A field that names another entity, so it opens that entity's own view. | `graph.fields` in `pack.yaml`; `link(...)` in a Sutra |
 | **Role / mask** | Who may open which kinds, and which fields read `•••`. | `pack.yaml` `roles:`; `drishti.security.redact` |
-| **About text** | The pack's own words for a kind (one sentence about this entity) and for its fields (term, meaning, unit, sign), shown in the About drawer. | `packs/<name>/config/about.yaml` (`pack.yaml` key `about:`) |
+| **About text** | The pack's own words for a kind (one sentence about this entity) and for its fields (term, meaning, unit, sign), shown in the About drawer. | `config/packs/<name>/config/about.yaml` (`pack.yaml` key `about:`) |
 | **Share** | A person's note about a view or a panel, sent to people and roles, with a pin. Not a copy of data: a link plus words. | `drishti_share`, `ShareService`; opened at `/share/sh_…` |
 | **Pin** | Which data a share or comment was about: business date, "known at", generation, source. Evidence, never an address; the view opens at the date and "known at" as request parameters. | `Pin`; the link's `asOf`, `knownAt`, `gen` |
 | **Notice** | One row in a person's inbox (share, mention, reply), pushed to the bell. Titles and excerpts are rendered for the reader each time. | `InboxStore`, `InboxService`, `InboxHub`, SSE event `notice` |
@@ -148,7 +148,7 @@ Sutra never says where data comes from; a connector never says how data looks.
 
 ### 3.1 The pack declares the kind and the mnemonic
 
-`packs/trading/pack.yaml` (the `trading` pack is pulled in by `market-risk` through `extends:`):
+`config/packs/trading/pack.yaml` (the `trading` pack is pulled in by `market-risk` through `extends:`):
 
 ```yaml
 pack: trading
@@ -184,7 +184,7 @@ connectors:
     kinds:
     - trade
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: trading
 ```
 
@@ -195,7 +195,7 @@ off unless `DRISHTI_STREAM_TRADING=true`.
 
 A second source also serves trades. `drishti.sources.default-route: demo` in `application.yaml` names the **demo**
 plugin, which serves the sample documents in every enabled pack's `samples/` folder
-(`packs/trading/samples/trade/MX-20000001.json` is one) and makes their numbers tick. Together:
+(`config/packs/trading/samples/trade/MX-20000001.json` is one) and makes their numbers tick. Together:
 
 | You ask for | Answered by | Evidence in the view's `provenance` |
 |---|---|---|
@@ -211,8 +211,8 @@ place).
 
 ### 3.3 The Sutra that draws it
 
-125 Sutras in `packs/trading/sutras/` match kind `trade`, one per product, all at priority 10, each with a `where`
-that picks its product. The one for `MX-20000001` is `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml`:
+125 Sutras in `config/packs/trading/sutras/` match kind `trade`, one per product, all at priority 10, each with a `where`
+that picks its product. The one for `MX-20000001` is `config/packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml`:
 
 ```yaml
 rachana: 1
@@ -376,7 +376,7 @@ kind `netting-set`, and this time:
 |---|---|---|
 | Pack | `trading` (through `market-risk`) | `counterparty-risk` |
 | Connector | `trading-store` (`delta`, domain `trading`) | `credit-store` (`delta`, domain `credit`) |
-| Sutra | `irs-fixfloat v1`, chosen by `where: $.productType == 'IRS_FIXFLOAT'` | `netting-set v1` in `packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml`, `match: { kind: netting-set, priority: 10 }` (no `where`: one layout for the kind) |
+| Sutra | `irs-fixfloat v1`, chosen by `where: $.productType == 'IRS_FIXFLOAT'` | `netting-set v1` in `config/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml`, `match: { kind: netting-set, priority: 10 }` (no `where`: one layout for the kind) |
 | Strip | Notional, MTM, DV01, ... | Trades, Net MTM, Collateral, PFE 95 peak, Utilisation, ... |
 | Real `provenance.layout` | `Sutra irs-fixfloat v1 + inference` | `Sutra netting-set v1 + inference` |
 
@@ -443,7 +443,7 @@ them is one file in the lowest pack that owns the kind, and it reaches `market-r
 vocabulary has about 190 terms, one per product field, and the `trade` entry the page-specific ones):
 
 ```yaml
-# packs/trading/config/about.yaml
+# config/packs/trading/config/about.yaml
 about: 1
 vocabulary:                        # a word defined once, reused by every kind and every pack that extends trading
   fixedRate:
@@ -486,7 +486,7 @@ broken entry is left out and listed with the Sutra problems (`GET /api/v1/sutras
 never fails the view. **Redaction comes first.** The template is rendered over the document your redactor produced, so
 for a viewer whose role may not see `mtm` (if it were named in `drishti.security.redact`) the sentence above would read
 "…It is marked at ••• USD…", and the glossary never sees a value at all. That is the one rule of the whole feature: *the explanation is derived from your view, never from
-the stored document.* The text that ships today is the VaR page (`packs/market-risk/config/about.yaml`, kind `var`):
+the stored document.* The text that ships today is the VaR page (`config/packs/market-risk/config/about.yaml`, kind `var`):
 
 ```
 VAR-EQD is a 1-day 99% historical VaR for DESK-EQD: 14.7m USD, 70% of its 20.9m limit, with 0 exception(s) in 250 days.
@@ -509,12 +509,12 @@ the pack is `genomics` (no `extends`), the Sutra `variant v1` (no `where`, so th
 source `reference-genome`, and the pack's `kinds.variant.about` yields, under the title *Sequence variant*,
 "VRNT-BRAF-V600E is a missense change in BRAF (p.Val600Glu, c.1799T>A); it is classified "Pathogenic (somatic)" for
 Melanoma, colorectal and thyroid cancer." Nothing in the code names `variant` or `genomics`: the words are in
-`packs/genomics/config/about.yaml`, which the generator `tools/packgen/genomics/make.py` writes from its own about
+`config/packs/genomics/config/about.yaml`, which the generator `tools/packgen/genomics/make.py` writes from its own about
 source.
 
 | | Trade (A) | Variant (B) |
 |---|---|---|
-| About file | `packs/trading/config/about.yaml`, `kinds.trade` | `packs/genomics/config/about.yaml`, `kinds.variant` |
+| About file | `config/packs/trading/config/about.yaml`, `kinds.trade` | `config/packs/genomics/config/about.yaml`, `kinds.variant` |
 | Candidates in the `MatchTrace` | 124 other Sutras of kind `trade` | none |
 | Source and health | `murex-rates`, `up` | `reference-genome`, `up` |
 | **Unchanged** | `ExplainController`, `ExplainService`, `PageContext`, the drawer and its keys | the same |
@@ -691,7 +691,7 @@ Where each part is changed is section 7.
 
 The `genomics` pack has nothing to do with banking. Type `VRNT VRNT-BRAF-V600E <GO>`.
 
-**Pack** (`packs/genomics/pack.yaml`): `extends: []` (it stands alone), kinds `gene`, `variant`, `protein`, ..., and
+**Pack** (`config/packs/genomics/pack.yaml`): `extends: []` (it stands alone), kinds `gene`, `variant`, `protein`, ..., and
 
 ```yaml
 mnemonics:
@@ -703,7 +703,7 @@ connectors:
     plugin: delta
     kinds: [gene, variant, protein, pathway, sample, sequencing-run, expression-study, clinical-trial]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: genomics
 routes:
   variant: genomics-store
@@ -711,14 +711,14 @@ routes:
 
 This pack states the route for every kind (`routes:` becomes `drishti.sources.routes.variant`, read by
 `SourceRouter.candidates()`). The lake data is `data/delta/genomics/variant/business_date=2026-09-17` and later. As in
-example A, today's read is answered from the pack's samples (`packs/genomics/samples/variant/`) by the demo plugin, and
+example A, today's read is answered from the pack's samples (`config/packs/genomics/samples/variant/`) by the demo plugin, and
 `?asOf=2026-09-30` is answered by `genomics-store` (`"source":"genomics-store","businessDate":"2026-09-30"`).
 
 **Document** (`GET /api/v1/entities/variant/VRNT-BRAF-V600E/raw`, trimmed): `variantId`, `geneSymbol: BRAF`,
 `proteinChange: p.Val600Glu`, `significance: Pathogenic (somatic)`, `frequencies: [{population, af}, ...]`,
 `evidence: [{source, assertion, stars, date}, ...]`, `gene: GENE-BRAF`.
 
-**Sutra** (`packs/genomics/sutras/genomics-and-biology/variant.v1.sutra.yaml`, trimmed):
+**Sutra** (`config/packs/genomics/sutras/genomics-and-biology/variant.v1.sutra.yaml`, trimmed):
 
 ```yaml
 match: { kind: variant, priority: 10 }
@@ -821,7 +821,7 @@ documents it draws, and its panels' `$.paths` are checked against your samples. 
 | I want to... | Change | Read |
 |---|---|---|
 | Read a new store (a database, a topic, a folder, a service) | A connector: a file `config/connectors/<name>.yaml` with `plugin:` and `settings:` (or Admin → Connectors); the pack names it in `routes:` for the kinds it serves, and may carry a `connectors:` template for it | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
-| Add a domain (new kinds, commands, links) | A pack folder `packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACKS.md](../guides/PACKS.md) |
+| Add a domain (new kinds, commands, links) | A pack folder `config/packs/<name>/` with `pack.yaml`, `sutras/`, `samples/`; enable it with `DRISHTI_PACKS` | [PACKS.md](../guides/PACKS.md) |
 | Change how one screen looks | Its Sutra (`*.sutra.yaml`), or a Design in the Build workbench, proposed and approved | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
 | Change how a figure is formatted | `fmt:` in the Sutra; named formats in the pack's `config/formats.yaml` | RACHANA_REFERENCE.md |
 | Change how inference reads field names | The pack's `config/semantics.yaml` | [INFERENCE.md](INFERENCE.md) |

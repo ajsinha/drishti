@@ -81,7 +81,7 @@ connectors:
     - physical-asset
     - taxonomy-alignment
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: climate
 routes:
   climate-profile: climate-store

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Core semantic hints: domain-neutral. Packs prepend their own roles (see packs/<name>/config/semantics.yaml),
+# Core semantic hints: domain-neutral. Packs prepend their own roles (see config/packs/<name>/config/semantics.yaml),
 # so a pack's meaning of a field name wins over these. Roles are tried in order; the first whose name pattern
 # matches (case-insensitive regex on the field name) wins. `weight` ranks candidates for the header strip.
 # A site can replace this file with drishti.inference.semantics-file.

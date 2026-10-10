@@ -232,7 +232,7 @@ public final class SutraCli {
             Path expectDir = sampleDir(u, sutra);
             List<Doc> docs = samplesOf(u, sutra, a.samples());
             if (docs.isEmpty()) {
-                cases.add(Case.skip(u.stem(), "samples", "no samples: add packs/<pack>/tests/" + sutra.name() + "/*.json"));
+                cases.add(Case.skip(u.stem(), "samples", "no samples: add config/packs/<pack>/tests/" + sutra.name() + "/*.json"));
                 out.println("skip " + u.file() + " (no samples)");
                 continue;
             }

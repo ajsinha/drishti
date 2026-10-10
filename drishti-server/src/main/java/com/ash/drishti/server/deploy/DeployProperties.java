@@ -43,7 +43,7 @@ public record DeployProperties(Integer maxArchiveMb, Integer maxUnpackedMb, Inte
         requireSignature = requireSignature != null && requireSignature;
         requireManifest = requireManifest == null || requireManifest;
         stagingMinutes = stagingMinutes == null ? 30 : stagingMinutes;
-        historyFile = historyFile == null || historyFile.isBlank() ? "./data/packs/deploy-history.jsonl" : historyFile;
+        historyFile = historyFile == null || historyFile.isBlank() ? com.ash.drishti.api.DataDir.under("packs/deploy-history.jsonl") : historyFile;
         probeDates = probeDates == null ? 3 : probeDates;
         probeTimeoutSeconds = probeTimeoutSeconds == null ? 30 : probeTimeoutSeconds;
     }

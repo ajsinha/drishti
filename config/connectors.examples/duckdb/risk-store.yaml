@@ -23,7 +23,7 @@ kinds:
 description: risk-store read from duckdb (the former application-duckdb.yaml profile)
 settings:
   domain: risk
-  path: ${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}
+  path: ${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}
   memory-limit: ${DRISHTI_DUCKDB_MEMORY:1GB}
   table: risk.entities
   pool-size: '4'

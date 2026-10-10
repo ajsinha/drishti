@@ -142,11 +142,11 @@ Rules that follow from this:
   converts in one step; the block becomes the file, `rachana: 1` is added, and the prose becomes `notes`:
 
   ```bash
-  python3 tools/rachana/md_to_yaml.py packs/my-pack/sutras --delete
+  python3 tools/rachana/md_to_yaml.py config/packs/my-pack/sutras --delete
   ```
 
   You should see one line per file, such as
-  `packs/my-pack/sutras/rates/irs-x.v1.sutra.md -> packs/my-pack/sutras/rates/irs-x.v1.sutra.yaml`. Without
+  `config/packs/my-pack/sutras/rates/irs-x.v1.sutra.md -> config/packs/my-pack/sutras/rates/irs-x.v1.sutra.yaml`. Without
   `--delete` the `.sutra.md` files stay beside the new ones (and are reported as `DRS-2004` until you remove
   them). The lines that only restated the layout (the "Applies to" line, the "Panels" table) are dropped,
   since tools derive them from the YAML.
@@ -493,7 +493,7 @@ view then shows the title and strip only.
   You should see entries such as
   `{'name': 'irs-fixfloat', 'latest': 1, 'versions': [1], 'domain': 'rates', 'kind': 'trade', 'where': "$.productType == 'IRS_FIXFLOAT'", 'priority': 10}`.
 - `GET /api/v1/sutras/{name}/{version}/source` returns the file's YAML (`text/yaml`), comments included, exactly as loaded.
-- The **domain** defaults to the name of the folder holding the file (`packs/trading/sutras/rates/…` → `rates`).
+- The **domain** defaults to the name of the folder holding the file (`config/packs/trading/sutras/rates/…` → `rates`).
 
 ### Where Sutras come from, and who wins
 
@@ -612,7 +612,7 @@ Every strip item and column may give a `label`. When it does not, the label is t
 **Pay date**. Where a label comes from, first match wins:
 
 1. `label:` in the Sutra;
-2. the **pack taxonomy**: `labels:` in the semantics file of an enabled pack (`packs/<pack>/config/semantics.yaml`),
+2. the **pack taxonomy**: `labels:` in the semantics file of an enabled pack (`config/packs/<pack>/config/semantics.yaml`),
    e.g. `labels: { mtm: MTM (USD), tradeId: Trade }`; a more specific pack wins over a general one;
 3. the **global taxonomy**: `labels:` in the core semantics (or the site's replacement,
    `drishti.inference.semantics-file`);
@@ -1496,7 +1496,7 @@ A format file has one `formats:` mapping. Keys of a format:
 | `suffix` | none | appended text (`"%"`, `" bp"`) |
 | `pattern` | none | `date` only: a Java date pattern; `yyyy-MM-dd` or none shows the text unchanged |
 
-A pack adds formats in `packs/<pack>/config/formats.yaml`:
+A pack adds formats in `config/packs/<pack>/config/formats.yaml`:
 
 ```yaml
 formats:
@@ -2028,13 +2028,13 @@ wins matching.
 
 | File | Entity | Notes |
 |---|---|---|
-| `packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
-| `packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with limit, table with totals and automatic id links |
-| `packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
-| `packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml` | `TRD IRS-48213` | line with `mark` (finance pack; enabled by default with `DRISHTI_PACKS=finance`) |
-| `packs/finance/sutras/fx/fx-swap.v2.sutra.yaml` | `TRD FXS-20931` | finance pack |
-| `packs/finance/sutras/commodities/listed-future.v1.sutra.yaml` | `TRD CFT-77120` | finance pack |
-| `packs/finance/sutras/credit/netting-set.v1.sutra.yaml` | `NSET NS-NORTH-01` | `link: true` columns, kv with inferred fields |
+| `config/packs/trading/sutras/rates/irs-fixfloat.v1.sutra.yaml` | `TRD MX-20000001` | kv, tabs (columns), ladder, line from a curve, hbar, links |
+| `config/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with limit, table with totals and automatic id links |
+| `config/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
+| `config/packs/finance/sutras/rates/irs-vanilla.v3.sutra.yaml` | `TRD IRS-48213` | line with `mark` (finance pack; enabled by default with `DRISHTI_PACKS=finance`) |
+| `config/packs/finance/sutras/fx/fx-swap.v2.sutra.yaml` | `TRD FXS-20931` | finance pack |
+| `config/packs/finance/sutras/commodities/listed-future.v1.sutra.yaml` | `TRD CFT-77120` | finance pack |
+| `config/packs/finance/sutras/credit/netting-set.v1.sutra.yaml` | `NSET NS-NORTH-01` | `link: true` columns, kv with inferred fields |
 
 For a guided, step-by-step introduction, see [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md). For how inference fills
 what a Sutra leaves out, see [INFERENCE.md](../architecture/INFERENCE.md).

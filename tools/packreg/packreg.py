@@ -19,7 +19,7 @@ Each archive is signed with Ed25519; servers install only packs whose signature 
 trust (``drishti.packs.registry.trusted-keys``). Standard library and the ``openssl`` command (3.0 or later) only.
 
     python3 tools/packreg/packreg.py keygen --out ~/.drishti/acme              # acme.pem (keep secret) + public key
-    python3 tools/packreg/packreg.py publish packs/desk-tools --registry /srv/drishti-registry \\
+    python3 tools/packreg/packreg.py publish config/packs/desk-tools --registry /srv/drishti-registry \\
         --key ~/.drishti/acme.pem --publisher acme
     python3 tools/packreg/packreg.py verify --registry /srv/drishti-registry --publisher acme --public-key MCowBQYDK2Vw…
 """

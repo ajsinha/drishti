@@ -22,7 +22,7 @@ kinds:
 - pnl-explain
 description: risk-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
-  root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}
+  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
   domain: risk
   catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
   uri: ${DRISHTI_ICEBERG_URI:}

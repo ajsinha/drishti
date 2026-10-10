@@ -64,7 +64,7 @@ public class HotPathBenchmark {
 
     @Setup
     public void setup() throws IOException {
-        Path p = Path.of("packs/finance/samples/trade/IRS-48213.json");
+        Path p = Path.of("config/packs/finance/samples/trade/IRS-48213.json");
         try (InputStream in = Files.newInputStream(p)) {
             irs = new JsonCodec().read(in);
         }
@@ -72,7 +72,7 @@ public class HotPathBenchmark {
         ElCompiler el = new ElCompiler();
         direction = el.compile("$.direction == 'PAY_FIXED' ? 'Pay fixed' : 'Receive fixed'");
         sum = el.compile("sum($.legs[0].cashflows, 'pv')");
-        formats = Formats.load(null, java.util.List.of("packs/finance/config/formats.yaml"));
+        formats = Formats.load(null, java.util.List.of("config/packs/finance/config/formats.yaml"));
         ctx = EvalContext.of(irs, formats);
         inference = new InferenceEngine(Semantics.defaults(), Rules.builtIn());
     }

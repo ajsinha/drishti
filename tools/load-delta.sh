@@ -22,7 +22,7 @@
 # trades are the samples), --days sets how many business days that book covers (default 3).
 set -euo pipefail
 cd "$(dirname "$0")/.."
-ROOT="data/delta"; TRADES=""; DAYS="3"
+ROOT="${DRISHTI_DATA_DIR:-data}/delta"; TRADES=""; DAYS="3"
 [[ $# -gt 0 && "$1" != --* ]] && { ROOT="$1"; shift; }
 while [[ $# -gt 0 ]]; do
   case "$1" in

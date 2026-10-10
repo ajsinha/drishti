@@ -21,7 +21,7 @@ kinds:
 description: collateral-store read from duckdb (the former application-duckdb.yaml profile)
 settings:
   domain: collateral
-  path: ${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}
+  path: ${DRISHTI_DUCKDB_PATH:${drishti.data.dir:./data}/duckdb/drishti.duckdb}
   memory-limit: ${DRISHTI_DUCKDB_MEMORY:1GB}
   table: collateral.entities
   pool-size: '4'

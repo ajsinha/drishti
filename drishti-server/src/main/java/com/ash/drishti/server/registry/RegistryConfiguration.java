@@ -28,7 +28,7 @@ public class RegistryConfiguration {
 
     @Bean
     public PackRegistryClient packRegistryClient(RegistryProperties props,
-            @Value("${drishti.packs.installed-dir:./data/packs/installed}") String installedDir) {
+            @Value("${drishti.packs.installed-dir:${drishti.data.dir:./data}/packs/installed}") String installedDir) {
         return new PackRegistryClient(props, Path.of(installedDir));
     }
 }

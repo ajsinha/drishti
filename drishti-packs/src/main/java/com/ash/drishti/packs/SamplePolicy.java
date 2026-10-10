@@ -54,7 +54,7 @@ public final class SamplePolicy {
     /** The policy the environment describes: the property and the saved override file. */
     public static SamplePolicy of(org.springframework.core.env.Environment env) {
         return new SamplePolicy(env.getProperty("drishti.packs.samples", VISIBLE),
-                Path.of(env.getProperty("drishti.packs.samples-file", "./data/packs/samples-mode")));
+                Path.of(PackPaths.samplesFile(env)));
     }
 
     /** The mode in force: the administrator's saved setting if there is one, else the property. */

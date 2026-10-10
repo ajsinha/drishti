@@ -80,7 +80,7 @@ wait_job() {
 
 python_tool_tests() {
   set -e
-  for gen in $(grep -l -- "--check" packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do python3 "$gen" --check; done   # generated pack content is current
+  for gen in $(grep -l -- "--check" config/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do python3 "$gen" --check; done   # generated pack content is current
   python3 -m unittest -q tools/samplegen/test_samplegen.py
   python3 -m unittest -q tools/packreg/test_packreg.py
   python3 -m unittest -q tools/test_sutragen.py

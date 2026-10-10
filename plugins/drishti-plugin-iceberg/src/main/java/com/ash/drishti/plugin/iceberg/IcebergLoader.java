@@ -81,7 +81,7 @@ public final class IcebergLoader {
     public static void main(String[] args) throws Exception {
         String file = args[0];
         Map<String, String> settings = new HashMap<>();
-        settings.put("root", args.length > 1 && !args[1].startsWith("--") ? args[1] : "./data/iceberg");
+        settings.put("root", args.length > 1 && !args[1].startsWith("--") ? args[1] : com.ash.drishti.api.DataDir.under("iceberg"));
         int fileRows = IcebergLayout.DEFAULT_FILE_ROWS;
         long rowGroupBytes = IcebergLayout.DEFAULT_ROW_GROUP_BYTES;
         long budget = 1024L * 1024 * 1024;

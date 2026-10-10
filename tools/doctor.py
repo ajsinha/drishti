@@ -84,8 +84,8 @@ def python_check() -> list[dict]:
 
 
 def layout_check(root: pathlib.Path) -> list[dict]:
-    out = [item("ok" if (root / "packs").is_dir() else "fail", "repo packs/", str(root / "packs"),
-                "" if (root / "packs").is_dir() else "run from a Drishti checkout (packs/ holds the shipped packs)")]
+    out = [item("ok" if (root / "packs").is_dir() else "fail", "repo config/packs/", str(root / "packs"),
+                "" if (root / "packs").is_dir() else "run from a Drishti checkout (config/packs/ holds the shipped packs)")]
     venv = root / "drishti-console" / ".venv"
     out.append(item("ok" if venv.is_dir() else "warn", "console venv", str(venv),
                     "" if venv.is_dir() else "cd drishti-console && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"))

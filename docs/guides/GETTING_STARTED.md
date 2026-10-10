@@ -98,7 +98,7 @@ cd drishti
 ```
 
 Every command in the rest of this guide is run **from this `drishti` folder** (the repository root).
-The server finds the packs (`./packs`) and its data (`./data`) relative to where you start it.
+The server finds the packs (`./config/packs`) and its data (`./data`) relative to where you start it.
 
 ## Step 3 · Build the server
 

@@ -264,7 +264,7 @@ connectors:
     - bond
     - correlation-matrix
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: market
   nyfed-sofr-feed:
     plugin: feed

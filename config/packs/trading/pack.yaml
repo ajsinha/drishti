@@ -55,7 +55,7 @@ connectors:
     kinds:
     - trade
     settings:
-      root: ${DRISHTI_DELTA_ROOT:./data/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: trading
       layout:
         trade:
@@ -94,7 +94,7 @@ connectors:
       id-field: tradeId
       stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}
       disk-cache.enabled: ${DRISHTI_STREAM_DISK_CACHE:true}
-      disk-cache.root: ${DRISHTI_CACHE_ROOT:./data/cache}
+      disk-cache.root: ${DRISHTI_CACHE_ROOT:${drishti.data.dir:./data}/cache}
       disk-cache.max-gb: ${DRISHTI_STREAM_CACHE_GB:10}
       disk-cache.reset-at: ${DRISHTI_CACHE_RESET_AT:02:00}
       disk-cache.zone: America/New_York

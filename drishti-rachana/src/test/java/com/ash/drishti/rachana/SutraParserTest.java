@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 class SutraParserTest {
 
-    static final Path SUTRAS = Path.of("..", "packs", "finance", "sutras");
+    static final Path SUTRAS = Path.of("..", "config", "packs", "finance", "sutras");
     private final SutraParser parser = new SutraParser();
 
     private Sutra load(String rel) throws Exception {

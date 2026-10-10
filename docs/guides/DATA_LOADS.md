@@ -170,7 +170,7 @@ HTTP/1.1 201
 **3. Announce it again.** Nothing runs twice:
 
 ```
-$ curl -s -w '\nHTTP %{http_code}\n' -X POST .../packs/market-risk/loads -d '{ ...the same body... }'
+$ curl -s -w '\nHTTP %{http_code}\n' -X POST .../config/packs/market-risk/loads -d '{ ...the same body... }'
 { ...the same record, "duplicate": true }
 HTTP 200
 ```
@@ -178,7 +178,7 @@ HTTP 200
 **4. The batch fails afterwards.** A different outcome for the same key is a new record, `attempt` 2:
 
 ```
-$ curl -s -X POST .../packs/market-risk/loads -d '{"kind":"var","businessDate":"2026-10-05","status":"failed","batchId":"eod-20261005-1","note":"copy stopped: disk full"}'
+$ curl -s -X POST .../config/packs/market-risk/loads -d '{"kind":"var","businessDate":"2026-10-05","status":"failed","batchId":"eod-20261005-1","note":"copy stopped: disk full"}'
 {"id":"muwrjapj-2","pack":"market-risk","kind":"var","businessDate":"2026-10-05","status":"failed","batchId":"eod-20261005-1",
  "note":"copy stopped: disk full","attempt":2,"reload":false,"verified":"skipped","alerts":0,"notices":1,
  "steps":[{"name":"record","status":"ok","detail":"recorded as attempt 2","ms":0},
@@ -190,7 +190,7 @@ $ curl -s -X POST .../packs/market-risk/loads -d '{"kind":"var","businessDate":"
 **5. A corrected batch lands** (a different batch id, so a reload):
 
 ```
-$ curl -s -X POST .../packs/market-risk/loads -d '{"kind":"var","businessDate":"2026-10-05","status":"ready","rows":1250,"rejected":0,"batchId":"eod-20261005-2"}'
+$ curl -s -X POST .../config/packs/market-risk/loads -d '{"kind":"var","businessDate":"2026-10-05","status":"ready","rows":1250,"rejected":0,"batchId":"eod-20261005-2"}'
 ... "reload": true, ... "summary": "var for 2026-10-05 reloaded: 1,250 rows, 0 rejected; 0 alerts fired"   -> HTTP 201
 ```
 
