@@ -188,6 +188,7 @@ drishti:
           - PUT /api/v1/admin/packs/*
           - POST /api/v1/admin/packs/deploy
           - POST /api/v1/admin/packs/deploy/*
+          - POST /api/v1/admin/packs/deploy/*/connectors
           - DELETE /api/v1/admin/packs/deploy/*
           - POST /api/v1/admin/packs/*/rollback
           - PUT /api/v1/admin/connectors/*

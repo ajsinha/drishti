@@ -244,8 +244,14 @@ connector-templates:                            # optional: what to suggest if t
 - `connectors:` is either a **list of names** (a pack that only names what it needs) or, as every pack shipped before connector
   files, a **mapping of definitions**. A mapping is read as the pack's **templates**; both forms work, and `connector-templates:`
   carries templates beside a list. Nothing about an existing pack has to change.
-- **Kinds** are routed by the pack's `routes:` (the pack author knows where each kind lives) and may be narrowed by the file's
-  `kinds:`. This keeps a connector reusable across packs while the pack stays in charge of its own kinds.
+- **Kinds**: the pack's `routes:` decide the **primary** connector for a kind (the pack author knows where each kind lives). A
+  connector's own `kinds:` (file, template or server configuration) makes it **serve** those kinds in addition, so a second
+  connector listing a kind is consulted after the routed one (for example a lake behind a recent store, for dates the recent
+  store does not hold). With no `kinds:` it serves what its plugin and the routes say. `kinds:` never removes a kind the routes send to it.
+  This keeps a connector reusable across packs while the pack stays in charge of its own kinds.
+- **Several server processes or test contexts sharing one connector folder** all watch it; a file that appears there is
+  started by every one of them and, for a name they define differently, replaces what they run. Give each its own folder
+  (`drishti.sources.connectors-dir`); a file left there by another run merges its settings (for example a Delta `domain`) into a connector the server configuration defines.
 - A name may be used by **several packs**; Admin → Connectors shows who uses each connector and for which kinds, and asks before
   you switch one off or delete it.
 

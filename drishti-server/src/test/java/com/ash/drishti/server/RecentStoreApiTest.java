@@ -37,7 +37,9 @@ import org.springframework.test.web.servlet.MockMvc;
  * 2026-10-01: the recent store is authoritative for the dates it holds (DATA-12), a read "as known at" an instant is
  * refused by stores without time travel (DATA-15), and an id with a {@code /} opens with the id in the query (DATA-21).
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
+// its own connector folder (read before the test environment is final): files other test contexts generate into the shared one, such as trading-store from the trading pack, would merge their settings into these connectors
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false",
+        "drishti.sources.connectors-dir=target/test-data/recent-store-connectors", "drishti.packs.enabled=finance", "drishti.sources.plugins.demo.enabled=false",
         "drishti.sources.plugins.file.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.recent-files.plugin=file", "drishti.sources.connectors.recent-files.kinds[0]=trade",
         "drishti.sources.connectors.recent-files.settings.rescan-seconds=3600",
