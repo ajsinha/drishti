@@ -104,6 +104,7 @@ class BackendClient:
         headers.update(collab.headers())
         headers.update(kw.pop("headers", {}))
         raw = kw.pop("raw", False)
+        with_headers = kw.pop("with_headers", False)
         try:
             r = await self._client.request(method, "/api/v1" + path, headers=headers, **kw)
         except httpx.TimeoutException as e:
@@ -116,7 +117,7 @@ class BackendClient:
         if r.status_code == 204:
             return None
         if raw:
-            return r.content
+            return (r.content, r.headers) if with_headers else r.content
         return r.json() if "json" in r.headers.get("content-type", "") else r.text
 
     async def open_download(self, path: str, ident) -> httpx.Response:
@@ -472,6 +473,14 @@ class BackendClient:
                 elif line == "" and event:
                     yield event, "\n".join(data)
                     event, data = None, []
+
+    # -- Rupaka phase 0 proof of concept (docs/architecture/RUPAKA_POC.md) -------------------------------------
+    async def poc_query(self, body: dict, ident):
+        """The proof of concept's masked aggregation: ``(Arrow IPC stream bytes, response headers)``."""
+        return await self._send("POST", "/bi/poc/query", ident, json=body, raw=True, with_headers=True)
+
+    async def poc_bench(self, runs: int, ident) -> dict:
+        return await self._get("/bi/poc/bench", ident, runs=runs)
 
     # -- identity ---------------------------------------------------------------------------------
     async def login(self, username: str, password: str, service) -> dict:

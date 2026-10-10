@@ -189,6 +189,16 @@ public final class Entitlements {
         return redactor(p).apply(data);
     }
 
+    /** True when the field of this name is masked for the principal (the same rule {@link #redactor} applies to a document's field). */
+    public boolean masked(Principal p, String field) {
+        return masks(p) && masked(field, field);
+    }
+
+    /** True when the field is one of those {@code redact} names, whoever asks (an administrator previewing what a user without raw sees). */
+    public boolean redactNames(String field) {
+        return masked(field, field);
+    }
+
     /** True when the principal sees some fields masked: a role without {@code raw} while {@code redact} names fields. */
     public boolean masks(Principal p) {
         return !props.redact().isEmpty() && (p.embedApp() != null || !has(p, com.ash.drishti.identity.RoleDefinition::raw));

@@ -18,6 +18,8 @@ hs_err_pid*
 .claude/
 # the Python runtime of Calc: installed by tools/fetch-pyodide.sh (pinned and verified), never committed
 drishti-console/web/static/vendor/pyodide/
+# DuckDB-Wasm (Rupaka proof of concept): installed by tools/fetch-duckdb-wasm.sh (pinned and verified), never committed
+drishti-console/web/static/vendor/duckdb-wasm/*/
 docs/qa/2026-10-03/ux/shots/
 
 # site connector files (written by the server and by Admin -> Connectors; examples are in config/connectors.examples/)

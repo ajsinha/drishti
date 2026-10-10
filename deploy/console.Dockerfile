@@ -9,7 +9,8 @@ FROM python:3.13-slim AS pyodide
 WORKDIR /src
 COPY tools/fetch-pyodide.sh tools/fetch-pyodide.sh
 COPY drishti-console/ drishti-console/
-RUN bash tools/fetch-pyodide.sh && rm -rf /root/.cache/drishti
+COPY tools/fetch-duckdb-wasm.sh tools/fetch-duckdb-wasm.sh
+RUN bash tools/fetch-pyodide.sh && bash tools/fetch-duckdb-wasm.sh && rm -rf /root/.cache/drishti
 
 FROM python:3.13-slim
 RUN useradd --system --uid 10001 drishti

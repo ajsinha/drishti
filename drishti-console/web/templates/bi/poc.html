@@ -1,0 +1,90 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# RUPAKA PHASE 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md). Throw-away. The heavy libraries (Perspective, DuckDB-Wasm)
+   are loaded by bi-poc.js from this page only, never from base.html. #}
+{% extends "base.html" %}
+{% block title %}BI proof of concept · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block head %}
+  <link rel="stylesheet" href="{{ perspective }}/perspective-viewer/css/pro.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="{{ perspective }}/perspective-viewer/css/pro-dark.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/bi-poc.css?v={{ ASSET_V }}">
+{% endblock %}
+{% block content %}
+<div class="adm poc" id="poc" data-perspective="{{ perspective }}" data-duckdb="{{ duckdb }}">
+  <h1>Rūpaka phase 0 <span class="badge-kind">proof of concept</span></h1>
+  <p class="text-muted-d">Throw-away page that tests the risky parts of the business-intelligence design
+    (docs/architecture/RUPAKA_POC.md): Perspective on a live feed, a masked Apache Arrow extract
+    sliced by DuckDB-Wasm in your browser, and the strict content security policy with WebAssembly. Nothing here is a product feature.</p>
+
+  <section class="pnl" id="pocStats"><header class="pnl-h"><h3>Measurements</h3><span class="pnl-code" id="pocState" role="status">loading</span></header>
+    <div class="pnl-b poc-stats">
+      <dl><dt>Updates/s applied</dt><dd id="stUps">0</dd></dl>
+      <dl><dt>Render fps</dt><dd id="stFps">0</dd></dl>
+      <dl><dt>Rows in table</dt><dd id="stRows">0</dd></dl>
+      <dl><dt>JS heap (MB)</dt><dd id="stHeap">n/a</dd></dl>
+      <dl><dt>Perspective ready (ms)</dt><dd id="stPspMs">…</dd></dl>
+      <dl><dt>DuckDB-Wasm ready (ms)</dt><dd id="stDuckMs">…</dd></dl>
+    </div></section>
+
+  <section class="pnl"><header class="pnl-h"><h3>a. Live grid and pivot (Perspective)</h3><span class="pnl-code">server feed + test publisher</span></header>
+    <div class="pnl-b">
+      <div class="poc-bar">
+        <label>Test publisher
+          <select id="pubRate" class="studio-select">
+            <option value="0" selected>off (server feed only)</option>
+            <option value="100">100 updates/s</option>
+            <option value="500">500 updates/s</option>
+            <option value="1000">1000 updates/s</option>
+          </select></label>
+        <button type="button" class="fk" id="pubClear">Clear table</button>
+        <span class="text-muted-d" id="feedState">feed: connecting</span>
+      </div>
+      <div class="poc-views">
+        <perspective-viewer id="pocGrid" class="poc-viewer" aria-label="Live trades grid"></perspective-viewer>
+        <perspective-viewer id="pocPivot" class="poc-viewer" aria-label="Live pivot by desk and side"></perspective-viewer>
+      </div>
+    </div></section>
+
+  <section class="pnl"><header class="pnl-h"><h3>b. Cached aggregation, sliced in the browser (DuckDB-Wasm)</h3><span class="pnl-code" id="duckState">not loaded</span></header>
+    <div class="pnl-b">
+      {% if not duckdb %}<p class="pnl-err" role="alert">DuckDB-Wasm is not installed: run <code>tools/fetch-duckdb-wasm.sh</code>.</p>{% endif %}
+      <div class="poc-bar">
+        <button type="button" class="fk" id="btnFetch">Fetch masked extract (Arrow)</button>
+        <label>Group by <select id="selGroup" class="studio-select">
+          <option value="desk">desk</option><option value="currency">currency</option>
+          <option value="productType">productType</option><option value="side">side</option></select></label>
+        <label>Filter currency <select id="selFilter" class="studio-select"><option value="">(all)</option></select></label>
+        <button type="button" class="fk" id="btnSlice" disabled>Re-slice</button>
+        <span class="mono text-muted-d" id="sliceTimes"></span>
+      </div>
+      <div class="tbl-wrap"><table class="tbl" id="sliceTable" data-plain><thead><tr><th>group</th><th>notional</th><th>mtm</th><th>trades</th></tr></thead><tbody></tbody></table></div>
+    </div></section>
+
+  <section class="pnl"><header class="pnl-h"><h3>c. Masks proven</h3><span class="pnl-code">the same query, two views</span></header>
+    <div class="pnl-b">
+      <p class="text-muted-d">The same aggregation (group by trader, a field the server masks for roles without <code>raw</code>) as you see it, and
+        as a user without <code>raw</code> sees it (an administrator's preview).</p>
+      <div class="poc-bar"><button type="button" class="fk" id="btnMasks">Run both</button><span class="mono text-muted-d" id="maskTimes"></span></div>
+      <div class="poc-two">
+        <div><h4>As you</h4><div class="tbl-wrap"><table class="tbl" id="maskAsYou" data-plain><thead><tr><th>trader</th><th>trades</th></tr></thead><tbody></tbody></table></div></div>
+        <div><h4>As a user without raw</h4><div class="tbl-wrap"><table class="tbl" id="maskPreview" data-plain><thead><tr><th>trader</th><th>trades</th></tr></thead><tbody></tbody></table></div></div>
+      </div>
+    </div></section>
+</div>
+{% endblock %}
+{% block scripts %}<script type="module" src="/static/js/bi-poc.js?v={{ ASSET_V }}"></script>{% endblock %}

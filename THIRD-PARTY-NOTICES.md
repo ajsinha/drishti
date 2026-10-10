@@ -31,6 +31,9 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | Apache ECharts (console, vendored) | Apache-2.0 |
 | FastAPI, Starlette, Jinja2, Uvicorn, httpx, PyYAML (console) | MIT / BSD |
 | CodeMirror 5 and its Python mode (console, vendored) | MIT |
+| FINOS Perspective (console, vendored; Rūpaka phase 0 proof of concept) | Apache-2.0 |
+| DuckDB-Wasm (console, installed by `tools/fetch-duckdb-wasm.sh`, not in the repository; Rūpaka phase 0) | MIT |
+| Apache Arrow JS (console, vendored bundle) and `arrow-format` with flatbuffers-java (server, Arrow IPC messages) | Apache-2.0 |
 | Pyodide (console, Calc; installed by `tools/fetch-pyodide.sh`, not in the repository) | MPL-2.0 |
 | CPython, numpy, pandas, scipy, statsmodels, matplotlib and their dependencies (inside Pyodide) | PSF-2.0, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, BSD-3-Clause, PSF-based (matplotlib); see each package |
 | Delta Kernel, Apache Parquet (parquet-java), snappy-java, AWS SDK for Java 2.x and Apache HttpClient 5 (the Delta connector and its native engine, `drishti-deltalake`) | Apache-2.0 |
