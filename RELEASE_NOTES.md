@@ -13,7 +13,48 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.18.0 — release notes
+# Drishti 1.19.0 — release notes
+
+*2026-10-10.* **Connectors as files with TLS everywhere, query by form, Drishti Elements, no restarts, and the start of BI.**
+
+- **Connectors are files** (docs/connectors/CONNECTOR_FILES.md): one `config/connectors/<name>.yaml` per connector, named
+  by packs; **Admin → Connectors** creates, tests, edits and disables them; changes apply live. Inline pack connectors are
+  templates, written to files once at first start; old per-pack data-source overrides migrate automatically.
+- **TLS/SSL for every connector** (docs/connectors/TLS.md): PEM, PKCS12 and JKS, mutual TLS, expiry warnings; Kafka
+  (Apache and Confluent: SASL, Schema Registry with JSON Schema and Avro), ActiveMQ, RabbitMQ, Redis, MongoDB,
+  PostgreSQL, REST, S3, Delta, Iceberg, Aerospike.
+- **Query by form:** `FORM <pack> <GO>` — typed criteria (safe regex, amounts, business-date ranges, multi-select
+  dropdowns), results in a grid with drill to the record, save as search, monitor or report; the form folds after a search
+  (Alt+F). Every pack has a `form:`; the Build workbench has a Form tab.
+- **Interactive Sutras:** `controls:` (dropdowns, date ranges, cascading, top-N …) read as `ctl.*`, cross-filtering by
+  click, and **Excel-style column filters** on every table.
+- **Panel zoom** (`Z`, the ⤢ button), with zoomed tables fitting the space.
+- **Drishti Elements:** `<drishti-view>` puts live views in other web applications without iframes (token exchange,
+  always masked, Admin → Embedding).
+- **Build → New pack:** a pack from JSON Schemas and/or a folder of JSON Lines, previewed and deployed in the browser.
+- **Nothing needs a restart:** packs, connectors, BI files and AI/MCP files load, reload and unload live; anything that
+  failed retries with backoff (Admin and Health show the next attempt).
+- **BI (Rūpaka), first steps:** the **BI** menu and `BI <GO>`, workspaces, catalogue, publishing with review, BI powers;
+  datasets and reports come next (docs/architecture/RUPAKA.md).
+- **AI and MCP layers, off by default:** pluggable LLM providers (OpenAI via Spring AI, Anthropic, a mock) and an MCP
+  client, on the server and the console, under one policy (masks, audit, limits).
+- Also: sign-in and sign-out links on public pages; the console listens on 0.0.0.0; finger-sized controls on touch
+  screens; named holidays in the calendars; sample packs can be hidden from business users.
+
+**Upgrade notes:**
+- **Folders:** packs moved to `config/packs/` (a missing folder falls back to `./packs` with a warning); connectors live in
+  `config/connectors/`; BI files in `config/bi/`; runtime data under `DRISHTI_DATA_DIR` (default `./data`). All paths are
+  configurable (CONFIGURATION.md).
+- **Connectors:** on first start, connector files are generated from pack templates and old overrides are migrated (a
+  backup is kept). A literal secret in a connector file is refused: use `${ENV}`.
+- **Roles:** the default roles `viewer`, `author` and `approver` now carry BI powers; roles defined by packs get none until
+  granted.
+- **Console:** new Python dependency `cryptography` (run `uv pip install -r drishti-console/requirements.txt`);
+  DuckDB-Wasm for the BI proof of concept is fetched by `tools/fetch-duckdb-wasm.sh`, not committed.
+- **New problem codes:** DRS-1011, DRS-2034..2039, DRS-2060, DRS-4010..4019, DRS-5031..5033, DRS-8001..8006, DRS-9001..9006
+  (API_GUIDE.md).
+
+# Previous release: Drishti 1.18.0 — release notes
 
 *2026-10-06.* **Data loads: tell Drishti new data has landed, and it acts on it.**
 
@@ -36,7 +77,7 @@
 **Upgrade notes:** none required. New: `drishti.loads.*` settings, the `loads:` section in `pack.yaml`, the `loads:write`
 token scope, problem codes DRS-5011 and DRS-5012.
 
-# Previous release: Drishti 1.17.1 — release notes
+# Older release: Drishti 1.17.1 — release notes
 
 *2026-10-06.* **A way home and back, hot reload that never stops, and a drill in nine minutes.**
 
