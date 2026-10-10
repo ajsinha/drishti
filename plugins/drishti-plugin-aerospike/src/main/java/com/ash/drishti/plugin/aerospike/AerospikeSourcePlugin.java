@@ -79,6 +79,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
     private final HitIndex index = new HitIndex();
     private volatile Map<String, NavigableSet<LocalDate>> kindDates = Map.of();
     private AerospikeClient client;
+    private com.ash.drishti.api.tls.TlsMaterial tls;
     private SourceContext context;
     private String namespace;
     private String set;
@@ -128,7 +129,11 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
         // Start even when the cluster is not reachable or still initialising: the client keeps trying in the background,
         // reads fail (and health says so) until it answers, and the next refresh fills the catalogue.
         policy.failIfNotConnected = false;
-        this.client = new AerospikeClient(policy, Host.parseHosts(ctx.setting("hosts", "localhost:3000"), 3000));
+        AerospikeTls.Plan tlsPlan = AerospikeTls.plan(ctx.settings(), System::getenv);   // fails the start, naming the setting and the file
+        this.tls = tlsPlan.tls();
+        AerospikeTls.apply(policy, tlsPlan);
+        AerospikeTls.applyAuthMode(policy, ctx.settings(), tlsPlan);
+        this.client = new AerospikeClient(policy, AerospikeTls.hosts(ctx.setting("hosts", "localhost:3000"), tlsPlan));
         refresh();
         long refresh = Long.parseLong(ctx.setting("refresh-seconds", "60"));
         ctx.scheduler().scheduleWithFixedDelay(this::refresh, refresh, refresh, TimeUnit.SECONDS);
@@ -439,7 +444,10 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        return client != null && client.isConnected() ? "UP" : "DOWN: not connected to Aerospike";
+        if (client == null || !client.isConnected()) {
+            return "DOWN: not connected to Aerospike";
+        }
+        return tls == null ? "UP" : tls.annotate("UP", java.time.Instant.now());
     }
 
     @Override
