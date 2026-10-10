@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: copy to config/connectors/reference-store.yaml to read the reference-store data from iceberg. It replaces the
+# connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
+plugin: iceberg
+kinds:
+- counterparty
+- counterparty-group
+- issuer
+- agreement
+- ccp
+- legal-entity
+- book
+- desk
+- trader
+- calendar
+- csa
+- clearing-account
+description: reference-store read from iceberg (the former application-iceberg.yaml profile)
+settings:
+  root: ${DRISHTI_ICEBERG_ROOT:./data/iceberg}
+  domain: reference
+  mode.counterparty: effective
+  mode.counterparty-group: effective
+  mode.issuer: effective
+  mode.agreement: effective
+  mode.ccp: effective
+  mode.legal-entity: effective
+  mode.book: effective
+  mode.desk: effective
+  mode.trader: effective
+  mode.calendar: effective
+  mode.csa: effective
+  mode.clearing-account: effective
+  catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
+  uri: ${DRISHTI_ICEBERG_URI:}
+  warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
+  credential: ${DRISHTI_ICEBERG_CREDENTIAL}

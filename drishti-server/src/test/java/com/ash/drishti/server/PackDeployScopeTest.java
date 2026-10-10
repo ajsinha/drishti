@@ -70,8 +70,9 @@ class PackDeployScopeTest {
     }
 
     private static final String[][] DOORS = {{"POST", "/api/v1/admin/packs/deploy"}, {"POST", "/api/v1/admin/packs/deploy/abc"},
-            {"DELETE", "/api/v1/admin/packs/deploy/abc"}, {"POST", "/api/v1/admin/packs/finance/rollback"}, {"PUT", "/api/v1/admin/packs/finance/datasource"},
-            {"DELETE", "/api/v1/admin/packs/finance/datasource"}, {"POST", "/api/v1/admin/packs/finance/datasource/test"}};
+            {"DELETE", "/api/v1/admin/packs/deploy/abc"}, {"POST", "/api/v1/admin/packs/finance/rollback"}, {"PUT", "/api/v1/admin/connectors/scope-probe"},
+            {"DELETE", "/api/v1/admin/connectors/scope-probe"}, {"POST", "/api/v1/admin/connectors/scope-probe/test"},
+            {"POST", "/api/v1/admin/connectors/scope-probe/enabled"}, {"POST", "/api/v1/admin/connectors/scope-probe/reset"}};
 
     @Test
     void anAdminSessionMayAndAnAuthorMayNot() throws Exception {

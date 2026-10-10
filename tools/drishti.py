@@ -1022,6 +1022,10 @@ def build_parser() -> argparse.ArgumentParser:
             p.add_argument("name", help="the pack's name")
     load_module("serverpacks", "serverpacks.py").register(sys.modules[__name__], ps, srv)
 
+    # connector --------------------------------------------------------------------------------------------
+    cs = group("connector", "Connectors over REST (Admin -> Connectors): list, get, apply a YAML file, test, enable, delete (administrator; a token needs packs:admin)")
+    load_module("serverconnectors", "serverconnectors.py").register(sys.modules[__name__], cs, add, srv)
+
     # design -----------------------------------------------------------------------------------------------
     ds = group("design", "Screen Designer designs over REST: create, edit, check, propose, approve, ship (anyone may design; approving needs an approver)")
     for name, what in (("list", "your designs"), ("create", "a new design, from samples and/or a Sutra file"), ("get", "show a design (or its Sutra with --yaml / -o)"),

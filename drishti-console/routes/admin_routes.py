@@ -250,39 +250,6 @@ async def datasource_get(request: Request, name: str):
         return _problem(e)
 
 
-@router.put("/api/packs/{name}/datasource")
-async def datasource_save(request: Request, name: str):
-    """Saves the administrator's override of the pack's data source and applies it (restart in place, undone if it cannot start)."""
-    body = await json_body(request)
-    try:
-        out = await request.app.state.backend.admin("PUT", f"/packs/{quote(name)}/datasource", ident(request), {"connectors": body.get("connectors") or {}}, timeout=60.0)
-    except BackendError as e:
-        return _problem(e)
-    request.app.state.packs.forget_all()
-    return out
-
-
-@router.delete("/api/packs/{name}/datasource")
-async def datasource_reset(request: Request, name: str, connector: str = ""):
-    try:
-        out = await request.app.state.backend.admin("DELETE", f"/packs/{quote(name)}/datasource", ident(request), timeout=60.0, **({"connector": connector} if connector else {}))
-    except BackendError as e:
-        return _problem(e)
-    request.app.state.packs.forget_all()
-    return out
-
-
-@router.post("/api/packs/{name}/datasource/test")
-async def datasource_test(request: Request, name: str):
-    """Tries the settings in force, or an edit not yet saved: dates and row counts per kind. Changes nothing."""
-    body = await json_body(request)
-    try:
-        return await request.app.state.backend.admin("POST", f"/packs/{quote(name)}/datasource/test", ident(request),
-                                                      {"connector": body.get("connector") or None, "connectors": body.get("connectors")}, timeout=90.0)
-    except BackendError as e:
-        return _problem(e)
-
-
 @router.post("/api/packs/{name}")
 async def switch_pack(request: Request, name: str):
     body = await json_body(request)

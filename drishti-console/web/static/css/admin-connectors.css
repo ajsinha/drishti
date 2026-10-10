@@ -1,0 +1,70 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Admin → Connectors. Colours come from the theme tokens (light, dark, high contrast); every state also has its word, and added/removed
+   diff lines carry a + or - so they read without colour. */
+.conn-name .mono { font-weight: 600; }
+.conn-kinds { max-width: 16rem; overflow-wrap: anywhere; white-space: normal; }
+.conn-health { display: block; max-width: 18rem; overflow-wrap: anywhere; font-size: .85rem; }
+[data-list] th, [data-list] td { white-space: normal; }
+[data-list] td.conn-used { max-width: 14rem; }
+.conn-problem { font-size: .85rem; max-width: 22rem; white-space: normal; }
+.conn-used div { white-space: normal; }
+.conn-dialog { width: min(1000px, 96vw); max-height: 94vh; overflow: auto; }
+.conn-confirm { width: min(560px, 94vw); }
+.conn-tabs { display: flex; flex-wrap: wrap; gap: .25rem; border-bottom: 1px solid var(--d-border); margin: .4rem 0 .8rem; }
+.conn-tabs [role="tab"] { background: none; border: 1px solid transparent; border-bottom: 0; border-radius: 6px 6px 0 0; padding: .45rem 1rem; min-height: 40px; color: var(--d-ink); cursor: pointer; font: inherit; }
+.conn-tabs [role="tab"][aria-selected="true"] { border-color: var(--d-border); background: var(--d-surface); font-weight: 700; box-shadow: inset 0 -3px 0 var(--d-accent); }
+.conn-tabs [role="tab"]:focus-visible, .conn-chip-x:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
+.conn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1rem; align-items: end; }
+.conn-grid label { display: flex; flex-direction: column; gap: .2rem; color: var(--d-muted); font-size: .85rem; }
+.conn-grid .conn-wide { grid-column: 1 / -1; }
+.conn-grid .conn-on { flex-direction: row; align-items: center; gap: .5rem; color: var(--d-ink); min-height: 44px; }
+.conn-set { border: 1px solid var(--d-border); border-radius: 8px; padding: .3rem .9rem .8rem; margin: .8rem 0; }
+.conn-set legend { font-size: .95rem; font-weight: 700; padding: 0 .4rem; width: auto; }
+.conn-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; }
+.conn-field { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.conn-field label { color: var(--d-ink); font-size: .85rem; }
+.conn-field input, .conn-field select { width: 100%; box-sizing: border-box; }
+.conn-req { color: var(--d-warn); font-size: .75rem; }
+.conn-hint { font-size: .8rem; }
+.conn-field-err:empty { display: none; }
+.conn-field input[aria-invalid="true"] { border-color: var(--d-bad); outline: 1px solid var(--d-bad); }
+.conn-extra { display: grid; grid-template-columns: 1fr 1.4fr auto; gap: .5rem; margin: .3rem 0; }
+.conn-chips { display: flex; flex-wrap: wrap; gap: .4rem; min-height: 1.6rem; }
+.conn-chip { display: inline-flex; align-items: center; gap: .3rem; border: 1px solid var(--d-border); border-radius: 999px; padding: .1rem .2rem .1rem .7rem; background: var(--d-surface); }
+.conn-chip-x { background: none; border: 0; color: var(--d-ink); font-size: 1.1rem; min-width: 28px; min-height: 28px; border-radius: 50%; cursor: pointer; }
+.conn-kind-add { display: flex; gap: .5rem; margin-top: .4rem; flex-wrap: wrap; }
+.conn-kind-add input { flex: 1 1 14rem; min-width: 0; }
+.conn-yaml { width: 100%; box-sizing: border-box; min-height: 22rem; resize: vertical; tab-size: 2; }
+.conn-problems { list-style: none; margin: .6rem 0 0; padding: 0; }
+.conn-problems li { padding: .15rem 0; }
+.conn-hint-box { border-left: 4px solid var(--d-accent); background: var(--d-emph-bg); padding: .5rem .8rem; border-radius: 0 6px 6px 0; }
+.conn-diff { max-height: 18rem; overflow: auto; border: 1px solid var(--d-border); border-radius: 6px; padding: .5rem .7rem; margin-top: .6rem; background: var(--d-surface); white-space: pre; font-size: .85rem; }
+.conn-diff span { display: block; }
+.conn-add { background: var(--d-emph-bg); color: var(--d-ok); }
+.conn-del { background: var(--d-emph-bg); color: var(--d-bad); }
+.conn-diff-h { font-weight: 700; color: var(--d-muted); }
+@media (max-width: 640px) {
+  .conn-grid, .conn-fields { grid-template-columns: 1fr; }
+  .conn-extra { grid-template-columns: 1fr; }
+  .conn-dialog { padding: .8rem; }
+  .conn-dialog input, .conn-dialog select, .conn-dialog textarea { font-size: 16px; min-height: 44px; }
+  .conn-tabs [role="tab"] { min-height: 44px; flex: 1 1 auto; }
+  .conn-dialog .fk, .conn-confirm .fk, .adm-actions .fk, .conn-chip-x { min-height: 44px; min-width: 44px; }
+  .conn-dialog .ds-actions .btn-pill, .conn-confirm .ds-actions .btn-pill, .adm-bar .btn-pill, .adm-bar select { flex: 1 1 100%; min-height: 44px; }
+}
+@media (pointer: coarse) { .conn-dialog .fk, .adm-actions .fk, .conn-tabs [role="tab"] { min-height: 44px; } }
+.conn-dialog td .fk + .fk { margin-left: .6rem; }

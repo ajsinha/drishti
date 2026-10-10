@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pictures of Admin → Packs → Deploy archive, history and roll back, and Data source (docs/guides/OPERATIONALISING.md, PACKS.md),
+"""The pictures of Admin → Packs → Deploy archive, history and roll back, and the pack row (docs/guides/OPERATIONALISING.md, PACKS.md),
 written to docs/guides/img/deploy/.
 
 The setup is its own: a scratch server and console (the ports of DRISHTI_SHOTS_SERVER_PORT / DRISHTI_SHOTS_CONSOLE_PORT, 18971 / 17971 when you
@@ -167,44 +167,3 @@ def deployed(c: Ctx):
     row.scroll_into_view_if_needed()
     row.screenshot(path=str(out_dir("deploy") / "04-pack-row.jpg"), type="jpeg", quality=84)
     print("  wrote", (out_dir("deploy") / "04-pack-row.jpg").relative_to(ROOT))
-
-
-@shot("05-data-source.jpg", also=("06-test-connection.jpg",))
-def data_source(c: Ctx):
-    c.page.set_viewport_size({"width": 1280, "height": 1000})
-    c.page.goto(c.base + "/admin/packs")
-    wait_back(c, "data-datasource")
-    c.page.locator(ROW + " [data-datasource]").first.click()
-    dlg = c.page.locator("[data-ds-dialog]")
-    dlg.locator("[data-connector]").wait_for(timeout=30000)
-    dlg.locator("tr[data-key='root'] input").fill(STATE["dr"])
-    c.page.wait_for_timeout(400)
-    dlg.screenshot(path=str(out_dir("deploy") / "05-data-source.jpg"), type="jpeg", quality=84)
-    print("  wrote", (out_dir("deploy") / "05-data-source.jpg").relative_to(ROOT))
-    dlg.locator("[data-ds-test]").click()
-    dlg.locator("[data-test-out] table").first.wait_for(timeout=60000)
-    c.page.wait_for_timeout(400)
-    dlg.screenshot(path=str(out_dir("deploy") / "06-test-connection.jpg"), type="jpeg", quality=84)
-    print("  wrote", (out_dir("deploy") / "06-test-connection.jpg").relative_to(ROOT))
-
-
-@shot("07-overridden.jpg")
-def saved(c: Ctx):
-    c.page.locator("[data-ds-save]").click()
-    wait_back(c, "data source overridden")
-    c.page.wait_for_timeout(800)
-    row = c.page.locator(ROW).first
-    row.scroll_into_view_if_needed()
-    row.screenshot(path=str(out_dir("deploy") / "07-overridden.jpg"), type="jpeg", quality=84)
-    print("  wrote", (out_dir("deploy") / "07-overridden.jpg").relative_to(ROOT))
-    c.page.locator(ROW + " [data-datasource]").first.click()      # leave the setup as it was found: reset the override
-    c.page.locator("[data-ds-dialog] [data-connector]").wait_for(timeout=30000)
-    c.page.locator("[data-ds-reset]").click()
-    for _ in range(240):
-        c.page.wait_for_timeout(500)
-        try:
-            c.page.goto(c.base + "/admin/packs")
-            if "data source overridden" not in c.page.content() and "desk-lake" in c.page.content():
-                break
-        except Exception:  # noqa: BLE001
-            pass

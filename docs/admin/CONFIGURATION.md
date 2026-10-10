@@ -249,7 +249,8 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./packs` | The packs directory. |
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PACKS_INSTALLED` | `drishti.packs.installed-dir` | `./data/packs/installed` | Where packs installed from a registry are kept. |
-| `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` | The administrator's per-pack data-source override files (Admin → Packs → Data source). |
+| `DRISHTI_CONNECTORS_DIR` | `drishti.sources.connectors-dir` | `./config/connectors` | The connector folder: one YAML file per connector, the file name being the connector's name (Admin → Connectors). Watched; a change applies without a restart. See [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md). |
+| `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` | Legacy: where the earlier per-pack data-source override files were. Read once at start and migrated into connector files; the originals are kept in `.migrated/`. |
 | `DRISHTI_LOADS_DIR` | `drishti.loads.dir` | `./data/loads` | The data-load history per pack and the administrators' expectation overrides ([DATA_LOADS.md](../guides/DATA_LOADS.md)). |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | The history of archive deployments and rollbacks. |
 | `DRISHTI_PACK_REGISTRY` | `drishti.packs.registry.url` | empty | A signed pack registry (a folder, `file:` or `https:` URL with `index.json`); empty: none. |
@@ -352,20 +353,21 @@ drishti:
 
 ### Add a site Delta Lake connector
 
+Create the file `config/connectors/ops-lake.yaml` (the file name is the connector's name):
+
 ```yaml
-drishti:
-  sources:
-    connectors:
-      ops-lake:
-        plugin: delta
-        kinds: [shipment]
-        settings:
-          root: /data/lake          # or s3a://my-bucket/lake
-          domain: logistics
-          mode.shipment: effective
+plugin: delta
+kinds: [shipment]
+settings:
+  root: /data/lake          # or s3a://my-bucket/lake
+  domain: logistics
+  mode.shipment: effective
 ```
 
-Restart, then `curl -s localhost:18480/api/v1/sources` shows an entry named `ops-lake`.
+No restart: the folder is watched, so within a few seconds `curl -s localhost:18480/api/v1/sources` shows an entry named
+`ops-lake`. Route a kind to it with `drishti.sources.routes.shipment: ops-lake` or from a pack's `routes:`. The same can be done in
+Admin → Connectors. Defining the connector under `drishti.sources.connectors` in `application.yaml` still works but is deprecated
+(see below).
 
 ### Use a different holiday calendar
 
@@ -393,8 +395,13 @@ drishti:
     routes: { trade: trading-store }
     plugins:
       rest: { enabled: true, settings: { base-url: "https://risk.internal/api" } }
-    connectors:
+    connectors:                  # deprecated: use config/connectors/<name>.yaml
       risk-lake: { plugin: delta, settings: { root: /data/lake, domain: risk } }
+    connectors-dir: ./config/connectors
+    connectors-watch: auto
+    connectors-poll: 5s
+    connectors-drain: 3s
+    connectors-generate: true
 ```
 
 | Key | Default | Meaning |
@@ -405,10 +412,24 @@ drishti:
 | `routes.<kind>` | `{}` plus from packs | Which plugin or connector serves a kind. Packs route their kinds to their connectors (`trade: trading-store`). |
 | `plugins.<name>.enabled` | `true` for any plugin not listed | Whether the plugin runs as itself (one instance). A plugin used only through `connectors` does not also run as itself unless it is listed here. |
 | `plugins.<name>.settings.*` | per plugin | Settings for that single instance; see [connector settings](#connector-settings-plugin-by-plugin). |
-| `connectors.<name>.plugin` | required | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`). Run a plugin as often as you like. |
+| `connectors-dir` | `./config/connectors` (`DRISHTI_CONNECTORS_DIR`) | The folder of connector files: one `<name>.yaml` per connector, the file name being the connector's name. Created on the first write. Details: [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md). |
+| `connectors-watch` | `auto` | How the folder is watched. `auto`: file events, falling back to polling; `poll`: polling only; `off`: the files are read at start only (a change then needs a restart). |
+| `connectors-poll` | `5s` | How often the files are looked at: the fallback when file events are unavailable, and a safety net beside them. |
+| `connectors-drain` | `3s` | A connector being restarted or stopped stays open this long so that reads in flight finish. |
+| `connectors-generate` | `true` | At the first start, write a connector file from the pack's template when no file of that name exists. Never overwrites a file. `false`: packs' templates are used in memory only and nothing is written. |
+| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`). Run a plugin as often as you like. |
 | `connectors.<name>.enabled` | `true` | Switch one connector off without deleting it. |
 | `connectors.<name>.kinds` | what the plugin reports | Restrict or declare the kinds it serves. |
 | `connectors.<name>.settings.*` | per plugin | Settings for this instance. `source-name` defaults to the connector's name. |
+
+**Deprecated: `connectors.<name>` in `application.yaml`.** Connectors are site resources kept one file each in `connectors-dir`; a pack
+only names them (its `connectors:` mapping is read as a template from which a missing file is generated). Connectors still defined
+under `drishti.sources.connectors` (in `application.yaml`, an `application-<profile>.yaml` or environment variables such as
+`DRISHTI_SOURCES_CONNECTORS_<NAME>_SETTINGS_<KEY>`) keep working and override the file of the same name setting by setting, but the
+server logs a warning at start for each, naming the file that is equivalent, and Admin → Connectors flags them. The per-store
+profiles (`postgres`, `duckdb`, `aerospike`, `mongodb`, `iceberg`, `redis`, `files`) are deprecated in the same way; their equivalents are
+the example files in `config/connectors.examples/<store>/`. A file in `connectors-dir` replaces the pack's template wholesale.
+Scope `packs:admin` also covers writes to `/api/v1/admin/connectors/**`. Full guide: [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
 
 What the bundled file sets under `plugins`:
 
@@ -470,14 +491,14 @@ The pack loader also writes some keys for the rest of the server (`drishti.packs
 
 See [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing).
 
-### `drishti.packs.deploy` and `drishti.packs.settings-dir` — deploy an archive, and the data-source overrides
+### `drishti.packs.deploy` and `drishti.packs.settings-dir` — deploy an archive, and the legacy data-source overrides
 
-Admin → Packs → **Deploy an archive** and **Data source** ([OPERATIONALISING.md, section 17](../guides/OPERATIONALISING.md#17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back)).
+Admin → Packs → **Deploy an archive** ([OPERATIONALISING.md, section 17](../guides/OPERATIONALISING.md#17-deploy-from-admin--packs-connectors-history-and-roll-back)). The **Data source** panel is now a read-only view of the pack's connectors, with links to Admin → Connectors.
 An uploaded archive (the pack only, never data) is checked, previewed against the running version, swapped into `drishti.packs.installed-dir` and loaded with the in-place restart.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `drishti.packs.settings-dir` | `./data/packs/settings` (`DRISHTI_PACKS_SETTINGS`) | One `<pack>.yaml` per pack: the administrator's data-source override (connector `enabled` and `settings`), written by Admin → Packs → Data source and merged over the pack's own connector settings at every load. A redeploy of the pack keeps it. **Precedence, highest first: the site (environment variables and `application.yaml`, e.g. `DRISHTI_SOURCES_CONNECTORS_<CONNECTOR>_SETTINGS_<KEY>`), the override file, the pack.** Credentials may only be `${ENV_NAME}` references. |
+| `DRISHTI_PACKS_SETTINGS` | `drishti.packs.settings-dir` | `./data/packs/settings` (`DRISHTI_PACKS_SETTINGS`) | **Legacy, migrated.** The folder where the earlier Admin → Packs → Data source panel wrote one `<pack>.yaml` per pack (connector `enabled` and `settings`). At the first start after the upgrade each override is moved into the connector file of the same name (applied on top of the existing file or, when there is none, of the pack's template); the original is kept in `<settings-dir>/.migrated/<pack>.yaml.<timestamp>`, the file's earlier text goes to `.history/`, and the step is audited as `connector-migrated`. An override that cannot be placed (no file and no template say which plugin) is left in place and reported. Nothing writes to this folder any more; it is read only for the migration. **Precedence, highest first: `drishti.sources.connectors` in the site configuration (deprecated), the connector file, the pack's template.** Credentials may only be `${ENV_NAME}` references. |
 | `drishti.packs.deploy.max-archive-mb` | `50` | The largest archive accepted (HTTP 413 above it, decided from the declared length before the body is read). The console's own limit is `packs.deploy_max_mb` in its `application.yaml`; keep it at or under this. |
 | `drishti.packs.deploy.max-unpacked-mb` / `max-files` | `200` / `10000` | What an archive may unpack to (a zip bomb stops here). |
 | `drishti.packs.deploy.keep-versions` | `5` | Previous versions kept per pack under `<installed-dir>/.previous/<pack>/` for a rollback; older ones are deleted. |

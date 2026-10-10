@@ -78,7 +78,7 @@ Words used throughout:
 | **mnemonic** | the short command that opens a kind | `TKT` opens a `ticket` |
 | **id** | one entity's identifier | `TKT-1001` |
 | **Sutra** | a layout for a kind, one YAML file starting `rachana: 1` | `sutras/ticket.v1.sutra.yaml` |
-| **connector** | a named data source the pack reads from | `agent-totals` (a derived one) |
+| **connector** | a configured source of data; a site resource (one file in `config/connectors/`) that the pack names, and may suggest a template for | `agent-totals` (a derived one) |
 | **route** | which connector answers a kind | `agent-load: agent-totals` |
 | **inference** | the layout Drishti works out from a document when no Sutra matches | the agent view below |
 
@@ -567,7 +567,8 @@ Only roles with `calc: true` see Calc (here `support-lead`). More in [Calc: Pyth
 Samples are for demos. Real tickets live somewhere else; here, JSON files that a ticketing system exports to a folder
 every few minutes. The `file` plugin reads such a folder ([FILE_CONNECTOR.md](../connectors/FILE_CONNECTOR.md)).
 Put one exported ticket in `data/helpdesk/ticket/TKT-2001.json` (the kind is the folder name, the id is the file name; no
-`_meta` needed), then declare the connector and route tickets to it:
+`_meta` needed), then name the connector, give it a template, and route tickets to it (a connector is a site resource; the pack suggests it, see
+[Connectors: the pack names them, the site owns them](#connectors-the-pack-names-them-the-site-owns-them)):
 
 ```yaml
 connectors:
@@ -582,7 +583,8 @@ routes:
   ticket: helpdesk-store            # tickets are read from this connector first
 ```
 
-Restart and check the connector, then open `TKT TKT-2001`:
+Restart. At this first start the server writes `config/connectors/helpdesk-store.yaml` from the template (the log says `connector file helpdesk-store.yaml generated from
+the template of pack 'helpdesk'`), and never overwrites it afterwards. Check the connector, then open `TKT TKT-2001`:
 
 ```bash
 curl -s $B/sources | python3 -c 'import json,sys; [print(s["name"], s["kinds"], s["health"]) for s in json.load(sys.stdin)["sources"] if s["name"]=="helpdesk-store"]'
@@ -596,8 +598,8 @@ helpdesk-store ['ticket'] UP
 `TKT-1001` still opens from the samples (`helpdesk, gen 1`). `TKT ageHours < 10` now finds a sample and the exported
 ticket together. The derived `LOAD` kind reads tickets through the normal routing, so it counts the exported ones too.
 For a database, a lake, Kafka or S3 only the `plugin` and `settings` change; see the connector pages. A site can point
-the connector elsewhere without touching the pack (`HELPDESK_DIR=/srv/exports/tickets`, or
-`drishti.sources.connectors.helpdesk-store.settings.root`). The finished example pack in the repository leaves this
+the connector elsewhere without touching the pack: edit `root:` in `config/connectors/helpdesk-store.yaml` (or in Admin → Connectors), and the running server restarts that
+one connector; `HELPDESK_DIR=/srv/exports/tickets` still works because the template, and so the generated file, reads it. The finished example pack in the repository leaves this
 step out, so that it needs no data folder.
 
 ### Step 17. Check it, and publish it
@@ -673,8 +675,9 @@ Below is the complete `packs/logistics/pack.yaml`, annotated. Then the keys only
 | `pivot` | server | `trade: { rows: [book], columns: [currency] }` | A Pivot tab on the kind's search results and pick lists | [pivot](#pivot-a-pivot-tab-on-search-results) |
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [Roles](#roles-and-field-masks) |
 | `python` | server | `python: { enabled: true }` | Calc (Python in the browser, `Alt+C`) on this pack's kinds, and starter snippets (also `python/*.py`) | [Calc](#calc-python-snippets) |
-| `connectors` | server | `helpdesk-store: { plugin: file, … }` | Named data sources | [below](#keys-for-packs-that-inherit-and-read-real-data) |
-| `routes` | server | `ticket: helpdesk-store` | Which connector answers a kind | [below](#keys-for-packs-that-inherit-and-read-real-data) |
+| `connectors` | server | `[helpdesk-store]` (names), or `helpdesk-store: { plugin: file, … }` (a mapping: the pack's templates) | The connectors the pack reads through. A list names site connectors; a mapping names them **and** suggests each one's definition | [below](#connectors-the-pack-names-them-the-site-owns-them) |
+| `connector-templates` | server | `helpdesk-store: { plugin: file, … }` | Suggested definitions to go with a list of names; written to `config/connectors/<name>.yaml` at the first start if no such file exists | [below](#connectors-the-pack-names-them-the-site-owns-them) |
+| `routes` | server | `ticket: helpdesk-store` | Which connector answers a kind | [below](#connectors-the-pack-names-them-the-site-owns-them) |
 | `ingest` | tooling | `trade: { key: tradeId, date: businessDate }` | Which field is each kind's id and which its business date, for `tools/ingest_jsonl.py --pack` and `drishti.py pack check`. **Optional and ignored by the server** (a pack loads the same without it); written by `pack new` when you give `--date` | [below](#generating-a-pack-from-json-lines) |
 | `alerts` | server | `- { kind: ticket, name: …, when: "$.ageHours > 24" }` | Suggested alert rules | below |
 | `sutras`, `formats`, `semantics`, `samples` | server | `sutras: sutras` | Where the pack's folders and files are | below |
@@ -883,12 +886,13 @@ extends:                        # the packs this one inherits from, in order (th
 - trading
 kinds: [netting-set, credit-limit, exposure-profile, cva, sa-ccr, collateral-balance, margin-call, simm]
 
-connectors:                     # named data sources. NAME: { plugin, enabled?, kinds, settings }
+connectors:                     # the connectors this pack reads through. Here a mapping NAME: { plugin, enabled?, kinds, settings }:
+                                # the names are what the pack needs, the definitions are the pack's TEMPLATES (the site's file wins)
   credit-store:
     plugin: delta               # which source plugin: delta, jdbc, aerospike, kafka, s3, rest, file, feeds, …
     enabled: ${DRISHTI_LAKE_ENABLED:true}    # ${VAR:default} is resolved from the environment
     kinds: [netting-set, credit-limit, exposure-profile, cva, sa-ccr]
-    settings:                   # passed to the plugin as-is (see CONNECTOR_GUIDE.md for each plugin's settings)
+    settings:                   # passed to the plugin as-is (see CONNECTOR_GUIDE.md for each plugin's settings; credentials only as ${ENV})
       root: ${DRISHTI_DELTA_ROOT:./data/delta}
       domain: credit            # reads data/delta/credit/<kind>/
   collateral-store:
@@ -906,12 +910,46 @@ roles:
   credit-risk: { kinds: ["*"], raw: true }   # may open every kind and sees every field unmasked
 ```
 
-- **Connectors are per data domain, not per pack.** The lake is laid out as `data/delta/<domain>/<kind>/`. Several
-  packs may declare the same connector; if they declare it identically, that is fine. A different declaration
-  under the same name is an error, unless one pack extends the other (then the more specific wins).
-- **Site configuration overrides a pack.** To point the `credit` domain at PostgreSQL instead of the lake, or to
-  switch a connector off, set `drishti.sources.connectors.credit-store.…` in the site configuration. See
-  [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md).
+#### Connectors: the pack names them, the site owns them
+
+A connector is a **site resource**: one YAML file in `config/connectors/` (`drishti.sources.connectors-dir`), whose file name is the connector's name
+(`config/connectors/credit-store.yaml` is `credit-store`). A pack does not carry connection settings that bind a site; it **names** what it reads through
+and routes its kinds. The reference for the file is [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
+
+```yaml
+connectors: [credit-store, collateral-store]        # the form for a pack that only names connectors
+connector-templates:                                # optional: what to suggest if the site has none yet
+  credit-store: { plugin: delta, kinds: [netting-set], settings: { root: "${DRISHTI_DELTA_ROOT:./data/delta}", domain: credit } }
+routes: { netting-set: credit-store, margin-call: collateral-store }
+```
+
+- **`connectors:` is a list of names or a mapping.** A list names site connectors. A mapping (what every pack shipped with Drishti uses, shown above) is read as the names **plus** the
+  pack's templates, so nothing about an existing pack has to change. `connector-templates:` carries templates beside a list. A pack author writing a new pack may prefer the list
+  form with `connector-templates:`.
+- **A template is a suggestion, written once.** At the first start, for each connector a pack names, the server writes `config/connectors/<name>.yaml` from the template
+  if no file of that name exists, logs `connector file credit-store.yaml generated from the template of pack 'counterparty-risk'`, and never overwrites a file
+  afterwards. The generated file starts with a comment saying where it came from. After that the file is the site's: it **replaces** the template wholesale (the settings are not merged,
+  so a later version of your pack cannot silently change a site's file), and the site edits it in an editor or in Admin → Connectors, applied live to that one connector.
+- **Kinds go through `routes:`.** You know which kind lives where, so you route it; the file's `kinds:` can only narrow that. A connector is therefore reusable by other packs.
+- **Shared connectors.** Connectors are per data domain, not per pack: the lake is laid out as `data/delta/<domain>/<kind>/`, and several packs name the same connector. If two related packs
+  (one `extends` the other) suggest different templates under one name, the more specific pack's template is the one written; two unrelated packs suggesting different
+  definitions of one name is an error, as it always was. Admin → Connectors shows which packs use a connector and asks before the site switches it off or deletes it.
+- **A name nobody defined is not a failure of the pack.** The pack loads; its kinds answer `DRS-1011` ("connector not configured"), Admin → Health shows
+  `connectorsNotConfigured`, and Admin → Packs → Data source offers a **Create** link pre-filled from your template. So give a template for every connector that has a
+  sensible default, and for a site-specific one (a customer's own database) name it and document what the site must create.
+- **Older site overrides still apply, setting by setting**: environment variables and `drishti.sources.connectors.<name>.…` in the server's own
+  configuration still win over a file (and warn), see [CONFIGURATION.md](../admin/CONFIGURATION.md). The recommended way to change a connector is its file.
+- **Archives carry names and templates only.** `pack make`, `pack bundle` and Admin → Packs → Deploy archive ship the names and templates, never a site's settings. The deploy preview lists
+  the connectors the pack names that the site lacks (`missing`), and the **Create connectors** step writes the files from your templates.
+
+**Checklist for a pack author**
+
+1. List every connector the pack reads through in `connectors:`, and route every kind that is not served by the demo `samples` in `routes:`.
+2. Give each a template with settings that work on a developer machine (`${VAR:default}` for paths and URLs).
+3. Never write a literal credential, not even in a template: use `${ENV_VAR}` (the server refuses a literal in a connector file, and so would any site that tried to keep your template).
+4. Do not rename a connector in a later version unless you must: the site's file is named after it, and a new name means a new file to create.
+5. Start a scratch server on an empty `config/connectors/` and check that the files are written and that Admin → Health shows no `connectorsNotConfigured` for the pack.
+6. Remember that your template is only the first suggestion: changes you make to it in a later version reach no existing site's file; say what a site must change in the pack's guide.
 
 ### What becomes of each key
 
@@ -926,7 +964,8 @@ The server turns the manifest into ordinary settings. Knowing this helps when yo
 | `graph.badges.vessel` | `drishti.graph.badges.vessel` |
 | `graph.impact.*` | `drishti.graph.impact.follow[i]`, `.measures.<kind>`, `.formats.<kind>` |
 | `roles.ops` | `drishti.security.roles.ops.kinds[i]`, `.raw`, `.author`, `.admin`, `.approve` |
-| `connectors.x` | `drishti.sources.connectors.x.plugin`, `.enabled`, `.kinds[i]`, `.settings.*` |
+| `connectors.x` (mapping) or `connector-templates.x` | a **template** for `config/connectors/x.yaml` (`plugin`, `enabled`, `kinds`, `settings`), written once at the first start if that file does not exist; the file, not the pack, is then the source of the connector's settings |
+| `connectors: [x]` (list) | the name `x`: the pack reads through the site connector `x` |
 | `routes.kind` | `drishti.sources.routes.<kind>` |
 | `columns.trade` | `drishti.search.columns.trade[i]` |
 | `pivot.trade` | `drishti.search.pivot.trade` (`true`, or the mapping as JSON) |
@@ -1489,7 +1528,8 @@ routes:
   netting-set: bank-credit-db                                # replaces counterparty-risk's route
 ```
 
-Start the server with `DRISHTI_PACKS=my-bank`. `counterparty-risk`, `trading`, `market-data` and `banking-core`
+At the first start the server writes `config/connectors/bank-credit-db.yaml` from the template (the environment variables are read when the connector starts; a literal
+password would be refused). Start the server with `DRISHTI_PACKS=my-bank`. `counterparty-risk`, `trading`, `market-data` and `banking-core`
 come with it. *Admin → Health* lists every override, one per line, in the form `<what> <name>: <winner> overrides
 <loser>`:
 
@@ -1744,7 +1784,7 @@ To change a shipped pack for your site without touching its files at all, use on
 |---|---|
 | A different layout for one kind | Put a Sutra with a higher `version` in the site Sutra folder (`./sutras`, `DRISHTI_SUTRAS`), or design it in the Build workbench ([SCREEN_DESIGNER.md](SCREEN_DESIGNER.md)) |
 | Other mnemonics, labels, columns, connectors or routes | A small pack of your own that `extends` the shipped one ([Inheritance](#inheritance)) |
-| A connector pointed elsewhere, or switched off | Site configuration: `drishti.sources.connectors.<name>.…` ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
+| A connector pointed elsewhere, or switched off | Its connector file, `config/connectors/<name>.yaml` (edit it, or use Admin → Connectors or `drishti.py connector apply`): a file replaces the pack's template and is applied without a restart ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
 | A pack hidden from everyone | *Admin → Packs* → **Switch off** ([PACKS.md](PACKS.md#switching-packs-off-and-on-admin--packs)) |
 
 The banking lake is built with:
@@ -2136,7 +2176,7 @@ After any change, one minute on a scratch server tells you the pack is sound.
 | Where | Look for |
 |---|---|
 | *Admin → Packs* (`/admin/packs`) | the pack, its version, **on**; *Needed by* shows what builds on it |
-| *Admin → Health* (`/admin/health`) | the pack **OK**, with its kinds, Sutras and connectors; **no Sutra problems**, no connector down, and the *Overrides* you expect and no others |
+| *Admin → Health* (`/admin/health`) | the pack **OK**, with its kinds, Sutras and connectors; **no Sutra problems**, no connector down or not configured, and the *Overrides* you expect and no others |
 | *About* (`/about`) | the pack among the loaded packs |
 | `HELP` (the pack's `code`) typed on the command line | the pack's overview: every kind you may open, its mnemonic, how many entities the sources hold, an example, the key fields |
 | *Help → Help centre* | the pack's guide card |
@@ -2170,7 +2210,7 @@ for today's business date: three sample tickets and the exported one.
 **The checklist**
 
 1. `sutras/problems` prints `{}`, and `sutra test` passes.
-2. *Admin → Health* shows the pack **OK**, with the overrides you expect (and no others).
+2. *Admin → Health* shows the pack **OK**, with the overrides you expect (and no others), and no connector *down* or *not configured* (`connectorsNotConfigured`); `ls config/connectors` has a file for each connector the pack names.
 3. Each `console.examples` command opens, and its *How this view was built* names a Sutra (or says `inference only` where
    you meant it to).
 4. `<MN> <GO>` for each mnemonic gives a pick list with sensible columns; the type-ahead offers the mnemonics.

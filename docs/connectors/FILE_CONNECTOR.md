@@ -349,6 +349,23 @@ The same is logged once, as a warning, each time such a file is indexed.
 | searches say `partial: true` | a field the query reads is not promoted | add it to `layout.<kind>.columns`, and to the rows' `columns` |
 | the first read of an old day is slow | the day is being indexed | expected once; raise `index-cache-mb` to keep more days |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/site-quotes.yaml
+plugin: file
+kinds: [quote]
+description: Quotes from the desk's drop folder
+settings:
+  root: /srv/desk/lake
+  rescan-seconds: '30'
+  lookback-days: '10'
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/files/`](../../config/connectors.examples/files).
+
 ## 12. Settings
 
 | Setting | Default | Meaning |
@@ -438,29 +455,27 @@ and is served as `{"rows": [{"date": "2026-09-01", "rate": 3.95, "volume_bn": 19
 
 #### Configure it
 
-**Site form** (`application.local.yaml`):
+**Site form**, the connector file `config/connectors/limits-drop.yaml` (the file name is the connector's name):
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      limits-drop:                         # the connector's name: health, provenance and routes use it
-        plugin: file                       # the file plugin
-        kinds: [credit-limit]              # serve only credit limits from this folder
-        settings:
-          root: ${LIMITS_DROP_DIR:/srv/drops/limits}   # the folder; an environment variable can move it
-          rescan-seconds: 30               # how often new date folders and new ids (for search) are listed
-          lookback-days: 5                 # a picked date may fall back at most 5 days to an older date folder
+plugin: file                       # the file plugin
+kinds: [credit-limit]              # serve only credit limits from this folder
+description: Credit limits dropped by the limits system
+settings:
+  root: ${LIMITS_DROP_DIR:/srv/drops/limits}   # the folder; an environment variable can move it
+  rescan-seconds: '30'             # how often new date folders and new ids (for search) are listed
+  lookback-days: '5'               # a picked date may fall back at most 5 days to an older date folder
 ```
 
-**Pack form** (`packs/<your-pack>/pack.yaml`), the same connector shipped with a pack:
+**Pack form** (`packs/<your-pack>/pack.yaml`), the same connector suggested by a pack as a template (written to the file above at the first start if
+the site has none):
 
 ```yaml
 connectors:
   limits-drop:                             # one entry per connector
     plugin: file
     kinds:
-    - credit-limit                         # a list: a site `kinds:` would replace it whole
+    - credit-limit                         # a list: a file's `kinds:` replaces it whole
     settings:
       root: ${LIMITS_DROP_DIR:/srv/drops/limits}
       rescan-seconds: 30
@@ -539,19 +554,22 @@ drishti:
           lookback-days: 10                     # how far back a picked date may fall to an older dated folder
 ```
 
-A pack (or a site) can run more folders as named connectors:
+A site (or a pack, as a suggested template) can run more folders as named connectors, each one a file. `config/connectors/eod-futures.yaml`:
 
 ```yaml
-# packs/<pack>/pack.yaml
-connectors:
-  eod-futures:
-    plugin: file
-    kinds: [settlement]                         # only this kind is read from the folder
-    settings:
-      root: ${EOD_FUTURES_DIR:/data/eod/futures}
-      lookback-days: 5
+plugin: file
+kinds: [settlement]                           # only this kind is read from the folder
+settings:
+  root: ${EOD_FUTURES_DIR:/data/eod/futures}
+  lookback-days: '5'
+```
+
+and the pack that reads it names it and routes the kind (`packs/<pack>/pack.yaml`):
+
+```yaml
+connectors: [eod-futures]
 routes:
-  settlement: eod-futures                       # try this connector first for settlements
+  settlement: eod-futures                     # try this connector first for settlements
 ```
 
 Every setting is in [section 12](#12-settings).

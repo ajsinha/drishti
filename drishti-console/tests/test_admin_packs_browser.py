@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Admin → Packs in a real browser: an archive is uploaded, its checks and its preview (breaking changes marked) are read, the deploy is
-confirmed; a pack's data source is edited, tested (dates and row counts), saved as an override and reset. Keyboard and phone width are
+confirmed; a pack's data source is a read-only view of its connectors, with links to Admin → Connectors. Keyboard and phone width are
 covered. Runs Chromium through Playwright against a console with a stand-in server; skipped when Playwright or its Chromium is missing."""
 import json
 import socket
@@ -41,21 +41,14 @@ class PackBackend(FakeBackend):
         super().__init__()
         self.version = "1.0.0"
         self.history = []
-        self.override = {}
         self.sent = {"upload": None, "confirm": None, "save": None, "tests": []}
 
     def datasource(self):
-        root = self.override.get("root", "/data/lake-a")
-        return {"pack": "lakepack", "file": "/srv/drishti/data/packs/settings/lakepack.yaml", "overridden": bool(self.override), "plugins": ["delta", "file"],
-                "connectors": [{"name": "item-store", "plugin": "file", "kinds": ["item", "thing"],
-                                "enabled": {"pack": "true", "override": None, "site": None, "effective": "true", "on": True, "source": "pack"},
-                                "settings": [
-                                    {"key": "root", "pack": "/data/lake-a", "override": self.override.get("root"), "site": None, "effective": root, "resolved": root,
-                                     "resolvable": True, "secret": False, "source": "override" if "root" in self.override else "pack", "overridden": "root" in self.override},
-                                    {"key": "lookback-days", "pack": "10", "override": None, "site": "7", "effective": "7", "resolved": "7", "resolvable": True,
-                                     "secret": False, "source": "site", "overridden": False},
-                                    {"key": "password", "pack": None, "override": None, "site": None, "effective": "", "resolved": None, "resolvable": True,
-                                     "secret": True, "source": "pack", "overridden": False}]}]}
+        return {"pack": "lakepack", "directory": "/srv/drishti/config/connectors", "missing": ["thing-stream"], "connectors": [
+            {"name": "item-store", "defined": True, "origin": "file", "state": "RUNNING", "health": "UP", "plugin": "file", "kinds": ["item"], "problems": [],
+             "editUrl": "/admin/connectors?name=item-store", "createUrl": "/admin/connectors?new=item-store", "hasTemplate": True},
+            {"name": "thing-stream", "defined": False, "state": "NOT_CONFIGURED", "problems": ["connector thing-stream is not configured"], "kinds": ["thing"],
+             "editUrl": "/admin/connectors?name=thing-stream", "createUrl": "/admin/connectors?new=thing-stream", "hasTemplate": False}]}
 
     async def admin_upload(self, path, ident, data, headers, timeout=120.0):
         self.sent["upload"] = {"size": len(data), "headers": headers}
@@ -72,8 +65,7 @@ class PackBackend(FakeBackend):
     async def admin(self, method, path, ident, body=None, timeout=None, **params):
         if path == "/packs":
             return [{"name": "lakepack", "title": "Lake pack", "description": "Items", "version": self.version, "loaded": True, "added": False, "enabled": True,
-                     "extends": [], "requiredBy": [], "kinds": ["item", "thing"], "connectors": ["item-store"], "mnemonics": ["ITM"],
-                     "dataSourceOverridden": bool(self.override)}]
+                     "extends": [], "requiredBy": [], "kinds": ["item", "thing"], "connectors": ["item-store", "thing-stream"], "mnemonics": ["ITM"]}]
         if path == "/registry":
             return {"url": "", "configured": False, "packs": []}
         if path == "/packs/history":
@@ -88,21 +80,6 @@ class PackBackend(FakeBackend):
             return {"discarded": True}
         if path == "/packs/lakepack/datasource" and method == "GET":
             return self.datasource()
-        if path == "/packs/lakepack/datasource" and method == "PUT":
-            self.sent["save"] = body
-            self.override = dict(body["connectors"].get("item-store", {}).get("settings", {}))
-            return {"changed": ["item-store.root"], "overridden": bool(self.override), "restarting": False, "note": "Saved; it takes effect when the server next starts."}
-        if path == "/packs/lakepack/datasource" and method == "DELETE":
-            self.override = {}
-            return {"overridden": False, "restarting": False, "note": "Saved; it takes effect when the server next starts."}
-        if path == "/packs/lakepack/datasource/test":
-            self.sent["tests"].append(body)
-            root = (((body.get("connectors") or {}).get("item-store") or {}).get("settings") or {}).get("root", "/data/lake-a")
-            rows = [("2026-10-05", 5), ("2026-10-02", 3)] if root.endswith("lake-b") else [("2026-10-05", 2)]
-            return {"pack": "lakepack", "tested": "the edited settings, not yet saved", "ok": True, "connectors": [{
-                "connector": "item-store", "plugin": "file", "ok": True, "health": "UP", "ms": 4, "error": None,
-                "kinds": [{"kind": "item", "exact": True, "note": "", "dates": [{"date": d, "rows": n} for d, n in rows]},
-                          {"kind": "thing", "exact": True, "note": "nothing found for this kind", "dates": []}]}]}
         return await super().admin(method, path, ident, body, **params)
 
 
@@ -156,58 +133,32 @@ def test_an_archive_is_checked_previewed_and_deployed(browser, packs_console):
     page.close()
 
 
-def test_the_data_source_is_edited_tested_saved_and_reset(browser, packs_console):
+def test_the_data_source_lists_the_packs_connectors_and_links_to_edit_or_create_them(browser, packs_console):
     url, backend = packs_console
-    backend.override = {}
     page = browser.new_page()
-    page.on("dialog", lambda d: d.accept())
     page.goto(url + "/admin/packs")
-    opener = page.locator("[data-datasource]")
-    opener.click()
-    dialog = page.locator("[data-ds-dialog]")
-    dialog.locator("[data-connector]").wait_for()
-    text = dialog.inner_text()
-    for t in ("Data source of lakepack", "item-store", "root", "pack default", "lookback-days", "set by the site: wins over this file", "password", "Precedence, highest first"):
-        assert t in text, t
-    site_row = dialog.locator("tr[data-key='lookback-days'] input")
-    assert site_row.is_disabled() and site_row.input_value() == "7"                              # the site wins: not editable here
-    root = dialog.locator("tr[data-key='root'] input")
-    assert root.input_value() == "/data/lake-a"
-    root.fill("/data/lake-b")
-    row = dialog.locator("tr[data-key='root']").inner_text()
-    assert "overridden here" in row and "pack default: /data/lake-a" in row                       # pack default against override, in words
-    dialog.locator("[data-ds-test]").click()
-    dialog.locator("[data-test-out] table").wait_for()
-    out = dialog.locator("[data-test-out]").inner_text()
-    assert "Reachable" in out and "2026-10-05" in out and "5" in out and "2026-10-02" in out and "3" in out and "nothing found for this kind" in out
-    assert backend.sent["tests"][-1]["connectors"] == {"item-store": {"settings": {"root": "/data/lake-b"}}}   # only the difference from the pack is sent
-    dialog.locator("[data-ds-save]").click()
-    page.wait_for_function("() => document.querySelector('[data-pack] .st-warn') !== null", timeout=15000)       # reloaded: the pack is badged
-    assert backend.sent["save"] == {"connectors": {"item-store": {"settings": {"root": "/data/lake-b"}}}}
-    assert "data source overridden" in page.locator("tr[data-pack=lakepack]").first.inner_text()
     page.locator("[data-datasource]").click()
-    page.locator("[data-ds-dialog] [data-connector]").wait_for()
-    again = page.locator("[data-ds-dialog] tr[data-key='root']")
-    assert again.locator("input").input_value() == "/data/lake-b"
-    again.get_by_role("button", name="Use the pack default for item-store root").click()
-    assert again.locator("input").input_value() == "/data/lake-a" and "pack default" in again.inner_text()
-    page.locator("[data-ds-reset]").click()
-    page.wait_for_function("() => document.querySelector('[data-pack] .st-warn') === null", timeout=15000)
-    assert backend.override == {}
+    dialog = page.locator("[data-ds-dialog]")
+    dialog.locator("[data-connector]").first.wait_for()
+    text = dialog.inner_text()
+    for t in ("Connectors of lakepack", "item-store", "running", "thing-stream", "not configured", "nothing defines it", "/srv/drishti/config/connectors", "Admin"):
+        assert t in text, t
+    assert dialog.locator("[data-connector='item-store'] a").get_attribute("href") == "/admin/connectors?name=item-store"
+    assert dialog.locator("[data-connector='thing-stream'] a").get_attribute("href") == "/admin/connectors?new=thing-stream"      # create, pre-filled from the pack's suggestion
+    assert dialog.locator("[data-ds-msg]").inner_text().startswith("1 connector is not configured")
+    assert dialog.locator("input, textarea").count() == 0                                          # a view: nothing to edit here
     page.close()
 
 
 def test_the_data_source_panel_works_from_the_keyboard(browser, packs_console):
     url, backend = packs_console
-    backend.override = {}
     page = browser.new_page()
     page.goto(url + "/admin/packs")
     page.locator("[data-datasource]").focus()
     page.keyboard.press("Enter")
     dialog = page.locator("[data-ds-dialog]")
-    dialog.locator("[data-connector]").wait_for()
-    page.wait_for_function("() => document.activeElement && document.activeElement.getAttribute('aria-label') === 'item-store root'", timeout=3000)
-    assert page.evaluate("() => document.activeElement.getAttribute('aria-label')") == "item-store root"       # focus lands on the first editable setting
+    dialog.locator("[data-connector]").first.wait_for()
+    page.wait_for_function("() => document.activeElement && document.activeElement.tagName === 'A'", timeout=3000)   # focus lands on the first link
     assert dialog.get_attribute("aria-labelledby") == "dsTitle"
     page.keyboard.press("Escape")
     page.wait_for_function("() => !document.querySelector('[data-ds-dialog]').open")
@@ -222,10 +173,10 @@ def test_the_pack_pages_fit_a_phone_and_the_dark_theme(browser, packs_console):
     page.goto(url + "/admin/packs")
     assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")              # no sideways page scroll
     page.locator("[data-datasource]").click()
-    page.locator("[data-ds-dialog] [data-connector]").wait_for()
+    page.locator("[data-ds-dialog] [data-connector]").first.wait_for()
     box = page.locator("[data-ds-dialog]").bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= 391
-    assert page.locator("[data-ds-save]").is_visible()
+    assert page.locator("[data-ds-close]").is_visible()
     colour = page.evaluate("() => getComputedStyle(document.querySelector('[data-ds-dialog]')).color")
     background = page.evaluate("() => getComputedStyle(document.querySelector('[data-ds-dialog]')).backgroundColor")
     assert colour != background                                                                               # readable in the dark theme too

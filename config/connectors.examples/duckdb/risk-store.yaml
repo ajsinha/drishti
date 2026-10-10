@@ -1,0 +1,29 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: copy to config/connectors/risk-store.yaml to read the risk-store data from duckdb. It replaces the
+# connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
+plugin: duckdb
+kinds:
+- var
+- stress-scenario
+- stress-result
+- frtb-sensitivity
+- pnl-explain
+description: risk-store read from duckdb (the former application-duckdb.yaml profile)
+settings:
+  domain: risk
+  path: ${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}
+  memory-limit: ${DRISHTI_DUCKDB_MEMORY:1GB}
+  table: risk.entities
+  pool-size: '4'

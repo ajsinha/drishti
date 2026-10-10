@@ -17,7 +17,7 @@
 
 A *source* is where Drishti reads entities from: a Delta Lake domain, a database, Kafka, a REST service, S3,
 a feed. Each one is a plugin instance, usually a named connector declared by a pack (for example the `trading`
-pack's `trading-store`). When one fails, the others keep serving; only the kinds it holds are affected.
+pack's `trading-store`, whose settings are in the site's file `config/connectors/trading-store.yaml`). When one fails, the others keep serving; only the kinds it holds are affected.
 
 The examples use `http://localhost:18480`. With security on, add `-H "Authorization: Bearer $TOKEN"`
 (an admin's token for `/api/v1/admin/*`; see [API_GUIDE.md](../../guides/API_GUIDE.md)).
@@ -151,8 +151,14 @@ Connector settings are listed per plugin in [CONFIGURATION.md](../CONFIGURATION.
 next read, and views of the kind work again. Until then, other kinds keep working, and links to the affected
 kinds show *pending* or *missing*.
 
-**A plugin failed to start.** Correct its settings, then restart the server (a plugin that failed at start-up is
-not retried). The other plugins are unaffected by the restart apart from the brief outage.
+**A connector failed to start.** Correct its settings in **Admin → Connectors** (the connector is `FAILED`; **Test connection**
+shows the reason with a hint) or in its file `config/connectors/<name>.yaml`; the connector is restarted on its own within a few
+seconds and no server restart is needed. A plugin configured directly under `drishti.sources.plugins` in `application.yaml`
+is not retried: correct it and restart the server. Other connectors are not affected either way.
+
+**A connector's file has a mistake.** The last good configuration keeps running. Admin → Health, `connectors.badFiles`, and the
+Connectors page give the message; fix the file (or restore an earlier text from the page's History) and it is picked up
+without a restart ([CONNECTOR_FILES.md, section 12](../../connectors/CONNECTOR_FILES.md#12-health-and-problems)).
 
 **The source is healthy but slow.** Give it more time, in `application.local.yaml` next to the server jar:
 
@@ -168,9 +174,10 @@ Then restart the server. Raising the link budget makes every view with slow link
 appears, so raise it only as far as needed. For lake and stream connectors a bigger cache also helps (`cache-mb`;
 see [PERFORMANCE.md](../PERFORMANCE.md#example-3-connector-caches)).
 
-**You want a connector off while its source is out for a long time.** Switch it off with its variable (for
-example `DRISHTI_LAKE_ENABLED=false` turns off the packs' lake connectors) or with
-`drishti.sources.connectors.<name>.enabled: false`, and restart. Views of its kinds then fail at once
+**You want a connector off while its source is out for a long time.** Disable it in **Admin → Connectors**
+(the switch on its row, or `drishti.py connector disable <name>`), or set `enabled: false` in its file
+`config/connectors/<name>.yaml`; there is no restart, and enable it again the same way when the source is back. (The variable
+`DRISHTI_LAKE_ENABLED=false` still turns off the packs' lake connectors, but it is read at start and needs a restart.) Views of its kinds then fail at once
 (`DRS-1001`, or `DRS-1002` when no other source serves the kind) instead of waiting for timeouts.
 
 ## Verification

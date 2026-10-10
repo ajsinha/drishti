@@ -42,29 +42,25 @@ class PackSettingsTest {
     }
 
     @Test
-    void theOverrideWinsOverThePackAndLeavesThePackFilesAlone(@TempDir Path dir) throws Exception {
+    void aConnectorFileReplacesThePacksTemplateAndLeavesThePackFilesAlone(@TempDir Path dir) throws Exception {
         Path packs = Files.createDirectories(dir.resolve("packs/risk"));
         String yaml = "pack: risk\nkinds: [var]\nconnectors:\n  lake:\n    plugin: delta\n    enabled: true\n    kinds: [var]\n    settings:\n"
                 + "      root: ${DRISHTI_DELTA_ROOT:./data/delta}\n      domain: risk\n";
         Files.writeString(packs.resolve("pack.yaml"), yaml);
-        PackSettings st = new PackSettings(dir.resolve("settings"));
-        PackLoader plain = new PackLoader();
+        ConnectorFiles files = new ConnectorFiles(dir.resolve("connectors"));
+        PackLoader plain = new PackLoader(files);
         Map<String, Object> before = plain.properties(plain.load(dir.resolve("packs"), List.of("risk")));
-        assertThat(before).containsEntry("drishti.sources.connectors.lake.settings.root", "${DRISHTI_DELTA_ROOT:./data/delta}");
+        assertThat(before).containsEntry("drishti.sources.connectors.lake.settings.root", "${DRISHTI_DELTA_ROOT:./data/delta}");   // no file: the template applies
 
-        st.write("risk", doc("lake", Map.of("enabled", false, "settings", Map.of("root", "/mnt/lake", "engine", "native"))));
-        PackLoader withOverride = new PackLoader(st);
-        Map<String, Object> after = withOverride.properties(withOverride.load(dir.resolve("packs"), List.of("risk")));
-        assertThat(after).containsEntry("drishti.sources.connectors.lake.settings.root", "/mnt/lake")
-                .containsEntry("drishti.sources.connectors.lake.settings.engine", "native")        // a setting the pack did not have
-                .containsEntry("drishti.sources.connectors.lake.settings.domain", "risk")          // the pack's own, untouched
-                .containsEntry("drishti.sources.connectors.lake.enabled", false);
+        files.write("lake", "plugin: delta\nenabled: false\nsettings:\n  root: /mnt/lake\n  engine: native\n");
+        Map<String, Object> after = plain.properties(plain.load(dir.resolve("packs"), List.of("risk")));
+        assertThat(after).doesNotContainKey("drishti.sources.connectors.lake.settings.root")      // the template yields completely: not merged
+                .doesNotContainKey("drishti.sources.connectors.lake.settings.domain");
+        Map<String, Object> fromFile = ConnectorFiles.properties(files.readAll(new java.util.HashMap<>()));
+        assertThat(fromFile).containsEntry("drishti.sources.connectors.lake.settings.root", "/mnt/lake")
+                .containsEntry("drishti.sources.connectors.lake.settings.engine", "native")
+                .containsEntry("drishti.sources.connectors.lake.enabled", "false");
         assertThat(Files.readString(packs.resolve("pack.yaml"))).isEqualTo(yaml);                  // the pack's artifact is never rewritten
-
-        st.write("risk", Map.of());                                                                // reset: the file goes, the pack applies again
-        assertThat(st.text("risk")).isNull();
-        assertThat(new PackLoader(st).properties(new PackLoader(st).load(dir.resolve("packs"), List.of("risk"))))
-                .containsEntry("drishti.sources.connectors.lake.settings.root", "${DRISHTI_DELTA_ROOT:./data/delta}");
     }
 
     @Test

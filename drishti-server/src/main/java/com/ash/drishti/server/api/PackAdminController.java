@@ -77,10 +77,10 @@ public class PackAdminController {
         this.overlay = new com.ash.drishti.server.PackOverlay(Path.of(env.getProperty("drishti.packs.overlay", "./data/packs/added.yaml")));
     }
 
-    /** A loader that reads the packs as the server will at its next start: with the administrators' data-source overrides applied. */
+    /** A loader that reads the packs as the server will at its next start: a template yields to the connector file of its name. */
     private com.ash.drishti.packs.PackLoader loader() {
-        return new com.ash.drishti.packs.PackLoader(new com.ash.drishti.packs.PackSettings(
-                Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings"))));
+        return new com.ash.drishti.packs.PackLoader(new com.ash.drishti.packs.ConnectorFiles(
+                Path.of(env.getProperty("drishti.sources.connectors-dir", "./config/connectors"))));
     }
 
     /** Loads a pack that is on disk but not loaded: checked first, then the server restarts in place to read it. */
@@ -168,8 +168,7 @@ public class PackAdminController {
             Map<String, Object> m = row(pack.name(), pack.title(), pack.description(), pack.version());
             m.put("loaded", true);
             m.put("added", overlay.added().contains(pack.name()));
-            m.put("dataSourceOverridden", new com.ash.drishti.packs.PackSettings(Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings")))
-                    .text(pack.name()) != null);
+            m.put("connectors", pack.connectorRefs());
             m.put("enabled", access.isEnabled(pack.name()));
             m.put("extends", pack.parents());
             m.put("requiredBy", access.requiredBy(pack.name()));

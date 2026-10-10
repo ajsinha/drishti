@@ -220,7 +220,7 @@ tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to kn
 - **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve`, `packs:admin` or `loads:write` (an ETL job announcing that a batch landed: [DATA_LOADS.md](../guides/DATA_LOADS.md#10-permissions)) when making a
   token (`drishti.security.token-scopes`; the account page lists them in words). What a token may do is the scope **and** the
   roles its user holds at the time of each call (`design:approve` is useless to someone who is not an approver, `packs:admin` to
-  someone who is not an admin), so demoting or disabling a user cuts their tokens at once. A token with a write scope must
+  someone who is not an admin; `packs:admin` covers loading and deploying packs and writes to `/api/v1/admin/connectors/**`), so demoting or disabling a user cuts their tokens at once. A token with a write scope must
   expire (`drishti.security.token-write-max-days`, 90). Every write done with a token is in the audit log as `token-write`
   (token id, method, path, status; never the secret) and each refusal as `token-denied`. Users, roles, tokens, sign-in, caches and
   personal or collaboration state are never open to a token (`token-never`); there is no `admin` scope. Tokens made before scopes
@@ -543,6 +543,7 @@ the current one), and choose their theme, clock zone, density and landing page.
 
 Admins also have:
 
+- **Connectors** (`/admin/connectors`): one YAML file per connector in `config/connectors/`; list, edit (a generated form or the YAML), test, save with a version history, enable or disable, reset to the pack's template, delete. Changes apply without a restart and are audited (`connector-saved`, `-deleted`, `-reset`, `-enabled`, `-disabled`, `-restored`, `-tested`, `-generated`, `-migrated`). See [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md);
 - **Health** (`/admin/health`): connectors, packs, live streams and the server, refreshed every 5 seconds;
 - **Caches** (`/admin/caches`): what each cache holds, with a purge for any one or all. Every purge is audited
   (`cache-purged`).

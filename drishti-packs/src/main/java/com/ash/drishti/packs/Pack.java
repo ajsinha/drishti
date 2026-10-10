@@ -63,6 +63,47 @@ public record Pack(String name, String version, String title, String description
         return parents();
     }
 
+    /**
+     * The connector definitions the pack suggests, by name: the {@code connector-templates:} mapping, and the older
+     * {@code connectors:} mapping read as templates. A template is never in force by itself once a connector file of the
+     * same name exists; it is what a file is generated from, and what is used when a file cannot be written.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Map<String, Object>> connectorTemplates() {
+        Map<String, Map<String, Object>> out = new java.util.LinkedHashMap<>();
+        for (String key : new String[] {"connectors", "connector-templates"}) {
+            if (manifest.get(key) instanceof Map<?, ?> m) {
+                m.forEach((k, v) -> out.put(String.valueOf(k), v instanceof Map<?, ?> d ? (Map<String, Object>) d : Map.of()));
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Every connector the pack names, in order: a {@code connectors:} list, the templates, and the connectors its
+     * {@code routes:} send kinds to. These are logical names of site connectors ({@code config/connectors/<name>.yaml}).
+     */
+    public java.util.List<String> connectorRefs() {
+        java.util.LinkedHashSet<String> out = new java.util.LinkedHashSet<>();
+        if (manifest.get("connectors") instanceof java.util.List<?> l) {
+            l.forEach(x -> out.add(String.valueOf(x).trim()));
+        }
+        out.addAll(connectorTemplates().keySet());
+        if (manifest.get("routes") instanceof Map<?, ?> r) {
+            r.values().forEach(v -> out.add(String.valueOf(v).trim()));
+        }
+        return java.util.List.copyOf(out);
+    }
+
+    /** The kind-to-connector routes the pack declares. */
+    public Map<String, String> routes() {
+        Map<String, String> out = new java.util.LinkedHashMap<>();
+        if (manifest.get("routes") instanceof Map<?, ?> r) {
+            r.forEach((k, v) -> out.put(String.valueOf(k), String.valueOf(v)));
+        }
+        return out;
+    }
+
     public Path resolve(String relative) {
         return dir.resolve(relative).normalize();
     }

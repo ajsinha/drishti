@@ -505,10 +505,13 @@ class BackendClient:
     async def change_password(self, current: str, new: str, ident) -> dict:
         return await self._send("POST", "/auth/password", ident, json={"current": current, "next": new})
 
-    async def admin(self, method: str, path: str, ident, body: dict | None = None, timeout: float | None = None, **params):
+    async def admin(self, method: str, path: str, ident, body: dict | None = None, timeout: float | None = None, headers: dict | None = None, **params):
         """Admin endpoints (``/admin/...``); the server enforces the admin role. ``timeout`` (seconds) overrides the console's
-        own wait for a call that may legitimately take longer (a bridge test waits for the bridge's own timeout)."""
+        own wait for a call that may legitimately take longer (a bridge test waits for the bridge's own timeout); ``headers`` are
+        sent as given (``If-Match`` carries a version)."""
         kw = {"params": params} if params else {}
+        if headers:
+            kw["headers"] = headers
         if timeout:
             kw["timeout"] = timeout
         if body is not None:

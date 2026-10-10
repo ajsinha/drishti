@@ -139,7 +139,7 @@ trading pack declares them on `trading-store`; the `duckdb` profile (`SPRING_PRO
 connector to the `duckdb` plugin and keeps the pack's settings, so the declaration applies unchanged:
 
 ```yaml
-# packs/trading/pack.yaml (generated)
+# packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
 connectors:
   trading-store:
     settings:
@@ -149,7 +149,7 @@ connectors:
                     tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
                     risk.dv01, sourceSystem]
 
-# drishti-server application-duckdb.yaml (the profile)
+# drishti-server application-duckdb.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
@@ -507,9 +507,35 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | a `.stage`, `.loading` or `.tmp` beside the file | a load was killed | harmless: the next load deletes them |
 | the server's resident memory exceeds its heap by about a gigabyte | DuckDB's native memory | expected; bounded by `memory-limit` |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/trading-store.yaml
+plugin: duckdb
+kinds: [trade]
+description: Trading documents in an embedded DuckDB file
+settings:
+  domain: trading
+  path: ${DRISHTI_DUCKDB_PATH:data/duckdb/drishti.duckdb}
+  memory-limit: ${DRISHTI_DUCKDB_MEMORY:1GB}
+  table: trading.entities
+  pool-size: '8'
+  layout:
+    trade:
+      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
+                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
+                risk.dv01, sourceSystem]
+```
+
+The `duckdb` profile (`SPRING_PROFILES_ACTIVE=duckdb`) did this for the six banking stores and still works, but is deprecated: the file replaces it. A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 3](#3-declaring-the-promoted-columns)).
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/duckdb/`](../../config/connectors.examples/duckdb).
+
 ## 12. Settings
 
-On a `duckdb` connector (`drishti.sources.connectors.<name>.settings`):
+In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|

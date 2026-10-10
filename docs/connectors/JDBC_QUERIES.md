@@ -59,25 +59,27 @@ answers with its own indexes.
 
 ## 2. Where the queries live
 
-In the connector's `settings`, either in a pack's `pack.yaml` (the pack owns its database) or in site configuration
-(`application.local.yaml`, the operator owns it). A connector serves as many kinds as it has `query.<kind>` keys:
+In the `settings:` of the connector's file, `config/connectors/<name>.yaml` (the site owns the connection; see [CONNECTOR_FILES.md](CONNECTOR_FILES.md)), or
+in the template a pack suggests in its `pack.yaml` when the pack owns its database (the server writes the template to the file at the first start). A connector serves as many
+kinds as it has `query.<kind>` keys. In the file form, with the credential an environment reference:
 
 ```yaml
-connectors:
-  trading-db:
-    plugin: jdbc
-    settings:
-      url: ${DRISHTI_TRADES_URL:jdbc:postgresql://db:5432/trades}
-      user: ${DRISHTI_TRADES_USER:drishti}
-      password: ${DRISHTI_TRADES_PASSWORD}
-      pool-size: 8
-      query.trade: >
-        SELECT … FROM trades WHERE trade_id = :id AND business_date = :asOf
-      query.trade.legs: SELECT … FROM trade_legs WHERE trade_id = :id ORDER BY leg_no
-      ids.trade: SELECT trade_id FROM trades WHERE business_date = :asOf
-      columns.trade: SELECT trade_id, mtm, notional, book, netting_set FROM trades WHERE business_date = :asOf
-      reverse.trade: SELECT trade_id FROM trades WHERE netting_set = :target AND business_date = :asOf
-      query.counterparty: SELECT * FROM counterparties WHERE id = :id
+# config/connectors/trading-db.yaml
+plugin: jdbc
+settings:
+  url: ${DRISHTI_TRADES_URL:jdbc:postgresql://db:5432/trades}
+  user: ${DRISHTI_TRADES_USER:drishti}
+  password: ${DRISHTI_TRADES_PASSWORD}
+  pool-size: 8
+  query.trade: >
+    SELECT … FROM trades WHERE trade_id = :id AND business_date = :asOf
+  query.trade.legs: SELECT … FROM trade_legs WHERE trade_id = :id ORDER BY leg_no
+  ids.trade: SELECT trade_id FROM trades WHERE business_date = :asOf
+  columns.trade: SELECT trade_id, mtm, notional, book, netting_set FROM trades WHERE business_date = :asOf
+  reverse.trade: SELECT trade_id FROM trades WHERE netting_set = :target AND business_date = :asOf
+  query.counterparty: SELECT * FROM counterparties WHERE id = :id
+# packs/<pack>/pack.yaml: the pack names the connector and routes its kinds
+connectors: [trading-db]
 routes:
   trade: trading-db
   counterparty: trading-db
@@ -253,23 +255,24 @@ CREATE TABLE counterparties (id text PRIMARY KEY, legal_name text, rating text);
 The connector:
 
 ```yaml
-connectors:
-  trading-db:
-    plugin: jdbc
-    settings:
-      url: ${DRISHTI_TRADES_URL}
-      pool-size: 12
-      query.trade: SELECT * FROM trades WHERE trade_id = :id AND business_date = :asOf
-      query.trade.legs: SELECT leg_no, pay_receive, fixed_rate, index_name FROM trade_legs WHERE trade_id = :id ORDER BY leg_no
-      query.trade.counterparty: >
-        SELECT c.* FROM counterparties c JOIN trades t ON t.counterparty_id = c.id WHERE t.trade_id = :id AND t.business_date = :asOf
-      part-shape.trade.counterparty: object
-      ids.trade: SELECT trade_id FROM trades WHERE business_date = (SELECT MAX(business_date) FROM trades)
-      columns.trade: SELECT trade_id, product_type, notional, mtm, book, netting_set, counterparty_id FROM trades WHERE business_date = :asOf
-      layout.trade.columns: productType, notional, mtm, book, nettingSet, counterparty.id
-      reverse.trade: SELECT trade_id FROM trades WHERE netting_set = :target AND business_date = :asOf
-      query.counterparty: SELECT * FROM counterparties WHERE id = :id
-      ids.counterparty: SELECT id, legal_name FROM counterparties
+# config/connectors/trading-db.yaml
+plugin: jdbc
+settings:
+  url: ${DRISHTI_TRADES_URL}
+  pool-size: 12
+  query.trade: SELECT * FROM trades WHERE trade_id = :id AND business_date = :asOf
+  query.trade.legs: SELECT leg_no, pay_receive, fixed_rate, index_name FROM trade_legs WHERE trade_id = :id ORDER BY leg_no
+  query.trade.counterparty: >
+    SELECT c.* FROM counterparties c JOIN trades t ON t.counterparty_id = c.id WHERE t.trade_id = :id AND t.business_date = :asOf
+  part-shape.trade.counterparty: object
+  ids.trade: SELECT trade_id FROM trades WHERE business_date = (SELECT MAX(business_date) FROM trades)
+  columns.trade: SELECT trade_id, product_type, notional, mtm, book, netting_set, counterparty_id FROM trades WHERE business_date = :asOf
+  layout.trade.columns: productType, notional, mtm, book, nettingSet, counterparty.id
+  reverse.trade: SELECT trade_id FROM trades WHERE netting_set = :target AND business_date = :asOf
+  query.counterparty: SELECT * FROM counterparties WHERE id = :id
+  ids.counterparty: SELECT id, legal_name FROM counterparties
+# packs/<pack>/pack.yaml: the pack names the connector and routes its kinds
+connectors: [trading-db]
 routes:
   trade: trading-db
   counterparty: trading-db
@@ -398,30 +401,26 @@ INSERT INTO desk.trades VALUES
 
 You write one SQL statement per kind under `query.<kind>`, using `:id` and `:asOf` ([Parameters](#3-parameters)); because it uses `:asOf`, the connector is dated.
 
-**Site form:**
+**Site form**, the connector file `config/connectors/desk-db.yaml`:
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      desk-db:
-        plugin: jdbc
-        kinds: [trade]                                       # optional: the query.* kinds are what it serves anyway
-        settings:
-          url: ${DESK_DB_URL:jdbc:postgresql://db.bank.example:5432/desk}
-          user: ${DESK_DB_USER:}                             # credentials from the environment, never in the file
-          password: ${DESK_DB_PASSWORD:}
-          pool-size: 4                                       # connections, each opened on first use
-          # the newest row on or before the date asked
-          query.trade: >-
-            SELECT trade_id, business_date, product, counterparty, notional, mtm, currency
-            FROM desk.trades
-            WHERE trade_id = :id
-              AND business_date = (SELECT MAX(business_date) FROM desk.trades
-                                   WHERE trade_id = :id AND business_date <= :asOf)
+plugin: jdbc
+kinds: [trade]                                       # optional: the query.* kinds are what it serves anyway
+settings:
+  url: ${DESK_DB_URL:jdbc:postgresql://db.bank.example:5432/desk}
+  user: ${DESK_DB_USER:}                             # credentials from the environment, never in the file
+  password: ${DESK_DB_PASSWORD}
+  pool-size: 4                                       # connections, each opened on first use
+  # the newest row on or before the date asked
+  query.trade: >-
+    SELECT trade_id, business_date, product, counterparty, notional, mtm, currency
+    FROM desk.trades
+    WHERE trade_id = :id
+      AND business_date = (SELECT MAX(business_date) FROM desk.trades
+                           WHERE trade_id = :id AND business_date <= :asOf)
 ```
 
-**Pack form** (the statement on one line, or as a YAML block scalar, as above):
+**Pack form**, the pack's suggested template (the statement on one line, or as a YAML block scalar, as above); the server writes it to the same file at the first start if the site has none:
 
 ```yaml
 connectors:
@@ -431,7 +430,7 @@ connectors:
     settings:
       url: ${DESK_DB_URL:jdbc:postgresql://localhost:5432/drishti}
       user: ${DESK_DB_USER:drishti}
-      password: ${DESK_DB_PASSWORD:drishti}
+      password: ${DESK_DB_PASSWORD}
       pool-size: 4
       query.trade: >-
         SELECT trade_id, business_date, product, counterparty, notional, mtm, currency FROM desk.trades

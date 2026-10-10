@@ -126,7 +126,7 @@ trading pack declares them on `trading-store`; the `aerospike` profile (`SPRING_
 connector to the Aerospike plugin and keeps the pack's settings, so the same declaration applies:
 
 ```yaml
-# packs/trading/pack.yaml (generated)
+# packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
 connectors:
   trading-store:
     settings:
@@ -137,7 +137,7 @@ connectors:
                     tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
                     risk.dv01, sourceSystem]
 
-# drishti-server application-aerospike.yaml (the profile)
+# drishti-server application-aerospike.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
@@ -442,9 +442,35 @@ ids now:
 | error 22 `operation not allowed at this time` in logs | too many concurrent scans on the cluster | the connector already limits itself to two; check other scanning clients |
 | `stop writes` / out of space while loading | the namespace's storage is too small | file or device storage, sized by [section 7](#7-seven-years-sizing-and-aerospike-with-delta-lake) |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/trading-store.yaml
+plugin: aerospike
+kinds: [trade]
+description: Trading documents and promoted bins in Aerospike
+settings:
+  domain: trading               # the set: sets trading, trading_ix and trading_kinds
+  hosts: ${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}
+  namespace: ${DRISHTI_AEROSPIKE_NAMESPACE:test}
+  layout:                       # nesting is flattened: layout.trade.columns
+    trade:
+      columns: [tradeId, mtm, book, desk, counterparty.id, counterparty.name, nettingSet, risk.dv01]
+  refresh-seconds: '60'
+  scan-threads: '8'
+  columns-cache-mb: '1024'
+  columns-seconds: '300'
+  # user: ${AS_USER}            # security-enabled clusters
+  # password: ${AS_PASSWORD}
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/aerospike/`](../../config/connectors.examples/aerospike).
+
 ## 12. Settings
 
-On an Aerospike connector (`drishti.sources.connectors.<name>.settings`):
+In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -514,24 +540,23 @@ SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=counterparty-risk,market-risk \
 
 ### Configuration by example
 
-**Site form, through the `aerospike` profile.** `application-aerospike.yaml` points the banking packs'
-`<domain>-store` connectors at Aerospike, naming only the plugin, hosts and namespace; the pack's kinds, routes, modes,
-`domain` (which becomes the set) and `layout` (the promoted bins) stay ([section 3](#3-declaring-which-fields-are-bins)):
+**Site form, as a connector file.** `config/connectors/trading-store.yaml` points the trading pack's `trading-store` at Aerospike
+(`config/connectors.examples/aerospike/` has all six banking `<domain>-store` connectors; the `aerospike` profile,
+`application-aerospike.yaml`, did the same and still works but is deprecated). A file replaces the pack's template wholesale, so it
+names the kinds and the promoted bins it needs ([section 3](#3-declaring-which-fields-are-bins)):
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      trading-store:
-        plugin: aerospike                                     # replaces the pack's "delta"
-        settings:
-          hosts: "${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}"  # host:port, comma-separated
-          namespace: "${DRISHTI_AEROSPIKE_NAMESPACE:test}"
-          # set: not given, so the pack's domain (trading) is the set
-          # layout: the pack's layout.trade.columns are the promoted bins
+# config/connectors/trading-store.yaml
+plugin: aerospike                                     # replaces the pack's "delta"
+kinds: [trade]
+settings:
+  domain: trading                                     # the set, unless `set` is given
+  hosts: ${DRISHTI_AEROSPIKE_HOSTS:localhost:3000}    # host:port, comma-separated
+  namespace: ${DRISHTI_AEROSPIKE_NAMESPACE:test}
+  layout.trade.columns: tradeId,mtm,book,desk,counterparty.id,counterparty.name,nettingSet,risk.dv01   # the promoted bins
 ```
 
-**Pack form**, as a pack's own connector (every key is in [section 12](#12-settings)):
+**Pack form**, the pack's suggested template (every key is in [section 12](#12-settings)); the server writes it to `config/connectors/trading-store.yaml` at the first start if the site has no such file:
 
 ```yaml
 connectors:

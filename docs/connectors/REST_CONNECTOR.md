@@ -161,33 +161,29 @@ What Drishti records (`GET /api/v1/entities/counterparty/CP-HARBOURVIEW/raw`, co
 
 ### 4.1 Site form
 
-In `application.local.yaml` (see [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtisources--where-data-comes-from)):
+The connector file `config/connectors/crm-api.yaml` (see [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtisources--where-data-comes-from) for the server-wide
+`drishti.sources.fetch-timeout` and routes):
 
 ```yaml
-drishti:
-  sources:
-    fetch-timeout: 3s                                  # the whole read, every connector tried (default 2s)
-    connectors:
-      crm-api:
-        plugin: rest
-        kinds: [counterparty]                          # only counterparties are asked of this service
-        settings:
-          base-url: ${CRM_URL:https://crm.bank.example/api}   # required; trailing slashes are dropped
-          path: /{kind}/{id}                           # {kind} and {id} are URL-encoded
-          timeout-ms: 2500                             # connect timeout and request timeout
-          generation-header: X-Version                 # a numeric response header (default ETag)
-          header.Authorization: "Bearer ${CRM_TOKEN}"  # any request header: header.<Name>
-          header.X-Client: drishti
-    routes:
-      counterparty: crm-api                            # Live reads ask the service first (section 6)
+plugin: rest
+kinds: [counterparty]                            # only counterparties are asked of this service
+settings:
+  base-url: ${CRM_URL:https://crm.bank.example/api}   # required; trailing slashes are dropped
+  path: /{kind}/{id}                             # {kind} and {id} are URL-encoded
+  timeout-ms: '2500'                             # connect timeout and request timeout
+  generation-header: X-Version                   # a numeric response header (default ETag)
+  header.Authorization: Bearer ${CRM_TOKEN}      # any request header: header.<Name>
+  header.X-Client: drishti
 ```
 
-In `application.yaml`-style files Spring keeps letters, digits, `-` and `.` in map keys; `header.X-Client` is fine.
-A header name with other characters needs the bracketed form, `"[header.X_Client]": drishti`.
+and the server settings that bear on it, in `application.yaml`: `drishti.sources.fetch-timeout: 3s` (the whole read, every connector tried; default 2s) and
+`drishti.sources.routes.counterparty: crm-api` (Live reads ask the service first, section 6). A header name is written as it is in a file, with any characters
+(`header.X_Client`); no bracketing is needed.
 
 ### 4.2 Pack form
 
-In `packs/<pack>/pack.yaml`, keys with dots are written flat:
+The pack's suggested template, in `packs/<pack>/pack.yaml` (keys with dots are written flat); the server writes it to `config/connectors/crm-api.yaml` at the first start
+if the site has none:
 
 ```yaml
 connectors:
@@ -204,8 +200,7 @@ routes:
   counterparty: crm-api
 ```
 
-A site can then change one key of the pack's connector without repeating the rest (for example only `base-url`),
-since site entries merge key by key; a `kinds:` list in the site replaces the pack's list.
+A site changes the connector by editing its file, which holds the whole definition (the pack's template is not merged into it); a `kinds:` list in the file replaces the pack's list.
 
 ### 4.3 The plugin as itself
 
@@ -411,9 +406,32 @@ is down does not stop the connector from starting.
 To see the request the connector sends, build it by hand: `<base-url without trailing slashes><path with {kind} and
 {id} encoded>`, then `curl -i -H 'Accept: application/json' -H 'Authorization: Bearer …' <url>`.
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/pricing-api.yaml
+plugin: rest
+kinds: [price]
+description: Prices from the pricing service
+settings:
+  base-url: https://pricing.example.com/api
+  path: /{kind}/{id}
+  timeout-ms: '1500'
+  header.Authorization: Bearer ${PRICING_TOKEN}
+  tls:
+    enabled: true
+    truststore:
+      path: /etc/drishti/tls/ca.p12
+      password: ${PRICING_TRUSTSTORE_PASSWORD}
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). The same over TLS is `config/connectors.examples/other/pricing-api.yaml`.
+
 ## 12. Settings
 
-On a `rest` connector (`drishti.sources.connectors.<name>.settings`) or the plugin as itself
+In the connector file's `settings:`, or for the plugin as itself
 (`drishti.sources.plugins.rest.settings`):
 
 | Setting | Default | Meaning |
@@ -463,7 +481,7 @@ Your client-onboarding system has an API that returns one counterparty as JSON:
 
 #### Configure it
 
-The pack form (the site form is in [4.1](#41-site-form)):
+The pack's suggested template (the connector file is in [4.1](#41-site-form)):
 
 ```yaml
 connectors:
@@ -474,7 +492,7 @@ connectors:
       base-url: ${CRM_URL:http://localhost:9000/api}
       path: /{kind}/{id}
       timeout-ms: 3000
-      header.Authorization: Bearer ${CRM_TOKEN:}       # flat key with a dot: write it this way in pack.yaml
+      header.Authorization: Bearer ${CRM_TOKEN:}       # flat key with a dot: write it this way in a pack.yaml template
 ```
 
 #### Try it

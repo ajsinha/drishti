@@ -18,7 +18,7 @@
                                     the difference from the running version (breaking changes marked), then deploy it
     history [--pack P]              deployments, rollbacks and reverted attempts, newest first, with the versions kept
     rollback PACK [--version V]     go back to a kept version (V may be 'shipped')
-    datasource get|set|test|reset   a pack's data source: pack default, administrator override, site value; try it; change it; reset it
+    datasource get                  the connectors a pack reads through and their state (change them with `drishti.py connector`)
 
 An administrator is needed; a personal API token also needs the packs:admin scope.
 """
@@ -164,136 +164,19 @@ def cmd_rollback(cli, a, extra) -> int:
 
 # -- data source -------------------------------------------------------------------------------------------------
 
-def parse_assignments(cli, items: list[str]) -> dict[str, str]:
-    out = {}
-    for it in items:
-        k, sep, v = it.partition("=")
-        if not sep or not k:
-            raise cli.CliError(f"expected KEY=VALUE, got {it!r}", 2)
-        out[k] = v
-    return out
-
-
-def current_override(ds: dict) -> dict:
-    """The stored override as the PUT body wants it: connector -> {enabled?, settings{key: value}}."""
-    out: dict = {}
-    for c in ds.get("connectors", []):
-        entry: dict = {}
-        if c["enabled"].get("override") is not None:
-            entry["enabled"] = c["enabled"]["override"] == "True" or c["enabled"]["override"] == "true"
-        st = {s["key"]: s["override"] for s in c["settings"] if s.get("override") is not None}
-        if st:
-            entry["settings"] = st
-        if entry:
-            out[c["name"]] = entry
-    return out
-
-
 def print_datasource(ds: dict, say=print) -> None:
-    say(f"data source of {ds['pack']}: " + ("an administrator override is in force" if ds.get("overridden") else "the pack's own settings (no override)")
-        + f"   [override file {ds['file']}]")
-    for c in ds["connectors"]:
-        en = c["enabled"]
-        say(f"\n  connector {c['name']}   plugin {c['plugin']}   kinds {', '.join(c['kinds'])}   {'on' if en['on'] else 'OFF'} ({en['source']})")
-        rows = []
-        for s in c["settings"]:
-            shown = "(from the environment)" if s["secret"] and not s["effective"].startswith("(") else s["effective"]
-            if s["secret"] and s["effective"].startswith("${"):
-                shown = s["effective"]
-            note = {"pack": "", "override": "overridden", "site": "site (environment or configuration)"}[s["source"]]
-            if s["overridden"] and s["pack"] is not None:
-                note += f"; pack default {s['pack']}"
-            if not s["resolvable"]:
-                note += "; variable NOT SET"
-            rows.append([s["key"], shown, note.strip("; ")])
-        _table(rows, ["setting", "in force", "where from"], say)
+    say(f"connectors of {ds['pack']}   [files in {ds['directory']}; change them with `drishti.py connector ...`]")
+    rows = [[c["name"], str(c.get("state", "")).lower().replace("_", " "), c.get("plugin") or "", ",".join(c.get("kinds") or []),
+             (c.get("origin") if c.get("defined") else "nothing defines it"), "; ".join(c.get("problems") or [])] for c in ds["connectors"]]
+    _table(rows, ["connector", "state", "plugin", "kinds from this pack", "defined by", "problems"], say)
+    for m in ds.get("missing") or []:
+        say(f"  {m} is not configured: create it with `drishti.py connector apply {m}.yaml` or in Admin -> Connectors")
 
 
 def cmd_ds_get(cli, a, extra) -> int:
     ds = cli.Api.from_args(a).json("GET", f"/api/v1/admin/packs/{q(a.name)}/datasource")
     cli.say_json(ds) if a.json else print_datasource(ds)
-    return 0
-
-
-def desired(cli, api, a) -> dict:
-    ds = api.json("GET", f"/api/v1/admin/packs/{q(a.name)}/datasource")
-    names = {c["name"] for c in ds["connectors"]}
-    if a.connector not in names:
-        raise cli.CliError(f"pack {a.name} has no connector {a.connector!r} (it has: {', '.join(sorted(names))})", 2)
-    over = current_override(ds)
-    entry = over.setdefault(a.connector, {})
-    st = dict(entry.get("settings", {}))
-    st.update(parse_assignments(cli, a.assign))
-    for k in getattr(a, "unset", None) or []:
-        st.pop(k, None)
-    if st:
-        entry["settings"] = st
-    else:
-        entry.pop("settings", None)
-    if a.enabled is not None:
-        entry["enabled"] = a.enabled == "true"
-    if not entry:
-        over.pop(a.connector)
-    return over
-
-
-def cmd_ds_set(cli, a, extra) -> int:
-    api = cli.Api.from_args(a)
-    over = desired(cli, api, a)
-    if a.test_first:
-        t = api.json("POST", f"/api/v1/admin/packs/{q(a.name)}/datasource/test", {"connector": a.connector, "connectors": over})
-        if not t.get("ok"):
-            print_test(t) if not a.json else cli.say_json(t)
-            print("\nnot saved: the test failed")
-            return 1
-    res = api.json("PUT", f"/api/v1/admin/packs/{q(a.name)}/datasource", {"connectors": over})
-    if a.json:
-        cli.say_json(res)
-    else:
-        print(f"saved the override for {a.name}: changed {', '.join(res.get('changed') or []) or 'nothing'}; {res.get('note', '')}")
-    return 0
-
-
-def print_test(t: dict, say=print) -> None:
-    say(f"tested {t['pack']}: {t['tested']}")
-    for c in t["connectors"]:
-        if c.get("skipped"):
-            say(f"\n  {c['connector']}: {c['error']}")
-            continue
-        say(f"\n  {c['connector']} ({c['plugin']}): " + (f"reachable, health {c.get('health')}, {c.get('ms')} ms" if c["ok"] else f"PROBLEM: {c.get('error')}"))
-        rows = []
-        for k in c.get("kinds", []):
-            if k["dates"]:
-                for d in k["dates"]:
-                    rows.append([k["kind"], d["date"] or "(undated)", ("" if k["exact"] else ">= ") + str(d["rows"]), k.get("note") or ""])
-            else:
-                rows.append([k["kind"], "", "0", k.get("note") or ""])
-        if rows:
-            _table(rows, ["kind", "business date", "rows", "note"], say)
-
-
-def cmd_ds_test(cli, a, extra) -> int:
-    api = cli.Api.from_args(a)
-    body: dict = {}
-    if a.connector:
-        body["connector"] = a.connector
-    if a.assign:
-        if not a.connector:
-            raise cli.CliError("--set needs --connector (which connector the settings are for)", 2)
-        ds = api.json("GET", f"/api/v1/admin/packs/{q(a.name)}/datasource")
-        over = current_override(ds)
-        entry = over.setdefault(a.connector, {})
-        entry["settings"] = {**entry.get("settings", {}), **parse_assignments(cli, a.assign)}
-        body["connectors"] = over
-    t = api.json("POST", f"/api/v1/admin/packs/{q(a.name)}/datasource/test", body or None)
-    cli.say_json(t) if a.json else print_test(t)
-    return 0 if t.get("ok") else 1
-
-
-def cmd_ds_reset(cli, a, extra) -> int:
-    res = cli.Api.from_args(a).json("DELETE", f"/api/v1/admin/packs/{q(a.name)}/datasource" + (f"?connector={q(a.connector)}" if a.connector else ""))
-    cli.say_json(res) if a.json else print(f"reset {a.name}{' ' + a.connector if a.connector else ''}: the pack's own settings apply again; {res.get('note', '')}")
-    return 0
+    return 1 if ds.get("missing") else 0
 
 
 def register(cli, ps, srv) -> None:
@@ -327,30 +210,10 @@ def register(cli, ps, srv) -> None:
     p.add_argument("--version", help="which kept version (default: the newest kept; 'shipped' for the copy that ships with the server)")
     p.set_defaults(func=wrap(cmd_rollback))
 
-    d = ps.add_parser("datasource", help="a pack's data source: get, set, test, reset",
-                      description="Where a pack's data comes from. The pack's own settings can be overridden by an administrator override file "
-                                  "(data/packs/settings/<pack>.yaml, survives redeploys) and by the site's environment; precedence: environment > override file > pack. "
-                                  "Credentials are never stored: a secret setting must be an environment reference such as ${LAKE_PASSWORD}.")
+    d = ps.add_parser("datasource", help="a pack's connectors and their state (read-only; change them with `connector`)",
+                      description="The connectors a pack reads through, each one's state, and which are not configured. Connectors are files in config/connectors "
+                                  "and are created, tested and changed with `drishti.py connector ...` or in Admin -> Connectors. Exit 1 when one is not configured.")
     ds = d.add_subparsers(dest="ds_cmd", metavar="ACTION", required=True)
-    g = ds.add_parser("get", help="each connector's settings: in force, pack default, override, site", parents=[srv])
+    g = ds.add_parser("get", help="the pack's connectors with their state", parents=[srv])
     g.add_argument("name", help="the pack's name")
     g.set_defaults(func=wrap(cmd_ds_get))
-    s = ds.add_parser("set", help="override settings of one connector (saved, then the server restarts in place)", parents=[srv],
-                      epilog="example:\n  drishti.py server packs datasource set my-bank bank-store root=/mnt/lake password='${LAKE_PW}' --test-first",
-                      formatter_class=__import__("argparse").RawDescriptionHelpFormatter)
-    s.add_argument("name", help="the pack's name")
-    s.add_argument("connector", help="the connector's name (see `datasource get`)")
-    s.add_argument("assign", nargs="*", metavar="KEY=VALUE", help="settings to override")
-    s.add_argument("--unset", action="append", metavar="KEY", help="drop one override (that setting returns to the pack's value)")
-    s.add_argument("--enabled", choices=["true", "false"], help="switch the connector on or off")
-    s.add_argument("--test-first", action="store_true", help="try the settings against the real source first; save only if it works")
-    s.set_defaults(func=wrap(cmd_ds_set))
-    t = ds.add_parser("test", help="try the settings in force (or --set ones): dates and row counts per kind; exit 1 on a problem", parents=[srv])
-    t.add_argument("name", help="the pack's name")
-    t.add_argument("--connector", help="only this connector")
-    t.add_argument("--set", dest="assign", action="append", default=[], metavar="KEY=VALUE", help="try these settings instead (needs --connector); nothing is saved")
-    t.set_defaults(func=wrap(cmd_ds_test))
-    r = ds.add_parser("reset", help="remove the override (all, or one connector's): the pack's own settings apply again", parents=[srv])
-    r.add_argument("name", help="the pack's name")
-    r.add_argument("--connector", help="only this connector's override")
-    r.set_defaults(func=wrap(cmd_ds_reset))

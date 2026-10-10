@@ -182,7 +182,7 @@ The pack declares the fields to promote on the connector that stores the kind, e
 packs' settings, so the same declaration applies:
 
 ```yaml
-# packs/trading/pack.yaml (generated)
+# packs/trading/pack.yaml (generated; the pack's suggested template, written to config/connectors/trading-store.yaml at the first start)
 connectors:
   trading-store:
     settings:
@@ -193,7 +193,7 @@ connectors:
                     tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
                     risk.dv01, sourceSystem]
 
-# drishti-server application-redis.yaml (the profile)
+# drishti-server application-redis.yaml (the profile; deprecated, see \"As a connector file\" below)
 drishti:
   sources:
     connectors:
@@ -624,9 +624,33 @@ Useful commands: `INFO memory` (`used_memory`, `mem_fragmentation_ratio`), `MEMO
 `HGETALL {trading:trade:days}:gens`, `HGET {trading:trade:20260930}:cols:<g> meta`, `ZRANGE trading:trade:days 0 -1`,
 `SUBSCRIBE trading:changes`.
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/trading-store.yaml
+plugin: redis
+kinds: [trade]
+description: Trading documents in Redis
+settings:
+  domain: trading
+  uri: ${DRISHTI_REDIS_URI:redis://localhost:6379}
+  cluster: ${DRISHTI_REDIS_CLUSTER:false}
+  layout:
+    trade:
+      columns: [tradeId, productType, productName, direction, currency, notional, mtm, pnl1d, maturityDate,
+                tradeDate, book, desk, status, assetClass, counterparty.id, counterparty.name, nettingSet,
+                risk.dv01, sourceSystem]
+```
+
+The `redis` profile (`SPRING_PROFILES_ACTIVE=redis`) did this for the banking stores and still works, but is deprecated. A file replaces the pack's template wholesale, so it repeats the promoted `layout` the pack declared ([section 3](#3-declaring-which-fields-are-columns)).
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). Ready-made files for this store are in [`config/connectors.examples/redis/`](../../config/connectors.examples/redis).
+
 ## 12. Settings
 
-On a Redis connector (`drishti.sources.connectors.<name>.settings`):
+In the connector file's `settings:` (see [As a connector file](#as-a-connector-file)):
 
 | Setting | Default | Meaning |
 |---|---|---|

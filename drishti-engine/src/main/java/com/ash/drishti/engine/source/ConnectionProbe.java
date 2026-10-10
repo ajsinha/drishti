@@ -59,6 +59,11 @@ public final class ConnectionProbe {
         this.codec = codec;
     }
 
+    /** The plugin prototypes this probe starts fresh instances of. */
+    public List<SourcePlugin> discovered() {
+        return discovered;
+    }
+
     /** The plugin names this server can probe. */
     public Set<String> plugins() {
         return discovered.stream().map(p -> p.manifest().name()).collect(java.util.stream.Collectors.toCollection(java.util.TreeSet::new));

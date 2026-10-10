@@ -84,7 +84,7 @@ class PackDeployApiTest {
 
     /** Folders are system properties set before the context starts: the pack loader reads them in an EnvironmentPostProcessor, before test properties exist. */
     private static final String[] SYSTEM_PROPERTIES = {"drishti.packs.dir", "drishti.packs.installed-dir", "drishti.packs.overlay", "drishti.packs.settings-dir",
-            "drishti.packs.deploy.history-file"};
+            "drishti.packs.deploy.history-file", "drishti.sources.connectors-dir"};
 
     /** What the build set before this class ran (surefire sets drishti.packs.dir): put back afterwards, not cleared, as the next test class in the same JVM needs it. */
     private static final java.util.Map<String, String> BEFORE = new java.util.HashMap<>();
@@ -108,6 +108,7 @@ class PackDeployApiTest {
             System.setProperty("drishti.packs.installed-dir", root.resolve("installed").toString());
             System.setProperty("drishti.packs.overlay", root.resolve("added.yaml").toString());
             System.setProperty("drishti.packs.settings-dir", root.resolve("settings").toString());
+            System.setProperty("drishti.sources.connectors-dir", root.resolve("connectors").toString());
             System.setProperty("drishti.packs.deploy.history-file", root.resolve("history.jsonl").toString());
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
@@ -191,6 +192,27 @@ class PackDeployApiTest {
         assertThat(pv.path("findings").get(1).path("level").asText()).isEqualTo("breaking");
         assertThat(Files.exists(root.resolve("installed/lakepack"))).as("a preview changes nothing").isFalse();
         mvc.perform(delete("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText())).andExpect(jsonPath("$.discarded").value(true));
+    }
+
+    @Test
+    void thePreviewListsConnectorsTheSiteLacksAndOffersToCreateThemFromTheTemplates() throws Exception {
+        Map<String, String> f = files("1.0.3", true, SUTRA);
+        f.put("pack.yaml", packYaml("1.0.3", true, "  other: new-lake\nconnector-templates:\n  new-lake:\n    plugin: file\n    kinds: [other]\n    settings:\n      root: "
+                + root.resolve("files-b") + "\n") + "");
+        JsonNode r = checked(TestArchives.bundle("lakepack", "1.0.3", f));
+        assertThat(r.path("ok").asBoolean()).as(r.toString()).isTrue();
+        JsonNode c = r.path("connectors");
+        assertThat(c.path("missing").findValuesAsText("")).isEmpty();
+        assertThat(JSON.convertValue(c.path("missing"), java.util.List.class)).containsExactly("new-lake");
+        assertThat(JSON.convertValue(c.path("creatable"), java.util.List.class)).containsExactly("new-lake");
+        assertThat(c.path("names").findValuesAsText("name")).contains("item-store", "new-lake");
+        assertThat(root.resolve("connectors/new-lake.yaml")).doesNotExist();                       // a preview changes nothing
+        mvc.perform(post("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText() + "/connectors")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.created[0]").value("new-lake"));
+        assertThat(Files.readString(root.resolve("connectors/new-lake.yaml"))).contains("plugin: file").contains("kinds:");
+        mvc.perform(post("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText() + "/connectors")).andExpect(jsonPath("$.created.length()").value(0));   // never overwritten
+        Files.deleteIfExists(root.resolve("connectors/new-lake.yaml"));
+        mvc.perform(delete("/api/v1/admin/packs/deploy/" + r.path("uploadId").asText()));
     }
 
     @Test
@@ -337,92 +359,21 @@ class PackDeployApiTest {
     // -- data source ---------------------------------------------------------------------------------------------------
 
     @Test
-    void theDataSourceShowsThreeLayersAndAnEditIsAnOverrideNotARewriteOfThePack() throws Exception {
+    void theDataSourceIsAViewOfThePacksConnectorsWithALinkToEditThem() throws Exception {
         mvc.perform(get("/api/v1/admin/packs/lakepack/datasource")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.overridden").value(false))
+                .andExpect(jsonPath("$.pack").value("lakepack"))
+                .andExpect(jsonPath("$.missing.length()").value(0))
                 .andExpect(jsonPath("$.connectors[0].name").value("item-store"))
                 .andExpect(jsonPath("$.connectors[0].plugin").value("file"))
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='root')].source").value(hasItem("pack")))
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='lookback-days')].source").value(hasItem("site")))      // the site's value (7) beats the pack's (10)
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='lookback-days')].effective").value(hasItem("7")))
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='lookback-days')].pack").value(hasItem("10")));
-        String before = Files.readString(root.resolve("packs/lakepack/pack.yaml"));
-        String edit = "{\"connectors\":{\"item-store\":{\"settings\":{\"root\":\"" + root.resolve("files-b") + "\",\"lookback-days\":\"3\",\"lookback-days-x\":\"1\",\"domain\":\"\"}}}}";
-        // the test comes first: it tries the edit against the real source and saves nothing
-        mvc.perform(post("/api/v1/admin/packs/lakepack/datasource/test").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"connector\":\"item-store\",\"connectors\":{\"item-store\":{\"settings\":{\"root\":\"" + root.resolve("files-b") + "\"}}}}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.ok").value(true))
-                .andExpect(jsonPath("$.tested").value(containsString("not yet saved")))
-                .andExpect(jsonPath("$.connectors[0].kinds[?(@.kind=='item')].dates[0].date").value(hasItem("2026-10-05")))
-                .andExpect(jsonPath("$.connectors[0].kinds[?(@.kind=='item')].dates[0].rows").value(hasItem(5)));
-        assertThat(root.resolve("settings/lakepack.yaml")).doesNotExist();
-        // the settings in force (files-a): two dates of items (newest first) and the one thing
-        JsonNode t = JSON.readTree(mvc.perform(post("/api/v1/admin/packs/lakepack/datasource/test")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-        JsonNode items = null;
-        for (JsonNode k : t.path("connectors").get(0).path("kinds")) {
-            if (k.path("kind").asText().equals("item")) {
-                items = k;
-            }
-        }
-        assertThat(items.path("dates").findValuesAsText("date")).containsExactly("2026-10-05", "2026-10-02");
-        assertThat(items.path("dates").findValues("rows").stream().map(JsonNode::asInt)).containsExactly(2, 3);
-        assertThat(items.path("exact").asBoolean()).isTrue();
-
-        mvc.perform(put("/api/v1/admin/packs/lakepack/datasource").contentType(MediaType.APPLICATION_JSON)
-                .content(edit.replace("\"lookback-days-x\":\"1\",", ""))).andExpect(status().isOk()).andExpect(jsonPath("$.overridden").value(true))
-                .andExpect(jsonPath("$.changed").value(hasItem("item-store.root")));
-        assertThat(Files.readString(root.resolve("settings/lakepack.yaml"))).contains("files-b").contains("# Data source override");
-        assertThat(Files.readString(root.resolve("packs/lakepack/pack.yaml"))).as("the pack's own file is untouched").isEqualTo(before);
-        mvc.perform(get("/api/v1/admin/packs/lakepack/datasource")).andExpect(jsonPath("$.overridden").value(true))
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='root')].overridden").value(hasItem(true)))
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='root')].pack").value(hasItem(root.resolve("files-a").toString())))
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='root')].override").value(hasItem(root.resolve("files-b").toString())))
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='root')].source").value(hasItem("override")))
-                .andExpect(jsonPath("$.connectors[0].settings[?(@.key=='lookback-days')].source").value(hasItem("site")));   // env beats the file
-        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='lakepack')].dataSourceOverridden").value(hasItem(true)));
-        // the saved override is what the next test uses
-        mvc.perform(post("/api/v1/admin/packs/lakepack/datasource/test")).andExpect(jsonPath("$.connectors[0].kinds[?(@.kind=='item')].dates[0].rows").value(hasItem(5)));
-
-        mvc.perform(delete("/api/v1/admin/packs/lakepack/datasource")).andExpect(status().isOk()).andExpect(jsonPath("$.overridden").value(false));
-        assertThat(root.resolve("settings/lakepack.yaml")).doesNotExist();
-        mvc.perform(get("/api/v1/admin/packs/lakepack/datasource")).andExpect(jsonPath("$.overridden").value(false));
-        assertThat(audit.recent(50, "lakepack")).extracting(AuditLog.Event::action).contains("pack-datasource-changed", "pack-datasource-reset", "pack-datasource-tested");
-    }
-
-    @Test
-    void anEditWithTheSameValuesAsThePackIsNotAnOverride() throws Exception {
-        String same = "{\"connectors\":{\"item-store\":{\"settings\":{\"root\":\"" + root.resolve("files-a") + "\",\"lookback-days\":\"10\"}}}}";
-        mvc.perform(put("/api/v1/admin/packs/lakepack/datasource").contentType(MediaType.APPLICATION_JSON).content(same)).andExpect(status().isOk())
-                .andExpect(jsonPath("$.overridden").value(false)).andExpect(jsonPath("$.restarting").value(false));
-        assertThat(root.resolve("settings/lakepack.yaml")).doesNotExist();
-    }
-
-    @Test
-    void invalidDataSourcesAreRefusedAndNothingIsWritten() throws Exception {
-        for (String body : new String[] {
-                "{\"connectors\":{\"item-store\":{\"settings\":{\"password\":\"hunter2\"}}}}",                  // a secret that is not an env reference
-                "{\"connectors\":{\"nope\":{\"enabled\":false}}}",                                              // not the pack's connector
-                "{\"connectors\":{\"item-store\":{\"plugin\":\"jdbc\"}}}",                                      // the plugin belongs to the pack
-                "{\"connectors\":{\"item-store\":{\"settings\":{\"root\":\"\"}}}}"}) {
-            mvc.perform(put("/api/v1/admin/packs/lakepack/datasource").contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.detail").value(containsString("not valid")));
-        }
-        assertThat(root.resolve("settings/lakepack.yaml")).doesNotExist();
+                .andExpect(jsonPath("$.connectors[0].origin").value("file"))             // written from the pack's template at start
+                .andExpect(jsonPath("$.connectors[0].defined").value(true))
+                .andExpect(jsonPath("$.connectors[0].editUrl").value("/admin/connectors?name=item-store"))
+                .andExpect(jsonPath("$.connectors[0].kinds").value(hasItem("item")));
+        assertThat(root.resolve("connectors/item-store.yaml")).exists();
+        assertThat(Files.readString(root.resolve("connectors/item-store.yaml"))).contains("plugin: file").contains("Generated at first start");
         mvc.perform(get("/api/v1/admin/packs/not-loaded/datasource")).andExpect(status().isNotFound());
-    }
-
-    @Test
-    void aCredentialIsOnlyAnEnvironmentReferenceAndATestSaysWhenTheVariableIsMissing() throws Exception {
-        String body = "{\"connectors\":{\"item-store\":{\"settings\":{\"password\":\"${DRISHTI_TEST_SURELY_UNSET_PW}\"}}}}";
-        mvc.perform(post("/api/v1/admin/packs/lakepack/datasource/test").contentType(MediaType.APPLICATION_JSON).content("{\"connectors\":" + JSON.readTree(body).path("connectors") + "}"))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.ok").value(false))
-                .andExpect(jsonPath("$.connectors[0].error").value(containsString("environment variable that is not set")));
-    }
-
-    @Test
-    void aSwitchedOffConnectorIsNotTried() throws Exception {
-        mvc.perform(post("/api/v1/admin/packs/lakepack/datasource/test").contentType(MediaType.APPLICATION_JSON)
-                .content("{\"connectors\":{\"item-store\":{\"enabled\":false}}}")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.connectors[0].skipped").value(true)).andExpect(jsonPath("$.ok").value(true));
+        // the old edit doors are gone: connectors are changed in Admin -> Connectors
+        mvc.perform(put("/api/v1/admin/packs/lakepack/datasource").contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().is4xxClientError());
+        mvc.perform(get("/api/v1/admin/packs")).andExpect(jsonPath("$[?(@.name=='lakepack')].connectors[0]").value(hasItem("item-store")));
     }
 }

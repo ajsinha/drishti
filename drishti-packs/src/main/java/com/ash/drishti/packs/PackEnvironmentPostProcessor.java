@@ -31,6 +31,8 @@ import org.springframework.core.env.MapPropertySource;
 public final class PackEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     public static final String SOURCE = "drishti-packs";
+    /** The connector files, ahead of the packs' own values and behind the server's configuration. */
+    public static final String FILES_SOURCE = "drishti-connector-files";
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment env, SpringApplication app) {
@@ -41,9 +43,29 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         names.addAll(org.springframework.boot.context.properties.bind.Binder.get(env)
                 .bind("drishti.packs.added", org.springframework.boot.context.properties.bind.Bindable.listOf(String.class))
                 .orElse(List.of()));
-        PackLoader loader = new PackLoader(new PackSettings(java.nio.file.Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings"))));
+        String connDir = env.getProperty("drishti.sources.connectors-dir", System.getenv().getOrDefault("DRISHTI_CONNECTORS_DIR", "./config/connectors"));
+        ConnectorFiles files = new ConnectorFiles(java.nio.file.Path.of(connDir));
+        PackSettings overrides = new PackSettings(java.nio.file.Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings")));
+        PackLoader loader = new PackLoader(files);
         List<Pack> packs = loader.load(PackLoader.dirs(dir, env.getProperty("drishti.packs.installed-dir", "./data/packs/installed")),
                 List.copyOf(names));
+        // connector files: migrate old per-pack overrides once, write files from the packs' templates where none exist
+        ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, overrides,
+                Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")));
+        // the packs' own properties are computed after the files exist, so a template is left out where a file stands in for it
         env.getPropertySources().addLast(new MapPropertySource(SOURCE, loader.properties(packs)));
+        java.util.Map<String, String> problems = new java.util.LinkedHashMap<>();
+        java.util.Map<String, Object> fileProps = new java.util.LinkedHashMap<>(ConnectorFiles.properties(files.readAll(problems)));
+        for (int i = 0; i < boot.messages().size(); i++) {
+            fileProps.put("drishti.sources.connectors-bootstrap[" + i + "]", boot.messages().get(i));
+        }
+        for (int i = 0; i < boot.generated().size(); i++) {
+            fileProps.put("drishti.sources.connectors-generated[" + i + "]", boot.generated().get(i));
+        }
+        for (int i = 0; i < boot.migrated().size(); i++) {
+            fileProps.put("drishti.sources.connectors-migrated[" + i + "]", boot.migrated().get(i));
+        }
+        problems.forEach((n, m) -> fileProps.put("drishti.sources.connector-file-problems." + n, m));
+        env.getPropertySources().addBefore(SOURCE, new MapPropertySource(FILES_SOURCE, fileProps));
     }
 }

@@ -23,7 +23,6 @@ import com.ash.drishti.engine.source.ConnectionProbe;
 import com.ash.drishti.engine.source.PluginDiscovery;
 import com.ash.drishti.engine.source.SourcesProperties;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.packs.PackSettings;
 import com.ash.drishti.rachana.SutraRegistry;
 import com.ash.drishti.server.registry.RegistryProperties;
 import java.nio.file.Path;
@@ -40,23 +39,14 @@ import org.springframework.core.env.ConfigurableEnvironment;
 public class DeployConfiguration {
 
     @Bean
-    public PackSettings packSettings(ConfigurableEnvironment env) {
-        return new PackSettings(Path.of(env.getProperty("drishti.packs.settings-dir", "./data/packs/settings")));
-    }
-
-    @Bean
     public PackDeployService packDeployService(ConfigurableEnvironment env, DeployProperties props, RegistryProperties registryProps, PackRegistry running,
-            ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer, JsonCodec codec) {
-        return new PackDeployService(env, props, registryProps, running, build, sutras, pipeline, shapes, designer, codec);
+            ObjectProvider<BuildProperties> build, SutraRegistry sutras, ViewPipeline pipeline, ShapeService shapes, AutoDesigner designer, JsonCodec codec,
+            com.ash.drishti.packs.ConnectorFiles connectorFiles) {
+        return new PackDeployService(env, props, registryProps, running, build, sutras, pipeline, shapes, designer, codec, connectorFiles);
     }
 
     @Bean
     public ConnectionProbe connectionProbe(SourcesProperties sources, JsonCodec codec) {
         return new ConnectionProbe(new PluginDiscovery().discover(sources.pluginDir()), codec);
-    }
-
-    @Bean
-    public DataSourceService dataSourceService(PackRegistry packs, PackSettings settings, ConfigurableEnvironment env, ConnectionProbe probe, DeployProperties props) {
-        return new DataSourceService(packs, settings, env, probe, props);
     }
 }

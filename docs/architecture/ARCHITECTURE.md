@@ -104,7 +104,7 @@ way MAYA's web layer is.
 | **Entity** | Any addressable record: `(kind, id)` → e.g. `(trade, IRS-48213)`, `(netting-set, NS-NORTH-01)`. |
 | **Mnemonic** | Command-line alias for a kind: `TRD`, `NSET`, `CPTY`, `CSA`, `AGR`, `CRV`, `BOOK`. Declared by packs (`mnemonics:` in `pack.yaml`); sites add more under `drishti.commands.mnemonics`. |
 | **DataNode** | Immutable, source-neutral tree (object / array / scalar) holding the entity document. |
-| **Source** | A plugin (`SourcePlugin`) that can `fetch`, and optionally `subscribe`, `search` and `reverse`; every document carries its *generation* (monotonic version). A **connector** is a named instance of a plugin with its own settings (`market-store` is a `delta` connector). |
+| **Source** | A plugin (`SourcePlugin`) that can `fetch`, and optionally `subscribe`, `search` and `reverse`; every document carries its *generation* (monotonic version). A **connector** is a named instance of a plugin with its own settings (`market-store` is a `delta` connector); it is a site resource kept as one file, `config/connectors/market-store.yaml`, that the registry watches and applies live, one connector at a time (see [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). |
 | **Fingerprint** | Stable hash of a document's **shape** (keys + types, not values or array lengths), shown as e.g. `b7df…1372`. Keys the layout cache. |
 | **Rachana** | The declarative screen grammar (रचना, *composition*): so no product ever gets its own coded screen. |
 | **Sutra** | One layout written in Rachana, versioned (`irs-vanilla v3`): header strip, panels, bindings, formats, keys, links. |
@@ -469,7 +469,7 @@ console ──X-Drishti-As-Of──▶ AsOfResolver ─▶ BusinessDates ─▶ 
                                                                                          └─▶ undated (demo, rest, …)
 ```
 
-Named connectors (`drishti.sources.connectors`, or a pack's `connectors:`) give each domain its own lake
+Named connectors (one file each in `config/connectors/`, written at the first start from a pack's `connectors:` template when absent; `drishti.sources.connectors` still works but is deprecated) give each domain its own lake
 connector, e.g. `market-store` and `trading-store`. Lake retention, compaction and vacuum run outside the server
 (`tools/lake/`, `deploy/lake-maintenance.yaml`; see OPERATIONS.md).
 
@@ -570,7 +570,8 @@ secrets in tracked files. The full key reference is [CONFIGURATION.md](../admin/
 | File | Owns |
 |---|---|
 | `drishti-server/src/main/resources/application.yaml` | server port, actuator, every `drishti.*` default: `sources`, `business-date`, `security`, `identity`, `rachana`, `governance`, `engine`, `packs`, `commands`, `live`, `graph` |
-| `packs/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, connectors, Sutra and sample folders |
+| `packs/<name>/pack.yaml` | a pack's kinds, mnemonics, references, badges, roles, the names of its connectors with their routes (and connector templates), Sutra and sample folders |
+| `config/connectors/<name>.yaml` | one connector of the site: plugin, switch, kinds and settings; watched and applied without a restart |
 | `packs/<name>/config/*.yaml` | the pack's formats, semantic hints, help and starter workspaces |
 | `drishti-rachana/src/main/resources/formats.yaml` (+ `drishti.rachana.formats-file`) | core named number/date formats |
 | `drishti-inference/src/main/resources/inference/semantics.yaml` | core semantic hints and density limits |

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Admin → Packs: Deploy archive (upload, the server's checks, the preview of what changes, confirm), History and roll back, and a pack's
-   Data source (view, edit, test, reset). Everything goes through same-origin /admin/api/packs/...; the server enforces the admin role,
+   Data source (the connectors it uses, with links to Admin → Connectors). Everything goes through same-origin /admin/api/packs/...; the server enforces the admin role,
    validates and audits. Text from the server is only ever put in the page as text, never as HTML. */
 (function () {
   'use strict';
@@ -170,166 +170,61 @@
   });
 
   // ---------------------------------------------------------------------------------------------------------------- data source
+  // A pack names its connectors; they are defined and changed in Admin -> Connectors. This panel is a view with links.
   var dlg = root.querySelector('[data-ds-dialog]');
   if (!dlg) { return; }
   var dsBody = dlg.querySelector('[data-ds-body]'), dsMsg = dlg.querySelector('[data-ds-msg]'), dsTitle = dlg.querySelector('[data-ds-title]'), dsIntro = dlg.querySelector('[data-ds-intro]');
-  var pack = null, model = null, opener = null;
+  var opener = null;
 
-  var SOURCE = { pack: 'pack default', override: 'overridden here', site: 'set by the site: wins over this file' };
+  var STATE = { RUNNING: ['st st-ok', 'running'], DISABLED: ['st', 'disabled'], FAILED: ['st st-bad', 'failed'], IDLE: ['st st-warn', 'not configured by its plugin'],
+    NOT_LOADED: ['st st-warn', 'not started'], NOT_CONFIGURED: ['st st-bad', 'not configured'] };
 
   function build(ds) {
-    model = ds;
     dsBody.textContent = '';
     dsIntro.textContent = '';
-    dsIntro.appendChild(document.createTextNode('Precedence, highest first: the site (environment variables and the server\'s own configuration), then what you save here ('));
-    dsIntro.appendChild(el('span', { class: 'mono', text: ds.file }));
-    dsIntro.appendChild(document.createTextNode('), then the pack\'s own settings. The pack\'s files are never changed, so redeploying the pack keeps your overrides. '
-      + 'A credential is never stored: write an environment variable reference such as ${LAKE_PASSWORD}.'));
-    ds.connectors.forEach(function (c) { dsBody.appendChild(connector(c)); });
-  }
-  function connector(c) {
-    var sec = el('section', { class: 'ds-conn', 'data-connector': c.name });
-    var en = el('input', { type: 'checkbox', id: 'dsEn-' + c.name, 'data-enabled': true });
-    en.checked = !!c.enabled.on;
-    en.setAttribute('data-initial', c.enabled.on ? '1' : '0');
-    if (c.enabled.site != null) { en.disabled = true; }
-    sec.appendChild(el('h3', {}, [c.name, ' ', el('span', { class: 'st', text: c.plugin }), ' ', el('span', { class: 'text-muted-d', text: 'kinds: ' + (c.kinds || []).join(', ') })]));
-    sec.appendChild(el('p', {}, [el('label', { class: 'chk', for: 'dsEn-' + c.name }, [en, 'Connector is on']),
-      el('span', { class: 'st ' + (c.enabled.source === 'pack' ? '' : 'st-warn'), text: SOURCE[c.enabled.source] }),
-      c.enabled.pack != null ? el('span', { class: 'text-muted-d mono', text: ' pack: ' + c.enabled.pack }) : null]));
-    var tb = el('tbody', { 'data-rows': true });
-    c.settings.forEach(function (s) { tb.appendChild(row(c, s)); });
-    var t = el('table', { class: 'tbl adm-tbl ds-tbl', 'data-plain': true }, [el('caption', { class: 'sr-only', text: 'Settings of ' + c.name }),
-      el('thead', {}, [el('tr', {}, ['Setting', 'Value', 'Where it comes from', ''].map(function (h) { return el('th', { text: h }); }))]), tb]);
-    sec.appendChild(el('div', { class: 'tbl-wrap' }, [t]));
-    var k = el('input', { class: 'studio-in', placeholder: 'setting name', 'aria-label': 'New setting name for ' + c.name, autocomplete: 'off' });
-    var v = el('input', { class: 'studio-in', placeholder: 'value (a secret: ${ENV_NAME})', 'aria-label': 'New setting value for ' + c.name, autocomplete: 'off' });
-    var add = el('button', { type: 'button', class: 'fk', text: 'Add setting' });
-    add.addEventListener('click', function () {
-      if (!k.value.trim()) { k.focus(); return; }
-      var existing = tb.querySelector('tr[data-key="' + k.value.trim().replace(/"/g, '') + '"]');
-      if (existing) { existing.querySelector('input').value = v.value; existing.querySelector('input').focus(); return; }
-      var r = row(c, { key: k.value.trim(), pack: null, override: v.value, site: null, effective: v.value, secret: /password|passwd|secret|token|api[-_.]?key|access[-_.]?key|private[-_.]?key|credential/i.test(k.value), source: 'override', overridden: true, resolvable: true });
-      tb.appendChild(r);
-      k.value = ''; v.value = '';
-      r.querySelector('input').focus();
+    dsIntro.appendChild(document.createTextNode('A pack names the connectors it reads through; each one is a file in '));
+    dsIntro.appendChild(el('span', { class: 'mono', text: ds.directory }));
+    dsIntro.appendChild(document.createTextNode(' and is created, tested and changed in '));
+    dsIntro.appendChild(el('a', { href: '/admin/connectors', text: 'Admin \u2192 Connectors' }));
+    dsIntro.appendChild(document.createTextNode('. Several packs may use the same connector.'));
+    if (!ds.connectors.length) { dsBody.appendChild(el('p', { class: 'text-muted-d', text: 'This pack names no connector.' })); return; }
+    var tb = el('tbody');
+    ds.connectors.forEach(function (c) {
+      var st = STATE[c.state] || ['st', String(c.state || '').toLowerCase()];
+      var link = c.defined
+        ? el('a', { class: 'fk', href: c.editUrl, text: 'Edit', 'aria-label': 'Edit connector ' + c.name })
+        : el('a', { class: 'fk', href: c.createUrl, text: 'Create', 'aria-label': 'Create connector ' + c.name });
+      var problems = (c.problems || []).map(function (x) { return el('div', { class: 't-bad', text: x }); });
+      tb.appendChild(el('tr', { 'data-connector': c.name }, [
+        el('th', { scope: 'row', class: 'mono', text: c.name }),
+        el('td', {}, [el('span', { class: st[0], text: st[1] })].concat(c.health ? [el('span', { class: 'text-muted-d', text: ' ' + c.health })] : [])),
+        el('td', { class: 'mono', text: c.plugin || (c.hasTemplate ? 'from the pack\'s template' : '\u2014') }),
+        el('td', { class: 'mono', text: (c.kinds || []).join(', ') || '\u2014' }),
+        el('td', { text: c.defined ? c.origin : 'nothing defines it' }),
+        el('td', {}, problems.concat([link]))]));
     });
-    sec.appendChild(el('div', { class: 'ds-add' }, [k, v, add]));
-    sec.appendChild(el('div', { class: 'ds-test', 'data-test-out': true, 'aria-live': 'polite' }));
-    return sec;
-  }
-  function row(c, s) {
-    var site = s.source === 'site';
-    var input = el('input', { class: 'studio-in mono', value: site ? s.effective : (s.override != null ? s.override : (s.pack != null ? s.pack : '')), 'aria-label': c.name + ' ' + s.key,
-      autocomplete: 'off', spellcheck: 'false', placeholder: s.secret ? '${ENV_NAME}' : '' });
-    input.disabled = site;
-    var badge = el('span', { class: 'st ' + (s.source === 'pack' ? '' : (site ? 'st-bad' : 'st-warn')), 'data-badge': true });
-    var note = el('span', { class: 'text-muted-d mono' });
-    function refresh() {
-      var now = input.value, base = s.pack == null ? '' : s.pack;
-      var changed = !site && now !== base;
-      badge.textContent = site ? SOURCE.site : (changed ? SOURCE.override : SOURCE.pack);
-      badge.className = 'st ' + (site ? 'st-bad' : (changed ? 'st-warn' : ''));
-      note.textContent = changed && s.pack != null ? ' pack default: ' + s.pack : (s.resolvable === false && !changed ? ' an environment variable it refers to is not set' : (s.secret && !changed ? ' a credential: an environment reference' : ''));
-      note.classList.toggle('t-warn', s.resolvable === false && !changed);
-      reset.hidden = site || !changed;
+    dsBody.appendChild(el('div', { class: 'tbl-wrap' }, [el('table', { class: 'tbl adm-tbl ds-tbl', 'data-plain': true }, [
+      el('caption', { class: 'visually-hidden', text: 'Connectors this pack uses' }),
+      el('thead', {}, [el('tr', {}, ['Connector', 'Status', 'Plugin', 'Kinds from this pack', 'Defined by', ''].map(function (h) { return el('th', { scope: 'col', text: h }); }))]), tb])]));
+    if (ds.missing.length) {
+      say(dsMsg, ds.missing.length + ' connector' + (ds.missing.length === 1 ? ' is' : 's are') + ' not configured: the pack loads, and the kinds routed to ' + (ds.missing.length === 1 ? 'it show' : 'them show') + ' that until the connector is created.', true);
     }
-    var reset = el('button', { type: 'button', class: 'fk', text: s.pack == null ? 'Remove' : 'Use pack default', 'aria-label': (s.pack == null ? 'Remove ' : 'Use the pack default for ') + c.name + ' ' + s.key });
-    reset.addEventListener('click', function () {
-      if (s.pack == null) { tr.remove(); return; }
-      input.value = s.pack; refresh(); input.focus();
-    });
-    input.addEventListener('input', refresh);
-    var tr = el('tr', { 'data-key': s.key, 'data-pack-value': s.pack == null ? '' : s.pack, 'data-has-pack': s.pack != null ? '1' : '0', 'data-site': site ? '1' : '0' },
-      [el('td', { class: 'mono', text: s.key }), el('td', {}, [input]), el('td', {}, [badge, note]), el('td', {}, [reset])]);
-    refresh();
-    return tr;
-  }
-
-  // The whole override the form describes: only what differs from the pack stays (the server drops the rest too).
-  function desired() {
-    var conns = {};
-    dsBody.querySelectorAll('[data-connector]').forEach(function (sec) {
-      var name = sec.getAttribute('data-connector'), entry = {}, st = {};
-      sec.querySelectorAll('tr[data-key]').forEach(function (tr) {
-        if (tr.getAttribute('data-site') === '1') { return; }
-        var key = tr.getAttribute('data-key'), val = tr.querySelector('input').value, base = tr.getAttribute('data-pack-value'), has = tr.getAttribute('data-has-pack') === '1';
-        if (has ? val !== base : val !== '') { st[key] = val; }
-      });
-      if (Object.keys(st).length) { entry.settings = st; }
-      var en = sec.querySelector('[data-enabled]');
-      if (en && !en.disabled && (en.checked ? '1' : '0') !== en.getAttribute('data-initial')) { entry.enabled = en.checked; }
-      var c = model.connectors.filter(function (x) { return x.name === name; })[0];
-      if (!('enabled' in entry) && c && c.enabled.override != null && !en.disabled) { entry.enabled = en.checked; }   // an override already in force stays unless changed
-      if (Object.keys(entry).length) { conns[name] = entry; }
-    });
-    return conns;
   }
   function open(name, from) {
-    pack = name; opener = from;
-    dsTitle.textContent = 'Data source of ' + name;
-    dsBody.textContent = 'Reading the settings…';
+    opener = from;
+    dsTitle.textContent = 'Connectors of ' + name;
+    dsBody.textContent = 'Reading the connectors\u2026';
     say(dsMsg, '');
     if (!dlg.open) { dlg.showModal(); }
     call('GET', '/admin/api/packs/' + q(name) + '/datasource').then(function (r) {
       if (!r.ok) { dsBody.textContent = ''; say(dsMsg, why(r), true); return; }
       build(r.body);
-      var first = dsBody.querySelector('.ds-tbl input:not([disabled])') || dsBody.querySelector('input:not([disabled])');
-      if (first) {
-        first.focus();
-        // Chromium may move focus back to the dialog itself once, right after the first paint
-        requestAnimationFrame(function () { if (document.activeElement !== first) { first.focus(); } });
-      }
+      var first = dsBody.querySelector('a') || dlg.querySelector('[data-ds-close]');
+      first.focus();
+      requestAnimationFrame(function () { if (document.activeElement !== first) { first.focus(); } });   // Chromium may move focus to the dialog once, after the first paint
     });
   }
   root.querySelectorAll('[data-datasource]').forEach(function (b) { b.addEventListener('click', function () { open(b.closest('tr').getAttribute('data-pack'), b); }); });
   dlg.querySelector('[data-ds-close]').addEventListener('click', function () { dlg.close(); });
   dlg.addEventListener('close', function () { if (opener) { opener.focus(); } });
-
-  function renderTest(t) {
-    t.connectors.forEach(function (c) {
-      var host = dsBody.querySelector('[data-connector="' + c.connector + '"] [data-test-out]');
-      if (!host) { return; }
-      host.textContent = '';
-      if (c.skipped) { host.appendChild(el('p', { class: 'text-muted-d', text: c.error })); return; }
-      host.appendChild(el('p', { class: c.ok ? 't-ok' : 't-bad', role: c.ok ? 'status' : 'alert',
-        text: c.ok ? 'Reachable: health ' + c.health + ', ' + c.ms + ' ms. What it holds:' : 'Problem: ' + (c.error || 'not reachable') }));
-      if (!c.ok || !(c.kinds || []).length) { return; }
-      var tb = el('tbody');
-      c.kinds.forEach(function (k) {
-        if (!k.dates.length) { tb.appendChild(el('tr', {}, [el('td', { class: 'mono', text: k.kind }), el('td', { text: '—' }), el('td', { class: 'mono', text: '0' }), el('td', { class: 'cmp-path', text: k.note || '' })])); }
-        k.dates.forEach(function (d) {
-          tb.appendChild(el('tr', {}, [el('td', { class: 'mono', text: k.kind }), el('td', { class: 'mono', text: d.date || '(undated)' }),
-            el('td', { class: 'mono ds-num', text: (k.exact ? '' : '≥ ') + d.rows.toLocaleString('en-US') }), el('td', { class: 'cmp-path', text: k.note || '' })]));
-        });
-      });
-      host.appendChild(el('div', { class: 'tbl-wrap' }, [el('table', { class: 'tbl adm-tbl', 'data-plain': true }, [el('caption', { class: 'sr-only', text: 'What ' + c.connector + ' holds' }),
-        el('thead', {}, [el('tr', {}, ['Kind', 'Business date', 'Rows', ''].map(function (h) { return el('th', { text: h }); }))]), tb])]));
-    });
-  }
-  dlg.querySelector('[data-ds-test]').addEventListener('click', function () {
-    say(dsMsg, 'Trying the settings on the real source…');
-    dsBody.querySelectorAll('[data-test-out]').forEach(function (n) { n.textContent = ''; });
-    call('POST', '/admin/api/packs/' + q(pack) + '/datasource/test', { connectors: desired() }).then(function (r) {
-      if (!r.ok) { say(dsMsg, why(r), true); return; }
-      say(dsMsg, r.body.ok ? 'The connection works (tested: ' + r.body.tested + ').' : 'There is a problem (tested: ' + r.body.tested + ').', !r.body.ok);
-      renderTest(r.body);
-    });
-  });
-  dlg.querySelector('[data-ds-save]').addEventListener('click', function () {
-    if (!window.confirm('Save these settings for ' + pack + ' and apply them? The server restarts in place: a few seconds without data. If it cannot start, the previous settings are put back.')) { return; }
-    say(dsMsg, 'Saving…');
-    call('PUT', '/admin/api/packs/' + q(pack) + '/datasource', { connectors: desired() }).then(function (r) {
-      if (!r.ok) { say(dsMsg, why(r), true); return; }
-      afterChange(dsMsg, r.body);
-    });
-  });
-  dlg.querySelector('[data-ds-reset]').addEventListener('click', function () {
-    if (!window.confirm('Remove every override of ' + pack + ' and use the pack\'s own settings again? The server restarts in place.')) { return; }
-    say(dsMsg, 'Resetting…');
-    call('DELETE', '/admin/api/packs/' + q(pack) + '/datasource').then(function (r) {
-      if (!r.ok) { say(dsMsg, why(r), true); return; }
-      afterChange(dsMsg, r.body);
-    });
-  });
 })();

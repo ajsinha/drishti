@@ -338,7 +338,12 @@ console suite needs `pytest-xdist` (in `requirements-test.txt`). The inotify wat
 
 ### 2.7 One config, several instances of the same connector
 
-A connector is a *named instance* of a plugin. The name is the key under `drishti.sources.connectors`; each instance
+A connector is a *named instance* of a plugin. The preferred way to define one is a **file**: `config/connectors/<name>.yaml`, where the file name is the connector's name
+and the file holds `plugin`, `enabled`, `kinds`, `description` and `settings` (the same keys as below, one connector per file; see
+[CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)). Packs only *name* the connectors they read through and may suggest a template, which the server writes to the
+folder once at the first start; a changed file restarts only that connector, with no server restart. Defining the connectors under `drishti.sources.connectors` in the
+server's own configuration, as the site file below does, keeps working but is **deprecated** (it is flagged in the log and in Admin → Connectors, and overrides a file
+setting by setting). In that form the name is the key under `drishti.sources.connectors`; each instance
 has its own settings, its own `source-name` (shown in provenance), its own entry in Admin → Health and in
 `GET /api/v1/sources`, and its own cache. You may run as many as you like of each plugin. This is a complete site file
 that registers two `file`, two `delta`, two `jdbc` (one in PostgreSQL table mode, one in query mode) and one `kafka` instance. Every key is the real

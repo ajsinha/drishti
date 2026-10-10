@@ -180,7 +180,8 @@ ${DRISHTI_RABBITMQ_ENABLED:false}`).
 
 ### 4.1 Pack form
 
-In `packs/<pack>/pack.yaml` (dotted keys written flat, as for every pack setting):
+The pack's suggested template, in `packs/<pack>/pack.yaml` (dotted keys written flat, as for every pack setting); the server writes it to
+`config/connectors/margin-mq.yaml` at the first start if the site has no such file:
 
 ```yaml
 connectors:
@@ -203,30 +204,25 @@ connectors:
 
 ### 4.2 Site form
 
-In `application.local.yaml` (or any Spring configuration), under `drishti.sources.connectors`. A setting key with
-characters other than letters, digits, `-` and `.` must be bracketed and quoted, for example
-`"[kind.desk_orders]": order`:
+The connector file `config/connectors/margin-mq.yaml`. A setting key is written as it is, with any characters (for example `kind.desk_orders`); no
+bracketing is needed. The URI of a secured broker comes from the environment, so no password is in the file:
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      margin-mq:
-        plugin: rabbitmq
-        kinds: [margin-call]
-        settings:
-          uri: ${RABBIT_URI}                       # amqps://drishti:…@rabbit.bank.example:5671/collateral
-          queues: drishti.margin-calls,drishti.collateral-events
-          declare: false                           # the platform team owns the queues; bind.* is ignored
-          kind.drishti.margin-calls: margin-call
-          id-field.drishti.margin-calls: callId
-          # drishti.collateral-events has no kind: its messages are envelopes {kind, id, doc}
-          heartbeat-seconds: 20
-          recovery-interval-ms: 2000
-          cache-mb: 256
-          state.root: /var/lib/drishti/state       # the store goes to /var/lib/drishti/state/margin-mq
-          state.max-gb: 20
-          state.durability: sync                   # the default: no acknowledged message is lost, even on power loss
+plugin: rabbitmq
+kinds: [margin-call]
+settings:
+  uri: ${RABBIT_URI}                         # amqps://drishti:…@rabbit.bank.example:5671/collateral
+  queues: drishti.margin-calls,drishti.collateral-events
+  declare: false                             # the platform team owns the queues; bind.* is ignored
+  kind.drishti.margin-calls: margin-call
+  id-field.drishti.margin-calls: callId
+  # drishti.collateral-events has no kind: its messages are envelopes {kind, id, doc}
+  heartbeat-seconds: '20'
+  recovery-interval-ms: '2000'
+  cache-mb: '256'
+  state.root: /var/lib/drishti/state         # the store goes to /var/lib/drishti/state/margin-mq
+  state.max-gb: '20'
+  state.durability: sync                     # the default: no acknowledged message is lost, even on power loss
 ```
 
 Give the connector `kinds:` whenever you can. Without it (and with no `kind` setting and an empty state store) the
@@ -710,9 +706,34 @@ on each queue.
 | the view does not tick, but reads work | the view was opened on a picked date, or another live connector holds the entity first | open it Live; check `provenance.source` of the view |
 | the server takes long to start | the state store holds many entities: it is iterated once at start | fewer entities: a lower `state.max-gb` (with `evict-oldest`), or clear it daily if the state is intraday |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/margin-mq.yaml
+plugin: rabbitmq
+enabled: ${DRISHTI_MARGIN_MQ:false}
+kinds: [margin-call]
+description: Margin calls from RabbitMQ
+settings:
+  uri: ${RABBIT_URI}                      # amqps:// for TLS; no password is written in the file
+  queues: [drishti.margin-calls]
+  declare: true
+  bind.drishti.margin-calls: collateral:margin.#
+  kind.drishti.margin-calls: margin-call
+  id-field.drishti.margin-calls: callId
+  prefetch: '100'
+  state.max-gb: '20'
+  state.when-full: evict-oldest
+  stale-after: 30m
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). A RabbitMQ connector over TLS is `config/connectors.examples/other/orders-queue.yaml`.
+
 ## 14. Settings
 
-On a `rabbitmq` connector (`drishti.sources.connectors.<name>.settings`, or `drishti.sources.plugins.rabbitmq.settings`).
+In the connector file's `settings:` (or `drishti.sources.plugins.rabbitmq.settings` for the plugin as itself).
 
 Read by `RabbitMqSourcePlugin`:
 
@@ -828,21 +849,19 @@ body:        {"callId": "MC-ALDERSHOT-FRA-2", "callDate": "2026-09-30", "marginT
 
 ### Configuration by example
 
-A connector for orders on the default exchange, with the queue declared by Drishti:
+A connector for orders on the default exchange, with the queue declared by Drishti, as the file `config/connectors/desk-orders.yaml`:
 
 ```yaml
-connectors:
-  desk-orders:
-    plugin: rabbitmq
-    kinds: [order]
-    settings:
-      uri: ${RABBIT_URI:amqp://guest:guest@localhost:5672/%2f}
-      queues: drishti.orders                               # comma list
-      declare: true                                        # declare each queue durable (and bind it)
-      bind.drishti.orders: orders.exchange:orders.#        # exchange:routing.key
-      kind.drishti.orders: order
-      id-field.drishti.orders: orderId
-      prefetch: 100
+plugin: rabbitmq
+kinds: [order]
+settings:
+  uri: ${RABBIT_URI}
+  queues: drishti.orders                               # comma list
+  declare: true                                        # declare each queue durable (and bind it)
+  bind.drishti.orders: orders.exchange:orders.#        # exchange:routing.key
+  kind.drishti.orders: order
+  id-field.drishti.orders: orderId
+  prefetch: '100'
 ```
 
 The settings are in [section 14](#14-settings). A message for it:

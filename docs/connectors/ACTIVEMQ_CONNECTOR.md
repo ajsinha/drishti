@@ -201,7 +201,8 @@ which the shipped `application.yaml` leaves off (`enabled: ${DRISHTI_ACTIVEMQ_EN
 
 ### 5.1 Pack form
 
-In `packs/<pack>/pack.yaml`, so the connector comes with the pack. Dotted keys (`kind.limits`) are written flat:
+The pack's suggested template, in `packs/<pack>/pack.yaml`, so the connector comes with the pack; the server writes it to `config/connectors/limits-mq.yaml`
+at the first start if the site has no such file. Dotted keys (`kind.limits`) are written flat:
 
 ```yaml
 connectors:
@@ -213,7 +214,7 @@ connectors:
       stale-after: 15m                                        # warn when nothing arrives for 15 minutes
       broker-url: ${AMQ_URL:failover:(tcp://localhost:61616)}
       user: ${AMQ_USER:}
-      password: ${AMQ_PASSWORD:}
+      password: ${AMQ_PASSWORD}
       destinations: queue:limits,topic:limit-breaches,queue:risk.entities
       kind.limits: credit-limit
       id-field.limits: limitId
@@ -229,32 +230,28 @@ routes:
 
 ### 5.2 Site form
 
-The same under `drishti.sources.connectors` in `application.local.yaml`. In Spring files a key with characters other
-than letters, digits, `-` and `.` must be bracketed and quoted (`"[kind.desk_limits]": credit-limit`):
+The same connector as the site's file, `config/connectors/limits-mq.yaml`. A key is written as it is, with any characters (`kind.desk_limits`); no
+bracketing is needed. The file replaces the pack's template wholesale, so it repeats the settings it needs:
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      limits-mq:
-        plugin: activemq
-        kinds: [credit-limit]
-        settings:
-          broker-url: "failover:(ssl://mq1.bank.example:61617,ssl://mq2.bank.example:61617)?initialReconnectDelay=1000&maxReconnectDelay=30000"
-          user: ${AMQ_USER}
-          password: ${AMQ_PASSWORD}
-          destinations: queue:limits
-          kind.limits: credit-limit
-          id-field.limits: limitId
-          client-id: drishti-prod-1-limits-mq
-          cache-mb: 256
-          state.root: /var/lib/drishti/state     # the store goes to /var/lib/drishti/state/limits-mq
-          state.max-gb: 20
-          state.durability: sync                 # the default: no acknowledged message is lost, even on power loss
+plugin: activemq
+kinds: [credit-limit]
+settings:
+  broker-url: failover:(ssl://mq1.bank.example:61617,ssl://mq2.bank.example:61617)?initialReconnectDelay=1000&maxReconnectDelay=30000
+  user: ${AMQ_USER}
+  password: ${AMQ_PASSWORD}
+  destinations: queue:limits
+  kind.limits: credit-limit
+  id-field.limits: limitId
+  client-id: drishti-prod-1-limits-mq
+  cache-mb: '256'
+  state.root: /var/lib/drishti/state     # the store goes to /var/lib/drishti/state/limits-mq
+  state.max-gb: '20'
+  state.durability: sync                 # the default: no acknowledged message is lost, even on power loss
 ```
 
-A site entry overrides a pack's connector key by key, so a site can change only `broker-url` and `client-id` and keep
-the pack's kinds and mappings ([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors)).
+A connector file changes only what it says, because it is the whole definition: to change just `broker-url` and `client-id` of the pack's template, copy the template
+into the file and edit those two lines ([CONNECTOR_DEVELOPER_GUIDE.md, Combining connectors](CONNECTOR_DEVELOPER_GUIDE.md#combining-connectors)).
 
 ### 5.3 Which kinds it serves
 
@@ -772,9 +769,36 @@ point a test connector at one plain `ssl://host:61617` URL (no `failover:`) for 
 | `failedToStart`: `cannot open disk cache at …` | the state folder is held by another connector or process, or not writable | a distinct `state.dir` per connector; permissions |
 | removed a topic from `destinations`, broker disk fills | its durable subscription still collects messages | remove the subscription on the broker |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/limits-mq.yaml
+plugin: activemq
+enabled: ${DRISHTI_LIMITS_MQ:false}
+kinds: [credit-limit, netting-set]
+description: Credit limits and netting sets from ActiveMQ
+settings:
+  stale-after: 15m
+  broker-url: ${AMQ_URL:failover:(tcp://localhost:61616)}
+  user: ${AMQ_USER:}
+  password: ${AMQ_PASSWORD}
+  destinations: queue:limits,topic:limit-breaches,queue:risk.entities
+  kind.limits: credit-limit
+  id-field.limits: limitId
+  kind.limit-breaches: credit-limit
+  id-field.limit-breaches: limitId
+  client-id: ${AMQ_CLIENT_ID:drishti-limits-mq}
+  state.max-gb: '20'
+  state.when-full: evict-oldest
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). An ActiveMQ connector with a user and a password from the environment, and TLS, is `config/connectors.examples/other/ops-events.yaml`.
+
 ## 16. Settings
 
-On an `activemq` connector (`drishti.sources.connectors.<name>.settings`, or `drishti.sources.plugins.activemq.settings`):
+In the connector file's `settings:` (or `drishti.sources.plugins.activemq.settings` for the plugin as itself):
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -880,7 +904,7 @@ Live entities pushed by systems that publish to ActiveMQ Classic (OpenWire) queu
 on a queue and quotes on a topic. All keys are in [section 16](#16-settings).
 
 ```yaml
-# packs/<pack>/pack.yaml (or the same under drishti.sources.connectors in application.local.yaml)
+# packs/<pack>/pack.yaml: the pack's suggested template (or the same settings as config/connectors/desk-orders.yaml)
 connectors:
   desk-orders:
     plugin: activemq
@@ -889,7 +913,7 @@ connectors:
     settings:
       broker-url: ${AMQ_URL:failover:(tcp://localhost:61616)}   # failover reconnects by itself
       user: ${AMQ_USER:}
-      password: ${AMQ_PASSWORD:}
+      password: ${AMQ_PASSWORD}
       destinations: queue:orders,topic:quotes                    # a bare name is a queue
       kind.orders: order                                         # destination name without queue:/topic:
       id-field.orders: orderId

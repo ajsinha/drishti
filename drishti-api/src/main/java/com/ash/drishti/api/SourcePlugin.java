@@ -184,4 +184,12 @@ public interface SourcePlugin extends AutoCloseable {
 
     @Override
     default void close() {}
+
+    /**
+     * The settings this plugin reads, for the connector form and validator (Admin → Connectors). The default declares
+     * none, and the server then falls back to its catalogue of the shipped plugins; a plugin that declares them here wins.
+     */
+    default List<SettingSpec> settingSpecs() {
+        return List.of();
+    }
 }

@@ -142,7 +142,7 @@ Only `.json` objects are read. Unlike the `file` connector there is no CSV form 
 
 ### 4.1 Pack form
 
-A pack declares the connector in its `pack.yaml`, off until switched on, with the kinds it serves:
+A pack suggests the connector as a template in its `pack.yaml`, off until switched on, with the kinds it serves (the server writes it to `config/connectors/risk-docs.yaml` at the first start if the site has none):
 
 ```yaml
 # packs/<pack>/pack.yaml
@@ -164,21 +164,17 @@ routes:
 
 ### 4.2 Site form
 
-In `application.local.yaml`, an S3-compatible store with static credentials from the environment:
+The connector file `config/connectors/risk-docs.yaml`, for an S3-compatible store with static credentials from the environment (or `file:` references):
 
 ```yaml
-drishti:
-  sources:
-    connectors:
-      risk-docs:
-        plugin: s3
-        kinds: [stress-result]
-        settings:
-          bucket: risk-docs
-          prefix: eod/
-          endpoint: https://minio.bank.example    # S3-compatible store; path-style addressing (path-style: true)
-          access-key: ${S3_ACCESS_KEY}            # otherwise the AWS credential chain
-          secret-key: ${S3_SECRET_KEY}
+plugin: s3
+kinds: [stress-result]
+settings:
+  bucket: risk-docs
+  prefix: eod/
+  endpoint: https://minio.bank.example    # S3-compatible store; path-style addressing (path-style: true)
+  access-key: ${S3_ACCESS_KEY}            # otherwise the AWS credential chain
+  secret-key: ${S3_SECRET_KEY}
 ```
 
 On AWS itself leave out `endpoint`, `access-key` and `secret-key`, set `region` to the bucket's region, and give the
@@ -502,9 +498,33 @@ reads everything under its prefix, and the server decides what each user may see
 | `DRS-1004 timed out reading …` | `GET`s far from the server, or many misses per read | keep the bucket in the server's region; lower `lookback-days`; route the kind so faster stores are not behind it |
 | server start is slow | the first listing runs inside start, one request per 1,000 keys | shrink the prefix (lifecycle rule, a narrower `prefix`) |
 
+## As a connector file
+
+A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
+
+```yaml
+# config/connectors/risk-docs.yaml
+plugin: s3
+enabled: ${DRISHTI_RISK_DOCS:false}
+kinds: [stress-result]
+description: Stress results in object storage
+settings:
+  bucket: ${RISK_DOCS_BUCKET:risk-docs}   # required
+  prefix: eod/
+  region: us-east-1
+  rescan-seconds: '60'
+  cache-seconds: '30'
+  lookback-days: '10'
+  # endpoint: https://minio.bank.example
+  # access-key: ${S3_ACCESS_KEY}
+  # secret-key: ${S3_SECRET_KEY}
+```
+
+The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). A Delta Lake on S3-compatible storage (the `delta` plugin, not this one) is `config/connectors.examples/other/customer-lake.yaml`; see [`config/connectors.examples/`](../../config/connectors.examples).
+
 ## 14. Settings
 
-On an `s3` connector (`drishti.sources.connectors.<name>.settings`) or the plugin as itself
+In the connector file's `settings:`, or for the plugin as itself
 (`drishti.sources.plugins.s3.settings`), as `S3SourcePlugin.start` reads them:
 
 | Setting | Default | Meaning |
@@ -564,7 +584,7 @@ The layout is described in [The layout](#2-the-layout): `<prefix><kind>/<id>.jso
 
 #### Configure it
 
-The pack form is in [4.1](#41-pack-form), the site form in [4.2](#42-site-form).
+The pack's template is in [4.1](#41-pack-form), the connector file in [4.2](#42-site-form).
 
 #### Try it
 

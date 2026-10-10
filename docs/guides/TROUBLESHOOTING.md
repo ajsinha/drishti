@@ -33,7 +33,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Search](#search) | DRS-4004, empty results, partial results |
 | [Studio and Sutras](#studio-and-sutras) | Save disabled, an edit has no effect, `.sutra.md` files after an upgrade, approval refused |
 | [Packs](#packs) | mnemonics missing, a pack switched off, *not loaded*, cannot switch off, generated files out of date |
-| [Connectors](#connectors) | a connector is idle, a connector failed to start, TLS errors and certificate expiry, schema-registry messages skipped |
+| [Connectors](#connectors) | a connector is idle, a connector failed to start, a bad connector file, TLS errors and certificate expiry, schema-registry messages skipped |
 | [Monitoring endpoints](#monitoring-endpoints) | `/actuator/prometheus` answers 401 or 403, `/api/docs` answers 401 |
 | [Alerts](#alerts-and-monitors) | an alert never fires |
 | [Development](#development) | licence header test fails |
@@ -765,8 +765,21 @@ The message names up to six of the mnemonics the server has loaded (from its pac
   without `feed`). Such a plugin stays idle on purpose (`PluginNotConfigured`): it is not an error, and the
   overall status stays **OK**.
 - **Fix:** nothing, if you do not use it. To use it, give it its settings under
-  `drishti.sources.connectors.<name>.settings` (or the plugin's own `drishti.sources.plugins.<name>.settings`),
-  and restart. See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+  `settings:` in `config/connectors/<name>.yaml` (or the plugin's own `drishti.sources.plugins.<name>.settings`);
+  the server applies the file without a restart. See [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
+
+### A connector does not start, or a connector file is bad
+
+Connectors are files, one per connector, in `config/connectors/` (the file name is the connector's name); see [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md).
+
+- **What you see:** Admin → Health is **DEGRADED** with `connectors.badFiles`, or a connector shows `failed` in Admin → Connectors and in `drishti.py connector list`;
+  the log says `connector file site-quotes.yaml is not usable; the last good configuration keeps running: ...`.
+- **Cause:** the file is not YAML, has a top-level key other than `plugin`, `enabled`, `kinds`, `description`, `settings` (and `name`), says a `name:` different from its
+  file name, uses `${VAR}` that is not set, or holds a literal credential. A bad file never stops a running connector: the last good configuration keeps running.
+- **Fix:** read the message (it names the key or setting), correct the file, and the server applies it within seconds (`connectors-poll`, 5 s). Use **Test connection**
+  in Admin → Connectors or `drishti.py connector test NAME` for a failure to reach the source (a TLS failure comes back in words). If edits are not picked up, check
+  `connectors.watch` in Health (`STOPPED` or `OFF` means restart, or set `drishti.sources.connectors-watch`), and that the file name is lower case letters, digits and hyphens.
+- **A kind answers `DRS-1011`:** the pack names a connector that has no file. Create it ([DRS-1011](#error-codes)).
 
 ### A connector failed to start
 
@@ -878,6 +891,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-1001` | no source holds that entity |
 | `DRS-1002` | no source serves that kind |
 | `DRS-1005` / `DRS-1006` / `DRS-1007` | pasted document is not a JSON object / a connector plugin could not be loaded (`/sources` lists why) / `knownAt` asked of a store with no earlier versions |
+| `DRS-1011` | a kind is routed to a connector that has no file in `config/connectors/` (HTTP 404). Cause: the pack names a connector nobody defined, or its file was deleted. Fix: create it in Admin → Connectors (the Create link on Admin → Packs → Data source pre-fills it from the pack's template) or `drishti.py connector apply NAME.yaml`; the pack itself loads and Admin → Health shows `connectorsNotConfigured` |
 | `DRS-1003` / `DRS-1004` | a source failed / timed out (a console page answers 504 for a timeout, 502 for a failed source) |
 | `DRS-2001` / `DRS-2002` / `DRS-2003` | Sutra parse error / invalid / not found |
 | `DRS-2005` / `DRS-2006` / `DRS-2007` | proposal not found / stale / four eyes |
@@ -908,6 +922,9 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 | `DRS-5010` | not signed in |
 | `DRS-5011` | a data-load call named a pack that is not loaded (or one the caller may open nothing of): see [DATA_LOADS.md](DATA_LOADS.md#12-troubleshooting) |
 | `DRS-5012` | a data-load call named a kind the pack does not own (the message lists its kinds) |
+| `DRS-5031` | a connector file or body is not valid (HTTP 422): bad name, unknown plugin, unknown top-level key, a missing required setting, a wrong type, a `name:` that is not the file name, or a literal credential. Fix: the message names the setting; credentials are `${ENV_VAR}` or `file:/path`; see [CONNECTOR_FILES.md, section 12](../connectors/CONNECTOR_FILES.md#12-health-and-problems) |
+| `DRS-5032` | a connector change conflicts (HTTP 409): the version you read is stale (reload and apply again), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use (repeat with `confirm=true`/`--confirm` once you have read who uses it), or you tried to delete a connector a pack's template names (reset or disable it) |
+| `DRS-5033` | no connector of that name (HTTP 404): check the spelling with `drishti.py connector list`; the file name is the name |
 | `DRS-6001`–`DRS-6010` | user management (see [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)); `DRS-6005` is a locked account |
 | `DRS-7001` | a share link that is not yours, or does not exist (HTTP 404; the two look the same on purpose). Ask the sender to share it with you again |
 | `DRS-7002` | a share had no recipient, or named someone you cannot address: an unknown user, one who uses none of your packs, a role that is not mentionable (HTTP 422). Search the picker for the name |

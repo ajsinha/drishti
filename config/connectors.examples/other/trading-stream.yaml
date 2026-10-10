@@ -1,0 +1,31 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: a Kafka topic of trades over TLS. Copy to config/connectors/trading-stream.yaml and name it in a pack
+# (connectors: [trading-stream]; routes: {trade: trading-stream}). Passwords are environment references.
+plugin: kafka
+kinds: [trade]
+description: Live trades from the trading Kafka cluster
+settings:
+  bootstrap-servers: kafka-1.example.com:9093,kafka-2.example.com:9093
+  topics: [trades]
+  kind: trade
+  id-field: tradeId
+  tls:
+    enabled: true
+    truststore:
+      path: /etc/drishti/tls/ca.p12
+      password: ${KAFKA_TRUSTSTORE_PASSWORD}
+    keystore:
+      path: /etc/drishti/tls/client.p12
+      password: ${KAFKA_KEYSTORE_PASSWORD}
