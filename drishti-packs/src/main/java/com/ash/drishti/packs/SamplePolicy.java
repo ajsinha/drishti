@@ -36,6 +36,8 @@ import java.util.Set;
  */
 public final class SamplePolicy {
 
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
+
     public static final String VISIBLE = "visible";
     public static final String DEVELOPERS = "developers";
     public static final String HIDDEN = "hidden";
@@ -73,30 +75,40 @@ public final class SamplePolicy {
     }
 
     /** Saves the mode as the administrator's setting; it overrides the property until {@link #clear()}. */
-    public synchronized void set(String mode) {
-        String m = normalise(mode, null);
-        if (m == null) {
-            throw new IllegalArgumentException("samples is one of " + MODES + ", not '" + mode + "'");
-        }
+    public void set(String mode) {
+        lock.lock();                   // writes a file: a ReentrantLock, not synchronized (Java 21 pins virtual threads)
         try {
-            Files.createDirectories(file.getParent());
-            Path tmp = Files.createTempFile(file.getParent(), ".samples-", ".tmp");
-            Files.writeString(tmp, m + "\n", StandardCharsets.UTF_8);
-            Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (IOException e) {
-            throw new java.io.UncheckedIOException(e);
+            String m = normalise(mode, null);
+            if (m == null) {
+                throw new IllegalArgumentException("samples is one of " + MODES + ", not '" + mode + "'");
+            }
+            try {
+                Files.createDirectories(file.getParent());
+                Path tmp = Files.createTempFile(file.getParent(), ".samples-", ".tmp");
+                Files.writeString(tmp, m + "\n", StandardCharsets.UTF_8);
+                Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
+            saved = m;
+        } finally {
+            lock.unlock();
         }
-        saved = m;
     }
 
     /** Removes the saved setting: the property decides again. */
-    public synchronized void clear() {
+    public void clear() {
+        lock.lock();                   // writes a file: a ReentrantLock, not synchronized (Java 21 pins virtual threads)
         try {
-            Files.deleteIfExists(file);
-        } catch (IOException e) {
-            throw new java.io.UncheckedIOException(e);
+            try {
+                Files.deleteIfExists(file);
+            } catch (IOException e) {
+                throw new java.io.UncheckedIOException(e);
+            }
+            saved = null;
+        } finally {
+            lock.unlock();
         }
-        saved = null;
     }
 
     private static String readSaved(Path f) {
