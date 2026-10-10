@@ -23,6 +23,8 @@ nothing is invented, and each document carries its source, dataset, retrieval da
 """
 from __future__ import annotations
 
+import dataclasses
+import os
 import sys
 from pathlib import Path
 
@@ -33,6 +35,7 @@ sys.path.insert(0, str(HERE.parent.parent / "realdata"))
 import packbuild as PB  # noqa: E402
 import taxonomy as T  # noqa: E402
 import build_docs as BD  # noqa: E402
+import packrun as PR  # noqa: E402
 from risk_model import Kind, Panel as P  # noqa: E402
 
 G = "Economics"
@@ -118,6 +121,36 @@ FORM = {
                       "gdpUsdBn": {"type": "number", "label": "GDP (USD bn)"}, "populationM": {"type": "number", "label": "Population (m)"}, "growth": {"type": "number", "label": "Real growth (%)"}}}
 
 
+def _without_imf() -> None:
+    """`realdata.py --no-imf`: the pack without the IMF forecast kind, the IMF debt and net lending, and every mention of the IMF."""
+    global KINDS, COLUMNS, FORM
+    kinds = []
+    for k in KINDS:
+        if k.kind == "economic-forecast":
+            continue
+        if k.kind == "economy":
+            k = dataclasses.replace(
+                k, desc=k.desc.replace("World Bank, IMF and CIA", "World Bank and CIA"), strip=[c for c in k.strip if c[1] != "$.debtToGdp"],
+                links={f: v for f, v in k.links.items() if f != "outlook"})
+        elif k.kind == "fiscal-position":
+            k = dataclasses.replace(
+                k, desc="Revenue, expense and military spending (World Bank), as shares of GDP.",
+                strip=[("Economy", "$.economyName", None, None, False), ("Revenue / GDP", "$.revenue", "pc1", None, True),
+                       ("Expense / GDP", "$.spending", "pc1", None, False), ("Military / GDP", "$.military", "pc2", None, False)],
+                panels=[q for q in k.panels if q.id not in ("debtPath", "balancePath")])
+        kinds.append(k)
+    KINDS = kinds
+    COLUMNS = {k: [f for f in v if f != "debtToGdp"] for k, v in COLUMNS.items() if k != "economic-forecast"}
+    COLUMNS["fiscal-position"] = ["economyName", "revenue", "spending", "military"]
+    FORM = {k: {f: x for f, x in v.items() if f != "debtToGdp"} for k, v in FORM.items() if k != "economic-forecast"}
+    FORM["fiscal-position"] = {f: x for f, x in FORM["fiscal-position"].items() if f not in ("debt", "balance")}
+
+
+NO_IMF = os.environ.get(BD.ENV_NO_IMF) == "1"
+if NO_IMF:
+    _without_imf()
+
+
 def build() -> dict[str, dict[str, dict]]:
     return BD.economics()
 
@@ -130,18 +163,24 @@ def spec() -> PB.PackSpec:
         columns=COLUMNS,
         form_overrides=FORM,
         name="economics", title="Economics", requires=[], generator="tools/packgen/economics/make.py",
-        description="Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, "
-                    "and World Bank regions and income groups.",
+        description=("Real public economic data for about 200 economies: output, growth, prices, jobs and external balance (World Bank, CIA World Factbook), "
+                     "and World Bank regions and income groups." if NO_IMF else
+                     "Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, "
+                     "and World Bank regions and income groups."),
         domains={"macro": KINDS},
-        examples=[("ECON ECON-IND", "India · growth path, output by sector"), ("ECON ECON-USA", "United States · the same view"), ("MACRO MACRO-BRA-GDP-GROWTH", "Brazil · one indicator with history and rank"),
+        examples=[e for e in [("ECON ECON-IND", "India · growth path, output by sector"), ("ECON ECON-USA", "United States · the same view"), ("MACRO MACRO-BRA-GDP-GROWTH", "Brazil · one indicator with history and rank"),
                   ("FCST FCST-JPN-WEO", "Japan · IMF outlook to 2031"), ("LABR LABR-NGA", "Nigeria · labour market"), ("FISC FISC-USA", "United States · debt and balance"),
-                  ("ECG ECG-SAS", "South Asia · a World Bank region")],
-        overview="The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0), the IMF World Economic Outlook (reuse with attribution), and the CIA "
-                 "World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
-                 "group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "
-                 "(see docs/guides/REAL_DATA.md).",
+                  ("ECG ECG-SAS", "South Asia · a World Bank region")] if not (NO_IMF and e[0].startswith("FCST"))],
+        overview=("The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0) and the CIA World Factbook (public domain). This build has no IMF data. "
+                  "Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
+                  "group, labour market, fiscal position and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "
+                  "(see docs/guides/REAL_DATA.md)." if NO_IMF else
+                  "The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0), the IMF World Economic Outlook (reuse with attribution), and the CIA "
+                  "World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income "
+                  "group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` "
+                  "(see docs/guides/REAL_DATA.md)."),
         roles={"economist": {"kinds": [k.kind for k in KINDS], "raw": True}})
 
 
 if __name__ == "__main__":
-    PB.main(spec(), build(), T.graph_fields())
+    PR.run(PB, "economics", spec(), build(), T.graph_fields())

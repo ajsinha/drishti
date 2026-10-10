@@ -22,10 +22,17 @@ removed). Neither pack is marked `sample: true` any more.
 The data is fetched and normalised by a repeatable tool, `tools/realdata/`, and committed to git as a small normalised dataset (`tools/realdata/dataset/`, 2.4 MB) plus the
 generated pack documents. The raw downloads are cached outside the repository and are never committed.
 
+> **Licence note: IMF data is for internal demonstration only.** The IMF World Economic Outlook data in these packs (the `economic-forecast` documents, and the
+> `debt` and `net_lending` series that feed each economy's debt ratio and fiscal position) is kept for **internal demos only**. The IMF's terms allow reuse with
+> attribution but require its **permission for commercial use** (copyright@imf.org). Before the packs are shown to a client, shipped, sold or used commercially,
+> either obtain that permission or build without the IMF: `python3 tools/realdata/realdata.py write --no-imf` (see [Building without the IMF](#building-without-the-imf)).
+> The World Bank (CC BY 4.0), UNDP (CC BY 3.0 IGO) and CIA Factbook (public domain) data needs only attribution.
+
 ![The economy of India](img/realdata/economy-india.jpg)
 
 ## Sources, licences and attribution
 
+<!-- realdata:begin sources -->
 | Source | Dataset and vintage | Licence | Terms |
 |---|---|---|---|
 | World Bank, World Development Indicators | World Development Indicators (updated 2026-10-08) | CC BY 4.0 | https://datacatalog.worldbank.org/public-licenses#cc-by |
@@ -33,6 +40,7 @@ generated pack documents. The raw downloads are cached outside the repository an
 | International Monetary Fund, World Economic Outlook (DataMapper) | World Economic Outlook (April 2026 edition) | IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission | https://www.imf.org/en/About/copyright-and-terms |
 | UNDP, Human Development Report: composite indices time series | Human Development Index time series (2025 report) | CC BY 3.0 IGO | https://creativecommons.org/licenses/by/3.0/igo/ |
 | CIA, The World Factbook (factbook.json mirror, CC0) | The World Factbook (mirror commit 144d6977b2) | Public domain (U.S. Government work); the factbook.json mirror is CC0 1.0 | https://github.com/factbook/factbook.json/blob/master/LICENSE.md |
+<!-- realdata:end sources -->
 
 Attribution text (also in [THIRD-PARTY-NOTICES.md](../../THIRD-PARTY-NOTICES.md), and in each document's *Data source and licence* panel):
 
@@ -79,12 +87,14 @@ Identifiers use the ISO 3166 alpha-3 code: `ECON-IND`, `MACRO-BRA-GDP-GROWTH`, `
 
 Each document has a `provenance` object (shown by the *Data source and licence* panel) and the same four facts in `_meta`:
 
+<!-- realdata:begin provenance -->
 ```json
 "provenance": {"source": "International Monetary Fund, World Economic Outlook (DataMapper)", "dataset": "World Economic Outlook (April 2026 edition)",
   "retrievedAt": "2026-10-10", "licence": "IMF Copyright and Terms of Use: reuse with attribution; commercial reuse needs the IMF's permission",
   "attribution": "Source: International Monetary Fund, World Economic Outlook database, https://www.imf.org/external/datamapper.",
   "url": "https://www.imf.org/external/datamapper"}
 ```
+<!-- realdata:end provenance -->
 
 ![An IMF forecast with its provenance](img/realdata/forecast-japan.jpg)
 
@@ -112,6 +122,7 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 
 ### Economy, labour and fiscal (economics pack)
 
+<!-- realdata:begin indicators-economics -->
 | Key | Indicator | Unit | Source and code | Countries with data |
 |---|---|---|---|---|
 | `gdp` | GDP, current prices | USD bn | World Bank WDI `NY.GDP.MKTP.CD` | 213 |
@@ -145,9 +156,11 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 | `revenue` | Revenue, excluding grants | % of GDP | World Bank WDI `GC.REV.XGRT.GD.ZS` | 150 |
 | `expense` | Expense | % of GDP | World Bank WDI `GC.XPN.TOTL.GD.ZS` | 150 |
 | `military` | Military expenditure | % of GDP | World Bank WDI `MS.MIL.XPND.GD.ZS` | 159 |
+<!-- realdata:end indicators-economics -->
 
 ### Society and governance (politics-society pack)
 
+<!-- realdata:begin indicators-society -->
 | Key | Indicator | Unit | Source and code | Countries with data |
 |---|---|---|---|---|
 | `life_expectancy` | Life expectancy at birth | years | World Bank WDI `SP.DYN.LE00.IN` | 217 |
@@ -172,8 +185,9 @@ The same Sutras serve every country: the United States and Nigeria below, Brazil
 | `wgi_regulatory` | Regulatory quality | index -2.5 to 2.5 | World Bank WGI `GOV_WGI_RQ.EST` | 205 |
 | `wgi_law` | Rule of law | index -2.5 to 2.5 | World Bank WGI `GOV_WGI_RL.EST` | 207 |
 | `wgi_corruption` | Control of corruption | index -2.5 to 2.5 | World Bank WGI `GOV_WGI_CC.EST` | 207 |
+<!-- realdata:end indicators-society -->
 
-The definitions and units are in each pack's *About this page* glossary (`config/about.yaml`, from `tools/packgen/*/about.yaml`) and in each macro or social indicator's
+The definitions and units are in each pack's *About this page* glossary (`config/about.yaml`, from `tools/packgen/*/about.yaml`, which `tools/realdata/about.py` generates) and in each macro or social indicator's
 *About this series* panel. World Governance Indicators are estimates from about -2.5 (weak) to 2.5 (strong).
 
 ![FORM economics: growth above 6% among economies over USD 100 bn](img/realdata/form-economics.jpg)
@@ -186,18 +200,53 @@ Uzbekistan, Viet Nam in the April 2026 data).
 ```
 python3 tools/realdata/realdata.py fetch     [--cache DIR] [--refresh] [--pause S]   download the raw data (network)
 python3 tools/realdata/realdata.py normalise [--cache DIR]                           raw cache -> tools/realdata/dataset/*.json
-python3 tools/realdata/realdata.py write                                              dataset -> the two packs (runs both generators)
-python3 tools/realdata/realdata.py all       [--cache DIR] [--refresh]                fetch, normalise, write
-python3 tools/realdata/realdata.py check                                              fail if the packs differ from the dataset
+python3 tools/realdata/realdata.py about                                              sources.yaml + about/*.kinds.yaml -> tools/packgen/*/about.yaml
+python3 tools/realdata/realdata.py write                                              dataset -> the two packs, their glossary and their Sutra tests
+python3 tools/realdata/realdata.py tests                                              the packs' Sutra tests only (config/packs/*/tests)
+python3 tools/realdata/realdata.py docs                                               the generated tables of this guide
+python3 tools/realdata/realdata.py all       [--cache DIR] [--refresh]                fetch, normalise, about, write, docs: everything committed
+python3 tools/realdata/realdata.py check     [--cache DIR]                           fail if anything committed differs from what `all` would write
 ```
+
+`all` from the cached raw data regenerates **everything committed for the two packs** byte for byte: the normalised dataset, the glossary source
+(`tools/packgen/*/about.yaml`), the packs (`pack.yaml`, Sutras, samples, guides, help, `config/about.yaml`), the Sutra tests (`tests/`) and the tables of this guide
+between its `<!-- realdata:begin ... -->` markers (sources, the two indicator tables with their country counts, the provenance example). Only `config/formats.yaml` is kept by hand.
+`check` fails on any drift: it re-derives the dataset from the cache (skipped, with a note, when there is no cache), runs both generators with `--check` (pack, glossary and
+tests) and compares the guide tables. A run on the committed state prints:
+
+```
+$ python3 tools/realdata/realdata.py check
+dataset: no raw cache at /home/ci/.cache/drishti-realdata, not re-derived     (with a cache: nothing)
+economics: 3924 files up to date
+politics-society: 5621 files up to date
+```
+
+### Building without the IMF
+
+```
+python3 tools/realdata/realdata.py all --no-imf [--out DIR]     # fetch (never the IMF), normalise, write the packs
+python3 tools/realdata/realdata.py write --no-imf               # from the committed dataset, filtered
+python3 tools/realdata/realdata.py check --no-imf               # the --no-imf packs are what the tool would write
+```
+
+`--no-imf` builds a World Bank, UNDP and Factbook pack set: the IMF is not contacted, the `economic-forecast` kind and its 192 documents are gone, the IMF `debt` and
+`net_lending` series are gone (so an economy has no `debtToGdp` and no `outlook` link), the `fiscal-position` kind keeps only the World Bank revenue, expense and military
+shares (`debt`, `balance` and the two paths are removed), and the glossary, FORM, examples, guide and provenance never name the IMF as a source. The politics-society pack
+never used IMF data and is identical. The one remaining word is the World Bank's definition of *Total reserves* ("... reserve position in the IMF ..."), which describes the
+reserves, not IMF data. The committed dataset, glossary, tests and this guide are never touched: the packs go to `--out` (default `~/.cache/drishti-realdata/no-imf/packs`) and a
+`--no-imf` dataset to `~/.cache/drishti-realdata/no-imf/dataset`; copy the two pack directories into `config/packs/` of the build you ship.
 
 | File | Role |
 |---|---|
 | `sources.yaml` | the sources (name, API, licence, attribution) and every indicator (code, unit, scale, definition); edit this to add an indicator |
 | `fetch.py` | the downloader: one request per World Bank indicator, per IMF series and per Factbook file, a pause between requests, retries, files already cached are kept |
 | `normalise.py` | pure parsing functions (World Bank, IMF, UNDP, Factbook) and the run that writes `dataset/*.json` |
-| `build_docs.py` | the document builders both pack generators call (`economics()`, `politics()`) |
-| `tests/` | `test_normalise.py` against small recorded fixtures (`tests/fixtures/`), `test_build_docs.py` against the committed dataset; no network |
+| `build_docs.py` | the document builders both pack generators call (`economics()`, `politics()`); `Data(no_imf=True)` drops the IMF |
+| `about.py`, `about/*.kinds.yaml` | the glossary source: the vocabulary comes from `sources.yaml`, the per-kind and per-field text from `about/<pack>.kinds.yaml` (edit there, not in `tools/packgen/*/about.yaml`) |
+| `pack_tests.py`, `pack_tests.yaml` | the packs' Sutra tests: which documents ship as tests, what each expects, the help-coverage ratchet |
+| `doc_snippets.py` | the generated tables of this guide |
+| `packrun.py` | what both pack generators run: glossary, pack and tests, written or (`--check`) compared |
+| `tests/` | `test_normalise.py` against small recorded fixtures (`tests/fixtures/`), `test_build_docs.py` against the committed dataset, `test_pipeline.py` (reproducibility, drift, `--no-imf`); no network |
 
 The cache defaults to `~/.cache/drishti-realdata` (outside the repository; use `--cache` to move it). A full fetch is about 50 World Bank calls, 8 IMF calls, one UNDP file and
 about 260 Factbook files, and takes 10 to 20 minutes at the default pause; the World Bank API is sometimes slow. Run it rarely and with the default pause.
@@ -205,7 +254,8 @@ about 260 Factbook files, and takes 10 to 20 minutes at the default pause; the W
 ### Refreshing
 
 ```
-python3 tools/realdata/realdata.py all --refresh      # download again, normalise, regenerate both packs
+python3 tools/realdata/realdata.py all --refresh      # download again, normalise, regenerate glossary, packs, tests and guide tables
+python3 tools/realdata/realdata.py check              # clean when everything committed matches
 python3 tools/packgen/economics/make.py --check       # clean when the pack matches the dataset
 python3 tools/packgen/politics/make.py --check
 python3 tools/drishti.py pack check config/packs/economics config/packs/politics-society
@@ -225,8 +275,8 @@ name; unmatched profiles are listed in `meta.json` (`factbookUnmatched`: depende
 ## Generated outputs stay consistent
 
 `tools/packgen/economics/make.py` and `tools/packgen/politics/make.py` write `pack.yaml`, the Sutras, `samples/`, `guides/`, `config/help.yaml` and `config/about.yaml`;
-`--check` fails if any differs. `config/formats.yaml` (the `pc1` and `pc2` formats that add a `%` sign to values already in percent) and `tests/` are kept by hand. The
-pack tests are one to five real countries per kind (India, the United States, Brazil, Nigeria, Japan) with `expect.yaml` (`noErrors`, `nonEmpty`, help coverage 100%).
+`--check` fails if any differs. They also write `config/about.yaml`'s source and the pack `tests/` (see `about.py` and `pack_tests.py`). Only `config/formats.yaml` (the `pc1` and `pc2` formats that add a `%` sign to values already in percent) is kept by hand. The
+pack tests are one to five real countries per kind (India, the United States, Brazil, Nigeria, Japan) with `expect.yaml` (`noErrors`, `nonEmpty`, help coverage 100%); which ones is in `tools/realdata/pack_tests.yaml`.
 
 ```
 $ python3 tools/drishti.py pack check config/packs/economics config/packs/politics-society

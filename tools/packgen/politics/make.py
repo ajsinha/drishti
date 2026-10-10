@@ -35,6 +35,7 @@ sys.path.insert(0, str(HERE.parent.parent / "realdata"))
 import packbuild as PB  # noqa: E402
 import taxonomy as T  # noqa: E402
 import build_docs as BD  # noqa: E402
+import packrun as PR  # noqa: E402
 from risk_model import Kind, Panel as P  # noqa: E402
 
 G = "Politics and society"
@@ -139,4 +140,4 @@ def spec() -> PB.PackSpec:
 
 
 if __name__ == "__main__":
-    PB.main(spec(), build(), T.graph_fields())
+    PR.run(PB, "politics", spec(), build(), T.graph_fields())

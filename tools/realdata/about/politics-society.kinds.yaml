@@ -1,0 +1,421 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The hand-written part of the about.yaml of the politics-society pack: what each kind and field means. The vocabulary (one entry per indicator)
+# comes from tools/realdata/sources.yaml. tools/realdata/about.py joins the two into tools/packgen/politics/about.yaml; edit here, not there.
+
+kinds:
+  jurisdiction:
+    title: Jurisdiction
+    about: ${$.name} is a ${$.governmentType} with its capital at ${$.capital}, per the CIA World Factbook; population ${fmt($.populationM, 'price2')} million.
+    guide: politics-society
+    glossary:
+      name:
+        term: Country
+        means: The country's common name.
+      capital:
+        term: Capital
+        means: The seat of government.
+      governmentType:
+        term: Government type
+        means: The form of government, as the CIA World Factbook describes it.
+      populationM:
+        term: Population
+        means: The number of residents (World Bank, mid-year).
+        unit: millions
+      areaKm2:
+        term: Area
+        means: Total area, land and water.
+        unit: square kilometres
+      currency:
+        term: Currency
+        means: The ISO 4217 code of the currency, from the Factbook exchange-rate entry.
+      legislature.party:
+        term: Party
+        means: A party or group in the lower chamber, as the Factbook lists it.
+      legislature.seats:
+        term: Seats
+        means: The seats the party won at the most recent election.
+      indicators.indicator:
+        term: Indicator
+        means: A society or governance statistic.
+      indicators.value:
+        term: Value
+        means: The latest published value.
+      indicators.year:
+        term: Year
+        means: The year of the value.
+      indicators.unit:
+        term: Unit
+        means: What the value measures.
+      partiesListed.party:
+        term: Party
+        means: A political party as the Factbook publishes the name.
+      profile.officialName:
+        term: Official name
+        means: The conventional long form of the country's name.
+      profile.languages:
+        term: Languages
+        means: The languages spoken and their shares, as published.
+      profile.religions:
+        term: Religions
+        means: The religious affiliations and their shares, as published.
+      profile.legalSystem:
+        term: Legal system
+        means: The legal tradition of the country.
+      profile.suffrage:
+        term: Suffrage
+        means: The voting age and who may vote.
+      profile.independence:
+        term: Independence
+        means: When and from whom the country became independent.
+      profile.nationalHoliday:
+        term: National holiday
+        means: The national day.
+      profile.location:
+        term: Location
+        means: Where the country is.
+      profile.currencyText:
+        term: Currency
+        means: The currency and its exchange-rate basis, as published.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
+  party:
+    title: Party
+    about: ${$.name} won ${fmt($.seats, 'amount0')} seats (${fmt($.seatShare, 'pc1')}) in the ${$.chamber} of ${$.countryName}.
+    guide: politics-society
+    glossary:
+      name:
+        term: Party
+        means: The party's name as the CIA World Factbook lists it in the election result.
+      countryName:
+        term: Country
+        means: The country the party competes in.
+      seats:
+        term: Seats
+        means: The seats the party won in the chamber at the most recent election.
+      seatShare:
+        term: Seat share
+        means: The party's seats as a share of the seats the Factbook lists.
+        unit: '% of seats'
+      chamber:
+        term: Chamber
+        means: The legislative chamber the result is for.
+      electionDate:
+        term: Election date
+        means: When the most recent election was held, as published.
+      results.party:
+        term: Party
+        means: A party or group in the chamber.
+      results.seats:
+        term: Seats
+        means: The seats it won.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
+  office-holder:
+    title: Office holder
+    about: ${$.countryName}'s ${lower($.role)} is ${$.holder}, as the CIA World Factbook publishes it.
+    guide: politics-society
+    glossary:
+      countryName:
+        term: Country
+        means: The country the office belongs to.
+      role:
+        term: Role
+        means: Chief of state (the ceremonial or constitutional head) or head of government (who leads the executive).
+      holder:
+        term: Holder
+        means: The title and name of the office holder as the Factbook publishes them; surnames are in capitals.
+      since:
+        term: Since
+        means: The date the holder took office, as published.
+      governmentType:
+        term: Government type
+        means: The form of government.
+      mandate.selection:
+        term: Selection
+        means: How the office is filled.
+      mandate.heldOn:
+        term: Most recent election
+        means: When the office was last filled by election, as published.
+      mandate.nextElection:
+        term: Expected next election
+        means: When the next election is due, as published.
+      mandate.results:
+        term: Published results
+        means: The result of the last election, as published.
+      mandate.asPublished:
+        term: As published
+        means: The Factbook's full entry for the office holder.
+      mandate.cabinet:
+        term: Cabinet
+        means: How the cabinet is chosen.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
+  election:
+    title: Election
+    about: '${$.title}: held ${$.dateText}; the largest party was ${$.winner}; the next election is expected ${$.nextElection}.'
+    guide: politics-society
+    glossary:
+      title:
+        term: Election
+        means: The country and the chamber or office.
+      dateText:
+        term: Held
+        means: When the most recent election took place, as the Factbook publishes the date.
+      system:
+        term: System
+        means: The electoral system, for example plurality, proportional representation or an electoral college.
+      winner:
+        term: Largest party
+        means: The party with the most seats, or the elected head of state.
+      nextElection:
+        term: Next election
+        means: When the next election is expected, as published.
+      results.party:
+        term: Party
+        means: A party or group.
+      results.seats:
+        term: Seats
+        means: The seats it won.
+      results.share:
+        term: Share of seats
+        means: Its seats as a share of the seats listed.
+        unit: '% of seats'
+      summary.chamber:
+        term: Chamber
+        means: The legislative chamber.
+      summary.seats:
+        term: Seats
+        means: The number of seats and how many are elected.
+      summary.electoralSystem:
+        term: Electoral system
+        means: How votes become seats.
+      summary.term:
+        term: Term
+        means: How long members serve.
+      summary.heldOn:
+        term: Most recent election
+        means: The date, as published.
+      summary.nextElection:
+        term: Expected next election
+        means: The date, as published.
+      summary.women:
+        term: Women in chamber
+        means: The share of seats held by women.
+        unit: '% of seats'
+      summary.selection:
+        term: Selection
+        means: How the head of state is chosen.
+      summary.results:
+        term: Published results
+        means: The result as the Factbook publishes it.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
+  region:
+    title: World region
+    about: ${$.name} has ${fmt($.countries, 'amount0')} countries and ${fmt($.populationM, 'price2')} million people; life expectancy is ${fmt($.lifeExpectancy, 'price2')}
+      years.
+    guide: politics-society
+    glossary:
+      name:
+        term: Region
+        means: A World Bank geographic region.
+      countries:
+        term: Countries
+        means: The number of countries of the region in the pack.
+      populationM:
+        term: Population
+        means: The region's total population (World Bank aggregate).
+        unit: millions
+      lifeExpectancy:
+        term: Life expectancy
+        means: Years a newborn would live at current mortality (World Bank aggregate).
+        unit: years
+      womenParliament:
+        term: Women in parliament
+        means: The share of parliamentary seats held by women (Inter-Parliamentary Union, via the World Bank).
+        unit: '% of seats'
+      internet:
+        term: Internet users
+        means: The share of the population that used the Internet in the last three months.
+        unit: '% of population'
+      governmentTypes.type:
+        term: Government type
+        means: The form of government as the CIA World Factbook words it.
+      governmentTypes.count:
+        term: Countries
+        means: How many countries of the region have this government type.
+      lifeTrend.year:
+        term: Year
+        means: The calendar year.
+      lifeTrend.value:
+        term: Life expectancy
+        means: Years at birth in that year.
+        unit: years
+      internetTrend.year:
+        term: Year
+        means: The calendar year.
+      internetTrend.value:
+        term: Internet users
+        means: Share of the population using the Internet in that year.
+        unit: '% of population'
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.
+  social-indicator:
+    title: Social indicator
+    about: ${$.name} was ${fmt($.latest, 'price2')} (${$.unit}) in ${$.latestYear}.
+    guide: politics-society
+    glossary:
+      name:
+        term: Indicator
+        means: The country and the statistic.
+      latest:
+        term: Latest value
+        means: The most recent published value.
+      unit:
+        term: Unit
+        means: What the value measures.
+      latestYear:
+        term: Year
+        means: The year of the latest value.
+      change5y:
+        term: Change over five years
+        means: The latest value minus the value about five years earlier.
+        sign: Positive is a rise; whether that is good depends on the indicator.
+      sourceName:
+        term: Source
+        means: The dataset the series comes from.
+      series.year:
+        term: Year
+        means: The calendar year.
+      series.value:
+        term: Value
+        means: The published value in that year.
+      byRegion.country:
+        term: Country
+        means: The country, from the same World Bank region.
+      byRegion.value:
+        term: Value
+        means: The latest value (2022 or later) for that country.
+      meaning.indicator:
+        term: Indicator
+        means: The statistic's name.
+      meaning.unit:
+        term: Unit
+        means: What the value measures.
+      meaning.definition:
+        term: Definition
+        means: The source's definition of the statistic.
+      meaning.comparedWith:
+        term: Compared with
+        means: The countries the bar chart compares with.
+      provenance.source:
+        term: Source
+        means: The organisation or organisations whose published data this view shows.
+      provenance.dataset:
+        term: Dataset
+        means: The named dataset and its vintage (the release the numbers come from).
+      provenance.retrievedAt:
+        term: Retrieved
+        means: The date the data was downloaded by tools/realdata.
+      provenance.licence:
+        term: Licence
+        means: The terms under which the source allows reuse; attribution is required.
+      provenance.attribution:
+        term: Attribution
+        means: The credit line to repeat when the data is shown or republished.
+      provenance.url:
+        term: Source address
+        means: The web page of the dataset.

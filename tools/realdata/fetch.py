@@ -33,8 +33,8 @@ UA = "drishti-realdata/1.0 (public-data demo loader; contact ajsinha@gmail.com)"
 
 
 class Fetcher:
-    def __init__(self, cache: Path, cfg: dict, pause: float = 0.4, refresh: bool = False, log=print):
-        self.cache, self.cfg, self.pause, self.refresh, self.log = cache, cfg, pause, refresh, log
+    def __init__(self, cache: Path, cfg: dict, pause: float = 0.4, refresh: bool = False, log=print, no_imf: bool = False):
+        self.cache, self.cfg, self.pause, self.refresh, self.log, self.no_imf = cache, cfg, pause, refresh, log, no_imf
         self.retrieved: dict[str, str] = {}
         cache.mkdir(parents=True, exist_ok=True)
 
@@ -98,7 +98,8 @@ class Fetcher:
 
     def all(self) -> None:
         self.worldbank()
-        self.imf()
+        if not self.no_imf:                  # --no-imf: the IMF is never contacted
+            self.imf()
         self.undp()
         self.factbook()
         meta = self.cache / "fetch.json"

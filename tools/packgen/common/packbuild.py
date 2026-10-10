@@ -23,6 +23,7 @@ packs it requires), every path a Sutra's header reads is present.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -31,7 +32,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
-PACKS = ROOT / "config" / "packs"
+PACKS = Path(os.environ["DRISHTI_PACKS_OUT"]) if os.environ.get("DRISHTI_PACKS_OUT") else ROOT / "config" / "packs"   # tools/realdata --out / --no-imf write elsewhere
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
@@ -182,7 +183,7 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     help_yaml = yaml.safe_dump({"guides": [{"slug": spec.name, "category": "packs", "title": f"{spec.title} pack", "icon": "box-seam",
                                             "file": f"guides/{spec.name}.md", "summary": spec.description}]}, sort_keys=False, allow_unicode=True)
     out[base / "config" / "help.yaml"] = f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n{help_yaml}"
-    gen_dir = (ROOT / spec.generator).parent                  # hand-written about text: see docs/architecture/CONTEXT_HELP.md
+    gen_dir = Path(os.environ["DRISHTI_ABOUT_DIR"]) / spec.name if os.environ.get("DRISHTI_ABOUT_DIR") else (ROOT / spec.generator).parent                  # hand-written about text: see docs/architecture/CONTEXT_HELP.md
     for src in sorted(gen_dir.glob("about.yaml")) + sorted(gen_dir.glob("about.*.yaml")):
         lang = src.name[len("about."):-len(".yaml")] if src.name != "about.yaml" else ""
         what = "what the pack's kinds mean" if not lang else f"the {lang} translation overlay of about.yaml"

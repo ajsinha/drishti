@@ -19,6 +19,7 @@ Percentages stay in percent as published (6.43 means 6.43%); the packs' pc1 / pc
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -27,6 +28,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import normalise as N  # noqa: E402
 
+ENV_NO_IMF = "DRISHTI_REALDATA_NO_IMF"    # set by `realdata.py --no-imf`: build without any IMF data
 RECENT = 2022          # an indicator counts in a ranking only when its latest year is this recent
 GENERIC_PARTY = re.compile(r"^(other|others|independents?|vacant|vacancy|unaffiliated|non-?partisan|undistributed)\b", re.I)
 
@@ -34,13 +36,22 @@ GENERIC_PARTY = re.compile(r"^(other|others|independents?|vacant|vacancy|unaffil
 class Data:
     """The dataset with the lookups the builders share."""
 
-    def __init__(self, ds: dict | None = None, cfg: dict | None = None):
+    def __init__(self, ds: dict | None = None, cfg: dict | None = None, no_imf: bool | None = None):
+        """no_imf (default: the DRISHTI_REALDATA_NO_IMF environment variable) drops the IMF forecast and every IMF series, so
+        nothing built from this Data carries IMF data or names the IMF as a source."""
+        self.no_imf = os.environ.get(ENV_NO_IMF) == "1" if no_imf is None else no_imf
         self.ds = ds or N.load()
         self.cfg = cfg or N.load_config()
         self.meta, self.C, self.G = self.ds["meta"], self.ds["countries"], self.ds["groups"]
         self.S, self.FC, self.FB = self.ds["series"], self.ds["forecast"], self.ds["factbook"]
-        self.ind = {i["key"]: i for i in self.cfg["indicators"]}
         self.src = self.cfg["sources"]
+        if self.no_imf:
+            self.cfg = {**self.cfg, "indicators": [i for i in self.cfg["indicators"] if i["kind"] != "imf"], "forecast": []}
+            drop = {i["key"] for i in N.load_config()["indicators"] if i["kind"] == "imf"}
+            self.S = {k: v for k, v in self.S.items() if k not in drop}
+            self.FC = {}
+            self.src = {k: v for k, v in self.src.items() if k != "imf"}
+        self.ind = {i["key"]: i for i in self.cfg["indicators"]}
 
     def ser(self, key: str, code: str) -> dict:
         return self.S.get(key, {}).get(code, {})
@@ -101,8 +112,12 @@ def _code(key: str) -> str:
 def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
     d = d or Data()
     docs: dict[str, dict] = {k: {} for k in ("economy", "macro-indicator", "economic-forecast", "labour-market", "fiscal-position", "country-group")}
-    p_wb, p_all, p_imf = d.prov("wdi"), d.prov("wdi", "imf", "factbook"), d.prov("imf")
-    p_wbimf = d.prov("wdi", "imf")
+    p_wb = d.prov("wdi")
+    if d.no_imf:
+        p_all, p_imf, p_wbimf = d.prov("wdi", "factbook"), None, p_wb
+    else:
+        p_all, p_imf, p_wbimf = d.prov("wdi", "imf", "factbook"), d.prov("imf"), d.prov("wdi", "imf")
+    fiscal_inds = ("revenue", "expense", "military", "tax_revenue") if d.no_imf else ("debt", "net_lending")
     econ_inds = [i for i in d.cfg["indicators"] if i["group"] == "economy"]
     countries = sorted(c for c in d.C if d.ser("gdp", c) or d.ser("gdp_growth", c))
     macro_ids: dict[str, list[str]] = {}
@@ -139,9 +154,12 @@ def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
             "growthPath": d.path("gdp_growth", iso, "growth"), "gdpPath": d.path("gdp", iso, "gdp"), "sectors": sectors,
             "regionGroup": f"ECG-{c['region']}", "incomeGroup": f"ECG-{c['income']}",
             "labour": f"LABR-{iso}" if d.ser("unemployment", iso) or d.ser("lfp", iso) else None,
-            "fiscal": f"FISC-{iso}" if d.ser("debt", iso) or d.ser("net_lending", iso) else None,
+            "fiscal": f"FISC-{iso}" if any(d.ser(k, iso) for k in fiscal_inds) else None,
             "outlook": f"FCST-{iso}-WEO" if d.FC.get("f_gdp_growth", {}).get(iso) else None,
             "indicators": macro_ids.get(iso, []), "provenance": p_all, "_meta": d.meta_of(p_all)}
+        if d.no_imf:
+            for gone in ("debtToGdp", "outlook"):
+                del docs["economy"][f"ECON-{iso}"][gone]
         # ---- labour
         if d.ser("unemployment", iso) or d.ser("lfp", iso):
             ly, _ = d.last("unemployment", iso)
@@ -155,8 +173,8 @@ def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
                              if d.val(ek, iso) is not None],
                 "economy": f"ECON-{iso}", "provenance": p_wb, "_meta": d.meta_of(p_wb)}
         # ---- fiscal
-        if d.ser("debt", iso) or d.ser("net_lending", iso):
-            ly, _ = d.last("debt", iso, 2025)
+        if any(d.ser(k, iso) for k in fiscal_inds):
+            ly, _ = d.last("revenue" if d.no_imf else "debt", iso, 2025)
             lend = d.last("net_lending", iso, 2025)[1]
             items = [{"item": lab, "value": v} for lab, v in (("Tax revenue", d.val("tax_revenue", iso)), ("Revenue (excl. grants)", d.val("revenue", iso)),
                                                               ("Expense", d.val("expense", iso)), ("Military expenditure", d.val("military", iso))) if v is not None]
@@ -166,6 +184,9 @@ def economics(d: Data | None = None) -> dict[str, dict[str, dict]]:
                 "ratios": items, "debtPath": [{"year": y, "debt": v} for y, v in sorted(d.ser("debt", iso).items())],
                 "balancePath": [{"year": y, "balance": v} for y, v in sorted(d.ser("net_lending", iso).items())],
                 "economy": f"ECON-{iso}", "provenance": p_wbimf, "_meta": d.meta_of(p_wbimf)}
+            if d.no_imf:
+                for gone in ("debt", "balance", "debtPath", "balancePath"):
+                    del docs["fiscal-position"][f"FISC-{iso}"][gone]
         # ---- forecast (IMF WEO)
         fg = d.FC.get("f_gdp_growth", {}).get(iso)
         if fg:

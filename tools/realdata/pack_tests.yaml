@@ -1,0 +1,120 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Which sample documents of the economics and politics-society packs ship as the packs' Sutra tests (config/packs/<pack>/tests/), what each test expects,
+# and the help-coverage ratchet (the lowest share of shown fields with a glossary entry, per Sutra; raise it when about.yaml grows, never lower it).
+# tools/realdata/pack_tests.py writes the tests from this file and the generated documents.
+
+economics:
+  helpCoverage:
+    country-group: 1
+    economic-forecast: 1
+    economy: 1
+    fiscal-position: 1
+    labour-market: 1
+    macro-indicator: 1
+  kinds:
+    country-group:
+      samples:
+      - ECG-HIC
+      - ECG-SAS
+      - ECG-WLD
+      nonEmpty:
+      - topEconomies
+    economic-forecast:
+      samples:
+      - FCST-IND-WEO
+      - FCST-JPN-WEO
+      nonEmpty:
+      - projections
+    economy:
+      samples:
+      - ECON-BRA
+      - ECON-IND
+      - ECON-JPN
+      - ECON-NGA
+      - ECON-USA
+      nonEmpty:
+      - growthPath
+      - sectors
+    fiscal-position:
+      samples:
+      - FISC-JPN
+      - FISC-USA
+      nonEmpty:
+      - ratios
+    labour-market:
+      samples:
+      - LABR-BRA
+      - LABR-NGA
+      nonEmpty:
+      - unemploymentPath
+    macro-indicator:
+      samples:
+      - MACRO-IND-GDP-GROWTH
+      - MACRO-NGA-GDP
+      - MACRO-USA-INFLATION
+      nonEmpty:
+      - history
+politics-society:
+  helpCoverage:
+    election: 1
+    jurisdiction: 1
+    office-holder: 1
+    party: 1
+    region: 1
+    social-indicator: 1
+  kinds:
+    election:
+      samples:
+      - ELEC-BRA-LOW
+      - ELEC-IND-LOW
+      - ELEC-USA-LOW
+      nonEmpty:
+      - results
+    jurisdiction:
+      samples:
+      - JUR-BRA
+      - JUR-IND
+      - JUR-JPN
+      - JUR-NGA
+      - JUR-USA
+      nonEmpty:
+      - indicators
+    office-holder:
+      samples:
+      - OFFC-IND-HOG
+      - OFFC-JPN-HOG
+      - OFFC-USA-COS
+      nonEmpty:
+      - mandate
+    party:
+      samples:
+      - PARTY-BRA-01
+      - PARTY-IND-01
+      nonEmpty:
+      - results
+    region:
+      samples:
+      - REGN-SAS
+      - REGN-SSF
+      nonEmpty:
+      - governmentTypes
+    social-indicator:
+      samples:
+      - SOCI-BRA-LIFE-EXPECTANCY
+      - SOCI-IND-HDI
+      - SOCI-NGA-WGI-LAW
+      nonEmpty:
+      - series

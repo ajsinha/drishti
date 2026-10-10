@@ -29,6 +29,7 @@ import csv
 import html
 import io
 import json
+import os
 import re
 from pathlib import Path
 
@@ -36,6 +37,14 @@ import yaml
 
 HERE = Path(__file__).resolve().parent
 DATASET = HERE / "dataset"
+ENV_DATASET = "DRISHTI_REALDATA_DATASET"      # a build that must not touch the committed dataset (--no-imf) points the generators here
+
+
+def dataset_dir() -> Path:
+    """The dataset the generators read: the committed one, or the directory named by DRISHTI_REALDATA_DATASET."""
+    return Path(os.environ[ENV_DATASET]) if os.environ.get(ENV_DATASET) else DATASET
+
+
 REGION_IDS = {"EAS", "ECS", "LCN", "MEA", "NAC", "SAS", "SSF"}
 INCOME_IDS = {"HIC", "UMC", "LMC", "LIC"}
 # Factbook internet codes that differ from the ISO 3166 alpha-2 code
@@ -241,8 +250,10 @@ def _norm(s: str) -> str:
 
 
 # ---------------------------------------------------------------- the run
-def run(cache: Path, cfg: dict) -> dict:
-    DATASET.mkdir(exist_ok=True)
+def run(cache: Path, cfg: dict, dataset: Path | None = None, no_imf: bool = False) -> dict:
+    """Normalise the raw cache into `dataset` (default: the committed one). no_imf leaves out every IMF series and the forecast."""
+    out = dataset or DATASET
+    out.mkdir(parents=True, exist_ok=True)
     yrs, iy = cfg["years"], cfg["imf_years"]
     countries, groups = wb_countries(json.loads((cache / "wb_country.json").read_text(encoding="utf-8")))
     keep = set(countries) | set(groups)
@@ -254,7 +265,7 @@ def run(cache: Path, cfg: dict) -> dict:
             if not p.exists():
                 continue
             series[k], vintages[ind["kind"]] = wb_series(json.loads(p.read_text(encoding="utf-8")), ind["scale"], keep)
-        elif kind == "imf":
+        elif kind == "imf" and not no_imf:
             p = cache / "imf" / f"{ind['code']}.json"
             if p.exists():
                 series[k] = imf_series(json.loads(p.read_text(encoding="utf-8")), ind["code"], keep, yrs["first"], iy["last"])
@@ -263,14 +274,14 @@ def run(cache: Path, cfg: dict) -> dict:
             if p.exists():
                 series[k] = undp_hdi(decode(p.read_bytes()), keep, yrs["first"], yrs["last"])
     forecast = {}
-    for f in cfg["forecast"]:
+    for f in ([] if no_imf else cfg["forecast"]):
         p = cache / "imf" / f"{f['code']}.json"
         if p.exists():
             forecast[f["key"]] = imf_series(json.loads(p.read_text(encoding="utf-8")), f["code"], set(countries), iy["first"], iy["last"])
     profiles = {p.stem: factbook_profile(json.loads(p.read_text(encoding="utf-8"))) for p in sorted((cache / "factbook").glob("*.json"))} \
         if (cache / "factbook").exists() else {}
     factbook, unmatched = factbook_to_iso3(profiles, countries)
-    imf_ind = json.loads((cache / "imf_indicators.json").read_text(encoding="utf-8")).get("indicators", {}) if (cache / "imf_indicators.json").exists() else {}
+    imf_ind = json.loads((cache / "imf_indicators.json").read_text(encoding="utf-8")).get("indicators", {}) if (cache / "imf_indicators.json").exists() and not no_imf else {}
     fetched = json.loads((cache / "fetch.json").read_text()) if (cache / "fetch.json").exists() else {}
     ref = json.loads((cache / "factbook_ref.json").read_text()) if (cache / "factbook_ref.json").exists() else {}
     meta = {"sources": cfg["sources"], "years": yrs, "imf_years": iy,
@@ -280,7 +291,7 @@ def run(cache: Path, cfg: dict) -> dict:
             "retrieved": _retrieved(fetched), "factbookUnmatched": sorted(unmatched)}
     series = {k: {c: v for c, v in s.items()} for k, s in series.items()}
     for name, obj in (("meta", meta), ("countries", countries), ("groups", groups), ("series", series), ("forecast", forecast), ("factbook", factbook)):
-        (DATASET / f"{name}.json").write_text(json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
+        (out / f"{name}.json").write_text(json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n", encoding="utf-8")
     return {"countries": len(countries), "series": sum(len(s) for s in series.values()), "factbook": len(factbook)}
 
 
@@ -296,4 +307,4 @@ def _retrieved(fetched: dict) -> dict:
 
 def load() -> dict:
     """The committed dataset, for the pack generators."""
-    return {n: json.loads((DATASET / f"{n}.json").read_text(encoding="utf-8")) for n in ("meta", "countries", "groups", "series", "forecast", "factbook")}
+    return {n: json.loads((dataset_dir() / f"{n}.json").read_text(encoding="utf-8")) for n in ("meta", "countries", "groups", "series", "forecast", "factbook")}
