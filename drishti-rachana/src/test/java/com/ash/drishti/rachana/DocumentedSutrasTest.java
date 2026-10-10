@@ -54,6 +54,9 @@ class DocumentedSutrasTest {
                 if (yaml.contains("...") || yaml.contains("…")) {
                     continue;   // an abridged illustration, not a Sutra to paste
                 }
+                if (!yaml.matches("(?ms).*^sutra:.*")) {
+                    continue;   // another Rachana document (a dataset, a report: RUPAKA.md), not a Sutra
+                }
                 Sutra s = parser.parse(yaml, f.getFileName().toString().replace(".md", ".sutra.yaml"), "docs");
                 assertThat(check.check(s)).as(f + " " + s.id()).isEmpty();
                 checked++;
