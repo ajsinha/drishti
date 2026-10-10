@@ -106,6 +106,20 @@ public interface SourcePlugin extends AutoCloseable {
         return Optional.empty();
     }
 
+    /**
+     * Bulk read for analytics (RUPAKA.md section 6.1): the chosen paths of a kind over a business-date range, filters applied, as column
+     * batches. Empty when the source cannot answer it as columns (the caller then reads records and warns that a large table will be slow).
+     * Sources that promote columns implement it with {@link ColumnScans#over}.
+     */
+    default Optional<ArrowScan> scan(ScanRequest request) throws Exception {
+        return Optional.empty();
+    }
+
+    /** Where this source's SQL store keeps its kinds, so a compiled query can run in the source (pushdown); empty when it is not a SQL store. */
+    default Optional<SqlTarget> sqlTarget() {
+        return Optional.empty();
+    }
+
     /** Entities of {@code kind} that reference {@code target} (for example trades in a netting set). */
     default List<EntityRef> reverse(EntityRef target, String kind) {
         return List.of();

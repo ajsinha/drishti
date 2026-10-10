@@ -392,6 +392,11 @@ public final class FileSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) {
+        return com.ash.drishti.api.ColumnScans.over(this, request);
+    }
+
+    @Override
     public Set<String> columnar(String kind) {
         return effective(kind) || !jsonl.containsKey(kind) ? Set.of() : Set.copyOf(promoted.getOrDefault(kind, List.of()));
     }

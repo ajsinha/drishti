@@ -107,6 +107,16 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) throws Exception {
+        return serves(request.kind()) ? delegate.scan(request) : Optional.empty();
+    }
+
+    @Override
+    public Optional<com.ash.drishti.api.SqlTarget> sqlTarget() {
+        return delegate.sqlTarget();
+    }
+
+    @Override
     public boolean pushes(EntityRef ref) {
         return serves(ref.kind()) && delegate.pushes(ref);
     }

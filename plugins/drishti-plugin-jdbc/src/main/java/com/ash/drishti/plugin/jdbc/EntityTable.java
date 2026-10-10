@@ -65,6 +65,11 @@ final class EntityTable {
         this.lookbackDays = lookbackDays;
     }
 
+    /** The table, kind, id and date columns as a relation for pushdown; the promoted columns are named as the loader names them. */
+    com.ash.drishti.api.SqlTarget.Relation relation(java.util.Set<String> promoted) {
+        return new com.ash.drishti.api.SqlTarget.Relation(table, kind, date, id, path -> promoted.contains(path) ? PostgresLayout.quoted(path) : null);
+    }
+
     private boolean effective(String k) {
         return "effective".equals(modes.get(k));
     }

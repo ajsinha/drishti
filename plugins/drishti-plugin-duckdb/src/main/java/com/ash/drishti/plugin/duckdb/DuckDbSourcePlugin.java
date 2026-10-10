@@ -280,6 +280,39 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) {
+        return com.ash.drishti.api.ColumnScans.over(this, request);
+    }
+
+    @Override
+    public Optional<com.ash.drishti.api.SqlTarget> sqlTarget() {
+        if (catalog == null || !catalog.catalogued()) {
+            return Optional.empty();
+        }
+        DuckDbCatalog cat = catalog;
+        return Optional.of(new com.ash.drishti.api.SqlTarget() {
+            @Override
+            public String dialect() {
+                return "duckdb";
+            }
+
+            @Override
+            public Relation relation(String kind) {
+                if (!cat.known(kind)) {
+                    return null;
+                }
+                Set<String> promoted = cat.columnar(kind);
+                return new Relation(cat.table(), "kind", "business_date", "id", path -> promoted.contains(path) ? DuckDbLayout.quoted(path) : null);
+            }
+
+            @Override
+            public <T> T with(Work<T> work) throws Exception {
+                return DuckDbSourcePlugin.this.with(c -> work.run(c));
+            }
+        });
+    }
+
+    @Override
     public Instant lastUpdate() {
         return catalog == null ? null : catalog.loadedAt();
     }

@@ -295,6 +295,35 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) {
+        return com.ash.drishti.api.ColumnScans.over(this, request);
+    }
+
+    @Override
+    public Optional<com.ash.drishti.api.SqlTarget> sqlTarget() {
+        if (table == null || pool == null || !tableKinds.stream().findAny().isPresent()) {
+            return Optional.empty();
+        }
+        EntityTable t = table;
+        return Optional.of(new com.ash.drishti.api.SqlTarget() {
+            @Override
+            public String dialect() {
+                return "postgresql";
+            }
+
+            @Override
+            public Relation relation(String kind) {
+                return tableKinds.contains(kind) ? t.relation(columnar(kind)) : null;
+            }
+
+            @Override
+            public <T> T with(Work<T> work) throws Exception {
+                return withConnection(work::run);
+            }
+        });
+    }
+
+    @Override
     public Instant lastUpdate() {
         return catalog == null ? null : catalog.loadedAt();
     }
