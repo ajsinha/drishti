@@ -67,12 +67,12 @@ public class DatasetController {
     /**
      * Runs a visual query: body {@code {fields, measures, filters, dates, orderBy, limit, layer}}. {@code format=json} (the default) answers a
      * small result as JSON; {@code format=arrow} answers an Arrow IPC stream with the layer, rows and masked columns in {@code X-Bi-*} headers.
-     * {@code explain=true} adds the compiled SQL (values are placeholders) and skips the result cache.
+     * {@code explain=true} (BI authors) adds the compiled SQL (values are placeholders) and skips the result cache.
      */
     @PostMapping("/datasets/{id}/query")
     public ResponseEntity<?> query(@PathVariable String id, @RequestBody JsonNode body, @RequestParam(defaultValue = "json") String format,
             @RequestParam(defaultValue = "false") boolean explain, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        QueryService.Result r = datasets.query(p, id, QueryRequest.of(body), explain);
+        QueryService.Result r = datasets.query(p, id, QueryRequest.of(body), explain && bi.mayAuthor(p));         // the SQL names server paths: authors only
         if ("arrow".equalsIgnoreCase(format)) {
             byte[] bytes = datasets.arrow(r);
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(ARROW))

@@ -101,9 +101,10 @@ final class TableBuilder {
                 warnings.add("connector '" + plugin.manifest().name() + "' cannot scan " + t.kind() + (each ? "" : " as columns")
                         + ": reading documents one by one (slow for a large table; promote the columns in the connector's layout)");
                 create(c, stage, cols, cols.stream().map(x -> numeric(x) ? ColumnBatch.Type.NUMBER : ColumnBatch.Type.TEXT).toList(), each);
-                rows = records(duck, stage, t, cols, date, warnings);
+                java.util.concurrent.atomic.AtomicReference<LocalDate> seen = new java.util.concurrent.atomic.AtomicReference<>();
+                rows = records(duck, stage, t, cols, date, warnings, seen);
                 if (resolved == null) {
-                    resolved = sources.currentDate();
+                    resolved = seen.get();                        // the business date the source says the documents are for
                 }
             }
             if (resolved == null) {
@@ -168,7 +169,8 @@ final class TableBuilder {
         }
     }
 
-    private long records(DuckDBConnection duck, String stage, Dataset.Table t, List<Dataset.Column> cols, LocalDate date, List<String> warnings) throws java.sql.SQLException {
+    private long records(DuckDBConnection duck, String stage, Dataset.Table t, List<Dataset.Column> cols, LocalDate date, List<String> warnings,
+            java.util.concurrent.atomic.AtomicReference<LocalDate> seen) throws java.sql.SQLException {
         List<EntityRef> ids = sources.ids(t.kind(), date, props.recordReadMax() + 1);
         if (ids.size() > props.recordReadMax()) {
             ids = ids.subList(0, props.recordReadMax());
@@ -182,6 +184,9 @@ final class TableBuilder {
                 EntityDocument d = docs.get(ref);
                 if (d == null || d.deleted()) {
                     continue;
+                }
+                if (seen.get() == null && d.provenance() != null && d.provenance().businessDate() != null) {
+                    seen.set(d.provenance().businessDate());
                 }
                 if (!each) {
                     row(app, ref.id(), -1, d.data(), cols);

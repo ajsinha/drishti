@@ -357,9 +357,10 @@ class DatasetApiTest {
         refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{\"measures\":[\"Nope\"]}"), 422, "DRS-9020");
         refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{}"), 422, "DRS-9020");
         // an injection attempt is a value: it matches nothing, and the explain text shows a placeholder, not the value
-        JsonNode inj = ok(call("POST", "/api/v1/bi/datasets/" + DS + "/query?explain=true", rita(),
+        JsonNode inj = ok(call("POST", "/api/v1/bi/datasets/" + DS + "/query?explain=true", wes(),
                 "{\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"trades.desk\",\"op\":\"eq\",\"values\":[\"x' OR '1'='1\"]}],\"dates\":{\"from\":\"2026-10-08\"}}"));
         assertThat(inj.path("rows").get(0).get(0).asInt()).isZero();
+        assertThat(ok(call("POST", "/api/v1/bi/datasets/" + DS + "/query?explain=true", rita(), "{\"measures\":[\"Trades\"]}")).path("meta").has("sql")).isFalse();     // only authors see the SQL
         assertThat(inj.path("meta").path("sql").asText()).contains("?").doesNotContain("OR '1'");
         refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{\"measures\":[\"Trades\"],\"filters\":[{\"field\":\"trades.notional\",\"op\":\"gt\",\"values\":[\"1; DROP\"]}]}"), 422, "DRS-9020");
         refused(call("POST", "/api/v1/bi/datasets/" + DS + "/query?format=xml", rita(), "{\"measures\":[\"Trades\"]}"), 422, "DRS-9020");
@@ -375,7 +376,7 @@ class DatasetApiTest {
         assertThat(query(hana(), body).path("meta").path("cached").asBoolean()).isFalse();           // another reader's rows: another entry
         // the lake is reloaded for 2026-10-08 with twice the notional, and the load is announced
         day("2026-10-08", 2);
-        call("POST", "/api/v1/packs/finance/loads", admin(), Map.of("kind", "trade", "businessDate", "2026-10-08", "status", "ready", "rows", 24)).andExpect(status().is2xxSuccessful());
+        call("POST", "/api/v1/packs/finance/loads", admin(), Map.of("kind", "trade", "businessDate", "2026-10-08", "status", "ready", "rows", 24, "batchId", "bi-test-" + java.util.UUID.randomUUID())).andExpect(status().is2xxSuccessful());
         double want = expected("DESK-A", 8, 2);
         double got = 0;
         boolean fresh = false;

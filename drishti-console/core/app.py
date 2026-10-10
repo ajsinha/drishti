@@ -287,7 +287,13 @@ def create_app(settings: Settings) -> FastAPI:
     from core.notfound import not_found
 
     app.add_exception_handler(404, not_found)
-    app.mount("/static", StaticFiles(directory=str(WEB / "static")), name="static")
+    from core.staticzip import CompressedStatic
+
+    static = CompressedStatic(directory=str(WEB / "static"), enabled=str(settings.get("static.compress", True)).lower() in ("true", "1", "yes", "on"),
+                              min_bytes=int(settings.get("static.compress_min_bytes", 1024)), cache_dir=str(settings.get("static.cache_dir", "") or ""),
+                              brotli_quality=int(settings.get("static.brotli_quality", 5)))
+    app.state.static = static
+    app.mount("/static", static, name="static")
     from core.calc import Calc
 
     app.state.calc = Calc(settings, WEB)

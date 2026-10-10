@@ -28,7 +28,6 @@ tables:
       nettingSet:       string                                  # links to the netting_sets table (a counterparty-risk kind)
       counterpartyId:   { path: counterparty.id, type: string } # a path into the nested counterparty object; links to counterparties
       counterpartyName: { path: counterparty.name, type: string }
-      trader:           string                                  # "trader" is on the server's redact list: masked without the raw power
       productType:      string
       assetClass:       string
       currency:         string
@@ -118,7 +117,8 @@ security:
     - { role: admin,     where: "true" }
   # A rule names tables (here trades), and every query of that reader joins them: a desk-head asking only for exposure would need a path
   # from netting sets to trades, which the model does not have, so the question is refused rather than answered with other desks' data.
-  # MASKED COLUMNS: shown as ••• to readers without the raw power, whatever the global redact list says. Names (cpty) match any table.
+  # MASKED COLUMNS: shown as ••• to readers without the raw power. A bare name matches that column in any table; table.column names one.
+  # The server's own redact list (drishti.security.redact) applies on top: counterpartyId is on it, so it is masked here too.
   masked: [counterpartyName, counterparties.name, counterparties.rating]
 
 rollups:

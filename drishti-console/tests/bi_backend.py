@@ -23,6 +23,22 @@ ITEM = {"id": "bi-1", "workspace": "rates", "workspaceName": "Rates Desk", "pers
         "can": {"edit": False, "propose": False, "publish": False, "approve": False, "withdraw": False, "promote": False, "certify": False, "delete": False, "move": False}}
 
 
+DATASET_ITEM = {"id": "file:dataset:trades-basic", "title": "Trades, the basics", "description": "One table", "endorsement": "promoted", "tags": ["sample"], "sample": True,
+                "shipped": True, "valid": True, "errors": 0, "tables": 1, "measures": 4, "relationships": 0}
+DATASET_MODEL = {"id": "file:dataset:trades-basic", "title": "Trades, the basics", "valid": True, "problems": [], "name": "trades-basic", "version": 1, "description": "One table",
+                 "sample": True, "engine": "duckdb",
+                 "tables": [{"name": "trade", "connector": "trading-store", "kind": "trade", "each": None, "mode": "cached", "onLoad": True, "schedule": "", "description": "", "access": "ok",
+                             "columns": [{"name": "id", "path": "id", "type": "string", "key": True, "calculated": False, "expr": None, "masked": False, "description": "the entity id"},
+                                         {"name": "desk", "path": "desk", "type": "string", "key": False, "calculated": False, "expr": None, "masked": False, "description": ""},
+                                         {"name": "mtm", "path": "mtm", "type": "decimal", "key": False, "calculated": False, "expr": None, "masked": True, "description": ""}]}],
+                 "relationships": [], "measures": [{"name": "MTM", "expr": "sum(trade.mtm)", "python": None, "format": "signed0", "description": "", "rollups": []}],
+                 "hierarchies": {"Desk and book": ["trade.desk", "trade.book"]},
+                 "security": {"rows": [{"role": "risk", "where": "true", "appliesToYou": True}], "masked": ["mtm"], "rowRulesEnforced": True},
+                 "rollups": [], "layers": [{"table": "trade", "mode": "cached", "partitions": [{"date": "2026-09-30", "rows": 750, "how": "scan", "builtAt": "2026-10-10T10:00:00Z"}]}]}
+DATASET_ANSWER = {"columns": [{"name": "trade.desk", "type": "string", "masked": False}, {"name": "MTM", "type": "decimal", "masked": True}], "rows": [["DESK-FX", None]], "rowCount": 1,
+                  "meta": {"layer": "columns", "rollup": None, "rows": 1, "millis": 3.2, "cached": False, "dates": ["2026-09-30"], "tables": ["trade"], "masked": ["MTM"], "warnings": [], "generation": 0}}
+
+
 class BiBackend(FakeBackend):
     """``powers`` are what /bi/me says the caller holds; ``enabled`` is the server's switch."""
 
@@ -49,6 +65,18 @@ class BiBackend(FakeBackend):
                     "workspaceNames": {"rates": "Rates Desk"}}
         if path == "/items/bi-1" or path == "/items/bi-1/open":
             return dict(ITEM, body="pages: []\n", bodyIs="published", draftChanges=False)
+        if path == "/datasets":
+            return {"datasets": [DATASET_ITEM]}
+        if path == "/datasets/file:dataset:trades-basic":
+            return DATASET_MODEL
+        if path == "/datasets/file:dataset:trades-basic/query":
+            return dict(DATASET_ANSWER, echo=body, explain=params.get("explain"))
+        if path == "/model/kinds":
+            return {"tables": [{"table": "trade", "pack": "trading", "kind": "trade", "connector": "trading-store", "data": True, "source": "promoted", "columns": [{"name": "desk", "path": "desk", "type": "string", "promoted": True}]}]}
+        if path == "/model/start":
+            return {"yaml": "dataset: x\n", "tables": [], "relationships": [], "proposals": [], "warnings": []}
+        if path == "/engine":
+            return {"engine": "duckdb", "queries": 3}
         if path == "/settings":
             return {"workspaceCreation": "authors", "workspaceCreationOptions": ["authors", "stewards", "admins"], "fourEyes": True, "dir": "./config/bi", "shippedItems": 0,
                     "powers": ["bi", "bi-author", "bi-steward", "bi-admin"], "roles": [{"name": "viewer", "builtIn": True, "bi": ["bi"]}, {"name": "desk", "builtIn": False, "bi": []}]}

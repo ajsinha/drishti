@@ -270,6 +270,8 @@
       q('[data-body]').textContent = it.body || '(empty)';
       q('[data-body-is]').textContent = it.bodyIs === 'draft' ? 'draft' : 'published version';
       actions(); form(); versions();
+      var open = q('[data-open-dataset]');
+      if (open) { open.hidden = it.kind !== 'dataset'; open.href = '/bi/d/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
     }
     function act(label, run, cls) {
       var b = h('button', { type: 'button', class: 'btn-pill ' + (cls || 'btn-ghost') }, label);

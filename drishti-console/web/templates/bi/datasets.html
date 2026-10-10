@@ -1,0 +1,45 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Rupaka phase 2 (RUPAKA.md sections 6 and 6.2): the datasets you may read, and a model started from the packs' kinds. Drawn by static/js/bi-dataset.js. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Datasets{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><h1>Datasets</h1>
+  <p class="text-muted-d">A dataset is the model reports are built on: tables from the packs' kinds, their relationships, measures and row rules. Open one to read its model and run a query.</p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<div class="bi-cards" data-datasets></div>
+<p class="bi-empty" data-empty hidden>No dataset yet. Start one from the packs below, or add a <code>*.dataset.yaml</code> file to the BI folder.</p>
+<section class="bi-sec" aria-labelledby="dStart" data-start hidden>
+  <h2 id="dStart">Start a model from the packs</h2>
+  <p class="text-muted-d">Choose the kinds. Each becomes a table; the links the packs declare become relationships (across packs), and relationships the data suggests are proposed, with how well the values match. Nothing changes a pack.</p>
+  <fieldset class="bi-kinds" data-kinds><legend>Kinds you may open</legend></fieldset>
+  <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-start-run>Start the model</button></p>
+  <div data-draft hidden>
+    <h3>Relationships read from the packs</h3>
+    <div class="tbl-wrap"><table class="tbl bi-tbl" data-draft-links data-plain><caption class="visually-hidden">Relationships from the packs</caption>
+      <thead><tr><th scope="col">From</th><th scope="col">To</th><th scope="col">Cardinality</th><th scope="col">Across packs</th></tr></thead><tbody></tbody></table></div>
+    <h3>Proposed from the data</h3>
+    <div class="tbl-wrap"><table class="tbl bi-tbl" data-draft-proposals data-plain><caption class="visually-hidden">Relationships proposed by value matching</caption>
+      <thead><tr><th scope="col">From</th><th scope="col">To</th><th scope="col">Match</th><th scope="col">Cardinality</th><th scope="col">Basis</th></tr></thead><tbody></tbody></table></div>
+    <p class="bi-empty" data-draft-none hidden>None.</p>
+    <ul class="bi-warn" data-draft-warnings></ul>
+    <h3>The YAML</h3>
+    <pre class="bi-body mono" data-draft-yaml tabindex="0"></pre>
+    <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-draft-save hidden>Save as a draft in my workspace</button></p>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset.js?v={{ ASSET_V }}"></script>{% endblock %}

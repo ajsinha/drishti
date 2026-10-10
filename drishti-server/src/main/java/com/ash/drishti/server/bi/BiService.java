@@ -520,6 +520,11 @@ public final class BiService {
         }
     }
 
+    /** True when the caller holds the {@code bi-author} power (no failure when not). */
+    public boolean mayAuthor(Principal p) {
+        return access.has(p, BiAccess.AUTHOR);
+    }
+
     /** The body of an item as this caller reads it: the working draft for those who may edit, else the published version. */
     public String bodyFor(Principal p, BiStore.Item i) {
         boolean shipped = BiFolder.isShipped(i.id());
