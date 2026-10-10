@@ -65,7 +65,9 @@
     fresh.setAttribute('data-span', old.getAttribute('data-span') || '12');
     fresh.setAttribute('data-height', old.getAttribute('data-height') || '0');
     fresh.tabIndex = old.tabIndex;
+    var keepControls = window.drishtiControls ? window.drishtiControls.keepHeader(old) : null;   // a header's controls stay (and keep their focus) through a tick
     old.replaceWith(fresh);
+    if (keepControls) { keepControls(fresh); }
     if (window.drishtiLayout) { window.drishtiLayout.decorate(fresh); }
     if (window.drishti) { window.drishti.enhance(fresh); }
     if (chosenId) { var t = document.getElementById(chosenId); if (t) { t.click(); } }
@@ -103,16 +105,27 @@
     document.dispatchEvent(new CustomEvent('drishti:frame', { detail: { generation: p.provenance.generation } }));   // About this page re-asks when it is open
   }
 
-  var off = window.DrishtiChannel.subscribe('view:' + view.dataset.kind + '/' + view.dataset.id, {
-    view: function () {
-      if (!first) { location.reload(); return; }   // reconnected: the server sent a fresh view, so repaint from it
-      first = false;
-      state('live', 'Live');
-    },
-    frame: onFrame,
-    gone: function () { off(); if (!deletedAt) { state('static', 'Static'); } },
-    error: function () { if (!deletedAt) { state('reconnecting', 'Reconnecting…'); } },
-    paused: function () { if (!deletedAt) { state('reconnecting', 'Paused while hidden'); } }
+  // The subscription carries the view's controls (view:trade/T1?ctl.leg=L2), so every frame is built with the reader's choices; a
+  // change of a control (controls.js) moves the subscription, and the first view event of the new one is not a reconnect.
+  var base = 'view:' + view.dataset.kind + '/' + view.dataset.id;
+  function key(q) { return q ? base + '?' + q : base; }
+  var off = subscribe(window.drishtiControls ? window.drishtiControls.query() : '');
+  function subscribe(q) {
+    return window.DrishtiChannel.subscribe(key(q), {
+      view: function () {
+        if (!first) { location.reload(); return; }   // reconnected: the server sent a fresh view, so repaint from it
+        first = false;
+        state('live', 'Live');
+      },
+      frame: onFrame,
+      gone: function () { off(); if (!deletedAt) { state('static', 'Static'); } },
+      error: function () { if (!deletedAt) { state('reconnecting', 'Reconnecting…'); } },
+      paused: function () { if (!deletedAt) { state('reconnecting', 'Paused while hidden'); } }
+    });
+  }
+  document.addEventListener('drishti:controls', function (e) {
+    if (deletedAt) { return; }
+    off(); first = true; off = subscribe(e.detail.query);
   });
   function onFrame(f) {
     for (var i = 0; i < f.patches.length; i++) {

@@ -30,7 +30,7 @@ import time
 from typing import AsyncIterator, Awaitable, Callable
 from urllib.parse import quote
 
-from core import asof
+from core import asof, controls
 from core.backend import BackendError
 
 Render = Callable[[str, str], str]      # (event, data) -> data as the caller wants it (panel patches as HTML)
@@ -89,8 +89,10 @@ class ChannelSession:
     async def _pump(self, sub: str) -> None:
         responses = self.opened.setdefault(sub, [])
         if sub.startswith("view:") and "/" in sub:
-            kind, _, id_ = sub[5:].partition("/")
-            upstream, is_view = self.backend.stream(kind, id_, self.me, opened=responses), True
+            base, ctl = controls.split_subscription(sub)       # view:kind/id?ctl.leg=L2: the stream is built with the reader's controls
+            kind, _, id_ = base[5:].partition("/")
+            more = {"controls": ctl} if ctl else {}
+            upstream, is_view = self.backend.stream(kind, id_, self.me, opened=responses, **more), True
         elif sub == "alerts":
             upstream, is_view = self.backend.sse("/me/alerts/stream", self.me, opened=responses), False
         elif sub == "poc:rows":                              # Rupaka phase 0 proof of concept: rows for Perspective (404 on the server unless enabled)

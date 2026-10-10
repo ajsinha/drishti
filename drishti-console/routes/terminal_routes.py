@@ -21,9 +21,10 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import about_index, asof, collab as collab_core
+from core import about_index, asof, collab as collab_core, controls
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
+from routes import api_routes
 from routes.common import ident, packs, render
 
 router = APIRouter(include_in_schema=False)
@@ -245,19 +246,41 @@ async def ask(request: Request, kind: str, id_: str):
     return JSONResponse({"answer": out.get("answer", ""), "sources": out.get("sources", [])})
 
 
+@router.get("/v/{kind}/{id_:path}/panels")
+async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
+    """Some panels of a view as ready HTML, built with the controls' values (``?panels=cashflows,legs&ctl.leg=L2``): what the page asks
+    for when a control changes, so only the panels that read it move. Also the strip and the controls (their options and values may
+    have moved: a cascading child). ``panels=-`` builds none. The server builds only the named panels."""
+    ctl = controls.from_query(request.query_params)
+    ids = [p for p in panels.split(",") if p and p != "-"] if panels else None
+    try:
+        vm = await request.app.state.backend.view(kind, id_, ident(request), controls=ctl, panels=ids)
+    except BackendError as e:
+        return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
+    layout = await request.app.state.layouts.context(request, vm, False)
+    shown, _pivots = await request.app.state.pivots.view(request, vm, layout["panels"])
+    env = request.app.state.templates.env
+    parts = env.get_template("_macros/view.html").module
+    out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p)} for p in shown]
+    return JSONResponse({"panels": out, "strip": str(parts.strip(vm)).strip(), "controls": vm.get("controls") or [],
+                         "timings": vm.get("timings")})
+
+
 @router.get("/v/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int = 0, share: str = ""):
     sid = collab_core.set_share(share)              # a view opened through a share's link tells the server so (its access log)
     pin = None                                      # how a pinned link (?asOf=&knownAt=&gen=) was honoured, for the banner
+    ctl = controls.from_query(request.query_params)  # ?ctl.leg=L2: the controls' values, so a link reproduces what was seen
+    more = {"controls": ctl} if ctl else {}
     try:
         try:
-            vm = await request.app.state.backend.view(kind, id_, ident(request))
+            vm = await request.app.state.backend.view(kind, id_, ident(request), **more)
         except BackendError as e:
             if not (getattr(request.state, "pinned", False) and asof.known_at() and e.code == "DRS-1007"):
                 raise
             asof.set_known(None)                    # a store with no earlier versions: ask again for the date, say so
             request.state.known_at = None
-            vm = await request.app.state.backend.view(kind, id_, ident(request))
+            vm = await request.app.state.backend.view(kind, id_, ident(request), **more)
             pin = "retry"
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.page_status,
@@ -276,17 +299,18 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         except BackendError:
             shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
-    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation")),
-                  pin=pin, pin_gen=gen or None, shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
+    return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
+                  pin=pin, pin_gen=gen or None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")])
 
 
-def share_url(request: Request, kind: str, id_: str, generation=None) -> str:
+def share_url(request: Request, kind: str, id_: str, generation=None, ctl: dict | None = None) -> str:
     """A link that opens this view as the sender sees it: live, or pinned to the same business date, "known at" instant
     and generation as request parameters (they survive sign-in and never touch the recipient's saved date)."""
     base = str(request.base_url).rstrip("/")
     path = f"/v/{quote(kind)}/{quote(id_)}"
+    extra = controls.to_query(ctl) if ctl else ""      # the controls' values travel with the link
     if asof.current() == "live":
-        return base + path
+        return base + path + ("?" + extra if extra else "")
     known = asof.known_at()
     return (f"{base}{path}?asOf={asof.current()}" + (f"&knownAt={quote(known)}" if known else "")
-            + (f"&gen={int(generation)}" if generation is not None and str(generation).isdigit() else ""))
+            + (f"&gen={int(generation)}" if generation is not None and str(generation).isdigit() else "") + (f"&{extra}" if extra else ""))

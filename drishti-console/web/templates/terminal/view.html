@@ -22,7 +22,7 @@
 {% block nav %}{% if not embed %}{% with command_text=(vm.mnemonic ~ ' ' ~ vm.ref.id ~ ' <GO>') if vm.mnemonic else vm.ref.id, live=(vm.provenance.live and asof == 'live'), built_ms=vm.timings.total %}{% include "terminal/_topbar.html" %}{% endwith %}{% endif %}{% endblock %}
 {% block content %}
 <div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-generation="{{ vm.provenance.generation }}" data-page-asof="{{ asof }}" data-known="{{ known_at or '' }}" data-label="{{ vm.title.id }}"
-     data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
+     data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if vm.controls %} data-controls="{{ vm.controls | tojson | forceescape }}" data-selects="{{ (vm.selects or []) | tojson | forceescape }}"{% endif %}{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
      data-sutra="{{ layout.sutra }}" data-min-span="{{ layout.min_span }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
   {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
   {% if shared and shared.access and not embed %}
@@ -133,6 +133,7 @@
 <script src="/static/js/discussion-view.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/discussion.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/zoom.js?v={{ ASSET_V }}"></script>
+{% if vm.controls %}<script src="/static/js/controls.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if calc and calc.offered and calc.allowed %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script>
 <script src="/static/vendor/codemirror/mode/python/python.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/calc.js?v={{ ASSET_V }}"></script>{% endif %}

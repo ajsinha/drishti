@@ -23,6 +23,7 @@ from fastapi import APIRouter, Query, Request
 
 from fastapi.responses import JSONResponse, StreamingResponse
 
+from core import controls
 from core.csrf import json_body
 from core.backend import BackendError
 from core.channel import ChannelSession
@@ -203,7 +204,8 @@ async def raw(request: Request, kind: str, id_: str):
 @router.get("/view/{kind}/{id_:path}")
 async def view(request: Request, kind: str, id_: str):
     try:
-        return await request.app.state.backend.view(kind, id_, ident(request))
+        ctl = controls.from_query(request.query_params)
+        return await request.app.state.backend.view(kind, id_, ident(request), **({"controls": ctl} if ctl else {}))
     except BackendError as e:
         return _problem(e)
 
@@ -240,7 +242,8 @@ async def stream(request: Request, kind: str, id_: str):
 
     async def events():
         try:
-            upstream = backend.stream(kind, id_, ident(request))
+            ctl = controls.from_query(request.query_params)
+            upstream = backend.stream(kind, id_, ident(request), **({"controls": ctl} if ctl else {}))
             try:
                 async for event, data in upstream:
                     if await request.is_disconnected():

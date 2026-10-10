@@ -77,7 +77,7 @@ const live = root.appendChild(new El('span')); live.className = 'tbar-live';
 const liveText = root.appendChild(new El('span', { 'data-live-text': '' }));
 let reloaded = false;
 global.location = { reload: () => { reloaded = true; } };
-global.document = { querySelector: s => s === '.tbar-live' ? live : s === '[data-live-text]' ? liveText : root.querySelector(s),
+global.document = { addEventListener() {}, querySelector: s => s === '.tbar-live' ? live : s === '[data-live-text]' ? liveText : root.querySelector(s),
   querySelectorAll: s => s === '.strip-i dd' ? [] : root.querySelectorAll(s), createElement: t => new El(t), getElementById: () => null };
 let handlers = null;
 global.window = { DrishtiChannel: { subscribe: (ch, h) => { handlers = h; return () => {}; } } };

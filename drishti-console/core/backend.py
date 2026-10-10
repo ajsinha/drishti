@@ -137,8 +137,12 @@ class BackendClient:
             raise _error(r, text)
         return r
 
-    async def view(self, kind: str, id_: str, ident) -> dict:
+    async def view(self, kind: str, id_: str, ident, controls: dict | None = None, panels: list[str] | None = None) -> dict:
+        """The view; ``controls`` are the ``ctl.<id>`` values the reader set, ``panels`` the only panels to build (``[]`` builds none)."""
         where, q = entity_path(kind, id_)
+        q = {**q, **(controls or {})}
+        if panels is not None:
+            q["panels"] = ",".join(panels) or "-"
         return await self._get(f"/views/{where}", ident, **q)
 
     async def explain(self, kind: str, id_: str, ident, generation: int | None = None, locale: str | None = None,
@@ -547,10 +551,12 @@ class BackendClient:
         """Sends raw bytes to an admin endpoint (a pack archive); ``headers`` carry its file name, checksum and signature."""
         return await self._send("POST", "/admin" + path, ident, content=data, headers={"Content-Type": "application/octet-stream", **headers}, timeout=timeout)
 
-    async def stream(self, kind: str, id_: str, ident=None, opened: list | None = None):
-        """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends (see ``sse`` for ``opened``)."""
+    async def stream(self, kind: str, id_: str, ident=None, opened: list | None = None, controls: dict | None = None):
+        """Yields ``(event, data)`` pairs from the server's SSE stream for a view, until it ends (see ``sse`` for ``opened``).
+        ``controls`` are the ``ctl.<id>`` values the stream is built with: every frame keeps them."""
         headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
         where, q = entity_path(kind, id_)
+        q = {**q, **(controls or {})}
         async with self._client.stream("GET", f"/api/v1/views/{where}/stream", params=q, timeout=None, headers=headers) as r:
             if opened is not None:
                 opened.append(r)

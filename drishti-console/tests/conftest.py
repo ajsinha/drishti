@@ -37,7 +37,7 @@ class FakeBackend:
         self.calls = []
         self.sessions = {}                       # console sign-in sessions the server keeps: id -> user name
 
-    async def view(self, kind, id_, user):
+    async def view(self, kind, id_, user, controls=None, panels=None):
         self.calls.append(("view", kind, id_, user))
         f = FIXTURES / f"view_{kind}_{id_}.json"
         if not f.exists():
