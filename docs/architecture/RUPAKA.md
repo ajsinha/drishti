@@ -33,8 +33,8 @@ asking again. Reports, datasets and workspaces are **YAML documents in the Racha
 designer that writes the same YAML (two views of one draft, as the Build workbench already does). Streaming visuals use
 **FINOS Perspective**; charts use the **ECharts** the console already vendors; free exploration uses **Graphic Walker**
 (the component behind PygWalker). **Python** is a first-class, interface-driven extension (transforms, measures, visuals)
-that runs in a sandboxed server runner or in the browser (Pyodide), behind one interface. **Generative AI** plugs in
-through one provider interface, **off by default**; everything works without it. Publishing goes through workspaces,
+that runs in a sandboxed server runner or in the browser (Pyodide), behind one interface. **Generative AI** comes later (stage 2 for BI, stage 3 for the whole UI, section 20.1), through one provider interface,
+**off by default**; everything works without it. Publishing goes through workspaces,
 review and a catalogue with endorsement, and access is the same roles, packs, masks and row rules as the rest of Drishti.
 
 Contents
@@ -458,6 +458,8 @@ notebook exploration can be saved as a Transform or Visual draft with its tests.
 
 ## 14. Generative AI hooks (off by default)
 
+This section is **stage 2** (section 20.1): nothing in it is built in stage 1, BI without AI.
+
 One provider interface (`AiProvider`: chat with tool calls, embeddings optional) with implementations for
 OpenAI-compatible endpoints, Anthropic, and on-premises models; configured by an administrator, **off** unless turned on.
 Every feature below has a non-AI equivalent that works out of the box.
@@ -558,11 +560,26 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 | 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run |
 | 6 | **Python**: the interfaces, the server runner and sandbox, browser target, manifests and tests, Calc client and PygWalker | M | a Transform, a Measure and a Visual ship in a pack with tests and run on both targets |
 | 7 | **Distribution**: export, subscriptions, alerts on measures, `<drishti-report>`, phone layouts | M | a subscription email renders per recipient with masks |
-| 8 | **AI hooks**: provider interface and the six hooks, all off by default, guardrails and audit | M | every hook works on, and the product works fully with all off |
 | 9 | **Analyse**: the analyst workbench (Slice, Data, SQL, Python, Explore, Notes) over masked extracts, save as notebook, promote cells to visuals, measures and Python interfaces | L | an analyst slices a 1 M-row extract, runs a Python cell on it and turns it into a tested Transform, all in the browser |
 
 Every phase ships with tests (unit, console, browser at phone width), documentation with real captures, and its numbers
 measured, as every Drishti feature does. Phases 0 to 3 are the minimum lovable BI; 4 to 9 make it a Power BI alternative.
+
+### 20.1 Three stages
+
+The work is done in three stages, in this order; each is complete and useful on its own.
+
+| Stage | Scope | Phases | AI |
+|---|---|---|---|
+| **1. BI** | Everything in this document except section 14: datasets, the query engine and its layers, reports, the designer, workspaces and catalogue, streaming BI, Python interfaces, distribution, the analyst workbench | 0 to 7 and 9 above | **none**: no feature depends on a language model, and none is built |
+| **2. Generative AI driven BI** | Section 14: the provider interface (off by default) and the BI hooks: report from words, ask the data, explain this number, narrative summaries, designer copilot, dataset helper | A1 provider interface, guardrails, audit and cost limits (M); A2 report from words and designer copilot (M); A3 ask the data and explain this number (M); A4 narratives and dataset helper (S) | optional, administrator-enabled; every hook has a non-AI equivalent from stage 1 |
+| **3. Generative AI driven UI** | The terminal and BI screens themselves composed from words: a Sutra or a workspace generated from a request and the data's shape, dynamic forms (the Rūpaka SRS's GenUI), conversational navigation, layouts that adapt to the task; all validated by the same schemas and published through the same review | designed after stage 2, from what stage 2 teaches | optional, as stage 2 |
+
+**Stage 1 keeps the seams, not the features.** It defines no AI code, but its designs leave the places stage 2 plugs into:
+every report, dataset and Sutra is a schema-validated document (so a generated one is checked like a written one); every
+change goes through drafts and review (so nothing generated is published without a person); queries carry the user's row
+rules and masks (so a prompt can only ever see what that user may see); and the designer edits a draft as a list of
+changes (so suggestions can arrive as diffs).
 
 ## 21. Open decisions
 
