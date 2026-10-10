@@ -486,6 +486,25 @@ dataset, report visual or terminal search result gives them, in one tabbed works
   Walker load only when their tab is first opened, with progress shown; keys for everything (`Shift+Enter` runs a cell,
   `Alt+1`…`Alt+6` switch tabs).
 
+### 9.2 Ad-hoc quant in the analyst workbench
+
+Analysts need pricing and risk next to the data, as Bloomberg's BQuant offers over Bloomberg data, but over the firm's
+own records. The workbench therefore has two kinds of Python cell:
+
+| Cell runs | For | Libraries |
+|---|---|---|
+| **in the browser** (Pyodide, Web Worker) | slicing, pandas, quick plots on the extract already received | the packages Pyodide provides |
+| **on the console** (the sandboxed Python workers of section 13.2) | quant: pricing, Greeks, scenarios, VaR/ES, exposure and XVA | the vendored wheel set plus the quant engine |
+
+**The quant engine is an interface,** `QuantEngine` in `drishti-console/core/quant/` (price, sensitivities, scenarios,
+VaR/ES, exposure/XVA; Drishti records in through per-pack adapters, Arrow tables out), with **QLRisk** (the owner's
+QuantLib-based risk library: pricing and sensitivities, VaR/ES/FRTB, PFE, SA-CCR, CVA/FVA, SIMM) as its first provider,
+installed from a pinned wheel, and a mock provider for tests. QuantLib is native code, so the engine runs only in the
+console's workers, never in the browser. Results become workbench tables, report visuals or Sutra panels, masked and
+audited like every result. The server's quant service (QUANT_SERVICE.md) implements the same interface later, so ad-hoc
+quant and production pricing share one path. Status: designed; built when QLRisk's API is declared stable.
+
+## 10. Workspaces, publishing and the catalogue
 ## 10. Workspaces, publishing and the catalogue
 
 - **Workspace roles:** `viewer` (open published content), `contributor` (create and edit drafts), `member` (publish),
