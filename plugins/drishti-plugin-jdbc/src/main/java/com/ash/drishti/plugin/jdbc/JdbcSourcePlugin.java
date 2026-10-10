@@ -84,6 +84,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     private volatile String lastError;
     private SourceContext context;
     private String url;
+    private JdbcTls.Plan tlsPlan = JdbcTls.Plan.NONE;
     private String user;
     private String password;
     private String sourceName;
@@ -120,7 +121,11 @@ public final class JdbcSourcePlugin implements SourcePlugin {
                     s.connection = null;
                 }
                 try {
-                    s.connection = DriverManager.getConnection(url, user, password);
+                    java.util.Properties props = new java.util.Properties();
+                    props.putAll(tlsPlan.properties());
+                    props.setProperty("user", user);
+                    props.setProperty("password", password);
+                    s.connection = DriverManager.getConnection(url, props);
                 } catch (SQLException e) {
                     lastError = e.getMessage();
                     throw e;
@@ -214,6 +219,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         if (url.isEmpty()) {
             throw new com.ash.drishti.api.PluginNotConfigured("jdbc needs settings.url");
         }
+        this.tlsPlan = JdbcTls.plan(ctx.settings(), url, System::getenv);     // fails the start, naming the setting and the file
         this.user = ctx.setting("user", "");
         this.password = ctx.setting("password", "");
         this.sourceName = ctx.setting("source-name", "jdbc");
@@ -354,6 +360,10 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         if (e != null) {
             return "DOWN: " + e + " (reconnecting)";
         }
+        return tlsPlan.tls() == null ? healthDetail() : tlsPlan.tls().annotate(healthDetail(), Instant.now());
+    }
+
+    private String healthDetail() {
         if (catalog != null && catalog.problem() != null) {
             return "UP (" + catalog.problem() + ")";
         }
@@ -368,6 +378,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
 
     @Override
     public void close() {
+        PgSslFactory.unregister(tlsPlan.factoryId());
         if (pool != null) {
             pool.forEach(s -> {
                 try {
