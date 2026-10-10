@@ -136,7 +136,8 @@ public final class DuckDbEngine implements AnalyticEngine {
         ArrowIpcWriter.Kind[] kinds = new ArrowIpcWriter.Kind[n];
         for (int i = 0; i < n; i++) {
             String t = md.getColumnTypeName(i + 1).toUpperCase(java.util.Locale.ROOT);
-            kinds[i] = t.contains("INT") && !t.contains("INTERVAL") ? ArrowIpcWriter.Kind.INT64
+            boolean wholeDecimal = t.startsWith("DECIMAL") && md.getScale(i + 1) == 0;                 // a sum of integers can come back as DECIMAL(38,0)
+            kinds[i] = (t.contains("INT") && !t.contains("INTERVAL")) || wholeDecimal ? ArrowIpcWriter.Kind.INT64
                     : t.startsWith("DOUBLE") || t.startsWith("FLOAT") || t.startsWith("DECIMAL") || t.equals("REAL") ? ArrowIpcWriter.Kind.FLOAT64 : ArrowIpcWriter.Kind.TEXT;
         }
         List<Object[]> rows = new ArrayList<>();

@@ -144,7 +144,7 @@ public final class PocQueryService implements AutoCloseable {
         return new Answer(arrow, rows, (System.nanoTime() - t0) / 1e6, hidden, q.layout());
     }
 
-    private static final String DIMS = "      desk: string\n      currency: string\n      productType: string\n      side: string\n      trader: string\n      book: string\n      notional: decimal\n      mtm: decimal\n";
+    private static final String DIMS = "      desk: string\n      currency: string\n      productType: string\n      side: string\n      trader: string\n      book: string\n      notional: decimal\n      mtm: integer\n";
     private DuckDbEngine engine;
 
     /**
@@ -187,7 +187,16 @@ public final class PocQueryService implements AutoCloseable {
         com.ash.drishti.server.bi.engine.AnalyticEngine.Answer a = engine().query(c.sql(), c.params(), 10_000, java.time.Duration.ofSeconds(30));
         List<ArrowIpcWriter.Column> cols = new ArrayList<>();
         for (ArrowIpcWriter.Column col : a.columns()) {
-            cols.add(new ArrowIpcWriter.Column(col.name().startsWith("trades.") ? col.name().substring(7) : col.name(), col.kind(), col.values()));
+            String name = col.name().startsWith("trades.") ? col.name().substring(7) : col.name();
+            if (MEASURES.contains(name) && col.kind() == ArrowIpcWriter.Kind.INT64) {                // the POC's contract: notional and mtm are doubles
+                Object[] d = new Object[col.values().length];
+                for (int i = 0; i < d.length; i++) {
+                    d[i] = col.values()[i] == null ? null : (Object) ((Number) col.values()[i]).doubleValue();
+                }
+                cols.add(new ArrowIpcWriter.Column(name, ArrowIpcWriter.Kind.FLOAT64, d));
+            } else {
+                cols.add(new ArrowIpcWriter.Column(name, col.kind(), col.values()));
+            }
         }
         List<String> hidden = new ArrayList<>();
         Stream.concat(q.groupBy().stream(), MEASURES.stream()).filter(masked).forEach(hidden::add);
