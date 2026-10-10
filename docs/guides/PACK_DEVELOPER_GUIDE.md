@@ -793,7 +793,7 @@ With these, `TRD MX-200000 <GO>` shows:
 
 ```text
 TRD      Product type   Direction      Currency  Notional      MTM (USD)    Maturity date  Book
-MX-20000001  IRS_FIXFLOAT   Receive fixed  AUD       242,000,000   1,875,863    2032-06-25     BOOK-RATES-3
+MX-20000001  IRS_FIXFLOAT   Receive fixed  AUD       242,000,000   1,876,068    2032-06-25     BOOK-RATES-3
 MX-20000002  IRS_FIXFLOAT   Pay fixed      EUR       110,000,000   1,761,589    2031-04-15     BOOK-RATES-1
 …
 ```

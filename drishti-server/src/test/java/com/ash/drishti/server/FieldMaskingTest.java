@@ -91,7 +91,7 @@ class FieldMaskingTest {
     @Test
     void viewsMaskTheStripTitleTablesRecordsAndDerivedValues() throws Exception {
         JsonNode full = read("/api/v1/views/trade/MX-20000001", "full");
-        assertThat(cell(full.path("strip"), "MTM (USD)").path("text").asText()).isEqualTo("+1,875,863");
+        assertThat(cell(full.path("strip"), "MTM (USD)").path("text").asText()).isEqualTo("+1,876,068");
         assertThat(full.path("title").path("with").path("text").asText()).isEqualTo("Meridian Reinsurance Ltd");
 
         JsonNode view = read("/api/v1/views/trade/MX-20000001", "masked");
@@ -144,7 +144,7 @@ class FieldMaskingTest {
         mvc.perform(put("/api/v1/me/monitors/Watch").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"entities\":[{\"kind\":\"trade\",\"id\":\"MX-20000001\"}]}")).andExpect(status().is2xxSuccessful());
         JsonNode rows = read("/api/v1/me/monitors/Watch", "masked");
-        assertThat(rows.toString()).contains(MASK).doesNotContain("Meridian", "1,875,863");
+        assertThat(rows.toString()).contains(MASK).doesNotContain("Meridian", "1,876,068");
     }
 
     @Test

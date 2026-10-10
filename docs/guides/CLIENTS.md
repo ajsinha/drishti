@@ -38,7 +38,7 @@ Send it in the `Authorization` header:
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "https://drishti.bank.example:18480/api/v1/entities/trade/MX-20000001/raw" | jq .data.mtm
 ```
 
-You should see the trade's MTM, for example `1875863`.
+You should see the trade's MTM, for example `1876068`.
 
 Keep tokens like passwords: in an environment variable or a secrets store, never in a shared file. If one leaks,
 revoke it: it stops at once. A token also stops when its owner is disabled, and when it expires. Administrators see
