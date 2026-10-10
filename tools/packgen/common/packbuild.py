@@ -36,6 +36,7 @@ sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
 import make_sutras as MS  # noqa: E402  (the Rachana writer the banking packs use)
+import packform as PF  # noqa: E402  (the form: section: query by form, FORM <pack>)
 from risk_model import Kind  # noqa: E402
 
 DOC_HEADER = "\n".join((ROOT / "docs" / "guides" / "RACHANA_REFERENCE.md").read_text(encoding="utf-8").splitlines()[:15])
@@ -100,6 +101,9 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
         m["routes"].update({k.kind: f"{d}-store" for k in ks})
     if spec.columns:
         m["columns"] = spec.columns
+    form = {k.kind: PF.form_from_columns(spec.columns[k.kind], k.id_field) for k in kinds if spec.columns.get(k.kind)}
+    if form:                                             # FORM <pack>: the key fields are the form's fields; the id comes first
+        m["form"] = form
     if spec.roles:
         m["roles"] = spec.roles
     return m

@@ -109,6 +109,9 @@ public record FormField(String path, String label, FieldType type, List<String> 
                 problems.add(named + ": values must be a list");
             }
         }
+        if (bool(m.get("required")) && bool(m.get("hidden")) && str(m.get("default")).isEmpty()) {
+            problems.add(named + ": a required field that is hidden needs a default");
+        }
         Object label = m.get("label");
         return new FormField(path, label == null || String.valueOf(label).isBlank() ? humanize(path) : String.valueOf(label).trim(), type, ops,
                 m.get("default") == null ? "" : String.valueOf(m.get("default")), order, str(m.get("group")), str(m.get("help")), bool(m.get("required")),

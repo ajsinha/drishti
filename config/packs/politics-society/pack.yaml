@@ -173,6 +173,118 @@ columns:
   - turnout
   - winner
   - majority
+form:
+  party:
+  - path: partyId
+    label: Party id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: position
+    label: Position
+    type: enum
+  - path: leaderName
+    label: Leader name
+    type: number
+  - path: seats
+    label: Seats
+    type: number
+  - path: polling
+    label: Polling
+    type: number
+  candidate:
+  - path: candidateId
+    label: Candidate id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: partyName
+    label: Party name
+    type: text
+  - path: constituency
+    label: Constituency
+    type: text
+  - path: role
+    label: Role
+    type: enum
+  - path: voteShare
+    label: Vote share
+    type: number
+  election:
+  - path: electionId
+    label: Election id
+    type: id
+  - path: title
+    label: Title
+    type: text
+  - path: date
+    label: Date
+    type: date
+  - path: turnout
+    label: Turnout
+    type: number
+  - path: winner
+    label: Winner
+    type: text
+  - path: majority
+    label: Majority
+    type: number
+  poll:
+  - path: pollId
+    label: Poll id
+    type: id
+  - path: pollster
+    label: Pollster
+    type: enum
+  - path: fieldwork
+    label: Fieldwork
+    type: date
+  - path: sample
+    label: Sample
+    type: number
+  - path: lead
+    label: Lead
+    type: number
+  - path: moe
+    label: Moe
+    type: number
+  bill:
+  - path: billId
+    label: Bill id
+    type: id
+  - path: title
+    label: Title
+    type: text
+  - path: sponsorName
+    label: Sponsor name
+    type: text
+  - path: stage
+    label: Stage
+    type: enum
+  - path: introduced
+    label: Introduced
+    type: date
+  - path: costM
+    label: Cost m
+    type: amount
+  region:
+  - path: regionId
+    label: Region id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: populationM
+    label: Population m
+    type: text
+  - path: medianIncome
+    label: Median income
+    type: amount
+  - path: unemployment
+    label: Unemployment
+    type: number
 roles:
   analyst:
     kinds:

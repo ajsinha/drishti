@@ -53,6 +53,32 @@ roles:
 alerts:
   - { kind: shipment, name: "Delayed more than 12 h", when: "$.etaDelayHours > 12", severity: critical, message: "${$.shipmentId}: ETA ${fmt($.etaDelayHours, 'hours0')}" }
   - { kind: container, name: "Reefer out of range", when: "$.currentC > 8 || $.currentC < 2", severity: critical, message: "${$.containerId}: ${fmt($.currentC, 'temp1')}" }
+form:                          # FORM logistics: the search form of each kind (see the form: section of the pack developer guide)
+  shipment:
+    - { path: shipmentId, label: Shipment id, type: id, group: Identity, help: "One or many: paste a list." }
+    - { path: status, type: enum, group: Identity }
+    - { path: origin, type: text, group: Route }
+    - { path: destination, type: text, group: Route }
+    - { path: eta, label: ETA, type: date, group: Route, help: "Relative ranges such as next 5 business days work here." }
+    - { path: etaDelayHours, label: ETA delay (hours), type: number, group: Route }
+    - { path: commodity, type: text, group: Cargo }
+    - { path: weightKg, label: Weight (kg), type: number, group: Cargo }
+  container:
+    - { path: containerId, label: Container id, type: id }
+    - { path: type, type: enum }
+    - { path: currentC, label: Temperature (C), type: number }
+    - { path: powerOn, label: Power on, type: bool }
+  vessel:
+    - { path: vesselId, label: Vessel id, type: id }
+    - { path: name, type: text }
+    - { path: flag, type: enum }
+    - { path: nextPort, type: text }
+    - { path: utilisation, type: number }
+  port:
+    - { path: portId, label: Port id, type: id }
+    - { path: name, type: text }
+    - { path: country, type: enum }
+    - { path: congestionIndex, label: Congestion index, type: number }
 console:
   examples:
     - ["SHP SHP-10042", "Shipment in transit · route, milestones, reefer temperature"]

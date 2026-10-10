@@ -142,6 +142,121 @@ columns:
   - gar
   - eligible
   - covered
+form:
+  climate-profile:
+  - path: profileId
+    label: Profile id
+    type: id
+  - path: counterpartyName
+    label: Counterparty name
+    type: number
+  - path: sector
+    label: Sector
+    type: enum
+  - path: intensity
+    label: Intensity
+    type: number
+  - path: transitionScore
+    label: Transition score
+    type: number
+  - path: physicalScore
+    label: Physical score
+    type: number
+  - path: netZeroTarget
+    label: Net zero target
+    type: text
+  financed-emissions:
+  - path: resultId
+    label: Result id
+    type: id
+  - path: book
+    label: Book
+    type: enum
+  - path: financed
+    label: Financed
+    type: amount
+  - path: exposure
+    label: Exposure
+    type: amount
+  - path: intensity
+    label: Intensity
+    type: number
+  - path: dataQuality
+    label: Data quality
+    type: text
+  climate-scenario:
+  - path: scenarioId
+    label: Scenario id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: category
+    label: Category
+    type: enum
+  - path: warming
+    label: Warming
+    type: number
+  - path: carbon2030
+    label: Carbon2030
+    type: number
+  - path: carbon2050
+    label: Carbon2050
+    type: number
+  climate-stress:
+  - path: resultId
+    label: Result id
+    type: id
+  - path: scenarioName
+    label: Scenario name
+    type: text
+  - path: deskName
+    label: Desk name
+    type: text
+  - path: loss2030
+    label: Loss2030
+    type: amount
+  - path: loss2050
+    label: Loss2050
+    type: amount
+  - path: capitalShare
+    label: Capital share
+    type: amount
+  physical-asset:
+  - path: assetId
+    label: Asset id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: counterpartyName
+    label: Counterparty name
+    type: number
+  - path: country
+    label: Country
+    type: enum
+  - path: value
+    label: Value
+    type: amount
+  - path: worstHazard
+    label: Worst hazard
+    type: text
+  taxonomy-alignment:
+  - path: reportId
+    label: Report id
+    type: id
+  - path: legalEntityName
+    label: Legal entity name
+    type: text
+  - path: gar
+    label: Gar
+    type: text
+  - path: eligible
+    label: Eligible
+    type: text
+  - path: covered
+    label: Covered
+    type: text
 roles:
   climate-analyst:
     kinds:

@@ -147,6 +147,115 @@ columns:
   - currency
   - gap1m
   - survivalDays
+form:
+  lcr:
+  - path: lcrId
+    label: Lcr id
+    type: id
+  - path: legalEntityName
+    label: Legal entity name
+    type: text
+  - path: lcr
+    label: Lcr
+    type: number
+  - path: hqla
+    label: Hqla
+    type: amount
+  - path: netOutflows
+    label: Net outflows
+    type: amount
+  - path: buffer
+    label: Buffer
+    type: text
+  nsfr:
+  - path: nsfrId
+    label: Nsfr id
+    type: id
+  - path: legalEntityName
+    label: Legal entity name
+    type: text
+  - path: nsfr
+    label: Nsfr
+    type: number
+  - path: asfTotal
+    label: Asf total
+    type: amount
+  - path: rsfTotal
+    label: Rsf total
+    type: amount
+  maturity-ladder:
+  - path: ladderId
+    label: Ladder id
+    type: id
+  - path: legalEntityName
+    label: Legal entity name
+    type: text
+  - path: currency
+    label: Currency
+    type: enum
+  - path: gap1m
+    label: Gap1m
+    type: amount
+  - path: survivalDays
+    label: Survival days
+    type: number
+  hqla-holding:
+  - path: holdingId
+    label: Holding id
+    type: id
+  - path: security
+    label: Security
+    type: text
+  - path: level
+    label: Level
+    type: enum
+  - path: marketValue
+    label: Market value
+    type: amount
+  - path: haircut
+    label: Haircut
+    type: number
+  - path: liquidityValue
+    label: Liquidity value
+    type: amount
+  funding-source:
+  - path: fundingId
+    label: Funding id
+    type: id
+  - path: counterpartyName
+    label: Counterparty name
+    type: number
+  - path: type
+    label: Type
+    type: enum
+  - path: amount
+    label: Amount
+    type: amount
+  - path: currency
+    label: Currency
+    type: enum
+  - path: maturity
+    label: Maturity
+    type: date
+  - path: runOffRate
+    label: Run off rate
+    type: number
+  liquidity-stress:
+  - path: resultId
+    label: Result id
+    type: id
+  - path: scenarioName
+    label: Scenario name
+    type: text
+  - path: legalEntityName
+    label: Legal entity name
+    type: text
+  - path: survivalDays
+    label: Survival days
+    type: number
+  - path: minimumPosition
+    label: Minimum position
+    type: text
 roles:
   treasury:
     kinds:

@@ -165,6 +165,125 @@ pivot:
     filters:
     - assetClass
     - status
+form:
+  trade:
+  - path: tradeId
+    label: Trade id
+    type: id
+    group: Identity
+    order: 1
+    help: 'One or many: paste a list. MX-2* is any id starting MX-2.'
+  - path: counterparty.name
+    label: Counterparty
+    type: text
+    group: Identity
+    order: 2
+  - path: nettingSet
+    label: Netting set
+    type: text
+    group: Identity
+    order: 3
+  - path: assetClass
+    label: Asset class
+    type: enum
+    group: Product
+    order: 4
+  - path: productType
+    label: Product type
+    type: enum
+    group: Product
+    order: 5
+  - path: productName
+    label: Product name
+    type: text
+    group: Product
+    order: 6
+  - path: direction
+    label: Direction
+    type: enum
+    group: Product
+    order: 7
+  - path: status
+    label: Status
+    type: enum
+    group: Product
+    order: 8
+  - path: book
+    label: Book
+    type: enum
+    group: Where
+    order: 9
+  - path: desk
+    label: Desk
+    type: enum
+    group: Where
+    order: 10
+  - path: currency
+    label: Currency
+    type: enum
+    group: Where
+    order: 11
+  - path: notional
+    label: Notional
+    type: amount
+    group: Money
+    order: 12
+    operators:
+    - '>='
+    - <=
+    - between
+    - '='
+    help: 'Amounts take k, m and bn: 250k, 1.5m, 2bn.'
+  - path: mtm
+    label: MTM (USD)
+    type: amount
+    group: Money
+    order: 13
+    operators:
+    - '>'
+    - <
+    - between
+    - '='
+  - path: pnl1d
+    label: P&L 1d
+    type: amount
+    group: Money
+    order: 14
+  - path: risk.dv01
+    label: DV01
+    type: amount
+    group: Money
+    order: 15
+  - path: tradeDate
+    label: Trade date
+    type: date
+    group: Dates
+    order: 16
+  - path: maturityDate
+    label: Maturity date
+    type: date
+    group: Dates
+    order: 17
+    help: 'Relative ranges work here: next 10 business days.'
+  desk-pnl:
+  - path: desk
+    label: Desk
+    type: id
+  - path: tradeCount
+    label: Trades
+    type: number
+  - path: mtm
+    label: MTM (USD)
+    type: amount
+  - path: pnl1d
+    label: P&L 1d
+    type: amount
+  - path: dv01
+    label: DV01
+    type: amount
+  - path: worstMtm
+    label: Worst MTM
+    type: amount
 console:
   examples:
   - - TRD MX-20000001

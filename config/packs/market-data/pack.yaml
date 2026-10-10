@@ -339,6 +339,345 @@ routes:
   rate-fixing: market-store
   bond: market-store
   correlation-matrix: market-store
+form:
+  ir-curve:
+  - path: curveId
+    label: Curve id
+    type: id
+  - path: currency
+    label: Currency
+    type: enum
+  - path: curveType
+    label: Curve type
+    type: text
+  - path: index
+    label: Index
+    type: text
+  - path: tenY
+    label: Ten y
+    type: text
+  - path: slope2s10s
+    label: Slope2s10s
+    type: text
+  - path: points
+    label: Points
+    type: text
+  - path: asOf
+    label: As of
+    type: text
+  repo-curve:
+  - path: curveId
+    label: Curve id
+    type: id
+  - path: currency
+    label: Currency
+    type: enum
+  - path: collateral
+    label: Collateral
+    type: text
+  - path: overnight
+    label: Overnight
+    type: text
+  - path: asOf
+    label: As of
+    type: text
+  fx-spot:
+  - path: pair
+    label: Pair
+    type: id
+  - path: mid
+    label: Mid
+    type: id
+  - path: bid
+    label: Bid
+    type: id
+  - path: ask
+    label: Ask
+    type: text
+  - path: change1d
+    label: Change1d
+    type: text
+  - path: spotDate
+    label: Spot date
+    type: date
+  fx-forward-curve:
+  - path: curveId
+    label: Curve id
+    type: id
+  - path: pair
+    label: Pair
+    type: text
+  - path: spot
+    label: Spot
+    type: text
+  - path: points3m
+    label: Points3m
+    type: text
+  - path: points1y
+    label: Points1y
+    type: text
+  fx-vol-surface:
+  - path: surfaceId
+    label: Surface id
+    type: id
+  - path: pair
+    label: Pair
+    type: text
+  - path: atm1m
+    label: Atm1m
+    type: text
+  - path: atm1y
+    label: Atm1y
+    type: text
+  - path: rr1y
+    label: Rr1y
+    type: text
+  ir-vol-cube:
+  - path: cubeId
+    label: Cube id
+    type: id
+  - path: currency
+    label: Currency
+    type: enum
+  - path: model
+    label: Model
+    type: text
+  - path: v1y10y
+    label: V1y10y
+    type: text
+  - path: v5y5y
+    label: V5y5y
+    type: text
+  cap-vol-surface:
+  - path: surfaceId
+    label: Surface id
+    type: id
+  - path: currency
+    label: Currency
+    type: enum
+  - path: atm5y
+    label: Atm5y
+    type: text
+  equity:
+  - path: ticker
+    label: Ticker
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: price
+    label: Price
+    type: amount
+  - path: change1d
+    label: Change1d
+    type: text
+  - path: marketCap
+    label: Market cap
+    type: text
+  - path: sector
+    label: Sector
+    type: enum
+  - path: exchange
+    label: Exchange
+    type: text
+  - path: currency
+    label: Currency
+    type: enum
+  equity-index:
+  - path: indexId
+    label: Index id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: level
+    label: Level
+    type: enum
+  - path: change1d
+    label: Change1d
+    type: text
+  - path: constituentCount
+    label: Constituent count
+    type: number
+  - path: currency
+    label: Currency
+    type: enum
+  dividend-curve:
+  - path: curveId
+    label: Curve id
+    type: id
+  - path: underlier
+    label: Underlier
+    type: text
+  - path: dividendYield
+    label: Dividend yield
+    type: amount
+  equity-vol-surface:
+  - path: surfaceId
+    label: Surface id
+    type: id
+  - path: underlier
+    label: Underlier
+    type: text
+  - path: atm1m
+    label: Atm1m
+    type: text
+  - path: atm1y
+    label: Atm1y
+    type: text
+  - path: skew1y
+    label: Skew1y
+    type: text
+  credit-curve:
+  - path: curveId
+    label: Curve id
+    type: id
+  - path: issuerName
+    label: Issuer name
+    type: text
+  - path: spread5y
+    label: Spread5y
+    type: text
+  - path: recovery
+    label: Recovery
+    type: text
+  - path: seniority
+    label: Seniority
+    type: text
+  - path: docClause
+    label: Doc clause
+    type: text
+  - path: pd1y
+    label: Pd1y
+    type: text
+  inflation-index:
+  - path: indexId
+    label: Index id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: latest
+    label: Latest
+    type: text
+  - path: yoy
+    label: Yoy
+    type: text
+  - path: lag
+    label: Lag
+    type: text
+  inflation-curve:
+  - path: curveId
+    label: Curve id
+    type: id
+  - path: index
+    label: Index
+    type: text
+  - path: be5y
+    label: Be5y
+    type: text
+  - path: be10y
+    label: Be10y
+    type: text
+  commodity:
+  - path: commodityId
+    label: Commodity id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: front
+    label: Front
+    type: text
+  - path: unit
+    label: Unit
+    type: text
+  - path: exchange
+    label: Exchange
+    type: text
+  - path: sector
+    label: Sector
+    type: enum
+  commodity-curve:
+  - path: curveId
+    label: Curve id
+    type: id
+  - path: commodity
+    label: Commodity
+    type: text
+  - path: front
+    label: Front
+    type: text
+  - path: shape
+    label: Shape
+    type: text
+  - path: roll
+    label: Roll
+    type: text
+  commodity-vol-surface:
+  - path: surfaceId
+    label: Surface id
+    type: id
+  - path: commodity
+    label: Commodity
+    type: text
+  - path: atmFront
+    label: Atm front
+    type: text
+  rate-fixing:
+  - path: indexId
+    label: Index id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: latest
+    label: Latest
+    type: text
+  - path: administrator
+    label: Administrator
+    type: text
+  - path: tenor
+    label: Tenor
+    type: text
+  bond:
+  - path: isin
+    label: Isin
+    type: id
+  - path: issuerName
+    label: Issuer name
+    type: text
+  - path: coupon
+    label: Coupon
+    type: text
+  - path: maturity
+    label: Maturity
+    type: date
+  - path: price
+    label: Price
+    type: amount
+  - path: yield
+    label: Yield
+    type: amount
+  - path: zSpread
+    label: Z spread
+    type: text
+  - path: modDuration
+    label: Mod duration
+    type: number
+  correlation-matrix:
+  - path: matrixId
+    label: Matrix id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: factors
+    label: Factors
+    type: text
+  - path: average
+    label: Average
+    type: text
 console:
   examples:
   - - CRV CRV-USD-OIS

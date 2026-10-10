@@ -143,6 +143,165 @@ routes:
   collateral-balance: collateral-store
   margin-call: collateral-store
   simm: collateral-store
+form:
+  netting-set:
+  - path: nettingSetId
+    label: Netting set id
+    type: id
+  - path: tradeCount
+    label: Trade count
+    type: number
+  - path: netMtm
+    label: Net mtm
+    type: amount
+  - path: collateral
+    label: Collateral
+    type: text
+  - path: eePeak
+    label: Ee peak
+    type: text
+  - path: pfePeak
+    label: Pfe peak
+    type: text
+  - path: limit
+    label: Limit
+    type: amount
+  - path: utilisation
+    label: Utilisation
+    type: number
+  credit-limit:
+  - path: limitId
+    label: Limit id
+    type: id
+  - path: counterpartyName
+    label: Counterparty name
+    type: number
+  - path: measure
+    label: Measure
+    type: text
+  - path: limit
+    label: Limit
+    type: amount
+  - path: used
+    label: Used
+    type: text
+  - path: utilisation
+    label: Utilisation
+    type: number
+  - path: status
+    label: Status
+    type: enum
+  exposure-profile:
+  - path: profileId
+    label: Profile id
+    type: id
+  - path: epe
+    label: Epe
+    type: text
+  - path: eepe
+    label: Eepe
+    type: text
+  - path: pfePeak
+    label: Pfe peak
+    type: text
+  - path: paths
+    label: Paths
+    type: text
+  - path: runDate
+    label: Run date
+    type: date
+  cva:
+  - path: resultId
+    label: Result id
+    type: id
+  - path: cva
+    label: Cva
+    type: text
+  - path: dva
+    label: Dva
+    type: text
+  - path: fva
+    label: Fva
+    type: text
+  - path: kva
+    label: Kva
+    type: text
+  - path: cs01
+    label: Cs01
+    type: text
+  sa-ccr:
+  - path: calcId
+    label: Calc id
+    type: id
+  - path: replacementCost
+    label: Replacement cost
+    type: amount
+  - path: addOn
+    label: Add on
+    type: date
+  - path: multiplier
+    label: Multiplier
+    type: text
+  - path: ead
+    label: Ead
+    type: text
+  - path: rwa
+    label: Rwa
+    type: text
+  collateral-balance:
+  - path: balanceId
+    label: Balance id
+    type: id
+  - path: held
+    label: Held
+    type: text
+  - path: posted
+    label: Posted
+    type: text
+  - path: net
+    label: Net
+    type: text
+  - path: asOf
+    label: As of
+    type: text
+  margin-call:
+  - path: callId
+    label: Call id
+    type: id
+  - path: callDate
+    label: Call date
+    type: date
+  - path: marginType
+    label: Margin type
+    type: text
+  - path: direction
+    label: Direction
+    type: enum
+  - path: amount
+    label: Amount
+    type: amount
+  - path: status
+    label: Status
+    type: enum
+  - path: disputeAmount
+    label: Dispute amount
+    type: amount
+  simm:
+  - path: calcId
+    label: Calc id
+    type: id
+  - path: total
+    label: Total
+    type: text
+  - path: posted
+    label: Posted
+    type: text
+  - path: received
+    label: Received
+    type: text
+  - path: version
+    label: Version
+    type: text
 console:
   examples:
   - - NSET NS-SUMMIT-NY

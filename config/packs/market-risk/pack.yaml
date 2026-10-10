@@ -86,6 +86,87 @@ routes:
   stress-result: risk-store
   frtb-sensitivity: risk-store
   pnl-explain: risk-store
+form:
+  var:
+  - path: resultId
+    label: Result id
+    type: id
+  - path: var99
+    label: Var99
+    type: text
+  - path: es975
+    label: Es975
+    type: text
+  - path: svar
+    label: Svar
+    type: text
+  - path: limit
+    label: Limit
+    type: amount
+  - path: exceptions
+    label: Exceptions
+    type: text
+  stress-scenario:
+  - path: scenarioId
+    label: Scenario id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: type
+    label: Type
+    type: enum
+  - path: severity
+    label: Severity
+    type: enum
+  stress-result:
+  - path: resultId
+    label: Result id
+    type: id
+  - path: scenarioName
+    label: Scenario name
+    type: text
+  - path: pnl
+    label: Pnl
+    type: amount
+  - path: limit
+    label: Limit
+    type: amount
+  frtb-sensitivity:
+  - path: resultId
+    label: Result id
+    type: id
+  - path: book
+    label: Book
+    type: enum
+  - path: deltaCharge
+    label: Delta charge
+    type: text
+  - path: vegaCharge
+    label: Vega charge
+    type: text
+  - path: curvatureCharge
+    label: Curvature charge
+    type: text
+  - path: total
+    label: Total
+    type: text
+  pnl-explain:
+  - path: resultId
+    label: Result id
+    type: id
+  - path: date
+    label: Date
+    type: date
+  - path: actual
+    label: Actual
+    type: text
+  - path: explained
+    label: Explained
+    type: text
+  - path: unexplained
+    label: Unexplained
+    type: text
 console:
   examples:
   - - VAR VAR-RATES

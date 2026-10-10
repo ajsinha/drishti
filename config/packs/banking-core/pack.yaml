@@ -199,6 +199,211 @@ columns:
   - tradeCount
   - mtm
   - dv01
+form:
+  counterparty:
+  - path: counterpartyId
+    label: Counterparty id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: rating
+    label: Rating
+    type: enum
+  - path: sector
+    label: Sector
+    type: enum
+  - path: country
+    label: Country
+    type: enum
+  - path: netMtm
+    label: Net mtm
+    type: amount
+  counterparty-group:
+  - path: groupId
+    label: Group id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: members
+    label: Members
+    type: text
+  - path: limit
+    label: Limit
+    type: amount
+  - path: utilisation
+    label: Utilisation
+    type: number
+  issuer:
+  - path: issuerId
+    label: Issuer id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: rating
+    label: Rating
+    type: enum
+  - path: sector
+    label: Sector
+    type: enum
+  - path: country
+    label: Country
+    type: enum
+  agreement:
+  - path: agreementId
+    label: Agreement id
+    type: id
+  - path: type
+    label: Type
+    type: enum
+  - path: counterpartyName
+    label: Counterparty name
+    type: number
+  - path: governingLaw
+    label: Governing law
+    type: text
+  - path: signed
+    label: Signed
+    type: text
+  - path: closeOutNetting
+    label: Close out netting
+    type: text
+  ccp:
+  - path: ccpId
+    label: Ccp id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: defaultFund
+    label: Default fund
+    type: text
+  - path: imPosted
+    label: Im posted
+    type: text
+  - path: marginModel
+    label: Margin model
+    type: text
+  legal-entity:
+  - path: entityId
+    label: Entity id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: lei
+    label: Lei
+    type: text
+  - path: jurisdiction
+    label: Jurisdiction
+    type: text
+  - path: regulator
+    label: Regulator
+    type: text
+  book:
+  - path: bookId
+    label: Book id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: deskName
+    label: Desk name
+    type: text
+  - path: tradeCount
+    label: Trade count
+    type: number
+  - path: mtm
+    label: Mtm
+    type: amount
+  - path: dv01
+    label: Dv01
+    type: amount
+  desk:
+  - path: deskId
+    label: Desk id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: head
+    label: Head
+    type: text
+  - path: books
+    label: Books
+    type: text
+  - path: var99
+    label: Var99
+    type: text
+  - path: mtm
+    label: Mtm
+    type: amount
+  trader:
+  - path: traderId
+    label: Trader id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: deskName
+    label: Desk name
+    type: text
+  - path: tradeCount
+    label: Trade count
+    type: number
+  calendar:
+  - path: calendarId
+    label: Calendar id
+    type: id
+  - path: name
+    label: Name
+    type: text
+  - path: holidays
+    label: Holidays
+    type: number
+  csa:
+  - path: csaId
+    label: Csa id
+    type: id
+  - path: marginType
+    label: Margin type
+    type: text
+  - path: thresholdUs
+    label: Threshold us
+    type: text
+  - path: thresholdThem
+    label: Threshold them
+    type: text
+  - path: mta
+    label: Mta
+    type: text
+  - path: independentAmount
+    label: Independent amount
+    type: amount
+  - path: frequency
+    label: Frequency
+    type: text
+  - path: mpor
+    label: Mpor
+    type: text
+  clearing-account:
+  - path: accountId
+    label: Account id
+    type: id
+  - path: ccpName
+    label: Ccp name
+    type: text
+  - path: im
+    label: Im
+    type: text
+  - path: vmToday
+    label: Vm today
+    type: text
+  - path: excess
+    label: Excess
+    type: text
 console:
   examples:
   - - CPTY CP-NORTHBRIDGE

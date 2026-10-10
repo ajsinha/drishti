@@ -58,6 +58,10 @@ class FormApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.kind").value("trade")).andExpect(jsonPath("$.mnemonic").value("TRD"))
                 .andExpect(jsonPath("$.kinds[*].kind", hasItem("trade")))
+                .andExpect(jsonPath("$.kinds[0].declared").value(true))                      // the trading pack declares its form: groups, order, help
+                .andExpect(jsonPath("$.form.inferred").value(false))
+                .andExpect(jsonPath("$.form.fields[0].path").value("tradeId"))
+                .andExpect(jsonPath("$.form.fields[?(@.path=='mtm')].group").value(hasItem("Money")))
                 .andExpect(jsonPath("$.form.fields.length()").value(greaterThan(3)))
                 .andExpect(jsonPath("$.form.fields[?(@.path=='mtm')].type").value(hasItem("amount")))
                 .andExpect(jsonPath("$.form.fields[?(@.path=='notional')].indexed").exists());
@@ -77,22 +81,22 @@ class FormApiTest {
                 .andExpect(jsonPath("$.command").value("TRD where (currency = 'EUR' or currency = 'USD') and notional >= 100m order by mtm desc limit 5"));
         mvc.perform(get("/api/v1/search").param("q", "TRD where (currency = 'EUR' or currency = 'USD') and notional >= 100m order by mtm desc limit 5")
                 .header("Authorization", as("searcher"))).andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(greaterThan(5)));
-        compile("searcher", "{\"criteria\":[{\"path\":\"notional\",\"op\":\">\",\"value\":\"lots\"}]}")
+        compile("searcher", "{\"criteria\":[{\"path\":\"notional\",\"op\":\">=\",\"value\":\"lots\"}]}")
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4004")).andExpect(jsonPath("$.detail").value(containsString("not a number")));
         compile("nothing", "{\"criteria\":[]}").andExpect(status().isForbidden());
     }
 
     @Test
     void regexSearchesRunAndUnsafeOnesAreRefusedWithACode() throws Exception {
-        compile("searcher", "{\"criteria\":[{\"path\":\"productType\",\"op\":\"regex\",\"value\":\"^REVOL\"}]}")
-                .andExpect(jsonPath("$.command").value("TRD where matches(productType, '^REVOL')"));
+        compile("searcher", "{\"criteria\":[{\"path\":\"productName\",\"op\":\"regex\",\"value\":\"^REVOL\"}]}")
+                .andExpect(jsonPath("$.command").value("TRD where matches(productName, '^REVOL')"));
         mvc.perform(get("/api/v1/search").param("q", "TRD where matches(productType, '^REVOL')").header("Authorization", as("searcher")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(6));
         mvc.perform(get("/api/v1/search").param("q", "TRD productType matches '^revol.*r$'").header("Authorization", as("searcher")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(6));
         mvc.perform(get("/api/v1/search").param("q", "TRD where matchesCase(productType, 'revol')").header("Authorization", as("searcher")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.matched").value(0));
-        compile("searcher", "{\"criteria\":[{\"path\":\"productType\",\"op\":\"regex\",\"value\":\"(a)\\\\1\"}]}")
+        compile("searcher", "{\"criteria\":[{\"path\":\"productName\",\"op\":\"regex\",\"value\":\"(a)\\\\1\"}]}")
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4010"));
         mvc.perform(get("/api/v1/search").param("q", "TRD where matches(productType, '(?=x)y')").header("Authorization", as("searcher")))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-4010"));
