@@ -143,7 +143,7 @@ def test_the_data_source_lists_the_packs_connectors_and_links_to_edit_or_create_
     text = dialog.inner_text()
     for t in ("Connectors of lakepack", "item-store", "running", "thing-stream", "not configured", "nothing defines it", "/srv/drishti/config/connectors", "Admin"):
         assert t in text, t
-    assert dialog.locator("[data-connector='item-store'] a").get_attribute("href") == "/admin/connectors?name=item-store"
+    assert dialog.locator("[data-connector='item-store'] a.fk").get_attribute("href") == "/admin/connectors?name=item-store"
     assert dialog.locator("[data-connector='thing-stream'] a").get_attribute("href") == "/admin/connectors?new=thing-stream"      # create, pre-filled from the pack's suggestion
     assert dialog.locator("[data-ds-msg]").inner_text().startswith("1 connector is not configured")
     assert dialog.locator("input, textarea").count() == 0                                          # a view: nothing to edit here

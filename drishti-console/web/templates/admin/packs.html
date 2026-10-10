@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Packs · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -57,11 +57,11 @@
     <tbody>
     {% for p in packs %}
       <tr data-pack="{{ p.name }}">
-        <td><b>{{ p.title }}</b>{% if p.sample %} <span class="st st-warn" data-sample-badge title="A sample pack: a demonstration, shown or hidden by the sample-pack setting">Sample</span>{% endif %}<div class="mono text-muted-d">{{ p.name }} {{ p.version }}</div></td>
+        <td class="pk-name"><b><a href="/admin/packs/{{ p.name }}" data-detail-link title="Open {{ p.title }}: kinds, Sutras, connectors, loads and history">{{ p.title }}</a></b>{% if p.sample %} <span class="st st-warn" data-sample-badge title="A sample pack: a demonstration, shown or hidden by the sample-pack setting">Sample</span>{% endif %}<div class="mono text-muted-d">{{ p.name }} {{ p.version }}</div></td>
         <td class="pk-desc">{{ p.description }}</td>
-        <td class="mono">{{ (p.extends or []) | join(', ') or '—' }}{% if p.requiredBy %}<div class="text-muted-d">needed by {{ p.requiredBy | join(', ') }}</div>{% endif %}</td>
+        <td class="mono">{% for x in p.extends or [] %}<a href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}—{% endfor %}{% if p.requiredBy %}<div class="text-muted-d">needed by {% for x in p.requiredBy %}<a href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% endfor %}</div>{% endif %}</td>
         <td class="mono">{% if p.loaded %}{{ (p.kinds or []) | length }}{% if p.mnemonics %} <span class="text-muted-d">({{ p.mnemonics[:4] | join(' ') }}{{ ' …' if p.mnemonics | length > 4 }})</span>{% endif %}{% else %}—{% endif %}</td>
-        <td class="mono">{{ (p.connectors or []) | join(', ') or '—' }}</td>
+        <td class="mono">{% for x in p.connectors or [] %}<a href="/admin/connectors/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}—{% endfor %}</td>
         <td>{% if not p.loaded %}<span class="st" title="On disk; Load it from here, or name it in drishti.packs.enabled (DRISHTI_PACKS)">not loaded</span>
             {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
             {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{{ retry_note(p.retry) }}{% endif %}

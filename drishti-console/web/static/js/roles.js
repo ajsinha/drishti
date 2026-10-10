@@ -23,7 +23,7 @@
     var pmsg = packs.querySelector('[data-msg]');
     packs.querySelectorAll('[data-switch]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var name = b.closest('tr').getAttribute('data-pack'), on = b.getAttribute('data-switch') === 'on';
+        var name = b.closest('[data-pack]').getAttribute('data-pack'), on = b.getAttribute('data-switch') === 'on';
         if (!on && !window.confirm('Switch ' + name + ' off for everyone? Its kinds cannot be opened until it is switched on again.')) { return; }
         fetch('/admin/api/packs/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: on }) })
           .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
@@ -39,7 +39,7 @@
     var lmsg = packs.querySelector('[data-msg]');
     packs.querySelectorAll('[data-load], [data-registry]').forEach(function (b) {
       b.addEventListener('click', function () {
-        var row = b.closest('tr'), name = row.getAttribute('data-pack'), version = row.getAttribute('data-version');
+        var row = b.closest('[data-pack]'), name = row.getAttribute('data-pack'), version = row.getAttribute('data-version');
         var action = b.getAttribute('data-load') || b.getAttribute('data-registry');
         var url = b.hasAttribute('data-registry')
           ? '/admin/api/registry/' + encodeURIComponent(name) + (action === 'install' ? '/' + encodeURIComponent(version) + '/install' : '/rollback')

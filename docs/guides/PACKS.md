@@ -446,6 +446,20 @@ Three more things live on **Admin → Packs**; each is written up step by step, 
 The same from the terminal: `drishti.py server packs deploy|history|rollback|datasource get`
 ([CLI_GUIDE.md](CLI_GUIDE.md#server-packs-deploy-history-rollback-and-datasource)). A personal API token needs the `packs:admin` scope; connectors have their own commands, `drishti.py connector ...`.
 
+### One pack: its own page
+
+Each pack title on **Admin → Packs** links to `/admin/packs/<name>` (the *Builds on*, *needed by* and *Connectors* cells link to the packs and connectors they name).
+
+![One pack: status, kinds with mnemonics, Sutras, connectors, loads and history](../connectors/img/connector_files/12-pack-detail.jpg)
+
+The page shows the title, version, code, description, the **Sample** badge, who changed the pack and when, and the status: **on**, **off**, **not loaded** or **refused**, with the
+reason and the retry state (*next retry in Ns (attempt k)*, **Retry now**) when the server is trying again. Under it: what the pack **builds on** and what **needs** it; the
+**kinds with their mnemonics**, a link that opens a record of each kind (where one exists) and one to `FORM <pack>` for the kind, with its form fields (declared in the `form:` section or
+inferred); the **Sutras** with their versions and **Open in Build**; the **connectors it names**, each linked to its page, a name nothing defines flagged **missing** with **Create**;
+how many kinds carry About text and glossary terms; today's **data-load expectations** and the last load, linking to the data loads page; and the pack's **deploy history** with
+**Roll back to this**. **Switch on/off**, **Load** and **Unload** are the list's buttons with the same rules. The server side is `GET /api/v1/admin/packs/{name}/detail` (administrators; kinds, mnemonics, forms, Sutras
+whose files live in the pack, About counts), beside the existing `GET /api/v1/admin/packs`, `/packs/{name}/datasource`, `/loads/{name}` and `/packs/history?pack=`.
+
 ## Telling Drishti new data has landed
 
 A pack can say which kinds its ETL is expected to land each business day, by when, and who is told, in a `loads:` section of its `pack.yaml`

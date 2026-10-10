@@ -2024,6 +2024,41 @@ open views carry on. The page confirms and refreshes. A pack loaded this way sho
 same way (not while another loaded pack builds on it). See
 [PACKS.md](PACKS.md#loading-a-pack-while-the-server-runs).
 
+#### One pack: its own page
+
+In the *Pack* column every title is a link (Tab to it, Enter opens it) to `/admin/packs/<name>`; *Builds on*, *needed by* and *Connectors* link to the
+packs and connectors they name. The page gathers what the list can only hint at:
+
+![Admin → Packs → one pack: status, kinds with their mnemonics, Sutras, connectors, loads and history](../connectors/img/connector_files/12-pack-detail.jpg)
+
+- **Summary:** title, version, code, description, the **Sample** badge, who changed it and when, and the status: **on**, **off**, **not loaded**, or **refused**
+  (a pack whose files could not be used) with the reason and, when the server is trying again, *failed — next retry in Ns (attempt k)* and **Retry now**.
+  **Builds on** and **Needed by** are links to the other packs' pages. **Switch on/off** and **Load/Unload** are the list's buttons, with the same safeguards.
+- **Kinds and mnemonics:** each kind with its mnemonic, a link that **opens a record of the kind** (where the pack has one), a link to `FORM <pack>`
+  for that kind, and its form fields (declared in the pack's `form:` section, or *inferred*).
+- **Sutras:** the pack's Sutras with their versions, each with **Open in Build** (the Build workbench).
+- **Connectors it names:** state and kinds for each, a link to its page, and, for a name nothing defines, **missing** with a **Create** button that opens the editor
+  pre-filled from the pack's suggestion.
+- **Query by form and About:** how many kinds declare a form, how many carry About text and how many glossary terms.
+- **Data loads:** today's expectations and their state, the last load, and a link to the full [data loads page](DATA_LOADS.md).
+- **Deploy history:** the pack's deployments and rollbacks with **Roll back to this** for each kept version.
+
+#### One connector: its own page
+
+In *Admin → Connectors* the connector name is a link to `/admin/connectors/<name>` (the *Used by* column links to the packs):
+
+![Admin → Connectors → one connector: summary, TLS certificates and their expiry, packs, settings, the file and its history](../connectors/img/connector_files/11-connector-detail.jpg)
+
+It shows the plugin, where the connector is defined (file, pack or the deprecated `application.yaml`), whether it is on, its **status** and the plugin's own health,
+the time of its last update, and, when it failed, *next retry in Ns (attempt k)* with **Retry now**. **TLS** says whether it is on, which protocols, whether the
+host name is checked and, for every certificate the settings name, **when it expires** (a warning under 30 days, *expired* in red). Below: the kinds it serves, the
+packs and kinds that use it (links), the **settings in effect** with credentials masked as `***`, the file as read-only text and the kept earlier versions.
+**Edit** opens the same editor as the list, **Test connection** opens it on the Test tab and runs the test, **Compare or restore** opens the History tab,
+**Disable/Enable** and **Reset to pack default** (or **Delete**, for a file no pack suggests) work as on the list, with the same questions when packs use the connector.
+Both pages are for administrators, work in both themes and on a phone, where every link and button is at least 44 px:
+
+![The connector page on a phone](../connectors/img/connector_files/13-connector-detail-phone.jpg) ![The pack page on a phone](../connectors/img/connector_files/14-pack-detail-phone.jpg)
+
 ### Admin → Health: is everything up?
 
 Worked example: check that every data source is up.

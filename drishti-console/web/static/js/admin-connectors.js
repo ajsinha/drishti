@@ -54,6 +54,7 @@
   // ---- the list: filter ---------------------------------------------------------------------------------------------------
   var filter = $('[data-filter]'), none = $('[data-filter-none]'), stateSel = $('[data-state-filter]'), originSel = $('[data-origin-filter]');
   function applyFilter() {
+    if (!filter) { return; }               // the detail page has the editor but no list
     var text = filter.value.trim().toLowerCase(), st = stateSel.value, org = originSel.value, shown = 0;
     $$('[data-list] tbody tr[data-conn]').forEach(function (tr) {
       var hit = (!text || tr.textContent.toLowerCase().indexOf(text) >= 0)
@@ -63,7 +64,7 @@
     });
     none.hidden = shown > 0 || !$('tr[data-conn]');
   }
-  [filter, stateSel, originSel].forEach(function (n) { n.addEventListener('input', applyFilter); n.addEventListener('change', applyFilter); });
+  [filter, stateSel, originSel].filter(Boolean).forEach(function (n) { n.addEventListener('input', applyFilter); n.addEventListener('change', applyFilter); });
 
   // ---- confirm ------------------------------------------------------------------------------------------------------------
   var confirmDlg = $('[data-confirm-dialog]');
@@ -87,7 +88,8 @@
   function usesOf(detail) { return (detail.usedBy || []).map(function (u) { return 'pack ' + u.pack + (u.kinds && u.kinds.length ? ' (' + u.kinds.join(', ') + ')' : ''); }); }
 
   // ---- row actions --------------------------------------------------------------------------------------------------------
-  function reloadSoon() { setTimeout(function () { location.reload(); }, 600); }
+  var onDetail = root.hasAttribute('data-detail');
+  function reloadSoon(gone) { setTimeout(function () { if (gone && onDetail) { location.href = '/admin/connectors'; } else { location.reload(); } }, 600); }
   function fetchDetail(name) { return call('GET', '/' + q(name)); }
 
   function toggle(name, on) {
@@ -129,7 +131,7 @@
         call('DELETE', '/' + q(name), null, d.body.etag ? { 'If-Match': d.body.etag } : {}, uses.length ? '?confirm=true' : '').then(function (r) {
           if (!r.ok) { say(msg, why(r), true); return; }
           say(msg, name + ' is deleted.');
-          reloadSoon();
+          reloadSoon(true);
         });
       });
     });
@@ -384,7 +386,7 @@
     });
   }
   function openExisting(name, from) {
-    fetchDetail(name).then(function (r) {
+    return fetchDetail(name).then(function (r) {
       if (!r.ok) { say(msg, why(r), true); return; }
       var c = r.body;
       var d = { isNew: false, hasFile: !!c.text, name: name, plugin: c.plugin, enabled: c.enabled, kinds: c.kinds || [], description: c.description || '', settings: c.settings || {}, etag: c.etag, template: c.template, text: c.text };
@@ -392,15 +394,16 @@
         : c.origin === 'pack' ? 'Defined by pack ' + c.template + ' and not yet a file: saving writes ' + name + '.yaml.'
         : 'Defined in the server\'s own configuration (deprecated): saving writes ' + name + '.yaml. Credentials show as *** and must be re-entered as ${ENV_VAR} references.';
       var go2 = c.text ? call('POST', '/' + q(name) + '/parse', { text: c.text }) : Promise.resolve(null);
-      go2.then(function (p) {
+      return go2.then(function (p) {
         if (p && p.ok && p.body.plugin) {
           d.plugin = p.body.plugin; d.enabled = p.body.enabled; d.kinds = p.body.kinds || []; d.description = p.body.description || ''; d.settings = p.body.settings || {};
         }
-        open({ from: from, draft: d, note: note, problems: (c.problems || []).map(function (x) { return { level: 'warning', field: name, message: x }; }), yaml: c.text });
+        return open({ from: from, draft: d, note: note, problems: (c.problems || []).map(function (x) { return { level: 'warning', field: name, message: x }; }), yaml: c.text });
       });
     });
   }
-  $('[data-new]').addEventListener('click', function () { openNew('', this); });
+  var newBtn = $('[data-new]');
+  if (newBtn) { newBtn.addEventListener('click', function () { openNew('', this); }); }
   dlg.addEventListener('close', function () { if (opener && document.body.contains(opener)) { opener.focus(); } });
   $('[data-close]', dlg).addEventListener('click', function () { hide(dlg); });
 
@@ -528,12 +531,33 @@
   document.addEventListener('keydown', function (e) {
     var t = e.target, typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
     if (typing || e.ctrlKey || e.metaKey || e.altKey || dlg.open || confirmDlg.open) { return; }
-    if (e.key === 'n') { e.preventDefault(); openNew('', $('[data-new]')); }
-    else if (e.key === '/') { e.preventDefault(); filter.focus(); }
+    if (e.key === 'n' && newBtn) { e.preventDefault(); openNew('', newBtn); }
+    else if (e.key === '/' && filter) { e.preventDefault(); filter.focus(); }
   });
 
   // links from a pack: ?name=x opens it, ?new=x opens New connector pre-filled from the pack's suggestion
   var params = new URLSearchParams(location.search);
-  if (params.get('name')) { openExisting(params.get('name'), null); }
+  if (params.get('name')) {
+    openExisting(params.get('name'), null).then(function () {
+      if (params.get('tab') === 'history') { go('history'); }
+      else if (params.get('tab') === 'test') { $('[data-test]').click(); }
+    });
+  }
   else if (params.get('new')) { openNew(params.get('new'), null); }
+
+  // the connector's own page (/admin/connectors/<name>): its buttons reuse the list's actions and the editor
+  if (onDetail) {
+    var me = root.getAttribute('data-detail');
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-act]');
+      if (!b) { return; }
+      var act = b.getAttribute('data-act');
+      if (act === 'edit') { openExisting(me, b); }
+      else if (act === 'history') { openExisting(me, b).then(function () { go('history'); }); }
+      else if (act === 'test') { openExisting(me, b).then(function () { $('[data-test]').click(); }); }
+      else if (act === 'enable' || act === 'disable') { toggle(me, act === 'enable'); }
+      else if (act === 'reset') { reset(me); }
+      else if (act === 'delete') { remove(me); }
+    });
+  }
 })();

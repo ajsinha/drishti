@@ -69,6 +69,21 @@ async def page(request: Request):
     return render(request, "admin/connectors.html", connectors=listing.get("connectors", []), listing=listing, plugins=plugins.get("plugins", []), status=status)
 
 
+@router.get("/{name}")
+async def detail_page(request: Request, name: str):
+    """One connector's page: what it is, how it is doing, who uses it, its settings (secrets masked), its file and history, and the
+    actions of the list. Everything is read from the server's connector API; the editor is the list page's own."""
+    me = ident(request)
+    if not me.is_admin:
+        return render(request, "admin/forbidden.html", status_code=403)
+    try:
+        c = await _server(request, "GET", f"/{quote(name)}")
+        status = await request.app.state.backend.admin("GET", "/status", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+    return render(request, "admin/connector_detail.html", c=c, status=status)
+
+
 @router.get("/api/list")
 async def api_list(request: Request):
     try:

@@ -522,6 +522,18 @@ class FakeBackend:
             if body.get("username") in self.users:
                 raise BackendError(409, "DRS-6002", "exists")
             return {**body, "enabled": True}
+        if path == "/packs" and method == "GET":                      # Admin -> Packs and the pack's own page
+            return [{"name": "trading", "title": "Trading", "description": "Trades, books and counterparties", "version": "1.0.0", "loaded": True, "added": False,
+                     "enabled": True, "sample": False, "extends": [], "requiredBy": [], "kinds": ["trade"], "connectors": ["trading-store"], "mnemonics": ["TRD"]}]
+        if path == "/packs/trading/detail":
+            return {"name": "trading", "code": "TRD", "routes": {"trade": "trading-store"}, "glossaryTerms": 0, "sutras": [{"name": "trade-view", "version": 1, "versions": [1], "kind": "trade"}],
+                    "kinds": [{"kind": "trade", "mnemonic": "TRD", "label": "Trade", "declaredForm": False, "formFields": [], "about": False, "glossaryTerms": 0}]}
+        if path == "/packs/trading/datasource":
+            return {"directory": "/srv/connectors", "missing": [], "connectors": [{"name": "trading-store", "defined": True, "state": "RUNNING", "kinds": ["trade"]}]}
+        if path == "/connectors/trading-store" and method == "GET":    # Admin -> Connectors -> one connector
+            return {"name": "trading-store", "origin": "pack", "plugin": "delta", "kinds": ["trade"], "description": "", "enabled": True, "state": "RUNNING", "health": "UP",
+                    "problems": [], "usedBy": [{"pack": "trading", "kinds": ["trade"]}], "template": "trading", "directory": "/srv/connectors", "settings": {"root": "/lake"},
+                    "tls": None, "text": "", "history": [], "etag": None}
         return {"ok": True}
 
     enabled_packs = ["finance", "logistics"]

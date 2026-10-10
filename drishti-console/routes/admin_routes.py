@@ -117,6 +117,46 @@ async def packs(request: Request):
                   deploy_max_mb=request.app.state.pack_upload_limit // 1048576)
 
 
+@router.get("/packs/{name}")
+async def pack_detail(request: Request, name: str):
+    """One pack's page: its summary and state, what it extends and who needs it, its kinds (with an example record to open and the form),
+    its Sutras, the connectors it names, its data loads, and its deploy history. Pieces the server cannot give (a pack that is not loaded
+    has no kinds yet) are left out; only the pack itself being unknown is an error."""
+    import asyncio
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    backend = request.app.state.backend
+    try:
+        rows = await backend.admin("GET", "/packs", me)
+    except BackendError as e:
+        return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+    row = next((p for p in rows if p.get("name") == name), None)
+    if row is None:
+        return render(request, "admin/forbidden.html", status_code=404,
+                      error=BackendError(404, "DRS-1001", f"no pack named '{name}' is on disk or loaded"))
+    q = quote(name)
+
+    async def best(coro, fallback):
+        try:
+            return await coro
+        except BackendError:
+            return fallback
+    loaded = bool(row.get("loaded"))
+    detail, overview, sources, expectations, loads, history = await asyncio.gather(
+        best(backend.admin("GET", f"/packs/{q}/detail", me), {}) if loaded else asyncio.sleep(0, {}),
+        best(backend.pack_overview(name, me), {}) if loaded else asyncio.sleep(0, {}),
+        best(backend.admin("GET", f"/packs/{q}/datasource", me), {}) if loaded else asyncio.sleep(0, {}),
+        best(backend.admin("GET", f"/loads/{q}/expectations", me), {}) if loaded else asyncio.sleep(0, {}),
+        best(backend.admin("GET", f"/loads/{q}", me, limit=3), {}) if loaded else asyncio.sleep(0, {}),
+        best(backend.admin("GET", "/packs/history", me, limit=30, pack=name), {"history": [], "kept": {}}))
+    examples = {k.get("kind"): k.get("example") for k in (overview or {}).get("kinds", [])}
+    every = {p.get("name") for p in rows}
+    return render(request, "admin/pack_detail.html", p=row, d=detail or {}, examples=examples, sources=sources or {}, expectations=expectations or {},
+                  loads=(loads or {}).get("loads", []), history=history.get("history", []), kept=(history.get("kept") or {}).get(name, []),
+                  known_packs=every, status=await _status(request))
+
+
 @router.post("/api/pack-samples")
 async def set_pack_samples(request: Request):
     """Hide the sample packs from business users (``developers``), from everyone (``hidden``), or show them (``visible``); ``default``

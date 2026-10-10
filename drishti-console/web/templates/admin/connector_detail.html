@@ -1,0 +1,103 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}{{ c.name }} · Connectors · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-embedding.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-connectors.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% from "_macros/retry.html" import retry_note, retry_button %}
+{% set states = {'RUNNING': ['running', 'st-ok'], 'FAILED': ['failed', 'st-bad'], 'DISABLED': ['disabled', ''], 'IDLE': ['idle', 'st-warn'], 'NOT_LOADED': ['not started', 'st-warn']} %}
+<div class="adm" data-connectors data-detail="{{ c.name }}" data-kinds="" data-directory="{{ c.directory }}">
+  {% with tab='connectors' %}{% include "admin/_nav.html" %}{% endwith %}
+  <p class="adm-crumb"><a href="/admin/connectors">Connectors</a> <span aria-hidden="true">/</span> <span class="mono">{{ c.name }}</span></p>
+  <h1 class="ws-h"><span class="mono">{{ c.name }}</span> <a class="emb-help" href="/help/connector-files" aria-label="Help: connector files and this page" title="Help: connector files and this page">?</a></h1>
+  {% if c.description %}<p class="text-muted-d">{{ c.description }}</p>{% endif %}
+  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+
+  <section aria-labelledby="cdSummary" class="det-sec">
+    <h2 class="ws-h" id="cdSummary">Summary</h2>
+    <dl class="det-kv">
+      <dt>Plugin</dt><dd class="mono">{{ c.plugin or '—' }}</dd>
+      <dt>Origin</dt><dd><span class="st{{ '' if c.origin == 'file' else ' st-warn' }}">{{ c.origin }}</span>
+        {% if c.file %}<span class="mono text-muted-d">{{ c.file }}</span>{% endif %}</dd>
+      <dt>Switched</dt><dd><span class="st {{ 'st-ok' if c.enabled else '' }}" data-enabled>{{ 'on' if c.enabled else 'off' }}</span></dd>
+      <dt>Status</dt><dd>{% set st = states.get(c.state, [c.state | lower, '']) %}<span class="st {{ st[1] }}" data-state>{{ st[0] }}</span>
+        {% if c.health %}<span class="text-muted-d" data-health>{{ c.health }}</span>{% endif %}
+        {% for p in c.problems %}<div class="t-bad conn-problem">{{ p }}</div>{% endfor %}</dd>
+      <dt>Last update</dt><dd class="mono">{{ when_local(c.lastUpdate) if c.lastUpdate else '—' }}</dd>
+      <dt>File changed</dt><dd class="mono">{{ when_local(c.updated) if c.updated else '—' }}</dd>
+      {% if c.retry %}<dt>Retry</dt><dd data-retry-state>{{ retry_note(c.retry) }} {{ retry_button('connectors') }}</dd>{% endif %}
+      <dt>TLS</dt><dd data-tls>{% set t = c.tls %}{% if not t %}<span class="text-muted-d">not configured</span>
+        {% elif t.error %}<span class="t-bad">{{ t.error }}</span>
+        {% elif not t.enabled %}<span class="text-muted-d">configured but off (<span class="mono">tls.enabled</span> is false)</span>
+        {% else %}<span class="st st-ok">on</span> <span class="text-muted-d">{{ (t.protocols or []) | join(', ') }}; host name {{ 'checked' if t.verifyHostname else 'NOT checked' }}</span>
+          {% for x in t.certificates or [] %}<div><span class="mono">{{ x.subject }}</span> <span class="text-muted-d">({{ x.source }})</span>
+            {% if x.expired %}<span class="st st-bad">expired {{ x.notAfter[:10] }}</span>{% else %}<span class="st {{ 'st-warn' if x.daysLeft < 30 else 'st-ok' }}">expires {{ x.notAfter[:10] }} ({{ x.daysLeft }} days)</span>{% endif %}</div>
+          {% else %}<div class="text-muted-d">no client certificate is configured, so none of its own expires</div>{% endfor %}
+          {% for w in t.warnings or [] %}<div class="t-warn">{{ w }}</div>{% endfor %}{% endif %}</dd>
+    </dl>
+    <p class="adm-actions det-actions">
+      <button type="button" class="fk" data-act="edit" aria-label="Edit {{ c.name }}">Edit</button>
+      <button type="button" class="fk" data-act="test" aria-label="Test the connection of {{ c.name }}">Test connection</button>
+      <button type="button" class="fk" data-act="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
+      {% if c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
+      {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-act="delete" aria-label="Delete {{ c.name }}">Delete</button>{% endif %}
+    </p>
+  </section>
+
+  <section aria-labelledby="cdKinds" class="det-sec">
+    <h2 class="ws-h" id="cdKinds">Kinds it serves</h2>
+    <p data-kinds-list>{% for k in c.kinds %}<span class="mono det-chip">{{ k }}</span> {% else %}<span class="text-muted-d">None named: it serves whatever the packs route to it.</span>{% endfor %}</p>
+  </section>
+
+  <section aria-labelledby="cdPacks" class="det-sec">
+    <h2 class="ws-h" id="cdPacks">Packs that use it</h2>
+    <ul class="det-list" data-used-by>{% for u in c.usedBy %}<li><a class="mono" href="/admin/packs/{{ u.pack }}">{{ u.pack }}</a>
+      {% if u.kinds %}<span class="text-muted-d">reads <span class="mono">{{ u.kinds | join(', ') }}</span> through it</span>{% endif %}</li>
+    {% else %}<li class="text-muted-d">No pack uses it.</li>{% endfor %}</ul>
+  </section>
+
+  <section aria-labelledby="cdSettings" class="det-sec">
+    <h2 class="ws-h" id="cdSettings">Settings in effect</h2>
+    {% if c.settings %}<div class="tbl-wrap"><table class="tbl adm-tbl" data-plain data-settings>
+      <caption class="visually-hidden">The settings this connector runs with; credentials are masked</caption>
+      <thead><tr><th scope="col">Setting</th><th scope="col">Value</th></tr></thead>
+      <tbody>{% for k, v in c.settings.items() %}<tr><th scope="row" class="mono">{{ k }}</th><td class="mono">{{ v }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d">No settings.</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="cdFile" class="det-sec">
+    <h2 class="ws-h" id="cdFile">The file</h2>
+    {% if c.text %}<p class="text-muted-d">Read only here; <b>Edit</b> opens the editor.</p>
+    <pre class="det-pre mono" tabindex="0" aria-label="The connector file {{ c.name }}.yaml" data-file-text>{{ c.text }}</pre>
+    {% else %}<p class="text-muted-d">{% if c.origin == 'pack' %}Defined by pack <span class="mono">{{ c.template }}</span> and not yet a file; saving in the editor writes <span class="mono">{{ c.name }}.yaml</span>.
+      {% else %}Defined in the server's own configuration (deprecated); saving in the editor writes <span class="mono">{{ c.name }}.yaml</span>.{% endif %}</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="cdHistory" class="det-sec">
+    <h2 class="ws-h" id="cdHistory">History</h2>
+    {% if c.history %}<p class="text-muted-d">Every earlier text is kept. <button type="button" class="fk" data-act="history">Compare or restore</button></p>
+    <ul class="det-list" data-history-list>{% for h in c.history %}<li class="mono">{{ h.id }} <span class="text-muted-d">{{ h.bytes }} bytes</span></li>{% endfor %}</ul>
+    {% else %}<p class="text-muted-d">No earlier version yet: the first change keeps the text it replaces.</p>{% endif %}
+  </section>
+
+  {% include "admin/_connector_dialogs.html" %}
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script>{% endblock %}
