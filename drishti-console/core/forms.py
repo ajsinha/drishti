@@ -96,3 +96,24 @@ def prepare(form: dict, params: Iterable[tuple[str, str]]) -> dict:
             groups.append(group)
         group["fields"].append(g)
     return {"groups": groups, "submitted": submitted}
+
+
+_SYMBOL = {"equals": "=", "contains": "contains", "starts": "starts", "regex": "matches", "between": "between", "relative": "", "in": "in", "is": "="}
+
+
+def summary(view: dict, shown: int = 3) -> str:
+    """One line of the criteria the form holds ("desk = RATES · notional > 10m · +3 more"), for when the form is folded away."""
+    parts: list[str] = []
+    for g in view["groups"]:
+        for f in g["fields"]:
+            held = [h for h in f["held"] if h and h != "any"]
+            if not held:
+                continue
+            op = _SYMBOL.get(f["op"], f["op"])
+            value = ",".join(held) if len(held) < 4 else f"{len(held)} values"
+            if f["op"] == "between":
+                value = f"{held[0]} and {f['held2']}"
+            parts.append(" ".join(x for x in (f["label"], op, value) if x))
+    if len(parts) > shown:
+        return " \u00b7 ".join(parts[:shown] + [f"+{len(parts) - shown} more"])
+    return " \u00b7 ".join(parts)

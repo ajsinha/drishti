@@ -16,7 +16,7 @@
 search grammar, shows that command, and runs it as any search: masks, kinds per role, packs per user and sample visibility apply."""
 from __future__ import annotations
 
-from urllib.parse import quote
+from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
@@ -90,8 +90,12 @@ async def form_page(request: Request, pack: str, kind: str = ""):
             out["titled"] = any(r["title"] != r["ref"]["id"] for r in out["rows"])
         except BackendError as e:
             out["error"] = e
+    folded = q.get("form") == "hidden" or (q.get("form") != "shown" and out["data"] is not None and not out["error"]
+                                           and bool(request.app.state.settings.get("form.collapse_on_submit", True)))
+    reopen = "/form/" + quote(pack) + "?" + urlencode([(k, v) for k, v in params if k != "form"] + [("form", "shown")])
     saved = [s for s in (getattr(request.state, "settings", None) or {}).get("savedSearches") or [] if s.get("path", "").startswith(f"/form/{quote(pack)}")]
     fields = info["form"]["fields"]
     return render(request, "terminal/form.html", info=info, view=view, q=q, limits=forms.LIMITS, presets=forms.PRESETS, saved=saved,
                   sortable=[f for f in fields if not f.get("hidden") and f["type"] in ("text", "number", "amount", "date", "enum", "id")],
-                  any_indexed=any(f.get("indexed") for f in fields), screen="form", **out)
+                  any_indexed=any(f.get("indexed") for f in fields), screen="form",
+                  folded=folded, brief=forms.summary(view), reopen=reopen, collapse=bool(request.app.state.settings.get("form.collapse_on_submit", True)), **out)

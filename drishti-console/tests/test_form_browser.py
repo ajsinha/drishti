@@ -122,6 +122,7 @@ def test_a_regex_runs_and_an_unsafe_one_is_refused_with_its_code(page, url, be):
     page.press('[name="v.counterparty.name"]', "Enter")
     page.wait_for_selector("[data-qf-command]")
     assert "matches(counterparty.name, '^Mer.*n')" in page.inner_text("[data-qf-command]")
+    page.keyboard.press("Alt+f")                                                                       # the results folded the form; Alt+F shows it
     page.fill('[name="v.counterparty.name"]', "(?=x)y")
     page.press('[name="v.counterparty.name"]', "Enter")
     page.wait_for_selector("[data-qf-error]")
@@ -165,4 +166,55 @@ def test_on_a_phone_every_control_is_a_44px_target(browser, url):
     assert small == []
     cols = pg.evaluate("[...new Set([...document.querySelectorAll('.qf-field')].map(e => Math.round(e.getBoundingClientRect().left)))].length")
     assert cols == 1                                                                                     # one column
+    ctx.close()
+
+
+def test_the_form_folds_to_one_line_of_criteria_and_back(page, url):
+    page.goto(url + "/form/trading", wait_until="load")
+    page.select_option('[name="op.mtm"]', ">")
+    page.fill('[name="v.mtm"]', "1m")
+    page.fill('[name="v.tradeId"]', "IRS-48213")
+    page.click(".qf-go")                                                                                 # results arrive: the form folds itself
+    page.wait_for_selector("[data-qf-command]")
+    assert not page.locator("#qfBody").is_visible() and page.locator("[data-qf-summary]").is_visible()
+    assert page.get_attribute("[data-qf-toggle]", "aria-expanded") == "false" and page.get_attribute("[data-qf-toggle]", "aria-controls") == "qfBody"
+    assert "Show form" in page.inner_text("[data-qf-toggle]")
+    line = page.inner_text("[data-qf-summary]")
+    assert "Mark to market > 1m" in line and "1m" in line and "IRS-48213" in line
+    page.click("[data-qf-toggle]")                                                                       # the button shows it, criteria kept
+    assert page.locator("#qfBody").is_visible() and "form=shown" in page.url
+    assert page.get_attribute("[data-qf-toggle]", "aria-expanded") == "true" and "Hide form" in page.inner_text("[data-qf-toggle]")
+    assert page.input_value('[name="v.mtm"]') == "1m"
+    page.keyboard.press("Alt+f")                                                                         # the key hides it
+    assert not page.locator("#qfBody").is_visible() and "form=hidden" in page.url
+    page.click("[data-qf-summary]")                                                                      # the summary shows it
+    assert page.locator("#qfBody").is_visible() and page.input_value('[name="v.tradeId"]') == "IRS-48213"
+    page.keyboard.press("Alt+f")
+    page.reload(wait_until="load")                                                                       # the address carries the state
+    assert not page.locator("#qfBody").is_visible()
+    page.goto(url + "/form/trading?kind=trade&op.mtm=%3E&v.mtm=1m&run=1&form=shown", wait_until="load")
+    assert page.locator("#qfBody").is_visible()
+    page.click("table.tbl tbody a:has-text('IRS-48213')")
+    page.wait_for_url("**/v/trade/IRS-48213")
+    page.keyboard.press("Alt+ArrowLeft")                                                                 # back from a result: the criteria are kept
+    page.wait_for_url("**/form/trading?**")
+    assert page.locator("#qfBody").is_visible()                                                          # as it was left (shown)
+    page.keyboard.press("Alt+f")
+    page.click("[data-qf-summary]")
+    assert page.input_value('[name="v.mtm"]') == "1m"
+
+
+def test_the_form_stays_open_when_the_person_kept_it_open_and_on_a_phone_the_toggle_is_44px(browser, url):
+    ctx = browser.new_context(viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True, bypass_csp=True)
+    pg = ctx.new_page()
+    pg.goto(url + "/form/trading?kind=trade&op.mtm=%3E&v.mtm=1m&run=1", wait_until="load")
+    assert not pg.locator("#qfBody").is_visible()
+    for sel in ("[data-qf-toggle]", "[data-qf-summary]"):
+        assert pg.locator(sel).bounding_box()["height"] >= 43.5
+    assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
+    pg.tap("[data-qf-toggle]")                                                                           # shown by hand: kept open on the next search in this tab
+    assert pg.locator("#qfBody").is_visible()
+    pg.tap(".qf-go")
+    pg.wait_for_selector("[data-qf-command]")
+    assert pg.locator("#qfBody").is_visible() and "form=shown" in pg.url
     ctx.close()
