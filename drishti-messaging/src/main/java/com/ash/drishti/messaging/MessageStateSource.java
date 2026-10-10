@@ -348,6 +348,12 @@ public abstract class MessageStateSource implements SourcePlugin {
                 size / 1_048_576, store.budget() / 1_048_576, oldest.size(), store.sizeOnDisk() / 1_048_576);
     }
 
+    /**
+     * The TLS material the connector built from its {@code tls.*} settings, set by the subclass when it connects over TLS: health
+     * then also says when a configured certificate is about to expire.
+     */
+    protected volatile com.ash.drishti.api.tls.TlsMaterial tls;
+
     /** Why the state store last failed to keep a message, until one is kept again. */
     private volatile String storeProblem;
 
@@ -357,7 +363,7 @@ public abstract class MessageStateSource implements SourcePlugin {
         if (problem != null) {
             return "DOWN: " + problem + " (messages are not acknowledged and come again)";
         }
-        String h = health.get();
+        String h = tls == null ? health.get() : tls.annotate(health.get(), java.time.Instant.now());
         if (store != null && store.overBudget() && h.startsWith("UP")) {
             double gib = 1024.0 * 1024 * 1024;                // the unit of state.max-gb
             return h + " (state store over its budget: " + Math.round(store.sizeOnDisk() / gib * 10) / 10.0 + " of "

@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.plugin.activemq;
 
+import com.ash.drishti.api.tls.TlsContexts;
+import com.ash.drishti.api.tls.TlsException;
+import com.ash.drishti.api.tls.TlsMaterial;
+import com.ash.drishti.api.tls.TlsSettings;
 import com.ash.drishti.messaging.MessageStateSource;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
@@ -28,7 +32,10 @@ import jakarta.jms.Topic;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.security.SecureRandom;
+import java.util.regex.Pattern;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSslConnectionFactory;
 
 /**
  * Live entities from ActiveMQ (Classic, OpenWire). Settings: {@code broker-url} (default
@@ -38,6 +45,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  * {@code cache-mb}; see {@link MessageStateSource}). Topics are read through durable subscriptions, so messages sent
  * while Drishti is away are delivered when it returns; each message is acknowledged after it is stored. A supervisor
  * rebuilds the connection if the session breaks for any other reason.
+ *
+ * <p><b>TLS.</b> A {@code broker-url} with {@code ssl://} (OpenWire over TLS, port 61617; also inside
+ * {@code failover:(ssl://a:61617,ssl://b:61617)}) connects over TLS, with the shared {@code tls.*} settings
+ * ({@link TlsSettings}): a private CA, a PKCS12/JKS truststore, hostname verification, and a client certificate for mutual
+ * TLS. The OpenWire client takes its protocol versions from the JVM ({@code jdk.tls.client.protocols}); {@code tls.protocols}
+ * and {@code tls.cipher-suites} are checked but cannot narrow them. AMQP (the {@code amqp+ssl://} scheme) is a different
+ * client, not part of this connector.
  */
 public final class ActiveMqSourcePlugin extends MessageStateSource {
 
@@ -52,7 +66,48 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
 
     @Override
     protected void connect() {
+        tls = tlsMaterial();                         // fails the start at once, with the file and the reason, when TLS is misconfigured
         loop = Thread.ofVirtual().name("drishti-activemq-" + sourceName).start(this::supervise);
+    }
+
+    private static final Pattern SSL_ENDPOINT = Pattern.compile("(ssl://[^,)?\\s]+)(\\?[^,)\\s]*)?");
+
+    private String brokerUrl() {
+        return context.setting("broker-url", "failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000");
+    }
+
+    private TlsMaterial tlsMaterial() {
+        TlsSettings ts = TlsSettings.from(context.settings());
+        boolean ssl = brokerUrl().contains("ssl://");
+        if (ts.enabled() && !ssl) {
+            throw new TlsException("tls.enabled is true but broker-url has no ssl:// endpoint (OpenWire over TLS is ssl://host:61617): "
+                    + brokerUrl());
+        }
+        return ssl ? TlsContexts.build(ts) : null;
+    }
+
+    /** The URL with {@code socket.verifyHostName=false} added to every ssl:// endpoint when hostname verification is off. */
+    static String withHostnameCheck(String url, boolean verify) {
+        if (verify) {
+            return url;
+        }
+        return SSL_ENDPOINT.matcher(url).replaceAll(m -> java.util.regex.Matcher.quoteReplacement(m.group(1)
+                + (m.group(2) == null ? "?" : m.group(2) + "&") + "socket.verifyHostName=false"));
+    }
+
+    /** The connection factory: an SSL one with the shared TLS material when the URL has ssl:// endpoints. */
+    ActiveMQConnectionFactory factory() {
+        String user = context.setting("user", null);
+        String password = context.setting("password", null);
+        TlsMaterial m = tls;
+        if (m == null) {
+            return new ActiveMQConnectionFactory(user, password, brokerUrl());
+        }
+        ActiveMQSslConnectionFactory f = new ActiveMQSslConnectionFactory(withHostnameCheck(brokerUrl(), m.settings().verifyHostname()));
+        f.setUserName(user);
+        f.setPassword(password);
+        f.setKeyAndTrustManagers(m.keyManagers(), m.trustManagers(), new SecureRandom());
+        return f;
     }
 
     private void supervise() {
@@ -63,7 +118,7 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
                 consume();
             } catch (Exception e) {
                 if (running) {
-                    health.set("DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage() + " (reconnecting)");
+                    health.set("DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage() + causes(e) + " (reconnecting)");
                 }
             } finally {
                 closeConnection();
@@ -78,10 +133,21 @@ public final class ActiveMqSourcePlugin extends MessageStateSource {
         }
     }
 
+    /** The chain of causes, as {@code ; caused by SSLHandshakeException: PKIX path building failed ...}: a TLS failure is in there. */
+    static String causes(Throwable e) {
+        StringBuilder sb = new StringBuilder();
+        Throwable c = e.getCause();
+        for (int i = 0; c != null && i < 5; i++, c = c.getCause()) {
+            if (c.getMessage() != null && !sb.toString().contains(c.getMessage()) && !String.valueOf(e.getMessage()).contains(c.getMessage())) {
+                sb.append("; caused by ").append(c.getClass().getSimpleName()).append(": ").append(c.getMessage());
+            }
+        }
+        return sb.toString();
+    }
+
     private void consume() throws JMSException {
         health.set("DOWN: connecting to " + context.setting("broker-url", "failover:(tcp://localhost:61616)"));
-        ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(context.setting("user", null), context.setting("password", null),
-                context.setting("broker-url", "failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000"));
+        ActiveMQConnectionFactory cf = factory();
         // a message the state store could not keep is redelivered until it is kept (the client's default gives up after
         // 6 and moves it to ActiveMQ.DLQ); max-redeliveries sets a limit when a dead-letter queue is wanted
         cf.getRedeliveryPolicy().setMaximumRedeliveries(Integer.parseInt(context.setting("max-redeliveries", "-1")));
