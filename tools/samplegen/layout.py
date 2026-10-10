@@ -42,7 +42,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-PACKS = ROOT / "packs"
+PACKS = ROOT / "config" / "packs"
 DOUBLE, STRING = "double", "string"
 ONE_FILE = 1 << 40                             # target file size for one write: never cut by bytes, only by file-rows
 
@@ -76,13 +76,13 @@ class Layout:
 
 
 def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, Layout]:
-    """Every kind's layout declared by a Delta connector of `domain` in packs/*/pack.yaml."""
+    """Every kind's layout declared by a Delta connector of `domain` in config/packs/*/pack.yaml."""
     import yaml
 
     out: dict[str, Layout] = {}
     for f in sorted(packs.glob("*/pack.yaml")):
         manifest = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
-        for conn in (manifest.get("connectors") or {}).values():
+        for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
             settings = conn.get("settings") or {}
             if conn.get("plugin") != "delta" or settings.get("domain") != domain:
                 continue
