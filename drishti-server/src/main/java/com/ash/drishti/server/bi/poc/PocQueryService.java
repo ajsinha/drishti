@@ -308,20 +308,27 @@ public final class PocQueryService implements AutoCloseable {
         }
     }
 
+    private final java.util.concurrent.locks.ReentrantLock connLock = new java.util.concurrent.locks.ReentrantLock();
+
     // ---- the sample lake -----------------------------------------------------------------------------------------------
 
-    private synchronized Connection connection() throws SQLException, IOException {
-        if (root == null) {
-            root = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
-            try (Statement s = root.createStatement()) {
-                s.execute("SET memory_limit = '768MB'");
-                s.execute("SET threads = 2");
-                s.execute("SET autoinstall_known_extensions = false");      // never download an extension at run time (delta is not bundled: see the class comment)
-                s.execute("SET autoload_known_extensions = false");
+    private Connection connection() throws SQLException, IOException {
+        connLock.lock();                          // opening DuckDB does I/O: a ReentrantLock (Java 21 pins virtual threads in synchronized)
+        try {
+            if (root == null) {
+                root = (DuckDBConnection) DriverManager.getConnection("jdbc:duckdb:");
+                try (Statement s = root.createStatement()) {
+                    s.execute("SET memory_limit = '768MB'");
+                    s.execute("SET threads = 2");
+                    s.execute("SET autoinstall_known_extensions = false");      // never download an extension at run time (delta is not bundled: see the class comment)
+                    s.execute("SET autoload_known_extensions = false");
+                }
+                ensureLake();
             }
-            ensureLake();
+            return root.duplicate();
+            } finally {
+            connLock.unlock();
         }
-        return root.duplicate();
     }
 
     private void ensureLake() throws SQLException, IOException {

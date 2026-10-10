@@ -65,6 +65,8 @@ class ArchitectureRulesTest {
     static final ArchRule noSerializable = noClasses()
             .that().areNotEnums().and().areNotAssignableTo(Throwable.class)
             .and().areNotAnnotatedWith(jakarta.persistence.Embeddable.class)   // JPA requires composite keys to be Serializable
+            .and().areNotAssignableTo("org.apache.iceberg.io.FileIO")            // Iceberg requires its FileIO (and the client supplier it holds) to be Serializable
+            .and().areNotAssignableTo("org.apache.iceberg.util.SerializableSupplier")
             .should().implement(java.io.Serializable.class)
             .allowEmptyShould(true);
 }

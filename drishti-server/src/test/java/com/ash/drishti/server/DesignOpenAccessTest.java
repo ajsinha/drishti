@@ -166,7 +166,11 @@ class DesignOpenAccessTest {
             assertThat(p.path("data").isNull() || p.path("data").isMissingNode()).as(id).isTrue();
             assertThat(p.path("empty").asBoolean()).as(id).isTrue();
         }
-        assertThat(view.toString()).doesNotContain("3.93", "3.54", "USD-SOFR");
+        var shown = view.deepCopy();                     // the view minus its timings: a millisecond figure such as 3.93 is not a curve value
+        if (shown instanceof com.fasterxml.jackson.databind.node.ObjectNode o) {
+            o.remove("timings");
+        }
+        assertThat(shown.toString()).doesNotContain("3.93", "3.54", "USD-SOFR");
     }
 
     @Test

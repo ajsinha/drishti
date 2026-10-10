@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.connectors;
 
+import java.util.concurrent.locks.ReentrantLock;
 import com.ash.drishti.api.SettingSpec;
 import com.ash.drishti.common.ConnectorSecrets;
 import com.ash.drishti.common.DrishtiException;
@@ -83,7 +84,7 @@ public final class ConnectorManager {
     private final Map<String, Instant> updated = new java.util.concurrent.ConcurrentHashMap<>();
     private final Set<String> applicationDefined;
     private final List<String> bootstrapMessages;
-    private final Object scanLock = new Object();
+    private final ReentrantLock scanLock = new ReentrantLock();   // file reads and writes: a ReentrantLock, not synchronized (Java 21 pins virtual threads)
     private volatile DirectoryWatcher watcher;
 
     public ConnectorManager(ConnectorFiles files, SourceRegistry registry, SourcesProperties props, PackRegistry packs, ConfigurableEnvironment env,
@@ -222,7 +223,8 @@ public final class ConnectorManager {
      * file is gone (a pack's template takes over where there is one). Safe to call from any thread; returns the names acted on.
      */
     public List<String> scan() {
-        synchronized (scanLock) {
+        scanLock.lock();
+        try {
             List<String> acted = new ArrayList<>();
             Set<String> present = new LinkedHashSet<>(files.names());
             for (String name : present) {
@@ -251,6 +253,8 @@ public final class ConnectorManager {
                 }
             }
             return acted;
+        } finally {
+            scanLock.unlock();
         }
     }
 
@@ -777,7 +781,8 @@ public final class ConnectorManager {
     public Change save(String name, String text, String ifMatch, boolean confirm) {
         List<Problem> warnings = new ArrayList<>();
         ConnectorFiles.Definition next = check(name, text, warnings);
-        synchronized (scanLock) {
+        scanLock.lock();
+        try {
             String current = files.exists(name) ? ConnectorFiles.etag(files.text(name)) : null;
             if (current != null && (ifMatch == null || !ifMatch.equals(current))) {
                 throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, ifMatch == null
@@ -792,6 +797,8 @@ public final class ConnectorManager {
             files.write(name, text);
             scan();
             return new Change(detail(name), changed, warnings);
+        } finally {
+            scanLock.unlock();
         }
     }
 
@@ -802,7 +809,8 @@ public final class ConnectorManager {
         }
         String text;
         String tag;
-        synchronized (scanLock) {
+        scanLock.lock();
+        try {
             text = files.text(name);
             if (text == null) {
                 text = baseText(name);
@@ -813,6 +821,8 @@ public final class ConnectorManager {
                     throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' changed since you read it; reload it");
                 }
             }
+        } finally {
+            scanLock.unlock();
         }
         String edited = withEnabled(text, enabled);
         return save(name, edited, tag, confirm);
@@ -852,7 +862,8 @@ public final class ConnectorManager {
 
     /** Removes a connector's file. A connector a pack's template names is reset, not deleted. */
     public Change delete(String name, String ifMatch, boolean confirm) {
-        synchronized (scanLock) {
+        scanLock.lock();
+        try {
             if (!files.exists(name) && !fileProblems.containsKey(name)) {
                 if (defined(name)) {
                     throw new DrishtiException(ErrorCode.CONNECTOR_CONFLICT, "connector '" + name + "' comes from "
@@ -876,6 +887,8 @@ public final class ConnectorManager {
             out.put("name", name);
             out.put("deleted", true);
             return new Change(out, List.of(), List.of());
+        } finally {
+            scanLock.unlock();
         }
     }
 
@@ -907,7 +920,8 @@ public final class ConnectorManager {
 
     /** Writes a file for a connector from a pack's suggested definition if none exists; returns whether it did. */
     public boolean createFromTemplate(String name) {
-        synchronized (scanLock) {
+        scanLock.lock();
+        try {
             if (files.exists(name)) {
                 return false;
             }
@@ -918,6 +932,8 @@ public final class ConnectorManager {
             files.write(name, templateText(t));
             scan();
             return true;
+        } finally {
+            scanLock.unlock();
         }
     }
 
