@@ -231,6 +231,31 @@ A connector with neither falls back to record-by-record reads, and the designer 
 What Rūpaka writes (the columns and rollup layers) goes to a BI store that is itself a configured connector (`bi-store`,
 by default a local Parquet/Delta folder; S3 by configuration), so it is managed like every other source.
 
+### 6.2 The data model: from pack entities to a relationship diagram
+
+As in Power BI, reports sit on a **data model** (the dataset), and the data model sits on connectors:
+connectors (by logical name) → data model (tables, relationships, measures, hierarchies, row rules) → reports. Reports
+never bind to connectors directly.
+
+- **Packs expose their entities.** Every kind of every pack the author may access is offered as a table, with the
+  fields its Sutras, shape and about text describe. A pack's link graph (trade → counterparty, trade → netting set) is
+  read as ready-made relationships, so a model started from pack kinds is already connected.
+- **One model, many packs.** A data model may combine kinds from any packs (trades from `trading`, counterparties from
+  `counterparty-risk`, exposures from `market-risk`); cross-pack links become cross-pack relationships.
+- **Inference fills the gaps.** For kinds without declared links, the dataset helper proposes relationships from the data:
+  a column whose values match another kind's key, with the match rate and the cardinality it found. Proposals are
+  accepted one by one; nothing changes on its own. (This is profiling, not AI: stage 1.)
+- **The Model view** in the designer is the relationship diagram: tables as boxes with their columns, measures and
+  hierarchies; drag a column onto another to relate them; each line shows cardinality (one-to-one, one-to-many,
+  many-to-one, many-to-many) and filter direction (single or both); a relationship can be inactive and used by a measure
+  explicitly. The diagram and the YAML (section 6) are two views of the same draft; the layout is saved with it.
+- **BI only.** Model relationships drive joins and cross-filtering in BI. The terminal keeps navigating by pack links;
+  editing a model never changes a pack.
+- **Access per pack.** A reader sees a model's tables only from the packs assigned to them (and not from packs switched
+  off, or sample packs hidden from them); a table they may not see returns no rows and the visual says so. Row rules and
+  masks apply per kind. Lineage lists every pack and connector behind a model, so switching a pack off shows the reports
+  it affects first.
+
 ## 7. The query engine
 
 - **Server-side DuckDB** (already a Drishti plugin) is the analytical engine: cached tables are DuckDB tables (on disk,
