@@ -25,7 +25,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from samplegen import ids  # noqa: E402
-from samplegen.dates import Calendar, iso, tenor_years  # noqa: E402
+from samplegen.dates import Calendar, holiday_lines, iso, tenor_years  # noqa: E402
 
 import data_market as M  # noqa: E402
 import data_names as N  # noqa: E402
@@ -369,15 +369,12 @@ def reference(trades: dict, docs: dict) -> None:
                                               "excess": round(fund * 0.012), "trades": [trade_row(t) for t in cleared[:30]], "ccp": ccp,
                                               "_meta": {"source": "clearing-system", "generation": 1}}
     for cal, name in N.CALENDARS.items():
-        c = Calendar.of(cal[4:])
-        hol = []
-        for y in (2026, 2027):
-            d = date(y, 1, 1)
-            while d.year == y:
-                if d.weekday() < 5 and not c.is_business_day(d):
-                    hol.append({"date": iso(d), "name": "Public holiday"})
-                d += timedelta(days=1)
-        docs["calendar"][cal] = {"calendarId": cal, "name": name, "holidays": hol, "weekend": ["Saturday", "Sunday"], "_meta": {"source": "reference-master", "generation": 1}}
+        hol = [h for y in (2026, 2027) for h in holiday_lines(cal[4:], y)]   # one named line per holiday
+        nxt = next((h for h in hol if h["date"] > iso(N.AS_OF)), None)
+        docs["calendar"][cal] = {"calendarId": cal, "name": name, "holidays": hol, "holidays2026": sum(h["year"] == 2026 for h in hol),
+                                 "holidays2027": sum(h["year"] == 2027 for h in hol),
+                                 "nextHoliday": nxt["name"] if nxt else "none",
+                                 "nextHolidayDate": nxt["date"] if nxt else None, "weekend": ["Saturday", "Sunday"], "_meta": {"source": "reference-master", "generation": 1}}
 
 
 def hierarchy(cp: str, grp: str, sets: list[dict]) -> dict:

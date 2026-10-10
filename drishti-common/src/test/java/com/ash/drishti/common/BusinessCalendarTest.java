@@ -42,4 +42,42 @@ class BusinessCalendarTest {
         assertThat(ldnNy.name()).isEqualTo("GBLO+USNY");
         assertThatThrownBy(() -> BusinessCalendar.of("MARS")).hasMessageContaining("unknown calendar");
     }
+
+    /**
+     * The same dates, in the same order, as the Python generator (tools/samplegen/dates.py): a trailing * marks an
+     * observed substitute. tools/samplegen/test_samplegen.py asserts this very table, so the two cannot drift.
+     */
+    private static final String[][] GOLDEN = {
+        {"USNY", "2026", "01-01,01-19,02-16,05-25,06-19,07-03*,09-07,10-12,11-11,11-26,12-25"},
+        {"USNY", "2027", "01-01,01-18,02-15,05-31,06-18*,07-05*,09-06,10-11,11-11,11-25,12-24*"},
+        {"GBLO", "2026", "01-01,04-03,04-06,05-04,05-25,08-31,12-25,12-28*"},
+        {"GBLO", "2027", "01-01,03-26,03-29,05-03,05-31,08-30,12-24*,12-28*"},
+        {"EUTA", "2026", "01-01,04-03,04-06,05-01,12-25"},
+        {"EUTA", "2027", "01-01,03-26,03-29"},
+        {"JPTO", "2026", "01-01,01-02,02-11,04-29,05-04,05-05,11-03,11-23,12-31"},
+        {"JPTO", "2027", "01-01,02-11,04-29,05-03,05-04,05-05,11-03,11-23,12-31"},
+    };
+
+    @Test
+    void holidayDatesAndObservanceMatchThePythonGenerator() {
+        for (String[] g : GOLDEN) {
+            int y = Integer.parseInt(g[1]);
+            String got = BusinessCalendar.of(g[0]).holidayNames(y).entrySet().stream()
+                    .map(e -> e.getKey().toString().substring(5) + (e.getValue().endsWith("(observed)") ? "*" : ""))
+                    .collect(java.util.stream.Collectors.joining(","));
+            assertThat(got).as(g[0] + " " + y).isEqualTo(g[2]);
+        }
+    }
+
+    @Test
+    void everyHolidayHasAName() {
+        BusinessCalendar ny = BusinessCalendar.of("USNY");
+        assertThat(ny.holidayNames(2026)).containsEntry(LocalDate.of(2026, 7, 3), "Independence Day (observed)")
+                .containsEntry(LocalDate.of(2026, 11, 26), "Thanksgiving Day").containsEntry(LocalDate.of(2026, 10, 12), "Columbus Day");
+        assertThat(BusinessCalendar.of("GBLO").holidayNames(2026)).containsEntry(LocalDate.of(2026, 12, 28), "Boxing Day (observed)")
+                .containsEntry(LocalDate.of(2026, 4, 3), "Good Friday");
+        for (String c : new String[] {"USNY", "GBLO", "EUTA", "JPTO"}) {
+            assertThat(BusinessCalendar.of(c).holidayNames(2026).values()).doesNotContain("Public holiday").allMatch(n -> !n.isBlank());
+        }
+    }
 }

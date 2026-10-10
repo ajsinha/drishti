@@ -106,6 +106,8 @@ KINDS = [
          [("Name", "$.name", None, None, False), ("Size", "size($.factors)", None, None, False), ("Average", "$.average", "price2", None, True)],
          [P("table", "pairs", "Pairs", "$.pairs", [("Factor 1", "@.a", None, None, False), ("Factor 2", "@.b", None, None, False), ("ρ", "@.rho", "price2", "sign", False)], key="F2")]),
     Kind("calendar", "CAL", "CAL-", "Holiday calendar", G, "Business-day calendar (USNY, TARGET, GBLO, JPTO…).", "calendarId",
-         [("Name", "$.name", None, None, False), ("Holidays (2026)", "size($.holidays)", None, None, True)],
-         [P("table", "holidays", "Holidays", "$.holidays", [("Date", "@.date", "date", None, False), ("Holiday", "@.name", None, None, False)], key="F2")]),
+         [("Name", "$.name", None, None, False), ("Holidays 2026", "$.holidays2026", None, None, True), ("Holidays 2027", "$.holidays2027", None, None, False),
+          ("Next holiday", "$.nextHoliday", None, None, False), ("On", "$.nextHolidayDate", "date", None, False)],
+         [P("table", "holidays", "Holidays", "$.holidays", [("Date", "@.date", "date", None, False), ("Day", "@.weekday", None, None, False), ("Holiday", "@.name", None, None, False),
+                                                          ("Observed", "@.observed", None, None, False)], key="F2")]),
 ]

@@ -1,10 +1,10 @@
 {
  "calcId": "SACCR-ALDERSHOT-NY",
- "replacementCost": 6197243,
+ "replacementCost": 6197532,
  "addOn": 36302260,
  "multiplier": 1.0,
- "ead": 59499305,
- "rwa": 11899861,
+ "ead": 59499709,
+ "rwa": 11899942,
  "addOns": [
   {
    "assetClass": "Interest rate",

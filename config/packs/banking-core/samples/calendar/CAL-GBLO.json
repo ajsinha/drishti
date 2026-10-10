@@ -4,65 +4,121 @@
  "holidays": [
   {
    "date": "2026-01-01",
-   "name": "Public holiday"
+   "name": "New Year's Day",
+   "weekday": "Thursday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-04-03",
-   "name": "Public holiday"
+   "name": "Good Friday",
+   "weekday": "Friday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-04-06",
-   "name": "Public holiday"
+   "name": "Easter Monday",
+   "weekday": "Monday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-05-04",
-   "name": "Public holiday"
+   "name": "Early May Bank Holiday",
+   "weekday": "Monday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-05-25",
-   "name": "Public holiday"
+   "name": "Spring Bank Holiday",
+   "weekday": "Monday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-08-31",
-   "name": "Public holiday"
+   "name": "Summer Bank Holiday",
+   "weekday": "Monday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-12-25",
-   "name": "Public holiday"
+   "name": "Christmas Day",
+   "weekday": "Friday",
+   "year": 2026,
+   "observed": ""
+  },
+  {
+   "date": "2026-12-28",
+   "name": "Boxing Day (observed)",
+   "weekday": "Monday",
+   "year": 2026,
+   "observed": "Yes"
   },
   {
    "date": "2027-01-01",
-   "name": "Public holiday"
+   "name": "New Year's Day",
+   "weekday": "Friday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-03-26",
-   "name": "Public holiday"
+   "name": "Good Friday",
+   "weekday": "Friday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-03-29",
-   "name": "Public holiday"
+   "name": "Easter Monday",
+   "weekday": "Monday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-05-03",
-   "name": "Public holiday"
+   "name": "Early May Bank Holiday",
+   "weekday": "Monday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-05-31",
-   "name": "Public holiday"
+   "name": "Spring Bank Holiday",
+   "weekday": "Monday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-08-30",
-   "name": "Public holiday"
+   "name": "Summer Bank Holiday",
+   "weekday": "Monday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-12-24",
-   "name": "Public holiday"
+   "name": "Christmas Day (observed)",
+   "weekday": "Friday",
+   "year": 2027,
+   "observed": "Yes"
   },
   {
-   "date": "2027-12-27",
-   "name": "Public holiday"
+   "date": "2027-12-28",
+   "name": "Boxing Day (observed)",
+   "weekday": "Tuesday",
+   "year": 2027,
+   "observed": "Yes"
   }
  ],
+ "holidays2026": 8,
+ "holidays2027": 8,
+ "nextHoliday": "Christmas Day",
+ "nextHolidayDate": "2026-12-25",
  "weekend": [
   "Saturday",
   "Sunday"

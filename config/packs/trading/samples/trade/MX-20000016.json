@@ -13,9 +13,9 @@
  "maturityDate": "2033-12-23",
  "currency": "GBP",
  "notional": 146000000.0,
- "mtm": -5361207,
+ "mtm": -5360345,
  "mtmCurrency": "USD",
- "pnl1d": -235043,
+ "pnl1d": -235005,
  "counterparty": {
   "id": "CP-ALDERSHOT",
   "name": "Aldershot Pension Trust"
@@ -100,13 +100,13 @@
      "n": 2,
      "accrualStart": "2025-12-23",
      "accrualEnd": "2026-12-23",
-     "payDate": "2026-12-28",
+     "payDate": "2026-12-29",
      "notional": 146000000.0,
      "rate": 0.040677,
      "yearFraction": 1.013889,
      "amount": -6021325.92,
-     "df": 0.990737,
-     "pv": -5965552.75,
+     "df": 0.990634,
+     "pv": -5964929.11,
      "status": "Fixed"
     },
     {
@@ -191,17 +191,17 @@
      "n": 9,
      "accrualStart": "2032-12-23",
      "accrualEnd": "2033-12-23",
-     "payDate": "2033-12-28",
+     "payDate": "2033-12-29",
      "notional": 146000000.0,
      "rate": 0.040677,
      "yearFraction": 1.013889,
      "amount": -6021325.92,
-     "df": 0.746623,
-     "pv": -4495661.02,
+     "df": 0.74654,
+     "pv": -4495158.32,
      "status": "Projected"
     }
    ],
-   "pv": -41763271.44,
+   "pv": -41762145.1,
    "accrued": 0.0,
    "payReceive": "Pay",
    "rateType": "Fixed",
@@ -344,15 +344,15 @@
      "accrualStart": "2026-09-23",
      "accrualEnd": "2026-12-23",
      "fixingDate": "2026-12-21",
-     "payDate": "2026-12-28",
+     "payDate": "2026-12-29",
      "notional": 146000000.0,
      "index": "SONIA",
      "rate": 0.037807,
      "spread": -0.00067,
      "yearFraction": 0.252778,
      "amount": 1370574.41,
-     "df": 0.990737,
-     "pv": 1357879.32,
+     "df": 0.990634,
+     "pv": 1357737.36,
      "status": "Projected"
     },
     {
@@ -792,19 +792,19 @@
      "accrualStart": "2033-09-23",
      "accrualEnd": "2033-12-23",
      "fixingDate": "2033-12-21",
-     "payDate": "2033-12-28",
+     "payDate": "2033-12-29",
      "notional": 146000000.0,
      "index": "SONIA",
      "rate": 0.040534,
      "spread": -0.00067,
      "yearFraction": 0.252778,
      "amount": 1471186.43,
-     "df": 0.746623,
-     "pv": 1098421.77,
+     "df": 0.74654,
+     "pv": 1098298.95,
      "status": "Projected"
     }
    ],
-   "pv": 36402064.85,
+   "pv": 36401800.07,
    "payReceive": "Receive",
    "rateType": "Float"
   }
@@ -883,21 +883,21 @@
    "status": "Settled"
   },
   {
-   "payDate": "2026-12-28",
+   "payDate": "2026-12-29",
    "leg": 1,
    "type": "Fixed",
    "rate": 0.040677,
    "amount": -6021325.92,
-   "pv": -5965552.75,
+   "pv": -5964929.11,
    "status": "Fixed"
   },
   {
-   "payDate": "2026-12-28",
+   "payDate": "2026-12-29",
    "leg": 2,
    "type": "Float",
    "rate": 0.037807,
    "amount": 1370574.41,
-   "pv": 1357879.32,
+   "pv": 1357737.36,
    "status": "Projected"
   },
   {
@@ -1175,83 +1175,83 @@
  "pnlHistory": [
   {
    "date": "2026-09-03",
-   "pnl": 179930
+   "pnl": 179901
   },
   {
    "date": "2026-09-04",
-   "pnl": -191191
+   "pnl": -191160
   },
   {
    "date": "2026-09-07",
-   "pnl": 219861
+   "pnl": 219826
   },
   {
    "date": "2026-09-08",
-   "pnl": 106063
+   "pnl": 106046
   },
   {
    "date": "2026-09-09",
-   "pnl": -24115
+   "pnl": -24111
   },
   {
    "date": "2026-09-10",
-   "pnl": 227548
+   "pnl": 227512
   },
   {
    "date": "2026-09-11",
-   "pnl": 135918
+   "pnl": 135896
   },
   {
    "date": "2026-09-14",
-   "pnl": 38146
+   "pnl": 38139
   },
   {
    "date": "2026-09-15",
-   "pnl": 176476
+   "pnl": 176448
   },
   {
    "date": "2026-09-16",
-   "pnl": -245561
+   "pnl": -245521
   },
   {
    "date": "2026-09-17",
-   "pnl": 126657
+   "pnl": 126637
   },
   {
    "date": "2026-09-18",
-   "pnl": 58972
+   "pnl": 58963
   },
   {
    "date": "2026-09-21",
-   "pnl": -224575
+   "pnl": -224539
   },
   {
    "date": "2026-09-22",
-   "pnl": -91753
+   "pnl": -91739
   },
   {
    "date": "2026-09-23",
-   "pnl": 46463
+   "pnl": 46456
   },
   {
    "date": "2026-09-24",
-   "pnl": 255128
+   "pnl": 255087
   },
   {
    "date": "2026-09-25",
-   "pnl": 196948
+   "pnl": 196916
   },
   {
    "date": "2026-09-28",
-   "pnl": -46342
+   "pnl": -46335
   },
   {
    "date": "2026-09-29",
-   "pnl": 84577
+   "pnl": 84564
   },
   {
    "date": "2026-09-30",
-   "pnl": -134977
+   "pnl": -134955
   }
  ],
  "execution": {
@@ -1314,7 +1314,7 @@
     "amount": 1404912.58
    },
    {
-    "date": "2026-12-28",
+    "date": "2026-12-29",
     "event": "Next payment",
     "status": "Pending",
     "description": "Scheduled; settlement instructions confirmed"
@@ -1369,8 +1369,8 @@
  "valuation": {
   "asOf": "2026-09-30",
   "currency": "USD",
-  "npv": -5361207,
-  "cleanPv": -5361207.0,
+  "npv": -5360345,
+  "cleanPv": -5360345.0,
   "accrued": 0.0,
   "legPvs": [],
   "model": "Multi-curve OIS discounting",
@@ -1385,20 +1385,20 @@
  "pnlExplain": [
   {
    "step": "Opening MTM",
-   "pnl": -5126164,
+   "pnl": -5125340,
    "total": true
   },
   {
    "step": "Carry",
-   "pnl": -71479
+   "pnl": -71467
   },
   {
    "step": "Roll-down",
-   "pnl": -16497
+   "pnl": -16495
   },
   {
    "step": "Rates delta",
-   "pnl": -140057
+   "pnl": -140033
   },
   {
    "step": "FX delta",
@@ -1422,7 +1422,7 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 12182
+   "mtm": 12181
   }
  }
 }

@@ -25,7 +25,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 from samplegen import ids, legs  # noqa: E402
 from samplegen.curves import Curve  # noqa: E402
-from samplegen.dates import Calendar, schedule, year_fraction  # noqa: E402
+from samplegen.dates import Calendar, holiday_lines, schedule, year_fraction  # noqa: E402
 
 
 class Identifiers(unittest.TestCase):
@@ -44,6 +44,23 @@ class Conventions(unittest.TestCase):
         periods = schedule(date(2026, 10, 2), date(2031, 10, 2), "Annual", ny)
         self.assertEqual(periods[0], (date(2026, 10, 2), date(2027, 10, 4)))
         self.assertAlmostEqual(year_fraction(date(2026, 1, 31), date(2026, 2, 28), "30/360"), 28 / 360)
+
+    def test_holidays_are_named_and_match_the_java_calendar(self):
+        # the same table as BusinessCalendarTest.GOLDEN (drishti-common): a trailing * marks an observed substitute
+        golden = {("USNY", 2026): "01-01,01-19,02-16,05-25,06-19,07-03*,09-07,10-12,11-11,11-26,12-25",
+                  ("USNY", 2027): "01-01,01-18,02-15,05-31,06-18*,07-05*,09-06,10-11,11-11,11-25,12-24*",
+                  ("GBLO", 2026): "01-01,04-03,04-06,05-04,05-25,08-31,12-25,12-28*",
+                  ("GBLO", 2027): "01-01,03-26,03-29,05-03,05-31,08-30,12-24*,12-28*",
+                  ("EUTA", 2026): "01-01,04-03,04-06,05-01,12-25", ("EUTA", 2027): "01-01,03-26,03-29",
+                  ("JPTO", 2026): "01-01,01-02,02-11,04-29,05-04,05-05,11-03,11-23,12-31",
+                  ("JPTO", 2027): "01-01,02-11,04-29,05-03,05-04,05-05,11-03,11-23,12-31"}
+        for (centre, year), want in golden.items():
+            lines = holiday_lines(centre, year)
+            self.assertEqual(",".join(h["date"][5:] + ("*" if h["observed"] else "") for h in lines), want, (centre, year))
+            self.assertTrue(all(h["name"] and h["name"] != "Public holiday" and h["year"] == year for h in lines))
+        ny = {h["date"]: h for h in holiday_lines("USNY", 2026)}
+        self.assertEqual(ny["2026-07-03"]["name"], "Independence Day (observed)")
+        self.assertEqual(ny["2026-11-26"]["weekday"], "Thursday")
 
     def test_fixed_leg_matches_the_mockup(self):
         c = Curve("USD", "USD", date(2026, 9, 30), ["1Y", "10Y"], [0.037, 0.038])

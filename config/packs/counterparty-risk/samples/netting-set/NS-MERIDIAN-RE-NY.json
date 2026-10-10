@@ -1,8 +1,8 @@
 {
  "nettingSetId": "NS-MERIDIAN-RE-NY",
  "tradeCount": 19,
- "netMtm": -56606259,
- "collateral": -35835945,
+ "netMtm": -56606054,
+ "collateral": -35835815,
  "eePeak": 20461182,
  "pfePeak": 45981301,
  "limit": 71000000.0,
@@ -169,7 +169,7 @@
    "notional": 242000000.0,
    "maturity": "2032-06-25",
    "maturityBucket": "5-10Y",
-   "mtm": 1875863
+   "mtm": 1876068
   },
   {
    "tradeId": "MX-20000142",
@@ -274,7 +274,7 @@
  "byAsset": [
   {
    "asset": "Rates",
-   "mtm": -66792468
+   "mtm": -66792263
   },
   {
    "asset": "Credit",

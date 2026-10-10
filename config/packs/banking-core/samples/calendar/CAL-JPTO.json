@@ -4,77 +4,135 @@
  "holidays": [
   {
    "date": "2026-01-01",
-   "name": "Public holiday"
+   "name": "New Year's Day",
+   "weekday": "Thursday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-01-02",
-   "name": "Public holiday"
+   "name": "Bank Holiday (New Year)",
+   "weekday": "Friday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-02-11",
-   "name": "Public holiday"
+   "name": "National Foundation Day",
+   "weekday": "Wednesday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-04-29",
-   "name": "Public holiday"
+   "name": "Showa Day",
+   "weekday": "Wednesday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-05-04",
-   "name": "Public holiday"
+   "name": "Greenery Day",
+   "weekday": "Monday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-05-05",
-   "name": "Public holiday"
+   "name": "Children's Day",
+   "weekday": "Tuesday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-11-03",
-   "name": "Public holiday"
+   "name": "Culture Day",
+   "weekday": "Tuesday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-11-23",
-   "name": "Public holiday"
+   "name": "Labour Thanksgiving Day",
+   "weekday": "Monday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2026-12-31",
-   "name": "Public holiday"
+   "name": "Year-End Bank Holiday",
+   "weekday": "Thursday",
+   "year": 2026,
+   "observed": ""
   },
   {
    "date": "2027-01-01",
-   "name": "Public holiday"
+   "name": "New Year's Day",
+   "weekday": "Friday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-02-11",
-   "name": "Public holiday"
+   "name": "National Foundation Day",
+   "weekday": "Thursday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-04-29",
-   "name": "Public holiday"
+   "name": "Showa Day",
+   "weekday": "Thursday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-05-03",
-   "name": "Public holiday"
+   "name": "Constitution Memorial Day",
+   "weekday": "Monday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-05-04",
-   "name": "Public holiday"
+   "name": "Greenery Day",
+   "weekday": "Tuesday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-05-05",
-   "name": "Public holiday"
+   "name": "Children's Day",
+   "weekday": "Wednesday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-11-03",
-   "name": "Public holiday"
+   "name": "Culture Day",
+   "weekday": "Wednesday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-11-23",
-   "name": "Public holiday"
+   "name": "Labour Thanksgiving Day",
+   "weekday": "Tuesday",
+   "year": 2027,
+   "observed": ""
   },
   {
    "date": "2027-12-31",
-   "name": "Public holiday"
+   "name": "Year-End Bank Holiday",
+   "weekday": "Friday",
+   "year": 2027,
+   "observed": ""
   }
  ],
+ "holidays2026": 9,
+ "holidays2027": 9,
+ "nextHoliday": "Culture Day",
+ "nextHolidayDate": "2026-11-03",
  "weekend": [
   "Saturday",
   "Sunday"

@@ -48,21 +48,59 @@ def _observed(d):
     return d + timedelta(days=1) if d.weekday() == 6 else d - timedelta(days=1) if d.weekday() == 5 else d
 
 
-def _holidays(center: str, y: int) -> set[date]:
+def _boxing_day(y):
+    """Boxing Day moves to the next weekday not already taken by Christmas's substitute (as in the Java calendar)."""
+    d = date(y, 12, 26)
+    if d.weekday() >= 5:
+        return date(y, 12, 28)
+    if d.weekday() == 0 and date(y, 12, 25).weekday() == 6:
+        return date(y, 12, 27)
+    return d
+
+
+def _named(center: str, y: int) -> list[tuple[date, str, date]]:
+    """(day the holiday is kept, name, nominal date) for one centre, before weekend filtering."""
     e = _easter(y)
+    fixed = lambda m, d, n: (date(y, m, d), n, date(y, m, d))  # noqa: E731
+    obs = lambda m, d, n: (_observed(date(y, m, d)), n, date(y, m, d))  # noqa: E731
+    rule = lambda d, n: (d, n, d)  # noqa: E731
     if center == "USNY":
-        return {_observed(date(y, 1, 1)), _nth_weekday(y, 1, 0, 3), _nth_weekday(y, 2, 0, 3), _last_weekday(y, 5, 0),
-                _observed(date(y, 6, 19)), _observed(date(y, 7, 4)), _nth_weekday(y, 9, 0, 1), _nth_weekday(y, 10, 0, 2),
-                _observed(date(y, 11, 11)), _nth_weekday(y, 11, 3, 4), _observed(date(y, 12, 25))}
+        return [obs(1, 1, "New Year's Day"), rule(_nth_weekday(y, 1, 0, 3), "Martin Luther King Jr. Day"),
+                rule(_nth_weekday(y, 2, 0, 3), "Presidents' Day"), rule(_last_weekday(y, 5, 0), "Memorial Day"),
+                obs(6, 19, "Juneteenth"), obs(7, 4, "Independence Day"), rule(_nth_weekday(y, 9, 0, 1), "Labor Day"),
+                rule(_nth_weekday(y, 10, 0, 2), "Columbus Day"), obs(11, 11, "Veterans Day"),
+                rule(_nth_weekday(y, 11, 3, 4), "Thanksgiving Day"), obs(12, 25, "Christmas Day")]
     if center == "GBLO":
-        return {_observed(date(y, 1, 1)), e - timedelta(days=2), e + timedelta(days=1), _nth_weekday(y, 5, 0, 1),
-                _last_weekday(y, 5, 0), _last_weekday(y, 8, 0), _observed(date(y, 12, 25)), _observed(date(y, 12, 26))}
+        return [obs(1, 1, "New Year's Day"), rule(e - timedelta(days=2), "Good Friday"), rule(e + timedelta(days=1), "Easter Monday"),
+                rule(_nth_weekday(y, 5, 0, 1), "Early May Bank Holiday"), rule(_last_weekday(y, 5, 0), "Spring Bank Holiday"),
+                rule(_last_weekday(y, 8, 0), "Summer Bank Holiday"), obs(12, 25, "Christmas Day"),
+                (_boxing_day(y), "Boxing Day", date(y, 12, 26))]
     if center == "EUTA":  # TARGET2
-        return {date(y, 1, 1), e - timedelta(days=2), e + timedelta(days=1), date(y, 5, 1), date(y, 12, 25), date(y, 12, 26)}
+        return [fixed(1, 1, "New Year's Day"), rule(e - timedelta(days=2), "Good Friday"), rule(e + timedelta(days=1), "Easter Monday"),
+                fixed(5, 1, "Labour Day"), fixed(12, 25, "Christmas Day"), fixed(12, 26, "Boxing Day (St Stephen's Day)")]
     if center == "JPTO":
-        return {date(y, 1, 1), date(y, 1, 2), date(y, 1, 3), date(y, 2, 11), date(y, 4, 29), date(y, 5, 3), date(y, 5, 4),
-                date(y, 5, 5), date(y, 11, 3), date(y, 11, 23), date(y, 12, 31)}
-    return {date(y, 1, 1), date(y, 12, 25)}
+        return [fixed(1, 1, "New Year's Day"), fixed(1, 2, "Bank Holiday (New Year)"), fixed(1, 3, "Bank Holiday (New Year)"),
+                fixed(2, 11, "National Foundation Day"), fixed(4, 29, "Showa Day"), fixed(5, 3, "Constitution Memorial Day"),
+                fixed(5, 4, "Greenery Day"), fixed(5, 5, "Children's Day"), fixed(11, 3, "Culture Day"),
+                fixed(11, 23, "Labour Thanksgiving Day"), fixed(12, 31, "Year-End Bank Holiday")]
+    return [fixed(1, 1, "New Year's Day"), fixed(12, 25, "Christmas Day")]
+
+
+def holiday_lines(center: str, y: int) -> list[dict]:
+    """One line per weekday holiday of the centre in year y: date, name, weekday, year and whether it is the observed
+    substitute for a nominal date that fell on a weekend (then the name says so)."""
+    out = []
+    for d, name, nominal in sorted(_named(center, y)):
+        if d.weekday() >= 5:
+            continue
+        o = d != nominal
+        out.append({"date": d.isoformat(), "name": f"{name} (observed)" if o else name, "weekday": d.strftime("%A"),
+                    "year": d.year, "observed": "Yes" if o else ""})
+    return out
+
+
+def _holidays(center: str, y: int) -> set[date]:
+    return {d for d, _, _ in _named(center, y)}
 
 
 @dataclass(frozen=True)
