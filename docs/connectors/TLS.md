@@ -23,10 +23,13 @@ the rest work the same for Kafka, ActiveMQ and RabbitMQ, and for each connector 
 This is the reference. The connector documents show complete configurations for their own protocols:
 [Kafka](KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent) (TLS, SASL, Confluent, Schema Registry),
 [ActiveMQ](ACTIVEMQ_CONNECTOR.md#14-security) (`ssl://`), [RabbitMQ](RABBITMQ_CONNECTOR.md#12-security) (`amqps://`,
-client-certificate login). A plugin author who wants the module in a new connector reads
+client-certificate login), and for the rest see the [matrix](#connector-matrix) below, whose rows lead to each connector's Security
+section. A plugin author who wants the module in a new connector reads
 [the developer guide](CONNECTOR_DEVELOPER_GUIDE.md#tls-for-a-connector-the-shared-module).
 
 ## Contents
+
+[Connector matrix](#connector-matrix)
 
 1. [The settings](#1-the-settings)
 2. [What can be trusted](#2-what-can-be-trusted)
@@ -39,6 +42,33 @@ client-certificate login). A plugin author who wants the module in a new connect
 9. [Certificate expiry](#9-certificate-expiry)
 10. [Rotation](#10-rotation)
 11. [Troubleshooting](#11-troubleshooting)
+
+---
+
+## Connector matrix
+
+Every connector with a network client reads these settings. This is what each does with them, and how that was checked.
+
+| Connector | TLS is on when | Client certificate | `protocols` / `cipher-suites` | `verify-hostname: false` | Expiry in health | Checked against |
+|---|---|---|---|---|---|---|
+| [Kafka](KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent) | `security.protocol: SSL` / `SASL_SSL` | yes | yes | yes | yes | a Kafka broker in Docker |
+| [ActiveMQ](ACTIVEMQ_CONNECTOR.md#14-security) | `broker-url` has `ssl://` | yes | checked, not narrowed (JVM's) | yes | yes | ActiveMQ Classic in Docker |
+| [RabbitMQ](RABBITMQ_CONNECTOR.md#12-security) | `amqps://` | yes (also the log-in, `auth-mechanism: external`) | yes | yes | yes | RabbitMQ 4.1 in Docker |
+| [Redis](REDIS_CONNECTOR.md#security-tls-and-credentials) | `rediss://` | yes | yes | yes (chain only) | yes | Redis 8.2 in Docker, `tls-auth-clients yes` |
+| [REST](REST_CONNECTOR.md#tls-for-the-rest-connector) | `https://` `base-url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [Feeds](FEEDS_CONNECTOR.md#10-security) (a mirror) | `https://` `url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [S3](S3_CONNECTOR.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
+| [MongoDB](MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
+| [PostgreSQL](POSTGRES_CONNECTOR.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |
+| other JDBC drivers | not mapped: the driver's own options in the URL | | | | | documented only |
+| [Aerospike](AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` | yes (also the log-in, `auth-mode: pki`) | yes | yes (no TLS name is given) | yes | unit tests of the wiring; the live check is a manual procedure (the server's TLS is Enterprise Edition) |
+| [Delta](DELTA_CONNECTOR.md#security-tls-and-credentials) (native engine) | `https://` `s3.endpoint` | yes | yes | yes | yes | an HTTPS stand-in S3 in the test process; refused with `engine: hadoop` |
+| [Iceberg](ICEBERG_CONNECTOR.md#security-tls-and-credentials) (REST catalog's object store) | `https://` `s3.endpoint` | yes | checked, not narrowed | **refused** | yes | an HTTPS stand-in S3 in the test process; refused with `catalog: hadoop` |
+
+The rule is the same everywhere: `tls.*` against an address that is not TLS is a start-up error, never a silent downgrade, and a
+wrong file or password stops the connector at start naming the setting and the file. Where a library has no hook for a
+private CA, the connector says so at start and names the JVM truststore as the way out; those places are the Hadoop S3A
+engine and path catalogs (Delta, Iceberg), and the REST catalog's own connection (Iceberg).
 
 ---
 

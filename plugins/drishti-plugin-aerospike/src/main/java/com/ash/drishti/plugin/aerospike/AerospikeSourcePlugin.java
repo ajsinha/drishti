@@ -16,7 +16,6 @@
 package com.ash.drishti.plugin.aerospike;
 
 import com.aerospike.client.AerospikeClient;
-import com.aerospike.client.Host;
 import com.aerospike.client.Key;
 import com.aerospike.client.Record;
 import com.aerospike.client.exp.Exp;

@@ -44,6 +44,8 @@ Read it if you run Drishti on Redis, load Redis for Drishti, or change the conne
 12. [Settings](#12-settings)
 13. [Checklist for production](#13-checklist-for-production)
 
+Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
+
 ---
 
 ## 1. The problem
@@ -623,6 +625,89 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 Useful commands: `INFO memory` (`used_memory`, `mem_fragmentation_ratio`), `MEMORY USAGE <key>`,
 `HGETALL {trading:trade:days}:gens`, `HGET {trading:trade:20260930}:cols:<g> meta`, `ZRANGE trading:trade:days 0 -1`,
 `SUBSCRIBE trading:changes`.
+
+## Security: TLS and credentials
+
+Redis is reached over TLS with the shared `tls.*` settings ([TLS.md](TLS.md)): a private CA, a PKCS12 or JKS store, a client
+certificate for a server that runs with `tls-auth-clients yes`, protocol versions and cipher suites. The address decides whether
+TLS is used: **`rediss://`** (two s) is TLS, `redis://` is plain text. For a cluster, every seed URI is `rediss://`.
+
+| Setting | Meaning for Redis |
+|---|---|
+| `uri: rediss://host:6380` | TLS on. With no `tls.*` the server certificate is checked against the JVM's authorities and the host name. |
+| `tls.ca-file` or `tls.truststore` (+ `tls.truststore-password`) | Trust a private CA. |
+| `tls.cert-file` + `tls.key-file` (+ `tls.key-password`), or `tls.keystore` (+ `tls.keystore-password`) | The client certificate. |
+| `tls.verify-hostname: false` | Check the certificate chain but not the name (logs a warning at every start). |
+| `tls.insecure-trust-all: true` | Check nothing. Refused unless `DRISHTI_ALLOW_INSECURE_TLS=true` is in the environment. |
+| `tls.protocols`, `tls.cipher-suites` | Handed to the client's TLS engine. |
+| `user`, `password` | The Redis ACL user and its password (`${ENV}` placeholder or `file:` reference), as before. |
+
+`tls.*` against a `redis://` URI is a start-up error, not a silent downgrade (`tls.enabled is true but uri is not rediss://`),
+and so is a missing or unreadable file (it names the setting and the file). The earlier way, a Lettuce option in the URI such as
+`rediss://host:6380?verifyPeer=CA`, still works and logs a deprecation warning that names `tls.verify-hostname`; the `tls.*`
+settings are the supported form. The load tool (`RedisLoader`, the command line) takes the URI only and uses the JVM's trust:
+for a private CA, run it with `-Djavax.net.ssl.trustStore=...`.
+
+### A complete file: mutual TLS, private CA
+
+`config/connectors/redis-tls.yaml` (the same file is in `config/connectors.examples/other/`):
+
+```yaml
+plugin: redis
+kinds: [trade]
+description: Trades in Redis over mutual TLS
+settings:
+  domain: trading
+  uri: rediss://redis.example.com:6380
+  user: drishti
+  password: ${DRISHTI_REDIS_PASSWORD}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+```
+
+The server side (the configuration used by the integration test, `RedisTlsTest`, against `redis:8.2`):
+
+```
+redis-server --port 0 --tls-port 6380 \
+  --tls-cert-file /tls/server.pem --tls-key-file /tls/server.key --tls-ca-cert-file /tls/ca.pem \
+  --tls-auth-clients yes
+```
+
+The server certificate must name the host Drishti connects to (a `subjectAltName` of `DNS:redis.example.com`); `tls-auth-clients
+no` turns the client-certificate requirement off, and then the `cert-file`/`key-file` lines are not needed.
+
+### Checking it from the command line
+
+```
+openssl s_client -connect redis.example.com:6380 -CAfile /etc/drishti/tls/ca.pem \
+  -cert /etc/drishti/tls/client.pem -key /etc/drishti/tls/client.key -verify_return_error < /dev/null
+redis-cli --tls --cacert /etc/drishti/tls/ca.pem --cert /etc/drishti/tls/client.pem --key /etc/drishti/tls/client.key \
+  -h redis.example.com -p 6380 --user drishti --askpass ping
+```
+
+`Verify return code: 0 (ok)` from the first and `PONG` from the second mean the server and the files are right; what is left is
+Drishti's side. Health then reads (captured from the integration test; the sentence about expiry appears once a certificate
+has less than 30 days left):
+
+```
+UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))
+```
+
+### Common errors
+
+These are the messages from a real Redis 8 in the integration test.
+
+| Message | Cause and fix |
+|---|---|
+| `tls.enabled is true but uri is not rediss:// (Redis over TLS is rediss://host:6380): redis://h:6379` | The URI says plain text. Use `rediss://` and the TLS port. |
+| `tls.* is set but uri is not rediss://: use rediss://host:port for Redis over TLS` | `tls.*` keys with a `redis://` URI. |
+| `tls.ca-file '/etc/drishti/tls/nope.pem': file not found` | A wrong path; the same message form for every `tls.*` file ([TLS.md, section 8](TLS.md#8-start-up-checks-and-their-messages)). |
+| `RedisConnectionException: Unable to connect to localhost/<unresolved>:33157` caused by `SSLHandshakeException: (certificate_required) Received fatal alert: certificate_required` | The server asks for a client certificate (`tls-auth-clients yes`) and none was configured. Set `tls.cert-file` and `tls.key-file`. |
+| the same, caused by `(certificate_unknown) PKIX path building failed: ... unable to find valid certification path to requested target` | The server certificate is not signed by a CA in `tls.ca-file`. Put the issuing CA in the bundle. |
+| the same, caused by `(certificate_unknown) No subject alternative names matching IP address 127.0.0.2 found` | The certificate does not name the address in the URI. Connect by a name it carries, or re-issue it with the name as a SAN. |
+| health `DOWN` with `Connection refused` | The port speaks plain text (`port`) or nothing: with `--port 0` only the `tls-port` listens. |
 
 ## As a connector file
 

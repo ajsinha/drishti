@@ -801,7 +801,22 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
   (last resort `tls.verify-hostname: false`, which warns at every start); give the client certificate and key for mutual
   TLS. Per connector: [Kafka](../connectors/KAFKA_CONNECTOR.md#119-common-errors-and-fixes),
   [ActiveMQ](../connectors/ACTIVEMQ_CONNECTOR.md#144-common-errors-and-fixes),
-  [RabbitMQ](../connectors/RABBITMQ_CONNECTOR.md#125-common-errors-and-fixes).
+  [RabbitMQ](../connectors/RABBITMQ_CONNECTOR.md#125-common-errors-and-fixes),
+  [Redis](../connectors/REDIS_CONNECTOR.md#security-tls-and-credentials),
+  [REST](../connectors/REST_CONNECTOR.md#tls-for-the-rest-connector),
+  [S3](../connectors/S3_CONNECTOR.md#tls-for-the-s3-connector),
+  [MongoDB](../connectors/MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials),
+  [PostgreSQL](../connectors/POSTGRES_CONNECTOR.md#security-tls-and-credentials),
+  [Aerospike](../connectors/AEROSPIKE_CONNECTOR.md#security-tls-certificate-log-in-and-credentials),
+  [Delta](../connectors/DELTA_CONNECTOR.md#security-tls-and-credentials),
+  [Iceberg](../connectors/ICEBERG_CONNECTOR.md#security-tls-and-credentials).
+- **Also at start:** `tls.* is set but … is not https://` (or `not rediss://`, or `tls.enabled is not true`) means `tls.*`
+  settings sit beside an address that is not TLS: the connector refuses to start rather than quietly connect in plain text.
+  Change the address (`https://`, `rediss://`, `amqps://`, `ssl://`, `tls=true`) or remove the `tls.*` keys. Where a library
+  cannot take a private CA per connector (Delta with `engine: hadoop`, Iceberg with `catalog: hadoop`, the Iceberg REST
+  catalog's own connection) the message says so and names the JVM truststore, `-Djavax.net.ssl.trustStore=…`.
+- **PostgreSQL connects but is not verified:** the PostgreSQL driver's default `sslmode=prefer` encrypts without checking the
+  certificate. Set `tls.enabled: true` with `tls.ca-file` (verified, `verify-full`), or `sslmode=verify-full` in the URL.
 
 ### A health text says "TLS certificate … expires in N days"
 

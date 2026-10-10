@@ -44,6 +44,8 @@ of any size, see [DEMO_DATA.md](DEMO_DATA.md).
 13. [Checklist for production](#13-checklist-for-production)
 14. [Query mode: your own SQL](#14-query-mode-your-own-sql)
 
+Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
+
 ---
 
 ## 1. The problem
@@ -456,6 +458,123 @@ Run-to-run variance, requests per second with 8 clients, server start and the ot
 | a picked date returns nothing for a snapshot kind | the newest date on or before it is more than `lookback-days` older | load every business date, or set `mode.<kind>: effective` for data that changes rarely |
 | the connector serves no kinds after an outage at start | it reads its catalogue again after 10 s, then every `refresh-seconds` | wait, or list `kinds:` in settings |
 | a search on an older day is slow every time | `columns-cache-mb` too small for the days users move between | raise it (230 MB per million trades a day) |
+
+## Security: TLS and credentials
+
+For `jdbc:postgresql://` the connector reads the shared `tls.*` settings ([TLS.md](TLS.md)) and hands them to the driver, so a
+private CA, a PKCS12/JKS store, a client certificate in any PEM key format, and protocol versions work the way they do for Kafka
+and RabbitMQ. A connector's password is an `${ENV}` placeholder or a `file:` reference, never a literal.
+
+`tls.*` needs `tls.enabled: true` (a PostgreSQL URL does not say whether TLS is wanted), and **replaces** the driver's own
+options: a URL that carries `sslmode`, `sslrootcert`, `sslfactory` or `ssl=true` together with `tls.*` is refused
+(`tls.* is set and the url also carries driver TLS options (sslmode, sslrootcert, ...): give TLS one way`). A URL with the driver's
+options and no `tls.*` works unchanged.
+
+### How the settings map onto the driver
+
+| You write | The driver gets |
+|---|---|
+| `tls.enabled: true` | `ssl=true`, `sslmode=verify-full`: the chain is checked against the trust you gave, and the driver checks the server name |
+| `tls.verify-hostname: false` | `sslmode=require` (the chain is still checked, by the module; the name is not) |
+| `tls.insecure-trust-all: true` | `sslmode=require` with a trust manager that accepts anything (development only; needs `DRISHTI_ALLOW_INSECURE_TLS=true`) |
+| `tls.ca-file` or `tls.truststore` | the trust, through the connector's socket factory (the driver's `sslrootcert` is not used; the CA bundle may hold many certificates) |
+| `tls.cert-file` + `tls.key-file`, or `tls.keystore` | the client certificate, through the same factory (the driver's `sslcert`/`sslkey` need PKCS#8 DER; here PKCS#1, SEC1 and encrypted keys work too) |
+| `tls.protocols`, `tls.cipher-suites` | applied to every socket the driver opens |
+
+If you would rather give the driver its own options, leave `tls.*` out and write them in the URL (this is the PostgreSQL
+documentation's form, supported as before):
+`jdbc:postgresql://db.example.com:5432/drishti?sslmode=verify-full&sslrootcert=/etc/drishti/tls/ca.pem&sslcert=/etc/drishti/tls/client.pk8.crt&sslkey=/etc/drishti/tls/client.pk8`
+(the key must be PKCS#8 DER: `openssl pkcs8 -topk8 -inform PEM -outform DER -in client.key -out client.pk8 -nocrypt`).
+Note that the driver's default is `sslmode=prefer`: it uses TLS if the server offers it **without checking the certificate**.
+A URL without any TLS setting is therefore encrypted but not authenticated; set `tls.enabled: true` (or `sslmode=verify-full`).
+
+### Two complete files
+
+Password log-in over verified TLS, `config/connectors/postgres-tls.yaml`:
+
+```yaml
+plugin: jdbc
+kinds: [trade]
+description: Trades in PostgreSQL, verified TLS
+settings:
+  url: jdbc:postgresql://db.example.com:5432/drishti
+  user: drishti
+  password: ${DRISHTI_DB_PASSWORD}
+  table: entities
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+```
+
+The client certificate as the log-in (no password), `config/connectors/postgres-tls-client-cert.yaml`:
+
+```yaml
+plugin: jdbc
+kinds: [trade]
+description: Trades in PostgreSQL, certificate log-in
+settings:
+  url: jdbc:postgresql://db.example.com:5432/drishti
+  user: drishti
+  table: entities
+  tls:
+    enabled: true
+    ca-file: /etc/drishti/tls/ca.pem
+    cert-file: /etc/drishti/tls/client.pem
+    key-file: /etc/drishti/tls/client.key
+    key-password-file: /run/secrets/pg-client-key-password
+```
+
+The server side, as in the integration test (`PostgresTlsTest`, against `postgres:18-alpine`): in `postgresql.conf`
+`ssl = on`, `ssl_cert_file`, `ssl_key_file` (owned by the postgres user, mode 0600) and `ssl_ca_file`; in `pg_hba.conf`
+
+```
+hostssl all pwuser all scram-sha-256
+hostssl all drishti all cert
+```
+
+The `cert` method logs in as the user named in the certificate's common name (`CN=drishti`), and needs the CA in `ssl_ca_file`.
+`hostssl` lines refuse a plain-text connection from that address.
+
+### Checking it from the command line
+
+```
+psql "host=db.example.com dbname=drishti user=pwuser sslmode=verify-full sslrootcert=/etc/drishti/tls/ca.pem" -c "select 1"
+psql "host=db.example.com dbname=drishti user=drishti sslmode=verify-full sslrootcert=/etc/drishti/tls/ca.pem \
+      sslcert=/etc/drishti/tls/client.pem sslkey=/etc/drishti/tls/client.key" -c "select ssl, client_dn from pg_stat_ssl where pid = pg_backend_pid()"
+```
+
+(`psql` wants the key mode 0600.) With the connector running, health carries the expiry once a certificate has under 30 days left:
+`UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))`.
+
+### The other databases
+
+The shared module hands PostgreSQL its context through a socket factory; the other drivers have no such hook, so for them put the
+driver's own options in the URL. `tls.*` against another driver is a start-up error that says so
+(`tls.* is only mapped for jdbc:postgresql:// urls; this driver takes its TLS options in the url (MySQL: ...`).
+
+| Database | In the URL |
+|---|---|
+| MySQL / MariaDB Connector/J | `?sslMode=VERIFY_IDENTITY` (checks the chain and the name) |
+| SQL Server (mssql-jdbc) | `;encrypt=true;trustServerCertificate=false;hostNameInCertificate=db.example.com` |
+| Oracle | a `tcps://` address and an Oracle wallet (`oracle.net.wallet_location`); see Oracle's JDBC guide |
+
+A private CA for these drivers goes into the JVM's truststore the Drishti server runs with
+(`-Djavax.net.ssl.trustStore=/etc/drishti/tls/ca.p12`, the password from the environment as `-Djavax.net.ssl.trustStorePassword`),
+which applies to the whole server. A secret is never written in the URL; the connector refuses `password=...` there.
+These follow each driver's documentation and have not been run in this repository's tests, which cover PostgreSQL.
+
+### Common errors
+
+Messages from a real PostgreSQL 18 (`jdbc has not read its table yet: catalogue not refreshed:` precedes them in a read; health shows them after `DOWN:`).
+
+| Message | Cause and fix |
+|---|---|
+| `SSL error: (certificate_unknown) PKIX path building failed: ... unable to find valid certification path to requested target` | The server certificate is not signed by the CA in `tls.ca-file`. Put the issuing CA in the bundle. |
+| `The hostname 127.0.0.2 could not be verified by hostnameverifier PgjdbcHostnameVerifier.` | The certificate does not name the host in the URL. Use a name it carries, or re-issue it with the name as a SAN; `tls.verify-hostname: false` only if you must. |
+| `FATAL: connection requires a valid client certificate` | The `hostssl ... cert` line wants a client certificate. Set `tls.cert-file` and `tls.key-file`. |
+| `FATAL: no pg_hba.conf entry for host "172.17.0.1", user "pwuser", database "postgres", no encryption` | The connection was plain text (`sslmode=disable` in the URL) and only `hostssl` lines exist. |
+| `tls.* is set but tls.enabled is not true: set tls.enabled: true to connect over TLS` | `tls.*` keys without `tls.enabled`. |
+| `tls.* is set and the url also carries driver TLS options (sslmode, sslrootcert, ...): give TLS one way` | Both forms at once; use one. |
 
 ## As a connector file
 

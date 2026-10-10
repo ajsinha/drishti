@@ -700,6 +700,25 @@ Rules the shipped connectors follow, which a new one should too:
 Where a client library builds its own TLS from properties (Kafka), translate from the `TlsMaterial` raw parts: see
 `KafkaSecurity` in `drishti-plugin-kafka`, which hands Kafka the PEM text it understands.
 
+Other shapes the shipped connectors show, for a library that wants something other than an `SSLContext`:
+
+- **The JDK `HttpClient`** (REST, feeds): `TlsHttp.material(settings, url, "base-url")` does the whole start-up rule (null for
+  `http://`, a `TlsException` for `tls.*` beside a plain URL, the built material for `https://`) and `TlsHttp.apply(builder, material)`
+  gives the client the context, protocols and ciphers, and honours `tls.verify-hostname: false`, which the JDK client would
+  otherwise ignore.
+- **A driver that loads its socket factory by class name** (PostgreSQL's `sslfactory`): register the `TlsMaterial` under a
+  generated id and pass the id as the driver's factory argument (`PgSslFactory` in `drishti-plugin-jdbc`); unregister on close.
+- **A client that takes its own policy object** (Aerospike's `TlsPolicy`, MongoDB's `SslSettings`, Lettuce's `SslOptions`, the AWS
+  SDK's `TlsTrustManagersProvider`): copy `sslContext()`, `trustManagers()`/`keyManagers()`, the protocols and the cipher suites
+  from the material; see `AerospikeTls`, `MongoTls`, `RedisTls` and `S3SourcePlugin.tlsMaterial`.
+- **A library with no hook** (Hadoop's S3A has none for a private CA): say so at start when `tls.*` is set, and name the JVM
+  truststore as the way out, as the Delta and Iceberg connectors do, rather than ignoring the settings.
+- **The settings form** is generated for you: `TlsSettings.settingSpecs("tls.")` is what Admin -> Connectors offers, and a test
+  (`SettingCatalogueTlsTest`) fails if it drifts from what `TlsSettings` reads. A plugin with `tls: true` in
+  `plugin-settings.yaml` gets the section; a second endpoint lists its prefix under `tls-prefixes`.
+- **Test** with `TlsFixture` in `drishti-testkit` (a CA, a server certificate for `localhost` and `127.0.0.1`, a client
+  certificate, a second CA to prove refusal, PEM and PKCS12 files, and a server `SSLContext` for an in-process HTTPS server).
+
 ---
 
 ## Reconnecting and failures

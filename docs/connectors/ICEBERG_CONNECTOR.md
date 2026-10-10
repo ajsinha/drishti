@@ -54,6 +54,8 @@ loader produces, or **extrapolations** from the benchmark, also marked.
 15. [Settings](#15-settings)
 16. [Checklist for production](#16-checklist-for-production)
 
+Also: [Security: TLS and credentials](#security-tls-and-credentials) (before *As a connector file*).
+
 ---
 
 ## 1. The problem
@@ -546,6 +548,70 @@ current snapshot's days with delete files.
 
 Iceberg logs `Table location loaded` once per table and `Refreshing table metadata` when a table changes; the
 connector turns off the scan report Iceberg would log for every planning.
+
+## Security: TLS and credentials
+
+An Iceberg lake behind a **REST catalog** whose object store (MinIO, Ceph, an internal gateway) has a certificate from a private
+CA is configured with the shared `tls.*` settings ([TLS.md](TLS.md)). They secure the **object store** that holds the data and
+metadata files: Iceberg's S3FileIO is replaced by a subclass whose HTTP client has the connector's trust and client certificate.
+
+| Setting | Meaning |
+|---|---|
+| `s3.endpoint: https://minio.example.com:9000` | TLS on for the object store. `tls.*` against a missing or `http://` endpoint is a start-up error (`tls.* is set but s3.endpoint is not https:// (...): tls.* secures the object store's endpoint`). |
+| `tls.ca-file` / `tls.truststore` (+ `tls.truststore-password`) | Trust a private CA. |
+| `tls.cert-file` + `tls.key-file` (+ `tls.key-password`), or `tls.keystore` (+ `tls.keystore-password`) | A client certificate. |
+| `tls.verify-hostname: false` | **Not supported**: the AWS client always checks the host name (`tls.verify-hostname: false is not supported for Iceberg's S3 client`). |
+| `s3.access-key`, `s3.secret-key` | As before. A catalog that vends credentials still overrides them. |
+
+Two things `tls.*` does not cover, because the libraries underneath have no setting for them:
+
+- **The REST catalog's own `https://` connection** uses the JVM's truststore. If the catalog is on a private CA too, import that CA into
+  the truststore the server runs with (`-Djavax.net.ssl.trustStore=/etc/drishti/tls/truststore.p12 -Djavax.net.ssl.trustStorePassword=...`).
+  The connector logs a warning at start when `tls.*` is set and the catalog URI is `https://`, to say so.
+- **Path-based tables (`catalog: hadoop`)** are read through Hadoop's S3A, which has no setting for a private CA. `tls.*` with
+  that catalog is refused at start (`tls.* applies to a REST catalog's object store: ...`); import the CA into the JVM's truststore instead.
+
+### A complete file
+
+`config/connectors/iceberg-rest-private-ca.yaml`:
+
+```yaml
+plugin: iceberg
+kinds: [trade]
+description: Iceberg tables behind a REST catalog, object store over TLS
+settings:
+  catalog: rest
+  uri: http://catalog.example.com:8181
+  warehouse: s3://lake/warehouse
+  namespace: risk
+  s3.endpoint: https://minio.example.com:9000
+  s3.region: us-east-1
+  s3.access-key: ${LAKE_ACCESS_KEY}
+  s3.secret-key: ${LAKE_SECRET_KEY}
+  tls:
+    ca-file: /etc/drishti/tls/ca.pem
+```
+
+### Checking it
+
+```
+curl --cacert /etc/drishti/tls/ca.pem https://minio.example.com:9000/minio/health/live
+curl http://catalog.example.com:8181/v1/config
+```
+
+Health reads `UP`, and `UP (TLS certificate CN=drishti (tls.cert-file) expires in 19 days (2026-10-30))` once a certificate has under
+30 days left. The test of the file IO (`IcebergTlsTest`) reads an object's metadata from an HTTPS endpoint that requires a client
+certificate, and shows the refusals (an untrusted server: `PKIX path building failed`; a missing client certificate).
+
+### Common errors
+
+| Message | Cause and fix |
+|---|---|
+| `tls.* is set but s3.endpoint is not https:// (...): tls.* secures the object store's endpoint` | `tls.*` with no endpoint or an `http://` one. |
+| `tls.* applies to a REST catalog's object store: Hadoop's S3A, which reads path-based tables, has no setting for a private CA. ...` | `tls.*` with `catalog: hadoop`. |
+| `tls.verify-hostname: false is not supported for Iceberg's S3 client ...` | A name mismatch cannot be switched off for this client; re-issue the certificate with the endpoint's name. |
+| `tls.ca-file '/etc/drishti/nope.pem': file not found` | A wrong path. |
+| a read fails with `PKIX path building failed` | The object store's certificate is not signed by a CA in `tls.ca-file`; or the **catalog's** certificate is private and not in the JVM truststore. |
 
 ## As a connector file
 

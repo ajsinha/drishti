@@ -579,9 +579,24 @@ tests use the same mechanism with recorded responses (`src/test/resources/record
   the environment or a secret store, never in a YAML file. It travels in the request's query string over TLS; health
   and errors name only the host, so the key does not appear in Admin → Health. A proxy that terminates TLS can see
   it in the URL. With an empty key FRED rejects the request and the connector reports the HTTP status.
-- **TLS** uses the JVM's default trust store. A proxy that inspects TLS needs its CA in that trust store
-  (`-Djavax.net.ssl.trustStore=…`, or imported into the JDK's `cacerts`); this affects every HTTPS client in the
-  server.
+- **TLS** for the five publishers uses the JVM's default trust store. A proxy that inspects TLS needs its CA in that trust
+  store (`-Djavax.net.ssl.trustStore=…`, or imported into the JDK's `cacerts`); this affects every HTTPS client in the server.
+  A **mirror** inside your network ([section 9](#9-running-without-internet-mirrors)) on a private CA is configured on the
+  connector itself with the shared `tls.*` settings ([TLS.md](TLS.md)): `url` is the mirror's `https://` address and
+  `tls.ca-file` its CA; `tls.cert-file` + `tls.key-file` for a mirror that asks for a client certificate.
+
+  ```yaml
+  plugin: feed
+  settings:
+    feed: ecb-fx
+    url: https://mirror.bank.example/ecb/eurofxref-hist-90d.xml
+    tls:
+      ca-file: /etc/drishti/tls/ca.pem
+  ```
+
+  `tls.*` with a `file:` or `http://` `url` is a start-up error (`tls.* is set but url is not https://`). An unreachable or
+  untrusted mirror is a `DOWN` health text with the reason (`PKIX path building failed ...`), and the last good data keeps
+  being served. The mirror's certificate expiry is added to the health text when it has under 30 days left.
 - **Proxies.** The HTTP client uses the JVM's default proxy selector, which reads the standard system properties
   (`-Dhttps.proxyHost=proxy.bank.example -Dhttps.proxyPort=8080 -Dhttp.nonProxyHosts=…`, or
   `-Djava.net.useSystemProxies=true`), not the `HTTPS_PROXY` environment variable. No proxy credentials are
