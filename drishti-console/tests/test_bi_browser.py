@@ -366,3 +366,22 @@ def test_the_bi_folder_is_live_a_file_added_changed_and_deleted_needs_no_restart
         page.reload()
         page.wait_for_timeout(700)
     expect(page.locator("[data-msg]")).to_contain_text("gone")
+
+
+def test_the_bi_keyword_types_ahead_opens_an_item_and_alone_opens_home(stack, browser):
+    page = sign_in(browser, "cat")
+    page.goto(CONSOLE_URL + "/t")
+    page.fill("#cmdInput", "bi ")
+    expect(page.locator("#cmdList")).to_contain_text("Catalogue")
+    expect(page.locator("#cmdList")).to_contain_text("My workspace")
+    page.fill("#cmdInput", "bi exp")
+    expect(page.locator("#cmdList")).to_contain_text("Counterparty exposure")
+    page.fill("#cmdInput", "BI Desk P&L")
+    page.press("#cmdInput", "Enter")
+    page.wait_for_url("**/bi/i/*")
+    expect(page.locator("[data-title]")).to_have_text("Desk P&L")
+    page.goto(CONSOLE_URL + "/t")
+    page.fill("#cmdInput", "BI")
+    page.press("#cmdInput", "Enter")
+    page.wait_for_url("**/bi")
+    clean(page)

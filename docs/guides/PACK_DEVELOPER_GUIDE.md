@@ -876,6 +876,11 @@ A Sutra's tables opt in on their own (`pivot:` on the panel). In the banking gen
 in `tools/packgen/banking/risk_data.py` (netting sets, books, clearing accounts, desks, collateral) and
 `SCHEDULE_PIVOTS` in `make_sutras.py` (a trade's cash flows, fixings and amortisation); rerun `make_sutras.py`.
 
+### Reserved command words
+
+The console owns three command words: `BI`, `RUPAKA` (its alias) and `FORM`. A pack may not define a mnemonic with any of those names, in any case: the pack loader
+refuses it (`pack 'x' defines the mnemonic 'BI', which is a reserved command word (BI, FORM, RUPAKA): choose another`) and `drishti pack check` fails the same way. No shipped pack uses them.
+
 ### `form`: the search form of a kind
 
 `FORM <pack> <GO>` opens a form for a pack's kinds: one input per field, typed, which the server compiles to the ordinary search

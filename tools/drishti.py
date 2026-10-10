@@ -291,7 +291,7 @@ def check_form_block(pack: pathlib.Path) -> list[str]:
     return load_module("packform", "packform.py").validate(m)
 
 
-RESERVED_WORDS = ("FORM", "RUPAKA")        # command words the console owns (the server's PackLoader.RESERVED_WORDS)
+RESERVED_WORDS = ("BI", "FORM", "RUPAKA")        # command words the console owns (the server's PackLoader.RESERVED_WORDS)
 
 
 def check_reserved_mnemonics(pack: pathlib.Path) -> list[str]:

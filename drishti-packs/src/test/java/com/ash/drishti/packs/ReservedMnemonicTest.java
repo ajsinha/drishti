@@ -24,7 +24,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** A pack may not define a mnemonic that is a reserved command word (RUPAKA, FORM), whatever the case. */
+/** A pack may not define a mnemonic that is a reserved command word (BI, RUPAKA, FORM), whatever the case. */
 class ReservedMnemonicTest {
 
     @TempDir Path dir;
@@ -37,7 +37,7 @@ class ReservedMnemonicTest {
 
     @Test
     void reservedWordsAreRefusedInAnyCase() throws Exception {
-        for (String word : List.of("RUPAKA", "rupaka", "Rupaka", "FORM", "form")) {
+        for (String word : List.of("BI", "bi", "RUPAKA", "rupaka", "Rupaka", "FORM", "form")) {
             Pack p = pack(word);
             assertThatThrownBy(() -> new PackLoader().properties(List.of(p))).isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("reserved command word").hasMessageContaining(word);

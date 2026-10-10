@@ -59,22 +59,22 @@ Everything the page does, the server decides: the page is a shell that asks the 
   *Catalogue*, and the three items you opened most recently. It is shown only to people who hold the `bi` power (section 3), and
   not at all when BI is switched off. Administrators with `bi-admin` also see *BI settings*; an administrator also sees the
   *proof of concept* there when `bi.poc_enabled` is on (section 10).
-- **`RUPAKA` on the command line** is a reserved keyword. Case does not matter.
+- **`BI` on the command line** is a reserved keyword (`RUPAKA` is an alias and works the same). Case does not matter.
 
 | Type | Opens |
 |---|---|
-| `RUPAKA <GO>` | the BI home (`/bi`) |
-| `RUPAKA WORKSPACE <GO>` | your personal workspace (`/bi/w/me`) |
-| `RUPAKA CATALOGUE <GO>` | the catalogue (`/bi/catalogue`) |
-| `RUPAKA <report> <GO>` | an item by its id or its exact title; if the words match several items, the catalogue searched for them |
-| `RUPAKA SETTINGS <GO>` | Admin, BI settings (needs `bi-admin`) |
+| `BI <GO>` | the BI home (`/bi`) |
+| `BI WORKSPACE <GO>` | your personal workspace (`/bi/w/me`) |
+| `BI CATALOGUE <GO>` | the catalogue (`/bi/catalogue`) |
+| `BI <report-or-board> <GO>` | an item by its id or its title (any case); if the words match several items, the catalogue searched for them (a pick list); until the report engine exists it opens the item's page |
+| `BI SETTINGS <GO>` | Admin, BI settings (needs `bi-admin`) |
 
 ![Type-ahead after RUPAKA](img/bi/03-keyword.jpg)
 
-Type-ahead offers the keyword after the first letters (`ru`), the three pages after `RUPAKA `, and the items you may open
+Type-ahead offers the keyword after the first letters (`b`, `ru`), the three pages (`WORKSPACE`, `CATALOGUE`, home) after `BI `, and the items you may open
 that match what you type next. Someone without the `bi` power gets no suggestions and, on `<GO>`, a message that says what is
-missing. **A pack may not define a mnemonic named `RUPAKA`** (or `FORM`, the other reserved word): the pack loader refuses it with
-`pack 'x' defines the mnemonic 'RUPAKA', which is a reserved command word (FORM, RUPAKA): choose another`, so `pack check` fails
+missing. **A pack may not define a mnemonic named `BI` or `RUPAKA`** (or `FORM`, the other reserved word): the pack loader refuses it with
+`pack 'x' defines the mnemonic 'BI', which is a reserved command word (BI, FORM, RUPAKA): choose another`, so `pack check` fails
 the same way.
 
 URLs: `/bi` (home), `/bi/catalogue`, `/bi/workspaces`, `/bi/w/<workspace>` (`me` is your personal one), `/bi/i/<item>`, and the
