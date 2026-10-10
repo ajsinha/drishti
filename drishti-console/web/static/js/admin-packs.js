@@ -88,6 +88,23 @@
       });
     });
 
+    // Hand-off from Build → New pack (?bundle=<job>): that job's bundle goes through the same upload, checks and preview as a chosen file.
+    var handed = /[?&]bundle=([A-Za-z0-9_-]+)/.exec(window.location.search);
+    if (handed) {
+      say(msg, 'Fetching the bundle from New pack…');
+      fetch('/build/pack/api/jobs/' + handed[1] + '/bundle', { credentials: 'same-origin' }).then(function (r) {
+        if (!r.ok) { return r.json().then(function (j) { throw new Error(j.detail || 'The bundle is not available (it may have expired).'); }); }
+        var cd = /filename="([^"]+)"/.exec(r.headers.get('Content-Disposition') || '');
+        return r.blob().then(function (b) { return new File([b], cd ? cd[1] : 'pack.tar.gz', { type: 'application/gzip' }); });
+      }).then(function (f) {
+        var dt = new DataTransfer();
+        dt.items.add(f);
+        file.files = dt.files;
+        file.dispatchEvent(new Event('change'));
+        up.click();
+      }).catch(function (e) { say(msg, e.message, true); });
+    }
+
     function checkList(checks) {
       var ul = el('ul', { class: 'dep-checks' });
       checks.forEach(function (c) {

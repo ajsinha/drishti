@@ -1,0 +1,114 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}New pack · {{ PRODUCT }}{% endblock %}
+{% block screen %}build{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/build-pack.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm bs pk" data-pack-new data-sample-docs="{{ limits.sampleDocs }}" data-read-rows="{{ read_rows }}" data-read-mb="{{ read_mb }}"
+     data-can-author="{{ 'true' if can_author else 'false' }}" data-is-admin="{{ 'true' if is_admin else 'false' }}">
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="/build">My designs</a> · <a href="/help/schema-to-pack">Schema to pack guide <span aria-hidden="true">?</span></a></nav>
+  <h1>New pack</h1>
+  <p class="text-muted-d">Bring one or many <b>schema files</b> (JSON Schema, JSON or YAML) and/or <b>JSON Lines data</b>, check what was detected, preview every
+    Sutra it makes, then download the pack or deploy it. Your files are read in this browser; only a <b>sample</b> of the documents and the
+    counts are sent, never the whole folder. The same rules run on the command line: <code>drishti.py pack make --schema</code>.</p>
+  {% if not can_author %}<p class="pk-warn" role="note">Your role does not have the author power: you can plan and preview, but downloading and deploying are off.</p>{% endif %}
+  <div class="pk-resume bs-bar" data-resume hidden></div>
+
+  <ol class="pk-steps" aria-label="Steps">
+    <li><button type="button" class="pk-step" data-go="1" aria-current="step"><span class="pk-n">1</span> Sources</button></li>
+    <li><button type="button" class="pk-step" data-go="2" aria-current="false"><span class="pk-n">2</span> Kinds</button></li>
+    <li><button type="button" class="pk-step" data-go="3" aria-current="false"><span class="pk-n">3</span> Pack</button></li>
+    <li><button type="button" class="pk-step" data-go="4" aria-current="false"><span class="pk-n">4</span> Preview</button></li>
+    <li><button type="button" class="pk-step" data-go="5" aria-current="false"><span class="pk-n">5</span> Output</button></li>
+  </ol>
+  <div class="bs-status" role="status" aria-live="polite" data-msg></div>
+
+  <section class="pnl" data-step="1" aria-labelledby="pk1"><div class="pnl-b">
+    <h2 id="pk1" class="bs-h">1. Bring your sources</h2>
+    <label class="bs-drop" for="pkFiles" data-drop>
+      <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+      <span><b>Choose files</b> or drop files and folders here</span>
+      <span class="text-muted-d">Schemas: .json, .yaml, .yml · data: .jsonl, .ndjson, or a .json array · as many as you like</span>
+      <input id="pkFiles" class="bs-file" type="file" multiple accept=".json,.jsonl,.ndjson,.yaml,.yml" data-files>
+    </label>
+    <p class="bs-actions"><label class="btn-pill btn-ghost" for="pkFolder"><i class="bi bi-folder2-open" aria-hidden="true"></i> Choose a folder
+      <input id="pkFolder" class="bs-file" type="file" webkitdirectory directory multiple data-folder></label>
+      <button type="button" class="btn-pill btn-ghost" data-cancel-read hidden>Cancel reading</button></p>
+    <details class="pk-caps"><summary>Reading limits</summary>
+      <div class="bs-bar">
+        <label for="pkRows">Read at most</label><input id="pkRows" class="studio-in" type="number" min="1000" step="1000" data-max-rows> <span>rows per file</span>
+        <label for="pkMb">Stop a file after</label><input id="pkMb" class="studio-in" type="number" min="1" data-max-mb> <span>MB</span>
+        <label for="pkKeep">Keep a sample of</label><input id="pkKeep" class="studio-in" type="number" min="5" data-sample-docs> <span>documents per file</span>
+      </div>
+      <p class="text-muted-d">A big file is streamed line by line and sampled as it goes (the same file always gives the same sample); nothing is held in memory but the sample.
+        The ceilings are set by <code>builder.pack_read_max_rows</code>, <code>builder.pack_read_max_mb</code> and <code>builder.pack_sample_docs</code>.</p>
+    </details>
+    <details class="pk-caps"><summary>Paste a schema instead</summary>
+      <div class="bs-bar"><label for="pkPasteName">File name</label><input id="pkPasteName" class="studio-in mono" type="text" value="pasted.schema.json" data-paste-name autocomplete="off"></div>
+      <label for="pkPaste" class="visually-hidden">Schema text</label>
+      <textarea id="pkPaste" class="studio-in mono pk-paste" rows="6" data-paste spellcheck="false"></textarea>
+      <p><button type="button" class="btn-pill btn-ghost" data-paste-add>Add this schema</button></p>
+    </details>
+    <p class="pk-total" data-total role="status" aria-live="polite"></p>
+    <ul class="bs-files pk-sources" aria-label="Sources" data-sources hidden></ul>
+  </div></section>
+
+  <section class="pnl" data-step="2" aria-labelledby="pk2" hidden><div class="pnl-b">
+    <h2 id="pk2" class="bs-h">2. Kinds: what was detected</h2>
+    <p class="text-muted-d">One card per kind. Anything marked in amber needs your decision; change any suggestion and the plan is redone.
+      The rules are in the <a class="lnk" href="/help/schema-to-pack#the-rules-one-by-one">guide</a>.</p>
+    <div data-kinds></div>
+  </div></section>
+
+  <section class="pnl" data-step="3" aria-labelledby="pk3" hidden><div class="pnl-b">
+    <h2 id="pk3" class="bs-h">3. The pack</h2>
+    <div data-pack-form></div>
+  </div></section>
+
+  <section class="pnl" data-step="4" aria-labelledby="pk4" hidden><div class="pnl-b">
+    <h2 id="pk4" class="bs-h">4. Preview every Sutra</h2>
+    <div class="pk-progress" data-progress hidden>
+      <progress data-prog max="1" value="0" aria-label="Sutras drafted"></progress>
+      <span data-bar role="status" aria-live="polite"></span>
+      <button type="button" class="btn-pill btn-ghost" data-cancel-job>Cancel</button>
+    </div>
+    <div data-preview></div>
+  </div></section>
+
+  <section class="pnl" data-step="5" aria-labelledby="pk5" hidden><div class="pnl-b">
+    <h2 id="pk5" class="bs-h">5. Output</h2>
+    <div data-output></div>
+  </div></section>
+
+  <div class="pk-nav bs-actions">
+    <button type="button" class="btn-pill btn-ghost" data-back hidden>Back</button>
+    <button type="button" class="btn-pill btn-accent" data-next>Next</button>
+    <button type="button" class="btn-pill btn-ghost" data-save>Save draft</button>
+    <button type="button" class="btn-pill btn-ghost" data-discard hidden>Discard draft</button>
+    <span class="bs-status" data-save-msg role="status" aria-live="polite"></span>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/pack-ui.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pack-read.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pack-kinds.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pack-preview.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/pack-new.js?v={{ ASSET_V }}"></script>
+{% endblock %}

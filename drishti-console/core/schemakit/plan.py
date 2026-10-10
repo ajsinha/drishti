@@ -143,6 +143,7 @@ class SutraPlan:
 @dataclass
 class KindPlan:
     kind: str
+    orig: str = ""            # the name before the user renamed it: overrides are keyed by it
     kind_why: str = ""
     title: str = ""
     description: str = ""
@@ -201,7 +202,7 @@ class Plan:
 
 
 def kind_dict(k: KindPlan) -> dict:
-    return {"kind": k.kind, "kindWhy": k.kind_why, "title": k.title, "description": k.description, "source": k.source,
+    return {"kind": k.kind, "origKind": k.orig or k.kind, "kindWhy": k.kind_why, "title": k.title, "description": k.description, "source": k.source,
             "key": k.key, "keyWhy": k.key_why, "keyCandidates": k.key_candidates, "keyAmbiguous": k.key_ambiguous,
             "links": [vars(l) for l in k.links], "match": k.match, "matchWhy": k.match_why, "matchOptions": k.match_options,
             "date": k.date, "dateWhy": k.date_why, "mnemonic": k.mnemonic, "strip": k.strip, "controls": k.controls,
@@ -638,7 +639,9 @@ def make_plan(schemas: list, samples: dict | None = None, overrides: dict | None
         else:
             kinds[k] = KindPlan(kind=k, kind_why="the file name", title=humanize(k), node=node_from_docs(docs_k), samples=docs_k)
     plan.warnings += res.warnings
-    for k, ov in overrides.items():                         # renames first
+    for kp in kinds.values():
+        kp.orig = kp.kind
+    for k, ov in list(overrides.items()):                   # renames first
         if k in kinds and ov.get("kind") and ov["kind"] != k and KIND_RE.fullmatch(ov["kind"]):
             kp = kinds.pop(k)
             kp.kind, kp.kind_why = ov["kind"], "chosen by you"

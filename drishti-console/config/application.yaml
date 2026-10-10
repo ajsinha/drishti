@@ -125,6 +125,17 @@ builder:                     # Build workbench, New (/build/new); docs/architect
   max_samples: 50            # files in one upload, and samples (a .jsonl line is one) in all
   max_file_mb: 5             # largest single file
   max_total_mb: 25           # all files together
+  pack_sample_docs: 200      # Build -> New pack: documents the browser keeps per data file and sends (a sample, never the file)
+  pack_read_max_rows: 500000 # the most rows per file the page may be told to read (it streams and samples; nothing is held but the sample)
+  pack_read_max_mb: 1024     # the most MB per file the page may be told to read
+  pack_max_files: 200        # schema and data files in one plan
+  pack_max_docs: 5000        # sampled documents in one plan request
+  pack_max_schema_kb: 512    # largest single schema file
+  pack_max_sutras: 200       # Sutras one generated pack may have
+  pack_jobs_per_user: 3      # preview jobs one person may have running (or kept) at a time
+  pack_job_ttl_min: 60       # minutes a finished preview (and its bundle) is kept
+  pack_draft_concurrency: 4  # Sutras drafted at once against the server
+  tools_dir: ../tools        # the repository's tools/ folder (packbundle.py makes the bundle); relative to drishti-console/
   studio_kind: sample        # the kind a new Design and "Open in Studio" preview a brought document as (a pasted document has no kind of its own)
 calc:                        # Calc: Python in the browser (docs/guides/PYTHON_CALC.md); also needs a role with calc
   enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
