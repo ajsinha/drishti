@@ -206,6 +206,7 @@ def test_a_kind_another_pack_defines_must_be_renamed_before_going_on(browser, pa
         assert "already defines the kind widget" in page.locator("[data-msg]").inner_text()
         assert page.locator("[data-step='3']").is_visible()
         page.click("[data-go='2']")
+        page.wait_for_function("() => !document.querySelector('[data-next]').disabled")   # going back re-plans; a plan landing mid-edit would redraw the card and drop the typed name
         page.fill("input[data-focus^=name-]", "gadget")
         page.locator("input[data-focus^=name-]").dispatch_event("change")
         page.locator(".pk-card h3:has-text('gadget'), .pk-card h3:has-text('Widget')").first.wait_for()

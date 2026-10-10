@@ -326,6 +326,7 @@ def test_every_control_works_from_the_keyboard(page):
     page.locator("[data-ctl='legs'] summary").focus()
     page.keyboard.press("Enter")
     assert page.locator("[data-ctl='legs'] details").evaluate("d => d.open")
+    page.wait_for_function("document.activeElement.classList.contains('ms-q')")   # opening puts the focus in the filter box
     page.keyboard.press("Tab")                                               # All
     page.keyboard.press("Tab")                                               # None
     done(page, lambda: page.keyboard.press("Enter"))
