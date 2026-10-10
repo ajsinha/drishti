@@ -69,9 +69,10 @@ def header(text: str, kp: KindPlan, sp: SutraPlan) -> str:
     return "\n".join(out) + "\n"
 
 
-def strip_entries(kp: KindPlan) -> list[str]:
+def strip_entries(kp: KindPlan, allowed: set | None = None) -> list[str]:
     out = []
-    for i, p in enumerate(kp.strip):
+    paths = [p for p in kp.strip if allowed is None or p.split(".")[0] in allowed]       # a variant's strip holds only its own fields
+    for i, p in enumerate(paths):
         f = kp.index.get(p)
         if f is None:
             continue
@@ -82,13 +83,13 @@ def strip_entries(kp: KindPlan) -> list[str]:
             parts.append('tone: "status"')
         elif f.fmt.startswith("signed"):
             parts.append('tone: "sign"')
-        if i == (1 if kp.index.get(kp.strip[0]) is not None and kp.index[kp.strip[0]].role == "status" else 0) and f.role == "number":
+        if i == (1 if kp.index.get(paths[0]) is not None and kp.index[paths[0]].role == "status" else 0) and f.role == "number":
             parts.append("emphasis: true")
         out.append("  - { " + ", ".join(parts) + " }")
     return out
 
 
-def body(text: str, kp: KindPlan) -> tuple[str, set]:
+def body(text: str, kp: KindPlan, allowed: set | None = None) -> tuple[str, set]:
     """Labels, formats, panel titles, strip and link() applied to the draft; also the set of field paths the Sutra shows."""
     links = {l.field: l for l in kp.links if not l.many}
     top = {norm(f.path): f for f in kp.fields if "." not in f.path and "[" not in f.path}
@@ -99,12 +100,13 @@ def body(text: str, kp: KindPlan) -> tuple[str, set]:
     while i < len(lines):
         line = lines[i]
         if line.startswith("strip:") and kp.strip:
-            entries = strip_entries(kp)
+            entries = strip_entries(kp, allowed)
             if entries:
                 out.append(line)
                 out += entries
                 for p in kp.strip:
-                    shown.add(p)
+                    if allowed is None or p.split(".")[0] in allowed:
+                        shown.add(p)
                 i += 1
                 while i < len(lines) and (lines[i].startswith(" ") or lines[i].startswith("-")):
                     i += 1
@@ -153,7 +155,10 @@ def body(text: str, kp: KindPlan) -> tuple[str, set]:
 
 
 def finalize(text: str, kp: KindPlan, sp: SutraPlan) -> tuple[str, set]:
-    return body(header(text, kp, sp), kp)
+    allowed = None
+    if sp.variant is not None and kp.node is not None:
+        allowed = set(kp.node.base_props) | set(sp.variant.props)
+    return body(header(text, kp, sp), kp, allowed)
 
 
 # ----------------------------------------------------------------------------------------------- About this page

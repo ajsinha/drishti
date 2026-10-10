@@ -344,3 +344,12 @@ def test_a_draft_over_the_notes_limit_is_refused_with_its_size(client, post, bac
     state["schemas"][0]["text"] = "".join(random.choice("abcdefghijklmnopqrstuvwxyz0123456789") for _ in range(40000))
     r = post("/build/pack/api/drafts", {"name": "big", "state": state})
     assert r.status_code == 413 and "KB" in r.json()["detail"]
+
+
+def test_data_files_follow_a_renamed_kind(post):
+    p = post("/build/pack/api/plan", body(data=[{"name": "trades.jsonl", "rows": 12, "bytes": 1, "docs": trades()}], overrides={"trade": {"kind": "deal"}})).json()
+    assert p["files"][0]["kind"] == "deal"
+    assert next(k for k in p["kinds"] if k["kind"] == "deal")["samples"] == 12
+    q = post("/build/pack/api/plan", body(data=[{"name": "x.jsonl", "rows": 12, "bytes": 1, "docs": trades()}], kindOf={"x.jsonl": "deal"},
+                                          overrides={"trade": {"kind": "deal"}})).json()
+    assert next(k for k in q["kinds"] if k["kind"] == "deal")["samples"] == 12

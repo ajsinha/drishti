@@ -172,10 +172,13 @@ async def plan_object(body: dict, lim: WizardLimits, backend, ident, packs_state
     settings = {"samples": max(1, min(int(body.get("samples") or 5), 20)), "strip_max": max(1, min(int(body.get("strip") or 6), 12))}
     try:
         first = P.make_plan(schemas)
-        by_kind, file_kind = assign(samples, [k.kind for k in first.kinds], kind_of)
+        back = {ov["kind"]: o for o, ov in overrides.items() if isinstance(ov, dict) and ov.get("kind")}     # a file the user pointed at a renamed kind
+        by_kind, file_kind = assign(samples, [k.kind for k in first.kinds], {f: back.get(k, k) for f, k in kind_of.items()})
         plan = P.make_plan(schemas, by_kind, overrides, settings, existing_mnemonics=taken, pack_name=str(pack.get("name") or ""))
     except SchemaError as e:
         raise WizardError(422, str(e)) from None
+    now = {k.orig: k.kind for k in plan.kinds}
+    file_kind = {f: now.get(k, k) for f, k in file_kind.items()}                 # the names the user sees: after any rename
     for k in ("name", "code", "title", "description", "version", "connector"):
         if pack.get(k):
             plan.pack[k] = str(pack[k])

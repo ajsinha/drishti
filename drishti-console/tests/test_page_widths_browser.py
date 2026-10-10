@@ -43,7 +43,7 @@ def _pages(views: list[str] | None = None) -> list[str]:
     pages = ["/", "/t", *(f"/v/{v}" for v in views), "/v/trade/NOPE-404", "/v/nosuchkind/X",
              "/s?q=TRD%20where%20mtm%20%3E%201m%20order%20by%20mtm%20desc%20limit%2020",
              f"/compare/{first}?a=2026-09-29&b=2026-09-30", f"/impact/{first}", "/history", "/m", "/alerts", "/w",
-             "/build", "/build/reviews", "/reports", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
+             "/build", "/build/pack/new", "/build/reviews", "/reports", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
              "/help", "/help/search?q=pivot", "/about", "/about/competitive",
              # the newer pages: data loads (all, and one pack's), collaboration admin, the inbox, a share nobody may open, the landing page's way back
              "/admin/loads", f"/admin/packs/{PACK}/loads", "/admin/collab", "/admin/embedding", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",

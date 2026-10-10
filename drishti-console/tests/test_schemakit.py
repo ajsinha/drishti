@@ -465,3 +465,11 @@ def test_bundle_has_the_pack_bundle_format(tmp_path, plan):
     assert (tmp_path / "out" / "demo-pack-1.0.0.tar.gz.sha256").read_text().startswith(res["sha256"])
     man, problems = packbundle.check_manifest(tmp_path / "demo-pack")
     assert problems == [] or all("MANIFEST" in p for p in problems)
+
+
+def test_a_variants_strip_holds_only_its_own_fields(plan):
+    i = plan.kind("instrument")
+    draft = DRAFT.replace("kind: trade", "kind: instrument")
+    text, shown = decorate.finalize(draft, i, i.sutras[0])                   # instrument-bond
+    y = yaml.safe_load(text)
+    assert "$.dividendYield" not in [s["bind"] for s in y["strip"]] and "$.coupon" in [s["bind"] for s in y["strip"]]
