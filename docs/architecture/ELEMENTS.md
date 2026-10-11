@@ -899,7 +899,7 @@ rewritten.
 
 The scripts stayed classic scripts (the console's pages and `script-src 'self'` are unchanged); each is an IIFE that registers
 `window.drishtiModules.<name> = { init }` and starts `init(document)` itself unless its `<script>` has `data-manual`, which the
-element sets when it loads them (`GET /embed/v1/poc/js/<name>.js`, a whitelist in `embed_routes.ENHANCERS`). `drishtiModules` is
+element sets when it loads them (`GET /embed/v1/js/<name>.js`, a whitelist in `embed_routes.ENHANCERS`). `drishtiModules` is
 the only global the element adds to the host page; with `data-manual` the engine, grid, charts, About and Pivot globals
 (`window.drishtiPivot`, `drishtiAbout`, `drishtiCharts`, `drishti`, ...) are not set. A real ES-module wrapper stays for step 9.
 
