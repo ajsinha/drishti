@@ -22,7 +22,7 @@
 {% block nav %}{% with command_text='FORM ' ~ info.pack %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="adm search qf-page">
-  <h1>{{ info.title }} <span class="role mono">FORM {{ info.pack }}</span>
+  <h1 data-recent-form="/form/{{ info.pack | urlencode }}?kind={{ info.kind | urlencode }}" data-label="{{ info.title }} · {% for k in info.kinds if k.kind == info.kind %}{{ k.label }}{% endfor %}" data-who="{{ me.user if me else '' }}">{{ info.title }} <span class="role mono">FORM {{ info.pack }}</span>
     <a class="qf-help" href="/help/context/form" title="Help: search with a form" aria-label="Help: search with a form"><i class="bi bi-question-circle" aria-hidden="true"></i></a></h1>
   {% if info.kinds | length > 1 %}
   <nav class="qf-kinds" aria-label="Kinds you can search">{% for k in info.kinds %}

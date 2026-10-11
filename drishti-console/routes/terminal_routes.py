@@ -98,7 +98,7 @@ async def go(request: Request, q: str = ""):
     words = q.replace("<GO>", "").replace("<go>", "").split()
     if words and words[0].upper() == FORM_WORD:                    # reserved too: FORM <pack> [kind] opens the pack's search form
         if len(words) == 1:
-            return RedirectResponse("/form", status_code=303)
+            return RedirectResponse("/forms", status_code=303)
         return RedirectResponse(f"/form/{quote(words[1])}" + (f"?kind={quote(words[2])}" if len(words) > 2 else ""), status_code=303)
     if _SEARCH.match(q.replace("<GO>", "")):
         return RedirectResponse(f"/s?q={quote(q.replace('<GO>', '').strip())}", status_code=303)

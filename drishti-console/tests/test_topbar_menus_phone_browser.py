@@ -23,7 +23,7 @@ pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install
 from test_live_tabs_browser import browser, console_url  # noqa: E402,F401 - the shared browser fixtures
 
 WIDTHS = (360, 390, 412)
-PAGES = ("/t", "/bi", "/bi/catalogue", "/bi/r/file:report:counterparty-risk", "/admin/users", "/help")
+PAGES = ("/t", "/forms", "/reports", "/bi", "/bi/catalogue", "/bi/r/file:report:counterparty-risk", "/admin/users", "/help")
 GUTTER = 16
 
 BUTTONS = "() => [...document.querySelectorAll('.tbar [data-bs-toggle=dropdown]')].map((b, i) => { b.dataset.tbi = i; return i; })"

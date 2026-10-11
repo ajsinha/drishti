@@ -16,10 +16,11 @@
 search grammar, shows that command, and runs it as any search: masks, kinds per role, packs per user and sample visibility apply."""
 from __future__ import annotations
 
+import asyncio
 from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from core import forms
 from core.backend import BackendError
@@ -32,10 +33,29 @@ router = APIRouter(include_in_schema=False)
 
 @router.get("/form")
 async def form_index(request: Request):
-    """The packs whose kinds you can search with a form, and your saved searches."""
-    current = [p for p in await packs(request) if p.get("kinds") and p.get("active", True)]
-    saved = (getattr(request.state, "settings", None) or {}).get("savedSearches") or []
-    return render(request, "terminal/form_index.html", packs=current, saved=saved, screen="form")
+    """The old address of the forms home."""
+    return RedirectResponse("/forms", status_code=303)
+
+
+@router.get("/forms")
+async def forms_home(request: Request):
+    """The forms home: every switched-on pack with a declared ``form:`` section, as far as the person may open it (the server answers
+    for the roles, the kinds and the sample-content policy), each kind a link to its form; a filter box, recent forms and saved searches."""
+    me, backend = ident(request), request.app.state.backend
+    current = [p for p in await packs(request) if p.get("active", True) and p.get("forms")]
+
+    async def one(p):
+        try:
+            info = await backend.form(p["name"], "", me)
+        except BackendError:
+            return None                      # no access to any kind, or the pack is not visible to this person: not listed
+        kinds = [{"kind": k["kind"], "label": k["label"], "mnemonic": k.get("mnemonic", ""), "fields": p["forms"][k["kind"]]}
+                 for k in info["kinds"] if k["kind"] in p["forms"]]
+        return {"name": p["name"], "title": p["title"], "description": p.get("description", ""), "kinds": kinds} if kinds else None
+
+    rows = [r for r in await asyncio.gather(*(one(p) for p in current)) if r]
+    saved = [s for s in (getattr(request.state, "settings", None) or {}).get("savedSearches") or [] if str(s.get("path", "")).startswith("/form/")]
+    return render(request, "terminal/form_index.html", packs=rows, saved=saved, screen="form")
 
 
 @router.post("/form/save")

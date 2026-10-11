@@ -14,21 +14,29 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
-{% block title %}Search with a form · {{ PRODUCT }}{% endblock %}
+{% block title %}Forms · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/form.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-<div class="adm search">
-  <h1>Search with a form <a class="qf-help" href="/help/context/form" title="Help: search with a form" aria-label="Help: search with a form"><i class="bi bi-question-circle" aria-hidden="true"></i></a></h1>
-  <p class="text-muted-d">Type <span class="mono">FORM &lt;pack&gt;</span> on the command line, or pick a pack. Fill in the fields you care about; the form writes the search for you.</p>
-  <ul class="qf-packs">{% for p in packs %}
-    <li><a class="lnk" href="/form/{{ p.name | urlencode }}"><b>{{ p.title }}</b></a> <span class="mono text-muted-d">FORM {{ p.name }}</span>
-      <span class="text-muted-d">{{ p.description }}</span></li>{% endfor %}
-    {% if not packs %}<li class="text-muted-d">None of the packs open to you has a kind to search.</li>{% endif %}
-  </ul>
+<div class="adm search" data-forms-home data-who="{{ me.user if me else '' }}">
+  <h1>Forms <a class="qf-help" href="/help/context/form" title="Help: search with a form" aria-label="Help: search with a form"><i class="bi bi-question-circle" aria-hidden="true"></i></a></h1>
+  <p class="text-muted-d">Query by form: pick a kind, fill in the fields you care about, and the form writes the search for you. On the command line: <span class="mono">FORM &lt;pack&gt; &lt;GO&gt;</span>.</p>
+  <label class="qh-find"><span class="visually-hidden">Filter packs and kinds</span>
+    <input type="search" class="studio-in" placeholder="Filter packs and kinds" data-forms-filter autocomplete="off"></label>
+  <div data-forms-recent hidden><h2 class="ws-h">Recent forms</h2><ul class="qf-saved" data-forms-recent-list></ul></div>
+  <div class="qh-packs">{% for p in packs %}
+    <section class="qh-pack" data-forms-pack data-text="{{ (p.title ~ ' ' ~ p.name ~ ' ' ~ p.description ~ ' ' ~ (p.kinds | map(attribute='label') | join(' ')) ~ ' ' ~ (p.kinds | map(attribute='kind') | join(' '))) | lower }}">
+      <h2 class="ws-h"><a class="lnk" href="/form/{{ p.name | urlencode }}">{{ p.title }}</a> <span class="mono text-muted-d">FORM {{ p.name }}</span></h2>
+      {% if p.description %}<p class="text-muted-d">{{ p.description }}</p>{% endif %}
+      <ul class="qh-kinds">{% for k in p.kinds %}
+        <li><a class="chip qh-kind" href="/form/{{ p.name | urlencode }}?kind={{ k.kind | urlencode }}" data-text="{{ (k.label ~ ' ' ~ k.kind) | lower }}">{{ k.label }} <span class="text-muted-d">{{ k.fields }} field{{ '' if k.fields == 1 else 's' }}</span></a></li>{% endfor %}
+      </ul>
+    </section>{% endfor %}
+  </div>
+  <p class="text-muted-d" data-forms-none{% if packs %} hidden{% endif %}>{% if packs %}Nothing matches that filter.{% else %}None of the packs open to you has a form to search with.{% endif %}</p>
   {% if saved %}<h2 class="ws-h">Your saved searches</h2>
   <ul class="qf-saved">{% for s in saved %}<li><a class="lnk" href="{{ s.path }}">{{ s.name }}</a></li>{% endfor %}</ul>{% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/forms-home.js?v={{ ASSET_V }}"></script>{% endblock %}

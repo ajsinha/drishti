@@ -27,8 +27,7 @@
     ('Watch', [
       ('/w', 'grid-1x2', 'Workspaces', 'Several live views on one screen', '/w'),
       ('/m', 'list-columns', 'Monitors', 'Live watchlists of entities', '/m'),
-      ('/alerts', 'bell', 'Alerts', 'Rules checked on every change', '/alerts'),
-      ('/reports', 'calendar-check', 'Reports', 'Searches delivered as CSV on a schedule', '/reports')])]),
+      ('/alerts', 'bell', 'Alerts', 'Rules checked on every change', '/alerts')])]),
   ('Build', 'braces', [
     ('Create', [
       ('/build/new', 'plus-square', 'New screen', 'Bring JSON files, a schema or stored entities, then design', '/build/new'),
@@ -58,6 +57,15 @@
       [('/bi/poc', 'speedometer2', 'Proof of concept', 'Phase 0: Perspective live grid, a masked Arrow extract (admins; bi.poc_enabled)', '/bi/poc')] if (me and me.is_admin and BI_POC) else []))] %}{% endif %}
 {% set MENU = MENU[:1] + [('BI', 'bar-chart-line', BI_COLS)] + MENU[1:] %}
 {% endif %}
+{% set nsf = namespace(items=[], rep=[]) %}{% for p in pack_switcher if p.active and p.forms %}{% set nsf.items = nsf.items + [('/form/' ~ p.name, 'card-checklist', p.title or p.name, (p.forms | length) ~ (' kind' if p.forms | length == 1 else ' kinds') ~ ' with a form: ' ~ (p.forms.keys() | list | join(', ')), '/form/' ~ p.name)] %}{% endfor %}
+{% set FORM_COLS = [('Query by form', [('/forms', 'ui-checks-grid', 'All forms', 'Every pack with a search form, a filter, your recent forms and saved searches. Also: FORM <GO>', '/forms')])] %}
+{% if nsf.items %}{% set FORM_COLS = FORM_COLS + [('Packs with forms', nsf.items)] %}{% endif %}
+{% set REPORT_ITEMS = [('/reports', 'calendar-check', 'Saved and scheduled reports', 'Searches delivered as CSV on a schedule', '/reports')] %}
+{% if bi_me and bi_me.enabled %}{% set REPORT_ITEMS = REPORT_ITEMS + [('/bi/catalogue?kind=report', 'bar-chart-line', 'BI reports', 'Published reports and boards you may open. Also: RUPAKA CATALOGUE', None)] %}
+{% for r in bi_me.recent if r.kind == 'report' %}{% set nsf.rep = nsf.rep + [('/bi/i/' ~ r.id, 'clock-history', r.title, 'BI report you opened recently', '/bi/i/' ~ r.id)] %}{% endfor %}{% set REPORT_ITEMS = REPORT_ITEMS + nsf.rep %}{% endif %}
+{% set TIPS = {'Forms': 'Forms — query by form', 'Reports': 'Reports — saved and scheduled reports, and BI reports'} %}
+{% set POS = 2 if (bi_me and bi_me.enabled) else 1 %}
+{% set MENU = MENU[:POS] + [('Forms', 'card-checklist', FORM_COLS), ('Reports', 'file-earmark-bar-graph', [('Reports', REPORT_ITEMS)])] + MENU[POS:] %}
 {% if me and me.is_admin %}{% set MENU = MENU + [
   ('Admin', 'shield-lock', [
     ('People & access', [
@@ -128,7 +136,7 @@
     {% for _t, items in columns %}{% for href, _i, _l, _d, match in items %}{% if _on(href, match) %}{% set ns.active = True %}{% endif %}{% endfor %}{% endfor %}
     <div class="dropdown tbar-menu">
       <button class="tbar-menu-btn{% if ns.active %} active{% endif %}" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
-              {% if ns.active %}aria-current="true"{% endif %} title="{{ label }}">
+              {% if ns.active %}aria-current="true"{% endif %} title="{{ TIPS[label] if label in TIPS else label }}"{% if label in TIPS %} aria-label="{{ TIPS[label] }}"{% endif %}>
         <i class="bi bi-{{ icon }}" aria-hidden="true"></i><span class="tbar-menu-l">{{ label }}</span></button>
       <div class="dropdown-menu mega-panel cols-{{ columns | length }}">
         {% for title, items in columns %}

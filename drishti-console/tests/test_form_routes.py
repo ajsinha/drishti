@@ -39,7 +39,7 @@ def cl(be):
 
 def test_the_reserved_word_opens_the_form(cl):
     for typed, where in [("FORM trading", "/form/trading"), ("form trading <GO>", "/form/trading"), ("FORM trading desk-pnl", "/form/trading?kind=desk-pnl"),
-                         ("FORM", "/form")]:
+                         ("FORM", "/forms")]:
         r = cl.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and r.headers["location"] == where, typed
 
@@ -134,3 +134,17 @@ def test_a_search_is_saved_under_a_name_and_listed(cl, be):
     cl.post("/form/save", json={"name": "big ones", "path": "/form/trading?kind=trade&run=1"})              # the same name (any case) replaces
     assert [s["name"] for s in be.saved] == ["big ones"]
     assert cl.post("/form/save", content="name=x", headers={"content-type": "text/plain"}).status_code in (400, 415)
+
+
+def test_the_forms_home_lists_packs_with_a_form_and_what_the_person_may_open(cl, be):
+    from core.backend import BackendError
+    page = cl.get("/forms").text
+    assert 'href="/form/trading?kind=trade"' in page and "FORM trading" in page and "field" in page and "data-forms-filter" in page
+    assert "/form/empty" not in page                                                       # no form section, nothing to search
+    assert 'aria-label="Forms — query by form"' in page and 'aria-label="Reports — saved and scheduled reports, and BI reports"' in page
+    assert cl.get("/form", follow_redirects=False).headers["location"] == "/forms"
+
+    async def refuse(pack, kind="", ident=None):                                        # the server: no kind open to this role, or a hidden sample pack
+        raise BackendError(403, "DRS-4030", "no access to any kind of pack")
+    be.form = refuse
+    assert "None of the packs open to you has a form" in cl.get("/forms").text

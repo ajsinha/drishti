@@ -97,6 +97,7 @@ class Packs:
                "monitors": console.get("monitors", {}) or {}, "alerts": m.get("alerts", []) or [], "kinds": m.get("kinds", []) or [],
                "mnemonics": {str(code).upper(): str((d or {}).get("kind", "")) for code, d in (m.get("mnemonics") or {}).items()
                              if isinstance(d, dict) and d.get("kind")}}
+        out["forms"] = {str(k): len(v or []) for k, v in (m.get("form") or {}).items() if isinstance(v, list)}   # kind -> declared fields (query by form)
         if console.get("workspaces") and (pdir / console["workspaces"]).exists():
             out["workspaces"] = (yaml.safe_load((pdir / console["workspaces"]).read_text()) or {}).get("templates", {}) or {}
         if console.get("help") and (pdir / console["help"]).exists():

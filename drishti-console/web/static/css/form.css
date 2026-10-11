@@ -64,3 +64,12 @@
   .qf-keys { display: none; }
 }
 @media print { .qf, .qf-keep { display: none; } }
+
+/* the forms home */
+.qh-find { display: block; margin: .6rem 0 1rem; max-width: 28rem; }
+.qh-find input { width: 100%; min-height: 36px; }
+.qh-packs { display: grid; gap: .2rem 2rem; }
+.qh-kinds { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem; margin: .3rem 0 1rem; padding: 0; }
+.qh-kinds li[hidden], .qh-pack[hidden], [data-forms-recent][hidden] { display: none; }
+.qh-kind { display: inline-flex; gap: .5rem; align-items: center; min-height: 36px; }
+@media (max-width: 700px) { .qh-kind { min-height: 44px; } .qh-find input { min-height: 44px; } }

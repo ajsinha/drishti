@@ -20,6 +20,18 @@
   'use strict';
   var form = document.querySelector('[data-qform]');
 
+  /* the forms home lists the last forms opened here, per browser and person: pack, kind, a label */
+  (function remember() {
+    var on = document.querySelector('[data-recent-form]');
+    if (!on) { return; }
+    try {
+      var key = 'drishti.forms.recent.' + (on.getAttribute('data-who') || ''), list = JSON.parse(localStorage.getItem(key) || '[]');
+      var href = on.getAttribute('data-recent-form');
+      list = [{ href: href, label: on.getAttribute('data-label') }].concat(list.filter(function (r) { return r.href !== href; })).slice(0, 8);
+      localStorage.setItem(key, JSON.stringify(list));
+    } catch (e) { /* storage refused: no recents, nothing else lost */ }
+  })();
+
   function each(list, fn) { Array.prototype.forEach.call(list, fn); }
 
   function syncField(box) {

@@ -82,14 +82,14 @@ landing page then shows **← Back to …** (the view, Build, Admin or Help page
 takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 ```text
-◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30] ● Live   Views ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30] ● Live   Views ▾  Forms ▾  Reports ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
 free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box with its **Live** button.
 Below 1100 pixels wide they move to a line of their own.
 
-**Then four menus** (five with **BI**, below). Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then six menus** (seven with **BI**, below). Below 1280 pixels they show as icons only. Each opens a wide panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -97,6 +97,9 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
+| **Forms** (icon: a checklist card; tooltip *Forms — query by form*) | Query by form | *All forms* (`/forms`: the [forms home](#the-forms-home)) |
+| | Packs with forms | one entry per switched-on pack that declares a `form:` section, opening `/form/<pack>` |
+| **Reports** (icon: a bar-chart page; tooltip *Reports — saved and scheduled reports, and BI reports*) | Reports | *Saved and scheduled reports* (`/reports`, [Scheduled reports](#scheduled-reports)); with the `bi` power also *BI reports* (the BI catalogue filtered to reports) and the BI reports you opened last |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
@@ -105,7 +108,7 @@ you are on is highlighted.
 | | Operations | *Packs*, *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
 
-**BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Build**, and the reserved command
+**BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
 word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
 catalogue, `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA` or `FORM`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
@@ -1376,7 +1379,16 @@ FORM trading <GO>
 
 Type-ahead helps: `FORM tra` completes to `FORM trading`, and after a space it lists the kinds you may open in that pack
 (`FORM trading trade`). Only the packs and kinds you may open are offered. A pack with several kinds shows a row of them under its title;
-pick one to switch forms. `FORM` alone lists the packs you can search with a form and your saved searches.
+pick one to switch forms. `FORM <GO>` alone, or the **Forms** icon in the top bar, opens the forms home.
+
+### The forms home
+
+`/forms` (the **Forms** icon in the top bar, then *All forms*; or `FORM <GO>`) lists every pack that is switched on for you and declares a
+`form:` section, each with its description and its kinds as links to `/form/<pack>?kind=<kind>` with the number of fields the form has. Only
+what you may open is listed: the server leaves out kinds your roles cannot open and packs hidden by the sample-content policy. The
+**filter box** (focused when you arrive, except on a phone) narrows packs and kinds as you type; `Esc` clears it. **Recent forms** are the
+last eight forms you opened in this browser (kept in browser storage, per person); **Your saved searches** are the searches you saved from forms.
+In the top bar the **Forms** icon is lit on `/forms` and on any form. The old address `/form` leads here.
 
 ![The trading pack's form for trades: a text field with its operator, an amount, a relative date, choices, a pasted list of ids and the Search button](img/form/01-form.jpg)
 
@@ -1581,7 +1593,7 @@ one live connection.
 ## Scheduled reports
 
 A report is a search that runs on its own, on a schedule, and delivers its result as a CSV file. On the search page,
-after a search, press **Schedule…** (or open **Views → Reports**). Give it a name, check the search, and say when:
+after a search, press **Schedule…** (or open **Reports** in the top bar). Give it a name, check the search, and say when:
 
 | When | Runs |
 |---|---|
