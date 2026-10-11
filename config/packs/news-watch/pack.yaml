@@ -37,7 +37,7 @@ graph:
   badges:
     news: "$.count + ' headlines'"
 roles:
-  analyst: { kinds: [news-topic, news] }
+  news-analyst: { kinds: [news-topic, news] }
 form:                          # FORM news-watch: the search form of each kind
   news-topic:
     - { path: topicId, label: Topic id, type: id, group: Identity, help: "One or many: paste a list." }

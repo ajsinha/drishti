@@ -43,7 +43,7 @@ graph:
     quote: "fmt($.price, 'price2') + ' ' + $.currency"
     listed-company: "$.ticker"
 roles:
-  analyst: { kinds: [listed-company, quote, news-topic, news] }
+  market-analyst: { kinds: [listed-company, quote, news-topic, news] }
 form:                          # FORM market-watch: the search form of each kind
   listed-company:
     - { path: companyId, label: Company id, type: id, group: Identity, help: "One or many: paste a list." }
