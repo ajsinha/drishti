@@ -121,7 +121,7 @@ You should see exactly one file, for example `drishti-server/target/drishti-serv
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
 sudo cp drishti-server/target/drishti-server-1.20.0-exec.jar /opt/drishti/drishti-server.jar
-sudo cp -r packs console docs /opt/drishti/
+sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
 ```
@@ -834,6 +834,18 @@ Work through this list for every shared installation. Each item says how to chec
     `DRISHTI_SEED_PASSWORD`, `DRISHTI_METRICS_TOKEN` (empty means only an admin token reads `/actuator`).
 14. **The token secret** is protected and rotated as a master key (next section).
 15. **Published ports.** `docker compose ps` shows no `0.0.0.0:18480`; the server's port is not reachable from outside.
+16. **Business intelligence.** If people use BI: `drishti.bi.query.store-dir` (`DRISHTI_BI_STORE`) on a local disk with room for the Parquet layers of the
+    dates in use (it can always be deleted and rebuilt), `drishti.bi.query.memory-limit` (default 768MB) and `threads` inside the host's memory
+    next to the heap, the query limits left on (`timeout`, `max-rows`, `max-concurrent`), `config/bi` in version control, and `drishti.bi.poc.enabled`
+    left `false` (the proof of concept is throw-away). Check: `GET /api/v1/bi/engine` as a `bi-admin` shows the limits in force and
+    `GET /api/v1/bi/poc/bench` answers `404`.
+17. **AI and MCP stay off unless wanted.** `drishti.ai.enabled` and `drishti.mcp.enabled` are `false` by default; switch them on only with
+    provider files in `config/ai` whose keys are `${ENV}` references, the policy limits set (`drishti.ai.policy`: `per-user-per-day`,
+    `cost-per-user-per-day`, `mask-redacted: true`) and an outbound proxy if the host needs one ([PROXY.md](../connectors/PROXY.md)).
+    Check: `GET /api/v1/admin/ai` shows `enabled` as you intend and `keySet` for each provider, never a key.
+18. **Embedding stays off unless wanted.** `drishti.embed.enabled` is `false` by default. When it is on, each host application is registered with exact
+    origins (`drishti.embed.allow-wildcard-origins` stays `false`), the narrowest scopes and kinds it needs, and a secret or key kept by its backend
+    only. Check: Admin → Embedding lists only the applications you expect.
 
 ## 9a-1. The token secret is a master key
 
@@ -1109,6 +1121,12 @@ working directory unless you changed them.
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
 | `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
 | `data/feeds/` (`DRISHTI_FEEDS`) | files for the file connector | by whoever writes them | |
+| `config/bi/` (`DRISHTI_BI_DIR`) | Rūpaka datasets, reports, boards and python files; what people publish from the BI pages is saved here too, and the identity database holds drafts, workspaces and history | **yes**, preferably in version control | version control, or copy |
+| `data/bi-store/` (`DRISHTI_BI_STORE`) | the BI engine's Parquet layers (columns and rollups) | no | rebuilt from the sources for the business date asked for; may be deleted while the server is stopped |
+| `config/ai/`, `config/mcp/` (`DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR`) | one YAML file per AI provider and per MCP server; no key is written in a file (`${ENV}` references) | yes, with the connector files | copy |
+| `data/collab/` (`DRISHTI_COLLAB_DIR`) | with the file store only: shares, threads and the outbox; compliance exports (kept 24 h). With the database store they are in `data/identity/` | **yes**, if you use the file store | copy |
+| `data/designs/`, `data/loads/`, `data/reports/` | the Build workbench's designs (when `drishti.builder.designs.store` is `file`), the data-load history and expectation overrides, scheduled report output | yes (designs and loads); reports as you need them | copy |
+| `data/packs/` | `installed/` (packs deployed or installed from the registry), `added.yaml` (packs loaded from Admin), `deploy-history.jsonl`, `samples-mode` | **yes**, with `config/packs/` if you deploy through Admin | copy |
 | `config/packs/` | the packs you installed | no, if they come from the release | keep your own packs in version control |
 
 ### 10.1 A nightly backup
@@ -1122,8 +1140,11 @@ stamp=$(date +%Y%m%d-%H%M)
 if [ -f data/identity/drishti.db ]; then                      # 1.10+: a consistent copy of the live SQLite database
   sqlite3 data/identity/drishti.db ".backup 'data/identity/backup.db'"
 fi
-tar czf /backup/drishti/drishti-$stamp.tgz --exclude=data/identity/drishti.db* \
-    data/identity data/governance sutras config/connectors application.local.yaml
+keep=()                                                         # only what exists here: a server that never wrote data/designs has none
+for p in data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/bi config/ai config/mcp application.local.yaml; do
+  [ -e "$p" ] && keep+=("$p")
+done
+tar czf /backup/drishti/drishti-$stamp.tgz --exclude=data/identity/drishti.db* "${keep[@]}"
 ls -1t /backup/drishti/drishti-*.tgz | tail -n +15 | xargs -r rm --
 ```
 
