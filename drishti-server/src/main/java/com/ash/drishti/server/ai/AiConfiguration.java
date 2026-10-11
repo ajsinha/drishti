@@ -121,6 +121,12 @@ public class AiConfiguration {
         return new LlmGateway(registry, policy);
     }
 
+    /** The canonical door (docs/architecture/AI_PROVIDERS.md section 10): {@code LLMModel}s with the policy applied, over the same gateway. */
+    @Bean
+    com.ash.drishti.ai.llm.LLMFactory llmFactory(LlmGateway gateway) {
+        return new com.ash.drishti.ai.llm.LLMFactory(gateway, null);
+    }
+
     @Bean(destroyMethod = "close")
     McpRegistry mcpRegistry(McpProperties mcp, Environment env, ObjectProvider<McpClientFactory> beans) {
         McpRegistry r = new McpRegistry(McpRegistry.discover(beans.orderedStream().toList()), () -> mcp.enabled()

@@ -224,7 +224,7 @@ public class AiController {
         }
     }
 
-    static DrishtiException map(LlmException e) {
+    public static DrishtiException map(LlmException e) {
         ErrorCode code = switch (e.kind()) {
             case TIMEOUT -> ErrorCode.AI_TIMEOUT;
             case RATE_LIMITED -> ErrorCode.AI_RATE_LIMITED;

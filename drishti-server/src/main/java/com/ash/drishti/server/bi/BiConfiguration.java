@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
 
 /** Beans of business intelligence phases 1 and 4: the powers, the BI folder reader, the service, and publishing and governance. */
 @Configuration
-@EnableConfigurationProperties({BiProperties.class, BiGovProperties.class})
+@EnableConfigurationProperties({BiProperties.class, BiGovProperties.class, com.ash.drishti.server.bi.ai.BiAiProperties.class})
 public class BiConfiguration {
 
     @Bean
