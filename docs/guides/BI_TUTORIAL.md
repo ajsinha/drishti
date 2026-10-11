@@ -17,7 +17,7 @@
 
 Three sample datasets ship with Drishti, built on the trades, so you can learn what a **dataset** is by reading and querying real ones, and three sample **reports** on them, so you can learn what a report
 is by using them and then **building one from scratch in the designer**. Chapters 0 to 9 open each dataset, read its model, run preview queries, change a measure in a copy of your own, and show row rules and masks with two users;
-chapters 10 to 15 open the reports, build one step by step, draw a relationship in the Model view, and use a report on a phone. Every output below was
+chapters 10 to 15 open the reports, build one step by step, draw a relationship in the Model view, and use a report on a phone; chapter 17 publishes and governs them (saved states, review, certification, lineage, impact, bundles). Every output below was
 captured from a real server over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit). Reference:
 [DATASETS.md](DATASETS.md) and [REPORTS.md](REPORTS.md); the pages themselves: [BI_GUIDE.md](BI_GUIDE.md).
 
@@ -465,3 +465,175 @@ At 390 px a report is one column in reading order, the buttons are 44 px, and no
 
 The engine's counters and limits (`GET /api/v1/bi/engine`, BI administrators): in this walk-through 17 queries, 1 cache hit, 9 layer builds, answered `columns` 12 and `rollup` 1. Reports, the designer and the Model view are phase 3 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.3: what is built and what is not). Publishing and lineage are phase 4, live visuals phase 5.
 What is not built yet for datasets is listed in [DATASETS.md section 10](DATASETS.md#10-what-is-not-built), for reports in [REPORTS.md section 12](REPORTS.md#12-built-and-not-built).
+
+## 17. Publish and govern: versions, review, certification, impact, environments
+
+Chapters 1 to 16 were about building. This one is about letting other people rely on what you built. It uses a small stack of its own: the trading pack with a 120-trade lake, a workspace *Rates Desk*, a published and certified dataset *Trades model* and a published and certified report *Trades report* on it, and four people: **ann** writes, **sue** is a steward, **root** is an administrator, **cat** reads. Every output is real.
+
+### 17.1 Save twice, compare, restore
+
+ann opens her unpublished dataset *Positions model*, presses **Edit**, adds a `currency` column with the message *add the currency column*, saves, then renames a measure with the message *rename the count measure*. **History** lists three saved states, newest first:
+
+```
+GET /api/v1/bi/items/bi-ba49ebcd44/history
+  #3  rename the count measure   ann  save
+  #2  add the currency column    ann  save
+  #1  first cut                  ann  create
+```
+
+She chooses saved state 1 against the draft and presses **Show the differences**. The diff is side by side; the rows that are not the same, from the API:
+
+```
+  added    left 0                                      right 10        currency: string
+  changed  left 13    Trades: { expr: "count(trade)" } right 14    Deals: { expr: "count(trade)" }
+```
+
+![History and the diff](img/bi-governance/history-diff.png)
+
+*Restore as draft* on state 2 makes it the draft again. The history now has **four** states: the restore is a new one (`origin: restore`), so nothing was lost, and a published version, had there been one, would not have been touched.
+
+### 17.2 Ask for a review
+
+ann writes *ready for a look* and presses **Propose for review**. The reviewers are told: sue's inbox now has
+
+```
+ann asks for review of dataset 'Positions model'
+```
+
+sue opens the item. Under **Review** she sees who asked and what they wrote, what changed (all fourteen lines are new: nothing is published yet), **Check passed**, what it does to reports (nothing: no report reads it), and a **data preview**: the first rows of the draft's `trade` table read through the file connector, answered with *her* row rules and masks.
+
+![The review page](img/bi-governance/review.png)
+
+She writes *looks right* in the note box and presses **Approve and publish**. The item is version 1, the decision and her comment are in the review record, and ann is told:
+
+```
+sue approved dataset 'Positions model': looks right
+```
+
+**Four-eyes:** had ann been allowed to approve her own request, `DRS-9005` would have refused it. A person who proposed may only withdraw.
+
+### 17.3 Certified, and where it shows
+
+Only a steward certifies. In the catalogue the certified items come first, with their badge, and the endorsement filter finds them:
+
+![The catalogue: certified first](img/bi-governance/catalogue-certified.png)
+
+### 17.4 Lineage
+
+On *Trades model*, **Lineage** says where it comes from and who reads it:
+
+```
+upstream:   {"table": "trade", "kind": "trade", "packs": ["trading"], "connector": "trading-store", "mode": "cached"}
+downstream: {"title": "Trades report", "status": "published", "endorsement": "certified", "uses": {"fields": ["trade.book", "trade.desk"], "measures": ["MTM", "Notional"], "hierarchies": []}}
+```
+
+![Lineage](img/bi-governance/lineage.png)
+
+### 17.5 What breaks if I remove a field
+
+Before changing a published dataset, ann asks what would break if `trade.book` went (the box under **Impact on reports**, or the API):
+
+```
+GET /api/v1/bi/items/bi-f99d2f18d5/impact?remove=trade.book
+{
+ "change": {
+  "breaking": true,
+  "removedFields": [
+   "trade.book"
+  ],
+  "removedMeasures": [],
+  "removedHierarchies": [],
+  "addedFields": [],
+  "addedMeasures": []
+ },
+ "breaksPublished": true,
+ "published": [
+  {
+   "visible": true,
+   "id": "bi-0ae16dad69",
+   "title": "Trades report",
+   "workspace": "rates-desk",
+   "endorsement": "certified",
+   "published": true,
+   "uses": [
+    "trade.book (page overview, visual rows)"
+   ]
+  }
+ ],
+ "refused": true,
+ "wouldRevokeCertification": [
+  "Trades model",
+  "Trades report"
+ ]
+}
+```
+
+She goes ahead anyway: she removes the `book` column and the hierarchy that uses it, saves, and presses **Publish**:
+
+```
+409 DRS-9040 DRS-9040 publishing 'Trades model' would break 1 published report by removing or renaming trade.book, Desk and book: 'Trades report' (trade.book (page overview, visual rows)). Ask a bi-admin to publish it with force, or keep the names the reports use.
+```
+
+![The refusal](img/bi-governance/impact-refused.png)
+
+She may not force it (`force` from her gets `DRS-9002`). **root**, a bi-admin, opens the page, presses **Publish**, is refused the same way, and then **Publish anyway**:
+
+![The administrator's page: Publish anyway](img/bi-governance/force-offer.png)
+
+The dataset is version 2, the report is broken, and **the certification of both has fallen**; the page says so, and the steward is told:
+
+```
+Certification of report 'Trades report' was revoked: its dataset 'Trades model' changed incompatibly
+Certification of dataset 'Trades model' was revoked: the dataset changed incompatibly
+```
+
+![After the forced publish](img/bi-governance/forced-warnings.png)
+
+The review record of the dataset now reads: `sue certify; root revoke: the dataset changed incompatibly`.
+
+### 17.6 Move it to another environment
+
+**Environments** in the rail. ann chooses *Rates Desk* and downloads the bundle: 3 items (the report brings the dataset it reads), each with its published versions, owner and checksums:
+
+```
+{"format": "drishti-bi-bundle", "formatVersion": 1, "createdAt": "2026-10-11T07:50:28.008422794Z", "createdBy": "ann", "checksum": "706d3dd46099e2772cf9187a00fb6c86f2aa5c653a344a4ce1e2dc128e1a4d28"}
+[{"title": "Trades model", "kind": "dataset", "owner": "ann", "status": "published", "publishedVersion": 2, "versions": [1, 2], "endorsement": "none"}, {"title": "Trades report", "kind": "report", "owner": "ann", "status": "published", "publishedVersion": 1, "versions": [1], "endorsement": "none"}, {"title": "Positions model", "kind": "dataset", "owner": "ann", "status": "published", "publishedVersion": 1, "versions": [1], "endorsement": "none"}]
+```
+
+A bundle is a file: copy it to the other server. There **sue** (a steward) chooses it on *Environments* and presses **Dry run**, which changes nothing. If the report has been edited there since the export, it is a conflict:
+
+```
+{
+ "counts": {
+  "create": 0,
+  "update": 0,
+  "unchanged": 2,
+  "conflict": 1,
+  "invalid": 0
+ },
+ "ok": false,
+ "conflict": [
+  {
+   "title": "Trades report",
+   "action": "conflict",
+   "blocks": [
+    "it exists here and differs (the draft differs): import with overwrite to replace it"
+   ]
+  }
+ ]
+}
+```
+
+![The dry run](img/bi-governance/environments-conflict.png)
+
+Choosing *Overwrite items that exist here and differ* and running the dry run again makes it an *update* and enables **Import**. Certification does not travel: items arrive as promoted at most; a steward certifies after looking. Owners and workspaces that do not exist on the other server are mapped (*Map owners*, *Map workspaces*) or, for an owner, become the importer.
+
+![Ready to import](img/bi-governance/environments-ready.png)
+
+### 17.7 On a phone
+
+The same sections stack in one column, every button is finger-sized, and the tables scroll inside their own frame:
+
+![History on a phone](img/bi-governance/phone-history.png)
+
+The reference for all of this, with what is not built, is [BI_GOVERNANCE.md](BI_GOVERNANCE.md).

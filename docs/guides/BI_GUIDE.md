@@ -16,7 +16,7 @@
 # Business intelligence (Rupaka): the BI page
 
 Rupaka is Drishti's business-intelligence layer. This guide describes **what is built today: phase 1 (the shell and the
-catalogue), phase 2 (datasets and the query engine) and phase 3 (reports, the designer and the Model view)**. You can open the BI page, keep drafts in a personal workspace, share workspaces
+catalogue), phase 2 (datasets and the query engine), phase 3 (reports, the designer and the Model view) and phase 4 (publishing and governance: saved states and diffs, review, certification, lineage, impact, bundles)**. You can open the BI page, keep drafts in a personal workspace, share workspaces
 with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them, and find what you
 may open in a catalogue. A **dataset** item is now parsed, validated and **queried**: tables from pack kinds through connectors,
 relationships, measures, row rules and masks, answered by an embedded DuckDB (section 13; the reference is [DATASETS.md](DATASETS.md) and the
@@ -44,6 +44,7 @@ there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan i
 14. [Reports: the viewer (phase 3)](#14-reports-the-viewer-phase-3)
 15. [The designer (phase 3)](#15-the-designer-phase-3)
 16. [The Model view (phase 3)](#16-the-model-view-phase-3)
+17. [Publishing and governance (phase 4)](#17-publishing-and-governance-phase-4)
 
 ## 1. What phases 1 to 3 are, and are not
 
@@ -52,12 +53,12 @@ there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan i
 | Open BI from the top bar or with `BI <GO>` | Stream live data into a visual, use Perspective or Python in BI (later phases) |
 | Keep drafts in a personal workspace, move them to a shared one | Explore a dataset freely (phase 9) |
 | Create typed items (`dataset`, `report`, `board`, `notebook`) with a YAML body | Run a `board` or `notebook` body: it is stored as text. A `dataset` body is validated and queried (section 13), a `report` body is drawn (section 14) |
-| Open a dataset: its model, and a **query preview** with the server's row rules and masks | Version-diff a dataset, or see what a change to it breaks (phase 4) |
+| Open a dataset: its model, and a **query preview** with the server's row rules and masks | Have a pack deploy carry BI content (a bundle is its own file, section 17) |
 | Open a report: tabs, slicers, click a bar to filter the page, drill down, drill through, show the rows, open in the terminal (section 14) | Export it, subscribe to it or embed it (phase 7) |
 | Design a report by dragging fields onto a canvas, with the YAML beside it, real data and the query time on every visual, Check, undo and redo (section 15) | Have the designer suggest a report from words (stage 2), or save an Explore view as a visual (phase 9) |
 | See a dataset's tables and relationships as a diagram and draw a relationship by dragging a column onto another (section 16) | Change a pack from the diagram: it never does |
 | Start a dataset from the packs' kinds, links across packs, proposed relationships | Schedule a refresh by cron, time intelligence, Python measures (DATASETS.md section 10) |
-| Publish versions, restore an old one, propose for review, approve (four-eyes) | See a diff between versions, or the dataset-change impact (phase 4) |
+| Publish versions, restore an old one, propose for review, approve (four-eyes); compare any two saved states side by side, review with a diff, Check and data preview, see lineage and what a dataset change breaks, move content between servers as a bundle (section 17) | Thread comments on a line of a diff, or approval chains of several reviewers |
 | Promote or certify items, set an audience of roles, users and packs | Export, subscribe, alert or embed (phase 7) |
 | Search, filter and sort a catalogue that shows each person only what they may open | Stream live data (phase 5) |
 | Read shipped, read-only content from the BI folder | Deploy a workspace as a pack bundle (phase 4) |
@@ -101,7 +102,7 @@ BI powers are granted on roles, beside `raw`, `author` and `approve` (see [USER_
 |---|---|
 | `bi` | open BI, the catalogue and the published content their audience allows; keep favourites and recents |
 | `bi-author` | create, edit, move, propose and publish items, and create shared workspaces (if the policy says authors) |
-| `bi-steward` | **certify** published items; create shared workspaces when the policy says stewards |
+| `bi-steward` | **certify** published items; **review** (approve or reject) proposals in any workspace; **import bundles**; create shared workspaces when the policy says stewards |
 | `bi-admin` | change BI settings, see and manage every shared workspace; always allowed to create workspaces |
 
 A higher power also opens BI, so a role granted only `bi-author` still sees the catalogue. The built-in `admin` role holds all four;
@@ -198,7 +199,7 @@ An **item** has a kind (`dataset`, `report`, `board`, `notebook`), a title, a de
 - Editing a **published** item makes the item a draft again; the published version stays what viewers see, and the page shows
   "draft changes not published".
 - **Publish** (member, `bi-author`, shared workspace, no review required) writes the next version and makes the item `published`.
-- **Propose for review** (contributor) freezes the item; **Approve and publish** needs a workspace `member` who holds the
+- **Propose for review** (contributor) freezes the item; **Approve and publish** needs a **`bi-steward`** (in any workspace), or a workspace `member` who holds the
   **`approve`** power (the same one that approves Sutras) and is not the proposer when four-eyes is on
   (`drishti.governance.four-eyes`, `DRS-9005` otherwise). **Reject** needs a reason and returns the item to draft; the proposer
   may **withdraw**.
@@ -208,7 +209,7 @@ An **item** has a kind (`dataset`, `report`, `board`, `notebook`), a title, a de
 ![Approving](img/bi/09-approve.jpg)
 
 - **Versions** are kept (`drishti.bi.versions-keep`, 50). The page lists them; *View* shows a version's body; *Restore as draft*
-  makes an old version the draft again, to be published as a new version. A diff between versions is not built.
+  makes an old version the draft again, to be published as a new version. The *History* section (section 17) adds a saved state for every save, a side-by-side diff and restore.
 - **Endorsement.** The owner or a member may **promote** a published item; only a `bi-steward` may **certify** it, or remove a
   certification. Certified items are pinned first in the catalogue and listed on Home.
 - **Favourites and views.** The star is yours alone. Opening an item counts one view for today; the card shows the views of the last
@@ -217,7 +218,7 @@ An **item** has a kind (`dataset`, `report`, `board`, `notebook`), a title, a de
 
 Every change is written to the audit log (Admin, Audit log): `bi-workspace-created`, `bi-workspace-updated`, `bi-workspace-deleted`,
 `bi-member-set`, `bi-member-removed`, `bi-item-created`, `-updated`, `-moved`, `-deleted`, `-proposed`, `-withdrawn`, `-approved`,
-`-rejected`, `-published`, `-restored`, `-endorsed`, `bi-settings-changed`.
+`-rejected`, `-published`, `-restored`, `-endorsed`, `bi-settings-changed`, and in phase 4 `bi-certification-revoked`, `bi-bundle-exported`, `bi-bundle-imported`, `bi-item-imported` ([BI_GOVERNANCE.md](BI_GOVERNANCE.md#8-the-audit-trail)).
 
 ## 9. Who sees what
 
@@ -311,8 +312,9 @@ real data and query time while designing, Check, undo and redo, save and save a 
 [REPORTS.md](REPORTS.md) and [RUPAKA.md](../architecture/RUPAKA.md) section 20.3, which also lists what is **not** built (Perspective and live visuals, the map, funnel, histogram, box, bubble, Python and entity visuals,
 the relative-date slicer, true totals for measures that do not add up, a Check that runs expected values).
 
-Not built (and not faked): version diff, lineage and impact,
-deploying a workspace as a pack bundle (phase 4); streaming BI and Perspective (phase 5); Python in BI (phase 6); export, subscriptions, alerts,
+Built in phase 4: a saved state for every save and the side-by-side diff; review with the reviewer's diff, Check, impact and data preview; certification only by a steward with automatic revocation; lineage and impact analysis with the refusal `DRS-9040`; bundles between environments with a dry run (`DRS-9041`, `9042`); the audit trail. The reference is [BI_GOVERNANCE.md](BI_GOVERNANCE.md); what is **not** built is its section 10.
+
+Not built (and not faked): importing BI content by deploying a pack archive; streaming BI and Perspective (phase 5); Python in BI (phase 6); export, subscriptions, alerts,
 embedding (phase 7); the analyst workbench and Explore (phase 9); *Analyse in BI* from a terminal view; "what changed since your last visit";
 AI features (stage 2). The rail's Explore is a placeholder that says so.
 
@@ -326,6 +328,9 @@ AI features (stage 2). The rail's Explore is a placeholder that says so.
 | `DRS-9004` | 409 | the state forbids it: name taken, nothing new to publish, already proposed, personal workspace (private, cannot publish or be shared), last admin, workspace not empty, shipped content is read-only |
 | `DRS-9005` | 403 | four-eyes: you proposed it, so you may not approve or reject it |
 | `DRS-9006` | 403 | BI is switched off on this server (`drishti.bi.enabled`) |
+| `DRS-9040` | 409 | publishing a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
+| `DRS-9041` | 422 | a bundle is not readable, fails its checksums, is too large or holds an invalid item |
+| `DRS-9042` | 409 | a bundle import would overwrite what differs here (conflicts), or names a workspace or owner that cannot be mapped |
 
 The dataset, query and report codes (`DRS-9010` to `9035`) are in [TROUBLESHOOTING.md](TROUBLESHOOTING.md#error-codes) and [REPORTS.md](REPORTS.md#9-checking-a-report-drs-9030-to-drs-9035).
 
@@ -465,3 +470,16 @@ cardinality and filter direction; a dashed line is inactive), and the YAML below
   A shipped dataset opens read-only with **Save a copy**. The diagram never changes a pack: a model's relationships drive BI joins and cross-filtering only.
 
 The Model view calls the dataset checks (`POST /api/v1/bi/datasets/validate`, which now also returns the model it parsed) and, for proposals, `POST /api/v1/bi/model/infer`; both need `bi-author`.
+
+## 17. Publishing and governance (phase 4)
+
+The reference is [BI_GOVERNANCE.md](BI_GOVERNANCE.md); the walk-through is [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 17. On an item's page (`/bi/i/<id>`) four sections are new, and the rail has **Environments**.
+
+* **History** (people who may edit the item). Every save of the body is a saved state with who, when and the message you wrote in *What changed* in the Edit form. Pick two (or press *Compare with draft*) and *Show the differences* for the side-by-side diff; *Restore as draft* makes a state the draft again as a new state, so nothing is lost. Below the table is the review record: requests, decisions with their comments, certifications, revocations, imports.
+* **Review** (shown while an item is proposed, to the people who may decide, including any bi-steward). The request and its note, what changed, Check, what it does to reports, and a data preview answered with the reviewer's own rows and masks. Write your comment in the note box above and press *Approve and publish* or *Reject*. The author is told in the inbox; four-eyes still applies.
+* **Impact on reports** (datasets, for editors). What publishing the draft would break, and a box *What breaks if I remove ...*. A publish that breaks published reports is refused with `DRS-9040` and the callout lists the reports; a **bi-admin** sees *Publish anyway* and, after it, a *Heads up* list that includes any certification that fell.
+* **Lineage** (everyone who opens the item). Where a dataset comes from (table, kind, packs, connector) and which reports read it; a report's dataset, what it uses, and the tables behind it.
+* **Certified** and **promoted** badges are in the catalogue and search (certified first), on Home and on the item; only a bi-steward certifies, and certification falls on its own when a dataset changes incompatibly.
+* **Environments** (`/bi/environments`). Choose a workspace and download a bundle; to import, a bi-steward chooses a bundle file, optionally maps workspaces and owners, runs a **dry run** (the table lists create, update, unchanged, conflict, invalid with the reason) and then *Import*. Changing any choice needs a new dry run.
+
+A phone shows the same sections one column wide with finger-sized buttons; the tables scroll inside their own frame.

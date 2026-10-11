@@ -1687,6 +1687,26 @@ POST /api/v1/bi/reports/file:report:trades-overview/query   {"page": "overview",
 Refusals are the standard problem body with the code: `422 DRS-9030` to `9032` (the report), `501 DRS-9033` (not built), `422 DRS-9034` (the dataset), `422 DRS-9035` (the state), and every dataset query code (`9020` to `9027`, `403 DRS-9021` for a masked column,
 `422 DRS-9020` when a row rule makes a visual unanswerable). Every query is audited like a dataset query. From the console the calls are under `/bi/api/reports/...`; the console's page asks three queries at a time (the server allows three per person) and retries a `429`.
 
+## Publishing and governance: `/api/v1/bi` (phase 4)
+
+Phase 4 of Rūpaka ([BI_GOVERNANCE.md](BI_GOVERNANCE.md) is the reference; [BI_GUIDE.md](BI_GUIDE.md) section 17 the pages). Every answer is as the caller: drafts and saved states are for people who may edit the item (and a bi-steward while it is proposed), the published text for everyone who may read it, and a report is named in a list only if the caller could open it. Writes by a personal token need `bi:write` (restore, impact of a text), `bi:approve` (approve, reject, endorse, bundle import) as in [tokens](#personal-api-tokens).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/bi/items/{id}/history` | `{revisions: [{seq, message, author, createdAt, origin, publishedVersion, draft, bytes}], events: [{seq, action, actor, note, revision, at}], canRestore}`, newest first; `origin` is `create`, `save`, `restore`, `publish` or `import`; `events` is the review record (`request`, `withdraw`, `approve`, `reject`, `certify`, `uncertify`, `promote`, `unpromote`, `revoke`, `import`) |
+| `GET` | `/bi/items/{id}/history/{n}` | one saved state with its `body` |
+| `POST` | `/bi/items/{id}/history/{n}/restore` | the saved state becomes the draft, as a new saved state; the item as `GET /bi/items/{id}`; `409 DRS-9004` while proposed |
+| `GET` | `/bi/items/{id}/diff?from=&to=` | side by side: `{from: {ref, label}, to, identical, added, removed, changed, rows: [{op: same\|added\|removed\|changed, left, right, leftNo, rightNo}]}`; a side is `draft`, `published`, `vN` or `rN` (default `published` against `draft`); `422 DRS-9003` for another |
+| `GET` | `/bi/items/{id}/review` | `{request, events, diff, check: {ok, problems}, impact, preview, mayDecide}`; `preview` is `{available, label, columns, rows, rowCount, meta}` or `{available: false, reason}`, answered with the caller's row rules and masks |
+| `GET` | `/bi/items/{id}/lineage` | dataset: `{upstream: [{table, kind, packs, connector, each, mode}], downstream: [{id, title, status, endorsement, uses}], hidden}`; report: `{dataset, uses, upstream}` |
+| `GET` | `/bi/items/{id}/impact[?remove=a,b]` | what breaks: `{change, breaksPublished, published: [{visible, id, title, uses}], drafts, refused, canForce, wouldRevokeCertification, hypothetical}` |
+| `POST` | `/bi/items/{id}/impact` | the same for `{yaml}` not yet saved |
+| `POST` | `/bi/items/{id}/publish`, `/approve` | `{note, force}`: `force` publishes over broken reports and needs `bi-admin`; the item plus `warnings` (what broke, which certification was revoked); `409 DRS-9040` without it |
+| `GET` | `/bi/bundle?items=a,b&workspace=w&dependencies=true` | a bundle (`drishti-bi-bundle`, format 1): items with published versions, sample flags, owner, audience and checksums, plus `skipped`; needs `bi-author` and the contributor role |
+| `POST` | `/bi/bundle/import` | `{bundle, dryRun (default true), overwrite, force, workspace, workspaces: {from: to}, owners: {from: to}}`; needs `bi-steward`; `{dryRun, ok, applied, counts, items: [{id, action, workspace, owner, reasons, warnings, blocks}]}`; `422 DRS-9041`, `409 DRS-9042` |
+
+Review notices reach the inbox ([the inbox](#share-with-a-note-the-directory-and-the-inbox)) as rows of type `bi-review` (to reviewers), `bi-decision` (to the author) and `bi-certification` (to the owner and the certifier); `kind` is `bi`, `id` the item and `title` a one-line summary. Refusals: `DRS-9040`, `9041`, `9042` and the phase 1 codes (`DRS-9001` to `9005`).
+
 ## Embedding views in another web application
 
 For `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).
