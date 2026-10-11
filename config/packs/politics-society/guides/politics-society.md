@@ -99,3 +99,7 @@ A social or governance statistic of one country over time, with the regional com
 **Fields its Sutra reads:** `name`, `latest`, `unit`, `latestYear`, `change5y`, `sourceName`, `series`, `byRegion`, `meaning`, `provenance`.
 
 **Links:** `jurisdiction` → Country (`jurisdiction`).
+
+## Who can see it
+
+Role `analyst`: kinds `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator`, raw JSON.

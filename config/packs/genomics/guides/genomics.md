@@ -111,3 +111,7 @@ A targeted-therapy trial: phase, biomarker, arms and enrolment against target.
 **Fields its Sutra reads:** `title`, `phase`, `status`, `enrolled`, `target`, `biomarkerName`, `enrolment`, `arms`.
 
 **Links:** `gene` → Target gene (`gene`), `biomarker` → Biomarker (`variant`).
+
+## Who can see it
+
+Role `scientist`: kinds `gene`, `variant`, `protein`, `pathway`, `sample`, `sequencing-run`, `expression-study`, `clinical-trial`, raw JSON.

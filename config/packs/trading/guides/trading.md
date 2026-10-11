@@ -41,6 +41,10 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 |---|---|---|---|---|
 | `trading-store` | `data/delta/trading/` | Trades in every product | snapshot (every business date) | `trade` |
 
+### Live trades and desk totals
+
+Two more connectors belong to this pack. `trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) streams the day's live trades, which **Live** in the top bar reads first. `desk-totals` is a *derived* connector: it computes the pack's second mnemonic, `DPNL` (kind `desk-pnl`), from the trades wherever they come from, one row per desk with the trade count, MTM, one-day P&L, DV01, worst MTM, books and currencies, refreshed every minute. Try `DPNL DESK-RATES <GO>`.
+
 Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow python tools/packgen/banking/make_data.py --lake data/delta`.
 
 ## Kinds

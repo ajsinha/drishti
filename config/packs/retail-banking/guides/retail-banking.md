@@ -117,3 +117,7 @@ A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, a
 **Fields its Sutra reads:** `name`, `exposure`, `ecl`, `coverage`, `dpd30`, `stages`, `delinquency`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
+
+## Who can see it
+
+Role `retail`: kinds `customer`, `deposit-account`, `mortgage`, `card-account`, `personal-loan`, `branch`, `collections-case`, `retail-portfolio`, `legal-entity`, raw JSON.

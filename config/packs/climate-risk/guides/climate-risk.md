@@ -97,3 +97,7 @@ EU taxonomy alignment of a legal entity's balance sheet: eligible and aligned as
 **Fields its Sutra reads:** `legalEntityName`, `gar`, `eligible`, `covered`, `objectives`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
+
+## Who can see it
+
+Role `climate-analyst`: kinds `climate-profile`, `financed-emissions`, `climate-scenario`, `climate-stress`, `physical-asset`, `taxonomy-alignment`, `counterparty`, `book`, `desk`, `legal-entity`, raw JSON.

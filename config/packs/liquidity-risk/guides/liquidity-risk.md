@@ -108,3 +108,7 @@ Intraday use of liquidity in a payment system: usage through the day and the lar
 **Fields its Sutra reads:** `legalEntityName`, `currency`, `peakUsage`, `available`, `usagePct`, `usage`, `largePayments`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
+
+## Who can see it
+
+Role `treasury`: kinds `lcr`, `nsfr`, `maturity-ladder`, `hqla-holding`, `funding-source`, `liquidity-stress`, `intraday-liquidity`, `legal-entity`, `counterparty`, `bond`, raw JSON.

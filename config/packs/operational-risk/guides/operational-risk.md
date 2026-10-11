@@ -115,3 +115,7 @@ Basel III standardised approach (SMA): business indicator, loss component and ca
 **Fields its Sutra reads:** `legalEntityName`, `bi`, `bic`, `ilm`, `capital`, `rwa`, `components`, `annualLosses`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
+
+## Who can see it
+
+Role `oprisk`: kinds `loss-event`, `risk-control`, `key-risk-indicator`, `issue`, `oprisk-scenario`, `third-party`, `cyber-incident`, `oprisk-capital`, `desk`, `legal-entity`, raw JSON.

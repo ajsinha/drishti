@@ -99,6 +99,12 @@ def overview(name: str, docs: dict) -> str:
         mode = "effective (a row when an entity changes)" if d in make_packs.EFFECTIVE_DOMAINS else "snapshot (every business date)"
         rows.append([f"`{d}-store`", f"`data/delta/{d}/`", layout.DOMAINS[d], mode, ", ".join(f"`{k}`" for k in ks)])
     lines += table(["Connector", "Folder", "Domain", "Tables", "Kinds"], rows)
+    if name == "trading":
+        lines += ["### Live trades and desk totals", "",
+                  "Two more connectors belong to this pack. `trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) "
+                  "streams the day's live trades, which **Live** in the top bar reads first. `desk-totals` is a *derived* connector: it computes the "
+                  "pack's second mnemonic, `DPNL` (kind `desk-pnl`), from the trades wherever they come from, one row per desk with the trade count, "
+                  "MTM, one-day P&L, DV01, worst MTM, books and currencies, refreshed every minute. Try `DPNL DESK-RATES <GO>`.", ""]
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "
                   "on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). "

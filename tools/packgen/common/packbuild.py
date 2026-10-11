@@ -139,6 +139,9 @@ def overview(spec: PackSpec, docs: dict) -> str:
         lines += [f"### {k.label} (`{k.kind}`)", "", k.desc, "", "**Fields its Sutra reads:** " + ", ".join(f"`{f}`" for f in fs) + ".", ""]
         if k.links:
             lines += ["**Links:** " + ", ".join(f"`{f}` → {lab} (`{kind}`)" for f, (kind, lab) in k.links.items()) + ".", ""]
+    if spec.roles:
+        lines += ["## Who can see it", ""]
+        lines += [f"Role `{r}`: kinds {', '.join(f'`{x}`' for x in v['kinds'])}{', raw JSON' if v.get('raw') else ''}." for r, v in spec.roles.items()] + [""]
     return "\n".join(lines).rstrip() + "\n"
 
 
