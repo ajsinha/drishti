@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Distribution routes of the console: file downloads for a BI report and a view, the Subscribe form, the merged list on /reports, the actions
 on a subscription and the administrators' list. The server (Java) makes every file and renders every mail; here the console only passes things on,
 and the tests check what it passes and what the pages say."""
@@ -51,7 +65,7 @@ def test_a_view_download_carries_only_the_controls_and_filters_of_the_page(clien
 def test_the_subscribe_form_describes_what_is_subscribed_and_saves_a_subscription(client, backend):
     state = json.dumps({"slicers": {"ccy": ["USD"]}})
     page = client.get("/reports/subscribe", params={"type": "report", "id": "file:report:daily", "page": "main", "state": state, "title": "Daily risk"}).text
-    assert "The BI report file:report:daily, page main, with the filters you have set" in page
+    assert "The BI report “Daily risk” (file:report:daily), page main, with the filters you have set" in page
     assert 'name="name" class="studio-in" value="Daily risk"' in page and "business-days 07:30" in page and "after-load" in page and "weekly mon 07:30 business" in page
     assert 'name="recipients"' in page and "role:risk" in page and "rendered for each recipient" in page.replace("\n", " ").replace("  ", " ") or "Each recipient gets their own render" in page
     view = client.get("/reports/subscribe", params={"type": "view", "id": "trade/IRS-48213", "view": "ctl.leg=L2"}).text

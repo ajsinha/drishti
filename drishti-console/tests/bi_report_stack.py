@@ -122,6 +122,10 @@ def seed(packs: list) -> None:
 class ReportStack:
     def __init__(self, tmp: Path, delta_root: str | None = None):
         self.tmp, self.procs, self.delta_root = tmp, {}, delta_root or os.environ.get("DRISHTI_BI_DELTA_ROOT")
+        self.server_args: list = []                               # extra command-line settings for the server (a test adds its SMTP host here)
+
+    def prepare(self, work: Path) -> None:
+        """Called with the server's scratch directory after the sample content is copied in and before the server starts: a test changes the content here."""
 
     def start(self) -> "ReportStack":
         try:
@@ -147,6 +151,7 @@ class ReportStack:
         reports.mkdir(parents=True)
         for name in ["trades-overview"] if not self.delta_root else ["trades-overview", "counterparty-risk", "cashflow-ladder"]:
             shutil.copy(ROOT / "config" / "bi" / "reports" / f"{name}.report.yaml", reports)
+        self.prepare(work)
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,
                    DRISHTI_BI_DIR=str(work / "config" / "bi"), DRISHTI_DATA_DIR=str(work / "data"))
         if self.delta_root:
@@ -159,7 +164,7 @@ class ReportStack:
             (work / "config" / "connectors").mkdir(parents=True)
             (work / "config" / "connectors" / "trading-store.yaml").write_text(CONNECTOR.format(root=lake))
         self.procs["server"] = subprocess.Popen([java, "-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
-                                                 f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
+                                                 f"--drishti.bi.query.store-dir={self.tmp / 'store'}", *self.server_args], cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", 150)
         seed(['trading', 'counterparty-risk'] if self.delta_root else ['trading'])
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",

@@ -27,6 +27,7 @@
   <section class="pnl"><header class="pnl-h"><h3>{{ what }}</h3></header><div class="pnl-b">
     <form class="alert-form dist-form" method="post" action="/reports/subscribe" data-subscribe-form>
       <input type="hidden" name="target" value="{{ target_json }}">
+      <input type="hidden" name="title" value="{{ form.title or '' }}">
       <label>Name<input name="name" class="studio-in" value="{{ form.name or '' }}" required maxlength="64"></label>
       <label>When<input name="schedule" class="studio-in mono" value="{{ form.schedule or '' }}" list="subWhen" required data-schedule></label>
       <datalist id="subWhen">{% for w in when %}<option value="{{ w }}">{% endfor %}</datalist>

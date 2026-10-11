@@ -88,15 +88,16 @@ async def view_download(request: Request, rest: str):
 
 # -- the Subscribe form ----------------------------------------------------------------------------------------------
 
-def _describe(target: dict) -> str:
+def _describe(target: dict, title: str = "") -> str:
+    named = f"“{title}” ({target.get('id')})" if title else str(target.get("id"))
     if target.get("type") == "view":
-        return f"The view {target.get('id')}" + (f" with your controls and filters ({target['view']})" if target.get("view") else "")
+        return f"The view {named}" + (f" with your controls and filters ({target['view']})" if target.get("view") else "")
     scope = f", visual {target['visual']}" if target.get("visual") else (f", page {target['page']}" if target.get("page") else ", every page")
-    return f"The BI report {target.get('id')}{scope}" + (", with the filters you have set" if target.get("state") else "")
+    return f"The BI report {named}{scope}" + (", with the filters you have set" if target.get("state") else "")
 
 
 async def _form_page(request: Request, form: dict, error: str = "", status_code: int = 200):
-    return render(request, "subscribe.html", status_code=status_code, form=form, error=error, what=_describe(form["target"]), when=SUGGESTED_WHEN,
+    return render(request, "subscribe.html", status_code=status_code, form=form, error=error, what=_describe(form["target"], form.get("title", "")), when=SUGGESTED_WHEN,
                   target_json=json.dumps(form["target"], separators=(",", ":")), screen="reports")
 
 
@@ -107,7 +108,7 @@ async def subscribe_form(request: Request, type: str = "report", id: str = "", p
     if st is not None:
         target["state"] = st
     me = request.state.identity
-    return await _form_page(request, {"name": title.strip()[:64] or (id.split(":")[-1] if id else "My subscription"), "target": target, "schedule": "business-days 07:30",
+    return await _form_page(request, {"name": title.strip()[:64] or (id.split(":")[-1] if id else "My subscription"), "title": title.strip()[:200], "target": target, "schedule": "business-days 07:30",
                                       "format": "html", "date": "today", "recipients": getattr(me, "user", "")})
 
 
@@ -117,7 +118,7 @@ async def subscribe_save(request: Request):
     target = _state(f.get("target", "")) or {}
     recipients = [x.strip() for x in f.get("recipients", "").replace(";", ",").replace("\n", ",").split(",") if x.strip()]
     name = f.get("name", "").strip()
-    form = {"name": name, "target": target, "schedule": f.get("schedule", ""), "format": f.get("format", "html"), "date": f.get("date", "today"),
+    form = {"name": name, "title": f.get("title", ""), "target": target, "schedule": f.get("schedule", ""), "format": f.get("format", "html"), "date": f.get("date", "today"),
             "recipients": ", ".join(recipients)}
     body = {"target": target, "schedule": form["schedule"], "format": form["format"], "date": form["date"], "recipients": recipients,
             "enabled": f.get("enabled", "on") == "on"}
