@@ -182,7 +182,7 @@ $ drishti.py connector plugins file
 plugin file
   setting            type                default    what it is
   -----------------  --------  --------  -------    ------------------------------------------------------------------------------
-  root               path      required             Folder of documents
+  root               path               <data dir>/feeds    Folder of documents; default: the feeds folder of the data directory
   domain             string                         Domain
   id-field           string                         Field holding the entity id
   rescan-seconds     int                            Rescan interval
@@ -196,7 +196,9 @@ plugin file
 A plugin can declare its own settings (the `settingSpecs()` method of the source SPI, see
 [CONNECTOR_DEVELOPER_GUIDE.md](CONNECTOR_DEVELOPER_GUIDE.md)); the shipped plugins are described in
 `drishti/plugin-settings.yaml` inside the engine. A setting a plugin does not declare is a **warning** (a likely typo), never a
-refusal, because plugins also read free-form keys (`layout.*`, `mode.*`, `query.*`).
+refusal, because plugins also read free-form keys (`layout.*`, `mode.*`, `query.*`). Every key the shipped plugins read is declared in
+that file; a test (`PluginSettingsCatalogueSyncTest`) fails when a plugin reads one it does not declare, or when a setting is marked
+`required` that the plugin defaults.
 
 ## 5. Credentials and TLS
 

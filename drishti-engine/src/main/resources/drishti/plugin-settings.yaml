@@ -28,6 +28,7 @@ plugins:
   jdbc:
     tls: true
     settings:
+      - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
       - { name: url, required: true, desc: "JDBC URL, e.g. jdbc:postgresql://host:5432/db", group: connection }
       - { name: user, desc: "Database user", group: connection }
       - { name: password, secret: true, desc: "Database password: ${ENV_VAR} or file:/path", group: connection }
@@ -48,8 +49,13 @@ plugins:
       - { name: columns-seconds, type: int, desc: "Column cache lifetime", group: tuning }
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
       - { name: "query.*", desc: "Custom SQL per purpose (query.trade, ...)", group: mapping }
+      - { name: "ids.*", desc: "A day's ids (and optionally a title) for type-ahead: ids.<kind>, SQL with :asOf", group: mapping }
+      - { name: "columns.*", desc: "A day's id and promoted fields, one row per entity: columns.<kind>, SQL with :asOf", group: mapping }
+      - { name: "reverse.*", desc: "Ids of the kind's entities that reference :target: reverse.<kind>", group: mapping }
+      - { name: "part-shape.*", desc: "part-shape.<kind>.<part>: object takes the first row of a part query as an object", group: mapping }
   duckdb:
     settings:
+      - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
       - { name: path, required: true, desc: "DuckDB database file", type: path, group: connection }
       - { name: table, desc: "Table holding the entities", group: connection }
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
@@ -67,11 +73,12 @@ plugins:
     tls: true
     proxy: true
     settings:
-      - { name: root, required: true, type: path, desc: "Lake root (folder, or s3://bucket/prefix)", group: connection }
+      - { name: root, type: path, default: "<data dir>/delta", desc: "Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory", group: connection }
       - { name: domain, desc: "Domain folder under the root", group: connection }
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
       - { name: "mode.*", desc: "Per-kind read mode", group: mapping }
       - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
+      - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
       - { name: engine, desc: "Reader engine", group: tuning }
       - { name: date-column, desc: "Business date column", group: mapping }
       - { name: id-column, desc: "Entity id column", group: mapping }
@@ -81,7 +88,7 @@ plugins:
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
       - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
       - { name: max-concurrent-reads, type: int, desc: "Concurrent reads", group: tuning }
-      - { name: cache-mb, type: int, desc: "Cache size", group: tuning }
+      - { name: cache-mb, type: int, default: "256", desc: "Cache size", group: tuning }
       - { name: doc-cache-mb, type: int, desc: "Document cache size", group: tuning }
       - { name: columns-cache-mb, type: int, desc: "Column cache size", group: tuning }
       - { name: id-map-mb, type: int, desc: "Id map size", group: tuning }
@@ -96,6 +103,8 @@ plugins:
     proxy: true
     settings:
       - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
+      - { name: "hadoop.*", desc: "Any Hadoop configuration property (hadoop.fs.s3a.connection.maximum)", group: tuning }
+      - { name: "catalog.*", desc: "Any Iceberg catalog property (catalog.<property>)", group: connection }
       - { name: warehouse, desc: "REST catalog warehouse", group: connection }
       - { name: credential, secret: true, desc: "REST catalog credential: ${ENV_VAR} or file:/path", group: connection }
       - { name: root, type: path, desc: "Warehouse root", group: connection }
@@ -119,8 +128,9 @@ plugins:
   aerospike:
     tls: true
     settings:
-      - { name: hosts, required: true, desc: "host:port list, comma separated", group: connection }
-      - { name: namespace, required: true, desc: "Namespace", group: connection }
+      - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
+      - { name: hosts, default: "localhost:3000", desc: "host:port list, comma separated", group: connection }
+      - { name: namespace, default: test, desc: "Namespace", group: connection }
       - { name: set, desc: "Set", group: connection }
       - { name: domain, desc: "Domain", group: connection }
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
@@ -139,6 +149,7 @@ plugins:
   mongodb:
     tls: true
     settings:
+      - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
       - { name: uri, required: true, desc: "MongoDB URI (credentials as ${ENV} references)", group: connection }
       - { name: database, desc: "Database", group: connection }
       - { name: collection, desc: "Collection", group: connection }
@@ -164,6 +175,7 @@ plugins:
   redis:
     tls: true
     settings:
+      - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
       - { name: uri, required: true, desc: "redis:// or rediss:// URI (credentials as ${ENV} references)", group: connection }
       - { name: user, desc: "User", group: connection }
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
@@ -191,7 +203,8 @@ plugins:
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
   file:
     settings:
-      - { name: root, required: true, type: path, desc: "Folder of documents", group: connection }
+      - { name: "layout.*", desc: "Per-kind promoted columns: layout.<kind>.columns: a, b, c", group: mapping }
+      - { name: root, type: path, default: "<data dir>/feeds", desc: "Folder of documents; default: the feeds folder of the data directory", group: connection }
       - { name: domain, desc: "Domain", group: connection }
       - { name: id-field, desc: "Field holding the entity id", group: mapping }
       - { name: rescan-seconds, type: int, desc: "Rescan interval", group: tuning }
@@ -289,11 +302,13 @@ plugins:
     tls: true
     proxy: true
     settings:
-      - { name: bootstrap-servers, required: true, desc: "Broker list host:port,...", group: connection }
+      - { name: bootstrap-servers, default: "localhost:9092", desc: "Broker list host:port,...", group: connection }
       - { name: topics, type: list, required: true, desc: "Topics to read", group: connection }
       - { name: kind, desc: "Kind of the messages", group: mapping }
-      - { name: id-field, desc: "Field holding the entity id", group: mapping }
-      - { name: mode, desc: "Consumption mode", group: mapping }
+      - { name: id-field, default: id, desc: "Field holding the entity id", group: mapping }
+      - { name: "kind.*", desc: "Kind per topic: kind.<topic>", group: mapping }
+      - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
+      - { name: mode, type: "enum:state|ticks", default: state, desc: "Consumption mode", group: mapping }
       - { name: search, type: boolean, desc: "Keep messages searchable", group: mapping }
       - { name: poll-ms, type: int, desc: "Poll interval", group: tuning }
       - { name: cache-mb, type: int, desc: "Cache size", group: tuning }
@@ -329,19 +344,45 @@ plugins:
   activemq:
     tls: true
     settings:
-      - { name: broker-url, required: true, desc: "Broker URL", group: connection }
+      - { name: broker-url, default: "failover:(tcp://localhost:61616)?initialReconnectDelay=1000&maxReconnectDelay=30000", desc: "Broker URL", group: connection }
       - { name: destinations, type: list, required: true, desc: "Queues and topics", group: connection }
       - { name: user, desc: "User", group: connection }
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
       - { name: client-id, desc: "Client id", group: connection }
+      - { name: kind, desc: "Kind of the messages (kind.<queue> sets it per queue or topic)", group: mapping }
+      - { name: id-field, default: id, desc: "Field holding the entity id", group: mapping }
+      - { name: "kind.*", desc: "Kind per destination: kind.<destination>", group: mapping }
+      - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
+      - { name: cache-mb, type: int, default: "128", desc: "Entities kept in memory", group: tuning }
+      - { name: state.dir, type: path, desc: "Folder of the received-state store; default: <state.root>/<connector name>", group: state }
+      - { name: state.root, type: path, default: "<data dir>/state", desc: "Parent of the per-connector state folder", group: state }
+      - { name: state.max-gb, default: "10", desc: "Size budget of the state store in GB (a number, may be fractional)", group: state }
+      - { name: state.reset-at, default: never, desc: "Clock time (HH:mm) to clear the state store each day, or never", group: state }
+      - { name: state.zone, default: America/New_York, desc: "Time zone of state.reset-at", group: state }
+      - { name: state.durability, type: "enum:none|wal|sync", default: sync, desc: "How a received message is made safe on disk: sync survives a power loss, wal a crash, none neither", group: state }
+      - { name: state.when-full, type: "enum:evict-oldest|warn", default: evict-oldest, desc: "At the size budget: drop the oldest entries, or only warn", group: state }
+      - { name: state.check-seconds, type: int, default: "60", desc: "How often the budget is checked", group: state }
       - { name: max-redeliveries, type: int, desc: "Redeliveries before giving up", group: tuning }
   rabbitmq:
     tls: true
     settings:
-      - { name: uri, required: true, desc: "amqp:// or amqps:// URI (credentials as ${ENV} references)", group: connection }
+      - { name: uri, default: "amqp://guest:guest@localhost:5672/%2f", desc: "amqp:// or amqps:// URI (credentials as ${ENV} references)", group: connection }
       - { name: auth-mechanism, type: "enum:plain|external", default: plain, desc: "external logs in with the client certificate (needs amqps:// and tls.cert-file or tls.keystore)", group: security }
       - { name: queues, type: list, required: true, desc: "Queues to read", group: connection }
       - { name: "bind.*", desc: "Queue bindings", group: connection }
+      - { name: kind, desc: "Kind of the messages (kind.<queue> sets it per queue or topic)", group: mapping }
+      - { name: id-field, default: id, desc: "Field holding the entity id", group: mapping }
+      - { name: "kind.*", desc: "Kind per queue: kind.<queue>", group: mapping }
+      - { name: "id-field.*", desc: "Id field per kind: id-field.<kind>", group: mapping }
+      - { name: cache-mb, type: int, default: "128", desc: "Entities kept in memory", group: tuning }
+      - { name: state.dir, type: path, desc: "Folder of the received-state store; default: <state.root>/<connector name>", group: state }
+      - { name: state.root, type: path, default: "<data dir>/state", desc: "Parent of the per-connector state folder", group: state }
+      - { name: state.max-gb, default: "10", desc: "Size budget of the state store in GB (a number, may be fractional)", group: state }
+      - { name: state.reset-at, default: never, desc: "Clock time (HH:mm) to clear the state store each day, or never", group: state }
+      - { name: state.zone, default: America/New_York, desc: "Time zone of state.reset-at", group: state }
+      - { name: state.durability, type: "enum:none|wal|sync", default: sync, desc: "How a received message is made safe on disk: sync survives a power loss, wal a crash, none neither", group: state }
+      - { name: state.when-full, type: "enum:evict-oldest|warn", default: evict-oldest, desc: "At the size budget: drop the oldest entries, or only warn", group: state }
+      - { name: state.check-seconds, type: int, default: "60", desc: "How often the budget is checked", group: state }
       - { name: declare, type: boolean, desc: "Declare queues at start", group: connection }
       - { name: prefetch, type: int, desc: "Prefetch", group: tuning }
       - { name: heartbeat-seconds, type: int, desc: "Heartbeat", group: tuning }

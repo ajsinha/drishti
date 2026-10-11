@@ -36,6 +36,7 @@ This page is the authoritative reference. Everything in it was checked against t
 | look up one panel kind | [Panel kinds](#panel-kinds) |
 | get completion and checking in your editor | [Completion and checking in your editor](#completion-and-checking-in-your-editor) |
 | look up a function or an operator | [Rachana-EL](#rachana-el-expressions) |
+| declare the search form of a pack's kinds (`form:` in `pack.yaml`) | [Pack search form](#pack-search-form-form-in-packyaml) |
 | understand an error such as `DRS-2023` | [Problem codes](#problem-codes) |
 | know what happens when you save a file or press Save in the workbench | [Hot reload, the workbench and governance](#hot-reload-the-workbench-and-governance) |
 
@@ -1614,6 +1615,53 @@ address is kept). The recipient who opens the share lands on the same view with 
 (when one was asked for) is built with the control values and shows only the rows the column filters leave, after the masks of its least
 privileged recipient are applied (a masked cell never matches a condition). A share sent without any view state, and every share made
 before this was kept, is unchanged. The values are not copied data: they only select what each recipient's own rights show.
+
+## Pack search form (`form:` in `pack.yaml`)
+
+Not part of a Sutra: the `form:` section of a pack's `pack.yaml` declares the search form of each kind (`FORM <pack> <GO>`, query by form).
+The server compiles the inputs to the ordinary search and runs it as any search, so masks, kinds per role and packs per user apply. A kind with no
+entry gets a form **inferred** from its search columns and the fields its Sutras read. The walk-through, with an example, is in
+[PACK_DEVELOPER_GUIDE.md, form](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind). The rules below are the ones the parser
+(`FormSpec`, `FormField`, `FieldType` in `drishti-engine`, `tools/packform.py` for `drishti.py pack check`) applies.
+
+```yaml
+form:
+  trade:                                  # a kind of this pack
+    calendar: USNY                        # optional; the business-day calendar of relative dates (default: the server's)
+    fields:
+      - { path: tradeId, type: id, group: Identity, order: 1 }
+      - { path: notional, type: amount, operators: [">=", "<=", between] }
+  netting-set:                            # the short form: just the list of fields
+    - { path: nettingSetId, type: id }
+```
+
+| Level | Key | Type | Default | Meaning |
+|---|---|---|---|---|
+| `form` | `<kind>` | list, or mapping | | One entry per kind; the kind must be one of the pack's `kinds` (`pack check` refuses another) |
+| kind | `fields` | list | | Required (and non-empty) in the mapping form; the whole value in the short form |
+| kind | `calendar` | text | server's | A calendar name known to the server (`USNY`, ...); `last 5 business days` runs on it. Another key in the mapping is refused (`use fields and calendar`) |
+| field | `path` | text | | **Required.** A document path (`mtm`, `counterparty.name`, `legs[0].rate`); a leading `$.` is dropped. Each path once per kind |
+| field | `label` | text | the path in words | The heading |
+| field | `type` | `text`, `number`, `amount`, `date`, `enum`, `id`, `bool` | `text` | Decides the input and the operators |
+| field | `operators` | list | all of the type's | A subset of the type's operators; the first is the default. One the type lacks is refused (`between` on text) |
+| field | `default` | text | empty | What the input starts with |
+| field | `order` | whole number | 0 | Lower first; fields without one follow in the order written |
+| field | `group` | text | none | A heading; fields of a group sit together |
+| field | `help` | text | none | One line under the input |
+| field | `required` | boolean | false | The form cannot be submitted without it |
+| field | `hidden` | boolean | false | Not an input; kept so a saved search can use it. `required` and `hidden` together need a `default` |
+| field | `values` | list | the values found in the data | Only for `enum` (on another type it is refused) |
+
+| Type | Operators (first is the default) |
+|---|---|
+| `text` | `equals`, `contains`, `starts`, `regex` |
+| `number`, `amount` | `=`, `between`, `>`, `<`, `>=`, `<=` (an amount takes `250k`, `1.5m`, `2bn`) |
+| `date` | `on`, `between`, `relative`, `before`, `after` |
+| `enum`, `id` | `in` |
+| `bool` | `is` |
+
+A problem is reported against the key, for example `pack.yaml form.trade.fields[2] (mtm): type 'money' is not one of text, number, amount, date, enum, id, bool`;
+a bad `form:` fails `drishti.py pack check`.
 
 ## Function keys
 
