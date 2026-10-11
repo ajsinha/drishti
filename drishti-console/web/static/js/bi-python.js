@@ -156,13 +156,29 @@
     return o;
   }
 
-  function chart(host, option, spec) {
+  /** Gives what the Python option left unsaid the theme's colours (text, axes, grid lines), so a chart is readable in the dark and the light theme alike. */
+  function themed(option, t) {
+    if (!t || !t.ink) { return option; }
+    const each = (v, fn) => { (Array.isArray(v) ? v : v ? [v] : []).forEach(fn); };
+    const text = (o, key, color) => { o[key] = o[key] || {}; if (!o[key].color) { o[key].color = color; } };
+    each(option.title, (x) => text(x, 'textStyle', t.ink));
+    each(option.legend, (x) => text(x, 'textStyle', t.muted));
+    ['xAxis', 'yAxis'].forEach((k) => each(option[k], (a) => {
+      text(a, 'axisLabel', t.muted); text(a, 'nameTextStyle', t.muted);
+      a.axisLine = a.axisLine || {}; a.axisLine.lineStyle = Object.assign({ color: t.border }, a.axisLine.lineStyle);
+      a.splitLine = a.splitLine || {}; a.splitLine.lineStyle = Object.assign({ color: t.border, opacity: 0.5 }, a.splitLine.lineStyle);
+    }));
+    option.textStyle = Object.assign({ color: t.muted }, option.textStyle);
+    return option;
+  }
+
+  function chart(host, option, spec, t) {
     if (!window.echarts) { return note(host, 'The chart library did not load.'); }
     B.clear(host);
     const box = h('div', { class: 'bi-chart bi-py-chart', role: 'img', 'aria-label': spec.alt || spec.title || 'Python chart', 'data-py-kind': 'echarts' });
     host.appendChild(box);
     const c = window.echarts.init(box, null, { renderer: 'canvas' });
-    c.setOption(Object.assign({ backgroundColor: 'transparent', animation: false }, clean(option)));
+    c.setOption(themed(Object.assign({ backgroundColor: 'transparent', animation: false }, clean(option)), t));
     box.setAttribute('data-ready', '1');
     return { dispose() { c.dispose(); }, resize() { c.resize(); } };
   }
@@ -190,13 +206,13 @@
       grid: { left: 56, right: 16, top: 24, bottom: 36 }, tooltip: { trigger: 'axis' },
       xAxis: Object.assign({ type: 'category', data: names, name: by.join(' / ') }, axis), yAxis: Object.assign({ type: 'value', name: label }, axis),
       series: [{ type: 'bar', name: label, data: values, itemStyle: { color: (ctx.palette && ctx.palette[0]) || '#4f7cff' } }]
-    }, spec);
+    }, spec, t);
   }
 
   /** Draws an answer of P.run in a frame body; returns the handle the frame disposes. */
   P.draw = function (host, spec, ctx, res) {
     if (res.kind === 'measure') { return bars(host, res, spec, ctx); }
-    if (res.kind === 'echarts') { return chart(host, res.option, spec); }
+    if (res.kind === 'echarts') { return chart(host, res.option, spec, ctx.t); }
     if (res.kind === 'svg') { return image(host, 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(res.svg), spec, 'svg'); }
     if (res.kind === 'png') { return image(host, 'data:image/png;base64,' + res.png, spec, 'png'); }
     return note(host, 'The Python item returned something this page cannot draw.');
