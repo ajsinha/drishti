@@ -83,8 +83,8 @@ for example `C:\drishti`, holding:
 | Copy | From | Why |
 |---|---|---|
 | `drishti-server-1.20.0-exec.jar` | `drishti-server\target\` | the server (all its libraries are inside) |
-| `packs\` | the repository root | the domain packs (Sutras, mnemonics, samples) |
-| `console\` | the repository root | only if you will run the console on this machine |
+| `config\packs\` | the repository root | the domain packs (Sutras, mnemonics, samples). Also `config\connectors\` (connector files) and `config\bi\` (BI datasets and reports) if you use them |
+| `drishti-console\` | the repository root | only if you will run the console on this machine |
 | `tools\windows\`, `tools\packgen\`, `tools\samplegen\` | the repository's `tools\` | the scripts, and the lake generator if you will build the demo lake here |
 | `data\` | an existing installation, if any | the lake (`data\delta`), users (`data\identity`), feeds, reports; start without it and it is created |
 | `application.local.yaml` | your own, if any | site settings; read from the folder the server starts in |
@@ -154,11 +154,23 @@ In a second PowerShell window:
 .\tools\windows\start-console.ps1
 ```
 
-The first run makes `console\.venv` and installs the console's libraries (with uv if present, else
+The first run makes the console's Python environment and installs its libraries (with uv if present, else
 `python -m venv` and pip). Open **http://localhost:17480/t**. Options: `-Port` (17480), `-Backend`
 (`http://127.0.0.1:18480`), `-Python` (the Python to build the environment with), `-Reinstall`.
 
-From here the [QUICKSTART.md](QUICKSTART.md#7-your-first-eight-commands) steps 7 to 9 are the same.
+To start the console by hand instead (the same steps the script takes):
+
+```powershell
+uv venv drishti-console\.venv
+uv pip install --python drishti-console\.venv\Scripts\python.exe -r drishti-console\requirements.txt
+drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py
+```
+
+(without uv: `python -m venv drishti-console\.venv`, then `drishti-console\.venv\Scripts\pip install -r drishti-console\requirements.txt`).
+
+> The settings are the console's own: `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`.
+
+From here the [QUICKSTART.md](QUICKSTART.md#7-your-first-ten-commands) steps 7 to 9 are the same.
 
 ## 6. The Delta engine on Windows
 

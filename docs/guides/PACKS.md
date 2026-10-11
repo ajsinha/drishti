@@ -82,7 +82,7 @@ command to try. The example ids are real: they exist in the pack's `samples/` fo
 |---|---|---|---|
 | `banking-core` | — | `CPTY` counterparty · `GRP` counterparty group · `ISS` issuer · `AGR` master agreement · `CCP` central counterparty · `LE` bank legal entity · `BOOK` book · `DESK` desk · `TRDR` trader · `CAL` holiday calendar · `CSA` credit support annex · `CLR` clearing account | `CPTY CP-NORTHBRIDGE` |
 | `market-data` | `banking-core` | `CRV` interest rate curve · `REPO` repo curve · `FX` FX spot rate · `FXF` FX forward curve · `FXV` FX volatility surface · `IRV` swaption volatility cube · `CPV` cap/floor volatility surface · `EQ` equity · `EQX` equity index · `DIV` dividend curve · `EQV` equity volatility surface · `CDS` credit curve · `INF` inflation index · `INFC` inflation curve · `CMD` commodity · `CMDC` commodity forward curve · `CMDV` commodity volatility surface · `FIX` rate index fixings · `BND` bond (security master) · `CORR` correlation matrix | `CRV CRV-USD-OIS` |
-| `trading` | `banking-core`, `market-data` | `TRD` trade (125 products in ten asset classes) | `TRD MX-20000001` |
+| `trading` | `banking-core`, `market-data` | `TRD` trade (125 products in ten asset classes) · `DPNL` desk P&L | `TRD MX-20000001` |
 | `market-risk` | `market-data`, `trading` | `VAR` VaR / expected shortfall · `SCN` stress scenario · `STR` stress result · `FRTB` FRTB sensitivities · `PNL` P&L explain | `VAR VAR-RATES` |
 | `counterparty-risk` | `market-data`, `trading` | `NSET` netting set · `LIM` credit limit · `EXP` exposure profile · `CVA` CVA / XVA · `SACCR` SA-CCR exposure · `COLL` collateral balance · `MC` margin call · `SIMM` ISDA SIMM initial margin | `NSET NS-SUMMIT-NY` |
 | `liquidity-risk` | `trading` | `LCR` liquidity coverage ratio · `NSFR` net stable funding ratio · `MLAD` maturity ladder · `HQLA` HQLA holding · `FUND` funding source · `LST` liquidity stress result · `IDL` intraday liquidity | `LCR LCR-NY` |
@@ -91,11 +91,14 @@ command to try. The example ids are real: they exist in the pack's `samples/` fo
 | `retail-banking` | `banking-core` | `CUST` customer · `ACCT` deposit account · `MTG` mortgage · `CARD` card account · `PLN` personal loan · `BRN` branch · `COLC` collections case · `RPF` retail portfolio (IFRS 9) | `CUST CUST-100231` |
 | `genomics` | — | `GENE` gene · `VRNT` variant · `PROT` protein · `PWY` pathway · `SMPL` sample · `SEQ` sequencing run · `EXPR` expression study · `TRIAL` clinical trial | `GENE GENE-TP53` |
 | `politics-society` | — | `JUR` jurisdiction · `PARTY` party · `OFFC` office holder · `ELEC` election · `REGN` world region · `SOCI` social indicator (real public data for about 216 countries: CIA World Factbook, World Bank, UNDP; [REAL_DATA](REAL_DATA.md)) | `JUR JUR-IND` |
-| `economics` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group (real public data for about 213 economies: World Bank, IMF, CIA World Factbook; [REAL_DATA](REAL_DATA.md)) | `ECON ECON-IND` |
-| `finance` | — | `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement · `CRV` curve · `CPTY` counterparty · `LIM` credit limit · `CLR` clearing account · `SPEC` contract specification · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings | `TRD IRS-48213` |
+| `economics` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group (real public data for about 213 economies: World Bank, IMF, CIA World Factbook; [REAL_DATA](REAL_DATA.md); not a sample, but the IMF part is for internal demonstrations only) | `ECON ECON-IND` |
+| `finance` | — | `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement · `CRV` curve · `CPTY` counterparty · `LIM` credit limit · `CLR` clearing account · `SPEC` contract specification · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings · `BPNL` book P&L (derived from the trades) | `TRD IRS-48213` |
 | `logistics` | — | `SHP` shipment · `CTR` container · `VSL` vessel · `PORT` port | `SHP SHP-10042` |
 | `news-watch` | — | `TOPIC` news topic · `NEWS` headlines (fifteen topics: central banks, countries, companies, themes; headlines computed on demand by the [news connector](../connectors/NEWS.md); a sample pack, connector off) | `TOPIC TOPIC-FED` |
 | `market-watch` | `news-watch` | `CO` listed company · `QUOTE` quote and price history (twenty well-known companies; the quote from the [yfinance connector](../connectors/YFINANCE.md), headlines from the news connector; a sample pack, connectors off) | `CO CO-AAPL` |
+
+Samples among them: `genomics`, `logistics`, `news-watch` and `market-watch` are sample packs (`sample: true`; [Sample packs](#sample-packs)). The rest are
+reference or real-data packs.
 
 Every pack's overview guide (*Help → Domain packs*, or `config/packs/<name>/guides/`) describes its domain and has a
 **Finding things** section with the commands that work for every kind of the pack:
@@ -111,10 +114,10 @@ Every pack's overview guide (*Help → Domain packs*, or `config/packs/<name>/gu
 for its own kinds. Pick lists are explained in [USER_GUIDE.md](USER_GUIDE.md#pick-lists-when-a-command-names-several-entities).)
 
 **Two families.** The `finance` pack is the small demo behind the four original mockups (`TRD IRS-48213`). The
-banking family (`banking-core` … `retail-banking`) is the full model: 125 trade products, 45 data kinds. Both
+banking family (`banking-core` … `retail-banking`) is the full model: 125 trade products and 76 kinds in eight packs. Both
 families define `trade`, `counterparty`, `netting-set` and other kinds, and a kind may belong to only one installed
-pack, so **a server runs one family or the other, never both**. `logistics`, `genomics`, `politics-society` and
-`economics` share no kinds with anything and can be added to either family.
+pack, so **a server runs one family or the other, never both**. `logistics`, `genomics`, `politics-society`,
+`economics`, `news-watch` and `market-watch` share no kinds with anything and can be added to either family.
 
 Typical combinations:
 
@@ -486,7 +489,7 @@ fields. Each row's mnemonic opens that kind's pick list. Typing the pack's name 
 | counterparty-risk | `CCR` | | operational-risk | `OPR` |
 | finance | `FIN` | | politics-society | `POLS` |
 | logistics | `LOGI` | | retail-banking | `RTL` |
-| news-watch | `NEWS` | | market-watch | `MKTW` |
+| news-watch | `NEWSW` | | market-watch | `MKTW` |
 
 The same answer as JSON: `curl -s localhost:18480/api/v1/packs/MKT/overview`. A pack author sets the code with `code:` in `pack.yaml` (in a generated pack, in its generator:
 [how the shipped packs are generated](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).

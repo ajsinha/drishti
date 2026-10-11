@@ -34,6 +34,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `LCR <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `LCR <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `LCR <GO>` | Lists every liquidity coverage ratio. |
+| `FORM liquidity-risk <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `LIQ <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## Where the data comes from
 
@@ -108,3 +110,7 @@ Intraday use of liquidity in a payment system: usage through the day and the lar
 **Fields its Sutra reads:** `legalEntityName`, `currency`, `peakUsage`, `available`, `usagePct`, `usage`, `largePayments`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
+
+## Who can see it
+
+Role `treasury`: kinds `lcr`, `nsfr`, `maturity-ladder`, `hqla-holding`, `funding-source`, `liquidity-stress`, `intraday-liquidity`, `legal-entity`, `counterparty`, `bond`, raw JSON.

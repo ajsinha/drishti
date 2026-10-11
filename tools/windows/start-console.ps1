@@ -17,8 +17,8 @@
   Starts the Drishti console (the web front end) on Windows.
 
 .DESCRIPTION
-  Runs from the Drishti folder. On first use it makes a Python environment in console\.venv (with uv if it is
-  installed, else python -m venv) and installs console\requirements.txt; then it starts the console, which talks to
+  Runs from the Drishti folder. On first use it makes a Python environment in drishti-console\.venv (with uv if it is
+  installed, else python -m venv) and installs drishti-console\requirements.txt; then it starts the console, which talks to
   the server at -Backend. Open http://localhost:17480/t once it says Uvicorn is running.
 
 .EXAMPLE
@@ -33,19 +33,19 @@ param(
     [int]$Port = $(if ($env:DRISHTI_CONSOLE_PORT) { [int]$env:DRISHTI_CONSOLE_PORT } else { 17480 }),
     # The server (DRISHTI_BACKEND_URL).
     [string]$Backend = $(if ($env:DRISHTI_BACKEND_URL) { $env:DRISHTI_BACKEND_URL } else { 'http://127.0.0.1:18480' }),
-    # Rebuild the environment (after console\requirements.txt changed).
+    # Rebuild the environment (after drishti-console\requirements.txt changed).
     [switch]$Reinstall
 )
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 Set-Location $root
-$venv = Join-Path $root 'console\.venv'
+$venv = Join-Path $root 'drishti-console\.venv'
 $venvPython = Join-Path $venv 'Scripts\python.exe'
-$requirements = Join-Path $root 'console\requirements.txt'
+$requirements = Join-Path $root 'drishti-console\requirements.txt'
 
 if ($Reinstall -and (Test-Path $venv)) { Remove-Item -Recurse -Force $venv }
 if (-not (Test-Path $venvPython)) {
-    Write-Host 'Making the console''s Python environment in console\.venv ...'
+    Write-Host 'Making the console''s Python environment in drishti-console\.venv ...'
     if (Get-Command uv -ErrorAction SilentlyContinue) {
         & uv venv $venv
         if ($LASTEXITCODE -ne 0) { throw 'uv venv failed.' }
@@ -55,11 +55,11 @@ if (-not (Test-Path $venvPython)) {
         if ($LASTEXITCODE -ne 0) { throw "$Python -m venv failed: install Python 3.11 or newer (python.org or winget install Python.Python.3.13)." }
         & $venvPython -m pip install -r $requirements
     }
-    if ($LASTEXITCODE -ne 0) { throw 'Installing console\requirements.txt failed.' }
+    if ($LASTEXITCODE -ne 0) { throw 'Installing drishti-console\requirements.txt failed.' }
 }
 
 $env:DRISHTI_CONSOLE_PORT = "$Port"
 $env:DRISHTI_BACKEND_URL = $Backend
 Write-Host "Drishti console on http://localhost:$Port/t (server $Backend)"
-& $venvPython (Join-Path $root 'console\run_drishti_web.py')
+& $venvPython (Join-Path $root 'drishti-console\run_drishti_web.py')
 exit $LASTEXITCODE

@@ -34,6 +34,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `JUR <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `JUR <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `JUR <GO>` | Lists every jurisdiction. |
+| `FORM politics-society <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `POLS <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## Where the data comes from
 
@@ -99,3 +101,7 @@ A social or governance statistic of one country over time, with the regional com
 **Fields its Sutra reads:** `name`, `latest`, `unit`, `latestYear`, `change5y`, `sourceName`, `series`, `byRegion`, `meaning`, `provenance`.
 
 **Links:** `jurisdiction` → Country (`jurisdiction`).
+
+## Who can see it
+
+Role `analyst`: kinds `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator`, raw JSON.

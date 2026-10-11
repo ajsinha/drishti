@@ -34,6 +34,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `CLIM <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `CLIM <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `CLIM <GO>` | Lists every climate profile. |
+| `FORM climate-risk <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `CLI <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## Where the data comes from
 
@@ -97,3 +99,7 @@ EU taxonomy alignment of a legal entity's balance sheet: eligible and aligned as
 **Fields its Sutra reads:** `legalEntityName`, `gar`, `eligible`, `covered`, `objectives`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
+
+## Who can see it
+
+Role `climate-analyst`: kinds `climate-profile`, `financed-emissions`, `climate-scenario`, `climate-stress`, `physical-asset`, `taxonomy-alignment`, `counterparty`, `book`, `desk`, `legal-entity`, raw JSON.

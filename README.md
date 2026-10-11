@@ -46,7 +46,13 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 - **Structured search** (`TRD where notional >= 250m and assetClass = 'Rates' order by mtm desc limit 20`), or
   **plain words** (`usd trades maturing before 2028 with negative mtm`): a deterministic parser shows the search
   it makes, part by part, before anything runs. No AI service is involved.
+- **Query by form** (`FORM <pack> <GO>`, the **Forms** menu, `/forms`): typed inputs for a kind (text, amounts, dates, multi-select
+  dropdowns, pasted lists of ids) that write the search for you, which you can name, watch, schedule or send
+  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#search-with-a-form-form-pack)).
 - **Impact (F8)**: what depends on an entity, what it rolls into, and the amount at stake.
+- **Controls and deep documents**: a screen can offer dropdowns, toggles, date ranges and sliders that choose what a
+  panel shows, and a trade shows its legs, cashflows and fixings on one screen (tabs that hold panels), with Excel-style
+  column filters on every table.
 
 **Over time**
 - **Business dates**: Live, or any past business day on the server's calendar, as a static snapshot. Views,
@@ -65,6 +71,8 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
   dividers dragged to resize, saved and **shared** read-only with roles or people.
 
 **Work together**
+- **Share a view with a note**, read your **inbox**, and discuss a number in a thread anchored to the data; everyone sees
+  the view with their own permissions ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#share-a-view-with-a-note)).
 - **Notes** on an entity or one of its fields, for the next reader; the author edits, every change is audited.
 - **Export and share**: CSV of any table, search or comparison; the document as JSON; print or PDF; a link that
   reopens the view exactly as you see it.
@@ -73,24 +81,43 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
 - **API tokens** (read-only, revocable), a standard-library **Python client** and **Excel** through Power Query
   ([CLIENTS.md](docs/guides/CLIENTS.md)).
 
+**Business intelligence (Rūpaka)**
+- The **BI** menu and the `BI <GO>` keyword (`RUPAKA` still works): a catalogue and workspaces with roles, **datasets**
+  (tables from pack kinds, relationships, measures, row rules and masks) on an embedded query engine, **reports** with a
+  designer and a Model view, publishing with review, versions and certification, live tables, Perspective grids and
+  **boards** of live tiles ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [BI_TUTORIAL.md](docs/guides/BI_TUTORIAL.md),
+  [REPORTS.md](docs/guides/REPORTS.md), [BOARDS.md](docs/guides/BOARDS.md)).
+
 **Shape it**
 - **Layout mode** (`Alt+L`): drag, resize and hide a view's panels on a 12-column grid, with the mouse, a pen, a finger
   or the keyboard, and keep it as your own layout of the Sutra; an author promotes it to the Sutra through review.
+- **Build -> New pack**: JSON Schema files and/or a folder of JSON Lines in, a pack out, to download or deploy
+  ([SCHEMA_TO_PACK.md](docs/guides/SCHEMA_TO_PACK.md)).
+- **Calc** (`Alt+C`): Python in your browser on the view you are looking at ([PYTHON_CALC.md](docs/guides/PYTHON_CALC.md)).
 - **The Build workbench** (`/build`; Sutra Studio's page is folded into it): drag panels and fields onto a live screen, or a YAML editor with completion from the language's JSON Schema, live checks and a
   preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
 - **Domain packs**, enabled per server and assigned per user: `banking-core`, `market-data`, `trading`
   (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk`,
-  `retail-banking`, `genomics`, `politics-society`, `economics`, and the small `finance`, `logistics`, `news-watch` and `market-watch` packs.
+  `retail-banking`, `genomics`, `politics-society` and `economics` (real public data; the IMF figures are for internal demonstrations only), and the small `finance`, `logistics`, `news-watch` and `market-watch` packs.
   Packs inherit from each other, load and unload from Admin → Packs, and install from a **signed, versioned
   registry** with rollback ([PACKS.md](docs/guides/PACKS.md)).
+- **Drishti Elements**: show live views inside another web application as `<drishti-view>` Web Components, without
+  iframes ([ELEMENTS.md](docs/architecture/ELEMENTS.md)).
+- **An AI layer and an MCP client**, both **off by default** (`drishti.ai.enabled`, `drishti.mcp.enabled`): pluggable
+  model providers and *Ask about this page* ([AI_PROVIDERS.md](docs/architecture/AI_PROVIDERS.md), [MCP_CLIENT.md](docs/architecture/MCP_CLIENT.md)).
 - **Derived kinds**: entities computed from others, declared in a pack, such as each desk's P&L summed from its
   trades (`DPNL DESK-RATES`), with history wherever their members have it.
 
 **Connect any data**
 - Delta Lake (local or S3, dated, time travel), PostgreSQL and other JDBC databases, Aerospike, Kafka, ActiveMQ,
   RabbitMQ, Amazon S3 and compatible stores, REST services, JSON and CSV files, and public market data (NY Fed
-  SOFR, ECB €STR and FX, US Treasury, FRED). Connectors reconnect by themselves and report their health
+  SOFR, ECB €STR and FX, US Treasury, FRED), and computed ones such as news headlines for a name and Yahoo Finance quotes.
+  Each connector is **one YAML file** in `config/connectors`, changed live in **Admin -> Connectors** with no restart;
+  TLS (private CA, mutual TLS) and an outbound HTTP proxy are settings of the file
+  ([CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [PROXY.md](docs/connectors/PROXY.md)).
+  Connectors reconnect by themselves, with backoff, and report their health
   ([CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md)).
+- Data lands from your ETL; one call tells Drishti to refresh, verify and flag late data ([DATA_LOADS.md](docs/guides/DATA_LOADS.md)).
 
 **Run it safely**
 - Sign-in with passwords or single sign-on (OpenID Connect), roles that decide which kinds each person may open,
@@ -167,7 +194,7 @@ drishti/
 ├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, news, yfinance, kafka, activemq, rabbitmq, s3
 ├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
-├── config/packs/<name>/                the 14 domain packs: pack.yaml, Sutras, vocabulary, samples, guides
+├── config/packs/<name>/                the 16 domain packs: pack.yaml, Sutras, vocabulary, samples, guides
 ├── deploy/                      Dockerfiles, compose, Grafana dashboard
 ├── tools/                       packgen/ samplegen/ lake/ (pack data and lakes), rachana/, packreg/ (signed packs),
 │                                drill.sh, license_headers.py
@@ -188,6 +215,10 @@ Start with the **[quickstart](docs/guides/QUICKSTART.md)**, then the **[user gui
 | you ship what you built to servers by copying: bundles, checksums, promotion, rollback (no API) | [OPERATIONALISING.md](docs/guides/OPERATIONALISING.md) |
 | you install for the first time, every step explained | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) |
 | you use the console | [USER_GUIDE.md](docs/guides/USER_GUIDE.md) |
+| you use or build business intelligence (Rūpaka) | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [BI_TUTORIAL.md](docs/guides/BI_TUTORIAL.md), [DATASETS.md](docs/guides/DATASETS.md), [REPORTS.md](docs/guides/REPORTS.md), [BI_GOVERNANCE.md](docs/guides/BI_GOVERNANCE.md), [BOARDS.md](docs/guides/BOARDS.md) |
+| you run on Windows, or read from a script or Excel | [WINDOWS.md](docs/guides/WINDOWS.md), [CLIENTS.md](docs/guides/CLIENTS.md) |
+| you use or refresh the real public data (economics, politics-society) | [REAL_DATA.md](docs/guides/REAL_DATA.md) |
+| you define connectors as files, with TLS or a proxy | [CONNECTOR_FILES.md](docs/connectors/CONNECTOR_FILES.md), [TLS.md](docs/connectors/TLS.md), [PROXY.md](docs/connectors/PROXY.md) |
 | you load, assign or install a domain pack | [PACKS.md](docs/guides/PACKS.md) |
 | you build a domain pack | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md) |
 | you learn to build screens in the Build workbench, step by step | [BUILD_WORKBENCH_TUTORIAL.md](docs/guides/BUILD_WORKBENCH_TUTORIAL.md) |

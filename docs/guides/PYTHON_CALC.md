@@ -397,7 +397,7 @@ Who has it out of the box:
 | `viewer` | configuration | **no** |
 | `trader` (`trading`), `market-risk` (`market-risk`), `credit-risk` (`counterparty-risk`) | the banking packs | yes |
 | `trader`, `risk` (`finance`) | the finance pack | yes |
-| roles of packs that do not enable Calc (`climate-analyst`, `economist`, `scientist`, `treasury`, `oprisk`, `retail`, `analyst`, `ops`) | those packs | no (their kinds offer no Calc) |
+| roles of packs that do not enable Calc (`climate-analyst`, `economist`, `scientist`, `treasury`, `oprisk`, `retail`, `analyst` of politics-society, `ops` and `shipment` of logistics, `market-analyst` and `listed-company` of market-watch, `news-analyst` and `news-topic` of news-watch) | those packs | no (their kinds offer no Calc) |
 | roles you define in Admin → Roles | the identity database | as you tick it |
 
 Give it:
@@ -579,7 +579,7 @@ DRS-5002`), and the runtime under `/pyodide/<version>/`.
 ## 17. The `drishti.quant` module
 
 `drishti.quant` is the pricing and risk maths the snippets share, in one file (`drishti-console/web/static/calc/quant.py`, about
-740 lines of Python and numpy, no scipy, so it loads in a blink). The worker fetches it from the console the first time a
+780 lines of Python and numpy, no scipy, so it loads in a blink). The worker fetches it from the console the first time a
 cell names `quant`; outside Calc it is an ordinary module.
 
 ```python
@@ -662,7 +662,7 @@ against the chi-squared distribution, survival, CVA and the FRTB formulas. The c
 console needs no numpy); run it with numpy and scipy installed:
 
 ```bash
-python -m pytest drishti-console/tests/test_quant.py        # 29 passed
+python -m pytest drishti-console/tests/test_quant.py        # 34 test functions
 ```
 
 ## 18. Snippet catalogue

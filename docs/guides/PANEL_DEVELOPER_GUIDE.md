@@ -193,6 +193,11 @@ hang on this one line:
   [section 8](#8-masks-source-and-no-access)). A kind that merely describes the view should be added to that exception
   list; a kind that reads data needs nothing.
 - Keys every panel takes (`id`, `title`, `key`, `span`, `height`, ...) are never kind options; do not list them.
+- `accepts()` also lets `where` through on every kind that has `rows` except `kv`, and `on-select` on `table`, `ladder` and
+  `hbar` (the controls of [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls)); a kind with `rows` gets `where` for free.
+- A kind can sit **inside a tab** (`tabs` with `panels:`) only when it is in `TAB_PARTS` in `SutraBuilder.java`
+  (today `kv`, `status`, `table`, `ladder`, `hbar`, `markdown`, `metric`); any other kind there is `DRS-2023`. Add yours only if
+  the console draws it in a tab body.
 
 Also update the class Javadoc ("The twenty-one panel kinds of the grammar"): it is one of the counts in
 [14.3](#143-the-counts).

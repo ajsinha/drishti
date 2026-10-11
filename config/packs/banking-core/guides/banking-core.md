@@ -32,6 +32,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `CPTY <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `CPTY <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `CPTY <GO>` | Lists every counterparty. |
+| `FORM banking-core <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `BNK <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## Where the data comes from
 

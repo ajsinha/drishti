@@ -34,6 +34,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `CUST <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `CUST <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `CUST <GO>` | Lists every customer. |
+| `FORM retail-banking <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `RTL <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## Where the data comes from
 
@@ -117,3 +119,7 @@ A retail portfolio segment: exposure and expected credit loss by IFRS 9 stage, a
 **Fields its Sutra reads:** `name`, `exposure`, `ecl`, `coverage`, `dpd30`, `stages`, `delinquency`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
+
+## Who can see it
+
+Role `retail`: kinds `customer`, `deposit-account`, `mortgage`, `card-account`, `personal-loan`, `branch`, `collections-case`, `retail-portfolio`, `legal-entity`, raw JSON.

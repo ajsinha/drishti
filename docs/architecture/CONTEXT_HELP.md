@@ -15,7 +15,8 @@
 -->
 # About this page: help about what the page is showing
 
-Status: proposed architecture (agreed with the product owner as a feature; the decisions below are open). Owner: the
+Status: built (steps 1 to 9; each step's "as built" note under Build plan says where the build differs from this design, and
+the build is right where they differ). Owner: the
 view pipeline, the pack format, the console's help centre and view page, the Build workbench.
 
 ## Why

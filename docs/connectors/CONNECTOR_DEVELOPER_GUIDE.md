@@ -15,7 +15,7 @@
 -->
 # Connectors: a developer's guide
 
-This guide is for the person who connects Drishti to data: choosing among the fifteen connectors that ship, combining
+This guide is for the person who connects Drishti to data: choosing among the seventeen plugins that ship, combining
 and operating them, and, when none fits, writing a new one. It teaches. The exact settings, data layouts, health texts
 and limits of each connector live in that connector's own document (`docs/connectors/<NAME>_CONNECTOR.md`), and this
 guide links there instead of repeating them. Named connectors are **files**, one YAML file per connector in `config/connectors/`: the folder, the
@@ -38,14 +38,15 @@ format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FIL
 5. [Registration and discovery](#registration-and-discovery)
 6. [Configuration binding](#configuration-binding)
 7. [TLS for a connector: the shared module](#tls-for-a-connector-the-shared-module)
-8. [Reconnecting and failures](#reconnecting-and-failures)
-9. [Connectors that compute data on demand](#connectors-that-compute-data-on-demand)
-10. [Testing with drishti-testkit](#testing-with-drishti-testkit)
-11. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
-12. [The shipped connectors](#the-shipped-connectors)
-13. [Combining connectors](#combining-connectors)
-14. [Operating connectors](#operating-connectors)
-15. [Troubleshooting](#troubleshooting)
+8. [Outbound HTTP proxy: the shared module](#outbound-http-proxy-the-shared-module)
+9. [Reconnecting and failures](#reconnecting-and-failures)
+10. [Connectors that compute data on demand](#connectors-that-compute-data-on-demand)
+11. [Testing with drishti-testkit](#testing-with-drishti-testkit)
+12. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
+13. [The shipped connectors](#the-shipped-connectors)
+14. [Combining connectors](#combining-connectors)
+15. [Operating connectors](#operating-connectors)
+16. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -357,10 +358,10 @@ the date the document is for (`null` for undated connectors); `live` says whethe
 
 ## The SourcePlugin SPI
 
-A source plugin brings entity documents from one system into Drishti. Plugins depend only on `drishti-api` (no
+A source plugin brings entity documents from one system into Drishti. Plugins depend only on `drishti-api` and the small `drishti-common` (no
 Spring, no Jackson), so they stay small and cannot clash with the server's libraries. The interface is
 `com.ash.drishti.api.SourcePlugin`; the types around it (`EntityRef`, `EntityDocument`, `AsOf`, `Provenance`,
-`PluginManifest`, `SourceCapabilities`, `SourceContext`, `HitIndex`, `ColumnSet`, `DateCoverage`, `SettingSpec`) are in the same
+`PluginManifest`, `SourceCapabilities`, `SourceContext`, `HitIndex`, `ColumnSet`, `DateCoverage`, `SettingSpec`, `ScanRequest`, `ArrowScan`, `SqlTarget`) are in the same
 package. Only two methods are abstract beyond `manifest`/`start`/`fetch`: everything else has a default that says "I do
 not do that", so a first plugin is three methods long.
 
@@ -377,6 +378,8 @@ public interface SourcePlugin extends AutoCloseable {
     default java.time.Instant lastUpdate();
     default java.util.Set<String> columnar(String kind);
     default Optional<ColumnSet> columns(String kind, Collection<String> paths, AsOf asOf) throws Exception;
+    default Optional<ArrowScan> scan(ScanRequest request) throws Exception;
+    default Optional<SqlTarget> sqlTarget();
     default List<EntityRef> reverse(EntityRef target, String kind);
     default List<EntityRef> reverse(EntityRef target, String kind, AsOf asOf);
     default List<EntityHit> search(String kind, String text, int limit);
@@ -384,6 +387,8 @@ public interface SourcePlugin extends AutoCloseable {
     default Optional<String> listingProblem(String kind);
     default Map<String, Object> cacheStats();
     default void purgeCaches();
+    default Optional<FieldNote> describeField(String kind, String field);
+    default Map<LocalDate, Long> inventory(String kind, int maxDates);
     default String health();
     default void close();
     default List<SettingSpec> settingSpecs();
@@ -536,6 +541,15 @@ data is, and the connector's `stale-after` setting turns it into a warning.
 | `purgeCaches()` | drop everything cached (memory and disk) so the next reads refill from the source of truth. Called by an admin at any time; must be safe while reads are in flight. Never purge the only copy of data (the message-queue state stores do not) |
 | `close()` | stop background tasks and release connections; called at shutdown and when a connector is reloaded |
 
+### `describeField(kind, field)` and `inventory(kind, maxDates)`: optional explanations
+
+Both default to "nothing to say" and are never needed for a first plugin.
+
+- `describeField` returns a `SourcePlugin.FieldNote(means, formula, origin)` for a field of one of your kinds, which **About this page** shows in its glossary.
+  A connector that computes fields (the `derived` connector) says there "sum of mtm over the trades" and the formula as configured; a store has nothing to add.
+- `inventory` returns, newest business date first, the dates the source holds for a kind and how many entities each has (at most `maxDates`), or an empty map when it
+  cannot say. **Admin → Packs → Data source → Test connection** shows it. It may read data, so it is never called on a request path.
+
 ### `settingSpecs()`: describing your settings
 
 Optional. A connector is a file whose `settings:` the plugin reads ([Configuration binding](#configuration-binding)), and **Admin → Connectors** generates its
@@ -609,7 +623,7 @@ Drishti finds plugins with the JDK's `ServiceLoader` (`PluginDiscovery` in `dris
 
    The class needs a public no-argument constructor.
 2. Make the jar visible, in either of two ways. On the **class path** of the server (a Maven dependency of
-   `drishti-server`, as the fifteen shipped plugins are), or in a folder named by `drishti.sources.plugin-dir`
+   `drishti-server`, as the seventeen shipped plugins are), or in a folder named by `drishti.sources.plugin-dir`
    (`DRISHTI_PLUGIN_DIR`): every `*.jar` in it is loaded in **its own class loader**, so its libraries cannot clash
    with the server's, and a jar added there needs no rebuild of the server, only a restart.
 
@@ -771,6 +785,29 @@ Other shapes the shipped connectors show, for a library that wants something oth
 
 ---
 
+## Outbound HTTP proxy: the shared module
+
+A plugin that speaks HTTP should honour the site's forward proxy the same way every shipped one does. The settings (`proxy.url`, `proxy.username`, `proxy.password`,
+`proxy.password-file`, `proxy.no-proxy`, `proxy.enabled`, or the bare `proxy: none`), the site default `drishti.http.proxy.*` and the rules are in
+[PROXY.md](PROXY.md); the code is `com.ash.drishti.api.proxy.ProxySettings` in `drishti-api` (Spring-free, like the TLS module). In `start`:
+
+```java
+ProxySettings proxy = ProxySettings.resolve(ctx.settings(), baseUrl);   // connector block, else site default, else environment, else none
+HttpClient.Builder b = proxy.apply(HttpClient.newBuilder());            // selector (honours no-proxy) and Basic authenticator
+...
+HttpResponse<String> r = proxy.send(client, request, BodyHandlers.ofString());   // I/O errors come back in plain words (407, CONNECT refused, DNS)
+...
+public String health() { return proxy.annotate("UP", baseUrl); }        // "... via proxy host:port (connector)" or "(proxy ... not used for host: no-proxy)"
+```
+
+`resolve` throws `ProxyException` for a malformed block (a literal password, an `https://` proxy, a username without a password): let it fail the start with its message.
+A library with its own proxy settings (the AWS SDK, Hadoop's S3A, the Iceberg REST client) is given `host()`, `port()`, `username()` and `password()` instead of
+`apply`; see `S3SourcePlugin`, `HadoopLake` and `SchemaRegistryClient`. The form of **Admin -> Connectors** offers the **Proxy** section to a plugin with `proxy: true` in
+`plugin-settings.yaml` (generated from `ProxySettings.settingSpecs()`, so a plugin does not list the keys itself). Test with `FakeProxy` in `drishti-testkit`: a forward
+proxy on a local port that tunnels `CONNECT`, counts what passes and can demand Basic credentials.
+
+---
+
 ## Reconnecting and failures
 
 Every connector recovers from an outage without a restart of Drishti, and starts even when its store is down. Your
@@ -792,6 +829,11 @@ you know what you hold. How each shipped connector does it:
 | `delta`, `file`, `rest`, `s3`, feeds, `news`, `yfinance` | nothing long-lived to lose: each call reads or connects afresh |
 
 While a store is down its reads fail (views say which source failed) and `health` reports `DOWN: … (reconnecting)`.
+
+**What the host adds.** A plugin that throws from `start` (other than `PluginNotConfigured`), or whose `health()` stays *down* after it was up, is retried by the
+server itself with the shared backoff `drishti.retry.connectors.*` (5 s doubling to 5 min, 20 % jitter; errors no retry can fix are retried only every `max`): see
+[CONNECTOR_FILES.md](CONNECTOR_FILES.md#a-connector-that-fails-to-start-or-loses-its-connection-is-retried). A plugin that retries inside (HTTP calls to a service)
+uses `RetryPolicy` from `drishti-common` in the same shape (`RetryPolicy.of(lookup, area)`), as the `news` and `yfinance` plugins do with their `retry-*` settings.
 
 ---
 
@@ -884,11 +926,11 @@ The contract covers the happy path. **Add your own tests for the failure semanti
 
 `docs/guides/examples/connector/` is a complete, small, **dated** source plugin written for teaching. It is built and
 tested with the rest of the project (`./mvnw verify`), but it is **not shipped**: the server does not depend on it,
-it is not one of the fifteen plugins, and it exists to be copied.
+it is not one of the seventeen plugins, and it exists to be copied.
 
 ```text
 docs/guides/examples/connector/
-  pom.xml                                          depends on drishti-api only (+ testkit for tests)
+  pom.xml                                          depends on drishti-api (+ drishti-common and testkit for tests)
   src/main/java/.../DayFolderSourcePlugin.java     the plugin (under 300 lines)
   src/main/resources/META-INF/services/com.ash.drishti.api.SourcePlugin
   src/test/java/.../DayFolderContractTest.java     the DatedSourceContract

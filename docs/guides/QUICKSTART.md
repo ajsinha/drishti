@@ -123,9 +123,9 @@ You should see `Uvicorn running on http://0.0.0.0:17480` (every interface: other
 Open **http://localhost:17480/t** in your browser. Sign-in is off out of the box, so you are the development
 user *Ash* with every role.
 
-## 7. Your first eight commands
+## 7. Your first ten commands
 
-Click the command line at the top (or press `/`), type each command and press Enter.
+Click the command line at the top (or press `/`), type each command and press Enter. The first eight open entities and searches; the last two are the console's own keywords.
 
 | # | Type | You should see |
 |---|---|---|
@@ -137,6 +137,8 @@ Click the command line at the top (or press `/`), type each command and press En
 | 6 | `CPTY north` | Exactly one counterparty's name contains "north", so it opens at once: `CP-NORTHBRIDGE`, Northbridge Capital LLP, with Rating `BB+` and its PFE peak. |
 | 7 | `TRD where mtm > 1m order by mtm desc limit 20` | A search: `163 of 750 trades match; the first 20 are shown`, largest MTM first. |
 | 8 | `NSET NS-SUMMIT-NY` | A netting set: Trades `108`, Utilisation `58%`, an exposure profile (`F2`) and the member trades (`F3`). |
+| 9 | `FORM trading` | The page *Search Trading with a form*: boxes for the fields people search by instead of a written search ([Search with a form](USER_GUIDE.md#search-with-a-form-form-pack)). `FORM` alone lists every pack with a form (the **Forms** menu). |
+| 10 | `BI` | The BI home (Rūpaka, business intelligence; `RUPAKA` is its older name): recent items, favourites, what is certified for you. Needs the `bi` power, which you have with sign-in off ([BI_GUIDE.md](BI_GUIDE.md)). |
 
 While you type, the dropdown suggests mnemonics and ids: type `TRD MX-2000010` and you should see `MX-20000100`,
 `MX-20000101`, … Press `↓` to pick one, `Tab` to complete it, Enter to open it.
@@ -307,7 +309,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 | Build a screen from your own JSON files, by dragging panels and fields, no YAML needed | [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), or **Build → Screen designer guide** (F1 on any Build page) |
 | Learn to build screens, step by step | [BUILD_WORKBENCH_TUTORIAL.md](BUILD_WORKBENCH_TUTORIAL.md) |
 | Change how a screen looks (Sutras) | [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
-| See every panel kind working, and copy from ten small Sutras with their data | [examples/](examples/README.md), or **File** in the workbench, or **Help → Examples** |
+| See every panel kind working, and copy from eleven small Sutras with their data | [examples/](examples/README.md), or **File** in the workbench, or **Help → Examples** |
 | Build Drishti from source, run the tests, add an endpoint, plugin, pack or page | [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) |
 | Connect your own data | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (one YAML file per connector in `config/connectors/`, or Admin → Connectors), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Turn on sign-in and run it for others | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) and [OPERATIONS.md](../admin/OPERATIONS.md) |

@@ -62,14 +62,20 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Terminal | `/t` | The command line, your pinned entities and example commands |
 | View | `/v/<kind>/<id>` | One entity, laid out in full (for example `/v/trade/MX-20000001`) |
 | Pick list and search results | `/s?q=…` | Entities a command names (`TRD MX-200000`) or a `where` search finds |
+| Forms | `/forms`, `/form/<pack>` | Query by form: the forms home, and a pack's search form ([Search with a form](#search-with-a-form-form-pack)) |
+| Pack overview | `/p/<pack>` | What a pack holds (type its code alone: `MKT <GO>`) |
 | Compare | `/compare/<kind>/<id>` | What changed in an entity between two business dates |
 | Impact | `/impact/<kind>/<id>` | What depends on an entity (F8) |
 | Monitors | `/m` | Live watchlists |
 | Alerts | `/alerts` | Your alert rules and recent alerts |
 | Workspaces | `/w` | Several live views on one screen |
-| Build | `/build`, `/build/reviews` | Design and edit layouts (Sutras) in the workbench; approve proposed ones |
+| Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule ([Scheduled reports](#scheduled-reports)) |
+| BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/b/<id>`, `/bi/datasets`, `/bi/designer` | Rūpaka business intelligence, for people with the `bi` power ([BI_GUIDE.md](BI_GUIDE.md)) |
+| Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
 | My account | `/account` | Your profile, settings and password |
-| Admin | `/admin/users`, `/admin/roles`, `/admin/packs`, `/admin/audit`, `/admin/health`, `/admin/caches` | Users, roles, packs, audit log, health and caches (admins only) |
+| Servers | `/servers` | The Drishti servers this console may talk to ([Working with several servers](#working-with-several-servers)) |
+| Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/loads`, `/admin/collab`, `/admin/embedding`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, data loads, collaboration moderation, embedding, health and caches (admins only) |
 | Help | `/help` | Tutorials, guides and every reference |
 | About | `/about` | Version, licence, loaded Sutras and the health of each source |
 
@@ -82,14 +88,14 @@ landing page then shows **← Back to …** (the view, Build, Admin or Help page
 takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 ```text
-◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30] ● Live   Views ▾  Forms ▾  Reports ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30] ● Live   Views ▾  BI ▾  Forms ▾  Reports ▾  Build ▾  Admin ▾  Help ▾   ● [bell] [box 12] [palette] (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
 free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box with its **Live** button.
 Below 1100 pixels wide they move to a line of their own.
 
-**Then six menus** (seven with **BI**, below). Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then six menus** (seven with **BI**, below; **Admin** only for administrators). Below 1280 pixels they show as icons only. Each opens a wide panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -103,14 +109,14 @@ you are on is highlighted.
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
-| | Learn | *Screen designer guide*, *Sutra guide*, *Rachana reference*, *Build a pack* |
+| | Learn | *Build workbench tutorial*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
-| | Operations | *Packs*, *Health*, *Caches* |
+| | Operations | *Packs*, *Connectors*, *Data loads*, *Collaboration*, *Embedding*, *Health*, *Caches* |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Install and run*, *About* |
 
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
 word `BI` goes there from the command line, in any case: `BI <GO>` the BI home, `BI WORKSPACE <GO>` your personal workspace, `BI CATALOGUE <GO>` the
-catalogue, `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
+catalogue, `BI SETTINGS <GO>` the BI settings (administrators with `bi-admin`), `BI <report-or-board> <GO>` a published item by id or title (a **report opens drawn**, with its slicers, drill-down and drill-through; type-ahead completes after `BI `; `RUPAKA` still works as an alias). Without the power the menu is not there and `BI <GO>`
 says what is missing. No pack can define a mnemonic named `BI`, `RUPAKA` or `FORM`. The BI page, its keys (`/`, `g h`, `g c`, `g w`, `?`) and what it can and cannot do yet:
 [BI_GUIDE.md](BI_GUIDE.md). **Using a report:** click a bar and the page filters to it, the buttons in a visual's header drill down, drill through to another page, show the rows behind it or open a trade in the terminal, and a slicer filters
 what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *Designer* in the BI rail, drag fields onto the canvas ([BI_GUIDE.md](BI_GUIDE.md) section 15, [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 13); the YAML reference is [REPORTS.md](REPORTS.md).
@@ -127,7 +133,7 @@ what it can reach ([BI_GUIDE.md](BI_GUIDE.md) section 14); **building one:** *De
 
 Worked example: find the audit log without typing an address.
 
-1. Click **Admin** in the top bar. A panel opens with two columns, *People & access* and *Operations*.
+1. Click **Admin** in the top bar. A panel opens with two columns, *People & access* and *Operations* (each with a line saying what the entry does).
 2. Click **Audit log** (*Every sign-in and change, by whom*). The audit page opens and **Admin** stays
    highlighted.
 3. Press `Esc`, or click anywhere outside, to close a menu without choosing.
@@ -184,6 +190,21 @@ Mnemonics come from the packs that are switched on. The full list, pack by pack,
 | `VAR` | VaR / expected shortfall | `VAR VAR-RATES` |
 | `LCR` | liquidity coverage ratio | `LCR LCR-NY` |
 
+### Reserved words
+
+Three words are keywords of the console itself, not mnemonics of a pack, and no pack may define a mnemonic with
+their name. They work in any case, and each has type-ahead.
+
+| Type | You get | More |
+|---|---|---|
+| `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
+| `BI <GO>` | the BI home, `/bi` (only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
+| `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
+
+A pack's code typed alone (`MKT <GO>`) opens that pack's overview ([A pack at a glance](#a-pack-at-a-glance)). Anything else
+that is not a command but reads as words (`live trades over 5m`) is offered as a question
+([Asking in plain words](#asking-in-plain-words)).
+
 ### Suggestions as you type
 
 The command line suggests as you type, in a dropdown, like the Bloomberg terminal. The dropdown holds up to
@@ -197,6 +218,8 @@ The command line suggests as you type, in a dropdown, like the Bloomberg termina
 | `TRD MX-2000010` | trades whose id starts that way: `MX-20000100`, `MX-20000101`, … |
 | `NSET SUMMIT` | netting sets whose id or title contains it: `NS-SUMMIT-LDN`, `NS-SUMMIT-NY` |
 | `XYZ Q` | `No matches for "XYZ Q"` |
+| `B`, `BI` (with the `bi` power) | the `BI` keyword, then `BI ` lists *BI home*, *My workspace*, *Catalogue* and the published reports whose id or title match |
+| `FORM `, then `FORM tra` | the packs you may open that have a form, then (after a space) their kinds: `FORM trading trade` |
 
 Each suggestion shows the mnemonic, the id (the letters you typed are highlighted) and a subtitle, for
 example:
@@ -1171,9 +1194,19 @@ To turn off the flash, untick *Flash changed values* in [your settings](#your-se
 
 The **Business date** box in the top bar says which day you are looking at.
 
-- **Live** (green, the default) is today's business date on the New York calendar (`USNY`), streaming.
+- **Live** (the default) is today's business date on the New York calendar (`USNY`), streaming.
   Weekends and holidays count as the business day before.
 - **A picked date** shows that day's end-of-day data as a static snapshot. The box turns amber.
+
+The round **Live** button beside the box is a toggle, the same on a laptop and a phone:
+
+| The button | Means | A click (or Enter or Space) |
+|---|---|---|
+| green, with a filled dot | live updates are on | pauses: the page becomes a static snapshot of the current business date |
+| red, with two pause bars | paused, or a picked date | resumes live on today's business date |
+
+You can still pick another date while paused. The choice is kept as you move between pages. A screen reader hears
+*Live updates on — click to pause* or *Live updates paused — click to resume*, which is also its tooltip.
 
 Worked example (needs the sample history; see [GETTING_STARTED.md](GETTING_STARTED.md), Step 5):
 
@@ -1184,7 +1217,7 @@ Worked example (needs the sample history; see [GETTING_STARTED.md](GETTING_START
 4. Open `NSET NS-MERIDIAN-RE-NY` with `F7`: it opens on the same date. Links, impact, search and
    suggestions all follow the date you picked.
 5. Pick Saturday `2026-09-26`. The box shows `↩ 2026-09-26` and the data is for Friday `2026-09-25`.
-6. Click **Live** to return to today.
+6. Click the red **Live** button to return to today: it turns green.
 
 What the banners mean:
 
@@ -1954,6 +1987,13 @@ between them without the menu.
 | Roles | `/admin/roles` | Define roles: the kinds each opens, and its powers |
 | Packs | `/admin/packs` | Switch a domain pack off or on for everyone; deploy an archive; see which connectors a pack reads through (**Data source**, read only) |
 | Connectors | `/admin/connectors` | Where data comes from: one connector per YAML file in `config/connectors/`; create, edit, test, switch off and see which packs use each ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)) |
+| Tokens | `/admin/tokens` | Every personal API token (never its secret), and revoking any of them ([CLIENTS.md](CLIENTS.md)) |
+| Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
+| AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) |
+| Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_LOADS.md](DATA_LOADS.md)) |
+| Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
+| Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([ELEMENTS.md](../architecture/ELEMENTS.md)) |
+| BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [BI_GUIDE.md](BI_GUIDE.md)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
 | Caches | `/admin/caches` | What the engine and each connector hold; **Purge** one or **Purge all** (safe at any time) |
@@ -1970,6 +2010,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | approve Sutras | approve proposed Sutras in Reviews |
 | administer | use every admin page |
 | Calc | use Calc (`Alt+C`): Python in the browser on what the role opens ([PYTHON_CALC.md](PYTHON_CALC.md#9-roles-who-may-use-calc)) |
+| BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([BI_GUIDE.md](BI_GUIDE.md#3-who-may-do-what-the-four-powers), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka)); the Roles form above lists only the first six powers |
 | layouts | use [layout mode](#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
 
 There is no power for the [Pivot tab](#the-pivot-tab-slice-a-table-your-way): anyone who may open a kind may arrange and save its pivots, as they
@@ -2115,7 +2156,8 @@ Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANA
 ## Help
 
 - *Help → Help centre* in the top bar, or `F1`, opens the help centre (`/help`): tutorials, guides, every reference
-  document and each pack's guides, with search. On any page, `F1` opens the guide for that page.
+  document and each pack's guides, with search (`/help/search?q=`). On a page, `F1` opens the guide for that page
+  (`/help/context/<page>`: Build opens the screen designer guide, BI the BI guide, Admin the users and roles guide, Workspaces, Monitors, Alerts and the inbox their own guides); on a view, `F1` opens [About this page](#about-this-page).
 - The **?** in each panel header explains that panel kind.
 - **About** (`/about`) shows the version, the Sutras loaded and the health of each source.
 
@@ -2132,7 +2174,7 @@ full-screen at the terminal.
   sideways inside their panel. Workspace panes stack too. No page scrolls sideways on a screen 360 px wide or
   wider.
 - **Top bar:** the menus and tools keep their icons on the first line (below 480 px the brand shows its mark
-  only); the command line and the business date share the second, and **Live** shows as its dot.
+  only); the command line and the business date share the second, and **Live** is the same round green or red toggle as on a laptop.
 - **Help:** screenshots fit the screen; tap one to open it full size.
 - **Live values** keep ticking.
 - The **workbench** is left out on phones; everything else, including help and administration, works.

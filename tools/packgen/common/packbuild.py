@@ -127,7 +127,7 @@ def overview(spec: PackSpec, docs: dict) -> str:
     lines += [f"**Extends:** {', '.join(f'`{r}`' for r in spec.requires) or 'nothing'} · **Kinds:** {len(spec.kinds)}", "",
               f"Enable it with `DRISHTI_PACKS={spec.name}` (the packs it extends come with it).", ""]
     first = spec.kinds[0]
-    lines += MD.finding(first.mnemonic, first.label, first.prefix)
+    lines += MD.finding(first.mnemonic, first.label, first.prefix, pack=spec.name, code=spec.code)
     lines += ["## Where the data comes from", ""]
     lines += t(["Connector", "Folder", "Kinds"], [[f"`{d}-store`", f"`data/delta/{d}/`", ", ".join(f"`{k.kind}`" for k in ks)]
                                                   for d, ks in spec.domains.items()])
@@ -139,6 +139,9 @@ def overview(spec: PackSpec, docs: dict) -> str:
         lines += [f"### {k.label} (`{k.kind}`)", "", k.desc, "", "**Fields its Sutra reads:** " + ", ".join(f"`{f}`" for f in fs) + ".", ""]
         if k.links:
             lines += ["**Links:** " + ", ".join(f"`{f}` → {lab} (`{kind}`)" for f, (kind, lab) in k.links.items()) + ".", ""]
+    if spec.roles:
+        lines += ["## Who can see it", ""]
+        lines += [f"Role `{r}`: kinds {', '.join(f'`{x}`' for x in v['kinds'])}{', raw JSON' if v.get('raw') else ''}." for r, v in spec.roles.items()] + [""]
     return "\n".join(lines).rstrip() + "\n"
 
 

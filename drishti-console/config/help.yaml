@@ -34,7 +34,13 @@ categories:
       - { slug: layout-mode, title: "Layout mode · arrange a view", icon: grid-3x3-gap, summary: "Alt+L: drag, resize and hide a view's panels for yourself, kept as your layout of its Sutra; authors promote it for review." }
       - { slug: pivot-tab, title: "The Pivot tab · slice a table", icon: table, summary: "Where a Sutra or pack offers it: drag fields into rows, columns, values and filters; totals, drill-down, chart, Excel; saved for you." }
       - { slug: python-calc, doc: guides/PYTHON_CALC.md, title: "Calc · Python on any view", icon: filetype-py, summary: "Alt+C: Python in your browser on the screen you are on. The drishti module, tables and charts, packs' snippets, roles, limits." }
+
       - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka) · the BI page", icon: bar-chart-line, summary: "RUPAKA <GO> and the BI menu, the catalogue, workspaces with roles, typed items, publish and review, certify, audiences, shipped files and BI settings: what phase 1 builds and what is still ahead." }
+      - { slug: bi-tutorial, doc: guides/BI_TUTORIAL.md, title: "Business intelligence tutorial", icon: map, summary: "Learn BI from the sample datasets and reports on the trades: read a model, query it, row rules and masks, build a report in the designer." }
+      - { slug: datasets, doc: guides/DATASETS.md, title: "BI datasets", icon: database, summary: "Tables, relationships, measures, the expression language, row rules, masks, layers and rollups, live tables." }
+      - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer and the designer, checks and codes." }
+      - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Publishing BI safely", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change, bundles between environments." }
+      - { slug: boards, doc: guides/BOARDS.md, title: "BI boards and live BI", icon: speedometer2, summary: "A wall of live tiles, kiosk mode, tile alerts, live tables, live visuals and Perspective." }
       - { slug: using-the-terminal, doc: guides/USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
   - id: layouts
     name: Layouts, Rachana and Sutras
@@ -65,8 +71,10 @@ categories:
     icon: plug
     blurb: One guide per store or stream Drishti reads from, each with a worked set-up, every setting and its troubleshooting.
     guides:
-      - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe, health, settings), testing with the testkit contracts, a worked teaching plugin, and a short summary of each of the 15 plugins; every setting lives in the per-connector docs." }
+      - { slug: connector-developer-guide, doc: connectors/CONNECTOR_DEVELOPER_GUIDE.md, title: Connector developer guide, icon: plug, summary: "Which connector to use, the source SPI (manifest, capabilities, fetch, search, subscribe, health, settings), testing with the testkit contracts, a worked teaching plugin, and a short summary of each of the 17 plugins; every setting lives in the per-connector docs." }
       - { slug: connector-files, doc: connectors/CONNECTOR_FILES.md, title: Connector files and Admin → Connectors, icon: plug, summary: "One YAML file per connector in config/connectors: the format and an example per store, how packs refer to connectors by name, live reload, the Admin page, the CLI, and moving off application.yaml." }
+      - { slug: connector-tls, doc: connectors/TLS.md, title: "TLS for connectors", icon: lock, summary: "The shared tls settings: private CA, PEM, PKCS12 and JKS, mutual TLS, expiry warnings, rotation." }
+      - { slug: connector-proxy, doc: connectors/PROXY.md, title: "Outbound HTTP proxy", icon: arrow-left-right, summary: "Reach the internet through a forward proxy: per connector, AI provider or MCP server, the site default, no-proxy, https via CONNECT." }
       - { slug: connector-demo, doc: connectors/DEMO_CONNECTOR.md, title: Demo, icon: play-circle, summary: "Every pack's samples, in memory, ticking." }
       - { slug: demo-data, doc: connectors/DEMO_DATA.md, title: Demo data, icon: hdd-stack, summary: "Building the demo book in each store, small to a million trades a day." }
       - { slug: connector-file, doc: connectors/FILE_CONNECTOR.md, title: File, icon: file-earmark, summary: "JSON lines on disk, from a demo to a large book." }
@@ -96,6 +104,7 @@ categories:
       - { slug: operationalising, doc: guides/OPERATIONALISING.md, title: "Operationalising: ship by copying", icon: box-arrow-in-right, summary: "Bundles, checksums and verify; deploy by copying with a backup; promote the same artifact dev to test to prod; data lakes and files; CI, permissions, Docker and Kubernetes, rollback and troubleshooting. No server API needed." }
       - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "The drishti command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs into a running server, and the Screen Designer's propose and approve over REST; every command with real output, and running it from PyCharm." }
       - { slug: data-loads, doc: guides/DATA_LOADS.md, title: "Telling Drishti new data has landed", icon: cloud-arrow-down, summary: "Your ETL loads the data; Drishti acts on it. One call (API or drishti.py data landed) makes Drishti refresh, verify the data is readable, evaluate alert rules and tell the right people; expectations flag late data on Health. With curl, Airflow, cron and DishtaYantra recipes." }
+      - { slug: real-data, doc: guides/REAL_DATA.md, title: "Real public data", icon: globe2, summary: "The economics and politics-society packs: sources, licences (IMF data: internal demonstrations only), regenerating them." }
   - id: admin
     name: Administration
     icon: shield-lock
@@ -118,6 +127,12 @@ categories:
       - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
       - { slug: api, doc: guides/API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
       - { slug: how-it-fits, doc: architecture/HOW_IT_FITS.md, title: How Drishti fits together, icon: diagram-3, summary: "Connectors, packs and Sutras, and how a command becomes a live screen, with real files and outputs." }
+      - { slug: elements, doc: architecture/ELEMENTS.md, title: "Drishti Elements", icon: window-stack, summary: "Live views inside other web applications as Web Components, without iframes: the embed API, token exchange, registering a host." }
+      - { slug: ai-providers, doc: architecture/AI_PROVIDERS.md, title: "AI providers", icon: stars, summary: "Model providers, one file each, off by default; the admin page and API." }
+      - { slug: mcp-client, doc: architecture/MCP_CLIENT.md, title: "MCP client", icon: plug, summary: "Other servers tools behind Drishti policy, off by default." }
+      - { slug: rupaka, doc: architecture/RUPAKA.md, title: "Rupaka design", icon: bar-chart-line, summary: "The design of BI inside Drishti and what each phase built." }
+      - { slug: about-this-page-design, doc: architecture/CONTEXT_HELP.md, title: "About this page: design", icon: info-circle, summary: "How About this page explains a view: page data, pack glossaries, the explain API." }
+      - { slug: collaboration, doc: architecture/COLLABORATION.md, title: "Collaboration design", icon: chat-square-text, summary: "Share with a note, threads anchored to the data, the inbox, email, retention and legal hold." }
       - { slug: architecture, doc: architecture/ARCHITECTURE.md, title: Architecture, icon: diagram-2, summary: "The pipeline, grammar, inference, live updates, modules and UX." }
       - { slug: quant-service, doc: architecture/QUANT_SERVICE.md, title: The quant service, icon: calculator, summary: "Server-side pricing: a QuantLib service behind the server (planned)." }
       - { slug: decisions, doc: architecture/adr/README.md, title: Decision records, icon: signpost-split, summary: "The architecture decisions, each with its context and consequences." }
@@ -155,3 +170,9 @@ contextual:
   inbox: sharing-and-discussion
   impact: impact
   form: using-the-terminal
+  pack: packs
+  admin-collab: sharing-and-discussion
+  bi-poc: bi-guide
+  reports: using-the-terminal
+  search: using-the-terminal
+  compare: using-the-terminal

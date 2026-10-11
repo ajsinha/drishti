@@ -62,7 +62,7 @@ def shown_prefix(spec) -> str:
     return "MX-…`, `CLY-…`, `END-…`, `IMG-…`, `BBG-…`, `WSS-" if spec.kind == "trade" else spec.prefix
 
 
-def finding(mnemonic: str, label: str, prefix: str, field_example: str = "") -> list[str]:
+def finding(mnemonic: str, label: str, prefix: str, field_example: str = "", pack: str = "", code: str = "") -> list[str]:
     """How to open and search a pack's documents, with placeholders rather than sample ids: the guides describe the
     pack, and the documents a site holds are its own."""
     what = label if any(c.isupper() for c in label.split()[0][1:]) else label[:1].lower() + label[1:]
@@ -76,7 +76,9 @@ def finding(mnemonic: str, label: str, prefix: str, field_example: str = "") -> 
         [f"`{mnemonic} <start of an id> <GO>`", "A pick list: one match opens, several give a table with the kind's key fields. "
                                                  "`*` is a wildcard, and case never matters."],
         [f"`{mnemonic} <field>=<value> <GO>`", by_field],
-        [f"`{mnemonic} <GO>`", f"Lists every {what}."]])
+        [f"`{mnemonic} <GO>`", f"Lists every {what}."]] + (
+        [[f"`FORM {pack} <GO>`", "The pack's search form: boxes for the key fields of each kind instead of a written search."]] if pack else []) + (
+        [[f"`{code} <GO>`", "The pack's overview: its kinds, their mnemonics and how many documents each holds."]] if code else []))
 
 
 def overview(name: str, docs: dict) -> str:
@@ -90,7 +92,7 @@ def overview(name: str, docs: dict) -> str:
               f"**Kinds:** {len(kinds)}", "",
               "Enable it with `DRISHTI_PACKS=" + name + "` (the packs it extends come with it; where they differ, the more specific wins).", ""]
     first = SPEC["trade"] if "trade" in kinds else SPEC[kinds[0]]
-    lines += finding(first.mnemonic, first.label, shown_prefix(first), "productType=IRS_FIXFLOAT" if first.kind == "trade" else "")
+    lines += finding(first.mnemonic, first.label, shown_prefix(first), "productType=IRS_FIXFLOAT" if first.kind == "trade" else "", name, make_packs.CODES[name])
     lines += ["## Where the data comes from", "",
               "Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by "
               "business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.", ""]
@@ -99,6 +101,12 @@ def overview(name: str, docs: dict) -> str:
         mode = "effective (a row when an entity changes)" if d in make_packs.EFFECTIVE_DOMAINS else "snapshot (every business date)"
         rows.append([f"`{d}-store`", f"`data/delta/{d}/`", layout.DOMAINS[d], mode, ", ".join(f"`{k}`" for k in ks)])
     lines += table(["Connector", "Folder", "Domain", "Tables", "Kinds"], rows)
+    if name == "trading":
+        lines += ["### Live trades and desk totals", "",
+                  "Two more connectors belong to this pack. `trading-stream` (Kafka, **off by default**; switch it on with `DRISHTI_STREAM_TRADING=true`) "
+                  "streams the day's live trades, which **Live** in the top bar reads first. `desk-totals` is a *derived* connector: it computes the "
+                  "pack's second mnemonic, `DPNL` (kind `desk-pnl`), from the trades wherever they come from, one row per desk with the trade count, "
+                  "MTM, one-day P&L, DV01, worst MTM, books and currencies, refreshed every minute. Try `DPNL DESK-RATES <GO>`.", ""]
     if name == "market-data":
         lines += ["### Public data feeds", "", "Real market data from public sources, each its own connector and **off by default**. Switch one "
                   "on with its environment variable (or `drishti.sources.connectors.<name>.enabled: true` in the site configuration). "

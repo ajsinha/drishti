@@ -35,7 +35,7 @@ running sample server.
 | adding a new panel kind | [Panel developer guide](PANEL_DEVELOPER_GUIDE.md) |
 | shipping Sutras in a pack | [Pack developer guide](PACK_DEVELOPER_GUIDE.md) |
 
-Ten small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md):
+Eleven small working Sutras, each with a self-contained JSON document and a note, are in [examples](examples/README.md):
 together they use all 21 panel kinds, nested pivot groups and tree rows. In the workbench every example opens as
 **your own copy** (Build → New screen → Examples), and **File → Open** loads any `.yaml` or `.json` of your own.
 
@@ -65,6 +65,7 @@ The `curl` commands assume security is off. With security on, add `-H "Authoriza
 11. [Reading other entities: `source:`](#11-reading-other-entities-source)
 12. [Expandable row groups: pivot `by` lists and tree tables](#12-expandable-row-groups-pivot-by-lists-and-tree-tables)
 13. [Dates, live data and imperfect data](#13-dates-live-data-and-imperfect-data)
+    - [13a. Controls: let the reader choose](#13a-controls-let-the-reader-choose-and-what-a-share-keeps), view state, and when a Sutra is not enough
 14. [Sutra and inference together](#14-sutra-and-inference-together)
 15. [Testing: `expect.yaml`, `sutra lint|test|preview`, CI](#15-testing-expectyaml-sutra-linttestpreview-ci)
 16. [The Build workbench](#16-the-build-workbench)
@@ -1171,6 +1172,60 @@ Most of this is **nothing to write**, and that is the design.
   type is shown as text. A Sutra never breaks a screen, which is also why a misspelt path is silent: preview against a
   thin document and a rich one, and read the Tests tab's *empty* cells (section 16).
 
+## 13a. Controls: let the reader choose, and what a share keeps
+
+A Sutra may declare up to 12 **controls** (`controls:` beside `panels:`): dropdowns, a multi-select, a date range, a slider, a
+top-N, a search box. The reader sets them on the screen; panels read the values in expressions as `ctl.<id>`. Controls only
+choose: they never write data. The keys, the eleven kinds, the relative dates and the problem codes (`DRS-2034` to `DRS-2039`) are in
+the [reference](RACHANA_REFERENCE.md#controls); this is how an author uses them.
+
+The shipped `netting-set` Sutra (counterparty-risk pack) puts four in the header of its member-trades table. This is the real
+file, trimmed to the parts that matter:
+
+```yaml
+controls:
+  - { id: asset, kind: dropdown, label: Asset class, options: "$.byAsset[*].asset", placement: header, panel: trades }
+  - { id: product, kind: multi-select, label: Product, options: "$.trades[*].product", placement: header, panel: trades }
+  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.trades[*].notional)", step: 1000000, placement: header, panel: trades }
+  - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }
+panels:
+  - id: trades
+    kind: table
+    title: "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}"
+    rows: $.trades
+    where: "(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product) && (ctl.minNotional == '' || @.notional >= ctl.minNotional)"
+    limit: ctl.top
+```
+
+How to read it:
+
+1. A control is `{ id, kind, label, ... }`. `options` is a list or an expression over the document (`"$.trades[*].product"`);
+   `placement: header` with `panel: trades` puts it in that panel's header (the default, `strip`, puts it under the title; `side` is a bar at the page side).
+2. A panel reads the value with `where:` (a condition on each row, `@` the row), `limit:`, `rows:` or a `${ctl.id}` in its `title`.
+   The server computes the rows with the value; nothing is filtered in the browser. `oneOf(@.product, ctl.product)` treats an empty
+   multi-select as "everything"; `within(@.payDate, ctl.when)` tests a date or number against a `from..to` range.
+3. A dropdown value is text, a multi-select is a list, a `slider` with one handle is a **number** (`@.notional >= ctl.minNotional` compares as numbers;
+   it is empty when the slider has no scale), with `range: true` it is `from..to` text. A `top-n` is a whole number.
+4. Use a control you did not declare and the Sutra is refused (`DRS-2036`); a default that does not fit the kind is `DRS-2039`.
+5. `on-select: { by: asset, field: asset, filter: [trades] }` on a `table`, `ladder` or `hbar` lets a click on a row or bar set a control.
+
+**View state.** The values live in the address (`?ctl.asset=FX&ctl.minNotional=250000000`, written once the reader has set one; a control left at its default is not
+written), so a link or the Share button reproduces the screen. `remember: user` keeps the last choice in the browser. A **sent share** keeps the
+reader's view state, the control values and the column filters (`f.<panel>.<column>`), up to `drishti.collab.share.max-view-state` characters
+(4000); the recipient opens the same view with the same values, under their own rights. The server serves it as
+`GET /api/v1/views/{kind}/{id}?ctl.<id>=...` (add `&panels=a,b` for only those panels). Not built yet: options from a Rūpaka dataset, a Pivot tab or CSV export that
+follows the controls, and control values stored with a scheduled subscription.
+
+**Query by form** is not a Sutra feature: the search form of a kind (`FORM trading <GO>`) is declared in the pack's `form:` section, see
+[PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind).
+
+**Tabs that hold panels.** A `tabs` panel with `each:` can hold whole panels per element (`panels:` instead of `body:`), so a deep trade shows each leg's terms,
+cashflows and fixings in its own tab; see section 4.2 and [Panels inside a tab](RACHANA_REFERENCE.md#panels-inside-a-tab).
+
+**When a Sutra is not enough.** A Sutra is a fixed layout everyone sees. For a one-off question about the screen in front of you, press `Alt+C` for Calc,
+Python in the browser with the view's document and tables already loaded ([PYTHON_CALC.md](PYTHON_CALC.md)). Calc is a power of a role (`calc`) and
+a pack must switch it on for its kinds; it never changes a Sutra.
+
 ## 14. Sutra and inference together
 
 A Sutra says what matters; inference fills in only what it leaves out:
@@ -1355,7 +1410,7 @@ YAML syntax; `DRS-2004` a file in a Sutra folder that is not a `*.sutra.yaml`; `
 version; `DRS-2010` missing key; `DRS-2011` unknown key; `DRS-2012` wrong type; `DRS-2020` bad name or version;
 `DRS-2021` unknown panel kind; `DRS-2022`/`DRS-2023` a missing or invalid panel option; `DRS-2024` duplicate panel id;
 `DRS-2025` function-key clash; `DRS-2026` strip longer than 8; `DRS-2027` bad area; `DRS-2028` `name@version` defined
-twice; `DRS-2029` an option value of the wrong kind; `DRS-2030` bad `span`; `DRS-2031` a `pivot` the Pivot tab cannot use;
+twice; `DRS-2029` an option value of the wrong kind; `DRS-2030` bad `span`; `DRS-2031` a `pivot` the Pivot tab cannot use; `DRS-2034`-`DRS-2039` a control that is malformed, duplicated, reads a missing parent or control, or has a default it cannot hold;
 `DRS-2101` an expression that does not compile.
 
 ## Where next

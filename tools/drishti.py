@@ -523,7 +523,7 @@ def cmd_pack_deploy(a, extra) -> int:
               + (f", moving {res['replaces']} to {res['backupDir']}" if res["replaces"] else " (a new pack)"))
     else:
         print(f"deployed {res['pack']} {res['version']} to {res['target']}" + (f"; previous {res['replaces']} kept at {res['backup']}" if res["backup"] else ""))
-        print("next: DRISHTI_PACKS must name it (restart) or Admin > Packs > Load; Sutra edits of a loaded pack hot-reload")
+        print("next: Admin > Packs > Load turns it on now (no restart), or add it to DRISHTI_PACKS for every start; Sutra edits of a loaded pack hot-reload")
     return 0
 
 

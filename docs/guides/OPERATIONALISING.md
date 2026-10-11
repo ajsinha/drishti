@@ -61,8 +61,8 @@ release, and because a lake can be terabytes.
 
 | You copied | What happens | What you do |
 |---|---|---|
-| a **new pack** (a name not in `DRISHTI_PACKS`) | nothing: the server loads only the packs it is told to | add it to `DRISHTI_PACKS` and restart, **or** Admin → Packs → **Load** (it takes effect at once, with no restart, and is records it in `data/packs/added.yaml`). Details: [PACKS.md, Turning packs on](PACKS.md#turning-packs-on) and its *Load* section |
-| a **new version of a loaded pack** | the running server still has the old content in memory | Sutra edits show by themselves (hot reload); anything else (pack.yaml, kinds, connectors, config) needs a restart ([PACKS.md, upgrading a pack](PACKS.md)) |
+| a **new pack** (a folder with a `pack.yaml`) | the packs folder is watched (`drishti.packs.watch`, default `auto`): after the copy has been quiet for 750 ms the pack is checked with the loaded ones, then loaded and remembered in `data/packs/added.yaml`. One that does not check out is not loaded; Admin → Packs and Health say why, and it is tried again by itself | nothing; or Admin → Packs → **Load** at once. With `drishti.packs.watch: off` only the Admin button acts. Details: [PACKS.md, Live reload](PACKS.md#live-reload-the-packs-folder-is-watched) |
+| a **new version of a loaded pack** | the same watcher checks it again and swaps it in: new mnemonics, kinds, roles, links, Sutras and connector templates apply with no restart. A bad edit keeps the last good version running and shows the problem on the pack's row | nothing; watch Admin → Packs for a problem |
 | **Sutra files** into a loaded pack's `sutras/` | the watcher debounces (250 ms) and reloads | nothing; see `sutraProblems` in Admin → Health if a file is invalid (the last good version stays live) |
 | **data** | the connector sees a new Delta version or a new file at its next refresh | nothing; a new business date appears within a minute |
 
@@ -331,8 +331,7 @@ restored finance 1.0.0 from prod/backups/finance-1.0.0-20261005T181007_529311; t
 ```
 
 It puts back the **newest** backup (`--version 1.0.0` picks one), keeps the version it replaced (so rolling back is itself
-undoable) and swaps in one rename. Then make the server notice: restart the server; Sutra-only differences
-already hot-reloaded. By hand: `mv config/packs/finance config/packs/finance.bad && mv backups/finance-1.0.0-… config/packs/finance`.
+undoable) and swaps in one rename. The packs-folder watcher then reloads the restored version by itself (restart only when `drishti.packs.watch` is `off`). By hand: `mv config/packs/finance config/packs/finance.bad && mv backups/finance-1.0.0-… config/packs/finance`.
 Data rolls back by `mv files files.new && mv files.old files` (section 8) or, for Delta, by `RESTORE`/time travel on the table.
 
 ## 11. Git as the source of truth, and a CI example
@@ -432,8 +431,8 @@ More in [WINDOWS.md](WINDOWS.md).
 | `unsafe entry` | a handmade archive with `..`, absolute paths or links | rebuild it with `pack bundle` |
 | `the pack fails pack check` | lint/test failed before bundling | run `pack check config/packs/<name>`; fix; `--no-check` only for a diagnosis |
 | `no drishti-server-*-exec.jar` | verify/bundle need the jar for lint and test | build it, set `DRISHTI_JAR`, or `--no-sutra` on a target that has no Java |
-| deployed, but the old content is served | the server holds the old pack in memory | restart the server |
-| deployed, but the pack is not in Admin → Packs | its name is not in `DRISHTI_PACKS` | add it and restart, or Admin → Packs → Load |
+| deployed, but the old content is served | the watcher has not run yet (it waits for the copy to be quiet for `drishti.packs.reload-debounce`, 750 ms, then checks), `drishti.packs.watch` is `off`, or the new version was refused and the last good one keeps running | wait a few seconds and look at the pack's row in Admin → Packs for a problem; with `watch: off`, use Admin → Packs → Load/Unload or restart |
+| deployed, but the pack is not in Admin → Packs | the folder is not in the packs folder the server watches (`--to` differs from `drishti.packs.dir` / `installed-dir`), the watch is off, or it does not check out | check the path; Admin → Packs → Load shows the reason; or add it to `DRISHTI_PACKS` and restart |
 | `sutraProblems` is not empty after a copy | a Sutra is invalid; the last good one stays live | read the DRS code in Admin → Health; fix the file; hot reload retries on the next save |
 | `PermissionError` on deploy | the target or backup folder is not writable by you | fix ownership (section 12); deploy as the deploying user |
 | `Access is denied` / rename fails (Windows) | a program holds the folder open | close it; the previous version is restored automatically |

@@ -18,7 +18,7 @@
 pack: news-watch
 sample: true                        # a demonstration pack: see drishti.packs.samples
 version: 1.0.0
-code: NEWS             # typed alone, opens this pack's overview
+code: NEWSW            # typed alone, opens this pack's overview
 title: News watch
 description: >-
   Sample pack: fifteen topics (central banks, countries, companies, themes) and the news about each, fetched on demand from Google News

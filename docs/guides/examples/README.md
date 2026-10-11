@@ -33,6 +33,6 @@ Each example is `<name>.sutra.yaml` (the layout), `<name>.json` (a self-containe
 | [exposure-profile](exposure-profile.md) | Exposure over tenor against a limit | `area` |
 | [linked-sources](linked-sources.md) | Panels that read other entities with `source` (needs the live demo packs) | `tabs`, `area`, `pivot` |
 
-A test (`RachanaExamplesTest` in the console tests) checks every example parses, that together they cover all twenty-one kinds, and that they include a nested pivot and a tree table, so the set cannot rot.
+A test (`drishti-console/tests/test_examples.py`; the Java `SutraCliTest` also runs `sutra test` over this folder) checks every example parses, that together they cover all twenty-one kinds, and that they include a nested pivot and a tree table, so the set cannot rot.
 
 Three folders are not Sutra examples: [schemas/](schemas/) holds the JSON Schemas and JSON Lines of [Schema to pack](../SCHEMA_TO_PACK.md) (`pack make --schema docs/guides/examples/schemas`), [connector/](connector/) is the teaching source plugin built in the [Connector developer guide](../../connectors/CONNECTOR_DEVELOPER_GUIDE.md) (built and tested by the testkit contracts, not shipped), and [pack/helpdesk/](pack/helpdesk/) is the help-desk pack of the [Pack developer guide](../PACK_DEVELOPER_GUIDE.md).
