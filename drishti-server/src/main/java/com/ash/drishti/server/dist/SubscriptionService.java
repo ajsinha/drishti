@@ -55,21 +55,20 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Subscriptions: a BI report, page or visual, or a Sutra view, delivered by email on a schedule (or after the day's data lands) to people,
- * to a role (a group) and, if an administrator allows it, to outside addresses. Kept with the owner's preferences (namespace
+ * and to a role (a group). Never to outside addresses: a person who is not a user has no rights, so no render can be made for them. Kept with the owner's preferences (namespace
  * {@code subscriptions}) with their history.
  *
  * <p>Each recipient gets <b>their own render</b>: the report is asked of the engine as that person, so their row rules and masks apply, never
  * the owner's. Someone who cannot open the target is skipped, with the reason in the history, not sent a refusal. A failed delivery is
  * retried with the shared retry policy ({@code drishti.retry.distribution.*}) up to {@code max-attempts}; a refused address or an SMTP 5xx
- * is not retried. An outside address cannot have rights of its own, so it receives the render of the subscription's owner: that is why the
- * setting is off by default.
+ * is not retried.  A subscription saved before outside addresses were refused keeps its address,
+ * but the address is skipped at every send with the reason in the history.
  */
 public final class SubscriptionService implements AutoCloseable {
 
     static final String NS = "subscriptions";
     private static final Logger LOG = LoggerFactory.getLogger(SubscriptionService.class);
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9 ._-]{0,63}");
-    private static final Pattern ADDRESS = Pattern.compile("^[^\\s,;<>\"()\\[\\]\\\\@]+@[^\\s,;<>\"()\\[\\]\\\\@]+\\.[^\\s,;<>\"()\\[\\]\\\\@]+$");
     private static final int DELIVERY_DETAIL = 40;
     private static final int RUNS_WITH_DETAIL = 3;
 
@@ -167,7 +166,7 @@ public final class SubscriptionService implements AutoCloseable {
 
     /**
      * Saves a subscription for {@code owner}. Body: {@code {target: {type, id, page?, visual?, state?, view?}, schedule, format, recipients: [...],
-     * date?, enabled?, title?}}; recipients are user names, {@code role:NAME}, or (if allowed) addresses.
+     * date?, enabled?, title?}}; recipients are user names or {@code role:NAME}; an email address is refused.
      */
     public JsonNode save(String owner, String name, JsonNode body) {
         if (!props.enabled()) {
@@ -394,6 +393,9 @@ public final class SubscriptionService implements AutoCloseable {
         if (r.user() != null) {
             d.put("user", r.user());
         }
+        if (r.principal() == null) {
+            return d.put("status", "skipped").put("error", "outside address: subscriptions go to users only, so it is not sent to");
+        }
         if (r.address() == null || r.address().isBlank()) {
             return d.put("status", "skipped").put("error", "no email address on file");
         }
@@ -471,7 +473,7 @@ public final class SubscriptionService implements AutoCloseable {
 
     private List<String> recipients(String owner, JsonNode list) {
         if (!list.isArray() || list.isEmpty()) {
-            throw invalid("name at least one recipient: a user, role:NAME" + (props.externalRecipients() ? ", or an email address" : ""));
+            throw invalid("name at least one recipient: a user, role:NAME" + "");
         }
         boolean others = directory.mayAddOthers(owner);
         List<String> out = new ArrayList<>();
@@ -481,15 +483,7 @@ public final class SubscriptionService implements AutoCloseable {
                 continue;
             }
             if (x.contains("@")) {
-                if (!props.externalRecipients()) {
-                    throw invalid("'" + x + "' is not a user: outside addresses are not allowed here (an administrator sets drishti.distribution.subscriptions.external-recipients)");
-                }
-                if (!ADDRESS.matcher(x).matches()) {
-                    throw invalid("'" + x + "' is not an email address");
-                }
-                if (!props.externalDomains().isEmpty() && props.externalDomains().stream().noneMatch(dom -> x.toLowerCase(Locale.ROOT).endsWith("@" + dom.toLowerCase(Locale.ROOT)))) {
-                    throw invalid("'" + x + "' is outside the allowed domains (" + String.join(", ", props.externalDomains()) + ")");
-                }
+                throw invalid("'" + x + "' is an email address, not a user: a subscription goes to users and roles only, because each person gets the report with their own access (an address outside the system has none)");
             } else if (x.startsWith("role:")) {
                 if (!others) {
                     throw invalid("only a BI author or an administrator may subscribe a role");
@@ -515,14 +509,10 @@ public final class SubscriptionService implements AutoCloseable {
 
     private List<Recipient> expand(String owner, JsonNode s) {
         Map<String, Recipient> out = new LinkedHashMap<>();
-        Person me = directory.person(owner).orElse(null);
         for (JsonNode n : s.path("recipients")) {
             String x = n.asText();
             if (x.contains("@")) {
-                if (me == null || !me.enabled()) {
-                    continue;
-                }
-                out.putIfAbsent(x.toLowerCase(Locale.ROOT), new Recipient(x, null, me.principal(), x));
+                out.putIfAbsent(x.toLowerCase(Locale.ROOT), new Recipient(x, null, null, x));   // kept from an older save; skipped at send
             } else if (x.startsWith("role:")) {
                 directory.members(x.substring(5)).forEach(p -> out.putIfAbsent(p.username(), new Recipient(p.email(), p.username(), p.principal(), p.displayName())));
             } else {

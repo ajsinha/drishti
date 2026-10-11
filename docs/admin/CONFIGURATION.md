@@ -1141,8 +1141,6 @@ Under `drishti.distribution.subscriptions`:
 | `enabled` | `true` | `false` stops the scheduler and refuses new subscriptions (existing ones are kept). Run the scheduler on one server of a group |
 | `per-user` | `20` | Most subscriptions one person keeps (the preference store allows 50) |
 | `max-recipients` | `200` | Most recipients (roles expanded) one run reaches; over it the run fails and says so |
-| `external-recipients` | `false` | `true` lets a subscription name email addresses that are not users. They have no rights of their own and receive the render of the subscription's owner |
-| `external-domains` | none | With external recipients on, only addresses at these domains |
 | `tick` | `30s` | How often due subscriptions and retries are looked for |
 | `keep-runs` | `30` | Runs kept in a subscription's history |
 | `max-attempts` | `4` | Tries for one delivery, with the shared retry policy between them |

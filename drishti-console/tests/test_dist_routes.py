@@ -81,7 +81,7 @@ def test_the_form_keeps_what_was_typed_when_the_server_refuses(client, backend):
     r = client.post("/reports/subscribe", content="name=Bad&schedule=whenever&date=today&format=html&recipients=ash&target=" + quote(_target()), headers=FORM)
     assert r.status_code == 422 and "DRS-9061" in r.text and "not a schedule" in r.text and 'value="whenever"' in r.text and 'value="Bad"' in r.text
     r = client.post("/reports/subscribe", content="name=Out&schedule=daily+07%3A00&date=today&format=html&recipients=boss%40elsewhere.com&target=" + quote(_target()), headers=FORM)
-    assert r.status_code == 422 and "outside addresses are not allowed" in r.text and 'value="boss@elsewhere.com"' in r.text
+    assert r.status_code == 422 and "not a user" in r.text and 'value="boss@elsewhere.com"' in r.text
 
 
 def test_one_list_holds_the_scheduled_reports_and_the_subscriptions(client, backend):

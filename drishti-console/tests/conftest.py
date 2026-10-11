@@ -708,7 +708,7 @@ class FakeBackend:
         if "whenever" in body.get("schedule", ""):
             raise BackendError(422, "DRS-9061", "'whenever' is not a schedule: use daily HH:MM, …")
         if any("@" in r for r in body.get("recipients", [])):
-            raise BackendError(422, "DRS-9061", "outside addresses are not allowed here")
+            raise BackendError(422, "DRS-9061", "is an email address, not a user: subscriptions go to users and roles only")
         t = body["target"]
         self.subs_kept[name] = {"name": name, "owner": ident.user, "title": "Report " + t.get("id", ""), "enabled": body.get("enabled", True), "nextRun": "2026-10-02T11:30:00Z",
                                 "runs": [], **body}

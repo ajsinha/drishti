@@ -918,7 +918,7 @@ Phase 7 (distribution) is built in two parts. Part 1 is **export and subscriptio
   engine call the screen makes. Limits are settings (rows, bytes, time, visuals, size).
 * **Subscriptions** to a report, a page, a visual or a view, with the view state (slicers, selections, drill path, carried values, the business-date rule `today`, `previous` or `load`; a view's controls and filters),
   on a schedule (`daily`, `weekdays`, `business-days`, `weekly`, `monthly`, each business-day aware with the pack calendar; `hourly`, `cron`) or **after a data load** (the load signal), as the email itself, a PDF or an Excel file, to users and roles
-  (outside addresses only if an administrator allows). **Each recipient gets their own render**, with their masks and row rules; a recipient who cannot open it is skipped with a reason. Pause, resume, run now, a history with each
+  (never to outside addresses: they have no rights to render with). **Each recipient gets their own render**, with their masks and row rules; a recipient who cannot open it is skipped with a reason. Pause, resume, run now, a history with each
   delivery's status, **retries with the shared retry policy**, and an audit trail.
 * **The console**: *Export* on the report bar and the view header, *Subscribe*, **Reports** in the top bar with the scheduled reports and the subscriptions in one list (existing scheduled reports unchanged), *All subscriptions* for administrators; phone-sized.
 * **The known gap closed**: an email, or a bridge post, that names a panel uses the **title the sender's view showed** (the filtered title), not the unfiltered one.
@@ -927,7 +927,7 @@ Phase 7 (distribution) is built in two parts. Part 1 is **export and subscriptio
 
 * **Alerts** from a measure or a board tile to the bell, inbox, email and chat bridges, board `notify:` (still `DRS-9053`), **embedding** and the hand-made **phone layout**, **narrative summaries**: part 2.
 * **Pixel-faithful pages**: the PDF and PNG draw the tables and, for a chart, bars of its first measure; colours, heatmaps, scatters and maps are shown as their data. A view is drawn by the snapshot layout (charts included).
-* **Charts or pivot tables inside the Excel workbook**; **a notice in the inbox when a delivery fails for good** (the history and the audit have it); outside addresses with rights of their own (they get the owner's render, which is why the setting is off).
+* **Charts or pivot tables inside the Excel workbook**; **a notice in the inbox when a delivery fails for good** (the history and the audit have it).
 * **A real-mail test**: tests use a local fake SMTP (GreenMail in Java; a small server in the Chromium test), by design.
 
 ### 20.1 Three stages

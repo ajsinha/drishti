@@ -98,7 +98,7 @@ A subscription says **what** (a report, a page or one visual, with the view stat
 | When | the schedule, below |
 | Data for | `today` (the current business date), `previous` (the business day before: the pack calendar's), or `load` (the business date of the load that triggered an `after-load` run) |
 | Send as | `html` (the tables are in the email), `pdf` or `xlsx` (the file is attached; the body says what it holds) |
-| To | user names and `role:NAME` (everyone with the role, today: a role is the group); outside addresses only if an administrator allows them |
+| To | user names and `role:NAME` (everyone with the role, today: a role is the group). **Never an email address**: the form refuses it (`DRS-9061`) |
 | View state | taken from the report or view you pressed Subscribe on: slicers, selections, drill path, carried values; a view's controls and filters |
 
 ### Schedules
@@ -229,8 +229,9 @@ Ask the owner of the subscription, o
 
 * **A recipient who cannot open the target** (the role lost the report, the kind) is **skipped**, with the reason in the history; they are not mailed a refusal.
 * **A recipient with no email address**, or a disabled user, is skipped.
-* **Outside addresses** (`drishti.distribution.subscriptions.external-recipients`, off) have no rights of their own: they receive the render **as the subscription's owner**. That is why the setting is off,
-  why only the owner can add them, and why `external-domains` can limit them to your partners' domains.
+* **Outside addresses are refused.** A person who is not a user has no rights, so no render can be made for them without handing over the owner's view; creating or changing a subscription with an address
+  fails with `DRS-9061` and says to name a user or `role:NAME`. (There was an administrator setting for this; it is gone.) A subscription saved earlier with an address **keeps it, but the address is skipped at
+  every send** with the reason (`outside address: subscriptions go to users only`) in the history; edit the subscription to remove it.
 * **Who may subscribe whom.** Anyone may subscribe **themselves**. Subscribing other people or a role needs a BI author (power `bi-author`) or an administrator (`DRS-9061` otherwise). The subscriber
   must be able to open the target themselves.
 

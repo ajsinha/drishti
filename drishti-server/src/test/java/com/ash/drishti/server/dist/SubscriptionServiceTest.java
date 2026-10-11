@@ -78,6 +78,7 @@ class SubscriptionServiceTest {
     final List<ContentExporter.Target> targets = new CopyOnWriteArrayList<>();
     final List<String> renderedFor = new CopyOnWriteArrayList<>();
     SubscriptionService service;
+    FilePreferenceStore store;
 
     static Principal who(String user, String... roles) {
         return new Principal(user, List.of(roles));
@@ -91,7 +92,7 @@ class SubscriptionServiceTest {
 
     @BeforeEach
     void setUp(@TempDir Path dir) {
-        service = service(dir, new DistProperties.Subscriptions(true, 3, 10, false, List.of(), Duration.ofSeconds(30), 5, 3, 5, Duration.ofSeconds(1)));
+        service = service(dir, new DistProperties.Subscriptions(true, 3, 10, Duration.ofSeconds(30), 5, 3, 5, Duration.ofSeconds(1)));
     }
 
     SubscriptionService service(Path dir, DistProperties.Subscriptions props) {
@@ -146,7 +147,8 @@ class SubscriptionServiceTest {
             }
             sent.add(mail);
         };
-        return new SubscriptionService(new FilePreferenceStore(dir, 65_536, 50), renderer, (t, p) -> {
+        store = new FilePreferenceStore(dir, 65_536, 50);
+        return new SubscriptionService(store, renderer, (t, p) -> {
             if (p.roles().contains("nobody")) {
                 throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no report");
             }
@@ -310,7 +312,7 @@ class SubscriptionServiceTest {
                 .hasMessageContaining("only a BI author or an administrator may subscribe other people");
         assertThatThrownBy(() -> service.save("bob", "x", body("{" + TARGET + ",\"schedule\":\"daily 07:00\",\"format\":\"html\",\"recipients\":[\"role:risk\"]}")))
                 .hasMessageContaining("may subscribe a role");
-        assertThatThrownBy(() -> save("x", "\"recipients\":[\"nobody@elsewhere.com\"]")).hasMessageContaining("outside addresses are not allowed");
+        assertThatThrownBy(() -> save("x", "\"recipients\":[\"nobody@elsewhere.com\"]")).hasMessageContaining("is an email address, not a user");
         assertThatThrownBy(() -> save("x", "\"recipients\":[\"nosuchuser\"]")).hasMessageContaining("no user 'nosuchuser'");
         assertThatThrownBy(() -> save("x", "\"recipients\":[]")).hasMessageContaining("at least one recipient");
         assertThatThrownBy(() -> service.save("alice", "x", body("{" + TARGET + ",\"schedule\":\"daily 07:00\",\"format\":\"docx\",\"recipients\":[\"alice\"]}")))
@@ -333,15 +335,19 @@ class SubscriptionServiceTest {
     }
 
     @Test
-    void outsideAddressesNeedTheSettingAndTheDomainList(@TempDir Path dir) {
-        SubscriptionService open = service(dir.resolve("open"), new DistProperties.Subscriptions(true, 5, 10, true, List.of("partner.com"), Duration.ofSeconds(30), 5, 3, 5, Duration.ofSeconds(1)));
+    void outsideAddressesAreRefusedAndOldOnesAreSkippedAtSend() {
         String base = "{" + TARGET + ",\"schedule\":\"daily 07:00\",\"format\":\"html\",\"recipients\":[";
-        assertThatThrownBy(() -> open.save("alice", "x", body(base + "\"x@gmail.com\"]}"))).hasMessageContaining("outside the allowed domains");
-        assertThatThrownBy(() -> open.save("alice", "x", body(base + "\"not an address@partner.com\"]}"))).hasMessageContaining("not an email address");
-        open.save("alice", "ext", body(base + "\"cfo@partner.com\"]}"));
-        open.run("alice", "ext", "by hand");
-        assertThat(sent).extracting(RenderedMail::to).containsExactly("cfo@partner.com");
-        assertThat(renderedFor).containsExactly("alice:HTML");                                // an outside address is given the owner's render
+        assertThatThrownBy(() -> service.save("alice", "x", body(base + "\"cfo@partner.com\"]}"))).hasMessageContaining("is an email address, not a user");
+        assertThatThrownBy(() -> service.save("alice", "x", body(base + "\"alice\",\"cfo@partner.com\"]}"))).hasMessageContaining("users and roles only");
+        // a subscription saved before the rule keeps its address; the address is skipped at send, with the reason
+        save("old", "\"recipients\":[\"alice\"]");
+        com.fasterxml.jackson.databind.node.ObjectNode stored = service.get("alice", "old").orElseThrow().deepCopy();
+        ((com.fasterxml.jackson.databind.node.ArrayNode) stored.path("recipients")).add("cfo@partner.com");
+        store.put("alice", SubscriptionService.NS, "old", stored);
+        var run = service.run("alice", "old", "by hand");
+        assertThat(sent).extracting(RenderedMail::to).containsExactly("alice@example.org");
+        assertThat(run.path("skipped").asInt()).isEqualTo(1);
+        assertThat(run.toString()).contains("outside address").contains("cfo@partner.com");
     }
 
     @Test

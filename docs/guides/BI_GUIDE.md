@@ -537,7 +537,7 @@ that pushes has gone silent for 30 s: a source that changes rarely is quiet, not
 
 A report page, one visual, or a Sutra view leaves Drishti as **PDF, PNG, Excel or CSV** (the *Export* bar under the page tabs) and by **email on a schedule** (*Subscribe*). Both are made for the person who
 gets them: the engine is asked as that person, so their row rules and masks apply. A subscription takes a schedule (`business-days 07:30`, `weekly mon 07:30 business`, `monthly last 18:00 business`,
-`after-load`), a form (the tables in the email, a PDF or an Excel file) and recipients (users and `role:NAME`; outside addresses only if an administrator allows). *Run now*, *Pause*, a history with each
+`after-load`), a form (the tables in the email, a PDF or an Excel file) and recipients (users and `role:NAME`; never an outside address). *Run now*, *Pause*, a history with each
 delivery's status, retries with the shared retry policy, an audit trail. The list is on **Reports** in the top bar, merged with the scheduled reports. Reference: [DISTRIBUTION.md](DISTRIBUTION.md); walk-through:
 [BI_TUTORIAL.md](BI_TUTORIAL.md#20-export-and-subscribe); settings `drishti.distribution.*`; codes `DRS-9060` and `DRS-9061`. Not built: alerts to the bell and chat bridges, embedding, a hand-made phone layout, narrative summaries
 (phase 7, part 2).

@@ -16,7 +16,6 @@
 package com.ash.drishti.server.dist;
 
 import java.time.Duration;
-import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -30,7 +29,7 @@ public record DistProperties(Export export, Subscriptions subscriptions) {
 
     public DistProperties {
         export = export == null ? new Export(null, null, null, null, null, null, null, null, null) : export;
-        subscriptions = subscriptions == null ? new Subscriptions(null, null, null, null, null, null, null, null, null, null) : subscriptions;
+        subscriptions = subscriptions == null ? new Subscriptions(null, null, null, null, null, null, null, null) : subscriptions;
     }
 
     /**
@@ -64,23 +63,18 @@ public record DistProperties(Export export, Subscriptions subscriptions) {
      * @param enabled false stops the scheduler and refuses new subscriptions (existing ones are kept)
      * @param perUser most subscriptions a person may own
      * @param maxRecipients most recipients (after groups are expanded) one run delivers to
-     * @param externalRecipients true lets a subscription name addresses that are not users; they get the report as its owner would see it, masks of the owner
-     * @param externalDomains with external recipients on: only these mail domains (empty: any)
      * @param tick how often the scheduler looks for due subscriptions
      * @param keepRuns runs remembered per subscription (history)
      * @param maxAttempts a failed delivery is tried this many times in all, with the shared retry policy ({@code drishti.retry.distribution.*}) between tries
      * @param emailRows most rows per table in an inline HTML email
      * @param loadDelay after a data load, wait this long for the BI layers to rebuild before an after-load subscription runs
      */
-    public record Subscriptions(Boolean enabled, Integer perUser, Integer maxRecipients, Boolean externalRecipients, List<String> externalDomains, Duration tick,
-            Integer keepRuns, Integer maxAttempts, Integer emailRows, Duration loadDelay) {
+    public record Subscriptions(Boolean enabled, Integer perUser, Integer maxRecipients, Duration tick, Integer keepRuns, Integer maxAttempts, Integer emailRows, Duration loadDelay) {
 
         public Subscriptions {
             enabled = enabled == null ? Boolean.TRUE : enabled;
             perUser = perUser == null ? 20 : Math.max(1, perUser);
             maxRecipients = maxRecipients == null ? 200 : Math.max(1, maxRecipients);
-            externalRecipients = externalRecipients == null ? Boolean.FALSE : externalRecipients;
-            externalDomains = externalDomains == null ? List.of() : List.copyOf(externalDomains);
             tick = tick == null ? Duration.ofSeconds(30) : tick;
             keepRuns = keepRuns == null ? 30 : Math.max(1, keepRuns);
             maxAttempts = maxAttempts == null ? 4 : Math.max(1, maxAttempts);
