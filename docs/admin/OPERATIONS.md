@@ -193,7 +193,7 @@ You should see:
 
 ```
 {"status":"UP","groups":["liveness","readiness"]}
-{"build":{"artifact":"drishti-server","name":"drishti-server","time":"2026-09-30T23:03:19.273Z","version":"1.18.0","group":"com.ash.drishti"}}
+{"build":{"artifact":"drishti-server","name":"drishti-server","time":"2026-10-11T12:53:58.674Z","version":"1.20.0","group":"com.ash.drishti"}}
 {"status":"UP"}
 ```
 
@@ -1339,7 +1339,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 {
     "status": "OK",
     "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
-    "server": { "version": "1.18.0", "uptimeSeconds": 6916, "java": "25.0.4.1", "heapUsedMb": 121,
+    "server": { "version": "1.20.0", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24 },
     "sources": [
         { "name": "credit-store", "version": "1.0", "status": "UP", "health": "UP",
@@ -1421,16 +1421,30 @@ curl -s localhost:18480/actuator/prometheus | grep '^drishti_'
 ```
 
 ```
-drishti_live_frames_total 11660.0
-drishti_live_latency_p99_milliseconds 1.198
+drishti_collab_mail_total{outcome="cancelled"} 0.0
+drishti_collab_mail_total{outcome="dead"} 0.0
+drishti_collab_mail_total{outcome="retry"} 0.0
+drishti_collab_mail_total{outcome="sent"} 0.0
+drishti_collab_outbox{state="dead"} 0.0
+drishti_collab_outbox{state="pending"} 0.0
+drishti_explain_seconds{quantile="0.5"} 0.0
+drishti_explain_seconds{quantile="0.99"} 0.0
+drishti_explain_seconds_count 2
+drishti_explain_seconds_sum 0.048063026
+drishti_explain_seconds_max 0.0
+drishti_explain_template_errors_total 0.0
+drishti_live_frames_total 0.0
+drishti_live_latency_p99_milliseconds 0.0
 drishti_live_streams 0.0
 drishti_live_topics 0.0
 drishti_view_seconds{quantile="0.5"} 0.0
 drishti_view_seconds{quantile="0.99"} 0.0
-drishti_view_seconds_count 112
-drishti_view_seconds_sum 0.313422287
-drishti_view_seconds_max 0.017122086
+drishti_view_seconds_count 0
+drishti_view_seconds_sum 0.0
+drishti_view_seconds_max 0.0
 ```
+
+`drishti_explain_seconds` is the time to build an About answer, `drishti_collab_mail_total{outcome}` counts collaboration emails (`sent`, `retry`, `dead`, `cancelled`) and `drishti_collab_outbox{state}` the outbox rows waiting (`pending`) or given up (`dead`); see [section 9a-2](#9a-2-collaboration-email-and-the-outbox).
 
 With embedding on, each registered host application has `drishti_embed_tokens_total`, `drishti_embed_calls_total`, `drishti_embed_refusals_total{code="DRS-8002"}` and the gauge `drishti_embed_streams`, all labelled `app` (the same numbers as Admin → Embedding; refusals that name no registered application are `app="(unknown)"`).
 

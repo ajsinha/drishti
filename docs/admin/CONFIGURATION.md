@@ -1842,6 +1842,8 @@ DRISHTI_PACKS=finance,trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRA
 `market-store`, `trading-store`, `risk-store`, `credit-store`, `collateral-store`) to read a database instead of
 the lake. The packs still decide kinds, routes and modes.
 
+**Deprecated since 1.19.** The profiles still work and the server logs a warning that names the equivalent connector file; the way forward is one YAML file per connector in `config/connectors/` ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), with an example for every store in `config/connectors.examples/`.
+
 | Profile | Variables | Defaults |
 |---|---|---|
 | `postgres` | `DRISHTI_PG_URL`, `DRISHTI_PG_USER`, `DRISHTI_PG_PASSWORD` | `jdbc:postgresql://localhost:5432/drishti`, `drishti`, `drishti` (tables `<domain>.entities`) |
@@ -1867,7 +1869,7 @@ SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti
 | `server.shutdown` | `graceful` | Finish requests in flight on stop. |
 | `server.compression` | on for JSON and `text/event-stream` | |
 | `spring.threads.virtual.enabled` | `true` | Every request runs on a virtual thread. Leave it on. |
-| `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres`, `aerospike` or `duckdb`, above. |
+| `spring.profiles.active` | none (`SPRING_PROFILES_ACTIVE`) | `postgres`, `aerospike`, `duckdb`, `files`, `iceberg`, `mongodb` or `redis` ([above](#profiles-another-store-instead-of-delta-lake); deprecated, connector files replace them). |
 | `spring.config.additional-location` | none (`SPRING_CONFIG_ADDITIONAL_LOCATION`) | Another config file or folder read **in addition to** the bundled one, e.g. `file:/etc/drishti/site.yaml`. See [QUICKSTART](../guides/QUICKSTART.md#supplying-a-different-application-config). |
 | `spring.config.location` | none | Config files read **instead of** the defaults: the bundled `application.yaml` is then not read unless you list `classpath:/application.yaml` first. |
 | `spring.config.import` | the local file and the packs overlay (bundled) | `optional:file:./application.local.yaml` and `optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}`. |
