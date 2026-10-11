@@ -1704,6 +1704,8 @@ Negative numbers use the true minus sign `−` (U+2212). Rounding is half-up. A 
 | `temp1` | 1 decimal, ` °C` | `4.25` → `4.3 °C` | logistics |
 | `hours0` | 0 decimals, `+` on positives, ` h` | `14` → `+14 h` | logistics |
 | `knots1` | 1 decimal, ` kn` | `18.4` → `18.4 kn` | logistics |
+| `pc1` | 1 decimal, `%` (the value is already a percentage, no scaling) | `3.84` → `3.8%` | economics, politics-society |
+| `pc2` | 2 decimals, `%` | `3.841` → `3.84%` | economics, politics-society; **market-watch** defines its own `pc2` with a `+` on positives and a space (`+1.25 %`), the later pack winning where both are enabled |
 
 ### Defining formats
 
