@@ -78,9 +78,9 @@ public final class EmbedAppStore {
             return false;
         }
 
-        /** Whether the application may show the kind: no kind list means every kind its users' roles open. */
+        /** Whether the application may show the kind: no kind list means every kind its users' roles open. A report is the kind {@code report:<id>}, and {@code report:*} allows every report. */
         public boolean allowsKind(String kind) {
-            return kinds.isEmpty() || kinds.contains(kind);
+            return kinds.isEmpty() || kinds.contains(kind) || kind.startsWith("report:") && kinds.contains("report:*");
         }
     }
 
@@ -391,7 +391,7 @@ public final class EmbedAppStore {
         if (d.scopes() != null || creating) {
             List<String> scopes = d.scopes() == null ? List.of() : d.scopes().stream().map(String::trim).filter(s -> !s.isEmpty()).distinct().toList();
             if (scopes.isEmpty()) {
-                throw bad("choose at least one scope (embed:view, embed:about)");
+                throw bad("choose at least one scope (embed:view, embed:about, embed:report)");
             }
             e.scopes = String.join(",", scopes);
         }

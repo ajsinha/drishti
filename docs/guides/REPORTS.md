@@ -38,6 +38,8 @@ Three sample reports ship in `config/bi/reports/`, each marked `sample: true` an
 11. [Settings](#11-settings)
 12. [Built and not built](#12-built-and-not-built)
 13. [Live visuals and Perspective (phase 5)](#13-live-visuals-and-perspective-phase-5)
+14. [Phone layouts](#14-phone-layouts)
+15. [A report in another web application](#15-a-report-in-another-web-application)
 
 ## 1. Where a report lives
 
@@ -74,6 +76,9 @@ pages:
         format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
 bookmarks:
   - { name: FX desk only, page: overview, filters: [{ field: trade.desk, op: in, values: [DESK-FX] }] }
+layouts:                       # optional: how a page is arranged on a phone (section 14)
+  phone:
+    overview: { order: [mtm], span: { mtm: 2 } }
 ```
 
 | Key | Meaning |
@@ -86,6 +91,7 @@ bookmarks:
 | `theme` | `palette`: `default` (the console's colours, following light, dark and high contrast), `colour-blind` (Okabe-Ito) or `mono`; optional `background` (a `#rrggbb`, used by the contrast check) |
 | `dates` | `from` and `to` (`yyyy-mm-dd`, inclusive) for every query; a person can pick a business date in the viewer's toolbar instead |
 | `filters`, `bookmarks`, `pages` | sections 4, 8 and below |
+| `layouts` | `phone: { <page id>: { order, hide, span } }`: how a page is arranged at 640 px and narrower. Without it a phone stacks the grid in reading order (section 14) |
 
 A **page** has `id` (letters, digits, hyphen, underscore, up to 40; made from the title when missing), `title`, `filters`, `visuals`, and optionally `drillthrough: { fields: [table.column] }`, which makes it a
 **drill-through target** (section 8): it is left out of the page tabs and opened from a visual. At most 30 pages, 60 visuals a page.
@@ -268,7 +274,7 @@ Built in phase 5 (section 13): visuals over live tables redraw in place with a l
 
 Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `map`, `bubble`, `funnel`, `histogram`, `box`, `python`, `entity-view` and `shape` visuals; the relative-date slicer; true totals for
 measures that do not add up; a time-intelligence or window measure (the dataset refuses them); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
-written in the YAML); different layouts per device (a phone stacks the grid); a *Check* that runs expected values on sample data; embedding (phase 7, later; export, subscriptions and alerts are built: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
+written in the YAML); a phone layout is the only per-device layout (no tablet or large-screen variant); a *Check* that runs expected values on sample data; embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
 report-level security beyond the catalogue and the dataset's rules.
 
 ## 13. Live visuals and Perspective (phase 5)
@@ -350,3 +356,39 @@ rows:    ["BBG-60000001","DESK-FI","BOOK-FI-3","GOVT_BOND","CHF","Short","••
 * **If Perspective cannot start** in a tab (WebAssembly blocked or failing), the visual shows the first 500 rows in Drishti's own table with a line that says so, and keeps following the live table the same way.
 * **Checks.** All the fields of a `perspective-*` visual must be columns **of one table** and not date parts; `format.aggregates` may name only columns of `values` and one of `sum avg count "distinct count" min max first last median dominant unique`; a pivot's `values` must hold a column (`DRS-9031`, `DRS-9032`). Without `title` or `alt` Check warns (`A11Y`).
 * **Not built:** Perspective charts (d3fc) and the settings panel; the viewer is configured by the YAML only. Rows are limited by `drishti.bi.report.perspective-rows` (20,000).
+
+## 14. Phone layouts
+
+*Built in phase 7 ([RUPAKA.md section 20.6, part 3](../architecture/RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)).* A phone shows one column. Without anything declared it is the grid in **reading order** (top to bottom, then left to right), each visual at a height its type has by default,
+which is a good first answer. When the order is wrong for a small screen (the headline numbers first, the table last), a report may say how each page is arranged at **640 px and narrower**:
+
+```yaml
+layouts:
+  phone:
+    desk:                                   # a page id
+      order: [mtm, trades, by-desk, movers] # these first, in this order; every other visual follows in reading order
+      hide: [rolling, losses, latest]       # not drawn on a phone, and not queried
+      span: { by-desk: 5 }                  # height in grid rows (1 to 40; one row is 56 px, with 10 px between); the width is the whole screen
+```
+
+| Key | Meaning |
+|---|---|
+| `layouts.phone.<page id>` | the arrangement of that page; a page with no entry keeps the automatic one-column layout |
+| `order` | visual ids, first on the screen first. A visual not listed follows the listed ones in reading order |
+| `hide` | visual ids left out on a phone. Hidden visuals are **not asked for**, so a hidden table costs the phone nothing. A visual may not be both in `order` and in `hide` |
+| `span` | visual id to a height in grid rows. Left out: the type's default height (cards 7.5 rem, charts 18 rem, tables 20 rem) |
+
+Mistakes are `DRS-9031` with the path (`layouts.phone.desk.order: page 'desk' has no visual 'nope'`), or `DRS-9030` for a height that is not 1 to 40. The same words are in `GET /api/v1/bi/reports/{id}` (the model's `layouts`) and the YAML the designer writes back.
+
+**Where it applies.** The console's viewer uses it when the **screen** is 640 px wide or narrower (and swaps back to the grid when the window grows, with no reload); `<drishti-report>` uses it when the **element** is that narrow, whatever the host page's width, so a report in a narrow card of a desktop page gets it too
+(section 15). Between 641 and 760 px the automatic single column applies. The designer's **Phone tab** edits it: for the page being edited it lists the visuals in phone order (drag a row or use its arrows to reorder, *Hide*, *Rows* for the height) beside a 390 px preview drawn to scale; each change is a step of
+the undo history, *Back to automatic* removes the page's entry, and a visual or page deleted later is dropped from the layouts by the designer. The sample *Live trading desk* ships with one (`config/bi/reports/live-trading-desk.report.yaml`); the picture of the tab and of the result is in the tutorial
+([BI_TUTORIAL.md chapter 22](BI_TUTORIAL.md#22-a-report-on-a-phone-and-in-another-application)).
+
+![The designer's Phone tab](img/bi-elements/designer-phone-tab.png)
+
+## 15. A report in another web application
+
+`<drishti-report report="file:report:live-trading-desk">` shows a **published** report, one page (`page="grid"`) or one visual (`visual="by-desk"`) in another application's page, signed in as that application's user, masked, with its slicers, cross-filter and live redraws. The attributes, events and the allow-list
+(Admin → Embedding: `report:<id>` or `report:*` in the host application's `kinds`) are in [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application) and the developer guide ([ELEMENTS.md](ELEMENTS.md#drishti-report)); what the element does not do (drill down and through, alerts, Export,
+Perspective) is listed there.

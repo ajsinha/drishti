@@ -27,9 +27,10 @@ import time
 from pathlib import Path
 
 from fastapi import APIRouter, Query, Request
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
 
 from core.backend import BackendError
+from core import element_dist as dist
 from core import element_sheet as es
 from core.channel import ChannelSession
 from core.element_sheet import shadow_css  # noqa: F401 - kept importable from here
@@ -43,6 +44,8 @@ from routes import api_routes
 router = APIRouter(prefix="/embed/v1", include_in_schema=False)
 WEB = Path(__file__).resolve().parent.parent / "web"
 API = "1.0"
+API_BASE = "/embed/v1"
+LIVE_KEYS = ("view:", "bilive:")           # what the embed channel carries: a view's frames, a report's live ticks
 _cache: dict = {}
 
 
@@ -55,6 +58,8 @@ async def cors(request: Request, response: Response) -> Response:
         response.headers["Vary"] = vary if "Origin" in vary else (vary + ", Origin" if vary else "Origin")
         response.headers["Access-Control-Expose-Headers"] = "Drishti-Embed-Api"
     response.headers["Drishti-Embed-Api"] = API
+    for name, value in dist.lifecycle(request.app.state.embed.settings).get("headers", {}).items():       # embed.lifecycle: a major that is deprecated or has a sunset day
+        response.headers[name] = value
     return response
 
 
@@ -68,6 +73,9 @@ async def refuse(request: Request, status: int, code: str, detail: str, retry_af
 async def identity(request: Request):
     """The embed caller as an Identity that calls the server with its embed token, and the token's claims. Raises EmbedError.
     The server verifies the token (signature, audience, expiry, host application, user, origin, scopes, rates) on every call."""
+    life = dist.lifecycle(request.app.state.embed.settings)
+    if life["retired"]:
+        raise EmbedError(410, "DRS-8006", f"the embed API v1 was retired on {life['sunset']}" + (f": {life['link']}" if life["link"] else ""))
     auth = request.headers.get("authorization", "")
     me, claims = await request.app.state.embed.identity(request, auth[7:].strip() if auth.lower().startswith("bearer ") else "",
                                                         request.headers.get("origin"))
@@ -144,6 +152,13 @@ async def element_css(request: Request):
     return await send(request, body, "text/css", etag)
 
 
+@router.get("/drishti-report.css")
+async def report_css(request: Request):
+    """The sheet of ``<drishti-report>`` (the BI sheets, generated like the view sheet), adopted after ``drishti-view.css``."""
+    body, etag = asset("rcss", lambda: (es.OUT_DIR / es.REPORT_FILE).read_bytes())
+    return await send(request, body, "text/css", etag)
+
+
 @router.get("/elements/{version}/drishti-view.css")
 async def versioned_css(request: Request, version: str):
     """The same sheet under its content hash: the URL names the bytes, so it is cacheable for ever (build step 8)."""
@@ -151,6 +166,30 @@ async def versioned_css(request: Request, version: str):
     if version != manifest["version"]:
         return await refuse(request, 404, "DRS-5001", f"no such element sheet: {version} (the current one is {manifest['version']})")
     response = await element_css(request)
+    if response.status_code == 200:
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    return response
+
+
+@router.get("/elements/{version}/{rest:path}")
+async def versioned(request: Request, version: str, rest: str):
+    """The library at an exact semantic version, immutable (``/elements/1.1.0/drishti-elements.js``, ``.../m/<name>.js``, ``.../integrity.json``); a partial
+    version (``1``, ``1.1``) answers ``302`` to the exact one for a host that accepts updates (SRI needs the exact version). ELEMENTS.md section 13."""
+    exact = dist.resolve(version)
+    if exact is None:
+        if dist.SEMVER.fullmatch(version):
+            return await refuse(request, 410, "DRS-8006", f"this console serves Drishti Elements {dist.VERSION}, not {version}: pin {dist.VERSION}, or use the alias {dist.VERSION.split('.')[0]}")
+        return await refuse(request, 404, "DRS-9404", f"no such element version: {version}")
+    if version != exact:
+        return await cors(request, RedirectResponse(f"{API_BASE}/elements/{exact}/{rest}", status_code=302, headers={"Cache-Control": "public, max-age=60"}))
+    if rest == "integrity.json":
+        body, media, etag = dist.lock_text().encode("utf-8"), "application/json", f'"{dist.VERSION}-integrity"'
+    else:
+        path = dist.files().get(rest)
+        if path is None:
+            return await refuse(request, 404, "DRS-9404", f"no such file in Drishti Elements {exact}: {rest}")
+        body, media, etag = path.read_bytes(), "text/javascript", '"' + dist.sri(path.read_bytes()) + '"'
+    response = await send(request, body, media, etag)
     if response.status_code == 200:
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     return response
@@ -175,7 +214,8 @@ async def echarts_js(request: Request):
 
 # The console's own enhancer scripts, root-scoped (static/js; ELEMENTS.md section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
-ENHANCERS = ("view", "charts", "colfilter", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "multiselect", "controls")
+ENHANCERS = ("view", "charts", "colfilter", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "multiselect", "controls",
+             "bi-lib", "bi-visuals", "bi-grids", "bi-frame", "bi-live", "bi-phone")
 
 
 @router.get("/js/{name}.js")
@@ -305,7 +345,7 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
     limit = min(api_routes.max_subscriptions(request), room)
-    asked = list(dict.fromkeys(x for x in s if x.startswith("view:")))[:limit * 2]
+    asked = list(dict.fromkeys(x for x in s if x.startswith(LIVE_KEYS)))[:limit * 2]
     session = ChannelSession(request.app.state.backend, me, lambda event, data: api_routes._view_event(request, event, data, embed=True),
                              limit=limit, app=claims["azp"], registry=api_routes.CHANNELS)
     guard = StreamGuard(session, claims, grace=float(hosts.settings.get("token_grace_seconds", 30)),
@@ -349,7 +389,7 @@ async def channel_change(request: Request, cid: str):
     for sub in (body.get("remove") or [])[:limit]:
         ch["remove"](str(sub))
     session.limit = min(limit, len(session.tasks) + hosts.limits.room(hosts.guards))        # embed.max_streams, across all channels
-    for sub in [x for x in (body.get("add") or []) if str(x).startswith("view:")][:limit * 2]:
+    for sub in [x for x in (body.get("add") or []) if str(x).startswith(LIVE_KEYS)][:limit * 2]:
         ch["add"](str(sub))
     return await cors(request, JSONResponse({"ok": True}, headers={"Cache-Control": "no-store"}))
 

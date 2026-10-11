@@ -188,4 +188,43 @@ class ReportParserTest {
         assertThat(w).extracting(Problem::message).anyMatch(m -> m.contains("no title and no alt text")).anyMatch(m -> m.contains("overlaps 'b'")).anyMatch(m -> m.contains("contrast ratio"));
         assertThat(ReportValidator.accessibility(ReportParser.parse(report("trades-overview")).report())).as("the sample is accessible").isEmpty();
     }
+
+    static final String PHONE = MINI.replace("pages:", """
+            layouts:
+              phone:
+                p:
+                  order: [v]
+                  hide: [w]
+                  span: { v: 5 }
+            pages:""").replace("      - { id: v,",
+            "      - { id: w, type: card, at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }\n      - { id: v,");
+
+    @Test
+    void aPhoneLayoutParsesChecksItsReferencesAndSurvivesTheYamlWriter() throws IOException {
+        ReportParser.Result r = ReportParser.parse(PHONE);
+        assertThat(r.problems().stream().filter(Problem::error).toList()).isEmpty();
+        Report.PhonePage p = r.report().layouts().get("phone").get("p");
+        assertThat(p.order()).containsExactly("v");
+        assertThat(p.hide()).containsExactly("w");
+        assertThat(p.span()).containsEntry("v", 5);
+        assertThat(ReportValidator.validate(r.report(), dataset("trades-basic")).stream().filter(Problem::error).toList()).isEmpty();
+        // written and read back it is the same model
+        String back = ReportYaml.write(r.report().toMap());
+        assertThat(back).contains("layouts:").contains("  phone:");
+        assertThat(ReportParser.parse(back).report().toMap()).isEqualTo(r.report().toMap());
+    }
+
+    @Test
+    void aPhoneLayoutNamingAMissingPageVisualOrABadSpanIsRefused() throws IOException {
+        String bad = PHONE.replace("order: [v]", "order: [v, v, nope]").replace("hide: [w]", "hide: [v]").replace("span: { v: 5 }", "span: { v: 99, zz: 2 }")
+                .replace("  phone:\n    p:", "  phone:\n    ghost: { order: [v] }\n    p:");
+        List<Problem> errs = errors(bad, "trades-basic");
+        assertThat(errs).extracting(Problem::path).contains("layouts.phone.ghost", "layouts.phone.p.order", "layouts.phone.p.hide", "layouts.phone.p.span.v", "layouts.phone.p.span.zz");
+    }
+
+    @Test
+    void aReportWithoutLayoutsHasNone() {
+        assertThat(ReportParser.parse(MINI).report().layouts()).isEmpty();
+        assertThat(ReportParser.parse(MINI).report().toMap()).doesNotContainKey("layouts");
+    }
 }

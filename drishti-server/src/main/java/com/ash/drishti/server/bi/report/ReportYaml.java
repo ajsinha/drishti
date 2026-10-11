@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
  */
 public final class ReportYaml {
 
-    private static final List<String> TOP = List.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "pages");
+    private static final List<String> TOP = List.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "pages");
     private static final List<String> PAGE = List.of("id", "title", "drillthrough", "filters", "visuals");
     private static final List<String> VISUAL = List.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
             "interacts", "action");
@@ -66,6 +66,12 @@ public final class ReportYaml {
                 for (Object x : l) {
                     item(indent + 2, (Map<String, Object>) x, VISUAL, 2);
                 }
+            } else if (v instanceof Map<?, ?> lm && "layouts".equals(e.getKey()) && depth == 0) {
+                line(indent, key + ":");
+                lm.forEach((device, byPage) -> {
+                    line(indent + 2, key(String.valueOf(device)) + ":");
+                    ((Map<?, ?>) byPage).forEach((page, lay) -> line(indent + 4, key(String.valueOf(page)) + ": " + flow(lay)));
+                });
             } else if (v instanceof List<?> l && !l.isEmpty() && l.get(0) instanceof Map) {
                 line(indent, key + ":");
                 for (Object x : l) {

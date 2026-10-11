@@ -260,7 +260,7 @@
   }
 
   /** What the cursor is in, for the suggestions strip: type names after `type:`, fields and measures inside wells, keys elsewhere. */
-  const KEYS = ['report', 'title', 'description', 'dataset', 'theme', 'dates', 'filters', 'bookmarks', 'pages', 'id', 'at', 'wells', 'sort', 'limit', 'hierarchy', 'drillthrough', 'format', 'text', 'alt', 'interacts', 'action', 'visuals'];
+  const KEYS = ['report', 'title', 'description', 'dataset', 'theme', 'dates', 'filters', 'bookmarks', 'layouts', 'pages', 'id', 'at', 'wells', 'sort', 'limit', 'hierarchy', 'drillthrough', 'format', 'text', 'alt', 'interacts', 'action', 'visuals'];
   function suggest() {
     const strip = B.clear(q('[data-suggest]'));
     if (!editor || !D.idx) { return; }
@@ -287,11 +287,11 @@
   }
 
   function showTab(name) {
-    ['canvas', 'yaml'].forEach((t) => {
+    ['canvas', 'phone', 'yaml'].forEach((t) => {
       q('[data-view="' + t + '"]').hidden = t !== name;
       q('[data-tab="' + t + '"]').setAttribute('aria-selected', t === name ? 'true' : 'false');
     });
-    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } else { ta.focus(); } suggest(); }); } else { D.emit('model', 'show'); }
+    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } else { ta.focus(); } suggest(); }); } else if (name === 'phone') { D.emit('phone', 'show'); } else { D.emit('model', 'show'); }
   }
 
   // ---- Check, Save ---------------------------------------------------------------------------------------------------
@@ -335,6 +335,7 @@
     q('[data-save]').addEventListener('click', save);
     q('[data-save-copy]').addEventListener('click', saveCopy);
     q('[data-tab="canvas"]').addEventListener('click', () => showTab('canvas'));
+    q('[data-tab="phone"]').addEventListener('click', () => showTab('phone'));
     q('[data-tab="yaml"]').addEventListener('click', () => showTab('yaml'));
     q('[data-preview]').addEventListener('change', (e) => { D.preview = e.target.checked; D.emit('preview', D.preview); });
     D.preview = true;

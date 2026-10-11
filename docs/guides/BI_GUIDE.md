@@ -72,7 +72,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 
 **Not built yet** (each is marked where it would matter, and listed in section 11)
 
-* Python in BI, and Python measures (phase 6); embedding (phase 7, later); exploring a dataset freely and the analyst workbench (phase 9, the rail's *Explore*);
+* Python in BI, and Python measures (phase 6); exploring a dataset freely and the analyst workbench (phase 9, the rail's *Explore*);
 * running a `notebook` body (it is stored as text); a designer for boards (edit the YAML); a Perspective chart;
 * time intelligence and window functions in measures; a cron refresh of a layer (a data-load signal or the refresh call does it); a history of a live table (it holds current state);
 * BI content inside a pack archive (a bundle is its own file); threaded comments on a line of a diff; approval chains of several reviewers;
@@ -334,7 +334,7 @@ real data and query time while designing, Check, undo and redo, save and save a 
 
 **Phase 5, streaming BI.** `mode: live` tables kept in memory and updated by key from the same live machinery as the terminal (with retention and per-reader rows and masks on every update); a live stream per report and visuals that redraw in place (coalesced, with a live indicator, pause and resume, stale and disconnected states); the rolling chart (`live-chart`); the Perspective grid and pivot over masked Arrow with streaming rows, under the narrowest policy; boards with pages, tile alerts, kiosk and rotation; the two live datasets, two live reports and the board shipped as samples; `drishti.bi.live.*`; `DRS-9050` to `9053`. References: [DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5), [REPORTS.md section 13](REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](BOARDS.md).
 
-**Not built (and not faked).** Everything of phases 6 to 9: Python in BI (phase 6); embedding (phase 7, later); the analyst workbench and Explore (phase 9); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2). The rail's *Explore* is a placeholder that says so.
+**Not built (and not faked).** Everything of phases 6 to 9: Python in BI (phase 6); the analyst workbench and Explore (phase 9); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2). The rail's *Explore* is a placeholder that says so.
 
 ## 12. Problems
 
@@ -427,7 +427,8 @@ and the layer that answered (`columns`, `rollup`, `direct`, `live`); *masked* is
 
 * **Keys.** `Tab` walks the visuals in reading order (top to bottom, left to right); in a chart `Left` and `Right` move between marks and `Enter` selects; `Esc` clears; `t`, `r`, `d`, `u` (table, rows, drill down, up) act
   on the focused visual; `?` lists them.
-* **A phone** (390 px) shows one column in reading order, 44 px buttons and no sideways scroll:
+* **A phone** (390 px) shows one column in reading order, 44 px buttons and no sideways scroll; a report that declares `layouts.phone` for the page shows **its own arrangement** instead (the visuals in the order the author chose, some hidden, heights set), see section 15
+  and [REPORTS.md section 14](REPORTS.md#14-phone-layouts):
 
   ![A report on a phone](img/bi-reports/viewer-phone-390.png)
 
@@ -441,6 +442,10 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
 
 ![The designer, with a report of two cards, a bar, a line and a slicer](img/bi-reports/design-two-visuals.png)
 
+* **Phone.** The **Phone** tab beside Canvas and YAML arranges the page being edited for a phone (640 px and narrower): the visuals in phone order (**drag** a row or use its arrows), a **Hide** box and a **Rows** height for each, and a **390 px preview** drawn to scale beside it. *Back to automatic*
+  removes the page's arrangement. It writes `layouts.phone` of the YAML ([REPORTS.md section 14](REPORTS.md#14-phone-layouts); walk-through: [BI_TUTORIAL.md chapter 22](BI_TUTORIAL.md#22-a-report-on-a-phone-and-in-another-application)).
+
+  ![The Phone tab](img/bi-elements/designer-phone-tab.png)
 * **Fields.** The dataset's tables, their columns (a date opens into its parts: year, quarter, month, week, day), its measures and its hierarchies, with a search box. **Drag a field onto the canvas** and the best
   visual for it appears: a measure is a card, a column is a table; **drag another onto that visual** and it improves: a category with a measure becomes a bar, a date with a measure a line, two categories with a
   measure a matrix. Without a mouse, the field's button adds it to the selected visual (or makes a new one). A hierarchy added to a chart makes it drillable.
@@ -545,4 +550,6 @@ delivery's status, retries with the shared retry policy, an audit trail. The lis
 (`above`, `below`, `between`, `outside`), moves too far (a percentage or an amount, against the previous look or the previous business day) or does not arrive by a time. It looks on a schedule, after a data load, or when a live table changes (after a quiet time).
 **Each person is judged on their own number**: the engine applies their row rules and masks; a masked number is never judged or shown. It stays quiet after firing until the number is back inside the limit (the *hysteresis*), and not again within the *cooldown*.
 It tells you in your inbox (the *Alerts* tab, and the bell), by email to your own address and in the chat bridges (a post with no number); there is a history, an audit trail, pause and resume. A board tile whose colour turns red can tell everyone who reads the board the same way (`notify:`, [BOARDS.md](BOARDS.md#notifications-a-tile-tells-people-when-it-turns-red)). The page is **Alerts** (`/alerts`), linked from **Reports** in the top bar;
-the reference is [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [BI_TUTORIAL.md chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number); settings `drishti.alerts.measure.*`; code `DRS-9062`. Not built: embedding, a hand-made phone layout, narrative summaries.
+the reference is [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [BI_TUTORIAL.md chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number); settings `drishti.alerts.measure.*`; code `DRS-9062`. Not built: narrative summaries.
+
+**Embedding.** `<drishti-report>` shows a published report, one page or one visual, in **another web application's** page (a Web Component, no iframe), masked whatever the user's roles, with slicers, cross-filter and live updates; the administrator lists the reports a host application may show (`report:<id>` or `report:*`) in Admin → Embedding. Reference: [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application); developer guide: [ELEMENTS.md](ELEMENTS.md#drishti-report); walk-through: [BI_TUTORIAL.md chapter 22](BI_TUTORIAL.md#22-a-report-on-a-phone-and-in-another-application); scope `embed:report`.

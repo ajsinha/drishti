@@ -13,11 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Distribution: export, subscriptions and alerts
+# Distribution: export, subscriptions, alerts and embedding
 
 Rūpaka phase 7 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-phase-7-part-1-as-built)). Part 1: two things leave Drishti as files and mail: an **export** (a BI report, a page, one
 visual, or a Sutra view, saved as PDF, a picture, an Excel workbook or CSV) and a **subscription** (the same content sent by email on a schedule, or after the day's data lands).
 Part 2 (section 4 here): **alerts** on a number, and notifications from a board tile, to the inbox, email and the chat bridges.
+Part 3 (section 5): a report **embedded** in another web application (`<drishti-report>`), and the report's own phone layout ([REPORTS.md](REPORTS.md#14-phone-layouts)).
 The walk-throughs with pictures are [BI_TUTORIAL.md chapter 20](BI_TUTORIAL.md#20-export-and-subscribe) (export and subscribe) and [chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number) (alerts); this is the reference.
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
@@ -567,10 +568,69 @@ The Alerts page, the form, the history and the inbox keep to the screen at 390 p
 
 ![The Alerts page at 390 px](img/bi-alerts/alerts-phone-390.png)
 
-## 5. What is not built
+## 5. Embedding a report in another web application
+
+*Phase 7, part 3 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)).* Export and subscriptions send a report **out**; embedding **shows it in place**, in another application's own page, live, for that application's user. It is a Drishti Element,
+`<drishti-report>`, in a Shadow DOM, with **no iframe**. The reference of every attribute, property, method and event is the developer guide ([ELEMENTS.md](ELEMENTS.md#drishti-report)); this is what a BI author and an administrator need to know.
+
+**What the host writes.**
+
+```html
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.1.0/drishti-elements.js" crossorigin="anonymous"></script>
+
+<drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
+<drishti-report id="one" report="file:report:live-trading-desk" visual="by-desk" chrome="bare"></drishti-report>
+```
+
+The host's own code gives the element a token provider (its backend exchanges the host's secret and its signed-in user for a short embed token at the Drishti server, [API_GUIDE.md](API_GUIDE.md#embedding-views-in-another-web-application)) and listens to what it says:
+
+```js
+DrishtiElements.configure({ tokenProvider: async () => (await fetch('/api/drishti-token?scope=embed:report')).json() });
+document.addEventListener('drishti:filter-changed', (e) => console.log(e.target.id, e.detail.selections));
+```
+
+This is the host page of the test (`tools/elements-demo`, its own origin, a strict policy: no inline script or style, no frames, only the console named beyond itself), with the *Live trading desk* report in a card. It is the real page, the real server and the demo source ticking:
+
+![A host application's page with the live report in a card](img/bi-elements/host-report.png)
+
+**What is in the element.** Everything the console viewer draws from the model: the page tabs, the slicers, the business date, bookmarks, *click a mark to filter or highlight*, **cross-filtering** between the visuals, *show as a table* and the live bar. A report over a live table follows it
+over the page's one embed connection, and each tick asks the visuals again **as the person looking**. A click on a bar below filters the other visuals, and the host is told, with the filters in force:
+
+![The same card after a click on the DESK-RATES bar](img/bi-elements/host-report-selected.png)
+
+What the host heard (`drishti:filter-changed`, captured from that page):
+
+```json
+{
+  "page": "desk", "slicers": {}, "dates": null,
+  "selections": [ { "visual": "by-desk", "field": "trade.desk", "values": [ "DESK-RATES" ] } ],
+  "carry": [], "mode": "filter", "source": "user"
+}
+```
+
+`visual="by-desk"` shows one visual alone, with no chrome, as a card of the host's own:
+
+![One visual of a report](img/bi-elements/host-one-visual.png)
+
+**Always masked.** An embedded call masks `drishti.security.redact` fields and the dataset's masked columns **whatever the user's roles** (a user with `raw` still sees `•••`, in the host's card; the same user in the console reads the real names). The element tells the host which columns were masked
+(`drishti:masked`, here `{"columns": ["trade.trader"]}`); the *Worst trades* table above shows the mask. Row rules are the user's, per call.
+
+**Which hosts may embed which reports (Admin → Embedding).** Register the host application (exact origins, a secret or a public key) with the scope **`embed:report`**. Its **Kinds and reports it may show** list is the allow-list: `report:file:report:live-trading-desk` allows that one report, `report:*` every report, an
+empty list everything the user's roles open. A host whose list names only entity kinds may show no report, and a report off the list is refused `DRS-8005` (the element shows the code and tells the host with `drishti:error`). Only a **published** report is embedded: a draft is refused. The server checks the list on every call.
+
+**Phone.** `<drishti-report>` uses the report's `layouts.phone` when **the element** is 640 px or narrower, so a report in a narrow card of a wide page, or a full-width one on a phone, gets the arranged page; see [REPORTS.md section 14](REPORTS.md#14-phone-layouts):
+
+![The report in the host's page at 390 px, with the report's phone layout](img/bi-elements/host-phone-390.png)
+
+**Live and tokens.** The report keeps its live stream while the page is visible and gives it back when hidden (and takes it again); a token renews in place on the open channel, so nothing redraws.
+
+**Not in the element.** Drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe (use the console for those), and Perspective grids and pivots, which need WebAssembly under a policy of their own: the element shows the note the designer shows. Two elements of one report do not cross-filter each other.
+The full list is in [RUPAKA.md section 20.6, part 3](../architecture/RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete).
+
+## 6. What is not built
 
 * **Narrative summaries** in a subscription (needs the AI stage).
-* **Embedding** (`<drishti-report>`) and the hand-made **phone layout** of a report: phase 7 part 2, later.
+* **In an embedded report** (section 5): drill, alerts, Export and Subscribe, Perspective, and cross-filtering between two elements. Embedding and the hand-made phone layout are built.
 * **For alerts**: a **webhook** channel of its own (use a chat bridge), **SMS**, **retries** of a failed alert mail, **escalation** (tell someone else if no one reacts), alerts that are **shared** between people (a board's
   audience is the only way an alert reaches more than its owner), a **calendar of quiet hours**, an alert on **several numbers at once** (make one alert each), and **forecast** conditions. An alert on a visual's *number* is a
   threshold on one value: per-row thresholds ("any desk below zero") are a board tile with `crit`, which judges the worst row.

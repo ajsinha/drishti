@@ -43,6 +43,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent / "static"
 USERS = ("viewer", "author")                              # the host's demo users: they must also exist in Drishti (the exchange refuses a stranger)
+SCOPES = ("embed:view", "embed:about", "embed:report")
 REPORTS: list = []
 
 
@@ -109,9 +110,14 @@ class Host(BaseHTTPRequestHandler):
             user = self.user()
             if not user:
                 return self.json(401, {"error": "not signed in"})
-            return self.mint(user)
+            scope = (urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query).get("scope") or ["embed:view embed:about"])[0]
+            wanted = [x for x in scope.split() if x in SCOPES] or ["embed:view", "embed:about"]       # the host asks only for what a page needs
+            return self.mint(user, " ".join(wanted))
         if path == "/api/csp-reports":
             return self.json(200, REPORTS)
+        if path in ("/report", "/report.html"):             # the page of <drishti-report> (a host with a report in a card)
+            html = (HERE / "report.html").read_text(encoding="utf-8").replace("__CONSOLE__", self.console)
+            return self.send(200, html.encode(), "text/html; charset=utf-8")
         if path in ("/", "/index.html"):
             html = (HERE / "index.html").read_text(encoding="utf-8").replace("__CONSOLE__", self.console)
             return self.send(200, html.encode(), "text/html; charset=utf-8", trusted_types="tt=1" in self.path)     # /?tt=1: a host that enforces Trusted Types (names only drishti-elements)
@@ -139,14 +145,14 @@ class Host(BaseHTTPRequestHandler):
             return self.json(200, {"user": ""}, {"Set-Cookie": "demo_user=; Path=/; Max-Age=0"})
         self.json(404, {"error": "not found"})
 
-    def mint(self, user: str):
+    def mint(self, user: str, scope: str = "embed:view embed:about"):
         """The RFC 8693 exchange, server to server: the app's client secret (Basic) and an assertion this host signed about its user."""
         now = int(time.time())
         endpoint = self.drishti + "/api/v1/embed/token"
         assertion = sign_rs256(self.key, {"iss": self.app, "sub": user, "aud": endpoint, "iat": now, "exp": now + 60, "jti": uuid.uuid4().hex})
         form = urllib.parse.urlencode({"grant_type": "urn:ietf:params:oauth:grant-type:token-exchange", "subject_token": assertion,
                                        "subject_token_type": "urn:ietf:params:oauth:token-type:jwt", "audience": self.console,
-                                       "scope": "embed:view embed:about"}).encode()
+                                       "scope": scope}).encode()
         basic = base64.b64encode(f"{self.app}:{self.secret}".encode()).decode()
         req = urllib.request.Request(endpoint, form, {"Content-Type": "application/x-www-form-urlencoded", "Authorization": f"Basic {basic}"})
         try:

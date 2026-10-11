@@ -296,18 +296,26 @@
     });
   }
 
+  /** The page's phone layout when the screen is a phone and the report declares one (RUPAKA.md section 20.6), else null: the automatic single column. */
+  function phoneLayout() {
+    return window.matchMedia && window.matchMedia('(max-width: ' + B.phone.MAX + 'px)').matches ? B.phone.layoutOf(rep.report, pageId) : null;
+  }
+
   function drawGrid() {
     frames.forEach((e) => { e.frame.dispose(); if (e.psp) { e.psp.dispose(); } });
     frames.clear();
     const grid = B.clear(q('[data-grid]'));
     const page = pageOf(pageId);
-    const ordered = page.visuals.slice().sort((a, b) => a.at.y - b.at.y || a.at.x - b.at.x);       // the keyboard reading order is the picture's
-    ordered.forEach((spec) => {
+    const lay = phoneLayout();                                          // on a phone, the report's own arrangement (order, hidden, heights) when it has one
+    const ordered = B.phone.arrange(page, lay);                         // else the keyboard reading order is the picture's
+    grid.setAttribute('data-phone', lay ? 'layout' : 'auto');
+    ordered.forEach(({ spec, rows }) => {
       const frame = buildFrame(spec);
+      if (lay && rows) { frame.el.style.height = B.phone.height(rows) + 'px'; }
       frames.set(spec.id, { frame, spec, token: 0, res: null });
       grid.appendChild(frame.el);
     });
-    ordered.forEach((spec) => load(spec));
+    ordered.forEach(({ spec }) => load(spec));
     q('[data-page-title]').textContent = page.title;
     document.title = rep.title + ' · ' + page.title + ' · BI';
     syncChips();
@@ -374,6 +382,9 @@
     q('[data-bookmarks-wrap]').hidden = !(rep.report.bookmarks || []).length;
     bm.addEventListener('change', () => { if (bm.value) { applyBookmark(bm.value); bm.value = ''; } });
     window.addEventListener('popstate', () => { const m = window.location.pathname.split('/bi/r/' + B.id2path(reportId))[1]; const p = m ? decodeURIComponent(m.replace(/^\//, '')) : rep.report.pages[0].id; if (pageOf(p)) { go(p, readCarry(), false); } });
+    if (window.matchMedia) {                                              // crossing the phone width swaps between the report's phone layout and the grid
+      window.matchMedia('(max-width: ' + B.phone.MAX + 'px)').addEventListener('change', () => { if (B.phone.layoutOf(rep.report, pageId)) { drawGrid(); } });
+    }
     if (window.ResizeObserver) { new ResizeObserver(() => frames.forEach((e) => e.frame.resize())).observe(q('[data-grid]')); }
     q('[data-design]').href = '/bi/design/' + B.id2path(reportId);
   }

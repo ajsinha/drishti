@@ -46,6 +46,8 @@ public record EmbedProperties(Boolean enabled, String issuer, List<String> audie
     public static final String VIEW = "embed:view";
     /** The scope that opens the About body. */
     public static final String ABOUT = "embed:about";
+    /** The scope that opens a published BI report: its definition, its visuals' queries and its live stream (the app's {@code kinds} then name {@code report:<id>} or {@code report:*}). */
+    public static final String REPORT = "embed:report";
 
     /**
      * @param tokensPerMinute exchanges per application per minute
@@ -86,7 +88,8 @@ public record EmbedProperties(Boolean enabled, String issuer, List<String> audie
         scopes = scopes == null || scopes.isEmpty() ? Map.of(
                 VIEW, List.of("GET /api/v1/views/*/*", "GET /api/v1/views/*/*/stream", "GET /api/v1/views/*/*/panels/*/records",
                         "GET /api/v1/embed/check", "POST /api/v1/command"),
-                ABOUT, List.of("GET /api/v1/views/*/*/explain")) : Map.copyOf(scopes);
+                ABOUT, List.of("GET /api/v1/views/*/*/explain"),
+                REPORT, List.of("GET /api/v1/bi/reports/*", "POST /api/v1/bi/reports/*/query", "GET /api/v1/bi/reports/*/live")) : Map.copyOf(scopes);
         limits = limits == null ? new Limits(null, null, null) : limits;
         allowWildcardOrigins = allowWildcardOrigins != null && allowWildcardOrigins;
         assertionMaxAge = assertionMaxAge == null ? Duration.ofSeconds(60) : assertionMaxAge;

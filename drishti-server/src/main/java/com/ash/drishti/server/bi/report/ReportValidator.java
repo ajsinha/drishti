@@ -21,6 +21,7 @@ import com.ash.drishti.server.bi.report.ReportParser.Problem;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,6 +76,7 @@ public final class ReportValidator {
                 visual(page.visuals().get(vi), pp + ".visuals[" + vi + "]", pageIds);
             }
         }
+        phoneLayouts(pageIds);
         for (int bi = 0; bi < report.bookmarks().size(); bi++) {
             Report.Bookmark b = report.bookmarks().get(bi);
             String p = "bookmarks[" + bi + "]";
@@ -91,6 +93,35 @@ public final class ReportValidator {
             }
             filters(b.filters(), p + ".filters");
         }
+    }
+
+    /** Every page and visual a phone layout names exists, and a visual is not both ordered twice nor ordered and hidden. */
+    private void phoneLayouts(Set<String> pageIds) {
+        report.layouts().getOrDefault("phone", Map.of()).forEach((pageId, lay) -> {
+            String p = "layouts.phone." + pageId;
+            Report.Page page = report.page(pageId);
+            if (page == null) {
+                err(ReportParser.REFERENCE, p, "the report has no page '" + pageId + "' (pages: " + String.join(", ", pageIds) + ")");
+                return;
+            }
+            Set<String> seen = new java.util.HashSet<>();
+            for (String id : lay.order()) {
+                if (page.visual(id) == null) {
+                    err(ReportParser.REFERENCE, p + ".order", "page '" + pageId + "' has no visual '" + id + "'");
+                } else if (!seen.add(id)) {
+                    err(ReportParser.REFERENCE, p + ".order", "'" + id + "' is listed twice");
+                }
+            }
+            for (String id : lay.hide()) {
+                if (page.visual(id) == null) {
+                    err(ReportParser.REFERENCE, p + ".hide", "page '" + pageId + "' has no visual '" + id + "'");
+                } else if (seen.contains(id) && lay.order().contains(id)) {
+                    err(ReportParser.REFERENCE, p + ".hide", "'" + id + "' is both ordered and hidden: leave it out of order or out of hide");
+                }
+            }
+            lay.span().keySet().stream().filter(id -> page.visual(id) == null)
+                    .forEach(id -> err(ReportParser.REFERENCE, p + ".span." + id, "page '" + pageId + "' has no visual '" + id + "'"));
+        });
     }
 
     private void visual(Report.Visual v, String p, Set<String> pageIds) {

@@ -120,9 +120,9 @@
   const OKABE = ['#0072b2', '#e69f00', '#009e73', '#cc79a7', '#56b4e9', '#d55e00', '#f0e442', '#666666'];
   B.PALETTES = ['default', 'colour-blind', 'mono'];
 
-  /** The theme's tokens as the page currently has them (they change with the theme). */
-  B.tokens = function () {
-    const s = getComputedStyle(document.documentElement), t = {};
+  /** The theme's tokens as the page (or the element given, for an embedded report) currently has them (they change with the theme). */
+  B.tokens = function (el) {
+    const s = getComputedStyle(el || document.documentElement), t = {};
     ['ink', 'muted', 'faint', 'border', 'link', 'accent', 'neg', 'pos', 'ok', 'warn', 'bad', 'surface', 'surface-2', 'bg', 'bg-2'].forEach((k) => { t[k] = s.getPropertyValue('--d-' + k).trim(); });
     t.mono = s.getPropertyValue('--d-font-mono').trim();
     return t;

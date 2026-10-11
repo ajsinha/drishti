@@ -36,6 +36,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -973,3 +974,40 @@ def test_slots_show_host_content_and_a_missing_token_is_an_event(host):
     h.js("DrishtiElements.invalidateToken(); DrishtiElements.configure({tokenProvider: () => Promise.reject(new Error('no session'))})")
     h.js("document.querySelector('#slotted').setAttribute('entity', 'NO-SUCH-TRADE-2')")
     h.until(lambda: h.events("token-needed", "slotted"), 10, "drishti:token-needed")
+
+
+def test_twenty_elements_on_ten_entities_cost_the_page_one_connection(host, stack):
+    """The small load test of ELEMENTS.md step 11 (house rule: small and local): 20 elements, 10 entities, one page. One channel GET for all of them, every element live, and the
+    frame latency the console reports is recorded."""
+    h = host()
+    h.open()
+    for i, entity in enumerate(RAPID * 2):
+        h.js("(() => { const e = document.createElement('drishti-view'); e.id = 'load" + str(i) + "'; e.setAttribute('kind', 'trade'); e.setAttribute('entity', '" + entity + "'); e.setAttribute('header', 'strip'); e.setAttribute('panels', 'none'); document.body.appendChild(e); })()")
+    h.until(lambda: h.js("[...document.querySelectorAll('[id^=load]')].every(e => e.getAttribute('data-state') === 'live')"), 60, "twenty live elements")
+    assert h.js("DrishtiElements.connections()") == 1
+    h.page.wait_for_timeout(2500)
+    gets = h.channel_gets()
+    assert len(gets) == 1, f"{len(gets)} channel streams for twenty elements"
+    keys = {k for post in h.channel_posts() for k in post.get("add", [])} | {urllib.parse.unquote(k) for k in re.findall(r"s=([^&]+)", gets[0][1])}
+    assert len([k for k in keys if k.startswith("view:trade/")]) >= 10, keys
+    latencies = [e[2]["latencyMs"] for e in h.events("tick") if isinstance(e[2].get("latencyMs"), (int, float)) and e[2]["latencyMs"] > 0]
+    if latencies:
+        latencies.sort()
+        stack.record("load20.frame_latency_ms_median_p99_max", [statistics.median(latencies), latencies[int(len(latencies) * 0.99) - 1 if len(latencies) > 1 else 0], latencies[-1]])
+
+
+def test_a_panel_element_shows_one_panel_of_the_view_without_the_header(host):
+    """<drishti-panel> (ELEMENTS.md step 14): one panel of a view in a card of the host's own; it is <drishti-view> with the `panel` attribute and no header."""
+    h = host()
+    h.open()
+    pid = h.js("document.querySelector('#main').view.panels.filter(p => p.kind !== 'links')[0].id")
+    h.js("(() => { const e = document.createElement('drishti-panel'); e.id = 'one'; e.setAttribute('kind', 'trade'); e.setAttribute('entity', '" + MAIN_ID + "'); e.setAttribute('panel', '" + pid + "'); document.body.appendChild(e); })()")
+    h.state("#one", "live")
+    inside = "document.querySelector('#one').shadowRoot"
+    assert h.js(f"{inside}.querySelectorAll('.pnl').length") == 1, "exactly the one panel"
+    assert h.js(f"{inside}.querySelector('.pnl').id") == 'p-' + pid
+    assert h.js(f"{inside}.querySelector('.vhead')") is None, "the header is off unless the host asks for one"
+    assert h.js("document.querySelector('#one').getAttribute('panels')") == pid
+    h.js("document.querySelector('#one').setAttribute('header', 'strip')")
+    h.until(lambda: h.js(f"!!{inside}.querySelector('.strip')"), 10, "the strip when the host asks for the header")
+    assert h.js(f"{inside}.querySelectorAll('.pnl').length") == 1

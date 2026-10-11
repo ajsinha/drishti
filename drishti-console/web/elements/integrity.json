@@ -1,0 +1,55 @@
+{
+  "api": "1.0",
+  "files": {
+    "drishti-elements.js": {
+      "bytes": 2500,
+      "integrity": "sha384-PgpgBX3SsOXgLZPcw0CLv0ze5Vuv7XLAjld/bprJxIOocMCO3gMcSFiHVb3VUy/3"
+    },
+    "m/assets.js": {
+      "bytes": 5142,
+      "integrity": "sha384-pipTIggMN49n/TXhEDqZ8S1UANKwaZ6clqWVjJ6uxfF8xSyupZzjhQsrMzU/tSWC"
+    },
+    "m/config.js": {
+      "bytes": 1526,
+      "integrity": "sha384-TANPx6RqOWSDaiQmpfmSnj77gx/4FS4Lqrz3dojPdD2sZVYkr1CAGUc0Rlon97/D"
+    },
+    "m/connection.js": {
+      "bytes": 7190,
+      "integrity": "sha384-P3TscGJ2aEhJnfIVzYZInNIRcw61P1G08ZZ9DJjxausDxQTkpK4lK2OT0/fxOFTl"
+    },
+    "m/element.js": {
+      "bytes": 22809,
+      "integrity": "sha384-Bhd6pysBh9CST5i99kxOo9luGUQKRqR0w5JxmrMXxXxAWdUCUYu1RhnQcvC3mUi8"
+    },
+    "m/enhancers.js": {
+      "bytes": 6298,
+      "integrity": "sha384-UIqJyrEiDjd7g2scVA3XSmf125pkmZp3RfTa0rk9zpni7scYUkP1NYRzUKEuma2X"
+    },
+    "m/frames.js": {
+      "bytes": 3789,
+      "integrity": "sha384-dGHQblyuz5AFI1o2kNWGgFQe8jW5LydHU+JTSlpZwJ10w4txJ1YuuF8ofYkuefyp"
+    },
+    "m/panel.js": {
+      "bytes": 1945,
+      "integrity": "sha384-0nyphhKJRVPuSYdiW9W6dEA2u/aLQz1mTt0HPJU4VzWqdyANgjIQIs5cT/1jgSL3"
+    },
+    "m/report-page.js": {
+      "bytes": 17948,
+      "integrity": "sha384-OX4t2PfET4o5yweHpidIu9bRWQnkc1a5Wf5D5WqL0dz58JuHdeCCgxyplURSLUEQ"
+    },
+    "m/report.js": {
+      "bytes": 14915,
+      "integrity": "sha384-dXl9/0QUbDGbrqJI/zirzP+PJ66Ry9kUuD96EDb8bsBERTIhwcnEefkllD9W+spp"
+    },
+    "m/sanitize.js": {
+      "bytes": 4975,
+      "integrity": "sha384-QYGV8hRo//p/JncRlk8llCmOb/OVmbCT1EYkokHYT2eEDg+FhA63TrB4MeKj9kU1"
+    },
+    "m/tokens.js": {
+      "bytes": 3767,
+      "integrity": "sha384-orzRFcRbdjBYbRdeAnM6RrRk5l8gtGGt215kh0f7YWLvCXQkxk1BbvPcexeNflUt"
+    }
+  },
+  "name": "@drishti/elements",
+  "version": "1.1.0"
+}

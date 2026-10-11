@@ -38,6 +38,14 @@ frameSheet.replaceSync(':host{display:block;position:relative;contain:content;co
   + '.dv-slot[hidden]{display:none}:host([data-zoomed]){min-height:min(32rem,90vh)}'
   + ':host([density="compact"]) :is(td,th){padding-block:.1rem}:host([density="comfortable"]) :is(td,th){padding-block:.55rem}');
 
+/** The report element's own sheet (generated from the BI sheets by tools/elements_sheet.py), adopted after the view sheet. */
+export const reportSheet = (server) => memo('rsheet:' + server, async () => {
+  const text = await (await fetch(server + API + '/drishti-report.css')).text();
+  const s = new CSSStyleSheet();
+  s.replaceSync(text);
+  return s;
+});
+
 export const font = (server) => memo('font:' + server, async () => {
   const face = new FontFace('bootstrap-icons', 'url(' + server + API + '/icons.woff2) format("woff2")');
   document.fonts.add(await face.load());
@@ -56,6 +64,14 @@ export const chartLibs = (server) => memo('charts:' + server, async () => {
   await script(server + API + '/echarts.js');
   quietDispose();
   for (const n of ENHANCERS) { await script(server + API + '/js/' + n + '.js'); }
+});
+
+/** What <drishti-report> draws with: ECharts, then the console's report code (window.drishtiBi), in order. */
+export const REPORT_LIBS = ['lib', 'phone', 'visuals', 'grids', 'frame', 'live'].map((n) => 'bi-' + n);
+export const reportLibs = (server) => memo('rlibs:' + server, async () => {
+  await script(server + API + '/echarts.js');
+  quietDispose();
+  for (const n of REPORT_LIBS) { await script(server + API + '/js/' + n + '.js'); }
 });
 
 /** ECharts' SVG painter empties its root and its <svg> with `innerHTML = ''` when a chart is disposed, which a Trusted Types host refuses: a

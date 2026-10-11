@@ -31,22 +31,28 @@ from core import element_sheet as es  # noqa: E402
 
 def main(argv: list[str]) -> int:
     text, manifest = es.build()
+    rtext, rmanifest = es.build_report()
     if "--icons" in argv:
         for name, files in es.icons_used().items():
             print(f"bi-{name}: {', '.join(files)}")
+        print("report: " + ", ".join(rmanifest["icons"]))
         return 0
     if "--check" in argv:
         try:
             have, have_manifest = es.committed()
+            rhave, rhave_manifest = es.report_committed()
         except FileNotFoundError:
-            print("the element sheet has not been built: python3 tools/elements_sheet.py")
+            print("the element sheets have not been built: python3 tools/elements_sheet.py")
             return 1
-        if have != text or have_manifest != manifest:
-            print("the element sheet is stale: python3 tools/elements_sheet.py")
+        if have != text or have_manifest != manifest or rhave != rtext or rhave_manifest != rmanifest:
+            print("the element sheets are stale: python3 tools/elements_sheet.py")
             return 1
-        print(f"up to date: {manifest['version']}")
+        print(f"up to date: {manifest['version']} (view), {rmanifest['version']} (report)")
         return 0
     es.OUT_DIR.mkdir(parents=True, exist_ok=True)
+    (es.OUT_DIR / es.REPORT_FILE).write_text(rtext, encoding="utf-8")
+    (es.OUT_DIR / es.REPORT_MANIFEST).write_text(es.manifest_text(rmanifest), encoding="utf-8")
+    print(f"{es.REPORT_FILE} {rmanifest['version']}: {rmanifest['bytes'] / 1024:.1f} KB, {rmanifest['gzip'] / 1024:.1f} KB gzip, {len(rmanifest['icons'])} glyphs")
     (es.OUT_DIR / es.SHEET_FILE).write_text(text, encoding="utf-8")
     (es.OUT_DIR / es.MANIFEST_FILE).write_text(es.manifest_text(manifest), encoding="utf-8")
     flag = "" if manifest["gzip"] <= es.GZIP_TARGET else f"  OVER the {es.GZIP_TARGET // 1024} KB gzip target"

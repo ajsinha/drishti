@@ -332,6 +332,10 @@ drishti:
         - POST /api/v1/command
       "[embed:about]":
         - GET /api/v1/views/*/*/explain
+      "[embed:report]":                        # a published BI report in <drishti-report>; the app's kinds must list report:<id> or report:*
+        - GET /api/v1/bi/reports/*              # the definition (and /catalogue, the visual types)
+        - POST /api/v1/bi/reports/*/query       # a read: one visual's rows under the page's slicers and selections
+        - GET /api/v1/bi/reports/*/live         # the report's live tables: ticks and status, no data
     limits:
       tokens-per-minute: 120                  # exchanges per host application
       views-per-minute: 600                   # calls per host application (the default for a new registration)

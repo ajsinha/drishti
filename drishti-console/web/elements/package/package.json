@@ -1,0 +1,35 @@
+{
+  "name": "@drishti/elements",
+  "version": "1.1.0",
+  "description": "Drishti Elements: live views and BI reports in other web applications, as Web Components without iframes",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": false,
+  "type": "module",
+  "sideEffects": true,
+  "main": "./dist/drishti-elements.js",
+  "module": "./dist/drishti-elements.js",
+  "types": "./types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./types/index.d.ts",
+      "default": "./dist/drishti-elements.js"
+    },
+    "./react": {
+      "types": "./types/react.d.ts"
+    },
+    "./integrity.json": "./integrity.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "types",
+    "integrity.json",
+    "README.md"
+  ],
+  "keywords": [
+    "drishti",
+    "web-components",
+    "embedding",
+    "bi"
+  ]
+}
