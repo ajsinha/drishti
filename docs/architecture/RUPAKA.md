@@ -224,8 +224,8 @@ capabilities for reading whole tables instead of one record:
 |---|---|---|
 | One record (`fetch`, `subscribe`) | terminal views, live updates, drill to record | exists |
 | Columns of a kind for a date (`columns`) | searches, derived kinds | exists (Delta's promoted columns) |
-| **Bulk scan**: chosen columns, filters and a date range, as Arrow record batches | the columns layer (7.1), `cached` tables | new, optional: `Optional<ArrowScan> scan(ScanRequest)`; Delta, Parquet, DuckDB and JDBC implement it natively, Kafka returns its current state |
-| **Pushdown**: the compiled SQL runs in the source | `direct` tables over SQL stores | new, optional: `Optional<SqlTarget> sqlTarget()`, an attachable target for the engine |
+| **Bulk scan**: chosen columns, filters and a date range, as column batches | the columns layer (7.1), `cached` tables | **built** (phase 2), optional: `Optional<ArrowScan> scan(ScanRequest)`; Delta, DuckDB, JDBC (table mode) and file implement it over their promoted columns (`ColumnScans`); Parquet-only, Iceberg and Kafka are not built: they fall back to record reads |
+| **Pushdown**: the compiled SQL runs in the source | `direct` tables over SQL stores | **built** (phase 2), optional: `Optional<SqlTarget> sqlTarget()` (a relation and a connection of the source's own pool, not an `ATTACH`); the DuckDB and PostgreSQL connectors provide it |
 
 A connector with neither falls back to record-by-record reads, and the designer warns that a large table will be slow.
 What Rūpaka writes (the columns and rollup layers) goes to a BI store that is itself a configured connector (`bi-store`,
@@ -276,8 +276,7 @@ config/bi/
 - **Datasets name connectors** by logical name ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), as packs do.
 - **Workspace drafts and published versions** live in the identity database (section 21, decision 1); the folder holds the
   reviewed content shipped with a site.
-- The folders may be empty or absent. Phase 0 reads the folder only to list the dataset files it finds (the `bench` answer's
-  `biDir` and `biDatasets`; see [RUPAKA_POC.md](RUPAKA_POC.md)).
+- The folders may be empty or absent. Since phase 2 the `datasets/` files are parsed, validated and queried (section 20.2); the other kinds are stored items.
 
 ## 7. The query engine
 
@@ -742,7 +741,7 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 | 0 | **Proof of concept**: Perspective live grid fed by Drishti's live path; masked Arrow out of a server DuckDB query; DuckDB-Wasm slicing it; CSP and size measured | M | a page shows a live pivot at target rates and a cached query under target, with masks proven |
 | 0a | **Interactive Sutras** (sections 8.1, 8.2; query by form is built first, in the terminal): Excel-style column filters on every table, then `controls:` and `ctl.*` with URL view state, then cross-filtering | M | a desk filters a trade's cashflows by leg and date from a dropdown, and any table by column filters, by mouse, keyboard and touch. **Built** in the terminal (column filters: delivery 1; controls, URL view state and cross-filtering: delivery 2); the Rūpaka side (slicers on a report) waits for stage 1 |
 | 1 | **Shell and catalogue**: BI top bar item, `RUPAKA <GO>`, `/bi` home, catalogue, workspaces (personal and shared), powers, audit | M | a published report appears for its audience only |
-| 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows |
+| 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows | **Built** except refresh by cron schedule and the items listed in 20.2; the demo report is phase 3 |
 | 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test) |
 | 4 | **Publishing and governance**: review before publish, versions, endorsement, lineage, impact of dataset changes, pack bundles for environments | M | certified content and lineage shown; deployment by bundle with rollback |
 | 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run |
@@ -766,10 +765,43 @@ reusing the `approve` power and four-eyes; Home (recent, favourites, certified f
 role checks on the server; storage in the identity database (SQLite or PostgreSQL) and **shipped, read-only content in `drishti.bi.dir`, watched live** (`drishti.bi.watch`: added,
 changed and deleted files are picked up with no restart; a bad file keeps its last good version and is reported in Admin, BI settings and on Health); the powers `bi`, `bi-author`,
 `bi-steward`, `bi-admin` on roles and Admin, BI settings; the API `/api/v1/bi/**` with token scopes `bi:write`, `bi:approve`, `bi:admin`; an audit event for every change; DRS-9001 to
-DRS-9006; `drishti.py bi workspace|catalogue list|get|publish`. **Not built, and not faked:** datasets, the query engine and everything of phases 2 to 9; the Datasets, Designer and
+DRS-9006; `drishti.py bi workspace|catalogue list|get|publish`. **Not built in phase 1 (datasets and the query engine are phase 2, section 20.2):** everything of phases 3 to 9; the Designer and
 Explore rail entries are placeholders; "what changed since your last visit" on Home; searching by fields used and filtering by live or cached; the version diff; a workspace as a pack
 bundle; dataset lineage and impact; per-entry export rules and classification tags (section 11 controls that need data); `Analyse in BI`. The shipped-file version number counts changes
 since the server started and only the current body is kept.
+
+### 20.2 Phase 2, as built
+
+Phase 2 (datasets and the query engine) is built; the references are [DATASETS.md](../guides/DATASETS.md) (the YAML, the expression language, security), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13, the walk-through
+[BI_TUTORIAL.md](../guides/BI_TUTORIAL.md), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.bi.query`). Measurements are in [RUPAKA_POC.md](RUPAKA_POC.md) section 11.
+
+**Built.**
+
+* **The dataset model (section 6).** The YAML with tables (from pack kinds by connector logical name, across packs; `each:` makes an array of the document a table), columns (path, type, format, key, calculated), relationships
+  (cardinality, direction, active), measures, hierarchies, `security.rows` per role and `security.masked`, and `rollups`; a parser and validator that report every problem with its DRS code and the path (`DRS-9010` structure, `9011` expression, `9012`
+  reference, `9013` reserved and not built). Stored as BI items (phase 1 store: drafts, versions, review; an invalid dataset cannot be published) and shipped in `config/bi/datasets` (watched live). The expression language is Rachana-EL's syntax with
+  aggregation (`sum avg min max count distinct ratio percentile`, a condition as the last argument, `[Measure]` references, `in`, `user.<attr>` in rules, date parts), compiled to SQL by its **own** compiler (the Rachana-EL closures evaluate documents, not columns).
+* **The model from packs (6.2).** Every kind the reader may open is offered as a table with the connector's promoted columns typed from the data (else from the pack's sample documents); the packs' link graph (`graph.fields`) becomes relationships, across packs;
+  relationships are **proposed by value matching** with the match rate, cardinality and a few unmatched values (profiling, no AI), from the promoted columns or, for connectors that promote none, from documents. API `/bi/model/kinds|start|infer`; a minimal read-only
+  model page lists tables, relationships, measures, rules and layers (the diagram is phase 3).
+* **Connector capabilities (6.1).** Optional SPI methods `scan(ScanRequest)` (column batches in the Arrow type model, without Arrow's memory libraries) and `sqlTarget()`; Delta, DuckDB, JDBC table mode and file scan over their promoted columns, DuckDB and JDBC expose a SQL
+  target; everything else falls back to record reads with a warning ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#bulk-reads-for-bi-scan-and-sqltarget)).
+* **The query engine (7, 7.1).** `AnalyticEngine` with the embedded DuckDB (no extension downloaded at run time: Parquet and the connector, not the `delta` extension). A visual query (fields, measures, filters, dates, order) compiles to one **parameterised** SQL
+  statement: names are checked against the model and quoted, **every value is bound**, joins follow many-to-one relationships from the measures' table, the reader's row rules are predicates the query cannot remove, masked columns are replaced by `•••` and never grouped on.
+  **Layers:** the **columns layer** (a typed Parquet file per table per business date in the BI store, built from the connector once and again when a data-load signal names the date, only that date, only the datasets that read the kind) and **rollups** (components of additive
+  measures per date; **aggregate-aware routing**: rollup, else columns, else the source for `direct`; the answer reports the layer). `direct` tables push the query into a SQL store; a **live** table is a short-lived snapshot of the connector's current state. Results leave as masked
+  **Arrow IPC** (the phase 0 writer, moved into the engine package) or JSON for small answers; the **result cache** is keyed by dataset version, query, the reader's row rules and masks and the data generation; **limits** (time, rows, bytes, server and per-user concurrency) are settings with
+  `DRS-9022` to `9025`; engine and source failures are `9026` and `9027`.
+* **API and pages.** `/api/v1/bi/datasets`, `/{id}`, `/validate`, `/{id}/query`, `/{id}/layers`, `/{id}/refresh`, `/model/*`, `/engine`; the console's Datasets list, Start-from-packs and one dataset's page with a query preview grid. The phase 0 query endpoint now runs its typed
+  and rollup layouts through this engine. Three **sample datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`) with a tutorial.
+* **Phase 0 adjustments.** Static files are served compressed (gzip, Brotli when installed; the 36 MB wasm is 8 MB). The BI-page style policy is **decided**: strict `style-src 'self'` on every BI page, no `unsafe-inline`; the hash list the POC page needs for Perspective's `<style>`
+  elements stays on the POC page only, and phase 5 (live grid) must generate it at vendoring time with a check that fails when a library update adds one. **Perspective retest: not done** (no BI page uses Perspective yet; the offline environment cannot fetch a newer build); the
+  second-tab trap stays open, with the fallback (ECharts and Drishti's own grid) in force until phase 5 retests the newest build on real Chrome, Firefox and Safari.
+
+**Not built, and not faked.** Refresh by the cron `refresh.schedule` (stored and validated; refresh is by data-load signal and `POST /datasets/{id}/refresh`); time intelligence (`ytd`, `mtd`, `same_period_last_year`) and window functions (`running`, `lag`, `rank`), refused with `DRS-9013`;
+Python measures (stored, not run, phase 6); queries whose measures aggregate several unrelated fact tables; filter direction `both`, many-to-many semantics and inactive relationships used by a measure; live tables as an incrementally updated in-memory table fed by the hot path
+(phase 5); the BI store as a configured connector (a folder today; mount S3 to put it there); engines other than DuckDB (the interface exists); pushdown of scan filters into Delta and file storage; lineage, impact and classification tags (phase 4); the designer, the Model diagram
+and reports (phase 3). The columns layer is **per dataset table**, not shared per kind as 7.1 sketches (a kind read by two datasets is read twice).
 
 ### 20.1 Three stages
 
