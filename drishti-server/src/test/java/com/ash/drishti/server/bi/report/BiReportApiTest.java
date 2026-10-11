@@ -121,6 +121,9 @@ class BiReportApiTest {
                       Notional: { expr: "sum(trades.notional)" }
                       MTM: { expr: "sum(trades.mtm)" }
                       Trades: { expr: "count(trades)" }
+                      Average notional: { expr: "avg(trades.notional)" }
+                      Largest: { expr: "max(trades.notional)" }
+                      Notional ytd: { expr: "ytd(sum(trades.notional), trades.tradeDate)" }
                     hierarchies:
                       Desk and book: [trades.desk, trades.book]
                     security:
@@ -267,7 +270,7 @@ class BiReportApiTest {
         assertThat(r.path("report").path("pages")).hasSize(2);
         assertThat(r.path("report").path("pages").get(0).path("visuals").get(2).path("hierarchy").asText()).isEqualTo("Desk and book");
         assertThat(r.path("dataset").path("tables").get(0).path("name").asText()).isEqualTo("trades");
-        assertThat(r.path("dataset").path("measures")).hasSize(3);
+        assertThat(r.path("dataset").path("measures")).hasSize(6);
         assertThat(r.path("dataset").has("security")).as("a reader is not told the row rules of the dataset through the report").isFalse();
         refused(call("GET", "/api/v1/bi/reports/" + REPORT, nobi(), null), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/reports/file:dataset:lake-report", rita(), null), 404, "DRS-9001");        // a dataset is not a report
@@ -361,8 +364,8 @@ class BiReportApiTest {
         refused(call("POST", "/api/v1/bi/reports/query", rita(), Map.of("yaml", goodYaml, "page", "p", "visual", "a")), 403, "DRS-9002");
         JsonNode cat = ok(call("GET", "/api/v1/bi/reports/catalogue", rita(), null));
         assertThat(cat.path("visuals").has("waterfall")).isTrue();
-        assertThat(cat.path("reserved").toString()).contains("map");
-        assertThat(ok(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", wes(), null)).path("measures")).hasSize(3);
+        assertThat(cat.path("reserved").toString()).contains("python");
+        assertThat(ok(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", wes(), null)).path("measures")).hasSize(6);
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", rita(), null), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=nope", wes(), null), 422, "DRS-9034");
     }
@@ -393,5 +396,91 @@ class BiReportApiTest {
         refused(call("POST", "/api/v1/bi/items/" + id + "/publish", wes(), Map.of()), 422, "DRS-9030");
         ok(call("PUT", "/api/v1/bi/items/" + id, wes(), Map.of("body", yaml)));
         ok(call("POST", "/api/v1/bi/items/" + id + "/publish", wes(), Map.of()));
+    }
+
+    // ---- the visuals of wave 3: true totals, distributions, the map ----------------------------------------------------
+
+    static final String DRAFT_HEAD = "report: d\ndataset: lake-report\npages:\n  - id: p\n    visuals:\n";
+
+    JsonNode draft(String who, String visualYaml, String visual, String state) throws Exception {
+        Map<String, Object> body = Map.of("yaml", DRAFT_HEAD + "      - " + visualYaml + "\n", "page", "p", "visual", visual, "state", json.readTree(state));
+        return ok(call("POST", "/api/v1/bi/reports/query", who, body));
+    }
+
+    static final String DAY = "{\"dates\":{\"from\":\"2026-10-08\",\"to\":\"2026-10-08\"}}";
+    static final String AT = ", at: { x: 0, y: 0, w: 12, h: 6 }";
+
+    @Test @Order(8)
+    void aMatrixWithSubtotalsCarriesTheEnginesTotalsForTheMeasuresThatDoNotAddUp() throws Exception {
+        JsonNode a = draft(wes(), "{ id: m, type: matrix" + AT + ", wells: { rows: [trades.desk], columns: [trades.currency], values: [Notional, Average notional, Largest] }, format: { subtotals: true } }", "m", DAY);
+        JsonNode totals = a.path("totals");
+        assertThat(totals).isNotEmpty();
+        JsonNode grand = null;
+        JsonNode perDesk = null;
+        for (JsonNode t : totals) {
+            if (t.path("by").isEmpty()) {
+                grand = t;
+            } else if (t.path("by").toString().equals("[\"trades.desk\"]")) {
+                perDesk = t;
+            }
+        }
+        assertThat(grand).isNotNull();
+        assertThat(grand.path("columns").toString()).isEqualTo("[\"Average notional\",\"Largest\"]");           // Notional adds up: the client sums it
+        assertThat(grand.path("rows").get(0).get(0).asDouble()).isEqualTo(notional(i -> true, 1) / 24, org.assertj.core.data.Offset.offset(1e-9));
+        assertThat(grand.path("rows").get(0).get(1).asDouble()).isEqualTo(24000.0);                               // a largest is a largest, not a sum of largests
+        assertThat(a.path("rows").size()).isEqualTo(6);
+        // the rows of the matrix itself are untouched, and a person without the raw power gets totals under the same rules as the rows
+        String hanaTotals = draft(wes(), "{ id: m, type: table" + AT + ", wells: { columns: [trades.desk, Trades, Average notional] }, format: { totals: true } }", "m", DAY).path("totals").toString();
+        assertThat(hanaTotals).contains("Trades").contains("Average notional");
+        JsonNode plain = draft(wes(), "{ id: m, type: matrix" + AT + ", wells: { rows: [trades.desk], values: [Average notional] } }", "m", DAY);
+        assertThat(plain.has("totals")).as("no subtotals asked for, no totals computed").isFalse();
+    }
+
+    @Test @Order(9)
+    void aHistogramAndABoxPlotCameBackBinnedAndSummarisedByTheServer() throws Exception {
+        JsonNode h = draft(wes(), "{ id: h, type: histogram" + AT + ", wells: { axis: [trades.tradeId], values: [Notional] }, format: { bins: 4 } }", "h", DAY);
+        assertThat(h.path("columns").get(0).path("name").asText()).isEqualTo("bin");
+        assertThat(h.path("rows").size()).isEqualTo(4);
+        long total = 0;
+        for (JsonNode r : h.path("rows")) {
+            total += r.get(1).asLong();
+        }
+        assertThat(total).isEqualTo(24);                                                                          // every trade is in one bar
+        assertThat(h.path("rows").get(0).get(1).asLong()).isEqualTo(6);                                           // notional 1000..24000 in four equal bands: 6 each
+        JsonNode b = draft(wes(), "{ id: b, type: box" + AT + ", wells: { axis: [trades.desk], details: [trades.tradeId], values: [Notional] } }", "b", DAY);
+        assertThat(b.path("rows").size()).isEqualTo(3);
+        assertThat(b.path("columns").get(3).path("name").asText()).isEqualTo("median");
+        for (JsonNode r : b.path("rows")) {
+            assertThat(r.get(6).asLong()).isEqualTo(8);
+            assertThat(r.get(1).asDouble()).isLessThanOrEqualTo(r.get(3).asDouble());
+            assertThat(r.get(3).asDouble()).isLessThanOrEqualTo(r.get(5).asDouble());
+        }
+        // a masked measure (the author lacks raw: mtm is masked) has no bars and no boxes, and says so
+        JsonNode masked = draft(wes(), "{ id: h, type: histogram" + AT + ", wells: { axis: [trades.tradeId], values: [MTM] } }", "h", DAY);
+        assertThat(masked.path("rows")).isEmpty();
+        assertThat(masked.path("meta").path("masked").toString()).contains("MTM");
+    }
+
+    @Test @Order(10)
+    void theNewVisualsAreInTheCatalogueAndAMapNeedsAPlace() throws Exception {
+        JsonNode cat = ok(call("GET", "/api/v1/bi/reports/catalogue", wes(), null));
+        for (String t : List.of("map", "funnel", "histogram", "box", "bubble")) {
+            assertThat(cat.path("visuals").has(t)).as(t).isTrue();
+            assertThat(cat.path("reserved").toString()).doesNotContain("\"" + t + "\"");
+        }
+        assertThat(cat.path("visuals").path("map").path("wells").has("latitude")).isTrue();
+        JsonNode v = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", DRAFT_HEAD + "      - { id: m, type: map" + AT + ", wells: { values: [Trades] } }\n")));
+        assertThat(v.path("valid").asBoolean()).isFalse();
+        assertThat(v.path("problems").toString()).contains("a country code");
+    }
+
+    @Test @Order(11)
+    void aTimeIntelligenceMeasureAnswersThroughAVisualAsOfTheEndOfTheDates() throws Exception {
+        JsonNode card = draft(wes(), "{ id: c, type: card" + AT + ", wells: { values: [Notional ytd] } }", "c", DAY);
+        assertThat(card.path("rows").get(0).get(0).asDouble()).isEqualTo(notional(i -> true, 1));               // every trade is dated this year, up to the 8th
+        JsonNode ds = ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-report", wes(), null));
+        assertThat(ds.path("refresh").path("scheduled").asBoolean()).isFalse();
+        assertThat(ds.path("refresh").path("calendar").asText()).isNotEmpty();
+        assertThat(ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-report/refresh", rita(), null)).path("scheduled").asBoolean()).isFalse();
     }
 }
