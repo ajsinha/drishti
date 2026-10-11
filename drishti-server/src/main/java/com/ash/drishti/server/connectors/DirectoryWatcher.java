@@ -16,13 +16,12 @@
 package com.ash.drishti.server.connectors;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import com.ash.drishti.common.SharedWatchService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +42,8 @@ public final class DirectoryWatcher implements AutoCloseable {
     private final Runnable task;
     private final String threadName;
     private volatile String state = "OFF";
-    private volatile WatchService service;
+    private final BlockingQueue<Boolean> signal = new ArrayBlockingQueue<>(1);   // an event happened (collapses to one)
+    private volatile SharedWatchService.Registration registration;
     private Thread thread;
 
     public DirectoryWatcher(Path dir, String mode, long pollMs, Runnable task) {
@@ -76,9 +76,7 @@ public final class DirectoryWatcher implements AutoCloseable {
             return false;
         }
         try {
-            WatchService ws = FileSystems.getDefault().newWatchService();
-            dir.register(ws, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
-            service = ws;
+            registration = SharedWatchService.defaultInstance().register(dir, () -> signal.offer(Boolean.TRUE));
             return true;
         } catch (IOException | RuntimeException e) {
             LOG.warn("file events are unavailable for {} ({}); looking at the files every {} ms instead", dir, e.getMessage(), pollMs);
@@ -89,19 +87,19 @@ public final class DirectoryWatcher implements AutoCloseable {
     private void loop() {
         try {
             while (!Thread.currentThread().isInterrupted()) {
-                if (service == null && !"poll".equalsIgnoreCase(mode) && tryRegister()) {
+                SharedWatchService.Registration reg = registration;
+                if (reg != null && !reg.valid()) {            // the folder was deleted: register again when it is back
+                    reg.close();
+                    registration = null;
+                    state = "POLLING";
+                }
+                if (registration == null && !"poll".equalsIgnoreCase(mode) && tryRegister()) {
                     state = "WATCHING";                      // the folder appeared (or events became available)
                 }
-                WatchService ws = service;
-                if (ws != null) {
-                    WatchKey key = ws.poll(pollMs, TimeUnit.MILLISECONDS);
-                    if (key != null) {
-                        key.pollEvents();
-                        key.reset();
-                        WatchKey more;
-                        while ((more = ws.poll(DEBOUNCE_MS, TimeUnit.MILLISECONDS)) != null) {
-                            more.pollEvents();
-                            more.reset();
+                if (registration != null) {
+                    if (signal.poll(pollMs, TimeUnit.MILLISECONDS) != null) {
+                        while (signal.poll(DEBOUNCE_MS, TimeUnit.MILLISECONDS) != null) {
+                            // a burst of events: wait for it to go quiet
                         }
                     }
                 } else {
@@ -113,7 +111,7 @@ public final class DirectoryWatcher implements AutoCloseable {
                     LOG.error("connector file pass failed; watching goes on", e);
                 }
             }
-        } catch (InterruptedException | java.nio.file.ClosedWatchServiceException e) {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             state = "OFF";
         } catch (RuntimeException | Error e) {
@@ -124,13 +122,9 @@ public final class DirectoryWatcher implements AutoCloseable {
 
     @Override
     public void close() {
-        try {
-            WatchService ws = service;
-            if (ws != null) {
-                ws.close();
-            }
-        } catch (IOException ignored) {
-            // closing on shutdown
+        SharedWatchService.Registration reg = registration;
+        if (reg != null) {
+            reg.close();
         }
         if (thread != null) {
             thread.interrupt();

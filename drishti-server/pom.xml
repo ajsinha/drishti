@@ -78,6 +78,7 @@
             <drishti.identity.users-file>${project.build.directory}/fork${surefire.forkNumber}/identity/users.json</drishti.identity.users-file>
             <drishti.identity.audit-file>${project.build.directory}/fork${surefire.forkNumber}/identity/audit.jsonl</drishti.identity.audit-file>
             <drishti.identity.iterations>1000</drishti.identity.iterations>
+            <spring.test.context.cache.maxSize>8</spring.test.context.cache.maxSize>
             <drishti.packs.dir>${project.basedir}/../config/packs</drishti.packs.dir>
             <drishti.rachana.dirs>${project.build.directory}/no-site-sutras</drishti.rachana.dirs>
             <drishti.identity.preferences-dir>${project.build.directory}/fork${surefire.forkNumber}/identity/preferences</drishti.identity.preferences-dir>

@@ -1615,6 +1615,9 @@ Measured on a developer workstation; see [PERFORMANCE.md](PERFORMANCE.md) for ho
 - One topic fans out to 10,000 listeners.
 - Live streams are capped per server by `drishti.live.max-streams` (20,000). Each browser tab uses one connection to
   the console, whatever it shows.
+- File watching (Sutras, packs, connectors, BI, AI and MCP folders) shares one operating-system watch service per
+  server process, so the server needs one inotify instance (`fs.inotify.max_user_instances`) however many folders it
+  watches. Watches (`fs.inotify.max_user_watches`) are still one per watched folder.
 - An ActiveMQ or RabbitMQ connector applies one message at a time; with `state.durability: sync` (the default) each
   waits for a disk sync, so a connector runs at about one message per sync of its disk, typically thousands a second
   on an SSD (not measured here). Split a heavy feed over several connectors, or use `wal` where losing the last

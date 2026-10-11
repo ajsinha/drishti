@@ -17,19 +17,15 @@ package com.ash.drishti.rachana;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.common.SharedWatchService;
 import com.ash.drishti.rachana.el.ElCompiler;
 import com.ash.drishti.rachana.model.SourceLocation;
 import com.ash.drishti.rachana.model.Sutra;
 import com.ash.drishti.rachana.parse.SutraParser;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.ClosedWatchServiceException;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -75,7 +71,8 @@ public final class SutraRegistry implements AutoCloseable {
     private final List<Consumer<Set<String>>> listeners = new CopyOnWriteArrayList<>();
     /** Everything readers see, published in one write: a reader never pairs new Sutras with old sources. */
     private volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of(), Map.of(), Map.of());
-    private volatile WatchService watcher;
+    private final java.util.concurrent.BlockingQueue<Boolean> signal = new java.util.concurrent.ArrayBlockingQueue<>(1);
+    private final List<SharedWatchService.Registration> registrations = new CopyOnWriteArrayList<>();
     private Thread watchThread;
     /** {@code OFF}, {@code WATCHING}, or {@code STOPPED: <reason>} once the watcher has ended unexpectedly. */
     private volatile String hotReload = "OFF";
@@ -379,28 +376,19 @@ public final class SutraRegistry implements AutoCloseable {
             return;
         }
         try {
-            watcher = FileSystems.getDefault().newWatchService();
             for (String d : props.allDirs()) {
                 Path dir = Path.of(d).toAbsolutePath().normalize();
                 if (Files.isDirectory(dir)) {
                     try (Stream<Path> s = Files.walk(dir)) {
                         for (Path p : s.filter(Files::isDirectory).toList()) {
-                            p.register(watcher, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY,
-                                    StandardWatchEventKinds.ENTRY_DELETE);
+                            registrations.add(SharedWatchService.defaultInstance().register(p, () -> signal.offer(Boolean.TRUE)));
                         }
                     }
                 }
             }
         } catch (IOException e) {
             // e.g. "User limit of inotify watches reached": edits must still be picked up, so look at the files instead
-            try {
-                if (watcher != null) {
-                    watcher.close();
-                }
-            } catch (IOException ignored) {
-                // the watcher was never usable
-            }
-            watcher = null;
+            releaseRegistrations();
             startPolling("file events unavailable: " + e.getMessage());
             return;
         }
@@ -476,13 +464,9 @@ public final class SutraRegistry implements AutoCloseable {
         Throwable cause = null;
         try {
             while (!Thread.currentThread().isInterrupted()) {
-                WatchKey key = watcher.take();
-                key.pollEvents();
-                key.reset();
-                WatchKey more;
-                while ((more = watcher.poll(debounce, TimeUnit.MILLISECONDS)) != null) {
-                    more.pollEvents();
-                    more.reset();
+                signal.take();
+                while (signal.poll(debounce, TimeUnit.MILLISECONDS) != null) {
+                    // a burst of events: wait for it to go quiet
                 }
                 try {
                     reload();
@@ -492,7 +476,7 @@ public final class SutraRegistry implements AutoCloseable {
                 }
             }
             closing = true;
-        } catch (InterruptedException | ClosedWatchServiceException e) {
+        } catch (InterruptedException e) {
             closing = true;
             Thread.currentThread().interrupt();
         } catch (RuntimeException | Error e) {
@@ -506,15 +490,16 @@ public final class SutraRegistry implements AutoCloseable {
         }
     }
 
+    private void releaseRegistrations() {
+        for (SharedWatchService.Registration r : registrations) {
+            r.close();
+        }
+        registrations.clear();
+    }
+
     @Override
     public void close() {
-        try {
-            if (watcher != null) {
-                watcher.close();
-            }
-        } catch (IOException ignored) {
-            // closing on shutdown
-        }
+        releaseRegistrations();
         if (watchThread != null) {
             watchThread.interrupt();
         }

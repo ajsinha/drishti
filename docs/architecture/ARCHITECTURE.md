@@ -277,7 +277,7 @@ kinds' required and allowed options and reports problems with line and column (c
 detailed checks are 2009–2012 and 2020–2039; the About files add 2040–2047, search forms 2060). Any other file in a Sutra folder (a `.sutra.md` from before 1.11, a plain `.yaml`)
 is reported as `DRS-2004` with the fix. Because the grammar is plain YAML, `RachanaSchema` generates a JSON Schema of
 it from `PanelKind`, the formats and the served kinds, served at `GET /api/v1/rachana/schema`; Studio's editor and
-any schema-aware editor complete and check Sutras with it. With `hot-reload` on, a `WatchService` reloads changed files (debounced 250 ms); an
+any schema-aware editor complete and check Sutras with it. With `hot-reload` on, file events reload changed files (debounced 250 ms); every watcher in the JVM (Sutras, packs, connectors, BI, AI, MCP) shares one `WatchService` and one dispatcher thread through `SharedWatchService` in `drishti-common`, so a process holds one inotify instance however many contexts or folders it watches; an
 invalid edit keeps the last good version and is listed at `GET /api/v1/sutras/problems`. Bindings use a small,
 compiled, side-effect-free expression language (**Rachana-EL**) — not scripting.
 
