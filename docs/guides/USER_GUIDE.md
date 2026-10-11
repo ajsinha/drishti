@@ -1194,9 +1194,19 @@ To turn off the flash, untick *Flash changed values* in [your settings](#your-se
 
 The **Business date** box in the top bar says which day you are looking at.
 
-- **Live** (green, the default) is today's business date on the New York calendar (`USNY`), streaming.
+- **Live** (the default) is today's business date on the New York calendar (`USNY`), streaming.
   Weekends and holidays count as the business day before.
 - **A picked date** shows that day's end-of-day data as a static snapshot. The box turns amber.
+
+The round **Live** button beside the box is a toggle, the same on a laptop and a phone:
+
+| The button | Means | A click (or Enter or Space) |
+|---|---|---|
+| green, with a filled dot | live updates are on | pauses: the page becomes a static snapshot of the current business date |
+| red, with two pause bars | paused, or a picked date | resumes live on today's business date |
+
+You can still pick another date while paused. The choice is kept as you move between pages. A screen reader hears
+*Live updates on — click to pause* or *Live updates paused — click to resume*, which is also its tooltip.
 
 Worked example (needs the sample history; see [GETTING_STARTED.md](GETTING_STARTED.md), Step 5):
 
@@ -1207,7 +1217,7 @@ Worked example (needs the sample history; see [GETTING_STARTED.md](GETTING_START
 4. Open `NSET NS-MERIDIAN-RE-NY` with `F7`: it opens on the same date. Links, impact, search and
    suggestions all follow the date you picked.
 5. Pick Saturday `2026-09-26`. The box shows `↩ 2026-09-26` and the data is for Friday `2026-09-25`.
-6. Click **Live** to return to today.
+6. Click the red **Live** button to return to today: it turns green.
 
 What the banners mean:
 
@@ -2164,7 +2174,7 @@ full-screen at the terminal.
   sideways inside their panel. Workspace panes stack too. No page scrolls sideways on a screen 360 px wide or
   wider.
 - **Top bar:** the menus and tools keep their icons on the first line (below 480 px the brand shows its mark
-  only); the command line and the business date share the second, and **Live** shows as its dot.
+  only); the command line and the business date share the second, and **Live** is the same round green or red toggle as on a laptop.
 - **Help:** screenshots fit the screen; tap one to open it full size.
 - **Live values** keep ticking.
 - The **workbench** is left out on phones; everything else, including help and administration, works.
