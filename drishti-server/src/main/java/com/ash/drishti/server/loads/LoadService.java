@@ -88,6 +88,13 @@ public final class LoadService {
         this.clock = clock;
     }
 
+    private final java.util.List<java.util.function.Consumer<LoadRecord>> readyListeners = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /** Calls {@code listener} after every load that finished ready (BI layers rebuild the date it names). A listener's failure never fails the load. */
+    public void onReady(java.util.function.Consumer<LoadRecord> listener) {
+        readyListeners.add(listener);
+    }
+
     public LoadStore store() {
         return store;
     }
@@ -184,6 +191,15 @@ public final class LoadService {
                 : told + " " + (told == 1 ? "person" : "people") + " told" + (cfg.email() ? " (email queued where an address is set)" : ""), 0));
         LoadRecord done = r.completed(verified, entities, fired, told, steps, ms(t0));
         store.update(done);
+        if (LoadRecord.READY.equals(status)) {
+            for (java.util.function.Consumer<LoadRecord> l : readyListeners) {
+                try {
+                    l.accept(done);
+                } catch (RuntimeException e) {
+                    org.slf4j.LoggerFactory.getLogger(LoadService.class).warn("a data-load listener failed: {}", e.getMessage());
+                }
+            }
+        }
         audit.record(by, "data-load-" + status, packName, kind + " " + date + (batch == null ? "" : " batch " + batch) + ", " + verified + ", " + fired + " alerts, " + told + " told");
         return new Outcome(done, false);
     }

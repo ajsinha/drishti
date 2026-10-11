@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.bi.poc;
+package com.ash.drishti.server.bi.engine;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -30,14 +30,14 @@ import org.apache.arrow.flatbuf.Schema;
 import org.apache.arrow.flatbuf.Type;
 
 /** RUPAKA PHASE 0 PROOF OF CONCEPT (tests): reads back an Arrow IPC stream written by {@link ArrowIpcWriter}, from the format's own definitions. */
-final class ArrowTestReader {
+public final class ArrowTestReader {
 
     /** Column name to values (String, Long, Double or null), in order, and the row count. */
-    record Table(Map<String, List<Object>> columns, int rows) {}
+    public record Table(Map<String, List<Object>> columns, int rows) {}
 
     private ArrowTestReader() {}
 
-    static Table read(byte[] bytes) {
+    public static Table read(byte[] bytes) {
         ByteBuffer in = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
         List<String> names = new ArrayList<>();
         List<Byte> types = new ArrayList<>();

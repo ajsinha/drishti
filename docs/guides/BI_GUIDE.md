@@ -15,16 +15,18 @@
 -->
 # Business intelligence (Rupaka): the BI page
 
-Rupaka is Drishti's business-intelligence layer. This guide describes **what is built today: phase 1, the shell and the
-catalogue**. You can open the BI page, keep drafts in a personal workspace, share workspaces with roles, put typed items in
-them, publish them through versions (with an optional second-person review), certify them, and find what you may open in a
-catalogue. **Datasets, reports and boards are not run yet**: an item holds a YAML body that Drishti stores, versions and
-publishes but does not execute or draw. The query engine, the designer and exploration are later phases; section 11 lists
-exactly what is and is not there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan is its section 20.
+Rupaka is Drishti's business-intelligence layer. This guide describes **what is built today: phase 1 (the shell and the
+catalogue) and phase 2 (datasets and the query engine)**. You can open the BI page, keep drafts in a personal workspace, share workspaces
+with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them, and find what you
+may open in a catalogue. A **dataset** item is now parsed, validated and **queried**: tables from pack kinds through connectors,
+relationships, measures, row rules and masks, answered by an embedded DuckDB (section 13; the reference is [DATASETS.md](DATASETS.md) and the
+walk-through [BI_TUTORIAL.md](BI_TUTORIAL.md)). **Reports and boards are not run yet**: such an item holds a YAML body that Drishti stores,
+versions and publishes but does not execute or draw. The designer and exploration are later phases; section 11 lists exactly what is and is not
+there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan is its section 20.
 
 ## Contents
 
-1. [What phase 1 is, and is not](#1-what-phase-1-is-and-is-not)
+1. [What phases 1 and 2 are, and are not](#1-what-phases-1-and-2-are-and-are-not)
 2. [Getting in: the BI menu and RUPAKA](#2-getting-in-the-bi-menu-and-rupaka)
 3. [Who may do what: the four powers](#3-who-may-do-what-the-four-powers)
 4. [The page and its rail](#4-the-page-and-its-rail)
@@ -36,14 +38,17 @@ exactly what is and is not there. The design is in [RUPAKA.md](../architecture/R
 10. [Shipped content, settings and the command line](#10-shipped-content-settings-and-the-command-line)
 11. [Built and not built](#11-built-and-not-built)
 12. [Problems](#12-problems)
+13. [Datasets and the query engine (phase 2)](#13-datasets-and-the-query-engine-phase-2)
 
-## 1. What phase 1 is, and is not
+## 1. What phases 1 and 2 are, and are not
 
 | You can | You cannot yet |
 |---|---|
-| Open BI from the top bar or with `RUPAKA <GO>` | Query data from a dataset, draw a visual, or open a report as a report (phases 2 and 3) |
+| Open BI from the top bar or with `RUPAKA <GO>` | Draw a visual, or open a report as a report (phase 3) |
 | Keep drafts in a personal workspace, move them to a shared one | Design a report, explore a dataset, use Perspective, DuckDB or Python in BI (later phases) |
-| Create typed items (`dataset`, `report`, `board`, `notebook`) with a YAML body | Run, validate or refresh that body: it is stored as text, checked only to be YAML with a mapping at the top |
+| Create typed items (`dataset`, `report`, `board`, `notebook`) with a YAML body | Run a `report`, `board` or `notebook` body: it is stored as text. A `dataset` body is validated and queried (section 13) |
+| Open a dataset: its model, and a **query preview** with the server's row rules and masks | Design a report on it, or see its model as a diagram (phase 3) |
+| Start a dataset from the packs' kinds, links across packs, proposed relationships | Schedule a refresh by cron, time intelligence, Python measures (DATASETS.md section 10) |
 | Publish versions, restore an old one, propose for review, approve (four-eyes) | See a diff between versions, or the dataset-change impact (phase 4) |
 | Promote or certify items, set an audience of roles, users and packs | Export, subscribe, alert or embed (phase 7) |
 | Search, filter and sort a catalogue that shows each person only what they may open | Stream live data (phase 5) |
@@ -285,11 +290,17 @@ Built in phase 1: the BI menu and `RUPAKA` keyword with type-ahead; the shell wi
 personal and shared workspaces with four roles; typed items with YAML bodies; versions, restore, review with four-eyes, endorsement;
 audience-based visibility; shipped files; Admin, BI settings; four powers on roles; the audit trail; the CLI; DRS-9001 to DRS-9006.
 
-Not built (and not faked): datasets, the query engine, relationships, measures and row rules (phase 2); reports, visuals, the
-designer, filters, bookmarks and drill-through (phase 3); version diff, lineage and impact, deploying a workspace as a pack
-bundle (phase 4); streaming BI and Perspective (phase 5); Python in BI (phase 6); export, subscriptions, alerts, embedding
-(phase 7); the analyst workbench and Explore (phase 9); *Analyse in BI* from a terminal view; "what changed since your last
-visit"; AI features (stage 2). The rail's Datasets, Designer and Explore are placeholders that say so.
+Built in phase 2: the dataset YAML with its parser and validation (DRS-9010 to 9013); the expression language with aggregation; a dataset
+started from pack kinds with the packs' links across packs and relationships proposed from the data; the connector SPI `scan` and `sqlTarget`
+(Delta, DuckDB, PostgreSQL, file); the query engine (an `AnalyticEngine` interface, embedded DuckDB, compiled parameterised SQL), the columns and
+rollup layers rebuilt per business date on data-load signals, `direct` tables pushed to a SQL store, a minimal `live` table; row rules and masks;
+Arrow and JSON answers; the result cache; limits (DRS-9020 to 9027); the Datasets list and dataset pages; three sample datasets; compressed static
+files. The details, and the list of what is **not** built, are in [DATASETS.md](DATASETS.md) section 10 and [RUPAKA.md](../architecture/RUPAKA.md) section 20.2.
+
+Not built (and not faked): reports, visuals, the designer, filters, bookmarks and drill-through (phase 3); version diff, lineage and impact,
+deploying a workspace as a pack bundle (phase 4); streaming BI and Perspective (phase 5); Python in BI (phase 6); export, subscriptions, alerts,
+embedding (phase 7); the analyst workbench and Explore (phase 9); *Analyse in BI* from a terminal view; "what changed since your last visit";
+AI features (stage 2). The rail's Designer and Explore are placeholders that say so.
 
 ## 12. Problems
 
@@ -305,3 +316,20 @@ visit"; AI features (stage 2). The rail's Datasets, Designer and Explore are pla
 The menu is missing: you hold no BI power (ask an administrator to grant `bi` on one of your roles in Admin, Roles), the console's
 `bi.enabled` is off, or the server could not be asked (the menu then hides rather than failing the page). *Publish* is not offered:
 the workspace requires review, or you are not a member with `bi-author`. More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+## 13. Datasets and the query engine (phase 2)
+
+**Datasets** in the rail lists the datasets you may read (shipped files and published ones; the three samples of `config/bi/datasets/` are marked *sample*). A dataset item is the model
+reports will sit on; its page (`/bi/d/<id>`) shows the **model** (tables and columns, relationships, measures and their expressions, hierarchies, row rules and which apply to you, masked
+columns, and the layers on disk) and a **query preview**: choose fields, measures, one filter, dates and a row limit, **Run the query**, and the grid shows the answer with the layer it came from
+(`rollup`, `columns`, `direct` or `live`), the time, whether the cache answered, the dates read, the columns masked for you and any warnings. Authors may tick *Show the SQL*.
+
+* **Who sees what.** Which dataset you can open is the catalogue's decision (audience, workspace). What its data shows you is the dataset's **row rules** and Drishti's **masks**, evaluated on the
+  server for you: a desk-head sees their desk's rows, someone without the raw power sees `•••` where the model masks. See [DATASETS.md section 6](DATASETS.md#6-security-row-rules-and-masks).
+* **Start a model from the packs** (authors): choose kinds; each becomes a table, the packs' links become relationships (across packs), and relationships are proposed from the data with their match rate. Save the
+  draft YAML to your workspace.
+* **Publishing** a dataset checks it: an invalid dataset (`DRS-9010` to `9013`) is refused with the first error. Drafts in your own workspace can be queried by you only; shipped and published
+  datasets by everyone who may read them.
+* **Refresh.** Layers are rebuilt per business date when a data-load signal names the date ([DATA_LOADS.md](DATA_LOADS.md)); an author can also clear and rebuild the current date from the API
+  (`POST /api/v1/bi/datasets/{id}/refresh`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
+* **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9013 (the dataset) and 9020 to 9027 (the query) in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).

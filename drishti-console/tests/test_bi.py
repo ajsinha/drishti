@@ -109,7 +109,7 @@ def test_every_page_has_the_rail_and_the_shared_top_bar(bi, path, page):
 
 def test_placeholders_say_what_phase_builds_them(bi):
     client, _ = bi
-    assert "phase 2" in client.get("/bi/datasets").text and "Not built yet" in client.get("/bi/datasets").text
+    assert "Start a model from the packs" in client.get("/bi/datasets").text                   # datasets are built (phase 2)
     assert "phase 3" in client.get("/bi/designer").text
     assert "Explore" in client.get("/bi/explore").text and "Not built yet" in client.get("/bi/explore").text
 

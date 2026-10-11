@@ -29,7 +29,7 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 # the server paths the page script may reach: nothing else is passed on
-_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items")
+_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine")
 _NO_BODY = {"GET", "DELETE"}
 
 
@@ -72,9 +72,13 @@ async def item(request: Request, item: str):
 
 @router.get("/bi/datasets")
 async def datasets(request: Request):
-    return _page(request, "bi/soon.html", "datasets", title="Datasets", phase="phase 2",
-                 what="Datasets are the semantic models reports are built on: tables from connectors, relationships, measures, row rules. "
-                      "Phase 1 stores dataset items as typed placeholders with a YAML body; nothing queries them yet.")
+    return _page(request, "bi/datasets.html", "datasets")
+
+
+@router.get("/bi/d/{item:path}")
+async def dataset(request: Request, item: str):
+    """One dataset: its model (tables, relationships, measures, row rules) and a query preview, drawn by ``bi-dataset.js``."""
+    return _page(request, "bi/dataset.html", "datasets", item=item)
 
 
 @router.get("/bi/designer")

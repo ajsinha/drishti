@@ -513,6 +513,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public Optional<com.ash.drishti.api.ArrowScan> scan(com.ash.drishti.api.ScanRequest request) {
+        return com.ash.drishti.api.ColumnScans.over(this, request);
+    }
+
+    @Override
     public Set<String> columnar(String kind) {
         if (!promoted.containsKey(kind) || "effective".equals(modes.get(kind))) {
             return Set.of();                                   // effective tables need each entity's latest row: documents

@@ -96,3 +96,26 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
   .bi-actions .btn-pill, .bi-form .btn-pill { width: 100%; }
   .bi-note { flex-basis: 100%; }
 }
+
+/* Rupaka phase 2: datasets (the list, a model started from the packs, one dataset's page with a query preview). */
+.bi-kinds { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .7rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: .15rem .9rem; margin: .5rem 0; }
+.bi-kinds legend { font-size: .85rem; color: var(--d-muted); padding: 0 .3rem; float: none; width: auto; margin: 0; }
+.bi-preview { max-width: 64rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); align-items: start; }
+.bi-preview select[multiple] { min-height: 9rem; }
+.bi-preview fieldset { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .7rem; display: grid; gap: .5rem; min-width: 0; }
+.bi-preview legend { font-size: .85rem; color: var(--d-muted); padding: 0 .3rem; float: none; width: auto; margin: 0; }
+.bi-preview .bi-actions { grid-column: 1 / -1; margin: 0; }
+.bi-grid th.num, .bi-grid td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.bi-result-meta { color: var(--d-muted); font-size: .9rem; margin: .5rem 0 .25rem; }
+.bi-warn { margin: .25rem 0 .75rem; padding-left: 1.2rem; color: var(--d-muted); font-size: .88rem; }
+.bi-table { border: 1px solid var(--d-border); border-radius: var(--d-radius); margin: .5rem 0; padding: .1rem .7rem; background: var(--d-surface); }
+.bi-table summary { cursor: pointer; padding: .5rem 0; overflow-wrap: anywhere; }
+.bi-table summary:focus-visible { outline: 2px solid var(--d-link); outline-offset: 2px; }
+@media (pointer: coarse) {
+  .bi-table summary, .bi-kinds .bi-checkrow { min-height: 44px; display: flex; align-items: center; }
+  .bi-preview select[multiple] { min-height: 11rem; }
+}
+@media (max-width: 760px) {
+  .bi-preview { grid-template-columns: minmax(0, 1fr); }
+  .bi-kinds { grid-template-columns: minmax(0, 1fr); }
+}

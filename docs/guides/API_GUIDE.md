@@ -1531,6 +1531,18 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9004 | 409 | BI conflict | Business intelligence: the state forbids it: workspace id taken, nothing new to publish, already proposed, edit while proposed, personal workspace (private: cannot publish, be shared or deleted this way), last admin, workspace not empty, shipped content is read-only |
 | DRS-9005 | 403 | BI four-eyes | Business intelligence: with `drishti.governance.four-eyes` on (and security on), the proposer may not approve or reject their own proposal |
 | DRS-9006 | 403 | BI off | Business intelligence is switched off on this server (`drishti.bi.enabled`) |
+| DRS-9010 | 422 | Dataset invalid | The dataset YAML or one of its structures is not valid (the problem names the path of the key) |
+| DRS-9011 | 422 | Dataset expression | A measure, calculated column or row rule does not parse, names something the model lacks, misuses an aggregate or refers to measures in a circle |
+| DRS-9012 | 422 | Dataset reference | A relationship, hierarchy, masked column, row rule or rollup points at something that does not exist |
+| DRS-9013 | 501 | Dataset not built | The document uses a feature the grammar reserves and this server does not build yet (time intelligence, window functions, Python measures) |
+| DRS-9020 | 422 | Query invalid | The query names a field, measure, operator, value or date the dataset cannot take, or the model cannot join what it asks |
+| DRS-9021 | 403 | Query masked | The query filters or sorts on a column masked for the caller, or reads a `direct` table of a kind they may not open |
+| DRS-9022 | 413 | Query rows | The answer is over `drishti.bi.query.max-rows` (or, as JSON, over `json-max-rows`) |
+| DRS-9023 | 413 | Query bytes | The Arrow answer is over `drishti.bi.query.max-bytes` |
+| DRS-9024 | 504 | Query timeout | The query ran past `drishti.bi.query.timeout` and was cancelled |
+| DRS-9025 | 429 | Query busy | Too many queries at once for the server (`max-concurrent`) or the user (`max-concurrent-per-user`) |
+| DRS-9026 | 502 | Query source | A table's connector is not running, or is not a SQL store for a `direct` table |
+| DRS-9027 | 500 | Query engine | The engine failed on the compiled query; the message says how |
 
 `DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1539,7 +1551,7 @@ unknown `rachana:` version); see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#pro
 ## Business intelligence (Rupaka): `/api/v1/bi`
 
 Phase 1 of Drishti Rūpaka ([BI_GUIDE.md](BI_GUIDE.md), [RUPAKA.md](../architecture/RUPAKA.md)): workspaces, typed items with a YAML body
-(stored and versioned, **not executed**), publish and review, endorsement and the catalogue. There is no admin path: the BI powers on the
+(stored and versioned; a `dataset` body is validated and queried, see the next section; the others are **not executed**), publish and review, endorsement and the catalogue. There is no admin path: the BI powers on the
 caller's roles and the workspace roles decide every call, from the identity on the request. A caller without the `bi` power gets `403 DRS-9002`
 on every call; with `drishti.bi.enabled` off, `403 DRS-9006`. Items and workspaces the caller may not see answer `404 DRS-9001`. Writes by a
 personal token need the scopes `bi:write`, `bi:approve` and `bi:admin` (the table under [tokens](#personal-api-tokens)). Every change is audited
@@ -1592,6 +1604,45 @@ Roles carry the BI powers: `GET` and `PUT /admin/role-definitions/{name}` have a
 unknown name is `422 DRS-9003`; a `PUT` that does not name `bi` keeps the powers the role had). From the console the same calls are under
 `/bi/api/...` (same-origin JSON, passed on under the signed-in user). The command line wraps the reads and publish:
 [CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka).
+
+## Datasets and the query engine: `/api/v1/bi` (phase 2)
+
+Phase 2 of Rūpaka ([BI_GUIDE.md](BI_GUIDE.md) section 13, [DATASETS.md](DATASETS.md), [BI_TUTORIAL.md](BI_TUTORIAL.md)). A dataset is a BI item of kind `dataset` (id `bi-<hex>`, or `file:dataset:<name>` for a shipped file); who may read the item is
+decided as for any item (`404 DRS-9001` otherwise), what the answer shows is decided by the dataset's row rules and Drishti's masks for the caller. A personal token reaches the queries and the model reads (they change nothing); `POST .../refresh` needs `bi:write`.
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/bi/datasets` | `{datasets: [{id, title, description, endorsement, tags, sample, shipped, valid, errors, tables, measures, relationships}]}`: the published datasets the caller may see (samples are left out for those who may not see sample content) |
+| `GET` | `/bi/datasets/{id}` | the model for this caller: `{id, title, name, version, valid, problems[{level, code, path, message}], tables[{name, connector, kind, each, mode, access, columns[{name, path, type, key, calculated, expr, masked}]}], relationships[], measures[{name, expr, rollups}], hierarchies, security{rows[{role, where, appliesToYou}], masked, rowRulesEnforced}, rollups, layers}` |
+| `POST` | `/bi/datasets/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], tables, measures}` without storing anything |
+| `POST` | `/bi/datasets/{id}/query` | runs a query (below); `?format=json` (default) or `arrow`; `?explain=true` adds the SQL (BI authors only) and skips the result cache |
+| `GET` | `/bi/datasets/{id}/layers` | what the BI store holds per table: dates, rows, how each was read |
+| `POST` | `/bi/datasets/{id}/refresh` | (needs `bi-author`) clears the current business date's layers of this dataset and reads them again in the background |
+| `GET` | `/bi/model/kinds` | every kind of every pack the caller may open as a table: `{tables: [{table, pack, kind, connector, data, source, columns[{name, path, type, promoted}]}]}` |
+| `POST` | `/bi/model/start` | `{kinds: [...], name?}` (needs `bi-author`): `{yaml, tables, relationships[], proposals[], warnings[]}`: a draft dataset, the links the packs declare (`crossPack` marks those across packs), and relationships proposed from the data |
+| `POST` | `/bi/model/infer` | `{kinds: [...]}` (needs `bi-author`): `{proposals: [{fromTable, fromColumn, toTable, toColumn, cardinality, matchRate, matched, sampled, unmatched[], basis}]}` |
+| `GET` | `/bi/engine` | (needs `bi-admin`) counters (`queries`, `cacheHits`, `rejectedBusy`, `layerBuilds`, `byLayer`) and the limits in force |
+
+**The query body.** `{"fields": ["trades.desk", "trades.tradeDate.month"], "measures": ["Notional", "MTM"], "filters": [{"field": "trades.currency", "op": "in", "values": ["USD", "EUR"]}], "dates": {"from": "2026-10-01", "to": "2026-10-09"}, "orderBy": [{"by": "MTM", "desc": true}], "limit": 100, "layer": "auto"}`.
+Fields are `table.column` or `table.column.part` (`year quarter month day week`); filter `op` is `eq ne in not-in lt le gt ge between contains starts-with is-null not-null`; a filter whose field is a measure name filters the aggregate;
+`dates` omitted means the latest business date; `layer` is `auto`, `columns` or `rollup`. Every name is checked against the model, **every value is a bound parameter**.
+
+**The JSON answer** (captured, trimmed; `ann` is an analyst without the raw power, `Counterparties` is a distinct count of a masked column):
+
+```
+POST /api/v1/bi/datasets/file:dataset:trading-risk/query     {"fields":["desks.name"],"measures":["MTM","Trades","Counterparties"]}
+{"columns": [{"name":"desks.name","type":"string","masked":false}, {"name":"MTM","type":"decimal","masked":false},
+             {"name":"Trades","type":"integer","masked":false}, {"name":"Counterparties","type":"integer","masked":true}],
+ "rows": [["Bonds and securitised", -2977676.0, 78, null], ["Commodities", 16954390.0, 90, null], ...],  "rowCount": 10,
+ "meta": {"layer":"columns", "rollup":null, "rows":10, "millis":8.06, "cached":false, "dates":["2026-09-30"], "tables":["trades","desks"],
+          "masked":["Counterparties"], "warnings":["measure Counterparties is masked"], "generation":0}}
+```
+
+**The Arrow answer** (`format=arrow`): `Content-Type: application/vnd.apache.arrow.stream` (an Arrow IPC stream: text, 64-bit integer and double columns with nulls; Perspective and DuckDB-Wasm read it as it is), with `X-Bi-Layer`, `X-Bi-Rollup`,
+`X-Bi-Rows`, `X-Bi-Cached`, `X-Bi-Masked` (the masked columns) and `Server-Timing`. Masks are applied before the bytes are written. A JSON answer holds at most `drishti.bi.query.json-max-rows` rows (`413 DRS-9022` otherwise: ask for Arrow).
+
+Refusals are the standard problem body with the code: `403 DRS-9021` (filtering a masked column), `422 DRS-9020`, `413 DRS-9022`/`9023`, `504 DRS-9024`, `429 DRS-9025`, `502 DRS-9026`, `500 DRS-9027`, and `422 DRS-9010` when the dataset itself has errors.
+Every query is audited (`bi-query`: the counts, the rows, the layer). From the console the calls are under `/bi/api/datasets/...` and `/bi/api/model/...`.
 
 ## Embedding views in another web application
 
@@ -1713,7 +1764,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
 | `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
 | `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_LOADS.md](DATA_LOADS.md)) | the roles that open the kind (an administrator needs no more) |
-| `bi:write` | Business intelligence: `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
+| `bi:write` | Business intelligence: `POST /bi/datasets/{id}/refresh`, `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
 | `bi:approve` | `POST /bi/items/{id}/approve`, `/reject` and `/endorse` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
 | `bi:admin` | `PUT` and `DELETE /bi/workspaces/{id}`, `PUT` and `DELETE /bi/workspaces/{id}/members/{user}`, `PUT /bi/settings` | workspace admin, or `bi-admin` |
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`) | `admin` |

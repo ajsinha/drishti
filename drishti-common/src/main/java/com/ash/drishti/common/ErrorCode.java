@@ -149,7 +149,31 @@ public enum ErrorCode {
     /** Business intelligence: with four-eyes on, nobody approves their own proposal. */
     BI_FOUR_EYES("DRS-9005", 403),
     /** Business intelligence is switched off on this server (drishti.bi.enabled). */
-    BI_OFF("DRS-9006", 403);
+    BI_OFF("DRS-9006", 403),
+    /** Datasets: the YAML is malformed or a key, name, type, mode or cardinality is not valid (the problem names the path). */
+    DATASET_INVALID("DRS-9010", 422),
+    /** Datasets: a measure, calculated column or row rule does not parse, names something the model lacks, or misuses an aggregate. */
+    DATASET_EXPRESSION("DRS-9011", 422),
+    /** Datasets: a relationship, hierarchy, rollup or security rule points at a table or column that does not exist, or the model cannot be joined as asked. */
+    DATASET_RELATION("DRS-9012", 422),
+    /** Datasets: the document uses a feature the grammar reserves and this server does not build yet (time intelligence, window functions, Python measures). */
+    DATASET_NOT_BUILT("DRS-9013", 501),
+    /** Queries: the query names a field, measure, operator or value the dataset does not have or cannot take. */
+    QUERY_INVALID("DRS-9020", 422),
+    /** Queries: the query filters, sorts on or probes a column masked for the caller. */
+    QUERY_MASKED("DRS-9021", 403),
+    /** Queries: the answer would exceed the row limit (drishti.bi.query.max-rows). */
+    QUERY_ROWS("DRS-9022", 413),
+    /** Queries: the answer would exceed the byte limit (drishti.bi.query.max-bytes). */
+    QUERY_BYTES("DRS-9023", 413),
+    /** Queries: the query ran past its time limit (drishti.bi.query.timeout) and was stopped. */
+    QUERY_TIMEOUT("DRS-9024", 504),
+    /** Queries: too many queries at once for the server or for this user (drishti.bi.query.max-concurrent, max-concurrent-per-user). */
+    QUERY_BUSY("DRS-9025", 429),
+    /** Queries: a table's connector cannot be read (not running, no SQL target for a direct table, nothing for the date). */
+    QUERY_SOURCE("DRS-9026", 502),
+    /** Queries: the analytic engine failed on a compiled query (a bug or a limit of the engine; the message says which). */
+    QUERY_ENGINE("DRS-9027", 500);
 
     private final String code;
     private final int httpStatus;

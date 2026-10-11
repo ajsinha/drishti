@@ -1,0 +1,66 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Rupaka phase 2: one dataset. A minimal read-only Model view (tables, relationships, measures, rules, layers) and a query preview grid. The Model
+   diagram and the designer are phase 3. Drawn by static/js/bi-dataset.js from /bi/api/datasets/<id>. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Dataset{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><div class="bi-title-row"><h1 data-title>Dataset</h1></div>
+  <p class="text-muted-d" data-desc></p>
+  <p class="bi-facts" data-meta></p>
+  <p class="bi-badges" data-badges></p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<section class="bi-sec" aria-labelledby="dProb" data-problems-sec hidden><h2 id="dProb">Problems</h2><ul class="bi-warn" data-problems></ul></section>
+<section class="bi-sec" aria-labelledby="dPrev"><h2 id="dPrev">Preview a query</h2>
+  <p class="text-muted-d">Choose what to group by and what to measure, as a visual would. The server compiles it, applies your row rules and masks, and answers from the smallest layer that can.</p>
+  <form class="bi-form bi-preview" data-preview autocomplete="off" aria-label="Query preview">
+    <label>Group by (fields)<select name="fields" multiple size="7" class="studio-select" data-fields></select></label>
+    <label>Measures<select name="measures" multiple size="7" class="studio-select" data-measures></select></label>
+    <fieldset><legend>Filter</legend>
+      <label>Field<select name="ffield" class="studio-select" data-ffield><option value="">none</option></select></label>
+      <label>Is<select name="fop" class="studio-select"><option value="eq">equal to</option><option value="ne">not equal to</option><option value="in">one of (comma separated)</option><option value="gt">greater than</option><option value="lt">less than</option><option value="contains">contains</option></select></label>
+      <label>Value<input name="fvalue" class="studio-in" autocomplete="off"></label></fieldset>
+    <fieldset><legend>Business dates</legend>
+      <label>From<input name="from" type="date" class="studio-in" data-from></label>
+      <label>To<input name="to" type="date" class="studio-in" data-to></label>
+      <label>Most rows<input name="limit" type="number" min="1" value="100" class="studio-in" data-limit></label>
+      <label class="bi-checkrow"><input type="checkbox" name="explain" data-explain> Show the SQL (authors)</label></fieldset>
+    <p class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-run>Run the query</button></p>
+  </form>
+  <p class="bi-result-meta" data-result-meta role="status" aria-live="polite"></p>
+  <ul class="bi-warn" data-result-warnings></ul>
+  <div class="tbl-wrap" data-grid-wrap hidden><table class="tbl bi-tbl bi-grid" data-grid data-plain><caption class="visually-hidden">Query result</caption><thead></thead><tbody></tbody></table></div>
+  <pre class="bi-body mono" data-sql tabindex="0" hidden></pre>
+</section>
+<section class="bi-sec" aria-labelledby="dTables"><h2 id="dTables">Tables</h2><div data-tables></div></section>
+<section class="bi-sec" aria-labelledby="dRel"><h2 id="dRel">Relationships</h2>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-relationships data-plain><caption class="visually-hidden">Relationships</caption>
+    <thead><tr><th scope="col">From (many)</th><th scope="col">To (one)</th><th scope="col">Cardinality</th><th scope="col">Direction</th><th scope="col">Active</th></tr></thead><tbody></tbody></table></div>
+  <p class="bi-empty" data-empty-rel hidden>No relationships: the tables are not joined.</p></section>
+<section class="bi-sec" aria-labelledby="dMeas"><h2 id="dMeas">Measures</h2>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-measures-table data-plain><caption class="visually-hidden">Measures</caption>
+    <thead><tr><th scope="col">Name</th><th scope="col">Expression</th><th scope="col">Rollups</th><th scope="col">Description</th></tr></thead><tbody></tbody></table></div></section>
+<section class="bi-sec" aria-labelledby="dSec"><h2 id="dSec">Security</h2>
+  <p class="text-muted-d" data-security-note></p>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-rules data-plain><caption class="visually-hidden">Row rules</caption>
+    <thead><tr><th scope="col">Role</th><th scope="col">Rows where</th><th scope="col">Applies to you</th></tr></thead><tbody></tbody></table></div>
+  <p data-masked></p></section>
+<section class="bi-sec" aria-labelledby="dHier"><h2 id="dHier">Hierarchies and layers</h2>
+  <ul class="bi-warn" data-hierarchies></ul>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-layers data-plain><caption class="visually-hidden">Layers on disk</caption>
+    <thead><tr><th scope="col">Table</th><th scope="col">Mode</th><th scope="col">Dates held</th><th scope="col">Rows</th></tr></thead><tbody></tbody></table></div></section>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset.js?v={{ ASSET_V }}"></script>{% endblock %}

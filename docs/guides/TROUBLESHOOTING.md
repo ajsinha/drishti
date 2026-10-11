@@ -1014,4 +1014,16 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-9004` | business intelligence: the state forbids it (HTTP 409): the workspace id is taken, there is nothing new to publish, the item is proposed (withdraw it first), a personal workspace cannot publish or be shared (move the item to a shared workspace), the last admin cannot be removed, the workspace still holds items, or the item is shipped content (change the file in the BI folder) |
 | `DRS-9005` | business intelligence: four-eyes: you proposed it, so someone else must approve or reject it (HTTP 403); withdraw it instead of rejecting your own proposal. Switch off with `drishti.governance.four-eyes` |
 | `DRS-9006` | business intelligence is switched off on this server (HTTP 403, `drishti.bi.enabled`) |
+| `DRS-9010` | a dataset's YAML or a structure in it is not valid (HTTP 422): the problem names the path of the key; check it on the dataset page or with `POST /api/v1/bi/datasets/validate`; publishing an invalid dataset is refused with this code |
+| `DRS-9011` | a measure, calculated column or row rule does not parse, names a table or column the dataset does not have, aggregates where it must not (or does not where it must), uses an unknown function, or refers to measures in a circle (HTTP 422) |
+| `DRS-9012` | a relationship, hierarchy, masked column, row rule or rollup points at a table or column that does not exist, or a rollup lists a measure it cannot hold (a distinct count, a percentile, a condition inside an aggregate) |
+| `DRS-9013` | the dataset uses time intelligence (`ytd`, `mtd`, ...), a window function (`running`, `lag`, `rank`) or a Python measure: reserved, **not built** (HTTP 501 as a query; a warning for a stored Python measure) |
+| `DRS-9020` | a query names a field, measure, filter operator, value or date the dataset cannot take, or the model has no many-to-one path joining what it asks for (HTTP 422; a row rule's tables are joined into every query a reader runs, so a rule can make a question unanswerable: the message names it) |
+| `DRS-9021` | a query filters on or sorts by a column masked for you, or reads a `direct` table of a kind you may not open (HTTP 403) |
+| `DRS-9022` | the answer is over `drishti.bi.query.max-rows` (or, as JSON, `json-max-rows`) (HTTP 413): group by less, filter, set a `limit`, or ask for Arrow |
+| `DRS-9023` | the Arrow answer is over `drishti.bi.query.max-bytes` (HTTP 413) |
+| `DRS-9024` | the query ran longer than `drishti.bi.query.timeout` and was cancelled (HTTP 504) |
+| `DRS-9025` | too many queries at once, for the server (`max-concurrent`) or for you (`max-concurrent-per-user`) (HTTP 429): try again |
+| `DRS-9026` | a table's connector is not running (Admin, Connectors says why), or is not a SQL store for a `direct` table (HTTP 502) |
+| `DRS-9027` | the analytic engine failed on the compiled query (HTTP 500); the message is DuckDB's. A BI author can add `?explain=true` to see the SQL |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |

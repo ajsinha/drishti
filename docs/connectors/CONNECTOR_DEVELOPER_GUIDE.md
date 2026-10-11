@@ -242,6 +242,9 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 | `feed` | yes, recent history | no | yes | no | — | — |
 | `derived` | yes, wherever its members have it | no | yes | no | — | computations cached per date |
 
+**For BI (Rūpaka datasets)** the `delta`, `duckdb`, `jdbc` (table mode) and `file` connectors implement `scan` over their promoted columns, and `duckdb` and `jdbc` (table mode) expose a `sqlTarget` for `direct` tables
+([Bulk reads for BI](#bulk-reads-for-bi-scan-and-sqltarget)); every other connector is read record by record, with a warning that a large table will be slow.
+
 **Rules of thumb.**
 
 - **History lives in a dated store; "now" can live in a stream.** The banking packs ship exactly this: a Delta Lake
@@ -480,6 +483,29 @@ the kind on the date, column by column (`ColumnSet`: `ids`, `numbers`, `texts`, 
 derived kinds and impact analysis read columns instead of documents. Return `Optional.empty()` when you cannot answer
 as columns and documents are read instead. `columns` is only called with paths `columnar` lists. A plugin that does not
 keep columns leaves both as they are.
+
+### Bulk reads for BI: `scan` and `sqlTarget`
+
+Rūpaka (BI, [RUPAKA.md](../architecture/RUPAKA.md) section 6.1) reads **whole tables** through the same connectors, by their logical names. Two **optional** methods say how, both default to "no":
+
+```java
+default Optional<ArrowScan> scan(ScanRequest request) throws Exception      // columns of a kind over a date range, as column batches
+default Optional<SqlTarget> sqlTarget()                                      // where this store's SQL tables are, for pushdown
+```
+
+* **`scan(ScanRequest)`**: `ScanRequest(kind, paths, filters, from, to, batchRows)` asks for chosen document paths (no leading `$.`), optional conjunctive filters (`EQ NE LT LE GT GE IN`), and a business-date range (`from == null`: the
+  source's latest day; an undated source ignores the range). Answer `Optional.empty()` when you cannot give **every** path as a column; the engine then reads records and warns that a large table will be slow. Otherwise return an
+  `ArrowScan`: call `next()` for a `ColumnBatch` (the date, the entity ids, and one array per path: `String[]` for text, `double[]` with `NaN` for an absent number, `boolean[]`) until it returns null, then `close()`; `warnings()` after the last batch lists
+  anything to show. The batch types are the Arrow type model without Arrow's memory libraries; the engine writes the Parquet layer from them. **A scan returns a date's own rows only**: a snapshot source that answers a date it
+  does not hold with an earlier day must skip that day, or a range would count it twice.
+* **The easy way.** A source that already promotes columns implements `columnar` and `columns` (above); give `scan` in one line: `return ColumnScans.over(this, request);`. It walks the days of the range, calls your `columns`, applies the filters, cuts batches, and
+  skips days that are not the date asked. The Delta, DuckDB, PostgreSQL (table mode) and file connectors do exactly this, so **what they can scan is what they promote** (`layout.<kind>.columns`); a dataset that names a column they do not promote is read from
+  documents instead. They do not yet push filters into their own storage: the filters are applied to the column set after it is read.
+* **`sqlTarget()`**: for SQL stores. A `SqlTarget` gives the `dialect()` (`duckdb`, `postgresql`), a `relation(kind)` (the table expression, the kind column, the business-date column, the id column, and a function from a document path to its quoted column or
+  null) and `with(work)`, which runs work on a connection borrowed from **your** pool. The engine compiles one SELECT over the relation, values bound as parameters, and runs it there (`mode: direct` tables). The DuckDB connector (the `entities` table of its
+  file) and the PostgreSQL connector (table mode) provide it; Delta and files do not (their pushdown is the scan above). A connector wrapper (`ConnectorInstance`, the named connector) forwards both methods.
+
+Test it as the engine does: [`ColumnScansTest`](../../drishti-api/src/test/java/com/ash/drishti/api/ColumnScansTest.java) is a stub source and the range, filter, batch and refusal cases; the engine's tests read a small generated lake through a stub connector.
 
 ### `reverse(target, kind[, asOf])`: what refers to this entity
 

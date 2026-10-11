@@ -1,0 +1,142 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE 2 of 3: the "real" example. A cross-pack model: trades (trading pack) joined to counterparties and desks and books
+# (banking-core pack) and to netting sets (counterparty-risk pack), using the links the packs already declare.
+# It also shows a date hierarchy, a rollup, a row rule per role and masked columns.
+# Tutorial: docs/guides/BI_TUTORIAL.md. Reference: docs/guides/DATASETS.md.
+
+rachana: 1
+dataset: trading-risk
+version: 1
+title: Trading and counterparty risk
+description: >-
+  Trades with their counterparties, desks, books and netting sets, across three packs. Measures: MTM, notional, P&L 1d,
+  trade counts, and exposure (EE and PFE peaks) from the netting sets. A desk-head sees only the trades of their own desks;
+  counterparty names and traders are masked for readers without the raw power.
+sample: true
+endorsement: promoted
+tags: [sample, trading, counterparty-risk, cross-pack]
+
+tables:
+  # ---- the fact tables: rows you add up --------------------------------------------------------------------------------
+  trades:
+    source: { connector: trading-store, kind: trade }          # pack: trading
+    mode: cached
+    refresh: { on-load: true }
+    columns:
+      tradeId:          { type: string, key: true }
+      desk:             string                                  # the desk's id, DESK-FI: links to the desks table
+      book:             string                                  # links to the books table
+      nettingSet:       string                                  # links to the netting_sets table (a counterparty-risk kind)
+      counterpartyId:   { path: counterparty.id, type: string } # a path into the nested counterparty object; links to counterparties
+      counterpartyName: { path: counterparty.name, type: string }
+      productType:      string
+      assetClass:       string
+      currency:         string
+      status:           string
+      notional:         { type: decimal, format: amount0 }
+      mtm:              { type: decimal, format: signed0 }
+      pnl1d:            { type: decimal, format: signed0 }
+      dv01:             { path: risk.dv01, type: decimal, format: signed0 }
+      tradeDate:        date
+      maturityDate:     date
+
+  netting_sets:
+    source: { connector: credit-store, kind: netting-set }     # pack: counterparty-risk
+    mode: cached
+    columns:
+      counterparty: string                                      # the counterparty's id: links to counterparties
+      tradeCount:   integer
+      netMtm:       { type: decimal, format: signed0 }
+      collateral:   { type: decimal, format: signed0 }
+      eePeak:       { type: decimal, format: amount0 }          # expected exposure, peak
+      pfePeak:      { type: decimal, format: amount0 }          # potential future exposure, peak
+      limit:        { type: decimal, format: amount0 }
+      utilisation:  decimal
+
+  # ---- the dimension tables: what you group and filter by --------------------------------------------------------------
+  counterparties:
+    source: { connector: reference-store, kind: counterparty }  # pack: banking-core
+    mode: cached
+    columns:
+      name:    string
+      rating:  string
+      sector:  string
+      country: string
+      type:    string
+
+  desks:
+    source: { connector: reference-store, kind: desk }
+    mode: cached
+    columns:
+      name: string
+      head: string
+
+  books:
+    source: { connector: reference-store, kind: book }
+    mode: cached
+    columns:
+      name:     string
+      deskName: string
+
+# Relationships join tables. "from" is the MANY side, "to" the ONE side. These four are the links the packs declare in their
+# link graph (graph.fields: desk, book, nettingSet, counterparty); they cross packs. Every id is the entity's own id.
+relationships:
+  - { from: trades.desk,             to: desks.id,           cardinality: many-to-one }   # trading -> banking-core
+  - { from: trades.book,             to: books.id,           cardinality: many-to-one }   # trading -> banking-core
+  - { from: trades.counterpartyId,   to: counterparties.id,  cardinality: many-to-one }   # trading -> banking-core
+  - { from: trades.nettingSet,       to: netting_sets.id,    cardinality: many-to-one }   # trading -> counterparty-risk
+  - { from: netting_sets.counterparty, to: counterparties.id, cardinality: many-to-one }  # counterparty-risk -> banking-core
+  # Not every join is allowed in one query: a measure from trades can be grouped by anything trades reaches, many-to-one
+  # (desks, books, counterparties, netting_sets). Exposure comes from netting_sets and can be grouped by counterparties,
+  # but not by desks (no many-to-one path from netting sets to desks). Ask for them in separate queries.
+
+measures:
+  MTM:                { expr: "sum(trades.mtm)",      format: signed0, description: "Mark-to-market in USD, signed." }
+  Notional:           { expr: "sum(trades.notional)", format: amount0 }
+  "P&L 1d":           { expr: "sum(trades.pnl1d)",    format: signed0, description: "Profit and loss over the last day." }
+  Trades:             { expr: "count(trades)" }
+  Counterparties:     { expr: "distinct(trades.counterpartyId)", description: "How many different counterparties the trades are with." }
+  MTM per 1m notional: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000", format: signed2 }
+  Worst trade MTM:    { expr: "min(trades.mtm)",      format: signed0 }
+  MTM median:         { expr: "percentile(trades.mtm, 0.5)", format: signed0, description: "The median trade MTM." }
+  Open MTM:           { expr: "sum(trades.mtm, trades.status == 'Live')", format: signed0, description: "MTM of the live trades only (a condition inside the aggregate)." }
+  Exposure (EE peak): { expr: "sum(netting_sets.eePeak)",  format: amount0, description: "Sum of the netting sets' expected-exposure peaks. Group by counterparty, not by desk." }
+  Exposure (PFE peak): { expr: "sum(netting_sets.pfePeak)", format: amount0 }
+  Netting sets:       { expr: "count(netting_sets)" }
+
+hierarchies:
+  Trade date: [trades.tradeDate.year, trades.tradeDate.quarter, trades.tradeDate.month, trades.tradeDate]   # a date column cut into parts
+  Desk and book: [desks.name, books.name]
+  Counterparty: [counterparties.sector, counterparties.name]
+
+security:
+  # ROW RULES. Evaluated on the server for each reader. A reader gets the rows allowed by ANY rule for a role they hold; a reader
+  # with no matching rule gets no rows. (With server security switched off nobody is restricted.)
+  rows:
+    - { role: desk-head, where: "trades.desk in user.desks" }   # user.desks: the desk ids on the reader's profile (several: DESK-FI; DESK-FX)
+    - { role: risk,      where: "true" }                        # risk sees everything
+    - { role: analyst,   where: "true" }                        # an analyst sees every row too, but without the raw power the masked columns below read •••
+    - { role: admin,     where: "true" }
+  # A rule names tables (here trades), and every query of that reader joins them: a desk-head asking only for exposure would need a path
+  # from netting sets to trades, which the model does not have, so the question is refused rather than answered with other desks' data.
+  # MASKED COLUMNS: shown as ••• to readers without the raw power. A bare name matches that column in any table; table.column names one.
+  # The server's own redact list (drishti.security.redact) applies on top: counterpartyId is on it, so it is masked here too.
+  masked: [counterpartyName, counterparties.name, counterparties.rating]
+
+rollups:
+  # A ROLLUP is a small pre-aggregated table per business date, built after the columns. A query that groups only by these
+  # columns and asks only for these measures is answered from it (see "layer" in the query preview).
+  - { name: by_desk_currency, table: trades, by: [desk, currency, assetClass], measures: [MTM, Notional, "P&L 1d", Trades, MTM per 1m notional] }

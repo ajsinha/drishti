@@ -110,6 +110,18 @@ public final class PackAccess {
         };
     }
 
+    /**
+     * Whether this user may see sample content that is not a pack, such as the sample BI datasets: the rule {@link #sampleVisible} applies to a
+     * sample pack (never in {@code hidden} mode, only authors and administrators in {@code developers} mode).
+     */
+    public boolean samplesVisible(String user) {
+        return switch (samples.mode()) {
+            case com.ash.drishti.packs.SamplePolicy.HIDDEN -> false;
+            case com.ash.drishti.packs.SamplePolicy.DEVELOPERS -> user != null && developer.test(user);
+            default -> true;
+        };
+    }
+
     public List<String> installed() {
         return registry.packs().stream().map(Pack::name).toList();
     }

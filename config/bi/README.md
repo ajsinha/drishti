@@ -21,7 +21,7 @@ describes data (Sutras, links, vocabulary); BI content may combine kinds from ma
 
 ```
 config/bi/
-  datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures
+  datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures; queried since phase 2 (three commented samples ship here)
   reports/    <id>.report.yaml    pages of visuals over datasets: filters, bookmarks, drill-through, theme
   boards/     <id>.board.yaml     a live board (stored in phase 1, not run)
   notebooks/  <id>.notebook.yaml  an analyst notebook (stored in phase 1, not run)
@@ -36,3 +36,6 @@ The folder is **watched live** (`drishti.bi.watch`: auto, poll, off): add a file
 does not parse keeps its last good version and shows as a problem in Admin, BI settings and on Health. No restart. See `docs/guides/BI_GUIDE.md`.
 
 The folders may be empty: nothing here is required for the rest of Drishti to run.
+
+**Datasets** (`datasets/*.dataset.yaml`) are parsed, validated and **queried** since phase 2: see `docs/guides/DATASETS.md` for the format, `docs/guides/BI_TUTORIAL.md` for a walk-through of the three samples in this folder (`trades-basic`, `trading-risk`, `trading-cashflows`, each marked `sample: true` so the sample-visibility setting can hide them), and
+`docs/guides/BI_GUIDE.md` section 13. A dataset that does not parse keeps its last good version and is reported; the layers it builds are written to the BI store (`drishti.bi.query.store-dir`, `./data/bi-store`), never into this folder.

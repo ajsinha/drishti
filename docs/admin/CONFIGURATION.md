@@ -285,6 +285,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | Where proposals are kept. |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir` | `./data` | The data folder: the umbrella every runtime path below defaults under (see [The data folder](#the-data-folder-and-the-config-folder)). |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
+| `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
 | `DRISHTI_PACKS_OVERLAY` | `drishti.packs.overlay` | `./data/packs/added.yaml` | The file of packs an administrator loaded from Admin → Packs; imported at start (`spring.config.import`) and named again by `drishti.packs.overlay`. Written by the server, not by hand. |
 | `DRISHTI_PACKS_SAMPLES` | `drishti.packs.samples` | `visible` | Who sees sample packs: `visible`, `developers` (author or admin) or `hidden`; Admin → Packs can override it. |
@@ -1023,6 +1024,39 @@ shipped, read-only files. The BI powers are granted on roles, see below.
 `drishti.governance.four-eyes` and the `approve` power.
 
 **Console.** `bi.enabled` (`DRISHTI_BI_ENABLED`, default `true`) switches the BI menu, the `/bi` pages and the `RUPAKA` keyword on or off in the console.
+
+**Console, compressed static files.** The console serves `/static/...` compressed (the 36 MB DuckDB-Wasm module is 8 MB gzipped): `static.compress` (default `true`), `static.compress_min_bytes` (`1024`; smaller files are sent as they are),
+`static.brotli_quality` (`5`; Brotli is used when the `brotli` package is installed and the browser accepts it, else gzip) and `static.cache_dir` (empty: the system temp folder, `drishti-console-static`). Each file is compressed once per version
+(path, size and modification time) and served from the cache; range requests, images and fonts go as they are.
+
+### `drishti.bi.query` — the dataset query engine (phase 2)
+
+The embedded DuckDB that answers dataset queries ([DATASETS.md](../guides/DATASETS.md), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13) and the layers it keeps. It starts its connection on the first query. Every limit
+answers with its own code (the codes are in [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2)). Defaults are what a laptop can carry.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `store-dir` | `./data/bi-store` (`DRISHTI_BI_STORE`) | The BI store: `columns/<dataset>/<table>/date=<d>/part.parquet`, `rollups/...`, `live/...`, `duckdb-tmp/`. Anything in it can be rebuilt from the connectors. |
+| `timeout` | `30s` | Longest a query may run; it is then cancelled (`504 DRS-9024`). |
+| `max-rows` | `100000` | Most rows a query returns without a `limit` (`413 DRS-9022`). |
+| `max-bytes` | `67108864` | Most bytes of an Arrow answer (`413 DRS-9023`). |
+| `max-concurrent` | `8` | Queries running at once on the server (`429 DRS-9025`). |
+| `max-concurrent-per-user` | `3` | Queries running at once for one user (`429 DRS-9025`). |
+| `admission` | `2s` | How long a query waits for a free slot before it is refused as busy. |
+| `json-max-rows` | `5000` | Most rows of an answer in JSON (`413 DRS-9022`; ask for `format=arrow`). |
+| `cache-entries` | `200` | Results kept in the result cache; `0` switches it off. The key is dataset, version, query, the reader's row-rule set and masks, and the dataset's data generation, so a data load or a changed dataset can never serve an old answer. |
+| `cache-max-bytes` | `67108864` | The cache's budget (entries weigh at least `cache-max-bytes / cache-entries`). |
+| `cache-ttl` | `15m` | Longest a cached result is served. |
+| `memory-limit` | `768MB` | DuckDB's memory limit (it spills to `store-dir/duckdb-tmp`). |
+| `threads` | `2` | DuckDB's worker threads. |
+| `scan-batch-rows` | `65536` | Rows in one batch when a layer is built from a connector's scan. |
+| `record-read-max` | `50000` | Most documents read one by one when a connector cannot scan the declared columns, or a table is over an array (`each`); the build stops there and warns. |
+| `record-read-budget` | `60s` | How long that document read may take. |
+| `latest-ttl` | `30s` | How long "the latest business date" of a table is trusted before the source is asked again (only when the newest date held is older than the current business date). |
+| `eager-rebuild` | `true` | On a data-load signal, read the date again in the background (`false`: on the next query that needs it). |
+| `live-ttl` | `5s` | How long a `live` table's snapshot is served before the connector is read again. |
+| `infer-sample` | `5000` | Values of a column the relationship finder looks at, and documents it reads for a table whose connector promotes no columns. |
+| `infer-min-match` | `0.8` | The share of a column's distinct values found among another table's ids for a relationship to be proposed. |
 
 ### `drishti.bi.poc` — Rupaka phase 0 proof of concept
 

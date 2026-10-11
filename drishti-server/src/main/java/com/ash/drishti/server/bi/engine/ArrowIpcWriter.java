@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.bi.poc;
+package com.ash.drishti.server.bi.engine;
 
 import com.google.flatbuffers.FlatBufferBuilder;
 import java.io.ByteArrayOutputStream;
@@ -38,7 +38,7 @@ import org.apache.arrow.flatbuf.Type;
 import org.apache.arrow.flatbuf.Utf8;
 
 /**
- * RUPAKA PHASE 0 PROOF OF CONCEPT. Writes an Apache Arrow IPC <em>stream</em> (schema, one record batch, end-of-stream) for
+ * Writes (built in the phase 0 proof of concept, now the engine's result format) an Apache Arrow IPC <em>stream</em> (schema, one record batch, end-of-stream) for
  * columns of text, 64-bit integers and doubles, with nulls. It uses only the message definitions of the Arrow format
  * ({@code arrow-format}, Apache-2.0, with flatbuffers); Arrow's memory and vector libraries (which need JVM
  * {@code --add-opens} flags and bring Netty) are not used. Perspective and DuckDB-Wasm read the bytes in the browser.

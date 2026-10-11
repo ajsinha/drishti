@@ -16,7 +16,7 @@
 
 # Rūpaka phase 0: the proof of concept, built and measured
 
-Status: built and measured (2026-10-10). **Throw-away code**, off by default, that tests the risky parts of
+Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11. **Throw-away code**, off by default, that tests the risky parts of
 [RUPAKA.md](RUPAKA.md) before the roadmap (section 20, phase 0) commits to them. Everything is marked `poc`: the server's
 `com.ash.drishti.server.bi.poc` package and `/api/v1/bi/poc/**`, the console's `routes/bi_poc_routes.py`, `/bi/poc`,
 `bi-poc.js`. Switches: server `drishti.bi.poc.enabled`, console `bi.poc_enabled` (both default `false`; see
@@ -221,3 +221,33 @@ DRISHTI_BI_POC_ENABLED=true python drishti-console/run_drishti_web.py           
 curl -s -X POST -H 'Content-Type: application/json' -d '{"groupBy":["desk"]}' localhost:18480/api/v1/bi/poc/query | file -
 curl -s localhost:18480/api/v1/bi/poc/bench           # the layout comparison (administrators)
 ```
+
+## 11. After phase 2: the adjustments, and the same questions asked of the real engine
+
+Phase 2 ([RUPAKA.md](RUPAKA.md) section 20.2) acted on the four adjustments and re-measured the layers through the real query engine.
+
+| Adjustment | Status |
+|---|---|
+| 1. Perspective in a second tab | **Open, not retested.** No BI page uses Perspective yet and the environment has no network for a newer build. Phase 5 (live grid) retests the newest build on real Chrome, Firefox and Safari; until then the fallback (ECharts and Drishti's own grid) is in force and the POC page is the only place Perspective runs. |
+| 2. Serve DuckDB-Wasm compressed | **Done.** The console serves `/static` compressed (`core/staticzip.py`, `static.*` settings): gzip, Brotli when the package is installed and the browser accepts it; each file is compressed once per version and cached; range requests, images and fonts go as they are. Tested for text and WebAssembly (`test_static_compression.py`). The module stays loaded only on demand. |
+| 3. Style policy for BI pages | **Decided:** strict `style-src 'self'` on every BI page, no `unsafe-inline`; the BI pages built so far need no inline style. The six hashes stay on the POC page only. When phase 5 brings Perspective into a BI page it must generate the hash list at vendoring time, with a check that fails when a library update adds one. |
+| 4. Typed columns beside the JSON | **Done.** The columns layer is exactly that: a typed Parquet projection per table per business date, written when the date lands, with the JSON documents left in the source for drill-down. |
+
+The phase 0 query endpoint (`POST /api/v1/bi/poc/query`) now compiles and runs its typed and rollup layouts through the real engine (`SqlCompiler`, `DuckDbEngine`); the JSON layout and the section 7 comparison keep the POC's own SQL, because the engine has no JSON-document layer on purpose.
+
+**Layers through the engine** (`EngineBenchTest`, 10,000 trades a day for 2 days = 20,000 rows, a file connector scanned into the columns layer, 100 runs after a warm-up, the result cache off except for the last row; JDK 21, `-Xmx1g`, this machine, 2026-10-10):
+
+| Step | p50 | p95 | On disk |
+|---|---:|---:|---:|
+| first query: read the source, build the columns layer for 2 dates, answer | 525 ms | | 53,913 bytes |
+| first rollup query: build the rollup from the columns layer, answer | 26 ms | | 3,044 bytes |
+| group by desk and currency, 3 measures, from the **columns layer** | 3.76 ms | 5.39 ms | |
+| the same from the **rollup** (6 result rows) | 3.86 ms | 6.35 ms | |
+| the same from the **result cache** | 0.039 ms | 0.101 ms | |
+
+Reading it, as section 7 did: at 20,000 rows the columns layer and the rollup cost the same (a few milliseconds, the floor of planning and a small Parquet read); the rollup is 18 times smaller on disk and will matter when the base grows to millions of rows, which a local-safe test
+does not reach (the 10 M-row target of RUPAKA.md section 18 is **not measured**). The layer build is paid once per date and per data load, not per query: it is the "JSON is parsed once per load, not per query" of section 7.1, and the cache makes a repeated visual cost microseconds. On the real
+Delta lake of the tutorial (750 trades a day) a first query that scans the trades takes about 12 ms and a repeat from the cache under 0.1 ms.
+
+**Compared with section 7** (same machine, the POC's own measurement, 20,000 rows, a fresh connection per run): JSON column 29.8 ms, typed columns 1.00 ms, rollup 1.04 ms. The engine's 3.8 ms includes what the POC's bench did not: compiling the query, the row-rule and mask handling, building the result columns and the
+Arrow-ready arrays. The ordering is the same (JSON far behind typed, rollup no faster than typed at this size).

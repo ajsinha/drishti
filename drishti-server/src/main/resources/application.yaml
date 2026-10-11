@@ -173,6 +173,10 @@ drishti:
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
       - /api/v1/bi/poc/query            # Rupaka phase 0 proof of concept: a read (an Arrow answer), only when drishti.bi.poc.enabled
+      - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
+      - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
+      - /api/v1/bi/model/start          # a draft dataset from pack kinds: reads connectors, stores nothing
+      - /api/v1/bi/model/infer          # relationships proposed by value matching: reads connectors, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
@@ -205,6 +209,7 @@ drishti:
           - POST /api/v1/bi/items/*/withdraw
           - POST /api/v1/bi/items/*/publish
           - POST /api/v1/bi/items/*/versions/*/restore
+          - POST /api/v1/bi/datasets/*/refresh
           - PUT /api/v1/bi/items/*
           - PUT /api/v1/bi/items/*/favourite
           - DELETE /api/v1/bi/items/*
@@ -456,6 +461,28 @@ drishti:
     usage-days: 30                   # days of views counted as usage
     recent: 12                       # rows under Recent, Certified and Shared on Home
     list-limit: 200                  # most rows one catalogue or workspace page returns
+    query:                           # Rupaka phase 2: the dataset query engine (embedded DuckDB) and its layers; docs/admin/CONFIGURATION.md, drishti.bi.query
+      store-dir: ${DRISHTI_BI_STORE:${drishti.data.dir:./data}/bi-store}   # the BI store: typed Parquet layers (columns, rollups) written here; never under the repository
+      timeout: 30s                   # longest a query may run (DRS-9024)
+      max-rows: 100000               # most rows a query returns (DRS-9022)
+      max-bytes: 67108864            # most bytes of an Arrow answer (DRS-9023)
+      max-concurrent: 8              # queries running at once on the server (DRS-9025)
+      max-concurrent-per-user: 3     # queries running at once for one user (DRS-9025)
+      admission: 2s                  # how long a query waits for a free slot before it is refused
+      json-max-rows: 5000            # most rows of an answer in JSON (larger results are asked for as Arrow)
+      cache-entries: 200             # results kept; 0 switches the result cache off
+      cache-max-bytes: 67108864      # the cache's budget
+      cache-ttl: 15m                 # longest a cached result is served
+      memory-limit: 768MB            # DuckDB's memory limit
+      threads: 2                     # DuckDB's worker threads
+      scan-batch-rows: 65536         # rows in one batch when a layer is built from a connector
+      record-read-max: 50000         # most documents read one by one when a connector cannot scan columns (the slow path)
+      record-read-budget: 60s        # how long that read may take
+      latest-ttl: 30s                # how long "the latest business date" of a table is trusted
+      eager-rebuild: true            # on a data-load signal, rebuild the date in the background (false: on the next query)
+      live-ttl: 5s                   # how long a live table's snapshot is served
+      infer-sample: 5000             # values of a column the relationship finder looks at
+      infer-min-match: 0.8           # the share of values found among the other table's ids for a relationship to be proposed
     poc:                             # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): throw-away endpoints under /api/v1/bi/poc
       enabled: ${DRISHTI_BI_POC_ENABLED:false}   # off: they answer 404 as if the code were absent
       rows: 10000                    # trades per day in the generated sample lake (at most 10,000: local-safe)
