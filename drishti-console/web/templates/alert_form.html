@@ -1,0 +1,140 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# An alert on a number: new, or an existing one with its history (RUPAKA.md section 20). #}
+{% extends "base.html" %}
+{% block title %}{{ 'Alert ' ~ alert.name if alert else 'New alert' }} · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{% set editing = alert is not none %}
+<div class="adm" data-alert-form-page>
+  <h1>{% if editing %}Alert: {{ alert.name }}{% else %}Alert me{% endif %}</h1>
+  <p class="text-muted-d">Watch one number and be told in your <a href="/inbox?tab=alert">inbox</a> (and by email or a chat bridge, if you ask) when it crosses a limit, moves too far, or does
+    not arrive. <b>The number is read as you</b>: with your row rules and masks. If it is masked for you the alert never judges it and never shows it. After it fires it stays quiet until
+    the value is back inside the limit (by the <i>hysteresis</i>, if you set one), and does not fire again within the <i>cooldown</i>.</p>
+  {% if msg %}<p class="adm-msg" role="status">{{ msg }}</p>{% endif %}
+  {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
+  {% if editing %}<p class="al-facts"><span class="st st-{{ {'active': 'bad', 'armed': 'ok', 'paused': 'warn'}[standing] }}" data-standing>{{ standing }}</span>
+    <span class="text-muted-d">{{ alert.label }} · {{ alert.describe }}</span> <a class="lnk" href="{{ alert.link }}">Open it</a></p>{% endif %}
+  <section class="pnl"><header class="pnl-h"><h3>{{ 'Change it' if editing else 'What to watch, and when to tell you' }}</h3></header><div class="pnl-b">
+    <form class="alert-form al-form" method="post" action="{{ '/alerts/measure/' ~ (alert.name | urlencode) if editing else '/alerts/new' }}" data-alert-form>
+      <label>Name<input name="name" class="studio-in" value="{{ f.name or '' }}" required maxlength="64"{% if editing %} readonly{% endif %}></label>
+      <label class="wide">Title (optional)<input name="title" class="studio-in" value="{{ f.title or '' }}" maxlength="200" placeholder="what the message calls it"></label>
+      <label>Severity<select name="severity" class="studio-select">{% for s in ['info', 'warn', 'critical'] %}<option{% if f.severity == s %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
+
+      <fieldset class="al-src wide2"><legend>Watch</legend>
+        <label>A<select name="source_type" class="studio-select" data-pick="source">
+          <option value="visual"{% if f.source_type == 'visual' %} selected{% endif %}>visual of a BI report</option>
+          <option value="dataset"{% if f.source_type == 'dataset' %} selected{% endif %}>measure of a dataset</option>
+          <option value="field"{% if f.source_type == 'field' %} selected{% endif %}>field of a Sutra entity</option></select></label>
+        <div class="al-grp" data-group="source" data-when="visual">
+          <label>Report<input name="report" class="studio-in mono" value="{{ f.report or '' }}" placeholder="file:report:daily-risk"></label>
+          <label>Page<input name="page" class="studio-in mono" value="{{ f.page or '' }}"></label>
+          <label>Visual<input name="visual" class="studio-in mono" value="{{ f.visual or '' }}"></label>
+          <label>Column (blank: the first number)<input name="measure" class="studio-in mono" value="{{ f.measure or '' }}"></label>
+          <label>Many rows become one number by<select name="reduce" class="studio-select">{% for r in ['first', 'sum', 'max', 'min', 'avg', 'count', 'last'] %}<option{% if f.reduce == r %} selected{% endif %}>{{ r }}</option>{% endfor %}</select></label>
+          <input type="hidden" name="state" value="{{ f.state or '' }}">
+          {% if f.state %}<p class="text-muted-d wide">With the filters you had set on the screen (slicers, selections, drill path) when you pressed <b>Alert me</b>.</p>{% endif %}
+        </div>
+        <div class="al-grp" data-group="source" data-when="dataset">
+          <label>Dataset<input name="dataset" class="studio-in mono" value="{{ f.dataset or '' }}" placeholder="file:dataset:trading"></label>
+          <label>Measure<input name="ds_measure" class="studio-in mono" value="{{ f.ds_measure or '' }}"></label>
+          <label class="wide">Only rows where (one per line: <code>field op values</code>, e.g. <code>desk eq FX, Rates</code>)<textarea name="filters" class="studio-in mono" rows="2">{{ f.filters or '' }}</textarea></label>
+        </div>
+        <div class="al-grp" data-group="source" data-when="field">
+          <label>Kind<input name="kind" class="studio-in mono" value="{{ f.kind or '' }}" placeholder="trade"></label>
+          <label>Id<input name="id" class="studio-in mono" value="{{ f.id or '' }}" placeholder="IRS-48213"></label>
+          <label>Field or expression<input name="field" class="studio-in mono" value="{{ f.field or '' }}" placeholder="mtm"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="al-cond wide2"><legend>Tell me when</legend>
+        <label>It<select name="condition_type" class="studio-select" data-pick="cond">
+          <option value="threshold"{% if f.condition_type == 'threshold' %} selected{% endif %}>crosses a limit</option>
+          <option value="change"{% if f.condition_type == 'change' %} selected{% endif %}>changes by too much</option>
+          <option value="nodata"{% if f.condition_type == 'nodata' %} selected{% endif %}>has no data by a time</option></select></label>
+        <div class="al-grp" data-group="cond" data-when="threshold">
+          <label>The number is<select name="op" class="studio-select" data-pick="range">{% for o, w in [('above', 'above'), ('below', 'below'), ('between', 'between'), ('outside', 'outside')] %}<option value="{{ o }}"{% if f.op == o %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
+          <label>Limit (the low edge for between and outside)<input name="value" class="studio-in mono" value="{{ f.value }}" inputmode="decimal"></label>
+          <label data-range-high>High edge<input name="high" class="studio-in mono" value="{{ f.high }}" inputmode="decimal"></label>
+        </div>
+        <div class="al-grp" data-group="cond" data-when="change">
+          <label>It<select name="change_op" class="studio-select">{% for o in ['moves', 'rises', 'falls'] %}<option{% if f.change_op == o %} selected{% endif %}>{{ o }}</option>{% endfor %}</select></label>
+          <label>By at least<input name="change_value" class="studio-in mono" value="{{ f.change_value }}" inputmode="decimal"></label>
+          <label>Counted in<select name="change_mode" class="studio-select"><option value="pct"{% if f.change_mode == 'pct' %} selected{% endif %}>percent</option><option value="abs"{% if f.change_mode == 'abs' %} selected{% endif %}>the number itself</option></select></label>
+          <label>Against<select name="against" class="studio-select"><option value="previous-run"{% if f.against == 'previous-run' %} selected{% endif %}>the previous look</option><option value="previous-day"{% if f.against == 'previous-day' %} selected{% endif %}>the previous business day</option></select></label>
+        </div>
+        <div class="al-grp" data-group="cond" data-when="nodata">
+          <label>Today's data has not arrived by<input name="by" class="studio-in mono" value="{{ f.by }}" placeholder="09:00" inputmode="numeric"></label>
+          <p class="text-muted-d wide">On a business day, from that time (in the business-date zone) until the source shows data for today's business date.</p>
+        </div>
+        <label>Hysteresis (how far back inside the limit before it re-arms)<input name="hysteresis" class="studio-in mono" value="{{ f.hysteresis }}" inputmode="decimal"></label>
+        <label>Cooldown (no second alert within)<input name="cooldown" class="studio-in mono" value="{{ f.cooldown or '' }}" placeholder="30m (the server's default)"></label>
+      </fieldset>
+
+      <fieldset class="al-when wide2"><legend>Look</legend>
+        <label>When<select name="trigger_mode" class="studio-select" data-pick="trigger">
+          <option value="schedule"{% if f.trigger_mode == 'schedule' %} selected{% endif %}>on a schedule</option>
+          <option value="after-load"{% if f.trigger_mode == 'after-load' %} selected{% endif %}>after a data load</option>
+          <option value="live"{% if f.trigger_mode == 'live' %} selected{% endif %}>when it changes (a live source)</option></select></label>
+        <div class="al-grp" data-group="trigger" data-when="schedule">
+          <label>Schedule<input name="schedule" class="studio-in mono" value="{{ f.schedule or '' }}" list="alSched"></label>
+          <datalist id="alSched">{% for w in schedules %}<option value="{{ w }}">{% endfor %}</datalist>
+        </div>
+        <div class="al-grp" data-group="trigger" data-when="after-load">
+          <label>Only loads of kind (blank: any)<input name="load_kind" class="studio-in mono" value="{{ f.load_kind or '' }}" placeholder="TRD"></label>
+        </div>
+        <div class="al-grp" data-group="trigger" data-when="live">
+          <label>Quiet for (before looking)<input name="debounce" class="studio-in mono" value="{{ f.debounce or '' }}" placeholder="10s"></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="al-to wide2"><legend>Tell me by</legend>
+        <label class="al-check"><input type="checkbox" name="d_inbox" {% if f.d_inbox %}checked{% endif %}> my inbox and the bell</label>
+        <label class="al-check"><input type="checkbox" name="d_email" {% if f.d_email %}checked{% endif %}> email (to the address on my account)</label>
+        <label class="al-check"><input type="checkbox" name="d_bridge" {% if f.d_bridge %}checked{% endif %}> the chat bridges that list alerts (a post that names the alert, with no number)</label>
+        <label class="al-check"><input type="checkbox" name="enabled" {% if f.enabled %}checked{% endif %}> Active</label>
+      </fieldset>
+
+      <div class="al-actions wide2">
+        <button type="submit" class="btn-pill btn-accent dist-act">{{ 'Save changes' if editing else 'Save alert' }}</button>
+        <button type="button" class="btn-pill btn-ghost dist-act" data-check-now>Check now</button>
+        <a class="btn-pill btn-ghost dist-act" href="/alerts">{{ 'Back' if editing else 'Cancel' }}</a>
+      </div>
+      <p class="al-check-out wide2" data-check-out role="status" aria-live="polite"></p>
+    </form>
+  </div></section>
+
+  {% if editing %}
+  <section class="pnl"><header class="pnl-h"><h3>History</h3><span class="pnl-code">{{ (alert.history or []) | length }}</span></header><div class="pnl-b">
+    <div class="al-act-row">
+      <form method="post" action="/alerts/measure/{{ alert.name | urlencode }}/check"><button class="fk dist-act" type="submit">Look now</button></form>
+      <form method="post" action="/alerts/measure/{{ alert.name | urlencode }}/{{ 'resume' if not alert.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not alert.enabled else 'Pause' }}</button></form>
+      <form method="post" action="/alerts/measure/{{ alert.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form>
+    </div>
+    {% if alert.history %}<div class="tbl-wrap"><table class="tbl al-hist" data-plain data-history>
+      <thead><tr><th>When</th><th>What</th><th>Message</th><th>Sent to</th></tr></thead>
+      <tbody>{% for e in alert.history %}<tr data-action="{{ e.action }}"><td class="mono">{{ when_local(e.at) }}</td>
+        <td><span class="st st-{{ {'fired': 'bad', 'cleared': 'ok', 'held': 'warn', 'skipped': 'warn'}.get(e.action, 'ok') }}">{{ e.action }}</span></td>
+        <td>{{ e.message }}</td>
+        <td class="mono">{% if e.delivered %}{% for ch, res in e.delivered.items() if res != 'off' %}<div>{{ ch }}: {{ res }}</div>{% endfor %}{% else %}—{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d">Nothing yet. The first look sets the starting point; a fired alert, a cleared one and a skipped look are all written here.</p>{% endif %}
+  </div></section>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/alert-form.js?v={{ ASSET_V }}"></script>{% endblock %}

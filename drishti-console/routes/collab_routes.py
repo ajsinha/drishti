@@ -30,7 +30,7 @@ from routes.common import ident, local_zone, localise, problem, render
 router = APIRouter(include_in_schema=False)
 
 # what the inbox page filters by: the tab, and the server's row type it means
-TABS = (("all", "All", ""), ("share", "Shares", "share"), ("mention", "Mentions", "mention"), ("reply", "Replies", "reply"))
+TABS = (("all", "All", ""), ("share", "Shares", "share"), ("mention", "Mentions", "mention"), ("reply", "Replies", "reply"), ("alert", "Alerts", "alert"))
 
 
 def collab(request: Request):
@@ -160,6 +160,9 @@ def _row_href(r: dict) -> str:
     """Where a row goes: a share through its link (which checks the right to open), anything else to the entity it is about."""
     if str(r.get("type", "")).startswith("load"):          # a data-load notice: threadId carries the pack; the page is for administrators
         return f"/admin/packs/{quote(r['threadId'], safe='')}/loads" if r.get("access") and r.get("threadId") else ""
+    if r.get("type") == "alert":                            # an alert on a number: the id is the console path it opens (made by the server, never a full URL)
+        path = str(r.get("id") or "")
+        return path if path.startswith("/") and not path.startswith("//") else ""
     if str(r.get("type", "")).startswith("bi-"):            # a BI governance notice: id is the item
         return f"/bi/i/{quote(r['id'], safe=':')}" if r.get("id") else ""
     if r.get("shareId"):

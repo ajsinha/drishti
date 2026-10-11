@@ -480,6 +480,40 @@ class BackendClient:
     async def admin_delete_subscription(self, owner: str, name: str, ident) -> None:
         return await self._send("DELETE", f"/admin/subscriptions/{quote(owner)}/{quote(name)}", ident)
 
+    # -- alerts on measures, fields and board tiles -------------------------------------------------------------
+    async def measure_alerts(self, ident) -> list:
+        return await self._get("/me/measure-alerts", ident)
+
+    async def measure_alert(self, name: str, ident) -> dict:
+        return await self._get(f"/me/measure-alerts/{quote(name)}", ident)
+
+    async def save_measure_alert(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/me/measure-alerts/{quote(name)}", ident, json=body)
+
+    async def delete_measure_alert(self, name: str, ident) -> None:
+        return await self._send("DELETE", f"/me/measure-alerts/{quote(name)}", ident)
+
+    async def check_measure_alert(self, name: str, ident) -> dict:
+        return await self._send("POST", f"/me/measure-alerts/{quote(name)}/check", ident, timeout=120.0)
+
+    async def pause_measure_alert(self, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/me/measure-alerts/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+
+    async def preview_measure_alert(self, body: dict, ident) -> dict:
+        return await self._send("POST", "/me/measure-alerts/preview", ident, json=body, timeout=120.0)
+
+    async def all_measure_alerts(self, ident) -> list:
+        return await self._get("/admin/measure-alerts", ident)
+
+    async def board_alerts(self, ident) -> list:
+        return await self._get("/admin/measure-alerts/boards", ident)
+
+    async def admin_pause_measure_alert(self, owner: str, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+
+    async def admin_delete_measure_alert(self, owner: str, name: str, ident) -> None:
+        return await self._send("DELETE", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}", ident)
+
     # -- notes ------------------------------------------------------------------------------------
     async def notes(self, kind: str, id_: str, ident) -> list:
         where, q = entity_path(kind, id_)

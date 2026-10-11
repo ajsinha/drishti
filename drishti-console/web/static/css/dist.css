@@ -37,3 +37,27 @@
   .bi-export .bi-tool { flex: 1 1 100%; min-width: 0; display: flex; align-items: center; gap: .4rem; }
   .bi-export .bi-tool select { flex: 1 1 auto; min-width: 0; max-width: 100%; }
 }
+
+/* Alerts on numbers: the form, the history, the lists. */
+.al-form fieldset { grid-column: 1 / -1; border: 1px solid var(--d-border); border-radius: 8px; padding: .6rem .8rem; margin: 0; min-width: 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem .9rem; align-items: end; }
+.al-form legend { font-size: .85rem; color: var(--d-muted); width: auto; float: none; padding: 0 .35rem; margin: 0; }
+.al-grp { display: contents; }
+.al-grp[hidden] { display: none; }
+.al-form .wide2 { grid-column: 1 / -1; }
+.al-form textarea { width: 100%; }
+.al-check { flex-direction: row !important; align-items: center; gap: .5rem; min-height: 36px; font-size: .9rem !important; color: inherit !important; }
+.al-check input { width: 20px; height: 20px; flex: 0 0 auto; }
+.al-actions, .al-act-row { display: flex; flex-wrap: wrap; gap: .5rem; }
+.al-act-row { margin-bottom: .6rem; }
+.al-hist td, .al-hist th { white-space: normal; overflow-wrap: anywhere; vertical-align: top; }
+.al-sub, .al-h2 { margin: 1rem 0 .4rem; font-size: 1rem; }
+.al-facts { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.al-check-out { min-height: 1.4rem; margin: 0; }
+@media (max-width: 640px), (pointer: coarse) {
+  .al-form fieldset { grid-template-columns: 1fr; }
+  .al-form input:not([type=checkbox]), .al-form select, .al-form textarea { font-size: 16px; min-height: 44px; }
+  .al-check { min-height: 44px; }
+  .al-check input { width: 24px; height: 24px; }
+  .al-actions .btn-pill, .al-act-row .fk, .al-facts a { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; }
+}

@@ -15,13 +15,35 @@
 #}
 {% extends "base.html" %}
 {% block title %}Alerts · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm" data-alerts>
   <h1>Alerts</h1>
-  <p class="text-muted-d">A rule watches one entity. The server checks it on every change, even when nobody has {{ PRODUCT }} open, and alerts once when it becomes true; it re-arms when it turns false again.</p>
-  <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
+  <p class="text-muted-d">Two kinds. An <b>alert on a number</b> watches a BI visual, a dataset measure or a field and tells you in your <a href="/inbox?tab=alert">inbox</a> when it crosses a limit, moves too far or
+    does not arrive; the number is read as you, with your masks. A <b>rule</b> watches one entity: the server checks it on every change, even when nobody has {{ PRODUCT }} open, and alerts once when it
+    becomes true; it re-arms when it turns false again.</p>
+  <p class="adm-msg" data-msg role="status" aria-live="polite">{{ msg }}</p>
+  <section class="pnl" id="measure" data-measure-alerts><header class="pnl-h"><h3>Alerts on numbers</h3><span class="pnl-code">{{ measure | length }}</span>
+    <a class="btn-pill btn-accent dist-act" href="/alerts/new" data-new-alert>New alert on a number</a>{% if me and me.is_admin %}<a class="lnk dist-link" href="/alerts/all">Everyone's alerts and board tiles</a>{% endif %}</header><div class="pnl-b">
+    {% if measure %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
+      <thead><tr><th>Name</th><th>Watching</th><th>Tell me when</th><th>State</th><th>Last</th><th></th></tr></thead>
+      <tbody>{% for a in measure %}<tr data-alert-row="{{ a.name }}"><td><a class="lnk dist-link" href="/alerts/measure/{{ a.name | urlencode }}">{{ a.name }}</a></td>
+        <td><a class="lnk dist-link" href="{{ a.link }}">{{ a.label }}</a></td>
+        <td>{{ a.describe }}<div class="cmp-path">{{ a.trigger.mode }}{% if a.trigger.schedule %} · {{ a.trigger.schedule }}{% endif %}</div></td>
+        <td><span class="st st-{{ {'active': 'bad', 'armed': 'ok', 'paused': 'warn'}[a.standing] }}" data-standing>{{ a.standing }}</span></td>
+        <td>{% if a.last %}<span class="mono text-muted-d">{{ when_local(a.last.at) }}</span> <b>{{ a.last.action }}</b><div class="cmp-path">{{ a.last.message }}</div>{% else %}—{% endif %}</td>
+        <td class="rpt-actions"><form method="post" action="/alerts/measure/{{ a.name | urlencode }}/check"><button class="fk dist-act" type="submit">Look now</button></form>
+          <form method="post" action="/alerts/measure/{{ a.name | urlencode }}/{{ 'resume' if not a.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not a.enabled else 'Pause' }}</button></form>
+          <a class="fk dist-act" href="/alerts/measure/{{ a.name | urlencode }}">Edit and history</a>
+          <form method="post" action="/alerts/measure/{{ a.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d">None yet. Press <b>Alert me</b> on a visual of a BI report, or click a number on a view and choose <b>Alert me</b>, or <a href="/alerts/new">start here</a>.</p>{% endif %}
+    {% if recent %}<h4 class="al-sub">Recent alerts on numbers</h4><ul class="alert-log" data-measure-log>{% for e in recent %}<li class="sev-{{ e.severity }}"><span class="mono">{{ when_local(e.at) }}</span>
+      <span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(e.severity, 'ok') }}">{{ e.severity }}</span> <a class="lnk" href="/alerts/measure/{{ e.alert | urlencode }}">{{ e.alert }}</a> {{ e.message }}</li>{% endfor %}</ul>{% endif %}
+  </div></section>
+  <h2 class="al-h2">Rules on one entity</h2>
   <section class="pnl"><header class="pnl-h"><h3>New rule</h3><span class="pnl-code">RULE</span></header><div class="pnl-b">
     <form class="alert-form" data-rule-form>
       <label>Name<input name="name" class="studio-in" required></label>

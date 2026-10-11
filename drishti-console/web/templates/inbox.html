@@ -21,7 +21,7 @@
 {% block content %}
 <div class="adm inbox" data-inbox>
   <h1>Inbox</h1>
-  <p class="text-muted-d">What people sent you. Rules that fired are on the <a href="/alerts">Alerts</a> page.</p>
+  <p class="text-muted-d">What people sent you, and the <a href="/alerts">alerts</a> that fired for you: a number that crossed a limit, a board tile that turned red. Their rules and history are on the Alerts page.</p>
   <nav class="inbox-tabs" aria-label="Filter the inbox">
     {% for key, name, _ in tabs %}<a class="fk{% if tab == key %} on{% endif %}" href="/inbox?tab={{ key }}{% if unread %}&amp;unread=1{% endif %}"{% if tab == key %} aria-current="page"{% endif %}>{{ name }}</a>{% endfor %}
     <a class="fk{% if unread %} on{% endif %}" href="/inbox?tab={{ tab }}{% if not unread %}&amp;unread=1{% endif %}" aria-pressed="{{ 'true' if unread else 'false' }}">Unread only</a>
@@ -46,7 +46,7 @@
   </ol>
   {% if more %}<p><a class="fk" href="/inbox?tab={{ tab }}{% if unread %}&amp;unread=1{% endif %}&amp;before={{ more }}">Older &rarr;</a></p>{% endif %}
   {% elif not error %}
-  <p class="inbox-empty">Nothing here yet. When someone shares a view with you, it arrives here and in the bell.</p>
+  <p class="inbox-empty">Nothing here yet. When someone shares a view with you, or an alert of yours fires, it arrives here and in the bell.</p>
   {% endif %}
 </div>
 {% endblock %}

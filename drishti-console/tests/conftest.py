@@ -738,6 +738,74 @@ class FakeBackend:
     async def admin_delete_subscription(self, owner, name, ident):
         self.subs_kept.pop(name, None)
 
+    alerts_kept = {}
+
+    @staticmethod
+    def _alert_words(b):
+        c, s = b.get("condition", {}), b.get("source", {})
+        label = {"visual": f"{s.get('report')} · {s.get('visual')}", "dataset": f"{s.get('dataset')} · {s.get('measure')}", "field": f"{s.get('kind')}/{s.get('id')} · {s.get('field')}"}.get(s.get("type"), "")
+        say = {"threshold": f"{c.get('op')} {c.get('value'):g}" if "value" in c else "", "change": f"{c.get('op')} by {c.get('value')}", "nodata": f"no data by {c.get('by')}"}.get(c.get("type"), "")
+        link = {"visual": f"/bi/r/{s.get('report')}/{s.get('page')}", "dataset": f"/bi/i/{s.get('dataset')}", "field": f"/v/{s.get('kind')}/{s.get('id')}"}.get(s.get("type"), "/")
+        return label, say, link
+
+    async def measure_alerts(self, ident):
+        return [a for a in self.alerts_kept.values() if a["owner"] == ident.user]
+
+    async def measure_alert(self, name, ident):
+        if name not in self.alerts_kept:
+            raise BackendError(404, "DRS-1001", f"no alert '{name}'")
+        return self.alerts_kept[name]
+
+    async def save_measure_alert(self, name, body, ident):
+        if body.get("condition", {}).get("op") == "under":
+            raise BackendError(422, "DRS-9062", "condition.op is above, below, between or outside")
+        if body.get("condition", {}).get("type") == "threshold" and "value" not in body.get("condition", {}):
+            raise BackendError(422, "DRS-9062", "condition.value is a number (for between and outside, the low edge)")
+        label, say, link = self._alert_words(body)
+        old = self.alerts_kept.get(name, {})
+        self.alerts_kept[name] = {"name": name, "owner": ident.user, "enabled": body.get("enabled", True), "title": body.get("title") or label, "severity": body.get("severity", "warn"),
+                                  "source": body["source"], "condition": body["condition"], "trigger": body["trigger"], "hysteresis": body.get("hysteresis", 0),
+                                  "cooldown": body.get("cooldown", "30m"), "delivery": body["delivery"], "describe": say, "label": label, "link": link,
+                                  "state": {}, "history": old.get("history", [])}
+        return self.alerts_kept[name]
+
+    async def delete_measure_alert(self, name, ident):
+        self.alerts_kept.pop(name, None)
+
+    async def check_measure_alert(self, name, ident):
+        a = self.alerts_kept[name]
+        a["state"] = {ident.user: {"active": True}}
+        a["history"].insert(0, {"id": 7, "at": "2026-10-11T15:00:00Z", "user": ident.user, "action": "fired", "severity": "warn", "message": f"{a['title']}: now 1,200 ({a['describe']})",
+                                 "delivered": {"inbox": "ok", "email": "off", "bridge": "off"}})
+        return a
+
+    async def pause_measure_alert(self, name, resume, ident):
+        self.alerts_kept[name]["enabled"] = resume
+        return self.alerts_kept[name]
+
+    async def preview_measure_alert(self, body, ident):
+        if body["source"].get("measure") == "secret":
+            return {"status": "masked", "value": None, "asOf": None, "note": "secret", "condition": "above 1", "live": False}
+        return {"status": "ok", "value": 1234.5, "asOf": "2026-10-09", "note": "", "condition": "above 1000", "holds": True, "live": True}
+
+    async def all_measure_alerts(self, ident):
+        if not getattr(ident, "is_admin", True):
+            raise BackendError(403, "DRS-5002", "administrators only")
+        return list(self.alerts_kept.values())
+
+    async def board_alerts(self, ident):
+        if not getattr(ident, "is_admin", True):
+            raise BackendError(403, "DRS-5002", "administrators only")
+        return [{"name": "t1", "owner": "ash", "title": "Desk wall · Net exposure", "severity": "critical", "board": {"board": "desk-wall", "page": "p1", "tile": "t1"},
+                 "describe": "reaches crit", "delivery": {"inbox": True, "email": True, "bridge": False}, "trigger": {"mode": "live", "debounce": "10s"}, "activeFor": 2,
+                 "link": "/bi/b/desk-wall", "history": [{"at": "2026-10-11T15:00:00Z", "user": "bob", "action": "fired", "message": "Desk wall · Net exposure — is now red"}]}]
+
+    async def admin_pause_measure_alert(self, owner, name, resume, ident):
+        self.alerts_kept[name]["enabled"] = resume
+
+    async def admin_delete_measure_alert(self, owner, name, ident):
+        self.alerts_kept.pop(name, None)
+
     notes_kept = []
     shares = {}
 

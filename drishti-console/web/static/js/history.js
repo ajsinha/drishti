@@ -43,6 +43,7 @@
     dlg.innerHTML = '<header class="hist-h"><h3 data-h></h3><span class="hist-tools">'
       + '<select data-days aria-label="Business days"><option value="10">10 days</option><option value="30" selected>30 days</option>'
       + '<option value="90">90 days</option><option value="250">250 days</option></select>'
+      + '<a class="fk" data-alert-me href="/alerts/new" title="Be told when this number crosses a limit, moves too far or does not arrive">Alert me</a>'
       + '<button type="button" class="fk" data-note title="Discuss this field">Discuss</button>'
       + '<button type="button" class="fk" data-close aria-label="Close">×</button></span></header>'
       + '<p class="hist-origin" data-origin></p><p class="hist-msg text-muted-d" data-msg></p><div class="hist-chart" data-chart-box></div>'
@@ -105,6 +106,8 @@
     current = { path: cell.getAttribute('data-path'), label: (cell.previousElementSibling && cell.previousElementSibling.tagName === 'DT' ? cell.previousElementSibling.textContent : cell.getAttribute('data-path')) };
     if (!dlg) { build(); }
     dlg.querySelector('[data-h]').textContent = current.label.trim() + ' · ' + id + ' over time';
+    dlg.querySelector('[data-alert-me]').href = '/alerts/new?source=field&kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)
+      + '&field=' + encodeURIComponent(current.path) + '&title=' + encodeURIComponent(current.label.trim() + ' of ' + id);
     dlg.showModal();
     load();
   });

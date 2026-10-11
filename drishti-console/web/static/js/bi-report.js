@@ -82,7 +82,9 @@
       return b;
     };
     const group = VGROUP[spec.type];
-    if (group === 'static' || group === 'perspective' || group === 'live' || spec.type === 'slicer') { return out; }
+    if (group === 'static' || spec.type === 'slicer') { return out; }
+    out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)
+    if (group === 'perspective' || group === 'live') { return out; }
     const sel = state.selections.find((s) => s.visual === spec.id);
     const path = state.drills[spec.id] || [];
     const lv = levels(spec);
@@ -99,6 +101,18 @@
     out.push(mk('bi-astable', 'table', state.asTable[spec.id] ? 'Show as a chart' : 'Show as a table', () => { state.asTable[spec.id] = !state.asTable[spec.id]; redraw(spec.id); }, { 'data-act': 'as-table', 'aria-pressed': state.asTable[spec.id] ? 'true' : 'false' }));
     if (sel) { out.push(mk('bi-clear', 'x-circle', 'Clear the selection', () => { clearSelection(spec.id); }, { 'data-act': 'clear' })); }
     return out;
+  }
+  /** Opens the alert form for this visual with the report, page, visual and the filters on the screen filled in. */
+  function alertButton(spec, mk) {
+    return mk('bi-alert', 'bell', 'Alert me about this visual', () => {
+      const p = new URLSearchParams({ source: 'visual', report: reportId, page: pageId, visual: spec.id, title: (rep.title || reportId) + ': ' + (spec.title || spec.id) });
+      const keep = stateFor(spec);
+      delete keep.dates;                                                         // an alert follows the data's own date, not the day pinned on the screen
+      delete keep.rows;
+      const st = JSON.stringify(keep);
+      if (st.length <= 15000) { p.set('state', st); }
+      window.location.assign('/alerts/new?' + p.toString());
+    }, { 'data-act': 'alert-me' });
   }
   const VGROUP = {};
   function setGroups(cat) { Object.keys(cat.visuals).forEach((t) => { VGROUP[t] = cat.visuals[t].group; }); }

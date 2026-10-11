@@ -23,6 +23,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from core.csrf import json_body
 from core.backend import BackendError
+from routes.alert_routes import decorate
 from routes.common import ident, packs, render
 
 router = APIRouter(include_in_schema=False)
@@ -113,15 +114,20 @@ async def alerts_stream(request: Request):
 
 
 @router.get("/alerts")
-async def alerts(request: Request, kind: str = "", id: str = ""):
+async def alerts(request: Request, kind: str = "", id: str = "", msg: str = ""):
     backend, me = request.app.state.backend, ident(request)
     try:
         events = await backend.mine("GET", "/alerts", me, limit=100)
         rules = await backend.mine("GET", "/alerts/rules", me)
     except BackendError:
         events, rules = [], []
+    try:
+        measure = decorate(await backend.measure_alerts(me), getattr(me, "user", ""))
+    except BackendError:
+        measure = []
+    recent = sorted((dict(e, alert=a["name"]) for a in measure for e in (a.get("history") or []) if e.get("action") == "fired"), key=lambda e: e.get("at", ""), reverse=True)[:20]
     suggestions = [s for p in await packs(request) for s in p["alerts"] if not kind or s.get("kind") == kind]
-    return render(request, "alerts.html", events=events, rules=rules, suggestions=suggestions, kind=kind, id=id, screen="alerts")
+    return render(request, "alerts.html", events=events, rules=rules, suggestions=suggestions, kind=kind, id=id, msg=msg, measure=measure, recent=recent, screen="alerts")
 
 
 @router.post("/alerts/api/{name}")

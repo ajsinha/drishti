@@ -1,0 +1,53 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Administrators: everyone's alerts on numbers, and the board tiles that notify (RUPAKA.md section 20). #}
+{% extends "base.html" %}
+{% block title %}All alerts · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm">
+  <h1>All alerts</h1>
+  <p class="text-muted-d">Every person's alerts on numbers, and the board tiles that tell the people who read their board. Pause or remove any of them. You see names, states and the words of
+    each message, which hold only what the person it was sent to may see; you do not see anyone's numbers by being here.</p>
+  {% if msg %}<p class="adm-msg" role="status">{{ msg }}</p>{% endif %}
+  {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
+  <section class="pnl" data-all-alerts><header class="pnl-h"><h3>People's alerts</h3><span class="pnl-code">{{ items | length }}</span><a class="lnk dist-link" href="/alerts">My alerts</a></header><div class="pnl-b">
+    {% if items %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
+      <thead><tr><th>Owner</th><th>Name</th><th>Watching</th><th>Tell when</th><th>Look</th><th>State</th><th>Last</th><th></th></tr></thead>
+      <tbody>{% for a in items %}<tr data-alert-row="{{ a.owner }}/{{ a.name }}"><td>{{ a.owner }}</td><td>{{ a.name }}</td><td>{{ a.label }}</td><td>{{ a.describe }}</td>
+        <td class="mono">{{ a.trigger.mode }}{% if a.trigger.schedule %} · {{ a.trigger.schedule }}{% endif %}</td>
+        <td><span class="st st-{{ {'active': 'bad', 'armed': 'ok', 'paused': 'warn'}[a.standing] }}">{{ a.standing }}</span></td>
+        <td>{% if a.last %}<span class="mono text-muted-d">{{ when_local(a.last.at) }}</span> <b>{{ a.last.action }}</b>{% else %}—{% endif %}</td>
+        <td class="rpt-actions"><form method="post" action="/alerts/all/{{ a.owner | urlencode }}/{{ a.name | urlencode }}/{{ 'resume' if not a.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not a.enabled else 'Pause' }}</button></form>
+          <form method="post" action="/alerts/all/{{ a.owner | urlencode }}/{{ a.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d">Nobody has made an alert on a number yet.</p>{% endif %}
+  </div></section>
+  <section class="pnl" data-board-alerts><header class="pnl-h"><h3>Board tiles that notify</h3><span class="pnl-code">{{ boards | length }}</span></header><div class="pnl-b">
+    {% if boards %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
+      <thead><tr><th>Board</th><th>Tile</th><th>Tells when</th><th>Look</th><th>Told now</th><th>Latest</th></tr></thead>
+      <tbody>{% for b in boards %}<tr data-board-row="{{ b.board.board }}/{{ b.board.tile }}"><td><a class="lnk" href="{{ b.link }}">{{ b.board.board }}</a></td><td>{{ b.title }}</td>
+        <td>{{ b.describe }} · {{ b.severity }}<div class="cmp-path">{{ 'inbox' }}{% if b.delivery.email %}, email{% endif %}{% if b.delivery.bridge %}, chat{% endif %}</div></td>
+        <td class="mono">{{ b.trigger.mode }}{% if b.trigger.schedule %} · {{ b.trigger.schedule }}{% endif %}</td>
+        <td>{{ b.activeFor }} {{ 'person' if b.activeFor == 1 else 'people' }}</td>
+        <td>{% set e = (b.history or [None])[0] %}{% if e %}<span class="mono text-muted-d">{{ when_local(e.at) }}</span> <b>{{ e.action }}</b>{% if e.user %} · {{ e.user }}{% endif %}<div class="cmp-path">{{ e.message }}</div>{% else %}—{% endif %}</td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d">No published board has a tile with <code>notify</code>. Add <code>notify: true</code> to a tile's <code>alert</code> in the board's YAML.</p>{% endif %}
+  </div></section>
+</div>
+{% endblock %}
