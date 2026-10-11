@@ -38,7 +38,7 @@ public final class BiExporter {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final Set<String> NOT_DATA = Set.of("slicer", "text", "image", "button");
-    private static final Set<String> BARS = Set.of("bar", "column", "line", "area", "pie", "donut", "waterfall", "treemap");
+    private static final Set<String> BARS = Set.of("bar", "column", "line", "area", "pie", "donut", "waterfall", "treemap", "funnel", "histogram");
     private static final Set<String> CARDS = Set.of("card", "multirow-card", "kpi", "gauge");
 
     private final BiReportService reports;
@@ -112,7 +112,8 @@ public final class BiExporter {
     private record Built(ExportDoc.Section section, String asOf) {}
 
     private Built section(Principal who, String reportId, Report.Page p, Report.Visual v, JsonNode state, String name) {
-        String type = CARDS.contains(v.type()) ? ExportDoc.CARD : BARS.contains(v.type()) ? ExportDoc.CHART : ExportDoc.TABLE;
+        boolean countries = "map".equals(v.type()) && !v.well("location").isEmpty();
+        String type = CARDS.contains(v.type()) ? ExportDoc.CARD : BARS.contains(v.type()) || countries ? ExportDoc.CHART : ExportDoc.TABLE;
         try {
             Map<String, Object> a = reports.query(who, reportId, null, p.id(), v.id(), state, false);
             @SuppressWarnings("unchecked")

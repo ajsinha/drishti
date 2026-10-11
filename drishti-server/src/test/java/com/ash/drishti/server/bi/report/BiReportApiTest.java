@@ -343,19 +343,19 @@ class BiReportApiTest {
                   - id: p
                     visuals:
                       - { id: a, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional, trades.mtm] } }
-                      - { id: b, type: map, at: { x: 6, y: 0, w: 6, h: 4 } }
+                      - { id: b, type: python, at: { x: 6, y: 0, w: 6, h: 4 } }
                 """;
         refused(call("POST", "/api/v1/bi/reports/validate", rita(), Map.of("yaml", yaml)), 403, "DRS-9002");
         JsonNode v = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", yaml, "quality", true)));
         assertThat(v.path("valid").asBoolean()).isFalse();
         assertThat(v.path("problems").toString()).contains("DRS-9032").contains("DRS-9033").contains("A11Y");
-        JsonNode good = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", yaml.replace(", trades.mtm", "").replace("type: map", "type: card, wells: { values: [MTM] }"))));
+        JsonNode good = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", yaml.replace(", trades.mtm", "").replace("type: python", "type: card, wells: { values: [MTM] }"))));
         assertThat(good.path("valid").asBoolean()).isTrue();
         JsonNode written = ok(call("POST", "/api/v1/bi/reports/format", wes(), Map.of("report", good.path("report"))));
         assertThat(written.path("yaml").asText()).contains("report: draft").contains("pages:");
         JsonNode again = ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", written.path("yaml").asText())));
         assertThat(again.path("report")).isEqualTo(good.path("report"));
-        String goodYaml = yaml.replace(", trades.mtm", "").replace("type: map", "type: card, wells: { values: [MTM] }");
+        String goodYaml = yaml.replace(", trades.mtm", "").replace("type: python", "type: card, wells: { values: [MTM] }");
         JsonNode preview = ok(call("POST", "/api/v1/bi/reports/query", wes(), Map.of("yaml", goodYaml, "page", "p", "visual", "a", "state", Map.of("dates", Map.of("from", "2026-10-08")))));
         assertThat(preview.path("rowCount").asInt()).isGreaterThan(0);
         refused(call("POST", "/api/v1/bi/reports/query", rita(), Map.of("yaml", goodYaml, "page", "p", "visual", "a")), 403, "DRS-9002");

@@ -67,6 +67,23 @@ pages:
         wells: { columns: [counterparties.sector, Trades, MTM, Counterparties] }
         format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
 
+      # A map of the exposure by the country of the counterparty (ISO codes; the map data is vendored, countries only), the year-to-date MTM
+      # (a time-intelligence measure: BI_GUIDE.md, DATASETS.md section 4) and the spread of the trades' MTM (a histogram over the members of an axis).
+      - id: exposure-map
+        type: map
+        title: Exposure by country (EE peak)
+        at: { x: 0, y: 13, w: 8, h: 7 }
+        wells: { location: [counterparties.country], values: [Exposure (EE peak)] }
+        alt: World map shading each country by the expected-exposure peak of its counterparties
+      - { id: mtm-ytd, type: card, title: MTM year to date, at: { x: 8, y: 13, w: 4, h: 2 }, wells: { values: [MTM ytd] } }
+      - id: mtm-spread
+        type: histogram
+        title: How the trades' MTM is spread
+        at: { x: 8, y: 15, w: 4, h: 5 }
+        wells: { axis: [trades.tradeId], values: [MTM] }
+        format: { bins: 12 }
+        alt: Bars counting how many trades fall in each band of mark to market
+
   - id: counterparty
     title: Counterparty
     drillthrough: { fields: [counterparties.name] }      # this page takes a counterparty's name as a filter when another page drills through to it

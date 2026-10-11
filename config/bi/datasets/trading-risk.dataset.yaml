@@ -112,6 +112,7 @@ measures:
   MTM per 1m notional: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000", format: signed2 }
   Worst trade MTM:    { expr: "min(trades.mtm)",      format: signed0 }
   MTM median:         { expr: "percentile(trades.mtm, 0.5)", format: signed0, description: "The median trade MTM." }
+  MTM ytd:            { expr: "ytd(sum(trades.mtm), trades.tradeDate)", format: signed0, description: "MTM of the trades dated this year up to the as-of date (the end of the report's dates). Time intelligence: ytd, mtd, qtd, prior_period, same_period_last_year, running." }
   Open MTM:           { expr: "sum(trades.mtm, trades.status == 'Live')", format: signed0, description: "MTM of the live trades only (a condition inside the aggregate)." }
   Exposure (EE peak): { expr: "sum(netting_sets.eePeak)",  format: amount0, description: "Sum of the netting sets' expected-exposure peaks. Group by counterparty, not by desk." }
   Exposure (PFE peak): { expr: "sum(netting_sets.pfePeak)", format: amount0 }

@@ -37,8 +37,11 @@ public final class VisualCatalogue {
     /** A visual type: the group it belongs to (chart, card, table, slicer, static) and its wells in order. */
     public record Type(String group, Map<String, Well> wells) {}
 
+    /** Visuals whose figures are worked out from the members of their axis: the query asks for every member and the server bins or summarises them. */
+    public static final Set<String> DISTRIBUTIONS = Set.of("histogram", "box");
+
     /** Types the grammar reserves and this server does not build (RUPAKA.md sections 8 and 12). */
-    public static final Set<String> RESERVED = Set.of("bubble", "funnel", "histogram", "box", "map", "python", "entity-view", "shape");
+    public static final Set<String> RESERVED = Set.of("python", "entity-view", "shape");
     /** Slicer modes built; {@code relative-date} is reserved. */
     public static final Set<String> SLICER_MODES = Set.of("list", "dropdown", "range");
 
@@ -57,6 +60,12 @@ public final class VisualCatalogue {
         for (String t : List.of("pie", "donut")) {
             put(t, "chart", "axis", axis, "values", new Well(Kind.MEASURE, true, 1));
         }
+        put("bubble", "chart", "details", new Well(Kind.FIELD, true, 1), "x", new Well(Kind.MEASURE, true, 1), "y", new Well(Kind.MEASURE, true, 1), "size",
+                new Well(Kind.MEASURE, true, 1));
+        put("funnel", "chart", "axis", axis, "values", new Well(Kind.MEASURE, true, 1));
+        put("histogram", "chart", "axis", axis, "values", new Well(Kind.MEASURE, true, 1));
+        put("box", "chart", "axis", legend, "details", axis, "values", new Well(Kind.MEASURE, true, 1));
+        put("map", "chart", "location", legend, "latitude", legend, "longitude", legend, "details", legend, "values", new Well(Kind.MEASURE, true, 1));
         put("waterfall", "chart", "axis", axis, "values", new Well(Kind.MEASURE, true, 1));
         put("treemap", "chart", "axis", new Well(Kind.FIELD, true, 2), "values", new Well(Kind.MEASURE, true, 1));
         put("heatmap", "chart", "axis", axis, "legend", new Well(Kind.FIELD, true, 1), "values", new Well(Kind.MEASURE, true, 1));

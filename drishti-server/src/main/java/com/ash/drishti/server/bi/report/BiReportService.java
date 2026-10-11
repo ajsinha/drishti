@@ -229,7 +229,7 @@ public final class BiReportService {
         boolean author = bi.mayAuthor(p);
         Map<String, Object> live = liveOf(p, pre);                  // read before the query: rows that change meanwhile are above its seq, so a client asking "since" misses none
         QueryService.Result r = shortNames(pre, datasets.queryItem(p, pre.dsItem(), pre.built().query(), explain && author));
-        Map<String, Object> out = new LinkedHashMap<>(datasets.json(r));
+        Map<String, Object> out = new LinkedHashMap<>(VisualCatalogue.DISTRIBUTIONS.contains(pre.visual().type()) ? distribution(pre, r) : datasets.json(r));
         if (pre.built().highlight() != null) {
             out.put("highlight", datasets.json(datasets.queryItem(p, pre.dsItem(), pre.built().highlight(), false)));
         } else {
@@ -237,8 +237,60 @@ public final class BiReportService {
         }
         out.put("visual", pre.visual().id());
         out.put("query", describe(pre.built().query()));
+        List<Map<String, Object>> totals = totals(p, pre);
+        if (!totals.isEmpty()) {
+            out.put("totals", totals);
+        }
         if (live != null) {
             out.put("live", live);
+        }
+        return out;
+    }
+
+    /** A histogram's bins or a box plot's boxes, worked out from the members the query returned; the answer has the shape of any other. */
+    private Map<String, Object> distribution(Prepared pre, QueryService.Result r) {
+        Report.Visual v = pre.visual();
+        String measure = v.well("values").get(0);
+        Distributions.Shape shape;
+        if ("histogram".equals(v.type())) {
+            Object bins = v.format().get("bins");
+            shape = Distributions.histogram(r, measure, bins instanceof Number n ? n.intValue() : Distributions.DEFAULT_BINS);
+        } else {
+            shape = Distributions.box(r, v.well("axis").isEmpty() ? null : v.well("axis").get(0), measure);
+        }
+        Map<String, Object> meta = new LinkedHashMap<>(datasets.meta(r));
+        meta.put("masked", r.meta().masked());
+        meta.put("rows", shape.rows().size());
+        meta.put("members", r.rows());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("columns", shape.columns());
+        out.put("rows", shape.rows());
+        out.put("rowCount", shape.rows().size());
+        out.put("meta", meta);
+        return out;
+    }
+
+    /**
+     * The true totals of a matrix with subtotals and of a table with {@code totals}: one query per level (see {@link Totals}), as the reader, under the same
+     * filters. A level the engine refuses is left out and the client shows {@code –} for it.
+     */
+    private List<Map<String, Object>> totals(Principal p, Prepared pre) {
+        Report.Visual v = pre.visual();
+        List<Totals.Level> levels = "matrix".equals(v.type()) ? Totals.matrix(pre.dataset(), v, pre.built().query(), props.totalsMaxRows())
+                : "table".equals(v.type()) ? Totals.table(pre.dataset(), v, pre.built().query(), props.totalsMaxRows()) : List.of();
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Totals.Level level : levels) {
+            try {
+                Map<String, Object> j = datasets.json(datasets.queryItem(p, pre.dsItem(), level.query(), false));
+                Map<String, Object> t = new LinkedHashMap<>();
+                t.put("by", level.by());
+                t.put("columns", ((List<?>) j.get("columns")).stream().map(c -> ((Map<?, ?>) c).get("name")).toList());
+                t.put("masked", ((List<?>) j.get("columns")).stream().filter(c -> Boolean.TRUE.equals(((Map<?, ?>) c).get("masked"))).map(c -> ((Map<?, ?>) c).get("name")).toList());
+                t.put("rows", j.get("rows"));
+                out.add(t);
+            } catch (DrishtiException e) {
+                // the figure stays a dash on the screen; the visual's own answer is unaffected
+            }
         }
         return out;
     }

@@ -139,7 +139,17 @@ public final class VisualQueries {
     private List<String> fieldsOf() {
         Set<String> f = new LinkedHashSet<>();
         switch (visual.type()) {
-            case "scatter" -> f.addAll(visual.well("details"));
+            case "scatter", "bubble" -> f.addAll(visual.well("details"));
+            case "box" -> {
+                f.addAll(visual.well("axis"));
+                f.addAll(visual.well("details"));
+            }
+            case "map" -> {
+                f.addAll(visual.well("location"));
+                f.addAll(visual.well("latitude"));
+                f.addAll(visual.well("longitude"));
+                f.addAll(visual.well("details"));
+            }
             case "table" -> visual.well("columns").stream().filter(x -> !ds.measures().containsKey(x)).forEach(f::add);
             case "perspective-grid", "perspective-pivot" -> perspectiveFields(f);
             case "live-chart" -> { }
@@ -183,7 +193,7 @@ public final class VisualQueries {
         Set<String> m = new LinkedHashSet<>();
         switch (visual.type()) {
             case "perspective-grid", "perspective-pivot" -> { }
-            case "scatter" -> {
+            case "scatter", "bubble" -> {
                 m.addAll(visual.well("x"));
                 m.addAll(visual.well("y"));
                 m.addAll(visual.well("size"));
@@ -287,7 +297,7 @@ public final class VisualQueries {
         if (isDate(first)) {
             return List.of(new QueryRequest.Sort(first, false));
         }
-        boolean ranked = !measures.isEmpty() && !Set.of("heatmap", "matrix", "table", "slicer").contains(visual.type());
+        boolean ranked = !measures.isEmpty() && !Set.of("heatmap", "matrix", "table", "slicer", "histogram", "box", "map").contains(visual.type());
         return ranked ? List.of(new QueryRequest.Sort(measures.get(0), true)) : List.of();       // else the engine's own order (it never sorts on a masked column)
     }
 
@@ -305,6 +315,9 @@ public final class VisualQueries {
     }
 
     private int limit(VisualCatalogue.Type spec) {
+        if (VisualCatalogue.DISTRIBUTIONS.contains(visual.type())) {
+            return props.distributionRows();
+        }
         int dflt = switch (spec.group()) {
             case "table" -> props.tableRows();
             case "slicer" -> props.slicerValues();

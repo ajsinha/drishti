@@ -166,6 +166,15 @@ public final class ReportValidator {
         if (v.type().startsWith("perspective-")) {
             perspective(v, p);
         }
+        if ("map".equals(v.type())) {
+            mapPlaces(v, p);
+        }
+        if ("histogram".equals(v.type()) && v.format().get("bins") != null) {
+            Object b = v.format().get("bins");
+            if (!(b instanceof Number n) || n.intValue() < 2 || n.intValue() > Distributions.MAX_BINS) {
+                err(ReportParser.VISUAL, p + ".format.bins", "bins is the number of bars of a histogram, 2 to " + Distributions.MAX_BINS);
+            }
+        }
         if ("live-chart".equals(v.type()) && v.format().get("window") != null) {
             Object w = v.format().get("window");
             if (!(w instanceof Number n) || n.intValue() < 5 || n.intValue() > 1000) {
@@ -214,6 +223,32 @@ public final class ReportValidator {
             if (type != null && !Set.of("integer", "decimal", "date", "timestamp").contains(type)) {
                 err(ReportParser.VISUAL, p + ".format.mode", "a range slicer needs a number or date field; " + v.well("field").get(0) + " is " + type);
             }
+        }
+    }
+
+    /** A map is a choropleth by a country code ({@code location}) or points at {@code latitude} and {@code longitude}; not both, and a point needs both coordinates. */
+    private void mapPlaces(Report.Visual v, String p) {
+        boolean place = !v.well("location").isEmpty();
+        boolean lat = !v.well("latitude").isEmpty();
+        boolean lon = !v.well("longitude").isEmpty();
+        if (!place && !lat && !lon) {
+            err(ReportParser.VISUAL, p + ".wells", "a map needs a location (a country code field) or a latitude and a longitude");
+        } else if (place && (lat || lon)) {
+            err(ReportParser.VISUAL, p + ".wells", "a map shades countries (location) or marks points (latitude and longitude), not both");
+        } else if (lat != lon) {
+            err(ReportParser.VISUAL, p + ".wells", "a points map needs both a latitude and a longitude");
+        }
+        for (String w : new String[] {"latitude", "longitude"}) {
+            for (String item : v.well(w)) {
+                String type = typeOf(item);
+                if (type != null && !Set.of("integer", "decimal").contains(type)) {
+                    err(ReportParser.VISUAL, p + ".wells." + w, w + " is a number; " + item + " is " + type);
+                }
+            }
+        }
+        Object mode = v.format().get("mode");
+        if (mode != null && !Set.of("countries", "points").contains(String.valueOf(mode))) {
+            err(ReportParser.VISUAL, p + ".format.mode", "a map's mode is countries or points");
         }
     }
 

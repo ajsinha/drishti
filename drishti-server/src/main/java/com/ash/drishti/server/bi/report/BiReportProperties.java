@@ -27,9 +27,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param showRows most rows "Show the rows" returns
  * @param topCandidates most values a top-N filter ranks before it keeps its N
  * @param perspectiveRows most rows a Perspective grid or pivot is sent (the browser pivots them)
+ * @param distributionRows most members a histogram or box plot reads (the server bins or summarises them; the picture is a few dozen rows)
+ * @param totalsMaxRows most rows one query for a true total (a matrix subtotal level or a table total) may return
  */
 @ConfigurationProperties("drishti.bi.report")
-public record BiReportProperties(Integer chartRows, Integer tableRows, Integer slicerValues, Integer showRows, Integer topCandidates, Integer perspectiveRows) {
+public record BiReportProperties(Integer chartRows, Integer tableRows, Integer slicerValues, Integer showRows, Integer topCandidates, Integer perspectiveRows,
+        Integer distributionRows, Integer totalsMaxRows) {
 
     public BiReportProperties {
         chartRows = chartRows == null || chartRows <= 0 ? 500 : chartRows;
@@ -38,9 +41,11 @@ public record BiReportProperties(Integer chartRows, Integer tableRows, Integer s
         showRows = showRows == null || showRows <= 0 ? 1000 : showRows;
         topCandidates = topCandidates == null || topCandidates <= 0 ? 10_000 : topCandidates;
         perspectiveRows = perspectiveRows == null || perspectiveRows <= 0 ? 20_000 : perspectiveRows;
+        distributionRows = distributionRows == null || distributionRows <= 0 ? 20_000 : distributionRows;
+        totalsMaxRows = totalsMaxRows == null || totalsMaxRows <= 0 ? 2_000 : totalsMaxRows;
     }
 
     public static BiReportProperties defaults() {
-        return new BiReportProperties(null, null, null, null, null, null);
+        return new BiReportProperties(null, null, null, null, null, null, null, null);
     }
 }
