@@ -185,6 +185,7 @@
     clearTimeout(planTimer);
     var host = $('[data-kinds]'), seq = ++planSeq;
     var focus = document.activeElement && document.activeElement.getAttribute ? document.activeElement.getAttribute('data-focus') : null;
+    var typing = document.activeElement && /^(input|textarea)$/i.test(document.activeElement.tagName) ? { el: document.activeElement, value: document.activeElement.value } : null;
     S.busy = true; nextB.disabled = true;
     say('Planning…');
     api('POST', '/build/pack/api/plan', payload()).then(function (r) {
@@ -194,11 +195,22 @@
       say('');
       S.plan = r.body; S.planFiles = r.body.files || [];
       ['name', 'code', 'title', 'description', 'version', 'connector'].forEach(function (k) { if (!S.pack[k] && r.body.pack[k]) { S.pack[k] = r.body.pack[k]; } });
-      K.render(host, S, change, assignFile);
-      if (focus) { var f = host.querySelector('[data-focus="' + focus.replace(/"/g, '') + '"]'); if (f) { f.focus(); } }
-      if (after) { after(); }
+      var a = document.activeElement;
+      if (a && host.contains(a) && /^(input|textarea)$/i.test(a.tagName) && (!typing || typing.el !== a || typing.value !== a.value)) { deferred = { seq: seq, after: after }; return; }   // the user is typing in the card: redrawing would drop it, so draw the plan when the field is left
+      drawPlan(host, focus, after);
     });
   }
+  var deferred = null;
+  function drawPlan(host, focus, after) {
+    deferred = null;
+    K.render(host, S, change, assignFile);
+    if (focus) { var f = host.querySelector('[data-focus="' + focus.replace(/"/g, '') + '"]'); if (f) { f.focus(); } }
+    if (after) { after(); }
+  }
+  $('[data-kinds]').addEventListener('focusout', function () {
+    var d = deferred;
+    setTimeout(function () { if (d && deferred === d && d.seq === planSeq) { drawPlan($('[data-kinds]'), null, d.after); } }, 0);   // a change event (fired first) starts a newer plan, which supersedes this one
+  });
   function change(orig, patch) {
     var o = S.overrides[orig] = S.overrides[orig] || {};
     Object.keys(patch).forEach(function (k) {
