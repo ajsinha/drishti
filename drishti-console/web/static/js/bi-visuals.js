@@ -482,7 +482,183 @@
     return handle;
   }
 
-  const CHARTS = { 'live-chart': liveChart, bar: categoryChart, column: categoryChart, line: categoryChart, area: categoryChart, combo: categoryChart, pie: pieChart, donut: pieChart, waterfall, treemap, heatmap, scatter, gauge };
+  // ---- funnel, histogram, box plot, bubble and map --------------------------------------------------------------------
+
+  function funnel(host, spec, ctx, res) {
+    const f = spec.format || {};
+    const s = seriesOf(spec, ctx, res, []);
+    if (!s.cats.length) { return emptyNote(host, 'No data for this selection.'); }
+    const sr = s.series[0];
+    const sel = selectedSet(ctx, spec);
+    const data = s.labels.map((l, i) => ({ name: l, value: typeof sr.values[i] === 'number' ? sr.values[i] : 0, itemStyle: { opacity: sel && !sel.has(String(s.cats[i])) ? 0.35 : 1 } }));
+    const t = ctx.t;
+    const nf = V.numFmt(spec, ctx, sr.measure);
+    const option = baseOption(spec, ctx, {
+      legend: false, extra: {
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => p.name + ': ' + B.fmt(p.value, nf, s.tb.isMasked(sr.measure)) }),
+        series: [{ type: 'funnel', sort: 'descending', left: '4%', right: '4%', top: 8, bottom: 8, gap: 2, data,
+          label: { show: f.labels !== false, color: t.ink, fontSize: 11, position: 'inside', formatter: (p) => p.name + '  ' + B.compact(p.value) }, itemStyle: { borderColor: t.surface, borderWidth: 1 } }]
+      }
+    });
+    return mount(host, option, spec, ctx, marksFor(s.axis, s, ctx, spec));
+  }
+
+  /** A histogram arrives binned by the server (columns bin, count, from, to): bars of how many members fall in each band. */
+  function histogram(host, spec, ctx, res) {
+    const tb = V.table(res);
+    const bi = tb.at('bin'), ci = tb.at('count');
+    const measure = (spec.wells.values || [])[0];
+    if (tb.isMasked('count') || (res.meta && (res.meta.masked || []).indexOf(measure) >= 0)) { return emptyNote(host, '•••'); }
+    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    const t = ctx.t;
+    const f = spec.format || {};
+    const labels = tb.rows.map((r) => String(r[bi]));
+    const option = baseOption(spec, ctx, {
+      legend: false, extra: {
+        xAxis: Object.assign({ type: 'category', data: labels, name: (f.axisTitles && f.axisTitles.x) || measure || '', nameLocation: 'middle', nameGap: 44, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 9, rotate: 30, hideOverlap: true } }, axisStyle(t), { axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 9, rotate: 30, hideOverlap: true } }),
+        yAxis: Object.assign({ type: 'value', name: (f.axisTitles && f.axisTitles.y) || 'count' }, axisStyle(t)),
+        grid: { left: 8, right: 16, top: 24, bottom: 52, containLabel: true },
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: (p) => { const x = Array.isArray(p) ? p[0] : p; return x.name + '\n' + B.compact(x.value) + ' in this band'; } }),
+        series: [{ type: 'bar', data: tb.rows.map((r) => r[ci]), barCategoryGap: '4%', itemStyle: { color: ctx.palette[0] }, label: { show: !!f.labels, position: 'top', color: t.ink, fontSize: 10 } }]
+      }
+    });
+    return mount(host, option, spec, ctx, { field: null, items: [], byName: () => null });
+  }
+
+  /** A box plot arrives summarised by the server (columns: the category, min, q1, median, q3, max, count, outliers). */
+  function box(host, spec, ctx, res) {
+    const tb = V.table(res);
+    const measure = (spec.wells.values || [])[0];
+    const field = (spec.wells.axis || [])[0] || null;
+    if (res.meta && (res.meta.masked || []).indexOf(measure) >= 0) { return emptyNote(host, '•••'); }
+    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    const t = ctx.t;
+    const cat = 0, nf = V.numFmt(spec, ctx, measure);
+    const names = tb.rows.map((r) => String(r[cat]));
+    const boxes = tb.rows.map((r) => [r[1], r[2], r[3], r[4], r[5]]);
+    const outliers = [];
+    tb.rows.forEach((r, i) => String(r[7] || '').split(',').map((x) => x.trim()).filter((x) => x !== '' && !isNaN(Number(x))).forEach((x) => outliers.push([i, Number(x)])));
+    const sel = selectedSet(ctx, spec);
+    const option = baseOption(spec, ctx, {
+      legend: false, extra: {
+        xAxis: Object.assign({ type: 'category', data: names, boundaryGap: true }, axisStyle(t)),
+        yAxis: valueAxis(spec, ctx, t, measure),
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => {
+          if (p.seriesType === 'scatter') { return names[p.value[0]] + '\noutlier ' + B.fmt(p.value[1], nf); }
+          const r = tb.rows[p.dataIndex];
+          return String(r[cat]) + '\nmax ' + B.fmt(r[5], nf) + '\nQ3 ' + B.fmt(r[4], nf) + '\nmedian ' + B.fmt(r[3], nf) + '\nQ1 ' + B.fmt(r[2], nf) + '\nmin ' + B.fmt(r[1], nf) + '\nn ' + r[6];
+        } }),
+        series: [
+          { type: 'boxplot', data: boxes.map((b, i) => ({ value: b, itemStyle: { opacity: sel && !sel.has(names[i]) ? 0.35 : 1 } })), itemStyle: { color: t['surface-2'] || t.surface, borderColor: ctx.palette[0], borderWidth: 2 }, boxWidth: ['20%', '60%'] },
+          { type: 'scatter', data: outliers, symbolSize: 6, itemStyle: { color: ctx.palette[1] || ctx.palette[0] } }
+        ]
+      }
+    });
+    const items = names.map((n, i) => ({ value: tb.rows[i][cat], label: n, text: n + ': median ' + B.fmt(tb.rows[i][3], nf) + ', ' + B.fmt(tb.rows[i][1], nf) + ' to ' + B.fmt(tb.rows[i][5], nf) + ', ' + tb.rows[i][6] + ' members' }));
+    return mount(host, option, spec, ctx, { field: field && tb.names[cat] === field ? field : null, items: field ? items : [], byName: (n) => (field ? items.find((q) => q.label === n) : null) });
+  }
+
+  // the map: countries only, vendored (no tiles, no CDN); loaded once, on first use
+  // (a <drishti-report> element loads this file from /embed/v1/js/, and the map from /embed/v1/world-countries.json on the same server)
+  const SELF = typeof document !== 'undefined' && document.currentScript && document.currentScript.src ? document.currentScript.src : '';
+  const MAP_URL = /\/embed\/v1\/js\/bi-visuals\.js/.test(SELF) ? SELF.replace(/js\/bi-visuals\.js.*$/, 'world-countries.json') : '/static/vendor/echarts/maps/world-countries.json';
+  const MAP_NAME = 'drishti-world';
+  let world = null;
+  let worldPromise = null;
+  function loadWorld() {
+    if (world) { return Promise.resolve(world); }
+    if (!worldPromise) {
+      worldPromise = fetch(MAP_URL, { credentials: 'same-origin' }).then((r) => { if (!r.ok) { throw new Error('map ' + r.status); } return r.json(); }).then((geo) => {
+        const by = { iso2: {}, iso3: {}, name: {} };
+        geo.features.forEach((ft) => {
+          const p = ft.properties;
+          if (p.iso2) { by.iso2[p.iso2.toUpperCase()] = p; }
+          by.iso3[p.iso3.toUpperCase()] = p;
+          by.name[p.name.toLowerCase()] = p;
+        });
+        window.echarts.registerMap(MAP_NAME, geo);
+        world = { geo, by };
+        return world;
+      });
+      worldPromise.catch(() => { worldPromise = null; });
+    }
+    return worldPromise;
+  }
+
+  /** The country a code means: ISO alpha-2 or alpha-3, or the English name; null when the map has no such country. */
+  function country(w, code) {
+    if (code == null) { return null; }
+    const k = String(code).trim();
+    return w.by.iso2[k.toUpperCase()] || w.by.iso3[k.toUpperCase()] || w.by.name[k.toLowerCase()] || null;
+  }
+
+  function drawMap(host, spec, ctx, res, w) {
+    const tb = V.table(res);
+    const f = spec.format || {};
+    const measure = (spec.wells.values || [])[0];
+    const mi = tb.at(measure);
+    const t = ctx.t;
+    const nf = V.numFmt(spec, ctx, measure);
+    const maskedValue = tb.isMasked(measure);
+    host.querySelectorAll(':scope > .bi-map-note').forEach((n) => n.remove());
+    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    const loc = (spec.wells.location || [])[0];
+    if (loc) {
+      const li = tb.at(loc);
+      const data = [], items = [], missing = [];
+      tb.rows.forEach((r) => {
+        const c = country(w, r[li]);
+        if (!c) { if (r[li] != null) { missing.push(String(r[li])); } return; }
+        const v = typeof r[mi] === 'number' ? r[mi] : null;
+        data.push({ name: c.iso3, value: v });
+        items.push({ value: r[li], label: c.name, iso3: c.iso3, text: c.name + ': ' + B.fmt(v, nf, maskedValue) });
+      });
+      const nums = data.map((d) => d.value).filter((v) => typeof v === 'number');
+      const sel = selectedSet(ctx, spec);
+      const option = baseOption(spec, ctx, {
+        legend: false, extra: {
+          tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => { const c = w.by.iso3[p.name]; return (c ? c.name : p.name) + ': ' + (typeof p.value === 'number' ? B.fmt(p.value, nf, maskedValue) : 'no figure'); } }),
+          visualMap: { min: Math.min(0, ...nums), max: Math.max(1, ...nums), calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 12, itemHeight: 90, inRange: { color: [t['surface-2'] || t.surface, t.link] }, textStyle: { color: t.muted, fontSize: 10 }, formatter: (v) => B.compact(v) },
+          series: [{ type: 'map', map: MAP_NAME, nameProperty: 'iso3', roam: false, left: 4, right: 4, top: 4, bottom: 34, data, emptyColor: t['surface-2'] || t.surface,
+            itemStyle: { borderColor: t.border, borderWidth: 0.5 }, emphasis: { label: { show: false }, itemStyle: { areaColor: t.pos } },
+            select: { disabled: true }, label: { show: false } }]
+        }
+      });
+      if (sel) { option.series[0].data = data.map((d) => Object.assign({}, d, { itemStyle: { opacity: items.find((i) => i.iso3 === d.name) && sel.has(String(items.find((i) => i.iso3 === d.name).value)) ? 1 : 0.4 } })); }
+      const handle = mount(host, option, spec, ctx, { field: loc, items, byName: (n) => items.find((x) => x.iso3 === n) });
+      if (missing.length) { host.appendChild(h('p', { class: 'bi-map-note', 'data-map-missing': missing.join(','), text: 'Not on the map: ' + [...new Set(missing)].join(', ') + ' (it holds countries only).' })); }
+      return handle;
+    }
+    const lat = tb.at((spec.wells.latitude || [])[0]), lon = tb.at((spec.wells.longitude || [])[0]);
+    const label = (spec.wells.details || [])[0];
+    const di = label ? tb.at(label) : -1;
+    const pts = tb.rows.filter((r) => typeof r[lat] === 'number' && typeof r[lon] === 'number');
+    const mx = Math.max(1, ...pts.map((r) => Math.abs(Number(r[mi]) || 0)));
+    const data = pts.map((r) => ({ name: di >= 0 ? String(r[di]) : r[lat] + ', ' + r[lon], value: [r[lon], r[lat], r[mi]], symbolSize: 7 + 22 * Math.sqrt(Math.abs(Number(r[mi]) || 0) / mx) }));
+    const option = baseOption(spec, ctx, {
+      legend: false, extra: {
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => p.name + ': ' + B.fmt(p.value[2], nf, maskedValue) }),
+        geo: { map: MAP_NAME, roam: false, left: 4, right: 4, top: 4, bottom: 4, silent: true, itemStyle: { areaColor: t['surface-2'] || t.surface, borderColor: t.border, borderWidth: 0.5 } },
+        series: [{ type: 'scatter', coordinateSystem: 'geo', data, itemStyle: { color: ctx.palette[0], opacity: 0.8 } }]
+      }
+    });
+    const items = data.map((d, i) => ({ value: di >= 0 ? pts[i][di] : d.name, label: d.name, text: d.name + ': ' + B.fmt(d.value[2], nf, maskedValue) }));
+    return mount(host, option, spec, ctx, { field: label || null, items: label ? items : [], byName: (n) => (label ? items.find((x) => x.label === n) : null) });
+  }
+
+  function map(host, spec, ctx, res) {
+    if (!window.echarts) { return emptyNote(host, 'The chart library did not load.'); }
+    if (world) { return drawMap(host, spec, ctx, res, world); }
+    B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'Loading the map…' }));
+    let inner = { dispose() {}, resize() {} };
+    let dead = false;
+    loadWorld().then((w) => { if (!dead) { inner = drawMap(host, spec, ctx, res, w) || inner; } })
+      .catch(() => { if (!dead) { emptyNote(host, 'The map data did not load.'); } });
+    return { dispose() { dead = true; inner.dispose(); }, resize() { inner.resize(); } };
+  }
+
+  const CHARTS = { 'live-chart': liveChart, bar: categoryChart, column: categoryChart, line: categoryChart, area: categoryChart, combo: categoryChart, pie: pieChart, donut: pieChart, waterfall, treemap, heatmap, scatter,
+    bubble: scatter, funnel, histogram, box, map, gauge };
   const CARDS = { card, 'multirow-card': multirow, kpi };
 
   /** Draws the visual if it is a chart or a card; returns the handle, or null when the type is not one of these (bi-grids.js draws the rest). */

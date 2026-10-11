@@ -29,6 +29,7 @@ Drishti is proprietary. It bundles or builds with these third-party components u
 | HdrHistogram | BSD-2-Clause / CC0 |
 | Bootstrap, Bootstrap Icons (console, vendored) | MIT |
 | Apache ECharts (console, vendored) | Apache-2.0 |
+| Natural Earth 110m country boundaries (console, vendored for the map visual; simplified) | Public domain |
 | FastAPI, Starlette, Jinja2, Uvicorn, httpx, PyYAML (console) | MIT / BSD |
 | CodeMirror 5 and its Python mode (console, vendored) | MIT |
 | FINOS Perspective (console, vendored; Rūpaka phase 0 proof of concept) | Apache-2.0 |

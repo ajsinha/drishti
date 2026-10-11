@@ -15,8 +15,9 @@
  */
 /* Rupaka phase 3 (RUPAKA.md section 8): the table, the matrix, the slicers and the static visuals (text, image, button) of a report, plus the generic
    data table every visual can be shown as. A table sorts by a column header and can open a row's entity in the terminal; a matrix groups its rows by the row
-   fields, spreads one field across its columns, and adds subtotals (collapsible) and totals - computed from the shown figures, so only for measures that add
-   up (sum, count); for the others the total cell says so instead of guessing. Slicers: a list, a dropdown (the shared multi-select) or a range. */
+   fields, spreads one field across its columns, and adds subtotals (collapsible) and totals. A total of a measure that adds up (sum, count) is the sum of the
+   figures shown; a total of one that does not (ratio, average, distinct count, percentile, min, max) is the engine's own, worked out over the rows of the whole
+   group and sent with the answer (`totals`); a table with `format.totals` ends with such a row too. Slicers: a list, a dropdown (the shared multi-select) or a range. */
 (function () {
   'use strict';
   const B = window.drishtiBi;
@@ -29,6 +30,22 @@
     const m = ctx.index.measures[name];
     const e = m && m.expr ? m.expr : '';
     return /^\s*(sum|count)\s*\(/.test(e) && !/(avg|ratio|distinct|percentile|min\(|max\(|\/|\[)/.test(e);
+  };
+
+  /** The engine's totals of a visual's answer: `find(by, values, measure)` is the figure for the group with these values of these fields; undefined when the engine gave none. */
+  V.trueTotals = function (res) {
+    const levels = (res && res.totals) || [];
+    return {
+      any: levels.length > 0,
+      find(by, values, measure) {
+        const lv = levels.find((l) => l.by.length === by.length && l.by.every((f, i) => f === by[i]));
+        if (!lv) { return undefined; }
+        const mi = lv.columns.indexOf(measure);
+        if (mi < 0 || (lv.masked || []).indexOf(measure) >= 0) { return undefined; }
+        const row = lv.rows.find((r) => by.every((f, i) => String(r[lv.columns.indexOf(f)] == null ? '\u2013' : r[lv.columns.indexOf(f)]) === String(values[i])));
+        return row ? row[mi] : undefined;
+      }
+    };
   };
 
   function cellText(v, spec, ctx, name, masked) {
@@ -90,7 +107,19 @@
       }
       body.appendChild(tr);
     });
-    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table', 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body);
+    let foot = null;
+    const tt = V.trueTotals(res);
+    if (spec.format && spec.format.totals && tt.any && !all && rows.length) {
+      foot = h('tfoot', {}, h('tr', { class: 'bi-grandtotal', 'data-total-row': '' }, names.map((n, k) => {
+        if (!ctx.index.measures[n]) { return h('th', { scope: 'row' }, k === 0 ? 'Total' : ''); }
+        const v = tt.find([], [], n);
+        const td = h('td', { class: 'num bi-total', 'data-measure': n, 'data-true-total': '' });
+        td.textContent = v === undefined ? '–' : B.fmt(v, V.numFmt(spec, ctx, n), tb.isMasked(n));
+        td.title = 'Worked out over all the rows, not added up from the rows shown';
+        return td;
+      })));
+    }
+    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table', 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body, foot);
     B.clear(host).appendChild(h('div', { class: 'tbl-wrap bi-vis-scroll' }, table));
     if (!rows.length) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }
     return NONE;
@@ -117,9 +146,17 @@
     });
     const sortedPaths = [...paths.values()].sort((a, b) => { for (let i = 0; i < a.length; i++) { const c = a[i].localeCompare(b[i]); if (c) { return c; } } return 0; });
     const startsWith = (pp, p) => !p || p.every((x, i) => pp[i] === x);
-    /** The sum of a measure over the rows under path p (null: all) and column c (null: all); undefined when the measure does not add up. */
+    const tt = V.trueTotals(res);
+    /** The engine's figure for a measure that does not add up: over all the rows of the group at path p (null: everything) and column c (null: every column). */
+    const trueTotal = (m, p, c) => {
+      const depth = p === null ? 0 : p.length;
+      const by = rowFields.slice(0, depth).concat(c !== null && colField ? [colField] : []);
+      const values = (p === null ? [] : p).concat(c !== null && colField ? [c] : []);
+      return tt.find(by, values, m);
+    };
+    /** The total of a measure over the rows under path p (null: all) and column c (null: all): the sum of the figures shown when the measure adds up, else the engine's. */
     const total = (m, p, c) => {
-      if (!V.additive(ctx, m)) { return undefined; }
+      if (!V.additive(ctx, m)) { return trueTotal(m, p, c); }
       let t = 0, any = false;
       cells.forEach((v, k) => { const [pk, cc, mm] = k.split(PART); if (mm === m && (c === null || cc === c) && startsWith(pk.split(SEP), p) && typeof v === 'number') { t += v; any = true; } });
       return any ? t : null;
@@ -137,7 +174,8 @@
     const cellFor = (m, v, bold, totalOfNonAdditive) => {
       const td = h('td', { class: 'num' + (bold ? ' bi-total' : ''), 'data-measure': m });
       td.textContent = totalOfNonAdditive ? '–' : B.fmt(v, V.numFmt(spec, ctx, m), tb.isMasked(m));
-      if (totalOfNonAdditive) { td.title = 'Not summed: ' + m + ' does not add up'; }
+      if (totalOfNonAdditive) { td.title = m + ' does not add up and the engine gave no total for it'; }
+      else if (bold && !V.additive(ctx, m)) { td.setAttribute('data-true-total', ''); td.title = 'Worked out over all the rows of the group, not added up from the figures shown'; }
       const colour = V.conditional(spec, m, v);
       if (colour) { td.style.color = colour; }
       return td;

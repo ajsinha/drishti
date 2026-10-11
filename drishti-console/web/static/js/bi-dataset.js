@@ -137,7 +137,7 @@
       q('[data-problems-sec]').hidden = m.problems.length === 0;
       if (!m.tables) { return; }
       q('[data-meta]').textContent = 'dataset ' + m.name + ' · version ' + m.version + ' · engine ' + m.engine + ' · ' + m.tables.length + ' tables · ' + m.measures.length + ' measures';
-      tables(m); relationships(m); measures(m); security(m); layers(m); preview(m);
+      tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); preview(m);
     }
 
     function tables(m) {
@@ -197,6 +197,28 @@
         }
         tb.appendChild(h('tr', {}, h('th', { scope: 'row', text: t.table }), h('td', { text: t.mode }), h('td', { text: where }), h('td', { text: num(rows) })));
       });
+    }
+
+    /** When the dataset refreshes by itself and how the last refresh went (the schedule, status, last and next run, rows, time and failures). */
+    function refresh(m) {
+      var r = m.refresh, tb = q('[data-refresh] tbody'), sec = q('[data-refresh-sec]'), note = q('[data-refresh-note]');
+      clear(tb);
+      sec.hidden = !r;
+      if (!r) { return; }
+      var when = function (x) { return x ? new Date(x).toLocaleString() : '–'; };
+      var line = function (what, st) {
+        var bad = st.status === 'failed' || st.status === 'retrying' || st.status === 'invalid';
+        tb.appendChild(h('tr', { 'data-refresh-row': what, 'data-status': st.status || '' }, h('th', { scope: 'row', text: what }), h('td', { class: 'mono', text: st.schedule || '' }),
+          h('td', {}, badge(st.status || 'waiting', bad ? 'bi-status' : 'bi-promoted', bad ? 'exclamation-triangle' : 'arrow-repeat'), st.error ? h('small', { class: 'text-muted-d', text: ' ' + st.error }) : null),
+          h('td', { text: when(st.lastRun) }), h('td', { text: st.retryAt ? 'retry ' + when(st.retryAt) : st.schedule === 'after-load' || /^after-load/.test(st.schedule || '') ? 'at the next data load' : when(st.nextRun) }),
+          h('td', { text: st.lastRows == null ? '–' : num(st.lastRows) }), h('td', { text: st.lastDurationMs == null ? '–' : num(st.lastDurationMs) + ' ms' }), h('td', { text: String(st.failures || 0) })));
+      };
+      if (r.dataset) { line('dataset', r.dataset); }
+      (r.tables || []).forEach(function (t) { line('table ' + t.table, t); });
+      note.textContent = r.scheduled
+        ? 'Layers are rebuilt on the schedule (' + r.zone + ' time, ' + r.calendar + ' calendar for business days); a failed run is tried again with the shared retry policy.'
+        : 'No refresh schedule: the layers are rebuilt when a data load for a kind this dataset reads arrives, and when an author presses Refresh.';
+      sec.querySelector('table').hidden = tb.children.length === 0;
     }
 
     function preview(m) {

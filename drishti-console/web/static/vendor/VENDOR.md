@@ -22,6 +22,7 @@ keeps its licence file beside it. Sizes are bytes as served (raw) and gzip -9.
 |---|---|---|---|---|---|
 | Bootstrap, Bootstrap Icons | 5.3.8 / see its folder | MIT | `bootstrap/`, `bootstrap-icons/` | yes | every page |
 | Apache ECharts, ECharts GL (patched: `echarts-gl/PATCHED.md`) | 6.1.0 / see its folder | Apache-2.0 / BSD-3 | `echarts/`, `echarts-gl/` | yes | chart panels |
+| **Natural Earth** country boundaries, 1:110m scale (the map visual: countries only, no tiles, no CDN) | 5.1 (nvkelso/natural-earth-vector, `ne_110m_admin_0_countries`) | Public domain (naturalearthdata.com/about/terms-of-use) | `echarts/maps/world-countries.json` (176,138 bytes: coordinates rounded to 2 decimals, properties reduced to `name`, `iso2`, `iso3`; 177 features) | yes | a report or board that holds a `map` visual; fetched on first use, `/embed/v1/world-countries.json` for the `<drishti-report>` element |
 | CodeMirror 5 | see its folder | MIT | `codemirror/` | yes | Studio, Build |
 | Pyodide (CPython for Calc) | 314.0.7 | MPL-2.0 | `pyodide/` | **no**: `tools/fetch-pyodide.sh` | Calc, on demand |
 | **FINOS Perspective** viewer, datagrid, d3fc plugin, engine (Rūpaka phase 0; the grid and pivot of phase 5) | 3.8.0 | Apache-2.0 (verified: package.json and LICENSE) | `perspective/3.8.0/` | yes, 3.9 MB | `/bi/poc`, and a report or board page that holds a `perspective-grid` or `perspective-pivot` visual (phase 5); on demand. The d3fc plugin is vendored but only the POC page loads it |

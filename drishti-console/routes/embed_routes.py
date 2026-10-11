@@ -206,6 +206,13 @@ async def charts_js(request: Request):
     return await send(request, (WEB / "static/js/charts.js").read_bytes(), "text/javascript", f'"{(WEB / "static/js/charts.js").stat().st_mtime_ns:x}"')
 
 
+@router.get("/world-countries.json")
+async def world_countries(request: Request):
+    """The countries of the world for a map visual (Natural Earth, public domain; vendored, see static/vendor/VENDOR.md), served with CORS like the chart library."""
+    path = WEB / "static/vendor/echarts/maps/world-countries.json"
+    return await send(request, path.read_bytes(), "application/json", f'"{path.stat().st_mtime_ns:x}"')
+
+
 @router.get("/echarts.js")
 async def echarts_js(request: Request):
     path = WEB / "static/vendor/echarts/echarts.min.js"

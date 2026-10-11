@@ -27,8 +27,8 @@
 
   const ICONS = { bar: 'bar-chart-steps', column: 'bar-chart-line', line: 'graph-up', area: 'graph-up-arrow', combo: 'bar-chart', scatter: 'diagram-3', pie: 'pie-chart', donut: 'pie-chart-fill',
     waterfall: 'reception-4', treemap: 'grid-1x2', heatmap: 'grid-3x3', card: 'card-heading', 'multirow-card': 'list-columns', kpi: 'speedometer2', gauge: 'speedometer', table: 'table',
-    matrix: 'grid-3x3-gap', slicer: 'funnel', text: 'fonts', image: 'image', button: 'hand-index' };
-  const GROUPS = [['Charts', ['bar', 'column', 'line', 'area', 'combo', 'scatter', 'pie', 'donut', 'waterfall', 'treemap', 'heatmap']], ['Cards', ['card', 'multirow-card', 'kpi', 'gauge']],
+    matrix: 'grid-3x3-gap', bubble: 'record-circle', funnel: 'filter-circle', histogram: 'bar-chart-fill', box: 'distribute-vertical', map: 'globe2', slicer: 'funnel', text: 'fonts', image: 'image', button: 'hand-index' };
+  const GROUPS = [['Charts', ['bar', 'column', 'line', 'area', 'combo', 'scatter', 'bubble', 'pie', 'donut', 'funnel', 'waterfall', 'treemap', 'heatmap', 'histogram', 'box', 'map']], ['Cards', ['card', 'multirow-card', 'kpi', 'gauge']],
     ['Tables', ['table', 'matrix']], ['Filter and other', ['slicer', 'text', 'image', 'button']]];
   const TYPE_ICON = { string: 'fonts', integer: '123', decimal: '123', boolean: 'check2-square', date: 'calendar3', timestamp: 'clock' };
   const PARTS = ['year', 'quarter', 'month', 'week', 'day'];
@@ -54,6 +54,12 @@
       return b;
     }
 
+    /** The time-intelligence function a measure uses (year to date, month to date, ... running total), or null: shown as a badge in the Fields pane. */
+    function timeKind(expr) {
+      const m = /\b(ytd|mtd|qtd|prior_period|same_period_last_year|running)\s*\(/.exec(expr || '');
+      return m ? ({ prior_period: 'prior period', same_period_last_year: 'last year', running: 'running total' })[m[1]] || m[1] : null;
+    }
+
     function drawFields() {
       B.clear(tree);
       (D.dataset.tables || []).forEach((t) => {
@@ -71,7 +77,12 @@
         tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': t.name }, h('summary', {}, B.icon('table'), ' ' + t.name, h('small', { class: 'text-muted-d', text: ' ' + (t.kind || '') })), ul));
       });
       const ms = h('ul', { class: 'bi-fieldlist' });
-      (D.dataset.measures || []).forEach((m) => ms.appendChild(h('li', { 'data-search': (m.name + ' ' + (m.description || '')).toLowerCase() }, fieldButton(m.name, 'measure', m.name, 'calculator', m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : '')))));
+      (D.dataset.measures || []).forEach((m) => {
+        const time = timeKind(m.expr);
+        const btn = fieldButton(m.name, 'measure', m.name, time ? 'calendar-range' : 'calculator', (time ? '[' + time + '] ' : '') + m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : ''));
+        if (time) { btn.appendChild(h('small', { class: 'bi-badge', 'data-time': time, text: time })); }
+        ms.appendChild(h('li', { 'data-search': (m.name + ' ' + (m.description || '') + ' ' + (time ? 'time ' + time : '')).toLowerCase() }, btn));
+      });
       tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': 'measures' }, h('summary', {}, B.icon('calculator'), ' Measures'), ms));
       const hs = h('ul', { class: 'bi-fieldlist' });
       Object.keys(D.idx.hierarchies).forEach((n) => hs.appendChild(h('li', { 'data-search': n.toLowerCase() }, fieldButton(n, 'hierarchy', n, 'diagram-2', n + ': ' + D.idx.hierarchies[n].join(' > ')))));
@@ -250,7 +261,13 @@
         fmt.appendChild(checkbox('Data labels', f.labels, (x) => setFmt(v, 'labels', x), { 'data-format-labels': '' }));
         if (['bar', 'column', 'area'].indexOf(v.type) >= 0) { fmt.appendChild(checkbox('Stacked', f.stacked, (x) => setFmt(v, 'stacked', x), { 'data-format-stacked': '' })); }
         if (['line', 'area', 'combo'].indexOf(v.type) >= 0) { fmt.appendChild(checkbox('Smooth lines', f.smooth, (x) => setFmt(v, 'smooth', x))); }
-        fmt.appendChild(frow('Legend', selectInput([['', 'default'], ['bottom', 'bottom'], ['top', 'top'], ['right', 'right'], ['none', 'none']], f.legend, (x) => setFmt(v, 'legend', x))));
+        if (v.type === 'histogram') {
+          fmt.appendChild(frow('Bars', textInput(f.bins, (x) => setFmt(v, 'bins', x === '' ? '' : Number(x)), { type: 'number', min: '2', max: '100', 'data-format-bins': '' }), 'Equal-width bands between the smallest and the largest value (2 to 100, default 10).'));
+        }
+        if (v.type === 'map') {
+          fmt.appendChild(h('p', { class: 'bi-vis-note', text: (v.wells.location || []).length ? 'Shades countries by the code in the location well (ISO alpha-2 or alpha-3, or the English name).' : 'Marks points at the latitude and longitude of the rows.' }));
+        }
+        if (['map', 'histogram', 'box', 'funnel', 'bubble'].indexOf(v.type) < 0) fmt.appendChild(frow('Legend', selectInput([['', 'default'], ['bottom', 'bottom'], ['top', 'top'], ['right', 'right'], ['none', 'none']], f.legend, (x) => setFmt(v, 'legend', x))));
         if (['bar', 'column', 'line', 'area', 'combo'].indexOf(v.type) >= 0) {
           const at = f.axisTitles || {};
           fmt.appendChild(frow('Category axis title', textInput(at.x, (x) => setFmt(v, 'axisTitles', Object.assign({}, at, { x }))), null));
@@ -277,6 +294,7 @@
         }
       }
       if (v.type === 'matrix') { fmt.appendChild(checkbox('Subtotals and totals', f.subtotals, (x) => setFmt(v, 'subtotals', x), { 'data-format-subtotals': '' })); }
+      if (v.type === 'table') { fmt.appendChild(checkbox('Total row (worked out over all the rows)', f.totals, (x) => setFmt(v, 'totals', x), { 'data-format-totals': '' })); }
       if (['card', 'kpi', 'gauge', 'table', 'matrix', 'bar', 'column', 'multirow-card'].indexOf(v.type) >= 0) { conditionalEditor(v, f); }
       if (v.type === 'slicer') {
         fmt.appendChild(frow('Mode', selectInput([['list', 'list'], ['dropdown', 'dropdown'], ['range', 'range (numbers and dates)']], f.mode || 'list', (x) => { setFmt(v, 'mode', x); if (x !== 'list' && v.at.h > 2) { D.change('Resize a slicer', () => { v.at.h = 2; }); } }, { 'data-format-mode': '' })));
