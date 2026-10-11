@@ -6,11 +6,11 @@
 
 # Drishti — Implementation Plan
 
-*Revision 1.1 · 2026-09-30 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
+*Revision 1.2 · 2026-10-11 · Author: Ashutosh Sinha · Companion to [ARCHITECTURE.md](ARCHITECTURE.md)*
 
 **Where things stand.** Every wave in this plan is done. The current release is **1.20.0**
 ([CHANGELOG.md](../../CHANGELOG.md), [RELEASE_NOTES.md](../../RELEASE_NOTES.md)). The table below maps each release to
-the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) lists the work done since
+the waves it shipped; [What shipped after the waves](#what-shipped-after-the-waves-1100) and [Since 1.10](#since-110) list the work done since
 the last numbered wave, and [Known gaps](#known-gaps) lists what is still open. The wave sections themselves are
 kept as they were planned, with notes where the delivery differed.
 
@@ -27,7 +27,17 @@ kept as they were planned, with notes where the delivery differed.
 | 1.8.0 | W13c packs per user |
 | 1.9.0 | W22 business dates and Delta Lake; R1–R2 risk taxonomy and Sutras; Markdown Sutras (replaced in 1.11: Sutras are YAML only, ADR-017) |
 | 1.10.0 | B0, R3–R5, P2–P8 (all domain packs); W16–W21; and the work [below](#what-shipped-after-the-waves-1100) |
-| 1.11 (unreleased) | Sutras are YAML only ([below](#since-110)) |
+| 1.11.0 | Sutras are YAML only (ADR-017) |
+| 1.12.0 | derived kinds, notes, scheduled reports, plain words, the signed pack registry (ADR-018) |
+| 1.13.0 | a million trades a day on eight stores, Calc, pivots, twenty panel kinds |
+| 1.14.0 | the Build workbench |
+| 1.15.0 | the metric tile, five developer guides |
+| 1.16.0 | Java 21 for production, About this page, share and discussion (ADR-020) |
+| 1.17.0 | the `drishti.py` command line, `pack make`, Admin deploy, API token write scopes |
+| 1.18.0 | data loads: the batch-landed signal, expectations, late data |
+| 1.19.0 | connectors as files, TLS and proxy, query by form, Drishti Elements, retry and no-restart reload, AI and MCP layers, Rūpaka phase 1 |
+| 1.20.0 | Rūpaka phases 2 and 3 (datasets, reports, designer), deep trades, real public data |
+| Unreleased | Rūpaka phases 4 and 5 (governance, live tables), Forms and Reports in the top bar, news and market-data connectors |
 
 ## Working agreement
 
@@ -202,19 +212,34 @@ Work done after the last numbered wave, grouped by theme. Each item is in [CHANG
 
 ## Since 1.10
 
-Work after 1.18.0, in [CHANGELOG.md](../../CHANGELOG.md) under *Unreleased*.
+Releases 1.11 to 1.20 and what is unreleased; each is in [CHANGELOG.md](../../CHANGELOG.md) with details and tests.
 
 | Theme | Delivered | Where to read |
 |---|---|---|
-| Sutras are YAML only | One file per Sutra, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (missing or unknown: `DRS-2009`); `description`, `notes` and a per-panel `description` for prose; Markdown Sutras no longer read (`DRS-2004`, converted by `tools/rachana/md_to_yaml.py`); all 228 shipped Sutras converted and the generators write YAML; the JSON Schema of the language at `GET /api/v1/rachana/schema`; Studio a YAML editor with completion (ADR-017, superseding ADR-011) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), [adr/017](adr/017-sutras-are-yaml.md) |
+| Sutras are YAML only (1.11) | One file per Sutra, `<name>.v<N>.sutra.yaml`, starting with `rachana: 1` (missing or unknown: `DRS-2009`); `description`, `notes` and a per-panel `description` for prose; Markdown Sutras no longer read (`DRS-2004`, converted by `tools/rachana/md_to_yaml.py`) | [adr/017](adr/017-sutras-are-yaml.md), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) |
 | Build gates | Error Prone in every compile and Spotless at `verify` (ADR-007 amended) | [DEVELOPER_GUIDE.md](../guides/DEVELOPER_GUIDE.md) |
-| Packs while running | Admin → Packs → Load / Unload a pack without a restart of the process (pack overlay, rollback) | [PACKS.md](../guides/PACKS.md) |
-| API tokens and clients | Personal read-only API tokens, searches as CSV, a Python client, Excel through Power Query | [CLIENTS.md](../guides/CLIENTS.md) |
+| Packs while running | Load and unload a pack without a restart (pack overlay, rollback); since 1.19 the packs folder is watched and a new or changed pack is checked and swapped in live; sample packs | [PACKS.md](../guides/PACKS.md) |
+| API tokens and clients | Personal API tokens (read-only, then write scopes `design:write`, `design:approve`, `packs:admin`, `loads:write`, `bi:*`, `ai:*`), searches as CSV, a Python client, Excel through Power Query | [CLIENTS.md](../guides/CLIENTS.md), [API_GUIDE.md](../guides/API_GUIDE.md#personal-api-tokens) |
 | History and freshness | A field over business days, searches compared between two dates, freshness and `stale-after` per connector | [USER_GUIDE.md](../guides/USER_GUIDE.md) |
-| One console, many servers | `servers:` in the console; a session per server; picker, `/connect/<id>`, `?srv=` links; public `/public/about` (ADR-016) | [CONFIGURATION.md](../admin/CONFIGURATION.md), [adr/016](adr/016-one-console-many-servers.md) |
-| Derived kinds, notes, shared workspaces | Kinds computed from others (`derived`), notes on entities and fields, workspaces shared read-only | [PACKS.md](../guides/PACKS.md), [USER_GUIDE.md](../guides/USER_GUIDE.md) |
-| Reports, access log, plain words | Scheduled CSV reports, who-viewed-what, a deterministic phrase parser | [USER_GUIDE.md](../guides/USER_GUIDE.md), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
-| Signed pack registry | Ed25519-signed, versioned packs installed and rolled back from Admin → Packs (ADR-018) | [PACKS.md](../guides/PACKS.md), [adr/018](adr/018-signed-pack-registry.md) |
+| One console, many servers | `servers:` in the console; a session per server; picker, `/connect/<id>`, `?srv=` links; public `/public/about` | [adr/016](adr/016-one-console-many-servers.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Derived kinds, notes, shared workspaces, reports (1.12) | Kinds computed from others (`derived`), notes on entities and fields, workspaces shared read-only, scheduled CSV reports, who-viewed-what, a deterministic phrase parser | [PACKS.md](../guides/PACKS.md), [USER_GUIDE.md](../guides/USER_GUIDE.md) |
+| Signed pack registry (1.12) | Ed25519-signed, versioned packs installed and rolled back from Admin → Packs | [adr/018](adr/018-signed-pack-registry.md), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md) |
+| Scale and stores (1.13) | A million trades a day measured on eight stores, Calc (Python in the browser), the Pivot tab, twenty panel kinds, JDK 25 | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md), [PYTHON_CALC.md](../guides/PYTHON_CALC.md), [PANEL_KINDS.md](../guides/PANEL_KINDS.md) |
+| Build workbench (1.14) | Designs kept on the server, operations with undo, samples, check matrix, propose with evidence | [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md), [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md) |
+| Java 21, About this page, collaboration (1.16) | Java 21 bytecode and runtime; About this page and the optional *Ask*; share with a note, the directory, the inbox, comment threads, email outbox, retention, legal holds, bridges and snapshots | [COLLABORATION.md](COLLABORATION.md), [adr/020](adr/020-collaboration-records-live-in-the-identity-database.md) |
+| The command line (1.17) | `drishti.py` (sutra, pack, data, server, doctor, view, design, docs); `pack make` from JSON Lines to a deployable folder; Admin deploy, history and roll back; offline `pack bundle` | [CLI_GUIDE.md](../guides/CLI_GUIDE.md), [OPERATIONALISING.md](../guides/OPERATIONALISING.md) |
+| Data loads (1.18) | `POST /packs/{pack}/loads`, expectations and late data, Admin → Data loads | [DATA_LOADS.md](../guides/DATA_LOADS.md) |
+| Connectors as files (1.19) | One YAML file per connector in `config/connectors/`, live reload, Admin → Connectors (list, form, YAML, test, history), the connector API and CLI, pack templates, a detail page per connector and per pack | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) |
+| TLS and proxy (1.19, 1.20) | One set of `tls.*` settings for every connector that can use TLS (Kafka with every security option, ActiveMQ over `ssl://`, RabbitMQ over `amqps://` and the rest, as the [connector matrix](../connectors/TLS.md#connector-matrix) lists); an outbound HTTP proxy for connectors, AI providers and MCP servers | [TLS.md](../connectors/TLS.md), [PROXY.md](../connectors/PROXY.md) |
+| Retry and no restart (1.19) | Anything that failed to load or lost its connection is tried again with backoff (`drishti.retry`), Retry now in Admin; no setting a pack contributes needs a restart | [OPERATIONS.md](../admin/OPERATIONS.md) |
+| Query by form, controls, regex search (1.19) | `FORM <pack>`, the pack `form:` section, multi-select dropdowns, `controls:` on a screen (and the slider, view state in sent shares), safe regular expressions, Excel-style column filters, the zoomed panel | [USER_GUIDE.md](../guides/USER_GUIDE.md), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) |
+| Drishti Elements (1.19) | `<drishti-view>`: live views in another web application's page, no iframe; host applications registered by an administrator (Admin → Embedding) | [ELEMENTS.md](ELEMENTS.md) |
+| AI and MCP (1.19) | Pluggable LLM providers and an MCP client, off by default, behind one policy (masking, limits, audit) | [AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md) |
+| Schema to pack (1.19) | Sutras and packs from JSON Schema; Build → New pack | [SCHEMA_TO_PACK.md](../guides/SCHEMA_TO_PACK.md) |
+| Rūpaka, business intelligence (1.19 to unreleased) | Phase 1 shell, workspaces and catalogue (1.19); phase 2 datasets and the query engine, phase 3 reports, the designer and the Model view (1.20); phase 4 publishing and governance, phase 5 live tables, Perspective and boards (unreleased) | [RUPAKA.md](RUPAKA.md), [BI_GUIDE.md](../guides/BI_GUIDE.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md), [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md) |
+| Deep trades and real data (1.20) | Tabs hold panels (a trade, its legs, their cashflows and fixings on one screen); the `economics` and `politics-society` packs carry real public data (`tools/realdata`; the IMF data is for internal demos only) | [PANEL_KINDS.md](../guides/PANEL_KINDS.md), [REAL_DATA.md](../guides/REAL_DATA.md) |
+| Connectors that compute (unreleased) | `news` and `yfinance` source plugins whose documents are computed when asked for; the `news-watch` and `market-watch` sample packs | [NEWS.md](../connectors/NEWS.md), [YFINANCE.md](../connectors/YFINANCE.md) |
+| Forms and Reports in the top bar (unreleased) | Two top-bar entries beside BI, with a forms home | [USER_GUIDE.md](../guides/USER_GUIDE.md) |
 
 ## Known gaps
 
@@ -223,22 +248,25 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 | Gap | Today | Where it shows |
 |---|---|---|
 | Several console processes | A tab's live channel lives in one console process, so a load balancer needs sticky sessions | [LIVE.md](LIVE.md) |
+| Rūpaka, not built | Notifications and subscriptions (phase 7), Python measures (phase 6), time intelligence and window functions, a report over several datasets, per-device layouts; each is marked "not built" where it would appear | [RUPAKA.md](RUPAKA.md) |
+| Server-side pricing | Not built: the QuantLib service is a proposal | [QUANT_SERVICE.md](QUANT_SERVICE.md) |
+| A million trades a day on a real server | The numbers in the scale document are measured on one workstation at the sizes its safety rule allows and extrapolated beyond | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
 
 ## Roadmap
 
-Everything planned up to 1.18.0 is built (see the changelog). Next, in order:
+Everything planned up to 1.20.0 is built (see the changelog). Next, in order:
 
 | # | Item | What it delivers | Design |
 |---|---|---|---|
-| 1 | **Server-side pricing: the quant service** | A QuantLib pricing service (`drishti-quant`) behind the Drishti server: model NPV beside booked MTM, Greeks, scenarios and implied vols for the packs' products, through a `quant` role power, with market data for the business date; in Calc (`drishti.pricer`), a Valuation panel and a what-if drawer; later, overnight batches into the lake. Five phases: the service; the gateway; the UX; what-if; more products and batches | [QUANT_SERVICE.md](QUANT_SERVICE.md), [ADR-019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md) |
-| 2 | **Windows, proven** | The Windows CI job green; the PowerShell scripts run on a real Windows machine; a `maintain-lake.ps1` with a Task Scheduler example | [WINDOWS.md](../guides/WINDOWS.md) |
-| 3 | **A real deployment** | Security on, single sign-on, HTTPS, the images built and run together (`deploy/compose.yaml`), with the quant service | [OPERATIONS.md](../admin/OPERATIONS.md) |
-| 4 | **Scale on a real server** | `tools/bench/scale.sh` at a million trades a day for each store, replacing the extrapolations | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
-| 5 | **Load with many users** | Concurrent viewers, live streams and searches measured together; limits documented | [PERFORMANCE.md](../admin/PERFORMANCE.md) |
+| 1 | **Server-side pricing: the quant service** | A QuantLib pricing service (`drishti-quant`) behind the Drishti server: model NPV beside booked MTM, Greeks, scenarios and implied vols for the packs' products, through a `quant` role power, with market data for the business date; in Calc and the console | [QUANT_SERVICE.md](QUANT_SERVICE.md), [adr/019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md) |
+| 2 | **Rūpaka phases 6 to 9** | Python measures, notifications and subscriptions, embedding of reports, the designer's *Explore to visual* | [RUPAKA.md](RUPAKA.md) |
+| 3 | **Windows, proven** | The Windows CI job green; the PowerShell scripts run on a real Windows machine; a `maintain-lake.ps1` with a Task Scheduler example | [WINDOWS.md](../guides/WINDOWS.md) |
+| 4 | **A real deployment** | Security on, single sign-on, HTTPS, the images built and run together (`deploy/compose.yaml`), with the quant service | [OPERATIONS.md](../admin/OPERATIONS.md) |
+| 5 | **Scale on a real server** | `tools/bench/scale.sh` at a million trades a day for each store, replacing the extrapolations | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
+| 6 | **Load with many users** | Concurrent viewers, live streams and searches measured together; limits documented | [PERFORMANCE.md](../admin/PERFORMANCE.md) |
 
-Also candidates: email delivery for reports (SMTP), several console processes behind one load balancer without sticky
-sessions, Iceberg without Hadoop, delete handling in the Redis connector, and per-field history charts on derived
-kinds over long ranges (a summary table).
+Also candidates: several console processes behind one load balancer without sticky sessions, Iceberg without Hadoop,
+delete handling in the Redis connector, and per-field history charts on derived kinds over long ranges (a summary table).
 
 ## Risks
 

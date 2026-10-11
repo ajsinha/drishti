@@ -593,7 +593,7 @@ needed to triage, values are not; the note is the user's own words, scrubbed lik
   (`423 DRS-7010` under hold).
 - **Legal hold.** Scope `entity` (kind and id), `user` (everything a user wrote or received), `thread`, or `all`.
   Holds stop purge and permanent removal, not ordinary use. Placing and releasing are audited.
-- **Export (eDiscovery).** An asynchronous job writes a zip to `drishti.collab.export-dir`:
+- **Export (eDiscovery).** An asynchronous job writes a zip to `exports/` under `drishti.collab.dir` (kept `drishti.collab.export-keep`, 24 h):
   `manifest.json` (filters, who, when, counts, per-thread first and last hash, the software version),
   `shares.ndjson` (each share with recipients, states and opens), `threads.ndjson` (each thread with every revision,
   **unscrubbed** — the record — with author, pin, action, reason and hashes), `holds.ndjson`, and `README.txt`
