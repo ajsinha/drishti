@@ -613,6 +613,15 @@ certificate, and shows the refusals (an untrusted server: `PKIX path building fa
 | `tls.ca-file '/etc/drishti/nope.pem': file not found` | A wrong path. |
 | a read fails with `PKIX path building failed` | The object store's certificate is not signed by a CA in `tls.ca-file`; or the **catalog's** certificate is private and not in the JVM truststore. |
 
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+
+For a **REST catalog**: the catalog's own HTTP client takes the proxy from `rest.client.proxy.hostname`, `.port`, `.username` and `.password` (set from the
+connector's settings when the catalog's address is not on `no-proxy`; Iceberg's client has no no-proxy list), and the object store's S3 file IO gets the SDK's
+proxy configuration (`https://` tunnelled, `tls.*` kept). For path tables read through **Hadoop**, `fs.s3a.proxy.*` is set. Health adds `via proxy host:port (source)`.
+Tested in `IcebergProxyTest` (the S3 file IO through a fake proxy, plain and `CONNECT` with its own TLS, and the S3A properties with no-proxy and `proxy: none`).
+
 ## As a connector file
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
@@ -670,6 +679,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `reverse-index` | `true` | `false` turns reverse lookups off |
 | `source-name` | the connector's name | the name shown in provenance and Health |
 | `stale-after` | none | warn when no new data arrived for this long (engine setting) |
+| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; for the REST catalog and the object store |
 
 Loader options (`IcebergLoader FILE|- [root]`): `--file-rows` (250000), `--row-group-mb` (1), `--buffer-mb` (1024),
 `--threads` (half the cores, at most 8), `--spill-dir` (the system temp folder), `--keep-days`, `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--catalog`,

@@ -23,6 +23,7 @@ from typing import Callable
 
 import yaml
 
+from core.ai import proxy as proxy_mod
 from core.ai.types import CAPABILITIES, LlmError, ProviderConfig
 
 _ENV = re.compile(r"^\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-?([^}]*))?\}$")
@@ -111,6 +112,7 @@ def parse_provider(path: Path, env) -> ProviderConfig:
             flatten(k, v, settings)
     for k in [k for k in settings if k.startswith("header.")]:
         settings[k] = resolve_header(k[7:], settings[k], env)
+    proxy_mod.check_password(settings, env)
     models, seen = [], set()
     for m in data.get("models") or []:
         mn = str((m or {}).get("name") or "").strip()
@@ -158,6 +160,7 @@ def parse_mcp(path: Path, env) -> dict:
         if k not in _MCP_KEYS:
             flatten(k, v, settings)
     headers = {str(k): resolve_header(str(k), str(v), env) for k, v in (data.get("headers") or {}).items()}
+    proxy_mod.check_password(settings, env)
     return {"name": name, "transport": str(data.get("transport") or "streamable-http"), "enabled": bool(data.get("enabled", True)),
             "url": str(data.get("url") or "").strip(), "headers": headers, "timeout": _duration(data.get("timeout"), 30.0),
             "allowed_tools": [str(t) for t in data.get("allowed-tools") or []], "settings": settings}

@@ -672,6 +672,26 @@ Rules worth knowing when you write a plugin:
 
 ---
 
+## An outbound HTTP proxy for a connector: the shared module
+
+A connector that makes HTTP requests gets proxy support from `com.ash.drishti.api.proxy` in `drishti-api` (pure JDK, no Spring), next to the TLS module: operators learn
+the `proxy.*` keys once ([PROXY.md](PROXY.md)). In `start(ctx)`:
+
+```java
+ProxySettings proxy = ProxySettings.resolve(ctx.settings(), baseUrl);          // the connector's proxy:, else the site default, else the environment, else none
+HttpClient http = proxy.apply(HttpClient.newBuilder().connectTimeout(timeout)).build();   // the selector (no-proxy aware) and the Basic authenticator
+...
+HttpResponse<InputStream> r = proxy.send(http, request, BodyHandlers.ofInputStream());   // a proxy failure comes back worded: 407, cannot connect, CONNECT refused
+...
+public String health() { return proxy.annotate("UP", baseUrl); }               // "UP via proxy host:port (connector)" or "... not used for host: no-proxy"
+```
+
+For an SDK client use the getters (`proxy.appliesTo(host)`, `proxy.uri()`, `proxy.username()`, `proxy.password()`) with the SDK's own proxy configuration, as the S3, Delta and Iceberg
+connectors do; `proxy.decided()` tells you to switch the SDK's reading of the JVM's proxy properties off. Add `proxy: true` to the plugin's entry in
+`drishti/plugin-settings.yaml` (or declare `ProxySettings.settingSpecs()` in `settingSpecs()`) so the form shows the section and the validator checks it; the Admin summary and the connection test then
+work with no further code. Never print `proxy.password()`; `describe()`, `note()`, `annotate()` and `toString()` never include it. Test with `FakeProxy` from `drishti-testkit`
+(HTTP forwarding, `CONNECT`, a counter per kind, Basic `Proxy-Authorization`), as `RestProxyTest` does.
+
 ## TLS for a connector: the shared module
 
 A connector that connects to a server over the network gets TLS from one shared module in the plugin API,

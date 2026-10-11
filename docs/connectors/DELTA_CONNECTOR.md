@@ -680,6 +680,16 @@ a missing client certificate, and a host name the certificate does not carry.
 | `tls.ca-file '/etc/drishti/nope.pem': file not found` | A wrong path. |
 | `PKIX path building failed: ... unable to find valid certification path to requested target` in the table's problem text | The store's certificate is not signed by a CA in `tls.ca-file`. |
 
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+
+For a lake on S3 or an S3-compatible store (`s3.endpoint`, or AWS): the **native** engine uses the AWS SDK's proxy configuration, the **Hadoop** engine gets
+`fs.s3a.proxy.host`, `.port`, `.username` and `.password` from the same settings (S3A has no no-proxy list: the proxy is set only when the endpoint is not on
+yours). `https://` endpoints are tunnelled with `CONNECT` and keep `tls.*` (native engine). Health adds `via proxy host:port (source)` after the TLS note.
+Tested in `S3StorageProxyTest` (native S3 reader against a fake proxy and a stand-in S3: plain, `CONNECT` with a private CA and with a wrong one, credentials,
+no-proxy, site default, `proxy: none`) and `HadoopLakeProxyTest` (the `fs.s3a.proxy.*` mapping).
+
 ## As a connector file
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
@@ -736,6 +746,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `s3.endpoint` | none | an S3-compatible store (MinIO, Ceph); also sets path-style access and TLS by scheme |
 | `s3.path-style` | `true` | path-style addressing, only with `s3.endpoint` |
 | `s3.access-key`, `s3.secret-key` | none | static credentials; otherwise the AWS chain |
+| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; for the S3 store |
 | `hadoop.<key>` | none | passed to Hadoop as `<key>` (see [CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)) |
 
 ## 15. Checklist for production

@@ -32,12 +32,13 @@ import java.util.Map;
 /**
  * The settings each source plugin reads, so Admin &rarr; Connectors can generate a form and check a file. A plugin that
  * declares its own ({@link SourcePlugin#settingSpecs()}) wins; the shipped plugins are described in
- * {@code drishti/plugin-settings.yaml}. A plugin with {@code tls: true} also carries the shared {@code tls.*} section.
+ * {@code drishti/plugin-settings.yaml}. A plugin with {@code tls: true} also carries the shared {@code tls.*} section, and one with
+ * {@code proxy: true} the shared {@code proxy.*} section (the outbound HTTP proxy).
  */
 public final class SettingCatalogue {
 
     /** What the form and validator know about one plugin. */
-    public record PluginSpec(String plugin, boolean tls, List<SettingSpec> settings, boolean declared) {
+    public record PluginSpec(String plugin, boolean tls, boolean proxy, List<SettingSpec> settings, boolean declared) {
 
         /** The spec that covers {@code key}, or null. */
         public SettingSpec find(String key) {
@@ -56,6 +57,7 @@ public final class SettingCatalogue {
         Map<String, Object> doc = load();
         List<SettingSpec> common = specs(doc.get("common"));
         List<SettingSpec> tls = TlsSettings.settingSpecs("tls.");       // generated from the class that reads them
+        List<SettingSpec> proxy = com.ash.drishti.api.proxy.ProxySettings.settingSpecs();
         @SuppressWarnings("unchecked")
         Map<String, Object> plugins = doc.get("plugins") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
         for (SourcePlugin p : discovered) {
@@ -63,9 +65,11 @@ public final class SettingCatalogue {
             List<SettingSpec> own = new ArrayList<>(p.settingSpecs());
             boolean declared = !own.isEmpty();
             boolean supportsTls = false;
+            boolean supportsProxy = false;
             if (!declared && plugins.get(name) instanceof Map<?, ?> entry) {
                 own.addAll(specs(entry.get("settings")));
                 supportsTls = Boolean.TRUE.equals(entry.get("tls"));
+                supportsProxy = Boolean.TRUE.equals(entry.get("proxy"));
                 declared = !own.isEmpty();
             }
             List<SettingSpec> all = new ArrayList<>(own);
@@ -80,10 +84,13 @@ public final class SettingCatalogue {
                     }
                 }
             }
+            if (supportsProxy) {
+                proxy.stream().filter(t -> all.stream().noneMatch(a -> a.name().equals(t.name()))).forEach(all::add);
+            }
             if (declared) {
                 common.stream().filter(c -> all.stream().noneMatch(a -> a.name().equals(c.name()))).forEach(all::add);
             }
-            byPlugin.put(name, new PluginSpec(name, supportsTls, List.copyOf(all), declared));
+            byPlugin.put(name, new PluginSpec(name, supportsTls, supportsProxy, List.copyOf(all), declared));
         }
     }
 

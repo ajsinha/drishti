@@ -110,6 +110,7 @@ public final class ProviderConfigLoader {
             }
             flatten(k, e.getValue(), settings);
         }
+        requireProxyPasswordReference(settings, env);
         settings.replaceAll((k, v) -> k.startsWith("header.") ? McpServerConfigLoader.header(k.substring(7), v, env) : v);
         List<ProviderConfig.ModelConfig> models = new ArrayList<>();
         java.util.Set<String> names = new java.util.HashSet<>();
@@ -137,6 +138,18 @@ public final class ProviderConfigLoader {
         return new ProviderConfig(name, type, root.path("enabled").asBoolean(true), text(root, "base-url", ""),
                 resolveKey(text(root, "api-key", ""), env), duration(text(root, "timeout", "")), root.path("retries").asInt(0),
                 text(root, "default-model", ""), settings, models);
+    }
+
+    /** The proxy password is an {@code ${ENV}} reference or a {@code proxy.password-file}, never the value itself. */
+    static void requireProxyPasswordReference(Map<String, String> settings, Function<String, String> env) {
+        String pw = settings.get("proxy.password");
+        if (pw != null && !pw.isBlank() && !pw.strip().matches("\\$\\{[A-Za-z_][A-Za-z0-9_]*(:-?[^}]*)?}")) {
+            throw new LlmException(LlmException.Kind.CONFIG,
+                    "proxy.password must be an ${ENV_NAME} placeholder (or use proxy.password-file); passwords are never written into a file");
+        }
+        if (pw != null && !pw.isBlank()) {
+            settings.put("proxy.password", McpServerConfigLoader.header("password", pw.strip(), env));       // resolved here, like the api-key
+        }
     }
 
     /** {@code ${NAME}} or {@code ${NAME:-fallback}} read from the environment; anything else is a literal and refused. */

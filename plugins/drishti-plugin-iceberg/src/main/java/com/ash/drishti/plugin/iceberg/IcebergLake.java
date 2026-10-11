@@ -81,6 +81,11 @@ public interface IcebergLake extends Closeable {
         return null;
     }
 
+    /** The outbound proxy of the catalog and the object store ({@code proxy.*} or the site default); {@code none} when reached directly. */
+    default com.ash.drishti.api.proxy.ProxySettings proxy() {
+        return com.ash.drishti.api.proxy.ProxySettings.none();
+    }
+
     static IcebergLake of(Map<String, String> settings) {
         String domain = settings.getOrDefault("domain", "").trim();
         if (domain.contains("..") || domain.startsWith("/")) {
@@ -124,6 +129,16 @@ public interface IcebergLake extends Closeable {
             conf.set("fs.s3a.endpoint", endpoint);
             conf.set("fs.s3a.path.style.access", s.getOrDefault("s3.path-style", "true"));
             conf.set("fs.s3a.connection.ssl.enabled", String.valueOf(endpoint.startsWith("https")));
+        }
+        var proxy = com.ash.drishti.api.proxy.ProxySettings.resolve(s, endpoint.isBlank() ? "https://s3.amazonaws.com" : endpoint);
+        if (proxy.appliesTo(endpoint.isBlank() ? "s3.amazonaws.com" : java.net.URI.create(endpoint).getHost())) {   // S3A's own proxy settings
+            conf.set("fs.s3a.proxy.host", proxy.host());
+            conf.set("fs.s3a.proxy.port", String.valueOf(proxy.port()));
+            conf.set("fs.s3a.proxy.ssl.enabled", "false");
+            if (proxy.hasCredentials()) {
+                conf.set("fs.s3a.proxy.username", proxy.username());
+                conf.set("fs.s3a.proxy.password", proxy.password());
+            }
         }
         if (!s.getOrDefault("s3.access-key", "").isBlank()) {
             conf.set("fs.s3a.access.key", s.get("s3.access-key"));
@@ -206,13 +221,21 @@ public interface IcebergLake extends Closeable {
 
         private final com.ash.drishti.api.tls.TlsMaterial tls;
         private final String tlsId;
+        private final com.ash.drishti.api.proxy.ProxySettings proxy;
 
-        private RestLake(RESTCatalog catalog, Namespace namespace, String uri, com.ash.drishti.api.tls.TlsMaterial tls, String tlsId) {
+        private RestLake(RESTCatalog catalog, Namespace namespace, String uri, com.ash.drishti.api.tls.TlsMaterial tls, String tlsId,
+                com.ash.drishti.api.proxy.ProxySettings proxy) {
             this.catalog = catalog;
             this.namespace = namespace;
             this.uri = uri;
             this.tls = tls;
             this.tlsId = tlsId;
+            this.proxy = proxy;
+        }
+
+        @Override
+        public com.ash.drishti.api.proxy.ProxySettings proxy() {
+            return proxy;
         }
 
         @Override
@@ -269,11 +292,34 @@ public interface IcebergLake extends Closeable {
                                     + "(Iceberg's REST client has no TLS setting)", uri);
                 }
             }
+            // the outbound proxy: Iceberg's REST client takes it from rest.client.proxy.*, the object store's client from the file IO
+            var catalogProxy = com.ash.drishti.api.proxy.ProxySettings.resolve(s, uri);
+            if (catalogProxy.appliesTo(java.net.URI.create(uri).getHost())) {
+                props.put("rest.client.proxy.hostname", catalogProxy.host());
+                props.put("rest.client.proxy.port", String.valueOf(catalogProxy.port()));
+                if (catalogProxy.hasCredentials()) {
+                    props.put("rest.client.proxy.username", catalogProxy.username());
+                    props.put("rest.client.proxy.password", catalogProxy.password());
+                }
+            }
+            String store = s.getOrDefault("s3.endpoint", "");
+            var storeProxy = com.ash.drishti.api.proxy.ProxySettings.resolve(s, store.isBlank() ? "https://s3.amazonaws.com" : store);
+            boolean storeViaProxy = storeProxy.appliesTo(store.isBlank() ? "s3.amazonaws.com" : java.net.URI.create(store).getHost());
+            if (storeViaProxy && tlsId == null) {
+                tlsId = TlsS3FileIO.register(null, storeProxy);
+                props.putIfAbsent("io-impl", TlsS3FileIO.class.getName());
+                props.put(TlsS3FileIO.ID, tlsId);
+            } else if (storeViaProxy) {
+                TlsS3FileIO.unregister(tlsId);
+                tlsId = TlsS3FileIO.register(tls, storeProxy);
+                props.put(TlsS3FileIO.ID, tlsId);
+            }
             RESTCatalog catalog = new RESTCatalog();
             catalog.setConf(conf);
             catalog.initialize(s.getOrDefault("source-name", "drishti"), props);
             String ns = s.getOrDefault("namespace", "").isBlank() ? domain : s.get("namespace");
-            return new RestLake(catalog, ns.isBlank() ? Namespace.empty() : Namespace.of(ns.split("\\.")), uri, tls, tlsId);
+            return new RestLake(catalog, ns.isBlank() ? Namespace.empty() : Namespace.of(ns.split("\\.")), uri, tls, tlsId,
+                    catalogProxy.active() ? catalogProxy : storeViaProxy ? storeProxy : com.ash.drishti.api.proxy.ProxySettings.none());
         }
 
         @Override

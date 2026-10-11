@@ -166,8 +166,16 @@ All in the connector file's `settings:`. Durations are whole seconds.
 | `retry-jitter` | `0.2` | random spread of each wait, so many failing reads do not repeat together |
 | `source-name` | `news` | the name shown as the document's source |
 | `tls.*` | none | the shared [TLS settings](TLS.md), for an HTTPS mirror or proxy on a private CA |
+| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 A bad value fails at start with the setting's name in the message. The settings form in Admin, Connectors lists these.
+
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+
+Google News is reached through the proxy when one applies; the first request of a name and every retry use it. Health ends `via proxy host:port (source)`.
+Tested in `NewsProxyTest` (through the proxy with a login, no-proxy bypass, the site default, `proxy: none`) against a fake proxy and the fake news server.
 
 ## 7. Health, errors and retries
 

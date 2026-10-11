@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.ai;
 
+import com.ash.drishti.api.proxy.ProxySettings;
 import com.ash.drishti.api.tls.TlsHttp;
 import com.ash.drishti.api.tls.TlsMaterial;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -47,6 +48,7 @@ public final class StreamableHttpMcpClient implements McpClient {
 
     private final McpServerConfig cfg;
     private final HttpClient http;
+    private final ProxySettings proxy;
     private final URI uri;
     private final AtomicLong ids = new AtomicLong();
     private volatile boolean connected;
@@ -60,8 +62,9 @@ public final class StreamableHttpMcpClient implements McpClient {
         } catch (IllegalArgumentException e) {
             throw new LlmException(LlmException.Kind.CONFIG, "url is not a valid URL");
         }
-        HttpClient.Builder b = HttpClient.newBuilder().connectTimeout(cfg.timeout()).version(HttpClient.Version.HTTP_1_1)
-                .followRedirects(HttpClient.Redirect.NEVER);
+        this.proxy = ProxySettings.resolve(cfg.settings(), cfg.url());             // proxy.* or the site default; https is tunnelled with CONNECT
+        HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(cfg.timeout()).version(HttpClient.Version.HTTP_1_1)
+                .followRedirects(HttpClient.Redirect.NEVER));
         TlsMaterial tls = TlsHttp.material(cfg.settings(), cfg.url(), "url");
         this.http = (tls == null ? b : TlsHttp.apply(b, tls)).build();
     }
@@ -215,7 +218,7 @@ public final class StreamableHttpMcpClient implements McpClient {
         try {
             HttpRequest req = headers(HttpRequest.newBuilder(uri).timeout(cfg.timeout()).header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(JSON.writeValueAsString(message), StandardCharsets.UTF_8)), session).build();
-            HttpResponse<InputStream> resp = http.send(req, HttpResponse.BodyHandlers.ofInputStream());
+            HttpResponse<InputStream> resp = proxy.send(http, req, HttpResponse.BodyHandlers.ofInputStream());
             String sid = resp.headers().firstValue("Mcp-Session-Id").orElse(null);
             if (sid != null) {
                 session = sid;

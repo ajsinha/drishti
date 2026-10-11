@@ -80,6 +80,7 @@ public final class NewsSourcePlugin implements SourcePlugin {
     private volatile HttpFetcher fetcher;
     private volatile SourceContext context;
     private volatile String health = "UP";
+    private com.ash.drishti.api.proxy.ProxySettings proxy = com.ash.drishti.api.proxy.ProxySettings.none();
     private volatile Instant lastUpdate;
     private final java.util.concurrent.atomic.AtomicLong webCalls = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicLong cacheHits = new java.util.concurrent.atomic.AtomicLong();
@@ -95,14 +96,15 @@ public final class NewsSourcePlugin implements SourcePlugin {
         this.settings = NewsSettings.of(ctx.settings());
         this.cache = new BoundedCache<>(settings.cacheMax());
         this.pipeline = new NewsPipeline(settings);
-        HttpClient.Builder b = HttpClient.newBuilder().connectTimeout(settings.timeout()).followRedirects(HttpClient.Redirect.NORMAL);
+        this.proxy = com.ash.drishti.api.proxy.ProxySettings.resolve(ctx.settings(), settings.baseUrl());   // proxy.* or the site default
+        HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(settings.timeout()).followRedirects(HttpClient.Redirect.NORMAL));
         if (com.ash.drishti.api.tls.TlsSettings.anyGiven(ctx.settings(), "tls.")) {          // a proxy or mirror on a private CA
             var tls = com.ash.drishti.api.tls.TlsHttp.material(ctx.settings(), settings.baseUrl(), "base-url");
             if (tls != null) {
                 b = com.ash.drishti.api.tls.TlsHttp.apply(b, tls);
             }
         }
-        this.fetcher = new HttpFetcher(b.build(), settings);
+        this.fetcher = new HttpFetcher(b.build(), settings, proxy);
         // nothing is fetched at start: there is no entity yet, and the web may be unreachable. Health is UP until a call fails.
     }
 
@@ -177,11 +179,11 @@ public final class NewsSourcePlugin implements SourcePlugin {
             Fetched f = new Fetched(load(q), Instant.now());
             cache.put(key, f);
             lastUpdate = f.at();
-            health = "UP";
+            health = proxy.annotate("UP", settings.baseUrl());
             mine.complete(f);
             return f;
         } catch (Exception e) {
-            health = "DOWN: " + e.getMessage() + " (tried again on the next request)";
+            health = proxy.annotate("DOWN: " + e.getMessage() + " (tried again on the next request)", settings.baseUrl());
             if (cached != null) {                                  // the web failed but an older answer is held: serve it rather than nothing
                 mine.complete(cached);
                 return cached;

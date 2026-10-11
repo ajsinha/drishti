@@ -603,7 +603,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         if (!lake.reachable()) {
             return "DOWN: cannot reach " + lake.describe() + " (" + engineName + ")";
         }
-        String tlsNote = lake.tls() == null ? "" : lake.tls().expiryNote(java.time.Instant.now());
+        String tlsNote = (lake.tls() == null ? "" : lake.tls().expiryNote(java.time.Instant.now()))
+                + (lake.proxy().active() ? (lake.tls() == null ? "" : "; ") + lake.proxy().note() : "");
         if (tables.isEmpty()) {
             return "DOWN: no Delta tables under " + lake.describe() + " (" + engineName + ")";
         }

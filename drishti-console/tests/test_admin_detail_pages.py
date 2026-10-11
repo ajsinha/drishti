@@ -28,6 +28,8 @@ CONNECTOR = {
     "tls": {"enabled": True, "verifyHostname": True, "protocols": ["TLSv1.3"], "warnings": [],
             "certificates": [{"source": "tls.cert-file", "subject": "CN=drishti", "notBefore": "2026-01-01T00:00:00Z", "notAfter": "2026-10-20T00:00:00Z",
                               "daysLeft": 12, "expired": False}]},
+    "proxy": {"enabled": True, "source": "site", "sourceLabel": "site default", "url": "http://proxy.corp:3128", "username": "svc", "password": "***",
+              "noProxy": [".corp.example"], "target": "lake.example", "viaProxy": True},
     "history": [{"id": "20261006T080000000", "at": "2026-10-06T08:00:00Z", "bytes": 40}]}
 PACKS = [
     {"name": "trading", "title": "Trading", "description": "Trades and books", "version": "1.2.0", "loaded": True, "added": True, "enabled": True, "sample": True,
@@ -85,6 +87,23 @@ def test_the_connector_page_shows_state_tls_packs_settings_file_and_history(clie
                  "Compare or restore", "20261006T080000000", "/help/connector-files", "admin-connectors.js", "data-edit-dialog", 'aria-current="page"'):
         assert text in page, text
     assert "Delete trading-lake" not in page                                           # a pack's connector is reset or disabled, never deleted
+
+
+def test_the_connector_page_shows_the_effective_proxy_masked_and_where_it_came_from(client, backend, monkeypatch):
+    serve(backend, monkeypatch)
+    page = client.get("/admin/connectors/trading-lake").text
+    for text in ("data-proxy", "http://proxy.corp:3128", "from the site default", "svc", ".corp.example"):
+        assert text in page, text
+    assert "s3cr3t" not in page and 'password <span class="mono">***</span>' in page
+    monkeypatch.setitem(CONNECTOR, "proxy", {"enabled": False, "source": "disabled", "sourceLabel": "disabled by the connector"})
+    assert "proxy: none" in client.get("/admin/connectors/trading-lake").text
+    monkeypatch.setitem(CONNECTOR, "proxy", {"enabled": True, "source": "connector", "sourceLabel": "connector", "url": "http://p:1", "target": "intranet",
+                                             "viaProxy": False, "note": "the proxy is configured but intranet is on the no-proxy list, so this connector goes direct"})
+    assert "goes direct" in client.get("/admin/connectors/trading-lake").text
+    monkeypatch.setitem(CONNECTOR, "proxy", {"error": "proxy.url is missing: give the proxy as http://host:port"})
+    assert "proxy.url is missing" in client.get("/admin/connectors/trading-lake").text
+    monkeypatch.setitem(CONNECTOR, "proxy", None)
+    assert "data-proxy" not in client.get("/admin/connectors/trading-lake").text         # a plugin that does not speak HTTP has no proxy row
 
 
 def test_a_connector_that_does_not_exist_is_a_404_and_non_admins_are_refused(client, backend, monkeypatch):

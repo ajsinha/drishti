@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.ai;
 
+import com.ash.drishti.api.proxy.ProxySettings;
 import com.ash.drishti.api.tls.TlsHttp;
 import com.ash.drishti.api.tls.TlsMaterial;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,6 +45,7 @@ public final class AnthropicProvider extends BaseProvider {
     private static final int MAX_BODY = 4_000_000;
 
     private final HttpClient client;
+    private final ProxySettings proxy;
     private final URI uri;
 
     AnthropicProvider(ProviderConfig c) {
@@ -54,8 +56,9 @@ public final class AnthropicProvider extends BaseProvider {
         } catch (IllegalArgumentException e) {
             throw new LlmException(LlmException.Kind.CONFIG, "base-url is not a valid URL");
         }
-        HttpClient.Builder b = HttpClient.newBuilder().connectTimeout(c.timeout()).followRedirects(HttpClient.Redirect.NEVER)
-                .version(HttpClient.Version.HTTP_1_1);
+        this.proxy = ProxySettings.resolve(c.settings(), uri.toString());          // proxy.* or the site default; https is tunnelled with CONNECT
+        HttpClient.Builder b = proxy.apply(HttpClient.newBuilder().connectTimeout(c.timeout()).followRedirects(HttpClient.Redirect.NEVER)
+                .version(HttpClient.Version.HTTP_1_1));
         TlsMaterial tls = TlsHttp.material(c.settings(), uri.toString(), "base-url");
         this.client = (tls == null ? b : TlsHttp.apply(b, tls)).build();
     }
@@ -118,7 +121,7 @@ public final class AnthropicProvider extends BaseProvider {
         });
         try {
             b.POST(HttpRequest.BodyPublishers.ofString(JSON.writeValueAsString(body), StandardCharsets.UTF_8));
-            HttpResponse<InputStream> resp = client.send(b.build(), HttpResponse.BodyHandlers.ofInputStream());
+            HttpResponse<InputStream> resp = proxy.send(client, b.build(), HttpResponse.BodyHandlers.ofInputStream());
             byte[] bytes;
             try (InputStream in = resp.body()) {
                 bytes = in.readNBytes(MAX_BODY);

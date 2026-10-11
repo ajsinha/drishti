@@ -22,6 +22,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.proxy.ProxySettings;
 import com.ash.drishti.api.tls.TlsHttp;
 import com.ash.drishti.api.tls.TlsMaterial;
 import java.io.IOException;
@@ -59,6 +60,7 @@ public final class RestSourcePlugin implements SourcePlugin {
 
     private HttpClient http;
     private TlsMaterial tls;
+    private ProxySettings proxy = ProxySettings.none();
     private SourceContext context;
     private String baseUrl;
     private String path;
@@ -91,7 +93,8 @@ public final class RestSourcePlugin implements SourcePlugin {
                 headers.put(key.substring(7), v);
             }
         });
-        HttpClient.Builder hb = HttpClient.newBuilder().connectTimeout(timeout);
+        this.proxy = ProxySettings.resolve(ctx.settings(), baseUrl);          // proxy.* / the site default; https targets are tunnelled with CONNECT
+        HttpClient.Builder hb = proxy.apply(HttpClient.newBuilder().connectTimeout(timeout));
         this.tls = TlsHttp.material(ctx.settings(), baseUrl, "base-url");      // fails the start, naming the setting and the file
         this.http = (tls == null ? hb : TlsHttp.apply(hb, tls)).build();
     }
@@ -109,7 +112,7 @@ public final class RestSourcePlugin implements SourcePlugin {
     public Optional<EntityDocument> fetch(EntityRef ref) throws IOException, InterruptedException {
         HttpRequest.Builder req = HttpRequest.newBuilder(uri(ref)).timeout(timeout).header("Accept", "application/json").GET();
         headers.forEach(req::header);
-        HttpResponse<InputStream> res = http.send(req.build(), HttpResponse.BodyHandlers.ofInputStream());
+        HttpResponse<InputStream> res = proxy.send(http, req.build(), HttpResponse.BodyHandlers.ofInputStream());
         try (InputStream body = res.body()) {
             if (res.statusCode() == 404) {
                 return Optional.empty();
@@ -125,6 +128,6 @@ public final class RestSourcePlugin implements SourcePlugin {
 
     @Override
     public String health() {
-        return http == null ? "DOWN: not started" : tls == null ? "UP" : tls.annotate("UP", Instant.now());
+        return http == null ? "DOWN: not started" : proxy.annotate(tls == null ? "UP" : tls.annotate("UP", Instant.now()), baseUrl);
     }
 }

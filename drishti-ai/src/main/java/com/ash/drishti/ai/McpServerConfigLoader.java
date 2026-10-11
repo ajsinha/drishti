@@ -98,6 +98,7 @@ public final class McpServerConfigLoader {
                 ProviderConfigLoader.flatten(e.getKey(), e.getValue(), settings);
             }
         }
+        ProviderConfigLoader.requireProxyPasswordReference(settings, env);
         List<String> allowed = new ArrayList<>();
         root.path("allowed-tools").forEach(n -> allowed.add(n.asText()));
         return new McpServerConfig(name, transport, root.path("enabled").asBoolean(true), text(root, "url", ""), headers,

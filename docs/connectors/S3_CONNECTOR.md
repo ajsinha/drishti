@@ -550,6 +550,15 @@ reads everything under its prefix, and the server decides what each user may see
 | `DRS-1004 timed out reading …` | `GET`s far from the server, or many misses per read | keep the bucket in the server's region; lower `lookback-days`; route the kind so faster stores are not behind it |
 | server start is slow | the first listing runs inside start, one request per 1,000 keys | shrink the prefix (lifecycle rule, a narrower `prefix`) |
 
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+
+The AWS SDK's proxy configuration is used, for AWS and for an S3-compatible `endpoint`. With a proxy the connector uses the Apache HTTP client (the
+URL-connection client cannot answer a proxy's login when it tunnels `https://`, so it is used only without one); `https://` endpoints are tunnelled with
+`CONNECT` and keep their `tls.*` settings. When Drishti has a proxy decision for the connector (its own block, the site default, or `proxy: none`), the SDK's own reading of the JVM's `https.proxyHost` properties and of the environment is switched off so the decision stands; with no decision at all the SDK behaves as it did before. Tested in `S3ProxyTest` against a fake proxy and a stand-in S3:
+plain and `CONNECT`, credentials, no-proxy, the site default and `proxy: none`.
+
 ## As a connector file
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
@@ -593,6 +602,7 @@ In the connector file's `settings:`, or for the plugin as itself
 | `cache-entries` | `10000` | the most reads and misses kept |
 | `lookback-days` | `10` | the oldest date folder used: the date asked minus this many calendar days |
 | `source-name` | `s3` (a named connector: its name) | the name in provenance and type-ahead subtitles |
+| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 Connector keys (`plugin`, `enabled`, `kinds`) are as for every connector
 ([CONNECTOR_DEVELOPER_GUIDE.md, Configuration binding](CONNECTOR_DEVELOPER_GUIDE.md#configuration-binding)). Fixed in the code, not settings: connection timeout 5 s, socket

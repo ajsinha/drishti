@@ -555,6 +555,6 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             }
         });
         String up = notLaidOut.isEmpty() ? "UP" : "UP (not laid out as the pack declares: " + String.join(", ", notLaidOut) + "; searches read documents)";
-        return lake.tls() == null ? up : lake.tls().annotate(up, java.time.Instant.now());
+        return lake.proxy().annotate(lake.tls() == null ? up : lake.tls().annotate(up, java.time.Instant.now()));
     }
 }

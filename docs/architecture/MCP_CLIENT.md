@@ -51,7 +51,15 @@ headers:
   Authorization: Bearer ${TOOLS_TOKEN}     # ${ENV} placeholders only; a credential header without one is refused
 allowed-tools: [calc_percentage_change]    # empty = all the server lists; others can be neither listed nor called
 tls: {ca-file: /etc/drishti/ca.pem}        # the shared tls.* keys
+proxy: {url: http://proxy.corp.example:3128, username: svc-drishti, password: ${PROXY_PASSWORD}}   # optional; `proxy: none` goes direct
 ```
+
+### Outbound proxy
+
+A Streamable HTTP server is reached through the file's `proxy:` block, the site default (`drishti.http.proxy.*`; in the console the `DRISHTI_HTTP_PROXY_*` environment
+variables) or directly, exactly as an AI provider and a connector are: `http://` proxy, https servers tunnelled with `CONNECT` and keeping `tls.*`, the password an `${ENV}` placeholder
+(a literal refuses the file), a wrong login reported without the password. The initialize handshake, `tools/list`, calls and the closing DELETE all use it. Reference:
+[PROXY.md](../connectors/PROXY.md#9-the-console-ai-and-mcp-clients). The `mock` transport has no network and ignores it.
 
 A server is **connected on first use**. Two things can go wrong, and both are retried by themselves (`drishti.retry.mcp.*`, defaults: 5 s,
 doubling, up to 5 min, jitter; the console has `retry.mcp.*`):
@@ -113,5 +121,5 @@ copy), seed `config/apikeys.json` from `config/apikeys.json.example`, then
 
 ## 6. Tests
 
-`McpLayerTest` (mock under policy: roles, masking, `allowed-tools`, credential headers; the Streamable HTTP client against a loopback
+`AiProxyTest` and `tests/test_ai_proxy.py` (the MCP client through a fake proxy, plain and `CONNECT` to a TLS server with its own CA), `McpLayerTest` (mock under policy: roles, masking, `allowed-tools`, credential headers; the Streamable HTTP client against a loopback
 stub: handshake, session id, JSON and event-stream answers, DELETE on close), `AiApiTest` (REST), `tests/test_ai_layer.py` (console).

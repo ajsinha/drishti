@@ -20,6 +20,8 @@ prefix `tls.`, and builds its secure connection with the same code (`com.ash.dri
 learn the settings once: a private CA, a PKCS12 or JKS store, a PEM file pair for mutual TLS, hostname verification and
 the rest work the same for Kafka, ActiveMQ and RabbitMQ, and for each connector that has taken the module on since.
 
+Behind a forward proxy, the same connectors also take the shared `proxy.*` settings ([PROXY.md](PROXY.md)); an `https://` target is tunnelled with `CONNECT` and keeps every `tls.*` setting described here.
+
 This is the reference. The connector documents show complete configurations for their own protocols:
 [Kafka](KAFKA_CONNECTOR.md#11-security-tls-sasl-and-confluent) (TLS, SASL, Confluent, Schema Registry),
 [ActiveMQ](ACTIVEMQ_CONNECTOR.md#14-security) (`ssl://`), [RabbitMQ](RABBITMQ_CONNECTOR.md#12-security) (`amqps://`,

@@ -50,6 +50,12 @@
             {% if x.expired %}<span class="st st-bad">expired {{ x.notAfter[:10] }}</span>{% else %}<span class="st {{ 'st-warn' if x.daysLeft < 30 else 'st-ok' }}">expires {{ x.notAfter[:10] }} ({{ x.daysLeft }} days)</span>{% endif %}</div>
           {% else %}<div class="text-muted-d">no client certificate is configured, so none of its own expires</div>{% endfor %}
           {% for w in t.warnings or [] %}<div class="t-warn">{{ w }}</div>{% endfor %}{% endif %}</dd>
+      {% set px = c.proxy %}{% if px is not none %}<dt>Proxy</dt><dd data-proxy>{% if px.error %}<span class="t-bad">{{ px.error }}</span>
+        {% elif not px.enabled %}<span class="text-muted-d">none: connects direct{% if px.source == 'disabled' %} (<span class="mono">proxy: none</span> in the file){% endif %}</span>
+        {% else %}<span class="st st-ok">on</span> <span class="mono">{{ px.url }}</span> <span class="text-muted-d">from the {{ px.sourceLabel }}</span>
+          {% if px.username %}<div class="text-muted-d">user <span class="mono">{{ px.username }}</span>, password <span class="mono">{{ px.password or 'none' }}</span></div>{% endif %}
+          {% if px.noProxy %}<div class="text-muted-d">direct for <span class="mono">{{ px.noProxy | join(', ') }}</span></div>{% endif %}
+          {% if px.note %}<div class="t-warn">{{ px.note }}</div>{% endif %}{% endif %}</dd>{% endif %}
     </dl>
     <p class="adm-actions det-actions">
       <button type="button" class="fk" data-act="edit" aria-label="Edit {{ c.name }}">Edit</button>

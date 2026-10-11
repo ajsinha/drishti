@@ -48,11 +48,17 @@ final class HttpFetcher {
     }
 
     private final HttpClient http;
+    private final com.ash.drishti.api.proxy.ProxySettings proxy;
     private final NewsSettings settings;
 
     HttpFetcher(HttpClient http, NewsSettings settings) {
+        this(http, settings, com.ash.drishti.api.proxy.ProxySettings.none());
+    }
+
+    HttpFetcher(HttpClient http, NewsSettings settings, com.ash.drishti.api.proxy.ProxySettings proxy) {
         this.http = http;
         this.settings = settings;
+        this.proxy = proxy;
     }
 
     byte[] get(URI uri) throws IOException, InterruptedException {
@@ -78,7 +84,7 @@ final class HttpFetcher {
                 .header("Accept", "application/rss+xml, application/xml, text/xml, */*").GET().build();
         long deadline = System.nanoTime() + settings.timeout().toNanos();
         try {
-            HttpResponse<InputStream> r = http.send(req, HttpResponse.BodyHandlers.ofInputStream());
+            HttpResponse<InputStream> r = proxy.send(http, req, HttpResponse.BodyHandlers.ofInputStream());
             try (InputStream in = r.body()) {
                 int code = r.statusCode();
                 if (code / 100 != 2) {

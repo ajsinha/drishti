@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.api.proxy.ProxySettings;
 import com.ash.drishti.api.tls.TlsException;
 import com.ash.drishti.api.tls.TlsMaterial;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.apache.iceberg.aws.s3.S3FileIO;
 import org.apache.iceberg.aws.s3.S3FileIOProperties;
 import org.apache.iceberg.util.SerializableSupplier;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
+import software.amazon.awssdk.http.apache.ProxyConfiguration;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 
@@ -40,7 +42,10 @@ public final class TlsS3FileIO extends S3FileIO {
 
     /** The catalog property carrying the id of the registered material. */
     static final String ID = "drishti.tls.id";
-    private static final Map<String, TlsMaterial> REGISTRY = new ConcurrentHashMap<>();
+    private static final Map<String, Material> REGISTRY = new ConcurrentHashMap<>();
+
+    /** What the file IO is given: the object store's TLS material and/or outbound proxy (either may be absent). */
+    record Material(TlsMaterial tls, ProxySettings proxy) {}
 
     private final Clients clients;
 
@@ -54,8 +59,12 @@ public final class TlsS3FileIO extends S3FileIO {
     }
 
     static String register(TlsMaterial m) {
+        return register(m, ProxySettings.none());
+    }
+
+    static String register(TlsMaterial m, ProxySettings proxy) {
         String id = java.util.UUID.randomUUID().toString();
-        REGISTRY.put(id, m);
+        REGISTRY.put(id, new Material(m, proxy));
         return id;
     }
 
@@ -67,15 +76,16 @@ public final class TlsS3FileIO extends S3FileIO {
 
     @Override
     public void initialize(Map<String, String> props) {
-        TlsMaterial m = props.get(ID) == null ? null : REGISTRY.get(props.get(ID));
+        Material m = props.get(ID) == null ? null : REGISTRY.get(props.get(ID));
         if (m == null) {
-            throw new TlsException("TlsS3FileIO has no TLS material (the catalog was closed, or io-impl was set without tls.* on the connector)");
+            throw new TlsException("TlsS3FileIO has no TLS or proxy settings (the catalog was closed, or io-impl was set without tls.* or proxy.* on the connector)");
         }
-        if (!m.settings().verifyHostname()) {
+        if (m.tls() != null && !m.tls().settings().verifyHostname()) {
             throw new TlsException("tls.verify-hostname: false is not supported for Iceberg's S3 client (the AWS client always checks the host "
                     + "name): give the endpoint a name the certificate carries");
         }
-        clients.tls = m;
+        clients.tls = m.tls();
+        clients.proxy = m.proxy();
         clients.properties = Map.copyOf(props);
         super.initialize(props);
     }
@@ -83,6 +93,7 @@ public final class TlsS3FileIO extends S3FileIO {
     /** The S3 client, made on first use from the properties and the material {@link #initialize} was given. */
     private static final class Clients implements SerializableSupplier<S3Client> {
         private transient volatile TlsMaterial tls;
+        private transient volatile ProxySettings proxy = ProxySettings.none();
         private transient volatile Map<String, String> properties;
 
         @Override
@@ -90,8 +101,19 @@ public final class TlsS3FileIO extends S3FileIO {
             AwsClientProperties client = new AwsClientProperties(properties);
             S3FileIOProperties s3 = new S3FileIOProperties(properties);
             TlsMaterial m = tls;
-            S3ClientBuilder b = S3Client.builder()
-                    .httpClientBuilder(ApacheHttpClient.builder().tlsTrustManagersProvider(m::trustManagers).tlsKeyManagersProvider(m::keyManagers));
+            ApacheHttpClient.Builder http = ApacheHttpClient.builder();
+            if (m != null) {
+                http.tlsTrustManagersProvider(m::trustManagers).tlsKeyManagersProvider(m::keyManagers);
+            }
+            ProxySettings px = proxy;
+            if (px.active()) {                                  // the host was checked against no-proxy when the catalog was opened
+                var pc = ProxyConfiguration.builder().endpoint(px.uri()).useSystemPropertyValues(false).useEnvironmentVariableValues(false);
+                if (px.hasCredentials()) {
+                    pc.username(px.username()).password(px.password()).preemptiveBasicAuthenticationEnabled(true);
+                }
+                http.proxyConfiguration(pc.build());
+            }
+            S3ClientBuilder b = S3Client.builder().httpClientBuilder(http);
             client.applyClientRegionConfiguration(b);
             client.applyLegacyMd5Plugin(b);
             s3.applyCredentialConfigurations(client, b);

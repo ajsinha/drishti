@@ -17,7 +17,8 @@
 # subtree), type (string|int|boolean|duration|path|list|enum:a|b), required, default, desc, secret, group.
 # A plugin with `tls: true` also offers the shared tls.* section, which is NOT written here: it is generated from
 # TlsSettings.settingSpecs (drishti-api), the class that reads the keys, so the form cannot drift from the code. A plugin
-# with a second TLS endpoint lists its prefix under `tls-prefixes` (kafka: schema-registry.tls.).
+# with a second TLS endpoint lists its prefix under `tls-prefixes` (kafka: schema-registry.tls.). A plugin with `proxy: true`
+# (every HTTP-based one) likewise offers the shared proxy.* section, generated from ProxySettings.settingSpecs (drishti-api).
 common:
   - { name: source-name, desc: "The name documents carry as their provenance (default: the connector's name)", group: general }
   - { name: "mode.*", desc: "Per-kind read mode (mode.<kind>)", group: mapping }
@@ -64,6 +65,7 @@ plugins:
       - { name: reverse-index, type: boolean, desc: "Build the reverse index", group: tuning }
   delta:
     tls: true
+    proxy: true
     settings:
       - { name: root, required: true, type: path, desc: "Lake root (folder, or s3://bucket/prefix)", group: connection }
       - { name: domain, desc: "Domain folder under the root", group: connection }
@@ -91,6 +93,7 @@ plugins:
       - { name: s3.secret-key, secret: true, desc: "S3 secret key: ${ENV_VAR} or file:/path", group: s3 }
   iceberg:
     tls: true
+    proxy: true
     settings:
       - { name: "layout.*", desc: "Per-kind column layout", group: mapping }
       - { name: warehouse, desc: "REST catalog warehouse", group: connection }
@@ -204,6 +207,7 @@ plugins:
       - { name: tick-ms, type: int, desc: "Tick interval", group: tuning }
   feed:
     tls: true
+    proxy: true
     settings:
       - { name: url, desc: "Feed URL", group: connection }
       - { name: feed, desc: "Built-in feed name", group: connection }
@@ -214,6 +218,7 @@ plugins:
       - { name: timeout-seconds, type: int, desc: "Request timeout", group: tuning }
   news:
     tls: true
+    proxy: true
     settings:
       - { name: base-url, desc: "RSS search address (default Google News)", group: connection }
       - { name: language, desc: "Edition language, e.g. en", group: connection }
@@ -238,6 +243,7 @@ plugins:
       - { name: retry-jitter, desc: "Random spread of the wait (0.2)", group: tuning }
   yfinance:
     tls: true
+    proxy: true
     settings:
       - { name: base-url, desc: "Chart endpoint without the symbol", group: connection }
       - { name: user-agent, desc: "User-Agent header", group: connection }
@@ -256,6 +262,7 @@ plugins:
       - { name: retry-jitter, desc: "Random spread of the wait (0.2)", group: tuning }
   rest:
     tls: true
+    proxy: true
     settings:
       - { name: base-url, required: true, desc: "Base URL of the service", group: connection }
       - { name: path, desc: "Path template", group: connection }
@@ -265,6 +272,7 @@ plugins:
       - { name: "header.*", desc: "A request header: header.<Name> (header.Authorization: Bearer ${SERVICE_TOKEN})", group: connection }
   s3:
     tls: true
+    proxy: true
     settings:
       - { name: bucket, required: true, desc: "Bucket", group: connection }
       - { name: prefix, desc: "Key prefix", group: connection }
@@ -279,6 +287,7 @@ plugins:
       - { name: cache-seconds, type: int, desc: "Cache lifetime", group: tuning }
   kafka:
     tls: true
+    proxy: true
     settings:
       - { name: bootstrap-servers, required: true, desc: "Broker list host:port,...", group: connection }
       - { name: topics, type: list, required: true, desc: "Topics to read", group: connection }

@@ -588,6 +588,14 @@ drishti:
     fingerprint-cache-size: 100000  # one per (entity, generation)
     bind-parallelism: 0             # 0 = one binding thread per core
   http:
+    proxy:                           # the site's outbound HTTP proxy (docs/connectors/PROXY.md): OFF unless url is set (or from-environment is true)
+      url: ${DRISHTI_HTTP_PROXY_URL:}                 # http://host:port; http and https targets both go through it (https via CONNECT)
+      username: ${DRISHTI_HTTP_PROXY_USERNAME:}       # Basic proxy authentication
+      password: ${DRISHTI_HTTP_PROXY_PASSWORD:}       # only a ${ENV} placeholder (a literal in this file is refused at start)
+      no-proxy: []                                    # hosts that go direct: names, .suffixes, addresses, CIDR blocks (10.0.0.0/8)
+      enabled: true                                   # false switches it off without removing it
+      from-environment: false                         # true: when url is empty, honour HTTPS_PROXY / HTTP_PROXY / NO_PROXY
+    # A connector (or AI provider, MCP server) inherits this unless its own file has a proxy: block, or `proxy: none`.
     request-limits:                 # oversized bodies are answered 413 DRS-5005 before they are read (declared or chunked)
       enabled: true
       rules:

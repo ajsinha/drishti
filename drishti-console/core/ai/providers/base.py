@@ -15,10 +15,12 @@
 """Common parts of console providers: the model list from the provider file, TLS from ``tls.*`` keys, and error mapping for httpx."""
 from __future__ import annotations
 
+import os
 import ssl
 
 import httpx
 
+from core.ai import proxy as proxy_mod
 from core.ai.types import CHAT, EMBEDDINGS, JSON_MODE, TOOL_CALLS, ChatRequest, LlmError, ModelInfo, ProviderConfig
 
 
@@ -40,7 +42,16 @@ def ssl_context(cfg: ProviderConfig, url: str):
         raise LlmError("config", f"cannot create the TLS context ({type(e).__name__})") from None
 
 
+def client_args(settings: dict, url: str) -> tuple[dict, "proxy_mod.Proxy"]:
+    """The ``httpx.AsyncClient`` arguments that send requests to ``url`` through the file's proxy, the site default or the environment
+    (see ``core/ai/proxy.py``), and the proxy that was chosen."""
+    px = proxy_mod.resolve(settings, url, os.environ.get)
+    return px.httpx_args(url), px
+
+
 def map_http_error(e: Exception) -> LlmError:
+    if isinstance(e, httpx.ProxyError):
+        return LlmError("failed", "the proxy refused the request or could not be used (check proxy.url, proxy.username and proxy.password)")
     if isinstance(e, httpx.TimeoutException):
         return LlmError("timeout", "the model endpoint did not answer in time")
     return LlmError("failed", "the model endpoint could not be reached or answered something unreadable")

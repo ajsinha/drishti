@@ -453,6 +453,26 @@ Errors, captured from the connector's test against an HTTPS server that requires
 To see the request the connector sends, build it by hand: `<base-url without trailing slashes><path with {kind} and
 {id} encoded>`, then `curl -i -H 'Accept: application/json' -H 'Authorization: Bearer …' <url>`.
 
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+
+```yaml
+settings:
+  base-url: https://api.vendor.example/v1
+  proxy:
+    url: http://proxy.corp.example:3128
+    username: svc-drishti
+    password: ${PROXY_PASSWORD}
+    no-proxy: [intranet.example]
+```
+
+Every request goes through the proxy (an `https://` `base-url` is tunnelled with `CONNECT` and keeps its `tls.*` settings end to end). Health
+says so: `UP via proxy proxy.corp.example:3128 (connector)`, or `UP (proxy ... not used for api.example: no-proxy)` when the host is on the list.
+A refused login is reported as `the proxy proxy.corp.example:3128 refused the credentials (HTTP 407 Proxy Authentication Required): check proxy.username
+and proxy.password`. Tested in `RestProxyTest` against a fake proxy: plain forwarding, `CONNECT` with TLS through the tunnel, Basic credentials, no-proxy, the site
+default and `proxy: none`.
+
 ## As a connector file
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
@@ -490,6 +510,7 @@ In the connector file's `settings:`, or for the plugin as itself
 | `timeout-ms` | `2000` | connect timeout and request timeout, in milliseconds |
 | `generation-header` | `ETag` | response header holding a numeric version (quotes removed); otherwise the fetch time in milliseconds |
 | `header.<Name>` | none | a request header `<Name>` sent with every request |
+| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 Server settings that bear on it: `drishti.sources.fetch-timeout` (2 s), `drishti.sources.routes.<kind>`,
 `drishti.graph.link-budget` (40 ms). Shipped environment variables for the plugin as itself: `DRISHTI_REST_ENABLED`

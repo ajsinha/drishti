@@ -42,6 +42,10 @@ settings:                         # the plugin's settings; nesting is flattened 
 - A credential (`password`, `secret…`, `token`, `api-key`, `access-key`, `private-key`, `credential`) is only ever an `${ENV_VAR}` or a `file:/path` reference.
 - Ready-made files for every store are in [`config/connectors.examples/`](../../config/connectors.examples) (`postgres/`, `duckdb/`, `aerospike/`, `mongodb/`, `iceberg/`,
   `redis/`, `files/`, `other/`). Every connector document ends its settings with an "As a connector file" section.
+- A site that reaches the internet only through a forward proxy sets it once for every HTTP-based connector (REST, feeds, news, yfinance, S3, Delta and Iceberg on S3, the
+  Kafka schema registry), AI provider and MCP server: `drishti.http.proxy.*` in `application.yaml`, or a `proxy:` block (`url`, `username`, `password` as `${ENV}`, `no-proxy`)
+  in one connector's `settings:`, or `proxy: none` to go direct. https targets are tunnelled with `CONNECT` and keep their `tls.*`. Admin → Connectors shows the effective proxy,
+  masked, and where it came from. See [PROXY.md](PROXY.md).
 - `drishti.sources.connectors` in `application.yaml` and the per-store profiles (`SPRING_PROFILES_ACTIVE=postgres`, …) still work but are **deprecated**.
 
 ### Precedence

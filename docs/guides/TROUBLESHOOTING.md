@@ -33,7 +33,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Search](#search) | DRS-4004, empty results, partial results |
 | [Studio and Sutras](#studio-and-sutras) | Save disabled, an edit has no effect, `.sutra.md` files after an upgrade, approval refused |
 | [Packs](#packs) | mnemonics missing, a pack switched off, *not loaded*, cannot switch off, generated files out of date |
-| [Connectors](#connectors) | a connector is idle, a connector failed to start, a bad connector file, TLS errors and certificate expiry, schema-registry messages skipped |
+| [Connectors](#connectors) | a connector is idle, a connector failed to start, a bad connector file, TLS errors and certificate expiry, proxy errors (407, CONNECT refused, DNS), schema-registry messages skipped |
 | [Monitoring endpoints](#monitoring-endpoints) | `/actuator/prometheus` answers 401 or 403, `/api/docs` answers 401 |
 | [Alerts](#alerts-and-monitors) | an alert never fires |
 | [Development](#development) | licence header test fails |
@@ -818,6 +818,21 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 
 - **What you see:** Admin → Health says **DEGRADED**, and `failedToStart` names the connector with a reason.
 - **Fix:** follow [runbooks/source-down.md](../admin/runbooks/source-down.md), step 2.
+
+### A connector, AI provider or MCP server fails behind a proxy: 407, CONNECT refused, "cannot connect to the proxy", DNS
+
+- **What you see:** health or *Test connection* says one of
+  `the proxy proxy.corp.example:3128 refused the credentials (HTTP 407 Proxy Authentication Required): check proxy.username and proxy.password`
+  (the JDK's own wording is `too many authentication attempts` or `Unable to tunnel through proxy. Proxy returns "HTTP/1.1 407 …"`),
+  `the proxy … refused to open a tunnel (CONNECT) to the target: … 403 Forbidden`, `cannot connect to the proxy 10.1.2.3:3128 (Connection refused)`,
+  `cannot resolve the name proxy.corp.example (DNS)`. *Test connection* adds a plain-words hint.
+- **Cause:** 407, the proxy wants a login and the one given is wrong or missing; CONNECT refused, the proxy does not allow that host or port; cannot connect, nothing listens at
+  `proxy.url` or a firewall drops it; DNS, the server cannot resolve the proxy's (or the target's) name.
+- **Check:** Admin → Connectors → the connector → **Proxy** shows the proxy in effect and where it came from (connector, site default, environment). From the server's host:
+  `curl -v -x http://proxy:3128 --proxy-user svc:… https://target/` (a `407` there is the same 407) and `curl -v --proxytunnel -x http://proxy:3128 https://target/` (the CONNECT).
+- **Fix:** correct `proxy.username` and the environment variable or file behind `proxy.password`; ask for the target on the proxy's allow-list (usually port 443); correct `proxy.url`
+  (`http://host:port`, never `https://`); add the host to `proxy.no-proxy` if it should go direct, or write `proxy: none`. A `PKIX` error through a proxy is the target's (or a
+  re-signing proxy's) certificate: `tls.ca-file`. Full table: [PROXY.md, section 11](../connectors/PROXY.md#11-troubleshooting).
 
 ### A connector will not connect over TLS, or stops at start with a `tls.` message
 

@@ -634,6 +634,14 @@ time of the last successful fetch:
 | server start takes 20 s or more | a feed's first fetch is waiting for its timeouts | lower `timeout-seconds`, fix the network, or switch the feed off |
 | a FRED series shows under another series' id | `url` lists more URLs than `series` names, or in a different order | make `url` and `series` match one to one |
 
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+
+The built-in feeds (NY Fed, ECB, US Treasury, FRED) and a mirror `url` both go through the proxy; `file:` URLs never do. Health:
+`UP via proxy proxy.corp.example:3128 (site default)`, and a failure keeps the proxy in the message (`DOWN: IOException: cannot connect to the proxy 10.1.2.3:3128
+(Connection refused): check proxy.url and that the proxy is running`). Tested in `FeedProxyTest`.
+
 ## As a connector file
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
@@ -668,6 +676,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `user-agent` | `public-data-feed-connector` | the `User-Agent` header; the pack sets `<product> public data feed connector` |
 | `source-name` | the connector's name (as itself: the `feed` value) | the name in provenance, health and search subtitles |
 | `stale-after` | none (the pack sets `4d`) | an engine setting: mark the connector stale when no refresh has brought data for this long |
+| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none` |
 
 And on the connector itself: `plugin: feed`, `enabled` (the pack uses `${DRISHTI_FEED_<NAME>:false}`), and `kinds`.
 

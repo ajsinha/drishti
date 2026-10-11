@@ -49,6 +49,7 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-s3</artifactId></dependency>
     <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId></dependency>
     <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId></dependency>
     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>

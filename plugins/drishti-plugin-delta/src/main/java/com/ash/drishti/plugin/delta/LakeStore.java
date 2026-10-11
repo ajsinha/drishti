@@ -59,6 +59,11 @@ public interface LakeStore extends AutoCloseable {
         return null;
     }
 
+    /** The outbound proxy of the object store's endpoint ({@code proxy.*} or the site default); {@code none} for local disk. */
+    default com.ash.drishti.api.proxy.ProxySettings proxy() {
+        return com.ash.drishti.api.proxy.ProxySettings.none();
+    }
+
     /**
      * The lake at {@code root}, read by the engine the settings choose ({@link EngineKind}).
      *
