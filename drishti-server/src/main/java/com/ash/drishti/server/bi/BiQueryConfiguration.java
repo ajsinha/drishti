@@ -88,8 +88,20 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public BiReportService biReportService(BiService bi, DatasetService datasets, BiReportProperties props) {
-        return new BiReportService(bi, datasets, props);
+    public BiReportService biReportService(BiService bi, DatasetService datasets, BiReportProperties props, com.ash.drishti.server.bi.python.PythonItems pythonItems) {
+        BiReportService reports = new BiReportService(bi, datasets, props);
+        reports.pythonItems(pythonItems);
+        return reports;
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.python.PythonItems pythonItems(BiService bi, BiReportProperties props) {
+        return new com.ash.drishti.server.bi.python.PythonItems(bi, props);
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.python.PythonController pythonController(com.ash.drishti.server.bi.python.PythonItems items) {
+        return new com.ash.drishti.server.bi.python.PythonController(items);
     }
 
     @Bean

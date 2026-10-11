@@ -286,15 +286,28 @@ public final class DatasetParser {
                 String expr = v.has("expr") ? v.path("expr").asText() : null;
                 String python = v.has("python") ? v.path("python").asText() : null;
                 if (expr == null && python == null) {
-                    out.add(error(path, "a measure has `expr:` (or `python:`, stored and not run yet)"));
+                    out.add(error(path, "a measure has `expr:` (or `python:`, run by the console's Python runner: RUPAKA.md section 20.8)"));
                     return;
                 }
-                measures.put(name, new Dataset.Measure(name, expr, v.has("format") ? v.path("format").asText() : null, text(v, "description", ""), python));
+                if (python != null && expr != null) {
+                    out.add(error(path, "a measure is an `expr:` or a `python:`, not both"));
+                    return;
+                }
+                measures.put(name, new Dataset.Measure(name, expr, v.has("format") ? v.path("format").asText() : null, text(v, "description", ""), python,
+                        names(v.path("inputs")), names(v.path("by"))));
             } else {
                 out.add(error(path, "a measure is an expression or { expr, format, description }"));
             }
         });
         return measures;
+    }
+
+    private static List<String> names(JsonNode n) {
+        List<String> out = new ArrayList<>();
+        if (n.isArray()) {
+            n.forEach(x -> out.add(x.asText()));
+        }
+        return out;
     }
 
     private static Map<String, List<String>> hierarchies(JsonNode n, List<Problem> out) {

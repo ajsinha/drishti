@@ -124,11 +124,44 @@ final class DatasetValidator {
 
     // ---- measures ----------------------------------------------------------------------------------------------------
 
+    /**
+     * A Python measure names a Python item and the columns it reads ({@code inputs}) and is grouped by ({@code by}), all of one table; the query engine
+     * refuses it (the console's runner computes it, for a python visual), so the model says so as a warning.
+     */
+    private void pythonMeasure(String path, Dataset.Measure m) {
+        if (m.python().isBlank()) {
+            err(RELATION, path + ".python", "python names the Python item that computes the measure (its catalogue id or file name)");
+            return;
+        }
+        if (m.inputs().isEmpty()) {
+            err(RELATION, path + ".inputs", "a Python measure lists the columns it reads: inputs: [trade.pnl1d]");
+        }
+        Set<String> tables = new LinkedHashSet<>();
+        for (String which : List.of("inputs", "by")) {
+            for (String c : "inputs".equals(which) ? m.inputs() : m.by()) {
+                try {
+                    Resolver.ColRef ref = resolver.resolve(List.of(c.split("\\.")), null);
+                    if (ref.column() == null || ref.part() != null) {
+                        err(RELATION, path + "." + which, "'" + c + "' is not a column (table.column)");
+                    } else {
+                        tables.add(ref.table());
+                    }
+                } catch (IllegalArgumentException e) {
+                    err(RELATION, path + "." + which, e.getMessage());
+                }
+            }
+        }
+        if (tables.size() > 1) {
+            err(RELATION, path, "a Python measure reads the columns of one table, not " + tables);
+        }
+        out.add(new Problem("warning", NOT_BUILT, path, "a Python measure (" + m.python() + ") is computed by the console's Python runner and shown by a python visual; a query that names it is refused"));
+    }
+
     private void measures() {
         for (Dataset.Measure m : ds.measures().values()) {
             String path = "measures." + m.name();
             if (m.expr() == null) {
-                out.add(new Problem("warning", NOT_BUILT, path, "a Python measure (" + m.python() + ") is stored and not run yet (RUPAKA.md section 13); queries that use it are refused"));
+                pythonMeasure(path, m);
                 continue;
             }
             Node n = parse(path, m.expr());

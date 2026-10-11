@@ -50,10 +50,10 @@ class SampleDatasetsTest {
     }
 
     @Test
-    void theBasicSampleIsOneTableWithFourMeasuresAndADeskBookHierarchy() throws IOException {
+    void theBasicSampleIsOneTableWithFourMeasuresAPythonMeasureAndADeskBookHierarchy() throws IOException {
         Dataset d = load("trades-basic").dataset();
         assertThat(d.tables()).containsOnlyKeys("trade");
-        assertThat(d.measures().keySet()).containsExactly("Notional", "MTM", "Trades", "Average MTM per trade");
+        assertThat(d.measures().keySet()).containsExactly("Notional", "MTM", "Trades", "Average MTM per trade", "Desk P&L volatility");
         assertThat(d.hierarchies().get("Desk and book")).containsExactly("trade.desk", "trade.book");
     }
 

@@ -168,7 +168,7 @@ final class SqlEmitter {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "no measure '" + name + "' in this dataset");
         }
         if (m.expr() == null) {
-            throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are stored and not run yet");
+            throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are run by the console's Python runner, shown by a python visual, never by a query");
         }
         if (!trail.add(name)) {
             throw new DrishtiException(ErrorCode.DATASET_EXPRESSION, "measures refer to each other in a circle at '" + name + "'");

@@ -318,7 +318,7 @@ public final class BiReportService {
      * Perspective shows as headers and an update's rows are keyed by.
      */
     private static QueryService.Result shortNames(Prepared pre, QueryService.Result r) {
-        if (!pre.visual().type().startsWith("perspective-") || pre.built().query().fields().isEmpty()) {
+        if (!(pre.visual().type().startsWith("perspective-") || "python".equals(pre.visual().type())) || pre.built().query().fields().isEmpty()) {
             return r;
         }
         String first = pre.built().query().fields().get(0);
@@ -362,6 +362,57 @@ public final class BiReportService {
         BiStore.Item dsItem = l.datasetItem();
         VisualQueries.Built built = VisualQueries.build(report, page, visual, state, l.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to));
         return new Prepared(report, visual, dsItem, l.dataset(), built);
+    }
+
+    private volatile com.ash.drishti.server.bi.python.PythonItems pythonItems;
+
+    /** Wired once at start: where a python visual finds its item. */
+    public void pythonItems(com.ash.drishti.server.bi.python.PythonItems items) {
+        this.pythonItems = items;
+    }
+
+    /**
+     * What the console's Python runner needs to run one python visual (RUPAKA.md section 20.8): the Python item (manifest and source, as the caller reads it),
+     * the Python measure it shows (its name and the columns it reads and groups by, as the table names them) or null, the visual's parameters, and where it
+     * may run. The rows come from the same visual query as any other (as an Arrow stream, masked for this caller).
+     */
+    public Map<String, Object> pythonOf(Principal p, String id, String yaml, String pageId, String visualId) {
+        Loaded l;
+        if (yaml != null) {
+            bi.requirePower(p, BiAccess.AUTHOR);
+            l = load(p, null, yaml, false);
+        } else {
+            l = loadItem(p, id);
+        }
+        Report report = l.parsed().report();
+        Report.Page page = report == null ? null : report.page(pageId);
+        Report.Visual visual = page == null ? null : page.visual(visualId);
+        if (visual == null || !"python".equals(visual.type()) || l.dataset() == null) {
+            throw new DrishtiException(ErrorCode.REPORT_STATE, "page '" + pageId + "' has no python visual '" + visualId + "'");
+        }
+        if (!ok(l.problems())) {
+            throw new DrishtiException(ErrorCode.REPORT_INVALID, "the report has errors: " + l.problems().stream().filter(ReportParser.Problem::error).findFirst().map(ReportParser.Problem::message).orElse(""));
+        }
+        List<String> values = visual.well("values");
+        Dataset.Measure pm = values.isEmpty() ? null : l.dataset().measures().get(values.get(0));
+        String ref = pm != null && pm.python() != null ? pm.python() : String.valueOf(visual.format().get("python"));
+        Map<String, Object> out = new LinkedHashMap<>(pythonItems.describe(p, ref, true));
+        if (pm != null) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("name", pm.name());
+            m.put("inputs", pm.inputs());
+            m.put("by", pm.by());
+            out.put("measure", m);
+        } else {
+            out.put("measure", null);
+        }
+        Object params = visual.format().get("params");
+        out.put("params", params instanceof Map<?, ?> ? params : Map.of());
+        Object run = visual.format().get("run");
+        out.put("run", run == null ? "auto" : String.valueOf(run));
+        out.put("visual", visual.id());
+        out.put("title", visual.title());
+        return out;
     }
 
     /** True when the report's dataset has a live table (its visuals update in place); nothing is started. */

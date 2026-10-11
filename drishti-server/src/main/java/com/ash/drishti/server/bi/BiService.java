@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  */
 public final class BiService {
 
-    public static final List<String> KINDS = List.of("dataset", "report", "board", "notebook");
+    public static final List<String> KINDS = List.of("dataset", "report", "board", "notebook", "python");
     public static final List<String> ENDORSEMENTS = List.of("none", "promoted", "certified");
     private static final Pattern SLUG = Pattern.compile("[a-z][a-z0-9-]{1,47}");
     private static final Pattern TAG = Pattern.compile("[A-Za-z0-9][A-Za-z0-9 ._:/-]{0,39}");
@@ -567,6 +567,20 @@ public final class BiService {
         return all.stream().filter(i -> "dataset".equals(i.kind())).toList();
     }
 
+    /** Every published Python item, whoever may read it (no caller): what a report's python visual resolves its item among. */
+    public List<BiStore.Item> allPythons() {
+        List<BiStore.Item> all = new ArrayList<>(store.published());
+        all.addAll(folder.items());
+        return all.stream().filter(i -> "python".equals(i.kind())).toList();
+    }
+
+    private volatile java.util.function.Function<String, String> pythonCheck;
+
+    /** Set once by the Python items service: what publishing a Python item checks its manifest with (the first error, or an empty text). */
+    public void pythonCheck(java.util.function.Function<String, String> check) {
+        this.pythonCheck = check;
+    }
+
     /** Every published board, whoever may read it (no caller): what board notifications are derived from. */
     public List<BiStore.Item> allBoards() {
         List<BiStore.Item> all = new ArrayList<>(store.published());
@@ -792,6 +806,12 @@ public final class BiService {
             com.ash.drishti.server.bi.report.ReportParser.Result r = com.ash.drishti.server.bi.report.ReportParser.parse(i.body());
             if (!r.ok()) {
                 throw new DrishtiException(ErrorCode.REPORT_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError() + " (check it in the designer)");
+            }
+        }
+        if ("python".equals(i.kind()) && !i.body().isBlank() && pythonCheck != null) {
+            String why = pythonCheck.apply(i.body());
+            if (!why.isEmpty()) {
+                throw new DrishtiException(ErrorCode.PYTHON_INVALID, "'" + i.title() + "' cannot be published: " + why + " (check it on its item page)");
             }
         }
         if ("board".equals(i.kind()) && !i.body().isBlank()) {

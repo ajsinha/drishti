@@ -124,6 +124,15 @@ public class BiReportController {
         return noStore(reports.query(p, id, null, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"), explain));
     }
 
+    /**
+     * Body {@code {page, visual}}: what the console's Python runner runs for one python visual (RUPAKA.md section 20.8): the Python item, the measure it shows,
+     * its parameters and where it may run. The rows come from {@code /query?format=arrow}.
+     */
+    @PostMapping("/{id}/python")
+    public ResponseEntity<Map<String, Object>> python(@PathVariable String id, @RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return noStore(reports.pythonOf(p, id, null, body.path("page").asText(""), body.path("visual").asText("")));
+    }
+
     private String write(Object o) {
         try {
             return json.writeValueAsString(o);

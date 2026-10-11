@@ -205,7 +205,17 @@ public enum ErrorCode {
     /** Distribution: a subscription is not valid (its target, schedule, format, recipients or view state), or the person has too many, or subscriptions are off. */
     SUBSCRIPTION_INVALID("DRS-9061", 422),
     /** Alerts: an alert on a measure or a field is not valid (its source, condition, trigger or delivery), or the person has too many, or alerts are off. */
-    ALERT_INVALID("DRS-9062", 422);
+    ALERT_INVALID("DRS-9062", 422),
+    /** Python in BI: a Python item's manifest is not valid (interface, entry, inputs, packages, target, limits or source), or a report names a Python item that does not fit. */
+    PYTHON_INVALID("DRS-9070", 422),
+    /** Python in BI: the code raised an error or returned something that is not a number per group or a chart (the traceback is shown to authors only). */
+    PYTHON_FAILED("DRS-9071", 422),
+    /** Python in BI: the run was stopped for exceeding its time, memory or output limit. */
+    PYTHON_LIMIT("DRS-9072", 413),
+    /** Python in BI: the sandbox refused something the code tried (a package off the allow-list, the network, a file outside the scratch folder, a process). */
+    PYTHON_SANDBOX("DRS-9073", 403),
+    /** Python in BI: the runner has no free worker (bi.python.workers) or is switched off or not installed. */
+    PYTHON_BUSY("DRS-9074", 503);
 
     private final String code;
     private final int httpStatus;

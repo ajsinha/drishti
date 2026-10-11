@@ -283,6 +283,8 @@ public final class DatasetService {
             mm.put("name", x.name());
             mm.put("expr", x.expr());
             mm.put("python", x.python());
+            mm.put("inputs", x.inputs());
+            mm.put("by", x.by());
             mm.put("format", x.format());
             mm.put("description", x.description());
             mm.put("rollups", d.rollups().stream().filter(ro -> ro.measures().contains(x.name())).map(Dataset.Rollup::name).toList());

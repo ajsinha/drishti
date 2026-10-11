@@ -115,8 +115,21 @@ public record Dataset(String name, int version, String title, String description
         }
     }
 
-    /** A measure: an aggregate expression, or a Python measure (stored, not run). */
-    public record Measure(String name, String expr, String format, String description, String python) {}
+    /**
+     * A measure: an aggregate expression, or a Python measure (RUPAKA.md section 20.8): {@code python} names a Python item, {@code inputs} the columns its
+     * function reads and {@code by} the columns it is grouped by (all {@code table.column}). The query engine never runs one: the console's runner does.
+     */
+    public record Measure(String name, String expr, String format, String description, String python, List<String> inputs, List<String> by) {
+
+        public Measure {
+            inputs = inputs == null ? List.of() : List.copyOf(inputs);
+            by = by == null ? List.of() : List.copyOf(by);
+        }
+
+        public Measure(String name, String expr, String format, String description, String python) {
+            this(name, expr, format, description, python, List.of(), List.of());
+        }
+    }
 
     /** Row rules and masked columns. */
     public record Security(List<RowRule> rows, List<String> masked) {

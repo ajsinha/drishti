@@ -70,6 +70,11 @@ measures:                        # a measure is an AGGREGATE: sum, avg, min, max
     expr: "[MTM] / [Trades]"     # [Name] uses another measure; the result is a ratio of two aggregates
     format: signed0
     description: MTM divided by the number of trades (a measure built from measures).
+  Desk P&L volatility:           # a PYTHON measure: not an expression but a Python item (config/bi/python/), run by the console's sandboxed runner
+    python: desk-pnl-volatility  # the item (catalogue id, file name or title); it is called once per group with a table of that group's rows
+    inputs: [trade.pnl1d]        # the columns the function reads
+    by: [trade.desk]             # the groups: one number per desk
+    description: Standard deviation of the one-day P&L per desk, computed in Python. Shown by a python visual (docs/guides/PYTHON_BI.md); a query cannot use it.
 
 hierarchies:                     # an order to drill through: coarse first
   Desk and book: [trade.desk, trade.book]

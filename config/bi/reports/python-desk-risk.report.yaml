@@ -1,0 +1,47 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE REPORT: Python in a report (docs/guides/PYTHON_BI.md). One page, two python visuals over the trades-basic dataset:
+# a Python MEASURE (Desk P&L volatility, declared in the dataset and shown as bars) and a Python VISUAL (a P&L histogram).
+# Each visual hands the Python runner the rows the person looking may see; the runner is the console's sandboxed worker, or the
+# browser's Pyodide (format.run: server, browser or auto).
+rachana: 1
+report: python-desk-risk
+version: 1
+title: Desk P&L risk (Python)
+description: A Python measure (P&L volatility per desk) and a Python visual (a P&L histogram), run on the rows you may see.
+sample: true
+endorsement: none
+tags: [sample, trading, python]
+dataset: trades-basic
+theme: { palette: default }
+
+pages:
+  - id: risk
+    title: Desk risk
+    visuals:
+      - id: volatility
+        type: python
+        title: Desk P&L volatility (Python measure)
+        at: { x: 0, y: 0, w: 6, h: 6 }
+        wells: { values: [Desk P&L volatility] }       # a Python measure of the dataset: its columns and groups come from the dataset
+        format: { run: auto }
+        alt: Bars of the standard deviation of one-day P&L for each desk
+      - id: histogram
+        type: python
+        title: One-day P&L (Python visual)
+        at: { x: 6, y: 0, w: 6, h: 6 }
+        wells: { columns: [trade.desk, trade.pnl1d] }  # the rows handed to Python
+        format: { python: pnl-histogram, params: { bins: 24 }, run: auto }
+        alt: Histogram of one-day P&L

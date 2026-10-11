@@ -124,6 +124,25 @@ public final class ReportValidator {
         });
     }
 
+    /**
+     * A python visual names its Python item in {@code format.python} (an item that returns a chart, or one that computes a measure), or shows a Python measure of
+     * the dataset from its values well; the rows it hands over are the measure's columns or its columns well.
+     */
+    private void pythonVisual(Report.Visual v, String p) {
+        List<String> values = v.well("values");
+        Dataset.Measure pm = values.isEmpty() ? null : ds.measures().get(values.get(0));
+        if (!values.isEmpty() && (pm == null || pm.python() == null)) {
+            err(ReportParser.VISUAL, p + ".wells.values", "a python visual's values well takes a Python measure of the dataset ('" + values.get(0) + "' is not one)");
+        }
+        Object item = v.format().get("python");
+        if (pm == null && (!(item instanceof String s) || s.isBlank())) {
+            err(ReportParser.VISUAL, p + ".format.python", "a python visual names its Python item in format: { python: <item> } (or shows a Python measure from its values well)");
+        }
+        if (pm == null && v.well("columns").isEmpty()) {
+            err(ReportParser.VISUAL, p + ".wells.columns", "a python visual needs the columns it hands to Python, or a Python measure in its values well");
+        }
+    }
+
     private void visual(Report.Visual v, String p, Set<String> pageIds) {
         VisualCatalogue.Type spec = VisualCatalogue.type(v.type());
         for (var e : spec.wells().entrySet()) {
@@ -168,6 +187,9 @@ public final class ReportValidator {
         }
         if ("map".equals(v.type())) {
             mapPlaces(v, p);
+        }
+        if ("python".equals(v.type())) {
+            pythonVisual(v, p);
         }
         if ("histogram".equals(v.type()) && v.format().get("bins") != null) {
             Object b = v.format().get("bins");

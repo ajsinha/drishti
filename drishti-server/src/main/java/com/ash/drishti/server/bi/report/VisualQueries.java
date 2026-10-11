@@ -152,6 +152,7 @@ public final class VisualQueries {
             }
             case "table" -> visual.well("columns").stream().filter(x -> !ds.measures().containsKey(x)).forEach(f::add);
             case "perspective-grid", "perspective-pivot" -> perspectiveFields(f);
+            case "python" -> pythonFields(f);
             case "live-chart" -> { }
             case "matrix" -> {
                 f.addAll(visual.well("rows"));
@@ -189,10 +190,29 @@ public final class VisualQueries {
         }
     }
 
+    /**
+     * The rows a python visual hands the runner: the columns of the Python measure it shows (its {@code by} and {@code inputs}), else the columns of its
+     * {@code columns} well; then the table's {@code id}, so the rows are the table's own, not grouped.
+     */
+    private void pythonFields(Set<String> f) {
+        List<String> values = visual.well("values");
+        Dataset.Measure pm = values.isEmpty() ? null : ds.measures().get(values.get(0));
+        if (pm != null && pm.python() != null) {
+            f.addAll(pm.by());
+            f.addAll(pm.inputs());
+        } else {
+            visual.well("columns").forEach(f::add);
+        }
+        String table = f.stream().map(this::tableOf).filter(x -> x != null).findFirst().orElse(null);
+        if (table != null) {
+            f.add(table + "." + Dataset.ID);
+        }
+    }
+
     private List<String> measuresOf() {
         Set<String> m = new LinkedHashSet<>();
         switch (visual.type()) {
-            case "perspective-grid", "perspective-pivot" -> { }
+            case "perspective-grid", "perspective-pivot", "python" -> { }
             case "scatter", "bubble" -> {
                 m.addAll(visual.well("x"));
                 m.addAll(visual.well("y"));
@@ -322,6 +342,7 @@ public final class VisualQueries {
             case "table" -> props.tableRows();
             case "slicer" -> props.slicerValues();
             case "perspective" -> props.perspectiveRows();
+            case "python" -> props.pythonRows();
             default -> props.chartRows();
         };
         int want = visual.limit() != null ? visual.limit() : dflt;

@@ -1,0 +1,50 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE PYTHON VISUAL: a histogram of one-day P&L drawn by Python. Reference: docs/guides/PYTHON_BI.md.
+#
+# A VISUAL is a function render(table, params) that gets a pandas table of the rows the visual's `columns` well names (what the
+# person looking may see) and returns a chart as DATA: an ECharts option (a dict), an SVG text or PNG bytes. It never returns HTML
+# or script; the page draws it with the vendored ECharts, or as an image.
+rachana: 1
+python: pnl-histogram
+title: P&L histogram
+description: Counts of trades by one-day P&L band, drawn with numpy and returned as an ECharts option.
+sample: true
+endorsement: promoted
+tags: [sample, trading, python]
+interface: visual
+output: echarts
+inputs: [pnl1d]
+packages: [numpy]
+target: both
+timeout: 10
+memory: 256
+params: { bins: 20 }
+source: |
+  import numpy as np
+
+  def render(table, params):
+      pnl = table["pnl1d"].dropna().to_numpy(dtype=float)
+      bins = int(params.get("bins", 20))
+      counts, edges = np.histogram(pnl, bins=bins) if len(pnl) else (np.zeros(bins), np.linspace(0, 1, bins + 1))
+      labels = [f"{(edges[i] + edges[i + 1]) / 2:,.0f}" for i in range(len(counts))]
+      return {
+          "title": {"text": f"One-day P&L of {len(pnl):,} trades", "left": "center", "textStyle": {"fontSize": 13}},
+          "tooltip": {"trigger": "axis"},
+          "grid": {"left": 50, "right": 20, "top": 40, "bottom": 40},
+          "xAxis": {"type": "category", "data": labels, "name": "P&L band (centre)"},
+          "yAxis": {"type": "value", "name": "Trades"},
+          "series": [{"type": "bar", "data": [int(c) for c in counts], "barCategoryGap": "5%"}],
+      }

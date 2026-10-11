@@ -41,7 +41,7 @@ public final class VisualCatalogue {
     public static final Set<String> DISTRIBUTIONS = Set.of("histogram", "box");
 
     /** Types the grammar reserves and this server does not build (RUPAKA.md sections 8 and 12). */
-    public static final Set<String> RESERVED = Set.of("python", "entity-view", "shape");
+    public static final Set<String> RESERVED = Set.of("entity-view", "shape");
     /** Slicer modes built; {@code relative-date} is reserved. */
     public static final Set<String> SLICER_MODES = Set.of("list", "dropdown", "range");
 
@@ -79,6 +79,8 @@ public final class VisualCatalogue {
         // streaming BI (phase 5): Perspective grids and pivots over the rows of one table, and a rolling line of measures
         put("perspective-grid", "perspective", "columns", new Well(Kind.FIELD, true, 0));
         put("perspective-pivot", "perspective", "rows", new Well(Kind.FIELD, true, 0), "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.FIELD, true, 0));
+        // Python (RUPAKA.md section 20.8): the rows of one table (or a Python measure) go to the Python runner; the visual draws what the item returns
+        put("python", "python", "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.MEASURE, false, 1));
         put("live-chart", "live", "values", new Well(Kind.MEASURE, true, 4));
         put("text", "static");
         put("image", "static");
