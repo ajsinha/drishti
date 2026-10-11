@@ -96,7 +96,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) |
 | Design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI, and what its phase 0 proof of concept measured | [RUPAKA.md](architecture/RUPAKA.md), [RUPAKA_POC.md](architecture/RUPAKA_POC.md) |
 | Collaboration: share a view with a note, comment threads anchored to the data, the inbox, email, retention and legal hold; the design, what was built and the plan | [COLLABORATION.md](architecture/COLLABORATION.md) |
-| Show Drishti's live views inside another web application without iframes (Drishti Elements: Web Components, embed API, token exchange) | [ELEMENTS.md](architecture/ELEMENTS.md) |
+| Show Drishti's live views and BI reports inside another web application without iframes (Drishti Elements: `<drishti-view>`, `<drishti-panel>`, `<drishti-report>`, token exchange, npm package) | [guides/ELEMENTS.md](guides/ELEMENTS.md) (developer guide), [architecture/ELEMENTS.md](architecture/ELEMENTS.md) (design) |
+| Arrange a report for a phone (`layouts.phone`: order, hide, height; the designer's Phone tab) | [REPORTS.md](guides/REPORTS.md#14-phone-layouts) |
 | Put live BI results (aggregates, pivots, rankings streamed by Pravaha, Flink or a custom BI server) in front of people as live views and boards | [LIVE_BI.md](architecture/LIVE_BI.md) |
 
 ### Add an industry or data
@@ -224,7 +225,8 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [RUPAKA.md](architecture/RUPAKA.md) | you want the design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI: the BI page (`RUPAKA <GO>`), datasets, the query engine, reports, the designer, workspaces and catalogue, streaming BI, Python interfaces, AI hooks off by default, build plan (design) |
 | [RUPAKA_POC.md](architecture/RUPAKA_POC.md) | you want what the Rūpaka phase 0 proof of concept built and measured (Perspective live grid, masked Arrow out of DuckDB, DuckDB-Wasm in the browser, CSP with WebAssembly, JSON vs typed vs rollup) and the go / adjust verdict for phase 1 (off by default) |
 | [LIVE_BI.md](architecture/LIVE_BI.md) | you want Drishti as the live front end of a streaming BI producer: the result-stream contract, Kafka with no code, a `bi` plugin, boards, drill-down, consistency (design note) |
-| [ELEMENTS.md](architecture/ELEMENTS.md) | you want Drishti Elements: live views inside other web applications as `<drishti-view>` Web Components, no iframes; the embed API, token exchange, host registration, and which build steps are done |
+| [ELEMENTS.md](architecture/ELEMENTS.md) | you want the design of Drishti Elements: live views and BI reports inside other web applications as Web Components, no iframes; the embed API, token exchange, host registration, `<drishti-report>`, and which build steps are done |
+| [guides/ELEMENTS.md](guides/ELEMENTS.md) | you are embedding Drishti in your own application: a five-minute start, the token exchange (Node, Java, Python), versions, SRI and npm, the element reference, a cookbook, troubleshooting by code |
 | [AI_PROVIDERS.md](architecture/AI_PROVIDERS.md) | you configure or build on the model providers: one interface, one file per provider in `config/ai/`, off by default, the admin page and the API |
 | [MCP_CLIENT.md](architecture/MCP_CLIENT.md) | you connect MCP servers (their tools, resources and prompts) behind Drishti's policy: one file per server in `config/mcp/`, off by default |
 | [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md) | you want the design of server-side pricing (QuantLib) and how it would reach the screen (proposed, not built; ADR-019) |

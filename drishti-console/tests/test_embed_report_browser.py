@@ -85,6 +85,9 @@ def register_host() -> str:
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
+    if os.environ.get("DRISHTI_EMBED_REPORT_REUSE"):               # a stack and a host started by hand (the same ports): for working on the test, never in the drill
+        yield None
+        return
     for port in (S.SERVER_PORT, S.CONSOLE_PORT, HOST_PORT):
         if S.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
@@ -174,7 +177,9 @@ def test_a_host_page_under_a_strict_policy_draws_the_report_live_and_masked(stac
     loaded = events(page, "loaded")
     assert loaded and loaded[0]["detail"]["page"] == "desk" and "by-desk" in loaded[0]["detail"]["visuals"]
     # the trader column of the worst-trades table reads the mask whatever the user's roles: `author` holds the raw power, an embed token never does
+    before = len([e for e in events(page, "loaded") if e["id"] == "rep"])
     page.click('[data-login="author"]')
+    page.wait_for_function("(n) => window.__events.filter(e => e.name === 'loaded' && e.id === 'rep').length > n", arg=before, timeout=60000)
     ready(page)
     cells = rep.locator('[data-visual="movers"] tbody tr td:nth-child(3)').all_inner_texts()
     assert cells and set(cells) == {"•••"}, cells
@@ -299,7 +304,6 @@ def test_the_designers_phone_tab_arranges_a_page_with_a_390_pixel_preview(stack,
     for vis in ("rolling", "losses", "latest"):
         page.check(f'[data-phone-hide="{vis}"]')
     expect(page.locator("[data-phone-preview] [data-phone-card]")).to_have_count(6)
-    page.click('[data-phone-up="mtm"]')
     page.click('[data-phone-up="mtm"]')
     page.click('[data-phone-up="mtm"]')
     page.drag_and_drop('[data-phone-visual="trades"]', '[data-phone-visual="by-desk"]')

@@ -28,6 +28,7 @@ Drishti ships five sample **datasets**, five sample **reports** and one **board*
 | 17 | **publish and govern**: saved states, review, certification, lineage, impact, bundles (its own small stack) | 30 |
 | 18, 19 | the **streaming** half: a live dataset, a report that redraws as the trades tick, a Perspective grid and pivot, a wall of live tiles for a screen | 30 |
 | 20, 21 | **distribution**: export a page and subscribe people to it by email, each with their own figures; **alerts** on a number, and a board tile that tells people when it turns red | 25 |
+| 22 | a report **arranged for a phone** in the designer, and **embedded** in another web application | 20 |
 
 Every output below was captured from a real server (the pictures and numbers of chapters 1 to 9 by `drishti-console/tests/bi_data_shots.py`, 10 to 15 by `bi_report_shots.py`, 17 by `bi_gov_shots.py`, 18 and 19 by `bi_live_shots.py`, 20 by `dist_shots.py`, 21 by `alerts_shots.py`) over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit), except where a chapter says its data differs. Your numbers are the same for chapters 1 to 15 if you build the lake as chapter 0 says.
 
@@ -913,3 +914,65 @@ The board tile told rita, wes and hana, each judged on their own report query; a
 
 The tile, in the board's YAML, is two lines in a tile's `alert:` (`notify: true`, and optionally `channels: [inbox, email]` for the board); [BOARDS.md](BOARDS.md#notifications-a-tile-tells-people-when-it-turns-red) is the reference, and a real validation of a board with
 `notify` mistakes is there too.
+
+## 22. A report on a phone, and in another application
+
+*Phase 7, part 3. This chapter uses the live stack of chapter 18 with embedding switched on (the test `drishti-console/tests/test_embed_report_browser.py` starts it: the server on 18953, the console on 17953, and a sample **host application** on 17952 with its own sign-in and its own backend; `tests/embed_report_shots.py` took the pictures and the output below).*
+
+**1. Arrange the phone.** On a phone a report is one column in reading order (chapter 15). The *Live trading desk* has nine visuals on its Desk page, and a phone does not need all of them. Open a draft of the report in the designer (**Designer**, then the report; a shipped report opens read-only: *Save a copy*),
+choose the **Phone** tab beside Canvas and YAML. The page's visuals are listed in the order a phone shows them, beside a 390 px screen drawn to scale. Tick **Hide** on *Losses*, *Net MTM and losses, rolling* and *Latest changes*; press the up arrow of *Net MTM* twice so the headline number comes first; type **5** in the *Rows* box of *Net MTM by desk* so the chart gets five grid rows of height.
+You can drag a row instead of pressing arrows.
+
+![The Phone tab](img/bi-elements/designer-phone-tab.png)
+
+Open the **YAML** tab: the arrangement is written as the page's `layouts.phone` (the real text, from that draft):
+
+```yaml
+layouts:
+  phone:
+    desk: { order: [mtm, trades, notional, pnl, by-desk, movers], hide: [losses, rolling, latest], span: { by-desk: 5 } }
+```
+
+Save, and open the report on a phone (390 px, or a narrow window): net MTM and the trade count come first, the chart is 320 px tall, the worst trades follow, and the three hidden visuals are not drawn **and not queried**. *Back to automatic* in the tab removes the entry; a page without one keeps the single column.
+
+**2. Put the report in another application.** In **Admin → Embedding** register the host application: its exact origin (`http://127.0.0.1:17952` here), a public key (or a secret), the scope **`embed:report`** and, under *Kinds and reports it may show*, `report:file:report:live-trading-desk`. The host's page has one script line and one element
+(the host's own code gives the element a token provider that asks *its* backend for an embed token; chapter text and recipes: [ELEMENTS.md](ELEMENTS.md#drishti-report)):
+
+```html
+<script type="module" src="http://127.0.0.1:17953/embed/v1/drishti-elements.js" crossorigin="anonymous"></script>
+<drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
+```
+
+![The host's page with the live report in a card](img/bi-elements/host-report.png)
+
+This is the host application's page, under a strict Content-Security-Policy (no inline script or style, no frames), and the numbers tick: the host's log, captured from the page, says what happened:
+
+```
+page-changed rep  {"page":"desk","title":"Desk", ... "phone":false}
+loaded       rep  {"title":"Live trading desk","page":"desk"}
+masked       rep  {"columns":["trade.trader"]}
+```
+
+Look at the *Worst trades* table: the **trader** column reads `•••`. A user who holds the raw power sees the real names in the console; **an embedded report always masks**.
+
+**3. Click a bar.** Click the **DESK-RATES** bar: the other visuals filter to that desk (156 trades of 750), a chip says so, and the host is told:
+
+![After a click on a bar](img/bi-elements/host-report-selected.png)
+
+```json
+{ "page": "desk", "slicers": {}, "dates": null,
+  "selections": [ { "visual": "by-desk", "field": "trade.desk", "values": [ "DESK-RATES" ] } ],
+  "carry": [], "mode": "filter", "source": "user" }
+```
+
+The host can do the same from code: `rep.filters = { selections: [...] }`, and `rep.clearFilters()`. `visual="by-desk"` with `chrome="bare"` shows one visual alone:
+
+![One visual in a card](img/bi-elements/host-one-visual.png)
+
+**4. The element on a phone.** Make the host's window 390 px wide: the element is narrow, so it uses the report's phone layout with no reload (`drishti:page-changed` says `"phone": true`), in the order the author chose:
+
+![The report in the host's page at 390 px](img/bi-elements/host-phone-390.png)
+
+**5. Which reports may a host show?** Only those its list names. Try another report (`file:report:live-exposure`) in the host's page: the element shows **`DRS-8005`**, tells the host (`drishti:error`, `fatal: true`), and the rest of the page is unaffected. Change the list in Admin → Embedding and the next load works. A report that is not published is refused the same way.
+
+Reference: [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application), [REPORTS.md section 14](REPORTS.md#14-phone-layouts), the developer guide [ELEMENTS.md](ELEMENTS.md).

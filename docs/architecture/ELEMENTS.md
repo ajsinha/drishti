@@ -15,8 +15,9 @@
 -->
 # Drishti Elements: Drishti's views inside other web applications, without iframes
 
-Status: steps 0 to 10 of [the build plan](#16-build-plan) are built (each has an "as built" note there, saying what differs from
-this design); step 11 is only partly (the element and its controls have Chromium, Firefox and WebKit tests, `test_embed_elements_browser.py` and `test_embed_controls_browser.py`, but there is no foreign-origin host app yet) and steps 12 to 15 are not: no npm package, no TypeScript declarations, no separate developer guide, no ADR-021. This document is the reference until the guide is written. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
+Status: steps 0 to 15 of [the build plan](#16-build-plan) are built or stated as not built (each has an "as built" note there, saying what differs from this design; steps 11 to 15 are in [one note](#steps-11-to-15-as-built-2026-10-11)):
+`<drishti-view>`, `<drishti-panel>` and `<drishti-report>` ([section 18](#18-drishti-report-a-published-report-in-another-web-application)) are built, the library is versioned with an `integrity.json` and an npm package folder with TypeScript declarations, and the developer guide ([guides/ELEMENTS.md](../guides/ELEMENTS.md)) and
+[ADR-021](adr/021-embedding-is-html-over-the-wire.md) are written. **Not built:** `<drishti-about>`, `<drishti-search>`, the frameworks smoke test (React, Angular, Vue), workspaces on `<drishti-view>` and the SharedWorker (step 15). This document is the design and the as-built record; the guide is the reference for a developer using the elements. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
 otherwise. Owner: the console (`drishti-console/`), the server's security layer and view pipeline.
 
 Contents
@@ -38,6 +39,7 @@ Contents
 15. [Documentation plan](#15-documentation-plan)
 16. [Build plan](#16-build-plan)
 17. [Decisions for the product owner](#17-decisions-for-the-product-owner)
+18. [`<drishti-report>`: a published report in another web application](#18-drishti-report-a-published-report-in-another-web-application)
 
 ## 1. Why
 
@@ -212,12 +214,12 @@ Three rules hold the design together:
 ### 5.1 Loading the library
 
 ```html
-<script type="module" src="https://drishti.bank.example/elements/1.0.0/drishti-elements.js"
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.1.0/drishti-elements.js"
         integrity="sha384-…" crossorigin="anonymous"></script>
 ```
 
-or, once step 12 is built, from npm (`npm i @drishti/elements`, `import '@drishti/elements'`); the npm package and the console would serve the same
-build ([section 13](#13-distribution-and-versioning)). **Today only the console serves the library; there is no npm package yet.** Importing defines the elements (`customElements.define`) once;
+or from npm (`npm i @drishti/elements`, `import '@drishti/elements'`; set `server`, because the module's own origin is then not the console); the npm package and the console serve the same
+build ([section 13](#13-distribution-and-versioning)). The path is `/embed/v1/elements/<version>/drishti-elements.js`; `…/1/…` and `…/1.1/…` redirect to the exact version, whose SRI value is in `…/integrity.json`. Importing defines the elements (`customElements.define`) once;
 importing twice is harmless.
 
 ### 5.2 `<drishti-view>` attributes
@@ -232,7 +234,7 @@ importing twice is harmless.
 | `theme` | `inherit`, or a Drishti theme: `terminal`, `light`, `blue`, `green`, `wallstreet`, `crimson`, `crimson-dark` | `inherit` | `inherit` uses the host's `--d-*` values, falling back to `light` |
 | `header` | `full`, `strip`, `none` | `full` | title + strip, strip only, or panels only |
 | `density` | `compact`, `comfortable` | the sheet's | row padding of tables (a host-level choice; the view's own look otherwise) |
-| `panel` | a panel id | none | **reserved** for `<drishti-panel>` (phase 2): accepted and ignored by `<drishti-view>` (use `panels` to show some) |
+| `panel` | a panel id | none | the attribute of `<drishti-panel>` (step 14, built): accepted and ignored by `<drishti-view>` (use `panels` to show some) |
 | `panels` | comma-separated panel ids | all | show only these panels (the view is still built whole; see `<drishti-panel>` for one panel) |
 | `live` | `auto`, `off` | `auto` | `off` loads once and never subscribes |
 | `locale` | a BCP 47 tag | the browser's | pack text (`?locale=` of About) |
@@ -941,6 +943,8 @@ embedded views again, because `about-hints.js` wires its popover to it.
   The element sends `Drishti-Embed-Api: 1.<minor>`; the console answers in the newest compatible shape.
 - Panel **HTML is not a contract**: hosts style it only through custom properties and parts; a test lists the parts.
 
+**As built (step 12):** see [Steps 11 to 15 as built](#steps-11-to-15-as-built-2026-10-11). The paths are `/embed/v1/elements/<version>/...` (under the embed API's own prefix, not `/elements/...`), the package is a folder made by `tools/elements_package.py`, and `Deprecation`/`Sunset` are configured by `embed.lifecycle`.
+
 **Decision 7:** the console serves the library and the npm package mirrors it (rather than npm only). Recommended:
 a host on a locked-down network fetches from Drishti, which it must reach anyway, and the version always matches the
 console it talks to.
@@ -971,7 +975,7 @@ console it talks to.
 
 ## 15. Documentation plan
 
-*Not written yet (step 13): this document is the reference, with the host-side snippets in sections 5 to 12; `docs/guides/ELEMENTS.md` below is what is planned.*
+*Written (step 13, 2026-10-11): `docs/guides/ELEMENTS.md` is the developer guide, with the reference tables generated from `core/element_api.py`; ADR-021 records Decision 1; the items below are what it holds.*
 
 - **`docs/guides/ELEMENTS.md`, the developer guide** (also in the console help centre, `help.yaml`): what Drishti Elements
   are; five-minute start (register a host app, mint a token with `curl`, a static page); the element reference
@@ -1306,6 +1310,30 @@ the shadow root, no style leak either way.
 
 **Not built:** editing an existing registration in the page (origins, scopes and limits change through `PUT /api/v1/admin/embed/apps/{id}`; rotate, disable and delete are in the page), and apps declared in a pack's own files (only the server's configuration, which a pack's settings can feed through the environment).
 
+### Steps 11 to 15 as built (2026-10-11)
+
+**Step 11, tests.** The foreign-origin host application exists since step 0 and is what the browser tests run against: `tools/elements-demo` on its own port, its own sign-in and backend doing the RFC 8693 exchange, the page served with a strict policy (no inline, no frames, only the console beyond itself;
+`/?tt=1` also enforces Trusted Types). The tests of section 14 are in `test_embed_elements_browser.py` and `test_embed_controls_browser.py` (Chromium, Firefox and WebKit): the live trade, masks per user, the search box, recent list, as-of picker, `drishti:navigate`, rapid switching, two elements on one connection, token
+expiry and renewal, a console restart, the sanitiser, Trusted Types, slots. New in this step: the **small load test** (`test_twenty_elements_on_ten_entities_cost_the_page_one_connection`: 20 elements, 10 entities, one channel stream, every element live, frame latency recorded) and the host page of `<drishti-report>`
+(`tools/elements-demo/static/report.html`, `test_embed_report_browser.py`). **Not built: the frameworks smoke** (React 19, Angular and Vue 3 pages, built once into `tests/elements/frameworks/`): it needs the three frameworks' production builds vendored, and this build environment has no network and no copy of them to vendor;
+the elements are plain custom elements with events on `addEventListener`, which the developer guide shows for each framework, but no framework page runs in a test yet.
+
+**Step 12, distribution.** `core/element_dist.py` holds the library's **semantic version** (`VERSION`, `1.1.0`; the entry reports it as `DrishtiElements.version`). The console serves it **exactly and immutably** at `/embed/v1/elements/1.1.0/drishti-elements.js` and `.../m/<name>.js`
+(`Cache-Control: public, max-age=31536000, immutable`, `ETag` = the file's SRI value) with `.../integrity.json` (`{"name", "version", "api", "files": {<path>: {"integrity": "sha384-…", "bytes"}}}`); a partial version (`/embed/v1/elements/1/…`, `/1.1/…`) answers `302` to the exact one (`max-age=60`, with CORS, so a module graph follows it);
+a version this console does not hold is `410 DRS-8006` (it says which one it serves), a malformed one `404`. `web/elements/integrity.json` is the committed record and `tests/test_element_package.py` fails when a module changed and `VERSION` did not, so **a version names the same bytes for ever**. The unversioned
+`/embed/v1/drishti-elements.js` (revalidated each time) stays for hosts that follow the console. **The npm package** `@drishti/elements` is a folder, `drishti-console/web/elements/package/`, made by `python3 tools/elements_package.py` (no network, no Node): `package.json` (an `exports` map, `type: module`), `dist/` (the same modules byte for byte,
+in the layout the console serves), `types/index.d.ts` and `types/react.d.ts` (**generated from one source**, `core/element_api.py`, which also generates the reference tables and the package README, and is checked against the real elements by a test), `integrity.json` and `README.md`. The sheets, the icon font and the chart code are not in
+the package: they are versioned with the console that serves the data and the library fetches them from `server`. Publishing to a registry (`npm pack`, `npm publish`) is the release build's job and is not done here. **`Deprecation` and `Sunset`**: `embed.lifecycle` in the console's settings (`{"1": {deprecation, sunset, link}}`) adds
+`Deprecation: @<epoch>` (RFC 9745), `Sunset: <HTTP date>` (RFC 8594) and a `Link` to every `/embed/v1` answer from the day it is announced, and from the sunset day the embed calls are `410 DRS-8006`. Nothing is announced by default; there is no `/embed/v2/` yet, so the mechanism is tested with a configured date, not in use.
+
+**Step 13, documentation.** The developer guide [guides/ELEMENTS.md](../guides/ELEMENTS.md) (also in the help centre): the five-minute start, the element reference (generated tables), the token exchange for the host backend, CSP and SRI, theming, a cookbook, troubleshooting by DRS code; `CONFIGURATION.md` (`embed.lifecycle`, the scope),
+`API_GUIDE.md` (the report paths), the help-centre entry, and [ADR-021](adr/021-embedding-is-html-over-the-wire.md) for Decision 1 (and what `<drishti-report>` does instead, where there is no server-rendered HTML to put over the wire).
+
+**Step 14, phase 2 elements.** **`<drishti-panel>`** is built: `<drishti-view>` with the `panel` attribute (`panel="legs"` is `panels="legs"`) and the header off unless asked for (`web/embed/panel.js`, 40 lines; a Chromium test). **`<drishti-about>` and `<drishti-search>` are not built.** The About body needs the console's `about.js`
+and `about-hints.js` started on its own root with a drawer the element does not have yet; the type-ahead needs a **search scope** (`embed:search`) and an embed-safe suggestion endpoint, neither of which the server has (`DrishtiElements.resolve` covers the exact command today).
+
+**Step 15, optional.** Not built: workspaces on `<drishti-view>` in place of iframes, and a host-served SharedWorker for HTTP/1.1 hosts. Neither is needed by anything else, and both are larger than their value until a host asks.
+
 ### Steps
 
 | # | Step | Size | Group | Depends on |
@@ -1343,3 +1371,67 @@ Critical path: 0 → 1 → 2 → 7 → 9 → 11. Groups A and B run in parallel 
 | 9 | Shadow root mode | **open**: closed protects nothing on a shared page and hurts host testing |
 | 10 | Personal arrangements in embedded views | **not shown**: the Sutra's layout only, predictable for host layouts |
 | 11 | Event names | **keep `drishti:*`** (the console's convention: `drishti:frame`, `drishti:theme`); React and Angular bind them with `addEventListener` (section 5.9), optional thin wrappers later map them to framework outputs |
+
+## 18. `<drishti-report>`: a published report in another web application
+
+Built in Rupaka phase 7 ([RUPAKA.md section 20.6, part 3](RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete)). The reference tables of every attribute, property, method and event are in the developer guide ([guides/ELEMENTS.md](../guides/ELEMENTS.md)) and generated from
+`drishti-console/core/element_api.py`; this section is the design.
+
+### 18.1 What it is
+
+A published report, one **page** of it or one **visual** of it, in a Shadow DOM with no iframe, drawn with the **console viewer's own code**, so a visual looks and behaves as it does in the console: the 12-column grid, the page tabs, slicers, the business date,
+bookmarks, "click a mark to filter or highlight", **cross-filtering** between the visuals, "show as a table", the live indicator and live redraws. The difference is the transport and the chrome:
+
+| | Console viewer (`bi-report.js`) | `<drishti-report>` (`report.js`, `report-page.js`) |
+|---|---|---|
+| Calls | same-origin `/bi/api/...` with the session cookie | `GET/POST /embed/v1/reports/...` with the host's embed token |
+| Live | `bilive:<id>` on the console's channel (`channel.js`) | `bilive:<id>` on the page's one embed channel (`connection.js`) |
+| Phone layout | the screen's width (`matchMedia`, 640 px) | **the element's own width** (`ResizeObserver`, 640 px) |
+| Colours | the page's `--d-*` tokens | the element's tokens (the host sets them; the theme attribute) |
+| Drill down, drill through, alerts, rows behind a visual, Export, Subscribe, Perspective | yes | **no** (section 18.5) |
+
+The code is shared, not copied: `bi-lib.js`, `bi-phone.js`, `bi-visuals.js`, `bi-grids.js`, `bi-frame.js` and `bi-live.js` are the console's classic scripts, served to the element by `GET /embed/v1/js/<name>.js` (the allow-list `ENHANCERS` of `routes/embed_routes.py`) and
+loaded once per page into `window.drishtiBi`; ECharts is `GET /embed/v1/echarts.js`. The element builds its DOM with `createElement` and `textContent` only: **no markup from the server is parsed**, so there is no sanitiser step and nothing a Trusted Types host would refuse.
+Its style sheet is the view sheet plus a second one generated the same way from `bi.css`, `bi-report.css` and `bi-board.css` (`drishti-report.css`, 26 KB, 5.5 KB gzipped; `tools/elements_sheet.py`), adopted after it.
+
+Attributes: `report` (required), `page`, `visual`, `filters` (initial state as JSON), `chrome` (`full` or `bare`), `theme`, `live`, `server`, `label`. With `visual` set the element is that one visual in a card (chrome `bare`), found on whichever page holds it;
+that is the `<drishti-visual>` of the first plan. Events (all `drishti:`, composed): `loaded`, `page-changed`, `filter-changed` (`source: 'user'` or `'api'`), `masked`, `tick`, `state`, `error`, `token-needed`. The `filters` property reads the filters in force and assigns them.
+
+### 18.2 The embed API for a report
+
+All under `/embed/v1`, CORS and tokens as section 6; `routes/embed_report_routes.py`.
+
+| Call | Does | Server path (embed scope `embed:report`) |
+|---|---|---|
+| `GET /reports/catalogue` | the visual types and their groups (the element needs to know which are static, slicers or Perspective) | `GET /api/v1/bi/reports/catalogue` |
+| `GET /reports/{id}` | the report: its model (`report`), the dataset's summary (`dataset`), `title`, `description`, `problems` (errors only) and `valid`; **never the YAML**, the warnings or the authoring flags; `403 DRS-8005` unless the report is **published** | `GET /api/v1/bi/reports/{id}` |
+| `POST /reports/{id}/query` | one visual's rows: `{page, visual, state: {slicers, selections, dates, carry, drill}}`, 64 KB at most | `POST /api/v1/bi/reports/{id}/query` |
+| the channel key `bilive:<id>` | `hello`, `tick`, `status` of the report's live tables (no data: a tick makes the element ask its visuals again, as the person looking) | `GET /api/v1/bi/reports/{id}/live` |
+
+The server sees the embed caller's own token on every one (a `Principal` with `embedApp`), so **masks and row rules are the token's user's**, and an embedded call masks `drishti.security.redact` fields and the dataset's own masked columns whatever the user's roles (Decision 5): the same user's trader column
+reads `•••` in the host's card and the real name in the console. The query engine's per-person limit (three at a time) applies; the element queues its visuals three at a time and retries a `429`.
+
+**Which hosts may embed which reports.** `embed:report` opens only the three paths above (and `GET .../catalogue`); the paths that author or validate a report (`dataset`, `validate`, `format`, a draft's `query`) are refused to an embed token (`403 DRS-5002`) by name. Which reports a host may show is the host
+application's existing **`kinds` list**, entered in Admin → Embedding: `report:<id>` allows one report (`report:file:report:trades-overview`), `report:*` every report, and an application whose list holds only entity kinds (`trade`, `counterparty`) may show no report (`400 DRS-8005`); an empty list means everything the
+user's roles open, as for views. The check is in the server's `EmbedTokenService` (the kind of a `/api/v1/bi/reports/{id}` call is `report:<id>`), on every call. That a report is published is checked by the console on the definition (an unpublished report is `403 DRS-8005`); the server does not know the
+difference for a direct call, so the `kinds` list is the boundary that is enforced.
+
+### 18.3 Phone layout in the element
+
+The element measures **its own width** (`ResizeObserver` on the host), not the page's: at 640 px or narrower, and when the report declares `layouts.phone` for the page, it draws the arranged page (`order`, `hide`, `span`: [REPORTS.md](../guides/REPORTS.md#14-phone-layouts)) and swaps back to the grid when it grows, with no reload. A hidden visual is not queried.
+Without a layout the container rule of the sheet (`@container drishti (max-width: 760px)`) stacks the grid into one column as for any report. `drishti:page-changed` carries `phone: true` when the arranged layout is on screen.
+
+### 18.4 Security and host policy
+
+The host's policy needs what `<drishti-view>` needs ([section 10](#10-security-threats-and-answers)) and nothing more: `script-src` and `connect-src` and `font-src` name the console. A report's **image** visual loads its `src` as the host's `img-src` allows (a host that wants none shows the alt text only).
+Perspective needs WebAssembly under a narrow policy of its own and is not loaded: the element shows the designer's note instead. Tokens are handled as for views (renewal in place on the open channel; the stream ends with `DRS-8001` after the grace period).
+
+### 18.5 Not built
+
+Drill down and through, "alert me", "show the rows behind this visual" and Export and Subscribe (the console viewer's chrome); Perspective visuals; cross-filtering **between** two elements; bookmarks are applied but not created. They are listed in [RUPAKA.md section 20.6, part 3](RUPAKA.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete).
+
+### 18.6 Tests
+
+`test_embed_report.py` (the console routes: trimmed definition, published only, token passed on, the 64 KB limit, CORS, modules, the sheet), `test_bi_phone.py` (the shared layout code, in Node), `EmbedTokenTest` (the scope, the allow-list, the authoring paths, `report:*`), `ReportParserTest` (the layout), and
+`test_embed_report_browser.py` (Chromium, a host on its own origin under a strict policy against a real server and console: the live report with a ticking source, masks versus the console for the same user, a click on a bar telling the host, the `filters` property, the allow-list refusing another report,
+one visual without chrome, the phone layout in the element and the console, the designer's Phone tab). Pictures and captured output: `tests/embed_report_shots.py`.

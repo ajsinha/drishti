@@ -38,8 +38,8 @@
       "integrity": "sha384-OX4t2PfET4o5yweHpidIu9bRWQnkc1a5Wf5D5WqL0dz58JuHdeCCgxyplURSLUEQ"
     },
     "m/report.js": {
-      "bytes": 14928,
-      "integrity": "sha384-b66xeKfEr+501ZLE9cSdlSp2EEmaKxPO0HGsJs+09IyqGqs5Xg1Z5bEFA2o2+Qk+"
+      "bytes": 14915,
+      "integrity": "sha384-dXl9/0QUbDGbrqJI/zirzP+PJ66Ry9kUuD96EDb8bsBERTIhwcnEefkllD9W+spp"
     },
     "m/sanitize.js": {
       "bytes": 4975,

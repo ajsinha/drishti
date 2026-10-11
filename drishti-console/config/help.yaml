@@ -40,7 +40,7 @@ categories:
       - { slug: datasets, doc: guides/DATASETS.md, title: "BI datasets", icon: database, summary: "Tables, relationships, measures, the expression language, row rules, masks, layers and rollups, live tables." }
       - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer and the designer, checks and codes." }
       - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Publishing BI safely", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change, bundles between environments." }
-      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Export, subscriptions and alerts", icon: envelope-paper, summary: "A report or view as PDF, PNG, Excel or CSV; subscriptions by email; alerts on a number, each person on their own masks." }
+      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Export, subscriptions, alerts and embedding", icon: envelope-paper, summary: "A report or view as PDF, PNG, Excel or CSV; subscriptions by email; alerts on a number, each person on their own masks; a report embedded in another application." }
       - { slug: boards, doc: guides/BOARDS.md, title: "BI boards and live BI", icon: speedometer2, summary: "A wall of live tiles, kiosk mode, tile alerts and notifications, live tables, live visuals and Perspective." }
       - { slug: using-the-terminal, doc: guides/USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
   - id: layouts
@@ -128,6 +128,7 @@ categories:
       - { slug: developer-guide, doc: guides/DEVELOPER_GUIDE.md, title: Developer guide, icon: tools, summary: "Repository map, building and testing, project rules, the request path, and recipes for endpoints, plugins, panel kinds, packs and pages." }
       - { slug: api, doc: guides/API_GUIDE.md, title: API guide, icon: braces-asterisk, summary: "REST endpoints, the ViewModel contract and error codes." }
       - { slug: how-it-fits, doc: architecture/HOW_IT_FITS.md, title: How Drishti fits together, icon: diagram-3, summary: "Connectors, packs and Sutras, and how a command becomes a live screen, with real files and outputs." }
+      - { slug: elements-guide, doc: guides/ELEMENTS.md, title: "Drishti Elements: developer guide", icon: window-stack, summary: "Put views, panels and BI reports in your own web application: a five-minute start, the token exchange, versions and npm, the element reference, a cookbook." }
       - { slug: elements, doc: architecture/ELEMENTS.md, title: "Drishti Elements", icon: window-stack, summary: "Live views inside other web applications as Web Components, without iframes: the embed API, token exchange, registering a host." }
       - { slug: ai-providers, doc: architecture/AI_PROVIDERS.md, title: "AI providers", icon: stars, summary: "Model providers, one file each, off by default; the admin page and API." }
       - { slug: mcp-client, doc: architecture/MCP_CLIENT.md, title: "MCP client", icon: plug, summary: "Other servers tools behind Drishti policy, off by default." }

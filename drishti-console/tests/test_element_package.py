@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Distribution of Drishti Elements (docs/architecture/ELEMENTS.md section 13; build step 12): a version names the same bytes for ever (the committed integrity record
 and the npm package folder are what the sources make), the console serves an exact version immutably with its integrity.json and answers a partial one with a 302,
 a version it does not hold is 410, the element API data the TypeScript declarations are generated from matches the real elements, and the embed API's lifecycle
@@ -131,3 +145,14 @@ def test_the_lifecycle_announces_a_deprecation_and_a_sunset_and_then_retires_the
     c.app.state.embed.settings["lifecycle"] = {"1": {"deprecation": "2020-01-01", "sunset": "2021-01-01", "link": "https://d.example/migrate"}}
     gone = c.get("/embed/v1/views/trade/IRS-47102", headers=h)
     assert gone.status_code == 410 and gone.json()["code"] == "DRS-8006" and "retired" in gone.json()["detail"] and gone.headers["access-control-allow-origin"] == HOST
+
+
+def test_the_developer_guide_holds_the_generated_reference_tables_and_names_every_attribute_and_event():
+    guide = (dist.WEB.parent.parent / "docs" / "guides" / "ELEMENTS.md").read_text(encoding="utf-8")
+    for el in api.ELEMENTS:
+        assert api.markdown_tables(el) in guide, f"the guide's table of <{el}> is stale: regenerate it with python3 tools/elements_package.py --docs"
+    for name in {n for spec in api.ELEMENTS.values() for n, _t, _d in spec["attributes"]}:
+        assert f"`{name}`" in guide, name
+    for ev in {e for spec in api.ELEMENTS.values() for e in spec["events"]}:
+        assert f"`{ev}`" in guide, ev
+    assert dist.VERSION in guide and "integrity.json" in guide and "DRS-8005" in guide

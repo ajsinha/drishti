@@ -110,6 +110,7 @@ ELEMENT_ADDENDUM = """\
 
 
 REPORT_ADDENDUM = """\
+:host { min-height: 0; }                       /* the console's page rule (100vh) is not an element's */
 .bi-embed { min-width: 0; }
 .bi-embed .bi-head { margin: 0 0 .4rem; }
 .bi-embed-title { margin: 0; font-size: 1.1rem; }

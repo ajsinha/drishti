@@ -687,7 +687,7 @@ an administrator can restrict which workspaces and roles may use each hook.
 - **Alerts:** a condition on a measure (`MTM < -15m`, a KPI off target) evaluated on refresh or live; to the bell, inbox,
   email and chat bridges (the alert engine exists).
 - **Embedding:** `<drishti-report report="…" page="…">` and `<drishti-visual>` through Drishti Elements (token exchange,
-  origin-bound, always masked), with the same container-query responsiveness.
+  origin-bound, always masked), with the same container-query responsiveness. **Built:** `<drishti-visual>` is the `visual` attribute of `<drishti-report>` (section 20.6, part 3).
 - **Mobile:** every report has an automatic phone layout (visuals stacked by importance) and an optional hand-made one in
   the designer; touch targets of 44 px; the BI page passes the phone sweep.
 
@@ -765,7 +765,7 @@ Phases 1 to 5 each have an "as built" subsection below (20.0 is phase 1, 20.2 ph
 | 4 | **Publishing and governance**: review before publish, versions, endorsement, lineage, impact of dataset changes, pack bundles for environments | M | certified content and lineage shown; deployment by bundle with rollback. **Built** except bundles inside a pack archive and rollback of an import (20.4) |
 | 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run. **Built** except incremental aggregates by group and the LOAD_AND_MEMORY capacity run (20.5) |
 | 6 | **Python**: the interfaces, the server runner and sandbox, browser target, manifests and tests, Calc client and PygWalker | M | a Transform, a Measure and a Visual ship in a pack with tests and run on both targets |
-| 7 | **Distribution**: export, subscriptions, alerts on measures, `<drishti-report>`, phone layouts | M | a subscription email renders per recipient with masks |
+| 7 | **Distribution**: export, subscriptions, alerts on measures, `<drishti-report>`, phone layouts | M | a subscription email renders per recipient with masks. **Built** (20.6, parts 1 to 3) |
 | 9 | **Analyse**: the analyst workbench (Slice, Data, SQL, Python, Explore, Notes) over masked extracts, save as notebook, promote cells to visuals, measures and Python interfaces | L | an analyst slices a 1 M-row extract, runs a Python cell on it and turns it into a tested Transform, all in the browser |
 
 Every phase ships with tests (unit, console, browser at phone width), documentation with real captures, and its numbers
@@ -856,7 +856,7 @@ answer. No visual of a sample report reached the one-second hint of Check.
 **Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5: the grid and the pivot are built, the charts are not: section 20.5); the visuals `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view` and `shape` (refused with `DRS-9033`); the relative-date slicer (refused); a report over
 **several datasets** (one dataset a report); true subtotals for measures that do not add up (a matrix shows `–`: the figures it totals are the ones it shows); highlight for charts other than bar and column (the others are filtered); capturing a bookmark's slicer
 choices from the page (written in the YAML); different layouts per device (a phone stacks the grid in reading order); the *Check* that runs a report's expected values on sample data, and a schema-completion popup in the YAML tab (a strip of suggestions instead);
-the designer's *Explore to visual* (phase 9) and the **usability test** the phase asks for (an hour, a Power BI author, a reference report); embedding (phase 7, later); a filter direction of `both`, many-to-many semantics and inactive
+the designer's *Explore to visual* (phase 9) and the **usability test** the phase asks for (an hour, a Power BI author, a reference report); embedding (phase 7: built, section 20.6 part 3); a filter direction of `both`, many-to-many semantics and inactive
 relationships used by a measure (the engine joins as written, 20.2); several fact tables in one visual's query (20.2). The Model view lays out by a simple rule (the most connected table in the middle) and does not route lines around boxes.
 
 ### 20.4 Phase 4, as built
@@ -925,7 +925,7 @@ Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**
 
 **Not built, and not faked.**
 
-* **Embedding** and the hand-made **phone layout**, **narrative summaries**: later in phase 7.
+* **Embedding** and the hand-made **phone layout** are built (section 20.6, part 3); **narrative summaries** are not.
 * **Pixel-faithful pages**: the PDF and PNG draw the tables and, for a chart, bars of its first measure; colours, heatmaps, scatters and maps are shown as their data. A view is drawn by the snapshot layout (charts included).
 * **Charts or pivot tables inside the Excel workbook**; **a notice in the inbox when a delivery fails for good** (the history and the audit have it).
 * **A real-mail test**: tests use a local fake SMTP (GreenMail in Java; a small server in the Chromium test), by design.
@@ -955,8 +955,38 @@ References: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-nu
 **Not built, and not faked.**
 
 * A **webhook** or **SMS** channel for an alert (use a chat bridge), **retries** of a failed alert email, **escalation**, **shared** alerts (a board's audience is the only way an alert reaches more than its owner), quiet hours, an alert on several numbers at once, forecasts.
-* **Hysteresis for a board tile** (it re-arms when the tile leaves the colour and the cooldown has passed), and **embedding**, the hand-made **phone layout** of a report and **narrative summaries**.
+* **Hysteresis for a board tile** (it re-arms when the tile leaves the colour and the cooldown has passed), and **narrative summaries** (embedding and the phone layout are built: part 3).
 * A subscription **delivery failure** is still not an inbox notice (the history and the audit have it); an alert's failed **email** is in the alert's history, not retried.
+
+#### 20.6, part 3: embedding and phone layouts, as built (phase 7 complete)
+
+References: [DISTRIBUTION.md section 5](../guides/DISTRIBUTION.md#5-embedding-a-report-in-another-web-application) (embedding), [REPORTS.md](../guides/REPORTS.md#14-phone-layouts) (`layouts.phone`), [ELEMENTS.md section 18](ELEMENTS.md#18-drishti-report-a-published-report-in-another-web-application)
+(the element), the developer guide [ELEMENTS.md of the guides](../guides/ELEMENTS.md), the walk-through [BI_TUTORIAL.md chapter 22](../guides/BI_TUTORIAL.md#22-a-report-on-a-phone-and-in-another-application), the API [API_GUIDE.md](../guides/API_GUIDE.md#embedding-a-report-embedv1reports),
+the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.lifecycle` in [CONFIGURATION.md](../admin/CONFIGURATION.md). No new code: a refused report is `DRS-8005`, a retired API `DRS-8006`.
+
+**Built.**
+
+* **`<drishti-report>`**, a Drishti Element beside `<drishti-view>`: a **published** report, one page of it (`page`) or one visual of it (`visual`; the `<drishti-visual>` of section 15 is this attribute), in a Shadow DOM with **no iframe**, under a strict host policy (adopted style
+  sheets, no inline script or style, nothing written as markup: the element builds its DOM from the report's model and the query results). It signs in as `<drishti-view>` does (the host's token provider, an embed token on every call) and is **always masked**. Slicers, the page's tabs,
+  the business date, bookmarks, highlight or filter on a click, **cross-filtering** between its visuals, "show as a table" and the live indicator are the console viewer's, drawn by the same code (`bi-visuals.js`, `bi-grids.js`, `bi-frame.js`). **Live**: a report over a live table follows
+  it over the page's one embed connection (`bilive:<report>` on the embed channel), each tick asking the visuals again as the person looking. Attributes: `report`, `page`, `visual`, `filters` (initial slicers, date, selections and mode as JSON), `chrome` (`full` or `bare`),
+  `theme`, `live`, `server`, `label`; the property `filters` reads and sets them; events `drishti:loaded`, `filter-changed`, `page-changed`, `masked`, `tick`, `state`, `error`, `token-needed`; methods `selectPage`, `clearFilters`, `refresh`, `reload`, `pause`, `resume`.
+* **Admin → Embedding governs which hosts may embed which reports.** The existing allow-list of a host application (`kinds`) takes `report:<id>` (one report) and `report:*` (every report); the new scope `embed:report` opens the three server paths a report needs
+  (`GET /api/v1/bi/reports/*`, `POST .../*/query` and `GET .../*/live`; a POST that reads). A host whose list names other kinds only is refused `DRS-8005` for a report; authoring paths (`dataset`, `validate`, `format`, a draft's `query`) are never open to an embed token. Only a **published** report
+  is embedded (`DRS-8005` otherwise). Masks, row rules and the three-queries-at-a-time limit are the server's, per call, for the token's user.
+* **Per-report phone layouts.** A report may declare `layouts: { phone: { <page id>: { order, hide, span } } }`: at **640 px and narrower** the page shows the visuals in `order` first (the rest follow in the grid's reading order), leaves out those in `hide` (they are **not queried**), and gives a visual
+  `span` grid rows of height (1 to 40; the width is the whole screen). A page with no entry keeps today's automatic single column. The viewer (the screen's width), `<drishti-report>` (**the element's own width**, so a report in a narrow card of a wide page uses it) and the designer's preview
+  share one file (`bi-phone.js`). The server parses and checks it (`DRS-9031` for a page or visual that does not exist, a repeated or both ordered and hidden visual, a height out of range) and writes it back in the YAML.
+* **The designer's Phone tab.** For the page being edited: the visuals in phone order, **drag** a row (or its arrows) to reorder, a **Hide** box, a **Rows** height, and a **390 px** preview drawn to scale beside it; one history step per change, *Back to automatic* removes the entry; a visual or page the layout names that is later
+  deleted or renamed is dropped from it by the designer itself. The sample report *Live trading desk* ships with a phone layout.
+* **Drishti Elements steps 11 to 15** ([ELEMENTS.md section 16](ELEMENTS.md#steps-11-to-15-as-built-2026-10-11)): the foreign-origin host page test, the versioned library with `integrity.json` and the npm package folder with TypeScript declarations, the developer guide and ADR, `<drishti-panel>`.
+
+**Not built, and not faked.**
+
+* **Perspective in an embedded report.** A Perspective grid or pivot needs WebAssembly, which a strict host policy does not give; the element shows the note the designer shows (it is drawn in the console viewer). Drill down, drill through, "alert me", "rows behind this visual" and the Export and Subscribe bar are the viewer's, not the element's.
+* **Two elements of one report cross-filtering each other** (each element is its own page), a hand-made phone layout **per theme or per device size other than the phone**, a layout in the board designer (boards are not part of embedding).
+* **A published-only check in the server for an embed token's direct calls**: the console refuses an unpublished report's definition; the host application's `kinds` list is the boundary the server enforces.
+* **Narrative summaries** (they need the AI layer).
 
 ### 20.1 Three stages
 

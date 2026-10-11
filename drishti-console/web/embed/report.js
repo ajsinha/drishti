@@ -144,7 +144,7 @@ export class DrishtiReport extends HTMLElement {
     try {
       await Promise.all([this.#adopt(), reportLibs(this.server)]);
       const id = encodeURIComponent(this.report).replace(/%3A/g, ':');
-      if (!catalogues.has(this.server)) { catalogues.set(this.server, this.#call('GET', '/reports/catalogue', null, ctrl.signal).catch((e) => { catalogues.delete(this.server); throw e; })); }
+      if (!catalogues.has(this.server)) { catalogues.set(this.server, this.#call('GET', '/reports/catalogue', null).catch((e) => { catalogues.delete(this.server); throw e; })); }
       const [rep, cat] = await Promise.all([this.#call('GET', '/reports/' + id, null, ctrl.signal), catalogues.get(this.server)]);
       if (seq !== this.#seq) { return; }
       if (!rep.report || !rep.dataset) {
