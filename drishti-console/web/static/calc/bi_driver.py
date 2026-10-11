@@ -61,9 +61,52 @@ def _bi_number(v, where):
     return int(f) if isinstance(v, int) else f
 
 
+class _NoQuant:
+    """``quant`` in a browser cell: the console's quant engine runs on the server target only (docs/architecture/QUANT_SERVICE.md section 16)."""
+
+    def price(self, *a, **k):
+        raise ValueError("quant: the quant engine is available on the server target only; run this cell on the server")
+
+    instruments = price
+
+
+def _bi_cell(p, df):
+    """A notebook cell of Analyse (docs/guides/ANALYSE.md): ``df`` is the extract; what it prints and its ``result`` come back, as the server's worker does."""
+    import contextlib as _ctx
+    import io as _io
+    ns = {"__name__": "python_item", "df": df, "params": p["params"] or {}, "quant": _NoQuant()}
+    out = _io.StringIO()
+    with _ctx.redirect_stdout(out):
+        exec(compile(p["source"], "<python-item>", "exec"), ns)
+    answer = {"kind": "cell", "stdout": out.getvalue()[:20000]}
+    r = ns.get("result")
+    if r is None:
+        return answer
+    if hasattr(r, "to_frame") and not hasattr(r, "columns"):
+        r = r.to_frame()
+    if hasattr(r, "columns") and hasattr(r, "head"):
+        shown = r.head(200)
+        answer["table"] = {"columns": [str(c) for c in shown.columns], "rows": shown.values.tolist(), "rowCount": int(len(r))}
+    elif isinstance(r, dict):
+        answer["option"] = _bi_clean(_json.loads(_json.dumps(r, default=_bi_plain, allow_nan=False)))
+    elif isinstance(r, str) and r.lstrip().startswith("<svg"):
+        low = r.lower()
+        if any(x in low for x in ("<script", "javascript:", "<foreignobject", "onload=", "onerror=", "<iframe", "<image", "xlink:href")):
+            raise ValueError("an SVG may not hold script, links or embedded content")
+        answer["svg"] = r
+    elif isinstance(r, (bytes, bytearray)) and bytes(r[:8]) == b"\x89PNG\r\n\x1a\n":
+        answer["png"] = _b64.b64encode(bytes(r)).decode("ascii")
+    else:
+        answer["value"] = _json.loads(_json.dumps(r, default=lambda o: _bi_plain(o) if hasattr(o, "tolist") else str(o), allow_nan=False))
+    return answer
+
+
 def _bi_main(payload):
     p = _json.loads(_b64.b64decode(payload).decode("utf-8"))
     df = _pd.DataFrame(p["rows"], columns=p["columns"])
+    if p["interface"] == "cell":
+        print(_MARK + _json.dumps(_bi_cell(p, df), default=_bi_plain, allow_nan=False))
+        return
     ns = {"__name__": "python_item"}
     exec(compile(p["source"], "<python-item>", "exec"), ns)
     fn = ns.get(p["entry"])

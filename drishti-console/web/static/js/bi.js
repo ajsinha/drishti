@@ -275,6 +275,8 @@
       var enc = encodeURIComponent(it.id).replace(/%3A/g, ':');
       var rep = q('[data-open-report]'), des = q('[data-open-design]'), mod = q('[data-open-model]');
       if (rep) { rep.hidden = it.kind !== 'report'; rep.href = '/bi/r/' + enc; }
+      var ana = q('[data-open-analyse]');
+      if (ana) { ana.hidden = it.kind !== 'notebook'; ana.href = '/bi/explore?item=' + encodeURIComponent(it.id); }
       var brd = q('[data-open-board]');
       if (brd) { brd.hidden = it.kind !== 'board'; brd.href = '/bi/b/' + enc; }
       if (des) { des.hidden = !(it.kind === 'report' && it.can && it.can.edit) && !(it.kind === 'report' && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }

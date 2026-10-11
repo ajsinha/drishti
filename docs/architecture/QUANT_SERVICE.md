@@ -43,6 +43,7 @@ works with Drishti, how it reaches the screen, and how it would be built.
 13. [Testing](#13-testing)
 14. [Phases](#14-phases)
 15. [Risks and open questions](#15-risks-and-open-questions)
+16. [The console's QuantEngine slot (built, lean)](#16-the-consoles-quantengine-slot-built-lean)
 
 ---
 
@@ -252,3 +253,65 @@ and released on its own.
 | Which products first | to confirm with the desks: the proposal is phase 1's list |
 | Batch results in the lake | to decide in phase 5: a new kind per day, written by the service's batch through the existing loaders |
 | Licensing | QuantLib is BSD-licensed, ORE uses a modified BSD licence; both suit a proprietary product, with notices in `THIRD-PARTY-NOTICES.md` |
+
+## 16. The console's QuantEngine slot (built, lean)
+
+This section is what is **built** of RUPAKA 9.2's `QuantEngine` for Analyse, and it is deliberately small: `price` only (no sensitivities, scenarios, VaR or XVA yet), no pack adapters, no Arrow in or out, a stand-in in place of QLRisk. A Python cell in [Analyse](../guides/ANALYSE.md) can price things with `quant.price(instrument, **parameters)`. The console does not contain a pricing library of its own: it has a **slot**, the
+`QuantEngine` interface, and a small **stand-in** that fills it so notebooks, demos and tests run anywhere. A real library plugs into the same slot.
+
+### 16.1 The interface
+
+`drishti-console/core/quant/engine.py`:
+
+```python
+class QuantEngine(ABC):
+    name = "engine"
+    def instruments(self) -> dict[str, list[str]]: ...      # {"npv": ["rate", "cashflows"]}
+    def price(self, instrument: str, **params) -> float: ... # raises QuantError for a call it cannot make
+    def describe(self) -> dict: ...                          # {"engine", "instruments"}
+```
+
+An engine is a **pure function of its inputs**: no network, no files, no state. It is imported by the Python worker *before* the sandbox closes and runs inside it, so it cannot reach out either.
+A `QuantError` reaches the cell as `ValueError: quant: <message>`.
+
+### 16.2 The stand-in
+
+`core/quant/standin.py` (`math` only), engine name `stand-in`. Rates, yields and volatilities are decimals (`0.05`), times are in years.
+
+| Instrument | Parameters | Returns |
+|---|---|---|
+| `black_scholes` | `spot`, `strike`, `rate`, `vol`, `years`, `kind` (`call` or `put`, default `call`), `div` (default `0`) | European option price |
+| `bond` | `coupon`, `yield_`, `years`, `face` (default `100`), `freq` (default `2`) | price of a fixed-coupon bond; a bond whose coupon equals its yield prices at `face` |
+| `npv` | `rate`, `cashflows` (a list; the first at time 0) | net present value |
+
+```python
+quant.price("black_scholes", spot=100, strike=100, rate=0.05, vol=0.2, years=1)        # 10.4506
+quant.price("bond", coupon=0.05, yield_=0.05, years=10)                                  # 100.0
+quant.price("npv", rate=0.1, cashflows=[-100, 110])                                      # 0.0
+quant.instruments()                                                                      # what the engine prices
+```
+
+It is for teaching and tests, **not a risk system**: no curves, calendars, day counts, Greeks or calibration. Its tests (`test_the_quant_stand_in_prices`) check the Black-Scholes values,
+put-call parity, a par bond and an NPV of zero.
+
+### 16.3 Setting
+
+`bi.explore.quant_engine` (console `application.yaml`), default `stand-in`. A name no installed engine answers to is `ValueError: no quant engine named ...` in the cell, and the Analyse page
+shows the engine in use.
+
+### 16.4 How QLRisk plugs in (design only)
+
+QLRisk (the user's quant library, `~/PycharmProjects/qlrisk`) is **under construction; the console neither imports nor modifies it**, and nothing here is wired to it. The slot is
+shaped so that, when its API is stable, the work is small and local:
+
+1. Write an adapter, `core/quant/qlrisk.py`, a `QuantEngine` subclass whose `instruments()` lists what QLRisk prices and whose `price()` translates keyword parameters into QLRisk calls
+   and returns a float (raising `QuantError` for a bad call). The adapter is the only file that imports QLRisk.
+2. Register it in `core/quant/__init__.py: get_engine` under the name `qlrisk`.
+3. Make QLRisk importable by the worker: the worker's import guard allows only the packages a cell lists (on `bi.python.packages`), but the engine is loaded by the worker *before* its sandbox,
+   from the console's own environment, so QLRisk must be installed there (and its data files readable at load time: the sandbox forbids reads after it closes).
+4. Set `bi.explore.quant_engine: qlrisk`.
+
+Open questions for that day: whether QLRisk wants curves and market data passed in (a cell would load them from the extract and pass them as parameters) or fetches them itself (it
+cannot, in the sandbox: no network), whether it is fork- and memory-friendly under the worker's address-space limit, and how results with structure (a Greeks table) come back (the stand-in returns
+one float; `price` could return a dict, and the cell's `result` already draws tables and charts). The design for a separate quant *service* the console calls over the network is
+[RUPAKA.md](RUPAKA.md) section 9.2 and sections 2 to 5 above; this slot is the in-process stand-in for it.

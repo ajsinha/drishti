@@ -183,6 +183,68 @@ def _number(v, where: str):
     return int(f) if isinstance(v, int) or hasattr(v, "dtype") and getattr(v.dtype, "kind", "") in "iu" else f
 
 
+def _load_quant(req: dict):
+    """The console's quant engine (``core/quant``) as the name ``quant`` in a notebook cell; ``None`` when the cell is run without one."""
+    root = req.get("quant_root")
+    if not root:
+        return None
+    sys.path.insert(0, root)
+    try:
+        from core.quant import QuantError, get_engine
+        engine = get_engine(req.get("quant_engine") or "stand-in")
+    finally:
+        sys.path.remove(root)
+
+    class Quant:
+        """``quant.price(instrument, **params)``: a number from the console's quant engine; ``quant.instruments()`` lists what it prices."""
+        engine_name = engine.name
+
+        def price(self, instrument, **params):
+            try:
+                return engine.price(instrument, **params)
+            except QuantError as e:
+                raise ValueError(f"quant: {e}") from None
+
+        def instruments(self):
+            return engine.instruments()
+
+    return Quant()
+
+
+def _cell(req: dict, df, ns: dict, quant) -> dict:
+    """A notebook cell of Analyse: runs the source with ``df`` (the reader's extract), ``params`` and ``quant``; answers what it printed and its ``result``
+    (an ECharts option, SVG text, PNG bytes, a table, or a value)."""
+    import io
+    import contextlib
+    ns.update(df=df, params=dict(req["params"]), quant=quant)
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        exec(compile(req["source"], FILE, "exec"), ns)
+    text = out.getvalue()[:20000]
+    result = ns.get("result")
+    answer: dict = {"kind": "cell", "stdout": text}
+    if result is None:
+        return answer
+    if hasattr(result, "to_frame") and not hasattr(result, "columns"):
+        result = result.to_frame()
+    if hasattr(result, "columns") and hasattr(result, "head"):
+        shown = result.head(int(req.get("table_rows") or 200))
+        answer["table"] = json.loads(json.dumps({"columns": [str(c) for c in shown.columns], "rows": shown.values.tolist(), "rowCount": int(len(result))},
+                                                default=_plain, allow_nan=False))
+    elif isinstance(result, dict):
+        answer["option"] = _clean(json.loads(json.dumps(result, default=_plain, allow_nan=False)))
+    elif isinstance(result, str) and result.lstrip().startswith("<svg"):
+        low = result.lower()
+        if any(x in low for x in ("<script", "javascript:", "<foreignobject", "onload=", "onerror=", "<iframe", "<image", "xlink:href")):
+            raise Denied("an SVG may not hold script, links or embedded content")
+        answer["svg"] = result
+    elif isinstance(result, (bytes, bytearray)) and bytes(result[:8]) == b"\x89PNG\r\n\x1a\n":
+        answer["png"] = base64.b64encode(bytes(result)).decode("ascii")
+    else:
+        answer["value"] = json.loads(json.dumps(result, default=lambda o: _plain(o) if hasattr(o, "tolist") else str(o), allow_nan=False))
+    return answer
+
+
 def _run(req: dict, tmp: str) -> dict:
     import pyarrow as pa
     import pandas as pd
@@ -192,10 +254,14 @@ def _run(req: dict, tmp: str) -> dict:
     with open(os.path.join(tmp, "in.arrow"), "rb") as f:
         df = pa.ipc.open_stream(f).read_all().to_pandas()
     df = df.drop(columns=[c for c in ("id",) if c in df.columns and c not in req["inputs"] and c not in (req["group_by"] or [])])
+    cell = req["interface"] == "cell"
+    quant = _load_quant(req) if cell else None             # imported before the hook, like the packages
     _limits(req)
     sys.dont_write_bytecode = True
     _install_hook(tmp)
     ns = {"__name__": "python_item", "__builtins__": _builtins(allowed)}
+    if cell:
+        return _cell(req, df, ns, quant)
     exec(compile(req["source"], FILE, "exec"), ns)          # the worker's own exec; the author's code is not given it
     fn = ns.get(req["entry"])
     if not callable(fn):

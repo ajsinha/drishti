@@ -72,7 +72,6 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 
 **Not built yet** (each is marked where it would matter, and listed in section 11)
 
-* exploring a dataset freely and the analyst workbench (phase 9, the rail's *Explore*);
 * running a `notebook` body (it is stored as text); a designer for boards (edit the YAML); a Perspective chart;
 * time intelligence and window functions in measures; a cron refresh of a layer (a data-load signal or the refresh call does it); a history of a live table (it holds current state);
 * BI content inside a pack archive (a bundle is its own file); threaded comments on a line of a diff; approval chains of several reviewers;
@@ -110,7 +109,7 @@ missing. **A pack may not define a mnemonic named `BI` or `RUPAKA`** (or `FORM`,
 the same way.
 
 URLs: `/bi` (home), `/bi/catalogue`, `/bi/workspaces`, `/bi/w/<workspace>` (`me` is your personal one), `/bi/i/<item>`, `/bi/datasets` and `/bi/d/<dataset>` (phase 2),
-`/bi/r/<report>[/<page>]` (the viewer), `/bi/b/<board>` (a board), `/bi/designer` and `/bi/design/<draft>` (the designer), `/bi/m/<dataset>` (the Model view), `/bi/environments` (bundles), and the placeholder `/bi/explore`. Admin: `/admin/bi`.
+`/bi/r/<report>[/<page>]` (the viewer), `/bi/b/<board>` (a board), `/bi/designer` and `/bi/design/<draft>` (the designer), `/bi/m/<dataset>` (the Model view), `/bi/environments` (bundles), and `/bi/explore` (Analyse). Admin: `/admin/bi`.
 
 ## 3. Who may do what: the four powers
 
@@ -143,7 +142,7 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 | Datasets | the semantic models, their pages and the Model view | built (phases 2 and 3) |
 | Designer | your report drafts, a new report on a dataset, and the designer | built (phase 3) |
 | Environments | download a workspace as a bundle; import one with a dry run | built (phase 4) |
-| Explore | free exploration of a dataset | placeholder, "phase 9" |
+| Analyse | open a dataset as your masked extract; Slice, SQL and Python cells; notebooks | `/bi/explore` ([ANALYSE.md](ANALYSE.md), section 21) |
 
 **Keys** (shown by `?`): `/` search the catalogue (from another BI page it takes you to the catalogue with the search focused),
 `g h` home, `g c` catalogue, `g w` my workspace, `?` the list, `Esc` closes it. Keys are ignored while you type in a field.
@@ -339,7 +338,7 @@ time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, 
 country file: no tiles, no CDN), **funnel**, **histogram**, **box plot** and **bubble** in the visual catalogue, the designer, exports and `<drishti-report>`; and **true totals** for the measures of a matrix or table that do not add up, worked out by the engine
 ([REPORTS.md sections 3.1 and 3.2](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [BI_TUTORIAL.md chapter 23](BI_TUTORIAL.md#23-time-totals-and-a-map); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
 
-**Not built (and not faked).** Everything of phases 8 and 9 and part of 6: the Python Transform and Source interfaces and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); the analyst workbench and Explore (phase 9); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2). The rail's *Explore* is a placeholder that says so.
+**Not built (and not faked).** Everything of phases 8 and 9 and part of 6: the Python Transform and Source interfaces and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); the rest of the analyst workbench (phase 9: DuckDB-Wasm in the page, Data, Notes, large extracts: [ANALYSE.md](ANALYSE.md) section 12); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2).
 
 ## 12. Problems
 
@@ -575,3 +574,16 @@ versioned, reviewed and published like any item; **Check the Python** on its pag
 ([REPORTS.md](REPORTS.md) section 3.3). The code runs on the **console**, in a short-lived worker with no network, a scratch folder only and CPU, memory, time and output limits, or **in the browser** (Pyodide, the runtime Calc ships) when the item allows it
 and `format.run` says so. It only ever receives the rows the viewer may see, masked as the server masked them. The sample report **Desk P&L risk (Python)** shows both. Reference, the sandbox, the settings and the codes `DRS-9070` to `9074`:
 [PYTHON_BI.md](PYTHON_BI.md); a short walk-through: [BI_TUTORIAL.md chapter 24](BI_TUTORIAL.md#24-python-a-measure-and-a-chart).
+
+## 21. Analyse (phase 9, lean)
+
+The rail's **Analyse** (`/bi/explore`) opens a dataset as an **extract**: the rows *you* may see, masked as the server masks them for you, at most `bi.explore.max_rows` (10,000). Three tabs work on it:
+
+* **Slice**: drag fields (or use each chip's R, C, V, F buttons) into Rows, Columns, Values and Filters for an instant pivot in the page;
+* **SQL**: cells that run one read-only `SELECT` over the table `extract` (limits on text, time and rows);
+* **Python**: pandas cells over `df`, with charts in `result` and `quant.price(...)`; they run in the console's sandbox (or in the browser, Pyodide) and need the `bi-author` power.
+
+**Save as a notebook** keeps the extract's definition and the cells as a BI item of kind `notebook` (versions, review and publishing like any item; *Open in Analyse* on its page reopens it, rebuilt for whoever
+opens it). **Promote** turns a Python cell into a Python Measure or Visual draft and a slice into a report draft; nothing is published. Slice and SQL totals are the *extract's*, not the dataset's: use a
+report for true totals. Reference: [ANALYSE.md](ANALYSE.md); tutorial chapter 25. Not built: DuckDB-Wasm in the page (Slice is JavaScript and SQL runs on the console), a *Data* tab, *Notes*,
+million-row extracts, scheduled notebooks (ANALYSE.md section 12).

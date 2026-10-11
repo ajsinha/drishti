@@ -102,7 +102,7 @@ def test_every_page_has_the_rail_and_the_shared_top_bar(bi, path, page):
     r = client.get(path)
     assert r.status_code == 200
     assert f'data-bi-page="{page}"' in r.text and 'class="bi-rail"' in r.text and 'class="tbar"' in r.text or 'class="tbar-row1"' in r.text
-    for label in ("Home", "Catalogue", "My workspace", "Workspaces", "Datasets", "Designer", "Explore"):
+    for label in ("Home", "Catalogue", "My workspace", "Workspaces", "Datasets", "Designer", "Analyse"):
         assert label in r.text
     assert "f-keys" not in r.text and "fkeys" not in r.text.lower()                        # the terminal's F-key footer is not shown
     assert "<script>" not in r.text.replace("<script src", "") and " onclick=" not in r.text
@@ -112,7 +112,8 @@ def test_placeholders_say_what_phase_builds_them(bi):
     client, _ = bi
     assert "Start a model from the packs" in client.get("/bi/datasets").text                   # datasets are built (phase 2)
     assert "Start designing" in client.get("/bi/designer").text and "Not built yet" not in client.get("/bi/designer").text       # the designer is built (phase 3)
-    assert "Explore" in client.get("/bi/explore").text and "Not built yet" in client.get("/bi/explore").text
+    page = client.get("/bi/explore").text                                                     # Analyse is built (phase 9)
+    assert "Analyse" in page and "Not built yet" not in page and "planned" not in page
 
 
 def test_a_page_without_the_power_is_refused_with_the_reason():

@@ -1,0 +1,248 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+"""Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): the page at ``/bi/explore`` and the console's routes behind it.
+
+A person opens a dataset (or one report visual's data) as a **masked extract**: the rows the server lets *them* see, cut to ``bi.explore.max_rows``.
+Slice (a pivot) runs in the page on that extract; SQL runs here, over the extract only, read-only and limited; Python cells run in the sandboxed worker of
+``core/pyrunner.py`` (or in the browser, Pyodide) with ``df`` (the extract) and ``quant``. Nothing is kept between calls: every call rebuilds the extract
+for the person asking, so a mask or a row rule changed on the server applies on the next run. Nothing here decides access; the server did, building the rows."""
+from __future__ import annotations
+
+import asyncio
+import ast
+from pathlib import Path
+from urllib.parse import quote
+
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
+
+from core.backend import BackendError
+from core.csrf import json_body
+from core.explore import ExploreError, Extract, Limits, check_fields, from_arrow, from_json, parse_notebook, promote_python, query_body, run_sql
+from core.pyrunner import PyError
+from core.quant import get_engine
+from routes.bi_routes import _page
+from routes.common import ident
+
+router = APIRouter(include_in_schema=False)
+CONSOLE = Path(__file__).resolve().parent.parent
+_SQL_SLOTS = asyncio.Semaphore(4)
+
+
+def _limits(request: Request) -> Limits:
+    return request.app.state.explore_limits
+
+
+def _fail(e: BackendError | ExploreError | PyError, author: bool = False) -> JSONResponse:
+    out = {"code": e.code, "detail": e.detail}
+    if isinstance(e, PyError) and e.traceback and author:
+        out["traceback"] = e.traceback
+    return JSONResponse(out, status_code=e.page_status if isinstance(e, BackendError) else e.status, headers={"Cache-Control": "no-store"})
+
+
+def _powers(request: Request) -> list[str]:
+    return list((getattr(request.state, "bi_me", None) or {}).get("powers") or [])
+
+
+async def extract_for(request: Request, spec: dict) -> Extract:
+    """The extract ``spec`` names, built by the server for the signed-in person: ``{dataset, fields, filters?, dates?}`` or ``{report, page, visual, state}``."""
+    limits, backend, me = _limits(request), request.app.state.backend, ident(request)
+    try:
+        import pyarrow  # noqa: F401
+        arrow = True
+    except ImportError:
+        arrow = False
+    cap = limits.max_rows if arrow else min(limits.max_rows, 5000)          # without pyarrow the server's JSON answer (json-max-rows) carries it
+    if spec.get("report"):
+        page, visual = str(spec.get("page", "")), str(spec.get("visual", ""))
+        if not page or not visual:
+            raise ExploreError("DRS-9070", 422, "send {report, page, visual} to open a visual's data")
+        if not arrow:
+            raise ExploreError("DRS-9074", 503, "opening a visual's data needs pyarrow on the console (pip install -r drishti-console/requirements.txt)")
+        content, headers = await backend.bi_arrow("/reports/" + quote(str(spec["report"]), safe=":") + "/query", me,
+                                                  {"page": page, "visual": visual, "state": spec.get("state") or {}}, format="arrow")
+        low = {str(k).lower(): v for k, v in headers.items()}
+        return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
+    dataset = str(spec.get("dataset") or "")
+    if not dataset:
+        raise ExploreError("DRS-9070", 422, "send {dataset, fields} or {report, page, visual}")
+    body = query_body(check_fields(spec.get("fields"), limits), cap, spec.get("filters"), spec.get("dates"))
+    path = "/datasets/" + quote(dataset, safe=":") + "/query"
+    if arrow:
+        content, headers = await backend.bi_arrow(path, me, body, format="arrow")
+        low = {str(k).lower(): v for k, v in headers.items()}
+        return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
+    return from_json(await backend.bi("POST", path, me, body, format="json"), cap)
+
+
+@router.get("/bi/explore")
+async def page(request: Request):
+    limits = _limits(request)
+    return _page(request, "bi/explore.html", "explore", limits=limits, may_python="bi-author" in _powers(request),
+                 quant=get_engine(limits.quant_engine).describe())
+
+
+@router.get("/bi/explore/status")
+async def status(request: Request):
+    """What Analyse offers this person: its limits, whether Python cells can run (server and browser) and the quant engine's instruments."""
+    limits, runner, calc = _limits(request), request.app.state.pyrunner, request.app.state.calc
+    return JSONResponse({"limits": {k: v for k, v in vars(limits).items()}, "python": {**runner.status(), "browser": calc.runtime.describe(),
+                                                                                       "mayRun": "bi-author" in _powers(request)},
+                         "quant": get_engine(limits.quant_engine).describe()}, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/bi/explore/extract")
+async def extract(request: Request):
+    """Body ``{dataset, fields, filters?, dates?}`` or ``{report, page, visual, state}``: the reader's rows as ``{columns[{name, type, masked}], rows, rowCount, total, truncated, masked}``."""
+    spec = await json_body(request)
+    try:
+        return JSONResponse((await extract_for(request, spec)).as_json(), headers={"Cache-Control": "no-store"})
+    except (BackendError, ExploreError) as e:
+        return _fail(e)
+
+
+@router.post("/bi/explore/sql")
+async def sql(request: Request):
+    """Body ``{extract: {...as above}, sql}``: one SELECT over the table ``extract``; ``{columns, rows, rowCount, truncated, ms, inputRows, masked}``."""
+    body = await json_body(request)
+    limits = _limits(request)
+    try:
+        ex = await extract_for(request, body.get("extract") or {})
+        async with _SQL_SLOTS:
+            out = await asyncio.to_thread(run_sql, ex, str(body.get("sql", "")), limits)
+    except (BackendError, ExploreError) as e:
+        return _fail(e)
+    return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers={"Cache-Control": "no-store"})
+
+
+def cell_packages(source: str, allowed: list[str]) -> list[str]:
+    """The allow-listed packages a cell imports (the worker imports them before its sandbox closes)."""
+    try:
+        tree = ast.parse(source)
+    except SyntaxError as e:
+        raise ExploreError("DRS-9070", 422, f"line {e.lineno}: {e.msg}") from None
+    found = []
+    for n in ast.walk(tree):
+        names = [a.name for a in n.names] if isinstance(n, ast.Import) else [n.module or ""] if isinstance(n, ast.ImportFrom) and n.level == 0 else []
+        for name in names:
+            top = name.split(".")[0]
+            if top in allowed and top not in found:
+                found.append(top)
+    if "pandas" not in found:
+        found.append("pandas")
+    return found
+
+
+@router.post("/bi/explore/python")
+async def python(request: Request):
+    """Body ``{extract, source, params?}``: runs one Python cell on the server over ``df`` (the extract as a pandas table) with ``quant``; answers
+    ``{kind: cell, stdout, table|option|svg|png|value}`` plus ``ms``, ``inputRows``, ``masked``. Needs ``bi-author``. Failures are DRS-9070 to 9074."""
+    body = await json_body(request)
+    limits, runner = _limits(request), request.app.state.pyrunner
+    author = "bi-author" in _powers(request)
+    source = str(body.get("source", ""))
+    try:
+        if not author:
+            raise ExploreError("DRS-9073", 403, "running Python cells needs the bi-author power")
+        if not source.strip() or len(source) > limits.cell_max_chars:
+            raise ExploreError("DRS-9072", 413, f"a cell holds 1 to {limits.cell_max_chars:,} characters (bi.explore.cell_max_chars)")
+        packages = cell_packages(source, runner.packages)
+        ex = await extract_for(request, body.get("extract") or {})
+        if ex.arrow is None:
+            raise ExploreError("DRS-9074", 503, "Python cells need pyarrow on the console (pip install -r drishti-console/requirements.txt)")
+        manifest = {"name": "analyse-cell", "interface": "cell", "source": source, "packages": packages, "inputs": [], "target": "server",
+                    "timeout": limits.cell_timeout, "memory": limits.cell_memory, "quant_root": str(CONSOLE), "quant_engine": limits.quant_engine,
+                    "params": body.get("params") if isinstance(body.get("params"), dict) else {}}
+        answer = await runner.run({"manifest": manifest}, ex.arrow)
+    except (BackendError, ExploreError, PyError) as e:
+        return _fail(e, author)
+    answer.update(inputRows=len(ex.rows), masked=ex.masked, target="server", truncatedInput=ex.truncated)
+    return JSONResponse(answer, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/bi/explore/notebook/check")
+async def notebook_check(request: Request):
+    """Body ``{yaml}`` or ``{notebook}``: checks a notebook body before it is saved as a ``notebook`` item. Answers ``{valid, problems, cells, notebook, yaml}``:
+    the notebook as data and as the YAML to store (the page holds no YAML library, so it reads and writes the body through this route)."""
+    import yaml as _yaml
+    body = await json_body(request)
+    text = str(body.get("yaml", "")) if "yaml" in body else _yaml.safe_dump(body.get("notebook") or {}, sort_keys=False, default_flow_style=None, width=200, allow_unicode=True)
+    try:
+        doc = parse_notebook(text, _limits(request))
+    except ExploreError as e:
+        return JSONResponse({"valid": False, "problems": [{"level": "error", "code": e.code, "message": e.detail}], "cells": 0}, headers={"Cache-Control": "no-store"})
+    return JSONResponse({"valid": True, "problems": [], "cells": len(doc.get("cells") or []), "notebook": doc, "yaml": text}, headers={"Cache-Control": "no-store"})
+
+
+def _matching_measure(model: dict, agg: str, column: str) -> str | None:
+    want = f"{agg}({column})".replace(" ", "").lower()
+    for m in model.get("measures") or []:
+        if str(m.get("expr") or "").replace(" ", "").lower() == want:
+            return m["name"]
+    return None
+
+
+@router.post("/bi/explore/promote")
+async def promote(request: Request):
+    """Body ``{to: measure|visual, name, source, columns}`` (a Python cell to a Python item draft) or ``{to: report, name, dataset, slice}`` (a slice to a report
+    draft). Answers ``{kind, title, yaml, notes}``; the page saves it as a draft item in the person's workspace. Nothing is published."""
+    body = await json_body(request)
+    limits, to = _limits(request), str(body.get("to", ""))
+    name = str(body.get("name") or "From Analyse")[:80]
+    try:
+        if to in ("measure", "visual"):
+            source = str(body.get("source", ""))
+            if not source.strip() or len(source) > limits.cell_max_chars:
+                raise ExploreError("DRS-9070", 422, "the cell is empty or too long to promote")
+            cols = [str(c) for c in body.get("columns") or []][:limits.max_fields]
+            text = promote_python(source, name, to, cols, cell_packages(source, request.app.state.pyrunner.packages))
+            notes = ["The cell's df became the function's table; a measure must return one number and a visual an ECharts option, SVG or PNG.",
+                     "Check it (Check the Python on the item page), then publish. A measure also needs a dataset measure that names it."]
+            return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers={"Cache-Control": "no-store"})
+        if to == "report":
+            return JSONResponse(await _slice_report(request, body, name), headers={"Cache-Control": "no-store"})
+        raise ExploreError("DRS-9070", 422, "to is measure, visual or report")
+    except (BackendError, ExploreError) as e:
+        return _fail(e)
+
+
+async def _slice_report(request: Request, body: dict, name: str) -> dict:
+    import re
+    import yaml
+    dataset, sl = str(body.get("dataset") or ""), body.get("slice") or {}
+    if not dataset or not isinstance(sl, dict):
+        raise ExploreError("DRS-9070", 422, "send {dataset, slice: {rows, columns, values: [{field, agg}]}}")
+    model = await request.app.state.backend.bi("GET", "/datasets/" + quote(dataset, safe=":"), ident(request))
+    rows, cols = [str(f) for f in sl.get("rows") or []], [str(f) for f in sl.get("columns") or []]
+    notes, measures = [], []
+    for v in sl.get("values") or []:
+        field, agg = str(v.get("field", "")), str(v.get("agg", "sum"))
+        found = _matching_measure(model, agg, field)
+        if found:
+            measures.append(found)
+        else:
+            notes.append(f"No dataset measure is {agg}({field}); add one to the dataset, then put it in the visual's values.")
+    if measures and rows:
+        visual = {"id": "slice", "type": "matrix", "title": name, "at": {"x": 0, "y": 0, "w": 12, "h": 6}, "wells": {"rows": rows, "columns": cols[:1], "values": measures}}
+    elif rows or cols:
+        visual = {"id": "slice", "type": "table", "title": name, "at": {"x": 0, "y": 0, "w": 12, "h": 6}, "wells": {"columns": rows + cols}}
+    else:
+        raise ExploreError("DRS-9070", 422, "the slice has no rows or columns to build a visual from")
+    if not visual["wells"].get("columns"):
+        visual["wells"].pop("columns", None)
+    slug = re.sub(r"[^A-Za-z0-9_-]", "-", name).strip("-")[:48] or "from-analyse"
+    report = {"rachana": 1, "report": slug, "version": 1, "title": name, "description": "Started from an Analyse slice.", "dataset": model.get("name") or dataset,
+              "pages": [{"id": "slice", "title": "Slice", "visuals": [visual]}]}
+    return {"kind": "report", "title": name, "yaml": yaml.safe_dump(report, sort_keys=False, default_flow_style=None, width=200), "notes": notes}
