@@ -345,7 +345,7 @@
         });
       }).catch(function () { /* a draft nobody published has no versions to show */ });
     }
-    document.addEventListener('bi:reload', function () { api('GET', path).then(show).catch(fail); });
+    document.addEventListener('bi:reload', function (ev) { if (ev.detail && ev.detail.id) { show(ev.detail); } else { api('GET', path).then(show).catch(fail); } });
     q('[data-favourite]').addEventListener('click', function () { api('PUT', path + '/favourite', { on: !it.favourite }).then(show).catch(fail); });
     api('POST', path + '/open').then(show).catch(function (e) { say(e.message, true); q('[data-title]').textContent = 'Not found'; });
   }

@@ -30,10 +30,10 @@
 <form class="bi-form" data-import aria-label="Import a bundle">
   <h2>Import a bundle</h2>
   <p class="text-muted-d" data-import-need hidden>Importing needs the bi-steward power.</p>
-  <label>Bundle file (<span class="mono">.bi-bundle.json</span>)<input type="file" name="file" class="studio-in" accept=".json,application/json" data-file></label>
+  <label>Bundle file (.bi-bundle.json)<input type="file" name="file" class="studio-in" accept=".json,application/json" data-file></label>
   <label>Into workspace (empty: the one named in the bundle)<select name="workspace" class="studio-select" data-ws-select-import></select></label>
-  <label>Map workspaces (<span class="mono">from:to</span>, comma separated)<input name="workspaces" class="studio-in mono" autocomplete="off" placeholder="rates-dev:rates-prod"></label>
-  <label>Map owners (<span class="mono">from:to</span>, comma separated)<input name="owners" class="studio-in mono" autocomplete="off" placeholder="alice-dev:alice"></label>
+  <label>Map workspaces (from:to, comma separated)<input name="workspaces" class="studio-in mono" autocomplete="off" placeholder="rates-dev:rates-prod"></label>
+  <label>Map owners (from:to, comma separated)<input name="owners" class="studio-in mono" autocomplete="off" placeholder="alice-dev:alice"></label>
   <label class="bi-checkrow"><input type="checkbox" name="overwrite"> Overwrite items that exist here and differ</label>
   <label class="bi-checkrow"><input type="checkbox" name="force" data-force-box hidden><span data-force-label hidden>Import even where it breaks published reports (bi-admin)</span></label>
   <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-dry>Dry run</button>

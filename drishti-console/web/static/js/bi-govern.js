@@ -125,7 +125,7 @@
   function previewTable(p) {
     if (!p.available) { return h('p', { class: 'bi-empty', text: 'No data preview: ' + p.reason }); }
     var head = h('tr', {}, p.columns.map(function (c) { return h('th', { scope: 'col', text: c.name }); }));
-    var body = p.rows.map(function (r) { return h('tr', {}, r.map(function (v, i) { return h('td', { class: p.columns[i].type === 'string' ? '' : 'num', text: v == null ? '–' : (typeof v === 'number' ? (Number.isInteger(v) ? String(v) : v.toLocaleString('en-US', { maximumFractionDigits: 2 })) : String(v)) }); })); });
+    var body = p.rows.map(function (r) { return h('tr', {}, r.map(function (v, i) { return h('td', { class: p.columns[i].type === 'string' ? '' : 'num', text: v == null ? '–' : (typeof v === 'number' ? v.toLocaleString('en-US', { maximumFractionDigits: 2 }) : String(v)) }); })); });
     return h('div', {}, h('p', { class: 'bi-result-meta', text: p.label + ' · ' + p.rowCount + ' row' + (p.rowCount === 1 ? '' : 's') }),
       h('div', { class: 'tbl-wrap', tabindex: '0', role: 'region', 'aria-label': 'Data preview' }, h('table', { class: 'tbl bi-grid', 'data-plain': true }, h('thead', {}, head), h('tbody', {}, body))));
   }
@@ -220,6 +220,7 @@
   document.addEventListener('bi:refused', function (ev) {
     var d = ev.detail, box = q('[data-force]'); clear(box);
     if (d.code !== 'DRS-9040') { box.hidden = true; return; }
+    say('');                                                  // the callout below says it once
     box.hidden = false;
     box.appendChild(h('p', { class: 'bi-bad-line', role: 'alert', text: d.message }));
     if (item && item.can && item.can.force) { box.appendChild(button('Publish anyway (bi-admin)', function () { force(d.sub); }, 'btn-ghost bi-danger')); }
@@ -229,7 +230,7 @@
   document.addEventListener('bi:item', function (ev) {
     item = ev.detail;
     item.isPublished = item.publishedVersion > 0;
-    var f = q('[data-force]'); if (f && !ev.detail.warnings) { f.hidden = true; clear(f); }
+    var f = q('[data-force]'); if (f) { f.hidden = true; clear(f); }
     warnings(ev.detail);
     history(); review(); impact(); lineage();
   });

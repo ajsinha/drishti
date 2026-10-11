@@ -148,10 +148,12 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
 .bi-inline label { min-width: 0; }
 .bi-env { max-width: 64rem; }
 .bi-env .bi-form { max-width: none; }
+.bi-env .bi-form input:not([type="checkbox"]), .bi-env .bi-form select { width: 100%; }
 .bi-plan-conflict, .bi-plan-invalid { color: var(--d-bad); font-weight: 600; }
 .bi-plan-create, .bi-plan-update { color: var(--d-ok); font-weight: 600; }
 .bi-plan-unchanged { color: var(--d-muted); }
 @media (pointer: coarse) {
+  .bi-sec li > a, .bi-callout li > a, .bi-impact li > a { display: inline-flex; align-items: center; min-height: 44px; }
   .bi-diff-wrap { min-height: 44px; }
   .bi-callout .btn-pill { min-height: 44px; }
 }
