@@ -137,6 +137,17 @@ java25_verify() {
   DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true JAVA_HOME="$JAVA25_HOME" ./mvnw -q -o verify -Ddrishti.test.forks=2 ${DRILL_MVN_ARGS:-}
 }
 
+# Every run cleans up after itself, passed or failed: the temporary folders the tests made under /tmp during this run
+# (drishti-* and pytest's), never older ones, never the console's static cache.
+DRILL_MARK=$(mktemp "${TMPDIR:-/tmp}/drill-mark.XXXXXX")
+drill_cleanup() {
+  local tmp="${TMPDIR:-/tmp}"
+  find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null
+  find "$tmp/pytest-of-$(id -un)" -mindepth 1 -maxdepth 1 -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null
+  rm -f "$DRILL_MARK"
+}
+trap drill_cleanup EXIT
+
 t=$SECONDS
 python3 tools/license_headers.py
 stage_done "licence headers" $t
