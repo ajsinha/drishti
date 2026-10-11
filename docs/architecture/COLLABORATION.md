@@ -972,6 +972,7 @@ cross-cutting sections only.
 
 ## As-built notes: step 10, watermarked snapshots (2026-10)
 
+- A share keeps the sender's **view state** (`Share.view`: the `ctl.*` control values and `f.<panel>.<column>` column filters as query text; column `view_state` on `drishti_share`, added by the schema script and, on SQLite, by `IdentityDatabase`; an old row has none and its hash is unchanged). The recipient's link and the picture carry it; `ColumnFilters` applies the console's filter grammar to the picture's table rows after the recipients' masks.
 - `collab/snapshot`: `SnapshotLayout` (a `ViewModel` to a `SnapshotModel` of text, boxes, lines and polylines; width is estimated from font size, so the layout is
   pure and testable as data), `SnapshotPainter` (Java2D, headless, JDK logical fonts, PNG) and `SnapshotService` (policy, audience, caches, limits, access log).
 - **Policy.** `snapshots.enabled` (default off); `packs.<pack>.snapshots.enabled` overrides it either way, so a pack can forbid (`403 DRS-7015`). The share

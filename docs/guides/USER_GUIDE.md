@@ -518,6 +518,7 @@ fill both dates for you; either date may be left empty (*from the start*, *to th
 | a **list of boxes** (multi-select) | `Enter` or `Space` on its button opens the list; tick boxes, or *All* / *None*; `Esc` closes it. Nothing ticked means everything |
 | a **switch** or **buttons** | Click, or `Space`; with buttons the arrow keys move and choose |
 | **dates**, a **number range** | Type or pick; the panel follows when you leave the box (numbers: when you pause) |
+| a **slider** | Drag the round handle (or press on the track), or focus it and use `←` `→` for one step, `PageUp` / `PageDown` for ten, `Home` / `End` for the ends; a slider with two handles sets a range, and the handles cannot cross. The number beside it says where it is; on a phone the handles are 44 pixels |
 | **Show 10 / 25 / 50** (top-n) | Pick how many rows |
 | **Find** (search) | Type; the panel follows when you pause |
 
@@ -544,8 +545,12 @@ works on rows of a table where the author set it up. Everything a click does, th
 **What you may see.** A control offers only values you may see: for a field your role does not show (`•••`), a dropdown lists nothing, and a
 search over it never finds anything. Controls only choose; they never change data.
 
-**Not yet.** The Pivot tab and CSV download of a panel read **every** row, not the ones the controls leave; a share you *send* to people, a
-picture of it and a scheduled export do not carry the choices (a copied link does). Authors add controls in the workbench's
+**Sending it.** *Share with a note* keeps your controls and your [column filters](#filter-a-table-like-excel) with the share: the people you
+send it to open the same view with the same choices, and a picture of the share (if you attach one) shows the filtered rows. The dialog says
+*with your controls and filters* beside the date when there are any.
+
+**Not yet.** The Pivot tab and CSV download of a panel read **every** row, not the ones the controls leave, and a scheduled export does not
+carry the choices (there is no scheduled delivery yet). Authors add controls in the workbench's
 [Controls tab](SCREEN_DESIGNER.md#the-controls-tab); the Sutra's side of it is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls).
 
 ## A deep trade: legs, cashflows and fixings

@@ -93,6 +93,11 @@ public final class ControlRules {
                     return "'" + d + "' is not a range (2026-10-01..2026-12-31) or a relative one (next-90d, last-30d, this-month, ytd)";
                 }
             }
+            case SLIDER -> {
+                if (!isNumber(d) && !isNumberRange(d)) {
+                    return "'" + d + "' is not a number (5000000) or a range of numbers (1000000..5000000)";
+                }
+            }
             case NUMBER_RANGE -> {
                 if (!isNumberRange(d)) {
                     return "'" + d + "' is not a range of numbers (1000000..5000000, either end may be empty)";
@@ -101,6 +106,11 @@ public final class ControlRules {
             default -> { }
         }
         return null;
+    }
+
+    /** A plain number (an optional sign, digits, an optional fraction). */
+    public static boolean isNumber(String s) {
+        return NUMBER.matcher(s.trim()).matches();
     }
 
     /** An ISO date. */

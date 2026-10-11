@@ -300,6 +300,31 @@ abstract class ShareApiContract {
         assertThat(opened.get("panel").asText()).isEqualTo("cashflows");
     }
 
+    @Test
+    void aShareKeepsTheSendersControlValuesAndColumnFiltersAndOnlyThose() throws Exception {
+        String view = "ctl.legs=2&f.cashflows.Rate=gt%3A1m&utm_source=x&asOf=2020-01-01&ctl.when=2026-10-01..2026-12-31";
+        JsonNode res = body(mvc.perform(post("/api/v1/shares").header("Authorization", as("ann", "risk")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(Map.of("kind", "trade", "id", TRADE, "note", "filtered", "view", view, "to", Map.of("users", List.of("rng"))))))
+                .andExpect(status().isCreated()));
+        String kept = "ctl.legs=2&f.cashflows.Rate=gt%3A1m&ctl.when=2026-10-01..2026-12-31";
+        for (String reader : new String[] {"ann", "rng"}) {
+            JsonNode opened = json.readTree(mvc.perform(get("/api/v1/shares/" + res.get("id").asText()).header("Authorization", as(reader, "risk"))).andReturn()
+                    .getResponse().getContentAsString(StandardCharsets.UTF_8));
+            assertThat(opened.get("view").asText()).as(reader).isEqualTo(kept);
+        }
+        JsonNode plain = body(mvc.perform(post("/api/v1/shares").header("Authorization", as("ann", "risk")).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(share("no filters", List.of("rng"), List.of())))).andExpect(status().isCreated()));
+        JsonNode openedPlain = json.readTree(mvc.perform(get("/api/v1/shares/" + plain.get("id").asText()).header("Authorization", as("rng", "risk")))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+        assertThat(openedPlain.has("view")).as("a share sent without view state has none").isFalse();
+    }
+
+    @Test
+    void aViewStateOverTheLimitIsRefused() throws Exception {
+        send("ann", "risk", Map.of("kind", "trade", "id", TRADE, "note", "x", "view", "ctl.a=" + "z".repeat(1900) + "&ctl.b=" + "z".repeat(1900) + "&ctl.c=" + "z".repeat(1900),
+                "to", Map.of("users", List.of("rng")))).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-5001"));
+    }
+
     // ---- the directory -------------------------------------------------------------------------------------------------
 
     @Test

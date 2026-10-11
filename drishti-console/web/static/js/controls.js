@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Controls of a Sutra (RUPAKA.md 8.1; RACHANA_REFERENCE.md "Controls"): dropdowns, multi-selects, toggles, date and number ranges, top-n and
+/* Controls of a Sutra (RUPAKA.md 8.1; RACHANA_REFERENCE.md "Controls"): dropdowns, multi-selects, toggles, date and number ranges, sliders, top-n and
    search, drawn from the view's `data-controls` (the server's ViewModel.controls) in the strip, a side bar or a panel's header.
    Changing one asks the server for only the panels that read it (GET .../panels?panels=a,b&ctl.x=...), swaps them in place, brings the
    other controls up to date (a cascading child's options, a corrected value), writes the values to the address (?ctl.leg=L2) and tells
@@ -153,6 +153,75 @@
         di.addEventListener('input', function () { change(d.id, di.value); });
         wrap.appendChild(label); wrap.appendChild(di); focusEl = di;
         set = function () { di.value = cur[d.id]; };
+      } else if (d.kind === 'slider') {
+        // a slider: one thumb, or two (d.range, value from..to). Keys: arrows (one step), PageUp / PageDown (ten steps), Home, End; a drag with
+        // a mouse, finger or pen. Each thumb is role=slider with aria-valuemin / -max / -now / -valuetext; the thumbs are 44 px on touch.
+        wrap = el('div', 'ctl ctl-slider', null, { 'data-ctl': d.id, role: 'group', 'aria-labelledby': id + '-l' });
+        wrap.appendChild(el('span', 'ctl-l', d.label || d.id, { id: id + '-l' }));
+        var lo = parseFloat(d.min), hi = parseFloat(d.max), stp = parseFloat(d.step) > 0 ? parseFloat(d.step) : 1, ready = isFinite(lo) && isFinite(hi) && hi > lo;
+        var track = el('div', 'ctl-sl-track', null, { 'data-ctl-track': '' }), fill = el('div', 'ctl-sl-fill'), out = el('output', 'ctl-sl-out', null, { for: id });
+        var thumbs = (d.range ? [0, 1] : [0]).map(function (i) {
+          var t = el('div', 'ctl-sl-thumb', null, { role: 'slider', tabindex: ready ? '0' : '-1', 'data-thumb': String(i),
+            'aria-orientation': 'horizontal', 'aria-label': (d.label || d.id) + (d.range ? (i ? ' to' : ' from') : '') });
+          if (i === 0) { t.id = id; }
+          if (ready) { t.setAttribute('aria-valuemin', String(lo)); t.setAttribute('aria-valuemax', String(hi)); } else { t.setAttribute('aria-disabled', 'true'); }
+          return t;
+        });
+        track.appendChild(fill); thumbs.forEach(function (t) { track.appendChild(t); });
+        wrap.appendChild(track); wrap.appendChild(out);
+        function slVals() {
+          var p = (cur[d.id] || '').split('..'), a0 = parseFloat(p[0]), b0 = parseFloat(p[1]);
+          if (d.range) { return [isFinite(a0) ? a0 : lo, isFinite(b0) ? b0 : hi]; }
+          return [isFinite(a0) ? a0 : lo];
+        }
+        function slPct(v) { return ready ? Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100)) : 0; }
+        function slSnap(v) {
+          v = Math.max(lo, Math.min(hi, v));
+          return Math.min(hi, Math.round((lo + Math.round((v - lo) / stp) * stp) * 1e9) / 1e9);
+        }
+        function slText(v) { return String(Math.round(v * 1e9) / 1e9); }
+        function slPush(vals, pause) { change(d.id, d.range ? slText(Math.min(vals[0], vals[1])) + '..' + slText(Math.max(vals[0], vals[1])) : slText(vals[0]), pause); }
+        function slMove(i, v, pause) {
+          var vals = slVals(); v = slSnap(v);
+          if (d.range) { v = i === 0 ? Math.min(v, vals[1]) : Math.max(v, vals[0]); }
+          vals[i] = v; slPush(vals, pause);
+        }
+        thumbs.forEach(function (t, i) {
+          t.addEventListener('keydown', function (e) {
+            var v = slVals()[i], k = e.key, nv = null;
+            if (!ready) { return; }
+            if (k === 'ArrowRight' || k === 'ArrowUp') { nv = v + stp; } else if (k === 'ArrowLeft' || k === 'ArrowDown') { nv = v - stp; }
+            else if (k === 'PageUp') { nv = v + stp * 10; } else if (k === 'PageDown') { nv = v - stp * 10; }
+            else if (k === 'Home') { nv = d.range && i === 1 ? slVals()[0] : lo; } else if (k === 'End') { nv = d.range && i === 0 ? slVals()[1] : hi; }
+            if (nv == null) { return; }
+            e.preventDefault(); slMove(i, nv, 0);
+          });
+          t.addEventListener('pointerdown', function (e) {
+            if (!ready) { return; }
+            e.preventDefault(); t.focus(); t.setPointerCapture(e.pointerId);
+            var r = track.getBoundingClientRect();
+            function to(ev, pause) { slMove(i, lo + Math.max(0, Math.min(1, (ev.clientX - r.left) / (r.width || 1))) * (hi - lo), pause); }
+            function drag(ev) { to(ev, 120); }
+            function drop(ev) { t.removeEventListener('pointermove', drag); t.removeEventListener('pointerup', drop); t.removeEventListener('pointercancel', drop); to(ev, 0); }
+            t.addEventListener('pointermove', drag); t.addEventListener('pointerup', drop); t.addEventListener('pointercancel', drop);
+          });
+        });
+        track.addEventListener('pointerdown', function (e) {                // a press on the track moves the nearest thumb there, then it can be dragged
+          if (!ready || e.target !== track && e.target !== fill) { return; }
+          var r = track.getBoundingClientRect(), v = lo + Math.max(0, Math.min(1, (e.clientX - r.left) / (r.width || 1))) * (hi - lo), vals = slVals();
+          var i = thumbs.length > 1 && Math.abs(v - vals[1]) < Math.abs(v - vals[0]) ? 1 : 0;
+          slMove(i, v, 0); thumbs[i].focus();
+        });
+        focusEl = thumbs[0];
+        set = function () {
+          var vals = slVals();
+          vals.forEach(function (v, i) {
+            thumbs[i].style.setProperty('--ctl-pos', slPct(v) + '%');
+            thumbs[i].setAttribute('aria-valuenow', slText(v)); thumbs[i].setAttribute('aria-valuetext', slText(v));
+          });
+          fill.style.setProperty('--ctl-from', (d.range ? slPct(vals[0]) : 0) + '%'); fill.style.setProperty('--ctl-to', slPct(vals[vals.length - 1]) + '%');
+          out.textContent = ready ? (d.range ? slText(vals[0]) + ' – ' + slText(vals[1]) : slText(vals[0])) : 'no bounds';
+        };
       } else if (d.kind === 'date-range' || d.kind === 'number-range') {
         var isDate = d.kind === 'date-range';
         wrap = el('div', 'ctl ctl-' + d.kind, null, { 'data-ctl': d.id, role: 'group', 'aria-labelledby': id + '-l' });
@@ -187,7 +256,7 @@
       }
       if (d.truncated) { wrap.appendChild(el('span', 'ctl-note', 'first ' + (d.options || []).length + ' shown')); }
       set();
-      return { wrap: wrap, set: set, focus: function () { if (focusEl) { focusEl.focus(); } }, sig: JSON.stringify([d.options, d.min, d.max]) };
+      return { wrap: wrap, set: set, focus: function () { if (focusEl) { focusEl.focus(); } }, sig: JSON.stringify([d.options, d.min, d.max, d.step, d.range]) };
     }
     function place(d) {
       var h = holder(d), u = ui[d.id];

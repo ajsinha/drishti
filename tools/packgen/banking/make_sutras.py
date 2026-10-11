@@ -58,11 +58,12 @@ CONTROLLED = {
         "controls": [
             "  - { id: asset, kind: dropdown, label: Asset class, options: \"$.byAsset[*].asset\", placement: header, panel: trades }",
             "  - { id: product, kind: multi-select, label: Product, options: \"$.trades[*].product\", placement: header, panel: trades }",
+            "  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: \"max($.trades[*].notional)\", step: 1000000, placement: header, panel: trades }",
             "  - { id: top, kind: top-n, label: Show, options: [10, 25, 50], default: 25, placement: header, panel: trades }",
         ],
         "panels": {
             "trades": {"title": "Member trades${ctl.asset ? ' · ' + ctl.asset : ''}",
-                       "extra": ["    where: \"(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product)\"",
+                       "extra": ["    where: \"(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product) && (ctl.minNotional == '' || @.notional >= ctl.minNotional)\"",
                                  "    limit: ctl.top"]},
             "byAsset": {"extra": ["    on-select: { by: asset, field: asset, filter: [trades] }"]}},
     },

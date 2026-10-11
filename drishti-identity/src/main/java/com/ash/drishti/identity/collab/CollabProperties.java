@@ -57,7 +57,7 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
         directory = directory == null ? new Directory(null, null, null) : directory;
         mentionableRoles = mentionableRoles == null ? List.of("*") : List.copyOf(mentionableRoles);
         maxGroupSize = positive(maxGroupSize, 200);
-        share = share == null ? new Share(null, null, null, null, null) : share;
+        share = share == null ? new Share(null, null, null, null, null, null) : share;
         threads = threads == null ? new Threads(null, null, null, null) : threads;
         text = text == null ? new Text(null, null) : text;
         limits = limits == null ? new Limits(null, null, null, null, null) : limits;
@@ -114,14 +114,16 @@ public record CollabProperties(Boolean enabled, String store, String dir, String
      * @param maxText longest note, in characters
      * @param undeliverable {@code tell} (default: the sender learns who was not notified, and why) or {@code silent}
      * @param postToThread the dialog's default for also posting to the discussion
+     * @param maxViewState longest view state (control values and column filters, as query text) a share carries, in characters
      */
-    public record Share(Integer maxRecipients, Integer maxExpanded, Integer maxText, String undeliverable, Boolean postToThread) {
+    public record Share(Integer maxRecipients, Integer maxExpanded, Integer maxText, String undeliverable, Boolean postToThread, Integer maxViewState) {
         public Share {
             maxRecipients = positive(maxRecipients, 25);
             maxExpanded = positive(maxExpanded, 200);
             maxText = positive(maxText, 2000);
             undeliverable = "silent".equals(undeliverable) ? "silent" : "tell";
             postToThread = postToThread != null && postToThread;
+            maxViewState = positive(maxViewState, 4000);
         }
 
         public boolean tell() {

@@ -39,9 +39,16 @@ import java.util.List;
  * @param channels {@code in-app}, with {@code email} and {@code picture} when asked for (comma-separated)
  * @param threadId the discussion thread it was also posted to, or null
  * @param hash SHA-256 over the fields above, so a stored row can be checked
+ * @param view the reader's view state when it was sent (control values and column filters as query text, {@code ctl.legs=2&f.cashflows.rate=gt%3A1m}), or null
  */
 public record Share(String id, String sender, Instant createdAt, String kind, String entityId, String panelId, String gateKind, Pin pin,
-        String body, List<Span> maskedSpans, String channels, String threadId, String hash) {
+        String body, List<Span> maskedSpans, String channels, String threadId, String hash, String view) {
+
+    /** A share without view state (every share made before it was kept, and every one sent without it). */
+    public Share(String id, String sender, Instant createdAt, String kind, String entityId, String panelId, String gateKind, Pin pin,
+            String body, List<Span> maskedSpans, String channels, String threadId, String hash) {
+        this(id, sender, createdAt, kind, entityId, panelId, gateKind, pin, body, maskedSpans, channels, threadId, hash, null);
+    }
 
     /** A half-open character range {@code [start, end)} of the note. */
     public record Span(int start, int end) {}
@@ -58,7 +65,7 @@ public record Share(String id, String sender, Instant createdAt, String kind, St
 
     /** This share with its hash computed. */
     public Share signed() {
-        return new Share(id, sender, createdAt, kind, entityId, panelId, gateKind, pin, body, maskedSpans, channels, threadId, hashOf());
+        return new Share(id, sender, createdAt, kind, entityId, panelId, gateKind, pin, body, maskedSpans, channels, threadId, hashOf(), view);
     }
 
     /** True when the stored hash matches the fields. */
@@ -72,6 +79,9 @@ public record Share(String id, String sender, Instant createdAt, String kind, St
                 pin != null && pin.live(), pin == null ? null : pin.knownAt(), pin == null ? 0 : pin.generation(),
                 pin == null ? null : pin.source(), body, spansToJson(maskedSpans), channels, threadId}) {
             b.append(o == null ? "" : o).append('\u001f');
+        }
+        if (view != null && !view.isEmpty()) {                  // only when present: a share made before view state keeps its hash
+            b.append("view=").append(view).append('\u001f');
         }
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(b.toString().getBytes(StandardCharsets.UTF_8)));

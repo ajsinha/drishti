@@ -59,6 +59,8 @@ def link_for(share: dict) -> str:
         q.append(f"gen={int(pin['generation'])}")
     if share.get("id"):
         q.append(f"share={quote(str(share['id']), safe='')}")
+    if share.get("view"):                                 # the sender's control values and column filters, as the address writes them
+        q.append(str(share["view"]))
     path = f"/v/{quote(str(share.get('kind') or ''), safe='')}/{quote(str(share.get('entityId') or ''), safe='')}"
     frag = f"#p-{quote(str(share['panel']), safe='')}" if share.get("panel") else ""
     return path + ("?" + "&".join(q) if q else "") + frag

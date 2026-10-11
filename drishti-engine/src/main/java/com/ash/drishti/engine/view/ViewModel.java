@@ -84,13 +84,15 @@ public record ViewModel(
      * @param remember whether the reader's last choice is kept
      * @param min a number range's lower bound (from the data or fixed), or null
      * @param max its upper bound
+     * @param step a slider's step, or null
+     * @param range a slider with two handles (its value is {@code from..to})
      * @param reads ids of the panels (and {@code strip} or {@code title}) whose expressions read it
      * @param truncated whether the options were cut at the limit
      */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public record ControlView(String id, String kind, String label, String placement, String panel, String parent, List<Opt> options,
-            String value, List<String> values, boolean required, boolean remember, String min, String max, List<String> reads,
-            boolean truncated) {}
+            String value, List<String> values, boolean required, boolean remember, String min, String max, String step, boolean range,
+            List<String> reads, boolean truncated) {}
 
     /**
      * A panel whose click sets a control: a table row sets {@code by} to the value of its {@code field}; a bar sets it to its label.

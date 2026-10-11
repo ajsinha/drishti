@@ -1488,7 +1488,7 @@ the address `.../v/trade/MX-20000001?ctl.legs=1&ctl.when=2026-10-01..2027-06-30`
 | Key | Required | Meaning |
 |---|---|---|
 | `id` | yes | The name read as `ctl.<id>`: a letter, then letters, digits and underscores, at most 32 (`DRS-2034`); unique (`DRS-2035`). `ctl` itself is reserved |
-| `kind` | yes | `dropdown`, `multi-select`, `cascading`, `toggle`, `segmented`, `date`, `date-range`, `number-range`, `top-n` or `search` (`DRS-2034` otherwise) |
+| `kind` | yes | `dropdown`, `multi-select`, `cascading`, `toggle`, `segmented`, `date`, `date-range`, `number-range`, `slider`, `top-n` or `search` (`DRS-2034` otherwise) |
 | `label` | | The text beside the control (the id when absent) |
 | `options` | for `dropdown`, `multi-select`, `cascading`, `toggle`, `segmented`, `top-n` | A list of values (`[Pay, Receive]`, or `{ value, label }` items), **or** an expression over the record (`"$.legs[*].leg"`; a list of records offers their `id`), **or** `{ kind: counterparty }`, the ids of that entity kind the sources list (at most 500; only when the reader may open the kind). More than 500 are cut and the control says so. Kinds that take no options refuse them (`DRS-2034`) |
 | `default` | | The value to start from: a value, `first`, `all` (a multi-select), or for dates a relative token (below). It must fit the kind (`DRS-2039`). A `top-n`, `toggle` and `segmented` control always has a value: its first option when no default is given |
@@ -1496,7 +1496,9 @@ the address `.../v/trade/MX-20000001?ctl.legs=1&ctl.when=2026-10-01..2027-06-30`
 | `required` | | `true`: the reader cannot clear it (a dropdown has no *(all)* entry) |
 | `placement` | | `strip` (default: under the title, with the strip), `header` (in a panel's header; needs `panel: <panel id>`, `DRS-2034` otherwise) or `side` (a bar at the side of the page) |
 | `parent` | for `cascading` | The control whose value the options depend on; it must be declared **before** this one (`DRS-2037`) |
-| `min`, `max` | | A `number-range`'s bounds: a number or an expression over the record (`"max($.legs[*].notional)"`) |
+| `min`, `max` | for `slider` | A `number-range`'s or `slider`'s bounds: a number or an expression over the record (`"max($.legs[*].notional)"`). A slider without both is `DRS-2034`; bounds that cannot be read (a masked field, a bad expression) leave the slider without a scale |
+| `step` | | A `slider`'s step: a number above zero or an expression over the record (default `1`). Values snap to `min + n x step`; the top of the scale is always reachable (`DRS-2034` for a step of zero or less) |
+| `range` | | `true`: a `slider` with two handles whose value is `from..to`. Only for sliders (`DRS-2034` otherwise); a `default` must match (one number, or `from..to` for two handles: `DRS-2039`) |
 
 At most 12 controls; an unknown key is `DRS-2011`.
 
@@ -1512,8 +1514,27 @@ At most 12 controls; an unknown key is `DRS-2011`.
 | `date` | a date input | an ISO date as text, or empty |
 | `date-range` | two date inputs and a presets list | `from..to` as text (either end may be empty), empty when none |
 | `number-range` | two number inputs | `min..max` as text |
+| `slider` | a track with one handle, or two with `range: true` (below) | one handle: a **number**, so `@.notional >= ctl.floor` compares as numbers (empty when the scale has no bounds); two handles: `from..to` as text, for `within(@.notional, ctl.band)` |
 | `top-n` | a select of the options | a whole number; a table's `limit: ctl.top` shows that many rows |
 | `search` | a search box (applied when the reader pauses) | the text |
+
+**The slider.** `{ id: floor, kind: slider, label: Notional at least, min: 0, max: "max($.trades[*].notional)", step: 1000000 }` draws a track
+with a round handle; `range: true` draws two (the lower cannot pass the upper). The request's value is held to `min`..`max`, snapped to the
+step and, for two handles, ordered; a value that is not a number falls back to the `default`, then to `min` (both ends for two handles), so
+the view always carries a value the slider can show, and a link reproduces it (`?ctl.floor=250000000`). Keys on a handle: `←` `↓` and `→` `↑`
+move one step, `PageDown` and `PageUp` ten, `Home` and `End` to the ends (for two handles, to the other handle); a press or drag on the
+track or a handle moves the nearest one (a drag follows the pointer and settles on release). Each handle is `role="slider"` with `aria-valuemin`,
+`aria-valuemax`, `aria-valuenow`, `aria-valuetext` and a label (*Notional at least*, or *… from* and *… to*); the handles are 44 px on a touch
+screen. The shipped `netting-set` Sutra of the counterparty-risk pack uses one as a notional threshold on its member trades:
+
+```yaml
+controls:
+  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: "max($.trades[*].notional)", step: 1000000, placement: header, panel: trades }
+panels:
+  - id: trades
+    kind: table
+    where: "(ctl.asset == '' || @.assetClass == ctl.asset) && oneOf(@.product, ctl.product) && (ctl.minNotional == '' || @.notional >= ctl.minNotional)"
+```
 
 Relative dates are read on the **business date of the request** (today, or the date picked in the top bar) and the server's business calendar
 (`drishti.business-date.calendar`; not a calendar per pack): `today`, `yesterday`, `previous-business-day`, `this-week`, `this-month`,
@@ -1573,10 +1594,18 @@ panels:
 
 ### What is not built yet
 
-A `slider` kind, options from a dataset column (a Rūpaka dataset), the Sutra-level view `title:` reading a control (a panel's `title` does; a
-control that the view `title` reads reloads the page), a Pivot tab and a CSV export that follow the controls (they read every row), and
-control values stored with a *sent* share, a snapshot picture or a scheduled subscription (they pin the business date and generation; the
-values travel with a copied link only).
+Options from a dataset column (a Rūpaka dataset), the Sutra-level view `title:` reading a control (a panel's `title` does; a control that the
+view `title` reads reloads the page), a Pivot tab and a CSV export that follow the controls (they read every row), and control values stored
+with a *scheduled subscription* (there is no scheduled delivery yet; a **sent** share carries them, see below).
+
+### Controls with a sent share
+
+A share keeps the **view state** its sender had on screen: the control values (`ctl.*`) and the column filters (`f.<panel>.<column>`), as the
+address writes them, in the share's `view` (at most `drishti.collab.share.max-view-state` characters, 4000 by default; nothing else from the
+address is kept). The recipient who opens the share lands on the same view with the same values and filters; the **picture** of the share
+(when one was asked for) is built with the control values and shows only the rows the column filters leave, after the masks of its least
+privileged recipient are applied (a masked cell never matches a condition). A share sent without any view state, and every share made
+before this was kept, is unchanged. The values are not copied data: they only select what each recipient's own rights show.
 
 ## Function keys
 

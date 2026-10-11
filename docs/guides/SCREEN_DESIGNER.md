@@ -232,7 +232,7 @@ The **About** tab (right pane, after Versions) is the pack's `config/about.yaml`
 ### The Controls tab
 
 The **Controls** tab (beside *About* and *Form*) edits the Sutra's `controls:` section: dropdowns over the record's own data, date and number
-ranges, a top-n, a search box ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls)). It is a part of the Sutra, so the YAML tab shows the
+ranges, sliders, a top-n, a search box ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls)). It is a part of the Sutra, so the YAML tab shows the
 same text, and every change is a step of the design's log: undo, redo and revisions cover it, and proposing the design sends it to review with the Sutra.
 
 ![The Controls tab: a card per control (id, kind, label, options, default, placement, panel, remember, required), the YAML, and the controls working over the previewed sample](img/controls/05-workbench.jpg)
@@ -241,7 +241,7 @@ same text, and every change is a step of the design's log: undo, redo and revisi
 - **Cards.** Each control is a card: **Id** (what panels read as `ctl.<id>`), **Kind**, **Label**, **Options** (one field: `a, b, c`, or an
   expression over the record such as `$.legs[*].leg`, or `kind: customer` for the ids of an entity kind), **Default**, **Placement** (strip, header
   of a panel, side) with the **Panel**, **Remember per reader**, **Required**; a cascading control has a **Parent** (an earlier control), a number
-  range **Min** and **Max**. Drag a card by its handle, or focus it and press `Alt+↑` / `Alt+↓` (the buttons do the same); `Delete` removes it. A
+  range or slider **Min** and **Max**, a slider also **Step** and **Two handles (a range)**. Drag a card by its handle, or focus it and press `Alt+↑` / `Alt+↓` (the buttons do the same); `Delete` removes it. A
   card's fields are named for screen readers by the control's id as you type it.
 - **YAML.** Under the cards, *YAML* holds the same controls as a list, one flow mapping a line. Edit either: the cards write the text, and typed text
   that reads rebuilds the cards (while you edit a card, your card wins).

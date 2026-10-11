@@ -134,6 +134,37 @@ class SnapshotApiTest {
                 .contains("https://drishti.test/share/sh_draftdraftdraft01").contains("Data as of");
     }
 
+    @Test
+    void aSharesColumnFiltersDecideWhichRowsThePictureDraws() throws Exception {
+        JsonNode view = body(mvc.perform(get("/api/v1/views/trade/" + TRADE).header("Authorization", as("rng", "risk"))).andReturn());
+        String panel = null;
+        String column = null;
+        String keep = null;
+        String drop = null;
+        for (JsonNode pv : view.get("panels")) {
+            JsonNode d = pv.get("data");
+            if (d != null && d.has("columns") && d.has("rows") && d.get("rows").size() >= 2 && !pv.get("id").asText().isBlank()) {
+                String a = d.get("rows").get(0).get("cells").get(0).path("text").asText();
+                String b = d.get("rows").get(1).get("cells").get(0).path("text").asText();
+                if (!a.isBlank() && !b.isBlank() && !a.equals(b) && !a.contains("•") && !b.contains("•")) {
+                    panel = pv.get("id").asText();
+                    column = d.get("columns").get(0).asText();
+                    keep = a;
+                    drop = b;
+                    break;
+                }
+            }
+        }
+        assertThat(panel).as("the trade view has a table with two different first cells").isNotNull();
+        Share all = draft("ann");
+        Share filtered = new Share(all.id(), all.sender(), all.createdAt(), all.kind(), all.entityId(), null, null, all.pin(), "x", List.of(), all.channels(), null,
+                null, "f." + panel + "." + column + "=in%3A" + java.net.URLEncoder.encode(keep, StandardCharsets.UTF_8));
+        List<String> before = snapshots.model(all, List.of(p("rng"))).texts();
+        List<String> after = snapshots.model(filtered, List.of(p("rng"))).texts();
+        assertThat(before).contains(keep, drop);
+        assertThat(after).contains(keep).doesNotContain(drop);
+    }
+
     // ---- the API ---------------------------------------------------------------------------------------------------------
 
     @Test

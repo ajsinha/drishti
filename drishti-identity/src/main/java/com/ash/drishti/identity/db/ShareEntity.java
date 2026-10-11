@@ -76,6 +76,9 @@ public class ShareEntity {
     @Column(name = "thread_id")
     public String threadId;
 
+    @Column(name = "view_state")
+    public String viewState;
+
     @Column(name = "hash", nullable = false)
     public String hash;
 }

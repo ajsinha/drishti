@@ -98,6 +98,7 @@ public class IdentityDatabase {
                 if (props.sqlite()) {
                     ensureHoldRange(ds);
                     ensureTokenScopes(ds);
+                    ensureShareViewState(ds);
                 }
                 LOG.info("identity database ready: {} ({})", redact(props.databaseUrl()), schema);
                 return;
@@ -133,6 +134,23 @@ public class IdentityDatabase {
             }
         } catch (java.sql.SQLException e) {
             throw new IllegalStateException("could not update drishti_collab_hold", e);
+        }
+    }
+
+    /** A share table made before view state was sent with a share gets its column here (SQLite has no "add column if not exists"). */
+    private static void ensureShareViewState(DataSource ds) {
+        try (java.sql.Connection c = ds.getConnection(); java.sql.Statement st = c.createStatement()) {
+            boolean have = false;
+            try (java.sql.ResultSet r = st.executeQuery("PRAGMA table_info(drishti_share)")) {
+                while (r.next()) {
+                    have |= "view_state".equals(r.getString("name"));
+                }
+            }
+            if (!have) {
+                st.execute("ALTER TABLE drishti_share ADD COLUMN view_state TEXT");
+            }
+        } catch (java.sql.SQLException e) {
+            throw new IllegalStateException("could not update drishti_share", e);
         }
     }
 
