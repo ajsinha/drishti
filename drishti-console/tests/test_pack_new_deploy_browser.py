@@ -73,7 +73,7 @@ def make_pack(page, base, name, version, data, download_to=None):
         page.click("[data-go='2']")
     for old in ("trade", "counterparty", "book"):
         page.fill(f"input[data-focus=name-{old}]", "sg" + old)
-        page.locator(f"input[data-focus=name-{old}]").dispatch_event("change")
+        page.locator(f"input[data-focus=name-{old}]").press("Tab")                 # leaving the field commits it, as a person does
         page.locator(f"input[data-focus=name-{old}][value=sg{old}]").wait_for()
         page.wait_for_function("() => !document.querySelector('[data-next]').disabled")           # the plan is redone; the next rename waits for it
     page.wait_for_function("() => !document.querySelector('[data-msg]').innerText.includes('Planning')")

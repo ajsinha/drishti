@@ -17,6 +17,9 @@
    both directions (test_page_widths_browser.py checks it at 390 px). A mouse keeps the compact desktop sizes. Links inside
    running text keep their size (WCAG 2.5.8, inline exception). This sheet loads last. */
 @media (pointer: coarse) {
+  /* admin lists and detail pages: a name link in a cell and the heading ? are tap targets too */
+  .conn-used a.mono, .conn-name a.mono, .ws-h > a.emb-help { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
+
   .tbar .tbar-brand, .tbar .asof-live, .tbar-menu-btn, .tbar-tools .tool, .tbar-tools .theme-btn, .brand, .theme-btn, button, [role="button"] { min-width: 44px; min-height: 44px; justify-content: center; }
   .tbar .cmd-input, .asof-date { height: 44px; min-height: 44px; }
   input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]) { min-height: 44px; }
