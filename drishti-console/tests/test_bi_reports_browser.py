@@ -72,6 +72,12 @@ def by(key, measure, rows=None):
 
 # ---- the viewer -------------------------------------------------------------------------------------------------------------
 
+# What sticks out past the right edge (named in a failure, to say where to look).
+WIDE = """() => [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > document.documentElement.clientWidth + 1
+  && !e.closest('[hidden]') && getComputedStyle(e).position !== 'fixed'
+  && !(e.parentElement && e.parentElement.closest('*') && (function (p) { for (; p && p !== document.body; p = p.parentElement) { if (/auto|scroll|hidden/.test(getComputedStyle(p).overflowX)) return true; } return false; })(e.parentElement))).slice(0, 6)
+  .map(e => e.tagName.toLowerCase() + '.' + String(e.className).trim().split(/\\s+/)[0] + ' ' + Math.round(e.getBoundingClientRect().right))"""
+
 def test_the_overview_opens_and_every_figure_adds_up(stack, browser):
     page = sign_in(browser, "rita")
     open_report(page, REPORT)
@@ -238,7 +244,7 @@ def test_a_phone_shows_one_column_without_sideways_scroll_and_finger_sized_butto
     page = sign_in(browser, "rita", viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
     open_report(page, REPORT)
     settled(page)
-    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "the page scrolls sideways"
+    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), ("the page scrolls sideways", page.evaluate(WIDE))
     xs = page.evaluate("[...document.querySelectorAll('.bi-vis')].map(v => Math.round(v.getBoundingClientRect().left))")
     assert len(set(xs)) == 1, xs                                                                         # one column
     ys = page.evaluate("[...document.querySelectorAll('.bi-vis')].map(v => Math.round(v.getBoundingClientRect().top))")
@@ -602,5 +608,5 @@ def test_the_viewer_and_the_designer_do_not_scroll_sideways_on_a_phone_or_a_wide
         page.goto(CONSOLE_URL + path)
         page.wait_for_selector("[data-ready=yes], [data-design-start]", timeout=30000)
         page.wait_for_timeout(1200)
-        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), f"{path} scrolls sideways at {width}"
+        assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), (f"{path} scrolls sideways at {width}", page.evaluate(WIDE))
     clean(page)

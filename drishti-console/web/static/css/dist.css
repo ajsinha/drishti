@@ -30,3 +30,10 @@
   .dist-form input, .dist-form select { font-size: 16px; min-height: 44px; }
   .rpt-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
 }
+
+/* a phone: the export picker takes its own row and shrinks to the screen (its options name long visuals) */
+@media (max-width: 640px) {
+  .bi-export { flex: 1 1 100%; min-width: 0; max-width: 100%; }
+  .bi-export .bi-tool { flex: 1 1 100%; min-width: 0; display: flex; align-items: center; gap: .4rem; }
+  .bi-export .bi-tool select { flex: 1 1 auto; min-width: 0; max-width: 100%; }
+}

@@ -141,7 +141,7 @@ def test_the_forms_home_lists_packs_with_a_form_and_what_the_person_may_open(cl,
     page = cl.get("/forms").text
     assert 'href="/form/trading?kind=trade"' in page and "FORM trading" in page and "field" in page and "data-forms-filter" in page
     assert "/form/empty" not in page                                                       # no form section, nothing to search
-    assert 'aria-label="Forms — query by form"' in page and 'aria-label="Reports — saved and scheduled reports, and BI reports"' in page
+    assert 'aria-label="Forms — query by form"' in page and 'aria-label="Reports — saved and scheduled reports, subscriptions, and BI reports"' in page
     assert cl.get("/form", follow_redirects=False).headers["location"] == "/forms"
 
     async def refuse(pack, kind="", ident=None):                                        # the server: no kind open to this role, or a hidden sample pack
