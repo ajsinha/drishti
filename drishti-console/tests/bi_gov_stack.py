@@ -119,7 +119,7 @@ def seed() -> dict:
     ann("PUT", "/bi/workspaces/rates-desk/members/cat", {"role": "viewer"})
     ids = {}
     for key, kind, title, body, publish in (("model", "dataset", "Trades model", dataset_body(), True), ("report", "report", "Trades report", REPORT, True), ("positions", "dataset", "Positions model", POSITIONS, False)):
-        s, it = ann("POST", "/bi/workspaces/rates-desk/items", {"kind": kind, "title": title, "description": f"{title} for the desk", "body": body, "message": "first cut", "tags": ["rates"]})
+        s, it = ann("POST", "/bi/workspaces/rates-desk/items", {"kind": kind, "title": title, "description": f"{title} for the desk", "body": body, "message": "first cut", "tags": ["rates"], "audienceRoles": ["bi-steward", "bi-reader", "bi-writer", "bi-reviewer"]})
         assert s == 201, it
         ids[key] = it["id"]
         if publish:

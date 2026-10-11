@@ -574,8 +574,8 @@ public final class BiService {
         if (visible(i, p, myWorkspaces(p), myPacks(p), access.has(p, BiAccess.ADMIN))) {
             return i;
         }
-        if (!BiFolder.isShipped(i.id()) && !w.personal() && (i.status().equals("proposed") || i.isPublished()) && access.has(p, BiAccess.STEWARD)) {
-            return i;                                                    // a steward reviews what is proposed and certifies what is published, wherever it is
+        if (!BiFolder.isShipped(i.id()) && !w.personal() && i.status().equals("proposed") && access.has(p, BiAccess.STEWARD)) {
+            return i;                                                    // a steward reviews what is proposed, wherever it is (what is published stays behind its audience)
         }
         throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'");
     }
@@ -740,11 +740,7 @@ public final class BiService {
         store.addEvent(id, "reject", p.user(), note(reason), latestRevision(id), Instant.now());
         notifier.tell(List.of(i.proposedBy()), BiNotifier.DECISION, id, p.user() + " rejected " + i.kind() + " '" + i.title() + "': " + note(reason), p.user());
         audit.record(p.user(), "bi-item-rejected", id, "proposed by " + i.proposedBy() + "; " + note(reason));
-        try {
-            return item(p, id, false);
-        } catch (DrishtiException e) {
-            return new LinkedHashMap<>(Map.of("id", id, "status", "draft", "title", i.title()));         // a steward outside the workspace cannot open the draft they sent back
-        }
+        return viewOrStub(p, id);
     }
 
     public Map<String, Object> publish(Principal p, String id, String note) {
@@ -828,9 +824,19 @@ public final class BiService {
                 }
             }
         }
-        Map<String, Object> out = new LinkedHashMap<>(item(p, i.id(), false));
+        Map<String, Object> out = new LinkedHashMap<>(viewOrStub(p, i.id()));
         out.put("warnings", warnings);
         return out;
+    }
+
+    /** The item as the caller sees it now; a reviewer who may not open it afterwards (a draft sent back, a publication outside their audience) gets its id and status only. */
+    private Map<String, Object> viewOrStub(Principal p, String id) {
+        try {
+            return item(p, id, false);
+        } catch (DrishtiException e) {
+            BiStore.Item x = store.item(id).orElseThrow(() -> e);
+            return new LinkedHashMap<>(Map.of("id", id, "status", x.status(), "title", x.title(), "publishedVersion", x.publishedVersion()));
+        }
     }
 
     /** The refusal text of a publish that would break published reports: the reports the caller may see by name, the rest counted. */

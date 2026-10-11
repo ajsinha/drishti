@@ -153,7 +153,7 @@ class BiGovernanceApiTest {
 
     @Test @Order(1)
     void everySaveIsAVersionWithADiffAndARestore() throws Exception {
-        ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "dataset", "title", "Governed", "body", DATASET, "message", "first cut"))).path("id").asText();
+        ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "dataset", "title", "Governed", "body", DATASET, "message", "first cut", "audienceRoles", List.of("steward", "reader")))).path("id").asText();
         String two = DATASET.replace("count(t)\" }\n  M", "count(t)\", format: amount0 }\n  M");
         call("PUT", itemPath(ds), ann(), Map.of("body", two, "message", "format the count")).andExpect(status().isOk());
         String three = two.replace("a: string, b: string", "a: string, b: string, c: string");
@@ -223,7 +223,7 @@ class BiGovernanceApiTest {
 
     @Test @Order(3)
     void onlyAStewardCertifiesAndTheBadgeShowsInTheCatalogue() throws Exception {
-        rep = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "report", "title", "Governed report", "body", report(ds)))).path("id").asText();
+        rep = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "report", "title", "Governed report", "body", report(ds), "audienceRoles", List.of("steward", "reader")))).path("id").asText();
         ok(call("POST", itemPath(rep) + "/publish", ann(), Map.of("note", "v1")));
         refused(call("POST", itemPath(ds) + "/endorse", ann(), Map.of("level", "certified")), 403, "DRS-9002");
         ok(call("POST", itemPath(ds) + "/endorse", sue(), Map.of("level", "certified")));
