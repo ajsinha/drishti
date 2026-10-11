@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
 final class ControlsReader {
 
     private static final Set<String> KEYS = Set.of("id", "kind", "label", "options", "default", "remember", "required", "placement", "panel",
-            "parent", "min", "max");
+            "parent", "min", "max", "step", "range");
     private static final Pattern ID = Pattern.compile(ControlRules.ID_PATTERN);
 
     private final String file;
@@ -191,9 +191,32 @@ final class ControlsReader {
         }
         String min = bound(m.get("min"), kind);
         String max = bound(m.get("max"), kind);
+        String step = bound(m.get("step"), kind);
+        boolean range = false;
+        PNode rng = m.get("range");
+        if (rng != null && rng.value() != null) {
+            if (kind != ControlKind.SLIDER) {
+                problem("DRS-2034", "'range' is for slider controls", rng);
+            } else if (rng.value() instanceof Boolean b) {
+                range = b;
+            } else {
+                problem("DRS-2034", "range is true or false, not '" + rng.value() + "'", rng);
+            }
+        }
+        if (kind == ControlKind.SLIDER && (min == null || max == null)) {
+            problem("DRS-2034", "a slider needs both 'min' and 'max': a number or an expression over the record ($.limits.max)", n);
+        }
+        if (step != null && step.matches("-?\\d+(\\.\\d+)?") && Double.parseDouble(step) <= 0) {
+            problem("DRS-2034", "step is a number above zero, not '" + step + "'", m.get("step"));
+        }
         String def = defaultOf(m.get("default"));
         checkDefault(id, kind, def, choices, m.get("default") == null ? n : m.get("default"));
-        return new Control(id, kind, text(m.get("label")), choices, from, lookup, def, remember, required, placement, panel, parent, min, max, loc(n));
+        if (kind == ControlKind.SLIDER && def != null && !def.isBlank() && ControlRules.isNumberRange(def.trim()) != range) {
+            problem("DRS-2039", "default of control '" + id + "': a " + (range ? "range slider takes a range (1000..5000)" : "slider takes one number (use range: true for two handles)"),
+                    m.get("default"));
+        }
+        return new Control(id, kind, text(m.get("label")), choices, from, lookup, def, remember, required, placement, panel, parent, min, max, step, range,
+                loc(n));
     }
 
     private Choice choice(PNode o) {
@@ -217,8 +240,8 @@ final class ControlsReader {
         if (n == null || n.value() == null) {
             return null;
         }
-        if (kind != ControlKind.NUMBER_RANGE) {
-            problem("DRS-2034", "'min' and 'max' are for number-range controls", n);
+        if (kind != ControlKind.NUMBER_RANGE && kind != ControlKind.SLIDER) {
+            problem("DRS-2034", "'min', 'max' and 'step' are for number-range and slider controls", n);
             return null;
         }
         if (!n.isScalar()) {

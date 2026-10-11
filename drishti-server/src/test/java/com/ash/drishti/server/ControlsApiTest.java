@@ -185,6 +185,27 @@ class ControlsApiTest {
     }
 
     @Test
+    void aSliderCarriesItsBoundsFromTheDataAndFiltersTheRowsOnTheServer() throws Exception {
+        JsonNode view = read(NETTING, "full");
+        JsonNode slider = control(view, "minNotional");
+        assertThat(slider.path("kind").asText()).isEqualTo("slider");
+        assertThat(slider.path("min").asText()).isEqualTo("0");
+        assertThat(slider.path("max").asDouble()).isGreaterThan(1_000_000);               // the largest member notional, read from the data
+        assertThat(slider.path("step").asText()).isEqualTo("1000000");
+        assertThat(slider.path("range").asBoolean()).isFalse();
+        assertThat(slider.path("value").asText()).isEqualTo("0");
+        assertThat(slider.path("reads")).extracting(JsonNode::asText).contains("trades");
+        int all = panel(view, "trades").path("data").path("rows").size();
+        JsonNode high = read(NETTING, "full", "ctl.minNotional", slider.path("max").asText());
+        int few = panel(high, "trades").path("data").path("rows").size();
+        assertThat(few).isBetween(1, all - 1);
+        assertThat(control(high, "minNotional").path("value").asText()).isEqualTo(slider.path("max").asText());
+        assertThat(control(read(NETTING, "full", "ctl.minNotional", "-5"), "minNotional").path("value").asText()).isEqualTo("0");
+        assertThat(control(read(NETTING, "full", "ctl.minNotional", "123456789012"), "minNotional").path("value").asText()).isEqualTo(slider.path("max").asText());
+        assertThat(panel(read(NETTING, "full", "ctl.minNotional", "not-a-number"), "trades").path("data").path("rows")).hasSize(all);
+    }
+
+    @Test
     void optionsNeverListAMaskedValueToAReaderWithoutRaw() throws Exception {
         String yaml = """
                 rachana: 1

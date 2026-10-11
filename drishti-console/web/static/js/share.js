@@ -100,8 +100,9 @@
 
   function pinText(live) {
     var asof = main.getAttribute('data-share-asof') || 'live', known = main.getAttribute('data-share-known-text');
-    if (live || asof === 'live') { return 'live: whoever opens it sees the data as it is then'; }
-    return asof + (known ? ' as known at ' + known : '') + ' (as you see it now)';
+    var extra = viewState() ? ', with your controls and filters' : '';
+    if (live || asof === 'live') { return 'live: whoever opens it sees the data as it is then' + extra; }
+    return asof + (known ? ' as known at ' + known : '') + ' (as you see it now)' + extra;
   }
 
   function url() { return main.getAttribute('data-share') + (panel ? '#p-' + encodeURIComponent(panel) : ''); }
@@ -152,6 +153,15 @@
   }
 
   // ---- sending ---------------------------------------------------------------------------------------------
+  /** The control values and column filters in the address (?ctl.leg=L2&f.cashflows.rate=gt:1m), kept with the share so the recipient sees the same view. */
+  function viewState() {
+    var keep = [];
+    new URLSearchParams(location.search).forEach(function (v, k) {
+      if (k.indexOf('ctl.') === 0 || k.indexOf('f.') === 0) { keep.push(encodeURIComponent(k) + '=' + encodeURIComponent(v)); }
+    });
+    return keep.join('&');
+  }
+
   function body() {
     var users = [], roles = [];
     picked.forEach(function (p) { (p.type === 'role' ? roles : users).push(p.name); });
@@ -162,6 +172,8 @@
       to: { users: users, roles: roles }, channels: { inApp: true }, live: !!live, picture: !!(picBox.checked && conf && conf.snapshots), postToThread: !!form.elements.postToThread.checked,
       asOf: main.getAttribute('data-share-asof') || 'live', knownAt: main.getAttribute('data-share-known') || ''
     };
+    var vs = viewState();
+    if (vs) { b.view = vs; }
     if (what === 'panel' && panel) {
       b.panel = panel;
       var p = document.getElementById('p-' + panel), g = p && p.getAttribute('data-gate-kind');

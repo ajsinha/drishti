@@ -101,8 +101,10 @@ public final class RachanaSchema {
         c.put("placement", Map.of("type", "string", "enum", List.of("strip", "header", "side")));
         c.put("panel", text("The panel whose header holds the control (placement: header)"));
         c.put("parent", text("The control a cascading control depends on"));
-        c.put("min", Map.of("description", "Lower bound of a number-range: a number or an expression over the record"));
-        c.put("max", Map.of("description", "Upper bound of a number-range"));
+        c.put("min", Map.of("description", "Lower bound of a number-range or slider: a number or an expression over the record"));
+        c.put("max", Map.of("description", "Upper bound of a number-range or slider"));
+        c.put("step", Map.of("description", "A slider's step: a number or an expression over the record (default 1)"));
+        c.put("range", Map.of("type", "boolean", "description", "A slider with two handles whose value is from..to (slider only)"));
         return object(c, List.of("id", "kind"));
     }
 

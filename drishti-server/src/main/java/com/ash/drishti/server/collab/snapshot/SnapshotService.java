@@ -20,6 +20,7 @@ import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.engine.control.ViewState;
 import com.ash.drishti.engine.ViewPipeline;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.identity.AccessLog;
@@ -36,6 +37,8 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.io.IOException;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -241,11 +244,22 @@ public final class SnapshotService {
         Principal maskOf = may.stream().filter(entitlements::masks).findFirst().orElse(may.get(0));
         UnaryOperator<DataNode> redact = masked ? entitlements.redactor(maskOf) : UnaryOperator.identity();
         Predicate<String> mayOpen = k -> may.stream().allMatch(p -> entitlements.mayOpen(p, k));
-        ViewModel v = pipeline.view(EntityRef.of(share.kind(), share.entityId()), asOf(share), redact, mayOpen);
+        ViewState state = viewState(share);
+        ViewModel v = state.isEmpty() ? pipeline.view(EntityRef.of(share.kind(), share.entityId()), asOf(share), redact, mayOpen)
+                : pipeline.view(EntityRef.of(share.kind(), share.entityId()), asOf(share), redact, mayOpen, state.controls());
         for (Principal p : may) {
             v = entitlements.restrict(p, v);
         }
-        return v;
+        return ColumnFilters.apply(v, state, LocalDate.now(ZoneOffset.UTC));      // the filters run after the masks: a masked cell never matches
+    }
+
+    /** The control values and column filters the sender had on screen; none for a share sent without them (or one that cannot be read). */
+    static ViewState viewState(Share share) {
+        try {
+            return ViewState.parse(share.view(), Integer.MAX_VALUE);
+        } catch (IllegalArgumentException e) {
+            return ViewState.NONE;
+        }
     }
 
     private static AsOf asOf(Share s) {
@@ -284,7 +298,7 @@ public final class SnapshotService {
         may.forEach(p -> roleSets.add(String.join("+", new TreeSet<>(p.roles()))));
         long gen = share.pin() == null ? 0 : share.pin().generation();
         return share.kind() + '\u0000' + share.entityId() + '\u0000' + asOf(share) + '\u0000' + gen + '\u0000' + (masked ? "masked" : "raw") + '\u0000'
-                + String.join("|", roleSets) + '\u0000' + share.gateKind() + '\u0000' + share.panelId();
+                + String.join("|", roleSets) + '\u0000' + share.gateKind() + '\u0000' + share.panelId() + '\u0000' + share.view();
     }
 
     private <T> T bounded(java.util.concurrent.Callable<T> job) {

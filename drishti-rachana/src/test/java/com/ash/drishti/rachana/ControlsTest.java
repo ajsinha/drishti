@@ -104,7 +104,7 @@ class ControlsTest {
 
     @Test
     void malformedControlsAreDrs2034() {
-        assertThat(problems("controls:\n  - { id: leg, kind: slider }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034") && p.contains("unknown control kind"));
+        assertThat(problems("controls:\n  - { id: leg, kind: knob }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034") && p.contains("unknown control kind"));
         assertThat(problems("controls:\n  - { id: leg, kind: dropdown }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034") && p.contains("needs 'options'"));
         assertThat(problems("controls:\n  - { id: 9x, kind: search }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034") && p.contains("control id"));
         assertThat(problems("controls:\n  - { kind: search }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034") && p.contains("needs an 'id'"));
@@ -137,6 +137,31 @@ class ControlsTest {
         assertThat(problems("controls:\n  - { id: c, kind: cascading, options: \"$.x\" }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2037"));
         assertThat(problems("controls:\n  - { id: c, kind: cascading, parent: p, options: \"$.x\" }\n  - { id: p, kind: search }\n", TABLE))
                 .anyMatch(p -> p.startsWith("DRS-2037") && p.contains("declared before"));
+    }
+
+    @Test
+    void aSliderReadsItsBoundsStepAndHandlesAndIsCheckedDrs2034And2039() {
+        Sutra s = parse("""
+                controls:
+                  - { id: floor, kind: slider, min: 0, max: "max($.schedule[*].amount)", step: 5, default: 10 }
+                  - { id: band, kind: slider, min: 0, max: 100, range: true, default: "20..80" }
+                """, TABLE);
+        Control floor = s.controls().get(0);
+        assertThat(floor.kind()).isEqualTo(ControlKind.SLIDER);
+        assertThat(floor.min()).isEqualTo("0");
+        assertThat(floor.max()).isEqualTo("max($.schedule[*].amount)");
+        assertThat(floor.step()).isEqualTo("5");
+        assertThat(floor.range()).isFalse();
+        assertThat(s.controls().get(1).range()).isTrue();
+        assertThat(problems("controls:\n  - { id: a, kind: slider, max: 10 }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034") && p.contains("'min' and 'max'"));
+        assertThat(problems("controls:\n  - { id: a, kind: slider, min: 0, max: 10, step: 0 }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034") && p.contains("step"));
+        assertThat(problems("controls:\n  - { id: a, kind: dropdown, options: [x], step: 5 }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034"));
+        assertThat(problems("controls:\n  - { id: a, kind: dropdown, options: [x], range: true }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2034") && p.contains("slider"));
+        assertThat(problems("controls:\n  - { id: a, kind: slider, min: 0, max: 10, default: abc }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2039"));
+        assertThat(problems("controls:\n  - { id: a, kind: slider, min: 0, max: 10, default: \"1..5\" }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2039") && p.contains("range: true"));
+        assertThat(problems("controls:\n  - { id: a, kind: slider, min: 0, max: 10, range: true, default: 5 }\n", TABLE)).anyMatch(p -> p.startsWith("DRS-2039"));
+        assertThat(problems("controls:\n  - { id: a, kind: slider, min: 0, max: 10, step: 2, default: 4 }\n  - { id: b, kind: slider, min: 0, max: 10, range: true, default: \"2..8\" }\n",
+                TABLE + "    where: \"@.leg >= ctl.a && within(@.leg, ctl.b)\"\n")).isEmpty();
     }
 
     @Test

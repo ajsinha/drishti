@@ -108,6 +108,7 @@ public final class ControlResolver {
         List<String> multi = List.of();
         String min = null;
         String max = null;
+        String step = null;
         switch (c.kind()) {
             case DROPDOWN, CASCADING, TOGGLE, SEGMENTED, MULTI_SELECT, TOP_N -> {
                 List<Opt> all = options(c, at, asOf, mayOpen);
@@ -138,6 +139,13 @@ public final class ControlResolver {
                 value = numberRange(c, raw);
                 ctl.put(c.id(), value);
             }
+            case SLIDER -> {
+                min = bound(c.min(), at);
+                max = bound(c.max(), at);
+                step = bound(c.step(), at);
+                value = slider(c, raw, min, max, step);
+                ctl.put(c.id(), c.range() || value.isEmpty() ? value : (Object) Values.normalise(Double.parseDouble(value)));
+            }
             case SEARCH -> {
                 value = raw != null ? raw.trim() : c.defaultValue() == null ? "" : c.defaultValue();
                 if (value.length() > 200) {
@@ -149,7 +157,7 @@ public final class ControlResolver {
         }
         List<String> reads = new ArrayList<>(ControlReads.affected(s, c.id()));
         return new ControlView(c.id(), c.kind().id(), c.display(), c.placement().id(), c.panel(), c.parent(), options, value,
-                multi.isEmpty() ? null : multi, c.required(), c.remember(), min, max, reads, truncated);
+                multi.isEmpty() ? null : multi, c.required(), c.remember(), min, max, step, c.range(), reads, truncated);
     }
 
     // ---- options -------------------------------------------------------------------------------------------------------------
@@ -284,6 +292,52 @@ public final class ControlResolver {
             return raw.trim();
         }
         return c.defaultValue() != null && ControlRules.isNumberRange(c.defaultValue()) ? c.defaultValue() : "";
+    }
+
+    /**
+     * A slider's value: what the request carried (or the default) held to the bounds and snapped to the step, a number, or {@code from..to}
+     * for two handles. A value that is not a number (or a range for two handles) falls back to the default; with no default a single
+     * handle starts at the lower bound and two at both bounds. Bounds that cannot be read leave the value as it is.
+     */
+    static String slider(Control c, String raw, String min, String max, String step) {
+        double lo = min == null ? Double.NEGATIVE_INFINITY : Double.parseDouble(min);
+        double hi = max == null ? Double.POSITIVE_INFINITY : Double.parseDouble(max);
+        double st = step == null ? 1 : Double.parseDouble(step);
+        if (st <= 0 || Double.isNaN(st)) {
+            st = 1;
+        }
+        for (String text : new String[] {raw == null ? null : raw.trim(), c.defaultValue() == null ? null : c.defaultValue().trim()}) {
+            if (text == null || text.isEmpty()) {
+                continue;
+            }
+            if (c.range() && ControlRules.isNumberRange(text) && text.indexOf("..") > 0 && !text.endsWith("..")) {
+                int cut = text.indexOf("..");
+                double a = snap(Double.parseDouble(text.substring(0, cut)), lo, hi, st);
+                double b = snap(Double.parseDouble(text.substring(cut + 2)), lo, hi, st);
+                return num(Math.min(a, b)) + ".." + num(Math.max(a, b));
+            }
+            if (!c.range() && ControlRules.isNumber(text)) {
+                return num(snap(Double.parseDouble(text), lo, hi, st));
+            }
+        }
+        if (min == null || max == null) {
+            return "";
+        }
+        return c.range() ? num(lo) + ".." + num(hi) : num(lo);
+    }
+
+    /** Held to the bounds, then to the nearest step from the lower bound (the upper bound itself is always allowed). */
+    private static double snap(double v, double lo, double hi, double step) {
+        double x = Math.max(lo, Math.min(hi, v));
+        if (!Double.isInfinite(lo)) {
+            x = lo + Math.round((x - lo) / step) * step;
+            x = Math.min(hi, x);
+        }
+        return Math.round(x * 1e9) / 1e9;
+    }
+
+    private static String num(double d) {
+        return Values.text(Values.normalise(d));
     }
 
     private String bound(String spec, EvalContext at) {

@@ -144,12 +144,13 @@ public final class JpaShareStore implements ShareStore {
         e.channels = s.channels();
         e.threadId = s.threadId();
         e.hash = s.hash();
+        e.viewState = s.view();
         return e;
     }
 
     private static Share toShare(ShareEntity e) {
         return new Share(e.id, e.sender, e.createdAt, e.kind, e.entityId, e.panelId, e.gateKind,
                 new Pin(e.pinDate, e.pinLive, e.pinKnownAt, e.pinGeneration, e.pinSource), e.body, Share.spansFromJson(e.maskedSpans),
-                e.channels, e.threadId, e.hash);
+                e.channels, e.threadId, e.hash, e.viewState);
     }
 }

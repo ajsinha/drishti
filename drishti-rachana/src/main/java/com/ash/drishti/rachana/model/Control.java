@@ -36,11 +36,13 @@ import java.util.Locale;
  * @param parent the control a cascading control depends on, or null
  * @param min the lower bound of a number range (a number or an expression over the record), or null
  * @param max the upper bound, or null
+ * @param step the slider's step: a number or an expression over the record, or null (1)
+ * @param range a slider with two handles whose value is {@code from..to}
  * @param location where it is written
  */
 public record Control(String id, ControlKind kind, String label, List<Choice> choices, String from, String lookup, String defaultValue,
         boolean remember, boolean required, Placement placement, String panel, String parent, String min, String max,
-        SourceLocation location) {
+        String step, boolean range, SourceLocation location) {
 
     /** The most options a control offers; more are cut and the control says so. */
     public static final int MAX_OPTIONS = 500;

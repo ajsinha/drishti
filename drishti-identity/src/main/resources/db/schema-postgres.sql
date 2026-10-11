@@ -201,6 +201,8 @@ CREATE TABLE IF NOT EXISTS drishti_share (
 );
 CREATE INDEX IF NOT EXISTS drishti_share_sender ON drishti_share (sender, id);
 CREATE INDEX IF NOT EXISTS drishti_share_entity ON drishti_share (kind, entity_id);
+-- The reader's view state sent with the share (control values and column filters, as query text); rows made before it have none.
+ALTER TABLE drishti_share ADD COLUMN IF NOT EXISTS view_state VARCHAR(4100);
 
 CREATE TABLE IF NOT EXISTS drishti_share_recipient (
     share_id VARCHAR(30) NOT NULL,

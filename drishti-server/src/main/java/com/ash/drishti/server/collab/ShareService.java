@@ -20,6 +20,7 @@ import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.engine.control.ViewState;
 import com.ash.drishti.engine.source.SourceRouter;
 import com.ash.drishti.identity.AccessLog;
 import com.ash.drishti.identity.User;
@@ -79,10 +80,18 @@ public final class ShareService {
 
     /**
      * A share to send. {@code generation} is the generation the page showed (evidence; at most what the server holds); {@code panel}
-     * and {@code gateKind} name a shared panel and the kind its source names; {@code live} sends a live link instead of the date.
+     * and {@code gateKind} name a shared panel and the kind its source names; {@code live} sends a live link instead of the date;
+     * {@code view} is the sender's view state as query text ({@code ctl.legs=2&f.cashflows.rate=gt%3A1m}: control values and column
+     * filters; anything else in it is dropped), which the recipient, the email and the picture reproduce.
      */
     public record Request(String kind, String id, String panel, String gateKind, Long generation, String note, To to, Channels channels,
-            Boolean live, Boolean postToThread, Boolean picture) {}
+            Boolean live, Boolean postToThread, Boolean picture, String view) {
+
+        public Request(String kind, String id, String panel, String gateKind, Long generation, String note, To to, Channels channels,
+                Boolean live, Boolean postToThread, Boolean picture) {
+            this(kind, id, panel, gateKind, generation, note, to, channels, live, postToThread, picture, null);
+        }
+    }
 
     public record Skipped(String name, String reason) {}
 
@@ -96,7 +105,7 @@ public final class ShareService {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record View(String id, boolean access, String reason, String pack, String role, String sender, String senderName, Instant createdAt,
             String kind, String entityId, String panel, Pin pin, String note, List<RecipientView> recipients,
-            List<ThreadService.CommentView> replies, Boolean picture) {}
+            List<ThreadService.CommentView> replies, Boolean picture, String view) {}
 
     /** One line of a box (sent or received). */
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -187,6 +196,7 @@ public final class ShareService {
             snapshots.require(kind, gate);
         }
         String note = cleanNote(req.note());
+        String view = cleanView(req.view());
         List<RecipientDraft> people = resolve(sender, req.to(), kind, gate);
         EntityDocument doc = fetch(kind, entityId, asOf);
         long generation = req.generation() == null ? 0 : req.generation();
@@ -209,7 +219,7 @@ public final class ShareService {
         String channels = picture ? "in-app,picture,profile=" + SnapshotService.profileOf(java.util.stream.Stream.concat(
                 reached.stream().map(r -> principals.of(r.username())), java.util.stream.Stream.of(sender)).toList()) : "in-app";
         Share share = new Share(Ulid.next("sh_", now.toEpochMilli()), sender.user(), now, kind, entityId, panel, gate, pin, note, spans,
-                channels, threadId, null).signed();
+                channels, threadId, null, view).signed();
         if (picture && !reached.isEmpty()) {            // drawn before anything is written: a picture that cannot be made refuses the share
             snapshots.render(share, reached.stream().map(r -> principals.of(r.username())).toList(), sender.user(), false);
         }
@@ -262,7 +272,7 @@ public final class ShareService {
         boolean live = Boolean.TRUE.equals(req.live());
         Pin pin = new Pin(live ? null : asOf.businessDate(), live || asOf.live(), now, generation, null);
         Share draft = new Share("sh_preview", sender.user(), now, kind, req.id().trim(), blank(req.panel()) ? null : req.panel().trim(), gate, pin,
-                "", List.of(), "in-app,picture", null, null);
+                "", List.of(), "in-app,picture", null, null, cleanView(req.view()));
         List<Principal> audience = people.stream().filter(d -> Recipient.NOTIFIED.equals(d.state())).map(d -> principals.of(d.user())).toList();
         return snapshots.render(draft, audience, sender.user(), true);
     }
@@ -324,6 +334,15 @@ public final class ShareService {
             }
         }
         return note;
+    }
+
+    /** The view state to keep: only control values and column filters, within {@code share.max-view-state}; null for none. */
+    private String cleanView(String raw) {
+        try {
+            return ViewState.parse(raw, props.share().maxViewState()).text();
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage() + " (drishti.collab.share.max-view-state)");
+        }
     }
 
     private void rateLimit(String user) {
@@ -467,7 +486,7 @@ public final class ShareService {
         String blocked = blockedReason(caller, s);
         if (blocked != null) {
             return new View(s.id(), false, blocked, packs.ownerOf(s.kind()), role, s.sender(), senderName, s.createdAt(), s.kind(), null, null, null,
-                    null, null, null, null);
+                    null, null, null, null, null);
         }
         if (recipient && !sender) {
             store.markOpened(id, caller.user(), Instant.now().truncatedTo(ChronoUnit.MILLIS));
@@ -475,7 +494,7 @@ public final class ShareService {
         List<RecipientView> shown = sender || compliance
                 ? store.recipients(id).stream().map(r -> new RecipientView(r.username(), r.addressed(), r.state(), r.openedAt())).toList() : null;
         return new View(s.id(), true, null, null, role, s.sender(), senderName, s.createdAt(), s.kind(), s.entityId(), s.panelId(), s.pin(),
-                threads.noteFor(caller, s), shown, threads.replies(caller, s), s.picture() ? Boolean.TRUE : null);
+                threads.noteFor(caller, s), shown, threads.replies(caller, s), s.picture() ? Boolean.TRUE : null, s.view());
     }
 
     /**

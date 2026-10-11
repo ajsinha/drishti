@@ -16,7 +16,7 @@
 /* The Controls tab: the Sutra's `controls:` edited visually, two ways (RUPAKA.md 8.1, SCREEN_DESIGNER.md "The Controls tab").
  *
  *   cards     a card per control: id, kind, label, options (a list, an expression over the record such as $.legs[*].id, or a lookup kind), default,
- *             placement (strip, header of a panel, side), remember, required; a cascading control names its parent, a number range its bounds.
+ *             placement (strip, header of a panel, side), remember, required; a cascading control names its parent, a number range or a slider its bounds (a slider also its step and whether it has two handles).
  *             Drag a card by its handle, or focus it and press Alt+Up or Alt+Down (the buttons do the same); Delete removes the focused card.
  *   YAML      the same controls as text, below. Edit either: the cards write the YAML, and typed YAML (once it reads) rebuilds the cards.
  *   keeping   after a pause the controls go to the server as ONE operation, setControls: a step of the design's log (undo, redo and revisions
@@ -29,9 +29,9 @@
 (function () {
   'use strict';
   var WB = window.DrishtiWB = window.DrishtiWB || {};
-  var SAVE = 700, KINDS = ['dropdown', 'multi-select', 'cascading', 'toggle', 'segmented', 'date', 'date-range', 'number-range', 'top-n', 'search'];
+  var SAVE = 700, KINDS = ['dropdown', 'multi-select', 'cascading', 'toggle', 'segmented', 'date', 'date-range', 'number-range', 'slider', 'top-n', 'search'];
   var LISTED = { dropdown: 1, 'multi-select': 1, cascading: 1, toggle: 1, segmented: 1, 'top-n': 1 };
-  var KEYS = ['id', 'kind', 'label', 'options', 'default', 'remember', 'required', 'placement', 'panel', 'parent', 'min', 'max'];
+  var KEYS = ['id', 'kind', 'label', 'options', 'default', 'remember', 'required', 'placement', 'panel', 'parent', 'min', 'max', 'step', 'range'];
   var PLACES = ['strip', 'header', 'side'];
 
   /** An option field's text ("a, b, c" or an expression or "kind: customer") as the Sutra stores it. */
@@ -141,7 +141,8 @@
         par.addEventListener('change', function () { if (par.value) { c.parent = par.value; } else { delete c.parent; } changed(false); });
         body.appendChild(labelled('Parent', par));
       }
-      if (c.kind === 'number-range') { body.appendChild(labelled('Min', field(c, 'min'))); body.appendChild(labelled('Max', field(c, 'max'))); }
+      if (c.kind === 'number-range' || c.kind === 'slider') { body.appendChild(labelled('Min', field(c, 'min'))); body.appendChild(labelled('Max', field(c, 'max'))); }
+      if (c.kind === 'slider') { body.appendChild(labelled('Step', field(c, 'step'))); }
       body.appendChild(labelled('Default', field(c, 'default')));
       var place = select(c, 'placement', PLACES);
       place.addEventListener('change', function () { c.placement = place.value; if (c.placement !== 'header') { delete c.panel; } if (c.placement === 'strip') { delete c.placement; } changed(true, i); });
@@ -153,6 +154,7 @@
         body.appendChild(labelled('Panel', pn));
       }
       var flags = WB.el('div', 'wbf-flags');
+      if (c.kind === 'slider') { flags.appendChild(check(c, 'range', 'Two handles (a range)')); }
       flags.appendChild(check(c, 'remember', 'Remember per reader')); flags.appendChild(check(c, 'required', 'Required'));
       body.appendChild(flags);
       li.appendChild(body);

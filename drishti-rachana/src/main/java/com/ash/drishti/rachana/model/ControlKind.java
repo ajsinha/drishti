@@ -38,6 +38,11 @@ public enum ControlKind {
     DATE_RANGE(false),
     /** A {@code min..max} range of numbers, with bounds fixed or read from the data. */
     NUMBER_RANGE(false),
+    /**
+     * A number on a slider between fixed or data-driven bounds ({@code min}, {@code max}, {@code step}): one value, or with
+     * {@code range: true} a {@code min..max} pair of handles. The single value reads as a number, the pair as {@code from..to}.
+     */
+    SLIDER(false),
     /** How many rows to show: one whole number from a short list. */
     TOP_N(true),
     /** Text to look for. */

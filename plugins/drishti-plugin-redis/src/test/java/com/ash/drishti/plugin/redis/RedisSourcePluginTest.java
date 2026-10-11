@@ -138,16 +138,14 @@ class RedisSourcePluginTest extends DatedSourceContract {
         p.start(context(Map.of("uri", uri(), "domain", "merge", "layout.trade.columns", "mtm,nettingSet", "refresh-seconds", "3600")));
         try {
             loadInto("merge", rows.rows);
-            p.refresh();
-            assertThat(p.columns("trade", List.of("mtm"), AsOf.LATEST).orElseThrow().ids()).containsExactly("X-1", "X-2");
+            awaitIds(p, "X-1", "X-2");
             List<EntityDocument> pushed = new CopyOnWriteArrayList<>();
             Subscription s = p.subscribe(EntityRef.of("trade", "X-2"), pushed::add);
             LocalDateRows update = new LocalDateRows();
             update.add("trade", "X-2", "{\"tradeId\":\"X-2\",\"mtm\":20,\"nettingSet\":\"NS-X\"}");
             update.add("trade", "X-3", "{\"tradeId\":\"X-3\",\"mtm\":3,\"nettingSet\":\"NS-Y\"}");
             loadInto("merge", update.rows, "--merge", "--publish");
-            ColumnSet c = p.columns("trade", List.of("mtm", "nettingSet"), AsOf.LATEST).orElseThrow();
-            assertThat(c.ids()).containsExactly("X-1", "X-2", "X-3");                // X-1 kept from the first load
+            ColumnSet c = awaitIds(p, "X-1", "X-2", "X-3");                          // X-1 kept from the first load
             assertThat(c.value("mtm", 1)).isEqualTo(20.0);
             long until = System.nanoTime() + Duration.ofSeconds(10).toNanos();
             while (pushed.isEmpty() && System.nanoTime() < until) {
@@ -165,6 +163,25 @@ class RedisSourcePluginTest extends DatedSourceContract {
             assertThat(p.search("trade", "x-", 5)).extracting(h -> h.ref().id()).containsExactly("X-1", "X-2", "X-3");
         } finally {
             p.close();
+        }
+    }
+
+    /**
+     * Waits (bounded) for the columns to hold exactly these ids: a load's announcement refreshes the catalogue on its own thread, and an
+     * explicit refresh that finds one running returns at once, so a single refresh proves nothing about when the data is visible.
+     */
+    private static ColumnSet awaitIds(RedisSourcePlugin p, String... ids) throws Exception {
+        long until = System.nanoTime() + Duration.ofSeconds(20).toNanos();
+        while (true) {
+            p.refresh();
+            ColumnSet c = p.columns("trade", List.of("mtm", "nettingSet"), AsOf.LATEST).orElse(null);
+            boolean match = c != null && java.util.Arrays.equals(c.ids(), ids);
+            if (match || System.nanoTime() > until) {
+                assertThat(c).isNotNull();
+                assertThat(c.ids()).containsExactly(ids);
+                return c;
+            }
+            Thread.sleep(50);
         }
     }
 
