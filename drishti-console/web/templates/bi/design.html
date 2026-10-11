@@ -1,0 +1,89 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Rupaka phase 3: the report designer (RUPAKA.md section 9). The canvas on the 12-column grid, the YAML tab, and three panes: Filters, Visualizations (with Build and
+   Format) and Fields. Drawn by static/js/bi-design*.js from /bi/api/items/<id> and /bi/api/reports/...; every action also has a button or a select, so nothing
+   needs the mouse. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Designer{% endblock %}
+{% block bi_keys %}
+    <dt><kbd>Tab</kbd></dt><dd>Walk the panes and the visuals</dd>
+    <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd></dt><dd>On a visual: move it one cell; with <kbd>Shift</kbd> resize it</dd>
+    <dt><kbd>Del</kbd> <kbd>Ctrl</kbd>+<kbd>D</kbd></dt><dd>On a visual: delete it; duplicate it</dd>
+    <dt><kbd>Enter</kbd></dt><dd>On a visual: go to its title in Format</dd>
+    <dt><kbd>Ctrl</kbd>+<kbd>Z</kbd> <kbd>Ctrl</kbd>+<kbd>Y</kbd></dt><dd>Undo; redo</dd>
+    <dt><kbd>Ctrl</kbd>+<kbd>S</kbd></dt><dd>Save the draft</dd>
+{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-report.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<div class="bi-design" data-design-root data-ready="">
+  <header class="bi-dbar">
+    <div class="bi-dtitle"><a class="bi-dback" href="/bi/designer" aria-label="Back to the designer start"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <h1 data-title>Report</h1><span class="bi-badge" data-state>Loading</span></div>
+    <div class="bi-dactions" role="toolbar" aria-label="Designer actions">
+      <button type="button" class="btn-pill btn-ghost" data-undo disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo</button>
+      <button type="button" class="btn-pill btn-ghost" data-redo disabled><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Redo</button>
+      <label class="bi-checkrow bi-preview-toggle"><input type="checkbox" data-preview checked> Preview with data</label>
+      <button type="button" class="btn-pill btn-ghost" data-check><i class="bi bi-clipboard-check" aria-hidden="true"></i> Check</button>
+      <a class="btn-pill btn-ghost" data-view-link href="/bi"><i class="bi bi-eye" aria-hidden="true"></i> View</a>
+      <a class="btn-pill btn-ghost" data-item-link href="/bi"><i class="bi bi-send" aria-hidden="true"></i> Publish&hellip;</a>
+      <button type="button" class="btn-pill btn-ghost" data-save-copy hidden><i class="bi bi-files" aria-hidden="true"></i> Save a copy</button>
+      <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-floppy" aria-hidden="true"></i> Save</button>
+    </div>
+  </header>
+  <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+  <p class="bi-warn bi-readonly" data-readonly hidden>This is shipped, read-only content. You can look, try changes and check them; <strong>Save a copy</strong> makes a draft of your own.</p>
+  <section class="bi-checkpanel" data-check-box hidden aria-labelledby="chkH"><h2 id="chkH">Check</h2>
+    <p data-check-sum tabindex="-1" role="status"></p><ul class="bi-warn" data-check-list></ul>
+    <button type="button" class="btn-pill btn-ghost" data-check-close>Close</button></section>
+  <div class="bi-dmain">
+    <div class="bi-dleft">
+      <div class="bi-dtabs">
+        <nav class="bi-tabs" data-ptabs role="tablist" aria-label="Pages"></nav>
+        <div class="bi-viewtabs" role="tablist" aria-label="View">
+          <button type="button" class="bi-tab" role="tab" data-tab="canvas" aria-selected="true">Canvas</button>
+          <button type="button" class="bi-tab" role="tab" data-tab="yaml" aria-selected="false">YAML</button>
+        </div>
+      </div>
+      <div data-view="canvas" class="bi-dview">
+        <div class="bi-dgrid-wrap">
+          <div class="bi-dgrid" data-canvas-grid role="group" aria-label="Report page canvas"></div>
+          <p class="bi-dempty" data-canvas-empty><i class="bi bi-plus-circle" aria-hidden="true"></i> Drag a field from Fields onto the canvas, or press its button, to make a visual.</p>
+        </div>
+      </div>
+      <div data-view="yaml" class="bi-dview" hidden>
+        <p class="text-muted-d">The same draft as text. Edit here or on the canvas: each shows the other. Suggestions follow the cursor.</p>
+        <div class="bi-suggestions" data-suggest aria-label="Suggestions for the cursor"></div>
+        <textarea data-yaml class="studio-in mono" rows="24" spellcheck="false" aria-label="Report YAML"></textarea>
+        <ul class="bi-warn" data-yaml-problems role="status"></ul>
+      </div>
+    </div>
+    <aside class="bi-pane bi-pane-filters" aria-labelledby="pfH"><h2 id="pfH">Filters</h2><div data-filters></div></aside>
+    <aside class="bi-pane bi-pane-vis" aria-labelledby="pvH"><h2 id="pvH">Visualizations</h2>
+      <div data-types class="bi-types"></div>
+      <div class="bi-ptabs" role="tablist" aria-label="Visual settings">
+        <button type="button" class="bi-tab" role="tab" data-ptab="build" aria-selected="true">Build</button>
+        <button type="button" class="bi-tab" role="tab" data-ptab="format" aria-selected="false">Format</button></div>
+      <div data-pane="build"><div data-build></div></div>
+      <div data-pane="format" hidden><div data-format></div></div>
+    </aside>
+    <aside class="bi-pane bi-pane-fields" aria-labelledby="pdH"><h2 id="pdH">Fields</h2>
+      <input type="search" class="studio-in" data-fields-search placeholder="Search fields" aria-label="Search fields">
+      <div data-fields-tree class="bi-fieldtree"></div>
+      <p><a data-model-link href="/bi/datasets"><i class="bi bi-diagram-2" aria-hidden="true"></i> Model view</a></p></aside>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-panes.js?v={{ ASSET_V }}"></script>{% endblock %}

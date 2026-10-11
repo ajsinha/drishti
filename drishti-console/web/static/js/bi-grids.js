@@ -1,0 +1,264 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Rupaka phase 3 (RUPAKA.md section 8): the table, the matrix, the slicers and the static visuals (text, image, button) of a report, plus the generic
+   data table every visual can be shown as. A table sorts by a column header and can open a row's entity in the terminal; a matrix groups its rows by the row
+   fields, spreads one field across its columns, and adds subtotals (collapsible) and totals - computed from the shown figures, so only for measures that add
+   up (sum, count); for the others the total cell says so instead of guessing. Slicers: a list, a dropdown (the shared multi-select) or a range. */
+(function () {
+  'use strict';
+  const B = window.drishtiBi;
+  const h = B.h;
+  const V = B.visuals;
+  const NONE = { dispose() {}, resize() {} };
+
+  /** True for a measure whose total is the sum of its parts: a sum or a count and nothing else. */
+  V.additive = function (ctx, name) {
+    const m = ctx.index.measures[name];
+    const e = m && m.expr ? m.expr : '';
+    return /^\s*(sum|count)\s*\(/.test(e) && !/(avg|ratio|distinct|percentile|min\(|max\(|\/|\[)/.test(e);
+  };
+
+  function cellText(v, spec, ctx, name, masked) {
+    const isMeasure = !!ctx.index.measures[name];
+    if (isMeasure || typeof v === 'number') { return B.fmt(v, V.numFmt(spec, ctx, name), masked); }
+    return v == null ? (masked ? '•••' : '–') : String(v);
+  }
+
+  function terminalLink(ctx, name, v) {
+    const col = ctx.index.columns[name];
+    if (!col || !col.kind || v == null || !(col.key || col.name === 'id')) { return null; }
+    return h('a', { href: '/v/' + encodeURIComponent(col.kind) + '/' + encodeURIComponent(String(v)), class: 'bi-toterm-link', 'data-open-terminal': col.kind, title: 'Open in the terminal', text: String(v) });
+  }
+
+  // ---- table ---------------------------------------------------------------------------------------------------------
+
+  /** A table of the visual's columns in the order its well lists them (or of every column of the result when `all` is set). */
+  V.dataTable = function (host, spec, ctx, res, all) {
+    const tb = V.table(res);
+    const names = all ? tb.names : (spec.wells.columns || []).filter((n) => tb.at(n) >= 0);
+    const bars = new Set((spec.format && spec.format.dataBars) || []);
+    const sort = host.__sort || (host.__sort = { by: null, desc: false });
+    let rows = tb.rows.map((r) => r);
+    if (sort.by) {
+      const i = tb.at(sort.by);
+      rows.sort((a, b) => { const x = a[i], y = b[i]; const c = x == null ? -1 : y == null ? 1 : typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y)); return sort.desc ? -c : c; });
+    }
+    const max = {};
+    names.forEach((n) => { if (bars.has(n)) { max[n] = Math.max(1e-9, ...rows.map((r) => Math.abs(Number(r[tb.at(n)]) || 0))); } });
+    const head = h('tr', {}, names.map((n) => {
+      const isNum = !!ctx.index.measures[n];
+      const btn = h('button', { type: 'button', class: 'bi-sorthead', 'data-sort': n }, B.label(n), sort.by === n ? h('i', { class: 'bi bi-' + (sort.desc ? 'caret-down-fill' : 'caret-up-fill'), 'aria-hidden': 'true' }) : null);
+      btn.addEventListener('click', () => { sort.desc = sort.by === n ? !sort.desc : isNum; sort.by = n; V.dataTable(host, spec, ctx, res, all); });
+      return h('th', { scope: 'col', class: isNum ? 'num' : '', 'aria-sort': sort.by === n ? (sort.desc ? 'descending' : 'ascending') : 'none' }, btn);
+    }));
+    const firstField = names.find((n) => !ctx.index.measures[n]);
+    const body = h('tbody', {});
+    rows.forEach((r) => {
+      const tr = h('tr', { 'data-row': '' });
+      names.forEach((n) => {
+        const i = tb.at(n), v = r[i], isMeasure = !!ctx.index.measures[n];
+        const td = h('td', { class: isMeasure || typeof v === 'number' ? 'num' : '' });
+        const link = !isMeasure && ctx.interactive ? terminalLink(ctx, n, v) : null;
+        if (link) { td.appendChild(link); } else if (bars.has(n) && typeof v === 'number') {
+          const w = h('span', { class: 'bi-bar' });
+          w.style.width = Math.round(100 * Math.abs(v) / max[n]) + '%';
+          td.appendChild(h('span', { class: 'bi-barcell' }, w, h('span', { class: 'bi-bartext', text: cellText(v, spec, ctx, n, tb.isMasked(n)) })));
+        } else { td.textContent = cellText(v, spec, ctx, n, tb.isMasked(n)); }
+        const colour = isMeasure ? V.conditional(spec, n, v) : null;
+        if (colour) { td.style.color = colour; td.style.fontWeight = '600'; }
+        tr.appendChild(td);
+      });
+      if (ctx.interactive && firstField && ctx.onMark && !all) {
+        tr.tabIndex = 0;
+        tr.setAttribute('aria-label', 'Row ' + String(r[tb.at(firstField)]) + ': open the actions for it');
+        const act = (e) => { const rc = tr.getBoundingClientRect(); ctx.onMark({ visual: spec.id, field: firstField, value: r[tb.at(firstField)], label: String(r[tb.at(firstField)]), row: true }, { x: e.clientX || rc.left + 20, y: e.clientY || rc.bottom, el: tr }); };
+        tr.addEventListener('click', (e) => { if (!e.target.closest('a,button')) { act(e); } });
+        tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target === tr) { e.preventDefault(); act(e); } });
+      }
+      body.appendChild(tr);
+    });
+    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table', 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body);
+    B.clear(host).appendChild(h('div', { class: 'tbl-wrap bi-vis-scroll' }, table));
+    if (!rows.length) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }
+    return NONE;
+  };
+
+  // ---- matrix --------------------------------------------------------------------------------------------------------
+
+  V.matrix = function (host, spec, ctx, res) {
+    const tb = V.table(res);
+    const rowFields = spec.wells.rows || [], colField = (spec.wells.columns || [])[0], measures = spec.wells.values || [];
+    const subtotals = !!(spec.format && spec.format.subtotals);
+    const collapsed = host.__collapsed || (host.__collapsed = new Set());
+    const ri = rowFields.map((f) => tb.at(f)), ci = colField ? tb.at(colField) : -1;
+    const colVals = [];
+    if (ci >= 0) { tb.rows.forEach((r) => { if (colVals.indexOf(String(r[ci])) < 0) { colVals.push(String(r[ci])); } }); colVals.sort(); }
+    const colKeys = ci >= 0 ? colVals : [''];
+    const SEP = '\u0001', PART = '\u0002';
+    const cells = new Map();                                 // path, column and measure -> value
+    const paths = new Map();                                 // row path -> array of values
+    tb.rows.forEach((r) => {
+      const vals = ri.map((i) => (r[i] == null ? '\u2013' : String(r[i])));
+      paths.set(vals.join(SEP), vals);
+      measures.forEach((m) => cells.set([vals.join(SEP), ci >= 0 ? String(r[ci]) : '', m].join(PART), r[tb.at(m)]));
+    });
+    const sortedPaths = [...paths.values()].sort((a, b) => { for (let i = 0; i < a.length; i++) { const c = a[i].localeCompare(b[i]); if (c) { return c; } } return 0; });
+    const startsWith = (pp, p) => !p || p.every((x, i) => pp[i] === x);
+    /** The sum of a measure over the rows under path p (null: all) and column c (null: all); undefined when the measure does not add up. */
+    const total = (m, p, c) => {
+      if (!V.additive(ctx, m)) { return undefined; }
+      let t = 0, any = false;
+      cells.forEach((v, k) => { const [pk, cc, mm] = k.split(PART); if (mm === m && (c === null || cc === c) && startsWith(pk.split(SEP), p) && typeof v === 'number') { t += v; any = true; } });
+      return any ? t : null;
+    };
+    const headRows = [];
+    if (colField && measures.length > 1) {
+      headRows.push(h('tr', {}, h('th', { scope: 'col', rowspan: '2', text: rowFields.map(B.label).join(' / ') }), colKeys.map((c) => h('th', { scope: 'colgroup', colspan: String(measures.length), class: 'num', text: c })),
+        subtotals ? h('th', { scope: 'colgroup', colspan: String(measures.length), class: 'num', text: 'Total' }) : null));
+      headRows.push(h('tr', {}, colKeys.map(() => measures.map((m) => h('th', { scope: 'col', class: 'num', text: m }))), subtotals ? measures.map((m) => h('th', { scope: 'col', class: 'num', text: m })) : null));
+    } else {
+      headRows.push(h('tr', {}, h('th', { scope: 'col', text: rowFields.map(B.label).join(' / ') }),
+        colField ? colKeys.map((c) => h('th', { scope: 'col', class: 'num', text: measures.length === 1 ? c : c })) : measures.map((m) => h('th', { scope: 'col', class: 'num', text: m })),
+        colField && subtotals ? h('th', { scope: 'col', class: 'num', text: 'Total' }) : null));
+    }
+    const cellFor = (m, v, bold, totalOfNonAdditive) => {
+      const td = h('td', { class: 'num' + (bold ? ' bi-total' : ''), 'data-measure': m });
+      td.textContent = totalOfNonAdditive ? '–' : B.fmt(v, V.numFmt(spec, ctx, m), tb.isMasked(m));
+      if (totalOfNonAdditive) { td.title = 'Not summed: ' + m + ' does not add up'; }
+      const colour = V.conditional(spec, m, v);
+      if (colour) { td.style.color = colour; }
+      return td;
+    };
+    const valueCells = (p, bold) => {
+      const out = [];
+      colKeys.forEach((c) => measures.forEach((m) => {
+        if (bold) { const t = total(m, p, c); out.push(cellFor(m, t, true, t === undefined)); } else { out.push(cellFor(m, cells.get([p.join(SEP), c, m].join(PART)), false, false)); }
+      }));
+      if (colField && subtotals) { measures.forEach((m) => { const t = total(m, p, null); out.push(cellFor(m, t, true, t === undefined)); }); }
+      return out;
+    };
+    const body = h('tbody', {});
+    const multi = rowFields.length > 1 && subtotals;
+    let last = null;
+    const emitGroup = (key, count) => {
+      const open = !collapsed.has(key);
+      const btn = h('button', { type: 'button', class: 'bi-twist', 'aria-expanded': open ? 'true' : 'false', 'aria-label': (open ? 'Collapse ' : 'Expand ') + key, 'data-group': key }, h('i', { class: 'bi bi-' + (open ? 'dash-square' : 'plus-square'), 'aria-hidden': 'true' }));
+      btn.addEventListener('click', () => { if (collapsed.has(key)) { collapsed.delete(key); } else { collapsed.add(key); } V.matrix(host, spec, ctx, res); });
+      body.appendChild(h('tr', { class: 'bi-subtotal', 'data-subtotal': key }, h('th', { scope: 'row' }, btn, ' ', key, h('small', { class: 'text-muted-d', text: ' (' + count + ')' })), valueCells([key], true)));
+    };
+    sortedPaths.forEach((p) => {
+      if (multi && (last === null || last !== p[0])) { emitGroup(p[0], sortedPaths.filter((x) => x[0] === p[0]).length); last = p[0]; }
+      if (multi && collapsed.has(p[0])) { return; }
+      body.appendChild(h('tr', { 'data-row': p.join(' / ') }, h('th', { scope: 'row', class: multi ? 'bi-indent' : '', text: multi ? p.slice(1).join(' / ') : p.join(' / ') }), valueCells(p, false)));
+    });
+    if (subtotals && sortedPaths.length) { body.appendChild(h('tr', { class: 'bi-grandtotal', 'data-grandtotal': '' }, h('th', { scope: 'row', text: 'Total' }), valueCells(null, true))); }
+    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table bi-matrix', 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Matrix' }), h('thead', {}, headRows), body);
+    B.clear(host).appendChild(h('div', { class: 'tbl-wrap bi-vis-scroll' }, table));
+    if (!sortedPaths.length) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }
+    return NONE;
+  };
+
+  // ---- slicer --------------------------------------------------------------------------------------------------------
+
+  V.slicer = function (host, spec, ctx, res) {
+    const tb = V.table(res);
+    const field = spec.wells.field[0];
+    const mode = (spec.format && spec.format.mode) || 'list';
+    const values = [];
+    tb.rows.forEach((r) => { if (r[0] != null) { values.push(r[0]); } });
+    const cur = ctx.slicer ? ctx.slicer.value : null;
+    const set = (v) => { if (ctx.slicer && ctx.slicer.onChange) { ctx.slicer.onChange(v); } };
+    const wrap = h('div', { class: 'bi-slicer', 'data-mode': mode });
+    if (mode === 'range') {
+      const col = B.column(ctx.index, field);
+      const type = col && col.type === 'date' ? 'date' : col && col.type === 'timestamp' ? 'date' : 'number';
+      const nums = values.map((v) => (type === 'number' ? Number(v) : String(v))).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+      const from = h('input', { type, class: 'studio-in', 'aria-label': 'From', 'data-range': 'from', placeholder: nums.length ? String(nums[0]) : '', value: cur && cur.from != null ? String(cur.from) : '' });
+      const to = h('input', { type, class: 'studio-in', 'aria-label': 'To', 'data-range': 'to', placeholder: nums.length ? String(nums[nums.length - 1]) : '', value: cur && cur.to != null ? String(cur.to) : '' });
+      const apply = () => {
+        const f = from.value === '' ? null : type === 'number' ? Number(from.value) : from.value;
+        const t = to.value === '' ? null : type === 'number' ? Number(to.value) : to.value;
+        set(f == null && t == null ? null : { from: f, to: t });
+      };
+      from.addEventListener('change', apply);
+      to.addEventListener('change', apply);
+      wrap.appendChild(h('label', { class: 'bi-range' }, h('span', { text: 'From' }), from));
+      wrap.appendChild(h('label', { class: 'bi-range' }, h('span', { text: 'To' }), to));
+      wrap.appendChild(h('p', { class: 'bi-vis-note', text: nums.length ? 'Values run from ' + nums[0] + ' to ' + nums[nums.length - 1] + '.' : 'No values.' }));
+      B.clear(host).appendChild(wrap);
+      return NONE;
+    }
+    const chosen = new Set(Array.isArray(cur) ? cur.map(String) : []);
+    const boxes = [];
+    const list = h('div', { class: 'bi-slicer-list', role: 'group', 'aria-label': spec.title || field });
+    values.forEach((v) => {
+      const box = h('input', { type: 'checkbox', value: String(v), 'data-slicer-value': String(v) });
+      box.checked = chosen.has(String(v));
+      boxes.push(box);
+      list.appendChild(h('label', { class: 'bi-checkrow' }, box, h('span', { text: tb.isMasked(field) ? '•••' : String(v) })));
+    });
+    const emit = () => {
+      const picked = boxes.filter((b) => b.checked).map((b) => { const orig = values.find((v) => String(v) === b.value); return orig; });
+      set(picked.length && picked.length < boxes.length ? picked : picked.length === boxes.length && boxes.length ? picked : null);
+    };
+    if (mode === 'dropdown') {
+      const details = h('details', { class: 'bi-dropdown', 'data-slicer-dropdown': '' }, h('summary', { text: 'All' }));
+      boxes.forEach((b) => { b.addEventListener('change', () => {}); });
+      wrap.appendChild(details);
+      B.clear(host).appendChild(wrap);
+      list.hidden = false;
+      details.appendChild(list);
+      const ms = window.drishtiModules && window.drishtiModules.multiselect;
+      if (ms) { ms.decorate(details, { label: spec.title || field, boxes, onChange: emit }); } else { boxes.forEach((b) => b.addEventListener('change', emit)); }
+      return NONE;
+    }
+    const q = h('input', { type: 'search', class: 'studio-in', placeholder: 'Search', 'aria-label': 'Search ' + (spec.title || field) });
+    q.addEventListener('input', () => { const t = q.value.trim().toLowerCase(); boxes.forEach((b) => { b.closest('label').hidden = !!t && b.value.toLowerCase().indexOf(t) < 0; }); });
+    boxes.forEach((b) => b.addEventListener('change', emit));
+    const clear = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-slicer-clear', text: 'Clear' });
+    clear.addEventListener('click', () => { boxes.forEach((b) => { b.checked = false; }); set(null); });
+    wrap.appendChild(h('div', { class: 'bi-slicer-head' }, q, clear));
+    wrap.appendChild(list);
+    B.clear(host).appendChild(wrap);
+    return NONE;
+  };
+
+  // ---- static --------------------------------------------------------------------------------------------------------
+
+  V.staticVisual = function (host, spec, ctx) {
+    B.clear(host);
+    if (spec.type === 'text') {
+      const heading = spec.format && spec.format.size === 'heading';
+      (spec.text || '').split(/\n+/).forEach((line) => host.appendChild(h(heading ? 'h3' : 'p', { class: 'bi-text', text: line })));
+    } else if (spec.type === 'image') {
+      host.appendChild(h('img', { class: 'bi-picture', src: spec.src || '', alt: spec.alt || '' }));
+    } else if (spec.type === 'button') {
+      const b = h('button', { type: 'button', class: 'btn-pill btn-accent bi-button', 'data-action': JSON.stringify(spec.action || {}), text: spec.text || spec.title || 'Go' });
+      b.addEventListener('click', () => { if (ctx.interactive && ctx.navigate) { ctx.navigate(spec.action || {}); } });
+      host.appendChild(b);
+    }
+    return NONE;
+  };
+
+  /** Draws any visual: a chart or a card (bi-visuals.js), else the table, the matrix, the slicer or a static one; `res` is null for static visuals. */
+  V.draw = function (host, spec, ctx, res) {
+    if (['text', 'image', 'button'].indexOf(spec.type) >= 0) { return V.staticVisual(host, spec, ctx); }
+    if (spec.type === 'table') { return V.dataTable(host, spec, ctx, res, false); }
+    if (spec.type === 'matrix') { return V.matrix(host, spec, ctx, res); }
+    if (spec.type === 'slicer') { return V.slicer(host, spec, ctx, res); }
+    return V.drawChartOrCard(host, spec, ctx, res) || NONE;
+  };
+})();

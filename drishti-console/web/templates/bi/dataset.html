@@ -13,15 +13,16 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Rupaka phase 2: one dataset. A minimal read-only Model view (tables, relationships, measures, rules, layers) and a query preview grid. The Model
-   diagram and the designer are phase 3. Drawn by static/js/bi-dataset.js from /bi/api/datasets/<id>. #}
+{# Rupaka phase 2: one dataset: its model as tables (tables, relationships, measures, rules, layers) and a query preview grid. The Model view (the diagram, phase 3)
+   is one click away for authors. Drawn by static/js/bi-dataset.js from /bi/api/datasets/<id>. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Dataset{% endblock %}
 {% block bi_main %}
 <header class="bi-head"><div class="bi-title-row"><h1 data-title>Dataset</h1></div>
   <p class="text-muted-d" data-desc></p>
   <p class="bi-facts" data-meta></p>
-  <p class="bi-badges" data-badges></p></header>
+  <p class="bi-badges" data-badges></p>
+  <p><a class="btn-pill btn-ghost" data-model-view href="/bi/datasets" hidden><i class="bi bi-diagram-2" aria-hidden="true"></i> Model view</a></p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
 <section class="bi-sec" aria-labelledby="dProb" data-problems-sec hidden><h2 id="dProb">Problems</h2><ul class="bi-warn" data-problems></ul></section>
 <section class="bi-sec" aria-labelledby="dPrev"><h2 id="dPrev">Preview a query</h2>

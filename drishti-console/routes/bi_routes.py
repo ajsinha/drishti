@@ -29,7 +29,7 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 # the server paths the page script may reach: nothing else is passed on
-_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine")
+_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports")
 _NO_BODY = {"GET", "DELETE"}
 
 
@@ -81,11 +81,29 @@ async def dataset(request: Request, item: str):
     return _page(request, "bi/dataset.html", "datasets", item=item)
 
 
+@router.get("/bi/r/{item}")
+@router.get("/bi/r/{item}/{page}")
+async def report(request: Request, item: str, page: str = ""):
+    """A report, drawn by ``bi-report.js``: its pages are tabs, its visuals ask the server for their data one query at a time (phase 3)."""
+    return _page(request, "bi/report.html", "report", item=item, report_page=page)
+
+
 @router.get("/bi/designer")
 async def designer(request: Request):
-    return _page(request, "bi/soon.html", "designer", title="Designer", phase="phase 3",
-                 what="The report designer (fields, visuals, filters, preview with data) arrives with the reports engine. "
-                      "Today a report item holds its YAML body, versioned and published, but is not rendered.")
+    """The designer's start: your report drafts, and a new report on a dataset."""
+    return _page(request, "bi/designer.html", "designer")
+
+
+@router.get("/bi/design/{draft}")
+async def design(request: Request, draft: str):
+    """The report designer on one draft (a report item you may edit): the canvas, Fields, Visualizations, Filters, pages, YAML, preview and Check."""
+    return _page(request, "bi/design.html", "designer", item=draft)
+
+
+@router.get("/bi/m/{item:path}")
+async def model_view(request: Request, item: str):
+    """The Model view of a dataset item: tables as boxes, relationships as lines, the YAML beside them (two views of one draft)."""
+    return _page(request, "bi/model.html", "datasets", item=item)
 
 
 @router.get("/bi/explore")

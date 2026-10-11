@@ -1,0 +1,152 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Rupaka phase 3: the report designer and the Model view (RUPAKA.md sections 6.2 and 9). The designer uses the whole width: the BI rail steps aside. Panes sit to the
+   right of the canvas as in Power BI (Filters, Visualizations, Fields); below 1100 px they go under it. Colours are theme tokens. */
+.bi-shell-design { grid-template-columns: minmax(0, 1fr); max-width: none; }
+.bi-shell-design .bi-rail { display: none; }
+.bi-design { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+.bi-dbar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem 1rem; }
+.bi-dtitle { display: flex; align-items: center; gap: .6rem; min-width: 0; }
+.bi-dtitle h1 { font-size: 1.25rem; margin: 0; padding: 0; overflow-wrap: anywhere; }
+.bi-dtitle h1::before, .bi-dtitle h1::after { content: none; }
+.bi-dback { color: var(--d-muted); padding: .3rem; border-radius: 6px; }
+.bi-dactions { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.bi-preview-toggle { margin: 0 .4rem; }
+.bi-checkpanel { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .9rem; background: var(--d-surface); }
+.bi-checkpanel h2 { font-size: 1rem; margin: 0 0 .3rem; }
+.bi-readonly { border: 1px solid var(--d-warn); border-radius: var(--d-radius); padding: .4rem .8rem; list-style: none; color: var(--d-ink); }
+.bi-dmain { display: grid; grid-template-columns: minmax(0, 1fr) 13.5rem 15.5rem 14rem; gap: .75rem; align-items: start; }
+.bi-dleft { min-width: 0; }
+.bi-dtabs { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: .4rem; border-bottom: 1px solid var(--d-border); margin-bottom: .5rem; }
+.bi-viewtabs { display: flex; gap: .15rem; }
+.bi-tab-add { min-width: 2.4rem; justify-content: center; }
+button.bi-tab { background: none; font: inherit; cursor: pointer; }
+.bi-dview { min-width: 0; }
+.bi-dgrid-wrap { position: relative; }
+.bi-dgrid { position: relative; min-height: 20rem; padding: 0; background-image: repeating-linear-gradient(to right, var(--d-border) 0, var(--d-border) 1px, transparent 1px, transparent calc(100% / 12)); background-size: 100% 100%; background-clip: content-box; border: 1px dashed var(--d-border); border-radius: var(--d-radius); align-content: start; }
+.bi-dempty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .5rem; color: var(--d-muted); pointer-events: none; margin: 0; text-align: center; padding: 1rem; }
+.bi-dvis { cursor: default; }
+.bi-dvis.bi-selected { outline: 2px solid var(--d-accent); outline-offset: 0; box-shadow: 0 0 0 4px var(--d-accent-tint); }
+.bi-dvis.bi-drop { outline: 2px dashed var(--d-link); }
+.bi-dvis.bi-dragging { opacity: .8; z-index: 5; }
+.bi-dhandle { cursor: grab; touch-action: none; user-select: none; }
+.bi-dvis .bi-vis-head { background: var(--d-surface-2); }
+.bi-resize { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 50%, var(--d-accent) 50%); border-bottom-right-radius: var(--d-radius); z-index: 3; }
+.bi-dvis { position: relative; }
+.bi-dropnote { text-align: center; }
+.bi-pane { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .65rem; min-width: 0; max-height: calc(100vh - 7rem); overflow: auto; }
+.bi-pane h2 { font-size: .95rem; margin: 0 0 .5rem; }
+.bi-fhead { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); margin: .7rem 0 .3rem; }
+.bi-ptabs { display: flex; gap: .15rem; margin: .6rem 0 .4rem; border-bottom: 1px solid var(--d-border); }
+.bi-types .bi-type-group { margin: .3rem 0 .15rem; font-size: .72rem; color: var(--d-muted); text-transform: uppercase; letter-spacing: .04em; }
+.bi-typegrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .25rem; }
+.bi-vtype { display: flex; flex-direction: column; align-items: center; gap: .1rem; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 6px; color: var(--d-ink); padding: .3rem .1rem; cursor: pointer; font-size: .6rem; line-height: 1.1; min-height: 3rem; overflow: hidden; }
+.bi-vtype i { font-size: 1.1rem; }
+.bi-vtype span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bi-vtype:hover { border-color: var(--d-accent); }
+.bi-vtype[aria-pressed="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent-strong); }
+.bi-vtype:focus-visible, .bi-field:focus-visible, .bi-chipbtn:focus-visible, .bi-swatch:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
+.bi-build-head { margin: .2rem 0 .4rem; font-size: .85rem; }
+.bi-well { border: 1px dashed var(--d-border); border-radius: 6px; padding: .3rem .4rem .4rem; margin: 0 0 .45rem; min-width: 0; }
+.bi-well.bi-drop { border-color: var(--d-link); background: var(--d-highlight); }
+.bi-well legend { font-size: .78rem; float: none; width: auto; padding: 0 .25rem; margin: 0; font-weight: 600; }
+.bi-chiplist { list-style: none; margin: 0 0 .25rem; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+.bi-wchip { display: flex; align-items: center; gap: .1rem; background: var(--d-accent-tint); border: 1px solid var(--d-border); border-radius: 6px; padding: .1rem .15rem .1rem .45rem; font-size: .8rem; }
+.bi-wchip span { flex: 1 1 auto; overflow-wrap: anywhere; }
+.bi-chipbtn { background: none; border: 0; color: var(--d-muted); cursor: pointer; min-width: 1.6rem; min-height: 1.6rem; border-radius: 4px; }
+.bi-chipbtn:hover:not(:disabled) { color: var(--d-ink); background: var(--d-highlight); }
+.bi-chipbtn:disabled { opacity: .3; }
+.bi-wadd, .bi-pane select, .bi-pane input:not([type="checkbox"]):not([type="color"]), .bi-pane textarea { max-width: 100%; width: 100%; box-sizing: border-box; }
+.bi-frow { display: flex; flex-direction: column; gap: .15rem; font-size: .78rem; color: var(--d-muted); margin: 0 0 .45rem; min-width: 0; }
+.bi-fieldset { border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .45rem .45rem; margin: 0 0 .45rem; min-width: 0; }
+.bi-fieldset legend { font-size: .78rem; float: none; width: auto; padding: 0 .25rem; margin: 0; color: var(--d-muted); }
+.bi-small { padding: .15rem .6rem; font-size: .78rem; min-height: 1.8rem; }
+.bi-swatches { display: flex; flex-wrap: wrap; gap: .25rem; }
+.bi-swatch { width: 1.6rem; height: 1.6rem; border-radius: 4px; border: 2px solid var(--d-border); cursor: pointer; }
+.bi-swatch[aria-pressed="true"] { border-color: var(--d-ink); box-shadow: 0 0 0 2px var(--d-accent); }
+.bi-cond { display: grid; grid-template-columns: 1fr 3.2rem 4.5rem 2.4rem 1.7rem; gap: .2rem; align-items: center; margin-bottom: .25rem; }
+.bi-cond input[type="color"] { padding: 0; min-height: 1.9rem; }
+.bi-fieldtable { margin: 0 0 .35rem; }
+.bi-fieldtable > summary { cursor: pointer; font-weight: 600; font-size: .85rem; padding: .15rem 0; overflow-wrap: anywhere; }
+.bi-fieldlist { list-style: none; margin: 0; padding: 0 0 0 .5rem; }
+.bi-field { display: flex; align-items: center; gap: .35rem; width: 100%; text-align: left; background: none; border: 0; color: var(--d-ink); font: inherit; font-size: .82rem; padding: .15rem .25rem; border-radius: 4px; cursor: grab; min-height: 1.7rem; }
+.bi-field:hover { background: var(--d-highlight); }
+.bi-field-name { flex: 1 1 auto; overflow-wrap: anywhere; }
+.bi-fieldparts > summary { cursor: pointer; font-size: .75rem; color: var(--d-muted); padding-left: 1.2rem; }
+.bi-parts { padding-left: 1.2rem; }
+.bi-fsec { margin-bottom: .4rem; }
+.bi-filterlist { list-style: none; margin: 0 0 .25rem; padding: 0; display: flex; flex-direction: column; gap: .2rem; }
+.bi-fitem { display: flex; align-items: center; gap: .1rem; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 6px; padding: .1rem .15rem .1rem .45rem; font-size: .78rem; }
+.bi-filter-text { flex: 1 1 auto; overflow-wrap: anywhere; }
+.bi-feditor { display: flex; flex-direction: column; gap: .3rem; border: 1px solid var(--d-accent); border-radius: 6px; padding: .45rem; margin-top: .25rem; }
+.bi-picklist { max-height: 9rem; overflow: auto; border: 1px solid var(--d-border); border-radius: 6px; padding: .2rem .3rem; margin-top: .25rem; }
+.bi-picklist label { display: flex; align-items: center; gap: .4rem; font-size: .8rem; }
+.bi-suggestions { display: flex; flex-wrap: wrap; gap: .25rem; margin: 0 0 .4rem; min-height: 1.8rem; }
+.bi-suggest { background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 999px; color: var(--d-ink); font-family: var(--d-font-mono); font-size: .75rem; padding: .1rem .55rem; cursor: pointer; }
+.bi-suggest:hover { border-color: var(--d-accent); }
+.bi-problem { list-style: disc; margin-bottom: .2rem; font-size: .85rem; color: var(--d-ink); }
+.bi-problem-error strong { color: var(--d-bad); }
+.bi-problem-warning strong { color: var(--d-warn); }
+.bi-problem-link { cursor: pointer; }
+.bi-problem-link:hover { text-decoration: underline; }
+.bi-dview .CodeMirror { height: 32rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); font-size: .85rem; background: var(--d-surface-2); color: var(--d-ink); }
+.bi-dview .CodeMirror-gutters { background: var(--d-surface); border-right: 1px solid var(--d-border); }
+.bi-pane-fields, .bi-pane-filters, .bi-pane-vis { position: sticky; top: .5rem; }
+
+@media (max-width: 1100px) {
+  .bi-dmain { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bi-dleft { grid-column: 1 / -1; }
+  .bi-pane { position: static; max-height: none; }
+}
+@media (max-width: 760px) {
+  .bi-dmain { grid-template-columns: minmax(0, 1fr); }
+  .bi-dactions .btn-pill { flex: 1 1 8rem; }
+}
+@media (pointer: coarse) {
+  .bi-vtype, .bi-field, .bi-chipbtn { min-height: 44px; min-width: 44px; }
+}
+
+/* the Model view (RUPAKA.md section 6.2): tables as boxes with their columns, relationships as lines */
+.bi-model { display: grid; grid-template-columns: minmax(0, 1fr) 22rem; gap: .75rem; align-items: start; }
+.bi-diagram { position: relative; min-height: 28rem; border: 1px dashed var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); overflow: auto; }
+.bi-diagram-inner { position: relative; min-width: 100%; }
+.bi-lines { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.bi-lines line, .bi-lines path { stroke: var(--d-link); stroke-width: 2; fill: none; }
+.bi-lines .bi-line-off { stroke-dasharray: 5 4; stroke: var(--d-muted); }
+.bi-lines .bi-line-hit { pointer-events: stroke; stroke: transparent; stroke-width: 12; cursor: pointer; }
+.bi-lines text { fill: var(--d-ink); font-size: 12px; font-family: var(--d-font-mono); paint-order: stroke; stroke: var(--d-surface); stroke-width: 3px; }
+.bi-lines .bi-line-sel { stroke: var(--d-accent); stroke-width: 3; }
+.bi-tbox { position: absolute; width: 13rem; background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: var(--d-radius); box-shadow: var(--d-shadow); }
+.bi-tbox:focus-within { border-color: var(--d-accent); }
+.bi-tbox header { display: flex; align-items: center; gap: .3rem; padding: .3rem .5rem; background: var(--d-accent-tint); border-bottom: 1px solid var(--d-border); font-weight: 600; font-size: .85rem; cursor: grab; touch-action: none; user-select: none; border-radius: var(--d-radius) var(--d-radius) 0 0; }
+.bi-tbox header small { margin-left: auto; color: var(--d-muted); font-weight: 400; }
+.bi-tbox ul { list-style: none; margin: 0; padding: .15rem 0; max-height: 14rem; overflow: auto; }
+.bi-col { display: flex; align-items: center; gap: .3rem; padding: .1rem .5rem; font-size: .78rem; min-height: 1.5rem; cursor: grab; }
+.bi-col:hover, .bi-col.bi-over { background: var(--d-highlight); }
+.bi-col.bi-over { outline: 2px dashed var(--d-link); outline-offset: -2px; }
+.bi-col .bi-coltype { margin-left: auto; color: var(--d-muted); font-size: .68rem; }
+.bi-col:focus-visible { outline: 2px solid var(--d-link); outline-offset: -2px; }
+.bi-relpanel { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .7rem; }
+.bi-relpanel h2, .bi-relpanel h3 { font-size: .95rem; margin: .2rem 0 .4rem; }
+.bi-rellist { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+.bi-rel { border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .45rem; font-size: .8rem; background: var(--d-surface-2); }
+.bi-rel.bi-selected { border-color: var(--d-accent); }
+.bi-rel code { overflow-wrap: anywhere; }
+@media (max-width: 1100px) { .bi-model { grid-template-columns: minmax(0, 1fr); } }
+.bi-cond2 { display: flex; flex-direction: column; gap: .2rem; margin: .25rem 0; }
+.bi-nr { max-width: none; border: 0; padding: 0; margin: 0; background: none; display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.bi-nr button { grid-column: 1 / -1; }
+.bi-small-note { font-size: .78rem; margin: 0 0 .4rem; }

@@ -67,11 +67,15 @@ public class BiReportController {
         return reports.format(p, body.path("report"));
     }
 
-    /** Body {@code {yaml, page, visual, state}}: one visual of draft YAML (authors), for the designer's preview. */
+    /**
+     * Body {@code {yaml | report, page, visual, state}}: one visual of a draft, for the designer's preview (authors). The draft is YAML text, or the report model
+     * as JSON (what the designer holds), which is written as YAML and read back, so a draft is judged exactly as a saved one would be.
+     */
     @PostMapping("/query")
     public ResponseEntity<Map<String, Object>> draftQuery(@RequestBody JsonNode body, @RequestParam(defaultValue = "false") boolean explain,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return noStore(reports.query(p, null, body.path("yaml").asText(""), body.path("page").asText(""), body.path("visual").asText(""), body.get("state"), explain));
+        String yaml = body.path("report").isObject() ? String.valueOf(reports.format(p, body.get("report")).get("yaml")) : body.path("yaml").asText("");
+        return noStore(reports.query(p, null, yaml, body.path("page").asText(""), body.path("visual").asText(""), body.get("state"), explain));
     }
 
     @GetMapping("/{id}")

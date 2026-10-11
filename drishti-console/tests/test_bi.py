@@ -59,8 +59,9 @@ def test_the_keyword_opens_my_workspace_and_the_catalogue(bi):
 
 def test_the_keyword_opens_a_report_by_title_or_id_or_searches(bi):
     client, backend = bi
-    assert go(client, "RUPAKA bi-1 <GO>").headers["location"] == "/bi/i/bi-1"
-    assert go(client, "RUPAKA desk p&l").headers["location"] == "/bi/i/bi-1"
+    assert go(client, "RUPAKA bi-1 <GO>").headers["location"] == "/bi/r/bi-1"            # a report opens drawn (phase 3)
+    assert go(client, "RUPAKA desk p&l").headers["location"] == "/bi/r/bi-1"
+    assert go(client, "BI desk p&l <GO>").headers["location"] == "/bi/r/bi-1"
     assert go(client, "RUPAKA nothing-like-it").headers["location"] == "/bi/catalogue?q=nothing-like-it"
     assert any(c[1] == "/catalogue" and c[3].get("q") == "desk p&l" for c in backend.bi_calls)
 
@@ -110,7 +111,7 @@ def test_every_page_has_the_rail_and_the_shared_top_bar(bi, path, page):
 def test_placeholders_say_what_phase_builds_them(bi):
     client, _ = bi
     assert "Start a model from the packs" in client.get("/bi/datasets").text                   # datasets are built (phase 2)
-    assert "phase 3" in client.get("/bi/designer").text
+    assert "Start designing" in client.get("/bi/designer").text and "Not built yet" not in client.get("/bi/designer").text       # the designer is built (phase 3)
     assert "Explore" in client.get("/bi/explore").text and "Not built yet" in client.get("/bi/explore").text
 
 
@@ -211,8 +212,8 @@ def test_bi_is_the_keyword_and_rupaka_its_alias(bi):
         assert go(client, typed).headers["location"] == "/bi"
     assert go(client, "BI WORKSPACE <GO>").headers["location"] == "/bi/w/me"
     assert go(client, "bi catalogue").headers["location"] == "/bi/catalogue"
-    assert go(client, "BI bi-1 <GO>").headers["location"] == "/bi/i/bi-1"
-    assert go(client, "bi desk p&l").headers["location"] == "/bi/i/bi-1"
+    assert go(client, "BI bi-1 <GO>").headers["location"] == "/bi/r/bi-1"
+    assert go(client, "bi desk p&l").headers["location"] == "/bi/r/bi-1"
     word = client.get("/api/suggest", params={"q": "b"}).json()
     assert word[0]["mnemonic"] == "BI" and word[0]["complete"] == "BI "
     pages = client.get("/api/suggest", params={"q": "BI "}).json()

@@ -1,0 +1,68 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Rupaka phase 3: the Model view of a dataset (RUPAKA.md section 6.2): tables as boxes, relationships as lines, drag a column onto another to relate them, relationships
+   proposed from the data, and the YAML beside it (two views of one draft). Drawn by static/js/bi-model.js from /bi/api/items/<id> and /bi/api/datasets/validate. #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Model view{% endblock %}
+{% block bi_keys %}
+    <dt><kbd>Tab</kbd></dt><dd>Walk the columns of the tables</dd>
+    <dt><kbd>Enter</kbd></dt><dd>On a column: choose it; press Enter on a second column to relate the two</dd>
+{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<div class="bi-design" data-model-root data-ready="">
+  <header class="bi-dbar">
+    <div class="bi-dtitle"><a class="bi-dback" data-dataset-link href="/bi/datasets" aria-label="Back to the dataset page"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      <h1 data-title>Model view</h1><span class="bi-badge" data-state>Loading</span><span class="bi-badge" data-valid></span></div>
+    <div class="bi-dactions" role="toolbar" aria-label="Model actions">
+      <button type="button" class="btn-pill btn-ghost" data-infer><i class="bi bi-search" aria-hidden="true"></i> Look for relationships in the data</button>
+      <button type="button" class="btn-pill btn-ghost" data-save-copy hidden><i class="bi bi-files" aria-hidden="true"></i> Save a copy</button>
+      <button type="button" class="btn-pill btn-accent" data-save><i class="bi bi-floppy" aria-hidden="true"></i> Save</button>
+    </div>
+  </header>
+  <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+  <p class="bi-warn bi-readonly" data-readonly hidden>This is shipped, read-only content. You can look at it; <strong>Save a copy</strong> makes a draft of your own to change.</p>
+  <div class="bi-model">
+    <div class="bi-diagram" data-diagram role="region" aria-label="Tables and relationships"><div class="bi-diagram-inner" data-diagram-inner></div></div>
+    <div class="bi-relpanel">
+      <h2>Relationships</h2>
+      <ul class="bi-rellist" data-rels></ul>
+      <p class="bi-empty" data-no-rels hidden>No relationships: the tables are not joined. Drag a column onto another table's column, or use the form below.</p>
+      <div data-add-wrap data-newrel>
+        <h3>Add a relationship</h3>
+        <p class="text-muted-d bi-small-note">Drag a column onto another table's column, or choose them here. From is the many side of a many-to-one.</p>
+        <div class="bi-form bi-nr">
+          <label>From table<select class="studio-select" data-nr-from-t></select></label>
+          <label>column<select class="studio-select" data-nr-from-c></select></label>
+          <label>To table<select class="studio-select" data-nr-to-t></select></label>
+          <label>column<select class="studio-select" data-nr-to-c></select></label>
+          <label>Cardinality<select class="studio-select" data-nr-card><option>many-to-one</option><option>one-to-many</option><option>one-to-one</option><option>many-to-many</option></select></label>
+          <label>Filters<select class="studio-select" data-nr-dir><option value="single">one way</option><option value="both">both ways</option></select></label>
+          <button type="button" class="btn-pill btn-accent" data-nr-add>Add relationship</button>
+        </div>
+      </div>
+      <h3>Proposed from the data</h3>
+      <ul class="bi-rellist" data-proposals></ul>
+      <h3>Problems</h3>
+      <ul class="bi-warn" data-problems></ul>
+    </div>
+  </div>
+  <section class="bi-sec" aria-labelledby="mYaml"><h2 id="mYaml">YAML</h2>
+    <p class="text-muted-d">The same draft as text. The diagram rewrites only the <code>relationships:</code> and <code>layout:</code> blocks; the rest, comments included, stays as you wrote it.</p>
+    <textarea data-yaml class="studio-in mono" rows="20" spellcheck="false" aria-label="Dataset YAML"></textarea></section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model.js?v={{ ASSET_V }}"></script>{% endblock %}

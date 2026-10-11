@@ -242,6 +242,11 @@
     }
 
     api('GET', path).then(draw).catch(function (e) { say(e.message, true); q('[data-title]').textContent = 'Not found'; });
+    var mv = q('[data-model-view]');
+    if (mv) {
+      mv.href = '/bi/m/' + id2path(id);
+      api('GET', '/me').then(function (me) { mv.hidden = me.powers.indexOf('bi-author') < 0; }).catch(function () {});
+    }
   }
 
   if (isDataset) { one(); } else { list(); }

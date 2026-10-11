@@ -272,6 +272,11 @@
       actions(); form(); versions();
       var open = q('[data-open-dataset]');
       if (open) { open.hidden = it.kind !== 'dataset'; open.href = '/bi/d/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
+      var enc = encodeURIComponent(it.id).replace(/%3A/g, ':');
+      var rep = q('[data-open-report]'), des = q('[data-open-design]'), mod = q('[data-open-model]');
+      if (rep) { rep.hidden = it.kind !== 'report'; rep.href = '/bi/r/' + enc; }
+      if (des) { des.hidden = !(it.kind === 'report' && it.can && it.can.edit) && !(it.kind === 'report' && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
+      if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }
     }
     function act(label, run, cls) {
       var b = h('button', { type: 'button', class: 'btn-pill ' + (cls || 'btn-ghost') }, label);

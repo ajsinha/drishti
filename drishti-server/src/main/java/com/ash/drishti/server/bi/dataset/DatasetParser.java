@@ -59,7 +59,7 @@ public final class DatasetParser {
     /** Measure names may hold spaces and punctuation: they are labels, never SQL. */
     static final Pattern LABEL = Pattern.compile("[^\\p{Cntrl}\\[\\]]{1,80}");
     private static final Set<String> TOP = Set.of("rachana", "dataset", "version", "title", "description", "sample", "engine", "tables", "relationships", "measures",
-            "hierarchies", "security", "rollups", "owner", "tags", "endorsement", "endorsedBy", "audience");
+            "hierarchies", "security", "rollups", "layout", "owner", "tags", "endorsement", "endorsedBy", "audience");
 
     private DatasetParser() {}
 

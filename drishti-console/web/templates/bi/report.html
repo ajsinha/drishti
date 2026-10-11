@@ -1,0 +1,52 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Rupaka phase 3: the report viewer (RUPAKA.md section 8). A shell: the page script (static/js/bi-report.js) asks /bi/api/reports/<id> for the report and each
+   visual's query, so this carries no data. Pages are tabs; a visual is a frame on a 12-column grid (a single column on a phone). #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Report{% endblock %}
+{% block bi_keys %}
+    <dt><kbd>Tab</kbd></dt><dd>Next visual, in reading order</dd>
+    <dt><kbd>&larr;</kbd> <kbd>&rarr;</kbd></dt><dd>In a chart: the next mark; <kbd>Enter</kbd> selects it</dd>
+    <dt><kbd>Esc</kbd></dt><dd>Clear the selection of a visual</dd>
+    <dt><kbd>t</kbd> <kbd>r</kbd></dt><dd>In a visual: show as a table; show the rows</dd>
+    <dt><kbd>d</kbd> <kbd>u</kbd></dt><dd>In a visual: drill down; drill up</dd>
+{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-report.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><div class="bi-title-row"><h1 data-title>Report</h1>
+    <a class="btn-pill btn-ghost bi-design-link" data-design href="/bi/designer"><i class="bi bi-pencil-square" aria-hidden="true"></i> Design</a></div>
+  <p class="text-muted-d" data-desc></p>
+  <p class="bi-badges" data-badges></p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<span class="visually-hidden" data-live role="status" aria-live="polite"></span>
+<section class="bi-sec bi-problems" data-problems hidden aria-labelledby="rProb"><h2 id="rProb">This report cannot be drawn yet</h2><ul class="bi-warn"></ul></section>
+<div data-report data-ready="">
+  <div class="bi-report-bar">
+    <nav class="bi-tabs" data-pages role="tablist" aria-label="Pages of the report"></nav>
+    <div class="bi-report-tools">
+      <button type="button" class="btn-pill btn-ghost" data-back hidden><i class="bi bi-arrow-left" aria-hidden="true"></i> Back</button>
+      <label class="bi-tool">Business date <input type="date" class="studio-in" data-date></label>
+      <label class="bi-tool" data-bookmarks-wrap hidden>Bookmarks <select class="studio-select" data-bookmarks><option value="">Choose one</option></select></label>
+      <label class="bi-tool">Click a mark to <select class="studio-select" data-mode><option value="filter">filter the page</option><option value="highlight">highlight</option></select></label>
+      <button type="button" class="btn-pill btn-ghost" data-reset hidden>Reset</button>
+    </div>
+  </div>
+  <p class="bi-chips" data-chips aria-label="Filters in force"></p>
+  <h2 class="visually-hidden" data-page-title></h2>
+  <div class="bi-rgrid" data-grid role="region" aria-label="Report page"></div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-report.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -213,8 +213,8 @@ public final class VisualQueries {
 
     private void carried(List<QueryRequest.Filter> base) {
         for (ReportState.Carry c : state.carry()) {
-            if (!c.values().isEmpty()) {
-                base.add(new QueryRequest.Filter(c.field(), "in", c.values()));
+            if (!c.values().isEmpty() || c.op().contains("null")) {
+                base.add(new QueryRequest.Filter(c.field(), c.op(), c.values()));
             }
         }
     }

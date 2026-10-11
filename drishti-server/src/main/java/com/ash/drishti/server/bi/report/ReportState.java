@@ -43,8 +43,8 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
     /** A mark selected on another visual: its field, its values, and whether other visuals highlight it (instead of filtering to it). */
     public record Selection(String visual, String field, List<Object> values, boolean highlight) {}
 
-    /** A value carried to a drill-through page. */
-    public record Carry(String field, List<Object> values) {}
+    /** A filter carried to a drill-through page (or applied by a bookmark): {@code in} unless {@code op} says another comparison. */
+    public record Carry(String field, String op, List<Object> values) {}
 
     /** The mark whose rows are wanted. */
     public record Mark(String field, List<Object> values) {}
@@ -78,7 +78,7 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
             if (!x.path("field").isTextual()) {
                 throw bad("a carried value is { field, values }");
             }
-            carry.add(new Carry(x.path("field").asText(), values(x.path("values"))));
+            carry.add(new Carry(x.path("field").asText(), x.path("op").asText("in").toLowerCase(java.util.Locale.ROOT), values(x.path("values"))));
         }
         JsonNode dates = n.path("dates");
         Mark rows = null;

@@ -39,6 +39,18 @@ DATASET_ANSWER = {"columns": [{"name": "trade.desk", "type": "string", "masked":
                   "meta": {"layer": "columns", "rollup": None, "rows": 1, "millis": 3.2, "cached": False, "dates": ["2026-09-30"], "tables": ["trade"], "masked": ["MTM"], "warnings": [], "generation": 0}}
 
 
+REPORT_ID = "file:report:trades-overview"
+REPORT_MODEL = {"rachana": 1, "report": "trades-overview", "version": 1, "title": "Trades overview", "dataset": "trades-basic",
+                "pages": [{"id": "overview", "title": "Overview", "visuals": [
+                    {"id": "mtm", "type": "card", "title": "Mark to market", "at": {"x": 0, "y": 0, "w": 3, "h": 2}, "wells": {"values": ["MTM"]}},
+                    {"id": "by-desk", "type": "bar", "title": "MTM by desk", "at": {"x": 3, "y": 0, "w": 6, "h": 4}, "wells": {"axis": ["trade.desk"], "values": ["MTM"]}, "hierarchy": "Desk and book"}]}]}
+REPORT = {"id": REPORT_ID, "title": "Trades overview", "description": "", "status": "published", "shipped": True, "sample": True, "valid": True, "problems": [],
+          "report": REPORT_MODEL, "dataset": DATASET_MODEL, "mayEdit": True}
+REPORT_CATALOGUE = {"visuals": {"card": {"group": "card", "wells": {"values": {"kind": "measure", "required": True, "max": 1}}},
+                                "bar": {"group": "chart", "wells": {"axis": {"kind": "field", "required": True, "max": 1}, "values": {"kind": "measure", "required": True, "max": 0}}}},
+                    "reserved": ["map"], "slicerModes": ["dropdown", "list", "range"]}
+
+
 class BiBackend(FakeBackend):
     """``powers`` are what /bi/me says the caller holds; ``enabled`` is the server's switch."""
 
@@ -71,6 +83,18 @@ class BiBackend(FakeBackend):
             return DATASET_MODEL
         if path == "/datasets/file:dataset:trades-basic/query":
             return dict(DATASET_ANSWER, echo=body, explain=params.get("explain"))
+        if path == "/reports/catalogue":
+            return REPORT_CATALOGUE
+        if path == "/reports/" + REPORT_ID:
+            return REPORT
+        if path == "/reports/" + REPORT_ID + "/query":
+            return dict(DATASET_ANSWER, visual=(body or {}).get("visual"), echo=body)
+        if path == "/reports/validate":
+            return {"valid": True, "problems": [], "report": REPORT_MODEL, "echo": body}
+        if path == "/reports/format":
+            return {"yaml": "report: trades-overview\n"}
+        if path == "/reports/dataset":
+            return DATASET_MODEL
         if path == "/model/kinds":
             return {"tables": [{"table": "trade", "pack": "trading", "kind": "trade", "connector": "trading-store", "data": True, "source": "promoted", "columns": [{"name": "desk", "path": "desk", "type": "string", "promoted": True}]}]}
         if path == "/model/start":

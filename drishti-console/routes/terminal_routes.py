@@ -85,7 +85,8 @@ async def rupaka(request: Request, rest: str):
     exact = [i for i in found if i["id"].lower() == rest.lower() or i["title"].lower() == rest.lower()]
     pick = exact[0] if exact else found[0] if len(found) == 1 else None
     if pick:
-        return RedirectResponse(f"/bi/i/{quote(pick['id'], safe=':')}", status_code=303)
+        where = "r" if pick.get("kind") == "report" else "i"             # a report opens drawn; every other item opens as its page
+        return RedirectResponse(f"/bi/{where}/{quote(pick['id'], safe=':')}", status_code=303)
     return RedirectResponse(f"/bi/catalogue?q={quote(rest)}", status_code=303)
 
 
