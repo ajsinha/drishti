@@ -31,6 +31,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
 import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
+import com.ash.drishti.api.proxy.ProxySettings;
 import software.amazon.awssdk.http.apache5.Apache5HttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.regions.providers.DefaultAwsRegionProviderChain;
@@ -72,6 +73,18 @@ public final class S3Storage implements Storage, AutoCloseable {
             http.tlsSocketStrategy(new org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy(s.tls().sslContext(), p.getProtocols(),
                     p.getCipherSuites(), org.apache.hc.core5.reactor.ssl.SSLBufferMode.STATIC,
                     s.tls().settings().verifyHostname() ? null : org.apache.hc.client5.http.ssl.NoopHostnameVerifier.INSTANCE));
+        }
+        ProxySettings px = s.proxy();
+        if (px.appliesTo(s.targetHost())) {                     // through the SDK's proxy config; https endpoints are tunnelled with CONNECT
+            var pc = software.amazon.awssdk.http.apache5.ProxyConfiguration.builder().endpoint(px.uri()).useSystemPropertyValues(false)
+                    .useEnvironmentVariableValues(false);
+            if (px.hasCredentials()) {
+                pc.username(px.username()).password(px.password()).preemptiveBasicAuthenticationEnabled(true);
+            }
+            http.proxyConfiguration(pc.build());
+        } else if (px.decided()) {                              // decided here (none, or a no-proxy host): the JVM's own proxy properties do not override it
+            http.proxyConfiguration(software.amazon.awssdk.http.apache5.ProxyConfiguration.builder().useSystemPropertyValues(false)
+                    .useEnvironmentVariableValues(false).build());
         }
         S3ClientBuilder b = S3Client.builder()
                 .httpClientBuilder(http)

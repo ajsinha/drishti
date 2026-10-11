@@ -20,7 +20,7 @@ import json
 
 import httpx
 
-from core.ai.providers.base import BaseProvider, map_http_error, ssl_context
+from core.ai.providers.base import BaseProvider, client_args, map_http_error, ssl_context
 from core.ai.types import TOOL_CALLS, ChatRequest, ChatResponse, LlmError, ModelInfo, ProviderConfig, ToolCall, Usage
 
 
@@ -31,7 +31,8 @@ class AnthropicProvider(BaseProvider):
         super().__init__(cfg)
         base = (cfg.base_url or "https://api.anthropic.com").rstrip("/")
         self._url = base + cfg.setting("messages-path", "/v1/messages")
-        self._client = httpx.AsyncClient(verify=ssl_context(cfg, base), timeout=cfg.timeout, follow_redirects=False)
+        args, self.proxy = client_args(cfg.settings, base)
+        self._client = httpx.AsyncClient(verify=ssl_context(cfg, base), timeout=cfg.timeout, follow_redirects=False, trust_env=False, **args)
 
     async def complete(self, info: ModelInfo, req: ChatRequest) -> ChatResponse:
         body: dict = {"model": info.id, "max_tokens": self.max_tokens(req, info, 1024),

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.deltalake;
 
+import com.ash.drishti.api.proxy.ProxySettings;
 import com.ash.drishti.api.tls.TlsContexts;
 import com.ash.drishti.api.tls.TlsException;
 import com.ash.drishti.api.tls.TlsMaterial;
@@ -34,13 +35,26 @@ import java.util.Map;
  * @param pathStyle path-style addressing ({@code http://host/bucket/key}), the default with an endpoint
  * @param readBlockBytes the smallest ranged GET: small reads (a Parquet footer, a deletion vector) fetch this much
  * @param tls the shared TLS material ({@code tls.*}: a private CA, a client certificate) for an {@code https://} endpoint, or null
+ * @param proxy the outbound proxy ({@code proxy.*} or the site default), {@link ProxySettings#none()} when the store is reached directly
  */
 public record S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes,
-        TlsMaterial tls) {
+        TlsMaterial tls, ProxySettings proxy) {
 
     /** Without TLS material: the JVM's trust, as before. */
     public S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes) {
-        this(endpoint, accessKey, secretKey, region, pathStyle, readBlockBytes, null);
+        this(endpoint, accessKey, secretKey, region, pathStyle, readBlockBytes, null, ProxySettings.none());
+    }
+
+    /** Reached directly. */
+    public S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes,
+            TlsMaterial tls) {
+        this(endpoint, accessKey, secretKey, region, pathStyle, readBlockBytes, tls, ProxySettings.none());
+    }
+
+    /** The host requests go to: the endpoint's, or AWS's regional one. */
+    public String targetHost() {
+        String r = region.isEmpty() ? "us-east-1" : region;
+        return endpoint.isEmpty() ? "s3." + r + ".amazonaws.com" : java.net.URI.create(endpoint).getHost();
     }
 
     /** The default smallest ranged GET: 1 MiB. */
@@ -52,7 +66,8 @@ public record S3Settings(String endpoint, String accessKey, String secretKey, St
         boolean pathStyle = Boolean.parseBoolean(settings.getOrDefault("s3.path-style", String.valueOf(!endpoint.isEmpty())));
         int block = Integer.parseInt(settings.getOrDefault("s3.read-block-kb", String.valueOf(DEFAULT_READ_BLOCK / 1024))) * 1024;
         return new S3Settings(endpoint, settings.getOrDefault("s3.access-key", "").trim(), settings.getOrDefault("s3.secret-key", ""),
-                settings.getOrDefault("s3.region", "").trim(), pathStyle, Math.max(4096, block), tls(settings, endpoint));
+                settings.getOrDefault("s3.region", "").trim(), pathStyle, Math.max(4096, block), tls(settings, endpoint),
+                ProxySettings.resolve(settings, endpoint.isEmpty() ? "https://s3.amazonaws.com" : endpoint));
     }
 
     /**

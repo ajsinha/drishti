@@ -86,6 +86,11 @@ public final class NativeEngine implements Engine, AutoCloseable {
         return io.tls();
     }
 
+    /** The outbound proxy of the S3 endpoint, {@code none} when it is reached directly. */
+    public com.ash.drishti.api.proxy.ProxySettings proxy() {
+        return io.proxy();
+    }
+
     /** An engine with default settings: local disk, and S3 with the AWS credential and region chains. */
     public static NativeEngine create() {
         return create(Map.of());

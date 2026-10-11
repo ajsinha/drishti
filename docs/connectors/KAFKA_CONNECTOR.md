@@ -907,6 +907,14 @@ Everything not about security (offsets, topics that do not exist, slow catch-up)
 | `DRS-1004` while the broker is down | a cold read waits up to 5 s for Kafka | expected until the broker returns; or raise `fetch-timeout` above 5 s to fall through to the lake |
 | messages skipped after a long outage | resume offset removed by retention, `auto.offset.reset` is `latest` | `client.auto.offset.reset: earliest`, or restart the server to replay |
 
+## Outbound proxy
+
+The settings and rules are shared by every HTTP-based connector: [PROXY.md](PROXY.md). A `proxy:` block in `settings:` (or `proxy: none`) overrides the site default `drishti.http.proxy.*`; the password is an `${ENV}` placeholder, never a literal.
+
+Kafka's brokers speak the Kafka protocol, not HTTP, and are **not** proxied. The one HTTP part, the **Schema Registry** (`schema-registry.url`), goes through the proxy
+when one applies (plain forwarding, or `CONNECT` for an `https://` registry with `schema-registry.tls.*` kept); a refused proxy login surfaces as a message that names the
+proxy, not the registry. Tested in `SchemaRegistryProxyTest`.
+
 ## As a connector file
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
@@ -962,6 +970,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 | `disk-cache.reset-at` | `02:00` | daily clearing time; `never` or blank: never |
 | `disk-cache.zone` | `America/New_York` | the zone of `reset-at` |
 | `stale-after` | none | engine setting: Health marks the connector stale after this long without a new message |
+| `proxy.*` | none | the outbound HTTP proxy ([PROXY.md](PROXY.md)): `proxy.url`, `proxy.username`, `proxy.password` (`${ENV}`), `proxy.no-proxy`, `proxy.enabled`, or `proxy: none`; the Schema Registry only |
 
 Set by the connector and not to be overridden: `key.deserializer` and `value.deserializer` (a string deserializer; with the Confluent wire format, one that also strips and decodes it),
 `enable.auto.commit` (`false`), `client.id` (`drishti-<source-name>`; the reader `drishti-<source-name>-reader`, with

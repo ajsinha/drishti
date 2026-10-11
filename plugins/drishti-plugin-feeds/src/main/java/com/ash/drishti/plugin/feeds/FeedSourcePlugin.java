@@ -64,6 +64,8 @@ public final class FeedSourcePlugin implements SourcePlugin {
     private final HitIndex index = new HitIndex();
     private HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build();
     private com.ash.drishti.api.tls.TlsMaterial tls;
+    private com.ash.drishti.api.proxy.ProxySettings proxy = com.ash.drishti.api.proxy.ProxySettings.none();
+    private String proxyTarget;
     private Feed feed;
     private SourceContext context;
     private String userAgent = "public-data-feed-connector";
@@ -96,14 +98,18 @@ public final class FeedSourcePlugin implements SourcePlugin {
         this.timeoutSeconds = Integer.parseInt(ctx.setting("timeout-seconds", "20"));
         this.userAgent = ctx.setting("user-agent", userAgent);       // the pack sets it (product name and version)
         String override = ctx.setting("url", "");
+        // the proxy (proxy.* or the site default) applies to the built-in feeds too; https targets are tunnelled with CONNECT
+        this.proxyTarget = override.startsWith("http") ? override : "https://";
+        this.proxy = com.ash.drishti.api.proxy.ProxySettings.resolve(ctx.settings(), proxyTarget);
+        HttpClient.Builder hb = proxy.apply(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL));
         if (override.startsWith("http") || com.ash.drishti.api.tls.TlsSettings.anyGiven(ctx.settings(), "tls.")) {
             // an https mirror on a private CA: the shared tls.* settings; the built-in feeds use the JVM's authorities
             this.tls = com.ash.drishti.api.tls.TlsHttp.material(ctx.settings(), override.isEmpty() ? "https://(the built-in feed)" : override, "url");
             if (tls != null) {
-                this.http = com.ash.drishti.api.tls.TlsHttp.apply(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10))
-                        .followRedirects(HttpClient.Redirect.NORMAL), tls).build();
+                hb = com.ash.drishti.api.tls.TlsHttp.apply(hb, tls);
             }
         }
+        this.http = hb.build();
         refresh();
         long every = Long.parseLong(ctx.setting("refresh-minutes", "60"));
         ctx.scheduler().scheduleWithFixedDelay(this::refresh, every, every, TimeUnit.MINUTES);
@@ -130,10 +136,10 @@ public final class FeedSourcePlugin implements SourcePlugin {
             }
             index.replaceAll(hits);
             fetchedAt = Instant.now();
-            health = tls == null ? "UP" : tls.annotate("UP", Instant.now());
+            health = proxy.annotate(tls == null ? "UP" : tls.annotate("UP", Instant.now()), proxyTarget);
             lastUpdate = java.time.Instant.now();
         } catch (Exception e) {
-            health = "DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage();
+            health = proxy.annotate("DOWN: " + e.getClass().getSimpleName() + ": " + e.getMessage(), proxyTarget);
         }
     }
 
@@ -143,7 +149,7 @@ public final class FeedSourcePlugin implements SourcePlugin {
         }
         HttpRequest req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(timeoutSeconds))
                 .header("User-Agent", userAgent).GET().build();
-        HttpResponse<String> r = http.send(req, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> r = proxy.send(http, req, HttpResponse.BodyHandlers.ofString());
         if (r.statusCode() / 100 != 2) {
             throw new IllegalStateException("HTTP " + r.statusCode() + " from " + URI.create(url).getHost());
         }

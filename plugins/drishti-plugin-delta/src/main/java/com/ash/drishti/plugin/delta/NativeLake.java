@@ -92,4 +92,9 @@ record NativeLake(String base, NativeEngine engine, Storage storage) implements 
     public com.ash.drishti.api.tls.TlsMaterial tls() {
         return engine.tls();
     }
+
+    @Override
+    public com.ash.drishti.api.proxy.ProxySettings proxy() {
+        return engine.proxy();
+    }
 }

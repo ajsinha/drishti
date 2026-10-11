@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import httpx
 
-from core.ai.providers.base import CHAT_EXTRAS, BaseProvider, map_http_error, ssl_context
+from core.ai.providers.base import CHAT_EXTRAS, BaseProvider, client_args, map_http_error, ssl_context
 from core.ai.types import ChatRequest, ChatResponse, LlmError, ModelInfo, ProviderConfig, ToolCall, Usage
 
 
@@ -32,7 +32,8 @@ class OpenAiCompatibleProvider(BaseProvider):
         base = (cfg.base_url or "https://api.openai.com").rstrip("/")
         self._url = base + cfg.setting("completions-path", "/v1/chat/completions")
         self._embed_url = base + cfg.setting("embeddings-path", "/v1/embeddings")
-        self._client = httpx.AsyncClient(verify=ssl_context(cfg, base), timeout=cfg.timeout, follow_redirects=False)
+        args, self.proxy = client_args(cfg.settings, base)
+        self._client = httpx.AsyncClient(verify=ssl_context(cfg, base), timeout=cfg.timeout, follow_redirects=False, trust_env=False, **args)
 
     def _headers(self) -> dict:
         h = {"Content-Type": "application/json", "Accept": "application/json"}

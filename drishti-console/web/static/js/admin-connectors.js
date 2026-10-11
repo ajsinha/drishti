@@ -49,7 +49,7 @@
   var known = (root.getAttribute('data-kinds') || '').split(',').filter(Boolean);
   var SECRET_OK = /^(\$\{[A-Za-z_][A-Za-z0-9_]*\}|file:.+)$/;
   var SECRET_KEY = /password|passwd|secret|token|api[-_.]?key|access[-_.]?key|private[-_.]?key|credential/i;
-  var GROUPS = [['connection', 'Connection'], ['tls', 'TLS'], ['mapping', 'What it reads'], ['tuning', 'Tuning'], ['s3', 'S3 storage'], ['security', 'Security'], ['general', 'General']];
+  var GROUPS = [['connection', 'Connection'], ['tls', 'TLS'], ['proxy', 'Proxy'], ['mapping', 'What it reads'], ['tuning', 'Tuning'], ['s3', 'S3 storage'], ['security', 'Security'], ['general', 'General']];
 
   // ---- the list: filter ---------------------------------------------------------------------------------------------------
   var filter = $('[data-filter]'), none = $('[data-filter-none]'), stateSel = $('[data-state-filter]'), originSel = $('[data-origin-filter]');
@@ -226,6 +226,15 @@
     return el('div', { class: 'conn-field' + (spec.required ? ' conn-required' : '') }, [
       el('label', { for: id }, [el('span', { class: 'mono', text: spec.name }), spec.required ? el('span', { class: 'conn-req', text: ' (required)' }) : null]), input, hint, err]);
   }
+  // the proxy the connector uses now (masked by the server) and where it came from, for the Proxy section and the test
+  function proxyLine(px) {
+    if (px === undefined || px === null) { return 'The site default (drishti.http.proxy.*) applies unless you set proxy.url here, or write proxy: none to go direct.'; }
+    if (px.error) { return 'Problem with the proxy settings: ' + px.error; }
+    if (!px.enabled) { return 'No proxy: this connector goes direct' + (px.source === 'disabled' ? ' (proxy: none).' : ' (no proxy is configured here or by the site).'); }
+    var t = 'Effective proxy: ' + px.url + ', from the ' + px.sourceLabel + (px.username ? '; user ' + px.username + ', password ' + (px.password || 'none') : '') +
+      ((px.noProxy || []).length ? '; direct for ' + px.noProxy.join(', ') : '') + '.';
+    return px.note ? t + ' ' + px.note + '.' : t;
+  }
   function buildForm() {
     groupsHost.textContent = '';
     var spec = plugins[draft.plugin];
@@ -236,6 +245,7 @@
       if (!by[g[0]]) { return; }
       var fs = el('fieldset', { class: 'conn-set', 'data-group': g[0] }, [el('legend', { text: g[1] })]);
       var grid = el('div', { class: 'conn-fields' });
+      if (g[0] === 'proxy') { fs.appendChild(el('p', { class: 'text-muted-d', 'data-proxy-now': true, text: proxyLine(draft.proxy) })); }
       by[g[0]].forEach(function (s) { used[s.name] = true; grid.appendChild(fieldFor(s, settings[s.name])); });
       fs.appendChild(grid);
       groupsHost.appendChild(fs);
@@ -389,7 +399,7 @@
     return fetchDetail(name).then(function (r) {
       if (!r.ok) { say(msg, why(r), true); return; }
       var c = r.body;
-      var d = { isNew: false, hasFile: !!c.text, name: name, plugin: c.plugin, enabled: c.enabled, kinds: c.kinds || [], description: c.description || '', settings: c.settings || {}, etag: c.etag, template: c.template, text: c.text };
+      var d = { isNew: false, hasFile: !!c.text, name: name, plugin: c.plugin, enabled: c.enabled, kinds: c.kinds || [], description: c.description || '', settings: c.settings || {}, etag: c.etag, template: c.template, text: c.text, proxy: c.proxy };
       var note = c.origin === 'file' ? 'Defined by ' + (c.file || name + '.yaml') + '.' + (c.template ? ' Pack ' + c.template + ' suggests a default; Reset in the list puts it back.' : '')
         : c.origin === 'pack' ? 'Defined by pack ' + c.template + ' and not yet a file: saving writes ' + name + '.yaml.'
         : 'Defined in the server\'s own configuration (deprecated): saving writes ' + name + '.yaml. Credentials show as *** and must be re-entered as ${ENV_VAR} references.';
@@ -414,6 +424,8 @@
     host.appendChild(el('p', { class: t.ok ? 't-ok' : 't-bad', role: t.ok ? 'status' : 'alert',
       text: t.ok ? 'Reachable: health ' + t.health + ', ' + t.ms + ' ms.' : 'Problem: ' + (t.error || 'not reachable') }));
     if (t.hint) { host.appendChild(el('p', { class: 'conn-hint-box', text: t.hint })); }
+    if (t.via) { host.appendChild(el('p', { class: 'text-muted-d', 'data-test-via': true, text: 'The test went ' + t.via + '.' })); }
+    else if (t.proxy && t.proxy.enabled) { host.appendChild(el('p', { class: 'text-muted-d', 'data-test-via': true, text: 'The test went direct: ' + (t.proxy.note || 'the target is on the no-proxy list.') })); }
     (t.warnings || []).forEach(function (w) { host.appendChild(el('p', { class: 't-warn', text: 'Note: ' + w })); });
     if (!t.ok || !(t.kinds || []).length) { if (t.ok) { host.appendChild(el('p', { class: 'text-muted-d', text: 'It started and is healthy. It names no kinds to ask about, so nothing was read.' })); } return; }
     var tb = el('tbody');

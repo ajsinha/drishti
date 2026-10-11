@@ -59,11 +59,17 @@ final class HttpFetcher {
     }
 
     private final HttpClient http;
+    private final com.ash.drishti.api.proxy.ProxySettings proxy;
     private final YFinanceSettings settings;
 
     HttpFetcher(HttpClient http, YFinanceSettings settings) {
+        this(http, settings, com.ash.drishti.api.proxy.ProxySettings.none());
+    }
+
+    HttpFetcher(HttpClient http, YFinanceSettings settings, com.ash.drishti.api.proxy.ProxySettings proxy) {
         this.http = http;
         this.settings = settings;
+        this.proxy = proxy;
     }
 
     byte[] get(URI uri) throws IOException, InterruptedException {
@@ -89,7 +95,7 @@ final class HttpFetcher {
                 .header("Accept", "application/json").GET().build();
         long deadline = System.nanoTime() + settings.timeout().toNanos();
         try {
-            HttpResponse<InputStream> r = http.send(req, HttpResponse.BodyHandlers.ofInputStream());
+            HttpResponse<InputStream> r = proxy.send(http, req, HttpResponse.BodyHandlers.ofInputStream());
             try (InputStream in = r.body()) {
                 int code = r.statusCode();
                 if (code / 100 != 2) {

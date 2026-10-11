@@ -27,7 +27,7 @@ import httpx
 
 from core import retry as retrymod
 from core.ai import config as cfgmod
-from core.ai.providers.base import map_http_error
+from core.ai.providers.base import client_args, map_http_error
 from core.ai.policy import MASK, PromptMasker
 from core.ai.types import CallContext, LlmError
 
@@ -95,7 +95,8 @@ class StreamableHttpClient:
                     verify.load_cert_chain(s["tls.cert-file"], s.get("tls.key-file") or None)
             except (OSError, ssl.SSLError):
                 raise LlmError("config", "cannot create the TLS context") from None
-        self._http = httpx.AsyncClient(verify=verify, timeout=cfg["timeout"], follow_redirects=False)
+        args, self.proxy = client_args(cfg["settings"], cfg["url"])
+        self._http = httpx.AsyncClient(verify=verify, timeout=cfg["timeout"], follow_redirects=False, trust_env=False, **args)
         self._ids = itertools.count(1)
         self._session: str | None = None
         self._protocol = PROTOCOL

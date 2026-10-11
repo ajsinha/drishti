@@ -221,6 +221,9 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_PORT` | `server.port` | `18480` | The server's HTTP port. |
 | `DRISHTI_PRODUCT` | `drishti.branding.product` | `Drishti` | The product name shown in pages and messages. |
 | `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | A directory of extra plugin jars; empty: none. |
+| `DRISHTI_HTTP_PROXY_URL` | `drishti.http.proxy.url` | empty | The site's outbound HTTP proxy (`http://host:port`); empty: none. See [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy). |
+| `DRISHTI_HTTP_PROXY_USERNAME` | `drishti.http.proxy.username` | empty | The proxy's Basic-authentication user. |
+| `DRISHTI_HTTP_PROXY_PASSWORD` | `drishti.http.proxy.password` | empty | The proxy's password: an environment variable, never a literal in a file. |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | Run the demo source (the packs' sample data). |
 | `DRISHTI_FEEDS` | `drishti.sources.plugins.file.settings.root` | `./data/feeds` | The folder the bundled `file` source reads. |
 | `DRISHTI_REST_ENABLED` | `drishti.sources.plugins.rest.enabled` | `false` | Run the `rest` source. |
@@ -357,6 +360,24 @@ area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `
 | `drishti.retry.permanent-after` | `retry.permanent_after` | `3` | A failure waiting cannot fix (refused credentials, a setting that is wrong) seen this many times in a row is treated as permanent and retried only every `max` |
 | `drishti.retry.<area>.<key>` | `retry.<area>.<key>` | the general value | Per-area override of any key above |
 | (none) | `ai.poll_seconds` | `5` | How often the console looks at `config/ai` and `config/mcp` for a changed file and for a retry that is due |
+
+### `drishti.http.proxy` — the site's outbound HTTP proxy
+
+Every HTTP-based connector (REST, feeds, news, yfinance, S3, Delta and Iceberg on S3, the Kafka schema registry), AI provider and MCP server reaches its
+target through this proxy unless its own file has a `proxy:` block or `proxy: none`. Off by default. `http://` and `https://` targets both go through an
+`http://` proxy (https via `CONNECT`, keeping the connector's `tls.*`). Read once at start. The reference, with the no-proxy entries, the masking, what each connector does and
+the troubleshooting table, is [PROXY.md](../connectors/PROXY.md).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `drishti.http.proxy.url` | empty (off) | The proxy, `http://host:port`. `https://proxy` is refused (a proxy reached over TLS is not supported). |
+| `drishti.http.proxy.username`, `drishti.http.proxy.password` | empty | Basic authentication; give both or neither. The password is an `${ENV}` placeholder or the environment variable `DRISHTI_HTTP_PROXY_PASSWORD`; a literal written in a configuration file stops the server at start. |
+| `drishti.http.proxy.no-proxy` | empty list | Hosts that go direct: names (and their sub-domains), `.suffix`, addresses, CIDR blocks, `*`. |
+| `drishti.http.proxy.enabled` | `true` | `false` keeps the settings but switches the site default off. |
+| `drishti.http.proxy.from-environment` | `false` | When no `url` is set, honour the standard `HTTPS_PROXY`, `HTTP_PROXY` and `NO_PROXY` variables (by the target's scheme). |
+
+The console's AI and MCP clients read the same `DRISHTI_HTTP_PROXY_URL`, `_USERNAME`, `_PASSWORD`, `_NO_PROXY`, `_ENABLED` and `_FROM_ENVIRONMENT` environment variables. A connector's
+own `proxy.*` block is a connector setting (a row of `proxy.*` in each connector's settings table), not a server setting.
 
 ### AI and MCP policy settings
 
@@ -1456,6 +1477,7 @@ are parsed; redirects are not followed; an empty body is an empty document, foun
 Full detail: [REST_CONNECTOR.md](../connectors/REST_CONNECTOR.md).
 
 TLS: an `https://` `base-url` with the shared [`tls.*`](#tls--tls-for-connectors) settings for a private CA or mutual TLS ([REST_CONNECTOR.md, TLS](../connectors/REST_CONNECTOR.md#tls-for-the-rest-connector)).
+Proxy: a `proxy:` block, or the site default [`drishti.http.proxy`](#drishtihttpproxy--the-sites-outbound-http-proxy) ([REST_CONNECTOR.md, Outbound proxy](../connectors/REST_CONNECTOR.md#outbound-proxy)).
 
 ### `tls.*` — TLS for connectors
 

@@ -46,6 +46,11 @@ public final class NativeFileIO implements FileIO {
     private volatile S3Storage s3;
     private final NativeCodecs codecs;
 
+    /** The outbound proxy of the S3 endpoint. */
+    public com.ash.drishti.api.proxy.ProxySettings proxy() {
+        return s3Settings.proxy();
+    }
+
     /** The TLS material of the S3 endpoint, or null. */
     public com.ash.drishti.api.tls.TlsMaterial tls() {
         return s3Settings.tls();

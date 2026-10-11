@@ -57,6 +57,7 @@ final class SchemaRegistryClient {
     private final URI base;
     private final String authorization;
     private final TlsMaterial tls;
+    private final com.ash.drishti.api.proxy.ProxySettings proxy;
     private final int timeoutMs;
     private final Map<Integer, Registered> cache = new ConcurrentHashMap<>();
 
@@ -85,11 +86,16 @@ final class SchemaRegistryClient {
                 : bearer != null ? "Bearer " + bearer : null;
         this.timeoutMs = Integer.parseInt(Secrets.get(settings, "schema-registry.timeout-ms", env) == null ? "10000"
                 : Secrets.get(settings, "schema-registry.timeout-ms", env));
+        this.proxy = com.ash.drishti.api.proxy.ProxySettings.resolve(settings, url, env);   // proxy.* or the site default (the registry is the one HTTP part of the connector)
         TlsSettings ts = TlsSettings.parse(settings, "schema-registry.tls.", env);
         this.tls = "https".equals(base.getScheme()) ? TlsContexts.build(ts, env, java.time.Clock.systemUTC()) : null;
         if (tls == null && TlsSettings.anyGiven(settings, "schema-registry.tls.")) {
             throw new TlsException("schema-registry.tls.* is set but schema-registry.url is http://; use https://");
         }
+    }
+
+    com.ash.drishti.api.proxy.ProxySettings proxy() {
+        return proxy;
     }
 
     TlsMaterial tls() {
@@ -123,7 +129,13 @@ final class SchemaRegistryClient {
 
     private JsonNode get(String path) throws IOException {
         URL url = base.resolve(path).toURL();
-        HttpURLConnection c = (HttpURLConnection) url.openConnection();
+        boolean viaProxy = proxy.appliesTo(url.getHost());
+        HttpURLConnection c = (HttpURLConnection) (viaProxy ? url.openConnection(new java.net.Proxy(java.net.Proxy.Type.HTTP,
+                java.net.InetSocketAddress.createUnresolved(proxy.host(), proxy.port()))) : url.openConnection());
+        if (viaProxy && proxy.hasCredentials()) {
+            com.ash.drishti.api.proxy.ProxySettings.allowBasicThroughTunnels();
+            c.setAuthenticator(proxy.authenticator());
+        }
         try {
             c.setConnectTimeout(timeoutMs);
             c.setReadTimeout(timeoutMs);
@@ -137,7 +149,15 @@ final class SchemaRegistryClient {
                     https.setHostnameVerifier((host, session) -> true);
                 }
             }
-            int status = c.getResponseCode();
+            int status;
+            try {
+                status = c.getResponseCode();
+            } catch (IOException e) {
+                throw proxy.explain(e);
+            }
+            if (status == 407) {
+                throw new IOException("the proxy " + proxy.host() + ":" + proxy.port() + " refused the credentials (HTTP 407 Proxy Authentication Required): check proxy.username and proxy.password");
+            }
             if (status == 401 || status == 403) {
                 throw new IOException("the schema registry refused the credentials (HTTP " + status + "): check schema-registry.basic-auth");
             }

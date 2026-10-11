@@ -571,6 +571,7 @@ public final class ConnectorManager {
         settings.forEach((k, v) -> shown.put(k, ConnectorSecrets.secretKey(k) && !v.isBlank() && !ConnectorSecrets.reference(v) ? "***" : v));
         m.put("settings", shown);
         m.put("tls", tlsSummary(settings));
+        m.put("proxy", ConnectorProxy.summary(takesProxy(String.valueOf(m.get("plugin"))), settings, env::resolveRequiredPlaceholders));
         m.put("text", files.text(name));
         if (files.exists(name)) {
             m.put("file", files.file(name).toString());
@@ -585,6 +586,12 @@ public final class ConnectorManager {
             return h;
         }).toList() : List.of());
         return m;
+    }
+
+    /** True when the plugin's connectors speak HTTP and so offer the shared {@code proxy.*} section. */
+    private boolean takesProxy(String plugin) {
+        SettingCatalogue.PluginSpec spec = catalogue.of(plugin);
+        return spec != null && spec.proxy();
     }
 
     /** The TLS the settings ask for and when each configured certificate expires; {@code null} when no {@code tls.*} setting is given. */
@@ -660,6 +667,7 @@ public final class ConnectorManager {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("name", name);
             m.put("tls", spec.tls());
+            m.put("proxy", spec.proxy());
             m.put("declared", spec.declared());
             m.put("settings", spec.settings().stream().map(s -> {
                 Map<String, Object> x = new LinkedHashMap<>();
@@ -725,6 +733,13 @@ public final class ConnectorManager {
             }
             if (spec != null && spec.declared() && s == null) {
                 out.add(new Problem("warning", where, "'" + key + "' is not a setting the " + d.plugin() + " plugin reads (a typo?)"));
+            }
+        }
+        if (spec != null && spec.proxy() && d.settings().keySet().stream().anyMatch(k -> k.equals("proxy") || k.startsWith("proxy."))) {
+            // the proxy block is checked for meaning (a missing url, a half-given login, an https proxy), not only for shape
+            Object bad = ConnectorProxy.summary(true, d.settings(), v -> v).get("error");
+            if (bad != null && !String.valueOf(bad).contains("is not set")) {
+                out.add(new Problem("error", "settings.proxy", String.valueOf(bad)));
             }
         }
         if (on && spec != null && spec.declared()) {
@@ -1088,6 +1103,12 @@ public final class ConnectorManager {
         }
         out.put("error", err);
         out.put("hint", err == null ? null : hint(err));
+        // the connection test goes through the proxy the connector would use, and says so (never the proxy password)
+        Map<String, Object> proxy = ConnectorProxy.summary(takesProxy(d.plugin()), read, v -> v);
+        out.put("proxy", proxy);
+        if (proxy != null && Boolean.TRUE.equals(proxy.get("viaProxy"))) {
+            out.put("via", "through the " + proxy.get("sourceLabel") + " proxy " + String.valueOf(proxy.get("url")).replaceFirst("^http://", ""));
+        }
         List<Map<String, Object>> ks = new ArrayList<>();
         for (ConnectionProbe.KindRows k : r.kinds()) {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -1124,6 +1145,14 @@ public final class ConnectorManager {
     /** A plain-words reading of the errors people meet with TLS and connections. */
     static String hint(String error) {
         String e = error.toLowerCase(java.util.Locale.ROOT);
+        if (e.contains("refused the credentials") && e.contains("proxy") || e.contains("407")) {
+            return "The proxy refused the login (HTTP 407). Check proxy.username and the environment variable or file behind proxy.password; "
+                    + "if the proxy needs no login, remove them.";
+        }
+        if (e.contains("cannot connect to the proxy") || e.contains("unable to tunnel through proxy") || e.contains("refused to open a tunnel")) {
+            return "The proxy could not be used. Check proxy.url (http://host:port), that the proxy is running and reachable from this server, "
+                    + "and that it allows CONNECT to the target's port (usually 443).";
+        }
         if (e.contains("pkix path building failed") || e.contains("unable to find valid certification path") || e.contains("unknown ca")
                 || e.contains("certificate_unknown") || e.contains("self-signed") || e.contains("self signed")) {
             return "The server's certificate is not trusted. Put the certificate authority that signed it in tls.ca-file (a PEM file) "

@@ -60,12 +60,23 @@ final class HadoopLake {
         return new Local(domain.isBlank() ? r : r.resolve(domain).normalize(), engine);
     }
 
-    private static void s3(Configuration conf, Map<String, String> s) {
+    static void s3(Configuration conf, Map<String, String> s) {
         String endpoint = s.getOrDefault("s3.endpoint", "");
         if (!endpoint.isBlank()) {
             conf.set("fs.s3a.endpoint", endpoint);
             conf.set("fs.s3a.path.style.access", s.getOrDefault("s3.path-style", "true"));
             conf.set("fs.s3a.connection.ssl.enabled", String.valueOf(endpoint.startsWith("https")));
+        }
+        var proxy = com.ash.drishti.api.proxy.ProxySettings.resolve(s, endpoint.isBlank() ? "https://s3.amazonaws.com" : endpoint);
+        String target = endpoint.isBlank() ? "s3.amazonaws.com" : java.net.URI.create(endpoint).getHost();
+        if (proxy.appliesTo(target)) {                         // S3A's own proxy settings (plain http to the proxy; https endpoints are tunnelled)
+            conf.set("fs.s3a.proxy.host", proxy.host());
+            conf.set("fs.s3a.proxy.port", String.valueOf(proxy.port()));
+            conf.set("fs.s3a.proxy.ssl.enabled", "false");
+            if (proxy.hasCredentials()) {
+                conf.set("fs.s3a.proxy.username", proxy.username());
+                conf.set("fs.s3a.proxy.password", proxy.password());
+            }
         }
         if (!s.getOrDefault("s3.access-key", "").isBlank()) {
             conf.set("fs.s3a.access.key", s.get("s3.access-key"));

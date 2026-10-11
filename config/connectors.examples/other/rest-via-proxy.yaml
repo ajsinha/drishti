@@ -1,0 +1,27 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: a vendor's HTTPS API reached through the company's forward proxy with a login. Copy to config/connectors/rest-via-proxy.yaml.
+# The https target is tunnelled with CONNECT and keeps its own TLS (tls.* below is optional). Leave the proxy: block out to use the site
+# default (drishti.http.proxy.*), or write `proxy: none` to go direct. See docs/connectors/PROXY.md.
+plugin: rest
+kinds: [price]
+description: Prices from a vendor API through the corporate proxy
+settings:
+  base-url: https://api.vendor.example/v1
+  header.Authorization: Bearer ${VENDOR_TOKEN}
+  proxy:
+    url: http://proxy.corp.example:3128
+    username: svc-drishti
+    password: ${PROXY_PASSWORD}        # an environment variable, never the password itself
+    no-proxy: [intranet.example, .corp.example, 10.0.0.0/8]

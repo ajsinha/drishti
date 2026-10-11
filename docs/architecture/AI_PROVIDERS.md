@@ -65,6 +65,11 @@ retries: 0
 default-model: fast                  # used when a call names no model and this is the provider the registry falls to
 header: {X-Team: red}                # extra headers; credential-looking ones (auth, key, token, secret) must be ${ENV}
 tls: {ca-file: /etc/drishti/ca.pem}  # the shared tls.* keys; https:// trusts the JVM's authorities unless told otherwise
+proxy:                               # optional outbound HTTP proxy (see "Outbound proxy" below); `proxy: none` goes direct
+  url: http://proxy.corp.example:3128
+  username: svc-drishti
+  password: ${PROXY_PASSWORD}   # ${ENV} only; a literal is refused and the file does not load
+  no-proxy: [localhost, .corp.example]
 models:
   - name: fast                       # logical name: what features and policy refer to
     id: gpt-4o-mini                  # the provider's own id
@@ -78,6 +83,15 @@ models:
 The provider name is the file name without its extension (or `name:`). A model is referred to as `provider/model` (for example
 `openai/fast`); a bare name works when only one provider has it. The registry default is `drishti.ai.default-model`
 (`DRISHTI_AI_DEFAULT_MODEL`), else the only chat model there is.
+
+### Outbound proxy
+
+A site that reaches the model endpoint only through a forward proxy puts a `proxy:` block in the provider file (`url`, `username`, `password` as `${ENV}`, `no-proxy`, `enabled`), or
+sets the site default once: `drishti.http.proxy.*` on the server, `DRISHTI_HTTP_PROXY_URL` and friends in the console. `proxy: none` in a file goes direct whatever the site says.
+`http://` and `https://` endpoints both go through an `http://` proxy; an https endpoint is tunnelled with `CONNECT`, so `tls.*` (a private CA, a client certificate) still applies to the
+endpoint itself. OpenAI-compatible and Anthropic providers use it on the server (the JDK HTTP client) and in the console (`httpx`). A literal `proxy.password` refuses the file without
+repeating it; a wrong proxy login is reported as a failure of the call without the password. Everything is in [PROXY.md](../connectors/PROXY.md#9-the-console-ai-and-mcp-clients). Tested in
+`AiProxyTest` (Java) and `tests/test_ai_proxy.py` (console) against a fake proxy on loopback. Admin -> AI does not display the proxy yet.
 
 ### A provider that cannot be set up is retried
 
@@ -211,7 +225,7 @@ models, MCP servers and (one server at a time, by link) their tools. The console
 
 ## 9. Tests
 
-`drishti-ai`: `LlmLayerTest` (mock, files, registry and reload, a stub OpenAI-compatible server incl. headers, cost and error
+`drishti-ai`: `AiProxyTest` (the proxy: credentials from the environment, the site default, `proxy: none`, no-proxy, a literal password refused), `LlmLayerTest` (mock, files, registry and reload, a stub OpenAI-compatible server incl. headers, cost and error
 handling, a stub Anthropic server, policy), `McpLayerTest`. `drishti-server`: `AiApiTest` (REST end to end with the mock),
 `AskEndToEndTest` and friends (Ask on the layer, incl. the legacy settings), `AskOffByDefaultTest`. Console:
 `tests/test_ai_layer.py`. None touches a network beyond loopback.

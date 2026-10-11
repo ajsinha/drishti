@@ -25,6 +25,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.proxy.ProxySettings;
 import com.ash.drishti.api.tls.TlsContexts;
 import com.ash.drishti.api.tls.TlsException;
 import com.ash.drishti.api.tls.TlsMaterial;
@@ -50,6 +51,8 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.http.apache5.Apache5HttpClient;
+import software.amazon.awssdk.http.urlconnection.ProxyConfiguration;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -77,6 +80,8 @@ public final class S3SourcePlugin implements SourcePlugin {
     private static final Pattern DATE = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
     private S3Client s3;
     private TlsMaterial tls;
+    private ProxySettings proxy = ProxySettings.none();
+    private String proxyTarget;
     private String bucket;
     private String prefix;
     private String sourceName;
@@ -109,11 +114,35 @@ public final class S3SourcePlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         String endpoint = ctx.setting("endpoint", "");
         this.tls = tlsMaterial(ctx.settings(), endpoint);          // fails the start, naming the setting and the file
-        UrlConnectionHttpClient.Builder http = UrlConnectionHttpClient.builder().connectionTimeout(Duration.ofSeconds(5)).socketTimeout(Duration.ofSeconds(20));
-        if (tls != null) {
-            http.tlsTrustManagersProvider(tls::trustManagers).tlsKeyManagersProvider(tls::keyManagers);
+        String region = ctx.setting("region", "us-east-1");
+        this.proxyTarget = endpoint.isBlank() ? "https://s3." + region + ".amazonaws.com" : endpoint;
+        this.proxy = ProxySettings.resolve(ctx.settings(), proxyTarget);
+        String targetHost = endpoint.isBlank() ? "s3." + region + ".amazonaws.com" : URI.create(endpoint).getHost();
+        software.amazon.awssdk.http.SdkHttpClient.Builder<?> http;
+        if (proxy.appliesTo(targetHost)) {
+            // The JDK's URL-connection client cannot answer a proxy's login when it tunnels (CONNECT) an https endpoint, so a proxied
+            // endpoint is reached with the Apache client, which does; https endpoints keep their own TLS through the tunnel.
+            var ap = Apache5HttpClient.builder().connectionTimeout(Duration.ofSeconds(5)).socketTimeout(Duration.ofSeconds(20));
+            if (tls != null) {
+                ap.tlsTrustManagersProvider(tls::trustManagers).tlsKeyManagersProvider(tls::keyManagers);
+            }
+            var pc = software.amazon.awssdk.http.apache5.ProxyConfiguration.builder().endpoint(proxy.uri()).useSystemPropertyValues(false)
+                    .useEnvironmentVariableValues(false);
+            if (proxy.hasCredentials()) {
+                pc.username(proxy.username()).password(proxy.password()).preemptiveBasicAuthenticationEnabled(true);
+            }
+            http = ap.proxyConfiguration(pc.build());
+        } else {
+            UrlConnectionHttpClient.Builder uc = UrlConnectionHttpClient.builder().connectionTimeout(Duration.ofSeconds(5)).socketTimeout(Duration.ofSeconds(20));
+            if (tls != null) {
+                uc.tlsTrustManagersProvider(tls::trustManagers).tlsKeyManagersProvider(tls::keyManagers);
+            }
+            if (proxy.decided()) {                                  // decided here (none, or a no-proxy host): the JVM's own proxy properties do not override it
+                uc.proxyConfiguration(ProxyConfiguration.builder().useSystemPropertyValues(false).useEnvironmentVariablesValues(false).build());
+            }
+            http = uc;
         }
-        S3ClientBuilder b = S3Client.builder().region(Region.of(ctx.setting("region", "us-east-1"))).httpClientBuilder(http);
+        S3ClientBuilder b = S3Client.builder().region(Region.of(region)).httpClientBuilder(http);
         if (!endpoint.isBlank()) {
             b.endpointOverride(URI.create(endpoint)).forcePathStyle(Boolean.parseBoolean(ctx.setting("path-style", "true")));
         }
@@ -264,9 +293,9 @@ public final class S3SourcePlugin implements SourcePlugin {
     public String health() {
         String e = listingError != null ? listingError : lastError;
         if (e != null) {
-            return "DOWN: " + e + " (retrying)";
+            return proxy.annotate("DOWN: " + e + " (retrying)", proxyTarget);
         }
-        return tls == null ? "UP" : tls.annotate("UP", java.time.Instant.now());
+        return proxy.annotate(tls == null ? "UP" : tls.annotate("UP", java.time.Instant.now()), proxyTarget);
     }
 
     @Override

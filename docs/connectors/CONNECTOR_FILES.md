@@ -232,6 +232,8 @@ a path, so it is not itself a secret. A password written in a file is an environ
 The Kafka connector also has `flavour`, `security.protocol`, `sasl.*` and `schema-registry.*` (with `schema-registry.tls.*` for the
 registry's own certificate); the form lists them in a **Security** and a **Schema Registry** section.
 
+**Outbound proxy.** Every connector that speaks HTTP also takes a `proxy:` block in `settings:` (shown as a **Proxy** section of the form, generated from `ProxySettings`, the class that reads the keys): `proxy.url` (`http://host:port`), `proxy.username`, `proxy.password` (an `${ENV}` reference, like every credential), `proxy.no-proxy` (names, suffixes, addresses, CIDR blocks) and `proxy.enabled`; the bare `proxy: none` goes direct whatever the site default (`drishti.http.proxy.*`) says. The connector's page shows the effective proxy, masked, and where it came from (connector, site default, environment), and **Test connection** goes through it and says so. The reference is [PROXY.md](PROXY.md).
+
 **Test connection** turns a TLS failure into words: an untrusted certificate points you at `tls.ca-file` or `tls.truststore`, a name
 mismatch tells you to connect by a name the certificate carries, an expired certificate says so, and a wrong store password points at
 the reference. Ready-made secure files are in [`config/connectors.examples/other/`](../../config/connectors.examples/other):
