@@ -277,6 +277,7 @@
       if (rep) { rep.hidden = it.kind !== 'report'; rep.href = '/bi/r/' + enc; }
       if (des) { des.hidden = !(it.kind === 'report' && it.can && it.can.edit) && !(it.kind === 'report' && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
       if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }
+      document.dispatchEvent(new CustomEvent('bi:item', { detail: x }));          // bi-govern.js draws history, review, impact and lineage
     }
     function act(label, run, cls) {
       var b = h('button', { type: 'button', class: 'btn-pill ' + (cls || 'btn-ghost') }, label);
@@ -284,7 +285,8 @@
       return b;
     }
     function post(sub, body, done) {
-      return api('POST', path + '/' + sub, body || {}).then(function (n) { say(done || 'Done.'); show(n); return n; }).catch(fail);
+      return api('POST', path + '/' + sub, body || {}).then(function (n) { say(done || 'Done.'); show(n); return n; })
+        .catch(function (e) { fail(e); document.dispatchEvent(new CustomEvent('bi:refused', { detail: { code: e.code, message: e.message, sub: sub } })); });
     }
     function actions() {
       var box = q('[data-actions]'), c = it.can; clear(box);
@@ -328,8 +330,8 @@
       e.preventDefault();
       var f = e.target;
       api('PUT', path, { title: f.elements.title.value, description: f.elements.description.value, tags: f.elements.tags.value, audienceRoles: f.elements.audienceRoles.value,
-        audienceUsers: f.elements.audienceUsers.value, audiencePacks: f.elements.audiencePacks.value, body: f.elements.body.value })
-        .then(function (n) { say('Draft saved.'); f.hidden = true; return api('GET', path).then(show); }).catch(fail);
+        audienceUsers: f.elements.audienceUsers.value, audiencePacks: f.elements.audiencePacks.value, body: f.elements.body.value, message: f.elements.message.value })
+        .then(function (n) { say('Draft saved.'); f.hidden = true; f.elements.message.value = ''; return api('GET', path).then(show); }).catch(fail);
     });
     function versions() {
       api('GET', path + '/versions').then(function (list) {
@@ -343,6 +345,7 @@
         });
       }).catch(function () { /* a draft nobody published has no versions to show */ });
     }
+    document.addEventListener('bi:reload', function () { api('GET', path).then(show).catch(fail); });
     q('[data-favourite]').addEventListener('click', function () { api('PUT', path + '/favourite', { on: !it.favourite }).then(show).catch(fail); });
     api('POST', path + '/open').then(show).catch(function (e) { say(e.message, true); q('[data-title]').textContent = 'Not found'; });
   }

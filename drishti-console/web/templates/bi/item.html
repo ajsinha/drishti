@@ -23,6 +23,10 @@
   <p class="bi-badges" data-badges></p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
 <div class="bi-actions" data-actions></div>
+<div class="bi-callout bi-callout-bad" data-force hidden></div>
+<div class="bi-callout" data-warnings hidden></div>
+<section class="bi-sec" data-sec-review aria-labelledby="iRev" hidden><h2 id="iRev"><i class="bi bi-shield-check" aria-hidden="true"></i> Review</h2>
+  <div data-review-body></div></section>
 <p><a class="btn-pill btn-accent" data-open-dataset href="/bi/datasets" hidden><i class="bi bi-diagram-3" aria-hidden="true"></i> Open the model and run a query</a>
   <a class="btn-pill btn-ghost" data-open-model href="/bi/datasets" hidden><i class="bi bi-diagram-2" aria-hidden="true"></i> Model view</a>
   <a class="btn-pill btn-accent" data-open-report href="/bi/designer" hidden><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Open the report</a>
@@ -40,6 +44,7 @@
     <label>Users<input name="audienceUsers" class="studio-in" autocomplete="off"></label>
     <label>Packs<input name="audiencePacks" class="studio-in" autocomplete="off" placeholder="finance"></label></fieldset>
   <label>Body (YAML)<textarea name="body" class="studio-in mono" rows="12" spellcheck="false"></textarea></label>
+  <label>What changed (kept with this saved state)<input name="message" class="studio-in" maxlength="500" autocomplete="off" placeholder="for example: add the currency column"></label>
   <button type="submit" class="btn-pill btn-accent">Save draft</button>
 </form>
 <section class="bi-sec" aria-labelledby="iVer"><h2 id="iVer">Versions</h2>
@@ -48,4 +53,26 @@
     <thead><tr><th scope="col">Version</th><th scope="col">Published</th><th scope="col">By</th><th scope="col">Note</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
     <tbody></tbody></table></div>
   <p class="bi-empty" data-empty-versions hidden>Not published yet.</p></section>
+<section class="bi-sec" data-sec-history aria-labelledby="iHist" hidden><h2 id="iHist"><i class="bi bi-clock-history" aria-hidden="true"></i> History</h2>
+  <p class="text-muted-d">Every save of the body is a saved state: who, when and what changed. Compare any two, or restore one as the draft (a new saved state; nothing is lost, and the published version is not touched).</p>
+  <div class="tbl-wrap"><table class="tbl bi-tbl" data-history data-plain>
+    <caption class="visually-hidden">Saved states, newest first</caption>
+    <thead><tr><th scope="col">State</th><th scope="col">Saved</th><th scope="col">By</th><th scope="col">Message</th><th scope="col">Published</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
+    <tbody></tbody></table></div>
+  <form class="bi-form bi-inline" data-diff-form aria-label="Compare two saved states">
+    <label>Compare<select class="studio-select" data-diff-from></select></label>
+    <label>with<select class="studio-select" data-diff-to></select></label>
+    <button type="submit" class="btn-pill btn-accent">Show the differences</button></form>
+  <div data-diff-out></div>
+  <div data-events-wrap hidden><h3>Review and certification record</h3><ul class="bi-events" data-events></ul></div></section>
+<section class="bi-sec" data-sec-impact aria-labelledby="iImp" hidden><h2 id="iImp"><i class="bi bi-exclamation-diamond" aria-hidden="true"></i> Impact on reports</h2>
+  <p class="text-muted-d">What breaks if a field or measure goes: the published reports that use it. Publishing a change that breaks published reports is refused unless a bi-admin forces it.</p>
+  <div data-impact-draft></div>
+  <form class="bi-form bi-inline" data-impact-form aria-label="What breaks if I remove">
+    <label>What breaks if I remove (table.column or measure, comma separated)<input name="remove" class="studio-in mono" autocomplete="off" placeholder="trade.book, Notional"></label>
+    <button type="submit" class="btn-pill btn-ghost">Check</button></form>
+  <div data-impact-what></div></section>
+<section class="bi-sec" data-sec-lineage aria-labelledby="iLin" hidden><h2 id="iLin"><i class="bi bi-diagram-2" aria-hidden="true"></i> Lineage</h2>
+  <div data-lineage></div></section>
 {% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-govern.js?v={{ ASSET_V }}"></script>{% endblock %}
