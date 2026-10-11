@@ -1,0 +1,47 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}All subscriptions · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm">
+  <h1>Everyone's subscriptions</h1>
+  <p class="text-muted-d">Administrators: every subscription on the server, whose it is, when it runs next and how it last went. You can pause, resume or delete any of them;
+    only the owner can change what it sends.</p>
+  {% if msg %}<p class="adm-msg" role="status">{{ msg }}</p>{% endif %}
+  {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
+  <section class="pnl"><header class="pnl-h"><h3>All subscriptions</h3><span class="pnl-code">{{ items | length }}</span><a class="lnk dist-link" href="/reports">Your own</a></header><div class="pnl-b">
+    {% if items %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
+      <thead><tr><th>Owner</th><th>Name</th><th>What</th><th>When</th><th>To</th><th>Next run</th><th>Last run</th><th></th></tr></thead>
+      <tbody>{% for s in items %}{% set last = (s.runs or [None])[0] %}
+        <tr data-row-owner="{{ s.owner }}" data-row-name="{{ s.name }}"><td>{{ s.owner }}</td>
+          <td>{{ s.name }}{% if not s.enabled %} <span class="badge-kind">paused</span>{% endif %}</td>
+          <td>{{ s.title }}<div class="cmp-path">{{ s.target.type }} {{ s.target.id }}</div></td>
+          <td class="mono">{{ s.schedule }}</td>
+          <td>{{ s.recipients | join(', ') }}<div class="cmp-path">{{ s.format }}</div></td>
+          <td class="mono">{{ (s.nextRun or '—')[:16] | replace('T', ' ') }}</td>
+          <td>{% if last %}<span class="{{ 't-bad' if last.status in ['failed', 'partial'] else '' }}">{{ last.status }}</span> <span class="mono text-muted-d">{{ last.at[:16] | replace('T', ' ') }}</span>
+            · {{ last.sent }} sent{% if last.failed %}, {{ last.failed }} failed{% endif %}{% else %}—{% endif %}</td>
+          <td class="rpt-actions">
+            <form method="post" action="/reports/all/{{ s.owner | urlencode }}/{{ s.name | urlencode }}/{{ 'resume' if not s.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not s.enabled else 'Pause' }}</button></form>
+            <form method="post" action="/reports/all/{{ s.owner | urlencode }}/{{ s.name | urlencode }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<p class="text-muted-d">No subscriptions on this server.</p>{% endif %}
+  </div></section>
+</div>
+{% endblock %}

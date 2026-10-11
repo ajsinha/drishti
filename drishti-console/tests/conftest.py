@@ -690,6 +690,54 @@ class FakeBackend:
     async def delete_report(self, name, ident):
         self.reports_kept.pop(name, None)
 
+    subs_kept = {}
+    exports_made = []
+
+    async def export(self, fmt, target, ident):
+        self.exports_made.append((fmt, target, ident.user))
+        if target.get("id") == "forbidden":
+            raise BackendError(403, "DRS-9002", "you may not open this report")
+        types = {"pdf": "application/pdf", "png": "image/png", "csv": "text/csv; charset=utf-8",
+                 "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+        return (f"file:{fmt}:{target.get('id')}".encode(), {"content-type": types[fmt], "content-disposition": f"attachment; filename=\"Daily risk.{fmt}\""})
+
+    async def subscriptions(self, ident):
+        return [s for s in self.subs_kept.values() if s["owner"] == ident.user]
+
+    async def save_subscription(self, name, body, ident):
+        if "whenever" in body.get("schedule", ""):
+            raise BackendError(422, "DRS-9061", "'whenever' is not a schedule: use daily HH:MM, …")
+        if any("@" in r for r in body.get("recipients", [])):
+            raise BackendError(422, "DRS-9061", "outside addresses are not allowed here")
+        t = body["target"]
+        self.subs_kept[name] = {"name": name, "owner": ident.user, "title": "Report " + t.get("id", ""), "enabled": body.get("enabled", True), "nextRun": "2026-10-02T11:30:00Z",
+                                "runs": [], **body}
+        return self.subs_kept[name]
+
+    async def delete_subscription(self, name, ident):
+        self.subs_kept.pop(name, None)
+
+    async def run_subscription(self, name, ident):
+        run = {"id": "r1", "at": "2026-10-01T09:00:00Z", "trigger": "by hand", "status": "partial", "sent": 2, "skipped": 1, "failed": 1, "retrying": 0,
+               "deliveries": [{"to": "a@x.test", "status": "sent", "attempts": 1}, {"to": "b@x.test", "status": "failed", "attempts": 3, "error": "refused"}]}
+        self.subs_kept[name]["runs"].insert(0, run)
+        return run
+
+    async def pause_subscription(self, name, resume, ident):
+        self.subs_kept[name]["enabled"] = resume
+        return self.subs_kept[name]
+
+    async def all_subscriptions(self, ident):
+        if not getattr(ident, "is_admin", True):
+            raise BackendError(403, "DRS-5002", "administrators only")
+        return list(self.subs_kept.values())
+
+    async def admin_pause_subscription(self, owner, name, resume, ident):
+        self.subs_kept[name]["enabled"] = resume
+
+    async def admin_delete_subscription(self, owner, name, ident):
+        self.subs_kept.pop(name, None)
+
     notes_kept = []
     shares = {}
 

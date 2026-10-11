@@ -311,6 +311,7 @@
     drawTabs();
     drawGrid();
     q('[data-back]').hidden = !state.carry.length;
+    document.dispatchEvent(new CustomEvent('drishti:report-page'));
   }
 
   function syncChips() {
@@ -397,6 +398,9 @@
     go(wanted && pageOf(wanted) ? wanted : first.id, carry, false);
     window.history.replaceState({ page: pageId, carry }, '', window.location.pathname + window.location.search);
     startLive();
+    // what the export and subscribe controls (bi-export.js) need: the report, the page being shown, the state of the screen and the visuals that hold data
+    B.reportView = { id: reportId, title: r.title, page: () => pageId, state: () => stateFor({ id: '' }), visuals: () => pageOf(pageId).visuals.filter((v) => ['static', 'slicer'].indexOf(VGROUP[v.type]) < 0) };
+    document.dispatchEvent(new CustomEvent('drishti:report-ready'));
     q('[data-ready]').setAttribute('data-ready', 'yes');
   }).catch((e) => { say(e.message, true); });
 })();

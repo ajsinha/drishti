@@ -22,18 +22,49 @@ from fastapi.responses import RedirectResponse
 
 from core.backend import BackendError
 from routes.common import ident, render
+from routes.dist_routes import SUGGESTED_WHEN
 
 router = APIRouter(prefix="/reports", include_in_schema=False)
 
 
+def _subscription_link(s: dict) -> str:
+    t = s.get("target") or {}
+    if t.get("type") == "view":
+        return f"/v/{t.get('id', '')}" + (f"?{t['view']}" if t.get("view") else "")
+    return f"/bi/r/{quote(t.get('id', ''), safe=':')}" + (f"/{quote(t['page'])}" if t.get("page") else "")
+
+
+def _rows(reports: list, subs: list) -> list:
+    """The scheduled reports and the subscriptions as one list, by name: what each is, when it runs, who gets it, and how its last run went."""
+    rows = []
+    for r in reports:
+        rows.append({"kind": "report", "name": r.get("name", ""), "enabled": r.get("enabled", True), "what": r.get("query", ""), "href": "/s?q=" + quote(r.get("query", "")),
+                     "note": "the business day before" if r.get("date") == "previous" else "", "when": r.get("schedule", ""),
+                     "to": "webhook" if r.get("deliver") == "webhook" else "folder", "to_note": r.get("webhook", ""), "next": r.get("nextRun"),
+                     "runs": r.get("runs") or [], "base": f"/reports/{quote(r.get('name', ''))}"})
+    for s in subs:
+        t = s.get("target") or {}
+        scope = t.get("visual") or t.get("page") or ""
+        rows.append({"kind": "subscription", "name": s.get("name", ""), "enabled": s.get("enabled", True), "what": s.get("title") or t.get("id", ""), "href": _subscription_link(s),
+                     "note": ((f"{scope} · " if scope else "") + {"previous": "the business day before", "load": "the date of the load"}.get(s.get("date"), "")).strip(" ·"),
+                     "when": s.get("schedule", ""), "to": ", ".join(s.get("recipients") or []), "to_note": {"html": "in the email", "pdf": "PDF attached", "xlsx": "Excel attached"}.get(s.get("format"), ""),
+                     "next": s.get("nextRun"), "runs": s.get("runs") or [], "base": f"/reports/subscriptions/{quote(s.get('name', ''))}"})
+    return sorted(rows, key=lambda r: (r["name"].lower(), r["kind"]))
+
+
 async def _page(request: Request, q: str = "", msg: str = "", error: str = "", status_code: int = 200, form: dict | None = None):
+    backend = request.app.state.backend
     try:
-        mine = await request.app.state.backend.reports(ident(request))
+        mine = await backend.reports(ident(request))
     except BackendError as e:
         mine, error = [], error or e.detail
-    return render(request, "reports.html", status_code=status_code, reports=sorted(mine, key=lambda r: r.get("name", "").lower()),
+    try:
+        subs = await backend.subscriptions(ident(request))
+    except BackendError:
+        subs = []                                          # an older server has no subscriptions: the scheduled reports still list
+    return render(request, "reports.html", status_code=status_code, reports=mine, rows=_rows(mine, subs), n_subs=len(subs),
                   form=form or {"query": q, "schedule": "business-days 18:30", "deliver": "folder", "date": "today"},
-                  msg=msg, error=error, screen="reports")
+                  msg=msg, error=error, screen="reports", when=SUGGESTED_WHEN)
 
 
 @router.get("")

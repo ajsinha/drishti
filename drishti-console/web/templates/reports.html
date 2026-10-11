@@ -15,32 +15,45 @@
 #}
 {% extends "base.html" %}
 {% block title %}Reports · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm">
-  <h1>Scheduled reports</h1>
-  <p class="text-muted-d">A search, run as you on a schedule and delivered as a CSV file: to the server's reports folder, or posted to
-    a webhook your administrator allows. It sees what you may see, as your roles stand when it runs.</p>
+  <h1>Reports and subscriptions</h1>
+  <p class="text-muted-d">Everything that runs for you on a schedule, in one list. A <b>scheduled report</b> is a search, run as you and delivered as a CSV file: to the
+    server's reports folder, or posted to a webhook your administrator allows. A <b>subscription</b> is a BI report, page or visual, or a view, sent by email on a schedule
+    (or after the day's data lands), <b>rendered for each recipient</b> with their own masks and row rules. Press <b>Subscribe</b> on a report or a view to make one.</p>
   {% if msg %}<p class="adm-msg" role="status">{{ msg }}</p>{% endif %}
   {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
-  <section class="pnl"><header class="pnl-h"><h3>Your reports</h3><span class="pnl-code">{{ reports | length }}</span></header><div class="pnl-b">
-    {% if reports %}<div class="tbl-wrap"><table class="tbl" data-plain>
-      <thead><tr><th>Name</th><th>Search</th><th>When</th><th>To</th><th>Next run</th><th>Last run</th><th></th></tr></thead>
-      <tbody>{% for r in reports %}{% set last = (r.runs or [None])[0] %}
-        <tr><td>{{ r.name }}{% if not r.enabled %} <span class="badge-kind">paused</span>{% endif %}</td>
-          <td><a class="lnk mono" href="/s?q={{ r.query | urlencode }}">{{ r.query }}</a>{% if r.date == 'previous' %}<div class="cmp-path">the business day before</div>{% endif %}</td>
-          <td class="mono">{{ r.schedule }}</td>
-          <td>{{ 'webhook' if r.deliver == 'webhook' else 'folder' }}{% if r.webhook %}<div class="cmp-path mono">{{ r.webhook }}</div>{% endif %}</td>
-          <td class="mono">{{ (r.nextRun or '—')[:16] | replace('T', ' ') }}</td>
-          <td>{% if last %}<span class="{{ 't-bad' if last.status != 'ok' else '' }}">{{ last.status }}</span>
-            <span class="mono text-muted-d">{{ last.at[:16] | replace('T', ' ') }}</span>{% if last.rows is not none and last.status == 'ok' %} · {{ last.rows }} rows{% endif %}
-            {% if last.error %}<div class="cmp-path">{{ last.error }}</div>{% elif last.target %}<div class="cmp-path mono">{{ last.target }}</div>{% endif %}{% else %}—{% endif %}</td>
+  <section class="pnl" id="subscriptions"><header class="pnl-h"><h3>Your reports and subscriptions</h3><span class="pnl-code">{{ rows | length }}</span>
+    {% if me and me.is_admin %}<a class="lnk dist-link" href="/reports/all">Everyone's subscriptions</a>{% endif %}</header><div class="pnl-b">
+    {% if rows %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
+      <thead><tr><th>Name</th><th>What</th><th>When</th><th>To</th><th>Next run</th><th>Last run</th><th></th></tr></thead>
+      <tbody>{% for r in rows %}{% set last = (r.runs or [None])[0] %}
+        <tr data-row-kind="{{ r.kind }}" data-row-name="{{ r.name }}"><td>{{ r.name }} <span class="badge-kind">{{ 'subscription' if r.kind == 'subscription' else 'report' }}</span>{% if not r.enabled %} <span class="badge-kind">paused</span>{% endif %}</td>
+          <td><a class="lnk dist-link{{ ' mono' if r.kind == 'report' else '' }}" href="{{ r.href }}">{{ r.what }}</a>{% if r.note %}<div class="cmp-path">{{ r.note }}</div>{% endif %}</td>
+          <td class="mono">{{ r.when }}</td>
+          <td>{{ r.to }}{% if r.to_note %}<div class="cmp-path{{ ' mono' if r.kind == 'report' else '' }}">{{ r.to_note }}</div>{% endif %}</td>
+          <td class="mono">{{ (r.next or ('after a data load' if 'after-load' in r.when else '—'))[:16] | replace('T', ' ') }}</td>
+          <td>{% if last %}<span class="{{ 't-bad' if last.status in ['failed', 'partial'] else '' }}" data-last-status>{{ last.status }}</span>
+            <span class="mono text-muted-d">{{ last.at[:16] | replace('T', ' ') }}</span>
+            {% if r.kind == 'report' %}{% if last.rows is not none and last.status == 'ok' %} · {{ last.rows }} rows{% endif %}
+              {% if last.error %}<div class="cmp-path">{{ last.error }}</div>{% elif last.target %}<div class="cmp-path mono">{{ last.target }}</div>{% endif %}
+            {% else %} · {{ last.sent }} sent{% if last.skipped %}, {{ last.skipped }} skipped{% endif %}{% if last.retrying %}, {{ last.retrying }} to retry{% endif %}{% if last.failed %}, {{ last.failed }} failed{% endif %}
+              {% if last.error %}<div class="cmp-path">{{ last.error }}</div>{% endif %}
+              <details class="dist-hist"><summary>History</summary>
+                <ol class="dist-runs">{% for run in r.runs %}<li><span class="mono">{{ run.at[:16] | replace('T', ' ') }}</span> {{ run.trigger }} · <b class="{{ 't-bad' if run.status in ['failed', 'partial'] else '' }}">{{ run.status }}</b>
+                  · {{ run.sent }} sent{% if run.skipped %}, {{ run.skipped }} skipped{% endif %}{% if run.retrying %}, {{ run.retrying }} to retry{% endif %}{% if run.failed %}, {{ run.failed }} failed{% endif %}
+                  {% if run.deliveries %}<ul>{% for d in run.deliveries %}<li class="mono">{{ d.to }} · {{ d.status }}{% if d.attempts and d.attempts > 1 %} (attempt {{ d.attempts }}){% endif %}{% if d.error %} · {{ d.error }}{% endif %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ol>
+              </details>{% endif %}
+            {% else %}—{% endif %}</td>
           <td class="rpt-actions">
-            <form method="post" action="/reports/{{ r.name | urlencode }}/run"><button class="fk" type="submit">Run now</button></form>
-            <form method="post" action="/reports/{{ r.name | urlencode }}/delete"><button class="fk" type="submit">Delete</button></form></td></tr>
+            <form method="post" action="{{ r.base }}/run"><button class="fk dist-act" type="submit">Run now</button></form>
+            {% if r.kind == 'subscription' %}<form method="post" action="{{ r.base }}/{{ 'resume' if not r.enabled else 'pause' }}"><button class="fk dist-act" type="submit">{{ 'Resume' if not r.enabled else 'Pause' }}</button></form>{% endif %}
+            <form method="post" action="{{ r.base }}/delete"><button class="fk dist-act" type="submit">Delete</button></form></td></tr>
       {% endfor %}</tbody></table></div>
-    {% else %}<p class="text-muted-d">None yet. Make one below, or press <b>Schedule…</b> on a search.</p>{% endif %}
+    {% else %}<p class="text-muted-d">None yet. Make a scheduled report below, press <b>Schedule…</b> on a search, or press <b>Subscribe</b> on a BI report or a view.</p>{% endif %}
   </div></section>
   <section class="pnl"><header class="pnl-h"><h3>New report, or change one (same name)</h3></header><div class="pnl-b">
     <form class="alert-form" method="post" action="/reports">
@@ -58,7 +71,7 @@
       <button type="submit" class="btn-pill btn-accent">Save report</button>
     </form>
     <p class="text-muted-d">When: <code>daily HH:MM</code>, <code>weekdays HH:MM</code>, <code>business-days HH:MM</code> (skips holidays),
-      <code>hourly</code>, or <code>cron</code> and six fields. Times are in the business-date zone. Email delivery needs SMTP settings on the server.</p>
+      <code>hourly</code>, or <code>cron</code> and six fields (a subscription also takes <code>weekly mon HH:MM</code>, <code>monthly 1|last HH:MM</code>, each with <code>business</code> after it to move off a holiday, and <code>after-load</code>). Times are in the business-date zone. Email delivery needs SMTP settings on the server.</p>
   </div></section>
 </div>
 {% endblock %}

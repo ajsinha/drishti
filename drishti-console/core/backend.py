@@ -448,6 +448,38 @@ class BackendClient:
     async def delete_report(self, name: str, ident) -> None:
         return await self._send("DELETE", f"/me/reports/{quote(name)}", ident)
 
+    # -- distribution: export and subscriptions ----------------------------------------------------------------
+    async def export(self, fmt: str, target: dict, ident) -> tuple[bytes, Any]:
+        """A report, page, visual or view as a file for the signed-in reader (``pdf``, ``png``, ``xlsx``, ``csv``): ``(bytes, headers)``."""
+        return await self._send("POST", f"/export/{quote(fmt)}", ident, json=target, raw=True, with_headers=True, timeout=120.0)
+
+    async def subscriptions(self, ident) -> list:
+        return await self._get("/me/subscriptions", ident)
+
+    async def save_subscription(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/me/subscriptions/{quote(name)}", ident, json=body)
+
+    async def delete_subscription(self, name: str, ident) -> None:
+        return await self._send("DELETE", f"/me/subscriptions/{quote(name)}", ident)
+
+    async def run_subscription(self, name: str, ident) -> dict:
+        return await self._send("POST", f"/me/subscriptions/{quote(name)}/run", ident, timeout=300.0)
+
+    async def pause_subscription(self, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/me/subscriptions/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+
+    async def preview_schedule(self, schedule: str, ident) -> dict:
+        return await self._send("POST", "/subscriptions/preview", ident, json={"schedule": schedule})
+
+    async def all_subscriptions(self, ident) -> list:
+        return await self._get("/admin/subscriptions", ident)
+
+    async def admin_pause_subscription(self, owner: str, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/admin/subscriptions/{quote(owner)}/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+
+    async def admin_delete_subscription(self, owner: str, name: str, ident) -> None:
+        return await self._send("DELETE", f"/admin/subscriptions/{quote(owner)}/{quote(name)}", ident)
+
     # -- notes ------------------------------------------------------------------------------------
     async def notes(self, kind: str, id_: str, ident) -> list:
         where, q = entity_path(kind, id_)

@@ -60,10 +60,12 @@
 {% set nsf = namespace(items=[], rep=[]) %}{% for p in pack_switcher if p.active and p.forms %}{% set nsf.items = nsf.items + [('/form/' ~ p.name, 'card-checklist', p.title or p.name, (p.forms | length) ~ (' kind' if p.forms | length == 1 else ' kinds') ~ ' with a form: ' ~ (p.forms.keys() | list | join(', ')), '/form/' ~ p.name)] %}{% endfor %}
 {% set FORM_COLS = [('Query by form', [('/forms', 'ui-checks-grid', 'All forms', 'Every pack with a search form, a filter, your recent forms and saved searches. Also: FORM <GO>', '/forms')])] %}
 {% if nsf.items %}{% set FORM_COLS = FORM_COLS + [('Packs with forms', nsf.items)] %}{% endif %}
-{% set REPORT_ITEMS = [('/reports', 'calendar-check', 'Saved and scheduled reports', 'Searches delivered as CSV on a schedule', '/reports')] %}
+{% set REPORT_ITEMS = [('/reports', 'calendar-check', 'Saved and scheduled reports', 'Searches delivered as CSV on a schedule, with your subscriptions in one list', '/reports'),
+  ('/reports#subscriptions', 'envelope-paper', 'My subscriptions', 'Reports and views sent to you or to others by email, on a schedule', None)] %}
+{% if me and me.is_admin %}{% set REPORT_ITEMS = REPORT_ITEMS + [('/reports/all', 'envelope-paper-heart', 'All subscriptions', 'Administrators: everyone\'s subscriptions, pause or remove', '/reports/all')] %}{% endif %}
 {% if bi_me and bi_me.enabled %}{% set REPORT_ITEMS = REPORT_ITEMS + [('/bi/catalogue?kind=report', 'bar-chart-line', 'BI reports', 'Published reports and boards you may open. Also: RUPAKA CATALOGUE', None)] %}
 {% for r in bi_me.recent if r.kind == 'report' %}{% set nsf.rep = nsf.rep + [('/bi/i/' ~ r.id, 'clock-history', r.title, 'BI report you opened recently', '/bi/i/' ~ r.id)] %}{% endfor %}{% set REPORT_ITEMS = REPORT_ITEMS + nsf.rep %}{% endif %}
-{% set TIPS = {'Forms': 'Forms — query by form', 'Reports': 'Reports — saved and scheduled reports, and BI reports'} %}
+{% set TIPS = {'Forms': 'Forms — query by form', 'Reports': 'Reports — saved and scheduled reports, subscriptions, and BI reports'} %}
 {% set POS = 2 if (bi_me and bi_me.enabled) else 1 %}
 {% set MENU = MENU[:POS] + [('Forms', 'card-checklist', FORM_COLS), ('Reports', 'file-earmark-bar-graph', [('Reports', REPORT_ITEMS)])] + MENU[POS:] %}
 {% if me and me.is_admin %}{% set MENU = MENU + [
