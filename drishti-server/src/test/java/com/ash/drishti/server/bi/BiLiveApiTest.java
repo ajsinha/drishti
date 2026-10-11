@@ -196,10 +196,10 @@ class BiLiveApiTest {
         String body = "{\"page\":\"grid\",\"visual\":\"all-trades\",\"state\":{\"limit\":50}}";
         JsonNode risk = ok(call("POST", "/api/v1/bi/reports/" + REPORT + "/query", rita(), body));
         JsonNode analyst = ok(call("POST", "/api/v1/bi/reports/" + REPORT + "/query", ann(), body));
-        int trader = columnIndex(risk, "trade.trader");
+        int trader = columnIndex(risk, "trader");
         assertThat(risk.path("rows").get(0).get(trader).asText()).startsWith("TRDR-");
         assertThat(analyst.path("rows").get(0).get(trader).asText()).isEqualTo("•••");
-        assertThat(analyst.path("meta").path("masked").toString()).contains("trade.trader");
+        assertThat(analyst.path("meta").path("masked").toString()).contains("trader");
         long gen = risk.path("live").path("generation").asLong();
         long end = System.currentTimeMillis() + 10_000;
         JsonNode later = risk;
@@ -229,10 +229,10 @@ class BiLiveApiTest {
         assertThat(risk.headers().get("content-type").get(0)).isEqualTo("application/vnd.apache.arrow.stream");
         ArrowTestReader.Table table = ArrowTestReader.read(risk.body());
         assertThat(table.rows()).isGreaterThan(100);
-        assertThat(table.columns()).containsKeys("trade.tradeId", "trade.trader", "trade.mtm", "trade.id", "trade.updateSeq");
-        assertThat(table.columns().get("trade.trader").get(0).toString()).startsWith("TRDR-");
+        assertThat(table.columns()).containsKeys("tradeId", "trader", "mtm", "id", "updateSeq");
+        assertThat(table.columns().get("trader").get(0).toString()).startsWith("TRDR-");
         ArrowTestReader.Table masked = ArrowTestReader.read(call("POST", path, ann(), snapshot).body());
-        assertThat(masked.columns().get("trade.trader")).allMatch("•••"::equals);
+        assertThat(masked.columns().get("trader")).allMatch("•••"::equals);
         assertThat(masked.rows()).isEqualTo(table.rows());
         JsonNode live = json.readTree(risk.headers().get("x-bi-live").get(0));
         long seq = live.path("tables").get(0).path("seq").asLong();
@@ -249,7 +249,7 @@ class BiLiveApiTest {
         }
         assertThat(delta).isNotNull();
         assertThat(delta.path("rowCount").asInt()).isBetween(1, table.rows());
-        int s = columnIndex(delta, "trade.updateSeq");
+        int s = columnIndex(delta, "updateSeq");
         for (JsonNode row : delta.path("rows")) {
             assertThat(row.get(s).asLong()).isGreaterThan(seq);
         }

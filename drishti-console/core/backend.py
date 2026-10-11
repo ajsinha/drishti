@@ -504,6 +504,15 @@ class BackendClient:
             kw["json"] = body
         return await self._send(method, "/bi" + path, ident, **kw)
 
+    async def bi_arrow(self, path: str, ident, body: dict | None, **params):
+        """A BI answer that is bytes (a Perspective visual's rows as an Arrow IPC stream): ``(bytes, response headers)``."""
+        kw: dict = {"raw": True, "with_headers": True}
+        if params:
+            kw["params"] = params
+        if body is not None:
+            kw["json"] = body
+        return await self._send("POST", "/bi" + path, ident, **kw)
+
     # -- Rupaka phase 0 proof of concept (docs/architecture/RUPAKA_POC.md) -------------------------------------
     async def poc_query(self, body: dict, ident):
         """The proof of concept's masked aggregation: ``(Arrow IPC stream bytes, response headers)``."""

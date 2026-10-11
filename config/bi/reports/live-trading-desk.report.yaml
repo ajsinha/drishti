@@ -37,11 +37,13 @@ pages:
   - id: desk
     title: Desk
     visuals:
-      - { id: trades,   type: card, title: Trades,         at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
-      - { id: notional, type: card, title: Notional,       at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
-      - { id: mtm,      type: card, title: Net MTM,        at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [MTM] },
+      - { id: trades,   type: card, title: Trades,         at: { x: 0, y: 0, w: 2, h: 2 }, wells: { values: [Trades] } }
+      - { id: notional, type: card, title: Notional,       at: { x: 2, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
+      - { id: mtm,      type: card, title: Net MTM,        at: { x: 5, y: 0, w: 3, h: 2 }, wells: { values: [MTM] },
           format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] } }
-      - { id: pnl,      type: card, title: P&L 1d,         at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: ["PnL 1d"] },
+      - { id: losses,   type: card, title: Losses,         at: { x: 8, y: 0, w: 2, h: 2 }, wells: { values: [Losses] },
+          format: { conditional: [{ measure: Losses, op: lt, value: 0, colour: "#b3261e" }] } }
+      - { id: pnl,      type: card, title: P&L 1d,         at: { x: 10, y: 0, w: 2, h: 2 }, wells: { values: ["PnL 1d"] },
           format: { conditional: [{ measure: "PnL 1d", op: lt, value: 0, colour: "#b3261e" }] } }
 
       - id: by-desk

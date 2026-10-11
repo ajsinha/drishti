@@ -47,6 +47,13 @@
   V.formatOf = (ctx, name) => (ctx.index.measures[name] && ctx.index.measures[name].format) || (ctx.index.columns[name] && ctx.index.columns[name].format) || null;
   V.numFmt = (spec, ctx, name) => (spec.format && spec.format.numberFormat) || V.formatOf(ctx, name);
 
+  /** A live redraw (`ctx.update`) of a number that changed: the new value flashes for a moment (the style sheet turns the flash off for people who ask for less motion). */
+  V.flashIfChanged = function (host, el, ctx) {
+    if (!ctx.update) { return; }
+    const old = host.querySelector('.bi-card-value');
+    if (old && old.getAttribute('data-value') !== el.getAttribute('data-value')) { el.classList.add('bi-flash'); }
+  };
+
   function emptyNote(host, text) {
     B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text }));
     return { dispose() {}, resize() {} };
@@ -74,41 +81,55 @@
     };
   }
 
-  /** Mounts an ECharts instance in `host` and wires click and the keyboard. `marks` is [{value, label, text}] in the order of the first axis. */
+  /** Mounts an ECharts instance in `host` and wires click and the keyboard. `marks` is [{value, label, text}] in the order of the first axis. When the viewer
+      redraws a live visual (`ctx.update`) and the chart is already there, its option is replaced in place: no new instance, no flicker, the keyboard cursor stays. */
   function mount(host, option, spec, ctx, marks) {
     if (!window.echarts) { return emptyNote(host, 'The chart library did not load.'); }
+    const sig = spec.type + ':' + spec.id;
+    const prev = ctx.update ? host.querySelector(':scope > .bi-chart') : null;
+    if (prev && prev.__chart && !prev.__chart.isDisposed() && prev.__sig === sig) {
+      prev.__state.marks = marks;
+      prev.__chart.setOption(option, true);
+      return prev.__handle;
+    }
     B.clear(host);
     const box = h('div', { class: 'bi-chart', tabindex: ctx.interactive ? '0' : '-1', role: 'img', 'aria-label': spec.alt || spec.title || spec.type });
     host.appendChild(box);
     const chart = window.echarts.init(box, null, { renderer: 'canvas' });
     chart.setOption(option);
     box.__chart = chart;
+    box.__sig = sig;
+    const state = { marks };
+    box.__state = state;
     let cursor = -1;
     const live = h('span', { class: 'visually-hidden', role: 'status', 'aria-live': 'polite' });
     host.appendChild(live);
-    const openMark = (m, x, y) => { if (ctx.interactive && ctx.onMark && m) { ctx.onMark({ visual: spec.id, field: marks.field, value: m.value, label: m.label }, { x, y, el: box }); } };
+    const openMark = (m, x, y) => { if (ctx.interactive && ctx.onMark && m) { ctx.onMark({ visual: spec.id, field: state.marks.field, value: m.value, label: m.label }, { x, y, el: box }); } };
     chart.on('click', (p) => {
-      let m = p.name ? marks.byName(p.name) : null;
-      if (!m) { m = marks.items[p.seriesType === 'heatmap' || p.seriesType === 'custom' ? p.value[0] : p.dataIndex]; }
+      let m = p.name ? state.marks.byName(p.name) : null;
+      if (!m) { m = state.marks.items[p.seriesType === 'heatmap' || p.seriesType === 'custom' ? p.value[0] : p.dataIndex]; }
       const ev = p.event && p.event.event;
       openMark(m, ev ? ev.clientX : 0, ev ? ev.clientY : 0);
     });
     box.addEventListener('keydown', (e) => {
-      if (!ctx.interactive || !marks.items.length) { return; }
+      const items = state.marks.items;
+      if (!ctx.interactive || !items.length) { return; }
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
         e.preventDefault();
         const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1;
         if (cursor >= 0) { chart.dispatchAction({ type: 'downplay', seriesIndex: 0, dataIndex: cursor }); }
-        cursor = (cursor + step + marks.items.length) % marks.items.length;
+        cursor = (cursor + step + items.length) % items.length;
         chart.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: cursor });
-        live.textContent = marks.items[cursor].text;
+        live.textContent = items[cursor].text;
       } else if ((e.key === 'Enter' || e.key === ' ') && cursor >= 0) {
         e.preventDefault();
         const r = box.getBoundingClientRect();
-        openMark(marks.items[cursor], r.left + r.width / 2, r.top + r.height / 2);
+        openMark(items[cursor], r.left + r.width / 2, r.top + r.height / 2);
       } else if (e.key === 'Escape') { cursor = -1; }
     });
-    return { dispose() { chart.dispose(); }, resize() { chart.resize(); } };
+    const handle = { dispose() { chart.dispose(); }, resize() { chart.resize(); } };
+    box.__handle = handle;
+    return handle;
   }
 
   /** Categories, series and values of a category chart: one series per measure, or one per value of the legend field (the first measure). */
@@ -368,6 +389,7 @@
     const colour = V.conditional(spec, m, v);
     const big = h('div', { class: 'bi-card-value', 'data-value': v == null ? '' : String(v), text: B.fmt(v, V.numFmt(spec, ctx, m), tb.isMasked(m)) });
     if (colour) { big.style.color = colour; }
+    V.flashIfChanged(host, big, ctx);
     B.clear(host).appendChild(h('div', { class: 'bi-card-body' }, big, spec.title ? null : h('div', { class: 'bi-card-label', text: m })));
     return { dispose() {}, resize() {} };
   }
@@ -400,6 +422,7 @@
     const value = h('div', { class: 'bi-card-value', 'data-value': v == null ? '' : String(v), text: B.fmt(v, nf, tb.isMasked(m)) });
     const colour = V.conditional(spec, m, v);
     if (colour) { value.style.color = colour; }
+    V.flashIfChanged(host, value, ctx);
     body.appendChild(value);
     if (!spec.title) { body.appendChild(h('div', { class: 'bi-card-label', text: m })); }
     if (typeof v === 'number' && typeof target === 'number' && target !== 0) {
@@ -419,7 +442,47 @@
     return handle;
   }
 
-  const CHARTS = { bar: categoryChart, column: categoryChart, line: categoryChart, area: categoryChart, combo: categoryChart, pie: pieChart, donut: pieChart, waterfall, treemap, heatmap, scatter, gauge };
+  // ---- a rolling line of measures (live-chart) -----------------------------------------------------------------------
+
+  /**
+   * Each redraw adds one point per measure (the first row of the answer) and keeps the latest `format.window` (default 120): a line of how the numbers have
+   * moved since the page was opened. The points live in the browser (`ctx.rolling[visual id]`); the server holds no history for it.
+   */
+  function liveChart(host, spec, ctx, res) {
+    const tb = V.table(res);
+    const f = spec.format || {};
+    const limit = Math.max(5, Math.min(1000, Number(f.window) || 120));
+    const store = ctx.rolling || (host.__rolling = host.__rolling || {});
+    const key = ctx.rollingKey || spec.id;
+    const buf = (store[key] = store[key] || { t: [], series: {} });
+    const row = tb.rows[0] || [];
+    const now = new Date();
+    buf.t.push(now.toTimeString().slice(0, 8));
+    (spec.wells.values || []).forEach((m) => {
+      const v = row[tb.at(m)];
+      (buf.series[m] = buf.series[m] || []).push(typeof v === 'number' ? v : null);
+    });
+    while (buf.t.length > limit) { buf.t.shift(); Object.keys(buf.series).forEach((k) => buf.series[k].shift()); }
+    const t = ctx.t;
+    const measures = spec.wells.values || [];
+    const series = measures.map((m, i) => ({
+      name: m, type: 'line', data: buf.series[m] || [], showSymbol: false, smooth: !!f.smooth, lineStyle: { color: ctx.palette[i % ctx.palette.length], width: 2 }, itemStyle: { color: ctx.palette[i % ctx.palette.length] }
+    }));
+    const option = baseOption(spec, ctx, {
+      legend: measures.length > 1, extra: {
+        xAxis: Object.assign({ type: 'category', data: buf.t, boundaryGap: false }, axisStyle(t)), yAxis: valueAxis(spec, ctx, t, measures[0]), series,
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'axis', formatter: (p) => { const l = Array.isArray(p) ? p : [p]; return l[0].name + '\n' + l.map((x) => x.seriesName + ': ' + B.fmt(x.value, V.numFmt(spec, ctx, x.seriesName))).join('\n'); } })
+      }
+    });
+    const first = measures[0];
+    const marks = { field: null, items: [], byName: () => null };
+    const handle = mount(host, option, Object.assign({}, spec, { alt: spec.alt || (spec.title + ': ' + B.fmt(buf.series[first][buf.series[first].length - 1], V.numFmt(spec, ctx, first), tb.isMasked(first))) }), ctx, marks);
+    const box = host.querySelector(':scope > .bi-chart');
+    if (box) { box.setAttribute('aria-label', (spec.alt || spec.title || 'Rolling chart') + ': ' + measures.map((m) => m + ' ' + B.fmt((buf.series[m] || []).slice(-1)[0], V.numFmt(spec, ctx, m), tb.isMasked(m))).join(', ')); }
+    return handle;
+  }
+
+  const CHARTS = { 'live-chart': liveChart, bar: categoryChart, column: categoryChart, line: categoryChart, area: categoryChart, combo: categoryChart, pie: pieChart, donut: pieChart, waterfall, treemap, heatmap, scatter, gauge };
   const CARDS = { card, 'multirow-card': multirow, kpi };
 
   /** Draws the visual if it is a chart or a card; returns the handle, or null when the type is not one of these (bi-grids.js draws the rest). */

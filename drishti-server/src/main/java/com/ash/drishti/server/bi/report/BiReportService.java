@@ -215,7 +215,7 @@ public final class BiReportService {
         Prepared pre = prepare(p, id, yaml, pageId, visualId, stateJson);
         boolean author = bi.mayAuthor(p);
         Map<String, Object> live = liveOf(p, pre);                  // read before the query: rows that change meanwhile are above its seq, so a client asking "since" misses none
-        QueryService.Result r = datasets.queryItem(p, pre.dsItem(), pre.built().query(), explain && author);
+        QueryService.Result r = shortNames(pre, datasets.queryItem(p, pre.dsItem(), pre.built().query(), explain && author));
         Map<String, Object> out = new LinkedHashMap<>(datasets.json(r));
         if (pre.built().highlight() != null) {
             out.put("highlight", datasets.json(datasets.queryItem(p, pre.dsItem(), pre.built().highlight(), false)));
@@ -236,7 +236,7 @@ public final class BiReportService {
     public ArrowAnswer queryArrow(Principal p, String id, String pageId, String visualId, JsonNode stateJson) {
         Prepared pre = prepare(p, id, null, pageId, visualId, stateJson);
         Map<String, Object> live = liveOf(p, pre);
-        QueryService.Result r = datasets.queryItem(p, pre.dsItem(), pre.built().query(), false);
+        QueryService.Result r = shortNames(pre, datasets.queryItem(p, pre.dsItem(), pre.built().query(), false));
         return new ArrowAnswer(datasets.arrow(r), datasets.meta(r), live);
     }
 
@@ -246,6 +246,27 @@ public final class BiReportService {
             return null;
         }
         return datasets.liveTick(p, pre.dsItem());
+    }
+
+    /**
+     * A Perspective visual shows the rows of one table, so its columns are named as the table names them ({@code trader}, not {@code trade.trader}): the names
+     * Perspective shows as headers and an update's rows are keyed by.
+     */
+    private static QueryService.Result shortNames(Prepared pre, QueryService.Result r) {
+        if (!pre.visual().type().startsWith("perspective-") || pre.built().query().fields().isEmpty()) {
+            return r;
+        }
+        String first = pre.built().query().fields().get(0);
+        String prefix = first.substring(0, Math.max(0, first.indexOf('.') + 1));
+        if (prefix.isEmpty()) {
+            return r;
+        }
+        List<com.ash.drishti.server.bi.engine.ArrowIpcWriter.Column> cols = r.columns().stream()
+                .map(c -> c.name().startsWith(prefix) ? new com.ash.drishti.server.bi.engine.ArrowIpcWriter.Column(c.name().substring(prefix.length()), c.kind(), c.values()) : c).toList();
+        QueryService.Meta m = r.meta();
+        List<String> masked = m.masked().stream().map(x -> x.startsWith(prefix) ? x.substring(prefix.length()) : x).toList();
+        return new QueryService.Result(cols, r.rows(), new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(), masked, m.warnings(), m.sql(),
+                m.generation()));
     }
 
     /** A visual's query, built and ready to run. */
