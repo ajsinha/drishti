@@ -132,8 +132,8 @@ Every one of these is a single operation, sent with the revision you built on. I
 
 Four ways, all producing the same operation, and the first is always in sight:
 
-1. **+ Add panel** in the bar above the screen, on every tab and at phone width. A chooser lists all 20 kinds with an icon and a line each; type to filter, Up/Down, Enter. Whatever tab you were on, the workbench switches to **Design**, selects the new panel, scrolls it into view, flashes it and opens the inspector.
-2. **Drag a kind** from the palette (**Add a panel**, a filterable grid of the 20 kinds) onto the canvas. The bar shows where it will go; drop it.
+1. **+ Add panel** in the bar above the screen, on every tab and at phone width. A chooser lists all 21 kinds with an icon and a line each; type to filter, Up/Down, Enter. Whatever tab you were on, the workbench switches to **Design**, selects the new panel, scrolls it into view, flashes it and opens the inspector.
+2. **Drag a kind** from the palette (**Add a panel**, a filterable grid of the 21 kinds) onto the canvas. The bar shows where it will go; drop it.
 3. Press a kind's **Add** button in the palette: it goes after the selected panel (or at the end of the main column).
 4. The key `N` on the canvas, or the command palette's **Add panel…**.
 
