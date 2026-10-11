@@ -54,6 +54,18 @@ public final class IdentityRepositories {
         void deleteByItemId(String itemId);
     }
 
+    public interface BiRevisions extends JpaRepository<BiEntities.BiRevision, String> {
+        List<BiEntities.BiRevision> findByItemIdOrderBySeqDesc(String itemId);
+
+        void deleteByItemId(String itemId);
+    }
+
+    public interface BiEvents extends JpaRepository<BiEntities.BiEvent, String> {
+        List<BiEntities.BiEvent> findByItemIdOrderBySeqDesc(String itemId);
+
+        void deleteByItemId(String itemId);
+    }
+
     public interface BiUserItems extends JpaRepository<BiEntities.BiUserItem, String> {
         List<BiEntities.BiUserItem> findByUsername(String username);
     }

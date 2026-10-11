@@ -320,6 +320,21 @@ public final class DatasetService {
         return r;
     }
 
+    /**
+     * Runs a query against the text of a draft dataset (a reviewer's data preview): the draft's own layers, the caller's row rules and masks. Not audited
+     * as a read of the stored dataset: the reviewer asks to see what would be published.
+     */
+    public QueryService.Result queryDraft(Principal p, BiStore.Item item, String body, QueryRequest q) {
+        DatasetParser.Result r = DatasetParser.parse(body);
+        if (!r.ok()) {
+            throw new DrishtiException(ErrorCode.DATASET_INVALID, "the draft of '" + item.title() + "' has errors: " + r.firstError());
+        }
+        QueryService.Loaded ds = new QueryService.Loaded(item.id() + "~review", Layers.key(item.id() + "~review"), r.dataset(), hash(body));
+        QueryService.Result res = queries.query(ds, q, caller(p, ds.dataset()), false);
+        audit.record(p.user(), "bi-query", item.id(), "review preview: " + res.rows() + " rows from " + res.meta().layer());
+        return res;
+    }
+
     /** The answer as JSON for a small result: columns with their types and the rows. */
     public Map<String, Object> json(QueryService.Result r) {
         if (r.rows() > props.jsonMaxRows()) {

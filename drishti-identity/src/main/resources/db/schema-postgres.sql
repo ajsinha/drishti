@@ -388,6 +388,16 @@ CREATE TABLE IF NOT EXISTS drishti_bi_version (
     created_by VARCHAR(255) NOT NULL DEFAULT '', created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 CREATE INDEX IF NOT EXISTS ix_bi_version_item ON drishti_bi_version (item_id);
+CREATE TABLE IF NOT EXISTS drishti_bi_revision (
+    id VARCHAR(255) PRIMARY KEY, item_id VARCHAR(255) NOT NULL, seq INTEGER NOT NULL, body TEXT NOT NULL DEFAULT '', message TEXT NOT NULL DEFAULT '', author VARCHAR(255) NOT NULL DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL, origin VARCHAR(255) NOT NULL DEFAULT 'save', published_version INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS ix_bi_revision_item ON drishti_bi_revision (item_id);
+CREATE TABLE IF NOT EXISTS drishti_bi_event (
+    id VARCHAR(255) PRIMARY KEY, item_id VARCHAR(255) NOT NULL, seq INTEGER NOT NULL, action VARCHAR(255) NOT NULL, actor VARCHAR(255) NOT NULL DEFAULT '', note TEXT NOT NULL DEFAULT '',
+    revision INTEGER NOT NULL DEFAULT 0, created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ix_bi_event_item ON drishti_bi_event (item_id);
 CREATE TABLE IF NOT EXISTS drishti_bi_user_item (
     id VARCHAR(255) PRIMARY KEY, username VARCHAR(255) NOT NULL, item_id VARCHAR(255) NOT NULL, favourite BOOLEAN NOT NULL, last_opened TIMESTAMP WITH TIME ZONE, opens INTEGER NOT NULL DEFAULT 0
 );

@@ -1070,6 +1070,19 @@ How many rows each kind of visual asks the engine for ([REPORTS.md](../guides/RE
 | `show-rows` | `1000` | Most rows *Show the rows* returns. |
 | `top-candidates` | `10000` | Most values a top-N filter ranks before it keeps its N. |
 
+### `drishti.bi.governance` — publishing and governance (phase 4)
+
+Saved states, review, certification, impact analysis and bundles ([BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md)).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `revisions-keep` | `200` | Saved states (revisions) kept per item; the oldest go first, but a saved state that is a published version is never dropped. Every change of the body is one. |
+| `preview-rows` | `20` | Rows of data a reviewer sees in the preview of a dataset or a report under review (at most 500). The reviewer's own row rules and masks apply. |
+| `refuse-breaking` | `true` | Refuse (`409 DRS-9040`) publishing a dataset change that removes or renames a field, measure or hierarchy a **published** report uses. A `bi-admin` can publish with `force`. Off: the publish goes ahead and answers with warnings. |
+| `revoke-certification` | `true` | Take certification away automatically from a certified dataset that changed incompatibly, and from certified reports broken by such a change; the owner and whoever certified are told. |
+| `bundle-max-bytes` | `8388608` | Largest BI bundle an import reads (`422 DRS-9041` above it). |
+| `tell-people` | `true` | Tell people in the inbox (the bell) when a review is asked for (reviewers), decided (the author) or a certification is revoked (the owner and whoever certified). Off: no inbox rows; the audit log and the item's history still record everything. |
+
 ### `drishti.bi.poc` — Rupaka phase 0 proof of concept
 
 **Throw-away code**, off by default, that tests the risky parts of the BI design (`docs/architecture/RUPAKA_POC.md`):

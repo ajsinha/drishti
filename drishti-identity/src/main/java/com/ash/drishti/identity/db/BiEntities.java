@@ -179,6 +179,69 @@ public final class BiEntities {
         public Instant createdAt;
     }
 
+    /** One saved state of an item's body (id = item/seq): every save is a revision, so nothing an author did is lost. */
+    @Entity(name = "BiRevision")
+    @Table(name = "drishti_bi_revision")
+    public static class BiRevision {
+        @Id
+        @Column(name = "id", nullable = false)
+        public String id;
+
+        @Column(name = "item_id", nullable = false)
+        public String itemId = "";
+
+        @Column(name = "seq", nullable = false)
+        public int seq;
+
+        @Column(name = "body", nullable = false)
+        public String body = "";
+
+        @Column(name = "message", nullable = false)
+        public String message = "";
+
+        @Column(name = "author", nullable = false)
+        public String author = "";
+
+        @Column(name = "created_at", nullable = false)
+        public Instant createdAt;
+
+        @Column(name = "origin", nullable = false)
+        public String origin = "save";
+
+        @Column(name = "published_version", nullable = false)
+        public int publishedVersion;
+    }
+
+    /** A governance event on an item (id = item/seq): review requested, approved, rejected, withdrawn, certification given or revoked, imported. */
+    @Entity(name = "BiEvent")
+    @Table(name = "drishti_bi_event")
+    public static class BiEvent {
+        @Id
+        @Column(name = "id", nullable = false)
+        public String id;
+
+        @Column(name = "item_id", nullable = false)
+        public String itemId = "";
+
+        @Column(name = "seq", nullable = false)
+        public int seq;
+
+        @Column(name = "action", nullable = false)
+        public String action = "";
+
+        @Column(name = "actor", nullable = false)
+        public String actor = "";
+
+        @Column(name = "note", nullable = false)
+        public String note = "";
+
+        @Column(name = "revision", nullable = false)
+        public int revision;
+
+        @Column(name = "created_at", nullable = false)
+        public Instant createdAt;
+    }
+
     /** What a user does with an item: favourite, last opened (id = username/item). */
     @Entity(name = "BiUserItem")
     @Table(name = "drishti_bi_user_item")
