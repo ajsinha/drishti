@@ -106,7 +106,7 @@ def seed() -> dict:
     ids = {}
     for key, kind, title, desc, tags, body, publish, audience in [
         ("pnl", "report", "Desk P&L", "Daily P&L by book and trader, with the day's movers", ["pnl", "daily"], "report: desk-pnl\ndataset: trades-basic\npages:\n  - id: overview\n    title: Overview\n    visuals: []\n", True, ["bi-reader", "bi-steward"]),
-        ("exposure", "board", "Counterparty exposure", "Live exposure by counterparty against limits", ["exposure", "credit"], "board:\n  source: counterparty\n", True, ["bi-reader"]),
+        ("exposure", "board", "Counterparty exposure", "Live exposure by counterparty against limits", ["exposure", "credit"], "board: exposure\npages:\n  - id: p\n    tiles:\n      - { report: desk-pnl, visual: v, at: { x: 0, y: 0, w: 4, h: 3 } }\n", True, ["bi-reader"]),
         ("trades", "dataset", "Trades dataset", "The trades table with desk and book relationships", ["trades"], "tables:\n  - trade\n", False, []),
         ("risk", "report", "Risk ladder", "DV01 ladder by bucket", ["risk", "dv01"], "report: risk-ladder\ndataset: trades-basic\npages:\n  - id: ladder\n    title: Ladder\n    visuals: []\n", True, ["bi-steward"])]:
         s, it = ann("POST", "/bi/workspaces/rates-desk/items", {"kind": kind, "title": title, "description": desc, "tags": tags, "body": body, "audienceRoles": audience})

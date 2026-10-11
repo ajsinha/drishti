@@ -44,14 +44,14 @@ PAGES = ("file:report:live-trading-desk/grid", "file:report:live-trading-desk/pi
 SHA = re.compile(r"sha256-[A-Za-z0-9+/]+=*")
 
 
-def measure(console: str, user: str, password: str, pages=PAGES) -> list[str]:
-    """The sorted hashes of the styles the Perspective pages write, as the browser reports them under a policy that allows none."""
-    from playwright.sync_api import sync_playwright
-
+def measure(console: str, user: str, password: str, pages=PAGES, browser=None) -> list[str]:
+    """The sorted hashes of the styles the Perspective pages write, as the browser reports them under a policy that allows none. ``browser`` is a running Playwright
+    browser to use (a test that already holds one); without it Chromium is started here."""
     found: set[str] = set()
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page()
+
+    def run(b) -> None:
+        context = b.new_context()
+        page = context.new_page()
         page.goto(f"{console}/login?next=/bi")
         page.fill("#lu", user)
         page.fill("#lp", password)
@@ -71,7 +71,17 @@ def measure(console: str, user: str, password: str, pages=PAGES) -> list[str]:
             page.wait_for_selector("[data-ready=yes]", state="attached", timeout=60000)
             page.wait_for_selector("[data-psp=ready]", state="attached", timeout=60000)
             page.wait_for_timeout(1500)
-        browser.close()
+        context.close()
+
+    if browser is not None:
+        run(browser)
+    else:
+        from playwright.sync_api import sync_playwright
+
+        with sync_playwright() as p:
+            b = p.chromium.launch()
+            run(b)
+            b.close()
     return sorted(found)
 
 

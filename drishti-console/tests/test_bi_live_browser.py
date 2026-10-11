@@ -304,12 +304,12 @@ def test_two_tabs_of_one_browser_both_draw_the_grid(stack, browser):
     page.context.close()
 
 
-def test_the_style_hash_list_covers_the_real_pages(stack):
+def test_the_style_hash_list_covers_the_real_pages(stack, browser):
     """A library update that writes another style makes this fail with the hash to add (tools/perspective-style-hashes.py prints the whole list)."""
     spec = importlib.util.spec_from_file_location("psp_hashes", Path(__file__).resolve().parents[2] / "tools" / "perspective-style-hashes.py")
     tool = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(tool)
-    measured = tool.measure(CONSOLE_URL, "rita", PASSWORD)
+    measured = tool.measure(CONSOLE_URL, "rita", PASSWORD, browser=browser)
     missing = [h for h in measured if h not in tool.STYLE_HASHES]
     assert not missing, f"Perspective {tool.PERSPECTIVE_VERSION} writes styles that core/perspective_csp.py STYLE_HASHES does not allow: {missing}"
     assert measured, "no style was measured: the probe saw nothing"
