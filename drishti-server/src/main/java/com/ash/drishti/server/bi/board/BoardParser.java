@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import com.ash.drishti.server.dist.SubscriptionSchedule;
 import java.util.regex.Pattern;
 
 /**
@@ -52,11 +53,13 @@ public final class BoardParser {
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}");
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Set<String> TOP = Set.of("rachana", "board", "version", "title", "description", "sample", "rotate", "pages", "owner", "tags", "endorsement", "endorsedBy",
-            "audience");
-    private static final Set<String> RESERVED_TOP = Set.of("notify", "notifications", "subscriptions");
+            "audience", "notify");
+    private static final Set<String> RESERVED_TOP = Set.of("notifications", "subscriptions");
     private static final Set<String> PAGE = Set.of("id", "title", "tiles");
     private static final Set<String> TILE = Set.of("id", "report", "page", "visual", "title", "at", "alert");
-    private static final Set<String> ALERT = Set.of("on", "warn", "crit");
+    private static final Set<String> ALERT = Set.of("on", "warn", "crit", "notify");
+    private static final Set<String> NOTIFY = Set.of("level", "channels", "cooldown", "trigger", "severity");
+    private static final Set<String> CHANNELS = Set.of("inbox", "email", "chat");
     private static final Set<String> OPS = Set.of("lt", "le", "gt", "ge", "eq", "ne");
     public static final int MAX_PAGES = 20;
     public static final int MAX_TILES_PER_PAGE = 48;
@@ -101,11 +104,13 @@ public final class BoardParser {
                 rotate = (int) d.toSeconds();
             }
         }
-        List<Board.Page> pages = pages(root.path("pages"), out);
-        return new Result(new Board(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), rotate, pages), out);
+        Board.Notify defaults = root.has("notify") ? notify(root.get("notify"), "notify", out, null) : null;
+        List<Board.Page> pages = pages(root.path("pages"), out, defaults);
+        return new Result(new Board(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), rotate, pages,
+                defaults), out);
     }
 
-    private static List<Board.Page> pages(JsonNode n, List<Problem> out) {
+    private static List<Board.Page> pages(JsonNode n, List<Problem> out, Board.Notify defaults) {
         List<Board.Page> list = new ArrayList<>();
         if (!n.isArray() || n.isEmpty()) {
             out.add(error("pages", "`pages:` is a list of pages, each with `tiles:`"));
@@ -133,12 +138,12 @@ public final class BoardParser {
             } else if (!seen.add(id)) {
                 out.add(error(path + ".id", "page id '" + id + "' is used twice"));
             }
-            list.add(new Board.Page(id, text(p, "title", id), tiles(p.path("tiles"), path + ".tiles", out)));
+            list.add(new Board.Page(id, text(p, "title", id), tiles(p.path("tiles"), path + ".tiles", out, defaults)));
         }
         return list;
     }
 
-    private static List<Board.Tile> tiles(JsonNode n, String path, List<Problem> out) {
+    private static List<Board.Tile> tiles(JsonNode n, String path, List<Problem> out, Board.Notify defaults) {
         List<Board.Tile> list = new ArrayList<>();
         if (!n.isArray() || n.isEmpty()) {
             out.add(error(path, "`tiles:` is a list of tiles: { report: <report>, visual: <visual id>, at: { x, y, w, h } }"));
@@ -174,7 +179,7 @@ public final class BoardParser {
             } else if (!seen.add(id)) {
                 out.add(error(p + ".id", "tile id '" + id + "' is used twice on the page"));
             }
-            list.add(new Board.Tile(id, report, text(t, "page", ""), visual, text(t, "title", ""), grid(t.path("at"), p + ".at", out), alert(t.path("alert"), p + ".alert", out)));
+            list.add(new Board.Tile(id, report, text(t, "page", ""), visual, text(t, "title", ""), grid(t.path("at"), p + ".at", out), alert(t.path("alert"), p + ".alert", out, defaults)));
         }
         return list;
     }
@@ -197,7 +202,7 @@ public final class BoardParser {
         return new Report.Grid(Math.max(0, x), Math.max(0, y), Math.max(1, w), Math.max(1, h));
     }
 
-    private static Board.Alert alert(JsonNode n, String path, List<Problem> out) {
+    private static Board.Alert alert(JsonNode n, String path, List<Problem> out, Board.Notify defaults) {
         if (n.isMissingNode() || n.isNull()) {
             return null;
         }
@@ -207,7 +212,7 @@ public final class BoardParser {
         }
         n.fieldNames().forEachRemaining(k -> {
             if (RESERVED_TOP.contains(k)) {
-                out.add(new Problem("error", NOT_BUILT, path + "." + k, "'" + k + "' is reserved and not built yet: a tile only changes colour; notifications arrive with distribution (phase 7)"));
+                out.add(new Problem("error", NOT_BUILT, path + "." + k, "'" + k + "' is reserved and not built: a tile notifies with `notify:`"));
             } else if (!ALERT.contains(k)) {
                 out.add(new Problem("warning", INVALID, path + "." + k, "unknown alert key '" + k + "' is ignored (on, warn, crit)"));
             }
@@ -218,7 +223,72 @@ public final class BoardParser {
             out.add(error(path, "an alert needs a warn or a crit threshold"));
             return null;
         }
-        return new Board.Alert(text(n, "on", ""), warn, crit);
+        Board.Notify notify = null;
+        if (n.has("notify") && !n.get("notify").isNull() && !(n.get("notify").isBoolean() && !n.get("notify").asBoolean())) {
+            notify = n.get("notify").isBoolean() ? (defaults != null ? defaults : new Board.Notify("crit", List.of("inbox"), null, null, null))
+                    : notify(n.get("notify"), path + ".notify", out, defaults);
+            if (notify != null && notify.level().equals("crit") && crit == null) {
+                out.add(error(path + ".notify", "notify level crit needs a crit threshold on this tile (or set level: warn)"));
+            }
+            if (notify != null && notify.level().equals("warn") && warn == null && crit == null) {
+                out.add(error(path + ".notify", "notify level warn needs a warn threshold on this tile"));
+            }
+        }
+        return new Board.Alert(text(n, "on", ""), warn, crit, notify);
+    }
+
+    /** Reads a {@code notify:} mapping; a key it leaves out comes from {@code base} (the board's defaults), else the built-in default. */
+    private static Board.Notify notify(JsonNode n, String path, List<Problem> out, Board.Notify base) {
+        if (!n.isObject()) {
+            out.add(error(path, "notify is { level: crit | warn, channels: [inbox, email, chat], cooldown: 1h, trigger: live | after-load | <schedule>, severity: info | warn | critical }, or true"));
+            return null;
+        }
+        n.fieldNames().forEachRemaining(k -> {
+            if (!NOTIFY.contains(k)) {
+                out.add(new Problem("warning", INVALID, path + "." + k, "unknown notify key '" + k + "' is ignored (level, channels, cooldown, trigger, severity)"));
+            }
+        });
+        String level = n.has("level") ? n.path("level").asText() : base != null ? base.level() : "crit";
+        if (!level.equals("crit") && !level.equals("warn")) {
+            out.add(error(path + ".level", "level is crit (notify on red) or warn (notify on amber or red)"));
+            level = "crit";
+        }
+        List<String> channels = new ArrayList<>();
+        if (n.has("channels")) {
+            if (!n.get("channels").isArray() || n.get("channels").isEmpty()) {
+                out.add(error(path + ".channels", "channels is a list of inbox, email, chat"));
+            } else {
+                for (JsonNode c : n.get("channels")) {
+                    if (!CHANNELS.contains(c.asText())) {
+                        out.add(error(path + ".channels", "'" + c.asText() + "' is not a channel: inbox, email, chat"));
+                    } else if (!channels.contains(c.asText())) {
+                        channels.add(c.asText());
+                    }
+                }
+            }
+        } else if (base != null) {
+            channels.addAll(base.channels());
+        }
+        if (channels.isEmpty()) {
+            channels.add("inbox");
+        }
+        String cooldown = n.has("cooldown") ? n.path("cooldown").asText() : base != null ? base.cooldown() : null;
+        if (cooldown != null && !cooldown.equals("0") && DatasetParser.span(cooldown) == null) {
+            out.add(error(path + ".cooldown", "cooldown is a time such as 30m, 1h or 1d"));
+        }
+        String trigger = n.has("trigger") ? n.path("trigger").asText() : base != null ? base.trigger() : null;
+        if (trigger != null && !trigger.equals("live") && !trigger.equals("after-load")) {
+            try {
+                SubscriptionSchedule.parse(trigger);
+            } catch (IllegalArgumentException e) {
+                out.add(error(path + ".trigger", "trigger is live, after-load or a schedule (business-days 07:30, hourly): " + e.getMessage()));
+            }
+        }
+        String severity = n.has("severity") ? n.path("severity").asText() : base != null ? base.severity() : null;
+        if (severity != null && !Set.of("info", "warn", "critical").contains(severity)) {
+            out.add(error(path + ".severity", "severity is info, warn or critical"));
+        }
+        return new Board.Notify(level, List.copyOf(channels), cooldown, trigger, severity);
     }
 
     private static Board.Rule rule(JsonNode n, String path, List<Problem> out) {

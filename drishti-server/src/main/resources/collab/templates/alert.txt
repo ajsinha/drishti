@@ -1,0 +1,8 @@
+${headline}
+
+${detail}
+Open it in ${product}:
+${link}
+
+You are receiving this because an alert you own, or one on a board you can read, fired in ${product}. The figure is the one you are entitled to see; it was read for you.
+Pause or change the alert on the Alerts page.

@@ -28,7 +28,36 @@ import java.util.Map;
  *
  * @param rotateSeconds seconds a page is shown before the next one in kiosk mode (null: the viewer's default, {@code bi.board_rotate_seconds})
  */
-public record Board(String name, int version, String title, String description, boolean sample, Integer rotateSeconds, List<Page> pages) {
+public record Board(String name, int version, String title, String description, boolean sample, Integer rotateSeconds, List<Page> pages, Notify tell) {
+
+    /** Without board-wide notification defaults. */
+    public Board(String name, int version, String title, String description, boolean sample, Integer rotateSeconds, List<Page> pages) {
+        this(name, version, title, description, sample, rotateSeconds, pages, null);
+    }
+
+    /**
+     * When a tile's colour raises a notification, and to whom it goes. {@code level} is the colour that notifies ({@code crit}, or {@code warn} for amber and red);
+     * {@code channels} are {@code inbox}, {@code email} and {@code chat} (the chat bridges); {@code trigger} is {@code live}, {@code after-load} or a schedule text;
+     * {@code cooldown} and {@code severity} may be null (the server's default and {@code warn}).
+     */
+    public record Notify(String level, List<String> channels, String cooldown, String trigger, String severity) {
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("level", level);
+            m.put("channels", channels);
+            if (cooldown != null) {
+                m.put("cooldown", cooldown);
+            }
+            if (trigger != null) {
+                m.put("trigger", trigger);
+            }
+            if (severity != null) {
+                m.put("severity", severity);
+            }
+            return m;
+        }
+    }
 
     /** A comparison against a number: {@code lt le gt ge eq ne}. */
     public record Rule(String op, double value) {
@@ -45,7 +74,11 @@ public record Board(String name, int version, String title, String description, 
      * The colour a tile takes when its value crosses a threshold: {@code crit} first, then {@code warn}. {@code on} names the measure (or column) whose values
      * are compared; empty means the first number the tile shows.
      */
-    public record Alert(String on, Rule warn, Rule crit) {
+    public record Alert(String on, Rule warn, Rule crit, Notify tell) {
+
+        public Alert(String on, Rule warn, Rule crit) {
+            this(on, warn, crit, null);
+        }
 
         public Map<String, Object> toMap() {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -57,6 +90,9 @@ public record Board(String name, int version, String title, String description, 
             }
             if (crit != null) {
                 m.put("crit", crit.toMap());
+            }
+            if (tell != null) {
+                m.put("notify", tell.toMap());
             }
             return m;
         }
@@ -82,6 +118,9 @@ public record Board(String name, int version, String title, String description, 
         }
         if (rotateSeconds != null) {
             m.put("rotate", rotateSeconds + "s");
+        }
+        if (tell != null) {
+            m.put("notify", tell.toMap());
         }
         List<Object> ps = new ArrayList<>();
         for (Page p : pages) {

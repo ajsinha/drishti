@@ -69,6 +69,24 @@ public final class BiBoardService {
         return null;
     }
 
+    /** Where a tile's visual is for one person: the report item and the page that holds the visual. */
+    public record TileTarget(String report, String page, String reportTitle) {}
+
+    /** The report and page a tile resolves to for this person, or empty when the report is not theirs to see or lacks the visual. */
+    public java.util.Optional<TileTarget> target(Principal p, Board.Tile t) {
+        BiStore.Item item = t.report().isBlank() ? null : reportFor(p, t.report());
+        Report r = item == null ? null : ReportParser.parse(bi.bodyFor(p, item)).report();
+        if (r == null) {
+            return java.util.Optional.empty();
+        }
+        for (Report.Page c : r.pages()) {
+            if ((t.page().isBlank() || c.id().equals(t.page())) && c.visual(t.visual()) != null) {
+                return java.util.Optional.of(new TileTarget(item.id(), c.id(), item.title()));
+            }
+        }
+        return java.util.Optional.empty();
+    }
+
     /** What a tile names inside its report, checked: the report exists for the caller, it has the page and the visual. */
     private List<ReportParser.Problem> tiles(Principal p, Board board, Map<String, Map<String, Object>> resolved) {
         List<ReportParser.Problem> out = new ArrayList<>();

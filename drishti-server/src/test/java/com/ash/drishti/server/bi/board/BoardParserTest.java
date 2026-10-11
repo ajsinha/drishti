@@ -84,11 +84,46 @@ class BoardParserTest {
     }
 
     @Test
-    void notificationsAreReservedAndNotBuiltDrs9053() {
-        assertThat(errors("board: wall\nnotify: { email: a@b.c }\npages:\n  - id: p\n    tiles:\n      - { report: r, visual: v, at: { x: 0, y: 0, w: 4, h: 3 } }\n"))
-                .anyMatch(p -> p.code().equals("DRS-9053") && p.path().equals("notify"));
-        assertThat(errors(HEAD + "      - { report: r, visual: v, at: { x: 0, y: 0, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, notify: { slack: x } } }\n"))
-                .anyMatch(p -> p.code().equals("DRS-9053") && p.path().endsWith("alert.notify"));
+    void notificationsAndSubscriptionsKeysStayReservedDrs9053() {
+        assertThat(errors("board: wall\nnotifications: { email: a@b.c }\npages:\n  - id: p\n    tiles:\n      - { report: r, visual: v, at: { x: 0, y: 0, w: 4, h: 3 } }\n"))
+                .anyMatch(p -> p.code().equals("DRS-9053") && p.path().equals("notifications"));
+        assertThat(errors("board: wall\nsubscriptions: []\npages:\n  - id: p\n    tiles:\n      - { report: r, visual: v, at: { x: 0, y: 0, w: 4, h: 3 } }\n"))
+                .anyMatch(p -> p.code().equals("DRS-9053") && p.path().equals("subscriptions"));
+    }
+
+    @Test
+    void aTileNotifiesWithNotifyTrueOrItsOwnSettingsAndTheBoardGivesDefaults() {
+        String tile = "      - { report: r, visual: v, at: { x: 0, y: 0, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, crit: { op: lt, value: -5 }, notify: %s } }\n";
+        assertThat(errors(HEAD + tile.formatted("true"))).isEmpty();
+        Board.Notify plain = BoardParser.parse(HEAD + tile.formatted("true")).board().pages().get(0).tiles().get(0).alert().tell();
+        assertThat(plain.level()).isEqualTo("crit");
+        assertThat(plain.channels()).containsExactly("inbox");
+        String withDefaults = "board: wall\nnotify: { channels: [inbox, email], cooldown: 2h, trigger: live }\npages:\n  - id: p\n    tiles:\n" + tile.formatted("true")
+                + tile.formatted("{ level: warn, channels: [chat], severity: critical }").replace("id: p", "id: q");
+        BoardParser.Result r = BoardParser.parse(withDefaults);
+        assertThat(r.ok()).as(r.firstError()).isTrue();
+        Board.Notify inherited = r.board().pages().get(0).tiles().get(0).alert().tell();
+        assertThat(inherited.channels()).containsExactly("inbox", "email");
+        assertThat(inherited.cooldown()).isEqualTo("2h");
+        Board.Notify own = r.board().pages().get(0).tiles().get(1).alert().tell();
+        assertThat(own.level()).isEqualTo("warn");
+        assertThat(own.channels()).containsExactly("chat");
+        assertThat(own.trigger()).isEqualTo("live");                                   // not repeated: it comes from the board
+        assertThat(own.severity()).isEqualTo("critical");
+        assertThat(errors(HEAD + tile.formatted("false"))).isEmpty();
+        assertThat(BoardParser.parse(HEAD + tile.formatted("false")).board().pages().get(0).tiles().get(0).alert().tell()).isNull();
+    }
+
+    @Test
+    void notifySettingsAreChecked() {
+        String tile = "      - { report: r, visual: v, at: { x: 0, y: 0, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, notify: %s } }\n";
+        assertThat(errors(HEAD + tile.formatted("{ level: red }"))).anyMatch(p -> p.path().endsWith("notify.level"));
+        assertThat(errors(HEAD + tile.formatted("{ channels: [sms] }"))).anyMatch(p -> p.path().endsWith("notify.channels"));
+        assertThat(errors(HEAD + tile.formatted("{ cooldown: soon }"))).anyMatch(p -> p.path().endsWith("notify.cooldown"));
+        assertThat(errors(HEAD + tile.formatted("{ trigger: whenever }"))).anyMatch(p -> p.path().endsWith("notify.trigger"));
+        assertThat(errors(HEAD + tile.formatted("{ severity: loud }"))).anyMatch(p -> p.path().endsWith("notify.severity"));
+        assertThat(errors(HEAD + tile.formatted("true"))).anyMatch(p -> p.message().contains("needs a crit threshold"));          // the default level is crit; this tile has only warn
+        assertThat(errors(HEAD + tile.formatted("{ level: warn }"))).isEmpty();
     }
 
     @Test

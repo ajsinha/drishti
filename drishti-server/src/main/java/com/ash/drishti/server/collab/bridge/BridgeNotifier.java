@@ -67,6 +67,21 @@ public final class BridgeNotifier implements Notifier {
         return List.of();
     }
 
+    /**
+     * An alert fired: one outbox row for each bridge whose routes list the {@code alert} event and cover {@code kind} (a Sutra kind, or {@code bi} for a measure).
+     * Not part of a share's transaction; the row is rendered when it is sent, by the alert posts the renderer was given.
+     *
+     * @return how many bridges were queued
+     */
+    public int onAlert(String kind, String ref) {
+        int n = 0;
+        for (BridgeRegistry.Bridge b : registry.matching(BridgeRegistry.ALERT, kind, packs.ownerOf(kind))) {
+            outbox.add(OutboxItem.pending(BridgeSender.CHANNEL, b.name(), BridgeRegistry.ALERT, ref, Instant.now(clock)));
+            n++;
+        }
+        return n;
+    }
+
     @Override
     public void onCommentPosted(CommentPosted e) {
         String kind = e.thread().kind();

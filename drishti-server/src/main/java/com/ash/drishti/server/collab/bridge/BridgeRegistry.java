@@ -38,7 +38,9 @@ public final class BridgeRegistry {
     public static final String SHARE = "share";
     public static final String COMMENT = "comment";
     public static final String MENTION = "mention";
-    public static final Set<String> EVENTS = Set.of(SHARE, COMMENT, MENTION);
+    /** A fired alert on a measure, a field or a board tile (the post says which alert and why, never a number). */
+    public static final String ALERT = "alert";
+    public static final Set<String> EVENTS = Set.of(SHARE, COMMENT, MENTION, ALERT);
     public static final Set<String> FORMATS = Set.of("json", "teams", "slack");
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
 
@@ -81,7 +83,7 @@ public final class BridgeRegistry {
             for (CollabProperties.Route r : w.routes()) {
                 for (String e : r.events()) {
                     if (!EVENTS.contains(e)) {
-                        throw new IllegalStateException("drishti.collab.bridges.webhooks." + w.name() + ": event '" + e + "' is not share, comment or mention");
+                        throw new IllegalStateException("drishti.collab.bridges.webhooks." + w.name() + ": event '" + e + "' is not share, comment, mention or alert");
                     }
                 }
             }

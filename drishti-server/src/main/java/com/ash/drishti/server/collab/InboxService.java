@@ -92,6 +92,10 @@ public final class InboxService {
             return new Row(n.seq(), n.at(), n.type(), n.actor(), n.actor(), n.kind(), may ? n.entityId() : null, null, null, may ? n.threadId() : null,
                     null, n.readAt() != null, may, may ? n.panelId() : "(no access) a " + n.kind() + " data load", null);
         }
+        if (n.type().equals("alert")) {
+            // an alert on a measure, a field or a board tile: entityId = the console path it opens, panelId = the one line, written from this reader's own reading
+            return new Row(n.seq(), n.at(), n.type(), n.actor(), n.actor(), n.kind(), n.entityId(), null, null, null, null, n.readAt() != null, true, n.panelId(), null);
+        }
         if (n.type().startsWith("bi-")) {
             // a BI governance notice: entityId = the item, panelId = the one-line summary (names and counts, never a data value)
             return new Row(n.seq(), n.at(), n.type(), n.actor(), n.actor(), n.kind(), n.entityId(), null, null, null, null, n.readAt() != null, true, n.panelId(), null);

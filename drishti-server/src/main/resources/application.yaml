@@ -279,6 +279,7 @@ drishti:
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"
       - "* /api/v1/admin/subscriptions/**"
+      - "* /api/v1/admin/measure-alerts/**"
       - "* /api/v1/shares/**"
       - "* /api/v1/threads/**"
       - "* /api/v1/comments/**"
@@ -438,7 +439,7 @@ drishti:
       per-minute: 30                 # posts per bridge per minute; the rest wait in the outbox
       timeout: 10s
       max-note: 500                  # characters of the note a post carries
-      webhooks: []                   # [{ name: risk-teams, format: teams, url-env: BRIDGE_RISK_URL, routes: [{ packs: [..], kinds: [..], events: [share, comment, mention] }] }]
+      webhooks: []                   # [{ name: risk-teams, format: teams, url-env: BRIDGE_RISK_URL, routes: [{ packs: [..], kinds: [..], events: [share, comment, mention, alert] }] }]
     snapshots:                                  # a watermarked PNG of a view that a share may carry; a pack can override: packs.<pack>.snapshots.enabled
       enabled: false                            # off: no share carries a picture
       width: 960                                # pixels wide

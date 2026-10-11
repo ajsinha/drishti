@@ -567,6 +567,18 @@ public final class BiService {
         return all.stream().filter(i -> "dataset".equals(i.kind())).toList();
     }
 
+    /** Every published board, whoever may read it (no caller): what board notifications are derived from. */
+    public List<BiStore.Item> allBoards() {
+        List<BiStore.Item> all = new ArrayList<>(store.published());
+        all.addAll(folder.items());
+        return all.stream().filter(i -> "board".equals(i.kind())).toList();
+    }
+
+    /** Whether the person has the BI power and may read the item (a board's audience, for notifications). */
+    public boolean mayRead(Principal p, BiStore.Item i) {
+        return access.has(p, BiAccess.BI) && canRead(p, i);
+    }
+
     BiStore.Item readable(Principal p, String id) {
         BiStore.Item i = itemOf(id);
         if (hiddenSample(i, p)) {

@@ -59,6 +59,7 @@ public final class BridgeItemRenderer {
     private final CommentRenderer comments;
     private final String product;
     private final Clock clock;
+    private volatile java.util.function.Function<String, java.util.Optional<BridgeMessage>> alertPosts = ref -> java.util.Optional.empty();
 
     @SuppressWarnings("java:S107")
     public BridgeItemRenderer(ShareStore shares, ThreadStore threads, Principals principals, Entitlements entitlements, MailContentPolicy policy,
@@ -76,6 +77,11 @@ public final class BridgeItemRenderer {
         this.clock = clock;
     }
 
+    /** Where the words of an {@code alert} post come from (the alert service): given the row's reference, the message, or empty when the alert is gone. */
+    public void alertPosts(java.util.function.Function<String, java.util.Optional<BridgeMessage>> source) {
+        this.alertPosts = source;
+    }
+
     /** The reader the posted text is written for: nobody in particular, with the role {@code bridges.render-as}. */
     Principal reader(String bridge) {
         return new Principal("bridge:" + bridge, List.of(props.bridges().renderAs()));
@@ -87,6 +93,7 @@ public final class BridgeItemRenderer {
         return switch (item.template()) {
             case BridgeRegistry.SHARE -> share(item, reader);
             case BridgeRegistry.COMMENT, BridgeRegistry.MENTION -> comment(item, reader);
+            case BridgeRegistry.ALERT -> alertPosts.apply(item.refId()).orElseThrow(() -> new ItemRenderer.Skip("the alert no longer exists"));
             default -> throw new ItemRenderer.Skip("no bridge template '" + item.template() + "'");
         };
     }
