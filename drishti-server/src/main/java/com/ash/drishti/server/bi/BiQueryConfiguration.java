@@ -27,6 +27,9 @@ import com.ash.drishti.server.bi.engine.DuckDbEngine;
 import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.engine.SourceGateway;
+import com.ash.drishti.server.bi.report.BiReportController;
+import com.ash.drishti.server.bi.report.BiReportProperties;
+import com.ash.drishti.server.bi.report.BiReportService;
 import com.ash.drishti.server.loads.LoadService;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.SecurityProperties;
@@ -40,7 +43,7 @@ import org.springframework.context.annotation.Configuration;
  * connection on the first query, so a server that never runs a BI query pays nothing.
  */
 @Configuration
-@EnableConfigurationProperties(QueryProperties.class)
+@EnableConfigurationProperties({QueryProperties.class, BiReportProperties.class})
 public class BiQueryConfiguration {
 
     @Bean(destroyMethod = "close")
@@ -69,5 +72,15 @@ public class BiQueryConfiguration {
     @Bean
     public DatasetController datasetController(DatasetService datasets, BiService bi) {
         return new DatasetController(datasets, bi);
+    }
+
+    @Bean
+    public BiReportService biReportService(BiService bi, DatasetService datasets, BiReportProperties props) {
+        return new BiReportService(bi, datasets, props);
+    }
+
+    @Bean
+    public BiReportController biReportController(BiReportService reports) {
+        return new BiReportController(reports);
     }
 }

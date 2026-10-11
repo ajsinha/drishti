@@ -1,0 +1,88 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE REPORT 1 of 3: "Trades overview". Four cards, a bar chart of MTM by desk that drills down to books, a line of notional by trade date, a table, and
+# a slicer. It reads the sample dataset trades-basic (config/bi/datasets/trades-basic.dataset.yaml): one table, four measures, a desk-to-book hierarchy.
+# Tutorial: docs/guides/BI_TUTORIAL.md (build it from scratch in the designer). Reference: docs/guides/REPORTS.md.
+#
+# A report is pages; a page is visuals on a 12-column grid. Every visual says WHERE it sits (`at`: column x, row y, width w in columns, height h in rows) and
+# WHAT it shows (`wells`: the fields it groups by and the measures it adds up, all names of the dataset). Nothing here is SQL: the server turns each visual into
+# a query on the dataset, as the person looking, so their row rules and masks apply.
+
+rachana: 1
+report: trades-overview          # the report's name: letters, digits, hyphen, underscore
+version: 1
+title: Trades overview
+description: >-
+  The day's trades at a glance: counts, notional and mark-to-market, MTM by desk (click a bar to filter the rest; the drill button goes on to the books),
+  notional by trade date, and the trades behind the numbers.
+sample: true                     # sample content: hidden from business users when "Hide samples" is on (like sample packs)
+endorsement: promoted
+tags: [sample, trading, tutorial]
+dataset: trades-basic            # the dataset it reads: its catalogue id, its file name or its name
+theme: { palette: default }      # default (the console's colours), colour-blind or mono
+
+pages:
+  - id: overview
+    title: Overview
+    visuals:
+      - { id: trades,   type: card, title: Trades,                 at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
+      - { id: notional, type: card, title: Notional,               at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
+      - { id: mtm,      type: card, title: Mark to market,         at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [MTM] },
+          format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] } }          # a negative MTM is red
+      - { id: average,  type: card, title: Average MTM per trade,  at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Average MTM per trade] } }
+
+      - id: by-desk
+        type: bar                  # horizontal bars; `column` is the vertical kind
+        title: MTM by desk (click a bar to filter the page)
+        at: { x: 0, y: 2, w: 6, h: 5 }
+        wells: { axis: [trade.desk], values: [MTM] }
+        hierarchy: Desk and book   # the drill-down button goes from desk to book (a hierarchy of the dataset)
+        format: { labels: true }
+        alt: Bar chart of mark to market for each desk
+
+      - id: by-date
+        type: line
+        title: Notional by trade date
+        at: { x: 6, y: 2, w: 6, h: 5 }
+        wells: { axis: [trade.tradeDate], values: [Notional] }
+        format: { labels: false, smooth: false }
+        alt: Line chart of notional for each trade date
+
+      - id: rows
+        type: table
+        title: Trades by desk and currency
+        at: { x: 0, y: 7, w: 9, h: 5 }
+        wells: { columns: [trade.desk, trade.currency, Trades, Notional, MTM] }
+        format: { dataBars: [Notional], conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
+
+      - id: currency
+        type: slicer
+        title: Currency
+        at: { x: 9, y: 7, w: 3, h: 5 }
+        wells: { field: [trade.currency] }
+        format: { mode: list, scope: page }
+
+  - id: products
+    title: By product
+    visuals:
+      - { id: share,  type: donut,  title: Notional by product type, at: { x: 0, y: 0, w: 5, h: 6 }, wells: { axis: [trade.productType], values: [Notional] },
+          format: { labels: true }, alt: Donut chart of notional for each product type }
+      - { id: matrix, type: matrix, title: Trades and MTM by desk and currency, at: { x: 5, y: 0, w: 7, h: 6 },
+          wells: { rows: [trade.desk], columns: [trade.currency], values: [Trades, MTM] }, format: { subtotals: true } }
+      - { id: books,  type: column, title: Notional by book, at: { x: 0, y: 6, w: 12, h: 5 }, wells: { axis: [trade.book], legend: [trade.currency], values: [Notional] },
+          format: { stacked: true }, alt: "Stacked columns of notional for each book, split by currency" }
+
+bookmarks:
+  - { name: FX desk only, page: overview, slicers: {} , filters: [{ field: trade.desk, op: in, values: [DESK-FX] }] }

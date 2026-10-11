@@ -182,7 +182,12 @@ public final class DatasetService {
 
     /** One dataset's model as the Model view and the preview need it, for this caller. */
     public Map<String, Object> model(Principal p, String id) {
-        BiStore.Item item = datasetItem(p, id);
+        return modelOf(p, datasetItem(p, id));
+    }
+
+    /** The model of a dataset item the caller has been given (the dataset a report reads, reached through the report). */
+    public Map<String, Object> modelOf(Principal p, BiStore.Item item) {
+        String id = item.id();
         String body = bi.bodyFor(p, item);
         DatasetParser.Result r = parse(id, body);
         Map<String, Object> m = new LinkedHashMap<>();
@@ -194,12 +199,26 @@ public final class DatasetService {
             return m;
         }
         Dataset d = r.dataset();
-        SqlCompiler.Masks masks = masks(p, d);
         m.put("name", d.name());
         m.put("version", d.version());
         m.put("description", d.description().isBlank() ? item.description() : d.description());
         m.put("sample", d.sample());
         m.put("engine", d.engine());
+        m.putAll(shape(p, d));
+        Set<String> mine = Set.copyOf(p.roles());
+        m.put("security", Map.of("rows", d.security().rows().stream().map(x -> Map.of("role", x.role(), "where", x.where(), "appliesToYou", mine.contains(x.role()))).toList(),
+                "masked", d.security().masked(), "rowRulesEnforced", security.enabled()));
+        m.put("rollups", d.rollups().stream().map(x -> Map.of("name", x.name(), "table", x.table(), "by", x.by(), "measures", x.measures())).toList());
+        if (r.ok()) {
+            m.put("layers", queries.layers().inventory(Layers.key(id), d));
+        }
+        return m;
+    }
+
+    /** The parts of a dataset a designer draws: tables with their columns, relationships, measures, hierarchies. */
+    private Map<String, Object> shape(Principal p, Dataset d) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        SqlCompiler.Masks masks = masks(p, d);
         List<Map<String, Object>> tables = new ArrayList<>();
         for (Dataset.Table t : d.tables().values()) {
             Map<String, Object> tm = new LinkedHashMap<>();
@@ -249,13 +268,6 @@ public final class DatasetService {
         }
         m.put("measures", measures);
         m.put("hierarchies", d.hierarchies());
-        Set<String> mine = Set.copyOf(p.roles());
-        m.put("security", Map.of("rows", d.security().rows().stream().map(x -> Map.of("role", x.role(), "where", x.where(), "appliesToYou", mine.contains(x.role()))).toList(),
-                "masked", d.security().masked(), "rowRulesEnforced", security.enabled()));
-        m.put("rollups", d.rollups().stream().map(x -> Map.of("name", x.name(), "table", x.table(), "by", x.by(), "measures", x.measures())).toList());
-        if (r.ok()) {
-            m.put("layers", queries.layers().inventory(Layers.key(id), d));
-        }
         return m;
     }
 
@@ -273,7 +285,7 @@ public final class DatasetService {
     }
 
     /** Checks YAML without storing it. */
-    public Map<String, Object> validate(String yaml) {
+    public Map<String, Object> validate(Principal p, String yaml) {
         DatasetParser.Result r = DatasetParser.parse(yaml);
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("valid", r.ok());
@@ -281,13 +293,26 @@ public final class DatasetService {
         if (r.dataset() != null) {
             m.put("tables", r.dataset().tables().keySet());
             m.put("measures", r.dataset().measures().keySet());
+            if (p != null) {
+                m.put("model", shape(p, r.dataset()));            // the same tables, columns and relationships the dataset page shows: what the Model view draws from a draft
+            }
         }
         return m;
     }
 
     /** Runs a query against a dataset as the caller. */
     public QueryService.Result query(Principal p, String id, QueryRequest q, boolean explain) {
-        BiStore.Item item = datasetItem(p, id);
+        return queryItem(p, datasetItem(p, id), q, explain);
+    }
+
+    /** The parsed dataset of an item, or DRS-9010 when it has errors. */
+    public Dataset parsedDataset(Principal p, BiStore.Item item) {
+        return loaded(p, item).dataset();
+    }
+
+    /** Runs a query against a dataset item the caller reaches through something else (a report): the row rules and masks are still the caller's. */
+    public QueryService.Result queryItem(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
+        String id = item.id();
         QueryService.Loaded ds = loaded(p, item);
         QueryService.Result r = queries.query(ds, q, caller(p, ds.dataset()), explain);
         audit.record(p.user(), "bi-query", id, q.fields().size() + " fields, " + q.measures().size() + " measures, " + r.rows() + " rows from " + r.meta().layer()

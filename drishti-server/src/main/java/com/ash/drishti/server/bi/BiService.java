@@ -718,6 +718,12 @@ public final class BiService {
                 throw new DrishtiException(ErrorCode.DATASET_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError() + " (check it on its dataset page)");
             }
         }
+        if ("report".equals(i.kind()) && !i.body().isBlank()) {
+            com.ash.drishti.server.bi.report.ReportParser.Result r = com.ash.drishti.server.bi.report.ReportParser.parse(i.body());
+            if (!r.ok()) {
+                throw new DrishtiException(ErrorCode.REPORT_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError() + " (check it in the designer)");
+            }
+        }
         int version = i.publishedVersion() + 1;
         Instant now = Instant.now();
         store.addVersion(new BiStore.Version(i.id(), version, i.body(), note, p.user(), now), props.versionsKeep());

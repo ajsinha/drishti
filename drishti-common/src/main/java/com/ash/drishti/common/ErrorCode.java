@@ -173,7 +173,19 @@ public enum ErrorCode {
     /** Queries: a table's connector cannot be read (not running, no SQL target for a direct table, nothing for the date). */
     QUERY_SOURCE("DRS-9026", 502),
     /** Queries: the analytic engine failed on a compiled query (a bug or a limit of the engine; the message says which). */
-    QUERY_ENGINE("DRS-9027", 500);
+    QUERY_ENGINE("DRS-9027", 500),
+    /** Reports: the YAML is malformed or a key, id, grid position, filter or setting is not valid (the problem names the path). */
+    REPORT_INVALID("DRS-9030", 422),
+    /** Reports: a field, measure, hierarchy, page or bookmark the report names does not exist in its dataset or in the report. */
+    REPORT_REFERENCE("DRS-9031", 422),
+    /** Reports: a visual is built wrongly (a well it does not have, a measure in a field well or a field in a measure well, a required well empty, too many items). */
+    REPORT_VISUAL("DRS-9032", 422),
+    /** Reports: the report uses a visual type, filter or setting the grammar reserves and this server does not build yet. */
+    REPORT_NOT_BUILT("DRS-9033", 501),
+    /** Reports: the report's dataset cannot be found, or its model has errors, so the report cannot be drawn. */
+    REPORT_DATASET("DRS-9034", 422),
+    /** Reports: a visual query names a page or visual the report lacks, or its interaction state (slicers, selection, drill path) is not valid. */
+    REPORT_STATE("DRS-9035", 422);
 
     private final String code;
     private final int httpStatus;

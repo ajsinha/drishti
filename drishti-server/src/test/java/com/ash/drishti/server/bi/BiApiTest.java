@@ -61,6 +61,9 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BiApiTest {
 
+    /** A minimal valid report: publishing a report checks its structure (DRS-9030). */
+    private static final String REPORT_BODY = "report: desk-pnl\ndataset: trades-basic\npages:\n  - { id: main, title: Main, visuals: [] }\n";
+
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
     @Autowired AuditLog audit;
@@ -191,7 +194,7 @@ class BiApiTest {
         refused(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "report", "title", "x", "body", "a: [1")), 422, "DRS-9003");
         refused(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "report", "title", "x", "audienceRoles", List.of("nope"))), 422, "DRS-9003");
         JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(),
-                Map.of("kind", "report", "title", "Desk P&L", "description", "Daily P&L by book", "tags", List.of("pnl", "daily"), "body", "pages: []\n",
+                Map.of("kind", "report", "title", "Desk P&L", "description", "Daily P&L by book", "tags", List.of("pnl", "daily"), "body", REPORT_BODY,
                         "audienceRoles", List.of("reader", "steward"))));
         item = i.path("id").asText();
         assertThat(i.path("status").asText()).isEqualTo("draft");
@@ -220,16 +223,16 @@ class BiApiTest {
         // editing a published item leaves the published version visible and the draft pending
         ok(call("PUT", "/api/v1/bi/items/" + item, ann(), Map.of("body", "pages: [a]\n")));
         JsonNode viewer = ok(call("GET", "/api/v1/bi/items/" + item, cat(), null));
-        assertThat(viewer.path("body").asText()).isEqualTo("pages: []\n");
+        assertThat(viewer.path("body").asText()).isEqualTo(REPORT_BODY);
         assertThat(viewer.path("bodyIs").asText()).isEqualTo("published");
         assertThat(ok(call("GET", "/api/v1/bi/items/" + item, ann(), null)).path("draftChanges").asBoolean()).isTrue();
         assertThat(ok(call("POST", "/api/v1/bi/items/" + item + "/publish", ann(), Map.of("note", "second"))).path("publishedVersion").asInt()).isEqualTo(2);
         JsonNode versions = ok(call("GET", "/api/v1/bi/items/" + item + "/versions", cat(), null));
         assertThat(versions.size()).isEqualTo(2);
-        assertThat(ok(call("GET", "/api/v1/bi/items/" + item + "/versions/1", cat(), null)).path("body").asText()).isEqualTo("pages: []\n");
+        assertThat(ok(call("GET", "/api/v1/bi/items/" + item + "/versions/1", cat(), null)).path("body").asText()).isEqualTo(REPORT_BODY);
         JsonNode restored = ok(call("POST", "/api/v1/bi/items/" + item + "/versions/1/restore", ann(), null));
         assertThat(restored.path("status").asText()).isEqualTo("draft");
-        assertThat(ok(call("GET", "/api/v1/bi/items/" + item, ann(), null)).path("body").asText()).isEqualTo("pages: []\n");
+        assertThat(ok(call("GET", "/api/v1/bi/items/" + item, ann(), null)).path("body").asText()).isEqualTo(REPORT_BODY);
     }
 
     @Test @Order(5)

@@ -66,7 +66,7 @@ public class DatasetController {
     @PostMapping("/datasets/validate")
     public Map<String, Object> validate(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.AUTHOR);
-        return datasets.validate(String.valueOf(body.getOrDefault("yaml", "")));
+        return datasets.validate(p, String.valueOf(body.getOrDefault("yaml", "")));
     }
 
     @GetMapping("/datasets/{id}")

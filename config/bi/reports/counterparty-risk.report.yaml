@@ -1,0 +1,84 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE REPORT 2 of 3: "Counterparty risk". A cross-pack report on the dataset trading-risk (trades from the trading pack, counterparties from banking-core,
+# netting sets from counterparty-risk): exposure by counterparty, two slicers that filter every page, and a drill-through from a counterparty's bar to a page
+# about that counterparty. Read it with three different people to see the row rules and masks at work (BI_TUTORIAL.md):
+#   * a desk-head sees only the trades of their own desks, so the MTM visuals show their desk; the exposure visuals are REFUSED for them (a visual says why,
+#     DRS-9020: the row rule is on trades and a netting set does not reach trades) - this is the dataset's rule, not a bug of the report;
+#   * an analyst (no raw power) sees the counterparty name as ••• because the dataset masks it, so every counterparty is one bar.
+# Reference: docs/guides/REPORTS.md.
+
+rachana: 1
+report: counterparty-risk
+version: 1
+title: Counterparty risk
+description: >-
+  Exposure (expected and potential future, peak) by counterparty with the trades behind it; filter by sector and country, click a counterparty and drill through
+  to its own page. Cross-pack: trading, banking-core and counterparty-risk.
+sample: true
+endorsement: promoted
+tags: [sample, counterparty-risk, cross-pack, tutorial]
+dataset: trading-risk
+theme: { palette: default }
+
+pages:
+  - id: exposure
+    title: Exposure
+    visuals:
+      - { id: ee,      type: card, title: Exposure (EE peak),   at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Exposure (EE peak)] } }
+      - { id: pfe,     type: card, title: Exposure (PFE peak),  at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Exposure (PFE peak)] } }
+      - { id: sets,    type: card, title: Netting sets,         at: { x: 6, y: 0, w: 2, h: 2 }, wells: { values: [Netting sets] } }
+      - { id: sector,  type: slicer, title: Sector,  at: { x: 8, y: 0, w: 2, h: 2 }, wells: { field: [counterparties.sector] }, format: { mode: dropdown, scope: report } }
+      - { id: country, type: slicer, title: Country, at: { x: 10, y: 0, w: 2, h: 2 }, wells: { field: [counterparties.country] }, format: { mode: dropdown, scope: report } }
+
+      - id: by-counterparty
+        type: bar
+        title: Exposure by counterparty (top 10 by EE peak)
+        at: { x: 0, y: 2, w: 7, h: 6 }
+        wells: { axis: [counterparties.name], values: [Exposure (EE peak), Exposure (PFE peak)] }
+        filters: [{ field: counterparties.id, op: top, n: 10, by: Exposure (EE peak) }]         # keep the 10 counterparties with the highest EE peak (ranked by id, so a masked name cannot break it)
+        drillthrough: { page: counterparty, field: counterparties.name }                        # click a bar, choose "Drill through": opens the counterparty page
+        alt: Bars of expected and potential future exposure for the ten largest counterparties
+
+      - id: by-sector
+        type: donut
+        title: Exposure by sector
+        at: { x: 7, y: 2, w: 5, h: 6 }
+        wells: { axis: [counterparties.sector], values: [Exposure (EE peak)] }
+        format: { labels: true }
+        alt: Donut chart of expected exposure for each counterparty sector
+
+      - id: mtm-by-counterparty
+        type: table
+        title: Trades and MTM by sector (the row rules apply here)
+        at: { x: 0, y: 8, w: 12, h: 5 }
+        wells: { columns: [counterparties.sector, Trades, MTM, Counterparties] }
+        format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
+
+  - id: counterparty
+    title: Counterparty
+    drillthrough: { fields: [counterparties.name] }      # this page takes a counterparty's name as a filter when another page drills through to it
+    visuals:
+      - { id: c-ee,     type: card, title: Exposure (EE peak),  at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Exposure (EE peak)] } }
+      - { id: c-trades, type: card, title: Trades,              at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
+      - { id: c-mtm,    type: card, title: Mark to market,      at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [MTM] } }
+      - { id: c-notional, type: card, title: Notional,          at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
+      - id: c-trades-table
+        type: table
+        title: The counterparty's trades (open one in the terminal)
+        at: { x: 0, y: 2, w: 12, h: 7 }
+        wells: { columns: [trades.tradeId, trades.desk, trades.productType, trades.currency, MTM, Notional] }
+        sort: { by: MTM, desc: true }
+        limit: 200
