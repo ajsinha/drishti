@@ -80,7 +80,7 @@ live trades over 5m in BOOK-RATES-3       →  the same in plain words: Drishti 
   preview against any entity. A save is a proposal; an approver reviews the diff (four eyes).
 - **Domain packs**, enabled per server and assigned per user: `banking-core`, `market-data`, `trading`
   (125 products), `market-risk`, `counterparty-risk`, `liquidity-risk`, `climate-risk`, `operational-risk`,
-  `retail-banking`, `genomics`, `politics-society`, `economics`, and the small `finance` and `logistics` packs.
+  `retail-banking`, `genomics`, `politics-society`, `economics`, and the small `finance`, `logistics`, `news-watch` and `market-watch` packs.
   Packs inherit from each other, load and unload from Admin → Packs, and install from a **signed, versioned
   registry** with rollback ([PACKS.md](docs/guides/PACKS.md)).
 - **Derived kinds**: entities computed from others, declared in a pack, such as each desk's P&L summed from its
@@ -164,7 +164,7 @@ drishti/
 ├── drishti-server/              the Spring Boot application: API, security, alerts, reports, pack registry
 ├── drishti-testkit/ drishti-it/ test fixtures; architecture, licence-header and file-size gates
 ├── drishti-benchmarks/          JMH hot-path benchmarks
-├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, kafka, activemq, rabbitmq, s3
+├── plugins/drishti-plugin-*/     demo, file, rest, jdbc, delta, aerospike, redis, mongodb, iceberg, duckdb, feeds, news, yfinance, kafka, activemq, rabbitmq, s3
 ├── drishti-console/                     the web console (routes/, core/, web/templates, web/static, tests/)
 ├── clients/python/              drishti_client.py: the standard-library Python client
 ├── config/packs/<name>/                the 14 domain packs: pack.yaml, Sutras, vocabulary, samples, guides

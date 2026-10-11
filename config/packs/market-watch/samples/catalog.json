@@ -1,0 +1,122 @@
+[
+ {
+  "kind": "listed-company",
+  "id": "CO-AAPL",
+  "title": "CO-AAPL",
+  "subtitle": "Technology · Apple Inc. (Nasdaq: AAPL) · Apple Inc, AAPL, iPhone"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-MSFT",
+  "title": "CO-MSFT",
+  "subtitle": "Technology · Microsoft Corporation (Nasdaq: MSFT) · MSFT"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-GOOGL",
+  "title": "CO-GOOGL",
+  "subtitle": "Communication Services · Alphabet Inc. (Nasdaq: GOOGL) · Google, GOOGL"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-AMZN",
+  "title": "CO-AMZN",
+  "subtitle": "Consumer Discretionary · Amazon.com, Inc. (Nasdaq: AMZN) · AMZN, AWS"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-NVDA",
+  "title": "CO-NVDA",
+  "subtitle": "Technology · NVIDIA Corporation (Nasdaq: NVDA) · Nvidia, NVDA"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-TSLA",
+  "title": "CO-TSLA",
+  "subtitle": "Consumer Discretionary · Tesla, Inc. (Nasdaq: TSLA) · TSLA, Elon Musk"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-META",
+  "title": "CO-META",
+  "subtitle": "Communication Services · Meta Platforms, Inc. (Nasdaq: META) · Meta, Facebook, Instagram"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-NFLX",
+  "title": "CO-NFLX",
+  "subtitle": "Communication Services · Netflix, Inc. (Nasdaq: NFLX) · NFLX"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-JPM",
+  "title": "CO-JPM",
+  "subtitle": "Financials · JPMorgan Chase & Co. (NYSE: JPM) · JPMorgan, JP Morgan, Jamie Dimon"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-BAC",
+  "title": "CO-BAC",
+  "subtitle": "Financials · Bank of America Corporation (NYSE: BAC) · BofA, BAC"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-GS",
+  "title": "CO-GS",
+  "subtitle": "Financials · The Goldman Sachs Group, Inc. (NYSE: GS) · Goldman"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-XOM",
+  "title": "CO-XOM",
+  "subtitle": "Energy · Exxon Mobil Corporation (NYSE: XOM) · Exxon, ExxonMobil"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-CVX",
+  "title": "CO-CVX",
+  "subtitle": "Energy · Chevron Corporation (NYSE: CVX) · CVX"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-SHEL",
+  "title": "CO-SHEL",
+  "subtitle": "Energy · Shell plc (NYSE: SHEL) · Shell plc"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-MRK",
+  "title": "CO-MRK",
+  "subtitle": "Health Care · Merck & Co., Inc. (NYSE: MRK) · Merck & Co, MRK"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-PFE",
+  "title": "CO-PFE",
+  "subtitle": "Health Care · Pfizer Inc. (NYSE: PFE) · PFE"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-WMT",
+  "title": "CO-WMT",
+  "subtitle": "Consumer Staples · Walmart Inc. (NYSE: WMT) · WMT"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-KO",
+  "title": "CO-KO",
+  "subtitle": "Consumer Staples · The Coca-Cola Company (NYSE: KO) · Coke, Coca Cola"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-DIS",
+  "title": "CO-DIS",
+  "subtitle": "Communication Services · The Walt Disney Company (NYSE: DIS) · Walt Disney, DIS"
+ },
+ {
+  "kind": "listed-company",
+  "id": "CO-BA",
+  "title": "CO-BA",
+  "subtitle": "Industrials · The Boeing Company (NYSE: BA) · BA"
+ }
+]

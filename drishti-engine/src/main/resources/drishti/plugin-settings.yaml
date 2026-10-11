@@ -212,6 +212,48 @@ plugins:
       - { name: user-agent, desc: "User-Agent header", group: connection }
       - { name: refresh-minutes, type: int, desc: "Refresh interval", group: tuning }
       - { name: timeout-seconds, type: int, desc: "Request timeout", group: tuning }
+  news:
+    tls: true
+    settings:
+      - { name: base-url, desc: "RSS search address (default Google News)", group: connection }
+      - { name: language, desc: "Edition language, e.g. en", group: connection }
+      - { name: country, desc: "Edition country, e.g. US", group: connection }
+      - { name: user-agent, desc: "User-Agent header", group: connection }
+      - { name: query-template, desc: "Search text; {name} is the entity name", group: mapping }
+      - { name: id-prefix, desc: "Prefix of entity ids (NEWS-)", group: mapping }
+      - { name: kind, desc: "Kind served (news)", group: mapping }
+      - { name: relevance, desc: "title: keep headlines naming the entity or an alias; off: keep all", group: mapping }
+      - { name: allow-sources, type: list, desc: "Only these publishers", group: mapping }
+      - { name: deny-sources, type: list, desc: "Never these publishers", group: mapping }
+      - { name: "aliases.*", desc: "Other names of an entity: aliases.<Name_with_underscores>: a, b", group: mapping }
+      - { name: max-items, type: int, desc: "Headlines per entity", group: tuning }
+      - { name: timeout-seconds, type: int, desc: "One request", group: tuning }
+      - { name: cache-ttl-seconds, type: int, desc: "How long an entity's headlines are reused", group: tuning }
+      - { name: cache-max-entities, type: int, desc: "Entities cached", group: tuning }
+      - { name: max-bytes, type: int, desc: "Largest response accepted", group: tuning }
+      - { name: retries, type: int, desc: "Repeats of a failed request", group: tuning }
+      - { name: retry-initial, desc: "First wait before a repeat (300ms)", group: tuning }
+      - { name: retry-max, desc: "Longest wait (3s)", group: tuning }
+      - { name: retry-factor, desc: "Growth of the wait (2)", group: tuning }
+      - { name: retry-jitter, desc: "Random spread of the wait (0.2)", group: tuning }
+  yfinance:
+    tls: true
+    settings:
+      - { name: base-url, desc: "Chart endpoint without the symbol", group: connection }
+      - { name: user-agent, desc: "User-Agent header", group: connection }
+      - { name: range, desc: "History span: 1mo, 3mo, 6mo, 1y, 5y, ytd, max ...", group: mapping }
+      - { name: interval, desc: "Bar size: 1d, 1wk, 1mo, 60m ...", group: mapping }
+      - { name: id-prefix, desc: "Prefix of entity ids (QUOTE-)", group: mapping }
+      - { name: kind, desc: "Kind served (quote)", group: mapping }
+      - { name: timeout-seconds, type: int, desc: "One request", group: tuning }
+      - { name: cache-ttl-seconds, type: int, desc: "How long a symbol's answer is reused", group: tuning }
+      - { name: cache-max-symbols, type: int, desc: "Symbols cached", group: tuning }
+      - { name: max-bytes, type: int, desc: "Largest response accepted", group: tuning }
+      - { name: retries, type: int, desc: "Repeats of a failed request", group: tuning }
+      - { name: retry-initial, desc: "First wait before a repeat (400ms)", group: tuning }
+      - { name: retry-max, desc: "Longest wait (4s)", group: tuning }
+      - { name: retry-factor, desc: "Growth of the wait (2)", group: tuning }
+      - { name: retry-jitter, desc: "Random spread of the wait (0.2)", group: tuning }
   rest:
     tls: true
     settings:

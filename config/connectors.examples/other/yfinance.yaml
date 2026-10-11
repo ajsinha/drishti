@@ -1,0 +1,28 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Example: the yfinance connector, a connector that is code rather than a store. It computes a quote and recent price history for a ticker
+# when asked, from Yahoo Finance's public chart endpoint (no API key). DISABLED as shipped. The endpoint is unofficial and Yahoo's terms
+# restrict its use: samples and internal demonstrations only, not production or redistribution. Ids are QUOTE-<TICKER>, for example QUOTE-AAPL.
+plugin: yfinance
+enabled: false
+kinds: [quote]
+settings:
+  base-url: https://query1.finance.yahoo.com/v8/finance/chart
+  range: 6mo
+  interval: 1d
+  timeout-seconds: 10
+  cache-ttl-seconds: 60
+  cache-max-symbols: 100
+  retries: 2

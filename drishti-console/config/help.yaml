@@ -81,6 +81,8 @@ categories:
       - { slug: connector-s3, doc: connectors/S3_CONNECTOR.md, title: S3, icon: bucket, summary: "One JSON object per entity in a bucket." }
       - { slug: connector-rest, doc: connectors/REST_CONNECTOR.md, title: REST, icon: globe, summary: "One HTTP GET per entity." }
       - { slug: connector-feeds, doc: connectors/FEEDS_CONNECTOR.md, title: Public feeds, icon: rss, summary: "SOFR, €STR, ECB FX, the Treasury curve and FRED." }
+      - { slug: connector-news, doc: connectors/NEWS.md, title: News, icon: newspaper, summary: "Headlines for a named entity, computed on demand." }
+      - { slug: connector-yfinance, doc: connectors/YFINANCE.md, title: Yahoo Finance, icon: graph-up, summary: "A quote and price history for a ticker (samples only)." }
       - { slug: connector-kafka, doc: connectors/KAFKA_CONNECTOR.md, title: Kafka, icon: broadcast, summary: "Live entities from a topic." }
       - { slug: connector-activemq, doc: connectors/ACTIVEMQ_CONNECTOR.md, title: ActiveMQ, icon: broadcast, summary: "Live entities from queues and topics, kept on local disk." }
       - { slug: connector-rabbitmq, doc: connectors/RABBITMQ_CONNECTOR.md, title: RabbitMQ, icon: broadcast, summary: "Live entities from AMQP queues." }

@@ -42,7 +42,7 @@ def test_developer_guide_table_and_readme_list_every_plugin_module():
     tree = next(line for line in readme.splitlines() if "plugins/drishti-plugin-*/" in line)
     for name in _modules():
         assert re.search(rf"\b{name}\b", tree), f"README's module tree lacks {name}"
-    assert "all %s plugins" % {15: "fifteen"}.get(len(_modules()), "?") in guide, "DEVELOPER_GUIDE's plugin count is stale"
+    assert "all %s plugins" % {17: "seventeen"}.get(len(_modules()), "?") in guide, "DEVELOPER_GUIDE's plugin count is stale"
 
 
 def test_configuration_lists_every_plugin_a_connector_can_name():

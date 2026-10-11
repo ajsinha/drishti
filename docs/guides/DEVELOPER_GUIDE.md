@@ -87,6 +87,8 @@ named connector (see [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVE
 | `drishti-plugin-iceberg` | `iceberg` | Apache Iceberg tables (path-based or a REST catalog), with time travel | — |
 | `drishti-plugin-duckdb` | `duckdb` | Every data domain in one embedded DuckDB file | — |
 | `drishti-plugin-feeds` | (one per feed) | Public feeds: NY Fed SOFR, ECB €STR and FX, US Treasury, FRED | — |
+| `drishti-plugin-news` | `news` | Headlines for a named entity, computed on demand from Google News RSS (code, not a store) | `drishti-common` |
+| `drishti-plugin-yfinance` | `yfinance` | A quote and price history for a ticker, computed on demand from Yahoo Finance (samples only) | `drishti-common` |
 | `drishti-plugin-kafka` | `kafka` | Compacted topics of entity documents | `drishti-diskcache` |
 | `drishti-plugin-activemq` | `activemq` | ActiveMQ queues and topics | `drishti-messaging` |
 | `drishti-plugin-rabbitmq` | `rabbitmq` | RabbitMQ queues | `drishti-messaging` |
@@ -109,7 +111,7 @@ drishti-diskcache                 (nothing internal)
 drishti-messaging                 (api, diskcache)
 drishti-deltalake                 (nothing internal)
 plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake)
-drishti-server                    (engine, identity, packs, and all fifteen plugins)
+drishti-server                    (engine, identity, packs, and all seventeen plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```

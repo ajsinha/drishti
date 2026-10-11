@@ -1,0 +1,17 @@
+{
+ "topicId": "TOPIC-BOJ",
+ "name": "Bank of Japan",
+ "category": "Central bank",
+ "aliases": [
+  "BoJ"
+ ],
+ "aliasText": "BoJ",
+ "edition": "default",
+ "newsId": "NEWS-Bank_of_Japan",
+ "newsAllId": "NEWS-Bank_of_Japan~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

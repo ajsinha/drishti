@@ -1,0 +1,18 @@
+{
+ "topicId": "TOPIC-BITCOIN",
+ "name": "bitcoin",
+ "category": "Theme",
+ "aliases": [
+  "crypto",
+  "cryptocurrency"
+ ],
+ "aliasText": "crypto, cryptocurrency",
+ "edition": "default",
+ "newsId": "NEWS-bitcoin",
+ "newsAllId": "NEWS-bitcoin~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

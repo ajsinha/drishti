@@ -1,0 +1,20 @@
+{
+ "companyId": "CO-NFLX",
+ "ticker": "NFLX",
+ "name": "Netflix, Inc.",
+ "aliases": [
+  "NFLX"
+ ],
+ "aliasText": "NFLX",
+ "exchange": "Nasdaq",
+ "sector": "Communication Services",
+ "country": "US",
+ "quoteId": "QUOTE-NFLX",
+ "newsId": "NEWS-Netflix",
+ "newsAllId": "NEWS-Netflix~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

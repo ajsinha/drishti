@@ -1,0 +1,84 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+
+# Market watch · a sample pack for Drishti built on two on-demand connectors: twenty well-known listed companies (static reference data),
+# each with a live quote and price history from Yahoo Finance (yfinance connector) and its headlines from Google News (news connector,
+# defined by the news-watch pack this one extends). Both connectors are off by default.
+pack: market-watch
+sample: true                        # a demonstration pack: see drishti.packs.samples
+version: 1.0.0
+code: MKTW             # typed alone, opens this pack's overview
+title: Market watch
+description: >-
+  Sample pack: twenty listed companies, each with a quote and price history (Yahoo Finance) and news headlines (Google News), fetched on demand.
+  Internal demonstration only: Yahoo's endpoint is unofficial and its terms restrict use. Off until the connectors are enabled.
+extends:
+  - news-watch
+kinds: [listed-company, quote]
+formats: config/formats.yaml
+mnemonics:
+  CO:    { kind: listed-company, label: Listed company }
+  QUOTE: { kind: quote, label: Quote and price history }
+graph:
+  id-patterns:
+    - { pattern: "^CO-", kind: listed-company }
+    - { pattern: "^QUOTE-", kind: quote }
+  fields:
+    quoteId: { kind: quote, label: Quote }
+    newsId:  { kind: news, label: Headlines }
+    newsAllId: { kind: news, label: All results }
+  badges:
+    quote: "fmt($.price, 'price2') + ' ' + $.currency"
+    listed-company: "$.ticker"
+roles:
+  analyst: { kinds: [listed-company, quote, news-topic, news] }
+form:                          # FORM market-watch: the search form of each kind
+  listed-company:
+    - { path: companyId, label: Company id, type: id, group: Identity, help: "One or many: paste a list." }
+    - { path: ticker, type: text, group: Identity }
+    - { path: name, type: text, group: Identity }
+    - { path: aliasText, label: Other names, type: text, group: Identity, help: "Aliases such as Google for Alphabet." }
+    - { path: exchange, type: enum, group: Listing }
+    - { path: sector, type: enum, group: Listing }
+    - { path: country, type: enum, group: Listing }
+console:
+  examples:
+    - ["CO CO-AAPL", "Apple · quote, six months of prices, headlines"]
+    - ["CO CO-XOM", "Exxon Mobil · energy"]
+    - ["QUOTE QUOTE-MSFT", "Any ticker works: the quote and history for MSFT"]
+    - ["NEWS NEWS-Alphabet", "The headlines for Alphabet, with the relevance steps"]
+  help: config/help.yaml
+columns:
+  listed-company:
+    - ticker
+    - name
+    - sector
+    - exchange
+    - country
+connectors:                    # a TEMPLATE: written once to config/connectors/yfinance.yaml, DISABLED. The ticker is sent to Yahoo when it is switched on.
+  yfinance:
+    plugin: yfinance
+    enabled: ${DRISHTI_YFINANCE_ENABLED:false}
+    kinds: [quote]
+    settings:
+      base-url: ${DRISHTI_YFINANCE_URL:https://query1.finance.yahoo.com/v8/finance/chart}
+      range: 6mo
+      interval: 1d
+      timeout-seconds: 10
+      cache-ttl-seconds: 60
+      cache-max-symbols: 100
+      user-agent: ${drishti.branding.product:Drishti} yfinance connector (sample)
+routes:
+  quote: yfinance

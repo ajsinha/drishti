@@ -1,0 +1,19 @@
+{
+ "topicId": "TOPIC-FED",
+ "name": "Federal Reserve",
+ "category": "Central bank",
+ "aliases": [
+  "Fed",
+  "FOMC",
+  "Powell"
+ ],
+ "aliasText": "Fed, FOMC, Powell",
+ "edition": "default",
+ "newsId": "NEWS-Federal_Reserve",
+ "newsAllId": "NEWS-Federal_Reserve~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

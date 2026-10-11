@@ -1,0 +1,17 @@
+{
+ "topicId": "TOPIC-BOE",
+ "name": "Bank of England",
+ "category": "Central bank",
+ "aliases": [
+  "BoE"
+ ],
+ "aliasText": "BoE",
+ "edition": "default",
+ "newsId": "NEWS-Bank_of_England",
+ "newsAllId": "NEWS-Bank_of_England~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

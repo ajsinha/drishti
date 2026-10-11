@@ -75,7 +75,7 @@ Words used below:
 
 ## The packs that ship
 
-There are fourteen packs in `config/packs/`. Each row lists the pack, what it inherits from, its mnemonics, and one
+There are sixteen packs in `config/packs/`. Each row lists the pack, what it inherits from, its mnemonics, and one
 command to try. The example ids are real: they exist in the pack's `samples/` folder.
 
 | Pack | Extends | Mnemonics | Try |
@@ -94,6 +94,8 @@ command to try. The example ids are real: they exist in the pack's `samples/` fo
 | `economics` | — | `ECON` economy · `MACRO` macro indicator · `FCST` IMF forecast · `LABR` labour market · `FISC` fiscal position · `ECG` country group (real public data for about 213 economies: World Bank, IMF, CIA World Factbook; [REAL_DATA](REAL_DATA.md)) | `ECON ECON-IND` |
 | `finance` | — | `TRD` trade · `NSET` netting set · `CSA` credit support annex · `AGR` master agreement · `CRV` curve · `CPTY` counterparty · `LIM` credit limit · `CLR` clearing account · `SPEC` contract specification · `IDX` rate index · `FXS` FX spot · `BOOK` book · `FIX` rate fixings | `TRD IRS-48213` |
 | `logistics` | — | `SHP` shipment · `CTR` container · `VSL` vessel · `PORT` port | `SHP SHP-10042` |
+| `news-watch` | — | `TOPIC` news topic · `NEWS` headlines (fifteen topics: central banks, countries, companies, themes; headlines computed on demand by the [news connector](../connectors/NEWS.md); a sample pack, connector off) | `TOPIC TOPIC-FED` |
+| `market-watch` | `news-watch` | `CO` listed company · `QUOTE` quote and price history (twenty well-known companies; the quote from the [yfinance connector](../connectors/YFINANCE.md), headlines from the news connector; a sample pack, connectors off) | `CO CO-AAPL` |
 
 Every pack's overview guide (*Help → Domain packs*, or `config/packs/<name>/guides/`) describes its domain and has a
 **Finding things** section with the commands that work for every kind of the pack:
@@ -368,7 +370,9 @@ a loaded pack names them again; after a restart they follow the usual rule (a co
 ## Sample packs
 
 A pack that exists to demonstrate Drishti is marked `sample: true` in its `pack.yaml`. The packs that ship marked so are **genomics** and **logistics**
-(invented data in domains far from capital markets); **politics-society** and **economics** are not samples: they carry real public data ([REAL_DATA](REAL_DATA.md)); the banking, markets and risk packs
+(invented data in domains far from capital markets) and **news-watch** and **market-watch** (a small list of well-known topics and listed companies, with
+news and quotes that [connectors compute on demand](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) from Google News and Yahoo Finance; their
+connectors are off as shipped, the Yahoo endpoint is unofficial and restricted, and names and tickers leave the network when they are on: internal demonstrations only); **politics-society** and **economics** are not samples: they carry real public data ([REAL_DATA](REAL_DATA.md)); the banking, markets and risk packs
 are the reference packs real ones build on, and are not samples. Who sees sample packs is the setting `drishti.packs.samples`
 (`DRISHTI_PACKS_SAMPLES`):
 
@@ -482,6 +486,7 @@ fields. Each row's mnemonic opens that kind's pick list. Typing the pack's name 
 | counterparty-risk | `CCR` | | operational-risk | `OPR` |
 | finance | `FIN` | | politics-society | `POLS` |
 | logistics | `LOGI` | | retail-banking | `RTL` |
+| news-watch | `NEWS` | | market-watch | `MKTW` |
 
 The same answer as JSON: `curl -s localhost:18480/api/v1/packs/MKT/overview`. A pack author sets the code with `code:` in `pack.yaml` (in a generated pack, in its generator:
 [how the shipped packs are generated](PACK_DEVELOPER_GUIDE.md#how-the-shipped-packs-are-generated)).

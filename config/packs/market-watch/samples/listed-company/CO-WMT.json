@@ -1,0 +1,20 @@
+{
+ "companyId": "CO-WMT",
+ "ticker": "WMT",
+ "name": "Walmart Inc.",
+ "aliases": [
+  "WMT"
+ ],
+ "aliasText": "WMT",
+ "exchange": "NYSE",
+ "sector": "Consumer Staples",
+ "country": "US",
+ "quoteId": "QUOTE-WMT",
+ "newsId": "NEWS-Walmart",
+ "newsAllId": "NEWS-Walmart~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

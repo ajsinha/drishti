@@ -1,0 +1,20 @@
+{
+ "companyId": "CO-PFE",
+ "ticker": "PFE",
+ "name": "Pfizer Inc.",
+ "aliases": [
+  "PFE"
+ ],
+ "aliasText": "PFE",
+ "exchange": "NYSE",
+ "sector": "Health Care",
+ "country": "US",
+ "quoteId": "QUOTE-PFE",
+ "newsId": "NEWS-Pfizer",
+ "newsAllId": "NEWS-Pfizer~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

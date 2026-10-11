@@ -133,7 +133,10 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Show live entities from ActiveMQ queues or topics | [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) |
 | Show live entities from RabbitMQ queues | [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) |
 | Serve public rates and FX (NY Fed SOFR, ECB €STR and FX, US Treasury, FRED) | [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) |
-| Understand the sample data every pack ships, and its live ticks | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
+| Write a connector that computes its data on demand, and see two (news headlines for a name, a quote for a ticker) | [NEWS.md](connectors/NEWS.md), [YFINANCE.md](connectors/YFINANCE.md), [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) |
+| Understand the sample data every pack ships, and its live ticks | [NEWS.md](connectors/NEWS.md) | you switch on the news connector or write one like it: ids, the filtering steps, settings, privacy, failures, how it is built |
+| [YFINANCE.md](connectors/YFINANCE.md) | you switch on the Yahoo Finance quote connector (samples only): ids, figures, settings, failures |
+| [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
 | Read your own database with your own SQL: several queries per kind | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) |
 | Serve millions of entities a day from Apache Iceberg (Snowflake, Glue, Polaris, Trino) | [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) |
 | Serve a large book from one embedded DuckDB file, with no database server | [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) |

@@ -1,0 +1,18 @@
+{
+ "topicId": "TOPIC-ECB",
+ "name": "European Central Bank",
+ "category": "Central bank",
+ "aliases": [
+  "ECB",
+  "Lagarde"
+ ],
+ "aliasText": "ECB, Lagarde",
+ "edition": "default",
+ "newsId": "NEWS-European_Central_Bank",
+ "newsAllId": "NEWS-European_Central_Bank~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}
