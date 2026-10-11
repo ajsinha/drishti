@@ -1,0 +1,100 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE REPORT (streaming): "Live trading desk". Cards, a bar chart, a rolling line and two small tables that redraw in place as the trades tick, and two
+# Perspective pages: every trade in a grid, and a pivot of mark-to-market by desk and currency that the browser re-pivots as rows arrive.
+# It reads the live dataset live-trading (config/bi/datasets/live-trading.dataset.yaml). Tutorial: docs/guides/BI_TUTORIAL.md, "A live desk".
+# Reference: docs/guides/REPORTS.md (live visuals, Perspective).
+#
+# Nothing in a report says "live": a visual over a live table is live. The viewer opens one stream for the report, asks for each visual again when the
+# table changed (as the person looking: their row rules and masks apply to every update), and shows when the last update arrived.
+
+rachana: 1
+report: live-trading-desk
+version: 1
+title: Live trading desk
+description: >-
+  The desk as it ticks: trades, notional, net MTM and P&L, MTM by desk, a rolling line of net MTM, the worst trades and the latest changes; then every trade in
+  a Perspective grid and a pivot by desk and currency.
+sample: true
+endorsement: promoted
+tags: [sample, trading, live, streaming, tutorial]
+dataset: live-trading
+theme: { palette: default }
+
+pages:
+  - id: desk
+    title: Desk
+    visuals:
+      - { id: trades,   type: card, title: Trades,         at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }
+      - { id: notional, type: card, title: Notional,       at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }
+      - { id: mtm,      type: card, title: Net MTM,        at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [MTM] },
+          format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] } }
+      - { id: pnl,      type: card, title: P&L 1d,         at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: ["PnL 1d"] },
+          format: { conditional: [{ measure: "PnL 1d", op: lt, value: 0, colour: "#b3261e" }] } }
+
+      - id: by-desk
+        type: bar
+        title: Net MTM by desk
+        at: { x: 0, y: 2, w: 6, h: 5 }
+        wells: { axis: [trade.desk], values: [MTM] }
+        hierarchy: Desk and book
+        format: { labels: true }
+        alt: Bar chart of net mark to market for each desk, redrawn as the trades tick
+
+      - id: rolling
+        type: live-chart               # a rolling line: each update of the table adds a point; the window keeps the latest 120
+        title: Net MTM and losses, rolling
+        at: { x: 6, y: 2, w: 6, h: 5 }
+        wells: { values: [MTM, Losses] }
+        format: { window: 120 }
+        alt: Line chart of net mark to market and of the negative marks, one point for each update
+
+      - id: movers
+        type: table
+        title: Worst trades
+        at: { x: 0, y: 7, w: 6, h: 5 }
+        wells: { columns: [trade.tradeId, trade.desk, trade.trader, MTM] }
+        sort: { by: MTM, desc: false }
+        limit: 8
+        format: { conditional: [{ measure: MTM, op: lt, value: 0, colour: "#b3261e" }] }
+
+      - id: latest
+        type: table
+        title: Latest changes
+        at: { x: 6, y: 7, w: 6, h: 5 }
+        wells: { columns: [trade.tradeId, trade.updatedAt, MTM] }
+        sort: { by: trade.updatedAt, desc: true }
+        limit: 8
+
+  - id: grid
+    title: Every trade
+    visuals:
+      - id: all-trades
+        type: perspective-grid          # Perspective in the browser; the rows arrive as masked Arrow, and each change is applied to the row it belongs to
+        title: Trades
+        at: { x: 0, y: 0, w: 12, h: 12 }
+        wells: { columns: [trade.tradeId, trade.desk, trade.book, trade.productType, trade.currency, trade.direction, trade.trader, trade.notional, trade.mtm, trade.pnl1d] }
+        alt: Grid of every trade with its desk, book, product, currency, direction, trader, notional, mark to market and P and L, updated as trades tick
+
+  - id: pivot
+    title: Pivot
+    visuals:
+      - id: desk-currency
+        type: perspective-pivot         # Perspective pivots the rows in the browser: desks down, currencies across, the aggregates you name
+        title: Net MTM and notional by desk and currency
+        at: { x: 0, y: 0, w: 12, h: 12 }
+        wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm, trade.notional] }
+        format: { aggregates: { trade.mtm: sum, trade.notional: sum } }
+        alt: Pivot table of net mark to market and notional by desk and currency, recomputed as trades tick

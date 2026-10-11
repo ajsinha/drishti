@@ -116,6 +116,12 @@ public final class VisualQueries {
         if (state.rows() != null) {
             return new Built(rows(fields, measures, base, from, to), null);
         }
+        if (state.since() != null && visual.type().startsWith("perspective-")) {
+            String table = fields.stream().map(this::tableOf).filter(x -> x != null).findFirst().orElse(null);
+            if (table != null && ds.tables().get(table).isLive()) {
+                base.add(new QueryRequest.Filter(table + "." + Dataset.SEQ, "gt", List.of(state.since())));
+            }
+        }
         List<QueryRequest.Sort> sorts = sorts(fields, measures);
         int limit = limit(spec);
         QueryRequest q = new QueryRequest(fields, measures, base, from, to, sorts, limit, "auto");
@@ -135,6 +141,8 @@ public final class VisualQueries {
         switch (visual.type()) {
             case "scatter" -> f.addAll(visual.well("details"));
             case "table" -> visual.well("columns").stream().filter(x -> !ds.measures().containsKey(x)).forEach(f::add);
+            case "perspective-grid", "perspective-pivot" -> perspectiveFields(f);
+            case "live-chart" -> { }
             case "matrix" -> {
                 f.addAll(visual.well("rows"));
                 f.addAll(visual.well("columns"));
@@ -148,9 +156,33 @@ public final class VisualQueries {
         return new ArrayList<>(f);
     }
 
+    /**
+     * The rows a Perspective visual shows: the fields it names, then the table's {@code id} (the key Perspective updates rows by) and, for a live table,
+     * {@code updateSeq} (what a client asks "changed since" by). The rows are the table's own, not grouped: Perspective does the pivoting in the browser.
+     */
+    private void perspectiveFields(Set<String> f) {
+        visual.well("columns").forEach(f::add);
+        visual.well("rows").forEach(f::add);
+        visual.well("values").forEach(f::add);
+        String table = null;
+        for (String x : f) {
+            table = tableOf(x);
+            if (table != null) {
+                break;
+            }
+        }
+        if (table != null) {
+            f.add(table + "." + Dataset.ID);
+            if (ds.tables().get(table).isLive()) {
+                f.add(table + "." + Dataset.SEQ);
+            }
+        }
+    }
+
     private List<String> measuresOf() {
         Set<String> m = new LinkedHashSet<>();
         switch (visual.type()) {
+            case "perspective-grid", "perspective-pivot" -> { }
             case "scatter" -> {
                 m.addAll(visual.well("x"));
                 m.addAll(visual.well("y"));
@@ -276,6 +308,7 @@ public final class VisualQueries {
         int dflt = switch (spec.group()) {
             case "table" -> props.tableRows();
             case "slicer" -> props.slicerValues();
+            case "perspective" -> props.perspectiveRows();
             default -> props.chartRows();
         };
         int want = visual.limit() != null ? visual.limit() : dflt;

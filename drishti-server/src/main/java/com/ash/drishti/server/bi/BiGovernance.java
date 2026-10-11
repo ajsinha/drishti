@@ -226,6 +226,10 @@ public final class BiGovernance {
             DatasetParser.Result r = DatasetParser.parse(i.body());
             ok = r.ok();
             r.problems().forEach(x -> problems.add(Map.of("level", x.level(), "code", x.code(), "path", x.path(), "message", x.message())));
+        } else if ("board".equals(i.kind()) && !i.body().isBlank()) {
+            com.ash.drishti.server.bi.board.BoardParser.Result r = com.ash.drishti.server.bi.board.BoardParser.parse(i.body());
+            ok = r.ok();
+            r.problems().forEach(x -> problems.add(x.toMap()));
         } else if ("report".equals(i.kind()) && !i.body().isBlank()) {
             ReportParser.Result r = ReportParser.parse(i.body());
             List<ReportParser.Problem> all = new ArrayList<>(r.problems());

@@ -62,6 +62,17 @@ public final class TableRelations {
         return wrap(ds, t, inner, new ArrayList<>(), d);
     }
 
+    /** A live table's in-memory table: the declared columns by their names, the two live columns ({@code updateSeq}, {@code updatedAt}), calculated columns added. */
+    public static SqlCompiler.Source live(Dataset ds, Dataset.Table t, String sqlTable, Dialect d) {
+        List<String> cols = new ArrayList<>();
+        cols.add("\"id\"");
+        cols.add("\"businessDate\"");
+        t.physical().forEach(c -> cols.add(Dialect.quote(c.name())));
+        cols.add("\"updateSeq\"");
+        cols.add("\"updatedAt\"");
+        return wrap(ds, t, "SELECT " + String.join(", ", cols) + " FROM " + sqlTable, new ArrayList<>(), d);
+    }
+
     /** A SQL store's table: the declared columns by their promoted names, the kind and the dates selected by bound parameters. */
     static SqlCompiler.Source direct(Dataset ds, Dataset.Table t, SqlTarget target, Dialect d, LocalDate from, LocalDate to) {
         if (t.each() != null) {

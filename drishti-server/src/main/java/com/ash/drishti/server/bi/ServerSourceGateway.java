@@ -77,6 +77,21 @@ public final class ServerSourceGateway implements SourceGateway {
         return router.fetchAll(refs, props.recordReadBudget(), asOf(date));
     }
 
+    @Override
+    public com.ash.drishti.api.Subscription subscribe(String connector, EntityRef ref, java.util.function.Consumer<EntityDocument> listener) {
+        if (connector != null && !connector.isBlank()) {
+            Optional<SourcePlugin> named = registry.connector(connector);
+            if (named.isPresent()) {
+                try {
+                    return named.get().subscribe(ref, listener);
+                } catch (UnsupportedOperationException e) {
+                    return com.ash.drishti.api.Subscription.NONE;                      // the connector cannot push: the table is read again on a timer
+                }
+            }
+        }
+        return router.subscribe(ref, listener);
+    }
+
     private AsOf asOf(LocalDate date) {
         return dates.resolve(date == null ? AsOf.LATEST : AsOf.of(date));
     }

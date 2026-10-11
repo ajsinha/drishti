@@ -310,6 +310,18 @@ public final class DatasetService {
         return loaded(p, item).dataset();
     }
 
+    /** The state of a dataset's live tables (generation, last update, state, counters), starting them when they are not running: {@code state: none} without live tables. */
+    public Map<String, Object> liveTick(Principal p, BiStore.Item item) {
+        return queries.liveTick(loaded(p, item));
+    }
+
+    /** A reader of the dataset's live state for a stream: the dataset is resolved once; each call reads the tables' counters (and starts a table that was closed as idle). */
+    public java.util.function.Supplier<Map<String, Object>> liveWatch(Principal p, BiStore.Item item) {
+        QueryService.Loaded ds = loaded(p, item);
+        queries.liveTick(ds);
+        return () -> queries.liveTick(ds);
+    }
+
     /** Runs a query against a dataset item the caller reaches through something else (a report): the row rules and masks are still the caller's. */
     public QueryService.Result queryItem(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
         String id = item.id();

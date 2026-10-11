@@ -26,9 +26,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param slicerValues most distinct values a slicer lists
  * @param showRows most rows "Show the rows" returns
  * @param topCandidates most values a top-N filter ranks before it keeps its N
+ * @param perspectiveRows most rows a Perspective grid or pivot is sent (the browser pivots them)
  */
 @ConfigurationProperties("drishti.bi.report")
-public record BiReportProperties(Integer chartRows, Integer tableRows, Integer slicerValues, Integer showRows, Integer topCandidates) {
+public record BiReportProperties(Integer chartRows, Integer tableRows, Integer slicerValues, Integer showRows, Integer topCandidates, Integer perspectiveRows) {
 
     public BiReportProperties {
         chartRows = chartRows == null || chartRows <= 0 ? 500 : chartRows;
@@ -36,9 +37,10 @@ public record BiReportProperties(Integer chartRows, Integer tableRows, Integer s
         slicerValues = slicerValues == null || slicerValues <= 0 ? 1000 : slicerValues;
         showRows = showRows == null || showRows <= 0 ? 1000 : showRows;
         topCandidates = topCandidates == null || topCandidates <= 0 ? 10_000 : topCandidates;
+        perspectiveRows = perspectiveRows == null || perspectiveRows <= 0 ? 20_000 : perspectiveRows;
     }
 
     public static BiReportProperties defaults() {
-        return new BiReportProperties(null, null, null, null, null);
+        return new BiReportProperties(null, null, null, null, null, null);
     }
 }

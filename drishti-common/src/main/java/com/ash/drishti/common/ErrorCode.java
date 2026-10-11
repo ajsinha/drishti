@@ -191,7 +191,15 @@ public enum ErrorCode {
     /** Governance: a BI bundle is not readable, fails its checksums, is too large or is not a bundle of this format. */
     BI_BUNDLE("DRS-9041", 422),
     /** Governance: an import would overwrite content that changed since it was exported (conflicts), or names a workspace or owner that cannot be mapped. */
-    BI_IMPORT("DRS-9042", 409);
+    BI_IMPORT("DRS-9042", 409),
+    /** Streaming BI: a live table cannot be kept (a table over an array, a kind no running connector serves, or its feed is failing and holds no rows). */
+    LIVE_TABLE("DRS-9050", 422),
+    /** Streaming BI: too many live streams are open for the server or for this user (drishti.bi.live.max-streams, max-streams-per-user). */
+    LIVE_STREAM("DRS-9051", 429),
+    /** Streaming BI: a board's YAML is malformed, or it names a report, page or visual that does not exist, or a tile or alert rule is not valid. */
+    BOARD_INVALID("DRS-9052", 422),
+    /** Streaming BI: the board uses a setting the grammar reserves and this server does not build yet (notifications, phase 7). */
+    BOARD_NOT_BUILT("DRS-9053", 501);
 
     private final String code;
     private final int httpStatus;

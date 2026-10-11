@@ -75,6 +75,7 @@ public final class QueryService implements AutoCloseable {
     private final QueryProperties props;
     private final AnalyticEngine engine;
     private final Layers layers;
+    private final LiveTables liveTables;
     private final SourceGateway sources;
     private final Cache<String, Result> cache;
     private final Semaphore slots;
@@ -86,9 +87,14 @@ public final class QueryService implements AutoCloseable {
     private final Map<String, AtomicLong> byLayer = new ConcurrentHashMap<>();
 
     public QueryService(QueryProperties props, AnalyticEngine engine, SourceGateway sources, Clock clock) {
+        this(props, BiLiveProperties.defaults(), engine, sources, clock);
+    }
+
+    public QueryService(QueryProperties props, BiLiveProperties liveProps, AnalyticEngine engine, SourceGateway sources, Clock clock) {
         this.props = props;
         this.engine = engine;
         this.sources = sources;
+        this.liveTables = new LiveTables(engine, sources, liveProps, clock);
         this.layers = new Layers(engine, sources, props, clock);
         this.slots = new Semaphore(props.maxConcurrent(), true);
         // one budget in bytes; every entry weighs at least budget / entries, so the entry count is bounded too
@@ -101,6 +107,32 @@ public final class QueryService implements AutoCloseable {
 
     public Layers layers() {
         return layers;
+    }
+
+    /** The live tables of the server (RUPAKA.md section 12). */
+    public LiveTables live() {
+        return liveTables;
+    }
+
+    /** Whether a dataset has a live table the engine keeps in memory (live tables are snapshots when {@code drishti.bi.live.enabled} is false). */
+    public boolean keepsLive(Dataset d) {
+        return liveTables.properties().enabled() && d.tables().values().stream().anyMatch(Dataset.Table::isLive);
+    }
+
+    /**
+     * The state of a dataset's live tables for a browser, starting them when they are not running: {@code generation}, {@code lastUpdate}, {@code state} and per
+     * table the counters. Empty ({@code state: none}) for a dataset without live tables.
+     */
+    public Map<String, Object> liveTick(Loaded ds) {
+        if (keepsLive(ds.dataset())) {
+            for (Dataset.Table t : ds.dataset().tables().values()) {
+                if (t.isLive()) {
+                    liveTables.ensure(ds.key(), ds.dataset(), t);
+                }
+            }
+            liveTables.touch(ds.key());
+        }
+        return liveTables.tick(ds.key());
     }
 
     public QueryProperties properties() {
@@ -173,7 +205,7 @@ public final class QueryService implements AutoCloseable {
             }
         }
         List<String> matched = ds.dataset().security().rows().stream().filter(r -> who.roles().contains(r.role())).map(r -> r.role() + "=" + r.where()).sorted().toList();
-        return ds.key() + "|" + ds.hash() + "|g" + layers.generation(ds.key()) + "|" + q + "|rows:" + who.enforce() + matched + who.attributes() + "|masked:" + masked
+        return ds.key() + "|" + ds.hash() + "|g" + layers.generation(ds.key()) + "|L" + liveTables.generation(ds.key()) + "|" + q + "|rows:" + who.enforce() + matched + who.attributes() + "|masked:" + masked
                 + "|denied:" + new java.util.TreeSet<>(who.denied());
     }
 
@@ -194,11 +226,23 @@ public final class QueryService implements AutoCloseable {
         }
         List<String> warnings = new ArrayList<>();
         Map<String, Layers.Layer> cols = new LinkedHashMap<>();
+        Map<String, LiveTable> inMemory = new LinkedHashMap<>();
         for (String t : plan.tables()) {
             Dataset.Table table = d.tables().get(t);
             if (who.denied().contains(t)) {
                 cols.put(t, new Layers.Layer(List.of(), List.of(), 0));
                 warnings.add("you may not open " + table.kind() + ": " + t + " has no rows for you");
+                continue;
+            }
+            if (table.isLive() && liveTables.properties().enabled()) {
+                LiveTable lt = liveTables.ensure(ds.key(), d, table);
+                inMemory.put(t, lt);
+                cols.put(t, new Layers.Layer(List.of(), List.of(), 0));
+                if (lt.state() == LiveTable.State.FAILED) {
+                    warnings.add("the live feed of " + t + " is failing: " + lt.status().error());
+                } else if (lt.status().error() != null) {
+                    warnings.add("live " + t + ": " + lt.status().error());
+                }
                 continue;
             }
             Layers.Layer layer = "live".equals(table.mode()) ? layers.live(ds.key(), table) : layers.columns(ds.key(), table, q.from(), q.to());
@@ -220,7 +264,8 @@ public final class QueryService implements AutoCloseable {
             layerName = "rollup";
         } else {
             for (String t : plan.tables()) {
-                from.put(t, TableRelations.cached(d, d.tables().get(t), cols.get(t).files(), Dialect.DUCKDB));
+                LiveTable lt = inMemory.get(t);
+                from.put(t, lt != null ? lt.source(d, Dialect.DUCKDB) : TableRelations.cached(d, d.tables().get(t), cols.get(t).files(), Dialect.DUCKDB));
             }
         }
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
@@ -413,6 +458,7 @@ public final class QueryService implements AutoCloseable {
 
     @Override
     public void close() {
+        liveTables.close();
         engine.close();
     }
 }

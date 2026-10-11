@@ -1,0 +1,115 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.bi.board;
+
+import com.ash.drishti.server.bi.report.Report;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * A board (RUPAKA.md section 12, docs/guides/BOARDS.md): a wall of tiles, each one a visual of a report, laid out on the report grid, in pages that can rotate
+ * by themselves on a screen on the wall. A tile does not copy its visual: it names a report and a visual and the board asks that report for the data, as the
+ * person looking, so the report's dataset, row rules and masks apply to every tile. Immutable; produced by {@link BoardParser}.
+ *
+ * @param rotateSeconds seconds a page is shown before the next one in kiosk mode (null: the viewer's default, {@code bi.board_rotate_seconds})
+ */
+public record Board(String name, int version, String title, String description, boolean sample, Integer rotateSeconds, List<Page> pages) {
+
+    /** A comparison against a number: {@code lt le gt ge eq ne}. */
+    public record Rule(String op, double value) {
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("op", op);
+            m.put("value", value);
+            return m;
+        }
+    }
+
+    /**
+     * The colour a tile takes when its value crosses a threshold: {@code crit} first, then {@code warn}. {@code on} names the measure (or column) whose values
+     * are compared; empty means the first number the tile shows.
+     */
+    public record Alert(String on, Rule warn, Rule crit) {
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            if (!on.isBlank()) {
+                m.put("on", on);
+            }
+            if (warn != null) {
+                m.put("warn", warn.toMap());
+            }
+            if (crit != null) {
+                m.put("crit", crit.toMap());
+            }
+            return m;
+        }
+    }
+
+    /** One tile: the report, its page (empty: the page that holds the visual) and the visual, where it sits and how it is called. */
+    public record Tile(String id, String report, String page, String visual, String title, Report.Grid at, Alert alert) {}
+
+    public record Page(String id, String title, List<Tile> tiles) {}
+
+    /** The structure the YAML has, in a stable key order (what the viewer reads). */
+    public Map<String, Object> toMap() {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("rachana", 1);
+        m.put("board", name);
+        m.put("version", version);
+        m.put("title", title);
+        if (!description.isBlank()) {
+            m.put("description", description);
+        }
+        if (sample) {
+            m.put("sample", true);
+        }
+        if (rotateSeconds != null) {
+            m.put("rotate", rotateSeconds + "s");
+        }
+        List<Object> ps = new ArrayList<>();
+        for (Page p : pages) {
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("id", p.id());
+            x.put("title", p.title());
+            List<Object> ts = new ArrayList<>();
+            for (Tile t : p.tiles()) {
+                Map<String, Object> y = new LinkedHashMap<>();
+                y.put("id", t.id());
+                y.put("report", t.report());
+                if (!t.page().isBlank()) {
+                    y.put("page", t.page());
+                }
+                y.put("visual", t.visual());
+                if (!t.title().isBlank()) {
+                    y.put("title", t.title());
+                }
+                y.put("at", t.at().toMap());
+                if (t.alert() != null) {
+                    y.put("alert", t.alert().toMap());
+                }
+                ts.add(y);
+            }
+            x.put("tiles", ts);
+            ps.add(x);
+        }
+        m.put("pages", ps);
+        return m;
+    }
+}
