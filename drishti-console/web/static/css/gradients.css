@@ -82,7 +82,7 @@ body {
 .strip-i dd.emph {
   background: linear-gradient(90deg, color-mix(in srgb, var(--d-grad-from) 22%, var(--d-emph-bg)), var(--d-emph-bg));
 }
-.asof-live.on, .hl-badge.hl-ok { box-shadow: 0 0 0 1px color-mix(in srgb, var(--d-grad-to) 25%, transparent); }
+.hl-badge.hl-ok { box-shadow: 0 0 0 1px color-mix(in srgb, var(--d-grad-to) 25%, transparent); }
 
 /* people who prefer less: keep the solid look */
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {

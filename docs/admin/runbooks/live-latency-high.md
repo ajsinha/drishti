@@ -72,7 +72,7 @@ A healthy server with some viewers:
    ```
 
    ```text
-   {'version': '1.18.0', 'uptimeSeconds': 6945, 'java': '25.0.4.1', 'heapUsedMb': 127, 'heapMaxMb': 15640, 'threads': 75, 'cpus': 24}
+   {'version': '1.20.0', 'uptimeSeconds': 6945, 'java': '21.0.12.1', 'heapUsedMb': 127, 'heapMaxMb': 15640, 'threads': 75, 'cpus': 24}
    ```
 
    `heapUsedMb` near `heapMaxMb` means the heap is too small (Fix D). Check host CPU with `top` or your monitoring.

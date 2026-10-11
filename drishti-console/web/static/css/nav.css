@@ -128,8 +128,6 @@
   .tbar .cmd { min-width: 0; flex: 1 1 9rem; }
   .tbar .asof { gap: .25rem; flex-wrap: wrap; white-space: normal; }
   .asof-date { width: 8.4rem; padding: .2rem .3rem; font-size: .78rem; }
-  .asof-live .asof-live-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-  .asof-live { padding: .35rem .45rem; }
   .tbar-menu-btn { padding: .45rem .45rem; }
   /* five menus (Views, BI, Forms, Reports, Build) may not fit beside the brand: the row takes what is left and wraps its
      buttons rather than push the page sideways */

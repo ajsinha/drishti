@@ -156,6 +156,11 @@ shows the reason with a hint) or in its file `config/connectors/<name>.yaml`; th
 seconds and no server restart is needed. A plugin configured directly under `drishti.sources.plugins` in `application.yaml`
 is not retried: correct it and restart the server. Other connectors are not affected either way.
 
+**You do not have to press anything when the cause is outside Drishti.** A connector that failed to start, or whose plugin reports `DOWN`, is tried
+again by itself with growing waits (5 s, 10 s, 20 s, ... up to 5 min; [OPERATIONS.md](../OPERATIONS.md#retries-what-failed-is-tried-again-by-itself)).
+Admin → Connectors and Admin → Health show *failed, next retry in 8 s (attempt 3)* with the last error, and **Retry now** (or
+`POST /api/v1/admin/retry/connectors`) tries at once, for example right after you restarted the database.
+
 **A connector's file has a mistake.** The last good configuration keeps running. Admin → Health, `connectors.badFiles`, and the
 Connectors page give the message; fix the file (or restore an earlier text from the page's History) and it is picked up
 without a restart ([CONNECTOR_FILES.md, section 12](../../connectors/CONNECTOR_FILES.md#12-health-and-problems)).

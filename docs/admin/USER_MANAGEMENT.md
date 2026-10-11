@@ -123,7 +123,7 @@ filter to see only what concerns her.
 A role says two things:
 
 1. **Which kinds of entity** its holders may open (`trade`, `counterparty`, … or `*` for every kind).
-2. **Six powers** (and, for business intelligence, the four [BI powers](#bi-powers-rupaka)):
+2. **Six powers** (plus `collaborate` and `compliance`, described under [Discussion, sharing and shared workspaces](#discussion-sharing-and-shared-workspaces), and, for business intelligence, the four [BI powers](#bi-powers-rupaka)):
 
    | Power | Lets the holder |
    |---|---|
@@ -215,12 +215,12 @@ tokens** ([CLIENTS.md](../guides/CLIENTS.md)). What an administrator needs to kn
 
 - A token acts as its owner, with the owner's roles and packs at the time of each call, and, unless it was
   made with a **write scope**, **only reads**: every `GET`, and the `POST`s that carry a query and change nothing, listed in
-  `drishti.security.token-read-posts` (`/api/v1/search/pivot/**` and `/api/v1/command`). Any other `POST`, `PUT`, `PATCH` or
+  `drishti.security.token-read-posts` (the search pivot, `/api/v1/command`, the search-form compile, and the BI query, validate and format calls). Any other `POST`, `PUT`, `PATCH` or
   `DELETE` is refused with `403 DRS-5002 API tokens only read`; add a path to the list only if it writes nothing.
-- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve`, `packs:admin` or `loads:write` (an ETL job announcing that a batch landed: [DATA_LOADS.md](../guides/DATA_LOADS.md#10-permissions)) when making a
+- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve`, `packs:admin`, `bi:write`, `bi:approve`, `bi:admin`, `ai:use`, `ai:admin` or `loads:write` (an ETL job announcing that a batch landed: [DATA_LOADS.md](../guides/DATA_LOADS.md#10-permissions)) when making a
   token (`drishti.security.token-scopes`; the account page lists them in words). What a token may do is the scope **and** the
   roles its user holds at the time of each call (`design:approve` is useless to someone who is not an approver, `packs:admin` to
-  someone who is not an admin; `packs:admin` covers loading and deploying packs and writes to `/api/v1/admin/connectors/**`), so demoting or disabling a user cuts their tokens at once. A token with a write scope must
+  someone who is not an admin; `packs:admin` covers loading and deploying packs, the registry, Retry now and writes to `/api/v1/admin/connectors/**`; the `bi:*` scopes cover the write calls of [business intelligence](#bi-powers-rupaka) and still need the BI power and the workspace role each call needs; `ai:use` opens `POST /api/v1/ai/chat` and the MCP tool calls), so demoting or disabling a user cuts their tokens at once. A token with a write scope must
   expire (`drishti.security.token-write-max-days`, 90). Every write done with a token is in the audit log as `token-write`
   (token id, method, path, status; never the secret) and each refusal as `token-denied`. Users, roles, tokens, sign-in, caches and
   personal or collaboration state are never open to a token (`token-never`); there is no `admin` scope. Tokens made before scopes
@@ -607,8 +607,8 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 | `POST` | `/admin/users/{u}/enabled` `{enabled}` | enable or disable |
 | `POST` | `/admin/users/{u}/password` `{password}` | reset a password (also clears a lockout) |
 | `GET` | `/admin/roles` | every role name a user may be given |
-| `GET` | `/admin/role-definitions` | every role: kinds, powers (`raw`, `author`, `approve`, `admin`, `calc`, `layout`), built-in or not, holders |
-| `GET` / `PUT` / `DELETE` | `/admin/role-definitions/{name}` | read / create or replace / delete a role you defined |
+| `GET` | `/admin/role-definitions` | every role: kinds, powers (`raw`, `author`, `approve`, `admin`, `calc`, `layout`, `collaborate`, `compliance`, and the `bi` list), built-in or not, holders |
+| `GET` / `PUT` / `DELETE` | `/admin/role-definitions/{name}` | read / create or replace / delete a role you defined (the body: `description`, `kinds`, the powers as booleans, `bi` as a list; a `bi` entry that is not one of the four powers is `422 DRS-9003`; leave `bi` out to keep the role's) |
 | `GET` | `/admin/audit?limit=&subject=` | audit events, newest first; `subject` matches who did it or to whom |
 | `GET` | `/admin/status` | the default-password warning, user count, installed packs |
 | `GET` | `/admin/caches` · `POST` `/admin/caches/{name}/purge` | caches; purge one, or `all` |

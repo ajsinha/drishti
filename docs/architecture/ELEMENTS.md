@@ -16,7 +16,7 @@
 # Drishti Elements: Drishti's views inside other web applications, without iframes
 
 Status: steps 0 to 10 of [the build plan](#16-build-plan) are built (each has an "as built" note there, saying what differs from
-this design); steps 11 to 15 are not. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
+this design); step 11 is only partly (the element and its controls have Chromium, Firefox and WebKit tests, `test_embed_elements_browser.py` and `test_embed_controls_browser.py`, but there is no foreign-origin host app yet) and steps 12 to 15 are not: no npm package, no TypeScript declarations, no separate developer guide, no ADR-021. This document is the reference until the guide is written. The decisions marked **Decision:** were taken as recommended unless an "as built" note says
 otherwise. Owner: the console (`drishti-console/`), the server's security layer and view pipeline.
 
 Contents
@@ -216,8 +216,8 @@ Three rules hold the design together:
         integrity="sha384-…" crossorigin="anonymous"></script>
 ```
 
-or from npm (`npm i @drishti/elements`, `import '@drishti/elements'`); the npm package and the console serve the same
-build ([section 13](#13-distribution-and-versioning)). Importing defines the elements (`customElements.define`) once;
+or, once step 12 is built, from npm (`npm i @drishti/elements`, `import '@drishti/elements'`); the npm package and the console would serve the same
+build ([section 13](#13-distribution-and-versioning)). **Today only the console serves the library; there is no npm package yet.** Importing defines the elements (`customElements.define`) once;
 importing twice is harmless.
 
 ### 5.2 `<drishti-view>` attributes
@@ -899,7 +899,7 @@ rewritten.
 
 The scripts stayed classic scripts (the console's pages and `script-src 'self'` are unchanged); each is an IIFE that registers
 `window.drishtiModules.<name> = { init }` and starts `init(document)` itself unless its `<script>` has `data-manual`, which the
-element sets when it loads them (`GET /embed/v1/poc/js/<name>.js`, a whitelist in `embed_routes.ENHANCERS`). `drishtiModules` is
+element sets when it loads them (`GET /embed/v1/js/<name>.js`, a whitelist in `embed_routes.ENHANCERS`). `drishtiModules` is
 the only global the element adds to the host page; with `data-manual` the engine, grid, charts, About and Pivot globals
 (`window.drishtiPivot`, `drishtiAbout`, `drishtiCharts`, `drishti`, ...) are not set. A real ES-module wrapper stays for step 9.
 
@@ -970,6 +970,8 @@ console it talks to.
   console memory, frame latency (`p99Ms`) against the console-only baseline.
 
 ## 15. Documentation plan
+
+*Not written yet (step 13): this document is the reference, with the host-side snippets in sections 5 to 12; `docs/guides/ELEMENTS.md` below is what is planned.*
 
 - **`docs/guides/ELEMENTS.md`, the developer guide** (also in the console help centre, `help.yaml`): what Drishti Elements
   are; five-minute start (register a host app, mint a token with `curl`, a static page); the element reference
