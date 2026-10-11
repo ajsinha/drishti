@@ -39,7 +39,7 @@
 .tbar-menu-btn.active { opacity: 1; color: var(--d-ink); }                 /* the underline marks it; the text stays readable */
 .tbar-menu-btn.active::after, .tbar-menu-btn.show::after { content: ""; position: absolute; left: .7rem; right: .7rem; bottom: -.4rem; height: 2px;
   border-radius: 2px; background: linear-gradient(90deg, var(--d-grad-from), var(--d-grad-to)); }
-@media (max-width: 1280px) { .tbar-menu-l { display: none; } .tbar-menu-btn { padding: .5rem .55rem; font-size: 1rem; } }
+@media (max-width: 1500px) { .tbar-menu-l { display: none; } .tbar-menu-btn { padding: .5rem .55rem; font-size: 1rem; } }
 
 .mega-panel { border: 1px solid var(--d-border); border-radius: 0 0 14px 14px; padding: 1rem 1.1rem 1.1rem; margin-top: .4rem !important; z-index: 1200;
   background: var(--d-surface); box-shadow: 0 24px 48px -20px rgba(0, 0, 0, .55); border-top: 2px solid transparent;
@@ -66,7 +66,7 @@
 .mega-desc { display: block; font-size: .76rem; color: var(--d-muted); line-height: 1.35; }
 
 /* the command line: the widest thing in the bar */
-.tbar .cmd { flex: 1 1 auto; min-width: 200px; max-width: 680px; }
+.tbar .cmd { flex: 1 1 auto; min-width: 160px; max-width: 680px; }
 .tbar .cmd-box { display: flex; align-items: center; }
 .cmd-prompt { position: absolute; left: .7rem; color: var(--d-accent); font-weight: 700; pointer-events: none; }
 .tbar .cmd-input { padding-left: 1.6rem; border-radius: 999px; height: 36px; }

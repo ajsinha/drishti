@@ -144,7 +144,7 @@ async def model_view(request: Request, item: str):
 
 @router.get("/bi/explore")
 async def explore(request: Request):
-    return _page(request, "bi/soon.html", "explore", title="Explore", phase="phase 9",
+    return _page(request, "bi/soon.html", "explore", title="Explore", phase="planned",
                  what="Free exploration of a dataset, and the analyst workbench, are not built yet.")
 
 

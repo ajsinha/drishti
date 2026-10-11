@@ -342,4 +342,23 @@ class BiGovernanceApiTest {
                 .contains("bi-item-published:" + ds + ":drishti-dev-admin").contains("bi-item-endorsed:" + ds + ":sue").contains("bi-item-restored:" + ds + ":ann")
                 .contains("bi-certification-revoked:" + ds).contains("bi-bundle-exported:bundle:ann").contains("bi-bundle-imported:bundle:sue").contains("bi-item-imported:" + rep + ":sue");
     }
+
+    // ---- boards in a bundle -----------------------------------------------------------------------------------------------------
+
+    @Test @Order(8)
+    void aBoardBringsItsReportsAndTheirDatasetsAndItsBodyIsCheckedOnImport() throws Exception {
+        String body = "board: gov-wall\npages:\n  - id: p\n    tiles:\n      - { report: " + rep + ", page: main, visual: n, at: { x: 0, y: 0, w: 4, h: 3 } }\n";
+        String board = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "board", "title", "Gov wall", "body", body))).path("id").asText();
+        JsonNode bundle = ok(call("GET", "/api/v1/bi/bundle?items=" + board, ann(), null));
+        assertThat(bundle.path("items").size()).isEqualTo(3);                                          // the board, the report on its tile, that report's dataset
+        assertThat(bundle.path("items").toString()).contains("\"id\":\"" + rep + "\"").contains("\"id\":\"" + ds + "\"");
+        assertThat(ok(call("GET", "/api/v1/bi/bundle?dependencies=false&items=" + board, ann(), null)).path("items").size()).isEqualTo(1);
+
+        // a board that does not parse is refused in the dry run, with its DRS code
+        String badId = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "board", "title", "Bad wall", "body", "board: bad\npages: []\n"))).path("id").asText();
+        JsonNode bad = ok(call("GET", "/api/v1/bi/bundle?items=" + badId, ann(), null));
+        JsonNode dry = ok(call("POST", "/api/v1/bi/bundle/import", sue(), Map.of("bundle", bad, "dryRun", true)));
+        assertThat(dry.toString()).contains("is not a valid board").contains("DRS-905");
+        assertThat(dry.path("applied").asBoolean()).isFalse();
+    }
 }

@@ -119,6 +119,27 @@ public final class ImpactAnalyzer {
         return null;
     }
 
+    /** The report items (stored or shipped) a board body names in its tiles, each once; empty when the board does not parse. */
+    public List<BiStore.Item> reportsOf(String boardBody) {
+        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.BoardParser.parse(boardBody).board();
+        List<BiStore.Item> out = new ArrayList<>();
+        if (b == null) {
+            return out;
+        }
+        List<BiStore.Item> pool = reports();
+        for (com.ash.drishti.server.bi.board.Board.Page pg : b.pages()) {
+            for (com.ash.drishti.server.bi.board.Board.Tile t : pg.tiles()) {
+                pool.stream().filter(i -> reportNamed(t.report(), i)).findFirst().filter(i -> !out.contains(i)).ifPresent(out::add);
+            }
+        }
+        return out;
+    }
+
+    /** True when {@code ref} (a tile's {@code report:}) names this report item: its id, its file name or its title. */
+    public static boolean reportNamed(String ref, BiStore.Item report) {
+        return ref != null && !ref.isBlank() && (report.id().equals(ref) || report.id().equals("file:report:" + ref) || report.title().equalsIgnoreCase(ref));
+    }
+
     /** The reports whose published text (or, when never published, whose draft) names this dataset. */
     public List<BiStore.Item> reportsOn(BiStore.Item dataset) {
         List<BiStore.Item> out = new ArrayList<>();

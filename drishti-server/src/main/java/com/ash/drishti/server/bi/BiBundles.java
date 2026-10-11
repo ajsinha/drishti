@@ -104,6 +104,15 @@ public final class BiBundles {
         }
         if (withDependencies) {
             for (BiStore.Item i : new ArrayList<>(chosen.values())) {
+                if ("board".equals(i.kind())) {
+                    for (BiStore.Item rep : impact.reportsOf(i.body())) {
+                        if (!chosen.containsKey(rep.id())) {
+                            take(p, rep.id(), chosen, skipped, "a report on the board '" + i.title() + "'");
+                        }
+                    }
+                }
+            }
+            for (BiStore.Item i : new ArrayList<>(chosen.values())) {
                 if ("report".equals(i.kind())) {
                     BiStore.Item ds = impact.datasetOf(i.body());
                     if (ds != null && !chosen.containsKey(ds.id())) {
@@ -383,6 +392,16 @@ public final class BiBundles {
                 warnings.add("its dataset '" + r.dataset() + "' is neither in the bundle nor here: the report cannot be drawn until it is");
             }
         }
+        // a board's reports
+        if ("board".equals(kind)) {
+            for (com.ash.drishti.server.bi.board.Board.Page pg : boardPages(body)) {
+                for (com.ash.drishti.server.bi.board.Board.Tile t : pg.tiles()) {
+                    if (!t.report().isBlank() && !reportKnown(t.report(), all)) {
+                        warnings.add("its report '" + t.report() + "' is neither in the bundle nor here: that tile cannot be drawn until it is");
+                    }
+                }
+            }
+        }
         // the audience
         for (String role : strings(n.path("audience").path("roles"))) {
             if (!roles.exists(role) && !role.equals("*")) {
@@ -394,6 +413,21 @@ public final class BiBundles {
             action = structural ? "invalid" : "conflict";
         }
         return new Plan(n, action, id, wsId, owner, reasons, warnings, blocks);
+    }
+
+    private static List<com.ash.drishti.server.bi.board.Board.Page> boardPages(String body) {
+        com.ash.drishti.server.bi.board.Board b = com.ash.drishti.server.bi.board.BoardParser.parse(body).board();
+        return b == null ? List.of() : b.pages();
+    }
+
+    private boolean reportKnown(String ref, JsonNode all) {
+        for (JsonNode n : all) {
+            if ("report".equals(n.path("kind").asText()) && (n.path("id").asText().equals(ref) || n.path("id").asText().equals("file:report:" + ref)
+                    || n.path("title").asText().equalsIgnoreCase(ref))) {
+                return true;
+            }
+        }
+        return impact.reports().stream().anyMatch(r -> ImpactAnalyzer.reportNamed(ref, r));
     }
 
     private boolean datasetKnown(String ref, JsonNode all) {
@@ -432,6 +466,11 @@ public final class BiBundles {
             ReportParser.Result r = ReportParser.parse(body);
             if (!r.ok()) {
                 blocks.add(which + " is not a valid report: " + r.firstError());
+            }
+        } else if ("board".equals(kind)) {
+            var r = com.ash.drishti.server.bi.board.BoardParser.parse(body);
+            if (!r.ok()) {
+                blocks.add(which + " is not a valid board: " + r.firstError());
             }
         }
     }
