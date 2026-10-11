@@ -37,7 +37,7 @@ kept as they were planned, with notes where the delivery differed.
 | 1.18.0 | data loads: the batch-landed signal, expectations, late data |
 | 1.19.0 | connectors as files, TLS and proxy, query by form, Drishti Elements, retry and no-restart reload, AI and MCP layers, Rūpaka phase 1 |
 | 1.20.0 | Rūpaka phases 2 and 3 (datasets, reports, designer), deep trades, real public data |
-| Unreleased | Rūpaka phases 4 and 5 (governance, live tables), Forms and Reports in the top bar, news and market-data connectors |
+| 1.21.0 | Rūpaka phases 4 and 5 (governance, live tables, Perspective, boards), outbound HTTP proxy, news and market sample packs, Forms and Reports in the top bar, the Live toggle, a documentation review against the code |
 
 ## Working agreement
 
@@ -254,19 +254,21 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Roadmap
 
-Everything planned up to 1.20.0 is built (see the changelog). Next, in order:
+Everything planned up to 1.21.0 is built (see the changelog). Agreed with the product owner on 2026-10-11, in order,
+each wave closing with a drill and a release:
 
-| # | Item | What it delivers | Design |
+| Wave | Release | What it delivers | Design |
 |---|---|---|---|
-| 1 | **Server-side pricing: the quant service** | A QuantLib pricing service (`drishti-quant`) behind the Drishti server: model NPV beside booked MTM, Greeks, scenarios and implied vols for the packs' products, through a `quant` role power, with market data for the business date; in Calc and the console | [QUANT_SERVICE.md](QUANT_SERVICE.md), [adr/019](adr/019-pricing-is-a-quantlib-service-behind-the-server.md) |
-| 2 | **Rūpaka phases 6 to 9** | Python measures, notifications and subscriptions, embedding of reports, the designer's *Explore to visual* | [RUPAKA.md](RUPAKA.md) |
-| 3 | **Windows, proven** | The Windows CI job green; the PowerShell scripts run on a real Windows machine; a `maintain-lake.ps1` with a Task Scheduler example | [WINDOWS.md](../guides/WINDOWS.md) |
-| 4 | **A real deployment** | Security on, single sign-on, HTTPS, the images built and run together (`deploy/compose.yaml`), with the quant service | [OPERATIONS.md](../admin/OPERATIONS.md) |
-| 5 | **Scale on a real server** | `tools/bench/scale.sh` at a million trades a day for each store, replacing the extrapolations | [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
-| 6 | **Load with many users** | Concurrent viewers, live streams and searches measured together; limits documented | [PERFORMANCE.md](../admin/PERFORMANCE.md) |
+| 2 | 1.22.0 | **Distribution (Rūpaka phase 7):** export (PDF, image, Excel/CSV); scheduled subscriptions rendered per recipient with masks, carrying control values and filters; alerts on measures and board notifications; `<drishti-report>` with Elements steps 11 to 15; per-report phone layouts | [RUPAKA.md](RUPAKA.md) |
+| 3 | 1.23.0 | **BI gaps:** scheduled refresh, year-to-date and month-to-date, window functions, several fact tables in one query; map, funnel, histogram, box, bubble and entity visuals; relative-date slicers, true totals, reports over several datasets, per-device layouts; rename detection, BI in pack archives, import rollback, incremental aggregates, live-table history, a board designer | [RUPAKA.md](RUPAKA.md) section 20 |
+| 4 | 1.24.0 | **Python (Rūpaka phase 6):** Transform, Measure and Visual interfaces; the sandboxed server runner and the browser target (Pyodide, on-demand compute on masked data the reader already has); the Calc client and PygWalker | [RUPAKA.md](RUPAKA.md) |
+| 5 | 2.0.0 | **Analyse (Rūpaka phase 9):** the analyst workbench (DuckDB-Wasm Slice and SQL, Pyodide notebooks) over masked extracts; QLRisk behind a quant-engine interface once its API is stable | [RUPAKA.md](RUPAKA.md), [QUANT_SERVICE.md](QUANT_SERVICE.md) |
+| 6 | between waves | **Platform loose ends:** chat bridges and plugin jars reload live; proxy gaps (HTTPS proxies, SOCKS, PAC, the server's own HTTP calls); AI streaming and stdio MCP | [AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md) |
+| 7 | 2.1.0 | **AI-driven BI (stage 2):** a report from words, ask the data, explain this number, under the AI policy (off by default, masked, audited) | [RUPAKA.md](RUPAKA.md) section 20.1 |
 
-Also candidates: several console processes behind one load balancer without sticky sessions, Iceberg without Hadoop,
-delete handling in the Redis connector, and per-field history charts on derived kinds over long ranges (a summary table).
+Later candidates: server-side pricing (the QuantLib service), Windows proven on a real machine, a real deployment (single
+sign-on, HTTPS, the images together), scale on a real server, load with many users, several console processes without
+sticky sessions, Iceberg without Hadoop, delete handling in the Redis connector.
 
 ## Risks
 

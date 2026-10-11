@@ -13,7 +13,44 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.20.0 — release notes
+# Drishti 1.21.0 — release notes
+
+*2026-10-11.* **BI you can govern and watch live; connectors behind a proxy; Forms and Reports in the top bar; documentation checked against the code.**
+
+- **Publishing and governance (Rūpaka phase 4)** (docs/guides/BI_GOVERNANCE.md): every save is a version with history, a
+  side-by-side diff and restore; review with the diff, Check, impact and a data preview (four eyes); certified and promoted
+  badges, certification revoked when a dataset change breaks what it certified; lineage and "what breaks if"; a publish
+  that breaks published reports is refused unless a BI admin forces it; BI bundles between environments (dry run first,
+  all or nothing, boards bring their reports and datasets); every step audited.
+- **Streaming BI (Rūpaka phase 5)** (docs/guides/BOARDS.md, REPORTS.md): live dataset tables kept in memory and updated by
+  key, live visuals redrawn in place (pause, resume, stale and disconnected states), Perspective grid and pivot under a
+  narrow policy on the pages that hold them, boards with kiosk mode. Samples: Live trading desk, Live exposure, Desk wall.
+- **Outbound HTTP proxy** (docs/connectors/PROXY.md) for REST, feeds, news, Yahoo Finance, S3, Delta and Iceberg on S3,
+  the schema registry, and the AI and MCP clients: per connector, a site default, or the environment; credentials only
+  as `${ENV}` and masked everywhere; Admin shows the effective proxy and tests through it.
+- **Connectors that are code:** `news` (Google News RSS) and `yfinance` (Yahoo Finance), off by default, with the sample
+  packs **news-watch** and **market-watch**. Yahoo's endpoint is unofficial: samples and internal demos only.
+- **The top bar:** **Forms** (with a `/forms` home; `FORM <GO>` opens it) and **Reports** menus beside BI; **Live** is one
+  round toggle on every screen (green live, red paused); no overlap from 1024 to 1920 px; every menu fits a phone.
+- **Query by form:** a field with more than three values is a checkbox dropdown with a filter box.
+- **Admin pages for every connector and pack.**
+- **Documentation reviewed against the code:** about 150 fixes across the user, BI, admin, API, connector and developer
+  guides and the in-product help; new tests keep the API guide, error codes and the connector settings catalogue in step
+  with the code.
+
+**Upgrading from 1.20.0:**
+- The identity database gains `drishti_bi_revision` and `drishti_bi_event`, created at start; BI history starts at the
+  upgrade.
+- The Python AI and MCP clients no longer read `HTTP_PROXY` by themselves; set `DRISHTI_HTTP_PROXY_FROM_ENVIRONMENT=true`
+  to keep that.
+- The news-watch pack's code is `NEWSW` (`NEWS` is its headlines command); its roles are `news-analyst` and
+  `market-analyst` (market-watch).
+- The connector settings catalogue no longer marks settings with code defaults as required (file `root`, kafka
+  `bootstrap-servers` and others); files that relied on the old warnings are unaffected.
+- **Give the server a heap limit** (`-Xmx`, for example 3g for a workstation): without one Java may grow to a quarter of
+  the machine's memory before collecting. A 2-hour check showed no leak (about 400 MB live after a collection).
+
+# Previous release: Drishti 1.20.0 — release notes
 
 *2026-10-10.* **BI you can use: datasets, a query engine, reports and a designer; deep trades; real public data.**
 
@@ -44,7 +81,7 @@
 datasets and reports are new folders under `config/bi/` and load live. Not built yet (marked in the docs): scheduled
 refresh, time intelligence and window functions, live visuals, several visual types, reports over several datasets.
 
-# Previous release: Drishti 1.19.0 — release notes
+# Older release: Drishti 1.19.0 — release notes
 
 *2026-10-10.* **Connectors as files with TLS everywhere, query by form, Drishti Elements, no restarts, and the start of BI.**
 

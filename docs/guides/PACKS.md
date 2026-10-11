@@ -143,7 +143,7 @@ default `./config/packs`, relative to the directory you start the server in).
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=finance,logistics java -jar drishti-server/target/drishti-server-1.20.0-exec.jar
+   DRISHTI_PACKS=finance,logistics java -jar drishti-server/target/drishti-server-1.21.0-exec.jar
    ```
 
 3. Check what loaded. Any of these works:
