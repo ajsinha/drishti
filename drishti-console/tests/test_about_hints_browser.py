@@ -127,7 +127,7 @@ def test_a_phone_tap_pins_the_tooltip_and_the_popover_fits_the_screen(live_conso
         assert tip.is_visible() and "More in About this page" in tip.inner_text()
         box = tip.bounding_box()
         assert box["x"] >= 0 and box["x"] + box["width"] <= 391
-        pg.locator("body").tap(position={"x": 195, "y": 40})
+        pg.locator("section[data-panel='scenarios']").tap(position={"x": 4, "y": 4})  # outside the tip, not on the top bar (a tap there opens a menu)
         assert tip.is_hidden()
         pg.locator("section[data-panel='scenarios'] a.pnl-help[data-about-help]").tap()
         pop = pg.locator(".about-pop")
