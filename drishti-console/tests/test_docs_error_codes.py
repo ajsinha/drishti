@@ -83,3 +83,21 @@ def test_rachana_reference_lists_every_problem_code_the_parser_reports():
                      and not "DRS-2040" <= c <= "DRS-2049")      # the pack about-file family has its own rows
     assert f"`{grammar[0]}` to `{grammar[-1]}`" in _read("docs/guides/RACHANA_REFERENCE.md"), \
         "the grammar problem-code range in RACHANA_REFERENCE is out of date"
+
+
+def _raised_anywhere() -> set[str]:
+    """Every DRS code written in the server's, the parsers' and the console's main code (not in tests or docs)."""
+    found: set[str] = set()
+    for pattern in ("*/src/main/**/*.java", "drishti-console/core/**/*.py", "drishti-console/routes/**/*.py", "drishti-console/web/static/js/**/*.js"):
+        for path in ROOT.glob(pattern):
+            if ".venv" in path.parts or "target" in path.parts:
+                continue
+            found |= set(CODE.findall(path.read_text(encoding="utf-8", errors="ignore")))
+    return found
+
+
+def test_troubleshooting_lists_no_code_that_nothing_raises():
+    """The other direction: a code in the table that no code can raise is a dead entry (DRS-3001 is documented as reserved)."""
+    listed = _first_column_codes(_section(_read("docs/guides/TROUBLESHOOTING.md"), "## Error codes"))
+    dead = listed - _raised_anywhere() - {"DRS-3001"}
+    assert not dead, f"TROUBLESHOOTING lists codes nothing raises: {sorted(dead)}"
