@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The top bar's Live control is one round 44 px toggle button at every width: a green circle (a filled dot) while live, a red
+"""The top bar's Live control is one round toggle button at every width (36 px with a mouse, as tall as the command line; 44 px on touch): a green circle (a filled dot) while live, a red
 circle (pause bars) once paused, no visible text, aria-pressed and a label that say what a click does. A click pauses (the
 page becomes a static snapshot of the current business date, so no more updates arrive), the next click resumes; the choice
 follows the user to the next page; Enter and Space work; both themes. Skipped when Playwright or its Chromium is missing."""
@@ -45,7 +45,8 @@ def test_live_is_a_green_red_toggle(browser, console_url, width, mobile, scheme)
         page.goto(console_url + VIEW, wait_until="load")
         s = page.evaluate(STATE)
         assert s["tag"] == "BUTTON" and s["visible"] and s["text"] == "" and s["radius"] in ("50%", "22px")
-        assert round(s["w"]) == 44 and round(s["h"]) == 44, s
+        size = 44 if mobile else 36                                   # as tall as the command line: 36 px with a mouse, 44 on touch
+        assert round(s["w"]) == size and round(s["h"]) == size, s
         assert s["pressed"] == "true" and s["label"] == ON and s["title"] == ON and not s["bars"]
         green = _rgb(s["bg"])
         assert green[1] > green[0] and green[1] > green[2], f"live should be green, got {s['bg']}"
@@ -57,7 +58,7 @@ def test_live_is_a_green_red_toggle(browser, console_url, width, mobile, scheme)
         s = page.evaluate(STATE)
         red = _rgb(s["bg"])
         assert red[0] > red[1] and red[0] > red[2], f"paused should be red, got {s['bg']}"
-        assert s["label"] == OFF and s["title"] == OFF and s["bars"] and s["text"] == "" and round(s["w"]) == 44
+        assert s["label"] == OFF and s["title"] == OFF and s["bars"] and s["text"] == "" and round(s["w"]) == size
         before = _ticks(page)
         page.wait_for_timeout(1200)
         assert _ticks(page) == before, "updates kept arriving while paused"
