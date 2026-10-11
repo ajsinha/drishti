@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 package com.ash.drishti.server.bi.engine;
 
 import java.time.Duration;
@@ -60,6 +75,12 @@ public record QueryProperties(String storeDir, Duration timeout, Integer maxRows
 
     private static Duration positive(Duration d, Duration dflt) {
         return d == null || d.isNegative() || d.isZero() ? dflt : d;
+    }
+
+    /** The same settings with another cache size (0 switches the cache off). */
+    public QueryProperties withCacheEntries(int entries) {
+        return new QueryProperties(storeDir, timeout, maxRows, maxBytes, maxConcurrent, maxConcurrentPerUser, jsonMaxRows, entries, cacheMaxBytes, cacheTtl, memoryLimit, threads,
+                scanBatchRows, recordReadMax, recordReadBudget, latestTtl, eagerRebuild, liveTtl, admission, inferSample, inferMinMatch);
     }
 
     /** Defaults for tests and embedded use. */

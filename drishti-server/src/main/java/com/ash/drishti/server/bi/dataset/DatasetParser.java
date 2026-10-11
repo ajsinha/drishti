@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 package com.ash.drishti.server.bi.dataset;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -135,8 +150,8 @@ public final class DatasetParser {
             }
             Map<String, Dataset.Column> columns = new LinkedHashMap<>();
             JsonNode cols = v.path("columns");
-            if (!cols.isObject() || cols.isEmpty()) {
-                out.add(error(path + ".columns", "a table lists its columns: name: { type: string, path: $.doc.path }"));
+            if (!cols.isObject()) {
+                out.add(error(path + ".columns", "a table lists its columns: name: { type: string, path: $.doc.path } (an empty list is allowed: the table then has only id and businessDate)"));
             } else {
                 cols.fields().forEachRemaining(c -> column(path + ".columns." + c.getKey(), c.getKey(), c.getValue(), columns, out));
             }

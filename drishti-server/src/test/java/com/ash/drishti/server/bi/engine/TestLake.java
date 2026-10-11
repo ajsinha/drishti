@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 package com.ash.drishti.server.bi.engine;
 
 import com.ash.drishti.api.AsOf;
@@ -45,10 +60,15 @@ class TestLake implements SourceGateway {
 
     /** @param promoted false makes the trades connector unable to scan, so the engine reads documents */
     TestLake(boolean promoted) {
+        this(promoted, 40);
+    }
+
+    /** @param rowsPerDay trades on each of the two days (the measurements use 10,000, the most a local test may hold) */
+    TestLake(boolean promoted, int rowsPerDay) {
         this.promoted = promoted;
         for (LocalDate day : List.of(DAY1, DAY2)) {
             List<Trade> list = new ArrayList<>();
-            for (int i = 0; i < 40; i++) {
+            for (int i = 0; i < rowsPerDay; i++) {
                 int shift = day.equals(DAY2) ? 1 : 0;
                 List<Map<String, Object>> legs = List.of(Map.of("leg", 1, "payReceive", "Pay", "notional", 1000.0 * (i + 1), "currency", "USD"),
                         Map.of("leg", 2, "payReceive", "Receive", "notional", 1000.0 * (i + 1), "currency", i % 2 == 0 ? "EUR" : "GBP"));

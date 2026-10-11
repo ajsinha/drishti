@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 package com.ash.drishti.server.bi.engine;
 
 import com.ash.drishti.api.DataNode;
@@ -250,9 +265,18 @@ public final class SqlCompiler {
                 return new Plan(p.dataset(), p.query(), p.fields(), p.measures(), p.filters(), p.rules(), p.denied(), allOf(base, joins), base, joins);
             }
         }
+        Set<String> ruleTables = new LinkedHashSet<>();
+        for (Node rule : p.rules()) {
+            Node.walk(rule, x -> {
+                if (x instanceof Node.Ref ref) {
+                    ruleTables.add(resolver.resolve(ref.parts(), null).table());
+                }
+            });
+        }
+        String rules = ruleTables.isEmpty() ? "" : "; your row rule reads " + ruleTables + " and is applied to every query you run, so the table the measures aggregate must reach it many-to-one";
         throw invalid(measures && aggTables.size() > 1 && candidates.stream().noneMatch(c -> tree(c, aggTables, edges, true) != null)
                 ? "the measures aggregate " + aggTables + ", which no many-to-one path connects: ask for them in separate queries"
-                : "the model has no relationship path joining " + tables + (measures ? " to the measures' table without repeating its rows (each join must go many-to-one)" : ""));
+                : "the model has no relationship path joining " + tables + (measures ? " to the measures' table without repeating its rows (each join must go many-to-one)" : "") + rules);
     }
 
     private static Set<String> allOf(String base, List<Join> joins) {

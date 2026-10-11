@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 package com.ash.drishti.server.bi.engine;
 
 import com.ash.drishti.api.ArrowScan;
@@ -98,13 +113,18 @@ final class TableBuilder {
                 }
             } else {
                 how = "records";
-                warnings.add("connector '" + plugin.manifest().name() + "' cannot scan " + t.kind() + (each ? "" : " as columns")
-                        + ": reading documents one by one (slow for a large table; promote the columns in the connector's layout)");
+                warnings.add(each ? t.name() + " is over the array '" + t.each() + "' of " + t.kind() + ": the documents of connector '" + plugin.manifest().name()
+                        + "' are read once per business date and cut into rows (slow for a large table)"
+                        : "connector '" + plugin.manifest().name() + "' cannot scan " + t.kind() + " as columns for table " + t.name()
+                        + ": reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)");
                 create(c, stage, cols, cols.stream().map(x -> numeric(x) ? ColumnBatch.Type.NUMBER : ColumnBatch.Type.TEXT).toList(), each);
                 java.util.concurrent.atomic.AtomicReference<LocalDate> seen = new java.util.concurrent.atomic.AtomicReference<>();
                 rows = records(duck, stage, t, cols, date, warnings, seen);
                 if (resolved == null) {
                     resolved = seen.get();                        // the business date the source says the documents are for
+                }
+                if (resolved == null) {
+                    resolved = newestDate(plugin, t.kind());      // else the newest date the connector holds
                 }
             }
             if (resolved == null) {
@@ -121,6 +141,15 @@ final class TableBuilder {
             Files.move(tmp, file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             return new Built(resolved, rows, file, warnings, how);
         });
+    }
+
+    /** The newest business date the connector says it holds for the kind, or the current business date when it cannot say. */
+    private LocalDate newestDate(SourcePlugin plugin, String kind) {
+        try {
+            return plugin.inventory(kind, 1).keySet().stream().max(java.util.Comparator.naturalOrder()).orElse(sources.currentDate());
+        } catch (RuntimeException e) {
+            return sources.currentDate();
+        }
     }
 
     private ArrowScan tryScan(SourcePlugin plugin, Dataset.Table t, List<Dataset.Column> cols, LocalDate date) {

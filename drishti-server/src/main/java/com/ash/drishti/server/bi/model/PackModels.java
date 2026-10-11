@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 package com.ash.drishti.server.bi.model;
 
 import com.ash.drishti.api.AsOf;
@@ -23,7 +38,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -142,7 +156,11 @@ public final class PackModels {
             try (Stream<Path> files = Files.list(dir)) {
                 for (Path f : files.sorted().limit(5).toList()) {
                     JsonNode doc = new ObjectMapper().readTree(Files.readString(f));
-                    doc.fields().forEachRemaining(e -> scalars(e.getKey(), e.getValue(), 0, cols));
+                    doc.fields().forEachRemaining(e -> {
+                        if (!e.getKey().startsWith("_")) {                       // _meta and friends are the server's, not the entity's
+                            scalars(e.getKey(), e.getValue(), 0, cols);
+                        }
+                    });
                 }
             } catch (IOException | RuntimeException e) {
                 // a sample that does not parse is simply not used
@@ -270,7 +288,11 @@ public final class PackModels {
         for (TableInfo t : chosen) {
             Optional<SourcePlugin> plugin = sources.plugin(t.connector(), t.kind());
             List<String> paths = t.columns().stream().filter(ColumnInfo::promoted).map(ColumnInfo::path).toList();
-            if (plugin.isEmpty() || paths.isEmpty()) {
+            if (plugin.isEmpty()) {
+                continue;
+            }
+            if (paths.isEmpty()) {
+                documents(t, ids, values, warnings);
                 continue;
             }
             try {
@@ -339,6 +361,39 @@ public final class PackModels {
         return out;
     }
 
+    /** A table whose connector promotes no columns: ids and the text values of its columns from up to {@code infer-sample} documents. */
+    private void documents(TableInfo t, Map<String, Set<String>> ids, Map<String, Map<String, List<String>>> values, List<String> warnings) {
+        try {
+            List<com.ash.drishti.api.EntityRef> refs = sources.ids(t.kind(), null, props.inferSample());
+            if (refs.isEmpty()) {
+                return;
+            }
+            Map<com.ash.drishti.api.EntityRef, com.ash.drishti.api.EntityDocument> docs = sources.read(refs, null);
+            Set<String> idSet = new HashSet<>();
+            Map<String, List<String>> cols = new LinkedHashMap<>();
+            for (ColumnInfo c : t.columns()) {
+                if ("string".equals(c.type())) {
+                    cols.put(c.name(), new ArrayList<>());
+                }
+            }
+            for (var e : docs.entrySet()) {
+                idSet.add(e.getKey().id());
+                for (ColumnInfo c : t.columns()) {
+                    if (cols.containsKey(c.name())) {
+                        var node = e.getValue().data().at(c.path());
+                        if (!node.isNull() && !node.isMasked() && !node.asText().isBlank()) {
+                            cols.get(c.name()).add(node.asText());
+                        }
+                    }
+                }
+            }
+            ids.put(t.table(), idSet);
+            values.put(t.table(), cols);
+        } catch (RuntimeException e) {
+            warnings.add(t.table() + ": cannot read documents to look for relationships (" + e.getMessage() + ")");
+        }
+    }
+
     // ---- the YAML ----------------------------------------------------------------------------------------------------
 
     private String yaml(List<TableInfo> chosen, List<Link> links, String name) {
@@ -360,12 +415,14 @@ public final class PackModels {
             table.put("source", src);
             Map<String, Object> cols = new LinkedHashMap<>();
             for (ColumnInfo c : t.columns()) {
-                Map<String, Object> col = new LinkedHashMap<>();
-                col.put("type", c.type());
-                if (!c.path().equals(c.name())) {
+                if (c.path().equals(c.name())) {
+                    cols.put(c.name(), c.type());                                 // shorthand: just the type
+                } else {
+                    Map<String, Object> col = new LinkedHashMap<>();
                     col.put("path", c.path());
+                    col.put("type", c.type());
+                    cols.put(c.name(), col);
                 }
-                cols.put(c.name(), col);
             }
             table.put("columns", cols);
             tables.put(t.table(), table);
@@ -391,10 +448,5 @@ public final class PackModels {
         } catch (IOException e) {
             throw new DrishtiException(ErrorCode.QUERY_ENGINE, "cannot write the draft: " + e.getMessage());
         }
-    }
-
-    /** Lower-case helper for tests. */
-    static String lower(String s) {
-        return s.toLowerCase(Locale.ROOT);
     }
 }

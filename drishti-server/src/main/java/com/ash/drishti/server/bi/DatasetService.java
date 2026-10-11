@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 package com.ash.drishti.server.bi;
 
 import com.ash.drishti.common.DrishtiException;
@@ -10,7 +25,6 @@ import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
-import com.ash.drishti.server.bi.dataset.Rollups;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import com.ash.drishti.server.bi.engine.ArrowIpcWriter;
 import com.ash.drishti.server.bi.engine.Layers;
@@ -386,15 +400,5 @@ public final class DatasetService {
         if (!touched.isEmpty()) {
             LOG.info("data load {} {}: BI layers cleared for {}", r.kind(), r.businessDate(), touched);
         }
-    }
-
-    /** A rollup that would cover this query, for the dataset page's explanation (null when none). */
-    String rollupFor(Dataset d, String measure, String table) {
-        for (Dataset.Rollup ro : d.rollups()) {
-            if (ro.table().equals(table) && Rollups.eligible(d, d.measures().get(measure), table)) {
-                return ro.name();
-            }
-        }
-        return null;
     }
 }
