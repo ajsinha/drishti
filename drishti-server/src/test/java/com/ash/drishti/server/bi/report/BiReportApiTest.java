@@ -151,6 +151,10 @@ class BiReportApiTest {
                         title: Other
                         visuals: []
                     """);
+            Files.writeString(datasets.resolve("restricted.dataset.yaml"), Files.readString(datasets.resolve("lake-report.dataset.yaml")).replace("dataset: lake-report", "dataset: restricted")
+                    .replace("title: Lake for reports", "title: Restricted\naudience: { roles: [bi-risk] }"));
+            Files.writeString(reports.resolve("uses-restricted.report.yaml"), "report: uses-restricted\ndataset: restricted\npages:\n  - id: p\n    visuals:\n"
+                    + "      - { id: n, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n");
             Files.writeString(reports.resolve("broken.report.yaml"), "report: broken\ndataset: no-such-dataset\npages:\n  - { id: p, visuals: [] }\n");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
@@ -361,6 +365,19 @@ class BiReportApiTest {
         assertThat(ok(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", wes(), null)).path("measures")).hasSize(3);
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", rita(), null), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=nope", wes(), null), 422, "DRS-9034");
+    }
+
+    @Test @Order(6)
+    void aPublishedReportReadsItsDatasetWithItsPublishersGrantsButADraftOnlyWithItsAuthorsOwn() throws Exception {
+        // the dataset is in the catalogue for bi-risk only: ann (an analyst) cannot find it, yet the published report over it answers her, as her
+        JsonNode viaReport = ok(call("POST", "/api/v1/bi/reports/file:report:uses-restricted/query", ann(),
+                "{\"page\":\"p\",\"visual\":\"n\",\"state\":{\"dates\":{\"from\":\"2026-10-08\",\"to\":\"2026-10-08\"}}}"));
+        assertThat(viaReport.path("rows").get(0).get(0).asInt()).isEqualTo(24);
+        refused(call("GET", "/api/v1/bi/datasets/file:dataset:restricted", ann(), null), 404, "DRS-9001");
+        // a draft naming it, from an author who may not read it, does not find it
+        String draft = "report: d\ndataset: restricted\npages:\n  - id: p\n    visuals: []\n";
+        assertThat(ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", draft))).path("problems").toString()).contains("DRS-9034").contains("no dataset 'restricted'");
+        refused(call("GET", "/api/v1/bi/reports/dataset?ref=restricted", wes(), null), 422, "DRS-9034");
     }
 
     @Test @Order(7)

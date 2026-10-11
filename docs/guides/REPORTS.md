@@ -241,7 +241,8 @@ colour with a contrast ratio under 3 against the theme's background), `LAYOUT` (
 ## 10. Security
 
 * A reader needs the **report** (the catalogue's audience and workspace roles decide); they need not be able to open the dataset's catalogue entry: the report reads its dataset with the grants of the
-  people who published it, and the engine applies **the reader's own row rules and masks**. A reader is not told the dataset's row rules through the report.
+  people who published it (a published or shipped report), and the engine applies **the reader's own row rules and masks**. A reader is not told the dataset's row rules through the report. A **draft** (and the designer) finds only the
+  datasets its author may read in the catalogue, so a report cannot be used to reach a dataset the catalogue hides from its author.
 * A row rule is a predicate on the dataset's tables, applied to every query. If a visual reads a table the rule's tables cannot reach many-to-one, that visual answers `DRS-9020`, naming the rule: in the
   sample *Counterparty risk* a desk head's exposure visuals say so, and an analyst sees the counterparty name as `•••` (one bar, since every name is the same mask).
 * The report's queries go through the same limits as any query (`drishti.bi.query.*`): three at a time per person (the page asks three at a time and retries a refusal for busy), time, rows and bytes.

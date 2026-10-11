@@ -68,18 +68,22 @@ public final class BiReportService {
         return i;
     }
 
-    /** The dataset a report names: by catalogue id, shipped file name, the dataset's own name or its title; published datasets first, then the caller's own. */
-    BiStore.Item datasetFor(Principal p, String ref) {
+    /**
+     * The dataset a report names: by catalogue id, shipped file name, the dataset's own name or its title. A report someone published reads its dataset with its
+     * publisher's grants ({@code viaPublished}: any published dataset); a draft, and the designer's lookups, find only the datasets the caller may read themselves, so
+     * a report cannot be used to reach a dataset the catalogue hides from its author.
+     */
+    BiStore.Item datasetFor(Principal p, String ref, boolean viaPublished) {
         if (ref == null || ref.isBlank()) {
             throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report names no dataset");
         }
-        List<BiStore.Item> published = bi.allDatasets();
-        for (BiStore.Item i : published) {
+        List<BiStore.Item> pool = viaPublished ? bi.allDatasets() : bi.datasetItems(p);
+        for (BiStore.Item i : pool) {
             if (i.id().equals(ref) || i.id().equals("file:dataset:" + ref)) {
                 return i;
             }
         }
-        for (BiStore.Item i : published) {
+        for (BiStore.Item i : pool) {
             if (i.title().equalsIgnoreCase(ref) || ref.equals(declaredName(p, i))) {
                 return i;
             }
@@ -90,12 +94,7 @@ public final class BiReportService {
                 return mine;
             }
         } catch (DrishtiException e) {
-            // not an item the caller can read: fall through to the refusal below
-        }
-        for (BiStore.Item i : bi.datasetItems(p)) {
-            if (i.title().equalsIgnoreCase(ref) || ref.equals(declaredName(p, i))) {
-                return i;
-            }
+            // not an item the caller can read: the refusal below
         }
         throw new DrishtiException(ErrorCode.REPORT_DATASET, "no dataset '" + ref + "' (a catalogue id, a file name such as trades-basic, or the dataset's name)");
     }
@@ -105,14 +104,14 @@ public final class BiReportService {
         return r.dataset() == null ? "" : r.dataset().name();
     }
 
-    private Loaded load(Principal p, BiStore.Item item, String yaml) {
+    private Loaded load(Principal p, BiStore.Item item, String yaml, boolean viaPublished) {
         ReportParser.Result parsed = ReportParser.parse(yaml);
         List<ReportParser.Problem> problems = new ArrayList<>(parsed.problems());
         BiStore.Item dsItem = null;
         Dataset ds = null;
         if (parsed.report() != null && !parsed.report().dataset().isBlank()) {
             try {
-                dsItem = datasetFor(p, parsed.report().dataset());
+                dsItem = datasetFor(p, parsed.report().dataset(), viaPublished);
                 ds = datasets.parsedDataset(p, dsItem);
             } catch (DrishtiException e) {
                 problems.add(ReportParser.error(e.errorCode().code(), "dataset", e.getMessage()));
@@ -126,7 +125,8 @@ public final class BiReportService {
 
     private Loaded loadItem(Principal p, String id) {
         BiStore.Item item = reportItem(p, id);
-        return load(p, item, bi.bodyFor(p, item));
+        String body = bi.bodyFor(p, item);
+        return load(p, item, body, body.equals(bi.publishedBody(item)));            // the published text reads with its publisher's grants; a draft only with the caller's own
     }
 
     private static boolean ok(List<ReportParser.Problem> problems) {
@@ -168,13 +168,13 @@ public final class BiReportService {
     /** The dataset a report names, as the designer's Fields pane needs it (authors). */
     public Map<String, Object> datasetModel(Principal p, String ref) {
         bi.requirePower(p, BiAccess.AUTHOR);
-        return datasetSummary(p, datasetFor(p, ref));
+        return datasetSummary(p, datasetFor(p, ref, false));
     }
 
     /** Checks report YAML without storing it: the problems with their codes, the model, and (when {@code quality}) the accessibility and layout warnings. */
     public Map<String, Object> validate(Principal p, String yaml, boolean quality) {
         bi.requirePower(p, BiAccess.AUTHOR);
-        Loaded l = load(p, null, yaml);
+        Loaded l = load(p, null, yaml, false);
         List<ReportParser.Problem> problems = new ArrayList<>(l.problems());
         if (quality && l.parsed().report() != null) {
             problems.addAll(ReportValidator.accessibility(l.parsed().report()));
@@ -215,7 +215,7 @@ public final class BiReportService {
         Loaded l;
         if (yaml != null) {
             bi.requirePower(p, BiAccess.AUTHOR);
-            l = load(p, null, yaml);
+            l = load(p, null, yaml, false);
         } else {
             l = loadItem(p, id);
         }

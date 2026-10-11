@@ -229,6 +229,9 @@ The pages work at 390 px: the rail scrolls sideways, the form stacks, tables scr
 
 ## 10. Open the sample reports: Trades overview
 
+The set-up of chapter 0 is all there is (the same people, the same lake); the reports ship in `config/bi/reports` and appear in the catalogue. The pictures and captured output of chapters 10 to 15 were made from a real stack by
+`drishti-console/tests/bi_report_shots.py` (ports 18990 and 17990).
+
 Choose **Catalogue**, filter by kind **report**, and open **Trades overview** (or type `BI trades overview <GO>`: a report opens drawn). Its YAML, `config/bi/reports/trades-overview.report.yaml`, is commented line by line; each visual says where it
 sits (`at: { x, y, w, h }` on the 12-column grid) and what it shows (`wells`). The page shows the day's 750 trades: 92,558,000,000 notional, +138,562,638 mark to market, an average of +184,750 a trade.
 
