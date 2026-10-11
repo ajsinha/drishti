@@ -99,8 +99,12 @@ def _files(directory: Path | str | None) -> list[Path]:
 
 
 def parse_provider(path: Path, env) -> ProviderConfig:
-    data = _read(path)
-    name = str(data.get("name") or path.stem).strip()
+    return provider_from_dict(_read(path), path.stem, env)
+
+
+def provider_from_dict(data: dict, default_name: str, env) -> ProviderConfig:
+    """One provider from its parsed block: a file's content, or the ``config`` that ``LLMProvider.from_settings`` is given."""
+    name = str(data.get("name") or default_name).strip()
     if not _NAME.match(name):
         raise LlmError("config", f"name '{name}' must be letters, digits, '.', '_' or '-'")
     typ = str(data.get("type") or "").strip()
