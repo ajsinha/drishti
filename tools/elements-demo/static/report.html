@@ -1,0 +1,50 @@
+<!doctype html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harbour CRM: a desk report in a card (a host application)</title>
+  <link rel="stylesheet" href="/host.css">
+  <link rel="stylesheet" href="/report.css">
+  <!-- the only Drishti line a host adds to its page; the console is named in this page's CSP (script-src, connect-src, font-src) -->
+  <script type="module" src="__CONSOLE__/embed/v1/drishti-elements.js" crossorigin="anonymous"></script>
+  <script type="module" src="/report.js"></script>
+</head>
+<body>
+  <header class="bar">
+    <b>Harbour CRM</b> <span class="muted">a host application on its own origin: a Drishti report in a card</span>
+    <span class="who">signed in as <b id="who" data-testid="who">nobody</b>
+      <button type="button" data-login="viewer">viewer</button> <button type="button" data-login="author">author</button></span>
+  </header>
+  <main class="stack">
+    <section class="card">
+      <h2>The desk report</h2>
+      <drishti-report id="rep" data-testid="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
+    </section>
+    <section class="card narrow">
+      <h2>One visual, no chrome</h2>
+      <drishti-report id="one" data-testid="one" report="file:report:live-trading-desk" visual="by-desk" chrome="bare" theme="light"></drishti-report>
+    </section>
+    <section class="card">
+      <h2>The host's own panel</h2>
+      <p class="muted">Events the report told this page about:</p>
+      <ol id="log" data-testid="log" class="log"></ol>
+    </section>
+  </main>
+</body>
+</html>

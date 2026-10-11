@@ -24,7 +24,7 @@
   {% with tab='embedding' %}{% include "admin/_nav.html" %}{% endwith %}
   <h1 class="ws-h">Embedding <a class="emb-help" href="/help/user-management#embedding-host-applications" aria-label="Help: embedding host applications" title="Help: embedding host applications">?</a></h1>
   <p class="text-muted-d">The web applications allowed to show {{ PRODUCT }} views in their own pages (Drishti Elements). Each host application
-    has exact origins, a client secret or a public key it authenticates with, and the scopes and kinds it may use. Usage counts since
+    has exact origins, a client secret or a public key it authenticates with, and the scopes it may use and the kinds and BI reports it may show. Usage counts since
     {% if since %}{{ when_local(since) }}{% else %}the server started{% endif %} and starts again at a restart.
     See <a href="/help/user-management#embedding-host-applications">Embedding host applications</a>.
     <span class="mono">n</span> registers an application, <span class="mono">/</span> focuses the filter.</p>
@@ -48,7 +48,7 @@
           {% if a.fromConfig %}<br><span class="st" title="Declared in drishti.embed.apps: change it in configuration and restart">from config</span>{% endif %}</th>
         <td class="mono emb-origins">{% for o in a.origins %}<div>{{ o }}</div>{% endfor %}</td>
         <td>{% if a.hasSecret %}<span class="st">client secret</span>{% endif %}{% if a.jwks %}<span class="st">public key</span>{% endif %}</td>
-        <td>{% for s in a.scopes %}<span class="role">{{ s }}</span>{% endfor %}<div class="text-muted-d">{{ a.kinds | join(', ') if a.kinds else 'every kind the user may open' }}</div></td>
+        <td>{% for s in a.scopes %}<span class="role">{{ s }}</span>{% endfor %}<div class="text-muted-d">{{ a.kinds | join(', ') if a.kinds else 'every kind and report the user may open' }}</div></td>
         <td>{% if a.enabled %}<span class="st st-ok">enabled</span>{% else %}<span class="st st-bad">disabled</span>{% endif %}</td>
         <td class="emb-usage" data-usage>
           <div><span class="mono">{{ '{:,}'.format(a.usage.tokensIssued) }}</span> tokens &middot; <span class="mono">{{ '{:,}'.format(a.usage.calls) }}</span> calls &middot;
@@ -81,7 +81,7 @@
       <fieldset class="emb-scopes"><legend>Scopes</legend>
         {% for s in emb.scopes or ['embed:view'] %}<label><input type="checkbox" name="scope" value="{{ s }}"{% if loop.first %} checked{% endif %}> <span class="mono">{{ s }}</span></label>{% endfor %}
       </fieldset>
-      <label>Kinds it may show (comma separated; empty: every kind its users' roles open)<input class="studio-in mono" name="kinds" placeholder="trade, counterparty"></label>
+      <label>Kinds and reports it may show (comma separated; a report is <span class="mono">report:&lt;id&gt;</span>, every report <span class="mono">report:*</span>; empty: everything its users' roles open)<input class="studio-in mono" name="kinds" placeholder="trade, counterparty, report:file:report:trades-overview"></label>
       <div class="emb-rates">
         <label>Calls per minute<input class="studio-in" type="number" min="1" name="callsPerMinute" value="{{ emb.callsPerMinute or 600 }}"></label>
         <label>Calls per user per minute<input class="studio-in" type="number" min="1" name="userCallsPerMinute" value="{{ emb.userCallsPerMinute or 60 }}"></label>

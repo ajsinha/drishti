@@ -109,6 +109,7 @@ embed:
   recheck_seconds: 60              # an open stream asks the server this often whether its token still passes (user, app, scopes)
   token_grace_seconds: 30          # after a token expires, how long the stream waits for a fresh one before gone DRS-8001
   compress_min_bytes: 512          # payloads smaller than this are sent uncompressed (br if the browser accepts it and brotli is installed, else gzip)
+  lifecycle: {}                    # announce the end of an embed API major: {"1": {deprecation: 2027-01-01, sunset: 2027-07-01, link: https://...}} -> Deprecation and Sunset headers, then 410 DRS-8006
 auth:
   enabled: ${DRISHTI_AUTH_ENABLED:false}      # off for local development
   session_secret: ${DRISHTI_SESSION_SECRET:}  # >= 32 characters; from the environment only

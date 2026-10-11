@@ -365,4 +365,7 @@ def create_app(settings: Settings) -> FastAPI:
         from routes import embed_routes
 
         app.include_router(embed_routes.router)
+        from routes import embed_report_routes
+
+        app.include_router(embed_report_routes.router)
     return app

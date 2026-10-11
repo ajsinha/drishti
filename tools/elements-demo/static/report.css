@@ -1,0 +1,21 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The host application's styles for the report page: a column of cards. They know nothing of Drishti. */
+.stack { display: flex; flex-direction: column; gap: 1rem; padding: 1rem; max-width: 1100px; margin: 0 auto; }
+.card { background: #fff; border: 1px solid #d8d0c0; border-radius: 6px; padding: .6rem .9rem; }
+.card h2 { margin: 0 0 .4rem; font-size: 1rem; }
+.card.narrow { max-width: 560px; }
+.log { margin: 0; padding-left: 1.2rem; font: 12px/1.4 monospace; max-height: 9rem; overflow: auto; }

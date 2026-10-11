@@ -54,6 +54,7 @@
         <nav class="bi-tabs" data-ptabs role="tablist" aria-label="Pages"></nav>
         <div class="bi-viewtabs" role="tablist" aria-label="View">
           <button type="button" class="bi-tab" role="tab" data-tab="canvas" aria-selected="true">Canvas</button>
+          <button type="button" class="bi-tab" role="tab" data-tab="phone" aria-selected="false">Phone</button>
           <button type="button" class="bi-tab" role="tab" data-tab="yaml" aria-selected="false">YAML</button>
         </div>
       </div>
@@ -61,6 +62,17 @@
         <div class="bi-dgrid-wrap">
           <div class="bi-dgrid" data-canvas-grid role="group" aria-label="Report page canvas"></div>
           <p class="bi-dempty" data-canvas-empty><i class="bi bi-plus-circle" aria-hidden="true"></i> Drag a field from Fields onto the canvas, or press its button, to make a visual.</p>
+        </div>
+      </div>
+      <div data-view="phone" class="bi-dview" hidden>
+        <p class="text-muted-d">How this page looks on a phone (640 px and narrower). Drag the rows, or use the arrows, to change the order; hide what a small screen does not need; set a height in rows.
+          Without a phone layout the page is one column in the grid's reading order.</p>
+        <div class="bi-phone-edit">
+          <div class="bi-phone-list-wrap">
+            <ul class="bi-phone-list" data-phone-list aria-label="Visuals in phone order"></ul>
+            <p class="bi-phone-actions"><button type="button" class="btn-pill btn-ghost" data-phone-reset><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Back to automatic</button></p>
+          </div>
+          <div class="bi-phone-frame" aria-label="Preview at 390 pixels"><div class="bi-phone-screen" data-phone-preview></div></div>
         </div>
       </div>
       <div data-view="yaml" class="bi-dview" hidden>
@@ -86,4 +98,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-panes.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-phone.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-visuals.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-grids.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-frame.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-canvas.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-panes.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-design-phone.js?v={{ ASSET_V }}"></script>{% endblock %}

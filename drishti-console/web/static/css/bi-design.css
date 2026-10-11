@@ -160,3 +160,23 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-nr { max-width: none; border: 0; padding: 0; margin: 0; background: none; display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
 .bi-nr button { grid-column: 1 / -1; }
 .bi-small-note { font-size: .78rem; margin: 0 0 .4rem; }
+
+/* Rupaka phase 7: the Phone tab - the visuals in phone order beside a 390 px screen drawn to scale (RUPAKA.md section 20.6) */
+.bi-phone-edit { display: grid; grid-template-columns: minmax(0, 1fr) 422px; gap: 1rem; align-items: start; }
+.bi-phone-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .35rem; }
+.bi-phone-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; border: 1px solid var(--d-border); border-radius: 6px; padding: .35rem .5rem; background: var(--d-surface); cursor: grab; }
+.bi-phone-row.bi-phone-hidden { opacity: .6; border-style: dashed; }
+.bi-phone-row.bi-phone-drag { opacity: .4; }
+.bi-phone-row.bi-phone-over { outline: 2px dashed var(--d-link); outline-offset: 1px; }
+.bi-phone-grip { color: var(--d-muted); }
+.bi-phone-name { flex: 1 1 8rem; min-width: 0; overflow-wrap: anywhere; }
+.bi-phone-move { min-width: 32px; min-height: 32px; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface-2); color: var(--d-ink); }
+.bi-phone-move:disabled { opacity: .35; }
+.bi-phone-rowlabel { display: inline-flex; align-items: center; gap: .3rem; font-size: .8rem; }
+.bi-phone-rows { width: 4.5rem; }
+.bi-phone-actions { margin: .6rem 0 0; }
+.bi-phone-frame { width: 422px; max-width: 100%; border: 2px solid var(--d-border); border-radius: 22px; padding: 14px 16px; background: var(--d-surface-2); }
+.bi-phone-screen { width: 390px; max-width: 100%; max-height: 640px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: var(--d-bg); }
+.bi-phone-card { border: 1px solid var(--d-border); border-radius: 6px; padding: .5rem .6rem; background: var(--d-surface); display: flex; flex-direction: column; gap: .2rem; flex: none; box-sizing: border-box; }
+@media (max-width: 1100px) { .bi-phone-edit { grid-template-columns: minmax(0, 1fr); } }
+@media (pointer: coarse) { .bi-phone-move, .bi-phone-row input[type="checkbox"] { min-width: 44px; min-height: 44px; } }
