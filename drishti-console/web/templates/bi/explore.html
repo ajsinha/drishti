@@ -1,0 +1,75 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Rupaka phase 9, Analyse (docs/guides/ANALYSE.md): open a dataset or a report visual's data as the reader's masked extract, then Slice, SQL and Python.
+   Drawn by static/js/bi-explore.js and bi-explore-cells.js; the strict policy of every BI page applies (no wasm here: browser Python runs in Calc's worker). #}
+{% extends "bi/shell.html" %}
+{% block bi_title %}Analyse{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-explore.css?v={{ ASSET_V }}">{% endblock %}
+{% block bi_main %}
+<header class="bi-head"><h1>Analyse</h1>
+  <p class="text-muted-d">Open a dataset as an extract of the rows you may see (masked columns stay masked), then slice it, query it with SQL or work on it in Python. Save the work as a notebook; promote a cell or a slice into a Python item or a report draft.</p></header>
+<p class="bi-msg" data-msg role="status" aria-live="polite"></p>
+<div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-may-python="{{ 'true' if may_python else 'false' }}">
+<form class="bi-form bx-open" data-open aria-label="Open an extract">
+  <h2>Extract</h2>
+  <label>Dataset<select name="dataset" class="studio-select" data-dataset></select></label>
+  <fieldset class="bx-fields" data-fields-box hidden><legend>Fields</legend><div data-fields></div></fieldset>
+  <div class="bi-actions">
+    <button type="submit" class="btn-pill btn-accent" data-open-go disabled><i class="bi bi-box-arrow-in-down" aria-hidden="true"></i> Open the extract</button>
+    <label class="bx-inline">Notebook<select class="studio-select" data-notebooks aria-label="Open a saved notebook"><option value="">(none)</option></select></label>
+  </div>
+</form>
+<p class="bx-info" data-info role="status" aria-live="polite"></p>
+<div class="bx-tabs" role="tablist" aria-label="Analyse" data-tabs>
+  <button type="button" role="tab" class="btn-pill btn-ghost" id="bxT-slice" aria-controls="bxP-slice" aria-selected="true" data-tab="slice">Slice</button>
+  <button type="button" role="tab" class="btn-pill btn-ghost" id="bxT-sql" aria-controls="bxP-sql" aria-selected="false" tabindex="-1" data-tab="sql">SQL</button>
+  <button type="button" role="tab" class="btn-pill btn-ghost" id="bxT-python" aria-controls="bxP-python" aria-selected="false" tabindex="-1" data-tab="python">Python</button>
+</div>
+<section id="bxP-slice" role="tabpanel" aria-labelledby="bxT-slice" data-pane="slice">
+  <p class="text-muted-d">Add a field to Rows, Columns, Values or Filters with its buttons, or drag it to a zone.</p>
+  <div class="bx-chips" data-chips aria-label="Fields of the extract"></div>
+  <div class="bx-zones">
+    <div class="bx-zone" data-zone="rows"><h3>Rows</h3><div data-zone-body></div></div>
+    <div class="bx-zone" data-zone="columns"><h3>Columns</h3><div data-zone-body></div></div>
+    <div class="bx-zone" data-zone="values"><h3>Values</h3><div data-zone-body></div></div>
+    <div class="bx-zone" data-zone="filters"><h3>Filters</h3><div data-zone-body></div></div>
+  </div>
+  <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-promote-slice disabled><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Promote to a report draft</button></div>
+  <p class="bi-result-meta" data-pivot-meta role="status"></p>
+  <div class="tbl-wrap" data-pivot></div>
+</section>
+<section id="bxP-sql" role="tabpanel" aria-labelledby="bxT-sql" data-pane="sql" hidden>
+  <p class="text-muted-d">One SELECT over the table <code>extract</code>, read-only, at most {{ limits.sql_max_rows }} rows back.</p>
+  <div data-cells="sql"></div>
+  <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-add="sql"><i class="bi bi-plus-lg" aria-hidden="true"></i> SQL cell</button>
+    <button type="button" class="btn-pill btn-ghost" data-run-all="sql"><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
+</section>
+<section id="bxP-python" role="tabpanel" aria-labelledby="bxT-python" data-pane="python" hidden>
+  <p class="text-muted-d">Python over <code>df</code> (a pandas table of the extract). Put a chart option, a table or a value in <code>result</code>; <code>quant.price(...)</code> is the quant engine ({{ quant.engine }}).
+    {% if not may_python %}<strong>Running Python needs the bi-author power.</strong>{% endif %}</p>
+  <div data-cells="python"></div>
+  <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-add="python"><i class="bi bi-plus-lg" aria-hidden="true"></i> Python cell</button>
+    <button type="button" class="btn-pill btn-ghost" data-run-all="python"><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
+</section>
+<form class="bi-form bx-save" data-save aria-label="Save as a notebook">
+  <h2>Notebook</h2>
+  <label>Title<input name="title" class="studio-in" autocomplete="off" maxlength="120" placeholder="Desk P&amp;L, first look"></label>
+  <div class="bi-actions"><button type="submit" class="btn-pill btn-accent" data-save-go disabled><i class="bi bi-journal-code" aria-hidden="true"></i> Save as a notebook</button>
+    <a class="btn-pill btn-ghost" data-saved href="#" hidden>Open the item</a></div>
+</form>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-python.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-explore-cells.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -201,3 +201,15 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1) and,
     max_groups: 5000                                            # most groups a measure is called for
     network_namespace: auto                                     # auto: also run the worker in a network namespace with no interfaces when the machine allows it (unshare); require; off
     scratch_dir: ""                                             # where each call's scratch folder is made; empty: the system temporary folder
+  # Rupaka phase 9 (docs/guides/ANALYSE.md): Analyse at /bi/explore: the masked extract, SQL cells, Python cells and notebooks.
+  explore:
+    max_rows: ${DRISHTI_BI_EXPLORE_MAX_ROWS:10000}             # most rows of an extract (the reader's rows, cut here); 10 to 100000
+    max_fields: 60                                              # most columns of an extract
+    sql_max_rows: 5000                                          # most rows a SQL cell returns
+    sql_max_seconds: 5                                          # a SQL cell running longer is stopped (DRS-9081)
+    sql_max_chars: 20000                                        # longest SQL text
+    cell_timeout_seconds: 20                                    # a Python cell's time limit on the server (also capped by bi.python.max_timeout_seconds)
+    cell_memory_mb: 512                                         # a Python cell's memory on the server (also capped by bi.python.max_memory_mb)
+    cell_max_chars: 65536                                       # longest Python cell
+    max_cells: 60                                               # most cells in a notebook
+    quant_engine: stand-in                                      # the engine behind quant.price(...) in a Python cell (docs/guides/QUANT_SERVICE.md)

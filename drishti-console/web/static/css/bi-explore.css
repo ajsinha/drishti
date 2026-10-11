@@ -1,0 +1,41 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Analyse (docs/guides/ANALYSE.md). Theme variables only; the page keeps the strict CSP (no inline style). */
+.bx { display: flex; flex-direction: column; gap: .8rem; min-width: 0; }
+.bx .bi-form { max-width: none; }
+.bx-fields { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .8rem; }
+.bx-table { display: flex; flex-wrap: wrap; gap: .2rem .9rem; align-items: center; margin: .2rem 0; }
+.bx-check { flex-direction: row !important; align-items: center; gap: .3rem !important; }
+.bx-inline { flex-direction: row !important; align-items: center; gap: .4rem !important; }
+.bx-info { margin: 0; color: var(--d-muted); font-size: .9rem; }
+.bx-tabs { display: flex; gap: .4rem; flex-wrap: wrap; }
+.bx-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.bx-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .3rem .15rem .6rem; border: 1px solid var(--d-border); border-radius: 999px; background: var(--d-surface); cursor: grab; font-size: .85rem; }
+.bx-mini { min-width: 1.6rem; min-height: 1.6rem; border: 1px solid var(--d-border); border-radius: 50%; background: transparent; color: var(--d-muted); font-size: .72rem; cursor: pointer; padding: 0; }
+.bx-mini:hover, .bx-mini:focus-visible { color: var(--d-text); border-color: var(--d-accent, currentColor); }
+.bx-zones { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .6rem; margin: .6rem 0; }
+.bx-zone { border: 1px dashed var(--d-border); border-radius: var(--d-radius); padding: .4rem .6rem; min-height: 4.5rem; }
+.bx-zone h3 { margin: 0 0 .3rem; font-size: .85rem; color: var(--d-muted); }
+.bx-over { border-style: solid; background: var(--d-surface); }
+.bx-item { display: inline-flex; align-items: center; gap: .3rem; margin: .15rem .3rem .15rem 0; padding: .1rem .3rem .1rem .5rem; border: 1px solid var(--d-border); border-radius: 999px; font-size: .82rem; }
+.bx-cell { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem; margin: .5rem 0; display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.bx-code { width: 100%; box-sizing: border-box; font-size: .85rem; }
+.bx-bar { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+.bx-out { min-width: 0; overflow-x: auto; }
+.bx-pre { margin: .2rem 0; padding: .4rem .6rem; background: var(--d-surface); border-radius: var(--d-radius); overflow-x: auto; font-size: .82rem; white-space: pre-wrap; }
+.bx-chart { height: 18rem; min-width: 0; }
+.bx-chart .bi-chart { height: 100%; }
+@media (max-width: 600px) { .bx-zones { grid-template-columns: 1fr; } .bx-bar > * { flex: 1 1 auto; } }

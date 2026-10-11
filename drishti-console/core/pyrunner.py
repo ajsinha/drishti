@@ -177,7 +177,8 @@ class PyRunner:
             (Path(tmp) / "in.arrow").write_bytes(arrow)
             req = {"interface": m["interface"], "entry": m.get("entry") or ("compute" if m["interface"] == "measure" else "render"), "source": m["source"],
                    "inputs": list(m.get("inputs") or []), "group_by": group_by, "params": params, "packages": list(m.get("packages") or []),
-                   "output": m.get("output") or "echarts", "timeout": timeout, "memory": memory, "max_output_bytes": self.max_output, "max_groups": self.max_groups}
+                   "output": m.get("output") or "echarts", "quant_root": m.get("quant_root"), "quant_engine": m.get("quant_engine"),
+                   "table_rows": m.get("table_rows"), "timeout": timeout, "memory": memory, "max_output_bytes": self.max_output, "max_groups": self.max_groups}
             (Path(tmp) / "req.json").write_text(json.dumps(req), encoding="utf-8")
             cmd = [sys.executable, "-I", str(WORKER), tmp]
             if self._netns_ok():

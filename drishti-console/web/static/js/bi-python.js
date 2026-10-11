@@ -109,6 +109,15 @@
     return job;
   }
 
+  /** A notebook cell of Analyse (ANALYSE.md) in Pyodide: `ex` is the extract as the console sent it ({columns[{name}], rows}); no report involved. */
+  P.runCell = function (source, ex, params) {
+    if (!P.browserReady()) { return Promise.reject(failure('DRS-9074', 'The browser Python runtime is not installed on this console (tools/fetch-pyodide.sh), so cells can run on the server only')); }
+    const packages = ['pandas'].concat(['numpy', 'scipy', 'statsmodels'].filter((p) => new RegExp('^\\s*(import|from)\\s+' + p + '\\b', 'm').test(source)));
+    const payload = { columns: ex.columns.map((c) => c.name), rows: ex.rows, source, interface: 'cell', params: params || {}, entry: '', inputs: [], by: null, output: '' };
+    const t0 = performance.now();
+    return runInBrowser({ name: 'analyse-cell', timeout: 30, packages }, payload).then((out) => Object.assign(out, { ms: Math.round(performance.now() - t0), target: 'browser', inputRows: ex.rows.length }));
+  };
+
   // ---- asking ------------------------------------------------------------------------------------------------------------------
   const wantsBrowser = (m) => m.target === 'browser' || m.target === 'both';
 
