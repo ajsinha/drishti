@@ -182,6 +182,8 @@ drishti:
       - /api/v1/bi/reports/validate     # checks a report's YAML without storing it
       - /api/v1/bi/boards/validate      # checks a board's YAML without storing it
       - /api/v1/bi/reports/format       # writes a report model as YAML
+      - /api/v1/export/*                # Rupaka phase 7: a report, visual or view rendered as PDF, PNG, Excel or CSV for the caller (masked), stores nothing
+      - /api/v1/subscriptions/preview   # renders what a subscription would send, for the caller, stores nothing
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the
     # controller behind it still checks the roles of the token's user at the time of the call, so a token never does more than
@@ -276,6 +278,7 @@ drishti:
       - "* /api/v1/admin/loads/**"
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"
+      - "* /api/v1/admin/subscriptions/**"
       - "* /api/v1/shares/**"
       - "* /api/v1/threads/**"
       - "* /api/v1/comments/**"
