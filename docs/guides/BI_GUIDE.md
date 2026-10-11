@@ -16,19 +16,19 @@
 # Business intelligence (Rupaka): the BI page
 
 Rupaka is Drishti's business-intelligence layer. This guide describes **what is built today: phase 1 (the shell and the
-catalogue), phase 2 (datasets and the query engine), phase 3 (reports, the designer and the Model view) and phase 4 (publishing and governance: saved states and diffs, review, certification, lineage, impact, bundles)**. You can open the BI page, keep drafts in a personal workspace, share workspaces
+catalogue), phase 2 (datasets and the query engine), phase 3 (reports, the designer and the Model view), phase 4 (publishing and governance: saved states and diffs, review, certification, lineage, impact, bundles) and phase 5 (streaming BI: live tables, live visuals, Perspective, boards)**. You can open the BI page, keep drafts in a personal workspace, share workspaces
 with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them, and find what you
 may open in a catalogue. A **dataset** item is now parsed, validated and **queried**: tables from pack kinds through connectors,
 relationships, measures, row rules and masks, answered by an embedded DuckDB (section 13; the reference is [DATASETS.md](DATASETS.md) and the
 walk-through [BI_TUTORIAL.md](BI_TUTORIAL.md)). A **report** item is now **drawn**: pages of visuals (bar, line, table, matrix, cards, slicers and more) that
 query the dataset as the person looking, with cross-filtering, drill-down and drill-through (section 14; the reference is [REPORTS.md](REPORTS.md)); the **designer** builds one by dragging fields onto a canvas
-(section 15) and the **Model view** draws a dataset's relationships as a diagram (section 16). **Boards and notebooks are not run yet**: such an item holds a YAML body that Drishti stores,
-versions and publishes but does not execute or draw. Live BI and exploration are later phases; section 11 lists exactly what is and is not
+(section 15) and the **Model view** draws a dataset's relationships as a diagram (section 16). A **board** item is now **drawn** as a wall of live tiles from several reports, with kiosk mode and alert colours (section 18; the reference is [BOARDS.md](BOARDS.md)). **Notebooks are not run yet**: such an item holds a YAML body that Drishti stores,
+versions and publishes but does not execute or draw. Exploration is a later phase; section 11 lists exactly what is and is not
 there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan is its section 20.
 
 ## Contents
 
-1. [What phases 1 to 3 are, and are not](#1-what-phases-1-to-3-are-and-are-not)
+1. [What phases 1 to 5 are, and are not](#1-what-phases-1-to-5-are-and-are-not)
 2. [Getting in: the BI menu and RUPAKA](#2-getting-in-the-bi-menu-and-rupaka)
 3. [Who may do what: the four powers](#3-who-may-do-what-the-four-powers)
 4. [The page and its rail](#4-the-page-and-its-rail)
@@ -45,14 +45,16 @@ there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan i
 15. [The designer (phase 3)](#15-the-designer-phase-3)
 16. [The Model view (phase 3)](#16-the-model-view-phase-3)
 17. [Publishing and governance (phase 4)](#17-publishing-and-governance-phase-4)
+18. [Live reports and boards (phase 5)](#18-live-reports-and-boards-phase-5)
 
-## 1. What phases 1 to 3 are, and are not
+## 1. What phases 1 to 5 are, and are not
 
 | You can | You cannot yet |
 |---|---|
-| Open BI from the top bar or with `BI <GO>` | Stream live data into a visual, use Perspective or Python in BI (later phases) |
+| Open BI from the top bar or with `BI <GO>` | Use Python in BI (phase 6) |
+| Open a report over a **live table** and watch its visuals redraw as the data ticks, with a last-update time, pause and resume, and stale and disconnected states; open a **Perspective** grid or pivot; open a **board**, a wall of live tiles with alert colours, in kiosk mode (section 18) | Get an email or a message when a tile turns red (phase 7), edit a board in a designer (edit its YAML), a Perspective chart |
 | Keep drafts in a personal workspace, move them to a shared one | Explore a dataset freely (phase 9) |
-| Create typed items (`dataset`, `report`, `board`, `notebook`) with a YAML body | Run a `board` or `notebook` body: it is stored as text. A `dataset` body is validated and queried (section 13), a `report` body is drawn (section 14) |
+| Create typed items (`dataset`, `report`, `board`, `notebook`) with a YAML body | Run a `notebook` body: it is stored as text. A `dataset` body is validated and queried (section 13), a `report` body is drawn (section 14), a `board` body is drawn (section 18) |
 | Open a dataset: its model, and a **query preview** with the server's row rules and masks | Have a pack deploy carry BI content (a bundle is its own file, section 17) |
 | Open a report: tabs, slicers, click a bar to filter the page, drill down, drill through, show the rows, open in the terminal (section 14) | Export it, subscribe to it or embed it (phase 7) |
 | Design a report by dragging fields onto a canvas, with the YAML beside it, real data and the query time on every visual, Check, undo and redo (section 15) | Have the designer suggest a report from words (stage 2), or save an Explore view as a visual (phase 9) |
@@ -60,7 +62,7 @@ there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan i
 | Start a dataset from the packs' kinds, links across packs, proposed relationships | Schedule a refresh by cron, time intelligence, Python measures (DATASETS.md section 10) |
 | Publish versions, restore an old one, propose for review, approve (four-eyes); compare any two saved states side by side, review with a diff, Check and data preview, see lineage and what a dataset change breaks, move content between servers as a bundle (section 17) | Thread comments on a line of a diff, or approval chains of several reviewers |
 | Promote or certify items, set an audience of roles, users and packs | Export, subscribe, alert or embed (phase 7) |
-| Search, filter and sort a catalogue that shows each person only what they may open | Stream live data (phase 5) |
+| Search, filter and sort a catalogue that shows each person only what they may open | Keep a history of a live table: it holds current state with a retention window |
 | Read shipped, read-only content from the BI folder | Deploy a workspace as a pack bundle (phase 4) |
 
 Everything the page does, the server decides: the page is a shell that asks the server's `/api/v1/bi` under your identity.
@@ -302,7 +304,7 @@ audience-based visibility; shipped files; Admin, BI settings; four powers on rol
 Built in phase 2: the dataset YAML with its parser and validation (DRS-9010 to 9013); the expression language with aggregation; a dataset
 started from pack kinds with the packs' links across packs and relationships proposed from the data; the connector SPI `scan` and `sqlTarget`
 (Delta, DuckDB, PostgreSQL, file); the query engine (an `AnalyticEngine` interface, embedded DuckDB, compiled parameterised SQL), the columns and
-rollup layers rebuilt per business date on data-load signals, `direct` tables pushed to a SQL store, a minimal `live` table; row rules and masks;
+rollup layers rebuilt per business date on data-load signals, `direct` tables pushed to a SQL store, a minimal `live` table (replaced in phase 5 by the incrementally maintained one); row rules and masks;
 Arrow and JSON answers; the result cache; limits (DRS-9020 to 9027); the Datasets list and dataset pages; three sample datasets; compressed static
 files. The details, and the list of what is **not** built, are in [DATASETS.md](DATASETS.md) section 10 and [RUPAKA.md](../architecture/RUPAKA.md) section 20.2.
 
@@ -314,7 +316,9 @@ the relative-date slicer, true totals for measures that do not add up, a Check t
 
 Built in phase 4: a saved state for every save and the side-by-side diff; review with the reviewer's diff, Check, impact and data preview; certification only by a steward with automatic revocation; lineage and impact analysis with the refusal `DRS-9040`; bundles between environments with a dry run (`DRS-9041`, `9042`); the audit trail. The reference is [BI_GOVERNANCE.md](BI_GOVERNANCE.md); what is **not** built is its section 10.
 
-Not built (and not faked): importing BI content by deploying a pack archive; streaming BI and Perspective (phase 5); Python in BI (phase 6); export, subscriptions, alerts,
+Built in phase 5: `mode: live` tables kept in memory and updated by key from the same live machinery as the terminal (with retention and per-reader rows and masks on every update); a live stream per report and visuals that redraw in place (coalesced, with a live indicator, pause and resume, stale and disconnected states); the rolling chart; the Perspective grid and pivot over masked Arrow with streaming rows, under the narrowest policy; boards (YAML in `config/bi/boards`) with pages, tile alerts, kiosk and rotation; the live samples; `drishti.bi.live.*`; `DRS-9050` to `9053`. The references are [DATASETS.md](DATASETS.md#71-live-tables-phase-5), [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5) and [BOARDS.md](BOARDS.md); what is **not** built is in section 18 and [RUPAKA.md](../architecture/RUPAKA.md) section 20.5.
+
+Not built (and not faked): importing BI content by deploying a pack archive; Python in BI (phase 6); export, subscriptions, alerts,
 embedding (phase 7); the analyst workbench and Explore (phase 9); *Analyse in BI* from a terminal view; "what changed since your last visit";
 AI features (stage 2). The rail's Explore is a placeholder that says so.
 
@@ -331,6 +335,10 @@ AI features (stage 2). The rail's Explore is a placeholder that says so.
 | `DRS-9040` | 409 | publishing a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
 | `DRS-9041` | 422 | a bundle is not readable, fails its checksums, is too large or holds an invalid item |
 | `DRS-9042` | 409 | a bundle import would overwrite what differs here (conflicts), or names a workspace or owner that cannot be mapped |
+| `DRS-9050` | 422 | a live table cannot be kept: it is over an array (`each`) or its `live:` block is wrong |
+| `DRS-9051` | 429 | too many live streams are open for the server or for you (`drishti.bi.live.max-streams`, `max-streams-per-user`): close a report or board |
+| `DRS-9052` | 422 | a board is malformed, or names a report you cannot open, a page or visual it lacks, a tile off the grid, a slicer, or a threshold that is not `{op, value}` |
+| `DRS-9053` | 501 | a board uses a reserved, unbuilt setting: `notify`, `notifications`, `subscriptions` (phase 7) |
 
 The dataset, query and report codes (`DRS-9010` to `9035`) are in [TROUBLESHOOTING.md](TROUBLESHOOTING.md#error-codes) and [REPORTS.md](REPORTS.md#9-checking-a-report-drs-9030-to-drs-9035).
 
@@ -483,3 +491,27 @@ The reference is [BI_GOVERNANCE.md](BI_GOVERNANCE.md); the walk-through is [BI_T
 * **Environments** (`/bi/environments`). Choose a workspace and download a bundle; to import, a bi-steward chooses a bundle file, optionally maps workspaces and owners, runs a **dry run** (the table lists create, update, unchanged, conflict, invalid with the reason) and then *Import*. Changing any choice needs a new dry run.
 
 A phone shows the same sections one column wide with finger-sized buttons; the tables scroll inside their own frame.
+
+## 18. Live reports and boards (phase 5)
+
+The references are [DATASETS.md](DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5) (live visuals, Perspective) and [BOARDS.md](BOARDS.md); the walk-through is [BI_TUTORIAL.md](BI_TUTORIAL.md) chapters 18 and 19.
+
+**A live report.** Open **Live trading desk** from the catalogue (the samples are shipped with the site; a business user sees them unless *Hide samples* is on). Above the pages is the **live indicator**: a dot and a word (**Live**, **Paused**, **Stale**, **Feed failing**,
+**Disconnected**, **Paused (tab in background)**), *Last update 07:49:57* (when the table last changed), and **Pause** / **Resume**. The visuals redraw in place as the table changes, at most four times a second; Pause holds the picture, Resume catches up at once.
+If the connection to the console drops the indicator says **Disconnected** and the page keeps what it has; when the stream is back every visual is asked again. A tab in the background for ten seconds gives its stream back and takes it again when you return. Nothing here costs the browser
+a connection of its own: the page uses the one channel the whole browser shares ([LIVE.md](../architecture/LIVE.md)).
+
+**Pages of the sample:** *Desk* (cards, net MTM by desk, a rolling line, the worst trades, the latest changes), *Every trade* (a Perspective grid of all trades), *Pivot* (a Perspective pivot by desk and currency). In a grid you can sort, scroll and resize columns; in the pivot
+the browser re-pivots as rows arrive. For a reader without the `raw` power the `trader` column reads `•••`, in the cards, the tables and the grid alike.
+
+**A board.** Open **Desk wall** (`/bi/b/file:board:desk-wall`; from its item page: *Open the board*). Tabs switch its pages; tiles over live tables change in place; a tile whose number crosses a threshold gets an amber or red border and says "warning" or "critical" in the line
+under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the screen and turns the pages by itself; `Esc` leaves. Keys: `k` kiosk, `Left` and `Right` pages, `p` pause. A phone shows the wall as one column.
+
+**Who may do what.** Opening needs the `bi` power and the right to read the report or board; each tile is the report's answer **to you** (your rows, your masks). A board is edited as YAML (the item's Edit form, or its file); publishing checks its structure.
+
+**Admin.** *Admin, BI settings* is unchanged; the engine page counts live tables and rows (`GET /api/v1/bi/engine`); a dataset's page says how each live table is doing (state, rows, entities that push, last change). Settings: the server's `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds`
+([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+
+**Not built, and not faked.** Notifications from boards and alerts (phase 7); a designer for boards; interaction between tiles; running totals by group maintained as changes arrive (a live table is maintained incrementally, its measures are recomputed over it); a history of a live table (it holds current state; the rolling chart's
+points live in the browser from the moment the page opened); Perspective charts and its settings panel; live tables over arrays and in `direct` queries; boards in bundles, in lineage and in impact analysis. If a live table's feed is quiet, the page says **Stale** only when the source
+that pushes has gone silent for 30 s: a source that changes rarely is quiet, not stale, when it does not push at all (its state then reads `pushes: false` and the table is read again every 30 s).

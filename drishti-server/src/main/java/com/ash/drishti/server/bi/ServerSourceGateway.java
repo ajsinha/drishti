@@ -44,12 +44,19 @@ public final class ServerSourceGateway implements SourceGateway {
     private final SourceRouter router;
     private final BusinessDates dates;
     private final QueryProperties props;
+    private final com.ash.drishti.engine.live.TopicHub hub;
 
     public ServerSourceGateway(SourceRegistry registry, SourceRouter router, BusinessDates dates, QueryProperties props) {
+        this(registry, router, dates, props, null);
+    }
+
+    /** @param hub the live views' topics: with it, a live table shares each entity's one source subscription with the views that show it (null: the router is asked directly) */
+    public ServerSourceGateway(SourceRegistry registry, SourceRouter router, BusinessDates dates, QueryProperties props, com.ash.drishti.engine.live.TopicHub hub) {
         this.registry = registry;
         this.router = router;
         this.dates = dates;
         this.props = props;
+        this.hub = hub;
     }
 
     @Override
@@ -89,7 +96,7 @@ public final class ServerSourceGateway implements SourceGateway {
                 }
             }
         }
-        return router.subscribe(ref, listener);
+        return hub != null ? hub.subscribe(ref, listener) : router.subscribe(ref, listener);
     }
 
     private AsOf asOf(LocalDate date) {

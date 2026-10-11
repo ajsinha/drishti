@@ -16,7 +16,8 @@
 
 # Live BI: Drishti as the live front end of a streaming BI producer
 
-Status: design note, proposed (2026-10-06). Nothing in it is built beyond what section 2 lists as existing. Owner: the
+Status: design note, proposed (2026-10-06). Nothing in it is built beyond what section 2 lists as existing. **Update (Rūpaka phase 5):** the BI engine now has live tables fed by the same topics, with row rules and masks per reader, and reports, Perspective visuals and boards that follow
+them ([LIVE.md](LIVE.md#live-bi-a-reports-live-tables), [RUPAKA.md](RUPAKA.md) section 20.5); that is Drishti serving a *table of current state*, maintained incrementally, with measures recomputed over it. Continuous aggregation by group, the heavy case this note argues belongs in a producer, is **still not built** in Drishti. Owner: the
 server's source layer (`drishti-api`, `plugins/`), the live path ([LIVE.md](LIVE.md)) and the console's view pages.
 
 **The question.** Can Drishti work as a real-time BI server: aggregations, pivots and rankings, kept current and pushed

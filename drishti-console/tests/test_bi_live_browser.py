@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Rupaka phase 5 (streaming BI) in Chromium, over the real server and console (tests/bi_live_stack.py: ports 18995 and 17995, security on, the trading and
-counterparty-risk packs, the demo source ticking every 200 ms: 750 live trades and 66 netting sets; never more): the sample report "Live trading desk" opens and
+counterparty-risk packs, the demo source ticking every 200 ms: 750 trades, 360 of them live, and 66 netting sets; never more): the sample report "Live trading desk" opens and
 redraws in place as the trades tick (the same chart, new numbers), says when the last update arrived, pauses and resumes, says when the connection drops and recovers;
 the Perspective grid and pivot load under the narrow policy with no violation, take masked Arrow, and apply streaming rows by key; when WebAssembly is blocked the grid
 is the plain table; the mask reads the same in every visual for a reader without raw; the sample board "Desk wall" colours tiles by threshold, fills the screen in kiosk

@@ -17,7 +17,7 @@
 
 Three sample datasets ship with Drishti, built on the trades, so you can learn what a **dataset** is by reading and querying real ones, and three sample **reports** on them, so you can learn what a report
 is by using them and then **building one from scratch in the designer**. Chapters 0 to 9 open each dataset, read its model, run preview queries, change a measure in a copy of your own, and show row rules and masks with two users;
-chapters 10 to 15 open the reports, build one step by step, draw a relationship in the Model view, and use a report on a phone; chapter 17 publishes and governs them (saved states, review, certification, lineage, impact, bundles). Every output below was
+chapters 10 to 15 open the reports, build one step by step, draw a relationship in the Model view, and use a report on a phone; chapter 17 publishes and governs them (saved states, review, certification, lineage, impact, bundles); chapters 18 and 19 are the **streaming** half: a live dataset, a report that redraws as the trades tick, a Perspective grid and pivot, and a wall of live tiles for a screen in the room. Every output below was
 captured from a real server over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit). Reference:
 [DATASETS.md](DATASETS.md) and [REPORTS.md](REPORTS.md); the pages themselves: [BI_GUIDE.md](BI_GUIDE.md).
 
@@ -463,7 +463,7 @@ At 390 px a report is one column in reading order, the buttons are 44 px, and no
 
 ## 16. What to look at next
 
-The engine's counters and limits (`GET /api/v1/bi/engine`, BI administrators): in this walk-through 17 queries, 1 cache hit, 9 layer builds, answered `columns` 12 and `rollup` 1. Reports, the designer and the Model view are phase 3 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.3: what is built and what is not). Publishing and lineage are phase 4, live visuals phase 5.
+The engine's counters and limits (`GET /api/v1/bi/engine`, BI administrators): in this walk-through 17 queries, 1 cache hit, 9 layer builds, answered `columns` 12 and `rollup` 1. Reports, the designer and the Model view are phase 3 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.3: what is built and what is not). Publishing and lineage are phase 4 (chapter 17), live tables, Perspective and boards phase 5 (chapters 18 and 19).
 What is not built yet for datasets is listed in [DATASETS.md section 10](DATASETS.md#10-what-is-not-built), for reports in [REPORTS.md section 12](REPORTS.md#12-built-and-not-built).
 
 ## 17. Publish and govern: versions, review, certification, impact, environments
@@ -637,3 +637,143 @@ The same sections stack in one column, every button is finger-sized, and the tab
 ![History on a phone](img/bi-governance/phone-history.png)
 
 The reference for all of this, with what is not built, is [BI_GOVERNANCE.md](BI_GOVERNANCE.md).
+
+## 18. A live desk: a dataset, a report and a Perspective grid that follow the trades
+
+Everything so far read data **as it was** when a layer was built. Phase 5 adds data **as it is**: a `mode: live` table that the engine keeps in memory and updates as the source pushes changes. This chapter uses the shipped samples `live-trading` (dataset) and
+**Live trading desk** (report) over the demo source, whose 360 live trades tick in a batch about twice a second (a few hundred row changes a second). They need no lake: set up the server as in chapter 0 (the `trading` and `counterparty-risk` packs are enough; the default demo source ticks) and sign in as `rita` (`bi`, raw) and `ann` (`bi`, no raw).
+The pictures were made by `drishti-console/tests/bi_live_shots.py` (ports 18995 and 17995).
+
+### 18.1 The dataset
+
+Open **Datasets, Live trading desk**. It is the dataset of chapter 2 with one change: `mode: live`, no connector named, and a retention window.
+
+```yaml
+tables:
+  trade:
+    source:
+      kind: trade               # whichever running connector serves trades and can push them (here the demo ticker)
+    mode: live
+    live:
+      rows: 5000                # the most rows it keeps
+    columns:
+      tradeId: { type: string, key: true }
+      desk:    string
+      ...
+      trader:  string
+      mtm:     { type: decimal, format: signed0 }
+security:
+  masked: [trader]
+```
+
+Under *Layers* the table has no dates on disk: it says how the in-memory table is doing.
+
+![The dataset page's Layers table: a live table](img/bi-live/dataset-live-layers.png)
+
+The same, from the API (`GET /api/v1/bi/datasets/file:dataset:live-trading/layers`, a minute after the first query):
+
+```json
+{"table": "trade", "mode": "live", "partitions": [], "live": {"state": "live", "rows": 750, "entities": 750, "subscribed": 360, "pushes": true, "seq": 34943, "epoch": 0, "applied": 34943, "skipped": 7, "evicted": 0, "deleted": 0, "error": null, ...}}
+```
+
+750 entities followed, 360 of them **push** (the demo source ticks its live samples; the other 390 are static), 34,943 row writes so far, 7 skipped because the values did not change. A table starts on first use and is closed after ten idle minutes ([DATASETS.md 7.1](DATASETS.md#71-live-tables-phase-5)).
+
+### 18.2 The report
+
+Open **Catalogue, Live trading desk**. Above the pages is the live indicator, and the cards, the bar and the tables are the visuals of chapter 10, now redrawn in place as the table changes.
+
+![Live trading desk](img/bi-live/live-desk.png)
+
+What to look at:
+
+* **The indicator** (*Live*, *Last update 07:49:57*): the time the table last changed. Press **Pause**: the pictures hold, the word says *Paused*, the server keeps ticking; **Resume** catches up at once.
+
+![Live, then paused](img/bi-live/live-indicator.png) ![Paused](img/bi-live/live-paused.png)
+
+* **The numbers change, the chart stays.** The bar chart is the same chart drawn over (a test marks the element and finds it after dozens of updates); the cards flash for a moment when their number changes; a table keeps its scroll position. At most four redraws a second however fast the source ticks.
+* **The rolling line** (*Net MTM and losses, rolling*) adds one point per update and keeps the latest 120: it shows how the numbers have moved since you opened the page (the browser holds the points, the server holds no history of an aggregate).
+* **Latest changes** sorts by `updatedAt`, a column every live table has: the trades that ticked most recently.
+* **The line under each visual** says `live`: the layer that answered. The query is the one of any report; the layer is the in-memory table.
+
+**The connection drops.** Stop the console (or lose the network) and the page says so, keeps what it has, and redraws everything when the stream is back:
+
+![Disconnected](img/bi-live/live-disconnected.png)
+
+### 18.3 Row rules and masks on every update
+
+Sign in as `ann` (no raw) and open the same report: *Worst trades* shows the trader as `•••`. Nothing about the stream changes: it carries no data, only "the table changed"; each tick makes **her** page ask again, as her, so the mask is applied to every update. `LiveTablesTest` and `BiLiveApiTest` prove it for several readers
+(a desk rule, a mask, a role no rule covers).
+
+### 18.4 Perspective: the grid and the pivot
+
+Open the report's *Every trade* page: **Perspective** (FINOS, vendored) shows all 750 trades and applies each change to its row, by key.
+
+![Perspective grid of 750 live trades](img/bi-live/perspective-grid.png)
+
+Its first read is the rows as **masked Apache Arrow** (`POST .../query?format=arrow`); after that only the rows that changed since the last answer (`state: { since: <seq> }`). Captured, the same visual for `ann` (the mask is in the bytes) and then the rows that changed:
+
+```
+as ann   columns: tradeId, desk, book, productType, currency, direction, trader, notional, mtm, pnl1d, id, updateSeq     masked: ["trader"]
+         ["BBG-60000001","DESK-FI","BOOK-FI-3","GOVT_BOND","CHF","Short","•••",198000000.0,-978378.0,-23374.0,"BBG-60000001",1]
+as rita  state: {"since": 34943}  ->  rowCount: 360 (every updateSeq above 34943)
+```
+
+![The same grid for ann: the trader column reads the mask](img/bi-live/perspective-grid-masked.png)
+
+The *Pivot* page is Perspective's own pivot, running in the browser on the rows you may see: desks down, currencies across, MTM and notional summed, re-pivoted as rows arrive.
+
+![Perspective pivot](img/bi-live/perspective-pivot.png)
+
+Perspective needs WebAssembly. Only a page that holds a Perspective visual is given it (and the SHA-256 of Perspective's four `<style>` texts, never `unsafe-inline`); the response header of this page and of every other BI page:
+
+```
+/bi/r/file:report:live-trading-desk/grid   script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'sha256-47DE...' 'sha256-5ZnN...' 'sha256-TlH5...' 'sha256-rjC4...'; worker-src 'self'
+/bi/r/file:report:live-exposure            script-src 'self'; style-src 'self'; worker-src 'self'
+```
+
+If Perspective cannot start in a tab, the grid is Drishti's own table of the first 500 rows with a line that says so; it keeps following the table.
+
+### 18.5 On a phone
+
+![Live trading desk at 390 px](img/bi-live/phone-live-390.png)
+
+## 19. A wall for the desk: a board
+
+A **board** puts visuals of several reports on one screen. Open **Catalogue, Desk wall** (`/bi/b/file:board:desk-wall`).
+
+![The Desk wall](img/bi-live/board-wall.png)
+
+* **Tiles from two reports over two datasets**: the trading desk (*Live trading desk*, dataset `live-trading`) and the counterparty exposure (*Live exposure*, dataset `live-exposure`, on the next tab).
+* **Alerts colour tiles.** *Net MTM* and *Losses* are amber: their rules (`warn: { op: lt, value: 150000000 }`) were crossed, and the line under each says *warning* in words. The thresholds are in the board's YAML; nothing is sent anywhere (notifications are phase 7).
+* **The second page** is another report over another live dataset:
+
+![Counterparty exposure](img/bi-live/board-exposure.png)
+
+Press **Kiosk** (or `k`, or add `?kiosk=1` to the address). The menus go, the wall fills the screen, and the pages turn by themselves every 20 seconds (the board's `rotate:`); `Esc` leaves, `p` pauses, the arrows turn the page.
+
+![Kiosk](img/bi-live/board-kiosk.png)
+
+The board's file is short; each tile names a report and a visual, and the report supplies the data, as you:
+
+```yaml
+pages:
+  - id: desk
+    title: Trading desk
+    tiles:
+      - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 3, h: 3 },
+          alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100000000 } } }
+```
+
+A board with a mistake says what and where (`POST /api/v1/bi/boards/validate`):
+
+```json
+[{"code": "DRS-9052", "path": "pages[0].tiles[0].at", "message": "x is 0 to 11 and w is 1 to 12, and x + w is at most 12 (the grid has 12 columns); this is x=0, w=13"},
+ {"code": "DRS-9053", "path": "pages[0].tiles[1].alert.notify", "message": "'notify' is reserved and not built yet: a tile only changes colour; notifications arrive with distribution (phase 7)"},
+ {"code": "DRS-9052", "path": "pages[0].tiles[0].visual", "message": "report 'Live trading desk' has no visual 'nope'"}]
+```
+
+On a phone the wall is one column:
+
+![The board at 390 px](img/bi-live/phone-board-390.png)
+
+The reference for boards, with what is not built, is [BOARDS.md](BOARDS.md); for live tables [DATASETS.md 7.1](DATASETS.md#71-live-tables-phase-5); for live visuals and Perspective [REPORTS.md 13](REPORTS.md#13-live-visuals-and-perspective-phase-5).

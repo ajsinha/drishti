@@ -210,7 +210,7 @@ public final class DatasetService {
                 "masked", d.security().masked(), "rowRulesEnforced", security.enabled()));
         m.put("rollups", d.rollups().stream().map(x -> Map.of("name", x.name(), "table", x.table(), "by", x.by(), "measures", x.measures())).toList());
         if (r.ok()) {
-            m.put("layers", queries.layers().inventory(Layers.key(id), d));
+            m.put("layers", withLive(Layers.key(id), d, queries.layers().inventory(Layers.key(id), d)));
         }
         return m;
     }
@@ -420,13 +420,29 @@ public final class DatasetService {
 
     public List<Map<String, Object>> layers(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
-        return queries.layers().inventory(Layers.key(id), loaded(p, item).dataset());
+        Dataset d = loaded(p, item).dataset();
+        return withLive(Layers.key(id), d, queries.layers().inventory(Layers.key(id), d));
+    }
+
+    /** A live table has no partitions on disk: its entry says how the in-memory table is doing (state, rows, entities followed, how many push, last change) or that it is not started. */
+    private List<Map<String, Object>> withLive(String key, Dataset d, List<Map<String, Object>> inventory) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> e : inventory) {
+            Map<String, Object> m = new LinkedHashMap<>(e);
+            Dataset.Table t = d.tables().get(String.valueOf(e.get("table")));
+            if (t != null && t.isLive() && queries.keepsLive(d)) {
+                m.put("live", queries.live().find(key, t.name()).map(x -> x.status().toMap()).orElse(Map.of("state", "not started", "table", t.name())));
+            }
+            out.add(m);
+        }
+        return out;
     }
 
     public Map<String, Object> engine() {
         Map<String, Object> m = new LinkedHashMap<>(queries.stats());
         m.put("engine", "duckdb");
         m.put("storeDir", queries.layers().root().toString());
+        m.put("live", queries.live().stats());
         m.put("limits", Map.of("timeoutSeconds", props.timeout().toSeconds(), "maxRows", props.maxRows(), "maxBytes", props.maxBytes(), "maxConcurrent", props.maxConcurrent(),
                 "maxConcurrentPerUser", props.maxConcurrentPerUser(), "jsonMaxRows", props.jsonMaxRows()));
         return m;

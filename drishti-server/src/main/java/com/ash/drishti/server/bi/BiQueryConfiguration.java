@@ -55,8 +55,8 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public SourceGateway biSources(SourceRegistry registry, SourceRouter router, BusinessDates dates, QueryProperties props) {
-        return new ServerSourceGateway(registry, router, dates, props);
+    public SourceGateway biSources(SourceRegistry registry, SourceRouter router, BusinessDates dates, QueryProperties props, com.ash.drishti.engine.live.TopicHub hub) {
+        return new ServerSourceGateway(registry, router, dates, props, hub);
     }
 
     @Bean(destroyMethod = "")

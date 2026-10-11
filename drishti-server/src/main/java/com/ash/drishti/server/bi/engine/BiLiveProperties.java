@@ -33,11 +33,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param staleAfter a feed that pushes but has delivered nothing for this long is shown as stale
  * @param maxStreams live streams open at once on the server
  * @param maxStreamsPerUser live streams open at once for one user
- * @param fetchParallel documents read at once when a live table is first loaded
  */
 @ConfigurationProperties("drishti.bi.live")
 public record BiLiveProperties(Boolean enabled, Integer maxRows, Duration batch, Duration frame, Duration status, Integer followMax, Duration resync, Duration idleClose,
-        Duration staleAfter, Integer maxStreams, Integer maxStreamsPerUser, Integer fetchParallel) {
+        Duration staleAfter, Integer maxStreams, Integer maxStreamsPerUser) {
 
     public BiLiveProperties {
         enabled = enabled == null || enabled;
@@ -51,7 +50,6 @@ public record BiLiveProperties(Boolean enabled, Integer maxRows, Duration batch,
         staleAfter = positive(staleAfter, Duration.ofSeconds(30));
         maxStreams = maxStreams == null || maxStreams <= 0 ? 100 : maxStreams;
         maxStreamsPerUser = maxStreamsPerUser == null || maxStreamsPerUser <= 0 ? 10 : maxStreamsPerUser;
-        fetchParallel = fetchParallel == null || fetchParallel <= 0 ? 16 : fetchParallel;
     }
 
     private static Duration positive(Duration d, Duration dflt) {
@@ -60,11 +58,11 @@ public record BiLiveProperties(Boolean enabled, Integer maxRows, Duration batch,
 
     /** Defaults for tests and embedded use. */
     public static BiLiveProperties defaults() {
-        return new BiLiveProperties(null, null, null, null, null, null, null, null, null, null, null, null);
+        return new BiLiveProperties(null, null, null, null, null, null, null, null, null, null, null);
     }
 
     /** The same settings with a quicker batch, frame and resync (tests). */
     public BiLiveProperties fast(Duration batchAndFrame, Duration resyncEvery) {
-        return new BiLiveProperties(enabled, maxRows, batchAndFrame, batchAndFrame, status, followMax, resyncEvery, idleClose, staleAfter, maxStreams, maxStreamsPerUser, fetchParallel);
+        return new BiLiveProperties(enabled, maxRows, batchAndFrame, batchAndFrame, status, followMax, resyncEvery, idleClose, staleAfter, maxStreams, maxStreamsPerUser);
     }
 }

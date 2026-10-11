@@ -16,7 +16,7 @@
 
 # Rūpaka phase 0: the proof of concept, built and measured
 
-Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11. **Throw-away code**, off by default, that tests the risky parts of
+Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11, and the Perspective retest of phase 5 is section 12. **Throw-away code**, off by default, that tests the risky parts of
 [RUPAKA.md](RUPAKA.md) before the roadmap (section 20, phase 0) commits to them. Everything is marked `poc`: the server's
 `com.ash.drishti.server.bi.poc` package and `/api/v1/bi/poc/**`, the console's `routes/bi_poc_routes.py`, `/bi/poc`,
 `bi-poc.js`. Switches: server `drishti.bi.poc.enabled`, console `bi.poc_enabled` (both default `false`; see
@@ -251,3 +251,61 @@ Delta lake of the tutorial (750 trades a day) a first query that scans the trade
 
 **Compared with section 7** (same machine, the POC's own measurement, 20,000 rows, a fresh connection per run): JSON column 29.8 ms, typed columns 1.00 ms, rollup 1.04 ms. The engine's 3.8 ms includes what the POC's bench did not: compiling the query, the row-rule and mask handling, building the result columns and the
 Arrow-ready arrays. The ordering is the same (JSON far behind typed, rollup no faster than typed at this size).
+
+## 12. The Perspective retest (phase 5)
+
+Phase 5 ([RUPAKA.md](RUPAKA.md) section 20.5) put Perspective on real report pages, so the questions of sections 1, 4 and 5 were asked again, of **the page a person opens** (a report with a Perspective grid or pivot under the console's real policy), not of the throw-away page. Perspective is the same vendored **3.8.0**: the
+environment is offline, so no newer build could be fetched; the answers below are for 3.8.0 on current browsers. Reproduce with `python tools/bench/perspective_retest.py` (ports 18990 and 17990, a lake of 10,000 trades a day, one heavy job); the numbers are its output of 2026-10-11 on the laptop of the other measurements.
+
+### Adjustment 1: the second-tab trap
+
+Section 8 found that a second tab opened five seconds or more after the first died in the viewer's wasm (`RuntimeError: unreachable`) in Chromium 153, and that Firefox trapped on its first load. **It does not reproduce on the report page.** A grid is drawn in the first tab; a second tab of the same profile opens 0, 6 and 12 s later (and 6 s after that); every tab draws its grid:
+
+| Browser | Version | First tab | Second tab at 0 s | at 6 s | at 12 s |
+|---|---|---|---|---|---|
+| Chromium (Playwright) | 153.0.8010.12 | ready | ready | ready | ready |
+| Chrome (the system's) | 155.0.8059.39 | ready | ready | ready | ready |
+| Firefox (Playwright's build) | 155.0 | ready | ready | ready | ready |
+| WebKit (Playwright's build; Safari's engine) | 26.6 | ready | ready | ready | ready |
+
+It was never root-caused, and the retest does not claim to have found the cause: the phase 0 page loaded the chart plugin, two viewers on one table and a publisher; the report page loads the grid plugin only and one table per visual. What stands: **the failure is not seen on the product's page in four browsers**, a Chromium test
+(`test_two_tabs_of_one_browser_both_draw_the_grid`) opens a second tab after six seconds on every run and fails if the grid fell back, and **the fallback stays**: a tab where WebAssembly cannot start (blocked by policy, a failing browser) shows the first 500 rows in Drishti's own table with a line that says so, and keeps following the live table
+(`test_the_grid_is_the_plain_table_when_webassembly_cannot_start`). Not tested: Safari itself (only WebKit's engine through Playwright), Firefox ESR, mobile browsers.
+
+### Performance at 10,000 rows, memory
+
+Chromium 153, headless with software rendering, loopback network, a grid of the report's nine columns over **10,000 trades** (the local-safe day), masked Arrow from the real server:
+
+| Step | Result |
+|---|---|
+| the visual's Arrow answer over HTTP, warm | 33 ms, 1,085,968 bytes, 10,000 rows |
+| navigation to a drawn grid (cold page, libraries cached by the first sign-in only) | 961 ms |
+| JS heap with the grid drawn | 21.1 MB |
+
+Perspective applying updates (random rows of the 10,000, by key) to the loaded table at a steady rate, 8 s each, frames timed with `requestAnimationFrame`:
+
+| Updates/s offered | Rows applied/s | Frames/s | Frame p95 / max (ms) | Frames over 50 ms | Rows in table | JS heap (MB) |
+|---:|---:|---:|---:|---:|---:|---:|
+| 0 | 0 | 60.1 | 16.7 / 16.8 | 0 | 10,000 | 21.7 |
+| 100 | 100 | 60.1 | 16.8 / 16.8 | 0 | 10,000 | 20.8 |
+| 500 | 500 | 60.1 | 16.7 / 16.8 | 0 | 10,000 | 19.4 |
+| 1,000 | 1,000 | 60.1 | 16.8 / 16.8 | 0 | 10,000 | 22.4 |
+
+The phase 0 target (1,000 updates a second without dropping below 45 fps) is met at five times the table size of the phase 0 run (2,000 rows), with nothing dropped and no frame over 17 ms. Caveats as in section 4: the engine runs in a worker, so the main thread's frame time is not the whole story; headless Chromium caps at 60 fps; the grid is the datagrid plugin
+(no chart); the table is 10,000 rows, not 100,000. **What the product sends is far less than what Perspective can take:** the live sample changes about 800 rows a second into the server's table, and a browser gets its rows at most four times a second (`bi.live.min_interval_ms`), only those whose `updateSeq` moved.
+
+**Server side** (the live table of the sample, the demo source changing 360 of its 750 trades about twice a second, queries by the report's visuals over HTTP while it ticks): about 800 row changes a second applied (one transaction per batch), a query over the live table at **p50 15 ms, p95 24 ms** (including the HTTP round trip and minting a token for each call);
+the table's counters after a minute: 34,943 applied, 7 skipped, 0 evicted. The 10 M-row and `LOAD_AND_MEMORY` capacity runs are **not** made: local data stays at 10,000 rows a day.
+
+### Adjustment 3: the style policy, resolved
+
+Section 11 decided strict `style-src 'self'` on every BI page and left the generated hash list to phase 5. Done:
+
+* A page that holds a `perspective-grid` or `perspective-pivot` is given, **in its own response and nowhere else**, `script-src 'self' 'wasm-unsafe-eval'` and `style-src 'self'` plus the SHA-256 of the styles Perspective writes. On the real pages these are **four** (section 5's six were measured on the phase 0 page, which also loads the chart plugin; the extra two stay on that page only, `POC_EXTRA_HASHES`).
+  Never `'unsafe-eval'`, never `'unsafe-inline'`, no blob worker (the engine's worker is `perspective-server.worker.js` of this origin, served with the narrow worker policy of section 5). The report route asks the server whether the report holds a Perspective visual, and when it cannot ask it answers with the strict policy (the visual then falls back to the plain table).
+* **The hash list is generated, and checked.** `python tools/perspective-style-hashes.py --console <url> --user <u> --password <p> [--check]` signs in with Chromium, opens the sample report's grid and pivot pages with the console's header rewritten to *no* style hashes, and reads the hash of every style the browser refused from its console. The Chromium test
+  `test_the_style_hash_list_covers_the_real_pages` runs it against the test stack and **fails, naming the hash to add**, when a library update writes a style `STYLE_HASHES` (`drishti-console/core/perspective_csp.py`) does not allow. The browser tests assert zero policy violations on the live report, the grid, the pivot, the masked grid and the board.
+* **Not retested, not offered:** the chart plugin and the settings panel needed about eight more hashes and `'unsafe-hashes'` (section 5, phase 0 measurement): they are not offered (the viewer is configured by the report's YAML, `settings: false`), so the policy stays as narrow as measured.
+* No COOP or COEP header is sent and no `SharedArrayBuffer` is used: the engine is the single-threaded build, as in section 5.
+
+Section 1's adjustments are therefore: 1 retested (not reproduced, fallback kept), 2 done in phase 2, 3 done, 4 done in phase 2.

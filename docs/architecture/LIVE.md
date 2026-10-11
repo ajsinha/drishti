@@ -208,6 +208,7 @@ The alerts stream does not count against `drishti.live.max-streams`.
 | `view:<kind>/<id>` | The view stream above. `frame` patches for panels other than line and area charts gain an `html` field with the rendered panel. |
 | `alerts` | The alerts stream. |
 | `monitor:<name>` | A monitor's stream. |
+| `bilive:<report id>` | A BI report's live tables ([below](#live-bi-a-reports-live-tables)): `hello`, `tick` and `status` events with no data. |
 
 Up to `live.max_subscriptions` (32) subscriptions per channel, that is per browser: a view open in several tabs
 counts once. One more is answered at once with `gone`, `DRS-5003` "this browser already follows 32 live
@@ -557,6 +558,32 @@ told when END-1000008's MTM rises above 2.1 million:
 
 Because it fires on the false → true edge, you get one alert when MTM crosses 2.1 m, not one per tick while it
 stays above. Users normally create rules from the console's alerts page; see [USER_GUIDE.md](../guides/USER_GUIDE.md).
+
+## Live BI: a report's live tables
+
+Business intelligence uses this machinery too (Rūpaka phase 5, [RUPAKA.md](RUPAKA.md) section 12; the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A dataset table with `mode: live` ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5)) is **fed by the same
+topics**: for each entity of its kind the engine subscribes through the source layer (the connector's `subscribe`, the same call a live view makes), applies each change to an in-memory table by key (batched every 100 ms, so ticks coalesce as they do for a view), and keeps a counter that grows with
+every change. It is **not** a view stream: it carries no panel patches and costs the entities' topics one more listener (`TopicHub`), not one more source subscription; a dataset that names a connector (`source: { connector: ... }`) subscribes through that connector directly instead, for a stream that keeps no state but ticks what a store serves.
+
+What reaches a browser is small. A report over such a table has one stream, `GET /api/v1/bi/reports/{id}/live` ([API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3)), relayed by the console's one channel as the subscription `bilive:<report id>`:
+
+| Event | Meaning |
+|---|---|
+| `hello` | the state of the report's live tables when the stream opens (the generation, the last change, `live` or `stale` or `failed`, counters per table) |
+| `tick` | the tables changed: the **latest** state, at most one per `drishti.bi.live.frame` (250 ms); a slow browser skips ticks, it never queues them (the same latest-wins rule as a view's frame mailbox) |
+| `status` | how the tables are doing when nothing changed, every `drishti.bi.live.status` (5 s): the heartbeat of this stream |
+
+A tick carries **no data and no mask**. The page asks its visuals again, as the person looking, through the BI query path: **row rules and masks are applied to every answer, never to the stream**, so a stream shared by a hundred readers is the same bytes and each reader's picture is their own.
+The hub (`live-hub.js`) forwards the two event names `tick` and `status`; a tab hidden for ten seconds gives the subscription back like any other and the report redraws everything when it takes it again.
+
+| Limit | Setting | |
+|---|---|---|
+| streams open at once | `drishti.bi.live.max-streams` (100), `max-streams-per-user` (10) | `429 DRS-9051`; these are BI streams and do not count against `drishti.live.max-streams` |
+| one stream per distinct report | | a board of ten tiles over two reports holds two |
+| the browser's subscriptions | `live.max_subscriptions` (32) | a `bilive:` subscription counts like a view |
+
+Pause, the "last update" time and the stale and disconnected states of the indicator are the page's (`bi-live.js`): *stale* is "nothing heard for `bi.live.stale_seconds`" (the 5-second status is what keeps a quiet healthy stream from looking stale) or the table's own `stale` state
+(a feed that pushes and then goes silent for `drishti.bi.live.stale-after`).
 
 ## Latency
 
