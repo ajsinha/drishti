@@ -512,13 +512,15 @@
     if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
     const t = ctx.t;
     const f = spec.format || {};
-    const labels = tb.rows.map((r) => String(r[bi]));
+    const fi = tb.at('from');
+    const bands = tb.rows.map((r) => String(r[bi]));
+    const labels = tb.rows.map((r) => (fi >= 0 && typeof r[fi] === 'number' ? B.compact(r[fi]) : String(r[bi])));          // the axis names where a bar starts; the tip says the whole band
     const option = baseOption(spec, ctx, {
       legend: false, extra: {
-        xAxis: Object.assign({ type: 'category', data: labels, name: (f.axisTitles && f.axisTitles.x) || measure || '', nameLocation: 'middle', nameGap: 44, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 9, rotate: 30, hideOverlap: true } }, axisStyle(t), { axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 9, rotate: 30, hideOverlap: true } }),
+        xAxis: Object.assign({ type: 'category', data: labels, name: (f.axisTitles && f.axisTitles.x) || (measure ? measure + ' (where a bar starts)' : ''), nameLocation: 'middle', nameGap: 26, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10, hideOverlap: true } }, axisStyle(t), { axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10, hideOverlap: true } }),
         yAxis: Object.assign({ type: 'value', name: (f.axisTitles && f.axisTitles.y) || 'count' }, axisStyle(t)),
-        grid: { left: 8, right: 16, top: 24, bottom: 52, containLabel: true },
-        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: (p) => { const x = Array.isArray(p) ? p[0] : p; return x.name + '\n' + B.compact(x.value) + ' in this band'; } }),
+        grid: { left: 8, right: 16, top: 24, bottom: 38, containLabel: true },
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: (p) => { const x = Array.isArray(p) ? p[0] : p; return bands[x.dataIndex] + '\n' + B.compact(x.value) + ' in this band'; } }),
         series: [{ type: 'bar', data: tb.rows.map((r) => r[ci]), barCategoryGap: '4%', itemStyle: { color: ctx.palette[0] }, label: { show: !!f.labels, position: 'top', color: t.ink, fontSize: 10 } }]
       }
     });
@@ -619,8 +621,8 @@
         legend: false, extra: {
           tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => { const c = w.by.iso3[p.name]; return (c ? c.name : p.name) + ': ' + (typeof p.value === 'number' ? B.fmt(p.value, nf, maskedValue) : 'no figure'); } }),
           visualMap: { min: Math.min(0, ...nums), max: Math.max(1, ...nums), calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 12, itemHeight: 90, inRange: { color: [t['surface-2'] || t.surface, t.link] }, textStyle: { color: t.muted, fontSize: 10 }, formatter: (v) => B.compact(v) },
-          series: [{ type: 'map', map: MAP_NAME, nameProperty: 'iso3', roam: false, left: 4, right: 4, top: 4, bottom: 34, data, emptyColor: t['surface-2'] || t.surface,
-            itemStyle: { borderColor: t.border, borderWidth: 0.5 }, emphasis: { label: { show: false }, itemStyle: { areaColor: t.pos } },
+          series: [{ type: 'map', map: MAP_NAME, nameProperty: 'iso3', roam: false, left: 4, right: 4, top: 4, bottom: 34, data,
+            itemStyle: { areaColor: t['surface-2'] || t.surface, borderColor: t.border, borderWidth: 0.5 }, emphasis: { label: { show: false }, itemStyle: { areaColor: t.pos } },
             select: { disabled: true }, label: { show: false } }]
         }
       });

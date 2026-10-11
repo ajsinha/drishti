@@ -67,7 +67,7 @@ measures:
   MTM: { expr: "sum(trade.mtm)", format: signed0 }
   Trades: { expr: "count(trade)" }
   Avg MTM: { expr: "avg(trade.mtm)", format: signed0 }
-  MTM per notional: { expr: "ratio(sum(trade.mtm), sum(trade.notional))" }
+  MTM per notional: { expr: "ratio(sum(trade.mtm), sum(trade.notional)) * 1000000", format: signed2 }
   Largest notional: { expr: "max(trade.notional)", format: amount0 }
   MTM ytd: { expr: "ytd(sum(trade.mtm), trade.tradeDate)", format: signed0 }
 """
@@ -90,18 +90,22 @@ pages:
       - { id: steps, type: funnel, title: Trades by product, at: { x: 0, y: 8, w: 4, h: 5 }, wells: { axis: [trade.productType], values: [Trades] }, alt: Trades by product }
       - { id: spread, type: histogram, title: Spread of trade MTM, at: { x: 4, y: 8, w: 4, h: 5 }, wells: { axis: [trade.tradeId], values: [MTM] }, format: { bins: 6 }, alt: Spread of MTM }
       - { id: boxes, type: box, title: MTM by desk, at: { x: 8, y: 8, w: 4, h: 5 }, wells: { axis: [trade.desk], details: [trade.tradeId], values: [MTM] }, alt: MTM by desk }
-      - { id: bubbles, type: bubble, title: Desks, at: { x: 0, y: 13, w: 6, h: 5 }, wells: { details: [trade.desk], x: [Trades], y: [MTM], size: [Notional] }, alt: Desks }
+      - { id: bubbles, type: bubble, title: Average against total MTM, at: { x: 0, y: 13, w: 6, h: 5 }, wells: { details: [trade.desk], x: [Avg MTM], y: [MTM], size: [Notional] }, alt: Desks }
       - id: matrix
         type: matrix
         title: By desk and currency
-        at: { x: 6, y: 13, w: 6, h: 5 }
+        at: { x: 0, y: 18, w: 12, h: 6 }
         wells: { rows: [trade.desk], columns: [trade.currency], values: [Notional, Avg MTM, MTM per notional, Largest notional] }
         format: { subtotals: true }
-      - { id: table, type: table, title: Desks, at: { x: 0, y: 18, w: 12, h: 5 }, wells: { columns: [trade.desk, Trades, Avg MTM, Largest notional] }, format: { totals: true } }
+      - { id: table, type: table, title: Desks, at: { x: 6, y: 13, w: 6, h: 5 }, wells: { columns: [trade.desk, Trades, Avg MTM, Largest notional] }, format: { totals: true } }
 """
 
 
 class Stack(bi_report_stack.ReportStack):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.server_args += ["--drishti.bi.refresh.tick=2s"]               # the refresh scheduler looks every 2 s here (30 s as shipped)
+
     def prepare(self, work):
         (work / "config/bi/datasets" / f"{DATASET}.dataset.yaml").write_text(DATASET_YAML)
         (work / "config/bi/reports" / "nv-demo.report.yaml").write_text(REPORT_YAML)
@@ -160,7 +164,8 @@ def test_the_map_shades_the_countries_and_marks_the_points(stack, browser):
         by_country[t["country"]] = by_country.get(t["country"], 0) + t["notional"]
     shade = option(page, "world")["series"][0]
     assert shade["type"] == "map"
-    got = {d["name"]: d["value"] for d in shade["data"]}
+    assert shade["data"]
+    got = {d["name"]: d["value"] for d in shade["data"] if "value" in d}                          # (ECharts adds the other regions with no figure)
     assert got == {"USA": by_country["US"], "GBR": by_country["GB"], "JPN": by_country["JP"]}               # codes in, countries out
     assert page.evaluate("echarts.getMap('drishti-world') !== undefined")
     assert page.evaluate("[...document.querySelectorAll('[data-visual=world] canvas')].every(c => c.width > 0 && c.height > 0)")
@@ -199,7 +204,8 @@ def test_funnel_histogram_box_and_bubble_draw_what_the_data_says(stack, browser)
     assert len(counts) == 6 and sum(counts) == len(mtm) == 120
     lo, hi = min(mtm), max(mtm)
     width = (hi - lo) / 6
-    assert counts == [sum(1 for v in mtm if (min(5, int((v - lo) // width)) == b)) for b in range(6)]
+    edges = [lo + k * width for k in range(6)]                                                     # the same edges the labels show: a value on an edge is in the bar that starts there
+    assert counts == [sum(1 for v in mtm if max(k for k in range(6) if v >= edges[k]) == b) for b in range(6)]
     box = option(page, "boxes")["series"][0]
     assert box["type"] == "boxplot"
     names = option(page, "boxes")["x"]
@@ -218,18 +224,17 @@ def test_totals_of_measures_that_do_not_add_up_are_the_engines(stack, browser):
     page = opened(browser)
     data = rows()
     overall_avg = sum(t["mtm"] for t in data) / len(data)
-    ratio = sum(t["mtm"] for t in data) / sum(t["notional"] for t in data)
+    ratio = sum(t["mtm"] for t in data) / sum(t["notional"] for t in data) * 1_000_000
     largest = max(t["notional"] for t in data)
     grand = page.locator('[data-visual="matrix"] tr[data-grandtotal]')
     expect(grand).to_have_count(1)
     cells = grand.locator("td[data-true-total]")
     assert cells.count() >= 3                                                                      # average, ratio and largest are the engine's
-    texts = {m: grand.locator(f'td[data-measure="{m}"]').first.inner_text() for m in ("Avg MTM", "MTM per notional", "Largest notional", "Notional")}
+    texts = {m: grand.locator(f'td[data-measure="{m}"]').last.inner_text() for m in ("Avg MTM", "MTM per notional", "Largest notional", "Notional")}
     assert texts["Largest notional"].replace(",", "") == f"{largest:.0f}"                          # a maximum is not a sum
     assert texts["Notional"].replace(",", "") == f"{sum(t['notional'] for t in data):.0f}"        # a sum is
-    assert re.sub(r"[^0-9.\-]", "", texts["MTM per notional"]).lstrip("0") != ""
-    assert abs(float(texts["MTM per notional"].replace(",", "").replace("+", "")) - ratio) < 0.01
-    assert abs(float(texts["Avg MTM"].replace(",", "").replace("+", "")) - overall_avg) < 1
+    assert abs(float(texts["MTM per notional"].replace(",", "").replace("+", "").replace("\u2212", "-")) - ratio) < 0.01
+    assert abs(float(texts["Avg MTM"].replace(",", "").replace("+", "").replace("\u2212", "-")) - overall_avg) < 1
     assert "–" not in grand.inner_text()
     foot = page.locator('[data-visual="table"] tfoot tr[data-total-row]')
     expect(foot).to_have_count(1)

@@ -217,7 +217,7 @@
       (r.tables || []).forEach(function (t) { line('table ' + t.table, t); });
       note.textContent = r.scheduled
         ? 'Layers are rebuilt on the schedule (' + r.zone + ' time, ' + r.calendar + ' calendar for business days); a failed run is tried again with the shared retry policy.'
-        : 'No refresh schedule: the layers are rebuilt when a data load for a kind this dataset reads arrives, and when an author presses Refresh.';
+        : 'No refresh schedule: the layers are rebuilt when a data load for a kind this dataset reads arrives, or when an author asks for a refresh (POST /datasets/{id}/refresh).';
       sec.querySelector('table').hidden = tb.children.length === 0;
     }
 

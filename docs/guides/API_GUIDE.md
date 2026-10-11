@@ -1602,7 +1602,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9010 | 422 | Dataset invalid | The dataset YAML or one of its structures is not valid (the problem names the path of the key) |
 | DRS-9011 | 422 | Dataset expression | A measure, calculated column or row rule does not parse, names something the model lacks, misuses an aggregate or refers to measures in a circle |
 | DRS-9012 | 422 | Dataset reference | A relationship, hierarchy, masked column, row rule or rollup points at something that does not exist |
-| DRS-9013 | 501 | Dataset not built | The document uses a feature the grammar reserves and this server does not build yet (time intelligence, window functions, Python measures) |
+| DRS-9013 | 501 | Dataset not built | The document uses a feature the grammar reserves and this server does not build yet (the window functions `lag` and `rank`, Python measures; time intelligence is built) |
 | DRS-9020 | 422 | Query invalid | The query names a field, measure, operator, value or date the dataset cannot take, or the model cannot join what it asks |
 | DRS-9021 | 403 | Query masked | The query filters or sorts on a column masked for the caller, or reads a `direct` table of a kind they may not open |
 | DRS-9022 | 413 | Query rows | The answer is over `drishti.bi.query.max-rows` (or, as JSON, over `json-max-rows`) |
@@ -1702,7 +1702,7 @@ Exists only while `drishti.bi.poc.enabled` is true (default `false`: `404`); nev
 ## Datasets and the query engine: `/api/v1/bi` (phase 2)
 
 Phase 2 of Rūpaka ([BI_GUIDE.md](BI_GUIDE.md) section 13, [DATASETS.md](DATASETS.md), [BI_TUTORIAL.md](BI_TUTORIAL.md)). A dataset is a BI item of kind `dataset` (id `bi-<hex>`, or `file:dataset:<name>` for a shipped file); who may read the item is
-decided as for any item (`404 DRS-9001` otherwise), what the answer shows is decided by the dataset's row rules and Drishti's masks for the caller. A personal token reaches the queries and the model reads (they change nothing); `POST .../refresh` needs `bi:write`.
+decided as for any item (`404 DRS-9001` otherwise), what the answer shows is decided by the dataset's row rules and Drishti's masks for the caller. A personal token reaches the queries and the model reads (they change nothing); `POST .../refresh` needs `bi:write` (it is in the `bi:write` scope's allow-list; `GET .../refresh` only reads).
 
 | Method | Path | What it does |
 |---|---|---|
@@ -1711,7 +1711,8 @@ decided as for any item (`404 DRS-9001` otherwise), what the answer shows is dec
 | `POST` | `/bi/datasets/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], tables, measures, model}` without storing anything; `model` (when the structure parsed) is the shape the Model view draws: `{tables[{name, kind, columns[...]}], relationships[{from, to, cardinality, direction, active}], measures[], hierarchies}` |
 | `POST` | `/bi/datasets/{id}/query` | runs a query (below); `?format=json` (default) or `arrow`; `?explain=true` adds the SQL (BI authors only) and skips the result cache |
 | `GET` | `/bi/datasets/{id}/layers` | what the BI store holds per table: dates, rows, how each was read; for a live table (phase 5) `partitions` is empty and `live` holds its counters (below) |
-| `POST` | `/bi/datasets/{id}/refresh` | (needs `bi-author`) clears the current business date's layers of this dataset and reads them again in the background |
+| `GET` | `/bi/datasets/{id}/refresh` | the refresh state (any reader of the dataset): `{enabled, scheduled, zone, calendar, dataset: {schedule, status, trigger, lastRun, nextRun, lastDurationMs, lastRows, lastDate, tables[], failures, retryAt, error, runs}, tables: [{table, ...the same}]}`; `status` is `never`, `waiting`, `running`, `ok`, `retrying`, `failed` or `invalid`; the dataset's `refresh:` schedule ([DATASETS.md section 7.2](DATASETS.md#72-scheduled-refresh)) |
+| `POST` | `/bi/datasets/{id}/refresh` | (needs `bi-author`; a token needs `bi:write`) clears the current business date's layers of this dataset and reads them again in the background; answers `{dataset, date, refreshing[], state}` at once (the state is the `GET`'s `dataset` object, `running`) and audits `bi-dataset-refresh` |
 | `GET` | `/bi/model/kinds` | every kind of every pack the caller may open as a table: `{tables: [{table, pack, kind, connector, data, source, columns[{name, path, type, promoted}]}]}` |
 | `POST` | `/bi/model/start` | `{kinds: [...], name?}` (needs `bi-author`): `{yaml, tables, relationships[], proposals[], warnings[]}`: a draft dataset, the links the packs declare (`crossPack` marks those across packs), and relationships proposed from the data |
 | `POST` | `/bi/model/infer` | `{kinds: [...]}` (needs `bi-author`): `{proposals: [{fromTable, fromColumn, toTable, toColumn, cardinality, matchRate, matched, sampled, unmatched[], basis}]}` |
@@ -1751,7 +1752,7 @@ any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's
 | `POST` | `/bi/reports/query` | the same for a draft (needs `bi-author`): `{report \| yaml, page, visual, state}` |
 | `POST` | `/bi/reports/validate` | `{yaml, quality?}` (needs `bi-author`): `{valid, problems[], report}`; `quality: true` adds the accessibility, layout checks |
 | `POST` | `/bi/reports/format` | `{report: {...}}`: the model written as YAML the way a person writes it: `{yaml}` |
-| `GET` | `/bi/reports/catalogue` | `{visuals: {type: {group, wells: {name: {kind, required, max}}}}, reserved[], slicerModes[]}` |
+| `GET` | `/bi/reports/catalogue` | `{visuals: {type: {group, wells: {name: {kind, required, max}}}}, reserved[], slicerModes[]}`; since wave 3 the visuals include `bubble`, `funnel`, `histogram`, `box` and `map`, and `reserved` is `python`, `entity-view`, `shape` |
 | `GET` | `/bi/reports/dataset?ref=` | (needs `bi-author`) the model of the dataset a report names (a catalogue id, a file name or the dataset's name): what the designer's Fields pane shows |
 
 **The state** of a visual query is what the person has done on the page: `{"slicers": {"currency": ["USD"], "notional": {"from": 1000000, "to": 3000000}}, "selections": [{"visual": "by-desk", "field": "trade.desk", "values": ["DESK-FX"], "highlight": false}],
@@ -1769,6 +1770,11 @@ POST /api/v1/bi/reports/file:report:trades-overview/query   {"page": "overview",
       "highlight": null, "visual": "by-desk",
       "query": {"fields": ["trade.desk"], "measures": ["MTM"], "filters": [], "orderBy": ["MTM desc"], "limit": 500}}
 ```
+
+**True totals and distributions (wave 3).** The answer of a **matrix** with `format.subtotals` or a **table** with `format.totals` carries `totals`: `[{by: [fields], columns: [names], masked: [names], rows: [[...]]}]`, one entry per level, for the measures that do not add up
+(a ratio, an average, a distinct count, a percentile, a minimum, a maximum, a time-intelligence measure), worked out by the engine as the caller ([REPORTS.md section 3.2](REPORTS.md#32-true-totals) has a captured answer). A **histogram** answers with the columns `bin`, `count`, `from`, `to` and a **box plot** with the category, `min`, `q1`, `median`, `q3`, `max`, `count`, `outliers`: the server
+asks the engine for the measure of every member of the axis (at most `drishti.bi.report.distribution-rows`) and bins or summarises it, so `meta.members` says how many it read; a masked measure has no rows and `meta.masked` names it. A **map**'s answer is an ordinary one: the location (or latitude and longitude) columns and the measure. Nothing here is a new endpoint
+and nothing a token cannot already do: these are the existing reads (`POST /bi/reports/{id}/query` is on the token read allow-list).
 
 **Live reports (phase 5).** A report over a dataset with a `mode: live` table ([DATASETS.md](DATASETS.md#71-live-tables-phase-5), [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5)) has a stream, `GET /bi/reports/{id}/live` (`Accept: text/event-stream`; with security on, the caller needs the right to read the report):
 

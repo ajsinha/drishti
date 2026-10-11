@@ -350,7 +350,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 What failed is tried again by itself, with exponential backoff and jitter; see [OPERATIONS.md](OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
 The server reads `drishti.retry.*` (packs refused, connectors, AI providers, MCP servers) and the console reads `retry.*` (its own AI
 providers and MCP servers; server names with hyphens, console names with underscores). A per-area override replaces any key for one
-area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `ai`, `mcp`, `distribution`) and `retry.<area>.<key>` in the console
+area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `ai`, `mcp`, `distribution`, `bi`) and `retry.<area>.<key>` in the console
 (areas `ai`, `mcp`).
 
 | Server | Console | Default | Meaning |
@@ -1094,7 +1094,21 @@ How many rows each kind of visual asks the engine for ([REPORTS.md](../guides/RE
 | `slicer-values` | `1000` | Most distinct values a slicer lists. |
 | `show-rows` | `1000` | Most rows *Show the rows* returns. |
 | `top-candidates` | `10000` | Most values a top-N filter ranks before it keeps its N. |
+| `distribution-rows` | `20000` | Most members a **histogram** or **box plot** reads (the server bins or summarises them; the picture is a few dozen rows). |
+| `totals-max-rows` | `2000` | Most rows one level of **true totals** (a matrix's subtotal level or a table's total) may return. |
 | `perspective-rows` | `20000` | Most rows a Perspective grid or pivot is sent (phase 5). The browser holds them: the retest of [RUPAKA_POC.md](../architecture/RUPAKA_POC.md#12-the-perspective-retest-phase-5) measured 10,000 rows at 21 MB of JS heap. |
+
+### `drishti.bi.refresh` — scheduled dataset refresh
+
+A dataset's `refresh:` schedule rebuilds its columns and rollup layers ([DATASETS.md section 7.2](../guides/DATASETS.md#72-scheduled-refresh)); a failed run is retried with the shared retry policy, area `bi` (`drishti.retry.bi.*`, falling back to `drishti.retry.*`: see Retries above).
+Times are in `drishti.business-date.zone`, business days by `drishti.business-date.calendar`.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | `false`: no schedule runs (a data-load signal and `POST /datasets/{id}/refresh` still do). |
+| `tick` | `30s` | How often the scheduler looks for a refresh that is due or a retry whose wait is over (a schedule runs within one tick of its time). |
+| `max-attempts` | `4` | Tries for one scheduled refresh (the first included) before it is left `failed` until its next scheduled time (1 to 20). |
+| `load-delay` | `2s` | For `after-load`: how long after the data-load signal the refresh starts. |
 
 ### `drishti.bi.live` — streaming BI (phase 5)
 

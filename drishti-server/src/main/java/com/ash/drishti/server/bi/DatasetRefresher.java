@@ -271,9 +271,9 @@ public final class DatasetRefresher implements AutoCloseable {
         Job j = new Job(ds, null, ds.dataset().refresh().scheduled() ? ds.dataset().refresh().schedule() : "on demand");
         State st = states.compute(j.key(), (k, old) -> old != null ? old : new State(j.schedule(), null));
         if (st.running.compareAndSet(false, true)) {
-            Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> {
-                run(j, st, "manual (" + actor + ")", sources());
-            });
+            st.status = "running";
+            st.trigger = "manual (" + actor + ")";
+            Thread.ofVirtual().name("drishti-bi-refresh-" + j.key()).start(() -> run(j, st, "manual (" + actor + ")", sources()));
         }
         return st.toMap();
     }

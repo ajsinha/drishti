@@ -178,7 +178,7 @@ tables:
   trades:
     source: { connector: trading-lake, kind: trade }      # a connector by its logical name (CONNECTOR_FILES.md)
     mode: cached                                          # live | cached | direct
-    refresh: { schedule: "0 */15 * * *", on-load: true }  # cron in the business zone, and on a data-load signal
+    refresh: { schedule: "0 */15 * * *", on-load: true }  # cron in the business zone, and on a data-load signal (built: 20.7)
     columns:
       tradeId:   { type: string, key: true }
       desk:      { type: string }
@@ -329,7 +329,7 @@ The phase 0 POC measures the JSON, columns and rollup paths side by side (RUPAKA
 
 ## 8. Reports and visuals
 
-*Phase 3 builds this section for ECharts, cards, tables and matrices, slicers and the interactions; Perspective, the map, the Python visual and the entity view are not built. What is built is in 20.3; the reference is [REPORTS.md](../guides/REPORTS.md).*
+*Phase 3 builds this section for ECharts, cards, tables and matrices, slicers and the interactions; wave 3 (20.7) adds the map, funnel, histogram, box plot and bubble and true totals; the Python visual and the entity view are not built. What is built is in 20.3 and 20.7; the reference is [REPORTS.md](../guides/REPORTS.md).*
 
 A report is `<drishti.bi.dir>/reports/<id>.report.yaml` (by default `config/bi/reports/`): pages, each a 12-column grid of visuals; filters at report, page and visual
 level; bookmarks; drill-through targets; a theme.
@@ -816,8 +816,7 @@ Phase 2 (datasets and the query engine) is built; the references are [DATASETS.m
 * **Phase 0 adjustments.** Static files are served compressed (gzip, Brotli when installed; the 36 MB wasm is 8 MB). The BI-page style policy is **decided**: strict `style-src 'self'` on every BI page, no `unsafe-inline`; the hash list the POC page needs for Perspective's `<style>`
   elements stays on the POC page only, and phase 5 generated its list on the real pages (`tools/perspective-style-hashes.py`: four hashes, not six) with a Chromium test that fails when a library update adds one. **Perspective retest: done in phase 5** (RUPAKA_POC.md section 12): the second-tab trap does not reproduce on the report page in Chromium 153, Chrome 155, Firefox 155 or WebKit 26.6; the fallback (Drishti's own table) stays in force for a tab where WebAssembly fails.
 
-**Not built, and not faked.** Refresh by the cron `refresh.schedule` (stored and validated; refresh is by data-load signal and `POST /datasets/{id}/refresh`); time intelligence (`ytd`, `mtd`, `same_period_last_year`) and window functions (`running`, `lag`, `rank`), refused with `DRS-9013`;
-Python measures (stored, not run, phase 6); queries whose measures aggregate several unrelated fact tables; filter direction `both`, many-to-many semantics and inactive relationships used by a measure; live tables as an incrementally updated in-memory table fed by the hot path
+**Not built, and not faked.** *(Wave 3, 20.7, built what this list first deferred: refresh by schedule, and time intelligence with `running`; the window functions `lag` and `rank` are still refused with `DRS-9013`.)* Python measures (stored, not run, phase 6); queries whose measures aggregate several unrelated fact tables; filter direction `both`, many-to-many semantics and inactive relationships used by a measure; live tables as an incrementally updated in-memory table fed by the hot path
 (built in phase 5, section 20.5); the BI store as a configured connector (a folder today; mount S3 to put it there); engines other than DuckDB (the interface exists); pushdown of scan filters into Delta and file storage; lineage, impact and classification tags (phase 4); the designer, the Model diagram
 and reports (built in phase 3, section 20.3). The columns layer is **per dataset table**, not shared per kind as 7.1 sketches (a kind read by two datasets is read twice).
 
@@ -853,8 +852,8 @@ is [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapters 10 to 15, the API is [API
 after the server started (the sum of the queries 18 ms, the slowest 4 ms), 244 ms with every answer from the cache; *Counterparty risk* 281 ms and 212 ms; *Cashflow ladder* 299 ms and 255 ms. Selecting a mark re-asks the other seven visuals: 200 ms to the last
 answer. No visual of a sample report reached the one-second hint of Check.
 
-**Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5: the grid and the pivot are built, the charts are not: section 20.5); the visuals `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view` and `shape` (refused with `DRS-9033`); the relative-date slicer (refused); a report over
-**several datasets** (one dataset a report); true subtotals for measures that do not add up (a matrix shows `–`: the figures it totals are the ones it shows); highlight for charts other than bar and column (the others are filtered); capturing a bookmark's slicer
+**Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5: the grid and the pivot are built, the charts are not: section 20.5); the visuals `python`, `entity-view` and `shape` (refused with `DRS-9033`; `bubble`, `funnel`, `histogram`, `box` and `map` are built in wave 3: 20.7); the relative-date slicer (refused); a report over
+**several datasets** (one dataset a report); true totals for measures that do not add up (built in wave 3: 20.7); highlight for charts other than bar and column (the others are filtered); capturing a bookmark's slicer
 choices from the page (written in the YAML); different layouts per device (a phone stacks the grid in reading order); the *Check* that runs a report's expected values on sample data, and a schema-completion popup in the YAML tab (a strip of suggestions instead);
 the designer's *Explore to visual* (phase 9) and the **usability test** the phase asks for (an hour, a Power BI author, a reference report); embedding (phase 7: built, section 20.6 part 3); a filter direction of `both`, many-to-many semantics and inactive
 relationships used by a measure (the engine joins as written, 20.2); several fact tables in one visual's query (20.2). The Model view lays out by a simple rule (the most connected table in the middle) and does not route lines around boxes.
@@ -987,6 +986,27 @@ the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.
 * **Two elements of one report cross-filtering each other** (each element is its own page), a hand-made phone layout **per theme or per device size other than the phone**, a layout in the board designer (boards are not part of embedding).
 * **A published-only check in the server for an embed token's direct calls**: the console refuses an unpublished report's definition; the host application's `kinds` list is the boundary the server enforces.
 * **Narrative summaries** (they need the AI layer).
+
+### 20.7 BI essentials (wave 3), as built
+
+References: [DATASETS.md](../guides/DATASETS.md) (section 4.1 time intelligence, 7.2 scheduled refresh), [REPORTS.md](../guides/REPORTS.md) (3.1 the new visuals, 3.2 true totals), [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 13 and 15, [BI_TUTORIAL.md chapter 23](../guides/BI_TUTORIAL.md#23-time-totals-and-a-map),
+[API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.refresh.*`, `drishti.bi.report.distribution-rows` and `totals-max-rows` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It moves five items from "not built" to built.
+
+**Built.**
+
+* **Scheduled refresh of datasets** (6 and 7.1 sketched `refresh: { schedule }`). A dataset's `refresh:` (and a table's `refresh.schedule`) takes the vocabulary of subscriptions: `daily 06:00`, `weekdays`, `business-days 07:30` with the pack's holiday calendar, `weekly`, `monthly ... business`, `hourly`, a cron (six fields, or the five the sketch showed), and **`after-load`**.
+  A scheduler (`DatasetRefresher`, a virtual-thread ticker, `drishti.bi.refresh.tick`) rebuilds the columns and rollup layers of the published datasets that are due, on its own thread so a failure is seen; a failure is retried with the shared retry policy (`drishti.retry.bi.*`) up to `max-attempts` and then left `failed` until the next time. `after-load` runs on the load signal and takes the dataset's
+  on-load rebuild over. The dataset page's Refresh section and `GET /api/v1/bi/datasets/{id}/refresh` show the schedule, status, last and next run, rows, time and failures; the state is in memory.
+* **Time intelligence** (6: "time intelligence `ytd`, `mtd`, `same_period_last_year`"). `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year` over a date column, and `running`: `ytd(sum(x), table.date)` restricts the aggregate to a window that ends at the query's **as-of date** (the end of its dates); the windows are worked out in Java from the pack's calendar
+  (the prior period is the same number of **business days** before; last year's window is pulled in to business days) and **bound as parameters** of a `FILTER (WHERE ...)`; `running` is a window over the grouped rows along the date field of the visual. Validated (`DRS-9011` for a wrong shape, `DRS-9012` for a rollup that lists one), not rollup material, masks and row rules as for any measure.
+  Not built: `lag` and `rank`, still `DRS-9013`.
+* **Visuals** (8). `map` (countries shaded by an ISO country code, or points at a latitude and longitude; the country file is **vendored**, Natural Earth 1:110m, countries only, 177 features, 176 KB: no tiles, no CDN, no outside request; served to `<drishti-report>` at `/embed/v1/world-countries.json`), `funnel`, `histogram`, `box`, `bubble`. The histogram and box plot ask the engine for the measure of **every member** of the axis
+  (`drishti.bi.report.distribution-rows`) and the server bins or summarises it (equal-width bands; quartiles by linear interpolation, whiskers at 1.5 interquartile ranges, outliers), so the screen, the export (PDF, PNG, Excel, CSV: bars for a funnel, a histogram and a map by country, tables for the rest) and a subscription show one set of numbers. In the visual catalogue (`GET /bi/reports/catalogue`), the designer
+  (Charts group, Build wells, Format **Bars**), the viewer and the element; masks apply (a masked measure is blank). A value the map does not hold is named under it.
+* **True totals** (8: "true subtotals for measures that do not add up"). A matrix with `subtotals: true` and a table with `totals: true` get, with the answer, the engine's totals for the measures that do not add up (`totals`: one entry per level, as the reader, under the same filters); the page sums only the measures that add up.
+* **The sample.** *Counterparty risk* gains a map of the exposure by country, a year-to-date MTM card (`MTM ytd` in `trading-risk`) and a histogram of the trades' MTM.
+
+**Not built, and not faked.** Regions below the country, a tile map or a map service, a choropleth by anything but a country code or name; a histogram with bands of your own; the window functions `lag` and `rank`; a refresh of an earlier date than the current business date by schedule; the refresh state across a restart; a refresh button on the dataset page (`POST .../refresh` exists).
 
 ### 20.1 Three stages
 

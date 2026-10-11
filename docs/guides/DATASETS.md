@@ -26,8 +26,8 @@ workspace, published with review like any item) or **shipped** as `config/bi/dat
 is executed: it is parsed, validated, compiled to SQL with **bound values**, and run by the embedded DuckDB.
 
 Contents: [1](#1-the-file) the file · [2](#2-tables-and-columns) tables and columns · [3](#3-relationships-and-how-queries-join) relationships ·
-[4](#4-measures-and-the-expression-language) measures and expressions · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
-[7](#7-modes-layers-and-rollups) modes, layers and rollups · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
+[4](#4-measures-and-the-expression-language) measures and expressions (4.1: time intelligence) · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
+[7](#7-modes-layers-and-rollups) modes, layers and rollups (7.2: scheduled refresh) · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
 [10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5))
 
 ## 1. The file
@@ -46,6 +46,7 @@ measures: { ... }           # section 4
 hierarchies: { ... }        # section 5
 security: { rows: [...], masked: [...] }   # section 6
 rollups: [ ... ]            # section 7
+refresh: "daily 06:00"      # when the layers are rebuilt on their own: a schedule or after-load (section 7.2)
 layout: { ... }             # where the Model view draws each table (written by the diagram; the language ignores it)
 ```
 
@@ -63,7 +64,7 @@ tables:
     mode: cached                            # cached (default) | direct | live  (section 7; live: 7.1)
     refresh:
       on-load: true                         # rebuild the date when a data-load signal for the kind arrives (default true)
-      schedule: "0 */15 * * *"              # cron, five fields: stored and checked, NOT scheduled yet (section 10)
+      schedule: "0 */15 * * *"              # rebuild this table on a schedule (section 7.2); a five-field cron, or any schedule of section 7.2
     columns:
       tradeId:   { type: string, key: true }
       desk:      string                     # shorthand for { type: string } with the path equal to the name
@@ -135,7 +136,7 @@ and in a calculated column a bare column of its own table.
 | `year(d)`, `quarter`, `month`, `day`, and the field form `table.dateColumn.year` (also `quarter`, `month`, `day`, `week`) | date parts of a `date` or `timestamp` column |
 
 A measure must aggregate (a column outside an aggregate is an error), aggregates do not nest (except `ratio`'s two arguments), and measures may not refer to each other in a circle.
-**Reserved, parsed and refused with `DRS-9013`:** `running`, `lag`, `rank`, `ytd`, `mtd`, `qtd`, `same_period_last_year` (window and time-intelligence functions).
+**Reserved, parsed and refused with `DRS-9013`:** `lag` and `rank` (window functions). Time intelligence and running totals are built: section 4.1.
 
 Real compiled output (captured from the `trades-basic` sample by a BI author's `?explain=true`; the values are placeholders, never in the text):
 
@@ -146,6 +147,73 @@ FROM (SELECT t.*, (CAST(t."mtm" AS DOUBLE) / NULLIF(?, 0)) AS "mtmInMillions"
       FROM (SELECT * FROM read_parquet(['.../columns/file_dataset_trades-basic/trade/date=2026-09-30/part.parquet'], union_by_name = true)) AS t) AS "trade"
 GROUP BY "trade"."desk" ORDER BY "trade.desk" ASC LIMIT 100001
 ```
+
+### 4.1 Time intelligence
+
+A measure may be asked "since the start of the year", "this month so far", "the period before this one" or "running". The function wraps an **aggregate expression** and names a **date column** of a table (`date`
+or `timestamp`; `businessDate` is one):
+
+```yaml
+measures:
+  MTM ytd:      { expr: "ytd(sum(trades.mtm), trades.tradeDate)" }
+  MTM mtd:      { expr: "mtd(sum(trades.mtm), trades.tradeDate)" }
+  Trades qtd:   { expr: "qtd(count(trades), trades.tradeDate)" }
+  MTM prior:    { expr: "prior_period(sum(trades.mtm), trades.tradeDate)" }
+  MTM last year: { expr: "same_period_last_year(sum(trades.mtm), trades.tradeDate)" }
+  MTM running:  { expr: "running(sum(trades.mtm), trades.tradeDate)" }
+  Share of ytd: { expr: "ratio(sum(trades.mtm), ytd(sum(trades.mtm), trades.tradeDate))" }    # inside a ratio, or any expression with other measures
+```
+
+| Function | Rows it adds up | Business-day aware? |
+|---|---|---|
+| `ytd(agg, date)` | the date column from 1 January of the as-of date's year to the as-of date | no: the rows have the dates they have |
+| `mtd(agg, date)` | from the 1st of the as-of date's month to the as-of date | no |
+| `qtd(agg, date)` | from the first day of the as-of date's quarter to the as-of date | no |
+| `prior_period(agg, date)` | the **same number of business days** immediately before the current period | yes: the pack's calendar (`drishti.business-date.calendar`, `USNY` unless changed) skips weekends and holidays |
+| `same_period_last_year(agg, date)` | the current period shifted back one year; an end that falls on a weekend or a holiday last year is pulled **in** to the business days inside the window | yes |
+| `running(agg, date)` | a running total of a `sum`, `count`, `min` or `max` along the date **field of the visual** | no |
+
+**The as-of date** is the end of the query's dates (`dates.to`, so a report's date range or the business date picker), else their start, else the newest date the query read, else the current business date. The **current period**
+of `prior_period` and `same_period_last_year` is the query's own dates (from the first to the as-of date), or the month to date when it names none. The windows are worked out in Java and **bound as parameters**; the SQL compares the
+date column with two dates:
+
+```
+as-of 2026-07-07, dates from 2026-07-06            weekends only (WEEKENDS)             USNY (Independence Day, observed on Friday 3 July 2026)
+ytd                                                2026-01-01 to 2026-07-07             2026-01-01 to 2026-07-07
+mtd and qtd                                        2026-07-01 to 2026-07-07             2026-07-01 to 2026-07-07
+prior_period  (2 business days: 6 and 7 July)      2026-07-02 to 2026-07-03             2026-07-01 to 2026-07-02
+same_period_last_year  (Sun 6 July 2025 is not a business day: the window is Monday the 7th only)
+                                                   2025-07-07 to 2025-07-07             2025-07-07 to 2025-07-07
+```
+
+Real compiled SQL (a test lake with one trade a weekday for a year; `Ytd` and `Mtd` by desk, as-of 2026-07-07; the four bound dates are 2026-01-01, 2026-07-07, 2026-07-01 and 2026-07-07) and its answer:
+
+```sql
+SELECT "trades"."desk" AS "trades.desk",
+       (sum("trades"."mtm") FILTER (WHERE ("trades"."tradeDate" >= CAST(? AS DATE) AND "trades"."tradeDate" <= CAST(? AS DATE)))) AS "Ytd",
+       (sum("trades"."mtm") FILTER (WHERE ("trades"."tradeDate" >= CAST(? AS DATE) AND "trades"."tradeDate" <= CAST(? AS DATE)))) AS "Mtd"
+FROM (SELECT t.*, (CAST(t."mtm" AS DOUBLE) / NULLIF(?, 0)) AS "mtmK" FROM (SELECT * FROM read_parquet([...], union_by_name = true)) AS t) AS "trades"
+GROUP BY "trades"."desk" ORDER BY "trades.desk" ASC LIMIT 100001
+-->  DESK-A  2084.0  42.0      DESK-B  2341.0  148.0      DESK-C  2390.0  20.0
+```
+
+A running total is a window over the grouped rows, ordered by the date **field the visual groups by** and restarting for each combination of its other fields (a coarser part of the same date, `trades.tradeDate.year` beside
+`trades.tradeDate.month`, restarts it each year). By day, 1 to 7 July 2026 (`fields: [trades.tradeDate]`, `measures: [Running]`):
+
+```sql
+SELECT "trades"."tradeDate" AS "trades.tradeDate", (sum(sum("trades"."mtm")) OVER (ORDER BY "trades"."tradeDate")) AS "Running"
+FROM (...) AS "trades" WHERE ("trades"."tradeDate" BETWEEN CAST(? AS DATE) AND CAST(? AS DATE)) GROUP BY "trades"."tradeDate" ORDER BY "trades.tradeDate" ASC LIMIT 100001
+-->  2026-07-01  69.0     2026-07-02  74.0     2026-07-03  116.0     2026-07-06  195.0     2026-07-07  210.0
+```
+
+**What it works on, and what it refuses.**
+
+* The functions restrict **the rows the query reads**. With a snapshot lake (every business date holds the whole book) read one date and let the date column do the rest. With a table whose partitions hold only each day's rows,
+  the query's dates must reach back to the start of the window (a report's `dates: { from: ... }`), or the earlier days are not there to add up.
+* The first argument holds aggregates and nothing else of this family: no nested time function, no `[Measure]` reference. A time function may sit inside an expression with other measures (`ratio(...)`, `[A] - [B]`) but not inside an aggregate. The date is a column, not a date part.
+* A **rollup** cannot hold a time measure (`DRS-9012`, as for a distinct count); the query runs on the columns layer.
+* `running` takes one `sum`, `count`, `min` or `max` (an average, ratio, distinct count or percentile has no running total: `DRS-9011`), needs the date as a **field** of the query (`422 DRS-9020` otherwise), cannot be filtered on (`DRS-9020`), and a date masked for the reader is `403 DRS-9021`.
+* Masks and row rules apply as for any measure; the as-of date is part of the cached result's key, so a new date is a new answer.
 
 ## 5. Hierarchies
 
@@ -229,6 +297,53 @@ every published dataset table that reads the kind, bumps the dataset's data gene
 background; **only that date, only those datasets**. Without a date in the query the **latest** date is used: the current business date when its layer exists, else the newest date the source
 holds (the answer's `dates` says which).
 
+### 7.2 Scheduled refresh
+
+A dataset's layers are rebuilt when a data load arrives (above) and on demand (`POST /datasets/{id}/refresh`). `refresh:` says when they are rebuilt **on their own**:
+
+```yaml
+refresh: "business-days 06:30"          # the whole dataset (a mapping works too: refresh: { schedule: "business-days 06:30" })
+tables:
+  trades:
+    refresh: { schedule: "0 */15 * * *" }     # or one table, on its own schedule
+```
+
+The words are the ones subscriptions use ([DISTRIBUTION.md](DISTRIBUTION.md)): `daily 06:00` (also written `daily at 06:00`), `weekdays 18:30`, **`business-days 07:30`** (the pack's holiday calendar: `drishti.business-date.calendar`), `weekly mon 07:00`,
+`monthly last 18:00 business`, `hourly`, `cron <six fields>` or a bare **five-field cron** (`0 */15 * * *`), and **`after-load`** (optionally `after-load trade`): not a time but the data load that finished ready for a kind the dataset reads.
+Times are in the business-date zone (`drishti.business-date.zone`). A schedule the server cannot read is `DRS-9010` at the path of the key (`refresh`, or `tables.<name>.refresh.schedule`).
+
+**What a refresh does.** For the current business date (the date of the load for `after-load`) it clears that date's partitions of the cached tables (`live` and `direct` tables hold none), drops the dataset's cached results, and reads the columns layer and the
+rollups again, **on the scheduler's own thread, so a failure is seen**: a connector that is not running, a source that fails, a layer that cannot be written. A dataset that reads a date the source holds no rows for refreshes with 0 rows.
+Only **published** datasets (stored or shipped) are scheduled; a draft is not.
+
+**When it fails.** The refresh is tried again with the shared retry policy (`drishti.retry.bi.*`, falling back to `drishti.retry.*`: 5 s, doubling, up to 5 minutes, 20 percent jitter): the dataset's state is `retrying` with the time of the next try, `failures` and the
+error. After `drishti.bi.refresh.max-attempts` tries (4) it is `failed` and left until its next scheduled time; a failure that waiting cannot fix (refused credentials, a setting that is not set) waits the policy's longest interval between tries.
+
+**What the dataset page shows.** The **Refresh** section lists the dataset and each scheduled table: the schedule, the status (`never` before the first run, `waiting` for an `after-load`, `running`, `ok`, `retrying`, `failed`, `invalid` for a schedule that does not read), the last refresh, the next one, rows, how long it took and the failures.
+
+![The dataset page's Refresh section](img/bi-visuals/dataset-refresh.png)
+
+`GET /api/v1/bi/datasets/{id}/refresh` is the same state (any reader of the dataset). Real output (the scheduler looks every `drishti.bi.refresh.tick`, here 2 s; the dataset says `daily 06:00`; it is Sunday evening in New York, so the next run is Monday 06:00, which is 10:00 UTC),
+first before a run, then the answer of `POST /datasets/{id}/refresh` (it runs in the background and says so at once), and four seconds later:
+
+```
+GET  /api/v1/bi/datasets/file:dataset:nv-demo/refresh
+{"enabled": true, "scheduled": true, "zone": "America/New_York", "calendar": "USNY",
+ "dataset": {"schedule": "daily 06:00", "status": "never", "trigger": "", "lastRun": null, "nextRun": "2026-10-12T10:00:00Z", "lastDurationMs": 0, "lastRows": 0, "lastDate": null,
+             "tables": [], "failures": 0, "retryAt": null, "error": null, "runs": 0}, "tables": []}
+POST /api/v1/bi/datasets/file:dataset:nv-demo/refresh
+{"dataset": "file:dataset:nv-demo", "date": "2026-10-09", "refreshing": ["trade"], "state": {"schedule": "daily 06:00", "status": "running", "trigger": "manual (wes)", "lastRun": null, "nextRun": "2026-10-12T10:00:00Z", ...}}
+GET  /api/v1/bi/datasets/file:dataset:nv-demo/refresh          (the demo lake holds 7 and 8 October, not the 9th: 0 rows)
+{"enabled": true, "scheduled": true, ..., "dataset": {"schedule": "daily 06:00", "status": "ok", "trigger": "manual (wes)", "lastRun": "2026-10-11T22:44:35.251467762Z", "nextRun": "2026-10-12T10:00:00Z",
+ "lastDurationMs": 4, "lastRows": 0, "lastDate": "2026-10-09", "tables": ["trade"], "failures": 0, "retryAt": null, "error": null, "runs": 1}, "tables": []}
+```
+
+**`after-load`.** A data-load signal with `status: ready` for a kind a table reads starts the refresh `drishti.bi.refresh.load-delay` (2 s) later, for the date loaded; the dataset then has the *tracked and retried* version of the rebuild, so the plain on-load rebuild
+(background, untracked) leaves it alone. A schedule for one kind (`after-load trade`) ignores the others.
+
+**The state is in memory.** After a restart a job shows `never` until it runs, and its next time is worked out again from the clock. Settings: `drishti.bi.refresh.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibirefresh--scheduled-dataset-refresh)). The refresh is audited (`bi-dataset-refresh`).
+No new write endpoint: `POST .../refresh` is the one that existed and needs `bi-author` (and, for a personal token, the `bi:write` scope).
+
 ### 7.1 Live tables (phase 5)
 
 A `mode: live` table is the **current state of a kind**, not a copy per business date. The engine reads the kind **once** when the table is first needed (the first query, or the first stream of a report over it), subscribes to
@@ -302,10 +417,10 @@ Validation never throws: it returns every problem with its code and the path of 
 
 | Code | Meaning |
 |---|---|
-| `DRS-9010` | the YAML or a structure is not valid (unknown type, mode or cardinality, a bad name, a missing `source.kind`, bad cron) |
+| `DRS-9010` | the YAML or a structure is not valid (unknown type, mode or cardinality, a bad name, a missing `source.kind`, a `refresh` schedule the server cannot read) |
 | `DRS-9011` | an expression does not parse, names something the model lacks, misuses an aggregate, uses an unknown function, refers to measures in a circle |
 | `DRS-9012` | a relationship, hierarchy, masked column, row rule or rollup points at a table or column that does not exist (or a rollup holds a measure it cannot) |
-| `DRS-9013` | a reserved feature (time intelligence, window functions, Python measures): parsed, **not built** |
+| `DRS-9013` | a reserved feature (the window functions `lag` and `rank`, Python measures): parsed, **not built**. Time intelligence (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`) is built (4.1): a wrong shape is `DRS-9011`, a rollup listing one `DRS-9012` |
 | `DRS-9020` | a query names a field, measure, operator, value or date the dataset cannot take, or cannot be joined |
 | `DRS-9021` | a query filters on, or sorts by, a column masked for the caller, or reads a `direct` table of a kind they may not open |
 | `DRS-9022` / `9023` | the answer is over the row limit / the byte limit |
@@ -318,8 +433,8 @@ Validation never throws: it returns every problem with its code and the path of 
 
 ## 10. What is not built
 
-Marked so nothing is mistaken for working: **time intelligence** (`ytd`, `mtd`, `same_period_last_year`) and **window functions** (`running`, `lag`, `rank`); **Python measures** (stored, not run, phase 6);
-the **cron `refresh.schedule`** (stored and validated; refresh is by data-load signal and on demand, `POST /datasets/{id}/refresh`); **queries whose measures aggregate several unrelated fact tables**;
+Marked so nothing is mistaken for working: the **window functions** `lag` and `rank` (time intelligence and `running` are built: 4.1); **Python measures** (stored, not run, phase 6);
+the **state of a refresh across a restart** (it is in memory: 7.2); a refresh of **an earlier date** than the current business date (a schedule refreshes today; a load refreshes the date it names); **queries whose measures aggregate several unrelated fact tables**;
 **filter direction `both`** and **many-to-many** semantics, and **inactive relationships used by a measure**; **running totals by group that a change adjusts** (live tables are maintained incrementally, measures are recomputed over them: 7.1), **history of a live table** (it holds current state with retention, not every update), **live tables over arrays** (`each`), **live tables in `direct` queries**;
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector
 honours them (the engine reads through the connector, not the files); **classification tags** and **per-entry export rules**. (Lineage and impact analysis are phase 4: [BI_GOVERNANCE.md](BI_GOVERNANCE.md).) Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [REPORTS.md](REPORTS.md), [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16.

@@ -116,7 +116,7 @@ The viewer's keyboard order is the picture's: visuals are read top to bottom, th
 ## 3. The visuals and their wells
 
 A **well** holds fields (`table.column`, or `table.column.year|quarter|month|week|day` for a date), measures (names of the dataset) or either, and takes a few items. Charts draw with ECharts
-(vendored); everything else is plain elements. Required wells must be filled. The designer's Visualizations pane offers the first 21 types below (`bar` to `button`); `live-chart`, `perspective-grid` and `perspective-pivot` (phase 5) are written in the YAML, and the designer's canvas shows a note for a Perspective visual (its page has no WebAssembly).
+(vendored); everything else is plain elements. Required wells must be filled. The designer's Visualizations pane offers the first 26 types below (`bar` to `button`, with `bubble`, `funnel`, `histogram`, `box` and `map` among the charts); `live-chart`, `perspective-grid` and `perspective-pivot` (phase 5) are written in the YAML, and the designer's canvas shows a note for a Perspective visual (its page has no WebAssembly).
 
 | Type | Group | Wells (kind, how many) | What it draws |
 |---|---|---|---|
@@ -130,23 +130,78 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 | `waterfall` | chart | `axis` field (1, required), `values` measure (1, required) | each step from the running total, and a total |
 | `treemap` | chart | `axis` fields (1 or 2, required), `values` measure (1, required) | nested rectangles |
 | `heatmap` | chart | `axis` field (1, required), `legend` field (1, required), `values` measure (1, required) | a grid coloured by the measure |
+| `bubble` | chart | `details` field (1, required), `x`, `y` and `size` measures (1 each, required) | a scatter whose points are as large as the `size` measure: a bubble per value of `details` (subsection 3.1) |
+| `funnel` | chart | `axis` field (1, required), `values` measure (1, required) | stages from the largest value down, each as wide as its measure |
+| `histogram` | chart | `axis` field (1, required), `values` measure (1, required); `format: { bins: 10 }` | how many members of `axis` have a value of the measure in each band: the server asks for the measure of **every** member and bins it |
+| `box` | chart | `axis` field (1, the category), `details` field (1, required), `values` measure (1, required) | a box plot of the measure over the members of `details`: median, quartiles, whiskers and outliers, one box per value of `axis` (or one box) |
+| `map` | chart | `location` field (1) **or** `latitude` and `longitude` fields; `details` field (1), `values` measure (1, required) | countries shaded by the measure (`location` holds ISO country codes), or a point at each latitude and longitude, as large as the measure |
 | `card` | card | `values` measure (1, required) | one number; `format.conditional` colours it |
 | `multirow-card` | card | `axis` field (1), `values` measures (required) | a row per value of `axis`, or the measures as rows |
 | `kpi` | card | `values` measure (1, required), `target` measure (1), `axis` field (1) | the value, how it stands against the target, a sparkline over `axis` |
 | `gauge` | card | `values` measure (1, required), `target` measure (1) | a dial; `format: { min, max }` sets the range |
-| `table` | table | `columns` fields and measures (required) | the fields grouped, the measures added up; click a column title to sort; data bars and conditional colours; a key column of a table whose kind is a Drishti kind links to the entity in the terminal |
-| `matrix` | table | `rows` fields (required), `columns` field (1), `values` measures (required) | rows by columns; `format: { subtotals: true }` adds a subtotal per group of the first row field (collapsible), a total per row and a grand total |
+| `table` | table | `columns` fields and measures (required) | the fields grouped, the measures added up; click a column title to sort; data bars and conditional colours; a key column of a table whose kind is a Drishti kind links to the entity in the terminal; `format: { totals: true }` ends with a **total row** the engine works out over all the rows (not only the rows shown) |
+| `matrix` | table | `rows` fields (required), `columns` field (1), `values` measures (required) | rows by columns; `format: { subtotals: true }` adds a subtotal per group of the first row field (collapsible), a total per row and a grand total, **true totals** for every measure (below) |
 | `slicer` | slicer | `field` (1, required) | section 6 |
 | `text`, `image`, `button` | static | none | `text`; `src` and `alt`; `text` and `action` |
 | `live-chart` | live | `values` measures (1 to 4, required) | a **rolling line**: each update of the live table adds a point per measure; `format: { window: 120 }` keeps the latest 5 to 1,000 points (section 13) |
 | `perspective-grid` | perspective | `columns` fields of **one table** (required) | the table's rows in a Perspective grid, masked for the reader and updated as the table changes (section 13) |
 | `perspective-pivot` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | the same rows pivoted by Perspective in the browser: `rows` down, `columns` across, `values` aggregated (`format: { aggregates: { trade.mtm: sum } }`) |
 
-Reserved and **refused with `DRS-9033`** (not built): `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view`, `shape`.
+Reserved and **refused with `DRS-9033`** (not built): `python`, `entity-view`, `shape`.
 
-A measure in a field well, a field in a measure well, an unknown well, a required well left empty or one over its number of items is `DRS-9032`; a name the dataset does not have is `DRS-9031`.
-Totals in a matrix are the sum of the shown figures, so they are computed for measures that add up (a `sum` or a `count`) and shown as `–` for the others (an average, a ratio, a distinct count):
-asking the engine for a true total of those is not built.
+A measure in a field well, a field in a measure well, an unknown well, a required well left empty or one over its number of items is `DRS-9032`; a name the dataset does not have is `DRS-9031`. A map with neither a `location` nor a `latitude` and `longitude`, or with both,
+or with a latitude without a longitude, or with a latitude that is not a number, is `DRS-9032`, and so is a `histogram` with `bins` outside 2 to 100.
+
+### 3.1 The map, funnel, histogram, box plot and bubble
+
+All five are ECharts charts (vendored), draw from the same query as any other chart, and are built the same way in the designer (Charts group, Build wells, Format), exported, and drawn by `<drishti-report>`. A mask applies as everywhere: a masked measure is a blank
+visual that says `•••`, a masked field is one bar or box. Real pictures from `drishti-console/tests/bi_visuals_shots.py` (two days of 60 trades; the demo report is in the test that checks them):
+
+![The new visuals on one page](img/bi-visuals/report-all.png)
+
+**Map.** `wells: { location: [counterparties.country], values: [Exposure (EE peak)] }` shades each country by the measure. `location` holds **ISO 3166 codes** (alpha-2 `US` or alpha-3 `USA`) or the English name; it is matched against a vendored country file
+(Natural Earth, 1:110m, **countries only**: `static/vendor/echarts/maps/world-countries.json`, 177 features; no tiles, no map service, no CDN, nothing leaves the network). A value the file does not know is **named under the map** (`Not on the map: KY (it holds countries only)`,
+which is what the Cayman Islands and Bermuda do in the sample) and never dropped silently. A click on a country filters the other visuals by its code. **Points:** `wells: { latitude: [trade.lat], longitude: [trade.lon], details: [trade.desk], values: [Trades] }` puts a point at each position, as large
+as the measure; `details` names it. The two modes are not mixed.
+
+![A map shaded by country](img/bi-visuals/report-map.png) ![Points on the map](img/bi-visuals/report-points.png)
+
+**Funnel** (`axis`, `values`): the stages largest first, as wide as the measure; a click filters by the stage. **Bubble** (`details`, `x`, `y`, `size`): the scatter with its fourth measure as the size.
+
+![A funnel](img/bi-visuals/report-funnel.png) ![A bubble chart](img/bi-visuals/report-bubble.png)
+
+**Histogram.** `wells: { axis: [trades.tradeId], values: [MTM] }, format: { bins: 12 }`: the engine is asked for the measure of every member of `axis` (up to `drishti.bi.report.distribution-rows`, 20,000), as the reader (their rows and masks), and the **server** bins it
+into equal-width bands between the smallest and the largest value (default 10, 2 to 100); a value on the edge between two bands belongs to the band that starts there. The answer is four columns, `bin`, `count`, `from`, `to`, so the screen, an export and a subscription show the same bars.
+**Box plot.** `wells: { axis: [trade.desk], details: [trade.tradeId], values: [MTM] }`: the measure of every member of `details`, summarised per value of `axis` (one box without it): first quartile, median and third quartile (**linear interpolation**, as the engine's `percentile`),
+**whiskers** at the lowest and highest value within 1.5 interquartile ranges of the box, and the members beyond them as outliers (at most 25 listed). The answer's columns are the category, `min` (the lower whisker), `q1`, `median`, `q3`, `max` (the upper whisker), `count` and `outliers`.
+
+![A histogram](img/bi-visuals/report-histogram.png) ![A box plot](img/bi-visuals/report-box.png)
+
+In the designer the five are in the Charts group of the Visualizations pane; the Build pane shows their wells (the map's four place wells are all optional, the validator asks for a place), and Format has **Bars** for a histogram.
+
+![The Charts group](img/bi-visuals/designer-types.png) ![The map's wells](img/bi-visuals/designer-build-map.png)
+
+### 3.2 True totals
+
+A total of a measure that adds up (a `sum` or a `count`) is the sum of the figures shown. A total of one that does not (a ratio, an average, a distinct count, a percentile, a minimum, a maximum, a time-intelligence measure) is **not** the sum or the average of
+the figures shown: the average of the desks' averages is not the average of the trades. So a matrix with `format: { subtotals: true }` and a table with `format: { totals: true }` ask the engine for those totals: **one more query per level**, as the reader, under the same filters, over the rows of the whole group.
+The answer carries them as `totals`:
+
+```
+POST /api/v1/bi/reports/file:report:nv-demo/query   {"page": "main", "visual": "matrix", "state": {"dates": {"from": "2026-10-07", "to": "2026-10-08"}}}      (the matrix: rows trade.desk, columns trade.currency)
+{"columns": ["trade.desk", "trade.currency", "Notional", "Avg MTM", "MTM per notional", "Largest notional"], "rows": [["DESK-EQD", "GBP", 154000000.0, 21250.0, 5519.48, 7000000.0], ...],
+ "totals": [{"by": [],                 "columns": ["Avg MTM", "MTM per notional", "Largest notional"], "masked": [], "rows": [[-3750.0, -961.5384615384615, 7000000.0]]},
+            {"by": ["trade.currency"], "columns": ["trade.currency", "Avg MTM", ...], "rows": [["EUR", -3750.0, -961.54, 7000000.0], ["GBP", 21250.0, 5519.48, 7000000.0], ["USD", -28750.0, -7278.48, 7000000.0]]},
+            {"by": ["trade.desk"],     "columns": ["trade.desk", "Avg MTM", ...], "rows": [...]}]}
+```
+
+Each entry is a level: `by` the fields it groups by, the measures that do not add up (the ones that do are summed by the page), and its rows. A matrix asks for the grand total, each value of the first row field (with several row fields), each column, and each row across the columns;
+a table asks for one level, the grand total. A level the engine refuses, or a measure masked for the reader, stays `–` with its reason in the cell's title. The caps are `drishti.bi.report.totals-max-rows` (2,000 rows a level).
+
+![A matrix with true totals](img/bi-visuals/report-matrix.png)
+![A table with a total row](img/bi-visuals/report-table.png)
+
+The grand total of *Largest notional* is the largest, 7,000,000; its sum would have been 21,000,000 (three desks): the cells that the engine worked out are marked (`data-true-total`) and say so in their tip.
 
 ## 4. Filters
 
@@ -263,7 +318,7 @@ colour with a contrast ratio under 3 against the theme's background), `LAYOUT` (
 ## 11. Settings
 
 `drishti.bi.report.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3)): `chart-rows` (500), `table-rows` (1000), `slicer-values` (1000), `show-rows` (1000),
-`top-candidates` (10000), `perspective-rows` (20000: the most rows a Perspective visual is sent). The query limits are `drishti.bi.query.*`; the live ones `drishti.bi.live.*`; the console's `bi.live.min_interval_ms` and `bi.live.stale_seconds` (section 13).
+`top-candidates` (10000), `perspective-rows` (20000: the most rows a Perspective visual is sent), `distribution-rows` (20000: the most members a histogram or box plot reads), `totals-max-rows` (2000: rows of one level of true totals). The query limits are `drishti.bi.query.*`; the live ones `drishti.bi.live.*`; the console's `bi.live.min_interval_ms` and `bi.live.stale_seconds` (section 13).
 
 ## 12. Built and not built
 
@@ -272,8 +327,8 @@ column), drill-down, drill-through, show the rows, show as a table, open in the 
 
 Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the Perspective grid and pivot; the sample live reports.
 
-Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `map`, `bubble`, `funnel`, `histogram`, `box`, `python`, `entity-view` and `shape` visuals; the relative-date slicer; true totals for
-measures that do not add up; a time-intelligence or window measure (the dataset refuses them); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
+Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `python`, `entity-view` and `shape` visuals; the relative-date slicer; a map of **regions below the country** (states, counties: the vendored file holds countries), a **tile** map or a map service (nothing is fetched from outside), a
+shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); the window functions `lag` and `rank` (the dataset refuses them); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
 written in the YAML); a phone layout is the only per-device layout (no tablet or large-screen variant); a *Check* that runs expected values on sample data; embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
 report-level security beyond the catalogue and the dataset's rules.
 

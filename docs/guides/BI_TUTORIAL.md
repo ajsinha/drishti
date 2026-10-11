@@ -29,8 +29,9 @@ Drishti ships five sample **datasets**, five sample **reports** and one **board*
 | 18, 19 | the **streaming** half: a live dataset, a report that redraws as the trades tick, a Perspective grid and pivot, a wall of live tiles for a screen | 30 |
 | 20, 21 | **distribution**: export a page and subscribe people to it by email, each with their own figures; **alerts** on a number, and a board tile that tells people when it turns red | 25 |
 | 22 | a report **arranged for a phone** in the designer, and **embedded** in another web application | 20 |
+| 23 | **time intelligence**, a dataset that **refreshes itself**, the **map**, funnel, histogram, box plot and bubble, and **true totals** | 20 |
 
-Every output below was captured from a real server (the pictures and numbers of chapters 1 to 9 by `drishti-console/tests/bi_data_shots.py`, 10 to 15 by `bi_report_shots.py`, 17 by `bi_gov_shots.py`, 18 and 19 by `bi_live_shots.py`, 20 by `dist_shots.py`, 21 by `alerts_shots.py`) over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit), except where a chapter says its data differs. Your numbers are the same for chapters 1 to 15 if you build the lake as chapter 0 says.
+Every output below was captured from a real server (the pictures and numbers of chapters 1 to 9 by `drishti-console/tests/bi_data_shots.py`, 10 to 15 by `bi_report_shots.py`, 17 by `bi_gov_shots.py`, 18 and 19 by `bi_live_shots.py`, 20 by `dist_shots.py`, 21 by `alerts_shots.py`, 23 by `bi_visuals_shots.py`) over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit), except where a chapter says its data differs. Your numbers are the same for chapters 1 to 15 if you build the lake as chapter 0 says.
 
 | Sample | What it teaches | Tables |
 |---|---|---|
@@ -221,10 +222,10 @@ Shipped files are read-only. Copy one and edit the copy, which is private to you
 ## 7. A dataset that is wrong
 
 ```
-POST /api/v1/bi/datasets/validate   {"yaml": "... measures:\n  N: { expr: \"sum(t.nope)\" }\n  M: { expr: \"ytd(sum(t.a))\" }"}
+POST /api/v1/bi/datasets/validate   {"yaml": "... measures:\n  N: { expr: \"sum(t.nope)\" }\n  M: { expr: \"lag(sum(t.a))\" }"}
 {"valid": false, "problems": [
   {"level":"error","code":"DRS-9011","path":"measures.N","message":"table 't' has no column 'nope' (it has a)"},
-  {"level":"error","code":"DRS-9013","path":"measures.M","message":"'ytd' is reserved for time intelligence and window functions and is not built yet (RUPAKA.md section 20.2)"}]}
+  {"level":"error","code":"DRS-9013","path":"measures.M","message":"'lag' is reserved for window functions and is not built yet (time intelligence ytd, mtd, qtd, prior_period, same_period_last_year and running are built)"}]}
 ```
 
 ## 8. Start a model from the packs
@@ -976,3 +977,57 @@ The host can do the same from code: `rep.filters = { selections: [...] }`, and `
 **5. Which reports may a host show?** Only those its list names. Try another report (`file:report:live-exposure`) in the host's page: the element shows **`DRS-8005`**, tells the host (`drishti:error`, `fatal: true`), and the rest of the page is unaffected. Change the list in Admin → Embedding and the next load works. A report that is not published is refused the same way.
 
 Reference: [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application), [REPORTS.md section 14](REPORTS.md#14-phone-layouts), the developer guide [ELEMENTS.md](ELEMENTS.md).
+
+## 23. Time, totals and a map
+
+*Wave 3, the BI essentials. This chapter uses a small stack of its own (the test `drishti-console/tests/test_bi_new_visuals_browser.py` starts it: the server on 18954 and the console on 17954; the pictures and outputs are made by `tests/bi_visuals_shots.py`). It is a dataset `nv-demo` on the trades of chapter 2, with a country and a position worked out from the desk, and a report on it. Two days of 60 trades. Reference: [DATASETS.md](DATASETS.md) sections 4.1 and 7.2, [REPORTS.md](REPORTS.md) section 3.*
+
+**1. A measure that knows about time.** Open the dataset `nv-demo` (**Datasets**, then its name) and look at the measures. `MTM ytd` is `ytd(sum(trade.mtm), trade.tradeDate)`: the sum over the trades dated from 1 January of the year to the **as-of date**, which is the end of the report's dates.
+`mtd`, `qtd`, `prior_period`, `same_period_last_year` and `running` work the same way ([DATASETS.md section 4.1](DATASETS.md#41-time-intelligence)); the two that look back count **business days** with the pack's calendar, so a holiday is skipped.
+In the designer (step 5) a measure like this has a small badge, `ytd`, in the Fields pane. A function that is not given what it needs is refused where the dataset is checked, with the path of the measure (`POST /api/v1/bi/datasets/validate`):
+
+```
+{"level":"error","code":"DRS-9011","path":"measures.M","message":"ytd(aggregate, table.dateColumn) takes two arguments, for example ytd(sum(trades.mtm), trades.tradeDate)"}
+```
+
+**2. A dataset that refreshes itself.** The dataset says `refresh: "daily at 06:00"`. Open its page and scroll to **Refresh**: the schedule (it is read as `daily 06:00`), the status, the last refresh, the next one, the rows and how long it took. The scheduler looks every `drishti.bi.refresh.tick` (30 s; 2 s on this stack)
+and rebuilds the layers at the time, on the pack's zone. Change it to `business-days 06:30` to follow the pack's holiday calendar, or `after-load` to follow the data. As an author press nothing: ask for one now, `POST /api/v1/bi/datasets/file:dataset:nv-demo/refresh`, and read the state again
+(`GET .../refresh`: `"status": "ok"`, `"trigger": "manual (wes)"`, `"lastRows"`, `"lastDurationMs"`). A source that fails is tried again with the shared retry policy, and the page says `retrying` with the time of the next try and the error.
+
+**3. A report with five new visuals.** Open the report `nv-demo` as `rita`. Top left, two cards: *MTM* and *MTM year to date*: the same figure, since every trade is dated this year. Then:
+
+* a **map** of the notional by country: `trade.country` holds `US`, `GB` and `JP`; the three countries are shaded and nothing else (no tiles are loaded: the map data is a file of ours). A second map marks the desks' positions with a point each, as large as the number of trades;
+* a **funnel** of the trades by product, a **histogram** of how the 120 trades' MTM is spread (six bars; the server did the binning), a **box plot** of the MTM by desk (median, quartiles, whiskers) and a **bubble** chart (average MTM against total MTM, as large as the notional).
+
+Click a country: the other visuals filter to it. Hover a box: its tip reads `max`, `Q3`, `median`, `Q1`, `min` and `n`.
+
+**4. A total that is a total.** Scroll to the matrix *By desk and currency* (rows desk, columns currency; notional, average MTM, MTM per million of notional and the largest notional; subtotals on) and the table *Desks* (with `totals: true`). The *Total* row of the notional is a sum; the totals of the other
+three are the engine's, over the rows of the whole group (their tip says so). **Largest notional** totals to 7,000,000, the largest, not 21,000,000; the **average MTM** total is the average of the 120 trades. Ask the API for them (`totals` in the answer, [REPORTS.md section 3.2](REPORTS.md#32-true-totals)).
+
+**5. In the designer.** Press **Designer**, start a draft on `nv-demo`, and look at the Visualizations pane: the Charts group now has `bubble`, `funnel`, `histogram`, `box` and `map`. Choose `map`: the Build pane shows its wells (`location`, `latitude`, `longitude`, `details`, `values`), a place is needed (`DRS-9032` otherwise),
+and the Fields pane marks `MTM ytd` as a time measure. Format has **Bars** for a histogram and **Total row** for a table.
+
+**6. Out of the page and on a phone.** *Export* the page as Excel, PDF, PNG or CSV: the histogram's bins and the box plot's boxes are the figures in the file; a map by country is a bar chart of its values; a map of points is a table of positions. On a phone (390 px) the report is one column, the map is 18 rem high and
+nothing makes the page wider; the matrix scrolls inside its own frame.
+
+**Pictures** (from the real stack):
+
+![The page](img/bi-visuals/report-all.png)
+
+![A map shaded by country](img/bi-visuals/report-map.png) ![Points on the map](img/bi-visuals/report-points.png)
+
+![A funnel](img/bi-visuals/report-funnel.png) ![A histogram](img/bi-visuals/report-histogram.png) ![A box plot](img/bi-visuals/report-box.png) ![A bubble chart](img/bi-visuals/report-bubble.png)
+
+![The year-to-date card](img/bi-visuals/report-cards.png)
+
+![A matrix with true totals](img/bi-visuals/report-matrix.png)
+
+![A table with a total row](img/bi-visuals/report-table.png)
+
+![The dataset's Refresh section](img/bi-visuals/dataset-refresh.png)
+
+![The Fields pane with the time badge](img/bi-visuals/designer-fields.png) ![The new types](img/bi-visuals/designer-types.png) ![The map's wells](img/bi-visuals/designer-build-map.png)
+
+![The map on a phone](img/bi-visuals/phone-map.png) ![The matrix on a phone](img/bi-visuals/phone-matrix.png)
+
+Reference: [DATASETS.md sections 4.1 and 7.2](DATASETS.md#41-time-intelligence), [REPORTS.md sections 3.1 and 3.2](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble), [BI_GUIDE.md section 13](BI_GUIDE.md#13-datasets-and-the-query-engine-phase-2).

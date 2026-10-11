@@ -60,7 +60,13 @@ public final class Distributions {
         double width = n == 1 ? 0 : (hi - lo) / n;
         long[] counts = new long[n];
         for (double v : values) {
-            int i = n == 1 ? 0 : Math.min(n - 1, (int) Math.floor((v - lo) / width));
+            int i = n == 1 ? 0 : Math.max(0, Math.min(n - 1, (int) Math.floor((v - lo) / width)));
+            while (i > 0 && v < lo + i * width) {                           // a value on an edge belongs to the bar that starts there, whatever the division rounded to
+                i--;
+            }
+            while (i < n - 1 && v >= lo + (i + 1) * width) {
+                i++;
+            }
             counts[i]++;
         }
         List<List<Object>> rows = new ArrayList<>();
@@ -144,12 +150,16 @@ public final class Distributions {
         return m;
     }
 
-    /** A number as a label: whole numbers as they are, others to at most four significant digits. */
+    /** A number as a label: whole numbers as they are, others to a few digits and never in scientific notation. */
     static String label(double v) {
         if (v == Math.rint(v) && Math.abs(v) < 1e15) {
             return String.format(Locale.ROOT, "%d", (long) v);
         }
-        String s = String.format(Locale.ROOT, "%.4g", v);
-        return s.contains("e") ? s : s.contains(".") ? s.replaceAll("0+$", "").replaceAll("\\.$", "") : s;
+        double a = Math.abs(v);
+        if (a >= 1000) {
+            return String.format(Locale.ROOT, "%d", Math.round(v));
+        }
+        String s = String.format(Locale.ROOT, a >= 100 ? "%.1f" : a >= 10 ? "%.2f" : "%.3f", v);
+        return s.contains(".") ? s.replaceAll("0+$", "").replaceAll("\\.$", "") : s;
     }
 }

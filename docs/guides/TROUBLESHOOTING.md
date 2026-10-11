@@ -973,6 +973,39 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **Cause:** a new file has no copyright header.
 - **Fix:** `python3 tools/license_headers.py --fix`, then build again.
 
+## Refresh, time intelligence, the map and totals (BI wave 3)
+
+### A dataset's refresh says `retrying` or `failed`
+
+- **Cause:** the scheduled rebuild of its layers failed: a connector that is not running (`DRS-9026`), a source that errors, a layer that could not be written. The dataset page's **Refresh** section and `GET /api/v1/bi/datasets/{id}/refresh` give the error, the failures and (`retrying`) the time of the next try.
+- **Fix:** repair the connector (Admin, Connectors). A `retrying` refresh tries again by itself, with the waits of `drishti.retry.bi.*` (5 s doubling to 5 minutes); after `drishti.bi.refresh.max-attempts` (4) it is `failed` until its next scheduled time: press the refresh (`POST /api/v1/bi/datasets/{id}/refresh`) once the source is back.
+  A schedule the server cannot read is `DRS-9010` at `refresh`; a state `invalid` means a stored schedule stopped reading after an upgrade.
+
+### A dataset never refreshes at its time
+
+- **Cause:** the dataset is a **draft** (only published and shipped datasets are scheduled), `drishti.bi.refresh.enabled` is `false`, the time is in the **business-date zone** (`drishti.business-date.zone`, not the server's), or it is `after-load` and no load for a kind it reads has arrived.
+- **Fix:** read the schedule and `nextRun` in the Refresh section; the scheduler looks every `drishti.bi.refresh.tick` (30 s), so a schedule runs within that of its time.
+
+### A year-to-date or prior-period figure is smaller than expected
+
+- **Cause:** time intelligence adds up **the rows the query read**. If each business date's partition holds only that day's rows, a report on one date has no earlier days to add up; or the as-of date is not the one you expect (it is the end of the report's dates).
+- **Fix:** give the report `dates: { from: <start of the window> }`, or read a snapshot lake on one date; check the answer's `meta.dates`. `prior_period` and `same_period_last_year` use the pack's calendar: `drishti.business-date.calendar`.
+
+### A running total is refused (`DRS-9020`)
+
+- **Cause:** `running(...)` runs along the date **field of the visual**: the date column must be on the visual's axis (or a field of the query), and a running total cannot be filtered on.
+- **Fix:** put the date (or a part of it: year, month) on the axis; to restart each year put `year` and `month` both on it.
+
+### A map shows fewer countries than the data has
+
+- **Cause:** the map matches the `location` field to a vendored list of countries (ISO alpha-2 or alpha-3 code, or the English name). Small territories and codes that are not countries are not on it; the visual names them under the map (`Not on the map: KY`).
+- **Fix:** put an ISO country code in the field (a calculated column in the dataset can map your own code); for points use `latitude` and `longitude`. The file is `static/vendor/echarts/maps/world-countries.json`; nothing is loaded from outside, so a map in a closed network works.
+
+### A total shows `–` where the other cells have numbers
+
+- **Cause:** the measure does not add up (a ratio, an average, a distinct count, ...) and the engine's total for it was refused or is masked for you; hover the cell. A matrix with no `subtotals: true` shows no totals at all.
+- **Fix:** the tip says which; for a masked measure ask for the raw power; for a refusal read the visual's `totals` in the answer (`POST /api/v1/bi/reports/{id}/query`).
+
 ## Live reports, Perspective and boards (BI phase 5)
 
 ### A report over a live dataset shows no live indicator, or a tile does not update
@@ -1110,7 +1143,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-9010` | a dataset's YAML or a structure in it is not valid (HTTP 422): the problem names the path of the key; check it on the dataset page or with `POST /api/v1/bi/datasets/validate`; publishing an invalid dataset is refused with this code |
 | `DRS-9011` | a measure, calculated column or row rule does not parse, names a table or column the dataset does not have, aggregates where it must not (or does not where it must), uses an unknown function, or refers to measures in a circle (HTTP 422) |
 | `DRS-9012` | a relationship, hierarchy, masked column, row rule or rollup points at a table or column that does not exist, or a rollup lists a measure it cannot hold (a distinct count, a percentile, a condition inside an aggregate) |
-| `DRS-9013` | the dataset uses time intelligence (`ytd`, `mtd`, ...), a window function (`running`, `lag`, `rank`) or a Python measure: reserved, **not built** (HTTP 501 as a query; a warning for a stored Python measure) |
+| `DRS-9013` | the dataset uses a window function (`lag`, `rank`) or a Python measure: reserved, **not built** (HTTP 501 as a query; a warning for a stored Python measure). Time intelligence (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`) is built; one with the wrong arguments is `DRS-9011` (it names what it needs), a `running` total whose date is not a field of the visual is `DRS-9020` |
 | `DRS-9020` | a query names a field, measure, filter operator, value or date the dataset cannot take, or the model has no many-to-one path joining what it asks for (HTTP 422; a row rule's tables are joined into every query a reader runs, so a rule can make a question unanswerable: the message names it) |
 | `DRS-9021` | a query filters on or sorts by a column masked for you, or reads a `direct` table of a kind you may not open (HTTP 403) |
 | `DRS-9022` | the answer is over `drishti.bi.query.max-rows` (or, as JSON, `json-max-rows`) (HTTP 413): group by less, filter, set a `limit`, or ask for Arrow |
