@@ -46,6 +46,18 @@ window.drsMessage = function (p, fallback) {
   // the previous business day on the server; the box says so before it submits.
   // the top bar's form only (an embedded pane has none): one exception here would stop the rest of this file, the
   // workspace's pane keys included
+  // The Live toggle: green = live (streaming), red = paused. Pausing keeps the current business date as a static snapshot
+  // (the date box stays choosable); resuming goes back to live. The choice is the existing as-of cookie, so it follows the
+  // user across pages. A button, so Enter and Space work.
+  var liveBtn = document.querySelector('.tbar [data-asof-live]');
+  if (liveBtn) {
+    liveBtn.addEventListener('click', function () {
+      var on = liveBtn.getAttribute('aria-pressed') === 'true';
+      var url = on ? liveBtn.getAttribute('data-pause-href') : liveBtn.getAttribute('data-live-href');
+      if (on && url.indexOf('d=&') >= 0) { url = url.replace('d=&', 'd=' + new Date().toISOString().slice(0, 10) + '&'); }
+      window.location.assign(url);
+    });
+  }
   var asof = document.querySelector('form[data-asof]');
   var box = asof ? asof.querySelector('input[type="date"]') : null;
   if (asof && box) {
