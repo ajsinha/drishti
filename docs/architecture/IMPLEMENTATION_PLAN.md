@@ -106,16 +106,16 @@ The first ten waves (plus W11, user management, after 1.0.0); all are done. Each
 - Tests: jqwik property tests for EL; golden `Layout` JSON per reference Sutra.
 
 ## W6 — Inference engine
-- `drishti-inference`: `ShapeTree`, `SemanticHints` (`config/inference/semantics.yaml`), the rules in ARCHITECTURE §6.
+- `drishti-inference`: `ShapeTree`, `SemanticHints` (`drishti-inference/src/main/resources/inference/semantics.yaml`), the rules in ARCHITECTURE §6.
 - `CandidateScorer`, `AreaPacker` (strip ≤ 8, right column ≤ 4), `LayoutMerger` (Sutra wins; `infer` holes filled).
 - Explanations (rule + score) recorded per inferred panel.
 - Tests: an unknown product renders; each reference entity without its Sutra stays usable (golden).
 - Docs: `docs/architecture/INFERENCE.md`.
 
 ## W7 — Engine pipeline & entity graph
-- `CommandParser` (`config/mnemonics.yaml`); `SuggestionService` + per-plugin `HitIndex` for type-ahead (mnemonics, recents, parallel `SourcePlugin.search` under a 30 ms budget).
+- `CommandParser` (mnemonics from each pack's `pack.yaml`); `SuggestionService` + per-plugin `HitIndex` for type-ahead (mnemonics, recents, parallel `SourcePlugin.search` under a 30 ms budget).
 - `ViewPipeline` (ARCHITECTURE §4), `LayoutResolver` with Caffeine caches, parallel `Binder`, `ViewModel` records and a streaming serializer.
-- `drishti-graph`: `ReferenceCatalog` (`config/references.yaml`), `LinkResolver` with a deadline and pending placeholders, badges, reverse lookups.
+- `drishti-graph`: `ReferenceCatalog` (the packs' `graph:`), `LinkResolver` with a deadline and pending placeholders, badges, reverse lookups.
 - `drishti-benchmarks`: JMH for fingerprint, EL, bind and the full pipeline.
 - Tests: golden ViewModels for the 4 entities; a slow link degrades to pending.
 
