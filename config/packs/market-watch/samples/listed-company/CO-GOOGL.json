@@ -1,0 +1,21 @@
+{
+ "companyId": "CO-GOOGL",
+ "ticker": "GOOGL",
+ "name": "Alphabet Inc.",
+ "aliases": [
+  "Google",
+  "GOOGL"
+ ],
+ "aliasText": "Google, GOOGL",
+ "exchange": "Nasdaq",
+ "sector": "Communication Services",
+ "country": "US",
+ "quoteId": "QUOTE-GOOGL",
+ "newsId": "NEWS-Alphabet",
+ "newsAllId": "NEWS-Alphabet~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

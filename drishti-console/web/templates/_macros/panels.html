@@ -18,6 +18,7 @@
 
 {% macro cell_text(c) -%}
 {%- if c.link -%}<a class="lnk" href="/v/{{ c.link.kind }}/{{ c.link.id }}">{{ c.text }}</a>
+{%- elif c.text is string and (c.text.startswith('https://') or c.text.startswith('http://')) and ' ' not in c.text -%}<a class="lnk ext" href="{{ c.text }}" target="_blank" rel="noopener noreferrer nofollow" title="{{ c.text }}">{{ c.text }}</a>
 {%- else -%}{{ c.text }}{%- endif -%}
 {%- endmacro %}
 

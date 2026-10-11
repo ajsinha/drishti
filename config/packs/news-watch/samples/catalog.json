@@ -1,0 +1,92 @@
+[
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-FED",
+  "title": "TOPIC-FED",
+  "subtitle": "Central bank · Federal Reserve · Fed, FOMC, Powell"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-ECB",
+  "title": "TOPIC-ECB",
+  "subtitle": "Central bank · European Central Bank · ECB, Lagarde"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-BOE",
+  "title": "TOPIC-BOE",
+  "subtitle": "Central bank · Bank of England · BoE"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-BOJ",
+  "title": "TOPIC-BOJ",
+  "subtitle": "Central bank · Bank of Japan · BoJ"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-INFLATION",
+  "title": "TOPIC-INFLATION",
+  "subtitle": "Theme · inflation · CPI, consumer prices"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-RATES",
+  "title": "TOPIC-RATES",
+  "subtitle": "Theme · interest rates · rate cut, rate hike, rates"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-OIL",
+  "title": "TOPIC-OIL",
+  "subtitle": "Theme · oil prices · crude, Brent, oil"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-BITCOIN",
+  "title": "TOPIC-BITCOIN",
+  "subtitle": "Theme · bitcoin · crypto, cryptocurrency"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-AI",
+  "title": "TOPIC-AI",
+  "subtitle": "Theme · artificial intelligence · AI, machine learning"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-CLIMATE",
+  "title": "TOPIC-CLIMATE",
+  "subtitle": "Theme · climate change · global warming, emissions, climate"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-INDIA",
+  "title": "TOPIC-INDIA",
+  "subtitle": "Country · India · Indian, New Delhi"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-GERMANY",
+  "title": "TOPIC-GERMANY",
+  "subtitle": "Country · Germany · German, Berlin"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-BRAZIL",
+  "title": "TOPIC-BRAZIL",
+  "subtitle": "Country · Brazil · Brazilian, Brasilia"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-DEUTSCHE-BANK",
+  "title": "TOPIC-DEUTSCHE-BANK",
+  "subtitle": "Company · Deutsche Bank · Deutsche"
+ },
+ {
+  "kind": "news-topic",
+  "id": "TOPIC-TOYOTA",
+  "title": "TOPIC-TOYOTA",
+  "subtitle": "Company · Toyota · トヨタ, Toyota Motor"
+ }
+]

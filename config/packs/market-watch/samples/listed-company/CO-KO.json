@@ -1,0 +1,21 @@
+{
+ "companyId": "CO-KO",
+ "ticker": "KO",
+ "name": "The Coca-Cola Company",
+ "aliases": [
+  "Coke",
+  "Coca Cola"
+ ],
+ "aliasText": "Coke, Coca Cola",
+ "exchange": "NYSE",
+ "sector": "Consumer Staples",
+ "country": "US",
+ "quoteId": "QUOTE-KO",
+ "newsId": "NEWS-Coca-Cola",
+ "newsAllId": "NEWS-Coca-Cola~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

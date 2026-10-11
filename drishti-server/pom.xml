@@ -41,6 +41,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-news</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-yfinance</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-activemq</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rabbitmq</artifactId></dependency>

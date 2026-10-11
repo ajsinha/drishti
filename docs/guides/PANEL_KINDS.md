@@ -36,6 +36,8 @@ Every box on a Drishti screen is a **panel**, and every panel is one of twenty-o
 - Operations: [timeline](#timeline), [markdown](#markdown)
 - [Common mistakes and their problem codes](#common-mistakes-and-their-problem-codes)
 
+A cell whose text is a web address (`https://...` or `http://...`, no spaces) is drawn as a link that opens in a new tab (`rel="noopener noreferrer nofollow"`), cut with an ellipsis, with the whole address as its title; the headlines of the news connector use it.
+
 ## Choosing a kind
 
 | Your data looks like | Use | Rather than |

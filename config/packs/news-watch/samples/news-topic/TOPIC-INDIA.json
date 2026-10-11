@@ -1,0 +1,18 @@
+{
+ "topicId": "TOPIC-INDIA",
+ "name": "India",
+ "category": "Country",
+ "aliases": [
+  "Indian",
+  "New Delhi"
+ ],
+ "aliasText": "Indian, New Delhi",
+ "edition": "default",
+ "newsId": "NEWS-India",
+ "newsAllId": "NEWS-India~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

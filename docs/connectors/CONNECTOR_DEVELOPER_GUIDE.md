@@ -39,12 +39,13 @@ format, live reload and the Admin page are in [CONNECTOR_FILES.md](CONNECTOR_FIL
 6. [Configuration binding](#configuration-binding)
 7. [TLS for a connector: the shared module](#tls-for-a-connector-the-shared-module)
 8. [Reconnecting and failures](#reconnecting-and-failures)
-9. [Testing with drishti-testkit](#testing-with-drishti-testkit)
-10. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
-11. [The shipped connectors](#the-shipped-connectors)
-12. [Combining connectors](#combining-connectors)
-13. [Operating connectors](#operating-connectors)
-14. [Troubleshooting](#troubleshooting)
+9. [Connectors that compute data on demand](#connectors-that-compute-data-on-demand)
+10. [Testing with drishti-testkit](#testing-with-drishti-testkit)
+11. [A worked example: the dayfolder plugin](#a-worked-example-the-dayfolder-plugin)
+12. [The shipped connectors](#the-shipped-connectors)
+13. [Combining connectors](#combining-connectors)
+14. [Operating connectors](#operating-connectors)
+15. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -220,6 +221,8 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 | JSON objects in a bucket (S3, MinIO, Ceph) | [`s3`](#s3) | the `file` layout in object storage, dated by folder | cost of listing large buckets; reads cached `cache-seconds` |
 | a total or summary of another kind (a book's P&L from its trades) | `derived` ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#derived-kinds-entities-computed-from-other-kinds)) | computed by the server from the other kind, through whichever connectors serve it | reads every member once per `refresh`; keep `max-scan` above the member count |
 | public rates and FX | [`feed`](#feed) | NY Fed SOFR, ECB €STR and FX, US Treasury curve, FRED; switched on by one variable each | needs internet (or a mirror); FRED needs a free key |
+| headlines about a named entity, computed on demand | [`news`](#news) | Google News RSS, filtered, de-duplicated and cached per name; nothing stored | needs internet; names leave the network; off by default |
+| a quote and price history for a ticker, computed on demand | [`yfinance`](#yfinance) | Yahoo Finance's unofficial chart endpoint; samples and internal demos only | needs internet; unofficial and restricted; off by default |
 
 ### What each connector can do
 
@@ -228,6 +231,7 @@ Whichever you choose, it is configured as a connector file (`config/connectors/<
 | `demo` | no | yes | yes | yes | — | — |
 | `file` | yes, by folder | no | yes | yes (JSON lines) | — | — |
 | `rest` | no | no | no | no | — | — |
+| `news`, `yfinance` | no (computed now) | no | only names or symbols already asked for | no | — | a bounded in-memory cache |
 | `jdbc` query mode | when a query uses `:asOf` | no | no | no | a small pool | — |
 | `jdbc` table mode | yes (`snapshot`/`effective`) | no | yes | yes | a small pool | — |
 | `delta` | yes (`snapshot`/`effective`, *known at*) | no | yes | yes | — | read cache in memory |
@@ -765,9 +769,48 @@ you know what you hold. How each shipped connector does it:
 | `aerospike` | the client tends the cluster in the background (`failIfNotConnected` off); the next refresh refills the catalogue |
 | `activemq` | the failover transport reconnects; its interruptions show in health; a supervisor rebuilds the session after any other failure |
 | `rabbitmq` | a supervisor retries until the first connection succeeds; then the client's automatic recovery reconnects and re-subscribes (a consumer the broker cancels, `DOWN: consumer cancelled on <queue>`, is not re-subscribed until a restart) |
-| `delta`, `file`, `rest`, `s3`, feeds | nothing long-lived to lose: each call reads or connects afresh |
+| `delta`, `file`, `rest`, `s3`, feeds, `news`, `yfinance` | nothing long-lived to lose: each call reads or connects afresh |
 
 While a store is down its reads fail (views say which source failed) and `health` reports `DOWN: … (reconnecting)`.
+
+---
+
+## Connectors that compute data on demand
+
+A connector does not have to sit in front of a store. `fetch(ref)` is Java code, and what it returns can be **worked out when it is asked
+for**: a web search, a calculation, a call to an in-house service, a join of several systems. Two shipped connectors are written this way
+and are the examples to read: [`news`](NEWS.md) (headlines for the name in the id, from Google News RSS) and [`yfinance`](YFINANCE.md) (a quote
+and price history for the ticker in the id, from Yahoo Finance). Neither has a database, a Delta table or a file behind it.
+
+The pattern, in six rules:
+
+1. **The id is the question.** `NEWS-Federal_Reserve`, `QUOTE-AAPL`. Parse it defensively (length, characters, prefix); an id that is not
+   yours, or names nothing, is `Optional.empty()`, not an error. A pack's document holds the id, and a panel reads the answer with
+   `source: "link($.newsId, 'news')"`.
+2. **Do nothing at `start`.** There is no entity yet, and the world may be unreachable. Read and validate the settings (fail with the
+   setting's name), build the HTTP client, and return. Health is `UP` until a call fails.
+3. **Bound everything.** A timeout on every call, a limit on the bytes read, a limit on the cache. The work runs on a virtual thread
+   and must never run longer than its timeout.
+4. **Cache what is dear to compute**, keyed by what the answer depends on (not by the id when two ids share one expensive call: `NEWS-x` and
+   `NEWS-x~all` share one web call), with a TTL and a maximum size, and make concurrent callers for one key share a single call.
+   Serve an older answer when a refresh fails rather than nothing, and say so in `health()`.
+5. **Fail loudly, retry sensibly.** Throw from `fetch` when the work fails (never return empty, which means "not held" and would tell the
+   view the entity does not exist). Repeat only what waiting can fix (connection errors, timeouts, 429, 5xx) with the shared backoff
+   (`RetryPolicy` from `drishti-common`, the shape of `drishti.retry.*`), and stop at once for the rest (403, an oversized body).
+6. **Treat the answer as hostile.** Parse XML with DOCTYPEs and external entities off; parse JSON for the fields you need and read the
+   wrong type as missing; allow only `http` and `https` links; strip markup from text.
+
+Show the logic in the document. The news connector returns, beside the headlines, the list of steps that chose them and how many each
+dropped (`pipeline`), so a person who wonders why a headline is missing can see which step removed it.
+
+What it costs the rest of the system: a view waits for linked entities only `drishti.graph.link-budget` (40 ms), so the first view of a
+slow computed entity shows its panel as pending, and the next shows it from the cache. Raise the budget if you build pages on such
+connectors ([PERFORMANCE.md](../admin/PERFORMANCE.md)). And data that leaves the network must be said so wherever it is switched on:
+both shipped connectors are `enabled: false` as shipped and name what they send in their documents and in the pack's pages.
+
+Test it without the network: a local `com.sun.net.httpserver.HttpServer` serving canned answers (and a bad answer for every rule above:
+an XXE attempt, an oversized body, a slow response, two 503s then success), and the contract of a source that is not dated. See
+`FakeNewsServer` and `NewsSourcePluginTest` in `plugins/drishti-plugin-news`, and `FakeYahooServer` in `plugins/drishti-plugin-yfinance`.
 
 ---
 
@@ -1178,6 +1221,39 @@ settings: { feed: nyfed-sofr, refresh-minutes: '60' }
 (`FIX-SOFR-NYFED`). **Loader:** none. **Limits:** needs the internet (or a mirror: `url: file://…`); FRED needs a free
 key; a failed fetch keeps the last good data and shows in health. → full reference: [FEEDS_CONNECTOR.md](FEEDS_CONNECTOR.md)
 
+### `news`
+
+**For.** Headlines about a named entity, **computed on demand** from Google News RSS (no key): the id carries the name, the connector
+searches, filters for relevance, drops duplicates and denied publishers, sorts newest first and caches per name. **Use it when** a page
+should show the news about the entity being viewed. It is the example of [a connector that is code, not a store](#connectors-that-compute-data-on-demand).
+
+```yaml
+# config/connectors/news.yaml  (written from the news-watch pack's template, enabled: false)
+plugin: news
+enabled: true
+kinds: [news]
+settings: { relevance: title, max-items: '15', cache-ttl-seconds: '600', deny-sources: "Some Spam Site", aliases.Federal_Reserve: "Fed, FOMC" }
+```
+
+**Layout.** Ids `NEWS-<name with underscores>[@lang-CC][~all]`. **Loader:** none. **Limits:** needs the internet; the entity names are sent to
+Google (off as shipped); the first view of a name is pending under the 40 ms link budget. → full reference: [NEWS.md](NEWS.md)
+
+### `yfinance`
+
+**For.** A quote and recent price history for a ticker, **computed on demand** from Yahoo Finance's public chart endpoint (no key). **Use it
+for** samples and internal demonstrations only: the endpoint is unofficial and Yahoo's terms restrict its use.
+
+```yaml
+# config/connectors/yfinance.yaml  (written from the market-watch pack's template, enabled: false)
+plugin: yfinance
+enabled: true
+kinds: [quote]
+settings: { range: 6mo, interval: 1d, cache-ttl-seconds: '60' }
+```
+
+**Layout.** Ids `QUOTE-<symbol>`. **Loader:** none. **Limits:** needs the internet; not for production or redistribution; an unknown symbol is not
+held. → full reference: [YFINANCE.md](YFINANCE.md)
+
 ### `demo`
 
 **For.** The enabled packs' sample entities (`config/packs/<pack>/samples/`), so everything works with nothing installed.
@@ -1480,6 +1556,7 @@ curl -s http://localhost:18480/api/v1/admin/health | jq '.packs[] | {name, conne
 | `activemq` | `DOWN: not started`, `DOWN: connecting to <broker-url>`, `UP`, `DOWN: connection to the broker lost (reconnecting)`, `DOWN: <message> (reconnecting)`, `DOWN: <Exception>: <message> (reconnecting)`, `DOWN: <reason> (messages are not acknowledged and come again)`, `UP (state store over its budget: X of Y GB; the oldest entities are being evicted)`, `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)` |
 | `rabbitmq` | `DOWN: not started`, `DOWN: <Exception>: <message> (retrying)`, `UP`, `DOWN: connection lost (recovering)`, `DOWN: consumer cancelled on <queue>`, and the same three state-store texts as `activemq` |
 | `s3` | `UP`, `DOWN: <error> (retrying)` |
+| `news`, `yfinance` | `UP` (nothing is fetched at start), `DOWN: <reason> (tried again on the next request)` after a failed call, `UP` after the next success |
 | `feed` | `UP`, `DOWN: <Exception>: <message>`, `DOWN: the feed returned no data (serving the last data)`, `DOWN: the feed returned no data` (`DOWN: not fetched yet` only before `start` has run: the first fetch is inside it) |
 
 Every connector recovers without restarting Drishti, and every one starts even when its store is down (see

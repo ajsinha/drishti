@@ -1,0 +1,22 @@
+{
+ "companyId": "CO-META",
+ "ticker": "META",
+ "name": "Meta Platforms, Inc.",
+ "aliases": [
+  "Meta",
+  "Facebook",
+  "Instagram"
+ ],
+ "aliasText": "Meta, Facebook, Instagram",
+ "exchange": "Nasdaq",
+ "sector": "Communication Services",
+ "country": "US",
+ "quoteId": "QUOTE-META",
+ "newsId": "NEWS-Meta_Platforms",
+ "newsAllId": "NEWS-Meta_Platforms~all",
+ "_meta": {
+  "source": "reference",
+  "generation": 1,
+  "live": false
+ }
+}

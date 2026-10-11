@@ -1,0 +1,59 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: news
+version: 1
+description: "The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed."
+match: { kind: news, priority: 10 }
+title: { pill: "News · Headlines", id: $.newsId }
+strip:
+  - { label: Entity, bind: $.entity }
+  - { label: Edition, bind: $.edition }
+  - { label: Relevance filter, bind: $.relevanceFilter }
+  - { label: Headlines, bind: $.count, fmt: amount0, emphasis: true }
+  - { label: Fetched, bind: $.fetchedAt }
+panels:
+  - id: headlines
+    kind: table
+    title: "Headlines, newest first"
+    key: F2
+    rows: $.items
+    columns:
+      - { label: Published, bind: "@.published" }
+      - { label: Source, bind: "@.source" }
+      - { label: Headline, bind: "@.title" }
+      - { label: Link, bind: "@.link" }
+  - id: bySource
+    kind: hbar
+    title: "Headlines by source"
+    key: F3
+    area: right
+    rows: $.bySource
+    label: source
+    value: count
+    fmt: amount0
+  - id: pipeline
+    kind: table
+    title: "How the headlines were chosen"
+    key: F4
+    area: right
+    rows: $.pipeline
+    columns:
+      - { label: Step, bind: "@.step" }
+      - { label: Kept, bind: "@.kept", fmt: amount0 }
+      - { label: Dropped, bind: "@.dropped", fmt: amount0 }
+  - { id: source, kind: kv, title: Data source and terms, area: right, rows: $.provenance }
+  - { id: built, kind: provenance, title: How this view was built }
+keys: { F9: raw }

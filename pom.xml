@@ -60,6 +60,8 @@
     <module>plugins/drishti-plugin-iceberg</module>
     <module>plugins/drishti-plugin-duckdb</module>
     <module>plugins/drishti-plugin-feeds</module>
+    <module>plugins/drishti-plugin-news</module>
+    <module>plugins/drishti-plugin-yfinance</module>
     <module>plugins/drishti-plugin-kafka</module>
     <module>plugins/drishti-plugin-activemq</module>
     <module>plugins/drishti-plugin-rabbitmq</module>
@@ -137,6 +139,8 @@
       <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId><version>${duckdb.version}</version></dependency>
       <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId><version>${arrow-format.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-news</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-yfinance</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-kafka</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-rest</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-jdbc</artifactId><version>${project.version}</version></dependency>

@@ -1,0 +1,79 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: news-topic
+version: 1
+description: "A topic and the news about it: headlines (newest first) with their publishers and links, a count by source, and how the headlines were chosen. The headlines are computed on demand by the news connector."
+match: { kind: news-topic, priority: 10 }
+title: { pill: "News · Topic", id: $.topicId }
+strip:
+  - { label: Topic, bind: $.name }
+  - { label: Category, bind: $.category }
+  - { label: Other names, bind: $.aliasText }
+  - { label: Edition, bind: $.edition }
+  - { label: Headlines, bind: "link($.newsId, 'news')" }
+panels:
+  - id: headlines
+    kind: table
+    title: "Headlines, newest first"
+    code: NEWS
+    key: F2
+    source: "link($.newsId, 'news')"
+    rows: $.items
+    columns:
+      - { label: Published, bind: "@.published" }
+      - { label: Source, bind: "@.source" }
+      - { label: Headline, bind: "@.title" }
+      - { label: Link, bind: "@.link" }
+  - id: bySource
+    kind: hbar
+    title: "Headlines by source"
+    key: F3
+    area: right
+    source: "link($.newsId, 'news')"
+    rows: $.bySource
+    label: source
+    value: count
+    fmt: amount0
+  - id: pipeline
+    kind: table
+    title: "How the headlines were chosen"
+    key: F4
+    area: right
+    source: "link($.newsId, 'news')"
+    rows: $.pipeline
+    columns:
+      - { label: Step, bind: "@.step" }
+      - { label: Kept, bind: "@.kept", fmt: amount0 }
+      - { label: Dropped, bind: "@.dropped", fmt: amount0 }
+  - id: everything
+    kind: table
+    title: "Everything the feed returned for this name (no relevance filter)"
+    key: F5
+    source: "link($.newsAllId, 'news')"
+    rows: $.items
+    columns:
+      - { label: Published, bind: "@.published" }
+      - { label: Source, bind: "@.source" }
+      - { label: Headline, bind: "@.title" }
+      - { label: Link, bind: "@.link" }
+  - id: note
+    kind: markdown
+    title: "About these headlines"
+    area: right
+    text: "Sample pack. Headlines are fetched when this page opens, by the news connector, from Google News. While the connector is off (its shipped state) the tables above stay empty: enable it in Admin, Connectors (news). Turning it on sends the name of this topic to Google."
+  - { id: built, kind: provenance, title: How this view was built }
+  - { id: refs, kind: links, title: Linked entities, code: REFS, area: right }
+keys: { F7: "link($.newsId, 'news')", F9: raw }

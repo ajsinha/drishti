@@ -109,3 +109,5 @@ body {
 .tbl td a.lnk, .tbl td a[href^="/v/"] { text-decoration: underline dotted; text-underline-offset: 3px;
   text-decoration-color: color-mix(in srgb, currentColor 55%, transparent); }
 .tbl td a.lnk:hover, .tbl td a[href^="/v/"]:hover { text-decoration-style: solid; }
+/* A web address in a cell (a headline's link) opens in a new tab and is cut with an ellipsis; the full address is its title. */
+.tbl td a.lnk.ext { display: inline-block; max-width: 18em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }

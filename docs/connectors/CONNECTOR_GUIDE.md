@@ -67,6 +67,8 @@ Highest first (the full rules are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md#pre
 | on Kafka, ActiveMQ or RabbitMQ (live) | `kafka`, `activemq`, `rabbitmq` | [KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md), [ACTIVEMQ_CONNECTOR.md](ACTIVEMQ_CONNECTOR.md), [RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md) |
 | JSON objects in a bucket (S3, MinIO, Ceph) | `s3` | [S3_CONNECTOR.md](S3_CONNECTOR.md) |
 | public rates and FX | `feed` | [FEEDS_CONNECTOR.md](FEEDS_CONNECTOR.md) |
+| headlines for a named entity, computed on demand (code, not a store) | `news` | [NEWS.md](NEWS.md) |
+| a quote and price history for a ticker, computed on demand (samples only) | `yfinance` | [YFINANCE.md](YFINANCE.md) |
 | the packs' sample entities | `demo` (runs as itself, no file) | [DEMO_CONNECTOR.md](DEMO_CONNECTOR.md) |
 
 The comparison of what each can do (history, live ticks, search, reverse lookups) and the rules of thumb are in

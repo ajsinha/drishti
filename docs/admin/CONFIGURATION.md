@@ -510,7 +510,7 @@ drishti:
 | `connectors-poll` | `5s` | How often the files are looked at: the fallback when file events are unavailable, and a safety net beside them. |
 | `connectors-drain` | `3s` | A connector being restarted or stopped stays open this long so that reads in flight finish. |
 | `connectors-generate` | `true` | At the first start, write a connector file from the pack's template when no file of that name exists. Never overwrites a file. `false`: packs' templates are used in memory only and nothing is written. |
-| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`). Run a plugin as often as you like. |
+| `connectors.<name>.plugin` | required (**deprecated**: put the connector in `connectors-dir`) | A named instance of a plugin (`delta`, `jdbc`, `file`, `rest`, `kafka`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `activemq`, `rabbitmq`, `s3`, `feed`, `news`, `yfinance`). Run a plugin as often as you like. |
 | `connectors.<name>.enabled` | `true` | Switch one connector off without deleting it. |
 | `connectors.<name>.kinds` | what the plugin reports | Restrict or declare the kinds it serves. |
 | `connectors.<name>.settings.*` | per plugin | Settings for this instance. `source-name` defaults to the connector's name. |
@@ -1713,6 +1713,10 @@ refetches. `stale-after` does not notice a publisher that stopped publishing, si
 new data. Full detail: [FEEDS_CONNECTOR.md](../connectors/FEEDS_CONNECTOR.md).
 
 TLS for a mirror on a private CA: `url: https://...` with the shared [`tls.*`](#tls--tls-for-connectors) settings ([FEEDS_CONNECTOR.md, Security](../connectors/FEEDS_CONNECTOR.md#10-security)).
+
+### `news` and `yfinance` — connectors that compute data on demand
+
+Nothing is stored: each document is worked out when asked for (the news about the name in the id; the quote of the ticker in the id) and cached for a short time. Both are off as shipped (`enabled: false`), because the names and tickers they are asked about leave the network (to Google and to Yahoo), and the Yahoo endpoint is unofficial and restricted to samples and internal demonstrations. Every setting, its default and the failure behaviour are in [NEWS.md](../connectors/NEWS.md#6-settings) and [YFINANCE.md](../connectors/YFINANCE.md#6-settings). Common to both: `base-url`, `user-agent`, `timeout-seconds` (10), `cache-ttl-seconds` (600 news, 60 quotes), `cache-max-entities` / `cache-max-symbols`, `max-bytes` (2,000,000), `retries` (2), `retry-initial`, `retry-max`, `retry-factor`, `retry-jitter`, `id-prefix`, `kind`, `source-name`, and the shared `tls.*`. News only: `language`, `country`, `query-template`, `relevance`, `allow-sources`, `deny-sources`, `aliases.<Name>`, `max-items`. Yahoo only: `range`, `interval`. Pages that read them through a panel's `source:` need `drishti.graph.link-budget` raised above the 40 ms default (a web call is slower), or show the panel as pending on the first view.
 
 ### `derived` — kinds computed from other kinds
 
