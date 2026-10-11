@@ -273,6 +273,10 @@ makes. An alert never judges, and never says, a figure you may not see; a number
 
 ![The alert form](img/bi-alerts/alert-form.png)
 
+On a phone the form is one column, with finger-sized controls:
+
+![The alert form on a phone, 390 px wide](img/bi-alerts/alert-form-phone-390.png)
+
 ### 4.1 What can be watched
 
 | Source | You give | The number is | Live (on change) |
