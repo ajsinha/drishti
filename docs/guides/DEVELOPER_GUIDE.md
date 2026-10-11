@@ -59,12 +59,13 @@ inherits from `spring-boot-starter-parent`, which aligns library versions, so th
 | `drishti-engine` | `engine` | Sources and routing, the view pipeline, binding, the ViewModel, commands and type-ahead, search, history, impact, business dates, live topics. | `ViewPipeline`, `source.SourceRegistry`, `source.SourceRouter`, `bind.Binder`, `view.ViewModel`, `view.PanelData`, `live.TopicHub`, `live.ViewStream`, `command.CommandParser`, `search.StructuredSearch` |
 | `drishti-identity` | `identity` | Users, passwords, roles, lockout, preferences, pack switches and the audit trail, in SQLite or PostgreSQL through JPA. | `UserService`, `JpaUserStore`, `RoleStore`, `PackStateStore`, `JpaAuditLog`, `IdentityDatabase`, `db.IdentityRepositories` |
 | `drishti-packs` | `packs` | Loads the enabled packs and turns them into the lowest-precedence property source. | `PackLoader`, `PackLineage`, `PackEnvironmentPostProcessor` (registered in `META-INF/spring.factories`) |
+| `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
 | `drishti-diskcache` | `diskcache` | A disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state. | `DiskCache` |
 | `drishti-messaging` | `messaging` | The latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `MessageStateSource` |
 | `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop: local disk through `java.nio` (Windows paths included), S3 through the AWS SDK, Parquet through parquet-java with its own input files and codecs. Read-only. Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
-| `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance. | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance` |
-| `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest` |
+| `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`ai`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `embed`, `explain`, `layout`, `loads`, `pivot`, `registry`, `reports`). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance` |
+| `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
 | `drishti-benchmarks` | `benchmarks` | JMH benchmarks of the hot paths (fingerprint, Rachana-EL, formats, cold inference). | `HotPathBenchmark` |
 
 ### 1.2 Source plugins
@@ -101,6 +102,7 @@ Compile-scope dependencies, from the POMs:
 ```text
 drishti-api                       (nothing internal; no Spring)
 └── drishti-common
+    ├── drishti-ai                 (api, common; Spring AI)
     ├── drishti-rachana
     │   ├── drishti-inference ──┐
     │   └── drishti-graph ──────┴── drishti-engine
@@ -111,33 +113,36 @@ drishti-diskcache                 (nothing internal)
 drishti-messaging                 (api, diskcache)
 drishti-deltalake                 (nothing internal)
 plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake)
-drishti-server                    (engine, identity, packs, and all seventeen plugins)
+drishti-server                    (engine, identity, packs, ai, and all seventeen plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```
 
 `ArchitectureRulesTest` keeps these one-way (see [§3.3](#33-architecture-rules)): nothing below the engine may see
-`engine` or `server`, the engine may not see `server`, and `api` sees nothing internal.
+`engine` or `server`, the engine may not see `server`, `api` sees nothing internal, and `ai` sees only `api` and `common`.
+The reactor also builds `docs/guides/examples/connector`, the worked example plugin of [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
 
 ### 1.4 Everything else
 
 | Folder | What is in it |
 |---|---|
-| `drishti-console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`, `competitive.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`) |
-| `config/packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/`, `config/` (formats, semantics, help, workspaces), `guides/`, and `python/` (Calc snippets). Fourteen ship. |
+| `drishti-console/` | The web console: `run_drishti_web.py` (entry point), `core/` (app factory, backend client, auth, business date, packs, config loader, `ai/` for the console's LLM clients, and one module per feature such as `forms.py`, `bi.py`, `controls.py`, `calc.py`, `retry.py`), `routes/` (one router per area), `web/templates/` (Jinja2, with `_macros/panels.html` holding one macro per panel kind), `web/embed/` and `web/elements/` (Drishti Elements, the `<drishti-view>` web component), `web/static/` (`js/`, `css/`, `img/`, and third-party code under `vendor/`), `web/guides/` (in-app guides), `config/` (`application.yaml`, `help.yaml`, `workspaces.yaml`, `competitive.yaml`), `tests/` (pytest, with a fake backend in `conftest.py`) |
+| `config/packs/<name>/` | One domain pack: `pack.yaml`, `sutras/`, `samples/`, `config/` (formats, semantics, help, workspaces), `guides/`, and `python/` (Calc snippets). Sixteen ship (`banking-core`, `climate-risk`, `counterparty-risk`, `economics`, `finance`, `genomics`, `liquidity-risk`, `logistics`, `market-data`, `market-risk`, `market-watch`, `news-watch`, `operational-risk`, `politics-society`, `retail-banking`, `trading`). |
 | `tools/packgen/` | Pack generators: `banking/` (five banking packs from one taxonomy, with their Calc snippets from `snippets/<pack>/*.py`), `common/packbuild.py` (the shared builder), and one `make.py` per other generated pack (`climate`, `economics`, `genomics`, `liquidity`, `oprisk`, `politics`, `retail`) |
 | `tools/load-delta.sh`, `tools/load-postgres.sh`, `tools/load-aerospike.sh` | Build or load the demo data in each store, small (the samples) to a million trades a day (`--trades N --days D`); see [DEMO_DATA.md](../connectors/DEMO_DATA.md) |
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (Delta Lake writer), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for scale tests: `--trades`, `--days`), `stream.py` (Kafka ticker), plus `test_samplegen.py` and `test_layout.py` |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>` (one store, one size: container, load, server, measure, clean up), `measure.py` (the HTTP measurements, one JSON line per measure), `report.py` (Markdown tables, linear fits, labelled extrapolations); `results/` keeps each run's raw JSON lines; see [SCALE_BENCHMARK.md](../admin/SCALE_BENCHMARK.md) |
 | `tools/lake/` | `maintain.py`: Delta Lake retention, compaction (layout-preserving for laid-out tables), checkpoints, vacuum and `relayout`; `test_maintain.py` |
-| `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack new|check|about-check|publish|install`, `data ingest|load`, `server health|packs`, `design ...`, `docs shots`; `test_drishti_cli.py` runs in the drill. See [CLI_GUIDE.md](CLI_GUIDE.md) |
+| `tools/drishti.py` | The one command line over the tools below and the server's REST: `sutra`, `pack ...` (`new`, `make`, `check`, `about-check`, `diff`, `i18n`, `publish`, `install`, `regenerate`, `catalogue`), `data ingest|load|profile`, `server health|packs|smoke`, `connector ...`, `bi ...`, `view get|explain`, `design ...`, `doctor`, `completion`, `docs shots`; the `test_cli_*.py` and `test_drishti_cli.py` suites cover it (not all run in the drill; see §2.6). See [CLI_GUIDE.md](CLI_GUIDE.md) |
+| `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md), [CLI_GUIDE.md](CLI_GUIDE.md)) |
+| `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/` | The real-data builds of the economics and politics-society packs ([REAL_DATA.md](REAL_DATA.md)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`); a sample host page for Drishti Elements; the PowerShell starters ([WINDOWS.md](WINDOWS.md)) |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
-| `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
+| `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `fetch-duckdb-wasm.sh` (DuckDB-Wasm for the BI engine, into `vendor/duckdb-wasm/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (load JSON lines), `serverpacks.py` (`server packs deploy|history|rollback|datasource`), `serverconnectors.py` (`connector list|get|apply|delete|test|plugins|enable|disable|reset|history`), `doctor.py` (`drishti.py doctor`), `completion.py` (shell completion), `viewcmd.py` (`view get|explain`), `dataprofile.py` (`data profile`), `license_headers.py` (check or insert the copyright header), `rachana/md_to_yaml.py` (converts Markdown Sutras, `*.sutra.md`, read before 1.11, to `*.sutra.yaml`: `python3 tools/rachana/md_to_yaml.py <file-or-folder> --delete`), `load-aerospike.sh` |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | Runtime and generated data, all git-ignored: `delta/` (the sample lake, `make_data.py --lake`), `feeds/` (`make_data.py`), `banking.jsonl` (`make_data.py --jsonl`, for Aerospike), `identity/` (the SQLite database), `governance/` (Sutra proposals), `reports/` |
 | `docs/` | These documents, by audience: `guides/` (quickstart, user, developer, API, Rachana and troubleshooting guides), `connectors/` (the connector and plugin guides, a design document per store, demo data), `admin/` (operations, configuration, users, performance, and the runbooks under `admin/runbooks/`), `architecture/` (architecture, design notes and the ADRs under `architecture/adr/`); `README.md` is the index; reference mockups and logos under `requirements/` |
-| `.github/workflows/fast.yml` | CI: `./mvnw -B -q verify` and the header check on Java 21 and 25 (`tools/drill.sh` runs the tests on both too); `pytest` for the console on Python 3.13 |
+| `.github/workflows/fast.yml`, `windows.yml` | CI: `fast.yml` runs `./mvnw -B -q verify` and the header check on Java 21 and 25 (`tools/drill.sh` runs the tests on both too) and `pytest` for the console on Python 3.13; `windows.yml` builds on Windows, runs the native Delta engine, the Delta connector and server tests, and asks a server on a small lake for a view, a search and a past date |
 
 ---
 
@@ -225,7 +230,7 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 
 You should see `Uvicorn running on http://127.0.0.1:17480`. `drishti-console/requirements.txt` holds FastAPI, Uvicorn,
 Jinja2, httpx, PyYAML, Markdown and pytest. Without uv, `python3 -m venv drishti-console/.venv` and
-`drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same.
+`drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt` do the same. `requirements.txt` also holds `cryptography` and, optionally, `brotli`.
 
 For Calc (Python on a view, `Alt+C`), install its runtime once: `tools/fetch-pyodide.sh` (about 340 MB downloaded to
 `~/.cache/drishti/`, 53 MB kept; see [PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)). Without it the
@@ -319,7 +324,7 @@ is a `*.md` file or is a `help.yaml`, the drill runs in docs mode by itself; oth
      (`wait()` and `should_reload()` in `drishti-console/tests`).
    - **The Python tool tests**: every generator that supports `--check` (`config/packs/*/tools/make_*.py`,
      `tools/packgen/*/make*.py`: generated pack content must match what the generator writes now), the `unittest`
-     suites of `tools/`, and, if `uv` is installed, the lake writer and maintenance tests with `deltalake`, `pyarrow` and
+     suites of `tools/` (`samplegen`, `packreg`, `test_sutragen`, `test_ingest_jsonl`, `test_drishti_cli`, `test_pack_bundle`, `test_packmake`, `test_pack_authoring`, `test_cli_extras`, `test_pack_deploy`; `test_cli_bi.py`, `test_cli_connectors.py`, `test_cli_loads.py`, `test_pack_form.py` and `test_schemapack.py` exist but the script does not list them yet, so run them by hand with `python3 -m unittest -q tools/<file>`), and, if `uv` is installed, the lake writer and maintenance tests with `deltalake`, `pyarrow` and
      `pyyaml` supplied by `uv run --with`, each under a 10-minute `timeout` (a hung test fails the drill, exit 124).
      (Tools that start worker processes after pyarrow or deltalake have started threads must spawn them, never fork:
      `bulk_trades.py` uses a `spawn` pool.)
@@ -579,6 +584,7 @@ excluded) with ArchUnit:
 | `engineDoesNotSeeServer` | `engine` may not use `server`. |
 | `controllersOnlyInServer` | `@RestController` classes live only in `com.ash.drishti.server..`. |
 | `noFieldInjection` | No field is annotated `@Autowired`. Use constructor injection. |
+| `aiLayerDependsOneWay` | Nothing in `com.ash.drishti.ai..` may use `engine`, `server`, `identity`, `rachana` or `packs`: the AI layer sees only the SPI and `common`. |
 | `noSerializable` | No class implements `java.io.Serializable`, except enums, throwables and JPA `@Embeddable` keys (JPA requires composite keys to be serialisable). |
 
 Tests may use `@Autowired` fields (`@Autowired MockMvc mvc;`), because test classes are not analysed.
@@ -629,8 +635,8 @@ The identity database (`drishti-identity`) is reached only through Spring Data J
 
 ### 3.6 The front end is vendored
 
-The console uses Bootstrap, Bootstrap Icons, ECharts (and ECharts GL) and CodeMirror (with its Python mode), copied
-under `drishti-console/web/static/vendor/`. There is no npm, no build step and no CDN (ADR-006). The Content Security Policy
+The console uses Bootstrap, Bootstrap Icons, ECharts (and ECharts GL), CodeMirror (with its Python mode), FINOS Perspective, DuckDB-Wasm and Apache Arrow JS (the last three for Rūpaka BI), copied
+under `drishti-console/web/static/vendor/`; `vendor/VENDOR.md` lists each library with its version, licence, size and whether the repository holds it. Pyodide and DuckDB-Wasm are installed by script, not committed (below). There is no npm, no build step and no CDN (ADR-006). The Content Security Policy
 in `drishti-console/core/app.py` is:
 
 ```text
@@ -640,7 +646,7 @@ connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'
 
 One file has its own policy: Calc's worker, `/static/js/calc-worker.js`, is served with
 `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/`, so it alone may compile WebAssembly
-(Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's session). Pyodide itself is the one vendored component **not in git** (53 MB): `tools/fetch-pyodide.sh` downloads a
+(Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's session). Pyodide (53 MB) and DuckDB-Wasm (36 MB, `tools/fetch-duckdb-wasm.sh`, pinned SHA-256) are the vendored components **not committed**. For Pyodide, `tools/fetch-pyodide.sh` downloads a
 pinned release, checks its SHA-256 and unpacks what Calc needs into `drishti-console/web/static/vendor/pyodide/`
 (git-ignored); the console serves it at `/pyodide/<version>/` ([PYTHON_CALC.md](PYTHON_CALC.md#12-installing-the-python-runtime)).
 
@@ -1453,7 +1459,7 @@ plugins' settings).
 | Spring and HTTP | `drishti-server` | `@SpringBootTest` + `@AutoConfigureMockMvc`, properties set per test class | `ApiTest`, `SecurityTest`, `CacheAdminTest`, `IdentityApiTest`, `WorkspaceApiTest`, `StructuredSearchTest`, `LiveTest` |
 | Whole pipeline | `drishti-server` | `ViewPipeline` from the context, real packs | `ViewPipelineTest` (the four mockups, value by value), `BankingPacksTest`, `DomainPacksTest`, `ImperfectDataTest`, `BusinessDateTest` |
 | Real services | plugins, identity | Testcontainers, skipped without Docker ([§2.3](#23-tests-that-need-docker)) | `PostgresIdentityStoreTest`, `AerospikeSourcePluginTest`, `RabbitMqOutageTest` |
-| Repository rules | `drishti-it` | ArchUnit and file walks | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest` |
+| Repository rules | `drishti-it` | ArchUnit and file walks | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
 | Documentation | rachana, server | the docs are parsed as code | `DocumentedSutrasTest` (every complete Sutra, a ```` ```yaml ```` block starting `rachana:`, in `docs/`, `drishti-console/web/guides/` and pack guides), `RachanaReferenceExampleTest` (the annotated example in `RACHANA_REFERENCE.md` previews as described), `PackSutrasTest` |
 | Performance gate | `drishti-server` | timed in the test | `ViewPipelineTest.warmViewsStayWellUnderFiftyMillisecondsAtP99`: 300 warm-up views, then 2000 timed; p99 must be under 50ms and the layout cache hit rate above 0.99 |
 | Micro-benchmarks | `drishti-benchmarks` | JMH, run by hand | `HotPathBenchmark` ([PERFORMANCE.md](../admin/PERFORMANCE.md) has the commands) |
@@ -1576,7 +1582,7 @@ The release commit for 1.9.0 (`Release 1.9.0`) shows every file a bump touches.
 2. **Bump the version** everywhere it is written. Find the old version first:
 
    ```bash
-   git grep -n -F '1.18.0' -- '*pom.xml' drishti-console/core/app.py deploy README.md docs
+   git grep -n -F '1.20.0' -- '*pom.xml' drishti-console/core/app.py deploy README.md docs
    ```
 
    | File | What changes |
