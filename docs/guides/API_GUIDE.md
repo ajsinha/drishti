@@ -33,20 +33,45 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 6. [Endpoint reference](#endpoint-reference)
    - [Command line and type-ahead](#command-line-and-type-ahead)
    - [Views](#views)
+   - [Explaining a view](#explaining-a-view)
    - [Raw documents, history and impact](#raw-documents-history-and-impact)
    - [Structured search](#structured-search)
+   - [Search by form (`/forms`)](#search-by-form-forms)
    - [The Pivot tab: panel rows, search pivots, saved pivots](#the-pivot-tab-panel-rows-search-pivots-saved-pivots)
    - [Live streams](#live-streams)
    - [Personal: settings, packs, workspaces, monitors, alerts](#personal-settings-packs-workspaces-monitors-alerts)
+   - [Python in the browser (Calc) and test entities](#python-in-the-browser-calc-and-test-entities)
    - [Catalogue: about, packs, sources, Sutras](#catalogue-about-packs-sources-sutras)
    - [Sutra Studio and governance](#sutra-studio-and-governance)
+   - [Using the shape API](#using-the-shape-api)
    - [Sign-in and user administration](#sign-in-and-user-administration)
+   - [Deploying a pack archive and the pack's connectors](#deploying-a-pack-archive-and-the-packs-connectors)
+   - [Packs from a signed registry](#packs-from-a-signed-registry)
+   - [Connectors (`/api/v1/admin/connectors`)](#connectors-apiv1adminconnectors)
    - [Data loads: telling Drishti a batch landed](#data-loads-telling-drishti-a-batch-landed)
    - [Administration: health and caches](#administration-health-and-caches)
    - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
 7. [The ViewModel in detail](#the-viewmodel-in-detail)
 8. [Error code table](#error-code-table)
-9. [Scripting recipes](#scripting-recipes)
+9. [Business intelligence (Rupaka): `/api/v1/bi`](#business-intelligence-rupaka-apiv1bi)
+10. [Datasets and the query engine: `/api/v1/bi` (phase 2)](#datasets-and-the-query-engine-apiv1bi-phase-2)
+11. [Reports: `/api/v1/bi/reports` (phase 3)](#reports-apiv1bireports-phase-3)
+12. [Boards: `/api/v1/bi/boards` (phase 5)](#boards-apiv1biboards-phase-5)
+13. [Publishing and governance: `/api/v1/bi` (phase 4)](#publishing-and-governance-apiv1bi-phase-4)
+14. [AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`](#ai-and-mcp-apiv1ai-and-apiv1adminai)
+15. [Embedding views in another web application](#embedding-views-in-another-web-application)
+16. [The console's own JSON routes](#the-consoles-own-json-routes)
+17. [Scripting recipes](#scripting-recipes)
+18. [Personal API tokens](#personal-api-tokens)
+19. [A field over time](#a-field-over-time)
+20. [How fresh a view is](#how-fresh-a-view-is)
+21. [Notes (deprecated)](#notes-deprecated)
+22. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
+23. [Comment threads](#comment-threads)
+24. [Shared workspaces](#shared-workspaces)
+25. [Scheduled reports](#scheduled-reports)
+26. [The access log (administrators)](#the-access-log-administrators)
+27. [A phrase as a search](#a-phrase-as-a-search)
 
 ## Before you start
 
@@ -86,8 +111,8 @@ You should see:
 ```json
 {
   "product": "Drishti",
-  "version": "1.18.0",
-  "java": "25.0.4.1 (Ubuntu)",
+  "version": "1.20.0",
+  "java": "21.0.12.1 (Ubuntu)",
   "uptimeSeconds": 6913,
   "securityEnabled": false,
   "sutras": 223
@@ -395,6 +420,8 @@ themselves when an id needs it.
 |---|---|---|
 | `POST` | `/command` | body `{"text": "TRD MX-20000001 <GO>"}` → `{"ref": {"kind", "id"}, "mnemonic"}`; `400 DRS-4001` if the text cannot be read; `403` if the caller may not open the kind |
 | `GET` | `/command/suggest?q=&limit=` | as-of. Up to `limit` suggestions (default `drishti.commands.suggest-limit`, 25; at most 50), filtered to kinds the caller may open. For a caller with [field masks](#field-masks), each entity's `title` and `subtitle` are its view title as the caller sees it (`Rates · Interest rate swap (fixed/float) · •••`), and an entity is offered only when the text typed is in its id or in that subtitle |
+| `GET` | `/command/history` | your recent commands, newest first (the up arrow on the command line): a JSON array of strings; an embedded host never writes it |
+| `GET` · `PUT` | `/command/aliases` | your aliases, short words for longer commands: `{"MYBOOK": "BOOK BOOK-RATES-1"}`. `PUT` replaces the whole set with the body; a word that is a mnemonic or a pack code is refused. Never open to a personal API token (`token-never`) |
 
 The command is what the console's command line sends when you press Enter. The mnemonic (`TRD`) is mapped to
 a kind (`trade`); the id is matched against the configured id patterns. `<GO>` is optional.
@@ -807,6 +834,7 @@ It is kept on the server, so it follows the user to any browser.
 | `PATCH` | `/me/settings` | change only the fields named; `null` resets one; unknown field or bad value → `400 DRS-5001` |
 | `GET` | `/admin/collab/shares?user=&kind=&id=&from=&to=&limit=&after=` · `/admin/collab/threads?…` | `admin` or `compliance`: search, metadata only (no note text), `{items[], next}` paged by id (`after` = the last id); `user` matches a sender or recipient, or a thread's writers |
 | `GET` | `/admin/collab/threads/{tid}` | `compliance`: the thread as the record has it (hidden and retracted comments, every revision, unscrubbed) with the chain result; audited |
+| `GET` | `/admin/collab/threads/hidden?limit=&after=` | `admin` or `compliance`: the hidden comments, `{items: [{commentId, threadId, kind, entityId, author, createdAt, reason}], next}` (never the text), paged in the scan order of `/admin/collab/threads` |
 | `DELETE` | `/admin/collab/threads/{tid}` | `admin`: remove a whole thread for good; `423 DRS-7010` while a legal hold covers it; audited |
 | `GET` · `POST` | `/admin/collab/holds[?active=true]` | `compliance`: list; place `{scope: entity\|kind\|user\|thread\|all, kind?, id?, user?, thread?, from?, to?, reason}` → `201` (`400` for a missing field, `DRS-7011` without a reason, `DRS-7005` for an unknown thread) |
 | `DELETE` | `/admin/collab/holds/{id}` | `compliance`: release (`400` if already released); the hold stays in the list |
@@ -915,12 +943,34 @@ suggests, for `trade`:
 `{"kind":"trade","name":"MTM below −450k","when":"$.mtm < -450000","severity":"warn","message":"${$.tradeId}: MTM ${fmt($.mtm, 'signed0')}"}`.
 The answer is `[]` when no installed pack suggests rules for the kind.
 
+### Python in the browser (Calc) and test entities
+
+[PYTHON_CALC.md](PYTHON_CALC.md). The Python runs in the user's browser; the server only says who may use it, keeps the user's snippets and serves whole columns.
+Calc needs the `calc` power and `drishti.calc.enabled`.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/calc/settings` | `{enabled, allowed, maxColumnRows, maxSnippetChars}`: whether Calc is on and whether the caller may use it |
+| `GET` | `/me/calc-snippets` | your saved snippets `[{name, description, kind, code, updatedAt}]` |
+| `PUT` · `DELETE` | `/me/calc-snippets/{name}` | save `{code, description?, kind?}` (the name is 1 to 80 letters, digits, spaces and `. _ ( ) -`; `code` at most `calc.max-snippet-chars`) → the snippet; delete → `204`, `404 DRS-1001` when there is none |
+| `GET` | `/search/columns/{kind}?paths=mtm,book&limit=` | as-of. Whole columns of a kind on the business date, as the source that keeps the fields as columns holds them, masked as a search is; without `paths`, the fields kept as columns. `400 DRS-5001` when no source of the kind keeps columns. Needs Calc and the kind |
+| `GET` · `PUT` | `/me/studio-tests/{sutra}` | the entities you test a Sutra against in Studio, `[{kind, id}]` (at most 30; `PUT` replaces the list; `400 DRS-5001` for an entry without a kind or id) |
+
+```bash
+curl -s $B/calc/settings
+```
+
+```json
+{"enabled":true,"allowed":true,"maxColumnRows":250000,"maxSnippetChars":50000}
+```
+
 ### Catalogue: about, packs, sources, Sutras
 
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/about` | `{product, version, built, java, uptimeSeconds, sutras, sources, securityEnabled, packs, copyright}` |
 | `GET` | `/packs` | every installed pack `{name, version, title, description, console, kinds, assigned, active}` (assigned/active for the caller) |
+| `GET` | `/packs/{name}/overview` | as-of. One pack's start page: `{name, code, title, description, version, extends, kinds: [{kind, mnemonic, label, count, more, failed, example, columns}]}`, only the kinds the caller may open (`name` may be the pack code, `FIN`); `400` when the pack is not switched on for the caller |
 | `GET` | `/sources` | `{sources: [{name, version, kinds, live, search, reverseLookup, health}], failures: {name: reason}}`; `kinds: []` means the source serves any kind |
 | `GET` | `/sutras` | every loaded Sutra `{name, latest, versions, domain, kind, where, priority}` |
 | `GET` | `/sutras/{name}/{version}` | one parsed Sutra as JSON `{name, version, domain, match, title, strip, panels, keys, location}`; `404 DRS-2003` |
@@ -1114,6 +1164,8 @@ user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`);
 | `POST` | `/builder/designs/{id}/propose` | body `{note}` optional; author right and `studio-save`. Runs the check and proposes the design's Sutra **with evidence** (matrix, sample names, notes; `GET /sutras/proposals/{id}` returns it as `evidence`). `202 {proposal, status}`; with review off `200 {name, version, status}`. The design's `status` becomes `proposed(P-n)`, then `live(vN)` on approval |
 | `GET` / `PUT` | `/builder/designs/{id}/about` | the design's About text (the pack's `config/about.yaml`) and its card over `?sample=` (`{rev, about, kind, card: {about, glossary, errors}, panels, problems, lint, coverage}`: `problems` are `DRS-2040`-`2044` with line and column, `lint` is `DRS-2045`-`2047`); `PUT {baseRev, text}` keeps the text as a step of the log (a new `rev`; `409 DRS-5007` when stale; counted with `max-notes-kb`) |
 | `POST` | `/builder/designs/{id}/about/preview` | body `{text, sample?}`: the same answer for the text in the editor, nothing kept |
+| `GET` / `PUT` | `/builder/designs/{id}/form` | the design's search form (the Build workbench's Form tab; the pack's `form:` section, [PACKS.md](PACKS.md)): `GET` answers the saved text with the field palette of the design's samples; `PUT` body `{baseRev, text}` keeps the text as a step of the design's log (`409 DRS-5007` on a stale revision; `422 DRS-2060` for a form that is not valid). A form change is proposed with the Sutra and travels with the proposal. Owner only |
+| `POST` | `/builder/designs/{id}/form/preview` | body `{text}`: the same answer for the text in the editor, nothing kept |
 | `GET` | `/builder/designs/{id}/export` | a zip pack fragment: `pack.yaml` stub, the Sutra, `tests/<sutra>/*.json` + `expect.yaml`, three samples, README, and `config/about.yaml` when the design has About text |
 | `POST` | `/builder/designs/import` | body a zip (`application/zip`); one design per `*.sutra.yaml`, with the samples of `tests/<sutra>/` and `samples/<kind>/`; `201 {designs, skipped}` |
 | `POST` / `DELETE` | `/builder/designs/{id}/share` | makes (renews) or revokes the read-only link; `{token, path}` is shown once |
@@ -1186,6 +1238,8 @@ sees password hashes.
 | `POST` | `/admin/users/{username}/password` | admin | body `{"password": "..."}` |
 | `GET` | `/admin/audit?limit=200&subject=` | admin | audit events `{at, actor, action, subject, detail}`, newest first |
 | `GET` | `/admin/roles` | admin | role names users may be given |
+| `GET` | `/admin/role-definitions` | admin | every role with what it allows: `{name, description, kinds[], raw, author, approve, admin, calc, layout, collaborate, compliance, bi[], builtIn, updatedAt, updatedBy, users}` |
+| `GET` · `PUT` · `DELETE` | `/admin/role-definitions/{name}` | admin | read; create or replace a role you define (body: `description`, `kinds`, the powers above, and `bi`, a list of `bi`, `bi-author`, `bi-steward`, `bi-admin`: leave it out to keep the role's current ones; `422 DRS-9003` for an unknown power); delete one you defined (`204`; built-in roles come from configuration and packs and are read-only). Audited. [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#2-roles) has the powers in words |
 | `GET` | `/admin/status` | admin | `{defaultAdminPasswordInUse, users, forceChangeOnCreate, installedPacks}` |
 
 A user record looks like:
@@ -1222,6 +1276,8 @@ Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-ba
 | `GET` | `/admin/retry` | What is failing and will be tried again, by area: `{packs{name{attempt, nextRetryInSeconds, nextRetryAt, lastError, permanent, failingSince}}, connectors{...}, ai{...}, mcp{...}, policy}`. Admin. |
 | `POST` | `/admin/retry/{area}` | **Retry now**: `area` is `packs`, `connectors` (optional `?name=` for one), `ai`, `mcp` or `all`. Tries at once and answers what was tried plus the new state; audited (`pack-retry-now`, `connector-retry-now`, `ai-retry-now`, `mcp-retry-now`). Admin; a token needs the `packs:admin` scope. `400 DRS-5001` for another area. |
 | `POST` | `/admin/packs/{name}/load`, `/unload` | Loads or unloads a pack at once, with no restart: `{name, added, loaded[], reloaded[], unloaded[], problems{}, restartFor[], restarting: false, note}`. `restartFor` is always empty (kept for compatibility): roles, graph, search columns, formats, hints, About pages, routes and sample folders are swapped in live too. `400` with the reason when the pack does not check out, or when an unload is refused because a loaded pack extends it. |
+| `GET` | `/admin/packs` | Admin. Every pack, loaded or only on disk: `{name, title, description, version, loaded, enabled, added, sample, problem, retry, connectors[], extends[], requiredBy[], kinds[], mnemonics[], updatedAt, updatedBy}` |
+| `GET` | `/admin/packs/{name}/detail` | Admin. What a loaded pack brings, for Admin → Packs → the pack: `{name, code, routes, kinds: [{kind, mnemonic, label, declaredForm, formFields[], about, glossaryTerms}], sutras, connectors, about…}`. `404 DRS-1001` for a pack that is not loaded; it reads no data, so it works while the pack is off |
 | `GET` | `/admin/packs/history?pack=&limit=` | Newest first: `history[]` of `{at, action (deploy, rollback, reverted), pack, version, previous, by, detail, sha256?}`, and `kept{pack: [{version, keptAt}]}` (the versions a rollback can go to; `shipped` when an installed copy hides the one that ships with the server) |
 | `POST` | `/admin/packs/{name}/rollback?version=` | Goes back to a kept version (omitted: the newest kept; `shipped`: remove the installed copy). Same safe restart. `400` when there is no such version. `{restored, replaced, restarting, note}` |
 | `GET` | `/admin/packs/{name}/datasource` | **Read only.** A loaded pack's connectors: `{pack, directory, connectors[], missing[]}`, each connector `{name, state, health, plugin, kinds (from this pack), origin (file, pack, application), defined, problems[]}`; `missing` names the connectors the pack uses that nothing defines. The old `PUT`, `DELETE` and `.../test` on this path are removed: use `/admin/connectors` |
@@ -1232,6 +1288,17 @@ curl -s -X POST $B/admin/packs/deploy -H 'Content-Type: application/octet-stream
      --data-binary @dist/my-bank-1.1.0.tar.gz | jq -c '{ok, uploadId, checks: [.checks[] | {name, ok}], counts: .preview.counts}'
 curl -s -X POST "$B/admin/packs/deploy/$ID?acceptBreaking=true" | jq -c '{deployed, previous, restarting}'
 ```
+
+### Packs from a signed registry
+
+Admin → Packs → Registry from a script ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#a-signed-pack-registry-publishing-and-installing) publishes to one;
+[ADR 018](../architecture/adr/018-signed-pack-registry.md) explains the signing). Administrators only; a personal token needs `packs:admin` for the `POST`s.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/registry` | `{url, configured, packs: [{name, version, title, description, requires, publisher, trusted, size, installedVersion, loadedVersion}]}`, by pack name and newest version first. With no registry configured (`drishti.packs.registry.url` empty) it is `{"url": "", "configured": false, "packs": []}` |
+| `POST` | `/admin/registry/{name}/{version}/install` | downloads the archive, checks the publisher's signature against `drishti.packs.registry.trusted-keys` and the sha256, installs it into `drishti.packs.installed-dir` and loads it with no restart; audited as `pack-installed` |
+| `POST` | `/admin/registry/{name}/rollback` | goes back to the version installed before the current one |
 
 ### Connectors (`/api/v1/admin/connectors`)
 
@@ -1247,6 +1314,7 @@ through; it does not carry their settings ([CONNECTOR_FILES.md](../connectors/CO
 | `GET` | `/admin/connectors` | Every connector: `origin` (`file`, `pack`, `application`), `plugin`, `kinds`, `enabled`, `state`, `health`, `lastUpdate`, `updated`, `etag`, `problems`, `usedBy` (the packs and kinds); plus `directory`, `watch`, `misnamed`, `fileProblems`, `deprecated`, `knownKinds` |
 | `GET` | `/admin/connectors/plugins` | The plugins and the settings each reads: `name`, `type`, `required`, `default`, `description`, `secret`, `group`; `tls` says whether the shared TLS section applies |
 | `GET` | `/admin/connectors/{name}` | The effective settings (credentials masked), the file `text`, `etag` (also the `ETag` header), `usedBy`, `packDefault` (the pack's template), `history`. `404 DRS-5033` for an unknown name |
+| `GET` | `/admin/connectors/{name}/suggestion` | What a loaded pack suggests for a connector of that name, to pre-fill **New connector**; `404 DRS-5033` when no pack does |
 | `PUT` | `/admin/connectors/{name}` | Create or change. Body `{"text": "<yaml>"}` or the form's fields. An existing file needs `If-Match: <etag>`; `?confirm=true` after switching off a connector packs use. Validates, writes atomically (the old text goes to `.history/`), applies to that one connector without a restart. `422 DRS-5031` when invalid; `409 DRS-5032` for a stale `If-Match`, an existing file without one, or an unconfirmed change to a connector in use |
 | `DELETE` | `/admin/connectors/{name}` | Delete a file no pack's template suggests (`If-Match`; `?confirm=true` when packs use it). The text is kept in `.history/`. `409 DRS-5032` for a connector a template names: reset or disable it |
 | `POST` | `/admin/connectors/{name}/enabled` `{"enabled": false}` | Switch on or off, keeping the rest of the file (`?confirm=true` when packs use it) |
@@ -1286,7 +1354,6 @@ that did not come. Everything about it (every field, the idempotency rules, the 
 | `GET` | `/packs/{pack}/loads/{id}` | one load |
 | `GET` | `/packs/{pack}/loads/expectations` | what the pack expects and its state: `pending`, `on-time`, `landed-late`, `late`, `missing`, `failed` |
 | `GET` `PUT` `DELETE` | `/admin/loads/{pack}/config` | the expectation settings in force; save or remove the administrator's override (administrators; never a token) |
-| `GET` | `/admin/loads/{pack}`, `/admin/loads/{pack}/{id}`, `/admin/loads/{pack}/expectations` | the same reads for the console |
 
 Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and `data-load-config-reset`. `GET /admin/health` lists
 `dataLate` and is `DEGRADED` while it is not empty.
@@ -1313,7 +1380,7 @@ curl -s $B/admin/health | jq -c '{status, summary, server, live}'
 ```json
 {"status":"OK",
  "summary":{"packsWithProblems":0,"failedToStart":0,"sourcesDown":0,"sourcesDegraded":0,"sources":18,"packs":12},
- "server":{"version":"1.18.0","uptimeSeconds":6953,"java":"25.0.4.1","heapUsedMb":146,"heapMaxMb":15640,"threads":75,"cpus":24},
+ "server":{"version":"1.20.0","uptimeSeconds":6953,"java":"21.0.12.1","heapUsedMb":146,"heapMaxMb":15640,"threads":75,"cpus":24},
  "live":{"frames":11680,"p50Ms":0.886,"streams":0,"p99Ms":1.917,"topics":0,"droppedFrames":0}}
 ```
 
@@ -1365,6 +1432,7 @@ them on your monitoring network in production.
 |---|---|
 | `/api/docs` | the OpenAPI 3 document (JSON) for every endpoint |
 | `/api/docs/ui` | Swagger UI (redirects to the UI page) |
+| `/public/about` | no sign-in needed: `{product, version, notice, signIn: {required, password, singleSignOn}}`, what the console's sign-in page shows |
 | `/actuator/health` | `{"status":"UP","groups":["liveness","readiness"]}`; probes at `/actuator/health/liveness` and `/actuator/health/readiness` |
 | `/actuator/info` | build information |
 | `/actuator/metrics` · `/actuator/metrics/{name}` | Micrometer metrics |
@@ -1521,7 +1589,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-7016 | 503 | picture failed | the picture took longer than `snapshots.timeout`, is larger than `snapshots.max-bytes`, or could not be drawn |
 | DRS-8001 | 401 | embed token refused | an embedded-view call with a missing, malformed, expired or wrong-audience embed token, or embedding is off (`drishti.embed.enabled`) |
 | DRS-8002 | 403 | origin not allowed | the request's `Origin` is not one of the host application's registered origins (also: the token endpoint called from a browser) |
-| DRS-8003 | 403 | host application refused | the host application is unknown or disabled, its credentials are wrong, or embedding is off at the token endpoint |
+| DRS-8003 | 403 | host application refused | the host application is unknown or disabled on an embed call (`403`), or at the token endpoint (`401 invalid_client`) it is unknown or disabled or its secret or key is wrong; embedding off is `403` |
 | DRS-8004 | 429 | embed rate limit | over the host application's or the user's call rate, or the application's token requests per minute; `Retry-After` says when |
 | DRS-8005 | 400 | kind not allowed | the host application may not show this kind (its `kinds` list) |
 | DRS-8006 | 410 | embed contract gone | the element's contract version is no longer served (raised by the console, not the server) |
@@ -1557,7 +1625,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9052 | 422 | Board invalid | A board is malformed, or names a report, page or visual the caller cannot open or that does not exist, a tile off the grid, a slicer, or a threshold that is not `{op, value}` |
 | DRS-9053 | 501 | Board not built | A board uses a reserved setting: `notify`, `notifications`, `subscriptions` (phase 7) |
 
-`DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
+`DRS-5003` (503, "backend unreachable") and `DRS-9404` (404, an unknown Drishti Elements module or script) are raised by the console, never by the server, so they are not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
 unknown `rachana:` version); see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#problem-codes).
 
@@ -1617,6 +1685,16 @@ Roles carry the BI powers: `GET` and `PUT /admin/role-definitions/{name}` have a
 unknown name is `422 DRS-9003`; a `PUT` that does not name `bi` keeps the powers the role had). From the console the same calls are under
 `/bi/api/...` (same-origin JSON, passed on under the signed-in user). The command line wraps the reads and publish:
 [CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka).
+
+### The phase 0 proof of concept: `/api/v1/bi/poc` (throw-away)
+
+Exists only while `drishti.bi.poc.enabled` is true (default `false`: `404`); never switch it on in production ([RUPAKA_POC.md](../architecture/RUPAKA_POC.md), [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibipoc--rupaka-phase-0-proof-of-concept)).
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/bi/poc/query` | admin. Body `{groupBy[], layout, date, filter: {column, value}, preview: "masked"}` → a masked aggregation as Apache Arrow (`application/vnd.apache.arrow.stream`), with `X-Poc-Masked` and `Server-Timing` headers. Read-only, so a token may call it |
+| `GET` | `/bi/poc/bench?runs=` | admin. The JSON / typed / rollup comparison |
+| `GET` | `/bi/poc/rows` | server-sent events: a `view` snapshot of the followed trades, then `row` events with the rows that changed (masked as the caller sees them). Needs the `trade` kind |
 
 ## Datasets and the query engine: `/api/v1/bi` (phase 2)
 
@@ -1764,6 +1842,37 @@ Phase 4 of Rūpaka ([BI_GOVERNANCE.md](BI_GOVERNANCE.md) is the reference; [BI_G
 
 Review notices reach the inbox ([the inbox](#share-with-a-note-the-directory-and-the-inbox)) as rows of type `bi-review` (to reviewers), `bi-decision` (to the author) and `bi-certification` (to the owner and the certifier); `kind` is `bi`, `id` the item and `title` a one-line summary. Refusals: `DRS-9040`, `9041`, `9042` and the phase 1 codes (`DRS-9001` to `9005`).
 
+## AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`
+
+Off by default (`drishti.ai.enabled`, `drishti.mcp.enabled`); [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) and [MCP_CLIENT.md](../architecture/MCP_CLIENT.md) are the references. While a layer is off every call below answers
+`404 DRS-4015`. Every call goes through the AI policy (masking, per-user limits, audit); a model or tool failure is `502 DRS-4016`, a timeout `504 DRS-4016`, a limit `429 DRS-4017`, a refusal by the policy `403 DRS-4018`, an unknown model or server `404 DRS-4019`. A personal token needs the scope `ai:use` (or `ai:admin` for the test call).
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/ai/models` | any signed-in user: the models features may name, `[{name, provider, id, kind, capabilities, maxTokens, …}]` |
+| `POST` | `/ai/chat` | body `{model?, system?, messages: [{role, content}] or prompt, temperature?, maxTokens?, jsonMode?, timeoutSeconds? (1-120, default 30), feature?}` → the answer with `text`, `model` and `usage`. `feature` is recorded as `api:<feature>` |
+| `POST` | `/ai/mcp/{server}/tools/{tool}` | body `{arguments?, feature?}` → the tool's result, if the server and tool are allowed for the caller's roles |
+| `GET` | `/admin/ai` | admin: `{enabled, dir, types, defaultModel, providers[{name, type, enabled, baseUrl, keySet, health, retry, models}], fileErrors, mcpEnabled, mcpDir, mcpServers[], mcpFileErrors}` (never a key) |
+| `POST` | `/admin/ai/test` | admin; body `{model?, prompt?}`: one real call → `{ok, text, model, usage, millis}`; audited as `ai-test` |
+| `GET` | `/admin/mcp/{server}/tools` | admin: the tools an MCP server offers |
+
+```bash
+curl -s $B/admin/ai
+```
+
+```json
+{"enabled":false,"dir":"./config/ai","types":["openai","anthropic","mock"],"defaultModel":"","providers":[],"fileErrors":{},"mcpEnabled":false,"mcpDir":"./config/mcp","mcpServers":[],"mcpFileErrors":{}}
+```
+
+```bash
+curl -s -X POST $B/ai/chat -H 'Content-Type: application/json' -d '{"prompt":"hi"}'
+```
+
+```json
+{"type":"about:blank","title":"ai off","status":404,"detail":"DRS-4015 the AI layer is switched off (drishti.ai.enabled)","instance":"/api/v1/ai/chat","code":"DRS-4015"}
+```
+
+
 ## Embedding views in another web application
 
 For `<drishti-view>` ([ELEMENTS.md](../architecture/ELEMENTS.md)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).
@@ -1810,6 +1919,39 @@ Other endpoints: `GET /api/v1/embed/check` answers `{app, user, jti, scopes, exp
 **4. The console's embed API** (`/embed/v1`, served when the console has `embed.enabled`; the element calls it, a host rarely does): `GET /views/{kind}/{id}` (head, strip and panels as HTML), `GET /views/{kind}/{id}/about`, `GET /views/{kind}/{id}/panels/{panel}/records`, `GET /resolve?text=` (a typed command or id to `{ref, mnemonic, title}`, read-only), `GET /channel?s=view:{kind}/{id}` (server-sent events: `channel`, `view`, `frame`, `gone`, `end`, `token`), `POST /channel/{cid}` (`{add, remove}`) and `POST /channel/{cid}/token`. Every call carries `Authorization: Bearer <embed token>`; CORS answers only the registered origins. The console verifies the token's signature (the server's key from `/api/v1/embed/jwks`, cached, re-read when a key id is new), expiry, audience and origin, then passes it to the server. A stream outlives its token: at expiry the console sends `event: token`, the element posts a fresh token to `/channel/{cid}/token` (the same user and application, a later expiry) and the stream carries on; with none within `embed.token_grace_seconds` it ends with `gone` `DRS-8001`. Problems are `{"code", "detail"}` (`DRS-8001` to `DRS-8006`; `429` carries `Retry-After`). Responses are gzip or Brotli compressed when accepted. Console settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views).
 
 **What a view says about masks.** `provenance.masked` (a number) and `provenance.maskedPanels` (panel ids) in every ViewModel and live `provenance` patch count the values the caller's masks replaced; both are `0` and `[]` when nothing is masked for the caller.
+
+## The console's own JSON routes
+
+Everything above is the **server's** API, on port 18480. The **console** (port 17480) has a second set of JSON routes that its pages call with `fetch`;
+they are not a public API and have no stability promise, but a script that must act exactly as a browser does can use them. What they have in common:
+
+- They are same-origin and ride the console's session cookie (`drishti_session`). A `POST`, `PUT`, `PATCH` or `DELETE` must come from a page of the console
+  (its `Origin` or `Referer` names the console or an entry of `auth.allowed_origins`; a request with neither header, such as `curl`, passes) and a body must be
+  sent as `application/json`; otherwise `403 DRS-5002`.
+- Each one asks the server for the same thing a script would, as the signed-in user (the console adds that user's identity to the call), so the user's roles,
+  packs, masks and business date apply as for the server's own endpoints. A server refusal comes back with its status and `DRS-` code; a console that cannot
+  reach the server answers `503 DRS-5003`.
+
+| Routes | What they do | Server calls behind them |
+|---|---|---|
+| `GET /api/suggest`, `POST /api/resolve`, `GET /api/history`, `PUT /api/aliases` | the command line: type-ahead, run a command, recent commands, aliases | `/command/suggest`, `/command`, `/command/history`, `/command/aliases` |
+| `GET /api/view/{kind}/{id}`, `GET /api/raw/{kind}/{id}`, `GET /api/series/{kind}/{id}` | a view, the raw document, a field over time | `/views/{kind}/{id}`, `/entities/{kind}/{id}/raw`, `/history/{kind}/{id}/series` |
+| `GET /api/stream/{kind}/{id}`, `GET /api/channel`, `GET /api/channel/who`, `POST /api/channel/{cid}` | live updates: one stream per browser (the channel) to which views subscribe | `/views/{kind}/{id}/stream`, `/me/alerts/stream`, `/me/monitors/{name}/stream` |
+| `GET /api/monitor-stream/{name}`, `GET /api/alerts/stream` | a monitor's and the user's alert stream | `/me/monitors/{name}/stream`, `/me/alerts/stream` |
+| `PATCH /api/settings`, `POST /api/packs`, `POST /api/tokens`, `DELETE /api/tokens/{id}` | the user's settings, active packs and personal API tokens | `/me/settings`, `/me/packs`, `/me/tokens` |
+| `GET` and `POST /api/notes/{kind}/{id}`, `PUT` and `DELETE /api/notes/{noteId}` | notes (deprecated) | `/notes/...` |
+| `PUT` and `DELETE /api/layout/{sutra}/{kind}`, `GET` and `POST .../promotion` | personal layouts and promoting one to a Sutra | `/me/layouts/...` |
+| `GET /api/pivot/records/{kind}/{id}/{panel}`, `POST /api/pivot/search/{kind}` and `/drill` and `/values`, `GET`, `PUT`, `DELETE /api/pivot/saved/panel/{sutra}/{panel}` and `/saved/search/{kind}`, `GET` and `POST .../promotion` | the Pivot tab | `/views/.../panels/{panel}/records`, `/search/pivot/...`, `/me/pivots/...` |
+| `GET /api/calc/snippets`, `PUT` and `DELETE /api/calc/snippets/{name}`, `GET /api/calc/search`, `GET /api/calc/columns/{kind}` | Calc | `/me/calc-snippets`, `/search`, `/search/columns/{kind}` |
+| `GET /api/collab`, `GET /api/directory`, `POST /api/share`, `POST /api/share/preview-picture`, `GET /api/share/{id}/picture`, `POST /api/share/{id}/replies`, `GET /api/inbox/count`, `POST /api/inbox/read` | share with a note, the directory, the inbox | `/collab`, `/directory`, `/shares...`, `/me/inbox...` |
+| `GET` and `POST /api/threads/{kind}/{id}`, `GET /api/thread-counts/{kind}/{id}`, `POST /api/thread/{tid}/comments`, `/state`, `PUT` and `DELETE /api/thread/{tid}/follow`, `PATCH /api/comment/{cid}`, `POST .../retract`, `/hide`, `/unhide`, `GET .../revisions` | comment threads | `/threads/...`, `/comments/...`, `/admin/collab/comments/{cid}/hide` |
+| `POST /api/ai/chat` | the console's AI layer ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) | none, or `/ai/chat` for the `server` provider; `404 DRS-4015` when AI is off |
+| `/admin/api/...`, `/admin/connectors/api/...`, `/admin/collab/api/...`, `/admin/embedding/api/...`, `/admin/ai/api/overview` | the Admin pages' actions: users, roles, packs (load, unload, deploy, roll back, registry, sample mode), loads configuration, token revoke, cache purge, retry now, connectors, collaboration compliance, embedded applications | the matching `/admin/...` endpoints; administrators only |
+| `/build/pack/api/...` | New pack from schemas (plan, jobs, drafts, preview, bundle) | none: the console builds the pack and hands it to the Build workbench or Deploy |
+| `POST /m/api/{name}`, `/m/api/{name}/delete`, `POST /alerts/api/{name}`, `/alerts/api/{name}/delete`, `POST /w/api/{name}`, `/w/api/{name}/share`, `/w/api/{name}/delete` | save and delete monitors, alert rules and workspaces | `/me/monitors/...`, `/me/alerts/rules/...`, `/me/workspaces/...` |
+
+The BI, Build, Studio, Forms, Reports and Export pages have JSON routes of their own beside their pages (under `/bi/`, `/build/`, `/studio/`, `/forms/`, `/reports/` and `/export/`);
+they follow the same rules and each maps to one endpoint of the BI, Designs, Sutra or search sections above.
 
 ## Scripting recipes
 
@@ -1884,11 +2026,12 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
 | `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
 | `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_LOADS.md](DATA_LOADS.md)) | the roles that open the kind (an administrator needs no more) |
-| `bi:write` | Business intelligence: `POST /bi/datasets/{id}/refresh`, `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
-| `bi:approve` | `POST /bi/items/{id}/approve`, `/reject` and `/endorse` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
+| `bi:write` | Business intelligence: `POST /bi/datasets/{id}/refresh`, `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `/history/{seq}/restore`, `/impact`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
+| `bi:approve` | `POST /bi/items/{id}/approve`, `/reject` and `/endorse`, and `POST /bi/bundle/import` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
 | `bi:admin` | `PUT` and `DELETE /bi/workspaces/{id}`, `PUT` and `DELETE /bi/workspaces/{id}/members/{user}`, `PUT /bi/settings` | workspace admin, or `bi-admin` |
-| `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`) | `admin` |
-| `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
+| `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` (install and roll back), `POST /admin/connectors/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
+| `ai:use` | `POST /ai/chat` and `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) | any signed-in user, under the AI policy |
+| `ai:admin` | `POST /admin/ai/test` | `admin` |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
 `drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, the audit log, shares, comments, notes, workspaces and
@@ -2048,6 +2191,7 @@ thread; nothing is erased. Each is also in the audit log (`collab.comment.add`, 
 | Method | Path | What it does |
 |---|---|---|
 | `GET` | `/me/reports` | your reports, each with `nextRun` and its last runs (`runs`: `at`, `trigger`, `status`, `rows`, `target` or `error`) |
+| `GET` | `/me/reports/{name}` | one of your reports with its `nextRun` and `runs`; `404` when you have none by that name |
 | `PUT` | `/me/reports/{name}` | saves one: `{"query": "TRD where mtm < 0", "schedule": "business-days 18:30", "deliver": "folder" \| "webhook", "webhook": "https://…", "date": "today" \| "previous", "enabled": true}` |
 | `POST` | `/me/reports/{name}/run` | runs it now; answers with the run |
 | `DELETE` | `/me/reports/{name}` | deletes it |
