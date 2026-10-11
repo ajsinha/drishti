@@ -25,6 +25,7 @@ import com.ash.drishti.packs.PackRegistry;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.bi.engine.AnalyticEngine;
 import com.ash.drishti.server.bi.gov.ImpactAnalyzer;
+import com.ash.drishti.server.bi.engine.BiLiveProperties;
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
 import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryService;
@@ -45,7 +46,7 @@ import org.springframework.context.annotation.Configuration;
  * connection on the first query, so a server that never runs a BI query pays nothing.
  */
 @Configuration
-@EnableConfigurationProperties({QueryProperties.class, BiReportProperties.class})
+@EnableConfigurationProperties({QueryProperties.class, BiReportProperties.class, BiLiveProperties.class})
 public class BiQueryConfiguration {
 
     @Bean(destroyMethod = "close")
@@ -54,13 +55,13 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public SourceGateway biSources(SourceRegistry registry, SourceRouter router, BusinessDates dates, QueryProperties props) {
-        return new ServerSourceGateway(registry, router, dates, props);
+    public SourceGateway biSources(SourceRegistry registry, SourceRouter router, BusinessDates dates, QueryProperties props, com.ash.drishti.engine.live.TopicHub hub) {
+        return new ServerSourceGateway(registry, router, dates, props, hub);
     }
 
     @Bean(destroyMethod = "")
-    public QueryService biQueries(QueryProperties props, AnalyticEngine engine, SourceGateway sources) {
-        return new QueryService(props, engine, sources, Clock.systemUTC());
+    public QueryService biQueries(QueryProperties props, BiLiveProperties live, AnalyticEngine engine, SourceGateway sources) {
+        return new QueryService(props, live, engine, sources, Clock.systemUTC());
     }
 
     @Bean
@@ -82,8 +83,18 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public BiReportController biReportController(BiReportService reports) {
-        return new BiReportController(reports);
+    public BiReportController biReportController(BiReportService reports, BiLiveProperties live, java.util.concurrent.ExecutorService drishtiVirtualExecutor) {
+        return new BiReportController(reports, live, drishtiVirtualExecutor);
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.board.BiBoardService biBoardService(BiService bi, BiReportService reports) {
+        return new com.ash.drishti.server.bi.board.BiBoardService(bi, reports);
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.board.BiBoardController biBoardController(com.ash.drishti.server.bi.board.BiBoardService boards) {
+        return new com.ash.drishti.server.bi.board.BiBoardController(boards);
     }
 
     @Bean

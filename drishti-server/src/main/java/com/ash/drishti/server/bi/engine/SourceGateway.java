@@ -18,11 +18,13 @@ package com.ash.drishti.server.bi.engine;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.Subscription;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * How the engine reaches the data: the same connectors as the rest of Drishti, by their logical names (RUPAKA.md section 6.1). The server's
@@ -42,6 +44,14 @@ public interface SourceGateway {
 
     /** The documents of these entities as of the date (null for the latest). */
     Map<EntityRef, EntityDocument> read(Collection<EntityRef> refs, LocalDate date);
+
+    /**
+     * Follows an entity's live updates: through the named connector when {@code connector} is not blank (a stream that keeps no state but ticks what a store
+     * serves), else through whichever live source holds the entity (the router's choice, as a live view makes). {@link Subscription#NONE} when nothing pushes it.
+     */
+    default Subscription subscribe(String connector, EntityRef ref, Consumer<EntityDocument> listener) {
+        return Subscription.NONE;
+    }
 
     /** The current business date. */
     LocalDate currentDate();

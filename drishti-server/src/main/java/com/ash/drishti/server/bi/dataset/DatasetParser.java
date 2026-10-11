@@ -163,7 +163,8 @@ public final class DatasetParser {
             if (!each.isBlank() && each.startsWith("$.")) {
                 each = each.substring(2);
             }
-            tables.put(t, new Dataset.Table(t, connector, kind, each.isBlank() ? null : each, mode, refresh.path("on-load").asBoolean(true), schedule, text(v, "description", ""), columns));
+            Dataset.Live live = live(path, v.path("live"), mode, each, out);
+            tables.put(t, new Dataset.Table(t, connector, kind, each.isBlank() ? null : each, mode, refresh.path("on-load").asBoolean(true), schedule, text(v, "description", ""), columns, live));
         });
         return tables;
     }
@@ -173,7 +174,7 @@ public final class DatasetParser {
             out.add(error(path, "'" + name + "' is not a column name (letters, digits, underscore; not starting with a digit)"));
             return;
         }
-        if (Dataset.ID.equals(name) || Dataset.DATE.equals(name) || Dataset.INDEX.equals(name)) {
+        if (Dataset.ID.equals(name) || Dataset.DATE.equals(name) || Dataset.INDEX.equals(name) || Dataset.SEQ.equals(name) || Dataset.UPDATED.equals(name)) {
             out.add(error(path, "'" + name + "' is a column every table has already; pick another name"));
             return;
         }
@@ -341,6 +342,79 @@ public final class DatasetParser {
             list.add(new Dataset.Rollup(name, text(r, "table", ""), by, ms));
         }
         return list;
+    }
+
+    // ---- live tables -------------------------------------------------------------------------------------------------
+
+    static final String LIVE_TABLE = "DRS-9050";
+    private static final Pattern SPAN = Pattern.compile("(\\d+)\\s*(ms|s|m|h|d)");
+
+    /** {@code live: { rows: 50000, age: 15m }} of a live table; refused on other modes and on a table over an array. */
+    private static Dataset.Live live(String path, JsonNode n, String mode, String each, List<Problem> out) {
+        if (n.isMissingNode() || n.isNull()) {
+            if ("live".equals(mode) && !each.isBlank()) {
+                out.add(new Problem("error", LIVE_TABLE, path + ".source.each", "a live table follows whole entities: it cannot be over the array '" + each + "' (use mode: cached for a table of array elements)"));
+            }
+            return null;
+        }
+        if (!"live".equals(mode)) {
+            out.add(error(path + ".live", "`live:` (retention) belongs to a table with mode: live, not " + mode));
+            return null;
+        }
+        if (!each.isBlank()) {
+            out.add(new Problem("error", LIVE_TABLE, path + ".source.each", "a live table follows whole entities: it cannot be over the array '" + each + "' (use mode: cached for a table of array elements)"));
+        }
+        if (!n.isObject()) {
+            out.add(error(path + ".live", "live is a mapping: { rows: 50000, age: 15m }"));
+            return null;
+        }
+        n.fieldNames().forEachRemaining(k -> {
+            if (!Set.of("rows", "age").contains(k)) {
+                out.add(new Problem("warning", INVALID, path + ".live." + k, "unknown live key '" + k + "' is ignored (rows, age)"));
+            }
+        });
+        Integer rows = null;
+        if (n.has("rows")) {
+            if (n.get("rows").canConvertToInt() && n.get("rows").asInt() >= 1) {
+                rows = n.get("rows").asInt();
+            } else {
+                out.add(error(path + ".live.rows", "rows is a positive number: the most rows the table keeps"));
+            }
+        }
+        java.time.Duration age = null;
+        if (n.has("age")) {
+            age = span(n.get("age").asText());
+            if (age == null) {
+                out.add(error(path + ".live.age", "age is a time such as 90s, 15m, 2h, 1d or PT15M: rows that have not changed for that long are dropped"));
+            }
+        }
+        return new Dataset.Live(rows, age);
+    }
+
+    /** {@code 90s}, {@code 15m}, {@code 2h}, {@code 1d} or an ISO-8601 duration; null when it is none of those. */
+    public static java.time.Duration span(String text) {
+        String t = text == null ? "" : text.trim();
+        try {
+            if (t.regionMatches(true, 0, "PT", 0, 2) || t.regionMatches(true, 0, "P", 0, 1)) {
+                java.time.Duration d = java.time.Duration.parse(t.toUpperCase(java.util.Locale.ROOT));
+                return d.isZero() || d.isNegative() ? null : d;
+            }
+        } catch (java.time.format.DateTimeParseException e) {
+            return null;
+        }
+        java.util.regex.Matcher m = SPAN.matcher(t);
+        if (!m.matches()) {
+            return null;
+        }
+        long v = Long.parseLong(m.group(1));
+        java.time.Duration d = switch (m.group(2)) {
+            case "ms" -> java.time.Duration.ofMillis(v);
+            case "s" -> java.time.Duration.ofSeconds(v);
+            case "m" -> java.time.Duration.ofMinutes(v);
+            case "h" -> java.time.Duration.ofHours(v);
+            default -> java.time.Duration.ofDays(v);
+        };
+        return d.isZero() ? null : d;
     }
 
     // ---- helpers -----------------------------------------------------------------------------------------------------

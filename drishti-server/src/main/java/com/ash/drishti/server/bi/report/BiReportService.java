@@ -212,6 +212,67 @@ public final class BiReportService {
      *     dataset) and {@code visual}
      */
     public Map<String, Object> query(Principal p, String id, String yaml, String pageId, String visualId, JsonNode stateJson, boolean explain) {
+        Prepared pre = prepare(p, id, yaml, pageId, visualId, stateJson);
+        boolean author = bi.mayAuthor(p);
+        Map<String, Object> live = liveOf(p, pre);                  // read before the query: rows that change meanwhile are above its seq, so a client asking "since" misses none
+        QueryService.Result r = shortNames(pre, datasets.queryItem(p, pre.dsItem(), pre.built().query(), explain && author));
+        Map<String, Object> out = new LinkedHashMap<>(datasets.json(r));
+        if (pre.built().highlight() != null) {
+            out.put("highlight", datasets.json(datasets.queryItem(p, pre.dsItem(), pre.built().highlight(), false)));
+        } else {
+            out.put("highlight", null);
+        }
+        out.put("visual", pre.visual().id());
+        out.put("query", describe(pre.built().query()));
+        if (live != null) {
+            out.put("live", live);
+        }
+        return out;
+    }
+
+    /** The rows of one visual as an Arrow IPC stream (for Perspective), with the live state in the headers' place: {@code meta} and {@code live}. */
+    public record ArrowAnswer(byte[] bytes, Map<String, Object> meta, Map<String, Object> live) {}
+
+    public ArrowAnswer queryArrow(Principal p, String id, String pageId, String visualId, JsonNode stateJson) {
+        Prepared pre = prepare(p, id, null, pageId, visualId, stateJson);
+        Map<String, Object> live = liveOf(p, pre);
+        QueryService.Result r = shortNames(pre, datasets.queryItem(p, pre.dsItem(), pre.built().query(), false));
+        return new ArrowAnswer(datasets.arrow(r), datasets.meta(r), live);
+    }
+
+    /** The state of the live tables behind a report (for the indicator and for a client that keeps rows), or null when the dataset has none. */
+    private Map<String, Object> liveOf(Principal p, Prepared pre) {
+        if (pre.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
+            return null;
+        }
+        return datasets.liveTick(p, pre.dsItem());
+    }
+
+    /**
+     * A Perspective visual shows the rows of one table, so its columns are named as the table names them ({@code trader}, not {@code trade.trader}): the names
+     * Perspective shows as headers and an update's rows are keyed by.
+     */
+    private static QueryService.Result shortNames(Prepared pre, QueryService.Result r) {
+        if (!pre.visual().type().startsWith("perspective-") || pre.built().query().fields().isEmpty()) {
+            return r;
+        }
+        String first = pre.built().query().fields().get(0);
+        String prefix = first.substring(0, Math.max(0, first.indexOf('.') + 1));
+        if (prefix.isEmpty()) {
+            return r;
+        }
+        List<com.ash.drishti.server.bi.engine.ArrowIpcWriter.Column> cols = r.columns().stream()
+                .map(c -> c.name().startsWith(prefix) ? new com.ash.drishti.server.bi.engine.ArrowIpcWriter.Column(c.name().substring(prefix.length()), c.kind(), c.values()) : c).toList();
+        QueryService.Meta m = r.meta();
+        List<String> masked = m.masked().stream().map(x -> x.startsWith(prefix) ? x.substring(prefix.length()) : x).toList();
+        return new QueryService.Result(cols, r.rows(), new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(), masked, m.warnings(), m.sql(),
+                m.generation()));
+    }
+
+    /** A visual's query, built and ready to run. */
+    private record Prepared(Report report, Report.Visual visual, BiStore.Item dsItem, Dataset dataset, VisualQueries.Built built) {}
+
+    private Prepared prepare(Principal p, String id, String yaml, String pageId, String visualId, JsonNode stateJson) {
         Loaded l;
         if (yaml != null) {
             bi.requirePower(p, BiAccess.AUTHOR);
@@ -235,17 +296,28 @@ public final class BiReportService {
         ReportState state = ReportState.of(stateJson);
         BiStore.Item dsItem = l.datasetItem();
         VisualQueries.Built built = VisualQueries.build(report, page, visual, state, l.dataset(), props, (field, n, by, desc, context, from, to) -> top(p, dsItem, field, n, by, desc, context, from, to));
-        boolean author = bi.mayAuthor(p);
-        QueryService.Result r = datasets.queryItem(p, dsItem, built.query(), explain && author);
-        Map<String, Object> out = new LinkedHashMap<>(datasets.json(r));
-        if (built.highlight() != null) {
-            out.put("highlight", datasets.json(datasets.queryItem(p, dsItem, built.highlight(), false)));
-        } else {
-            out.put("highlight", null);
+        return new Prepared(report, visual, dsItem, l.dataset(), built);
+    }
+
+    /** True when the report's dataset has a live table (its visuals update in place); nothing is started. */
+    public boolean isLive(Principal p, String id) {
+        Loaded l = loadItem(p, id);
+        return l.dataset() != null && l.dataset().tables().values().stream().anyMatch(Dataset.Table::isLive);
+    }
+
+    /**
+     * Opens what a stream of a report needs: the dataset's live tables are started when they are not running, and the returned supplier reads their state (cheap:
+     * it does not read the report again). {@code null} for a report whose dataset has no live table. The caller's right to read the report is checked here, once.
+     */
+    public java.util.function.Supplier<Map<String, Object>> liveWatch(Principal p, String id) {
+        Loaded l = loadItem(p, id);
+        if (l.datasetItem() == null || l.dataset() == null) {
+            throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report's dataset cannot be found, so it has no live state");
         }
-        out.put("visual", visual.id());
-        out.put("query", describe(built.query()));
-        return out;
+        if (l.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
+            return null;
+        }
+        return datasets.liveWatch(p, l.datasetItem());
     }
 
     private List<Object> top(Principal p, BiStore.Item dsItem, String field, int n, String by, boolean desc, List<QueryRequest.Filter> context, LocalDate from, LocalDate to) {

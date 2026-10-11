@@ -328,6 +328,9 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | Rupaka phase 1: the BI top-bar menu, the `/bi` pages and the `RUPAKA` keyword. The server has its own switch, `drishti.bi.enabled`. |
 | `DRISHTI_BI_POC_ENABLED` | `bi.poc_enabled` | `false` | Rupaka phase 0 proof of concept: the `/bi/poc` page, an administrators-only entry under the BI menu. (`RUPAKA <GO>` opens the BI home, not this page.) |
+| `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | Rupaka phase 5: a report or board redraws its live visuals at most this often, never two rounds at once; a burst of ticks is one redraw (100 to 5000). |
+| `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | A live report or board that has heard nothing from the server (not even its 5-second status) for this long says **Stale** (5 to 600). |
+| `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | A board in kiosk mode turns to its next page after this long, unless the board sets `rotate:` (3 to 3600). |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_AI_ENABLED` | `ai.enabled` | `false` | Turn on the console's own LLM provider layer (the recommended provider is `type: server`, which delegates to the server so keys stay there). |
@@ -1054,7 +1057,7 @@ answers with its own code (the codes are in [API_GUIDE.md](../guides/API_GUIDE.m
 | `record-read-budget` | `60s` | How long that document read may take. |
 | `latest-ttl` | `30s` | How long "the latest business date" of a table is trusted before the source is asked again (only when the newest date held is older than the current business date). |
 | `eager-rebuild` | `true` | On a data-load signal, read the date again in the background (`false`: on the next query that needs it). |
-| `live-ttl` | `5s` | How long a `live` table's snapshot is served before the connector is read again. |
+| `live-ttl` | `5s` | How long a `live` table's snapshot is served before the connector is read again. Used only when `drishti.bi.live.enabled` is `false` (live tables are then the phase 2 snapshot); otherwise a live table is kept in memory and updated as the source pushes ([`drishti.bi.live`](#drishtibilive--streaming-bi-phase-5)). |
 | `infer-sample` | `5000` | Values of a column the relationship finder looks at, and documents it reads for a table whose connector promotes no columns. |
 | `infer-min-match` | `0.8` | The share of a column's distinct values found among another table's ids for a relationship to be proposed. |
 
@@ -1069,6 +1072,26 @@ How many rows each kind of visual asks the engine for ([REPORTS.md](../guides/RE
 | `slicer-values` | `1000` | Most distinct values a slicer lists. |
 | `show-rows` | `1000` | Most rows *Show the rows* returns. |
 | `top-candidates` | `10000` | Most values a top-N filter ranks before it keeps its N. |
+| `perspective-rows` | `20000` | Most rows a Perspective grid or pivot is sent (phase 5). The browser holds them: the retest of [RUPAKA_POC.md](../architecture/RUPAKA_POC.md#12-the-perspective-retest-phase-5) measured 10,000 rows at 21 MB of JS heap. |
+
+### `drishti.bi.live` — streaming BI (phase 5)
+
+Live tables kept in memory by the engine and the streams that tell browsers they changed ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md),
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds` and `bi.board.rotate_seconds` (the environment table above).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | `false`: a `mode: live` table is the phase 2 snapshot of the connector's current state (`drishti.bi.query.live-ttl`); nothing is kept in memory or streamed. |
+| `max-rows` | `50000` | Most rows one live table holds, whatever the dataset's own `live: { rows }` asks; the rows changed longest ago are evicted past it. |
+| `batch` | `100ms` | How often the changes that arrived are applied to a table (changes of one entity inside the interval are merged; one transaction with the retention). |
+| `frame` | `250ms` | The shortest time between two `tick` events to one browser. The latest state is sent: a slow browser skips ticks, never queues them. |
+| `status` | `5s` | How often a stream says how its tables are doing when nothing changed (also its heartbeat). |
+| `follow-max` | `2000` | Most entities one live table follows; past it the table stops adding and says so in its state. |
+| `resync` | `30s` | How often the kind is listed again: new entities are read and followed, a connector that cannot push is read again. |
+| `idle-close` | `10m` | A live table nobody has queried or streamed for this long is closed and its subscriptions are given back. |
+| `stale-after` | `30s` | A feed that pushes but has delivered nothing for this long is shown as **stale**. |
+| `max-streams` | `100` | Live report streams open at once on the server (`429 DRS-9051`). |
+| `max-streams-per-user` | `10` | Live report streams open at once for one person (`429 DRS-9051`). A browser holds one per distinct report on its open reports and boards. |
 
 ### `drishti.bi.governance` — publishing and governance (phase 4)
 

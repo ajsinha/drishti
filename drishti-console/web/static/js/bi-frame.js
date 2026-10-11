@@ -42,11 +42,19 @@
       el, body, head, foot, tools, title,
       busy() { el.classList.add('bi-vis-busy'); el.setAttribute('aria-busy', 'true'); },
       /** Draws `res` with `draw(body, res)` (which returns a handle) and fills the line under the visual. */
-      result(res, draw) {
+      result(res, draw, opts) {
         el.classList.remove('bi-vis-busy', 'bi-vis-failed');
         el.removeAttribute('aria-busy');
-        drop();
-        handle = draw(body, res);
+        if (opts && opts.keep && handle) {                                   // a live redraw: keep what is there, draw over it, keep the scroll position
+          const before = handle;
+          const scrolls = [body].concat(B.qa('*', body)).map((n) => [n.scrollTop, n.scrollLeft]);
+          handle = draw(body, res, before);
+          if (before !== handle) { before.dispose(); }
+          [body].concat(B.qa('*', body)).forEach((n, i) => { if (scrolls[i] && (scrolls[i][0] || scrolls[i][1])) { n.scrollTop = scrolls[i][0]; n.scrollLeft = scrolls[i][1]; } });
+        } else {
+          drop();
+          handle = draw(body, res);
+        }
         if (res && res.meta) {
           const m = res.meta;
           foot.textContent = '';

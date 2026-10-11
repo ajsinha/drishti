@@ -44,12 +44,19 @@ public final class ServerSourceGateway implements SourceGateway {
     private final SourceRouter router;
     private final BusinessDates dates;
     private final QueryProperties props;
+    private final com.ash.drishti.engine.live.TopicHub hub;
 
     public ServerSourceGateway(SourceRegistry registry, SourceRouter router, BusinessDates dates, QueryProperties props) {
+        this(registry, router, dates, props, null);
+    }
+
+    /** @param hub the live views' topics: with it, a live table shares each entity's one source subscription with the views that show it (null: the router is asked directly) */
+    public ServerSourceGateway(SourceRegistry registry, SourceRouter router, BusinessDates dates, QueryProperties props, com.ash.drishti.engine.live.TopicHub hub) {
         this.registry = registry;
         this.router = router;
         this.dates = dates;
         this.props = props;
+        this.hub = hub;
     }
 
     @Override
@@ -75,6 +82,21 @@ public final class ServerSourceGateway implements SourceGateway {
     @Override
     public Map<EntityRef, EntityDocument> read(Collection<EntityRef> refs, LocalDate date) {
         return router.fetchAll(refs, props.recordReadBudget(), asOf(date));
+    }
+
+    @Override
+    public com.ash.drishti.api.Subscription subscribe(String connector, EntityRef ref, java.util.function.Consumer<EntityDocument> listener) {
+        if (connector != null && !connector.isBlank()) {
+            Optional<SourcePlugin> named = registry.connector(connector);
+            if (named.isPresent()) {
+                try {
+                    return named.get().subscribe(ref, listener);
+                } catch (UnsupportedOperationException e) {
+                    return com.ash.drishti.api.Subscription.NONE;                      // the connector cannot push: the table is read again on a timer
+                }
+            }
+        }
+        return hub != null ? hub.subscribe(ref, listener) : router.subscribe(ref, listener);
     }
 
     private AsOf asOf(LocalDate date) {

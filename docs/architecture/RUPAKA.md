@@ -577,15 +577,19 @@ quant and production pricing share one path. Status: designed; built when QLRisk
 
 ## 12. Streaming BI
 
-- A `live` table is the current state of a live kind: rows arrive through the existing TopicHub (or the LIVE_BI result
-  producers) and are applied to an in-memory Arrow table on the server; visuals over it subscribe to its changes.
-- Visual updates are **coalesced per visual** to a frame rate the eye can follow (default 4 per second for charts, up to
-  30 for Perspective grids), with backpressure: a slow browser gets the latest state, never a growing queue.
-- Aggregations over live tables are maintained **incrementally** for the simple, common cases (sum, count, min, max by
-  group) and recomputed on a short timer for the rest; heavy continuous aggregation belongs in a producer (Pravaha, Flink),
-  per LIVE_BI.
-- Time windows (`last 15 minutes`, `today`) are part of the dataset or the visual, and bound the memory a live table holds.
-- Perspective receives Arrow updates and does its own pivoting in the browser, on the masked rows the user may see.
+Phase 5 is built; section 20.5 lists exactly what, and this section says how it works and where the first design changed. The user references are [DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5) (live tables), [REPORTS.md](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5)
+(live visuals, Perspective), [BOARDS.md](../guides/BOARDS.md) and [LIVE.md](LIVE.md#live-bi-a-reports-live-tables) (the stream).
+
+- A `live` table is the current state of a live kind: the engine reads the kind once, subscribes to each entity through the **existing TopicHub** (the same topics live views use; a dataset that names a connector subscribes through it), and applies each change to an in-memory DuckDB table **by key**, in
+  batches (100 ms, merged per entity), in one transaction with the retention. **As built:** a row whose declared columns did not change is skipped; every live table has `updateSeq` and `updatedAt`; a table that is not used for ten minutes is closed.
+- Visual updates are **coalesced** and **back-pressured**. **As built:** the server tells a browser only that a report's tables *changed* (`tick`, at most one per 250 ms, the latest state, never a queue; `status` every 5 s as the heartbeat); the page asks its visuals again, as the person looking, in one round at a time (at most every 250 ms, three
+  queries at a time), drawing over the old picture in place. The first design's per-visual frame rates (4 a second for charts, up to 30 for Perspective grids) became **one cadence for a report**; a Perspective grid applies its changed rows at the same cadence (the retest of RUPAKA_POC.md section 12 shows Perspective itself taking 1,000 updates a second at 60 frames).
+  Per-reader row rules and masks apply to **every answer**, never to the stream: the stream carries no data.
+- Aggregations over live tables: **as built, measures are recomputed over the in-memory table on each query** (a few milliseconds at 10,000 rows), cached per live generation. The first design's **incrementally maintained aggregates** (sum, count, min, max by group adjusted by each change) are **not built**; heavy continuous
+  aggregation belongs in a producer (Pravaha, Flink), per LIVE_BI.
+- Time windows: **as built, a live table is bounded by retention** (`live: { rows, age }` and `drishti.bi.live.max-rows`); a visual-level time window is the rolling chart's point window, kept **in the browser**. The server keeps no history of an aggregate.
+- Perspective: **as built, the first read is Arrow** (masked on the server) **and updates are JSON rows by key** (the rows whose `updateSeq` is above the last answer's; the whole set again when rows left the table), pivoted by Perspective in the browser on the rows the person may see. Perspective charts (d3fc) are not built.
+- Boards: a wall of tiles from several reports, kiosk mode, rotation and per-tile alert colouring (section 20.5). Notifications are phase 7.
 
 ## 13. Python in BI: interfaces, not scripts
 
@@ -754,7 +758,7 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 | 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows | **Built** except refresh by cron schedule and the items listed in 20.2; the three sample reports that answer on it are phase 3 (20.3) |
 | 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test). **Built** except the usability test and the items listed in 20.3 |
 | 4 | **Publishing and governance**: review before publish, versions, endorsement, lineage, impact of dataset changes, pack bundles for environments | M | certified content and lineage shown; deployment by bundle with rollback. **Built** except bundles inside a pack archive and rollback of an import (20.4) |
-| 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run |
+| 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run. **Built** except incremental aggregates by group and the LOAD_AND_MEMORY capacity run (20.5) |
 | 6 | **Python**: the interfaces, the server runner and sandbox, browser target, manifests and tests, Calc client and PygWalker | M | a Transform, a Measure and a Visual ship in a pack with tests and run on both targets |
 | 7 | **Distribution**: export, subscriptions, alerts on measures, `<drishti-report>`, phone layouts | M | a subscription email renders per recipient with masks |
 | 9 | **Analyse**: the analyst workbench (Slice, Data, SQL, Python, Explore, Notes) over masked extracts, save as notebook, promote cells to visuals, measures and Python interfaces | L | an analyst slices a 1 M-row extract, runs a Python cell on it and turns it into a tested Transform, all in the browser |
@@ -805,12 +809,11 @@ Phase 2 (datasets and the query engine) is built; the references are [DATASETS.m
 * **API and pages.** `/api/v1/bi/datasets`, `/{id}`, `/validate`, `/{id}/query`, `/{id}/layers`, `/{id}/refresh`, `/model/*`, `/engine`; the console's Datasets list, Start-from-packs and one dataset's page with a query preview grid. The phase 0 query endpoint now runs its typed
   and rollup layouts through this engine. Three **sample datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`) with a tutorial.
 * **Phase 0 adjustments.** Static files are served compressed (gzip, Brotli when installed; the 36 MB wasm is 8 MB). The BI-page style policy is **decided**: strict `style-src 'self'` on every BI page, no `unsafe-inline`; the hash list the POC page needs for Perspective's `<style>`
-  elements stays on the POC page only, and phase 5 (live grid) must generate it at vendoring time with a check that fails when a library update adds one. **Perspective retest: not done** (no BI page uses Perspective yet; the offline environment cannot fetch a newer build); the
-  second-tab trap stays open, with the fallback (ECharts and Drishti's own grid) in force until phase 5 retests the newest build on real Chrome, Firefox and Safari.
+  elements stays on the POC page only, and phase 5 generated its list on the real pages (`tools/perspective-style-hashes.py`: four hashes, not six) with a Chromium test that fails when a library update adds one. **Perspective retest: done in phase 5** (RUPAKA_POC.md section 12): the second-tab trap does not reproduce on the report page in Chromium 153, Chrome 155, Firefox 155 or WebKit 26.6; the fallback (Drishti's own table) stays in force for a tab where WebAssembly fails.
 
 **Not built, and not faked.** Refresh by the cron `refresh.schedule` (stored and validated; refresh is by data-load signal and `POST /datasets/{id}/refresh`); time intelligence (`ytd`, `mtd`, `same_period_last_year`) and window functions (`running`, `lag`, `rank`), refused with `DRS-9013`;
 Python measures (stored, not run, phase 6); queries whose measures aggregate several unrelated fact tables; filter direction `both`, many-to-many semantics and inactive relationships used by a measure; live tables as an incrementally updated in-memory table fed by the hot path
-(phase 5); the BI store as a configured connector (a folder today; mount S3 to put it there); engines other than DuckDB (the interface exists); pushdown of scan filters into Delta and file storage; lineage, impact and classification tags (phase 4); the designer, the Model diagram
+(built in phase 5, section 20.5); the BI store as a configured connector (a folder today; mount S3 to put it there); engines other than DuckDB (the interface exists); pushdown of scan filters into Delta and file storage; lineage, impact and classification tags (phase 4); the designer, the Model diagram
 and reports (built in phase 3, section 20.3). The columns layer is **per dataset table**, not shared per kind as 7.1 sketches (a kind read by two datasets is read twice).
 
 ### 20.3 Phase 3, as built
@@ -845,7 +848,7 @@ is [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapters 10 to 15, the API is [API
 after the server started (the sum of the queries 18 ms, the slowest 4 ms), 244 ms with every answer from the cache; *Counterparty risk* 281 ms and 212 ms; *Cashflow ladder* 299 ms and 255 ms. Selecting a mark re-asks the other seven visuals: 200 ms to the last
 answer. No visual of a sample report reached the one-second hint of Check.
 
-**Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5); the visuals `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view` and `shape` (refused with `DRS-9033`); the relative-date slicer (refused); a report over
+**Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5: the grid and the pivot are built, the charts are not: section 20.5); the visuals `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view` and `shape` (refused with `DRS-9033`); the relative-date slicer (refused); a report over
 **several datasets** (one dataset a report); true subtotals for measures that do not add up (a matrix shows `–`: the figures it totals are the ones it shows); highlight for charts other than bar and column (the others are filtered); capturing a bookmark's slicer
 choices from the page (written in the YAML); different layouts per device (a phone stacks the grid in reading order); the *Check* that runs a report's expected values on sample data, and a schema-completion popup in the YAML tab (a strip of suggestions instead);
 the designer's *Explore to visual* (phase 9) and the **usability test** the phase asks for (an hour, a Power BI author, a reference report); export, subscriptions, alerts, embedding (phase 7); a filter direction of `both`, many-to-many semantics and inactive
@@ -865,6 +868,36 @@ Phase 4 (publishing and governance) is built; the reference is [BI_GOVERNANCE.md
 * **Audit.** Publish, approve, reject, certify, revoke, restore, export and import are in the audit log.
 
 **Not built, and not faked.** BI content inside a pack archive (deploy does not import it) and rollback of an import beyond the saved state it keeps; recognising a rename as a rename; impact on a changed meaning or type, a relationship or a row rule; lineage beyond the connector and for boards and notebooks (not built); threaded comments on a diff line; chains of several reviewers; re-certification schedules; "what changed since your last visit"; the Model view does not yet call the impact of unsaved YAML (the API does). Saved states begin at the upgrade.
+
+### 20.5 Phase 5, as built
+
+Phase 5 (streaming BI) is built; the references are [DATASETS.md 7.1](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md 13](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md), [LIVE.md](LIVE.md#live-bi-a-reports-live-tables),
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapters 18 and 19, the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
+and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS-9050` to `9053`.
+
+**Built.**
+
+* **Live dataset tables (section 12).** `mode: live` with `live: { rows, age }` retention; the engine (`LiveTables`, `LiveTable`, `LiveFeed`) reads the kind once, subscribes through the TopicHub (or the named connector), applies changes **by key** to an in-memory DuckDB table in batched
+  transactions with the retention, skips rows that did not change, resyncs the listing every 30 s (new entities are followed; a connector that cannot push is read again), counts rows, entities, pushing subscriptions, applied, skipped, evicted and deleted, reports `starting`, `live`, `stale`, `failed`, and closes a table idle for ten minutes. Two implicit columns, `updateSeq` and `updatedAt`.
+  **Row rules and masks are applied by the query compiler on every query**, as the reader; the table knows no reader. A dataset's page and `GET /bi/datasets/{id}/layers` say how each live table is doing; `GET /bi/engine` counts them. A table over an array is refused (`DRS-9050`). With `drishti.bi.live.enabled: false` a live table is the phase 2 snapshot.
+* **Live visuals.** A report over a live dataset has a stream (`GET /bi/reports/{id}/live`: `hello`, `tick`, `status`; per-server and per-person limits, `DRS-9051`) that reaches the browser over the console's one channel (`bilive:<report id>`). The viewer redraws the page's visuals in place (a chart keeps its instance, a table its scroll position, a card flashes), **coalesced** (one round at
+  a time, at most every 250 ms) and **back-pressured** (the server sends the latest state, never a queue); a live indicator with the last update time, **Pause** and **Resume**, and the states **Stale**, **Feed failing**, **Disconnected** and **Paused (tab in background)**; a failed update keeps the old picture marked as old. Cards, KPIs, bars, columns, lines, tables and the rest update this way; a **rolling chart** (`live-chart`) collects a point per update in the browser.
+* **Perspective.** `perspective-grid` and `perspective-pivot` over the rows of one table: first read as **masked Arrow**, updates as the rows whose `updateSeq` is above the last answer's (JSON, by key; the whole set again when rows left), Perspective pivoting in the browser; a plain-table fallback when WebAssembly cannot start. **CSP resolved properly**: a report or board page that holds a Perspective visual
+  gets, in its own response only, `'wasm-unsafe-eval'` and the SHA-256 of the **four** styles Perspective 3.8.0 writes (`core/perspective_csp.py`); every other BI page keeps `style-src 'self'` and no WebAssembly; the engine's worker is a script of this origin; the hash list is measured on the real pages by `tools/perspective-style-hashes.py` and checked by a Chromium test. The retest: RUPAKA_POC.md section 12.
+* **Boards.** `config/bi/boards/<id>.board.yaml` and `board` items: pages of tiles, each a visual of a report on the report grid, per-tile **alert colouring** by threshold (warn and crit, in words as well as colour), **kiosk** (full screen, menus hidden) with **auto-rotating pages**, the live indicator and pause, Perspective and rolling-chart tiles; a parser with every problem coded (`DRS-9052`, reserved `notify` as `DRS-9053`); the publish check; the API (`GET /bi/boards/{id}`, `POST /bi/boards/validate`). No external notifications.
+* **Samples.** The live datasets `live-trading` and `live-exposure` (over the demo ticker's trades and netting sets), the reports **Live trading desk** and **Live exposure**, the board **Desk wall**; BI_TUTORIAL chapters 18 and 19 with real screenshots.
+* **Measured** (this machine, the demo source changing 360 of 750 trades about twice a second, so about 800 row changes a second into one live table with queries answered at p50 15 ms and p95 24 ms over HTTP meanwhile; Perspective at 10,000 rows): RUPAKA_POC.md section 12.
+
+**Not built, and not faked.**
+
+* **Incrementally maintained aggregates by group** (a change adjusting running sums, counts, minimums and maximums). The *table* is incremental; the *measures* are recomputed over it on each query and cached per live generation. Heavy continuous aggregation belongs in a producer ([LIVE_BI.md](LIVE_BI.md)).
+* **The "live targets met under the LOAD_AND_MEMORY capacity run"**: the done-when of the phase table. No million-row capacity run was made (local data stays at 10,000 rows a day); what was measured is in RUPAKA_POC.md section 12.
+* **A history of a live table** (every update kept: append mode) and server-side time series of an aggregate: a live table holds current state with retention; the rolling chart's points live in the browser from the moment the page opened. Time buckets (`second`, `minute`) on `updatedAt` are not date parts.
+* **Per-visual frame rates** (the design's 4 and 30 a second): one cadence for a report.
+* **Perspective charts** (d3fc), the Perspective settings panel (its `<style>` and `style=` needs are beyond the four hashes), a Perspective visual over several tables, a Perspective visual in the designer's canvas (a note is shown).
+* **Notifications** from boards and alerts (email, chat, webhook): phase 7; `notify:` is refused (`DRS-9053`). A **designer for boards**, interaction between tiles, slicers on a board. Boards in bundles, lineage and impact.
+* **Live tables over arrays** (`each`), in `direct` queries, and a Delta, file or JDBC connector that pushes (only the demo source, Kafka and Redis implement `subscribe`; others are read again every 30 s).
+* Safari was tested through Playwright's WebKit build (26.6), not Safari itself.
 
 ### 20.1 Three stages
 

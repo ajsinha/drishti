@@ -554,6 +554,12 @@ public final class BiService {
         return catalogueItems(p).stream().filter(i -> "dataset".equals(i.kind())).toList();
     }
 
+    /** The published report items the caller may see (what a board's tile can name). */
+    public List<BiStore.Item> reportItems(Principal p) {
+        open(p);
+        return catalogueItems(p).stream().filter(i -> "report".equals(i.kind())).toList();
+    }
+
     /** Every published dataset, whoever may read it (no caller): what a data-load signal concerns. */
     public List<BiStore.Item> allDatasets() {
         List<BiStore.Item> all = new ArrayList<>(store.published());
@@ -774,6 +780,12 @@ public final class BiService {
             com.ash.drishti.server.bi.report.ReportParser.Result r = com.ash.drishti.server.bi.report.ReportParser.parse(i.body());
             if (!r.ok()) {
                 throw new DrishtiException(ErrorCode.REPORT_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError() + " (check it in the designer)");
+            }
+        }
+        if ("board".equals(i.kind()) && !i.body().isBlank()) {
+            com.ash.drishti.server.bi.board.BoardParser.Result r = com.ash.drishti.server.bi.board.BoardParser.parse(i.body());
+            if (!r.ok()) {
+                throw new DrishtiException(ErrorCode.BOARD_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError());
             }
         }
         // what this publish does to the reports that read a dataset (docs/guides/BI_GOVERNANCE.md, Impact)

@@ -37,8 +37,10 @@ import java.util.Map;
  * @param slicers by slicer visual id: a list of values (list, dropdown) or {@code {from, to}} (range)
  * @param drill the values clicked so far down the visual's hierarchy
  * @param rows non-null: show the rows behind the visual (and, when {@code field} is given, only those of the mark)
+ * @param since for a Perspective visual over a live table: only the rows whose {@code updateSeq} is greater (what changed since the client's last answer)
  */
-public record ReportState(Map<String, JsonNode> slicers, List<Selection> selections, List<Object> drill, List<Carry> carry, String from, String to, Mark rows, Integer limit) {
+public record ReportState(Map<String, JsonNode> slicers, List<Selection> selections, List<Object> drill, List<Carry> carry, String from, String to, Mark rows, Integer limit,
+        Long since) {
 
     /** A mark selected on another visual: its field, its values, and whether other visuals highlight it (instead of filtering to it). */
     public record Selection(String visual, String field, List<Object> values, boolean highlight) {}
@@ -49,7 +51,7 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
     /** The mark whose rows are wanted. */
     public record Mark(String field, List<Object> values) {}
 
-    public static final ReportState NONE = new ReportState(Map.of(), List.of(), List.of(), List.of(), null, null, null, null);
+    public static final ReportState NONE = new ReportState(Map.of(), List.of(), List.of(), List.of(), null, null, null, null, null);
 
     /** Reads the JSON; a malformed state is DRS-9035. */
     public static ReportState of(JsonNode n) {
@@ -87,8 +89,9 @@ public record ReportState(Map<String, JsonNode> slicers, List<Selection> selecti
             rows = r.isObject() && r.path("field").isTextual() ? new Mark(r.path("field").asText(), values(r.path("values"))) : new Mark(null, List.of());
         }
         Integer limit = n.has("limit") && n.get("limit").canConvertToInt() && n.get("limit").asInt() > 0 ? n.get("limit").asInt() : null;
+        Long since = n.has("since") && n.get("since").canConvertToLong() && n.get("since").asLong() >= 0 ? n.get("since").asLong() : null;
         return new ReportState(slicers, selections, values(n.path("drill")), carry, dates.path("from").isTextual() ? dates.path("from").asText() : null,
-                dates.path("to").isTextual() ? dates.path("to").asText() : null, rows, limit);
+                dates.path("to").isTextual() ? dates.path("to").asText() : null, rows, limit, since);
     }
 
     private static List<JsonNode> list(JsonNode n, String key) {

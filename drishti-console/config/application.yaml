@@ -180,3 +180,9 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1) and,
   enabled: ${DRISHTI_BI_ENABLED:true}   # false: no BI top-bar menu, no /bi pages (the server's drishti.bi.enabled is separate)
   # Rupaka phase 0 PROOF OF CONCEPT (docs/architecture/RUPAKA_POC.md): the /bi/poc page; also needs the server's drishti.bi.poc.enabled
   poc_enabled: ${DRISHTI_BI_POC_ENABLED:false}   # false: no page, no top-bar entry, no RUPAKA <GO>; /bi/poc answers 404
+  # Rupaka phase 5 (streaming BI): live visuals and boards
+  live:
+    min_interval_ms: ${DRISHTI_BI_LIVE_MIN_INTERVAL_MS:250}   # a report redraws its live visuals at most this often (a burst of ticks becomes one redraw); 100 to 5000
+    stale_seconds: ${DRISHTI_BI_LIVE_STALE_SECONDS:30}        # no tick or status from the server for this long: the report says "Stale"; 5 to 600
+  board:
+    rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600

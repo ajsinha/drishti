@@ -253,12 +253,20 @@
     return NONE;
   };
 
+  /** A Perspective visual is drawn by bi-perspective.js, on the pages that may run it (the report viewer and boards); the designer shows what it will be. */
+  V.perspectiveNote = function (host, spec) {
+    B.clear(host).appendChild(h('div', { class: 'bi-vis-note', role: 'note' }, h('strong', { text: spec.type === 'perspective-grid' ? 'Perspective grid' : 'Perspective pivot' }),
+      h('p', { text: 'Shown in the report viewer: it needs WebAssembly, which only the viewer is given. Columns: ' + [].concat(...Object.keys(spec.wells || {}).map((k) => spec.wells[k])).join(', ') + '.' })));
+    return NONE;
+  };
+
   /** Draws any visual: a chart or a card (bi-visuals.js), else the table, the matrix, the slicer or a static one; `res` is null for static visuals. */
   V.draw = function (host, spec, ctx, res) {
     if (['text', 'image', 'button'].indexOf(spec.type) >= 0) { return V.staticVisual(host, spec, ctx); }
     if (spec.type === 'table') { return V.dataTable(host, spec, ctx, res, false); }
     if (spec.type === 'matrix') { return V.matrix(host, spec, ctx, res); }
     if (spec.type === 'slicer') { return V.slicer(host, spec, ctx, res); }
+    if (spec.type.indexOf('perspective-') === 0) { return V.perspectiveNote(host, spec); }
     return V.drawChartOrCard(host, spec, ctx, res) || NONE;
   };
 })();

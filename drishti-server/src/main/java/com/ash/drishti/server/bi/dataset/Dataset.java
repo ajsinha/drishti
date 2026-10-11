@@ -49,6 +49,10 @@ public record Dataset(String name, int version, String title, String description
     public static final String DATE = "businessDate";
     /** The column of a table over an array ({@code each}): the element's position in the array, from 0. */
     public static final String INDEX = "index";
+    /** The column every live table has: the order in which rows last changed (a counter that only grows), for "what changed since". */
+    public static final String SEQ = "updateSeq";
+    /** The column every live table has: when the row last changed. */
+    public static final String UPDATED = "updatedAt";
 
     /**
      * A table.
@@ -61,14 +65,30 @@ public record Dataset(String name, int version, String title, String description
      * @param onLoad rebuild the affected business date when a data-load signal for the kind arrives
      * @param schedule cron text, stored (not scheduled: see RUPAKA.md section 20.2)
      * @param columns by column name, in file order
+     * @param live for {@code mode: live}: how many rows to keep and for how long (null: the server's defaults)
      */
-    public record Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns) {
+    public record Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns,
+            Live live) {
+
+        public Table(String name, String connector, String kind, String each, String mode, boolean onLoad, String schedule, String description, Map<String, Column> columns) {
+            this(name, connector, kind, each, mode, onLoad, schedule, description, columns, null);
+        }
+
+        public boolean isLive() {
+            return "live".equals(mode);
+        }
 
         /** The columns read from the source (everything but calculated ones). */
         public List<Column> physical() {
             return columns.values().stream().filter(c -> c.expr() == null).toList();
         }
     }
+
+    /**
+     * What a live table keeps (RUPAKA.md section 12): at most {@code rows} rows (the oldest updated go first) and none that has not changed for {@code age}.
+     * Either may be null: the server's {@code drishti.bi.live.max-rows} and no age limit.
+     */
+    public record Live(Integer rows, java.time.Duration age) {}
 
     /**
      * A column.

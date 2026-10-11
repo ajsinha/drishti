@@ -180,6 +180,7 @@ drishti:
       - /api/v1/bi/reports/*/query      # Rupaka phase 3: one visual of a report under the page's state, through the dataset engine, masked and row-ruled
       - /api/v1/bi/reports/query        # the same for draft YAML (authors)
       - /api/v1/bi/reports/validate     # checks a report's YAML without storing it
+      - /api/v1/bi/boards/validate      # checks a board's YAML without storing it
       - /api/v1/bi/reports/format       # writes a report model as YAML
     # WRITE SCOPES (TOKEN_SCOPES in docs/guides/API_GUIDE.md): a token is made with `read` (the default: all of the above) or with
     # scopes from this list (keys in [brackets] keep the colon); each opens the METHOD path patterns under `allow` (* = any method). A scope is only a door: the

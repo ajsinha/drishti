@@ -29,7 +29,9 @@
 
   const state = { slicers: {}, selections: [], drills: {}, carry: [], dates: null, mode: 'filter', rows: {}, asTable: {} };
   let rep = null, idx = null, pageId = null, palette = null, tokens = null;
-  const frames = new Map();                 // visual id -> {frame, spec, token}
+  const frames = new Map();                 // visual id -> {frame, spec, token, psp}
+  const rolling = {};                       // visual id -> the points a rolling chart has collected since the page opened
+  let watch = null, indicator = null, refresher = null, seenGeneration = 0, wasOff = false;
   const live = q('[data-live]');
   const say = (t, bad) => B.say(q('[data-msg]'), t, bad);
 
@@ -66,7 +68,7 @@
   function ctxFor(spec) {
     const sel = state.selections.find((s) => s.visual === spec.id);
     return {
-      index: idx, palette, t: tokens, interactive: true, selected: sel || null,
+      index: idx, palette, t: tokens, interactive: true, selected: sel || null, rolling,
       onMark: (mark) => selectMark(spec, mark), navigate: (a) => navigate(a),
       slicer: spec.type === 'slicer' ? { value: state.slicers[spec.id] == null ? null : state.slicers[spec.id], onChange: (v) => { state.slicers[spec.id] = v; refreshAll(spec.id); } } : null
     };
@@ -80,7 +82,7 @@
       return b;
     };
     const group = VGROUP[spec.type];
-    if (group === 'static' || spec.type === 'slicer') { return out; }
+    if (group === 'static' || group === 'perspective' || group === 'live' || spec.type === 'slicer') { return out; }
     const sel = state.selections.find((s) => s.visual === spec.id);
     const path = state.drills[spec.id] || [];
     const lv = levels(spec);
@@ -123,20 +125,46 @@
     return f;
   }
 
-  function load(spec) {
+  /** Asks for a visual's data and draws it. `opts.quiet` is a live redraw: the picture stays, is drawn over in place, and a failure only marks it as old. */
+  function load(spec, opts) {
+    const quiet = !!(opts && opts.quiet);
     const entry = frames.get(spec.id);
-    if (!entry) { return; }
+    if (!entry) { return Promise.resolve(); }
     const token = ++entry.token;
-    if (VGROUP[spec.type] === 'static') { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(spec), null)); return; }
-    entry.frame.busy();
-    B.enqueue(() => B.api('POST', '/reports/' + B.id2path(reportId) + '/query', { page: pageId, visual: spec.id, state: stateFor(spec) })).then((res) => {
+    if (VGROUP[spec.type] === 'static') { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(spec), null)); return Promise.resolve(); }
+    if (VGROUP[spec.type] === 'perspective') { return loadPerspective(spec, entry, token, quiet); }
+    if (!quiet) { entry.frame.busy(); }
+    return B.enqueue(() => B.api('POST', '/reports/' + B.id2path(reportId) + '/query', { page: pageId, visual: spec.id, state: stateFor(spec) })).then((res) => {
       if (token !== entry.token) { return; }
       entry.res = res;
-      draw(spec.id);
-    }, (e) => { if (token === entry.token) { entry.frame.error(e); } });
+      sawLive(res);
+      B.live.markStale(entry.frame, false);
+      draw(spec.id, quiet);
+    }, (e) => {
+      if (token !== entry.token) { return; }
+      if (quiet && entry.res) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); } else { entry.frame.error(e); }
+    });
   }
 
-  function draw(id) {
+  function sawLive(res) { if (res && res.live && res.live.generation > seenGeneration) { seenGeneration = res.live.generation; } }
+
+  /** A Perspective visual: the first read as Arrow, then only what changed (bi-perspective.js); the controller lives with the frame until the page changes. */
+  function loadPerspective(spec, entry, token, quiet) {
+    if (!entry.psp) {
+      const ask = (format, extra) => {
+        const body = { page: pageId, visual: spec.id, state: Object.assign(stateFor(spec), extra || {}) };
+        return B.enqueue(() => (format === 'arrow' ? B.arrow('/reports/' + B.id2path(reportId) + '/query?format=arrow', body) : B.api('POST', '/reports/' + B.id2path(reportId) + '/query', body)))
+          .then((res) => { sawLive(res); return res; });
+      };
+      entry.psp = B.perspective.start(spec, entry.frame, ask, ctxFor(spec));
+      entry.frame.busy();
+      return entry.psp.load().catch((e) => { if (token === entry.token) { entry.frame.error(e); } });
+    }
+    if (quiet) { return entry.psp.refresh().then(() => B.live.markStale(entry.frame, false), (e) => B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message)); }
+    return entry.psp.reload().catch((e) => entry.frame.error(e));
+  }
+
+  function draw(id, live) {
     const entry = frames.get(id);
     if (!entry || !entry.res) { return; }
     const spec = entry.spec;
@@ -144,9 +172,10 @@
     const res = entry.res;
     entry.frame.result(res, (host) => {
       const c = ctxFor(ds);
+      c.update = !!live;
       if (state.rows[id] || state.asTable[id]) { return B.visuals.dataTable(host, ds, c, res, true); }
       return B.visuals.draw(host, ds, c, res);
-    });
+    }, live ? { keep: true } : undefined);
     refreshButtons(spec);
     const chartOrCard = entry.frame.body.querySelector('.bi-chart');
     if (chartOrCard) { chartOrCard.setAttribute('data-ready', '1'); }
@@ -163,6 +192,27 @@
   function refreshAll(exceptId) {
     pageOf(pageId).visuals.forEach((v) => { if (v.id !== exceptId) { load(v); } });
     syncChips();
+  }
+
+  // ---- live: the page follows the report's live tables (RUPAKA.md section 12) -----------------------------------------------
+  /** A tick: every visual of the page that draws data is asked again, quietly, three at a time; a burst of ticks is one round (bi-live.js coalesce). */
+  function refreshLive() {
+    const specs = pageOf(pageId).visuals.filter((v) => ['static', 'slicer'].indexOf(VGROUP[v.type]) < 0);
+    return Promise.all(specs.map((v) => load(v, { quiet: true }))).then(() => { canvas.setAttribute('data-live-round', String((Number(canvas.getAttribute('data-live-round')) || 0) + 1)); });
+  }
+
+  function startLive() {
+    if (!(rep.dataset.tables || []).some((t) => t.mode === 'live')) { return; }
+    const min = Number(canvas.getAttribute('data-live-min')) || 250;
+    refresher = B.live.coalesce(refreshLive, min);
+    watch = B.live.watch([reportId], {
+      staleSeconds: Number(canvas.getAttribute('data-live-stale')) || 30,
+      onHello: (id, d) => { if (wasOff || Number(d.generation) > seenGeneration) { refresher.request(); } wasOff = false; },
+      onTick: () => { refresher.request(); },
+      onState: (info) => { if (info.state === 'disconnected' || info.state === 'hidden') { wasOff = true; } if (indicator) { indicator.draw(); } },
+      onSignal: () => { if (indicator) { indicator.draw(); } }
+    });
+    indicator = B.live.indicator(q('[data-live-bar]'), () => watch);
   }
 
   // ---- interactions --------------------------------------------------------------------------------------------------
@@ -233,7 +283,7 @@
   }
 
   function drawGrid() {
-    frames.forEach((e) => e.frame.dispose());
+    frames.forEach((e) => { e.frame.dispose(); if (e.psp) { e.psp.dispose(); } });
     frames.clear();
     const grid = B.clear(q('[data-grid]'));
     const page = pageOf(pageId);
@@ -346,6 +396,7 @@
     const carry = readCarry();
     go(wanted && pageOf(wanted) ? wanted : first.id, carry, false);
     window.history.replaceState({ page: pageId, carry }, '', window.location.pathname + window.location.search);
+    startLive();
     q('[data-ready]').setAttribute('data-ready', 'yes');
   }).catch((e) => { say(e.message, true); });
 })();

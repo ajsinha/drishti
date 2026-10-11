@@ -28,7 +28,7 @@ is executed: it is parsed, validated, compiled to SQL with **bound values**, and
 Contents: [1](#1-the-file) the file · [2](#2-tables-and-columns) tables and columns · [3](#3-relationships-and-how-queries-join) relationships ·
 [4](#4-measures-and-the-expression-language) measures and expressions · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
 [7](#7-modes-layers-and-rollups) modes, layers and rollups · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
-[10](#10-what-is-not-built) what is not built
+[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5))
 
 ## 1. The file
 
@@ -62,7 +62,7 @@ tables:
       connector: trading-store              # a connector by its LOGICAL name (config/connectors/<name>.yaml); empty: whichever serves the kind
       kind: trade                           # the pack kind
       each: legs                            # optional: one row per element of this array in each document (below)
-    mode: cached                            # cached (default) | direct | live  (section 7)
+    mode: cached                            # cached (default) | direct | live  (section 7; live: 7.1)
     refresh:
       on-load: true                         # rebuild the date when a data-load signal for the kind arrives (default true)
       schedule: "0 */15 * * *"              # cron, five fields: stored and checked, NOT scheduled yet (section 10)
@@ -76,7 +76,8 @@ tables:
 
 * **Types:** `string`, `integer`, `decimal`, `boolean`, `date`, `timestamp`. A value that cannot be cast to its type is null (never an error).
 * **Every table also has** `id` (the entity's id) and `businessDate` (the date the row is for); do not declare them. A table with `each` also has
-  `index` (the element's position from 0), and its `id` is the **parent** entity's id, which is how it joins to the parent.
+  `index` (the element's position from 0), and its `id` is the **parent** entity's id, which is how it joins to the parent. A **live** table also has `updateSeq` and `updatedAt`
+  (section 7.1); the five names are reserved (`DRS-9010`).
 * **`each`:** the trade's `legs` or `schedule` array becomes a table with one row per element; column paths are relative to the element. It is always built by
   reading the documents (an array cannot come from promoted columns) once per business date.
 * **Calculated column:** a row-level expression over the table's own stored columns (section 4); it may not aggregate, use measures or the user, or use another
@@ -208,7 +209,7 @@ ann filters counterparties.name:    403 DRS-9021 'counterparties.name' is masked
 |---|---|---|
 | `cached` (default) | typed Parquet, one file per **business date** in the BI store (`drishti.bi.query.store-dir`): the **columns layer** | read once per date from the connector, on the first query, and again when a data-load signal for the kind names the date |
 | `direct` | the source's own SQL table; the compiled query runs in the source | needs a connector with a SQL target (the DuckDB and PostgreSQL connectors); every table of the query must be direct and in one store; `each` tables cannot be direct |
-| `live` | a snapshot of the kind's current state read through the connector, kept for `drishti.bi.query.live-ttl` | minimal: a short-lived snapshot, **not** an incrementally updated in-memory table (section 10) |
+| `live` | the kind's current state, **kept in memory by the engine and updated by key as the source pushes changes**, with a retention window (section 7.1) | built in phase 5. With `drishti.bi.live.enabled: false` it falls back to a short-lived snapshot of the connector's state, kept for `drishti.bi.query.live-ttl` |
 
 **The layers a query is answered from, smallest first:** a **rollup** that covers it, else the **columns layer**, else (direct tables) the **source**. The answer reports which
 (`layer`, and `rollup`). Layout in the BI store: `columns/<dataset>/<table>/date=<yyyy-mm-dd>/part.parquet` with a `meta.json` (the table's signature, rows, how it was read, warnings),
@@ -229,6 +230,69 @@ rollup material: `distinct`, `percentile`, a condition inside an aggregate, anot
 every published dataset table that reads the kind, bumps the dataset's data generation (so cached results can no longer be served), and, with `eager-rebuild` on, reads the date again in the
 background; **only that date, only those datasets**. Without a date in the query the **latest** date is used: the current business date when its layer exists, else the newest date the source
 holds (the answer's `dates` says which).
+
+### 7.1 Live tables (phase 5)
+
+A `mode: live` table is the **current state of a kind**, not a copy per business date. The engine reads the kind **once** when the table is first needed (the first query, or the first stream of a report over it), subscribes to
+each entity through the same live machinery the terminal's live views use, and then **applies every change to its in-memory table by key**: a new id is inserted, a known id replaces its row, a deletion removes it. Reports and
+boards over it redraw as it changes ([REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](BOARDS.md)). The sample is [config/bi/datasets/live-trading.dataset.yaml](../../config/bi/datasets/live-trading.dataset.yaml):
+
+```yaml
+tables:
+  trade:
+    source:
+      kind: trade               # no connector named: whichever running connector serves trades and can push them
+    mode: live
+    live:                       # retention: the most rows it holds, and how long a row may go without changing
+      rows: 5000
+      age: 15m
+    columns:
+      tradeId: { type: string, key: true }
+      desk:    string
+      mtm:     { type: decimal, format: signed0 }
+```
+
+**Where the changes come from.** The connector's `subscribe` for each entity: the demo source ticks its live samples; the Kafka and Redis connectors (and any connector that implements `subscribe`) feed the table the way they feed a live view. `connector:` names
+a connector by its logical name when a stream that keeps no state ticks what a store serves (a Kafka connector in `ticks` mode: the entities are listed and read from the store, the changes come from Kafka); empty means the router's choice, as for a live view.
+The table follows at most `drishti.bi.live.follow-max` (2,000) entities and says so when it stops there. A connector that **cannot push** is read again every `drishti.bi.live.resync` (30 s): the table still follows it, a row whose values did not change is skipped,
+and the table's state says `pushes: false`.
+
+**Incremental, and what that means.** The *table* is maintained incrementally: a batch of changes (merged per entity, every `drishti.bi.live.batch`, 100 ms) is written in **one transaction** with the retention, so a query never sees half a batch, and a row whose declared
+columns did not change does not move the table's counters (a source that republishes the same values costs nothing downstream). The *measures* are **recomputed** by the engine over the table on each query, as every measure is: with the table in memory that is a few
+milliseconds at 10,000 rows. The engine does **not** keep running totals by group that a change adjusts; that is not built (heavy continuous aggregation belongs in a producer, [LIVE_BI.md](../architecture/LIVE_BI.md)).
+
+**Retention.** `live: { rows, age }` (both optional). `rows` bounds the table: past it the rows changed longest ago go first (`drishti.bi.live.max-rows`, 50,000, is the ceiling whatever a dataset asks). `age` drops rows that have not changed for that long (`90s`, `15m`, `2h`,
+`1d` or ISO `PT15M`); it is applied with every batch and on every resync, so a quiet table forgets too. Whatever leaves (evicted, or deleted by the source) starts a new **epoch** of the table; a client that holds rows (a Perspective grid) reads them again.
+
+**Two columns every live table has**, queryable like any other and never declared:
+
+| Column | Type | Meaning |
+|---|---|---|
+| `updateSeq` | integer | a counter that grows with each row that changes: "what changed since *n*" is `updateSeq > n` |
+| `updatedAt` | timestamp | when the row last changed (UTC) |
+
+**Row rules and masks apply on every update.** The table holds the source's rows and knows no reader. Every query, whenever it is asked, is compiled with the asker's row rules as predicates it cannot remove and their masks as `•••` (or null for a measure);
+the stream that tells a browser the table changed carries **no data**. Two readers of one table, one with a desk rule and one without `raw`, are each answered as themselves after every update (`LiveTablesTest`, `BiLiveApiTest`).
+
+**How a live table is doing.** `GET /api/v1/bi/datasets/{id}/layers` and the dataset page's Layers table show, per live table, `state` (`starting`, `live`, `stale`, `failed`, `closed`), `rows`, entities followed and how many push, and the time of the last change; the engine page
+(`GET /api/v1/bi/engine`, bi-admin) counts live tables and rows. A real answer, a minute after the first query, with the demo source ticking its 360 live trades (of 750) in a batch about twice a second:
+
+```json
+{"table": "trade", "kind": "trade", "state": "live", "rows": 750, "entities": 750, "subscribed": 360, "pushes": true, "seq": 34943, "epoch": 0, "generation": 99,
+ "lastUpdate": "2026-10-11T11:50:06.738811278Z", "lastSeen": "2026-10-11T11:50:06.738811278Z", "startedAt": "2026-10-11T11:49:08.530247983Z",
+ "applied": 34943, "skipped": 7, "evicted": 0, "deleted": 0, "error": null}
+```
+
+![The dataset page's Layers table for a live table](img/bi-live/dataset-live-layers.png)
+
+`stale` means the feed pushes but has delivered nothing for `drishti.bi.live.stale-after` (30 s); `failed` means the first read failed and there are no rows (the queries answer a warning with the reason, or `DRS-9026` when no running connector serves the kind).
+
+**A table nobody uses is closed.** A live table that has not been queried or streamed for `drishti.bi.live.idle-close` (10 minutes) is closed and its subscriptions are given back; the next use starts it again. A dataset edited so that a live table's definition changed
+gets a new table.
+
+**What cannot be live:** a table over an array (`each`): it follows whole entities (`DRS-9050`). A live table cannot be a `direct` table's neighbour in one query (the same rule as for cached tables).
+
+**Limits and settings:** `drishti.bi.live.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibilive--streaming-bi-phase-5).
 
 ## 8. The query
 
@@ -254,11 +318,13 @@ Validation never throws: it returns every problem with its code and the path of 
 | `DRS-9025` | too many queries at once (server or user) |
 | `DRS-9026` | a table's connector is not running, or is not a SQL store for a `direct` table |
 | `DRS-9027` | the engine failed on the compiled query (the message says how) |
+| `DRS-9050` | a live table cannot be kept: it is over an array (`each`) or its `live:` block is wrong; also `DRS-9026` when no running connector serves its kind |
+| `DRS-9051` | too many live streams are open for the server or the person (`drishti.bi.live.max-streams`, `max-streams-per-user`), HTTP 429 |
 
 ## 10. What is not built
 
 Marked so nothing is mistaken for working: **time intelligence** (`ytd`, `mtd`, `same_period_last_year`) and **window functions** (`running`, `lag`, `rank`); **Python measures** (stored, not run, phase 6);
 the **cron `refresh.schedule`** (stored and validated; refresh is by data-load signal and on demand, `POST /datasets/{id}/refresh`); **queries whose measures aggregate several unrelated fact tables**;
-**filter direction `both`** and **many-to-many** semantics, and **inactive relationships used by a measure**; **live tables as an incrementally updated in-memory table** from the hot path (a short-lived snapshot today);
+**filter direction `both`** and **many-to-many** semantics, and **inactive relationships used by a measure**; **running totals by group that a change adjusts** (live tables are maintained incrementally, measures are recomputed over them: 7.1), **history of a live table** (it holds current state with retention, not every update), **live tables over arrays** (`each`), **live tables in `direct` queries**;
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector
 honours them (the engine reads through the connector, not the files); **lineage and impact**, **classification tags**, **per-entry export rules**. Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [REPORTS.md](REPORTS.md), [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16.

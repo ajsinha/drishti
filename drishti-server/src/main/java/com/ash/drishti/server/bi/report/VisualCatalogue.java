@@ -38,7 +38,7 @@ public final class VisualCatalogue {
     public record Type(String group, Map<String, Well> wells) {}
 
     /** Types the grammar reserves and this server does not build (RUPAKA.md sections 8 and 12). */
-    public static final Set<String> RESERVED = Set.of("bubble", "funnel", "histogram", "box", "map", "python", "live-grid", "live-pivot", "live-chart", "entity-view", "shape");
+    public static final Set<String> RESERVED = Set.of("bubble", "funnel", "histogram", "box", "map", "python", "entity-view", "shape");
     /** Slicer modes built; {@code relative-date} is reserved. */
     public static final Set<String> SLICER_MODES = Set.of("list", "dropdown", "range");
 
@@ -67,6 +67,10 @@ public final class VisualCatalogue {
         put("table", "table", "columns", new Well(Kind.ANY, true, 0));
         put("matrix", "table", "rows", new Well(Kind.FIELD, true, 0), "columns", new Well(Kind.FIELD, false, 1), "values", values);
         put("slicer", "slicer", "field", new Well(Kind.FIELD, true, 1));
+        // streaming BI (phase 5): Perspective grids and pivots over the rows of one table, and a rolling line of measures
+        put("perspective-grid", "perspective", "columns", new Well(Kind.FIELD, true, 0));
+        put("perspective-pivot", "perspective", "rows", new Well(Kind.FIELD, true, 0), "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.FIELD, true, 0));
+        put("live-chart", "live", "values", new Well(Kind.MEASURE, true, 4));
         put("text", "static");
         put("image", "static");
         put("button", "static");

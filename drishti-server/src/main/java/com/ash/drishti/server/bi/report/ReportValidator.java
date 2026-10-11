@@ -132,6 +132,15 @@ public final class ReportValidator {
                 }
             }
         }
+        if (v.type().startsWith("perspective-")) {
+            perspective(v, p);
+        }
+        if ("live-chart".equals(v.type()) && v.format().get("window") != null) {
+            Object w = v.format().get("window");
+            if (!(w instanceof Number n) || n.intValue() < 5 || n.intValue() > 1000) {
+                err(ReportParser.VISUAL, p + ".format.window", "window is the number of points a live chart keeps, 5 to 1000");
+            }
+        }
         filters(v.filters(), p + ".filters");
         if (v.sort() != null && !v.wells().values().stream().anyMatch(l -> l.contains(v.sort().by()))) {
             err(ReportParser.REFERENCE, p + ".sort.by", "'" + v.sort().by() + "' is not a field or measure of this visual");
@@ -173,6 +182,43 @@ public final class ReportValidator {
             String type = typeOf(v.well("field").get(0));
             if (type != null && !Set.of("integer", "decimal", "date", "timestamp").contains(type)) {
                 err(ReportParser.VISUAL, p + ".format.mode", "a range slicer needs a number or date field; " + v.well("field").get(0) + " is " + type);
+            }
+        }
+    }
+
+    private static final Set<String> AGGREGATES = Set.of("sum", "avg", "count", "distinct count", "min", "max", "first", "last", "median", "dominant", "unique");
+
+    /** A Perspective visual shows the rows of ONE table, unaggregated: its fields must all be columns of the same table; {@code format.aggregates} names columns of the pivot. */
+    private void perspective(Report.Visual v, String p) {
+        Set<String> tables = new java.util.LinkedHashSet<>();
+        v.wells().values().forEach(l -> l.forEach(item -> {
+            try {
+                Resolver.ColRef ref = resolver.resolve(List.of(item.split("\\.")), null);
+                if (ref.part() != null) {
+                    err(ReportParser.VISUAL, p + ".wells", "'" + item + "' is a date part; Perspective shows the table's columns as they are");
+                } else if (ref.column() != null) {
+                    tables.add(ref.table());
+                }
+            } catch (IllegalArgumentException e) {
+                // reported by the well check
+            }
+        }));
+        if (tables.size() > 1) {
+            err(ReportParser.VISUAL, p + ".wells", "a " + v.type() + " shows the rows of one table, not " + String.join(" and ", tables) + ": join them in a dataset table, or use a matrix");
+        }
+        Object agg = v.format().get("aggregates");
+        if (agg != null) {
+            if (!(agg instanceof java.util.Map<?, ?> m)) {
+                err(ReportParser.VISUAL, p + ".format.aggregates", "aggregates maps a column to sum, avg, count, min, max, ...");
+            } else {
+                m.forEach((col, how) -> {
+                    if (!v.well("values").contains(String.valueOf(col))) {
+                        err(ReportParser.REFERENCE, p + ".format.aggregates." + col, "'" + col + "' is not in the values well of this " + v.type());
+                    }
+                    if (!AGGREGATES.contains(String.valueOf(how))) {
+                        err(ReportParser.VISUAL, p + ".format.aggregates." + col, "'" + how + "' is not an aggregate; use " + String.join(", ", new java.util.TreeSet<>(AGGREGATES)));
+                    }
+                });
             }
         }
     }
@@ -254,7 +300,7 @@ public final class ReportValidator {
                 Report.Visual v = page.visuals().get(vi);
                 String p = "pages[" + pi + "].visuals[" + vi + "]";
                 VisualCatalogue.Type spec = VisualCatalogue.type(v.type());
-                boolean data = spec != null && ("chart".equals(spec.group()) || "table".equals(spec.group()) || "card".equals(spec.group()));
+                boolean data = spec != null && Set.of("chart", "table", "card", "perspective", "live").contains(spec.group());
                 if ((data || "image".equals(v.type())) && v.title().isBlank() && v.alt().isBlank()) {
                     out.add(new Problem("warning", "A11Y", p, "the " + v.type() + " has no title and no alt text: a screen reader announces nothing about it"));
                 }

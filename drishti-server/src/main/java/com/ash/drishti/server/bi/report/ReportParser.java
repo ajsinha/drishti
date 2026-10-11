@@ -513,7 +513,7 @@ public final class ReportParser {
         return s.isEmpty() ? fallback : s.length() > 40 ? s.substring(0, 40) : s;
     }
 
-    static Problem error(String code, String path, String message) {
+    public static Problem error(String code, String path, String message) {
         return new Problem("error", code, path, message);
     }
 }

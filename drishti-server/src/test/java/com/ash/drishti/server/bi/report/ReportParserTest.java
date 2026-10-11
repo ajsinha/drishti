@@ -134,7 +134,7 @@ class ReportParserTest {
 
     @Test
     void reservedVisualsAndSlicerModesAreDrs9033() {
-        for (String type : List.of("map", "bubble", "funnel", "live-grid", "python")) {
+        for (String type : List.of("map", "bubble", "funnel", "histogram", "python")) {
             List<Problem> p = ReportParser.parse(MINI.replace("type: bar", "type: " + type)).problems();
             assertThat(p).as(type).extracting(Problem::code).contains("DRS-9033");
         }

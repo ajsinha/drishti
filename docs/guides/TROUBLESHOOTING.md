@@ -932,6 +932,58 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **Cause:** a new file has no copyright header.
 - **Fix:** `python3 tools/license_headers.py --fix`, then build again.
 
+## Live reports, Perspective and boards (BI phase 5)
+
+### A report over a live dataset shows no live indicator, or a tile does not update
+
+- **Cause:** the report's dataset has no table with `mode: live` (the indicator appears only then), or the console's live channel could not be opened (see "The live dot is amber"), or `drishti.bi.live.enabled` is `false` on the server (live tables are then a 5-second snapshot and nothing is streamed).
+- **Fix:** open the dataset's page: its Layers table says `in memory, live` for a live table. Check `GET /api/v1/bi/datasets/{id}/layers` (`live.state`) and, as a BI administrator, `GET /api/v1/bi/engine` (`live.enabled`).
+
+### The indicator says **Stale**
+
+- **Cause:** either the page has heard nothing from the server (not even its 5-second `status`) for `bi.live.stale_seconds` (30), or the table's source pushes but has delivered nothing for `drishti.bi.live.stale-after` (30 s): the source system or its connector has gone quiet. Hover over the indicator for the reason.
+- **Fix:** if the reason is "nothing heard from the server", reload the page; if "the source has pushed nothing", look at the connector (Admin, Connectors) and at the source. A source that changes rarely but is healthy says **Live**: stale needs a feed that pushes and then stops.
+
+### The indicator says **Feed failing**
+
+- **Cause:** the live table's first read failed and it holds no rows: no running connector serves the kind, or the connector is down. The queries answer with a warning that gives the connector's reason (`DRS-9026` when none serves the kind).
+- **Fix:** Admin, Connectors; then reopen the report (a failed table tries again on the next resync, every 30 s, and the page redraws when it recovers).
+
+### The indicator says **Disconnected**, or **Paused (tab in background)**
+
+- **Cause:** *Disconnected*: the stream between the console and the browser (or the server) dropped, for example the console restarted, or `DRS-9051` refused one for too many open streams. *Paused (tab in background)*: the tab was hidden for ten seconds and gave its stream back.
+- **Fix:** nothing to do for the first two: the browser reconnects by itself, and when the stream is back every visual is asked again. For `DRS-9051` close a tab or a board.
+
+### The live table has fewer rows than the kind has entities, or a row disappeared
+
+- **Cause:** the table follows at most `drishti.bi.live.follow-max` entities (2,000) and keeps at most the dataset's `live: { rows }` (and `drishti.bi.live.max-rows`, 50,000): the ones changed longest ago go first. `live: { age }` drops rows that have not changed for that long. A deletion pushed by the source removes the row.
+- **Fix:** raise the limits, or narrow the kind. The table's state (dataset page, `GET /bi/datasets/{id}/layers`) says `entities`, `rows`, `evicted` and `deleted`; a note says when `follow-max` stopped it.
+
+### The live table says `pushes: false`, and updates arrive only every 30 seconds
+
+- **Cause:** no connector that serves the kind can push it. When a dataset names no `connector:`, the engine uses the connector that serves the kind best (the one with the most columns promoted): a Delta or file connector for `trade` beats the demo source, and a store does not push. The table then reads the kind again every `drishti.bi.live.resync`.
+- **Fix:** name a connector that pushes in the dataset (`source: { connector: <name>, kind: trade }`: the Kafka or Redis connector, in `ticks` mode when a store serves the entities), or lower `resync`.
+
+### A Perspective grid says "Perspective could not start in this tab"
+
+- **Cause:** WebAssembly is blocked or failed in this browser tab (a policy of a proxy that rewrites the `Content-Security-Policy` header, a browser setting, or an out-of-memory tab). The visual then shows the first 500 rows as a plain table, and keeps following the live table.
+- **Fix:** open the report in a fresh tab; check the browser console for a `Content-Security-Policy` message. The report page that holds a Perspective visual is given `'wasm-unsafe-eval'` and the four style hashes in its own response only: a proxy must pass the header through. After a Perspective update, run `python tools/perspective-style-hashes.py --console <url> --user <u> --password <p> --check` and copy the list into `core/perspective_csp.py`.
+
+### A Perspective grid or pivot shows `•••` in a column
+
+- **Cause:** that column is masked for you (Drishti's field masks, or the dataset's `security.masked` and you lack `raw`): the server replaced it before the rows left. The same mask reads in every visual of the report.
+- **Fix:** nothing: ask an administrator for the `raw` power if you need the values.
+
+### A board tile says "Not available"
+
+- **Cause:** you may not open the report the tile shows, the report was deleted or renamed, or it no longer has that visual. The rest of the wall draws.
+- **Fix:** open the board's problems (the list above the wall, or `GET /api/v1/bi/boards/{id}`: `problems` with `DRS-9052` and the path) and correct the tile's `report:` and `visual:`.
+
+### A tile never changes colour
+
+- **Cause:** the rule compares a number the tile does not show (`on:` names a measure that is not among its columns), the value is masked for you (a masked value is null and never crosses a threshold), or the level was already reached. `crit` is tested before `warn`.
+- **Fix:** put the measure in `on:` exactly as the tile's column is named; read `data-alert` on the tile (`warn`, `crit` or empty) to see what the page decided.
+
 ## Error codes
 
 | Code | Meaning |
@@ -1029,10 +1081,14 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-9030` | a report's YAML or a structure in it is not valid (HTTP 422): not YAML, an unknown visual type, a grid position that does not fit the 12 columns, a duplicate id, an operator that is not one, an image from another address. The problem names the path of the key; check it in the designer's YAML tab or with `POST /api/v1/bi/reports/validate`; publishing such a report is refused with this code |
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer that its dataset or the report does not have (HTTP 422); the message lists what exists. A dataset that changed under a report is the usual cause |
 | `DRS-9032` | a visual is built wrongly (HTTP 422): a measure in a field well or a field in a measure well, a well the visual does not have, a required well left empty, more items than the well takes |
-| `DRS-9033` | the report uses a visual type (`map`, `bubble`, `funnel`, `histogram`, `box`, `python`, `live-grid`, `live-pivot`, `live-chart`, `entity-view`, `shape`) or the relative-date slicer: reserved, **not built** (HTTP 501) |
+| `DRS-9033` | the report uses a visual type (`map`, `bubble`, `funnel`, `histogram`, `box`, `python`, `entity-view`, `shape`) or the relative-date slicer: reserved, **not built** (HTTP 501) |
 | `DRS-9034` | a report's dataset cannot be found (a catalogue id, a file name such as `trades-basic`, or the dataset's name) or has errors, so the report cannot be drawn (HTTP 422). Open the dataset's page to see its problems |
 | `DRS-9035` | a visual query names a page, visual or slicer the report lacks, or its state is not valid: a drill path past the last level of the hierarchy, a selection from a visual that is not on the page, dates that are not `yyyy-mm-dd` (HTTP 422) |
 | `DRS-9040` | publishing the dataset would break published reports (HTTP 409): a field, measure or hierarchy they use is removed or renamed. The message lists the reports and what each uses. Fix the reports first, publish the dataset with the names kept (add the new name beside the old), or have a `bi-admin` publish with `force` ([BI_GOVERNANCE.md](BI_GOVERNANCE.md#6-impact-what-breaks-if-i-change-this)) |
 | `DRS-9041` | a BI bundle cannot be used (HTTP 422): not a bundle of this format, a file fails its checksum, it is larger than `drishti.bi.governance.bundle-max-bytes`, or an item in it is not valid. The message says which |
 | `DRS-9042` | a bundle import is refused (HTTP 409): items that changed here since the bundle was made would be overwritten (conflicts), or a workspace or owner it names cannot be mapped. Run it as a dry run to see the list, then choose `overwrite` or map the names |
+| `DRS-9050` | a live table cannot be kept (HTTP 422): it is over an array (`each`: a live table follows whole entities; use `mode: cached`) or its `live:` block is wrong (`rows` a positive number, `age` such as `90s`, `15m`, `2h`). When no running connector serves its kind the query answers `DRS-9026` instead |
+| `DRS-9051` | too many live streams are open (HTTP 429), for the server (`drishti.bi.live.max-streams`, 100) or for you (`max-streams-per-user`, 10). Each open live report holds one, a board one per distinct report on it: close a tab or a board. The page says **Disconnected** with the reason |
+| `DRS-9052` | a board is not valid (HTTP 422): not YAML, a bad name or id, a tile off the 12-column grid, an alert threshold that is not `{ op: lt, value: 0 }`, or a tile that names a report you cannot open, a page or visual it does not have, or a slicer. The problem names the path ([BOARDS.md](BOARDS.md#7-checking-a-board-drs-9052-and-drs-9053)) |
+| `DRS-9053` | a board uses a reserved setting (HTTP 501): `notify`, `notifications`, `subscriptions`. Notifications arrive with distribution (phase 7); a tile only changes colour |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |

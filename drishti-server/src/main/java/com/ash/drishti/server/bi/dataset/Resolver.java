@@ -60,6 +60,12 @@ public final class Resolver {
         if (Dataset.DATE.equals(name)) {
             return new Dataset.Column(Dataset.DATE, Dataset.DATE, "date", null, false, null, "the business date of the row");
         }
+        if (t.isLive() && Dataset.SEQ.equals(name)) {
+            return new Dataset.Column(Dataset.SEQ, Dataset.SEQ, "integer", null, false, null, "the order in which rows last changed (a counter that only grows)");
+        }
+        if (t.isLive() && Dataset.UPDATED.equals(name)) {
+            return new Dataset.Column(Dataset.UPDATED, Dataset.UPDATED, "timestamp", null, false, null, "when the row last changed");
+        }
         return null;
     }
 

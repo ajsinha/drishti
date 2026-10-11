@@ -1552,6 +1552,10 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9040 | 409 | Breaks reports | Publishing a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
 | DRS-9041 | 422 | Bundle invalid | A BI bundle is not readable, fails its checksums, is too large or holds an invalid item |
 | DRS-9042 | 409 | Import conflict | A bundle import would overwrite content that changed since the export, or names a workspace or owner that cannot be mapped |
+| DRS-9050 | 422 | Live table | A live table cannot be kept: it is over an array (`each`) or its `live:` block is wrong |
+| DRS-9051 | 429 | Live streams | Too many live streams are open for the server or for this user (`drishti.bi.live.max-streams`, `max-streams-per-user`) |
+| DRS-9052 | 422 | Board invalid | A board is malformed, or names a report, page or visual the caller cannot open or that does not exist, a tile off the grid, a slicer, or a threshold that is not `{op, value}` |
+| DRS-9053 | 501 | Board not built | A board uses a reserved setting: `notify`, `notifications`, `subscriptions` (phase 7) |
 
 `DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1625,12 +1629,12 @@ decided as for any item (`404 DRS-9001` otherwise), what the answer shows is dec
 | `GET` | `/bi/datasets/{id}` | the model for this caller: `{id, title, name, version, valid, problems[{level, code, path, message}], tables[{name, connector, kind, each, mode, access, columns[{name, path, type, key, calculated, expr, masked}]}], relationships[], measures[{name, expr, rollups}], hierarchies, security{rows[{role, where, appliesToYou}], masked, rowRulesEnforced}, rollups, layers}` |
 | `POST` | `/bi/datasets/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], tables, measures, model}` without storing anything; `model` (when the structure parsed) is the shape the Model view draws: `{tables[{name, kind, columns[...]}], relationships[{from, to, cardinality, direction, active}], measures[], hierarchies}` |
 | `POST` | `/bi/datasets/{id}/query` | runs a query (below); `?format=json` (default) or `arrow`; `?explain=true` adds the SQL (BI authors only) and skips the result cache |
-| `GET` | `/bi/datasets/{id}/layers` | what the BI store holds per table: dates, rows, how each was read |
+| `GET` | `/bi/datasets/{id}/layers` | what the BI store holds per table: dates, rows, how each was read; for a live table (phase 5) `partitions` is empty and `live` holds its counters (below) |
 | `POST` | `/bi/datasets/{id}/refresh` | (needs `bi-author`) clears the current business date's layers of this dataset and reads them again in the background |
 | `GET` | `/bi/model/kinds` | every kind of every pack the caller may open as a table: `{tables: [{table, pack, kind, connector, data, source, columns[{name, path, type, promoted}]}]}` |
 | `POST` | `/bi/model/start` | `{kinds: [...], name?}` (needs `bi-author`): `{yaml, tables, relationships[], proposals[], warnings[]}`: a draft dataset, the links the packs declare (`crossPack` marks those across packs), and relationships proposed from the data |
 | `POST` | `/bi/model/infer` | `{kinds: [...]}` (needs `bi-author`): `{proposals: [{fromTable, fromColumn, toTable, toColumn, cardinality, matchRate, matched, sampled, unmatched[], basis}]}` |
-| `GET` | `/bi/engine` | (needs `bi-admin`) counters (`queries`, `cacheHits`, `rejectedBusy`, `layerBuilds`, `byLayer`) and the limits in force |
+| `GET` | `/bi/engine` | (needs `bi-admin`) counters (`queries`, `cacheHits`, `rejectedBusy`, `layerBuilds`, `byLayer`), the limits in force and, since phase 5, `live: {tables, rows, enabled}` |
 
 **The query body.** `{"fields": ["trades.desk", "trades.tradeDate.month"], "measures": ["Notional", "MTM"], "filters": [{"field": "trades.currency", "op": "in", "values": ["USD", "EUR"]}], "dates": {"from": "2026-10-01", "to": "2026-10-09"}, "orderBy": [{"by": "MTM", "desc": true}], "limit": 100, "layer": "auto"}`.
 Fields are `table.column` or `table.column.part` (`year quarter month day week`); filter `op` is `eq ne in not-in lt le gt ge between contains starts-with is-null not-null`; a filter whose field is a measure name filters the aggregate;
@@ -1661,7 +1665,8 @@ any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's
 | Method | Path | What it does |
 |---|---|---|
 | `GET` | `/bi/reports/{id}` | the report for this caller: `{id, title, description, status, shipped, sample, valid, problems[{level, code, path, message}], report, dataset, mayEdit}`; `report` is the model (the YAML's structure with defaults filled in), `dataset` the model of the dataset it reads (tables with columns, measures, hierarchies, relationships; no row rules) |
-| `POST` | `/bi/reports/{id}/query` | one visual's data: body `{page, visual, state}`; the answer is the dataset query's JSON answer plus `highlight`, `visual` and `query` (what was asked); `?explain=true` adds the SQL for BI authors |
+| `POST` | `/bi/reports/{id}/query` | one visual's data: body `{page, visual, state}`; the answer is the dataset query's JSON answer plus `highlight`, `visual` and `query` (what was asked), and, over a dataset with a live table, `live` (phase 5, below); `?explain=true` adds the SQL for BI authors; `?format=arrow` answers an Apache Arrow IPC stream (a Perspective visual's rows, masked for the caller) with `X-Bi-Rows`, `X-Bi-Masked` and `X-Bi-Live` headers |
+| `GET` | `/bi/reports/{id}/live` | **SSE** (phase 5): the report's live tables as they change: `hello`, `tick`, `status` (below); `429 DRS-9051` when too many streams are open |
 | `POST` | `/bi/reports/query` | the same for a draft (needs `bi-author`): `{report \| yaml, page, visual, state}` |
 | `POST` | `/bi/reports/validate` | `{yaml, quality?}` (needs `bi-author`): `{valid, problems[], report}`; `quality: true` adds the accessibility, layout checks |
 | `POST` | `/bi/reports/format` | `{report: {...}}`: the model written as YAML the way a person writes it: `{yaml}` |
@@ -1684,8 +1689,60 @@ POST /api/v1/bi/reports/file:report:trades-overview/query   {"page": "overview",
       "query": {"fields": ["trade.desk"], "measures": ["MTM"], "filters": [], "orderBy": ["MTM desc"], "limit": 500}}
 ```
 
+**Live reports (phase 5).** A report over a dataset with a `mode: live` table ([DATASETS.md](DATASETS.md#71-live-tables-phase-5), [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5)) has a stream, `GET /bi/reports/{id}/live` (`Accept: text/event-stream`; with security on, the caller needs the right to read the report):
+
+| Event | Data |
+|---|---|
+| `hello` | the live state when the stream opens: `{generation, lastUpdate, state, at, tables: [...]}`; `state` is `live`, `stale`, `starting`, `failed`, `closed` or `none` (a report with no live table: the stream ends after it) |
+| `tick` | the same, whenever the tables changed, at most one per `drishti.bi.live.frame` (250 ms): the **latest** state, so a slow client skips ticks and never queues them. It carries **no data**: the client asks its visuals again, as itself |
+| `status` | the same, every `drishti.bi.live.status` (5 s) when nothing changed or the state changed; also the heartbeat |
+
+Each entry of `tables` is `{table, kind, state, rows, entities, subscribed, pushes, seq, epoch, generation, lastUpdate, lastSeen, startedAt, applied, skipped, evicted, deleted, error}`: `seq` is the table's change counter (`updateSeq` of its newest row), `epoch` grows when rows leave it,
+`generation` grows with every change. Captured from a real server (the demo source ticking its 360 live trades of 750, a batch about twice a second; `curl -N` shows the same):
+
+```
+GET /api/v1/bi/reports/file:report:live-trading-desk/live
+event:hello  data:{"generation":95,"lastUpdate":"2026-10-11T11:50:03.684098666Z","state":"live","at":"2026-10-11T11:50:04.732755792Z","tables":[{"table":"trade","kind":"trade","state":"live","rows":750,"entities":750,"subscribed":360,"pushes":true,"seq":33503,"epoch":0,"generation":95,...}]}
+event:tick   data:{"generation":96,"lastUpdate":"2026-10-11T11:50:04.545007543Z","state":"live",...,"tables":[{"table":"trade",...,"seq":33863,"epoch":0,"generation":96,...}]}
+```
+
+A JSON answer over such a dataset also carries `live` (the same object, read **before** the query ran, so asking "since `seq`" misses nothing): `"meta": {"layer": "live", ...}`, `"live": {"generation": 99, "state": "live", "tables": [{"table": "trade", "seq": 34943, "epoch": 0, ...}]}`.
+The state's `since` (a number) is for Perspective visuals: only the rows whose `updateSeq` is above it. A Perspective visual's first read is `?format=arrow`; the columns are named as the table names them, plus `id` and, for a live table, `updateSeq`. Captured (the same visual for a reader without `raw`; the mask is in the bytes):
+
+```
+POST /api/v1/bi/reports/file:report:live-trading-desk/query?format=arrow   {"page": "grid", "visual": "all-trades", "state": {"limit": 3}}   (as ann)
+200  columns: tradeId, desk, book, productType, currency, direction, trader, notional, mtm, pnl1d, id, updateSeq        masked: ["trader"]
+     ["BBG-60000001","DESK-FI","BOOK-FI-3","GOVT_BOND","CHF","Short","•••",198000000.0,-978378.0,-23374.0,"BBG-60000001",1]
+POST ...   {"page": "grid", "visual": "all-trades", "state": {"since": 34943}}   (as rita)   200  rowCount: 360 (the rows that changed since), every updateSeq > 34943
+```
+
+A live table in `GET /bi/datasets/{id}/layers`: `{"table": "trade", "partitions": [], "mode": "live", "live": {"state": "live", "rows": 750, "entities": 750, "subscribed": 360, "pushes": true, "seq": 34943, "epoch": 0, "lastUpdate": "...", "error": null, ...}}`.
+
 Refusals are the standard problem body with the code: `422 DRS-9030` to `9032` (the report), `501 DRS-9033` (not built), `422 DRS-9034` (the dataset), `422 DRS-9035` (the state), and every dataset query code (`9020` to `9027`, `403 DRS-9021` for a masked column,
 `422 DRS-9020` when a row rule makes a visual unanswerable). Every query is audited like a dataset query. From the console the calls are under `/bi/api/reports/...`; the console's page asks three queries at a time (the server allows three per person) and retries a `429`.
+
+## Boards: `/api/v1/bi/boards` (phase 5)
+
+Phase 5 of Rūpaka ([BOARDS.md](BOARDS.md) is the reference). A board is a BI item of kind `board` (id `bi-<hex>`, or `file:board:<name>` for a shipped file); who may read it is decided as for any item. A board holds no data: each tile names a report and a visual, and its data and its live stream are the
+report's (`POST /bi/reports/{id}/query`, `GET /bi/reports/{id}/live`).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/bi/boards/{id}` | `{id, title, description, status, shipped, sample, valid, problems[{level, code, path, message}], board, tiles, mayEdit}`; `board` is the model (pages, tiles with `at` and `alert`, `rotate`), `tiles` maps `"<page id>/<tile id>"` to `{report, reportTitle, page, type, live}` (`report` is the item id the tile resolved to for **this caller**, or null) |
+| `POST` | `/bi/boards/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], board}`: the structure and what each tile names inside its report |
+
+Captured from a real server, validating a board with a tile off the grid, a reserved key, a visual that does not exist and a report that does not exist:
+
+```
+POST /api/v1/bi/boards/validate   {"yaml": "board: bad\npages:\n  - id: p\n    tiles:\n      - { report: live-trading-desk, visual: nope, at: { x: 0, y: 0, w: 13, h: 3 } }\n      - { report: no-such, visual: v, at: { x: 0, y: 3, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, notify: { email: a@b.c } } }\n"}
+200  {"valid": false, "problems": [
+       {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[0].at", "message": "x is 0 to 11 and w is 1 to 12, and x + w is at most 12 (the grid has 12 columns); this is x=0, w=13"},
+       {"level": "error", "code": "DRS-9053", "path": "pages[0].tiles[1].alert.notify", "message": "'notify' is reserved and not built yet: a tile only changes colour; notifications arrive with distribution (phase 7)"},
+       {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[0].visual", "message": "report 'Live trading desk' has no visual 'nope'"},
+       {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[1].report", "message": "no report 'no-such' that you can open (a catalogue id, a file name such as live-trading-desk, or the report's name)"}]}
+```
+
+Publishing a board (`POST /bi/items/{id}/publish`) checks its structure and refuses `422 DRS-9052`. From the console the calls are under `/bi/api/boards/...` and the stream is the channel subscription `bilive:<report id>` ([LIVE.md](../architecture/LIVE.md#live-bi-a-reports-live-tables)).
 
 ## Publishing and governance: `/api/v1/bi` (phase 4)
 

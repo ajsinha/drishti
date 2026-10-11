@@ -210,7 +210,7 @@ public final class DatasetService {
                 "masked", d.security().masked(), "rowRulesEnforced", security.enabled()));
         m.put("rollups", d.rollups().stream().map(x -> Map.of("name", x.name(), "table", x.table(), "by", x.by(), "measures", x.measures())).toList());
         if (r.ok()) {
-            m.put("layers", queries.layers().inventory(Layers.key(id), d));
+            m.put("layers", withLive(Layers.key(id), d, queries.layers().inventory(Layers.key(id), d)));
         }
         return m;
     }
@@ -308,6 +308,18 @@ public final class DatasetService {
     /** The parsed dataset of an item, or DRS-9010 when it has errors. */
     public Dataset parsedDataset(Principal p, BiStore.Item item) {
         return loaded(p, item).dataset();
+    }
+
+    /** The state of a dataset's live tables (generation, last update, state, counters), starting them when they are not running: {@code state: none} without live tables. */
+    public Map<String, Object> liveTick(Principal p, BiStore.Item item) {
+        return queries.liveTick(loaded(p, item));
+    }
+
+    /** A reader of the dataset's live state for a stream: the dataset is resolved once; each call reads the tables' counters (and starts a table that was closed as idle). */
+    public java.util.function.Supplier<Map<String, Object>> liveWatch(Principal p, BiStore.Item item) {
+        QueryService.Loaded ds = loaded(p, item);
+        queries.liveTick(ds);
+        return () -> queries.liveTick(ds);
     }
 
     /** Runs a query against a dataset item the caller reaches through something else (a report): the row rules and masks are still the caller's. */
@@ -408,13 +420,29 @@ public final class DatasetService {
 
     public List<Map<String, Object>> layers(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
-        return queries.layers().inventory(Layers.key(id), loaded(p, item).dataset());
+        Dataset d = loaded(p, item).dataset();
+        return withLive(Layers.key(id), d, queries.layers().inventory(Layers.key(id), d));
+    }
+
+    /** A live table has no partitions on disk: its entry says how the in-memory table is doing (state, rows, entities followed, how many push, last change) or that it is not started. */
+    private List<Map<String, Object>> withLive(String key, Dataset d, List<Map<String, Object>> inventory) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Map<String, Object> e : inventory) {
+            Map<String, Object> m = new LinkedHashMap<>(e);
+            Dataset.Table t = d.tables().get(String.valueOf(e.get("table")));
+            if (t != null && t.isLive() && queries.keepsLive(d)) {
+                m.put("live", queries.live().find(key, t.name()).map(x -> x.status().toMap()).orElse(Map.of("state", "not started", "table", t.name())));
+            }
+            out.add(m);
+        }
+        return out;
     }
 
     public Map<String, Object> engine() {
         Map<String, Object> m = new LinkedHashMap<>(queries.stats());
         m.put("engine", "duckdb");
         m.put("storeDir", queries.layers().root().toString());
+        m.put("live", queries.live().stats());
         m.put("limits", Map.of("timeoutSeconds", props.timeout().toSeconds(), "maxRows", props.maxRows(), "maxBytes", props.maxBytes(), "maxConcurrent", props.maxConcurrent(),
                 "maxConcurrentPerUser", props.maxConcurrentPerUser(), "jsonMaxRows", props.jsonMaxRows()));
         return m;

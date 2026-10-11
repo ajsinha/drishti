@@ -26,6 +26,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from urllib.parse import quote
 
+from core.perspective_csp import PERSPECTIVE_WORKERS, STYLE_HASHES, policy as perspective_policy
+
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -35,6 +37,14 @@ from core.nextpath import to_login
 
 WEB = Path(__file__).resolve().parent.parent / "web"
 ASSET_VERSION = "1.20.0"
+
+
+def _bounded(value, low: int, high: int, default: int) -> int:
+    """A numeric setting held between two bounds; anything that is not a number is the default."""
+    try:
+        return max(low, min(high, int(float(value))))
+    except (TypeError, ValueError):
+        return default
 
 
 def asset_fingerprint() -> str:
@@ -63,15 +73,14 @@ PYODIDE = "/pyodide/"
 # WebAssembly on its main thread (Perspective's viewer): 'wasm-unsafe-eval', never 'unsafe-eval'. The two vendored workers
 # (Perspective's engine, DuckDB-Wasm) are scripts of this origin with the worker policy above; neither is a blob.
 POC_PAGE = "/bi/poc"
-# Perspective's viewer also writes <style> elements (its shadow roots' own CSS): not allowed by style-src 'self'. These are the SHA-256
-# hashes of the six it writes for the grid and the pivot of Perspective 3.8.0 (measured: the page logs each refused one with its
-# hash); the charts and the settings panel need about eight more (see RUPAKA_POC.md): a new Perspective version means new hashes.
-POC_STYLE_HASHES = ("sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=", "sha256-5ZnN0JqHgS1XbqCOd7qSJmy89TJJwbmeYjC8fPeSuwc=",
-                    "sha256-CjknTzl2uKtf8HzhOg2u184k8XVq0Q32LfRRPUqc0g4=", "sha256-ILUuaTblzLnuV4UciYvrUJkuNlQ570jCEpzE0t/Pe5s=",
-                    "sha256-TlH50xiDI4R2hMVrktT2rsnuNnNdfvL/RTinBMjapl0=", "sha256-rjC4ta+DkxJjU72hK9nIKZxg1UN00ALy4b/FYtZ7KHc=")
-POC_CSP = (CSP.replace("script-src 'self'", "script-src 'self' 'wasm-unsafe-eval'")
-           .replace("style-src 'self'", "style-src 'self' " + " ".join(f"'{h}'" for h in POC_STYLE_HASHES)))
-POC_WORKERS = ("/static/vendor/perspective/3.8.0/perspective/cdn/perspective-server.worker.js",)
+# Perspective's viewer also writes <style> elements (its shadow roots' own CSS): not allowed by style-src 'self'. The hashes and the policy are in
+# core/perspective_csp.py, shared with the reports and boards of phase 5 that hold a Perspective visual.
+POC_EXTRA_HASHES = ("sha256-CjknTzl2uKtf8HzhOg2u184k8XVq0Q32LfRRPUqc0g4=", "sha256-ILUuaTblzLnuV4UciYvrUJkuNlQ570jCEpzE0t/Pe5s=")   # the phase 0 page also loads the chart plugin
+POC_STYLE_HASHES = STYLE_HASHES + POC_EXTRA_HASHES
+POC_CSP = perspective_policy(CSP, POC_STYLE_HASHES)
+POC_WORKERS = PERSPECTIVE_WORKERS
+# Rupaka phase 5: a report or board that holds a Perspective visual gets, in its own response only, the same narrow relaxation (routes/bi_routes.py sets
+# the header); every other BI page keeps the strict policy (no wasm, no extra style source).
 POC_WORKER_SUFFIX = "/duckdb-browser-eh.worker.js"
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
@@ -228,6 +237,11 @@ def create_app(settings: Settings) -> FastAPI:
         CLOCK_LABEL=settings.get("ui.clock_label", "NY"),
         COPYRIGHT=settings.get("ui.copyright", ""),
         BI_POC=str(settings.get("bi.poc_enabled", False)).lower() in ("true", "1", "yes", "on"),
+        BI_LIVE={
+            "min_interval_ms": _bounded(settings.get("bi.live.min_interval_ms", 250), 100, 5000, 250),
+            "stale_seconds": _bounded(settings.get("bi.live.stale_seconds", 30), 5, 600, 30),
+            "rotate_seconds": _bounded(settings.get("bi.board.rotate_seconds", 30), 3, 3600, 30),
+        },
         ABOUT_PREFETCH=str(settings.get("ui.about_prefetch", True)).lower() not in ("false", "0", "no", "off"),
     )
     from core.asof import to_local

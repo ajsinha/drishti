@@ -189,7 +189,13 @@
       var tb = q('[data-layers] tbody'); clear(tb);
       (m.layers || []).forEach(function (t) {
         var rows = t.partitions.reduce(function (a, p) { return a + p.rows; }, 0);
-        tb.appendChild(h('tr', {}, h('th', { scope: 'row', text: t.table }), h('td', { text: t.mode }), h('td', { text: t.partitions.map(function (p) { return p.date; }).join(', ') || 'none yet: built on the first query' }), h('td', { text: num(rows) })));
+        var where = t.partitions.map(function (p) { return p.date; }).join(', ') || 'none yet: built on the first query';
+        if (t.live) {                                    // a live table is in memory, kept up to date by the feed (phase 5)
+          rows = t.live.rows || 0;
+          where = t.live.state === 'not started' ? 'in memory: not started yet (it starts with the first query or stream)'
+            : 'in memory, ' + t.live.state + ': ' + num(t.live.subscribed) + ' of ' + num(t.live.entities) + ' entities push their changes' + (t.live.lastUpdate ? ', last change ' + new Date(t.live.lastUpdate).toTimeString().slice(0, 8) : '');
+        }
+        tb.appendChild(h('tr', {}, h('th', { scope: 'row', text: t.table }), h('td', { text: t.mode }), h('td', { text: where }), h('td', { text: num(rows) })));
       });
     }
 

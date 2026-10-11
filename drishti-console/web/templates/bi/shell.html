@@ -39,7 +39,8 @@
     <button type="button" class="bi-rail-link bi-rail-keys" data-bi-keys><i class="bi bi-keyboard" aria-hidden="true"></i><span>Keys <kbd>?</kbd></span></button>
   </nav>
   <section class="bi-canvas" id="biCanvas" data-bi-page="{{ bi_page }}" data-workspace="{{ workspace | default('') }}" data-item="{{ item | default('') }}"
-           data-user="{{ me.user if me else '' }}">
+           data-user="{{ me.user if me else '' }}"
+           data-perspective="{{ perspective | default('') }}" data-live-min="{{ BI_LIVE.min_interval_ms }}" data-live-stale="{{ BI_LIVE.stale_seconds }}" data-rotate="{{ BI_LIVE.rotate_seconds }}">
     {% block bi_main %}{% endblock %}
   </section>
 </div>
