@@ -235,7 +235,7 @@ class BiApiTest {
     @Test @Order(5)
     void reviewBeforePublishUsesTheApproverPowerAndFourEyes() throws Exception {
         ok(call("PUT", "/api/v1/bi/workspaces/" + workspace, ann(), Map.of("reviewRequired", true)));
-        JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "dataset", "title", "Trades", "body", "table: trades\n")));
+        JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "dataset", "title", "Trades", "body", "dataset: trades\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\n")));
         String id = i.path("id").asText();
         refused(call("POST", "/api/v1/bi/items/" + id + "/publish", ann(), Map.of()), 403, "DRS-9002");     // review is required
         assertThat(ok(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of("note", "please"))).path("status").asText()).isEqualTo("proposed");
@@ -349,5 +349,17 @@ class BiApiTest {
             assertThat(all).as(action).contains(action + ":");
         }
         assertThat(all).contains("bi-item-endorsed:" + item + ":sue");
+    }
+
+    @Test @Order(99)
+    void anInvalidDatasetCannotBePublishedAndSaysWhy() throws Exception {
+        JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "dataset", "title", "Broken", "body", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: strng }\n")));
+        String id = i.path("id").asText();
+        ok(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of()));
+        r1(call("POST", "/api/v1/bi/items/" + id + "/approve", bob(), Map.of()));
+    }
+
+    private void r1(ResultActions r) throws Exception {
+        refused(r, 422, "DRS-9010");
     }
 }

@@ -367,7 +367,7 @@ class QueryEngineTest {
             total += (double) v;
         }
         assertThat(total).isEqualTo(lake.trades.get(TestLake.DAY2).stream().mapToDouble(t -> 2000.0 * (Integer.parseInt(t.id().substring(5)) + 1)).sum());
-        assertThat(r.meta().warnings()).anyMatch(w -> w.contains("reading documents"));
+        assertThat(r.meta().warnings()).anyMatch(w -> w.contains("read once per business date"));
     }
 
     // ---- cache and data loads ----------------------------------------------------------------------------------------
