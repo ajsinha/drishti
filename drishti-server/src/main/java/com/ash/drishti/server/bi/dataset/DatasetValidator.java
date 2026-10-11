@@ -153,7 +153,9 @@ final class DatasetValidator {
             String f = c.function();
             int a = c.args().size();
             if (Node.RESERVED.contains(f)) {
-                err(NOT_BUILT, path, "'" + f + "' is reserved for time intelligence and window functions and is not built yet (RUPAKA.md section 20.2)");
+                err(NOT_BUILT, path, "'" + f + "' is reserved for window functions and is not built yet (time intelligence ytd, mtd, qtd, prior_period, same_period_last_year and running are built)");
+            } else if (Node.TIME.contains(f) || Node.WINDOW.contains(f)) {
+                timeCall(path, c);
             } else if (!Node.AGGREGATES.contains(f) && !Node.SCALARS.contains(f)) {
                 err(EXPRESSION, path, "unknown function '" + f + "'; aggregates: " + new java.util.TreeSet<>(Node.AGGREGATES) + ", row functions: " + new java.util.TreeSet<>(Node.SCALARS));
             } else if (ARITY_1_2.contains(f) && (a < 1 || a > 2)) {
@@ -170,6 +172,41 @@ final class DatasetValidator {
                 err(EXPRESSION, path, "if(condition, then, else) takes three arguments");
             }
         });
+    }
+
+    /** {@code ytd(sum(x), table.date)}: an aggregate expression and a date column; {@code running} takes one sum, count, min or max. */
+    private void timeCall(String path, Node.Call c) {
+        String f = c.function();
+        if (c.args().size() != 2) {
+            err(EXPRESSION, path, f + "(aggregate, table.dateColumn) takes two arguments, for example " + f + "(sum(trades.mtm), trades.tradeDate)");
+            return;
+        }
+        Node agg = c.args().get(0);
+        Node date = c.args().get(1);
+        if (!Node.hasAggregate(agg)) {
+            err(EXPRESSION, path, f + "() restricts an aggregate: its first argument must aggregate, for example sum(trades.mtm)");
+        }
+        boolean nested = Node.anyMatch(agg, x -> x instanceof Node.Call k && (Node.TIME.contains(k.function()) || Node.WINDOW.contains(k.function())));
+        if (nested || Node.anyMatch(agg, x -> x instanceof Node.MeasureRef)) {
+            err(EXPRESSION, path, f + "() cannot hold another time function or a measure reference; write the aggregate itself");
+        }
+        if (Node.WINDOW.contains(f) && !(agg instanceof Node.Call k && Set.of("sum", "count", "min", "max").contains(k.function()))) {
+            err(EXPRESSION, path, "running() adds up along the date, so it takes one sum, count, min or max (an average, ratio, distinct count or percentile has no running total)");
+        }
+        if (!(date instanceof Node.Ref ref)) {
+            err(EXPRESSION, path, f + "()'s second argument is a date column, for example trades.tradeDate");
+            return;
+        }
+        try {
+            Resolver.ColRef col = resolver.resolve(ref.parts(), null);
+            Dataset.Column column = col.column() == null || col.part() != null ? null : resolver.column(col.table(), col.column());
+            boolean temporal = column != null && ("date".equals(column.type()) || "timestamp".equals(column.type())) || Dataset.DATE.equals(col.column()) && col.part() == null;
+            if (!temporal) {
+                err(EXPRESSION, path, f + "()'s second argument must be a date or timestamp column; '" + ref.text() + "' is not");
+            }
+        } catch (IllegalArgumentException e) {
+            err(EXPRESSION, path, e.getMessage());
+        }
     }
 
     /** Every name resolves; a column outside an aggregate is an error in a measure. */
@@ -193,6 +230,12 @@ final class DatasetValidator {
                 }
             }
             case Node.UserRef u -> err(EXPRESSION, path, "user." + u.attribute() + " is for row rules; a measure does not depend on the reader");
+            case Node.Call c when (Node.TIME.contains(c.function()) || Node.WINDOW.contains(c.function())) && c.args().size() == 2 -> {
+                if (inAggregate) {
+                    err(EXPRESSION, path, c.function() + "() cannot be inside an aggregate");
+                }
+                refs(path, c.args().get(0), false, current);               // the date column (second argument) is checked by timeCall
+            }
             case Node.Call c -> {
                 boolean agg = Node.AGGREGATES.contains(c.function());
                 if (agg && inAggregate && !"ratio".equals(c.function())) {

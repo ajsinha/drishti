@@ -107,4 +107,9 @@ public final class ServerSourceGateway implements SourceGateway {
     public LocalDate currentDate() {
         return dates.current();
     }
+
+    @Override
+    public com.ash.drishti.common.BusinessCalendar calendar() {
+        return dates.calendar();
+    }
 }

@@ -144,7 +144,7 @@ public final class SqlCompiler {
             if (m.expr() == null) {
                 throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are stored and not run yet");
             }
-            SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user());
+            SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user()).planning();
             probe.emit(new Node.MeasureRef(name), false);
             aggTables.addAll(probe.tables());
             boolean masked = columnsOfMeasure(name).stream().anyMatch(c -> c.column() != null && reader.masks().masked(c.table(), c.column()));
@@ -156,7 +156,7 @@ public final class SqlCompiler {
             Dataset.Measure m = ds.measures().get(f.field());
             if (m != null && m.expr() != null && !f.field().contains(".")) {
                 filters.add(new FilterUse(f, null, m));
-                SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user());
+                SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user()).planning();
                 probe.emit(new Node.MeasureRef(f.field()), false);
                 aggTables.addAll(probe.tables());
                 tables.addAll(probe.tables());
@@ -353,10 +353,15 @@ public final class SqlCompiler {
      * @param components for a rollup, the stored column of each component; null otherwise
      */
     public Compiled compile(Plan p, Reader reader, Map<String, Source> sources, int rowCap, Map<String, String> components) {
+        return compile(p, reader, sources, rowCap, components, TimeWindows.Context.weekends(java.time.LocalDate.now(java.time.ZoneOffset.UTC)));
+    }
+
+    /** As {@link #compile(Plan, Reader, Map, int, Map)}, with the as-of date and calendar the time-intelligence measures are worked out from. */
+    public Compiled compile(Plan p, Reader reader, Map<String, Source> sources, int rowCap, Map<String, String> components, TimeWindows.Context time) {
         QueryRequest q = p.query();
-        SqlEmitter select = new SqlEmitter(ds, dialect, p.base(), components, reader.user());
+        SqlEmitter select = new SqlEmitter(ds, dialect, p.base(), components, reader.user()).time(time);
         SqlEmitter where = new SqlEmitter(ds, dialect, p.base(), null, reader.user());
-        SqlEmitter having = new SqlEmitter(ds, dialect, p.base(), components, reader.user());
+        SqlEmitter having = new SqlEmitter(ds, dialect, p.base(), components, reader.user()).time(time);
         List<String> items = new ArrayList<>();
         List<String> group = new ArrayList<>();
         List<Out> outs = new ArrayList<>();
@@ -376,6 +381,7 @@ public final class SqlCompiler {
             }
             items.add(expr + " AS " + Dialect.quote(f.text()));
             aliasSql.put(f.text(), f.masked() ? null : expr);
+            select.windowField(f.ref(), expr, f.masked());
         }
         for (Use m : p.measures()) {
             outs.add(new Out(m.name(), true, m.masked(), null));
@@ -552,6 +558,9 @@ public final class SqlCompiler {
     }
 
     private String measureFilter(SqlEmitter e, QueryRequest.Filter f) {
+        if (usesWindow(f.field(), new java.util.HashSet<>())) {
+            throw invalid("'" + f.field() + "' is a running total, which is worked out along the visual's date field: it cannot be filtered on");
+        }
         String expr = e.emit(new Node.MeasureRef(f.field()), false);
         List<Object> v = f.values();
         if (v.size() != 1 || !(v.get(0) instanceof Number n)) {
@@ -568,6 +577,22 @@ public final class SqlCompiler {
         };
         e.params().add(n.doubleValue());
         return "(" + expr + " " + op + " ?)";
+    }
+
+    private boolean usesWindow(String measure, Set<String> seen) {
+        Dataset.Measure m = ds.measures().get(measure);
+        if (m == null || m.expr() == null || !seen.add(measure)) {
+            return false;
+        }
+        boolean[] hit = {false};
+        Node.walk(ExprParser.parse(m.expr()), n -> {
+            if (n instanceof Node.Call c && Node.WINDOW.contains(c.function())) {
+                hit[0] = true;
+            } else if (n instanceof Node.MeasureRef r && usesWindow(r.name(), seen)) {
+                hit[0] = true;
+            }
+        });
+        return hit[0];
     }
 
     private static DrishtiException invalid(String message) {

@@ -132,7 +132,7 @@ class DatasetParserTest {
 
     @Test
     void reservedGrammarIsDrs9013AndPythonMeasuresAreStoredNotRun() {
-        assertThat(errors(GOOD.replace("sum(trades.notional)\"", "ytd(sum(trades.notional))\""))).extracting(Problem::code).contains("DRS-9013");
+        assertThat(errors(GOOD.replace("sum(trades.notional)\"", "lag(sum(trades.notional))\""))).extracting(Problem::code).contains("DRS-9013");
         assertThat(errors(GOOD.replace("count(trades)", "rank(trades.mtm)"))).extracting(Problem::code).contains("DRS-9013");
         DatasetParser.Result r = DatasetParser.parse(GOOD.replace("  Trades: { expr: \"count(trades)\" }", "  Trades: { python: risk.measures.attrib, inputs: [trades.mtm] }")
                 .replace("measures: [Notional, MTM, Trades]", "measures: [Notional, MTM]"));

@@ -113,6 +113,12 @@ public class DatasetController {
         return datasets.refresh(p, id);
     }
 
+    /** When the dataset refreshes and how the last refresh went: schedule, status, last run, next run, rows, duration, failures (a reader of the dataset). */
+    @GetMapping("/datasets/{id}/refresh")
+    public Map<String, Object> refreshState(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return datasets.refreshState(p, id);
+    }
+
     // ---- the model from the packs ------------------------------------------------------------------------------------
 
     /** Every kind of every pack the caller may open, as a table with its columns. */

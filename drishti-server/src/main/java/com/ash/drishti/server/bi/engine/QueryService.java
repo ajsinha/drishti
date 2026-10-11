@@ -269,8 +269,6 @@ public final class QueryService implements AutoCloseable {
             }
         }
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
-        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components);
-        AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, props.timeout());
         List<String> dates = new ArrayList<>();
         cols.values().forEach(l -> l.partitions().forEach(p -> {
             if (p.date() != null && p.rows() > 0 && !dates.contains(p.date().toString())) {
@@ -278,7 +276,18 @@ public final class QueryService implements AutoCloseable {
             }
         }));
         java.util.Collections.sort(dates);
+        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(q, dates));
+        AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, props.timeout());
         return finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
+    }
+
+    /**
+     * The as-of date of the time-intelligence measures: the end of the query's dates, else its start, else the newest date the query read, else the current
+     * business date.
+     */
+    private TimeWindows.Context timeContext(QueryRequest q, List<String> readDates) {
+        LocalDate asOf = q.to() != null ? q.to() : q.from() != null ? q.from() : !readDates.isEmpty() ? LocalDate.parse(readDates.get(readDates.size() - 1)) : sources.currentDate();
+        return new TimeWindows.Context(asOf, q.from(), sources.calendar());
     }
 
     private Result finish(Loaded ds, QueryRequest q, SqlCompiler.Compiled c, AnalyticEngine.Answer a, String layer, String rollup, List<String> dates,
@@ -383,7 +392,7 @@ public final class QueryService implements AutoCloseable {
             from.put(t, TableRelations.direct(d, d.tables().get(t), target, dialect, q.from(), q.to()));
         }
         int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
-        SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null);
+        SqlCompiler.Compiled c = compiler.compile(p, reader, from, cap, null, timeContext(q, List.of()));
         long t0 = System.nanoTime();
         AnalyticEngine.Answer a;
         try {
@@ -440,6 +449,41 @@ public final class QueryService implements AutoCloseable {
             }
         }
         return touched;
+    }
+
+    /** What a refresh did: the date rebuilt, the tables, the rows read and how long it took. */
+    public record Refreshed(String date, List<String> tables, long rows, long millis, List<String> warnings) {}
+
+    /**
+     * Rebuilds the layers of a dataset for one business date, now and on this thread, so a failure comes back to the caller (the scheduler retries it with the
+     * shared policy): the date's partitions of the cached tables are cleared, the cached results of the dataset dropped, and the columns and rollup layers read
+     * again. Live and direct tables hold no layer and are left alone.
+     *
+     * @param only the tables to rebuild, or null for every cached table of the dataset
+     */
+    public Refreshed refresh(Loaded ds, java.util.Collection<String> only, LocalDate date) {
+        long t0 = System.nanoTime();
+        List<Dataset.Table> tables = ds.dataset().tables().values().stream()
+                .filter(t -> "cached".equals(t.mode()) && (only == null || only.contains(t.name()))).toList();
+        for (String kind : tables.stream().map(Dataset.Table::kind).distinct().toList()) {
+            layers.invalidate(ds.key(), ds.dataset(), kind, date);
+        }
+        if (cache != null) {
+            cache.asMap().keySet().removeIf(k -> k.startsWith(ds.key() + "|"));
+        }
+        long rows = 0;
+        List<String> warnings = new ArrayList<>();
+        for (Dataset.Table t : tables) {
+            Layers.Layer l = layers.columns(ds.key(), t, date, date);
+            rows += l.rows();
+            warnings.addAll(l.warnings());
+            for (Dataset.Rollup r : ds.dataset().rollups()) {
+                if (r.table().equals(t.name())) {
+                    layers.rollup(ds.key(), ds.dataset(), r, l);
+                }
+            }
+        }
+        return new Refreshed(date.toString(), tables.stream().map(Dataset.Table::name).toList(), rows, Math.round((System.nanoTime() - t0) / 1e6), warnings.stream().distinct().toList());
     }
 
     private void rebuild(Loaded ds, Dataset.Table t, LocalDate date) {

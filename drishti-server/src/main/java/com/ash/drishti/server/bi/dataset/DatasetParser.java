@@ -59,7 +59,7 @@ public final class DatasetParser {
     /** Measure names may hold spaces and punctuation: they are labels, never SQL. */
     static final Pattern LABEL = Pattern.compile("[^\\p{Cntrl}\\[\\]]{1,80}");
     private static final Set<String> TOP = Set.of("rachana", "dataset", "version", "title", "description", "sample", "engine", "tables", "relationships", "measures",
-            "hierarchies", "security", "rollups", "layout", "owner", "tags", "endorsement", "endorsedBy", "audience");
+            "hierarchies", "security", "rollups", "refresh", "layout", "owner", "tags", "endorsement", "endorsedBy", "audience");
 
     private DatasetParser() {}
 
@@ -99,7 +99,7 @@ public final class DatasetParser {
         List<Dataset.Rollup> rollups = rollups(root.path("rollups"), out);
         String engine = text(root, "engine", "duckdb");
         Dataset ds = new Dataset(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false),
-                engine, tables, rels, measures, hierarchies, security, rollups);
+                engine, tables, rels, measures, hierarchies, security, rollups, refresh(root.path("refresh"), "refresh", out));
         if (!"duckdb".equals(engine)) {
             out.add(error("engine", "only the embedded engine `duckdb` is built; '" + engine + "' is planned (RUPAKA.md section 7.1)"));
         }
@@ -111,6 +111,29 @@ public final class DatasetParser {
     }
 
     // ---- sections ----------------------------------------------------------------------------------------------------
+
+    /** The dataset's {@code refresh:}: a schedule text, or a mapping with {@code schedule:}. */
+    private static Dataset.Refresh refresh(JsonNode n, String path, List<Problem> out) {
+        if (n.isMissingNode() || n.isNull()) {
+            return Dataset.Refresh.NONE;
+        }
+        String text = n.isTextual() ? n.asText() : n.isObject() && n.path("schedule").isTextual() ? n.path("schedule").asText() : "";
+        if (text.isBlank()) {
+            out.add(error(path, "refresh is a schedule such as \"daily 06:00\", \"business-days 07:30\", \"0 */15 * * *\" or \"after-load\", or a mapping { schedule: ... }"));
+            return Dataset.Refresh.NONE;
+        }
+        return new Dataset.Refresh(checkedSchedule(path, text, out));
+    }
+
+    private static String checkedSchedule(String path, String text, List<Problem> out) {
+        try {
+            RefreshSpec.parse(text);
+            return RefreshSpec.normalise(text);
+        } catch (IllegalArgumentException e) {
+            out.add(error(path, e.getMessage()));
+            return "";
+        }
+    }
 
     private static Map<String, Dataset.Table> tables(JsonNode n, List<Problem> out) {
         Map<String, Dataset.Table> tables = new LinkedHashMap<>();
@@ -145,8 +168,8 @@ public final class DatasetParser {
             }
             JsonNode refresh = v.path("refresh");
             String schedule = text(refresh, "schedule", "");
-            if (!schedule.isBlank() && schedule.trim().split("\\s+").length != 5) {
-                out.add(error(path + ".refresh.schedule", "a schedule is a cron expression with five fields, for example \"0 */15 * * *\""));
+            if (!schedule.isBlank()) {
+                schedule = checkedSchedule(path + ".refresh.schedule", schedule, out);
             }
             Map<String, Dataset.Column> columns = new LinkedHashMap<>();
             JsonNode cols = v.path("columns");

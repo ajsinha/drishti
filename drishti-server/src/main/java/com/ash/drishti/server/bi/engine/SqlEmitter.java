@@ -47,6 +47,14 @@ final class SqlEmitter {
     private String current;
     private boolean sawAggregate;
     private final Set<String> trail = new HashSet<>();
+    private TimeWindows.Context time;
+    /** While a time function's aggregate is emitted: the date expression and the window the rows must fall in. */
+    private String windowDate;
+    private TimeWindows.Window window;
+    private final Map<String, List<WindowField>> windowFields = new java.util.LinkedHashMap<>();
+
+    /** A field of the query as the SELECT writes it, for {@code running()} to order and partition by. */
+    private record WindowField(String part, String sql, boolean masked) {}
 
     /**
      * @param base the table the query's rows come from (the meaning of {@code count(table)})
@@ -64,6 +72,27 @@ final class SqlEmitter {
 
     List<Object> params() {
         return params;
+    }
+
+    private boolean planning;
+
+    /** An emitter that only finds out which tables an expression touches (the planner's probe): the windows are placeholders and a running total needs no field. */
+    SqlEmitter planning() {
+        this.planning = true;
+        this.time = TimeWindows.Context.weekends(java.time.LocalDate.now(java.time.ZoneOffset.UTC));
+        return this;
+    }
+
+    /** The as-of date, the query's start and the calendar the time-intelligence windows are worked out from. */
+    SqlEmitter time(TimeWindows.Context context) {
+        this.time = context;
+        return this;
+    }
+
+    /** Tells {@code running()} about a field of the query: its table.column, date part, SQL text and whether it is masked. */
+    void windowField(Resolver.ColRef ref, String sql, boolean masked) {
+        windowFields.computeIfAbsent(ref.table() + "." + ref.column(), k -> new ArrayList<>()).add(new WindowField(ref.part(), sql, masked));
+        windowFields.computeIfAbsent("*", k -> new ArrayList<>()).add(new WindowField(ref.table() + "." + ref.column() + "." + ref.part(), sql, masked));
     }
 
     Set<String> tables() {
@@ -158,6 +187,9 @@ final class SqlEmitter {
             sawAggregate = true;
             return aggregate(c);
         }
+        if (Node.TIME.contains(f) || Node.WINDOW.contains(f)) {
+            return timeCall(c, inAgg);
+        }
         return switch (f) {
             case "abs" -> "abs(" + emit(a.get(0), inAgg) + ")";
             case "upper" -> "upper(" + emit(a.get(0), inAgg) + ")";
@@ -200,7 +232,80 @@ final class SqlEmitter {
             case "percentile" -> dialect.percentile(inner, Double.toString(((Node.Num) a.get(1)).value()));
             default -> throw new DrishtiException(ErrorCode.QUERY_INVALID, "unknown aggregate " + f);
         };
-        return cond == null ? call : call + " FILTER (WHERE " + emit(cond, true) + ")";
+        if (cond == null && window == null) {
+            return call;
+        }
+        String where = cond == null ? "" : emit(cond, true);
+        if (window != null) {
+            params.add(window.lo().toString());
+            params.add(window.hi().toString());
+            String range = "(" + windowDate + " >= CAST(? AS DATE) AND " + windowDate + " <= CAST(? AS DATE))";
+            where = where.isEmpty() ? range : where + " AND " + range;
+        }
+        return call + " FILTER (WHERE " + where + ")";
+    }
+
+    /** {@code ytd(sum(x), t.date)}: the aggregate over the rows whose date falls in the window; {@code running(sum(x), t.date)}: a running total along the date field. */
+    private String timeCall(Node.Call c, boolean inAgg) {
+        String f = c.function();
+        Resolver.ColRef col;
+        try {
+            col = resolver.resolve(((Node.Ref) c.args().get(1)).parts(), null);
+        } catch (IllegalArgumentException | ClassCastException e) {
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, f + "(): " + e.getMessage());
+        }
+        String type = resolver.column(col.table(), col.column()).type();
+        String sql = column(new Resolver.ColRef(col.table(), col.column(), null));
+        String date = "timestamp".equals(type) ? "CAST(" + sql + " AS DATE)" : sql;
+        if (Node.WINDOW.contains(f)) {
+            return running(c, col);
+        }
+        if (time == null) {
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, f + "() needs an as-of date and a calendar, which this query was not given");
+        }
+        String savedDate = windowDate;
+        TimeWindows.Window saved = window;
+        windowDate = date;
+        window = TimeWindows.of(f, time);
+        try {
+            return emit(c.args().get(0), inAgg);
+        } finally {
+            windowDate = savedDate;
+            window = saved;
+        }
+    }
+
+    /** A running total: the sum (or minimum, maximum) of the aggregate so far along the date field, within the other fields (a coarser part of the same date restarts it). */
+    private String running(Node.Call c, Resolver.ColRef date) {
+        Node.Call agg = (Node.Call) c.args().get(0);
+        String inner = emit(agg, false);
+        sawAggregate = true;
+        List<WindowField> same = windowFields.getOrDefault(date.table() + "." + date.column(), List.of());
+        List<String> rank = List.of("year", "quarter", "month", "week", "day");
+        WindowField order = null;
+        for (WindowField w : same) {
+            if (order == null || (w.part() == null ? rank.size() : rank.indexOf(w.part())) > (order.part() == null ? rank.size() : rank.indexOf(order.part()))) {
+                order = w;
+            }
+        }
+        if (order == null && planning) {
+            return "NULL";
+        }
+        if (order == null) {
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, "a running total of " + date.table() + "." + date.column() + " needs that date as a field of the visual (its axis): the total runs along it");
+        }
+        if (order.masked()) {
+            throw new DrishtiException(ErrorCode.QUERY_MASKED, "'" + date.table() + "." + date.column() + "' is masked for you: a running total cannot run along it");
+        }
+        List<String> partition = new ArrayList<>();
+        for (WindowField w : windowFields.getOrDefault("*", List.of())) {
+            if (!w.masked() && !w.sql().equals(order.sql())) {
+                partition.add(w.sql());
+            }
+        }
+        String fn = "count".equals(agg.function()) || "sum".equals(agg.function()) ? "sum" : agg.function();
+        String over = fn + "(" + inner + ") OVER (" + (partition.isEmpty() ? "" : "PARTITION BY " + String.join(", ", partition) + " ") + "ORDER BY " + order.sql() + ")";
+        return "count".equals(agg.function()) ? "CAST(" + over + " AS BIGINT)" : over;
     }
 
     /** Answers an aggregate from a rollup's stored components: a sum of sums, a sum of counts, a minimum of minimums. */

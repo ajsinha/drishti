@@ -26,6 +26,7 @@ import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.bi.engine.AnalyticEngine;
 import com.ash.drishti.server.bi.gov.ImpactAnalyzer;
 import com.ash.drishti.server.bi.engine.BiLiveProperties;
+import com.ash.drishti.server.bi.engine.BiRefreshProperties;
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
 import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryService;
@@ -46,7 +47,7 @@ import org.springframework.context.annotation.Configuration;
  * connection on the first query, so a server that never runs a BI query pays nothing.
  */
 @Configuration
-@EnableConfigurationProperties({QueryProperties.class, BiReportProperties.class, BiLiveProperties.class})
+@EnableConfigurationProperties({QueryProperties.class, BiReportProperties.class, BiLiveProperties.class, BiRefreshProperties.class})
 public class BiQueryConfiguration {
 
     @Bean(destroyMethod = "close")
@@ -70,6 +71,15 @@ public class BiQueryConfiguration {
         DatasetService service = new DatasetService(bi, queries, props, entitlements, security, users, audit, packs, graph, sources);
         loads.onReady(service::onLoad);                                  // a data-load signal rebuilds exactly the date it names
         return service;
+    }
+
+    @Bean(destroyMethod = "close")
+    public DatasetRefresher datasetRefresher(QueryService queries, DatasetService datasets, BiRefreshProperties props, BusinessDates dates, AuditLog audit,
+            org.springframework.core.env.Environment env) {
+        DatasetRefresher refresher = new DatasetRefresher(queries, datasets::published, props, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "bi"), dates, Clock.systemUTC(),
+                audit, true);
+        datasets.attach(refresher);
+        return refresher;
     }
 
     @Bean

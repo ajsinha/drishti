@@ -36,9 +36,10 @@ import java.util.Set;
  * @param hierarchies by hierarchy name: its levels, each {@code table.column} or {@code table.column.part}
  * @param security row rules and masked columns
  * @param rollups the pre-aggregations the author asks for
+ * @param refresh when the dataset's layers are rebuilt without a person asking (blank schedule: only by a data-load signal or on demand)
  */
 public record Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables,
-        List<Relationship> relationships, Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups) {
+        List<Relationship> relationships, Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups, Refresh refresh) {
 
     public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
     public static final Set<String> MODES = Set.of("live", "cached", "direct");
@@ -125,6 +126,20 @@ public record Dataset(String name, int version, String title, String description
 
     /** A row rule: readers holding {@code role} see the rows where {@code where} is true. */
     public record RowRule(String role, String where) {}
+
+    /**
+     * Scheduled refresh (RUPAKA.md section 7): the text is a schedule as the distribution subscriptions say it ({@code daily 06:00}, {@code business-days 07:30},
+     * {@code weekly mon 07:00}, {@code monthly last 18:00 business}, {@code hourly}, {@code cron <six fields>} or a five-field cron), or {@code after-load [kind]}:
+     * not a time but the data load that finished ready.
+     */
+    public record Refresh(String schedule) {
+
+        public static final Refresh NONE = new Refresh("");
+
+        public boolean scheduled() {
+            return schedule != null && !schedule.isBlank();
+        }
+    }
 
     /**
      * A rollup: the aggregates of {@code measures} grouped by {@code by} (columns of {@code table}) per business date.

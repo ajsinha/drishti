@@ -28,8 +28,15 @@ public sealed interface Node {
     Set<String> AGGREGATES = Set.of("sum", "avg", "min", "max", "count", "distinct", "ratio", "percentile");
     /** Row-level functions. */
     Set<String> SCALARS = Set.of("abs", "coalesce", "upper", "lower", "round", "year", "quarter", "month", "day", "if", "contains", "startsWith", "length");
+    /**
+     * Time intelligence: {@code ytd(agg, table.dateColumn)} and its kin restrict the aggregate to the rows whose date falls in a window that ends at the query's
+     * as-of date (the end of its dates); the windows are worked out in Java from the pack's business-day calendar and bound as parameters.
+     */
+    Set<String> TIME = Set.of("ytd", "mtd", "qtd", "prior_period", "same_period_last_year");
+    /** {@code running(agg, table.dateColumn)}: a running total of a sum, count, min or max along the date field of the query. */
+    Set<String> WINDOW = Set.of("running");
     /** Grammar the language reserves for later (RUPAKA.md section 6): parsed, then refused with DRS-9013. */
-    Set<String> RESERVED = Set.of("running", "lag", "rank", "ytd", "mtd", "qtd", "same_period_last_year");
+    Set<String> RESERVED = Set.of("lag", "rank");
 
     record Num(double value, boolean integral) implements Node {}
 

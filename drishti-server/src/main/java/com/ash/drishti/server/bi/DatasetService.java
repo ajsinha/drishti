@@ -73,6 +73,7 @@ public final class DatasetService {
     private final ReferenceCatalog graph;
     private final SourceGateway sources;
     private final Map<String, Parsed> parsed = new ConcurrentHashMap<>();
+    private volatile DatasetRefresher refresher;
 
     public DatasetService(BiService bi, QueryService queries, QueryProperties props, Entitlements entitlements, SecurityProperties security, UserService users, AuditLog audit,
             PackRegistry packs, ReferenceCatalog graph, SourceGateway sources) {
@@ -86,6 +87,24 @@ public final class DatasetService {
         this.packs = packs;
         this.graph = graph;
         this.sources = sources;
+    }
+
+    /** The scheduler that rebuilds datasets on their {@code refresh:} (set once at start-up); the dataset page shows its state. */
+    public void attach(DatasetRefresher refresher) {
+        this.refresher = refresher;
+    }
+
+    /** Every published dataset that parses, ready to query: what the scheduler and a data-load signal work over. */
+    public List<QueryService.Loaded> published() {
+        List<QueryService.Loaded> all = new ArrayList<>();
+        for (BiStore.Item i : bi.allDatasets()) {
+            String body = bi.publishedBody(i);
+            DatasetParser.Result res = parse(i.id(), body);
+            if (res.ok()) {
+                all.add(new QueryService.Loaded(i.id(), Layers.key(i.id()), res.dataset(), hash(body)));
+            }
+        }
+        return all;
     }
 
     // ---- resolving ---------------------------------------------------------------------------------------------------
@@ -209,6 +228,9 @@ public final class DatasetService {
         m.put("security", Map.of("rows", d.security().rows().stream().map(x -> Map.of("role", x.role(), "where", x.where(), "appliesToYou", mine.contains(x.role()))).toList(),
                 "masked", d.security().masked(), "rowRulesEnforced", security.enabled()));
         m.put("rollups", d.rollups().stream().map(x -> Map.of("name", x.name(), "table", x.table(), "by", x.by(), "measures", x.measures())).toList());
+        if (r.ok() && refresher != null) {
+            m.put("refresh", refresher.status(new QueryService.Loaded(id, Layers.key(id), d, "")));
+        }
         if (r.ok()) {
             m.put("layers", withLive(Layers.key(id), d, queries.layers().inventory(Layers.key(id), d)));
         }
@@ -405,17 +427,29 @@ public final class DatasetService {
         return bytes;
     }
 
-    /** Clears a dataset's layers for the latest business date and reads them again. */
+    /** Clears a dataset's layers for the current business date and reads them again, in the background; the dataset's refresh state says how it went. */
     public Map<String, Object> refresh(Principal p, String id) {
         BiStore.Item item = datasetItem(p, id);
         QueryService.Loaded ds = loaded(p, item);
         java.time.LocalDate today = sources.currentDate();
-        List<String> touched = new ArrayList<>();
-        for (Dataset.Table t : ds.dataset().tables().values()) {
-            touched.addAll(queries.onLoad(t.kind(), today, List.of(ds)));
-        }
+        List<String> touched = ds.dataset().tables().values().stream().filter(t -> "cached".equals(t.mode())).map(Dataset.Table::name).toList();
         audit.record(p.user(), "bi-dataset-refresh", id, "layers of " + today + " cleared and rebuilt");
-        return Map.of("dataset", id, "date", today.toString(), "refreshing", touched.stream().distinct().toList());
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("dataset", id);
+        out.put("date", today.toString());
+        out.put("refreshing", touched);
+        if (refresher != null) {
+            out.put("state", refresher.runNow(ds, p.user()));
+        } else {
+            queries.onLoad(ds.dataset().tables().values().stream().findFirst().map(Dataset.Table::kind).orElse(""), today, List.of(ds));
+        }
+        return out;
+    }
+
+    /** The refresh state of a dataset the caller may read: its schedule, last run, status, next run, failures. */
+    public Map<String, Object> refreshState(Principal p, String id) {
+        QueryService.Loaded ds = loaded(p, datasetItem(p, id));
+        return refresher == null ? Map.of("enabled", false, "scheduled", false) : refresher.status(ds);
     }
 
     public List<Map<String, Object>> layers(Principal p, String id) {
@@ -454,19 +488,15 @@ public final class DatasetService {
 
     // ---- data loads --------------------------------------------------------------------------------------------------
 
-    /** A data-load signal: clears and rebuilds the date for every published dataset that reads the kind. */
+    /** A data-load signal: clears and rebuilds the date for every published dataset that reads the kind (those that refresh {@code after-load} are left to the scheduler). */
     public void onLoad(LoadRecord r) {
-        List<QueryService.Loaded> all = new ArrayList<>();
-        for (BiStore.Item i : bi.allDatasets()) {
-            String body = bi.publishedBody(i);
-            DatasetParser.Result res = parse(i.id(), body);
-            if (res.ok()) {
-                all.add(new QueryService.Loaded(i.id(), Layers.key(i.id()), res.dataset(), hash(body)));
-            }
-        }
+        List<QueryService.Loaded> all = published().stream().filter(d -> !DatasetRefresher.afterLoad(d.dataset())).toList();
         List<String> touched = queries.onLoad(r.kind(), r.businessDate(), all);
         if (!touched.isEmpty()) {
             LOG.info("data load {} {}: BI layers cleared for {}", r.kind(), r.businessDate(), touched);
+        }
+        if (refresher != null) {
+            refresher.onLoad(r.kind(), r.businessDate());
         }
     }
 }
