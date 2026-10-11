@@ -22,7 +22,9 @@ import com.ash.drishti.graph.ReferenceCatalog;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.packs.PackRegistry;
+import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.bi.engine.AnalyticEngine;
+import com.ash.drishti.server.bi.gov.ImpactAnalyzer;
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
 import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryService;
@@ -82,5 +84,15 @@ public class BiQueryConfiguration {
     @Bean
     public BiReportController biReportController(BiReportService reports) {
         return new BiReportController(reports);
+    }
+
+    @Bean
+    public BiGovernance biGovernance(BiService bi, BiStore store, BiAccess access, ImpactAnalyzer impact, BiGovProperties gov, PackRegistry packs, DatasetService datasets) {
+        return new BiGovernance(bi, store, access, impact, gov, packs, datasets);
+    }
+
+    @Bean
+    public BiGovController biGovController(BiGovernance gov, BiBundles bundles, BiService bi) {
+        return new BiGovController(gov, bundles, bi);
     }
 }

@@ -203,7 +203,7 @@ drishti:
           - POST /api/v1/sutras/proposals/*/approve
           - POST /api/v1/sutras/proposals/*/reject
       "[bi:write]":
-        description: "Business intelligence (Rupaka): create, edit, move, propose, withdraw, publish and delete your workspaces' items, restore versions, mark favourites, create workspaces (when the policy lets you). Needs the bi-author power and the workspace role at call time."
+        description: "Business intelligence (Rupaka): create, edit, move, propose, withdraw, publish and delete your workspaces' items, restore versions and saved states, ask what a dataset change would break, mark favourites, create workspaces (when the policy lets you). Needs the bi-author power and the workspace role at call time."
         allow:
           - POST /api/v1/bi/workspaces
           - POST /api/v1/bi/workspaces/*/items
@@ -213,16 +213,19 @@ drishti:
           - POST /api/v1/bi/items/*/withdraw
           - POST /api/v1/bi/items/*/publish
           - POST /api/v1/bi/items/*/versions/*/restore
+          - POST /api/v1/bi/items/*/history/*/restore
+          - POST /api/v1/bi/items/*/impact
           - POST /api/v1/bi/datasets/*/refresh
           - PUT /api/v1/bi/items/*
           - PUT /api/v1/bi/items/*/favourite
           - DELETE /api/v1/bi/items/*
       "[bi:approve]":
-        description: "Business intelligence: approve or reject proposed items (the approve power, never your own proposal with four-eyes on) and endorse (promote; certify needs bi-steward)."
+        description: "Business intelligence: approve or reject proposed items (the approve power or bi-steward, never your own proposal with four-eyes on), endorse (promote; certify needs bi-steward) and import a bundle (bi-steward)."
         allow:
           - POST /api/v1/bi/items/*/approve
           - POST /api/v1/bi/items/*/reject
           - POST /api/v1/bi/items/*/endorse
+          - POST /api/v1/bi/bundle/import
       "[bi:admin]":
         description: "Business intelligence: change a workspace (settings, members, delete) and the BI settings. Needs the workspace admin role or the bi-admin power at call time."
         allow:

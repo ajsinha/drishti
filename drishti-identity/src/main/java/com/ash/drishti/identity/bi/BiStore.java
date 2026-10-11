@@ -68,6 +68,12 @@ public final class BiStore {
     /** One published version of an item. */
     public record Version(String item, int version, String body, String note, String createdBy, Instant createdAt) {}
 
+    /** One saved state of an item's body: every save, restore, publish and import is one; {@code publishedVersion} is set when it is the published text. */
+    public record Revision(String item, int seq, String body, String message, String author, Instant createdAt, String origin, int publishedVersion) {}
+
+    /** A governance event: {@code request}, {@code withdraw}, {@code approve}, {@code reject}, {@code certify}, {@code uncertify}, {@code revoke}, {@code import}. */
+    public record Event(String item, int seq, String action, String actor, String note, int revision, Instant createdAt) {}
+
     /** What a user did with an item. */
     public record Mark(boolean favourite, Instant lastOpened, int opens) {}
 
@@ -75,6 +81,8 @@ public final class BiStore {
     private final IdentityRepositories.BiMembers members;
     private final IdentityRepositories.BiItems items;
     private final IdentityRepositories.BiVersions versions;
+    private final IdentityRepositories.BiRevisions revisions;
+    private final IdentityRepositories.BiEvents events;
     private final IdentityRepositories.BiUserItems marks;
     private final IdentityRepositories.BiUsages usage;
     private final IdentityRepositories.BiSettings settings;
@@ -82,8 +90,10 @@ public final class BiStore {
     private final ReentrantLock writes = new ReentrantLock();
 
     public BiStore(IdentityRepositories.BiWorkspaces workspaces, IdentityRepositories.BiMembers members, IdentityRepositories.BiItems items,
-            IdentityRepositories.BiVersions versions, IdentityRepositories.BiUserItems marks, IdentityRepositories.BiUsages usage,
-            IdentityRepositories.BiSettings settings, TransactionTemplate tx) {
+            IdentityRepositories.BiVersions versions, IdentityRepositories.BiRevisions revisions, IdentityRepositories.BiEvents events,
+            IdentityRepositories.BiUserItems marks, IdentityRepositories.BiUsages usage, IdentityRepositories.BiSettings settings, TransactionTemplate tx) {
+        this.revisions = revisions;
+        this.events = events;
         this.workspaces = workspaces;
         this.members = members;
         this.items = items;
@@ -123,6 +133,8 @@ public final class BiStore {
         locked(() -> tx.execute(s -> {
             for (BiEntities.BiItem i : items.findByWorkspace(id)) {
                 versions.deleteByItemId(i.id);
+                revisions.deleteByItemId(i.id);
+                events.deleteByItemId(i.id);
                 items.delete(i);
             }
             members.deleteByWorkspace(id);
@@ -215,6 +227,8 @@ public final class BiStore {
                 return false;
             }
             versions.deleteByItemId(id);
+            revisions.deleteByItemId(id);
+            events.deleteByItemId(id);
             items.deleteById(id);
             return true;
         })));
@@ -246,6 +260,76 @@ public final class BiStore {
                 versions.delete(all.get(k));
             }
             return null;
+        }));
+    }
+
+    // -- revisions: every save ----------------------------------------------------------------------------------------
+    /** Newest first. */
+    public List<Revision> revisions(String item) {
+        return tx.execute(s -> revisions.findByItemIdOrderBySeqDesc(item).stream().map(BiStore::of).toList());
+    }
+
+    public Optional<Revision> revision(String item, int seq) {
+        return Optional.ofNullable(tx.execute(s -> revisions.findById(item + "/" + seq).map(BiStore::of).orElse(null)));
+    }
+
+    /** Adds the next revision of the item and drops the oldest beyond {@code keep}; a revision that carries a published version is never dropped. */
+    public Revision addRevision(String item, String body, String message, String author, Instant at, String origin, int publishedVersion, int keep) {
+        return locked(() -> tx.execute(s -> {
+            List<BiEntities.BiRevision> all = revisions.findByItemIdOrderBySeqDesc(item);
+            int seq = all.isEmpty() ? 1 : all.get(0).seq + 1;
+            BiEntities.BiRevision e = new BiEntities.BiRevision();
+            e.id = item + "/" + seq;
+            e.itemId = item;
+            e.seq = seq;
+            e.body = body == null ? "" : body;
+            e.message = message == null ? "" : message;
+            e.author = author == null ? "" : author;
+            e.createdAt = at;
+            e.origin = origin;
+            e.publishedVersion = publishedVersion;
+            revisions.save(e);
+            int kept = 1;
+            for (BiEntities.BiRevision r : all) {
+                if (++kept > Math.max(2, keep) && r.publishedVersion == 0) {
+                    revisions.delete(r);
+                }
+            }
+            return of(e);
+        }));
+    }
+
+    /** Marks an existing revision as the text of a published version. */
+    public void markRevisionPublished(String item, int seq, int version) {
+        locked(() -> tx.execute(s -> {
+            revisions.findById(item + "/" + seq).ifPresent(r -> {
+                r.publishedVersion = version;
+                revisions.save(r);
+            });
+            return null;
+        }));
+    }
+
+    // -- governance events ----------------------------------------------------------------------------------------------
+    /** Newest first. */
+    public List<Event> events(String item) {
+        return tx.execute(s -> events.findByItemIdOrderBySeqDesc(item).stream().map(BiStore::of).toList());
+    }
+
+    public Event addEvent(String item, String action, String actor, String note, int revision, Instant at) {
+        return locked(() -> tx.execute(s -> {
+            List<BiEntities.BiEvent> all = events.findByItemIdOrderBySeqDesc(item);
+            int seq = all.isEmpty() ? 1 : all.get(0).seq + 1;
+            BiEntities.BiEvent e = new BiEntities.BiEvent();
+            e.id = item + "/" + seq;
+            e.itemId = item;
+            e.seq = seq;
+            e.action = action;
+            e.actor = actor == null ? "" : actor;
+            e.note = note == null ? "" : note;
+            e.revision = revision;
+            e.createdAt = at;
+            return of(events.save(e));
         }));
     }
 
@@ -340,6 +424,14 @@ public final class BiStore {
 
     private static Member of(BiEntities.BiMember e) {
         return new Member(e.workspace, e.username, e.role, e.addedAt, e.addedBy);
+    }
+
+    private static Revision of(BiEntities.BiRevision e) {
+        return new Revision(e.itemId, e.seq, e.body, e.message, e.author, e.createdAt, e.origin, e.publishedVersion);
+    }
+
+    private static Event of(BiEntities.BiEvent e) {
+        return new Event(e.itemId, e.seq, e.action, e.actor, e.note, e.revision, e.createdAt);
     }
 
     private static Version of(BiEntities.BiVersion e) {

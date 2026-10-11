@@ -185,7 +185,13 @@ public enum ErrorCode {
     /** Reports: the report's dataset cannot be found, or its model has errors, so the report cannot be drawn. */
     REPORT_DATASET("DRS-9034", 422),
     /** Reports: a visual query names a page or visual the report lacks, or its interaction state (slicers, selection, drill path) is not valid. */
-    REPORT_STATE("DRS-9035", 422);
+    REPORT_STATE("DRS-9035", 422),
+    /** Governance: publishing the dataset change would break published reports (a field, measure or hierarchy they use is removed or renamed); a bi-admin may force it. */
+    BI_IMPACT("DRS-9040", 409),
+    /** Governance: a BI bundle is not readable, fails its checksums, is too large or is not a bundle of this format. */
+    BI_BUNDLE("DRS-9041", 422),
+    /** Governance: an import would overwrite content that changed since it was exported (conflicts), or names a workspace or owner that cannot be mapped. */
+    BI_IMPORT("DRS-9042", 409);
 
     private final String code;
     private final int httpStatus;

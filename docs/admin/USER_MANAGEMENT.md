@@ -282,7 +282,7 @@ a list, `bi`, on a role: `drishti.security.roles.<role>.bi: [bi, bi-author]` in 
 |---|---|
 | `bi` | open BI (the **BI** top-bar menu, `RUPAKA <GO>`, `/bi`), the catalogue and the published items their audience allows; favourites and recents |
 | `bi-author` | create, edit, move, propose and publish items in the workspaces they are a contributor or member of, and create shared workspaces (when the policy is `authors`, the default) |
-| `bi-steward` | **certify** published items (owners only *promote*); create shared workspaces when the policy is `stewards` |
+| `bi-steward` | **certify** published items (owners only *promote*); **review** proposals in any workspace; **import bundles**; create shared workspaces when the policy is `stewards` |
 | `bi-admin` | Admin → BI settings (the workspace policy, powers per role); admin of every shared workspace; always allowed to create workspaces |
 
 A higher power also opens BI, so a role with only `bi-author` sees the catalogue. An administrator (`admin`) holds all four; with security off

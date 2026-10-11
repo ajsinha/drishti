@@ -20,6 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.bi.BiStore;
+import com.ash.drishti.server.bi.gov.ImpactAnalyzer;
 import com.ash.drishti.server.governance.GovernanceProperties;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.PackAccess;
@@ -73,9 +74,16 @@ public final class BiService {
     private final Entitlements entitlements;
     private final GovernanceProperties governance;
     private final SecurityProperties security;
+    private final BiGovProperties gov;
+    private final ImpactAnalyzer impact;
+    private final BiNotifier notifier;
 
     public BiService(BiProperties props, BiStore store, BiFolder folder, BiAccess access, AuditLog audit, UserService users, RoleCatalog roles,
-            PackAccess packs, Entitlements entitlements, GovernanceProperties governance, SecurityProperties security) {
+            PackAccess packs, Entitlements entitlements, GovernanceProperties governance, SecurityProperties security, BiGovProperties gov, ImpactAnalyzer impact,
+            BiNotifier notifier) {
+        this.gov = gov;
+        this.impact = impact;
+        this.notifier = notifier;
         this.props = props;
         this.store = store;
         this.folder = folder;
@@ -169,7 +177,7 @@ public final class BiService {
         return "u-" + (clean.length() > 30 ? clean.substring(0, 30) : clean) + "-" + hash;
     }
 
-    private BiStore.Workspace personal(Principal p) {
+    BiStore.Workspace personal(Principal p) {
         String id = personalId(p.user());
         return store.workspace(id).orElseGet(() -> {
             BiStore.Workspace w = store.saveWorkspace(new BiStore.Workspace(id, "My workspace", "Drafts only you can see. Move an item to a shared workspace to publish it.",
@@ -179,7 +187,7 @@ public final class BiService {
         });
     }
 
-    private BiStore.Workspace workspaceOf(String id) {
+    BiStore.Workspace workspaceOf(String id) {
         if (BiFolder.WORKSPACE.equals(id)) {
             return new BiStore.Workspace(BiFolder.WORKSPACE, "Shipped content", "Read-only content shipped in the BI folder (" + props.dir() + ").", false, "", false, Instant.EPOCH, "");
         }
@@ -187,7 +195,7 @@ public final class BiService {
     }
 
     /** The caller's role in the workspace, or null: the owner of a personal one and a bi-admin are admins; the shipped one is viewable by all. */
-    private String roleIn(BiStore.Workspace w, Principal p) {
+    String roleIn(BiStore.Workspace w, Principal p) {
         if (BiFolder.WORKSPACE.equals(w.id())) {
             return "viewer";
         }
@@ -200,7 +208,7 @@ public final class BiService {
         return store.members(w.id()).stream().filter(m -> m.username().equals(p.user())).map(BiStore.Member::role).findFirst().orElse(null);
     }
 
-    private String requireRole(BiStore.Workspace w, Principal p, String atLeast, String what) {
+    String requireRole(BiStore.Workspace w, Principal p, String atLeast, String what) {
         String role = roleIn(w, p);
         if (BiAccess.rank(role) < 0) {
             throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no workspace '" + w.id() + "'");     // existence is not revealed to non-members
@@ -411,7 +419,8 @@ public final class BiService {
         m.put("description", i.description());
         m.put("owner", i.owner());
         m.put("tags", i.tags());
-        m.put("status", rank >= BiAccess.rank("contributor") || shipped ? i.status() : "published");     // a viewer sees what is published, not drafts in progress
+        boolean reviewing = !shipped && i.status().equals("proposed") && access.has(p, BiAccess.STEWARD);
+        m.put("status", rank >= BiAccess.rank("contributor") || shipped || reviewing ? i.status() : "published");     // a viewer sees what is published, not drafts in progress
         m.put("publishedVersion", i.publishedVersion());
         m.put("endorsement", i.endorsement());
         m.put("endorsedBy", i.endorsedBy());
@@ -429,8 +438,7 @@ public final class BiService {
         m.put("role", role);
         boolean edit = !shipped && rank >= BiAccess.rank("contributor") && access.has(p, BiAccess.AUTHOR);
         boolean publish = edit && rank >= BiAccess.rank("member") && !w.personal() && !w.reviewRequired();
-        boolean approve = !shipped && i.status().equals("proposed") && rank >= BiAccess.rank("member") && entitlements.mayApprove(p)
-                && !(fourEyes() && i.proposedBy().equals(p.user()));
+        boolean approve = !shipped && i.status().equals("proposed") && mayReview(p, w) && !(fourEyes() && i.proposedBy().equals(p.user()));
         Map<String, Object> can = new LinkedHashMap<>();
         can.put("edit", edit);
         can.put("propose", edit && !w.personal() && !i.status().equals("proposed") && !i.status().equals("published"));
@@ -439,11 +447,13 @@ public final class BiService {
         can.put("withdraw", !shipped && i.status().equals("proposed") && (i.proposedBy().equals(p.user()) || rank >= BiAccess.rank("admin")));
         can.put("promote", !shipped && i.isPublished() && (i.owner().equals(p.user()) || rank >= BiAccess.rank("member")));
         can.put("certify", !shipped && i.isPublished() && access.has(p, BiAccess.STEWARD));
+        can.put("review", approve);
+        can.put("force", access.has(p, BiAccess.ADMIN));
         can.put("delete", edit && (rank >= BiAccess.rank("member") || i.owner().equals(p.user())));
         can.put("move", edit && !i.status().equals("proposed"));
         m.put("can", can);
         if (detail) {
-            boolean draft = !shipped && rank >= BiAccess.rank("contributor");
+            boolean draft = !shipped && (rank >= BiAccess.rank("contributor") || reviewing);
             String body = draft || shipped ? i.body() : store.version(i.id(), i.publishedVersion()).map(BiStore.Version::body).orElse("");
             m.put("body", body);
             m.put("bodyIs", draft ? "draft" : "published");
@@ -483,6 +493,7 @@ public final class BiService {
                 tags(body.get("tags")), checkedBody(body.get("body")), "draft", 0, "none", "", audienceList(body, "audienceRoles", true),
                 audienceList(body, "audienceUsers", false), audienceList(body, "audiencePacks", false), "", null, now, now, p.user(), null, "");
         store.saveItem(i);
+        revise(i, i.body(), text(body, "message", 500, false).isEmpty() ? "created" : text(body, "message", 500, false), p.user(), "create", 0);
         audit.record(p.user(), "bi-item-created", i.id(), kind + " '" + i.title() + "' in " + w.id());
         return item(p, i.id(), false);
     }
@@ -550,7 +561,7 @@ public final class BiService {
         return all.stream().filter(i -> "dataset".equals(i.kind())).toList();
     }
 
-    private BiStore.Item readable(Principal p, String id) {
+    BiStore.Item readable(Principal p, String id) {
         BiStore.Item i = itemOf(id);
         if (hiddenSample(i, p)) {
             throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'");
@@ -563,10 +574,29 @@ public final class BiService {
         if (visible(i, p, myWorkspaces(p), myPacks(p), access.has(p, BiAccess.ADMIN))) {
             return i;
         }
+        if (!BiFolder.isShipped(i.id()) && !w.personal() && i.status().equals("proposed") && access.has(p, BiAccess.STEWARD)) {
+            return i;                                                    // a steward reviews what is proposed, wherever it is (what is published stays behind its audience)
+        }
         throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "no item '" + id + "'");
     }
 
-    private BiStore.Item editable(Principal p, String id, String what) {
+    /** The item for a caller who may read it, after the BI gate (enabled, the bi power): the governance service's door. */
+    BiStore.Item readableForGovernance(Principal p, String id) {
+        open(p);
+        return readable(p, id);
+    }
+
+    /** Whether the caller may see the item (used to keep names out of a list shown to someone who could not open them). */
+    boolean canRead(Principal p, BiStore.Item i) {
+        try {
+            readable(p, i.id());
+            return true;
+        } catch (DrishtiException e) {
+            return false;
+        }
+    }
+
+    BiStore.Item editable(Principal p, String id, String what) {
         open(p);
         access.require(p, BiAccess.AUTHOR);
         BiStore.Item i = readable(p, id);
@@ -593,6 +623,9 @@ public final class BiService {
                 body.containsKey("audiencePacks") ? audienceList(body, "audiencePacks", false) : i.audiencePacks(), i.proposedBy(), i.proposedAt(),
                 i.createdAt(), Instant.now(), p.user(), i.publishedAt(), i.publishedBy());
         store.saveItem(n);
+        if (bodyChanged) {
+            revise(n, newBody, text(body, "message", 500, false), p.user(), "save", 0);
+        }
         audit.record(p.user(), "bi-item-updated", id, (bodyChanged ? "body " : "") + (catalogueOnly ? "catalogue fields" : ""));
         return item(p, id, false);
     }
@@ -639,6 +672,8 @@ public final class BiService {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
         }
         store.saveItem(withStatus(i, "proposed", p.user(), Instant.now(), p.user()));
+        store.addEvent(id, "request", p.user(), note(note), latestRevision(id), Instant.now());
+        notifier.tell(notifier.reviewers(i, p.user()), BiNotifier.REVIEW, id, p.user() + " asks for review of " + i.kind() + " '" + i.title() + "'", p.user());
         audit.record(p.user(), "bi-item-proposed", id, note(note));
         return item(p, id, false);
     }
@@ -652,37 +687,48 @@ public final class BiService {
             requireRole(workspaceOf(i.workspace()), p, "admin", "withdrawing someone else's proposal");
         }
         store.saveItem(withStatus(i, "draft", "", null, p.user()));
+        store.addEvent(id, "withdraw", p.user(), "", latestRevision(id), Instant.now());
         audit.record(p.user(), "bi-item-withdrawn", id, "");
         return item(p, id, false);
     }
 
+    /** Whether the caller may decide a review of an item in this workspace: a bi-steward anywhere, or a workspace member holding the approve power. */
+    private boolean mayReview(Principal p, BiStore.Workspace w) {
+        return access.has(p, BiAccess.STEWARD) || BiAccess.rank(roleIn(w, p)) >= BiAccess.rank("member") && entitlements.mayApprove(p);
+    }
+
     public Map<String, Object> approve(Principal p, String id, String note) {
+        return approve(p, id, note, false);
+    }
+
+    public Map<String, Object> approve(Principal p, String id, String note, boolean force) {
         open(p);
         BiStore.Item i = readable(p, id);
         BiStore.Workspace w = workspaceOf(i.workspace());
-        requireRole(w, p, "member", "approving");
         if (BiFolder.isShipped(id) || !i.status().equals("proposed")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is not waiting for review");
         }
-        if (!entitlements.mayApprove(p)) {
-            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "approving needs the approve power on a role (the same as approving Sutras)");
+        if (!mayReview(p, w)) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "approving needs the bi-steward power, or a member of the workspace with the approve power on a role");
         }
         if (fourEyes() && i.proposedBy().equals(p.user())) {
             throw new DrishtiException(ErrorCode.BI_FOUR_EYES, "four-eyes: " + p.user() + " proposed this and may not approve it");
         }
+        Map<String, Object> out = publishNow(p, i, "approved: " + note(note), force);
+        store.addEvent(id, "approve", p.user(), note(note), latestRevision(id), Instant.now());
+        notifier.tell(List.of(i.proposedBy()), BiNotifier.DECISION, id, p.user() + " approved " + i.kind() + " '" + i.title() + "'" + (note(note).isBlank() ? "" : ": " + note(note)), p.user());
         audit.record(p.user(), "bi-item-approved", id, "proposed by " + i.proposedBy() + "; " + note(note));
-        return publishNow(p, i, "approved: " + note(note));
+        return out;
     }
 
     public Map<String, Object> reject(Principal p, String id, String reason) {
         open(p);
         BiStore.Item i = readable(p, id);
-        requireRole(workspaceOf(i.workspace()), p, "member", "rejecting");
         if (BiFolder.isShipped(id) || !i.status().equals("proposed")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is not waiting for review");
         }
-        if (!entitlements.mayApprove(p)) {
-            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "rejecting needs the approve power on a role");
+        if (!mayReview(p, workspaceOf(i.workspace()))) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "rejecting needs the bi-steward power, or a member of the workspace with the approve power on a role");
         }
         if (fourEyes() && i.proposedBy().equals(p.user())) {
             throw new DrishtiException(ErrorCode.BI_FOUR_EYES, "four-eyes: " + p.user() + " proposed this; withdraw it instead of rejecting it");
@@ -691,11 +737,17 @@ public final class BiService {
             throw new DrishtiException(ErrorCode.BI_INVALID, "say why it is rejected");
         }
         store.saveItem(withStatus(i, "draft", "", null, p.user()));
+        store.addEvent(id, "reject", p.user(), note(reason), latestRevision(id), Instant.now());
+        notifier.tell(List.of(i.proposedBy()), BiNotifier.DECISION, id, p.user() + " rejected " + i.kind() + " '" + i.title() + "': " + note(reason), p.user());
         audit.record(p.user(), "bi-item-rejected", id, "proposed by " + i.proposedBy() + "; " + note(reason));
-        return item(p, id, false);
+        return viewOrStub(p, id);
     }
 
     public Map<String, Object> publish(Principal p, String id, String note) {
+        return publish(p, id, note, false);
+    }
+
+    public Map<String, Object> publish(Principal p, String id, String note, boolean force) {
         BiStore.Item i = editable(p, id, "publishing");
         BiStore.Workspace w = workspaceOf(i.workspace());
         if (w.personal()) {
@@ -708,10 +760,10 @@ public final class BiService {
         if (i.status().equals("published")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
         }
-        return publishNow(p, i, note(note));
+        return publishNow(p, i, note(note), force);
     }
 
-    private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note) {
+    private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force) {
         if ("dataset".equals(i.kind()) && !i.body().isBlank()) {
             com.ash.drishti.server.bi.dataset.DatasetParser.Result r = com.ash.drishti.server.bi.dataset.DatasetParser.parse(i.body());
             if (!r.ok()) {
@@ -724,13 +776,108 @@ public final class BiService {
                 throw new DrishtiException(ErrorCode.REPORT_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError() + " (check it in the designer)");
             }
         }
+        // what this publish does to the reports that read a dataset (docs/guides/BI_GOVERNANCE.md, Impact)
+        ImpactAnalyzer.Result damage = null;
+        if ("dataset".equals(i.kind()) && i.isPublished()) {
+            damage = impact.impact(i, impact.publishedBody(i), i.body());
+            if (damage.change().breaking() && damage.breaksPublished() && gov.refuseBreaking()) {
+                if (!force) {
+                    throw new DrishtiException(ErrorCode.BI_IMPACT, impactMessage(p, i, damage) + (access.has(p, BiAccess.ADMIN)
+                            ? " A bi-admin may publish anyway with force." : " Ask a bi-admin to publish it with force, or keep the names the reports use."));
+                }
+                access.require(p, BiAccess.ADMIN);
+            }
+        }
         int version = i.publishedVersion() + 1;
         Instant now = Instant.now();
+        boolean revoke = gov.revokeCertification() && damage != null && damage.change().breaking();
+        boolean ownRevoked = revoke && i.endorsement().equals("certified");
         store.addVersion(new BiStore.Version(i.id(), version, i.body(), note, p.user(), now), props.versionsKeep());
         store.saveItem(new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), i.body(), "published", version,
-                i.endorsement(), i.endorsedBy(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), "", null, i.createdAt(), now, p.user(), now, p.user()));
-        audit.record(p.user(), "bi-item-published", i.id(), "version " + version + "; " + note);
-        return item(p, i.id(), false);
+                ownRevoked ? "none" : i.endorsement(), ownRevoked ? "" : i.endorsedBy(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), "", null, i.createdAt(), now,
+                p.user(), now, p.user()));
+        BiStore.Revision last = store.revisions(i.id()).stream().findFirst().orElse(null);
+        if (last != null && last.body().equals(i.body())) {
+            store.markRevisionPublished(i.id(), last.seq(), version);
+        } else {
+            revise(i, i.body(), note, p.user(), "publish", version);
+        }
+        audit.record(p.user(), "bi-item-published", i.id(), "version " + version + "; " + note
+                + (damage != null && damage.breaksPublished() ? "; FORCED over " + damage.published().size() + " published report(s)" : ""));
+        List<String> warnings = new ArrayList<>();
+        if (damage != null && damage.change().breaking()) {
+            warnings.add("This version removes or renames " + String.join(", ", damage.change().removed()) + ".");
+            damage.published().forEach(h -> warnings.add("Published report '" + h.report().title() + "' uses " + String.join("; ", h.uses()) + " and is broken."));
+        }
+        if (ownRevoked) {
+            revoked(p, i, "the dataset changed incompatibly", warnings);
+        }
+        if (revoke) {
+            for (ImpactAnalyzer.Hit h : damage.published()) {
+                BiStore.Item r = h.report();
+                if (r.endorsement().equals("certified")) {
+                    if (BiFolder.isShipped(r.id())) {
+                        warnings.add("Shipped report '" + r.title() + "' is certified in its file and stays so; change the file.");
+                    } else {
+                        revoked(p, r, "its dataset '" + i.title() + "' changed incompatibly", warnings);
+                    }
+                }
+            }
+        }
+        Map<String, Object> out = new LinkedHashMap<>(viewOrStub(p, i.id()));
+        out.put("warnings", warnings);
+        return out;
+    }
+
+    /** The item as the caller sees it now; a reviewer who may not open it afterwards (a draft sent back, a publication outside their audience) gets its id and status only. */
+    private Map<String, Object> viewOrStub(Principal p, String id) {
+        try {
+            return item(p, id, false);
+        } catch (DrishtiException e) {
+            BiStore.Item x = store.item(id).orElseThrow(() -> e);
+            return new LinkedHashMap<>(Map.of("id", id, "status", x.status(), "title", x.title(), "publishedVersion", x.publishedVersion()));
+        }
+    }
+
+    /** The refusal text of a publish that would break published reports: the reports the caller may see by name, the rest counted. */
+    private String impactMessage(Principal p, BiStore.Item dataset, ImpactAnalyzer.Result res) {
+        List<String> seen = new ArrayList<>();
+        int hidden = 0;
+        for (ImpactAnalyzer.Hit h : res.published()) {
+            if (canRead(p, h.report())) {
+                seen.add("'" + h.report().title() + "' (" + String.join("; ", h.uses().subList(0, Math.min(3, h.uses().size()))) + (h.uses().size() > 3 ? "; and " + (h.uses().size() - 3) + " more" : "") + ")");
+            } else {
+                hidden++;
+            }
+        }
+        return "publishing '" + dataset.title() + "' would break " + res.published().size() + " published report" + (res.published().size() == 1 ? "" : "s") + " by removing or renaming "
+                + String.join(", ", res.change().removed()) + ": " + String.join(", ", seen) + (hidden > 0 ? (seen.isEmpty() ? "" : "; and ") + hidden + " you cannot see" : "") + ".";
+    }
+
+    /** Takes certification away from an item, records it, and tells its owner and whoever certified it. */
+    private void revoked(Principal p, BiStore.Item x, String why, List<String> warnings) {
+        BiStore.Item now = store.item(x.id()).orElse(x);
+        store.saveItem(new BiStore.Item(now.id(), now.workspace(), now.kind(), now.title(), now.description(), now.owner(), now.tags(), now.body(), now.status(),
+                now.publishedVersion(), "none", "", now.audienceRoles(), now.audienceUsers(), now.audiencePacks(), now.proposedBy(), now.proposedAt(), now.createdAt(),
+                now.updatedAt(), now.updatedBy(), now.publishedAt(), now.publishedBy()));
+        store.addEvent(x.id(), "revoke", p.user(), why, latestRevision(x.id()), Instant.now());
+        audit.record(p.user(), "bi-certification-revoked", x.id(), why);
+        java.util.Set<String> to = new java.util.LinkedHashSet<>();
+        to.add(x.owner());
+        if (!x.endorsedBy().isBlank()) {
+            to.add(x.endorsedBy());
+        }
+        to.remove(p.user());
+        notifier.tell(to, BiNotifier.CERTIFICATION, x.id(), "Certification of " + x.kind() + " '" + x.title() + "' was revoked: " + why, p.user());
+        warnings.add("Certification of '" + x.title() + "' was revoked: " + why + ". A steward certifies it again after checking it.");
+    }
+
+    private BiStore.Revision revise(BiStore.Item i, String body, String message, String actor, String origin, int version) {
+        return store.addRevision(i.id(), body, message, actor, Instant.now(), origin, version, gov.revisionsKeep());
+    }
+
+    int latestRevision(String id) {
+        return store.revisions(id).stream().findFirst().map(BiStore.Revision::seq).orElse(0);
     }
 
     private BiStore.Item withStatus(BiStore.Item i, String status, String proposedBy, Instant proposedAt, String actor) {
@@ -786,7 +933,24 @@ public final class BiService {
         store.saveItem(new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), v.body(),
                 n == i.publishedVersion() ? "published" : "draft", i.publishedVersion(), i.endorsement(), i.endorsedBy(), i.audienceRoles(), i.audienceUsers(),
                 i.audiencePacks(), "", null, i.createdAt(), Instant.now(), p.user(), i.publishedAt(), i.publishedBy()));
+        revise(i, v.body(), "restored version " + n, p.user(), "restore", 0);
         audit.record(p.user(), "bi-item-restored", id, "version " + n);
+        return item(p, id, false);
+    }
+
+    /** Makes a saved state (a revision) the draft again, as a new revision: nothing is lost, and the published version is not touched. */
+    public Map<String, Object> restoreRevision(Principal p, String id, int seq) {
+        BiStore.Item i = editable(p, id, "restoring versions");
+        if (i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "withdraw the proposal before restoring");
+        }
+        BiStore.Revision r = store.revision(id, seq).orElseThrow(() -> new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + i.title() + "' has no saved state " + seq));
+        String published = i.isPublished() ? impact.publishedBody(i) : null;
+        store.saveItem(new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), r.body(),
+                r.body().equals(published) ? "published" : "draft", i.publishedVersion(), i.endorsement(), i.endorsedBy(), i.audienceRoles(), i.audienceUsers(),
+                i.audiencePacks(), "", null, i.createdAt(), Instant.now(), p.user(), i.publishedAt(), i.publishedBy()));
+        revise(i, r.body(), "restored saved state " + seq, p.user(), "restore", 0);
+        audit.record(p.user(), "bi-item-restored", id, "saved state " + seq);
         return item(p, id, false);
     }
 
@@ -818,6 +982,8 @@ public final class BiService {
         store.saveItem(new BiStore.Item(i.id(), i.workspace(), i.kind(), i.title(), i.description(), i.owner(), i.tags(), i.body(), i.status(), i.publishedVersion(),
                 level, level.equals("none") ? "" : p.user(), i.audienceRoles(), i.audienceUsers(), i.audiencePacks(), i.proposedBy(), i.proposedAt(), i.createdAt(),
                 i.updatedAt(), i.updatedBy(), i.publishedAt(), i.publishedBy()));
+        store.addEvent(id, level.equals("certified") ? "certify" : level.equals("none") && i.endorsement().equals("certified") ? "uncertify" : level.equals("promoted") ? "promote" : "unpromote",
+                p.user(), "", latestRevision(id), Instant.now());
         audit.record(p.user(), "bi-item-endorsed", id, level);
         return item(p, id, false);
     }

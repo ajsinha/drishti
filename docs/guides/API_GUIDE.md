@@ -1549,6 +1549,9 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9033 | 501 | Report not built | The report uses a visual type, slicer mode or setting the grammar reserves and this server does not build yet |
 | DRS-9034 | 422 | Report dataset | The report's dataset cannot be found or has errors, so the report cannot be drawn |
 | DRS-9035 | 422 | Report state | A visual query names a page, visual or slicer the report lacks, or its state (slicers, selections, drill path, carried values, dates) is not valid |
+| DRS-9040 | 409 | Breaks reports | Publishing a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
+| DRS-9041 | 422 | Bundle invalid | A BI bundle is not readable, fails its checksums, is too large or holds an invalid item |
+| DRS-9042 | 409 | Import conflict | A bundle import would overwrite content that changed since the export, or names a workspace or owner that cannot be mapped |
 
 `DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1683,6 +1686,26 @@ POST /api/v1/bi/reports/file:report:trades-overview/query   {"page": "overview",
 
 Refusals are the standard problem body with the code: `422 DRS-9030` to `9032` (the report), `501 DRS-9033` (not built), `422 DRS-9034` (the dataset), `422 DRS-9035` (the state), and every dataset query code (`9020` to `9027`, `403 DRS-9021` for a masked column,
 `422 DRS-9020` when a row rule makes a visual unanswerable). Every query is audited like a dataset query. From the console the calls are under `/bi/api/reports/...`; the console's page asks three queries at a time (the server allows three per person) and retries a `429`.
+
+## Publishing and governance: `/api/v1/bi` (phase 4)
+
+Phase 4 of Rūpaka ([BI_GOVERNANCE.md](BI_GOVERNANCE.md) is the reference; [BI_GUIDE.md](BI_GUIDE.md) section 17 the pages). Every answer is as the caller: drafts and saved states are for people who may edit the item (and a bi-steward while it is proposed), the published text for everyone who may read it, and a report is named in a list only if the caller could open it. Writes by a personal token need `bi:write` (restore, impact of a text), `bi:approve` (approve, reject, endorse, bundle import) as in [tokens](#personal-api-tokens).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/bi/items/{id}/history` | `{revisions: [{seq, message, author, createdAt, origin, publishedVersion, draft, bytes}], events: [{seq, action, actor, note, revision, at}], canRestore}`, newest first; `origin` is `create`, `save`, `restore`, `publish` or `import`; `events` is the review record (`request`, `withdraw`, `approve`, `reject`, `certify`, `uncertify`, `promote`, `unpromote`, `revoke`, `import`) |
+| `GET` | `/bi/items/{id}/history/{n}` | one saved state with its `body` |
+| `POST` | `/bi/items/{id}/history/{n}/restore` | the saved state becomes the draft, as a new saved state; the item as `GET /bi/items/{id}`; `409 DRS-9004` while proposed |
+| `GET` | `/bi/items/{id}/diff?from=&to=` | side by side: `{from: {ref, label}, to, identical, added, removed, changed, rows: [{op: same\|added\|removed\|changed, left, right, leftNo, rightNo}]}`; a side is `draft`, `published`, `vN` or `rN` (default `published` against `draft`); `422 DRS-9003` for another |
+| `GET` | `/bi/items/{id}/review` | `{request, events, diff, check: {ok, problems}, impact, preview, mayDecide}`; `preview` is `{available, label, columns, rows, rowCount, meta}` or `{available: false, reason}`, answered with the caller's row rules and masks |
+| `GET` | `/bi/items/{id}/lineage` | dataset: `{upstream: [{table, kind, packs, connector, each, mode}], downstream: [{id, title, status, endorsement, uses}], hidden}`; report: `{dataset, uses, upstream}` |
+| `GET` | `/bi/items/{id}/impact[?remove=a,b]` | what breaks: `{change, breaksPublished, published: [{visible, id, title, uses}], drafts, refused, canForce, wouldRevokeCertification, hypothetical}` |
+| `POST` | `/bi/items/{id}/impact` | the same for `{yaml}` not yet saved |
+| `POST` | `/bi/items/{id}/publish`, `/approve` | `{note, force}`: `force` publishes over broken reports and needs `bi-admin`; the item plus `warnings` (what broke, which certification was revoked); `409 DRS-9040` without it |
+| `GET` | `/bi/bundle?items=a,b&workspace=w&dependencies=true` | a bundle (`drishti-bi-bundle`, format 1): items with published versions, sample flags, owner, audience and checksums, plus `skipped`; needs `bi-author` and the contributor role |
+| `POST` | `/bi/bundle/import` | `{bundle, dryRun (default true), overwrite, force, workspace, workspaces: {from: to}, owners: {from: to}}`; needs `bi-steward`; `{dryRun, ok, applied, counts, items: [{id, action, workspace, owner, reasons, warnings, blocks}]}`; `422 DRS-9041`, `409 DRS-9042` |
+
+Review notices reach the inbox ([the inbox](#share-with-a-note-the-directory-and-the-inbox)) as rows of type `bi-review` (to reviewers), `bi-decision` (to the author) and `bi-certification` (to the owner and the certifier); `kind` is `bi`, `id` the item and `title` a one-line summary. Refusals: `DRS-9040`, `9041`, `9042` and the phase 1 codes (`DRS-9001` to `9005`).
 
 ## Embedding views in another web application
 

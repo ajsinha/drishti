@@ -29,7 +29,7 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 # the server paths the page script may reach: nothing else is passed on
-_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports")
+_ALLOWED = ("me", "home", "catalogue", "settings", "workspaces", "items", "datasets", "model", "engine", "reports", "bundle")
 _NO_BODY = {"GET", "DELETE"}
 
 
@@ -68,6 +68,12 @@ async def workspace(request: Request, workspace: str):
 @router.get("/bi/i/{item:path}")
 async def item(request: Request, item: str):
     return _page(request, "bi/item.html", "item", item=item)
+
+
+@router.get("/bi/environments")
+async def environments(request: Request):
+    """Environments: export a workspace as a bundle, import one (dry run first). Drawn by ``bi-env.js`` (phase 4)."""
+    return _page(request, "bi/environments.html", "environments")
 
 
 @router.get("/bi/datasets")
