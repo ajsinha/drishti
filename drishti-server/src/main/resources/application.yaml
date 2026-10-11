@@ -178,6 +178,8 @@ drishti:
       - /api/v1/bi/model/start          # a draft dataset from pack kinds: reads connectors, stores nothing
       - /api/v1/bi/model/infer          # relationships proposed by value matching: reads connectors, stores nothing
       - /api/v1/bi/reports/*/query      # Rupaka phase 3: one visual of a report under the page's state, through the dataset engine, masked and row-ruled
+      - /api/v1/bi/reports/*/python     # Rupaka phase 6: what the console's Python runner runs for one python visual (the item, its manifest and source as the caller reads it), stores nothing
+      - /api/v1/bi/python/validate      # checks a Python item's manifest without storing it
       - /api/v1/bi/reports/query        # the same for draft YAML (authors)
       - /api/v1/bi/reports/validate     # checks a report's YAML without storing it
       - /api/v1/bi/boards/validate      # checks a board's YAML without storing it

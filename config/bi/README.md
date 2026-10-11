@@ -24,10 +24,11 @@ config/bi/
   datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures, row rules and masks; queried since phase 2
                                   (five commented samples ship: trades-basic, trading-risk, trading-cashflows, and the live live-trading and live-exposure)
   reports/    <id>.report.yaml    pages of visuals over a dataset: filters, bookmarks, drill-through, theme; drawn since phase 3
-                                  (five commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure)
+                                  (six commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure, python-desk-risk)
   boards/     <id>.board.yaml     a wall of live tiles from several reports, with alerts and kiosk mode; drawn since phase 5 (one commented sample: desk-wall)
   notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9)
-  python/                         typed Python implementations (transforms, measures, visuals) and their manifests and tests (phase 6: not built, the folder is reserved)
+  python/     <id>.python.yaml    a Python Measure or Visual with its manifest (inputs, packages, target, limits, source); run by the console's sandboxed runner or in the browser, since phase 6
+                                  (two commented samples: desk-pnl-volatility, pnl-histogram; docs/guides/PYTHON_BI.md)
 ```
 
 Every file is a **published, read-only item of the catalogue** (workspace "Shipped content", id `file:<kind>:<name>`). The keys `title`, `description`, `owner`, `tags`, `endorsement` (none, promoted,

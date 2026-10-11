@@ -15,7 +15,7 @@
 -->
 # Tutorial: learn BI from the sample datasets and reports
 
-Drishti ships five sample **datasets**, five sample **reports** and one **board** (all in `config/bi`, all read-only), built on the trades, so you can learn what each is by using it and then **building your own**. The tutorial is the walk-through; the pages themselves are described in [BI_GUIDE.md](BI_GUIDE.md) (read its sections 2 to 4 first if you have never opened BI), and the references are [DATASETS.md](DATASETS.md), [REPORTS.md](REPORTS.md), [BOARDS.md](BOARDS.md) and [BI_GOVERNANCE.md](BI_GOVERNANCE.md).
+Drishti ships five sample **datasets**, six sample **reports** (one of them for Python, chapter 24), a Python measure and a Python visual, and one **board** (all in `config/bi`, all read-only), built on the trades, so you can learn what each is by using it and then **building your own**. The tutorial is the walk-through; the pages themselves are described in [BI_GUIDE.md](BI_GUIDE.md) (read its sections 2 to 4 first if you have never opened BI), and the references are [DATASETS.md](DATASETS.md), [REPORTS.md](REPORTS.md), [BOARDS.md](BOARDS.md) and [BI_GOVERNANCE.md](BI_GOVERNANCE.md).
 
 **Start here, in this order.** Chapter 0 sets up a server, a console and four people (about ten minutes). Then:
 
@@ -30,8 +30,9 @@ Drishti ships five sample **datasets**, five sample **reports** and one **board*
 | 20, 21 | **distribution**: export a page and subscribe people to it by email, each with their own figures; **alerts** on a number, and a board tile that tells people when it turns red | 25 |
 | 22 | a report **arranged for a phone** in the designer, and **embedded** in another web application | 20 |
 | 23 | **time intelligence**, a dataset that **refreshes itself**, the **map**, funnel, histogram, box plot and bubble, and **true totals** | 20 |
+| 24 | **Python**: a measure and a chart written as items, run sandboxed on the console or in the browser on the rows you may see | 20 |
 
-Every output below was captured from a real server (the pictures and numbers of chapters 1 to 9 by `drishti-console/tests/bi_data_shots.py`, 10 to 15 by `bi_report_shots.py`, 17 by `bi_gov_shots.py`, 18 and 19 by `bi_live_shots.py`, 20 by `dist_shots.py`, 21 by `alerts_shots.py`, 23 by `bi_visuals_shots.py`) over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit), except where a chapter says its data differs. Your numbers are the same for chapters 1 to 15 if you build the lake as chapter 0 says.
+Every output below was captured from a real server (the pictures and numbers of chapters 1 to 9 by `drishti-console/tests/bi_data_shots.py`, 10 to 15 by `bi_report_shots.py`, 17 by `bi_gov_shots.py`, 18 and 19 by `bi_live_shots.py`, 20 by `dist_shots.py`, 21 by `alerts_shots.py`, 23 by `bi_visuals_shots.py`, 24 by `bi_python_shots.py`) over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit), except where a chapter says its data differs. Your numbers are the same for chapters 1 to 15 if you build the lake as chapter 0 says.
 
 | Sample | What it teaches | Tables |
 |---|---|---|
@@ -1031,3 +1032,60 @@ nothing makes the page wider; the matrix scrolls inside its own frame.
 ![The map on a phone](img/bi-visuals/phone-map.png) ![The matrix on a phone](img/bi-visuals/phone-matrix.png)
 
 Reference: [DATASETS.md sections 4.1 and 7.2](DATASETS.md#41-time-intelligence), [REPORTS.md sections 3.1 and 3.2](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble), [BI_GUIDE.md section 13](BI_GUIDE.md#13-datasets-and-the-query-engine-phase-2).
+
+## 24. Python: a measure and a chart
+
+*Phase 6. This chapter uses the stack of `drishti-console/tests/test_bi_python_browser.py` (server 18955, console 17955); the pictures are made by `tests/bi_python_shots.py`. You need `pandas`, `numpy` and `pyarrow` in the console's environment
+(`pip install -r drishti-console/requirements.txt`); the browser step also needs Pyodide (`tools/fetch-pyodide.sh`).*
+
+**1. Open the sample.** Catalogue, *Desk P&L risk (Python)* (or `/bi/r/file:report:python-desk-risk`). Two visuals fill in: bars of **Desk P&L volatility**, a Python measure (one number per desk), and a histogram of one-day P&L drawn by Python.
+Under each is the line that says what ran: `Python · desk-pnl-volatility v1 · server · 283 ms · 60 rows`. The report said `run: auto`: the console's sandboxed runner answered. The rows it was given are the ones *you* may see, with your masks.
+
+![The report, run on the server](img/bi-python/report-server.png)
+
+**2. Read the two items.** Open *Desk P&L volatility* from the catalogue (kind *python*). The body is the manifest: `interface: measure`, `inputs: [pnl1d]`, `packages: [pandas]`, `target: both`, and the source, a function
+`compute(table, params)` that returns `float(pnl.std(ddof=1))` for the rows of **one desk**. Press **Check the Python**: the server checked the manifest and the console parsed the source.
+
+![An item page and its Check](img/bi-python/item-check.png)
+
+**3. See how the measure is used.** The dataset `trades-basic` declares it (open the dataset, *Measures*):
+
+```yaml
+  Desk P&L volatility:
+    python: desk-pnl-volatility
+    inputs: [trade.pnl1d]
+    by: [trade.desk]
+```
+
+Ask the dataset for it in a query and it is refused: the SQL engine cannot run Python (`DRS-9013`). The report's `python` visual (`wells: { values: [Desk P&L volatility] }`) is what shows it: the server hands the console the rows of `trade.desk` and `trade.pnl1d`
+that you may see, and the runner calls the function once per desk.
+
+**4. Break one on purpose.** Create an item of kind *python* in your workspace with the body below (a measure that imports `os`), and press **Check the Python**:
+
+```yaml
+python: bad
+interface: measure
+inputs: [pnl1d]
+source: |
+  import os
+  def compute(table, params):
+      return 1
+```
+
+```
+{"level":"error","code":"DRS-9070","path":"source","message":"line 1: import of 'os' is not allowed (list it in packages, or it is not available to Python items)"}
+```
+
+Remove the import and publish: a workspace that requires review waits for a second person, as for a report. A viewer of a report that names the item runs **what was published**; you, who edit it, run the draft.
+Make the function divide by zero and open a report that uses it: you see `DRS-9071 ZeroDivisionError: division by zero` **and the traceback** (you have `bi-author`); a viewer sees the code and the message only.
+
+**5. Run it in the browser.** Open `/bi/r/file:report:py-browser` of the test stack (the sample with `format.run: browser`): the first visual takes a few seconds (the page loads Pyodide, numpy and pandas from this console on first use), the line under it says
+`browser`, and the figures are the same. The page's content-security policy still has no `'wasm-unsafe-eval'`: only Calc's worker, which loads Python, has it.
+
+![The same report, run in the browser](img/bi-python/report-browser.png)
+
+**6. Put your own in a report.** In the designer add a visual of type **python** (group *Python*), drop `trade.desk` and `trade.pnl1d` into *columns*, and in Format give *Python item* the name of a visual item (`pnl-histogram`), the *Parameters* `{"bins": 12}`, and *Run on*
+`auto`. The canvas shows a placeholder (Python runs when the report is opened); save, open the report, and it draws.
+
+Reference: [PYTHON_BI.md](PYTHON_BI.md) (the manifest, the sandbox, the settings, the codes), [DATASETS.md section 4.2](DATASETS.md#42-python-measures-phase-6), [REPORTS.md section 3.3](REPORTS.md#33-the-python-visual-phase-6).
+

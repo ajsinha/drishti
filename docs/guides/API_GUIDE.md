@@ -1627,6 +1627,11 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9060 | 422 | Export failed | An export is off, names an unknown format or a target that cannot be read, is over `max-bytes`, or took longer than `timeout` |
 | DRS-9061 | 422 | Subscription not valid | A subscription's target, schedule, format, date rule or recipients are wrong (an email address is refused: users and roles only), there are too many, or subscriptions are off |
 | DRS-9062 | 422 | Alert not valid | An alert on a number has a wrong source, condition, trigger, delivery, severity, hysteresis or cooldown; the person has too many; the source cannot be opened by them; `live` is asked of a source with no live table; email is asked and there is no address (or email is off); or alerts are off |
+| DRS-9070 | 422 | Python item not valid | A Python item's manifest has a bad key, interface, package (off the allow-list), target, limit or source (no entry function), a python visual names no item, or an item for the browser only is asked to run on the server |
+| DRS-9071 | 422 | Python code failed | The code raised an error, or returned something that is not a number per group (measure) or an ECharts option, SVG or PNG (visual); the traceback is in the console's answer for `bi-author` only |
+| DRS-9072 | 413 or 504 | Python limit | The call ran over its `timeout` (504), memory, or the size of its input or output (413) |
+| DRS-9073 | 403 | Python sandbox refusal | The code imported a package it did not list, or tried the network, a file outside its scratch folder, or a process |
+| DRS-9074 | 503 | Python runner unavailable | All workers busy for `queue_seconds`, the runner switched off (`bi.python.enabled`), `pandas` or `pyarrow` missing from the console, or Pyodide missing for a browser run |
 
 `DRS-5003` (503, "backend unreachable") and `DRS-9404` (404, an unknown Drishti Elements module or script) are raised by the console, never by the server, so they are not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1752,8 +1757,9 @@ any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's
 | `POST` | `/bi/reports/query` | the same for a draft (needs `bi-author`): `{report \| yaml, page, visual, state}` |
 | `POST` | `/bi/reports/validate` | `{yaml, quality?}` (needs `bi-author`): `{valid, problems[], report}`; `quality: true` adds the accessibility, layout checks |
 | `POST` | `/bi/reports/format` | `{report: {...}}`: the model written as YAML the way a person writes it: `{yaml}` |
-| `GET` | `/bi/reports/catalogue` | `{visuals: {type: {group, wells: {name: {kind, required, max}}}}, reserved[], slicerModes[]}`; since wave 3 the visuals include `bubble`, `funnel`, `histogram`, `box` and `map`, and `reserved` is `python`, `entity-view`, `shape` |
+| `GET` | `/bi/reports/catalogue` | `{visuals: {type: {group, wells: {name: {kind, required, max}}}}, reserved[], slicerModes[]}`; since wave 3 the visuals include `bubble`, `funnel`, `histogram`, `box` and `map`, and `reserved` is `entity-view`, `shape`; phase 6 adds the `python` visual (group `python`) |
 | `GET` | `/bi/reports/dataset?ref=` | (needs `bi-author`) the model of the dataset a report names (a catalogue id, a file name or the dataset's name): what the designer's Fields pane shows |
+| `POST` | `/bi/reports/{id}/python` | (phase 6) body `{page, visual}`: what the console's runner runs for one python visual: `{id, title, version, status, draft, manifest, measure, params, run, visual}`; `manifest` holds the Python item as the caller reads it (the published version, or the draft for those who edit it) with its `source`; `measure` is `{name, inputs, by}` for a Python measure or null. A read: on the token read allow-list. `422 DRS-9035` (no such python visual), `DRS-9070` (the item is not valid) |
 
 **The state** of a visual query is what the person has done on the page: `{"slicers": {"currency": ["USD"], "notional": {"from": 1000000, "to": 3000000}}, "selections": [{"visual": "by-desk", "field": "trade.desk", "values": ["DESK-FX"], "highlight": false}],
 "drill": ["DESK-FX"], "carry": [{"field": "counterparties.name", "op": "in", "values": ["Orbital"]}], "dates": {"from": "2026-10-01", "to": "2026-10-08"}, "rows": true, "limit": 200}`. Slicers are by the slicer's visual id (a list, or `{from, to}`); selections are the marks selected on
@@ -1807,6 +1813,26 @@ A live table in `GET /bi/datasets/{id}/layers`: `{"table": "trade", "partitions"
 
 Refusals are the standard problem body with the code: `422 DRS-9030` to `9032` (the report), `501 DRS-9033` (not built), `422 DRS-9034` (the dataset), `422 DRS-9035` (the state), and every dataset query code (`9020` to `9027`, `403 DRS-9021` for a masked column,
 `422 DRS-9020` when a row rule makes a visual unanswerable). Every query is audited like a dataset query. From the console the calls are under `/bi/api/reports/...`; the console's page asks three queries at a time (the server allows three per person) and retries a `429`.
+
+**Python items (phase 6, [PYTHON_BI.md](PYTHON_BI.md)).** A Python item is a BI item of kind `python` (the ordinary item calls above), so it is versioned, reviewed and published by them; publishing checks its manifest and refuses a bad one (`422 DRS-9070`).
+The server never runs Python; these calls tell the console's runner what to run, and the console's routes run it:
+
+| Call | Needs | What it does | Token rule |
+|---|---|---|---|
+| `POST /api/v1/bi/python/validate` | `bi` | body `{yaml}`: `{valid, problems[{level, code, path, message}], manifest, packages}`: every problem in a manifest, nothing stored | non-GET, on `token-read-posts` (a read: a personal token may call it) |
+| `GET /api/v1/bi/python/{ref}` | `bi`, and the right to read the item | the item (catalogue id, shipped file name or title) as the caller reads it: `{id, title, version, status, draft, manifest}`; `404 DRS-9001` | GET: read |
+| `POST /api/v1/bi/reports/{id}/python` | `bi`, and the right to read the report | body `{page, visual}`: what to run for one python visual (see the reports table above) | non-GET, on `token-read-posts` (a read) |
+| `GET /bi/python/status` (console) | signed in | the runner: `{enabled, ready, missing, workers, running, packages, installed, calls, failures, isolation, browser}` | the console's own route: session cookie, no token |
+| `POST /bi/python/run` (console) | signed in; the server decides access | body `{report, page, visual, state}`: runs the visual's Python item on the server, on the rows the server builds for this person; answers `{kind: measure, by, rows}`, `{kind: echarts, option}`, `{kind: svg, svg}` or `{kind: png, png}` plus `ms`, `inputRows`, `masked`, `item`, `version`, `measure`, `target`; a failure is `{code, detail}` (+ `traceback` for `bi-author`) with `422 DRS-9071`, `403 DRS-9073`, `413`/`504 DRS-9072`, `503 DRS-9074` | JSON from the console's own pages only: `Origin`/`Referer` same-origin and `application/json`, else `403 DRS-5002` / `DRS-5001`; no personal token (the console's session cookie) |
+| `POST /bi/python/check` (console) | signed in; the server decides access | body `{yaml}`: the server's manifest checks plus the console's source checks (parses, defines its entry, imports only what it lists): `{valid, problems, manifest}` | as `/bi/python/run` |
+
+```
+POST /bi/api/reports/file:report:python-desk-risk/python   {"page": "risk", "visual": "histogram"}                    (as rita)   200
+  {"id": "file:python:pnl-histogram", "title": "P&L histogram", "version": 1, "status": "published", "draft": false, "params": {"bins": 24}, "run": "auto", "measure": null,
+   "manifest": {"name": "pnl-histogram", "interface": "visual", "entry": "render", "inputs": ["pnl1d"], "packages": ["numpy"], "target": "both", "timeout": 10, "memory": 256, "output": "echarts", ...}}
+POST /bi/python/run   {"report": "file:report:python-desk-risk", "page": "risk", "visual": "volatility", "state": {}}                  (as rita)   200
+  {"kind": "measure", "by": ["desk"], "rows": [["DESK-EQD", 5803.810000880093], ["DESK-FI", 5803.810000880093], ["DESK-FX", 5803.810000880093]], "ms": 283, "measure": "Desk P&L volatility", "target": "server", "inputRows": 60, ...}
+```
 
 ## Boards: `/api/v1/bi/boards` (phase 5)
 
@@ -2039,6 +2065,7 @@ they are not a public API and have no stability promise, but a script that must 
 | `GET /api/collab`, `GET /api/directory`, `POST /api/share`, `POST /api/share/preview-picture`, `GET /api/share/{id}/picture`, `POST /api/share/{id}/replies`, `GET /api/inbox/count`, `POST /api/inbox/read` | share with a note, the directory, the inbox | `/collab`, `/directory`, `/shares...`, `/me/inbox...` |
 | `GET` and `POST /api/threads/{kind}/{id}`, `GET /api/thread-counts/{kind}/{id}`, `POST /api/thread/{tid}/comments`, `/state`, `PUT` and `DELETE /api/thread/{tid}/follow`, `PATCH /api/comment/{cid}`, `POST .../retract`, `/hide`, `/unhide`, `GET .../revisions` | comment threads | `/threads/...`, `/comments/...`, `/admin/collab/comments/{cid}/hide` |
 | `POST /api/ai/chat` | the console's AI layer ([AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md)) | none, or `/ai/chat` for the `server` provider; `404 DRS-4015` when AI is off |
+| `GET /bi/python/status`, `POST /bi/python/run`, `POST /bi/python/check` | the Python runner of BI: its state, running a python visual's item on the server, checking a Python item | `/bi/reports/{id}/python`, `/bi/reports/{id}/query?format=arrow`, `/bi/python/validate` |
 | `/admin/api/...`, `/admin/connectors/api/...`, `/admin/collab/api/...`, `/admin/embedding/api/...`, `/admin/ai/api/overview` | the Admin pages' actions: users, roles, packs (load, unload, deploy, roll back, registry, sample mode), loads configuration, token revoke, cache purge, retry now, connectors, collaboration compliance, embedded applications | the matching `/admin/...` endpoints; administrators only |
 | `/build/pack/api/...` | New pack from schemas (plan, jobs, drafts, preview, bundle) | none: the console builds the pack and hands it to the Build workbench or Deploy |
 | `POST /m/api/{name}`, `/m/api/{name}/delete`, `POST /alerts/api/{name}`, `/alerts/api/{name}/delete`, `POST /w/api/{name}`, `/w/api/{name}/share`, `/w/api/{name}/delete` | save and delete monitors, alert rules and workspaces | `/me/monitors/...`, `/me/alerts/rules/...`, `/me/workspaces/...` |

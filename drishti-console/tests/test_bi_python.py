@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Rupaka phase 6 (docs/guides/PYTHON_BI.md), the console's routes for Python in BI: the run route hands the Python runner the masked rows the server built and answers a
 number per group or a chart; failures are DRS codes and the traceback is for authors; the check route; the report page carries the browser target's wiring; CSRF."""
 import io

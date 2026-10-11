@@ -388,7 +388,7 @@ public final class ReportValidator {
                 Report.Visual v = page.visuals().get(vi);
                 String p = "pages[" + pi + "].visuals[" + vi + "]";
                 VisualCatalogue.Type spec = VisualCatalogue.type(v.type());
-                boolean data = spec != null && Set.of("chart", "table", "card", "perspective", "live").contains(spec.group());
+                boolean data = spec != null && Set.of("chart", "table", "card", "perspective", "live", "python").contains(spec.group());
                 if ((data || "image".equals(v.type())) && v.title().isBlank() && v.alt().isBlank()) {
                     out.add(new Problem("warning", "A11Y", p, "the " + v.type() + " has no title and no alt text: a screen reader announces nothing about it"));
                 }

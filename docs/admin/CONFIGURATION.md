@@ -334,6 +334,15 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | Rupaka phase 5: a report or board redraws its live visuals at most this often, never two rounds at once; a burst of ticks is one redraw (100 to 5000). |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | A live report or board that has heard nothing from the server (not even its 5-second status) for this long says **Stale** (5 to 600). |
 | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | A board in kiosk mode turns to its next page after this long, unless the board sets `rotate:` (3 to 3600). |
+| `DRISHTI_BI_PYTHON_ENABLED` | `bi.python.enabled` | `true` | Rupaka phase 6 ([PYTHON_BI.md](../guides/PYTHON_BI.md)): the console's Python runner. Off: a python visual's server target answers `DRS-9074` (the browser target still works where an item allows it). |
+| `DRISHTI_BI_PYTHON_WORKERS` | `bi.python.workers` | `2` | Worker processes at once; a call waits `bi.python.queue_seconds` (`5`) for a place, then `DRS-9074`. |
+| `DRISHTI_BI_PYTHON_QUEUE_SECONDS` | `bi.python.queue_seconds` | `5` | How long a Python call waits for a free worker. |
+| `DRISHTI_BI_PYTHON_MAX_TIMEOUT` | `bi.python.max_timeout_seconds` | `60` | The most a manifest's `timeout` may be: the CPU and wall-clock limit of one call. |
+| `DRISHTI_BI_PYTHON_MAX_MEMORY_MB` | `bi.python.max_memory_mb` | `1024` | The most a manifest's `memory` may be, on top of what the interpreter and its packages need to start. |
+| `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | `bi.python.max_input_bytes` | `16000000` | Largest Arrow table handed to Python (`DRS-9072`). |
+| `DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES` | `bi.python.max_output_bytes` | `1000000` | Largest answer (a chart option, an image, a measure's rows) (`DRS-9072`). |
+| (no variable) | `bi.python.packages` | `[pandas, numpy, pyarrow, scipy, statsmodels]` | The allow-list of packages Python items may use; one not installed is refused when used. Equal to the server's `drishti.bi.report.python-packages`. |
+| (no variable) | `bi.python.max_groups`, `network_namespace`, `scratch_dir` | `5000`, `auto`, system temp | Most groups a measure is called for; `auto`, `require` or `off` for the no-network namespace (the audit hook is always on); where scratch folders are made. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_AI_ENABLED` | `ai.enabled` | `false` | Turn on the console's own LLM provider layer (the recommended provider is `type: server`, which delegates to the server so keys stay there). |
@@ -1097,6 +1106,10 @@ How many rows each kind of visual asks the engine for ([REPORTS.md](../guides/RE
 | `distribution-rows` | `20000` | Most members a **histogram** or **box plot** reads (the server bins or summarises them; the picture is a few dozen rows). |
 | `totals-max-rows` | `2000` | Most rows one level of **true totals** (a matrix's subtotal level or a table's total) may return. |
 | `perspective-rows` | `20000` | Most rows a Perspective grid or pivot is sent (phase 5). The browser holds them: the retest of [RUPAKA_POC.md](../architecture/RUPAKA_POC.md#12-the-perspective-retest-phase-5) measured 10,000 rows at 21 MB of JS heap. |
+| `python-rows` | `10000` | Most rows a **python visual** hands the Python runner ([PYTHON_BI.md](../guides/PYTHON_BI.md), phase 6). |
+| `python-packages` | `pandas, numpy, pyarrow, scipy, statsmodels` | The packages a Python item's manifest may list (publishing refuses another: `DRS-9070`). Keep it equal to the console's `bi.python.packages`, which is what the runner enforces. |
+| `python-max-seconds` | `60` | The largest `timeout` a Python manifest may ask for. |
+| `python-max-memory-mb` | `1024` | The largest `memory` a Python manifest may ask for, in megabytes. |
 
 ### `drishti.bi.refresh` — scheduled dataset refresh
 
@@ -1113,7 +1126,7 @@ Times are in `drishti.business-date.zone`, business days by `drishti.business-da
 ### `drishti.bi.live` — streaming BI (phase 5)
 
 Live tables kept in memory by the engine and the streams that tell browsers they changed ([DATASETS.md](../guides/DATASETS.md#71-live-tables-phase-5), [REPORTS.md](../guides/REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](../guides/BOARDS.md),
-[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds` and `bi.board.rotate_seconds` (the environment table above).
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` and, for the Python runner, `bi.python.*` (the environment table above; [PYTHON_BI.md](../guides/PYTHON_BI.md) section 9).
 
 | Key | Default | Meaning |
 |---|---|---|

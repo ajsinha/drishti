@@ -1058,6 +1058,21 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **Cause:** the rule compares a number the tile does not show (`on:` names a measure that is not among its columns), the value is masked for you (a masked value is null and never crosses a threshold), or the level was already reached. `crit` is tested before `warn`.
 - **Fix:** put the measure in `on:` exactly as the tile's column is named; read `data-alert` on the tile (`warn`, `crit` or empty) to see what the page decided.
 
+### A python visual says `DRS-9074`, or never draws
+
+- **Cause:** the console has no free worker (`bi.python.workers`, waits `bi.python.queue_seconds`), the runner is off (`bi.python.enabled: false`), `pandas` or `pyarrow` is not installed in the console's Python (`GET /bi/python/status` says `ready: false` and lists `missing`), the item lists a package that is allowed but not installed, or a browser run has no Pyodide (`tools/fetch-pyodide.sh`).
+- **Fix:** read `GET /bi/python/status` (`enabled`, `ready`, `missing`, `installed`, `running`, `isolation`); `pip install -r drishti-console/requirements.txt` in the console's environment; raise `workers`; for the browser target run `tools/fetch-pyodide.sh`. With `network_namespace: require` the machine must allow `unshare --user --net`, else use `auto`.
+
+### A python visual says `DRS-9071`, `DRS-9072` or `DRS-9073`
+
+- **Cause:** `9071`: the code raised (the message names the exception; people with `bi-author` also see the traceback, whose line numbers are the item's source) or returned the wrong thing (a measure: one number per group; a visual: an ECharts option, SVG text or PNG bytes). `9072`: it ran over its `timeout` (504) or its `memory`, or the rows in or the answer out were too big (413). `9073`: it imported a package it did not list, or tried the network, a file outside its scratch folder, or a process.
+- **Fix:** open the item, press **Check the Python**, and read the traceback as an author; raise `timeout` or `memory` in the manifest (up to `python-max-seconds` and `python-max-memory-mb`), or hand Python fewer rows (`limit`, filters, a narrower `columns` well; `python-rows`); list the package in `packages`, and add it to `bi.python.packages` and the server's `drishti.bi.report.python-packages` if it is not allowed.
+
+### A python measure is refused in a query
+
+- **Cause:** the SQL engine cannot run Python (`DRS-9013`).
+- **Fix:** show the measure in a **python visual** (`wells: { values: [<the measure>] }`); see [PYTHON_BI.md](PYTHON_BI.md) section 5.
+
 ## Error codes
 
 | Code | Meaning |
@@ -1168,6 +1183,11 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-9060` | an export could not be made (HTTP 422): exports are off (`drishti.distribution.export.enabled`), the format is not `pdf`, `png`, `xlsx` or `csv`, the report or view cannot be read, the file is over `max-bytes` (export one page or visual, or narrow the filters), or it took longer than `timeout`. The message names the setting |
 | `DRS-9061` | a subscription is not valid (HTTP 422): a schedule that is not one of `daily`, `weekdays`, `business-days`, `weekly mon HH:MM`, `monthly 1\|last HH:MM` (add `business`), `hourly`, `cron`, `after-load`; a format other than `html`, `pdf`, `xlsx`; an email address (outside addresses are refused, whatever the settings); a role or another person when you are not a BI author; a target you cannot open yourself; or more than `per-user` subscriptions |
 | `DRS-9062` | an alert on a number is not valid (HTTP 422): a source that is not `visual`, `dataset` or `field` or lacks its keys; a condition with an `op` that is not `above`, `below`, `between` or `outside` (or `rises`, `falls`, `moves` for a change), a limit that is not a number, a `high` that is not above `value`, a change of zero or less, a `by` that is not `HH:MM`; a trigger with a schedule that is not one of the subscription words, or a `debounce` under `min-debounce`; a severity other than `info`, `warn`, `critical`; a negative hysteresis; **a source you cannot open yourself**; `live` on a source with no live table; email asked and no address on your account (or `drishti.alerts.measure.email` off); more than `per-user` alerts; or alerts off |
+| `DRS-9070` | a Python item or its use is not valid (HTTP 422): an unknown manifest key, an `interface` that is not `measure` or `visual`, a package off the allow-list, no entry function in the source, a `target: browser` item that needs a package Pyodide lacks, a `timeout` or `memory` over the settings; a python visual with neither `format.python` nor a Python measure; an item for the browser only asked to run on the server. Publishing a Python item with such a manifest is refused with it |
+| `DRS-9071` | the Python code failed (HTTP 422): an exception, a measure that did not return one number per group, a visual that returned neither an ECharts option, SVG nor PNG. The traceback is shown to `bi-author` only |
+| `DRS-9072` | a Python limit stopped it (HTTP 504 for time, 413 for memory, input or output size) |
+| `DRS-9073` | the Python sandbox refused something (HTTP 403): an import that is not on the item's list, the network, a file outside the scratch folder, a process |
+| `DRS-9074` | the Python runner is not available (HTTP 503): all workers busy, switched off, `pandas` or `pyarrow` missing in the console, a package not installed, or no Pyodide for a browser run |
 | `DRS-9404` | raised by the console only (HTTP 404): an embedding page asked for a Drishti Elements module or enhancer script the console does not ship (`/embed/v1/m/<name>.js`, or `/embed/v1/js/<name>.js` for a script that is not one of the console's enhancers); check the file name and the library version in the `<script>` tag |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |
 

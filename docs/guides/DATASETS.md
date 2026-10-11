@@ -26,7 +26,7 @@ workspace, published with review like any item) or **shipped** as `config/bi/dat
 is executed: it is parsed, validated, compiled to SQL with **bound values**, and run by the embedded DuckDB.
 
 Contents: [1](#1-the-file) the file · [2](#2-tables-and-columns) tables and columns · [3](#3-relationships-and-how-queries-join) relationships ·
-[4](#4-measures-and-the-expression-language) measures and expressions (4.1: time intelligence) · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
+[4](#4-measures-and-the-expression-language) measures and expressions (4.1: time intelligence, 4.2: Python measures) · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
 [7](#7-modes-layers-and-rollups) modes, layers and rollups (7.2: scheduled refresh) · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
 [10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5))
 
@@ -113,7 +113,7 @@ measures:
   MTM per 1m: { expr: "ratio(sum(trades.mtm), sum(trades.notional)) * 1000000" }
   Share:      { expr: "[MTM] / [Notional]" }                      # [Name] uses another measure
   Open MTM:   { expr: "sum(trades.mtm, trades.status == 'Live')" } # a condition inside the aggregate
-  Attrib:     { python: risk.measures.pnl_attribution, inputs: [trades.mtm] }   # stored, NOT run (section 10)
+  Vol:        { python: desk-pnl-volatility, inputs: [trades.pnl1d], by: [trades.desk] }   # a PYTHON measure: run by the console's runner, shown by a python visual (4.2)
 ```
 
 The expression language is **Rachana-EL's syntax** (operators, literals, `?:`, text in `'...'` or `"..."`) **extended with aggregation**. It is closed and side-effect free;
@@ -214,6 +214,25 @@ FROM (...) AS "trades" WHERE ("trades"."tradeDate" BETWEEN CAST(? AS DATE) AND C
 * A **rollup** cannot hold a time measure (`DRS-9012`, as for a distinct count); the query runs on the columns layer.
 * `running` takes one `sum`, `count`, `min` or `max` (an average, ratio, distinct count or percentile has no running total: `DRS-9011`), needs the date as a **field** of the query (`422 DRS-9020` otherwise), cannot be filtered on (`DRS-9020`), and a date masked for the reader is `403 DRS-9021`.
 * Masks and row rules apply as for any measure; the as-of date is part of the cached result's key, so a new date is a new answer.
+
+### 4.2 Python measures (phase 6)
+
+A measure may be a **Python item** instead of an expression: `python:` names the item (catalogue id, shipped file name or title), `inputs` the columns its function reads and `by` the columns that
+make a group, all `table.column` and all of **one table**:
+
+```yaml
+measures:
+  Desk P&L volatility:
+    python: desk-pnl-volatility       # config/bi/python/desk-pnl-volatility.python.yaml
+    inputs: [trade.pnl1d]
+    by: [trade.desk]                  # one number per desk
+    description: Standard deviation of the one-day P&L per desk, computed in Python.
+```
+
+The SQL engine **cannot run it**: a query that names a Python measure is refused (`DRS-9013`), and the model says so as a warning when it is checked. A **python visual** shows it
+(`wells: { values: [Desk P&L volatility] }`): the server hands the console the rows of `by` and `inputs` that this person may see, and the console's sandboxed runner (or the browser's Pyodide) calls the
+item once per group. Checks: the item is named, `inputs` is not empty, every name is a column, all of one table (`DRS-9012`); `expr` and `python` together are `DRS-9010`. The dataset is checked
+**without** looking the item up (an item can be published after the dataset), so a wrong item name appears when a report runs it (`DRS-9001`/`9070`). Reference: [PYTHON_BI.md](PYTHON_BI.md).
 
 ## 5. Hierarchies
 
@@ -420,7 +439,7 @@ Validation never throws: it returns every problem with its code and the path of 
 | `DRS-9010` | the YAML or a structure is not valid (unknown type, mode or cardinality, a bad name, a missing `source.kind`, a `refresh` schedule the server cannot read) |
 | `DRS-9011` | an expression does not parse, names something the model lacks, misuses an aggregate, uses an unknown function, refers to measures in a circle |
 | `DRS-9012` | a relationship, hierarchy, masked column, row rule or rollup points at a table or column that does not exist (or a rollup holds a measure it cannot) |
-| `DRS-9013` | a reserved feature (the window functions `lag` and `rank`, Python measures): parsed, **not built**. Time intelligence (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`) is built (4.1): a wrong shape is `DRS-9011`, a rollup listing one `DRS-9012` |
+| `DRS-9013` | a reserved feature (the window functions `lag` and `rank`) or a Python measure named in a query: parsed, **not built** for SQL (a python visual shows a Python measure: 4.2). Time intelligence (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`) is built (4.1): a wrong shape is `DRS-9011`, a rollup listing one `DRS-9012` |
 | `DRS-9020` | a query names a field, measure, operator, value or date the dataset cannot take, or cannot be joined |
 | `DRS-9021` | a query filters on, or sorts by, a column masked for the caller, or reads a `direct` table of a kind they may not open |
 | `DRS-9022` / `9023` | the answer is over the row limit / the byte limit |
@@ -433,7 +452,7 @@ Validation never throws: it returns every problem with its code and the path of 
 
 ## 10. What is not built
 
-Marked so nothing is mistaken for working: the **window functions** `lag` and `rank` (time intelligence and `running` are built: 4.1); **Python measures** (stored, not run, phase 6);
+Marked so nothing is mistaken for working: the **window functions** `lag` and `rank` (time intelligence and `running` are built: 4.1); a Python measure **inside a query** (a python visual runs it: 4.2);
 the **state of a refresh across a restart** (it is in memory: 7.2); a refresh of **an earlier date** than the current business date (a schedule refreshes today; a load refreshes the date it names); **queries whose measures aggregate several unrelated fact tables**;
 **filter direction `both`** and **many-to-many** semantics, and **inactive relationships used by a measure**; **running totals by group that a change adjusts** (live tables are maintained incrementally, measures are recomputed over them: 7.1), **history of a live table** (it holds current state with retention, not every update), **live tables over arrays** (`each`), **live tables in `direct` queries**;
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector

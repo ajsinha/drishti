@@ -271,7 +271,7 @@ config/bi/
   reports/    <id>.report.yaml    section 8
   boards/     <id>.board.yaml     phase 5 ([BOARDS.md](../guides/BOARDS.md))
   notebooks/  <id>.notebook.yaml  stored, not run (phase 9)
-  python/                         section 13: typed implementations, their manifests and tests (phase 6: not built)
+  python/                         section 13: typed Python items (measures and visuals; Transform and Source not built) with their manifests: <id>.python.yaml (phase 6: 20.8)
 ```
 
 - **Never inside a pack.** A pack describes data (kinds, Sutras, links, vocabulary). A dataset may combine kinds from several
@@ -329,7 +329,7 @@ The phase 0 POC measures the JSON, columns and rollup paths side by side (RUPAKA
 
 ## 8. Reports and visuals
 
-*Phase 3 builds this section for ECharts, cards, tables and matrices, slicers and the interactions; wave 3 (20.7) adds the map, funnel, histogram, box plot and bubble and true totals; the Python visual and the entity view are not built. What is built is in 20.3 and 20.7; the reference is [REPORTS.md](../guides/REPORTS.md).*
+*Phase 3 builds this section for ECharts, cards, tables and matrices, slicers and the interactions; wave 3 (20.7) adds the map, funnel, histogram, box plot and bubble and true totals; the Python visual is built in 20.8; the entity view is not. What is built is in 20.3 and 20.7; the reference is [REPORTS.md](../guides/REPORTS.md).*
 
 A report is `<drishti.bi.dir>/reports/<id>.report.yaml` (by default `config/bi/reports/`): pages, each a 12-column grid of visuals; filters at report, page and visual
 level; bookmarks; drill-through targets; a theme.
@@ -343,7 +343,7 @@ level; bookmarks; drill-through targets; a theme.
 | Slicer (list, dropdown, range, relative date, hierarchy) | Drishti | sync across pages |
 | Map (points, regions) | ECharts geo with vendored map data | no external tiles by default |
 | Text, image, shape, button (navigate, bookmark, drill-through) | Drishti | |
-| Python visual | the Python runner (section 13) | returns a declarative chart, never HTML |
+| Python visual | the Python runner (section 13; built: 20.8) | returns a declarative chart (an ECharts option, SVG or PNG), never HTML |
 | Entity view | a Drishti Sutra view of one record, in a report | the terminal inside BI |
 
 Interactions: cross-filter and cross-highlight between visuals on a page; drill-down and up along hierarchies; drill-through
@@ -707,8 +707,8 @@ an administrator can restrict which workspaces and roles may use each hook.
 
 **No new server processes unless they are needed.** The BI modules run inside the existing Drishti server (Java) and the
 console (Python); DuckDB is embedded in the server. The only extra processes are the Python runner's short-lived worker
-subprocesses, started by the console when a Python transform, measure or visual runs and stopped when idle
-(`bi.python.workers`, default 2, `bi.python.idle-seconds`, default 300). When measured load calls for it (section 18,
+subprocesses, started by the console when a Python transform, measure or visual runs (as built, one per call and gone when it ends, at most
+`bi.python.workers` at once, default 2: 20.8; no idle workers and no `idle-seconds`). When measured load calls for it (section 18,
 LOAD_AND_MEMORY), two scale-out options exist, both off by default: the runner as its own service on another host
 (`bi.python.runner-url`), and more Drishti servers behind a load balancer, as PERFORMANCE.md "Scaling out" describes.
 
@@ -764,7 +764,7 @@ Phases 1 to 5 each have an "as built" subsection below (20.0 is phase 1, 20.2 ph
 | 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test). **Built** except the usability test and the items listed in 20.3 |
 | 4 | **Publishing and governance**: review before publish, versions, endorsement, lineage, impact of dataset changes, pack bundles for environments | M | certified content and lineage shown; deployment by bundle with rollback. **Built** except bundles inside a pack archive and rollback of an import (20.4) |
 | 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run. **Built** except incremental aggregates by group and the LOAD_AND_MEMORY capacity run (20.5) |
-| 6 | **Python**: the interfaces, the server runner and sandbox, browser target, manifests and tests, Calc client and PygWalker | M | a Transform, a Measure and a Visual ship in a pack with tests and run on both targets |
+| 6 | **Python**: the interfaces, the server runner and sandbox, browser target, manifests and tests, Calc client and PygWalker (the Measure and Visual interfaces, runner, sandbox, browser target and manifests are built, 20.8; Transform, shipped tests, the Calc client and PygWalker are not) | M | a Transform, a Measure and a Visual ship in a pack with tests and run on both targets |
 | 7 | **Distribution**: export, subscriptions, alerts on measures, `<drishti-report>`, phone layouts | M | a subscription email renders per recipient with masks. **Built** (20.6, parts 1 to 3) |
 | 9 | **Analyse**: the analyst workbench (Slice, Data, SQL, Python, Explore, Notes) over masked extracts, save as notebook, promote cells to visuals, measures and Python interfaces | L | an analyst slices a 1 M-row extract, runs a Python cell on it and turns it into a tested Transform, all in the browser |
 
@@ -816,7 +816,7 @@ Phase 2 (datasets and the query engine) is built; the references are [DATASETS.m
 * **Phase 0 adjustments.** Static files are served compressed (gzip, Brotli when installed; the 36 MB wasm is 8 MB). The BI-page style policy is **decided**: strict `style-src 'self'` on every BI page, no `unsafe-inline`; the hash list the POC page needs for Perspective's `<style>`
   elements stays on the POC page only, and phase 5 generated its list on the real pages (`tools/perspective-style-hashes.py`: four hashes, not six) with a Chromium test that fails when a library update adds one. **Perspective retest: done in phase 5** (RUPAKA_POC.md section 12): the second-tab trap does not reproduce on the report page in Chromium 153, Chrome 155, Firefox 155 or WebKit 26.6; the fallback (Drishti's own table) stays in force for a tab where WebAssembly fails.
 
-**Not built, and not faked.** *(Wave 3, 20.7, built what this list first deferred: refresh by schedule, and time intelligence with `running`; the window functions `lag` and `rank` are still refused with `DRS-9013`.)* Python measures (stored, not run, phase 6); queries whose measures aggregate several unrelated fact tables; filter direction `both`, many-to-many semantics and inactive relationships used by a measure; live tables as an incrementally updated in-memory table fed by the hot path
+**Not built, and not faked.** *(Wave 3, 20.7, built what this list first deferred: refresh by schedule, and time intelligence with `running`; the window functions `lag` and `rank` are still refused with `DRS-9013`.)* Python measures **inside a query** (a python visual runs them: 20.8); queries whose measures aggregate several unrelated fact tables; filter direction `both`, many-to-many semantics and inactive relationships used by a measure; live tables as an incrementally updated in-memory table fed by the hot path
 (built in phase 5, section 20.5); the BI store as a configured connector (a folder today; mount S3 to put it there); engines other than DuckDB (the interface exists); pushdown of scan filters into Delta and file storage; lineage, impact and classification tags (phase 4); the designer, the Model diagram
 and reports (built in phase 3, section 20.3). The columns layer is **per dataset table**, not shared per kind as 7.1 sketches (a kind read by two datasets is read twice).
 
@@ -852,7 +852,7 @@ is [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapters 10 to 15, the API is [API
 after the server started (the sum of the queries 18 ms, the slowest 4 ms), 244 ms with every answer from the cache; *Counterparty risk* 281 ms and 212 ms; *Cashflow ladder* 299 ms and 255 ms. Selecting a mark re-asks the other seven visuals: 200 ms to the last
 answer. No visual of a sample report reached the one-second hint of Check.
 
-**Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5: the grid and the pivot are built, the charts are not: section 20.5); the visuals `python`, `entity-view` and `shape` (refused with `DRS-9033`; `bubble`, `funnel`, `histogram`, `box` and `map` are built in wave 3: 20.7); the relative-date slicer (refused); a report over
+**Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5: the grid and the pivot are built, the charts are not: section 20.5); the visuals `entity-view` and `shape` (refused with `DRS-9033`; the `python` visual is built in 20.8; `bubble`, `funnel`, `histogram`, `box` and `map` are built in wave 3: 20.7); the relative-date slicer (refused); a report over
 **several datasets** (one dataset a report); true totals for measures that do not add up (built in wave 3: 20.7); highlight for charts other than bar and column (the others are filtered); capturing a bookmark's slicer
 choices from the page (written in the YAML); different layouts per device (a phone stacks the grid in reading order); the *Check* that runs a report's expected values on sample data, and a schema-completion popup in the YAML tab (a strip of suggestions instead);
 the designer's *Explore to visual* (phase 9) and the **usability test** the phase asks for (an hour, a Power BI author, a reference report); embedding (phase 7: built, section 20.6 part 3); a filter direction of `both`, many-to-many semantics and inactive
@@ -1007,6 +1007,31 @@ References: [DATASETS.md](../guides/DATASETS.md) (section 4.1 time intelligence,
 * **The sample.** *Counterparty risk* gains a map of the exposure by country, a year-to-date MTM card (`MTM ytd` in `trading-risk`) and a histogram of the trades' MTM.
 
 **Not built, and not faked.** Regions below the country, a tile map or a map service, a choropleth by anything but a country code or name; a histogram with bands of your own; the window functions `lag` and `rank`; a refresh of an earlier date than the current business date by schedule; the refresh state across a restart; a refresh button on the dataset page (`POST .../refresh` exists).
+
+### 20.8 Python in BI (phase 6), as built
+
+References: [PYTHON_BI.md](../guides/PYTHON_BI.md) (the reference), [DATASETS.md](../guides/DATASETS.md) section 4.2, [REPORTS.md](../guides/REPORTS.md) section 3.3, [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapter 24,
+[API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3), the settings `drishti.bi.report.python-*` and the console's `bi.python.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `PythonBiTest`, `PythonBiApiTest`, `test_pyrunner.py`,
+`test_bi_python.py`, `test_bi_python_browser.py`.
+
+**Built.**
+
+* **Interfaces (13.1).** A **Measure** (`compute(table, params)`, called once per group with a pandas table of that group's rows, returns a number) and a **Visual** (`render(table, params)`, returns an ECharts option, an SVG or PNG bytes: data, never HTML; `formatter`-type keys that could carry markup are removed, an SVG with script or links is refused). Written as pandas, not as `pyarrow`: the table is
+  handed over as Arrow and converted. **Transform** (and **Source**) stay out of scope: a Python-made table as a dataset source is not built.
+* **Manifest (13.1).** A Python item's body: `python` (name), `interface`, `entry`, `inputs`, `packages`, `target` (`server`, `browser`, `both`), `timeout`, `memory`, `output`, `params`, `source`. Parsed and checked by the server (`PythonManifest`, `DRS-9070`) on validate and on publish; the console
+  adds the source checks the server cannot make (it parses, defines its entry, imports only what it lists: `POST /bi/python/check`, the item page's button). The decision of 13.1 to keep implementations in `config/bi/python/` as a *package* with *tests* was changed: **a Python item is a BI item** (a file `config/bi/python/<id>.python.yaml`, or a workspace item of kind `python`) so it has versions, review (phase 4
+  governance), an audience and appears in the catalogue and in bundles with no new machinery. A dotted name (`risk.measures.pnl_attribution`) became the item's id, file name or title. **Tests shipped with an item are not built.**
+* **In datasets and reports (13.2, 8).** A dataset measure `{ python, inputs, by }` (all of one table); a query that names it is `DRS-9013`, because the SQL engine cannot run Python. A new visual type `python` (catalogue group *python*, wells `columns` and `values`) asks the server for the rows of one table (the Perspective way: the table's own rows with its `id`, at most
+  `drishti.bi.report.python-rows`) under the page's filters, masked and row-ruled as the caller, and shows a Python measure as bars, or what a Visual item returns; `format: { python, params, run }`. The server resolves the item for the caller (`POST /api/v1/bi/reports/{id}/python`: a viewer runs the **published** version, someone who edits the item the draft).
+* **Server runner (13.2, decision row 5).** Worker subprocesses of the console, **one per call** (not a warm pool), `python -I`, empty environment, a scratch folder, `RLIMIT_CPU` and `RLIMIT_AS` and a file-size limit, a wall-clock kill of the process group, an audit hook (no sockets, processes, loader; writes only in the scratch folder, reads only in the Python installation and the scratch folder), an import guard
+  (the manifest's packages, on the console's allow-list, and a short list of safe standard-library modules), a **network namespace** with no interfaces when the machine allows `unshare --user --net` (`bi.python.network_namespace`), a pool of `bi.python.workers` (2) with a bounded wait, input and output size limits. Failures are `DRS-9071` to `9074`; the traceback is for `bi-author` only. The output is derived from the rows the server
+  masked for the reader, so it cannot reveal a masked field; the "masked again on the way out" of 13.2 is therefore not needed and **not built**. The sandbox is defence in depth, not a kernel sandbox ([PYTHON_BI.md](../guides/PYTHON_BI.md) section 7 lists what is enforced and what is not).
+* **Browser target (13.2).** The same item in Pyodide in **Calc's own worker** (`calc-worker.js`, the vendored runtime, loaded on the first browser run), on the JSON the viewer's own query returned; `static/calc/bi_driver.py` runs it. The report page keeps the strict policy: only the worker's response has `'wasm-unsafe-eval'`. `run: auto` asks the server first and falls back to the browser. The browser has numpy, pandas, scipy and statsmodels, not pyarrow.
+* **The sample.** *Desk P&L risk (Python)*: the Python measure **Desk P&L volatility** (in `trades-basic`) and a Python histogram of one-day P&L on the trades sample, both items in `config/bi/python/`; the designer offers the visual under *Python*, with Format for the item, *Run on* and the parameters.
+* **Measured.** A server call is about 220 to 320 ms on the development machine (a process start and the pandas import): the **< 50 ms** of section 18 is **not met**, and a warm pool is the fix; a first browser run takes about 3.3 s.
+
+**Not built, and not faked.** The Transform and Source interfaces; a Python measure inside a SQL query or a chart's measures; tests shipped with an item; Vega-Lite; Python on boards, in alerts, subscriptions and embedded reports (an export of a python visual is its input rows); a warm worker pool and the separate runner service (`bi.python.runner-url`); a kernel-level sandbox; the Calc `drishti_bi` client, PygWalker and
+notebooks (13.4); scikit-learn and polars in the default allow-list; the designer's live preview of a python visual (it shows a placeholder).
 
 ### 20.1 Three stages
 

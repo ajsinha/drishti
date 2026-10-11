@@ -19,7 +19,7 @@ A **report** is pages of **visuals** on a 12-column grid, bound to the fields an
 catalogue, for how a visual becomes a query, and for what people can do with a report on the page. To read or build one step by step see [BI_TUTORIAL.md](BI_TUTORIAL.md) (chapters 10 to 15, and 18 for a live report); for the
 pages (viewer, designer, Model view) see [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16 and 18. The design is [RUPAKA.md](../architecture/RUPAKA.md) sections 8 and 9; what is built is its sections 20.3 and 20.5.
 
-Three sample reports ship in `config/bi/reports/`, each marked `sample: true` and commented line by line: **Trades overview** (on `trades-basic`), **Counterparty risk** (cross-pack, on
+Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **Desk P&L risk (Python)**, section 3.3), each marked `sample: true` and commented line by line: **Trades overview** (on `trades-basic`), **Counterparty risk** (cross-pack, on
 `trading-risk`) and **Cashflow ladder** (deep trades, on `trading-cashflows`); phase 5 adds **Live trading desk** (on the live dataset `live-trading`: cards, a bar, a rolling line, two tables, a Perspective grid and a pivot) and
 **Live exposure** (on `live-exposure`), and the board **Desk wall** ([BOARDS.md](BOARDS.md)) that shows tiles of both.
 
@@ -146,11 +146,26 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 | `live-chart` | live | `values` measures (1 to 4, required) | a **rolling line**: each update of the live table adds a point per measure; `format: { window: 120 }` keeps the latest 5 to 1,000 points (section 13) |
 | `perspective-grid` | perspective | `columns` fields of **one table** (required) | the table's rows in a Perspective grid, masked for the reader and updated as the table changes (section 13) |
 | `perspective-pivot` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | the same rows pivoted by Perspective in the browser: `rows` down, `columns` across, `values` aggregated (`format: { aggregates: { trade.mtm: sum } }`) |
+| `python` | python | `columns` fields (any number), `values` one Python measure of the dataset | what a Python item returns for the rows this person may see: bars of a Python measure, or a chart or image (section 3.3) |
 
-Reserved and **refused with `DRS-9033`** (not built): `python`, `entity-view`, `shape`.
+
+Reserved and **refused with `DRS-9033`** (not built): `entity-view`, `shape`.
 
 A measure in a field well, a field in a measure well, an unknown well, a required well left empty or one over its number of items is `DRS-9032`; a name the dataset does not have is `DRS-9031`. A map with neither a `location` nor a `latitude` and `longitude`, or with both,
 or with a latitude without a longitude, or with a latitude that is not a number, is `DRS-9032`, and so is a `histogram` with `bins` outside 2 to 100.
+
+### 3.3 The python visual (phase 6)
+
+```yaml
+- { id: volatility, type: python, wells: { values: [Desk P&L volatility] }, format: { run: auto } }       # a Python measure of the dataset
+- { id: histogram,  type: python, wells: { columns: [trade.desk, trade.pnl1d] }, format: { python: pnl-histogram, params: { bins: 24 }, run: auto } }
+```
+
+The visual hands the rows of its wells (the table's own rows, under the page's filters, at most `python-rows`) to a **Python item** and draws what comes back. `format.python` names the item (catalogue id,
+file name or title) unless the values well holds a Python measure ([DATASETS.md](DATASETS.md) section 4.2); `format.params` overrides the item's parameters; `format.run` is `auto`, `server` or `browser`. A python visual
+with neither an item nor a Python measure, a values well that is not a Python measure, or no columns is `DRS-9032`. It has no drill, selection, alert or *show the rows* buttons; an export of it is the table of rows handed to Python. The designer
+offers it under *Python* and shows a placeholder (Python runs when the report is opened). Everything about the items, where they run, the sandbox and the codes `DRS-9070` to `9074` is in [PYTHON_BI.md](PYTHON_BI.md); the sample report is
+`python-desk-risk`.
 
 ### 3.1 The map, funnel, histogram, box plot and bubble
 
@@ -318,16 +333,18 @@ colour with a contrast ratio under 3 against the theme's background), `LAYOUT` (
 ## 11. Settings
 
 `drishti.bi.report.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3)): `chart-rows` (500), `table-rows` (1000), `slicer-values` (1000), `show-rows` (1000),
-`top-candidates` (10000), `perspective-rows` (20000: the most rows a Perspective visual is sent), `distribution-rows` (20000: the most members a histogram or box plot reads), `totals-max-rows` (2000: rows of one level of true totals). The query limits are `drishti.bi.query.*`; the live ones `drishti.bi.live.*`; the console's `bi.live.min_interval_ms` and `bi.live.stale_seconds` (section 13).
+`top-candidates` (10000), `perspective-rows` (20000: the most rows a Perspective visual is sent), `distribution-rows` (20000: the most members a histogram or box plot reads), `totals-max-rows` (2000: rows of one level of true totals), `python-rows` (10000: the most rows a python visual hands to Python), `python-packages`, `python-max-seconds` and `python-max-memory-mb` (what a Python manifest may list and ask for: [PYTHON_BI.md](PYTHON_BI.md) section 9). The query limits are `drishti.bi.query.*`; the live ones `drishti.bi.live.*`; the console's `bi.live.min_interval_ms` and `bi.live.stale_seconds` (section 13).
 
 ## 12. Built and not built
 
 Built: the report model and its parser, validator and writer (DRS-9030 to 9035); the visual catalogue above; filters at three levels with top-N; slicers (list, dropdown, range); cross-filter, highlight (bar and
 column), drill-down, drill-through, show the rows, show as a table, open in the terminal; bookmarks; palettes; the viewer, the designer and the Model view; the three stored sample reports; the API.
 
+Built in phase 6 (section 3.3): the `python` visual, run on the server in a sandboxed worker or in the browser.
+
 Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the Perspective grid and pivot; the sample live reports.
 
-Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `python`, `entity-view` and `shape` visuals; the relative-date slicer; a map of **regions below the country** (states, counties: the vendored file holds countries), a **tile** map or a map service (nothing is fetched from outside), a
+Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `entity-view` and `shape` visuals; a python visual on a **board**, in an **alert** or a **subscription** (section 3.3; [PYTHON_BI.md](PYTHON_BI.md) section 12); the relative-date slicer; a map of **regions below the country** (states, counties: the vendored file holds countries), a **tile** map or a map service (nothing is fetched from outside), a
 shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); the window functions `lag` and `rank` (the dataset refuses them); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
 written in the YAML); a phone layout is the only per-device layout (no tablet or large-screen variant); a *Check* that runs expected values on sample data; embedding is built for the report's visuals but not for its drill, alert and export chrome (section 15; export, subscriptions and alerts: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
 report-level security beyond the catalogue and the dataset's rules.

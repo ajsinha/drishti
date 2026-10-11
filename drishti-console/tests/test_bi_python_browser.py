@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Python in a report (docs/guides/PYTHON_BI.md), in Chromium over the real server and console (tests/bi_report_stack.py on ports 18955 and 17955, security on, a small
 file lake: two business days of 60 trades). The shipped sample report "Desk P&L risk (Python)" runs a Python measure (the standard deviation of one-day P&L per desk) and a
 Python histogram on the server (sandboxed worker); the same two visuals run in the browser (Pyodide in Calc's worker) and give the same figures; the report page keeps the

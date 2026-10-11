@@ -17,7 +17,7 @@
 
 Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar and on the command line (`RUPAKA` is an alias). This guide is the tour of its pages and of who may do what: the menu, the rail, workspaces, the catalogue, items and their lifecycle, and, in sections 13 to 18, datasets, reports, the designer, the Model view, publishing and live reports and boards. The detail of each lives in a reference of its own (below); this guide shows you where things are and how they fit.
 
-**What a person can do today (phases 1 to 5):** open BI, keep drafts in a personal workspace, share workspaces with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them and find what they may open in a catalogue. A **dataset** is parsed, validated and **queried**: tables from pack kinds through connectors, relationships, measures, row rules and masks, answered by an embedded DuckDB. A **report** is **drawn**: pages of visuals that query the dataset as the person looking, with cross-filtering, drill-down and drill-through; the **designer** builds one by dragging fields onto a canvas and the **Model view** draws a dataset's relationships. Datasets can be **live** (kept in memory as the source ticks), reports then redraw in place, Perspective shows a grid or a pivot, and a **board** is a wall of live tiles with alert colours and a kiosk mode. A **notebook** item is only stored, versioned and published: it is not run or drawn (section 11 says exactly what is and is not there).
+**What a person can do today (phases 1 to 5):** open BI, keep drafts in a personal workspace, share workspaces with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them and find what they may open in a catalogue. A **dataset** is parsed, validated and **queried**: tables from pack kinds through connectors, relationships, measures, row rules and masks, answered by an embedded DuckDB. A **report** is **drawn**: pages of visuals that query the dataset as the person looking, with cross-filtering, drill-down and drill-through; the **designer** builds one by dragging fields onto a canvas and the **Model view** draws a dataset's relationships. Datasets can be **live** (kept in memory as the source ticks), reports then redraw in place, Perspective shows a grid or a pivot, and a **board** is a wall of live tiles with alert colours and a kiosk mode. **Python** (phase 6) writes measures and visuals as typed items, run sandboxed on the console or in the browser on the rows the person may see ([PYTHON_BI.md](PYTHON_BI.md); section 20 below). A **notebook** item is only stored, versioned and published: it is not run or drawn (section 11 says exactly what is and is not there).
 
 ## Start here
 
@@ -63,7 +63,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 
 **You can**
 
-* open BI from the top bar or with `BI <GO>`; keep drafts in a personal workspace and move them to a shared one; create typed items (`dataset`, `report`, `board`, `notebook`) with a YAML body;
+* open BI from the top bar or with `BI <GO>`; keep drafts in a personal workspace and move them to a shared one; create typed items (`dataset`, `report`, `board`, `notebook`, `python`) with a YAML body;
 * open a **dataset**: its model, and a query preview with the server's row rules and masks; start a dataset from the packs' kinds (links across packs, relationships proposed from the data); see and edit its relationships as a diagram (section 13 and 16);
 * open a **report**: tabs, slicers, click a bar to filter the page, drill down, drill through, show the rows, open a trade in the terminal; **design** one by dragging fields onto a canvas, with the YAML beside it, real data, Check, undo and redo (sections 14 and 15);
 * publish versions, restore an old one, propose for review and approve (four-eyes); compare any two saved states; review with a diff, Check and a data preview; promote and certify; see lineage and what a dataset change breaks; move content between servers as a bundle (section 17);
@@ -72,7 +72,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 
 **Not built yet** (each is marked where it would matter, and listed in section 11)
 
-* Python in BI, and Python measures (phase 6); exploring a dataset freely and the analyst workbench (phase 9, the rail's *Explore*);
+* exploring a dataset freely and the analyst workbench (phase 9, the rail's *Explore*);
 * running a `notebook` body (it is stored as text); a designer for boards (edit the YAML); a Perspective chart;
 * time intelligence and window functions in measures; a cron refresh of a layer (a data-load signal or the refresh call does it); a history of a live table (it holds current state);
 * BI content inside a pack archive (a bundle is its own file); threaded comments on a line of a diff; approval chains of several reviewers;
@@ -209,7 +209,7 @@ A `bi-admin` is an admin of every shared workspace (but cannot read anyone's per
 
 ![An item](img/bi/07-item.jpg)
 
-An **item** has a kind (`dataset`, `report`, `board`, `notebook`), a title, a description, an owner, tags, an audience, a
+An **item** has a kind (`dataset`, `report`, `board`, `notebook`, `python`), a title, a description, an owner, tags, an audience, a
 **YAML body** and a lifecycle. The body must parse as YAML with a mapping at the top; it may be empty; it is at most
 `drishti.bi.max-body-bytes` (256 KiB). Nothing runs it.
 
@@ -265,7 +265,7 @@ open item page says so on its next load (`404 DRS-9001`). A file that does not p
 as a problem, with the message, in *Admin, BI settings* and on *Health* (`bi.problems`); fixing the file clears it. A bad file that never parsed has no item, only the
 problem. Shipped items cannot be edited here: change the file. Details: [config/bi/README.md](../../config/bi/README.md).
 
-Drishti ships **five datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`, and the live `live-trading` and `live-exposure`), **five reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure`) and **one board** (`desk-wall`), each commented line by line and marked `sample: true`. A sample is hidden from the people who may not see sample packs
+Drishti ships **five datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`, and the live `live-trading` and `live-exposure`), **six reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure` and `python-desk-risk`), **two Python items** (`desk-pnl-volatility`, `pnl-histogram`) and **one board** (`desk-wall`), each commented line by line and marked `sample: true`. A sample is hidden from the people who may not see sample packs
 (*Admin, Packs, Hide samples from business users* or *from everyone*), exactly as a sample pack is.
 
 ```yaml
@@ -339,7 +339,7 @@ time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, 
 country file: no tiles, no CDN), **funnel**, **histogram**, **box plot** and **bubble** in the visual catalogue, the designer, exports and `<drishti-report>`; and **true totals** for the measures of a matrix or table that do not add up, worked out by the engine
 ([REPORTS.md sections 3.1 and 3.2](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [BI_TUTORIAL.md chapter 23](BI_TUTORIAL.md#23-time-totals-and-a-map); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
 
-**Not built (and not faked).** Everything of phases 6 to 9: Python in BI (phase 6); the analyst workbench and Explore (phase 9); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2). The rail's *Explore* is a placeholder that says so.
+**Not built (and not faked).** Everything of phases 8 and 9 and part of 6: the Python Transform and Source interfaces and a warm worker pool ([PYTHON_BI.md](PYTHON_BI.md) section 12); the analyst workbench and Explore (phase 9); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2). The rail's *Explore* is a placeholder that says so.
 
 ## 12. Problems
 
@@ -566,3 +566,12 @@ It tells you in your inbox (the *Alerts* tab, and the bell), by email to your ow
 the reference is [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [BI_TUTORIAL.md chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number); settings `drishti.alerts.measure.*`; code `DRS-9062`. Not built: narrative summaries.
 
 **Embedding.** `<drishti-report>` shows a published report, one page or one visual, in **another web application's** page (a Web Component, no iframe), masked whatever the user's roles, with slicers, cross-filter and live updates; the administrator lists the reports a host application may show (`report:<id>` or `report:*`) in Admin → Embedding. Reference: [DISTRIBUTION.md section 5](DISTRIBUTION.md#5-embedding-a-report-in-another-web-application); developer guide: [ELEMENTS.md](ELEMENTS.md#drishti-report); walk-through: [BI_TUTORIAL.md chapter 22](BI_TUTORIAL.md#22-a-report-on-a-phone-and-in-another-application); scope `embed:report`.
+
+## 20. Python in BI (phase 6)
+
+A **Python item** (kind `python`, or a file in `config/bi/python/`) is a function with a manifest: a **Measure** (a number per group: `compute(table, params)`) or a **Visual** (a chart: `render(table, params)`). It is stored,
+versioned, reviewed and published like any item; **Check the Python** on its page parses the source and lists every problem. A **dataset** declares a Python measure
+(`python:`, `inputs:`, `by:`: [DATASETS.md](DATASETS.md) section 4.2), and a report's **`python` visual** (designer, group *Python*) shows it, or any item named in `format.python`
+([REPORTS.md](REPORTS.md) section 3.3). The code runs on the **console**, in a short-lived worker with no network, a scratch folder only and CPU, memory, time and output limits, or **in the browser** (Pyodide, the runtime Calc ships) when the item allows it
+and `format.run` says so. It only ever receives the rows the viewer may see, masked as the server masked them. The sample report **Desk P&L risk (Python)** shows both. Reference, the sandbox, the settings and the codes `DRS-9070` to `9074`:
+[PYTHON_BI.md](PYTHON_BI.md); a short walk-through: [BI_TUTORIAL.md chapter 24](BI_TUTORIAL.md#24-python-a-measure-and-a-chart).
