@@ -30,6 +30,7 @@ def test_every_catalogued_guide_exists_and_renders(client):
         r = client.get(f"/help/{slug}")
         assert r.status_code == 200, slug
         assert 'class="help-article"' in r.text, slug
+        assert not re.search(r'<(?:td|th)[^>]*\sstyle=', r.text), slug                 # aligned columns are classes: the CSP drops inline styles
     assert len(slugs) == len(set(slugs)) >= 25
 
 

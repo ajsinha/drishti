@@ -155,7 +155,7 @@ class ConnectorApiTest {
                 {"Api-Bad", body(root, ""), "not a connector name"},
                 {"plugins", body(root, ""), "reserved"},
                 {"api-bad", "{\"plugin\":\"nosuch\"}", "no plugin named 'nosuch'"},
-                {"api-bad", "{\"plugin\":\"file\",\"settings\":{}}", "settings.root: required"},
+                {"api-bad", "{\"plugin\":\"jdbc\",\"settings\":{}}", "settings.url: required"},
                 {"api-bad", body(root, ",\"password\":\"hunter2\""), "never written into a connector file"},
                 {"api-bad", "{\"text\":\"name: other\\nplugin: file\\nsettings: {root: /tmp}\\n\"}", "file name is the connector's name"},
                 {"api-bad", "{\"text\":\"plugin: file\\nbogus: 1\\n\"}", "unknown key 'bogus'"},
