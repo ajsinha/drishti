@@ -19,18 +19,30 @@ Everything you can open in the terminal you can also read from code, as yourself
 A token reads what you may read (your roles and packs, at the time of each call) and, unless you gave it a **write scope**,
 **never changes anything**: any request other than `GET` with a read-only token is refused (`403 DRS-5002 API tokens only
 read`), except the `POST`s that only read (`/search/pivot/**`, `/command`, the allow-list
-`drishti.security.token-read-posts`). Tools and CI that must change things get a token with `design:write`,
-`design:approve` or `packs:admin`; see "Personal API tokens" in [CLI_GUIDE.md](CLI_GUIDE.md) and below.
+`drishti.security.token-read-posts`, which also lets a token run a dataset query for BI). Tools and CI that must change things get a token with the scope for
+that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](CLI_GUIDE.md) and below.
 
 ## 1. Make a token
 
 1. Open **My account → API tokens**.
 2. Give it a name that says what uses it (`Risk notebook`, `Desk P&L workbook`) and, if you like, a lifetime in days
-   (1–366; blank for no expiry). Tick a **scope** only if the token must change things: `design:write`,
-   `design:approve` or `packs:admin` (the page explains each). A token with a write scope must expire (90 days at most).
+   (1–366; blank for no expiry). Tick a **scope** only if the token must change things (the page explains each; the
+   list is `drishti.security.token-scopes`). A token with a write scope must expire (90 days at most).
 3. Press **Create token**. You see the token once, for example `drk_7QhK2mPq9xZa_4kq…` (`drk_`, a 12-character id, `_`,
    a 43-character secret). **Copy it now**: Drishti keeps only a hash of the secret and cannot show it again.
 4. The list shows each token's id, when it was created, when it expires, when it was last used, and **Revoke**.
+
+| Scope | Lets the token | And still needs |
+|---|---|---|
+| `read` (always) | read what its owner may read | |
+| `design:write` | create, edit, check, propose and share Designs; save Sutras as proposals | the author role |
+| `design:approve` | approve or reject proposed Sutras | the approver or admin role |
+| `packs:admin` | load, unload, deploy and roll back packs; create, change, test and delete connectors; Retry now | the admin role |
+| `loads:write` | announce that a batch of data has landed ([DATA_LOADS.md](DATA_LOADS.md)) | the owner's roles open the kind |
+| `bi:write` | create, edit, propose, publish and delete BI items; restore versions ([BI_GUIDE.md](BI_GUIDE.md)) | the `bi-author` power and a workspace role |
+| `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |
+| `bi:admin` | change a workspace and the BI settings | the workspace admin role or `bi-admin` |
+| `ai:use`, `ai:admin` | call the configured models and MCP tools; send a test call to a model | the admin role for `ai:admin` |
 
 Send it in the `Authorization` header:
 
@@ -115,6 +127,10 @@ It is plain HTTP and JSON; the [API guide](API_GUIDE.md) lists every endpoint. T
 | a pick list or search | `/api/v1/search?q=…` (JSON) or `/api/v1/search/csv?q=…` (CSV) |
 | what changed between dates | `/api/v1/history/{kind}/{id}/diff?from=…&to=…` |
 | a pack's kinds | `/api/v1/packs/{code}/overview` |
+| the BI catalogue, an item, a dataset or report | `/api/v1/bi/catalogue`, `/api/v1/bi/items/{id}`, `/api/v1/bi/datasets/{id}`, `/api/v1/bi/reports/{id}` |
+
+A dataset query is a `POST` with the fields, measures and filters in the body (`/api/v1/bi/datasets/{id}/query`); it only reads, so a read-only token may call it, and the answer
+carries the owner's row rules and masks ([DATASETS.md](DATASETS.md), [API_GUIDE.md](API_GUIDE.md)).
 
 Add `X-Drishti-As-Of: 2026-09-29` for a past business date and `X-Drishti-Known-At: 2026-09-29T14:30:00Z` for the
 data as known at an instant (stores with time travel only; others answer `DRS-1007`). For an id with a `/` (or `\`),

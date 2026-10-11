@@ -62,7 +62,7 @@ You need a Linux or macOS machine with the tools below. On Windows, Drishti runs
 
 | Tool | Version | Why | Check with |
 |---|---|---|---|
-| OpenJDK | **25** exactly | builds and runs the server | `java -version` |
+| OpenJDK | **21** or newer (production runs 21) | builds and runs the server | `java -version` |
 | Python | 3.11 or newer | runs the console | `python3 --version` |
 | uv | any recent | creates the console's Python environment and builds sample history | `uv --version` |
 | git | any | downloads the code | `git --version` |
@@ -84,7 +84,7 @@ export PATH="$JAVA_HOME/bin:$PATH"
 java -version
 ```
 
-You should see a line that starts with `openjdk version "25.`.
+You should see a line that starts with `openjdk version "21.` (or a newer version if you installed one).
 
 > **Tip:** add the two `export` lines to your `~/.bashrc` so new terminals get them too.
 
@@ -228,7 +228,7 @@ drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 You should see:
 
 ```text
-INFO:     Uvicorn running on http://127.0.0.1:17480 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://0.0.0.0:17480 (Press CTRL+C to quit)
 ```
 
 Now open **http://localhost:17480** in your browser. You see the landing page with an animated eye.
@@ -400,7 +400,7 @@ Until you do, the admin's *Users* page warns that the development password is st
 wrong passwords in a row lock an account for 15 minutes.
 
 **Admin** in the top bar opens the administration pages: *Users* (create users, give roles and packs),
-*Audit log*, *Health* and *Caches*. Users, roles and packs per user are explained in
+*Roles*, *Audit log*, *Packs*, *Connectors*, *Data loads*, *Collaboration*, *Embedding*, *Health* and *Caches*. Users, roles and packs per user are explained in
 [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
 > **Production:** set `DRISHTI_SEED_ADMIN=false` so no development admin is created, and use long random
@@ -464,7 +464,7 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 |---|---|
 | Learn every feature of the console, with examples | [USER_GUIDE.md](USER_GUIDE.md) |
 | Know which packs exist and what commands they offer | [PACKS.md](PACKS.md) |
-| Change how a screen looks | the in-app *Sutra guide* and *Screen designer guide*, and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
+| Change how a screen looks | [BUILD_WORKBENCH_TUTORIAL.md](BUILD_WORKBENCH_TUTORIAL.md), [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md), [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) and [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md) |
 | Add users and roles | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Connect your own data | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (one YAML file per connector in `config/connectors/`, or Admin → Connectors), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | See every document | [the documentation map](../README.md) |
