@@ -131,6 +131,9 @@
   .asof-live .asof-live-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .asof-live { padding: .35rem .45rem; }
   .tbar-menu-btn { padding: .45rem .45rem; }
+  /* five menus (Views, BI, Forms, Reports, Build) may not fit beside the brand: the row takes what is left and wraps its
+     buttons rather than push the page sideways */
+  .tbar-menus { flex: 1 1 auto; min-width: 0; flex-wrap: wrap; row-gap: .2rem; }
   .tbar-tools { gap: .1rem; }
   .tbar-tools .tool, .tbar-tools .theme-btn { min-width: 30px; padding: 0 .3rem; }
   /* A menu panel is as wide as the screen less a 16 px gutter each side, under the whole bar (its buttons are not the

@@ -167,7 +167,7 @@ def test_my_designs_renames_duplicates_and_deletes_in_the_page(console_url, brow
     row = page.locator("tr[data-name='Browser design']")
     row.get_by_role("button", name="Rename").click()
     page.get_by_label("New name").fill("Renamed in browser")
-    page.get_by_role("button", name="Save").click()
+    page.get_by_role("button", name="Save", exact=True).click()
     row = page.locator("tr[data-name='Renamed in browser']")
     row.wait_for()
     row.get_by_role("button", name="Duplicate").click()

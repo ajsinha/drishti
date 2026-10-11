@@ -263,12 +263,18 @@ def test_the_keys_work_and_the_help_opens(stack, browser):
     clean(page)
 
 
+# What sticks out past the right edge of the screen (named in a failure, to say where to look).
+WIDE = """() => [...document.querySelectorAll('body *')].filter(e => e.getBoundingClientRect().right > document.documentElement.clientWidth + 1
+  && !e.closest('[hidden]') && getComputedStyle(e).position !== 'fixed').slice(0, 6)
+  .map(e => e.tagName.toLowerCase() + '.' + String(e.className).trim().split(/\\s+/)[0] + ' ' + Math.round(e.getBoundingClientRect().right))"""
+
+
 def test_a_phone_gets_a_scrolling_rail_finger_sized_controls_and_no_sideways_scroll(stack, browser):
     page = sign_in(browser, "ann", viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
     for path in ("/bi", "/bi/catalogue", "/bi/workspaces", "/bi/w/rates-desk", "/bi/datasets"):
         page.goto(CONSOLE_URL + path)
         page.wait_for_timeout(500)
-        assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"), path
+        assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"), (path, page.evaluate(WIDE))
         small = page.evaluate("""() => [...document.querySelectorAll('.bi-shell a[href], .bi-shell button, .bi-shell input:not([type=hidden]), .bi-shell select')]
           .filter(e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && !e.closest('[hidden]')
             && !(e.tagName === 'A' && e.closest('.bi-card') && !e.closest('h3')) && !(e.tagName === 'A' && e.closest('p, .bi-empty')); })
