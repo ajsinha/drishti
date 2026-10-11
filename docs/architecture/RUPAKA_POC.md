@@ -16,13 +16,15 @@
 
 # Rūpaka phase 0: the proof of concept, built and measured
 
-Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11, and the Perspective retest of phase 5 is section 12. **Throw-away code**, off by default, that tests the risky parts of
+Status: built and measured (2026-10-10); the follow-up of phase 2 is section 11, and the Perspective retest of phase 5 is section 12. The page it built is still there for administrators (`/bi/poc`, off by default); everything the real BI pages use was rebuilt in phases 1 to 5 ([RUPAKA.md](RUPAKA.md) section 20) and is documented in [BI_GUIDE.md](../guides/BI_GUIDE.md). **Throw-away code**, off by default, that tests the risky parts of
 [RUPAKA.md](RUPAKA.md) before the roadmap (section 20, phase 0) commits to them. Everything is marked `poc`: the server's
 `com.ash.drishti.server.bi.poc` package and `/api/v1/bi/poc/**`, the console's `routes/bi_poc_routes.py`, `/bi/poc`,
 `bi-poc.js`. Switches: server `drishti.bi.poc.enabled`, console `bi.poc_enabled` (both default `false`; see
 [CONFIGURATION.md](../admin/CONFIGURATION.md)). With them off the paths answer 404 as if the code were absent.
 
 ## 1. Verdict for phase 1: **go, with four adjustments**
+
+*Where the adjustments ended up (2026-10-11):* 1, Perspective in a second tab, was retested on the real report page in four browsers and does not reproduce, the fallback stays (section 12); 2, compressed static files, done in phase 2 (section 11); 3, the style policy, decided in phase 2 and resolved with a generated, checked hash list in phase 5 (section 12); 4, typed columns beside the JSON, done in phase 2 as the columns layer (section 11). The text below is the verdict as it stood after phase 0.
 
 The three bets hold. Perspective takes 1,000 updates a second at 60 fps; masked Arrow out of a server DuckDB reaches the browser
 in about 15 ms and DuckDB-Wasm re-slices it in about 4 ms; the strict CSP holds with WebAssembly allowed on one page. Adjust:
@@ -56,8 +58,8 @@ in about 15 ms and DuckDB-Wasm re-slices it in about 4 ms; the strict CSP holds 
 | Live transport | the console's one channel | one more subscription kind, `poc:rows`, relayed by `core/channel.py`; the page opens no stream of its own (`test_pages_never_open_their_own_event_streams` stays green) |
 | Vendoring | `web/static/vendor/VENDOR.md` | Perspective 3.8.0 (3.9 MB, committed), Arrow JS 17 bundle (0.2 MB, committed), DuckDB-Wasm 1.33.1-dev57.0 (36 MB, installed by `tools/fetch-duckdb-wasm.sh`, pinned SHA-256, not committed: over the 40 MB ceiling together) |
 
-Access: administrators only (a `bi` role power is a nine-argument record change in the role catalogue, not trivial for a
-throw-away). The masks proof therefore uses `preview: masked`, and the tests use a role with `admin` and without `raw`.
+Access: administrators only (at phase 0 a `bi` role power was a nine-argument record change in the role catalogue, not trivial for a
+throw-away; the four BI powers arrived in phase 1, and this page still asks for `admin`). The masks proof therefore uses `preview: masked`, and the tests use a role with `admin` and without `raw`.
 
 ![desktop](img/rupaka-poc/bi-poc-desktop.png)
 
@@ -228,9 +230,9 @@ Phase 2 ([RUPAKA.md](RUPAKA.md) section 20.2) acted on the four adjustments and 
 
 | Adjustment | Status |
 |---|---|
-| 1. Perspective in a second tab | **Open, not retested.** No BI page uses Perspective yet and the environment has no network for a newer build. Phase 5 (live grid) retests the newest build on real Chrome, Firefox and Safari; until then the fallback (ECharts and Drishti's own grid) is in force and the POC page is the only place Perspective runs. |
+| 1. Perspective in a second tab | **Open, not retested at the end of phase 2; retested in phase 5 (section 12).** No BI page uses Perspective yet and the environment has no network for a newer build. Phase 5 (live grid) retests the newest build on real Chrome, Firefox and Safari; until then the fallback (ECharts and Drishti's own grid) is in force and the POC page is the only place Perspective runs. |
 | 2. Serve DuckDB-Wasm compressed | **Done.** The console serves `/static` compressed (`core/staticzip.py`, `static.*` settings): gzip, Brotli when the package is installed and the browser accepts it; each file is compressed once per version and cached; range requests, images and fonts go as they are. Tested for text and WebAssembly (`test_static_compression.py`). The module stays loaded only on demand. |
-| 3. Style policy for BI pages | **Decided:** strict `style-src 'self'` on every BI page, no `unsafe-inline`; the BI pages built so far need no inline style. The six hashes stay on the POC page only. When phase 5 brings Perspective into a BI page it must generate the hash list at vendoring time, with a check that fails when a library update adds one. |
+| 3. Style policy for BI pages | **Decided:** strict `style-src 'self'` on every BI page, no `unsafe-inline`; the BI pages built so far need no inline style. The six hashes stay on the POC page only. When phase 5 brings Perspective into a BI page it must generate the hash list at vendoring time, with a check that fails when a library update adds one (done in phase 5, section 12). |
 | 4. Typed columns beside the JSON | **Done.** The columns layer is exactly that: a typed Parquet projection per table per business date, written when the date lands, with the JSON documents left in the source for drill-down. |
 
 The phase 0 query endpoint (`POST /api/v1/bi/poc/query`) now compiles and runs its typed and rollup layouts through the real engine (`SqlCompiler`, `DuckDbEngine`); the JSON layout and the section 7 comparison keep the POC's own SQL, because the engine has no JSON-document layer on purpose.

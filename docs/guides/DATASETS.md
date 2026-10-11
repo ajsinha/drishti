@@ -15,7 +15,7 @@
 -->
 # Datasets: the YAML, the expression language and the security rules
 
-Reference for the **dataset** of Drishti Rūpaka (BI), as built in phase 2. For the walk-through see [BI_TUTORIAL.md](BI_TUTORIAL.md); for the
+Reference for the **dataset** of Drishti Rūpaka (BI), as built in phase 2 (live tables, section 7.1, are phase 5). For the walk-through see [BI_TUTORIAL.md](BI_TUTORIAL.md) (chapters 1 to 9, and 18 for a live table); for the pages that show a dataset see [BI_GUIDE.md](BI_GUIDE.md) sections 13 and 16; for the
 design see [RUPAKA.md](../architecture/RUPAKA.md) sections 6 and 7 and "20.2 Phase 2, as built"; for the HTTP API see
 [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2); for the settings see
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
@@ -49,9 +49,7 @@ rollups: [ ... ]            # section 7
 layout: { ... }             # where the Model view draws each table (written by the diagram; the language ignores it)
 ```
 
-Unknown top-level keys are a warning. Three complete, commented examples ship in `config/bi/datasets/`: `trades-basic` (one table),
-`trading-risk` (five tables across three packs, a row rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables); the tutorial
-reads each.
+Unknown top-level keys are a warning. Five complete, commented examples ship in `config/bi/datasets/`: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which the tutorial reads in chapters 2 to 5, and the live `live-trading` and `live-exposure` (section 7.1, tutorial chapter 18).
 
 ## 2. Tables and columns
 
@@ -243,9 +241,8 @@ tables:
     source:
       kind: trade               # no connector named: whichever running connector serves trades and can push them
     mode: live
-    live:                       # retention: the most rows it holds, and how long a row may go without changing
+    live:                       # retention: the most rows it holds (and, optionally, `age:` how long a row may go without changing, below)
       rows: 5000
-      age: 15m
     columns:
       tradeId: { type: string, key: true }
       desk:    string
@@ -275,12 +272,10 @@ milliseconds at 10,000 rows. The engine does **not** keep running totals by grou
 the stream that tells a browser the table changed carries **no data**. Two readers of one table, one with a desk rule and one without `raw`, are each answered as themselves after every update (`LiveTablesTest`, `BiLiveApiTest`).
 
 **How a live table is doing.** `GET /api/v1/bi/datasets/{id}/layers` and the dataset page's Layers table show, per live table, `state` (`starting`, `live`, `stale`, `failed`, `closed`), `rows`, entities followed and how many push, and the time of the last change; the engine page
-(`GET /api/v1/bi/engine`, bi-admin) counts live tables and rows. A real answer, a minute after the first query, with the demo source ticking its 360 live trades (of 750) in a batch about twice a second:
+(`GET /api/v1/bi/engine`, bi-admin) counts live tables and rows. A real answer, a minute after the first query, with the demo source (`tick-ms: 200` here; its default is 400) changing 360 of the 750 trades in every batch:
 
 ```json
-{"table": "trade", "kind": "trade", "state": "live", "rows": 750, "entities": 750, "subscribed": 360, "pushes": true, "seq": 34943, "epoch": 0, "generation": 99,
- "lastUpdate": "2026-10-11T11:50:06.738811278Z", "lastSeen": "2026-10-11T11:50:06.738811278Z", "startedAt": "2026-10-11T11:49:08.530247983Z",
- "applied": 34943, "skipped": 7, "evicted": 0, "deleted": 0, "error": null}
+{"table": "trade", "kind": "trade", "state": "live", "rows": 750, "entities": 750, "subscribed": 750, "pushes": true, "seq": 38239, "epoch": 0, "generation": 109, "lastUpdate": "2026-10-11T13:17:39.331718015Z", "lastSeen": "2026-10-11T13:17:39.737547667Z", "startedAt": "2026-10-11T13:16:41.653443716Z", "applied": 38239, "skipped": 8, "evicted": 0, "deleted": 0, "error": null}
 ```
 
 ![The dataset page's Layers table for a live table](img/bi-live/dataset-live-layers.png)
@@ -318,7 +313,7 @@ Validation never throws: it returns every problem with its code and the path of 
 | `DRS-9025` | too many queries at once (server or user) |
 | `DRS-9026` | a table's connector is not running, or is not a SQL store for a `direct` table |
 | `DRS-9027` | the engine failed on the compiled query (the message says how) |
-| `DRS-9050` | a live table cannot be kept: it is over an array (`each`) or its `live:` block is wrong; also `DRS-9026` when no running connector serves its kind |
+| `DRS-9050` | a live table cannot be kept: it is over an array (`each`) or its `live:` block is wrong (a query over a live table whose kind no running connector serves answers `DRS-9026`) |
 | `DRS-9051` | too many live streams are open for the server or the person (`drishti.bi.live.max-streams`, `max-streams-per-user`), HTTP 429 |
 
 ## 10. What is not built
@@ -327,4 +322,4 @@ Marked so nothing is mistaken for working: **time intelligence** (`ytd`, `mtd`, 
 the **cron `refresh.schedule`** (stored and validated; refresh is by data-load signal and on demand, `POST /datasets/{id}/refresh`); **queries whose measures aggregate several unrelated fact tables**;
 **filter direction `both`** and **many-to-many** semantics, and **inactive relationships used by a measure**; **running totals by group that a change adjusts** (live tables are maintained incrementally, measures are recomputed over them: 7.1), **history of a live table** (it holds current state with retention, not every update), **live tables over arrays** (`each`), **live tables in `direct` queries**;
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector
-honours them (the engine reads through the connector, not the files); **lineage and impact**, **classification tags**, **per-entry export rules**. Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [REPORTS.md](REPORTS.md), [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16.
+honours them (the engine reads through the connector, not the files); **classification tags** and **per-entry export rules**. (Lineage and impact analysis are phase 4: [BI_GOVERNANCE.md](BI_GOVERNANCE.md).) Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [REPORTS.md](REPORTS.md), [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16.
