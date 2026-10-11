@@ -53,6 +53,7 @@ With the signal, the same four things happen every time, in order, and each leav
 | views and date lists to include the new data now | drops the caches of the connectors that serve the kind (the same thing Admin → Caches does) |
 | to know the data is really readable | counts the kind's entities on that business date and records `verified` or `not-found` |
 | alerts on the new numbers | evaluates every alert rule on the kind for that date, as each rule's owner may see it |
+| alerts on numbers, and subscriptions, that follow loads | an alert on a BI measure or a Sutra field whose trigger is `after-load` (and every "no data" alert), a board tile that notifies after loads, and a subscription with the schedule `after-load`, look `load-delay` (5 s) after a load that finished ready, once the BI layers have rebuilt ([DISTRIBUTION.md](DISTRIBUTION.md#43-when-it-looks-the-trigger)) |
 | the right people told | one inbox notice (and the bell) each, and an email through the outbox if the pack asks for it |
 | to know when a batch did **not** come | an expectation per kind (`trade by 19:00 America/New_York`); a scheduler flags it late on Health and tells the same people |
 

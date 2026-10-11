@@ -884,7 +884,7 @@ channel `bridge`: one outbox row per matching bridge, written in the share's or 
 (`GET /admin/collab/bridges`, `POST /admin/collab/bridges/{name}/test`). Deviations from the design: (1) the bridge's URL and signing secret come from
 **environment variables** named by `url-env` and `secret-env` (Teams and Slack URLs are credentials), not from a configured URL prefix list; `bridges.allow`
 is the prefix list the resolved URL must start with, and it is empty (nothing may post) until an administrator fills it; (2) routing is per bridge,
-`routes: [{packs, kinds, events}]` with events `share`, `comment` and `mention`, instead of binding a thread: a bridge posts every comment on the kinds it covers
+`routes: [{packs, kinds, events}]` with events `share`, `comment`, `mention` and `alert` (an alert on a number or a board tile fired: [DISTRIBUTION.md section 4.6](../guides/DISTRIBUTION.md#46-delivery); the post names the alert and holds no number), instead of binding a thread: a bridge posts every comment on the kinds it covers
 (replies inside a share's private thread are never posted); a comment that mentions someone and matches both a `comment` and a `mention` route is one post, as a
 mention; (3) the rendering reader is a synthetic principal holding only the role `bridges.render-as` (default `viewer`), so masked ranges read `•••`; a value quote
 `{$.path}` is **never** filled in, even for a role with `raw` (it reads as its path); the pack's `email.content` (`link-only`, `title`, `comment`) applies to

@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 /**
  * Reads a board's YAML (docs/guides/BOARDS.md) into a {@link Board} and checks its structure; what a tile names inside its report is checked by
  * {@link com.ash.drishti.server.bi.board.BiBoardService}. Never throws for a bad document: the problems come back with their DRS code ({@code DRS-9052}, and
- * {@code DRS-9053} for what the grammar reserves: notifications are phase 7) and the path of the offending key.
+ * {@code DRS-9053} for what the grammar still reserves: {@code notifications} and {@code subscriptions}) and the path of the offending key.
  */
 public final class BoardParser {
 
@@ -81,7 +81,7 @@ public final class BoardParser {
         }
         root.fieldNames().forEachRemaining(k -> {
             if (RESERVED_TOP.contains(k)) {
-                out.add(new Problem("error", NOT_BUILT, k, "'" + k + "' is reserved and not built yet: notifications from boards arrive with distribution (RUPAKA.md section 20, phase 7)"));
+                out.add(new Problem("error", NOT_BUILT, k, "'" + k + "' is reserved and not built: a board notifies through `notify:` on a tile's alert (and defaults in a top-level `notify:`)"));
             } else if (!TOP.contains(k)) {
                 out.add(new Problem("warning", INVALID, k, "unknown key '" + k + "' is ignored"));
             }

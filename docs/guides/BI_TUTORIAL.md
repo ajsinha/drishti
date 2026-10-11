@@ -27,8 +27,9 @@ Drishti ships five sample **datasets**, five sample **reports** and one **board*
 | 13 to 16 | **build** a report from scratch in the designer, draw a relationship in the Model view, a report on a phone, what to read next | 40 |
 | 17 | **publish and govern**: saved states, review, certification, lineage, impact, bundles (its own small stack) | 30 |
 | 18, 19 | the **streaming** half: a live dataset, a report that redraws as the trades tick, a Perspective grid and pivot, a wall of live tiles for a screen | 30 |
+| 20, 21 | **distribution**: export a page and subscribe people to it by email, each with their own figures; **alerts** on a number, and a board tile that tells people when it turns red | 25 |
 
-Every output below was captured from a real server (the pictures and numbers of chapters 1 to 9 by `drishti-console/tests/bi_data_shots.py`, 10 to 15 by `bi_report_shots.py`, 17 by `bi_gov_shots.py`, 18 and 19 by `bi_live_shots.py`) over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit), except where a chapter says its data differs. Your numbers are the same for chapters 1 to 15 if you build the lake as chapter 0 says.
+Every output below was captured from a real server (the pictures and numbers of chapters 1 to 9 by `drishti-console/tests/bi_data_shots.py`, 10 to 15 by `bi_report_shots.py`, 17 by `bi_gov_shots.py`, 18 and 19 by `bi_live_shots.py`, 20 by `dist_shots.py`, 21 by `alerts_shots.py`) over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit), except where a chapter says its data differs. Your numbers are the same for chapters 1 to 15 if you build the lake as chapter 0 says.
 
 | Sample | What it teaches | Tables |
 |---|---|---|
@@ -855,3 +856,60 @@ On a phone the list scrolls sideways and every button is 44 px:
 ![The list at 390 px](img/bi-dist/list-phone-390.png)
 
 The reference, with the schedule grammar, limits and what is not built, is [DISTRIBUTION.md](DISTRIBUTION.md).
+
+## 21. Alerts on a number
+
+This chapter uses the same stack as chapter 20 (rita sees every figure, hana is a desk head, **ann's `mtm` is masked**; the stack, with a fake mail server, is `drishti-console/tests/alerts_stack.py`) and the sample report
+**Trades overview**. Rita wants to be told when the total mark to market falls below -300,000. The full reference is [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers).
+
+**1. Alert me.** Open the report. Every visual that shows a number has a bell in the corner of its frame. Press it on the **Mark to market** card:
+
+![The bell on a card](img/bi-alerts/report-alert-me.png)
+
+**2. The form.** It knows the report, the page, the visual and the filters on your screen. Name it, choose *crosses a limit*, *below*, `-300000`, look *after a data load*, and tell you by your inbox and email. *Check now* says what the
+alert reads for **you** right now, and saves nothing:
+
+![The form](img/bi-alerts/alert-form.png)
+
+Today it reads `-225,000`, inside the limit. (The same call is `POST /api/v1/me/measure-alerts/preview`.) *Save alert* arms it. Press *Alert me* the same way for a **dataset measure** (`/alerts/new?source=dataset&dataset=…&measure=…`: a *change* alert,
+"the number of trades moves by 10 % against the previous look") and for a **Sutra field**: on a view, click a number (`-100,000` on `BBG-1008000`) and choose **Alert me** beside *Discuss*:
+
+![A number on a view, with Alert me](img/bi-alerts/view-alert-me.png)
+
+The **Alerts** page (*Reports* in the top bar, *My alerts*; it is also *Views, Alerts*) lists them with the older per-entity rules below. All three are armed:
+
+![Armed](img/bi-alerts/alerts-armed.png)
+
+**3. A load fires it.** The ETL adds ten losing trades and announces the load (`POST /api/v1/packs/trading/loads`). A second later (`load-delay`) the alerts look; the total is now `-725,000`, the change alert sees 70 trades against 60,
+and the board tile of the sample board `desk-alerts` (chapter 19's idea, with `notify: true` on a tile) turns red for everyone who reads it. The **Alerts** tab of rita's inbox and the bell:
+
+![The inbox](img/bi-alerts/inbox-alerts.png)
+
+and the list now says `active`, and the history says what was sent where (`inbox: ok`, `email: sent`):
+
+![Active](img/bi-alerts/alerts-active.png)
+
+![History](img/bi-alerts/alert-history.png)
+
+The mail she got (the figure is hers; a chat bridge would have got a post with **no figure**):
+
+![The alert mail](img/bi-alerts/alert-mail.png)
+
+It does **not** fire again while the number stays below the limit, and re-arms when it is back above `-300,000 + 25,000` (the *hysteresis*); it will not fire again within the *cooldown* (30 minutes).
+
+**4. Each person on their own number.** **Ann** makes the same alert. Her `mtm` is masked, so *Check now* says so and her alert never judges the number, never fires and never shows a figure. Her history has one line:
+
+![Ann's check](img/bi-alerts/alert-masked.png)
+
+![Ann's history](img/bi-alerts/alert-history-masked.png)
+
+The board tile told rita, wes and hana, each judged on their own report query; ann was told nothing, because for her the tile's number is masked. An administrator sees all of it at **Alerts, Everyone's alerts** (`/alerts/all`):
+
+![Everyone's alerts and the board tiles](img/bi-alerts/alerts-all.png)
+
+**5. On a phone.** The Alerts page, the form, the history and the inbox keep to the screen at 390 px, with 44 px targets:
+
+![The Alerts page at 390 px](img/bi-alerts/alerts-phone-390.png)
+
+The tile, in the board's YAML, is two lines in a tile's `alert:` (`notify: true`, and optionally `channels: [inbox, email]` for the board); [BOARDS.md](BOARDS.md#notifications-a-tile-tells-people-when-it-turns-red) is the reference, and a real validation of a board with
+`notify` mistakes is there too.

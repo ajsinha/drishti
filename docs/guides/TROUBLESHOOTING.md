@@ -405,6 +405,32 @@ The dialog (and the reply to `POST /api/v1/shares`) lists who was skipped and wh
 Email is a separate channel: [The email never arrived](#the-email-never-arrived). A thread you cannot see is `DRS-7005` (a thread follows the right to
 open its entity); a comment past its edit window is `DRS-7008`; the whole list is under [Error codes](#error-codes).
 
+## Alerts on numbers
+
+An alert that never fires, fires twice, or tells too much. Work down; each row is one cause. The alert's **history** (the edit page: `/alerts/measure/<name>`) says what every look did and why; *Check now* in the form, or `POST /api/v1/me/measure-alerts/preview`, says what the alert reads for you right now.
+
+| Symptom | Cause | Check and fix |
+|---|---|---|
+| It never fires | The number is not past the limit **for you** (a row rule shows you less than you expect) | *Check now* shows your number. An alert is judged on **your** rows, not the report's author's |
+| The history says `skipped: masked for you, so it cannot be judged` | The measure is masked for your role | By design: it is never judged or shown. Ask for the access, or watch another number |
+| The history says `skipped: there is no earlier number to compare with yet` | A change alert's first look | It only sets the starting point; the next look compares |
+| The history says `skipped: … the earlier number is zero` | A percentage change from zero | Use `abs`, or a threshold |
+| The history says `skipped: no data yet (…)` or `could not be read: …` | The source returned no rows, a masked-everything answer, or an error (a dataset that no longer parses, a report you lost) | Open the report or dataset: the same message shows. The alert resumes by itself when the source reads again |
+| It fired once and never again | It is **active**: it fires again only after the number is back inside the limit by the hysteresis, and after the cooldown | The list shows `active`. Lower the hysteresis, or press *Pause* then *Resume* to arm it afresh |
+| The history says `held`: `held back by the cooldown until …` | A second breach inside the cooldown | It fires when the cooldown ends if the condition still holds. Set `cooldown` (`0` for none) |
+| An after-load alert does not look after my load | The load was for another kind (`trigger.kind`), or the load did not finish `ready`, or `load-delay` has not passed | [DATA_LOADS.md](DATA_LOADS.md); the history's `trigger` says `load` when a load looked |
+| A live alert never looks | Nothing changed, or the source is not live | The preview says `"live": false` for a source with no live table; a live alert looks `debounce` after the last change |
+| A "no data" alert fired on a weekend or holiday | It cannot: it only fires on business days of the server's calendar, from `by` in the business-date zone | Check `by` and the zone ([DISTRIBUTION.md section 4.2](DISTRIBUTION.md#42-when-it-fires-the-condition)) |
+| It fired but nothing is in the inbox | Inbox was off for this alert, or `inbox.keep` pruned the row | The history's `delivered.inbox` says `ok`; the *Alerts* tab of the inbox lists the rows |
+| `delivered.email` says `skipped: no email address on file` | Your account has no address | An administrator sets it under Admin, Users (people cannot add their own) |
+| `delivered.email` says `failed: …` | The mail server refused or was unreachable. Alerts do not retry | Fix `spring.mail.*`; the next firing is a new mail |
+| `delivered.bridge` says `skipped: no bridge route lists the alert event` | No route has `events: [alert]` (or its `kinds` exclude the alert's: a Sutra kind for a field alert, `bi` for the rest) | [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox) |
+| `delivered.bridge` says `skipped: already posted for this alert within its cooldown` | One post per alert per cooldown (a minute at least) | By design: a bridge is a room |
+| A board tile never notifies | `notify` needs a threshold of its level (`crit` needs `crit`), the board is not **published**, the trigger waits for a load, or **nobody can read it** | Validate the board (`POST /api/v1/bi/boards/validate`); see `/alerts/all` for the tile, who is alerted now and its history |
+| The history of a board tile says `this tile would tell 412 people, more than 300` | More readers than `max-audience` | Narrow the board's audience, or raise the setting |
+| The same person is told twice by a tile and their own alert | They are different alerts | Pause one |
+| Several servers all look | The evaluator runs on each | `drishti.alerts.measure.enabled=false` on all but one |
+
 ## Commands and views
 
 ### "DRS-4001 cannot read command '…'; type <MNEMONIC> <ID> <GO> with a mnemonic such as …"
@@ -1108,6 +1134,7 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-9053` | a board uses a reserved setting (HTTP 501): `notify`, `notifications`, `subscriptions`. Notifications arrive with distribution (phase 7); a tile only changes colour |
 | `DRS-9060` | an export could not be made (HTTP 422): exports are off (`drishti.distribution.export.enabled`), the format is not `pdf`, `png`, `xlsx` or `csv`, the report or view cannot be read, the file is over `max-bytes` (export one page or visual, or narrow the filters), or it took longer than `timeout`. The message names the setting |
 | `DRS-9061` | a subscription is not valid (HTTP 422): a schedule that is not one of `daily`, `weekdays`, `business-days`, `weekly mon HH:MM`, `monthly 1\|last HH:MM` (add `business`), `hourly`, `cron`, `after-load`; a format other than `html`, `pdf`, `xlsx`; an email address (outside addresses are refused, whatever the settings); a role or another person when you are not a BI author; a target you cannot open yourself; or more than `per-user` subscriptions |
+| `DRS-9062` | an alert on a number is not valid (HTTP 422): a source that is not `visual`, `dataset` or `field` or lacks its keys; a condition with an `op` that is not `above`, `below`, `between` or `outside` (or `rises`, `falls`, `moves` for a change), a limit that is not a number, a `high` that is not above `value`, a change of zero or less, a `by` that is not `HH:MM`; a trigger with a schedule that is not one of the subscription words, or a `debounce` under `min-debounce`; a severity other than `info`, `warn`, `critical`; a negative hysteresis; **a source you cannot open yourself**; `live` on a source with no live table; email asked and no address on your account (or `drishti.alerts.measure.email` off); more than `per-user` alerts; or alerts off |
 | `DRS-9404` | raised by the console only (HTTP 404): an embedding page asked for a Drishti Elements module or enhancer script the console does not ship (`/embed/v1/m/<name>.js`, or `/embed/v1/js/<name>.js` for a script that is not one of the console's enhancers); check the file name and the library version in the `<script>` tag |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |
 

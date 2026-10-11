@@ -1147,6 +1147,29 @@ Under `drishti.distribution.subscriptions`:
 | `email-rows` | `25` | Most rows per table in an email whose body holds the report (`html` format) |
 | `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
 
+### `drishti.alerts.measure` — alerts on numbers and board notifications
+
+Alerts on a visual, a dataset measure or a Sutra field, and notifications from board tiles (phase 7, part 2: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-numbers)). Every key has a default;
+change one in `application.yaml` or with `DRISHTI_ALERTS_MEASURE_*`.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | `false` stops the evaluator and refuses new alerts (`422 DRS-9062`); stored alerts are kept. Run it on **one** server of a group |
+| `per-user` | `20` | Most alerts one person owns (the preference store allows 50 of a kind) |
+| `tick` | `15s` | How often scheduled alerts, "no data" deadlines and the wait after a load are looked at |
+| `load-delay` | `5s` | After a data load, wait this long before the alerts that follow loads look, so the BI layers rebuild first |
+| `live-poll` | `2s` | How often the live tables behind live alerts are checked for a change |
+| `live-debounce` | `10s` | The quiet time a live alert waits after the last change before looking, when the alert does not set its own |
+| `min-debounce` | `1s` | The shortest debounce an alert may ask for |
+| `live-max-wait` | `2m` | While changes never stop, a live alert still looks at least this often |
+| `min-gap` | `5s` | Two looks of one alert for one person closer than this are one (a look by hand ignores it) |
+| `cooldown` | `30m` | After an alert fires it will not fire again for the same person within this, unless the alert sets its own (`0` for none) |
+| `keep-history` | `50` | Events kept in an alert's history (a board tile keeps 15; the preference document is 64 KB) |
+| `boards` | `true` | `false` turns notifications from board tiles off (the tiles still colour) |
+| `max-audience` | `300` | Most people one board tile notifies; a board with more readers tells nobody and says so in the history |
+| `email` | `true` | `false` stops alert email (a save that asks for it is refused). Mail goes through the server's mail settings, as subscriptions do (`spring.mail.*`, `drishti.collab.email.from`, `drishti.collab.console-url`) |
+| `bridges` | `true` | `false` stops chat bridge posts for alerts (the routes in `drishti.collab.bridges.webhooks` must also list the event `alert`) |
+
 ### `drishti.bi.governance` — publishing and governance (phase 4)
 
 Saved states, review, certification, impact analysis and bundles ([BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md)).
@@ -1311,13 +1334,13 @@ and follow tables, `drishti_collab_hold`; back them up with the rest of the iden
 | `retention.interval` | `24h` | How often the purge runs. It starts only when some retention above 0 is configured, so a default install never runs it. See [OPERATIONS.md](OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export). |
 | `export-keep` | `24h` | How long a finished compliance export is kept before it is deleted (it is also deleted when downloaded: once). Files are written under `<dir>/exports`. |
 | `packs` | `{}` | Per-pack overrides by pack name, in configuration: `packs.genomics.share-enabled: false` switches sharing off for that pack's kinds (`403 DRS-7004`); `packs.genomics.email.content: link-only` makes email about that pack's kinds carry neither the id nor the note. |
-| `bridges.enabled` | `false` | Chat bridges (build step 9): post "comment + link" to Teams, Slack or a signed webhook for the events a route lists. Posts go through the outbox (retries, backoff and dead letters as for email) and never carry a data value. See [OPERATIONS.md](OPERATIONS.md#9a-4-chat-bridges-teams-slack-webhooks). |
+| `bridges.enabled` | `false` | Chat bridges (build step 9): post "comment + link" (or, for an alert, the alert and its condition) to Teams, Slack or a signed webhook for the events a route lists. Posts go through the outbox (retries, backoff and dead letters as for email) and never carry a data value. See [OPERATIONS.md](OPERATIONS.md#9a-4-chat-bridges-teams-slack-webhooks). |
 | `bridges.render-as` | `viewer` | The role whose view of masked values the posted note follows: the note is written as a person with only that role would read it, so with the bundled `viewer` (no `raw`) a value copied from a masked field reads `•••`. Value quotes (`{$.mtm}`) are filled from that role's view of the document (a masked field stays `•••`), so posts can carry figures; an administrator may name a raw role for a restricted channel, and a `link-only` pack posts only the link. |
 | `bridges.allow` | `[]` | URL prefixes a bridge's URL must start with (written out in full, no wildcards: `[https://hooks.slack.com/services/, https://contoso.webhook.office.com/]`). Empty means no bridge can post: configuration alone cannot send data to a host nobody approved. |
 | `bridges.per-minute` | `30` | Posts per bridge per minute; the rest wait in the outbox and go a minute later (no attempt is counted). |
 | `bridges.timeout` | `10s` | Connect and response time for one post. Redirects are never followed. |
 | `bridges.max-note` | `500` | Characters of the note or comment a post carries (cut with an ellipsis). |
-| `bridges.webhooks` | `[]` | The bridges, a list of `{name, format, url-env, secret-env, routes}`: `name` (letters, digits, `-`, `_`; it is the outbox recipient), `format` (`json`: signed generic webhook; `teams`: incoming webhook or Workflows; `slack`: incoming webhook), `url-env` (the **environment variable** holding the URL: Teams and Slack URLs are secrets, so the URL is never in configuration), `secret-env` (the variable holding the HMAC key, `json` only), and `routes`: a list of `{packs, kinds, events}` where `events` are `share`, `comment`, `mention` and an empty `packs` or `kinds` means any. A typo in a name, format or event stops the server at start. Example: `[{name: risk-desk, format: teams, url-env: BRIDGE_RISK_DESK_URL, routes: [{packs: [market-risk], events: [share, comment]}]}]`. |
+| `bridges.webhooks` | `[]` | The bridges, a list of `{name, format, url-env, secret-env, routes}`: `name` (letters, digits, `-`, `_`; it is the outbox recipient), `format` (`json`: signed generic webhook; `teams`: incoming webhook or Workflows; `slack`: incoming webhook), `url-env` (the **environment variable** holding the URL: Teams and Slack URLs are secrets, so the URL is never in configuration), `secret-env` (the variable holding the HMAC key, `json` only), and `routes`: a list of `{packs, kinds, events}` where `events` are `share`, `comment`, `mention` and `alert` (an alert on a number or a board tile fired: the post names the alert and holds no number; `kinds` match a Sutra kind for a field alert and `bi` for every other alert) and an empty `packs` or `kinds` means any. A typo in a name, format or event stops the server at start. Example: `[{name: risk-desk, format: teams, url-env: BRIDGE_RISK_DESK_URL, routes: [{packs: [market-risk], events: [share, comment]}]}]`. |
 | `snapshots.enabled` | `false` | Watermarked snapshots (build step 10): a share may include a PNG of the view, drawn on the server (Java2D, headless, the JDK's own fonts; no browser, nothing downloaded). Off by default. A pack overrides it: `packs.genomics.snapshots.enabled: false` forbids pictures of that pack's kinds (`403 DRS-7015`); `true` allows them for a pack when the global setting is off. The picture is made for the **most restrictive recipient** (any recipient without `raw` masks it for all; a panel any recipient may not open is left out) and rides the share's page and, under `email.content: comment`, its email as an attachment. |
 | `snapshots.width` | `960` | Pixels wide (480 to 2400). |
 | `snapshots.max-height` | `1800` | Most pixels tall (200 to 8000); panels that do not fit are replaced by one line saying how many were left out. |

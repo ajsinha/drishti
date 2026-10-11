@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Makes the pictures and the captured output of the alerts section of docs/guides/DISTRIBUTION.md, the BI tutorial chapter on alerts, BOARDS.md and the API guide from the
 real stack (not a test: run it by hand).
 
@@ -122,6 +136,10 @@ def main(out: Path, captures: Path) -> None:
                 got["api_refused"] = bi_report_stack.api("PUT", "/me/measure-alerts/Bad", "rita", roles, {
                     "source": {"type": "visual", "report": REPORT, "visual": "mtm"}, "condition": {"type": "threshold", "op": "over", "value": 1}, "trigger": {"mode": "schedule"}})
                 got["api_boards"] = bi_report_stack.admin("GET", "/admin/measure-alerts/boards")[1]
+                got["board_validate"] = bi_report_stack.api("POST", "/bi/boards/validate", "wes", ["bi-writer"], {"yaml": (
+                    "board: wall\nnotifications: { email: a@b.c }\nnotify: { channels: [inbox, email], cooldown: 2h, trigger: live }\npages:\n  - id: p1\n    tiles:\n"
+                    "      - { id: a, report: trades-overview, visual: mtm, at: { x: 0, y: 0, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, notify: true } }\n"
+                    "      - { id: b, report: trades-overview, visual: mtm, at: { x: 4, y: 0, w: 4, h: 3 }, alert: { crit: { op: lt, value: -5 }, notify: { level: red, channels: [sms] } } }\n")})[1]
 
                 # mails: the alert, and the board tile, each with the figure the person may see
                 deadline = time.time() + 20

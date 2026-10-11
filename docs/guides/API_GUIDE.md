@@ -1623,9 +1623,10 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9050 | 422 | Live table | A live table cannot be kept: it is over an array (`each`) or its `live:` block is wrong |
 | DRS-9051 | 429 | Live streams | Too many live streams are open for the server or for this user (`drishti.bi.live.max-streams`, `max-streams-per-user`) |
 | DRS-9052 | 422 | Board invalid | A board is malformed, or names a report, page or visual the caller cannot open or that does not exist, a tile off the grid, a slicer, or a threshold that is not `{op, value}` |
-| DRS-9053 | 501 | Board not built | A board uses a reserved setting: `notify`, `notifications`, `subscriptions` (notifications from a board: phase 7 part 2) |
+| DRS-9053 | 501 | Board not built | A board uses a setting the grammar still reserves: `notifications` or `subscriptions` (`notify` is built) |
 | DRS-9060 | 422 | Export failed | An export is off, names an unknown format or a target that cannot be read, is over `max-bytes`, or took longer than `timeout` |
-| DRS-9061 | 422 | Subscription not valid | A subscription's target, schedule, format, date rule or recipients are wrong, there are too many, or subscriptions are off |
+| DRS-9061 | 422 | Subscription not valid | A subscription's target, schedule, format, date rule or recipients are wrong (an email address is refused: users and roles only), there are too many, or subscriptions are off |
+| DRS-9062 | 422 | Alert not valid | An alert on a number has a wrong source, condition, trigger, delivery, severity, hysteresis or cooldown; the person has too many; the source cannot be opened by them; `live` is asked of a source with no live table; email is asked and there is no address (or email is off); or alerts are off |
 
 `DRS-5003` (503, "backend unreachable") and `DRS-9404` (404, an unknown Drishti Elements module or script) are raised by the console, never by the server, so they are not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1834,7 +1835,7 @@ Errors are `DRS-9060` (an export) and `DRS-9061` (a subscription); an unreadable
 | `POST` | `/export/{format}` | `format` is `pdf`, `png`, `xlsx` or `csv`. Body `{type: "report", id, page?, visual?, state?, date?}` (`state` is the report's view state: `slicers`, `selections`, `drill`, `carry`, `dates`) or `{type: "view", id: "kind/id", date?, view?}` (`view` is the query text of the control values and column filters, `ctl.x=1&f.panel.col=gt:5`). Answers the file with `Content-Disposition: attachment` and `X-Export-Rows`. `422 DRS-9060`: exports off, an unknown format, a target that does not exist, over `max-bytes`, over `timeout` |
 | `GET` | `/me/subscriptions` | your subscriptions: `{name, owner, title, target, schedule, date, format, recipients, enabled, nextRun, loadDate?, runs[]}`; a run is `{id, at, trigger, status, sent, skipped, failed, retrying, deliveries[{to, status, attempts, error?, nextAttempt?}]}` |
 | `GET` | `/me/subscriptions/{name}` | one |
-| `PUT` | `/me/subscriptions/{name}` | save: `{target: {type, id, page?, visual?, state?, view?}, schedule, format: html\|pdf\|xlsx, recipients: [user \| role:NAME \| address], date?: today\|previous\|load, enabled?, title?}`. `422 DRS-9061` says what is wrong |
+| `PUT` | `/me/subscriptions/{name}` | save: `{target: {type, id, page?, visual?, state?, view?}, schedule, format: html\|pdf\|xlsx, recipients: [user \| role:NAME], date?: today\|previous\|load, enabled?, title?}`. `422 DRS-9061` says what is wrong |
 | `DELETE` | `/me/subscriptions/{name}` | delete (`204`) |
 | `POST` | `/me/subscriptions/{name}/run` | run now: one render and one mail per recipient, as that recipient; answers the run |
 | `POST` | `/me/subscriptions/{name}/pause` · `/me/subscriptions/{name}/resume` | pause or resume (a resumed one is scheduled from now) |
@@ -1848,10 +1849,51 @@ From the console: `GET /dist/bi/<report id>.<format>?page=&visual=&state=&date=`
 Captured from a real server: exporting the sample page as Excel, and what the first lines of the response are:
 
 ```
-POST /api/v1/export/xlsx  {{"type":"report","id":"file:report:trades-overview","page":"overview","state":{{"slicers":{{}}}}}}
+POST /api/v1/export/xlsx  {"type":"report","id":"file:report:trades-overview","page":"overview","state":{"slicers":{}}}
 200  Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
-     Content-Disposition: attachment; filename="{cap['xlsx_name']}"
-     {cap['xlsx_bytes']} bytes, sheets: {', '.join(cap['xlsx_sheets'])}
+     Content-Disposition: attachment; filename="Trades overview.xlsx"
+     6362 bytes, sheets: About, Trades, Notional, Mark to market, Average MTM per trade, MTM by desk (click a bar to fil, Notional by trade date, Trades by desk and currency
+```
+
+## Alerts on numbers: `/api/v1`
+
+Phase 7, part 2 ([DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers) is the reference). An alert watches one number and is **evaluated as its owner**: their row rules and masks apply to every reading, and a number masked for
+them is never judged or put in a message. Errors are `422 DRS-9062`; an alert that does not exist is `404 DRS-1001`. These calls are **never open to a personal API token** (`/me/**` and `/admin/measure-alerts/**` are in `token-never`).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/me/measure-alerts` | your alerts: the stored alert (below) plus `describe` (the condition in words), `label` (what it watches) and `link` (the console path that opens it) |
+| `GET` | `/me/measure-alerts/{name}` | one |
+| `PUT` | `/me/measure-alerts/{name}` | save (create, or change: an edited alert is armed afresh and keeps its history): `{title?, severity?: info\|warn\|critical, enabled?, source: {type: visual, report, page, visual, measure?, reduce?: first\|last\|sum\|min\|max\|avg\|count, state?} \| {type: dataset, dataset, measure, filters?: [{field, op, values}]} \| {type: field, kind, id, field}, condition: {type: threshold, op: above\|below\|between\|outside, value, high?} \| {type: change, mode: pct\|abs, op: rises\|falls\|moves, value, against: previous-run\|previous-day} \| {type: nodata, by: "HH:MM"}, trigger: {mode: schedule, schedule} \| {mode: after-load, kind?} \| {mode: live, debounce?}, hysteresis?, cooldown?, delivery?: {inbox, email, bridge}}`. The alert is looked at once as you save it |
+| `DELETE` | `/me/measure-alerts/{name}` | delete (`204`) |
+| `POST` | `/me/measure-alerts/{name}/check` | look now, as you; answers the alert with its new state and history |
+| `POST` | `/me/measure-alerts/{name}/pause` · `/me/measure-alerts/{name}/resume` | pause, or resume (armed afresh, and looked at once) |
+| `POST` | `/me/measure-alerts/preview` | the same body as a save: `{status: ok\|masked\|no_data\|error, value, asOf, note, condition, holds?, live}` for **you, now**; saves and sends nothing |
+| `GET` | `/admin/measure-alerts` | everyone's alerts (administrators) |
+| `GET` | `/admin/measure-alerts/boards` | the board tiles that notify (administrators): the tile, its colour rule, `activeFor` (how many people are alerted now) and the history |
+| `POST` | `/admin/measure-alerts/{owner}/{name}/pause` · `/admin/measure-alerts/{owner}/{name}/resume` | administrators |
+| `DELETE` | `/admin/measure-alerts/{owner}/{name}` | administrators (`204`) |
+
+A stored alert is `{name, owner, title, severity, enabled, source, condition, trigger, hysteresis, cooldown, delivery, createdAt, state, history}`: `state` maps a user to `{active, firedAt?, lastValue?, lastEval, note?}`; a `history`
+entry is `{at, user, action: fired\|cleared\|held\|skipped, severity, trigger: saved\|schedule\|load\|live\|by hand\|resumed, value?, asOf?, reference?, delta?, message, id?, delivered?: {inbox, email, bridge}}` (newest first; `delivered` says `ok`, `sent`,
+`queued for 1 bridge`, `skipped: …`, `failed: …` or `off`). An alert's firing is an inbox row of type `alert` (`kind: alert`, `id` the console path it opens, `title` the one line), read from `GET /me/inbox?type=alert` ([the inbox](#share-with-a-note-the-directory-and-the-inbox)).
+A board tile with `notify` is an alert whose key is `board:<board id>/<page>/<tile>`; its state and history are under `/admin/measure-alerts/boards`.
+
+From the console: `/alerts` (the list, beside the older rules), `/alerts/new` (the form: `?source=visual&report=&page=&visual=&state=`, `?source=dataset&dataset=&measure=`, `?source=field&kind=&id=&field=`), `/alerts/measure/<name>` (edit and history),
+`/alerts/all` (administrators) and `POST /alerts/preview` (the form's *Check now*).
+
+Captured from a real server. *Check now* for the MTM card, before and after ten losing trades and a data load:
+
+```
+POST /api/v1/me/measure-alerts/preview  {"source":{"type":"visual","report":"file:report:trades-overview","page":"overview","visual":"mtm"},"condition":{"type":"threshold","op":"below","value":-300000},"trigger":{"mode":"after-load"}}
+200  {"status": "ok", "value": -725000.0, "asOf": "2026-10-08", "note": "", "condition": "below -300,000", "holds": true, "live": false}
+```
+
+and a refusal:
+
+```
+PUT /api/v1/me/measure-alerts/Bad  {"source":{"type":"visual","report":"file:report:trades-overview","visual":"mtm"},"condition":{"type":"threshold","op":"over","value":1},"trigger":{"mode":"schedule"}}
+422  {"type": "about:blank", "title": "alert invalid", "status": 422, "detail": "DRS-9062 condition.op is above, below, between or outside", "instance": "/api/v1/me/measure-alerts/Bad", "code": "DRS-9062"}
 ```
 
 ## Publishing and governance: `/api/v1/bi` (phase 4)
@@ -1872,7 +1914,7 @@ Phase 4 of Rūpaka ([BI_GOVERNANCE.md](BI_GOVERNANCE.md) is the reference; [BI_G
 | `GET` | `/bi/bundle?items=a,b&workspace=w&dependencies=true` | a bundle (`drishti-bi-bundle`, format 1): items with published versions, sample flags, owner, audience and checksums, plus `skipped`; needs `bi-author` and the contributor role |
 | `POST` | `/bi/bundle/import` | `{bundle, dryRun (default true), overwrite, force, workspace, workspaces: {from: to}, owners: {from: to}}`; needs `bi-steward`; `{dryRun, ok, applied, counts, items: [{id, action, workspace, owner, reasons, warnings, blocks}]}`; `422 DRS-9041`, `409 DRS-9042` |
 
-Review notices reach the inbox ([the inbox](#share-with-a-note-the-directory-and-the-inbox)) as rows of type `bi-review` (to reviewers), `bi-decision` (to the author) and `bi-certification` (to the owner and the certifier); `kind` is `bi`, `id` the item and `title` a one-line summary. Refusals: `DRS-9040`, `9041`, `9042` and the phase 1 codes (`DRS-9001` to `9005`).
+Review notices reach the inbox ([the inbox](#share-with-a-note-the-directory-and-the-inbox)) as rows of type `bi-review` (to reviewers), `bi-decision` (to the author) and `bi-certification` (to the owner and the certifier); `kind` is `bi`, `id` the item and `title` a one-line summary. Alerts on numbers arrive as rows of type `alert` ([Alerts on numbers](#alerts-on-numbers-apiv1)). Refusals: `DRS-9040`, `9041`, `9042` and the phase 1 codes (`DRS-9001` to `9005`).
 
 ## AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`
 

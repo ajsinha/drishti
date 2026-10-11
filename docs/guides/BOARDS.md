@@ -22,7 +22,7 @@ A **board** is a wall of tiles for a screen on the wall of a trading desk, a ris
 1. [What a board is, and is not](#1-what-a-board-is-and-is-not)
 2. [The file](#2-the-file)
 3. [Tiles](#3-tiles)
-4. [Alerts: a tile changes colour](#4-alerts-a-tile-changes-colour)
+4. [Alerts: a tile changes colour, and can tell people](#4-alerts-a-tile-changes-colour)
 5. [The viewer, kiosk and rotation](#5-the-viewer-kiosk-and-rotation)
 6. [Who sees what](#6-who-sees-what)
 7. [Checking a board: DRS-9052 and DRS-9053](#7-checking-a-board-drs-9052-and-drs-9053)
@@ -36,7 +36,7 @@ A **board** is a wall of tiles for a screen on the wall of a trading desk, a ris
 * Tiles can come from **several reports over several datasets**: the sample board shows the trading desk and the counterparty exposure on one wall.
 * Tiles over a **live table** redraw in place as the table changes; tiles over a cached table show the data as it was read (a board is not "live" unless its tiles are).
 * A board is a BI item of kind `board`: a YAML document stored, versioned, reviewed and published like a report (phase 1 and 4), or **shipped** read-only in `config/bi/boards` (watched live: add, change or delete a file and the catalogue follows with no restart).
-* A board **sends nothing anywhere**. Colouring a tile is all an alert does; notifications (email, chat) arrive with distribution, phase 7, and are refused today (`DRS-9053`).
+* A board **sends nothing by itself**. Colouring a tile is what an `alert:` does; a tile tells people only when its alert says `notify:` (section 4, *Notifications*): then everyone who may read the board is told, each on their own number, in their inbox and, if the board says so, by email and the chat bridges.
 
 ## 2. The file
 
@@ -80,7 +80,7 @@ Unknown keys are **warnings** (ignored), never errors. A file that does not pars
 | `page` | the report's page that holds the visual; empty means the first page that has it |
 | `title` | replaces the visual's own title on the wall |
 | `at` | `{ x, y, w, h }` on the same **12-column grid** as a report: `x` 0 to 11, `w` 1 to 12 with `x + w` at most 12, `y` 0 or more, `h` 1 to 40 rows of 56 px |
-| `alert` | the thresholds (section 4) |
+| `alert` | the thresholds, and `notify:` (section 4) |
 
 Any visual draws as a tile except a **slicer** (a control, not a picture: refused, `DRS-9052`). A tile is not interactive: nothing a person clicks on a tile filters another tile, and there is no drill. Perspective tiles work (the page then has the narrow WebAssembly policy, [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5)); a **rolling chart** keeps its points in the browser for as long as the board is open.
 
@@ -100,6 +100,78 @@ alert: { on: MTM, warn: { op: lt, value: 150000000 }, crit: { op: lt, value: 100
 The browser evaluates the rule on every redraw against the tile's rows: a card or KPI by its one value, a chart or table by **the worst of its rows**. `crit` is tested first, then `warn`. A tile that reaches a level gets a **coloured border** (amber for warn, red for crit, from the theme's tokens), its number takes the colour, and the line under it says **warning** or **critical** in words: the state never depends on colour alone. `data-alert="warn"` or `"crit"` on the tile's element is what tests and scripts read. Nothing is sent.
 
 Thresholds are compared with the value the reader's own query returns, so a reader whose row rules show only their desk sees a tile turn colour on **their** numbers. A masked value (a number the reader may not see) is `null` and never crosses a threshold.
+
+### Notifications: a tile tells people when it turns red
+
+Add `notify` to a tile's `alert` and the **server** (not a browser) judges the tile for every person who may read the board and tells them when it enters the colour. It is the same machinery as an
+alert on a number ([DISTRIBUTION.md section 4.8](DISTRIBUTION.md#48-board-notifications) is the reference, with a real run): per-person evaluation under their own masks and row rules, a cooldown, delivery to the inbox, email
+and the chat bridges, a history, and an administrators' overview at `/alerts/all`.
+
+```yaml
+notify:                              # optional, top level: defaults for every tile that says `notify`
+  channels: [inbox, email]
+  cooldown: 1h
+pages:
+  - id: p1
+    tiles:
+      - id: mtm
+        report: trades-overview
+        visual: mtm
+        at: { x: 0, y: 0, w: 6, h: 3 }
+        alert:
+          warn: { op: lt, value: -100000 }
+          crit: { op: lt, value: -300000 }
+          notify: true               # or { level: warn, channels: [chat], trigger: live, severity: critical, cooldown: 30m }
+```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `notify: true` | | take the board's `notify:` defaults (or the built-in ones) |
+| `level` | `crit` | `crit` notifies on red; `warn` on amber or red. `crit` needs a `crit` threshold on the tile; `warn` needs a `warn` or a `crit` one |
+| `channels` | `[inbox]` | any of `inbox`, `email`, `chat` |
+| `cooldown` | the server's `drishti.alerts.measure.cooldown` (30 min) | no second notification for one person within it |
+| `trigger` | `after-load` | `after-load` (shortly after a data load announced ready), `live` (when a live report changes) or a schedule (`business-days 07:30`) |
+| `severity` | `critical` for `crit`, else `warn` | `info`, `warn`, `critical` |
+
+A person is told when the tile **enters** the level, and again only after it has dropped below it and the cooldown has passed. A person whose number for the tile is masked is told nothing. The message is the tile and its
+colour, never a figure (`Desk wall · Mark to market — is now red`); it opens the board, where each person sees their own number. A board with more readers than `drishti.alerts.measure.max-audience` (300) tells nobody
+and says so in the history. `notify: false` (or no `notify`) keeps a tile silent.
+
+### Notifications: a tile tells people when it turns red
+
+Add `notify` to a tile's `alert` and the **server** (not a browser) judges the tile for every person who may read the board and tells them when it enters the colour. It is the same machinery as an
+alert on a number ([DISTRIBUTION.md section 4.8](DISTRIBUTION.md#48-board-notifications) is the reference, with a real run): per-person evaluation under their own masks and row rules, a cooldown, delivery to the inbox, email
+and the chat bridges, a history, and an administrators' overview at `/alerts/all`.
+
+```yaml
+notify:                              # optional, top level: defaults for every tile that says `notify`
+  channels: [inbox, email]
+  cooldown: 1h
+pages:
+  - id: p1
+    tiles:
+      - id: mtm
+        report: trades-overview
+        visual: mtm
+        at: { x: 0, y: 0, w: 6, h: 3 }
+        alert:
+          warn: { op: lt, value: -100000 }
+          crit: { op: lt, value: -300000 }
+          notify: true               # or { level: warn, channels: [chat], trigger: live, severity: critical, cooldown: 30m }
+```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `notify: true` | | take the board's `notify:` defaults (or the built-in ones) |
+| `level` | `crit` | `crit` notifies on red; `warn` on amber or red. `crit` needs a `crit` threshold on the tile; `warn` needs a `warn` or a `crit` one |
+| `channels` | `[inbox]` | any of `inbox`, `email`, `chat` |
+| `cooldown` | the server's `drishti.alerts.measure.cooldown` (30 min) | no second notification for one person within it |
+| `trigger` | `after-load` | `after-load` (shortly after a data load announced ready), `live` (when a live report changes) or a schedule (`business-days 07:30`) |
+| `severity` | `critical` for `crit`, else `warn` | `info`, `warn`, `critical` |
+
+A person is told when the tile **enters** the level, and again only after it has dropped below it and the cooldown has passed. A person whose number for the tile is masked is told nothing. The message is the tile and its
+colour, never a figure (`Desk wall · Mark to market — is now red`); it opens the board, where each person sees their own number. A board with more readers than `drishti.alerts.measure.max-audience` (300) tells nobody
+and says so in the history. `notify: false` (or no `notify`) keeps a tile silent.
 
 ## 5. The viewer, kiosk and rotation
 
@@ -140,22 +212,45 @@ On a phone the wall is **one column** in reading order, the buttons are 44 px, a
 | Code | HTTP | Meaning |
 |---|---|---|
 | `DRS-9052` | 422 | the YAML is malformed, a key or id is wrong, a tile is off the grid, an alert threshold is not `{ op, value }`, a tile names a report the caller cannot open or a page or visual it does not have, or the visual is a slicer |
-| `DRS-9053` | 501 | the board uses a setting the grammar reserves and this server does not build: `notify`, `notifications`, `subscriptions` (on the board or an alert) |
+| `DRS-9052` | 422 | (also) a `notify:` with a `level` that is not `crit` or `warn`, a channel that is not `inbox`, `email` or `chat`, a `cooldown` or a `trigger` that is not readable, a `severity` that is not `info`, `warn` or `critical`, or a level the tile has no threshold for |
+| `DRS-9053` | 501 | the board uses a setting the grammar reserves and this server does not build: `notifications` or `subscriptions` (on the board or an alert). `notify` is built |
 
-A real answer, for a board with a tile off the grid, a visual that does not exist, a report that does not exist and a reserved key:
+A real answer, for a board with a reserved key and `notify` settings that cannot work (from a real server; the model the server read is cut):
 
 ```json
-[
-  {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[0].at",
-   "message": "x is 0 to 11 and w is 1 to 12, and x + w is at most 12 (the grid has 12 columns); this is x=0, w=13"},
-  {"level": "error", "code": "DRS-9053", "path": "pages[0].tiles[1].alert.notify",
-   "message": "'notify' is reserved and not built yet: a tile only changes colour; notifications arrive with distribution (phase 7)"},
-  {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[0].visual",
-   "message": "report 'Live trading desk' has no visual 'nope'"},
-  {"level": "error", "code": "DRS-9052", "path": "pages[0].tiles[1].report",
-   "message": "no report 'no-such' that you can open (a catalogue id, a file name such as live-trading-desk, or the report's name)"}
-]
+{
+  "valid": false,
+  "problems": [
+    {
+      "level": "error",
+      "code": "DRS-9053",
+      "path": "notifications",
+      "message": "'notifications' is reserved and not built: a board notifies through `notify:` on a tile's alert (and defaults in a top-level `notify:`)"
+    },
+    {
+      "level": "error",
+      "code": "DRS-9052",
+      "path": "pages[0].tiles[0].alert.notify",
+      "message": "notify level crit needs a crit threshold on this tile (or set level: warn)"
+    },
+    {
+      "level": "error",
+      "code": "DRS-9052",
+      "path": "pages[0].tiles[1].alert.notify.level",
+      "message": "level is crit (notify on red) or warn (notify on amber or red)"
+    },
+    {
+      "level": "error",
+      "code": "DRS-9052",
+      "path": "pages[0].tiles[1].alert.notify.channels",
+      "message": "'sms' is not a channel: inbox, email, chat"
+    }
+  ]
+}
 ```
+
+The same call for a tile off the grid, a visual that does not exist and a report that does not exist gives `DRS-9052` with paths such as `pages[0].tiles[0].at`, `pages[0].tiles[0].visual` and `pages[0].tiles[1].report`, and messages such as
+`x is 0 to 11 and w is 1 to 12, and x + w is at most 12 (the grid has 12 columns); this is x=0, w=13`, `report 'Live trading desk' has no visual 'nope'` and `no report 'no-such' that you can open (a catalogue id, a file name such as live-trading-desk, or the report's name)`.
 
 ## 8. Settings
 
@@ -164,6 +259,8 @@ A real answer, for a board with a tile off the grid, a visual that does not exis
 | console `bi.board.rotate_seconds` (`DRISHTI_BI_BOARD_ROTATE_SECONDS`) | 30 | kiosk page time when the board sets no `rotate:` (3 to 3600) |
 | console `bi.live.min_interval_ms`, `bi.live.stale_seconds` | 250, 30 | how often tiles redraw at most, and when the indicator says "Stale" |
 | server `drishti.bi.live.*` | | the live tables and streams a board's reports use ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibilive--streaming-bi-phase-5)) |
+| server `drishti.alerts.measure.*` | | notifications from tiles: the load delay, the live debounce, the cooldown, the audience limit, email and chat on or off ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications)) |
+| server `drishti.alerts.measure.*` | | notifications from tiles: the load delay, the live debounce, the cooldown, the audience limit, email and chat on or off ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications)) |
 
 ## 9. API
 
@@ -184,11 +281,11 @@ The tiles' data comes from the report endpoints (`POST /api/v1/bi/reports/{id}/q
 
 ## 10. Built and not built
 
-**Built:** the board file and its parser with every problem coded (`DRS-9052`, `9053`); shipped boards (watched) and board items (stored, versioned, reviewed, published; the publish check); the viewer with pages, live redraw in place, the live indicator with pause and resume, per-tile alert colouring by threshold, kiosk mode with auto-rotating pages, Perspective and rolling-chart tiles; the API; phone layout.
+**Built:** the board file and its parser with every problem coded (`DRS-9052`, `9053`); **notifications from a tile** (`notify:`: inbox, email and chat bridges, each person on their own number, cooldown, history, an administrators' overview); **notifications from a tile** (`notify:`: inbox, email and chat bridges, each person on their own number, cooldown, history, an administrators' overview); shipped boards (watched) and board items (stored, versioned, reviewed, published; the publish check); the viewer with pages, live redraw in place, the live indicator with pause and resume, per-tile alert colouring by threshold, kiosk mode with auto-rotating pages, Perspective and rolling-chart tiles; the API; phone layout.
 
 **Not built, and not faked:**
 
-* **Notifications from a board or a tile** (email, chat, webhook): phase 7. `notify:` is refused (`DRS-9053`), not ignored.
+* **A webhook or SMS channel** for a tile (use a chat bridge), **a notification when a tile leaves red** (it only re-arms), and the board-wide keys `notifications` and `subscriptions`, which stay refused (`DRS-9053`), not ignored.
 * **A designer for boards**: edit the YAML (the item's Edit form, or the file); the report designer does not place tiles.
 * **Interaction between tiles** (clicking a mark filters other tiles), slicers on a board, drill-down and drill-through from a tile.
 * **Lineage and impact for boards**: a report change that removes a visual a board uses is found when the board is read (the tile says so), not at the report's publish; boards are not in the lineage panel. A board item can be put in a bundle (by name, or with its workspace), but the reports it shows are not added as dependencies and its body is not checked on import: export the reports with it ([BI_GOVERNANCE.md section 7](BI_GOVERNANCE.md#7-environments-bundles)).

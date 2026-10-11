@@ -72,7 +72,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 
 **Not built yet** (each is marked where it would matter, and listed in section 11)
 
-* Python in BI, and Python measures (phase 6); export, subscriptions, email or message alerts when a tile turns red, embedding (phase 7); exploring a dataset freely and the analyst workbench (phase 9, the rail's *Explore*);
+* Python in BI, and Python measures (phase 6); embedding (phase 7, later); exploring a dataset freely and the analyst workbench (phase 9, the rail's *Explore*);
 * running a `notebook` body (it is stored as text); a designer for boards (edit the YAML); a Perspective chart;
 * time intelligence and window functions in measures; a cron refresh of a layer (a data-load signal or the refresh call does it); a history of a live table (it holds current state);
 * BI content inside a pack archive (a bundle is its own file); threaded comments on a line of a diff; approval chains of several reviewers;
@@ -334,7 +334,7 @@ real data and query time while designing, Check, undo and redo, save and save a 
 
 **Phase 5, streaming BI.** `mode: live` tables kept in memory and updated by key from the same live machinery as the terminal (with retention and per-reader rows and masks on every update); a live stream per report and visuals that redraw in place (coalesced, with a live indicator, pause and resume, stale and disconnected states); the rolling chart (`live-chart`); the Perspective grid and pivot over masked Arrow with streaming rows, under the narrowest policy; boards with pages, tile alerts, kiosk and rotation; the two live datasets, two live reports and the board shipped as samples; `drishti.bi.live.*`; `DRS-9050` to `9053`. References: [DATASETS.md section 7.1](DATASETS.md#71-live-tables-phase-5), [REPORTS.md section 13](REPORTS.md#13-live-visuals-and-perspective-phase-5), [BOARDS.md](BOARDS.md).
 
-**Not built (and not faked).** Everything of phases 6 to 9: Python in BI (phase 6); export, subscriptions, alerts and embedding (phase 7); the analyst workbench and Explore (phase 9); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2). The rail's *Explore* is a placeholder that says so.
+**Not built (and not faked).** Everything of phases 6 to 9: Python in BI (phase 6); embedding (phase 7, later); the analyst workbench and Explore (phase 9); importing BI content by deploying a pack archive; *Analyse in BI* from a terminal view; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses; AI features (stage 2). The rail's *Explore* is a placeholder that says so.
 
 ## 12. Problems
 
@@ -529,15 +529,20 @@ under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the scre
 **Admin.** *Admin, BI settings* is unchanged; the engine page counts live tables and rows (`GET /api/v1/bi/engine`); a dataset's page says how each live table is doing (state, rows, entities that push, last change). Settings: the server's `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds`
 ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
-**Not built, and not faked.** Notifications from boards and alerts (phase 7); a designer for boards; interaction between tiles; running totals by group maintained as changes arrive (a live table is maintained incrementally, its measures are recomputed over it); a history of a live table (it holds current state; the rolling chart's
+**Not built, and not faked.** A designer for boards; interaction between tiles; running totals by group maintained as changes arrive (a live table is maintained incrementally, its measures are recomputed over it); a history of a live table (it holds current state; the rolling chart's
 points live in the browser from the moment the page opened); Perspective charts and its settings panel; live tables over arrays and in `direct` queries; boards in bundles, in lineage and in impact analysis. If a live table's feed is quiet, the page says **Stale** only when the source
 that pushes has gone silent for 30 s: a source that changes rarely is quiet, not stale, when it does not push at all (its state then reads `pushes: false` and the table is read again every 30 s).
 
-## 19. Export and subscriptions (phase 7, part 1)
+## 19. Export, subscriptions and alerts (phase 7)
 
 A report page, one visual, or a Sutra view leaves Drishti as **PDF, PNG, Excel or CSV** (the *Export* bar under the page tabs) and by **email on a schedule** (*Subscribe*). Both are made for the person who
 gets them: the engine is asked as that person, so their row rules and masks apply. A subscription takes a schedule (`business-days 07:30`, `weekly mon 07:30 business`, `monthly last 18:00 business`,
 `after-load`), a form (the tables in the email, a PDF or an Excel file) and recipients (users and `role:NAME`; never an outside address). *Run now*, *Pause*, a history with each
 delivery's status, retries with the shared retry policy, an audit trail. The list is on **Reports** in the top bar, merged with the scheduled reports. Reference: [DISTRIBUTION.md](DISTRIBUTION.md); walk-through:
-[BI_TUTORIAL.md](BI_TUTORIAL.md#20-export-and-subscribe); settings `drishti.distribution.*`; codes `DRS-9060` and `DRS-9061`. Not built: alerts to the bell and chat bridges, embedding, a hand-made phone layout, narrative summaries
-(phase 7, part 2).
+[BI_TUTORIAL.md](BI_TUTORIAL.md#20-export-and-subscribe); settings `drishti.distribution.*`; codes `DRS-9060` and `DRS-9061`.
+
+**Alerts.** *Alert me* (the bell in a visual's frame; or click a number on a view) watches one number: a visual of a report, a measure of a dataset or a field of a Sutra entity. It fires when the number crosses a limit
+(`above`, `below`, `between`, `outside`), moves too far (a percentage or an amount, against the previous look or the previous business day) or does not arrive by a time. It looks on a schedule, after a data load, or when a live table changes (after a quiet time).
+**Each person is judged on their own number**: the engine applies their row rules and masks; a masked number is never judged or shown. It stays quiet after firing until the number is back inside the limit (the *hysteresis*), and not again within the *cooldown*.
+It tells you in your inbox (the *Alerts* tab, and the bell), by email to your own address and in the chat bridges (a post with no number); there is a history, an audit trail, pause and resume. A board tile whose colour turns red can tell everyone who reads the board the same way (`notify:`, [BOARDS.md](BOARDS.md#notifications-a-tile-tells-people-when-it-turns-red)). The page is **Alerts** (`/alerts`), linked from **Reports** in the top bar;
+the reference is [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [BI_TUTORIAL.md chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number); settings `drishti.alerts.measure.*`; code `DRS-9062`. Not built: embedding, a hand-made phone layout, narrative summaries.

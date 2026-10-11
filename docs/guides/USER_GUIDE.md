@@ -67,7 +67,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Compare | `/compare/<kind>/<id>` | What changed in an entity between two business dates |
 | Impact | `/impact/<kind>/<id>` | What depends on an entity (F8) |
 | Monitors | `/m` | Live watchlists |
-| Alerts | `/alerts` | Your alert rules and recent alerts |
+| Alerts | `/alerts` | Your alerts on numbers, your alert rules and recent alerts (also **Reports**, *My alerts*) |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
 | Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](#export-and-subscriptions)) |
@@ -1661,7 +1661,7 @@ them. Your subscriptions are on **Reports** in the top bar, in one list with you
 
 ## Alerts
 
-An alert rule watches **one entity** and tells you when a condition becomes true.
+An alert rule watches **one entity** and tells you when a condition becomes true. (To be told when a **number** in a BI report, a dataset or a view crosses a limit, moves too far or does not arrive, see [Alerts on numbers](#alerts-on-numbers) at the end of this section; both are on the same **Alerts** page.)
 
 - The **server** checks every rule on every change of its entity, even when nobody has Drishti open.
 - A rule alerts **once** when its condition becomes true, and re-arms when it turns false again.
@@ -1707,6 +1707,18 @@ on the Alerts page and fill the form when clicked.
 Rules are kept with your account, and so are the alerts they fire: the newest 1,000 per user
 (`drishti.alerts.keep`) are kept in the identity database, so they are still there after a server restart. More in the
 [Monitors and alerts guide](../../drishti-console/web/guides/monitors-and-alerts.md).
+
+
+### Alerts on numbers
+
+Click **Alert me** (the bell in the corner of a visual of a BI report) or click a number on a view and choose **Alert me**: the form opens with that number filled in. Say when to tell you: when it goes **above** or **below** a limit,
+**between** two numbers or **outside** them; when it **changes by** a percentage or an amount (against the previous look, or the previous business day); or when today's data **has not arrived by** a time. Say when to look (on a schedule,
+after a data load, or when it changes), and how to tell you: your **inbox** and the bell, **email** to the address on your account, the **chat bridges** your administrator set up. *Check now* shows what it reads for you right now.
+
+**It is your number.** The alert reads the number as you: with your row rules and your masks. If a number is masked for you the alert never judges it and never shows it. Once it fires it stays quiet until the number is back
+inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your alerts are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
+*Edit and history* (what every look did, and what was sent where) and *Delete*. What fired is in the **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
+Reference: [DISTRIBUTION.md section 4](DISTRIBUTION.md#4-alerts-on-numbers); walk-through: [BI_TUTORIAL.md chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number).
 
 ## Workspaces
 

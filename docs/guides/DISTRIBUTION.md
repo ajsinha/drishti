@@ -13,11 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Distribution: export and subscriptions
+# Distribution: export, subscriptions and alerts
 
-Rūpaka phase 7, part 1 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-phase-7-part-1-as-built)). Two things leave Drishti as files and mail: an **export** (a BI report, a page, one
+Rūpaka phase 7 ([RUPAKA.md section 20.6](../architecture/RUPAKA.md#206-phase-7-part-1-as-built)). Part 1: two things leave Drishti as files and mail: an **export** (a BI report, a page, one
 visual, or a Sutra view, saved as PDF, a picture, an Excel workbook or CSV) and a **subscription** (the same content sent by email on a schedule, or after the day's data lands).
-The walk-through with pictures is [BI_TUTORIAL.md chapter 20](BI_TUTORIAL.md#20-export-and-subscribe); this is the reference.
+Part 2 (section 4 here): **alerts** on a number, and notifications from a board tile, to the inbox, email and the chat bridges.
+The walk-throughs with pictures are [BI_TUTORIAL.md chapter 20](BI_TUTORIAL.md#20-export-and-subscribe) (export and subscribe) and [chapter 21](BI_TUTORIAL.md#21-alerts-on-a-number) (alerts); this is the reference.
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
 masks apply; nothing is copied from the sender's screen. A desk head's export holds her desk; an analyst whose column is masked gets the mask.
@@ -261,10 +262,314 @@ detail, problems first). `per-user` (20) caps how many one person keeps (the pre
 **Reports** in the top bar leads to `/reports`: your scheduled reports (CSV to a folder or webhook) and your subscriptions in **one list**, by name, with what each is, when it runs, who gets it, its next run
 (UTC) and its last run. Existing scheduled reports are unchanged. *Subscribe* is on every BI report (the Export bar) and every view (the header).
 
-## 4. What is not built
+## 4. Alerts on numbers
 
-* **Narrative summaries** in a subscription (needs the AI stage), and **alerts on a measure** to the bell, inbox, email and chat bridges: phase 7 part 2.
-* **Embedding** (`<drishti-report>`) and the hand-made **phone layout** of a report: phase 7 part 2.
+An **alert** watches one number and tells you when it crosses a limit, moves too far or does not arrive. **The number is read as you**: with your row rules and your masks, by the same engine call the screen
+makes. An alert never judges, and never says, a figure you may not see; a number that is masked for you is not judged at all.
+
+![Alert me on a card](img/bi-alerts/report-alert-me.png)
+
+*Alert me* (the bell in the corner of a visual's frame) opens the form with the report, the page, the visual and the filters on your screen filled in:
+
+![The alert form](img/bi-alerts/alert-form.png)
+
+### 4.1 What can be watched
+
+| Source | You give | The number is | Live (on change) |
+|---|---|---|---|
+| **A visual of a BI report** (`type: visual`) | `report`, `page`, `visual`, optionally `measure` (a column; the first number column when blank), `reduce` and `state` (slicers, selections, drill path: the filters you had on the screen; the date is never kept, an alert follows the data's own date) | the column of the visual's answer. A card or KPI is one row; for a visual with many rows `reduce` says how they become one number: `first` (default), `last`, `sum`, `min`, `max`, `avg`, `count` | when the report's dataset has a live table |
+| **A measure of a dataset** (`type: dataset`) | `dataset`, `measure`, optionally `filters` (`[{field, op, values}]`, the same as a query) | the measure over the latest business date, no grouping | when the dataset has a live table |
+| **A field of a Sutra entity** (`type: field`) | `kind`, `id`, `field` (a path such as `mtm` or `$.limits.utilisation`, or any Rachana expression over the entity) | the field, read through your field masks | when the source pushes changes |
+| **A board tile** (from the board's YAML; section 4.8) | the tile | its colour as a level: 0 normal, 1 amber, 2 red | when the report's dataset has a live table |
+
+*Alert me* is on every visual that shows numbers (not text, image, button or slicer), and in the dialog that opens when you click a number on a view (*Alert me*, beside *Discuss*): that is the Sutra
+field, with its path. A number that is a **metric tile** or a cell of the view's summary strip is a field too.
+
+### 4.2 When it fires: the condition
+
+| Condition | Keys | Fires when |
+|---|---|---|
+| **Threshold** | `op`: `above`, `below`, `between`, `outside`; `value` (the limit, or the low edge); `high` (the high edge, for `between` and `outside`) | the number is above (`>`) or below (`<`) the limit; **between** `value` and `high` (edges included); **outside** them (`<` low or `>` high) |
+| **Change** | `mode`: `pct` or `abs`; `op`: `rises`, `falls` or `moves`; `value` (above zero); `against`: `previous-run` or `previous-day` | the number rose by at least `value` (`rises`), fell by at least `value` (`falls`) or did either (`moves`). `pct` is `(now - before) / abs(before) x 100`; `previous-run` compares with what the alert read the last time it looked, `previous-day` with the same source on the previous business day of the data's date |
+| **No data** | `by`: a time of day (`09:00`), in the business-date zone | on a business day, from `by` on, the source shows no data for today's business date: no rows, or an as-of date before it. It clears when data lands |
+
+A change with nothing to compare with (the first look, or a before of zero for a percentage) does not fire; the history says so. A reading that **cannot be judged** (masked for you, no data yet, the
+source gave an error) never fires and never clears an alert that is active.
+
+### 4.3 When it looks: the trigger
+
+| Trigger | Keys | The alert looks |
+|---|---|---|
+| **schedule** (default `hourly`) | `schedule`: `hourly`, `daily 07:00`, `weekdays …`, `business-days 07:30`, `weekly mon 07:30`, `monthly last 18:00 business`, `cron …` (the words of [subscriptions](#schedules)) | at those times, in the business-date zone, holiday-aware where the words say so. After a restart it is scheduled from now (it does not catch up) |
+| **after-load** | `kind` (optional): only a load of this kind | `load-delay` (5 s) after a data load announced ready ([DATA_LOADS.md](DATA_LOADS.md)), so the BI layers have rebuilt. A "no data" alert is looked at after **every** load, whatever its trigger |
+| **live** | `debounce` (default 10 s, at least 1 s) | when the source **changes**, once the changes have been quiet for the debounce; and at least every `live-max-wait` (2 min) while changes never stop. Needs a live source (the table above), else the save is refused. A live alert keeps its live table open: it is read by the engine as long as the alert exists |
+
+A new or edited alert is also looked at **once, when you save it**: an alert whose condition already holds fires then (a change alert only takes its starting point). *Look now* (the list and the edit page)
+looks at once. Two looks of one alert for one person closer than `min-gap` (5 s) are one.
+
+### 4.4 No flapping: armed, active, hysteresis, cooldown
+
+An alert is a small state machine for each person it is judged for.
+
+| State | Meaning |
+|---|---|
+| **armed** | watching; nothing is wrong |
+| **active** | it fired and the number has not come back yet; it does **not** fire again while active |
+| **paused** | switched off by you (or an administrator); nothing is looked at. *Resume* arms it afresh |
+
+* **Hysteresis** (a number, default 0): once active, the alert re-arms only when the number is back inside the limit by at least this much. `above 100` with hysteresis `10` fires at 101, stays active at 95,
+  and re-arms at 90. For `change` it is the same margin on the size of the change; for `between` and `outside` the range is widened or narrowed by it.
+* **Cooldown** (default `drishti.alerts.measure.cooldown`, 30 min; `0` for none): after it fires, it will not fire again for this person within the cooldown, even if it re-armed. A breach inside the cooldown is
+  written to the history as **held** (once) and fires when the cooldown ends **if the condition still holds**.
+
+### 4.5 Each person is judged on their own number
+
+An alert is **evaluated as the person it is for**: for your own alert, you. The dataset engine applies your row rules and your masks; a Sutra field is read through your field masks.
+
+* A number **masked for you** is a *masked* reading: the alert records `skipped: masked for you, so it cannot be judged` once, and never fires, never clears, and never shows a figure. *Check now* in the form says so.
+* A visual or dataset you can **no longer open** is an error reading; nothing fires.
+* The message (inbox, mail, history) carries **your** number, formatted with thousands separators: `MTM floor — now -725,000 (below -300,000)`. A chat bridge post carries **no number** at all.
+
+### 4.6 Delivery
+
+| Channel | What | Rules |
+|---|---|---|
+| **Inbox** (always on unless you turn it off) | a row of type `alert` in your inbox (the *Alerts* tab) and a toast and a count on the bell, live. The row is the one line, cut to 100 characters (the full text is in the history), and opens what the alert is about | the same inbox as shares ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
+| **Email** | one mail to **the address on your account**, `Drishti alert: <title>` | users only: an alert cannot name an address. No address, no mail (the history says `skipped: no email address on file`). A send that fails is recorded as `failed: …` (alerts do not retry: the next firing is a new mail). Off for the server with `drishti.alerts.measure.email` |
+| **Chat bridges** | a post to every bridge whose route lists the event `alert` and covers the kind: a Sutra kind for a field alert, `bi` for everything else | the post names the alert, what it watches and the condition, the owner and a link, **never a number**, because a bridge is a room, not a person. At most one post per alert per cooldown (a minute at least), however many people it fired for. Configure with `events: [alert]` in a route ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox)); off with `drishti.alerts.measure.bridges` |
+
+The **history** (on the edit page; the last `keep-history`, 50) has an entry for each firing, clearing, held breach and skipped reason, with the time, what triggered it (`saved`, `schedule`, `load`, `live`, `by hand`,
+`resumed`), the number, the message, and what each channel did:
+
+![History](img/bi-alerts/alert-history.png)
+
+and **the inbox** has the row, rendered for you when you read it:
+
+![The inbox, Alerts tab](img/bi-alerts/inbox-alerts.png)
+
+The audit log has `alert.save`, `alert.delete`, `alert.pause`, `alert.resume` and `alert.fire` (who, which alert, what triggered it; no number).
+
+### 4.7 Where it is kept, and limits
+
+An alert is a document in the owner's preferences (namespace `measure-alerts`, 64 KB, so the history is capped), with its state for each person and its history. `per-user` (20) caps how many one person
+keeps. Alerts are looked at by the server that runs the scheduler: with several servers, turn `drishti.alerts.measure.enabled` off on all but one. The whole list is on the **Alerts** page (`/alerts`:
+*Alerts on numbers*, beside the older rules on one entity, which are unchanged), linked from **Reports** in the top bar and from the inbox. The old per-entity rules ([USER_GUIDE.md](USER_GUIDE.md#alerts)) stay: they watch an
+expression on every change of one entity; an alert on a number adds the BI sources, the change and no-data conditions, hysteresis, cooldown and delivery.
+
+### 4.8 Board notifications
+
+A board tile's colour (`alert:` with `warn` and `crit`; [BOARDS.md section 4](BOARDS.md#4-alerts-a-tile-changes-colour)) can also **tell people** when it turns red. The board's author says so in the YAML:
+
+```yaml
+board: desk-alerts
+notify:                               # defaults for every tile that says `notify:`
+  channels: [inbox, email]            # inbox (always), email, chat (the bridges)
+  cooldown: 1h
+pages:
+  - id: p1
+    tiles:
+      - id: mtm
+        report: trades-overview
+        visual: mtm
+        at: { x: 0, y: 0, w: 6, h: 3 }
+        alert:
+          warn: { op: lt, value: -100000 }
+          crit: { op: lt, value: -300000 }
+          notify: true                 # or { level: warn, channels: [chat], trigger: live, severity: critical }
+```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `level` | `crit` | the colour that notifies: `crit` (red), or `warn` (amber or red). `crit` needs a `crit` threshold on the tile, `warn` a `warn` or `crit` one |
+| `channels` | `[inbox]` | `inbox`, `email`, `chat` (the chat bridges, as in 4.6) |
+| `cooldown` | `drishti.alerts.measure.cooldown` | no second notification for the same person within it |
+| `trigger` | `after-load` | `after-load`, `live` (needs a live report; on change, after the debounce) or a schedule (`business-days 07:30`, `hourly`) |
+| `severity` | `critical` for `crit`, else `warn` | `info`, `warn`, `critical` |
+
+`notify: true` takes the board's `notify:` defaults, or the built-in ones. The tile's level is judged exactly as the viewer colours it (the first number, or `on:`; the worst of the rows; `crit` before `warn`).
+**Who is told**: everyone who may read the board (the BI power and the right to read the item), each **judged on their own number** by the report's engine call as them: a desk head is told on her desk's number, an
+analyst whose number is masked is not told at all. The message is the tile's name and its colour (`Desk wall · Mark to market — is now red`); it opens the board, where each person sees their own figure. A board with more
+readers than `max-audience` (300) tells nobody and says so in the history. A person is told when the tile **enters** the colour and again only after it has gone below it (and the cooldown has passed). The board's YAML **is** the
+definition: publish a change and the next look uses it; nothing else is stored but the state and the history. Administrators see the tiles that notify, who is alerted now and the history at **Alerts, Everyone's alerts**
+(`/alerts/all`):
+
+![Everyone's alerts and the board tiles](img/bi-alerts/alerts-all.png)
+
+### 4.9 Real output
+
+Rita (who sees every figure) makes the alert of the pictures: *the MTM card of Trades overview, below -300,000, after a data load, with hysteresis 25,000, by inbox and email*. *Check now* answers (the server's
+`POST /api/v1/me/measure-alerts/preview`, saving nothing):
+
+```
+{
+  "status": "ok",
+  "value": -725000.0,
+  "asOf": "2026-10-08",
+  "note": "",
+  "condition": "below -300,000",
+  "holds": true,
+  "live": false
+}
+```
+
+The ETL adds ten losing trades and announces the load (`POST /api/v1/packs/trading/loads`); a second after, the alert as the server holds it (abridged):
+
+```json
+{
+  "name": "MTM floor",
+  "owner": "rita",
+  "source": {
+    "type": "visual",
+    "report": "file:report:trades-overview",
+    "page": "overview",
+    "visual": "mtm",
+    "measure": "",
+    "reduce": "first",
+    "state": {
+      "carry": [],
+      "slicers": {},
+      "selections": [],
+      "drill": []
+    }
+  },
+  "condition": {
+    "type": "threshold",
+    "op": "below",
+    "value": -300000.0
+  },
+  "trigger": {
+    "mode": "after-load"
+  },
+  "hysteresis": 25000.0,
+  "cooldown": "30m",
+  "delivery": {
+    "inbox": true,
+    "email": true,
+    "bridge": false
+  }
+}
+```
+
+```json
+{
+  "state": {
+    "rita": {
+      "active": true,
+      "firedAt": "2026-10-11T20:21:53.529000506Z",
+      "lastValue": -725000.0,
+      "lastEval": "2026-10-11T20:21:53.529000506Z"
+    }
+  },
+  "history": [
+    {
+      "at": "2026-10-11T20:21:53.529000506Z",
+      "user": "rita",
+      "action": "fired",
+      "severity": "warn",
+      "trigger": "load",
+      "value": -725000.0,
+      "asOf": "2026-10-08",
+      "message": "MTM floor \u2014 now -725,000 (below -300,000)",
+      "id": 1791750102507,
+      "delivered": {
+        "inbox": "ok",
+        "email": "sent",
+        "bridge": "off"
+      }
+    }
+  ]
+}
+```
+
+Her inbox (`GET /api/v1/me/inbox?type=alert`, the row is rendered for her as she reads it; the first is the board tile, the others her two alerts):
+
+```json
+[
+  {
+    "seq": 7,
+    "type": "alert",
+    "kind": "alert",
+    "id": "/bi/r/file:report:trades-overview/overview",
+    "access": true,
+    "title": "MTM floor \u2014 now -725,000 (below -300,000)"
+  },
+  {
+    "seq": 6,
+    "type": "alert",
+    "kind": "alert",
+    "id": "/bi/i/file:dataset:trades-basic",
+    "access": true,
+    "title": "Trade count moves \u2014 now 70, up 16.67% from 60 (previous run)"
+  },
+  {
+    "seq": 4,
+    "type": "alert",
+    "kind": "alert",
+    "id": "/bi/b/file:board:desk-alerts",
+    "access": true,
+    "title": "Desk wall \u00b7 Mark to market \u2014 is now red"
+  }
+]
+```
+
+and the mail the fake SMTP received for her alert (the figure is hers; a chat bridge would have got no figure):
+
+```
+Subject: Drishti alert: Desk wall · Mark to market
+To: rita@desk.test
+
+Desk wall · Mark to market
+
+is now red
+
+Severity: critical
+Watching: trades-overview · mtm
+Condition: reaches crit
+Open it in Drishti:
+http://127.0.0.1:17951/bi/b/file:board:desk-alerts
+
+You are receiving this because an alert you own, or one on a board you can read, fired in Drishti. The figure is the one you are entitled to see; it was read for you.
+Pause or change the alert on the Alerts page.
+```
+
+![The alert mail](img/bi-alerts/alert-mail.png)
+
+**Ann**, whose `mtm` column is masked, makes the same alert. *Check now* says `That number is masked for you, so an alert on it would never judge it. Ask for the access, or watch another number.`; after the same load her history holds one entry and her inbox none:
+
+```json
+[
+  {
+    "at": "2026-10-11T20:21:55.707388871Z",
+    "user": "ann",
+    "action": "skipped",
+    "severity": "warn",
+    "trigger": "saved",
+    "message": "masked for you, so it cannot be judged (MTM)"
+  }
+]
+```
+
+![Ann's history](img/bi-alerts/alert-history-masked.png)
+
+A bad alert is `422 DRS-9062` and names the key:
+
+```
+422 {"type": "about:blank", "title": "alert invalid", "status": 422, "detail": "DRS-9062 condition.op is above, below, between or outside", "instance": "/api/v1/me/measure-alerts/Bad", "code": "DRS-9062"}
+```
+
+### 4.10 Phone
+
+The Alerts page, the form, the history and the inbox keep to the screen at 390 px (no sideways scrolling, 44 px targets):
+
+![The Alerts page at 390 px](img/bi-alerts/alerts-phone-390.png)
+
+## 5. What is not built
+
+* **Narrative summaries** in a subscription (needs the AI stage).
+* **Embedding** (`<drishti-report>`) and the hand-made **phone layout** of a report: phase 7 part 2, later.
+* **For alerts**: a **webhook** channel of its own (use a chat bridge), **SMS**, **retries** of a failed alert mail, **escalation** (tell someone else if no one reacts), alerts that are **shared** between people (a board's
+  audience is the only way an alert reaches more than its owner), a **calendar of quiet hours**, an alert on **several numbers at once** (make one alert each), and **forecast** conditions. An alert on a visual's *number* is a
+  threshold on one value: per-row thresholds ("any desk below zero") are a board tile with `crit`, which judges the worst row.
 * **A headless-browser rendering** of the page: the PDF and PNG are drawn by the server from the tables (and, for a view, the snapshot layout); they are faithful to the numbers, not to every pixel of the screen
   (chart colours, a heatmap, a scatter, a map are shown as their data).
 * **Excel charts and pivot tables** inside the workbook; **XLSX styling** beyond the header, number and date formats.

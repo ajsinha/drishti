@@ -592,7 +592,7 @@ Phase 5 is built; section 20.5 lists exactly what, and this section says how it 
   aggregation belongs in a producer (Pravaha, Flink), per LIVE_BI.
 - Time windows: **as built, a live table is bounded by retention** (`live: { rows, age }` and `drishti.bi.live.max-rows`); a visual-level time window is the rolling chart's point window, kept **in the browser**. The server keeps no history of an aggregate.
 - Perspective: **as built, the first read is Arrow** (masked on the server) **and updates are JSON rows by key** (the rows whose `updateSeq` is above the last answer's; the whole set again when rows left the table), pivoted by Perspective in the browser on the rows the person may see. Perspective charts (d3fc) are not built.
-- Boards: a wall of tiles from several reports, kiosk mode, rotation and per-tile alert colouring (section 20.5). Notifications are phase 7.
+- Boards: a wall of tiles from several reports, kiosk mode, rotation and per-tile alert colouring (section 20.5), and notifications from a tile (section 20.6, part 2).
 
 ## 13. Python in BI: interfaces, not scripts
 
@@ -856,7 +856,7 @@ answer. No visual of a sample report reached the one-second hint of Check.
 **Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5: the grid and the pivot are built, the charts are not: section 20.5); the visuals `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view` and `shape` (refused with `DRS-9033`); the relative-date slicer (refused); a report over
 **several datasets** (one dataset a report); true subtotals for measures that do not add up (a matrix shows `–`: the figures it totals are the ones it shows); highlight for charts other than bar and column (the others are filtered); capturing a bookmark's slicer
 choices from the page (written in the YAML); different layouts per device (a phone stacks the grid in reading order); the *Check* that runs a report's expected values on sample data, and a schema-completion popup in the YAML tab (a strip of suggestions instead);
-the designer's *Explore to visual* (phase 9) and the **usability test** the phase asks for (an hour, a Power BI author, a reference report); export, subscriptions, alerts, embedding (phase 7); a filter direction of `both`, many-to-many semantics and inactive
+the designer's *Explore to visual* (phase 9) and the **usability test** the phase asks for (an hour, a Power BI author, a reference report); embedding (phase 7, later); a filter direction of `both`, many-to-many semantics and inactive
 relationships used by a measure (the engine joins as written, 20.2); several fact tables in one visual's query (20.2). The Model view lays out by a simple rule (the most connected table in the middle) and does not route lines around boxes.
 
 ### 20.4 Phase 4, as built
@@ -900,13 +900,13 @@ and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS
 * **A history of a live table** (every update kept: append mode) and server-side time series of an aggregate: a live table holds current state with retention; the rolling chart's points live in the browser from the moment the page opened. Time buckets (`second`, `minute`) on `updatedAt` are not date parts.
 * **Per-visual frame rates** (the design's 4 and 30 a second): one cadence for a report.
 * **Perspective charts** (d3fc), the Perspective settings panel (its `<style>` and `style=` needs are beyond the four hashes), a Perspective visual over several tables, a Perspective visual in the designer's canvas (a note is shown).
-* **Notifications** from boards and alerts (email, chat, webhook): phase 7; `notify:` is refused (`DRS-9053`). A **designer for boards**, interaction between tiles, slicers on a board. Boards in lineage and impact analysis; a board item can be put in a bundle, but its reports are not added as dependencies and its body is not checked on import ([BI_GOVERNANCE.md section 7](../guides/BI_GOVERNANCE.md#7-environments-bundles)).
+* **Notifications** from a tile are built (section 20.6, part 2); `notifications` and `subscriptions` stay refused (`DRS-9053`). A **designer for boards**, interaction between tiles, slicers on a board. Boards in lineage and impact analysis; a board item can be put in a bundle, but its reports are not added as dependencies and its body is not checked on import ([BI_GOVERNANCE.md section 7](../guides/BI_GOVERNANCE.md#7-environments-bundles)).
 * **Live tables over arrays** (`each`), in `direct` queries, and a Delta, file or JDBC connector that pushes (only the demo source, Kafka and Redis implement `subscribe`; others are read again every 30 s).
 * Safari was tested through Playwright's WebKit build (26.6), not Safari itself.
 
 ### 20.6 Phase 7, part 1, as built
 
-Phase 7 (distribution) is built in two parts. Part 1 is **export and subscriptions**; the references are [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 19, the walk-through
+Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**; part 2, **alerts and board notifications**, follows below it; the references are [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 19, the walk-through
 [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md#20-export-and-subscribe), the API [API_GUIDE.md](../guides/API_GUIDE.md#export-and-subscriptions-apiv1), the settings `drishti.distribution.*` and the retry area
 `drishti.retry.distribution.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). Codes `DRS-9060` and `DRS-9061`.
 
@@ -925,10 +925,38 @@ Phase 7 (distribution) is built in two parts. Part 1 is **export and subscriptio
 
 **Not built, and not faked.**
 
-* **Alerts** from a measure or a board tile to the bell, inbox, email and chat bridges, board `notify:` (still `DRS-9053`), **embedding** and the hand-made **phone layout**, **narrative summaries**: part 2.
+* **Embedding** and the hand-made **phone layout**, **narrative summaries**: later in phase 7.
 * **Pixel-faithful pages**: the PDF and PNG draw the tables and, for a chart, bars of its first measure; colours, heatmaps, scatters and maps are shown as their data. A view is drawn by the snapshot layout (charts included).
 * **Charts or pivot tables inside the Excel workbook**; **a notice in the inbox when a delivery fails for good** (the history and the audit have it).
 * **A real-mail test**: tests use a local fake SMTP (GreenMail in Java; a small server in the Chromium test), by design.
+
+#### 20.6, part 2: alerts on measures, fields and board tiles, as built
+
+References: [DISTRIBUTION.md section 4](../guides/DISTRIBUTION.md#4-alerts-on-numbers), [BOARDS.md](../guides/BOARDS.md#notifications-a-tile-tells-people-when-it-turns-red), the walk-through
+[BI_TUTORIAL.md chapter 21](../guides/BI_TUTORIAL.md#21-alerts-on-a-number), the API [API_GUIDE.md](../guides/API_GUIDE.md#alerts-on-numbers-apiv1), the settings `drishti.alerts.measure.*` in
+[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications). Code `DRS-9062`; `DRS-9053` now refuses only `notifications` and `subscriptions`.
+
+**Built.**
+
+* **An alert on a number**: a visual of a report, a measure of a dataset (with filters) or a field of a Sutra entity; conditions **threshold** (`above`, `below`, `between`, `outside`), **change** (percent or absolute, `rises`, `falls`, `moves`, against the previous look
+  or the previous business day) and **no data** (a source has not landed for today's business date by a time). It looks on a **schedule** (the subscription words), **after a data load** (the load signal, after `load-delay`) or, for a source with a live table or a
+  pushing Sutra source, **on change after a quiet time** (`debounce`, with a `live-max-wait` ceiling). It is also looked at once when it is saved.
+* **Per-person evaluation.** The number is read **as the person it is for**, through the same engine calls as the screen (the report service, the dataset engine, the field masks), so their row rules and masks apply; a masked number is never judged and never
+  sent. The state (armed or active, when it last fired, the last number) and the history are kept per person. A pure state machine (`AlertLogic`) decides, with no I/O, and is tested on its own.
+* **Hysteresis and cooldown** against flapping; a breach inside the cooldown is held back and fires when it ends if it still holds. Pause and resume (a resumed alert is armed afresh), *Look now*, a preview that saves nothing, and an audit trail (`alert.*`).
+* **Delivery** to the **inbox** (an inbox row of type `alert`, with the bell and a toast), to **email** (users only, to the address on their account; never to an address typed into an alert) and to the **chat bridges** (a new route event `alert`; a post
+  that names the alert and the condition and holds **no number**, one per alert per cooldown). The history says what each channel did.
+* **Board notifications.** `notify:` on a tile's `alert` (and defaults at the top of the board) makes the tile an alert for **every person who may read the board**, each judged on their own number: level `crit` or `warn`, channels `inbox`, `email`, `chat`, a
+  `trigger`, a `cooldown`, a `severity`. The board's YAML is the definition; nothing about the definition is stored. `DRS-9053` no longer refuses `notify`.
+* **The console**: *Alert me* on every visual and in a view's number dialog (a Sutra field); the **Alerts** page integrates the new list with the older per-entity rules (no second page); the form, the edit page with the history, an *Alerts* tab in the inbox, entries in the **Reports** menu
+  and an administrators' overview of everyone's alerts and of the board tiles that notify (`/alerts/all`); phone-sized (no sideways scroll, 44 px targets).
+* **Subscriptions refuse outside addresses** altogether (the administrator setting is gone); an old address is skipped at send with the reason in the history.
+
+**Not built, and not faked.**
+
+* A **webhook** or **SMS** channel for an alert (use a chat bridge), **retries** of a failed alert email, **escalation**, **shared** alerts (a board's audience is the only way an alert reaches more than its owner), quiet hours, an alert on several numbers at once, forecasts.
+* **Hysteresis for a board tile** (it re-arms when the tile leaves the colour and the cooldown has passed), and **embedding**, the hand-made **phone layout** of a report and **narrative summaries**.
+* A subscription **delivery failure** is still not an inbox notice (the history and the audit have it); an alert's failed **email** is in the alert's history, not retried.
 
 ### 20.1 Three stages
 

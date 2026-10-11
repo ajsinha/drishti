@@ -23,7 +23,7 @@ import java.time.Instant;
  *
  * @param seq monotonic row number (the SSE event id); 0 before it is stored
  * @param username the recipient
- * @param type {@code share}, {@code mention}, {@code reply}, {@code thread} or {@code moderation}
+ * @param type {@code share}, {@code mention}, {@code reply}, {@code thread}, {@code moderation}, {@code load}, {@code bi-*} (governance) or {@code alert} (an alert on a number or a board tile)
  * @param kind entity kind
  * @param entityId entity id
  * @param panelId a panel, or null

@@ -268,7 +268,7 @@ Built in phase 5 (section 13): visuals over live tables redraw in place with a l
 
 Not built, and not faked: Perspective **charts** (the d3fc plugin) and the Perspective settings panel (the viewer's configuration is the YAML); a Perspective visual over **several tables**; a `perspective-*` visual in the designer's canvas (it shows a note: the designer's page has no WebAssembly); `map`, `bubble`, `funnel`, `histogram`, `box`, `python`, `entity-view` and `shape` visuals; the relative-date slicer; true totals for
 measures that do not add up; a time-intelligence or window measure (the dataset refuses them); highlight for charts other than bar and column; capturing a bookmark's slicer choices from the page (they are
-written in the YAML); different layouts per device (a phone stacks the grid); a *Check* that runs expected values on sample data; export, subscriptions, alerts and embedding (phase 7); Explore to visual (phase 9);
+written in the YAML); different layouts per device (a phone stacks the grid); a *Check* that runs expected values on sample data; embedding (phase 7, later; export, subscriptions and alerts are built: [DISTRIBUTION.md](DISTRIBUTION.md)); Explore to visual (phase 9);
 report-level security beyond the catalogue and the dataset's rules.
 
 ## 13. Live visuals and Perspective (phase 5)
