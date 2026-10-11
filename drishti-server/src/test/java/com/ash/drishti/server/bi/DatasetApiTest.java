@@ -438,4 +438,21 @@ class DatasetApiTest {
         assertThat(e.path("limits").path("maxRows").asInt()).isEqualTo(100000);
         assertThat(e.path("byLayer").path("rollup").asInt()).isGreaterThan(0);
     }
+
+    @Test @Order(13)
+    void aCopyInMyWorkspaceIsQueriedAsADraftAndOnlyItsOwnerReadsIt() throws Exception {
+        String yaml = java.nio.file.Files.readString(Path.of("target/bi-dataset-folder/datasets/lake-test.dataset.yaml"))
+                .replace("Trades: { expr: \"count(trades)\" }", "Trades: { expr: \"count(trades)\" }\n  Big: { expr: \"sum(trades.notional, trades.notional > 10000)\" }");
+        JsonNode created = ok(call("POST", "/api/v1/bi/workspaces/me/items", wes(), Map.of("kind", "dataset", "title", "My copy", "body", yaml)));
+        String id = created.path("id").asText();
+                refused(call("POST", "/api/v1/bi/datasets/" + id + "/query", rita(), "{\"measures\":[\"Trades\"]}"), 404, "DRS-9001");        // a personal draft is private
+        JsonNode mine = ok(call("GET", "/api/v1/bi/datasets/" + id, wes(), null));
+        assertThat(mine.path("measures").toString()).contains("Big");
+        // the draft has no row rule for wes's roles, so the count is zero but the new measure compiles and runs
+        JsonNode r = ok(call("POST", "/api/v1/bi/datasets/" + id + "/query", wes(), "{\"measures\":[\"Big\"],\"dates\":{\"from\":\"2026-10-07\"}}"));
+        assertThat(r.path("rowCount").asInt()).isEqualTo(1);
+        // an invalid body is a draft too, but cannot be queried or published
+        ok(call("PUT", "/api/v1/bi/items/" + id, wes(), Map.of("body", yaml.replace("sum(trades.notional)", "sum(trades.nope)"))));
+        refused(call("POST", "/api/v1/bi/datasets/" + id + "/query", wes(), "{\"measures\":[\"Trades\"]}"), 422, "DRS-9010");
+    }
 }

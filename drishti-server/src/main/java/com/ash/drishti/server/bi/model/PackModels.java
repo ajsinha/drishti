@@ -237,7 +237,7 @@ public final class PackModels {
         List<Link> proposals = infer(chosen, declared, warnings);
         for (TableInfo t : chosen) {
             if (!t.data()) {
-                warnings.add(t.table() + ": the connector has no data to look at now, so its types are guesses from " + t.source());
+                warnings.add(t.table() + ": the connector promotes no columns to read here, so the types are guesses from " + t.source());
             }
             if (t.columns().isEmpty()) {
                 warnings.add(t.table() + ": no columns are known for " + t.kind() + "; promote some in the connector's layout or add them by hand");
