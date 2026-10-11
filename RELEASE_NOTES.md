@@ -13,7 +13,30 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.21.0 — release notes
+# Drishti 1.22.0 — release notes
+
+*2026-10-11.* **Distribution: export, subscriptions, alerts and embedded reports.**
+
+- **Export** (docs/guides/DISTRIBUTION.md): a BI report, page or visual, or a Sutra view, as PDF (paged, with the title,
+  date and filters), PNG, Excel (a typed sheet per visual) or CSV, made for the person asking: their masks and row rules.
+- **Subscriptions:** a report, page, visual or view by email on a schedule (daily, business days, weekly, monthly,
+  last business day, hourly, cron, or after the day's data lands), as the email itself, a PDF or an Excel file, to users
+  and roles. **Each recipient gets their own render** with their own masks; someone who may not open it is skipped, with
+  the reason in the history. Pause, run now, history, retries. Outside email addresses are refused.
+- **Alerts on measures:** a threshold, a change, or data that did not arrive, on a BI visual, a dataset measure or a
+  Sutra field; checked on a schedule, after a load, or live; judged for each person on their own numbers (a masked number
+  is never judged or sent); hysteresis and cooldown; to the inbox, email or chat. Board tiles can notify their audience.
+- **`<drishti-report>`:** embed a published report, page or visual in another web application, always masked, under the
+  host's CSP; Admin → Embedding says which hosts may embed which reports. Elements are versioned, with a package folder.
+- **Phone layouts per report** (`layouts.phone`), arranged in the designer's Phone tab.
+- **Reliability:** one shared file watcher per process (it was six), which also ends random test failures from the
+  operating system's watcher limit; the drill removes the temporary files its tests make.
+
+**Upgrading from 1.21.0:** subscriptions and measure alerts add tables, created at start; existing scheduled reports
+appear in the same list and keep working. Outside email addresses on old subscriptions are skipped at send. Hosts that
+embed reports need the `embed:report` scope and `report:<id>` (or `report:*`) in their allowed kinds.
+
+# Previous release: Drishti 1.21.0 — release notes
 
 *2026-10-11.* **BI you can govern and watch live; connectors behind a proxy; Forms and Reports in the top bar; documentation checked against the code.**
 
@@ -50,7 +73,7 @@
 - **Give the server a heap limit** (`-Xmx`, for example 3g for a workstation): without one Java may grow to a quarter of
   the machine's memory before collecting. A 2-hour check showed no leak (about 400 MB live after a collection).
 
-# Previous release: Drishti 1.20.0 — release notes
+# Older release: Drishti 1.20.0 — release notes
 
 *2026-10-10.* **BI you can use: datasets, a query engine, reports and a designer; deep trades; real public data.**
 

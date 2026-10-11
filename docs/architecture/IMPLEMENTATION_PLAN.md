@@ -38,6 +38,7 @@ kept as they were planned, with notes where the delivery differed.
 | 1.19.0 | connectors as files, TLS and proxy, query by form, Drishti Elements, retry and no-restart reload, AI and MCP layers, Rūpaka phase 1 |
 | 1.20.0 | Rūpaka phases 2 and 3 (datasets, reports, designer), deep trades, real public data |
 | 1.21.0 | Rūpaka phases 4 and 5 (governance, live tables, Perspective, boards), outbound HTTP proxy, news and market sample packs, Forms and Reports in the top bar, the Live toggle, a documentation review against the code |
+| 1.22.0 | Rūpaka phase 7, distribution: export (PDF, PNG, Excel, CSV), scheduled subscriptions rendered per recipient, alerts on measures and board notifications, `<drishti-report>` and Elements steps 11 to 14, per-report phone layouts; one shared file watcher per process |
 
 ## Working agreement
 
@@ -254,17 +255,19 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Roadmap
 
-Everything planned up to 1.21.0 is built (see the changelog). Agreed with the product owner on 2026-10-11, in order,
+Everything planned up to 1.22.0 is built (see the changelog). Agreed with the product owner on 2026-10-11, in order,
 each wave closing with a drill and a release:
 
 | Wave | Release | What it delivers | Design |
 |---|---|---|---|
-| 2 | 1.22.0 | **Distribution (Rūpaka phase 7):** export (PDF, image, Excel/CSV); scheduled subscriptions rendered per recipient with masks, carrying control values and filters; alerts on measures and board notifications; `<drishti-report>` with Elements steps 11 to 15; per-report phone layouts | [RUPAKA.md](RUPAKA.md) |
-| 3 | 1.23.0 | **BI gaps:** scheduled refresh, year-to-date and month-to-date, window functions, several fact tables in one query; map, funnel, histogram, box, bubble and entity visuals; relative-date slicers, true totals, reports over several datasets, per-device layouts; rename detection, BI in pack archives, import rollback, incremental aggregates, live-table history, a board designer | [RUPAKA.md](RUPAKA.md) section 20 |
-| 4 | 1.24.0 | **Python (Rūpaka phase 6):** Transform, Measure and Visual interfaces; the sandboxed server runner and the browser target (Pyodide, on-demand compute on masked data the reader already has); the Calc client and PygWalker | [RUPAKA.md](RUPAKA.md) |
-| 5 | 2.0.0 | **Analyse (Rūpaka phase 9):** the analyst workbench (DuckDB-Wasm Slice and SQL, Pyodide notebooks) over masked extracts; QLRisk behind a quant-engine interface once its API is stable | [RUPAKA.md](RUPAKA.md), [QUANT_SERVICE.md](QUANT_SERVICE.md) |
-| 6 | between waves | **Platform loose ends:** chat bridges and plugin jars reload live; proxy gaps (HTTPS proxies, SOCKS, PAC, the server's own HTTP calls); AI streaming and stdio MCP | [AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md) |
-| 7 | 2.1.0 | **AI-driven BI (stage 2):** a report from words, ask the data, explain this number, under the AI policy (off by default, masked, audited) | [RUPAKA.md](RUPAKA.md) section 20.1 |
+| 3 | 1.23.0 | **BI gaps, the essentials:** scheduled refresh, year-to-date and month-to-date, the main missing visuals (map, funnel, histogram, box, bubble), true totals for measures that do not add up | [RUPAKA.md](RUPAKA.md) section 20 |
+| 4 | 2.0.0 | **Python and Analyse (Rūpaka phases 6 and 9, lean):** Python measures and visuals through a sandboxed server runner and the browser (Pyodide); a lean analyst workbench (Slice, SQL, a Python notebook) over masked extracts; QLRisk behind a quant-engine interface once its API is stable | [RUPAKA.md](RUPAKA.md), [QUANT_SERVICE.md](QUANT_SERVICE.md) |
+| 5 | 2.1.0 | **AI-driven BI (stage 2), small:** a report from words, ask the data, explain this number, under the AI policy | [RUPAKA.md](RUPAKA.md) section 20.1 |
+
+Trimmed on 2026-10-11 to wrap up sooner (the product owner's call): the long tail of BI gaps (window functions, several
+fact tables in one query, relative-date slicers, reports over several datasets, per-device layouts beyond the phone,
+rename detection, BI in pack archives, import rollback, incremental aggregates, live-table history, a board designer) and
+the platform loose ends (live bridges and plugin jars, proxy gaps, AI streaming and stdio MCP) are candidates, not plans.
 
 Later candidates: server-side pricing (the QuantLib service), Windows proven on a real machine, a real deployment (single
 sign-on, HTTPS, the images together), scale on a real server, load with many users, several console processes without
