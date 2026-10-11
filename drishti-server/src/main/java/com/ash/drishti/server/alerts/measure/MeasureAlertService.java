@@ -280,13 +280,19 @@ public final class MeasureAlertService implements AutoCloseable {
     }
 
     public boolean delete(String owner, String name) {
-        boolean gone = store.delete(owner, NS, name);
-        if (gone) {
-            personal.remove(owner + "/" + name);
-            resetRuntime(owner + "/" + name);
-            audit.record(owner, "alert.delete", "alert/" + owner + "/" + name, "");
+        ReentrantLock lock = locks.computeIfAbsent(owner + "/" + name, k -> new ReentrantLock());
+        lock.lock();                                                              // not between an evaluation's read and its write-back
+        try {
+            boolean gone = store.delete(owner, NS, name);
+            if (gone) {
+                personal.remove(owner + "/" + name);
+                resetRuntime(owner + "/" + name);
+                audit.record(owner, "alert.delete", "alert/" + owner + "/" + name, "");
+            }
+            return gone;
+        } finally {
+            lock.unlock();
         }
-        return gone;
     }
 
     /** Pause or resume. A resumed alert is armed afresh. */

@@ -298,13 +298,14 @@ class BiLiveApiTest {
         String author = as("wes", "live-author");
         String yaml = """
                 board: bad
+                notifications: { email: a@b.c }
                 pages:
                   - id: p
                     tiles:
                       - { report: live-trading-desk, visual: nope, at: { x: 0, y: 0, w: 4, h: 3 } }
                       - { report: no-such-report, visual: mtm, at: { x: 4, y: 0, w: 4, h: 3 } }
                       - { report: live-trading-desk, visual: mtm, at: { x: 0, y: 3, w: 13, h: 3 } }
-                      - { report: live-trading-desk, visual: mtm, at: { x: 0, y: 6, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 }, notify: { email: a@b.c } } }
+                      - { report: live-trading-desk, visual: mtm, at: { x: 0, y: 6, w: 4, h: 3 }, alert: { warn: { op: lt, value: 0 } } }
                 """;
         JsonNode r = ok(call("POST", "/api/v1/bi/boards/validate", author, json.writeValueAsString(Map.of("yaml", yaml))));
         assertThat(r.path("valid").asBoolean()).isFalse();
