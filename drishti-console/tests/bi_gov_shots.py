@@ -16,7 +16,7 @@
 
     drishti-console/.venv/bin/python drishti-console/tests/bi_gov_shots.py <pictures dir> <captures.json>
 
-Ports 18992 (server) and 17992 (console), a scratch directory, a 120-trade file lake. Pictures are desktop (1400 px) and the phone (390 px)."""
+Ports 18992 (server) and 17992 (console), a scratch directory, a 120-trade file lake. Pictures are desktop (1600 px: the top bar needs it) and the phone (390 px)."""
 import json
 import re
 import sys
@@ -30,7 +30,7 @@ from bi_gov_stack import CONSOLE_URL, PASSWORD, call
 
 
 def sign_in(browser, user, **ctx):
-    context = browser.new_context(**{"viewport": {"width": 1400, "height": 1000}, "accept_downloads": True, **ctx})
+    context = browser.new_context(**{"viewport": {"width": 1600, "height": 1000}, "accept_downloads": True, **ctx})
     page = context.new_page()
     page.goto(CONSOLE_URL + "/login?next=/bi")
     page.fill("#lu", user)
