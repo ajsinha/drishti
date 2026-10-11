@@ -177,6 +177,11 @@
         <configuration>
           <forkCount>${drishti.test.forks}</forkCount>
           <reuseForks>true</reuseForks>
+          <systemPropertyVariables>
+            <!-- as the server does at start (ProxySettings.allowBasicThroughTunnels): the JDK reads this once, at its first
+                 HTTP client, so a test that makes a client before a proxy test would otherwise fix the default (Basic refused) -->
+            <jdk.http.auth.tunneling.disabledSchemes></jdk.http.auth.tunneling.disabledSchemes>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
       <plugin>
