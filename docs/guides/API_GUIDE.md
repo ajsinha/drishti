@@ -533,7 +533,7 @@ caller's own explain answer (so field masks are already applied: a masked value 
 text, and nothing else; labels only unless `values: shown`. The model gets no tools. Limits are per user (`DRS-4009`). Questions are
 recorded in the access log (action `ask`); answers are not stored. Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default).
 
-Planned, not yet in the server (the design, [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#api)): a `glossary` block (the pack's entry for each field the page shows: term, meaning, unit, sign) and, for authors, `POST /studio/explain`, `GET /builder/designs/{id}/explain` and `POST /builder/about/preview` for the workbench. The optional *Ask about this page* endpoint is described [below](#ask-about-this-page). The pack's own text problems (`DRS-2040` to `DRS-2044`) are load problems, listed by `GET /sutras/problems`; they never fail an explain call.
+The explain answer also carries `glossary`: an entry for each field the page shows, `[{key, label, shownIn[], term, means, origin}]` (`origin` says where the words came from: `core:vocabulary.rate` is the built-in vocabulary, a pack's own entry names the pack). For authors, the same card for a design in the Build workbench is `GET` and `PUT /builder/designs/{id}/about` and `POST .../about/preview` ([Designs](#designs-your-work-kept-on-the-server)); the design is [CONTEXT_HELP.md](../architecture/CONTEXT_HELP.md#api). The pack's own text problems (`DRS-2040` to `DRS-2044`) are load problems, listed by `GET /sutras/problems`; they never fail an explain call.
 
 ### Raw documents, history and impact
 

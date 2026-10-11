@@ -1025,6 +1025,7 @@ drishti.py pack deploy dist/finance-1.0.0.tar.gz --to /opt/drishti/packs --backu
 drishti.py pack rollback finance --to /opt/drishti/packs --backup /opt/drishti/backups [--version 1.0.0]
 ```
 
+`pack bundle` also takes `--no-check` (skip the `pack check` that runs first), `--requires-server VERSION` (the minimum server version written into the manifest; default this checkout's) and `--json`.
 `pack verify` also takes a folder (drift check of a deployed pack) and `--no-sutra` (no Java), `--server-version V`, `--json`.
 `pack deploy` copies to a temporary sibling, swaps by rename and keeps the previous version in the backup folder; it never
 touches a running server. `pack verify --registry R --publisher P --public-key K` is still the registry check below.
@@ -1416,7 +1417,7 @@ python3 tools/drishti.py server health
 ```
 
 ```text
-status DEGRADED  version 1.18.0  java 21.0.12.1  uptime 190s
+status DEGRADED  version 1.20.0  java 21.0.12.1  uptime 190s
 packs 2  sources 4 (degraded 0, down 2)  packs with problems 1  failed to start 0
   file                        DOWN      DOWN: no directory /srv/drishti/run/data/feeds
   genomics-store              DOWN      DOWN: cannot reach /srv/drishti/delta/genomics (engine: native)
@@ -1511,7 +1512,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-1.18.0-exec.jar (version 1.18.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-1.20.0-exec.jar (version 1.20.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -1524,7 +1525,7 @@ YELLOW console venv            ~/drishti/drishti-console/.venv
 GREEN  configured directories  none of DRISHTI_DELTA_ROOT, DRISHTI_FILES_ROOT, DRISHTI_PACKS_INSTALLED is set
 GREEN  port 18971              in use by Drishti: status UP
 GREEN  port 17971              free (the default console port)
-YELLOW server                  http://localhost:18971: version 1.18.0, java 21.0.12.1, status DEGRADED
+YELLOW server                  http://localhost:18971: version 1.20.0, java 21.0.12.1, status DEGRADED
 YELLOW token                   none given: calls run anonymously or as --user
                                fix: set DRISHTI_TOKEN or --token-file (My account, API tokens)
 doctor: 0 red, 5 yellow
@@ -1532,7 +1533,7 @@ doctor: 0 red, 5 yellow
 
 ### `view get` and `view explain`: a view in the terminal
 
-`view get KIND/ID [--date D]` prints the strip and every panel as text tables (key/value fields, tables and ladders, timelines,
+`view get KIND/ID [--date D] [--table|--json]` prints the strip and every panel as text tables (key/value fields, tables and ladders, timelines,
 waterfalls and bars, series summarised as first/last/min/max, graphs and links); `--json` prints the server's view unchanged.
 `view explain KIND/ID [--date D] [--panel ID]` prints the About answer: what you are looking at, the glossary of every field
 shown, where the data came from, and why this layout (the Sutra that matched and the match trace). Both are the **caller's**
@@ -1628,7 +1629,7 @@ archive helpdesk-0.2.0.tar.gz (5819 bytes, sha256 aee6b807bb8149e8...)
   ok    unpack          21 files, 18 KB; no path leaves the pack folder, no links
   ok    pack.yaml       helpdesk 0.2.0
   ok    manifest        20 files listed; every checksum matches; nothing unlisted
-  ok    server version  needs >=1.0.0, this is 1.18.0
+  ok    server version  needs >=1.0.0, this is 1.20.0
   ok    sutra lint      1 Sutra file(s) passed
   ok    sutra test      1 Sutra file(s) passed
   ok    dependencies    extends no other pack
