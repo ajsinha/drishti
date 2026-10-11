@@ -314,6 +314,14 @@ CUST where totalDeposits > 100k order by totalDeposits desc
 
 The full rules are in the [user guide](USER_GUIDE.md#search-by-value).
 
+**Rather fill in boxes than write a search?** Type `FORM trading` and press Enter. The page *Search Trading with a form*
+has one input for each field people search by (text, amounts, dates, choices); **Search** writes the search above for you
+and shows it. `FORM` alone, or **Forms** in the top bar, lists every pack that has a form
+([Search with a form](USER_GUIDE.md#search-with-a-form-form-pack)).
+
+**Business intelligence.** Type `BI` and press Enter for the BI home (Rūpaka: datasets, reports and boards built on the same
+data; `RUPAKA` is its older name). It needs the `bi` power, which you have with sign-in off. Start with [BI_GUIDE.md](BI_GUIDE.md).
+
 ## Step 11 · Look at a past business date
 
 The **Business date** box in the top bar says which day you are looking at. **Live** (green) means

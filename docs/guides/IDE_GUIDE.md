@@ -59,7 +59,7 @@ flag and refuses to start when it is given, so leave it out there. The build sto
 Use an IntelliJ IDEA release that knows your JDK (Java 25 needs IDEA 2025.2 or newer).
 
 1. **File → Open**, choose the repository's root `pom.xml`, then **Open as Project**. IDEA imports every Maven module
-   (the server, the engine, the 15 plugins, the testkit, …). Wait for the import and indexing to finish.
+   (the server, the engine, the 17 plugins, the testkit, …). Wait for the import and indexing to finish.
 2. **File → Project Structure → Project**:
    - **SDK**: your JDK 21 or newer. If it is not listed: **Add SDK → Add JDK…** and choose its folder, for example
      `/usr/lib/jvm/java-21-openjdk-amd64` (Ubuntu OpenJDK), `/usr/lib/jvm/jdk-21-oracle-x64` (Oracle JDK on Linux),
@@ -129,7 +129,7 @@ Click **Debug** (Shift+F9) instead of Run, and set breakpoints as usual. Useful 
 - **Java method bodies:** in a debug session, **Run → Debugging Actions → Reload Changed Classes** (or build with
   Ctrl+F9; IDEA offers to reload). Changes to signatures, fields or new classes need a restart.
 - **Sutras** (`*.sutra.yaml`): the server reloads them on its own when the file changes; no restart.
-- **Packs:** switch a loaded pack on or off in **Admin → Packs** in the console, no restart ([PACKS.md](PACKS.md)).
+- **Packs:** the packs folder is watched: edit, add or delete a pack folder and the server reloads it; switch a pack on or off in **Admin → Packs**; no restart ([PACKS.md](PACKS.md)).
 - **`application.yaml` and environment variables:** restart the server.
 
 ### 3.5 Several servers at once
@@ -147,7 +147,7 @@ it must not share `./data`. Point a console at it with `DRISHTI_BACKEND_URL=http
 
 **Settings → Project → Python Interpreter → Add Interpreter → Add Local Interpreter**:
 
-- **Existing**: pick `drishti-console/.venv/bin/python` (Windows: `console\.venv\Scripts\python.exe`), created in §1; or
+- **Existing**: pick `drishti-console/.venv/bin/python` (Windows: `drishti-console\.venv\Scripts\python.exe`), created in §1; or
 - **Virtualenv → New**: location `drishti-console/.venv`, base interpreter Python 3.11 or newer; then in PyCharm's terminal
   `pip install -r drishti-console/requirements.txt -r drishti-console/requirements-test.txt`.
 

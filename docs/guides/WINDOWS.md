@@ -170,7 +170,7 @@ The first run makes the console's Python environment and installs its libraries 
 > (without uv: `python -m venv drishti-console\.venv`, then `drishti-console\.venv\Scripts\pip install -r drishti-console\requirements.txt`).
 > The settings are the console's own: `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`.
 
-From here the [QUICKSTART.md](QUICKSTART.md#7-your-first-eight-commands) steps 7 to 9 are the same.
+From here the [QUICKSTART.md](QUICKSTART.md#7-your-first-ten-commands) steps 7 to 9 are the same.
 
 ## 6. The Delta engine on Windows
 
