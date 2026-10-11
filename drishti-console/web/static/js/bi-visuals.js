@@ -61,7 +61,7 @@
       color: ctx.palette,
       animation: false,
       textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 },
-      tooltip: { confine: true, backgroundColor: t.surface, borderColor: t.border, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 } },
+      tooltip: { confine: true, renderMode: 'richText', backgroundColor: t.surface, borderColor: t.border, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 } },
       legend: o.legend === false ? { show: false } : { show: true, bottom: 0, textStyle: { color: t.muted, fontSize: 10 }, type: 'scroll' },
       grid: { left: 8, right: 16, top: f.axisTitles && f.axisTitles.y && !o.horizontal ? 28 : 12, bottom: o.legend === false ? 8 : 30, containLabel: true }
     }, o.extra || {});
@@ -161,12 +161,11 @@
       const list = Array.isArray(p) ? p : [p];
       const lines = list.filter((x) => x.seriesName !== '__highlight').map((x) => {
         const sr = s.series.find((q) => q.name === x.seriesName) || s.series[0];
-        return x.marker + ' ' + x.seriesName + ': <b>' + B.fmt(typeof x.value === 'number' ? x.value : x.value && x.value[1], V.numFmt(spec, ctx, sr.measure), s.tb.isMasked(sr.measure)) + '</b>';
+        return x.seriesName + ': ' + B.fmt(typeof x.value === 'number' ? x.value : x.value && x.value[1], V.numFmt(spec, ctx, sr.measure), s.tb.isMasked(sr.measure));
       });
-      return esc(list[0].name) + '<br>' + lines.join('<br>');
+      return list[0].name + '\n' + lines.join('\n');
     };
   }
-  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
   function selectedSet(ctx, spec) {
     const s = ctx.selected && ctx.selected.visual === spec.id ? ctx.selected.values.map(String) : [];
@@ -227,7 +226,7 @@
     const data = s.labels.map((l, i) => ({ name: l, value: sr.values[i], itemStyle: { opacity: sel && !sel.has(String(s.cats[i])) ? 0.35 : 1 } }));
     const option = baseOption(spec, ctx, {
       legend: f.legend !== 'none', extra: {
-        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => esc(p.name) + ': <b>' + B.fmt(p.value, V.numFmt(spec, ctx, sr.measure), s.tb.isMasked(sr.measure)) + '</b> (' + (total ? Math.round(100 * p.value / total) : 0) + '%)' }),
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => p.name + ': ' + B.fmt(p.value, V.numFmt(spec, ctx, sr.measure), s.tb.isMasked(sr.measure)) + ' (' + (total ? Math.round(100 * p.value / total) : 0) + '%)' }),
         series: [{ type: 'pie', radius: spec.type === 'donut' ? ['45%', '70%'] : [0, '70%'], center: ['50%', '45%'], data, label: { show: !!f.labels, color: ctx.t.ink, fontSize: 10, formatter: '{b}: {d}%' }, itemStyle: { borderColor: ctx.t.surface, borderWidth: 1 } }]
       }
     });
@@ -253,7 +252,7 @@
     const option = baseOption(spec, ctx, {
       legend: false, extra: {
         xAxis: Object.assign({ type: 'category', data: labels }, axisStyle(t)), yAxis: valueAxis(spec, ctx, t, sr.measure),
-        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => { const x = steps[p.value[0]]; return esc(x.label) + '<br>' + (x.total ? 'Total ' : 'Change ') + '<b>' + B.fmt(x.delta, V.numFmt(spec, ctx, sr.measure), s.tb.isMasked(sr.measure)) + '</b>'; } }),
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { trigger: 'item', formatter: (p) => { const x = steps[p.value[0]]; return x.label + '\n' + (x.total ? 'Total ' : 'Change ') + B.fmt(x.delta, V.numFmt(spec, ctx, sr.measure), s.tb.isMasked(sr.measure)); } }),
         series: [{ type: 'custom', renderItem: item, data: steps.map((x, i) => [i, x.from, x.to]), encode: { x: 0, y: [1, 2] }, label: { show: !!f.labels, position: 'top' } }]
       }
     });
@@ -280,7 +279,7 @@
     const items = data.map((n) => ({ value: n.raw !== undefined ? n.raw : n.name, label: n.name, text: n.name + ': ' + B.fmt(n.value, V.numFmt(spec, ctx, m), tb.isMasked(m)) }));
     const option = baseOption(spec, ctx, {
       legend: false, extra: {
-        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { formatter: (p) => esc(p.name) + ': <b>' + B.fmt(p.value, V.numFmt(spec, ctx, m), tb.isMasked(m)) + '</b>' }),
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { formatter: (p) => p.name + ': ' + B.fmt(p.value, V.numFmt(spec, ctx, m), tb.isMasked(m)) }),
         series: [{ type: 'treemap', data, roam: false, nodeClick: false, breadcrumb: { show: false }, label: { color: ctx.t.ink, fontSize: 11 }, itemStyle: { borderColor: ctx.t.surface, borderWidth: 1 }, levels: [{ itemStyle: { borderWidth: 2, borderColor: ctx.t.surface, gapWidth: 2 } }] }]
       }
     });
@@ -302,7 +301,7 @@
         grid: { left: 8, right: 16, top: 10, bottom: 46, containLabel: true },
         xAxis: Object.assign({ type: 'category', data: xs, splitArea: { show: true } }, axisStyle(t)), yAxis: Object.assign({ type: 'category', data: ys, splitArea: { show: true } }, axisStyle(t)),
         visualMap: { min: Math.min(0, ...nums), max: Math.max(1, ...nums), calculable: false, orient: 'horizontal', left: 'center', bottom: 0, inRange: { color: [t['surface-2'] || t.surface, t.link] }, textStyle: { color: t.muted, fontSize: 10 } },
-        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { formatter: (p) => esc(xs[p.value[0]]) + ' / ' + esc(ys[p.value[1]]) + ': <b>' + B.fmt(p.value[2], V.numFmt(spec, ctx, m), tb.isMasked(m)) + '</b>' }),
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { formatter: (p) => xs[p.value[0]] + ' / ' + ys[p.value[1]] + ': ' + B.fmt(p.value[2], V.numFmt(spec, ctx, m), tb.isMasked(m)) }),
         series: [{ type: 'heatmap', data: vals, label: { show: !!(spec.format && spec.format.labels), color: t.ink, fontSize: 10, formatter: (p) => B.compact(p.value[2]) } }]
       }
     });
@@ -324,7 +323,7 @@
         xAxis: Object.assign({ type: 'value', name: xm, nameLocation: 'middle', nameGap: 26, axisLabel: { formatter: (v) => B.compact(v), color: t.muted, fontSize: 10 } }, axisStyle(t), { axisLabel: { formatter: (v) => B.compact(v), color: t.muted, fontSize: 10 } }),
         yAxis: Object.assign({ type: 'value', name: ym }, axisStyle(t), { axisLabel: { formatter: (v) => B.compact(v), color: t.muted, fontSize: 10 } }),
         grid: { left: 8, right: 16, top: 24, bottom: 34, containLabel: true },
-        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { formatter: (p) => esc(p.name) + '<br>' + esc(xm) + ': <b>' + B.fmt(p.value[0], V.numFmt(spec, ctx, xm)) + '</b><br>' + esc(ym) + ': <b>' + B.fmt(p.value[1], V.numFmt(spec, ctx, ym)) + '</b>' }),
+        tooltip: Object.assign(baseOption(spec, ctx, {}).tooltip, { formatter: (p) => p.name + '\n' + xm + ': ' + B.fmt(p.value[0], V.numFmt(spec, ctx, xm)) + '\n' + ym + ': ' + B.fmt(p.value[1], V.numFmt(spec, ctx, ym)) }),
         series: [{ type: 'scatter', data, itemStyle: { color: ctx.palette[0], opacity: 0.8 } }]
       }
     });
@@ -429,5 +428,4 @@
     return fn ? fn(host, spec, ctx, res) : null;
   };
   V.isChart = (type) => !!CHARTS[type];
-  V.esc = esc;
 })();

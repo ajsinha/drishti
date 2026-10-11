@@ -105,6 +105,7 @@
       const v = D.sel();
       if (!v) { D.addVisual(type); return; }
       if (v.type === type) { return; }
+      const was = v.type;
       D.change('Change to a ' + type, () => {
         const old = v.wells;
         const specs = D.wellSpecs(type);
@@ -115,7 +116,9 @@
         Object.keys(specs).forEach((w) => { if (v.wells[w] && !v.wells[w].length) { delete v.wells[w]; } });
         D.auto.delete(v.id);
         if (type === 'slicer') { v.format = Object.assign({ mode: 'list', scope: 'page' }, v.format); }
+        if (v.id.indexOf(was + '-') === 0 && was !== 'slicer' && type !== 'slicer') { v.id = D.newVisualId(type); }          // the id says what the visual is
       });
+      D.select(v.id);
     }
 
     function markTypes() {

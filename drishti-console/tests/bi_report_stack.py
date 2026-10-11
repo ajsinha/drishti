@@ -45,6 +45,20 @@ DESKS = ["DESK-FX", "DESK-FI", "DESK-EQD"]
 BOOKS = ["BOOK-FX-1", "BOOK-FI-1", "BOOK-EQ-1"]
 
 
+def make_lake(target: Path, days: int = 3) -> str | None:
+    """A small Delta lake (a few thousand rows, never millions) made with ``tools/packgen/banking/make_data.py --lake``, which the cross-pack and the cashflow samples
+    read. ``DRISHTI_BI_DELTA_ROOT`` names one that exists; else it is made with ``uv run --with deltalake ...`` (needs uv and its cache); None when neither works."""
+    have = os.environ.get("DRISHTI_BI_DELTA_ROOT")
+    if have:
+        return have
+    uv = shutil.which("uv")
+    if not uv:
+        return None
+    done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/packgen/banking/make_data.py"), "--lake",
+                           str(target), "--days", str(days)], capture_output=True, text=True, timeout=600, cwd=ROOT)
+    return str(target) if done.returncode == 0 and (target / "trading").exists() else None
+
+
 def api(method: str, path: str, user: str, roles: list, body=None):
     """The server's API as ``user`` on this stack's port. Returns (status, json)."""
     import urllib.error

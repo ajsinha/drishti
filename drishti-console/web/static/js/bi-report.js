@@ -265,8 +265,8 @@
 
   function syncChips() {
     const box = B.clear(q('[data-chips]'));
-    state.carry.forEach((c) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'carry' }, B.icon('funnel'), ' ' + B.label(c.field) + ': ' + c.values.join(', '))));
-    state.selections.forEach((s) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'selection' }, B.icon('cursor'), ' ' + B.label(s.field) + ': ' + s.values.join(', '))));
+    state.carry.forEach((c) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'carry' }, B.icon('funnel'), ' ' + c.field + ': ' + c.values.join(', '))));
+    state.selections.forEach((s) => box.appendChild(h('span', { class: 'bi-chip', 'data-chip': 'selection' }, B.icon('cursor'), ' ' + s.field + ': ' + s.values.join(', '))));
     Object.keys(state.slicers).forEach((k) => {
       const v = state.slicers[k];
       if (v == null) { return; }

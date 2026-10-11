@@ -44,6 +44,7 @@ pages:
         at: { x: 0, y: 2, w: 8, h: 6 }
         wells: { axis: [cashflows.payDate.year], values: [Cashflow amount] }
         hierarchy: Pay date
+        filters: [{ field: cashflows.payDate, op: not-null }]         # a cashflow with no pay date has no place on the ladder
         format: { labels: false }
         alt: Columns of scheduled cashflow amount by pay date
 

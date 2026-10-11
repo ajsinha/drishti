@@ -266,7 +266,7 @@
         if (el) { el.focus(); }
       } else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); remove(id); }
       else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(id); }
-      else if (e.key === 'Enter') { e.preventDefault(); const t = D.q('[data-format-title]'); if (t) { t.focus(); } }
+      else if (e.key === 'Enter') { e.preventDefault(); D.showPane('format'); const t = D.q('[data-format-title]'); if (t) { t.focus(); } }
     }
 
     // ---- the pointer: move by the header, resize by the corner --------------------------------------------------------

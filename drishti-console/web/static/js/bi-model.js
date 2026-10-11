@@ -28,7 +28,7 @@
   const shell = canvas.closest('.bi-shell');
   if (shell) { shell.classList.add('bi-shell-design'); }
 
-  const BOX_W = 208;
+  const BOX_W = 224;
   let item = null, model = null, rels = [], layout = {}, editor = null, readOnly = false, dirty = false, selectedRel = -1, validateTimer = null, ignore = false;
   const boxes = new Map();                       // table name -> {el, list}
   const NS = 'http://www.w3.org/2000/svg';
@@ -90,13 +90,45 @@
   }
 
   // ---- drawing -------------------------------------------------------------------------------------------------------
+  /** Where tables go when the YAML says nothing: each group of related tables in a band of its own, its best connected table in the middle, neighbours on both
+   *  sides, theirs further out (fewer crossings); tables related to nothing in a last band, side by side. */
   function autoPlace(tables) {
+    const adj = {};
+    tables.forEach((t) => { adj[t.name] = []; });
+    rels.forEach((r) => {
+      const a = r.from.split('.')[0], b = r.to.split('.')[0];
+      if (adj[a] && adj[b] && a !== b) { adj[a].push(b); adj[b].push(a); }
+    });
+    const names = tables.map((t) => t.name).sort((x, y) => adj[y].length - adj[x].length);
     const placed = {};
-    const degree = {};
-    rels.forEach((r) => { [r.from, r.to].forEach((x) => { const t = x.split('.')[0]; degree[t] = (degree[t] || 0) + 1; }); });
-    const order = tables.map((t) => t.name).sort((a, b) => (degree[b] || 0) - (degree[a] || 0));
-    const perRow = Math.max(2, Math.min(4, Math.ceil(Math.sqrt(order.length))));
-    order.forEach((n, i) => { placed[n] = { x: 24 + (i % perRow) * (BOX_W + 70), y: 24 + Math.floor(i / perRow) * 280 }; });
+    const seen = new Set();
+    const BAND = 270, COL = BOX_W + 56;
+    let y = 24;
+    names.filter((n) => adj[n].length).forEach((root) => {
+      if (seen.has(root)) { return; }
+      const col = { [root]: 0 };
+      seen.add(root);
+      let frontier = [root], flip = 1;
+      while (frontier.length) {
+        const next = [];
+        frontier.forEach((n) => adj[n].filter((m) => !seen.has(m)).forEach((m) => {
+          seen.add(m);
+          const side = n === root ? (flip = -flip) : Math.sign(col[n]) || 1;
+          col[m] = col[n] + side;
+          next.push(m);
+        }));
+        frontier = next;
+      }
+      const lo = Math.min(...Object.values(col)), rows = {};
+      Object.keys(col).sort((x, z) => adj[z].length - adj[x].length).forEach((n) => {
+        const c = col[n] - lo;
+        rows[c] = rows[c] || 0;
+        placed[n] = { x: 24 + c * COL, y: y + rows[c] * BAND };
+        rows[c]++;
+      });
+      y += Math.max(...Object.values(rows)) * BAND;
+    });
+    names.filter((n) => !seen.has(n)).forEach((n, i) => { placed[n] = { x: 24 + i * COL, y }; });
     return placed;
   }
 
@@ -201,18 +233,23 @@
         t.setAttribute('x', p.x + (p.right ? 8 : -8));
         t.setAttribute('y', p.y - 6);
         t.setAttribute('text-anchor', p.right ? 'start' : 'end');
-        t.textContent = (many ? '*' : '1') + (arrow ? ' ▶' : '');
+        t.textContent = many ? '*' : '1';
         g.appendChild(t);
       };
       const both = r.direction === 'both';
       label(a, many1);
       label(b, many2);
-      const mid = document.createElementNS(NS, 'text');
-      mid.setAttribute('x', (a.x + b.x) / 2);
-      mid.setAttribute('y', (a.y + b.y) / 2 - 8);
-      mid.setAttribute('text-anchor', 'middle');
-      mid.textContent = r.cardinality + (both ? ' · both ways' : ' · ' + (r.direction || 'single')) + (r.active === false ? ' · inactive' : '');
-      g.appendChild(mid);
+      const title = document.createElementNS(NS, 'title');
+      title.textContent = r.from + ' \u2192 ' + r.to + ': ' + r.cardinality + (both ? ', filters both ways' : ', filters one way') + (r.active === false ? ', inactive' : '');
+      g.appendChild(title);
+      if (i === selectedRel) {
+        const mid = document.createElementNS(NS, 'text');
+        mid.setAttribute('x', (a.x + b.x) / 2);
+        mid.setAttribute('y', (a.y + b.y) / 2 - 8);
+        mid.setAttribute('text-anchor', 'middle');
+        mid.textContent = r.cardinality + (both ? ' \u00b7 both ways' : ' \u00b7 one way') + (r.active === false ? ' \u00b7 inactive' : '');
+        g.appendChild(mid);
+      }
       svg.appendChild(g);
     });
   }
@@ -277,11 +314,16 @@
     const t = model.tables.find((x) => x.name === table);
     (t ? t.columns : []).forEach((c) => sel.appendChild(h('option', { value: c.name, text: c.name })));
   }
+  /** Fills the form's table and column lists from the model, keeping what the person chose (a redraw after an edit must not undo a drag that just filled the form). */
   function fillSelects() {
     ['from', 'to'].forEach((k) => {
-      const s = B.clear(q('[data-nr-' + k + '-t]'));
-      model.tables.forEach((t) => s.appendChild(h('option', { value: t.name, text: t.name })));
-      fillColumns(q('[data-nr-' + k + '-c]'), model.tables[0] ? model.tables[0].name : '');
+      const ts = q('[data-nr-' + k + '-t]'), cs = q('[data-nr-' + k + '-c]');
+      const keepT = ts.value, keepC = cs.value;
+      B.clear(ts);
+      model.tables.forEach((t) => ts.appendChild(h('option', { value: t.name, text: t.name })));
+      ts.value = model.tables.some((t) => t.name === keepT) ? keepT : (model.tables[0] ? model.tables[0].name : '');
+      fillColumns(cs, ts.value);
+      if (keepC && [...cs.options].some((o) => o.value === keepC)) { cs.value = keepC; }
     });
   }
 
@@ -307,7 +349,8 @@
     B.api('POST', '/model/infer', { kinds }).then((d) => {
       say(d.proposals.length ? d.proposals.length + ' proposed from the data. Nothing changes until you accept one.' : 'No relationships to propose: the packs’ links and the data match what you have.');
       d.proposals.forEach((p) => {
-        const ft = model.tables.find((t) => t.kind === p.fromTable), tt = model.tables.find((t) => t.kind === p.toTable);
+        const norm = (k) => String(k || '').replace(/-/g, '_');           // the proposals name a table as its kind with underscores
+        const ft = model.tables.find((t) => norm(t.kind) === p.fromTable || t.name === p.fromTable), tt = model.tables.find((t) => norm(t.kind) === p.toTable || t.name === p.toTable);
         const from = ft ? ft.name + '.' + p.fromColumn : null, to = tt ? tt.name + '.' + p.toColumn : null;
         const have = rels.some((r) => r.from === from && r.to === to);
         const ok = from && to && colInfo(from) && (colInfo(to) || /\.id$/.test(to)) && !have;
