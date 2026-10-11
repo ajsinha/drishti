@@ -593,7 +593,7 @@ needed to triage, values are not; the note is the user's own words, scrubbed lik
   (`423 DRS-7010` under hold).
 - **Legal hold.** Scope `entity` (kind and id), `user` (everything a user wrote or received), `thread`, or `all`.
   Holds stop purge and permanent removal, not ordinary use. Placing and releasing are audited.
-- **Export (eDiscovery).** An asynchronous job writes a zip to `drishti.collab.export-dir`:
+- **Export (eDiscovery).** An asynchronous job writes a zip to `exports/` under `drishti.collab.dir` (kept `drishti.collab.export-keep`, 24 h):
   `manifest.json` (filters, who, when, counts, per-thread first and last hash, the software version),
   `shares.ndjson` (each share with recipients, states and opens), `threads.ndjson` (each thread with every revision,
   **unscrubbed** — the record — with author, pin, action, reason and hashes), `holds.ndjson`, and `README.txt`
@@ -854,7 +854,7 @@ dispatcher renders through `ItemRenderer` beans, one per outbox template; `share
 step 5 as new beans, with coalescing of several thread notices into one email (a share is always one email); (3) no panel *title* is in the mail, only
 the panel id (the share stores the id); (4) `spring.mail.host` is not defaulted from a `DRISHTI_SMTP_*` placeholder (an empty host would still create the
 mail client): use the standard `spring.mail.*` or `SPRING_MAIL_*`; (5) the mail health check is switched off so an unreachable mail server never turns
-`/readyz` red; (6) the console toggles for `notify` (account page) belong to the console step and are not built here; (7) a missing `spring.mail.host` or
+`/readyz` red; (6) the console toggles for `notify` (account page) belong to the console step (built there); (7) a missing `spring.mail.host` or
 `console-url` leaves email off (`503 DRS-7012` on request); only email on with sign-in off refuses to start. Tests: `OutboxDispatcherTest`,
 `MailRenderTest`, `ShareMailJpaTest` and `ShareMailFileTest` (GreenMail, in-process), `ShareMailLinkOnlyTest`, the outbox contract on both stores.
 **Step 5 as built, and where it differs from the design above.** `CommentThread`, `Comment`, `Revision` (with `HashChain`: SHA-256 per thread,
@@ -895,7 +895,7 @@ or any bridge is available; (5) every post is an audit-log entry `collab.bridge.
 decision; (6) `GET /admin/collab/bridges` shows each bridge's host, status (`ok`, or why not, naming the variables) and its outbox counts, never the URL path or the
 secret; (7) no secret is ever logged: failures are described by status or exception class only; (8) problem codes `DRS-7013` (bridge unavailable: off, not usable, or the
 test post failed) and `DRS-7014` (no such bridge). Follow-ups built with it: **mention and reply emails** (`CommentItemRenderer`, templates `mention` and `reply`,
-`EmailNotifier.onComment`; coalescing of several notices into one email is still not built, each mention or reply is one email), **panel titles instead of ids** in
+`EmailNotifier.onComment`; coalescing of several notices into one email came later, as the digest below: at this step each mention or reply was one email), **panel titles instead of ids** in
 every email and bridge post (`PanelTitles`, read from the view as the recipient gets it, the id when it cannot be built), and the **inbox purge** by
 `inbox.keep-days` (`InboxPurge`, every `retention.interval`; this closes deviation (7) of step 7). Tests: `BridgeDeliveryTest` (payload shapes against an in-process
 fake endpoint, HMAC, masked values never sent, routing, retry, dead letter, rate limit, redirect, secrets), `BridgeRegistryTest`, `CommentMailTest`,
@@ -904,16 +904,16 @@ fake endpoint, HMAC, masked values never sent, routing, retry, dead letter, rate
 **Step 7 as built, and where it differs from the design above.** `Hold`, `HoldStore` (JPA and `holds.json`), `drishti.collab.retention` (`keep-days`,
 `kinds`, `interval`; `packs.<pack>.retention-days`), `CollabPurge` (daily, only when some retention is above 0; holds win; whole threads; audited with the
 final hash), `HoldService`, `ChainVerifier`, `ExportService` and `ComplianceController` in `drishti-server/.../collab/compliance`; `ThreadStore` and
-`ShareStore` gained `page` and `deleteThread` / `delete`. Moderation (hide, unhide, lock) was built in step 5. Deviations: (1) **API only: the admin console
-page (`templates/admin/collab.html`, `compliance_routes.py`) is not built here**, it waits for the console work of step 6 to land; (2) a hold's scope also
+`ShareStore` gained `page` and `deleteThread` / `delete`. Moderation (hide, unhide, lock) was built in step 5. Deviations: (1) **API only at this step: the admin console
+page (`templates/admin/collab.html`, `collab_admin_routes.py`, Admin → Collaboration) came with the console work of step 6**; (2) a hold's scope also
 has `kind`, and any scope takes a date range (`drishti_collab_hold` gained `date_from` and `date_to`; SQLite databases made earlier get the columns at
 start); (3) the export streams a zip with `shares.ndjson`, `threads.ndjson`, `chains.ndjson` (first and last hash per thread, instead of a list inside the
 manifest, so memory is bounded), `holds.ndjson`, `README.txt` and a last `manifest.json` with every file's SHA-256; "notices" are the share
 recipients' delivery states and opens and each comment's mentions, the outbox and inbox rows are not exported; (4) jobs are kept in memory (a restart forgets
 an unfinished one), one runs at a time with a queue of 8, and a download happens once; (5) `GET /admin/collab/verify` without `thread` checks everything
 (or one entity) and `GET /admin/collab/threads/{id}` gives the compliance officer the full record; (6) administrators may also run retention by hand
-(`POST /admin/collab/retention/run?dryRun=`) and remove one whole thread (`DELETE /admin/collab/threads/{id}`, `423 DRS-7010` under a hold); (7) inbox rows are
-not yet purged by `inbox.keep-days` (they are capped by `inbox.keep`); (8) exports are audited in the audit log (`collab.export.*`), not the access log.
+(`POST /admin/collab/retention/run?dryRun=`) and remove one whole thread (`DELETE /admin/collab/threads/{id}`, `423 DRS-7010` under a hold); (7) inbox rows were
+not yet purged by `inbox.keep-days` at this step (they are capped by `inbox.keep`; the purge came with step 9); (8) exports are audited in the audit log (`collab.export.*`), not the access log.
 Tests: `ComplianceApiContract` on both stores (authorization, hold scopes and date ranges, purge skips held items, export contents and checksums, tamper
 detection), `CollabPurgeDaysTest`, `HoldTest`, the store contract's `removal` and `holds`.
 **Step 6 as built, and where it differs from the design above.** One side drawer (`#aboutDrawer`, kept so About's code and tests are unchanged) with

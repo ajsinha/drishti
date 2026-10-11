@@ -50,8 +50,8 @@ default):
 
 ### 1.2 Non-goals (v1)
 - Trade capture / booking (Drishti is read-only).
-- Pricing or risk calculation — values (MTM, DV01, PFE) come from sources.
-- A WYSIWYG layout designer (Sutra is text; a *Sutra Studio* previews it).
+- Pricing or risk calculation on the server — values (MTM, DV01, PFE) come from sources. A user may compute on a view in the browser with Calc ([PYTHON_CALC.md](../guides/PYTHON_CALC.md)); a server-side QuantLib service is proposed, not built ([QUANT_SERVICE.md](QUANT_SERVICE.md)).
+- A free-form page designer. Screens stay Sutras; the Build workbench and the Sutra Studio edit them with a preview, and the BI report designer lays out report pages ([RUPAKA.md](RUPAKA.md)).
 
 ---
 
@@ -274,7 +274,7 @@ misreading old files; `description`, `notes` and a per-panel `description` carry
 `<name>.v<N>.sutra.yaml` and are found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
 pack's `sutras/` folder (`config/packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
 kinds' required and allowed options and reports problems with line and column (codes `DRS-2001`, `DRS-2002`; the
-detailed checks are 2009–2027). Any other file in a Sutra folder (a `.sutra.md` from before 1.11, a plain `.yaml`)
+detailed checks are 2009–2012 and 2020–2039; the About files add 2040–2047, search forms 2060). Any other file in a Sutra folder (a `.sutra.md` from before 1.11, a plain `.yaml`)
 is reported as `DRS-2004` with the fix. Because the grammar is plain YAML, `RachanaSchema` generates a JSON Schema of
 it from `PanelKind`, the formats and the served kinds, served at `GET /api/v1/rachana/schema`; Studio's editor and
 any schema-aware editor complete and check Sutras with it. With `hot-reload` on, a `WatchService` reloads changed files (debounced 250 ms); an
@@ -529,13 +529,16 @@ Maven multi-module reactor on `spring-boot-starter-parent`, `groupId com.ash.dri
 | `drishti-engine` | `ViewPipeline`, `Binder`, caches, `SourceRouter`, `SourceRegistry`, `PluginDiscovery`, `TopicHub`, `ViewStream`, `PatchDiffer`, suggestions, structured search, impact, business dates | `EngineConfiguration` |
 | `drishti-identity` | Users, roles, passwords, lockout, audit, per-user preferences (workspaces, settings); the collaboration records (`com.ash.drishti.identity.collab`: shares, inbox, outbox, threads, holds, `HashChain`); stored in a JPA database (section 18) | `IdentityConfiguration` |
 | `drishti-packs` | Domain packs: reads `config/packs/<name>/pack.yaml`, resolves inheritance, contributes lowest-precedence properties (an `EnvironmentPostProcessor`) | `PackRegistry` |
+| `drishti-ai` | The LLM provider layer and MCP client, no Spring: `LlmGateway`, `LlmRegistry`, providers (`openai`, `anthropic`, `mock`), `LlmPolicy` (masking, limits, audit), `McpGateway`, `McpRegistry`; off by default ([AI_PROVIDERS.md](AI_PROVIDERS.md), [MCP_CLIENT.md](MCP_CLIENT.md)) | – |
 | `drishti-diskcache` | `DiskCache`: a size-bounded, daily-cleared RocksDB cache on local disk for live connectors | – |
 | `drishti-messaging` | `MessageStateSource`: the shared half of the ActiveMQ and RabbitMQ connectors (latest document per entity in a persistent RocksDB store plus a memory cache) | – |
 | `drishti-server` | **The** Spring Boot application: `DrishtiApplication`, REST controllers, SSE, security (`TokenFilter`, OIDC), governance, alerts, actuator, OpenAPI | controllers, filters |
-| `plugins/drishti-plugin-*` | Source plugins: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `feeds`, `kafka`, `activemq`, `rabbitmq`, `s3` (ServiceLoader; all are on the server's class path, extra jars from `drishti.sources.plugin-dir` get their own class loader) | – |
+| `plugins/drishti-plugin-*` | Source plugins: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `redis`, `mongodb`, `iceberg`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3` (ServiceLoader; all are on the server's class path, extra jars from `drishti.sources.plugin-dir` get their own class loader) | – |
 | `drishti-testkit` | Shared contract tests for plugins (`DatedSourceContract`, `MessageSourceContract`, `BrokerOutage`) | – |
 | `drishti-it` | Architecture (ArchUnit), licence-header and file-size tests | – |
 | `drishti-benchmarks` | JMH benchmark of the hot path (`HotPathBenchmark`) | – |
+
+**Inside `drishti-server`** (packages of `com.ash.drishti.server`): `api` (the controllers), `security`, `governance`, `collab` (shares, threads, compliance, bridges), `connectors` (connector files and the manager), `deploy` and `registry` (pack archives, the signed registry), `design` (the Build workbench's Designs), `explain` (About this page and Ask), `embed` (Drishti Elements), `loads` (data loads), `reports` (scheduled reports), `pivot`, `calc`, `layout`, `ai` (the AI and MCP endpoints), `cli` (the Java `sutra` tool) and `bi` (Rūpaka: workspaces and catalogue, datasets and the DuckDB query engine, reports, boards, governance, live tables).
 
 **Naming** (Pravaha convention): `XxxController`, `XxxProperties` (records bound via `@ConfigurationProperties`),
 DTO holders `ApiDtos`, `ApiExceptionHandler`, `XxxRegistry` / `XxxCatalog` instead of "Repository" (identity's
@@ -602,6 +605,13 @@ The main endpoints; [API_GUIDE.md](../guides/API_GUIDE.md) lists every one with 
 | `GET` | `/health/live` · `/admin/health` · `/admin/caches` | live latency · everything's health · caches |
 | `GET`/`PUT` | `/me/workspaces`, `/me/monitors`, `/me/alerts`, `/me/settings` | per-user state |
 | `POST` | `/auth/login` · `/auth/oidc` · `/admin/users…` | identity (see USER_MANAGEMENT.md) |
+| `GET`/`POST` | `/forms/{pack}` · `/forms/{pack}/{kind}/compile` | query by form |
+| `POST` | `/packs/{pack}/loads` | the batch-landed signal ([DATA_LOADS.md](../guides/DATA_LOADS.md)) |
+| `GET`/`PUT`/`POST` | `/admin/connectors…` · `/admin/packs…` · `/admin/registry…` | connectors as files, packs, deploy, the signed registry |
+| `GET`/`POST` | `/threads…` · `/shares…` · `/me/inbox…` | discussion and sharing ([COLLABORATION.md](COLLABORATION.md)) |
+| `GET`/`POST`/`PUT` | `/bi/…` | Rūpaka: workspaces, datasets and queries, reports, boards, governance |
+| `POST` | `/ai/chat` · `/ai/mcp/{server}/tools/{tool}` | the AI and MCP layers (off by default) |
+| `POST` | `/embed/token` and the `embed:` scopes | embedded views for other web applications ([ELEMENTS.md](ELEMENTS.md)) |
 
 Errors are RFC 7807 `application/problem+json` with a `code` (`DRS-nnnn`) member, for example:
 
@@ -643,10 +653,17 @@ bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:
 | `/alerts` | Alert rules (Rachana-EL, evaluated server-side on every tick, edge-triggered), pack suggestions, history; a bell and toasts on every page |
 | `/w`, `/w/{name}` | Workspaces: 2–4 embedded views with follow-the-selection between panes, saved per user on the server |
 | `/studio`, `/studio/reviews` | Sutra Studio (editor + live preview) and the review queue |
+| `/build`, `/build/d/{id}`, `/build/new`, `/build/pack/new` | The Build workbench: My designs, one design (Sutra, samples, panels, controls, form, About), New pack from schemas |
+| `/forms`, `/form/{pack}` | Query by form: the forms home and one pack's form |
+| `/reports` | Saved and scheduled reports, and BI reports |
+| `/bi`, `/bi/catalogue`, `/bi/workspaces`, `/bi/d/{id}`, `/bi/r/{id}`, `/bi/b/{id}`, `/bi/designer`, `/bi/m/{dataset}` | Rūpaka: home, catalogue, workspaces, datasets, report viewer, boards, report designer, Model view |
+| `/inbox`, `/share/{id}` | The inbox and the page a shared link opens |
 | `/help`, `/help/{slug}`, `/help/search` | Help centre: guides and the repository's docs rendered in-app; F1 opens help for the current screen |
 | `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices |
 | `/account` | Own profile, settings and password |
-| `/admin/users`, `/admin/audit`, `/admin/health`, `/admin/caches` | User administration, audit log, health of everything, caches |
+| `/admin/users`, `/admin/roles`, `/admin/tokens`, `/admin/audit`, `/admin/access`, `/admin/health`, `/admin/caches` | User administration, roles, API tokens, audit log, who looked at what, health of everything, caches |
+| `/admin/packs`, `/admin/packs/{name}`, `/admin/connectors`, `/admin/connectors/{name}`, `/admin/loads` | Packs (switch, load, deploy, registry), connectors, data loads |
+| `/admin/embedding`, `/admin/collab`, `/admin/ai`, `/admin/bi` | Host applications for embedding, collaboration compliance, AI and MCP, BI settings |
 | `/api/channel` | The browser's single live channel, shared by its tabs (section 10); `/api/channel/who` the session it carries |
 
 **Phones and tablets.** The console is responsive down to 360 px, with no separate app: views stack into one
