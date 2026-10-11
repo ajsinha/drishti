@@ -16,6 +16,8 @@
 # Changelog
 
 ## Unreleased
+
+## 1.20.0 — BI you can use: datasets, reports and the designer; deep trades; real public data (2026-10-10)
 - **Added:** **Rūpaka phase 3: reports, the designer and the Model view.** A *report* (YAML: pages on a 12-column grid, visuals bound to a dataset's fields and measures through wells, filters at report, page and visual level with basic, advanced and top-N, bookmarks,
   drill-through pages, a theme) is parsed, validated against its dataset (`DRS-9030` to `9035`) and written back the way a person writes it; publishing a report checks it. The viewer at `/bi/r/<id>[/<page>]` (`BI <report> <GO>` opens it) draws 21 visuals (bar, column, line, area,
   combo, scatter, pie, donut, waterfall, treemap, heatmap with ECharts; card, multi-row card, KPI, gauge; table, matrix with subtotals; list, dropdown and range slicers; text, image, button), each from one dataset query built on the server and run as the reader (row rules and masks),

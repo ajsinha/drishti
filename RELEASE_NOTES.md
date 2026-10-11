@@ -13,7 +13,38 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 1.19.0 — release notes
+# Drishti 1.20.0 — release notes
+
+*2026-10-10.* **BI you can use: datasets, a query engine, reports and a designer; deep trades; real public data.**
+
+- **Datasets and the query engine (Rūpaka phase 2)** (docs/guides/DATASETS.md): a dataset is YAML over pack kinds, across
+  packs, with relationships, measures, hierarchies, row rules and masks. Queries run on an embedded DuckDB over columns
+  and rollup layers, rebuilt when a day's data lands, with caching and limits (`DRS-9010` to `9013`, `9020` to `9027`).
+  Row rules fail closed; masks apply before aggregation. Three sample datasets over the trades.
+- **Reports, the designer and the Model view (phase 3)** (docs/guides/REPORTS.md): the viewer at `/bi/r/<id>`
+  (`BI <report> <GO>`) with 21 visual types, cross-filter and highlight, drill-down, drill-through, show the rows and
+  open in the terminal; the designer at `/bi/design/<draft>` with Fields, Visualizations, Format and Filters panes, a
+  12-column canvas, a two-way YAML tab, Check, undo and redo; the Model view at `/bi/m/<dataset>`. Three sample reports:
+  Trades overview, Counterparty risk, Cashflow ladder. Learn it step by step in docs/guides/BI_TUTORIAL.md.
+- **Deep trades:** swaps, basis and cross-currency swaps, caps, swaptions and commodity swaps carry legs, cashflows and
+  fixings, three or four levels deep; a `tabs` panel holds whole panels per tab, so a trade shows a tab per leg with its
+  cashflows opening to their fixings.
+- **Real public data** in the `economics` and `politics-society` packs (World Bank, UNDP, CIA World Factbook, IMF) from
+  the repeatable `tools/realdata/` pipeline. The IMF forecasts are for internal demonstrations only.
+- **Shared views keep their filters:** a sent share carries the sender's control values and column filters, and the
+  recipient (and the emailed picture) sees the same view, masked for the recipient.
+- **The `slider` control:** one value or a range, keyboard and touch.
+- **Admin pages for every connector and pack**, linked from the lists.
+- **Fixed:** Build → New pack no longer loses what you type when a background re-plan arrives.
+
+**Upgrading from 1.19.0:** the identity database gains a nullable `view_state` column on shares, added automatically
+(SQLite and PostgreSQL); old shares read as having none. The trading pack's deep samples renamed some cashflow fields
+(`accrualStart` → `periodStart`, `accrualEnd` → `periodEnd`, `yearFraction` → `accrualFactor`, `df` → `discountFactor`,
+`businessDay` → `businessDayConvention`): your own Sutras over the shipped sample trades may need the new names. BI
+datasets and reports are new folders under `config/bi/` and load live. Not built yet (marked in the docs): scheduled
+refresh, time intelligence and window functions, live visuals, several visual types, reports over several datasets.
+
+# Previous release: Drishti 1.19.0 — release notes
 
 *2026-10-10.* **Connectors as files with TLS everywhere, query by form, Drishti Elements, no restarts, and the start of BI.**
 
@@ -54,7 +85,7 @@
 - **New problem codes:** DRS-1011, DRS-2034..2039, DRS-2060, DRS-4010..4019, DRS-5031..5033, DRS-8001..8006, DRS-9001..9006
   (API_GUIDE.md).
 
-# Previous release: Drishti 1.18.0 — release notes
+# Older release: Drishti 1.18.0 — release notes
 
 *2026-10-06.* **Data loads: tell Drishti new data has landed, and it acts on it.**
 

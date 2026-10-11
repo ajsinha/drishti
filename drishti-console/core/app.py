@@ -34,7 +34,7 @@ from core.config import Settings
 from core.nextpath import to_login
 
 WEB = Path(__file__).resolve().parent.parent / "web"
-ASSET_VERSION = "1.19.0"
+ASSET_VERSION = "1.20.0"
 
 
 def asset_fingerprint() -> str:
