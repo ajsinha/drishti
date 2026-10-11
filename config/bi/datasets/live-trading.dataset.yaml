@@ -14,7 +14,7 @@
 
 # SAMPLE (streaming): the live trading desk. One table whose rows are the trades the live feed pushes, kept in memory by the BI engine and
 # updated in place as each trade ticks. Reports and boards over it redraw as the numbers move.
-# Tutorial: docs/guides/BI_TUTORIAL.md, "A live desk". Reference: docs/guides/DATASETS.md (live tables), docs/guides/BOARDS.md.
+# Tutorial: docs/guides/BI_TUTORIAL.md, chapter 18 "A live desk". Reference: docs/guides/DATASETS.md (live tables), docs/guides/BOARDS.md.
 #
 # `mode: live` is the whole difference from the other samples: nothing is copied per business date; the engine subscribes to the kind through the same live
 # machinery the terminal's live views use (the demo ticker out of the box; Kafka, Redis and the other streaming connectors in a real setup) and applies each

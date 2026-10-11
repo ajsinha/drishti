@@ -16,10 +16,12 @@
 
 # Drishti Rūpaka: business intelligence in Drishti, live and governed
 
-Status: design, proposed (2026-10-10). Nothing in it is built. Owner: a new module family (`drishti-bi-*` on the
-server, `drishti-console/bi/` in the console), the existing source layer, identity, collaboration and Elements.
-Companion notes: [LIVE_BI.md](LIVE_BI.md) (streaming result producers and boards) and the Project Rūpaka SRS that this
+Status: design, **built in part**. Phases 0 to 5 of section 20 are built (the proof of concept, the shell and catalogue, datasets and the query engine, reports and the designer, publishing and governance, streaming BI); phases 6, 7 and 9 and the AI stages are still a plan. Owner: the BI package of the server (`com.ash.drishti.server.bi`, with `dataset`, `engine`, `report`, `board` and `poc` beside it), the console's BI routes, templates and scripts (`routes/bi_routes.py`, `web/templates/bi/`, `web/static/js/bi*.js`), the existing source layer, identity, collaboration and Elements.
+Companion notes: [LIVE_BI.md](LIVE_BI.md) (streaming result producers: the heavy case this design leaves to a producer), [RUPAKA_POC.md](RUPAKA_POC.md) (the phase 0 proof of concept and later measurements), [QUANT_SERVICE.md](QUANT_SERVICE.md) (server-side pricing, proposed) and the Project Rūpaka SRS that this
 design adopts and adapts.
+
+**How to read this document.** Sections 1 to 19 are the **design**: they say what Rūpaka should be and, where building changed the design, say **As built** in place. Section 20 is the build plan and, for each of phases 1 to 5, a **"as built"** subsection that lists exactly what exists and what does not; when a design section and an "as built" subsection differ, the subsection is right. The user documents are
+[BI_GUIDE.md](../guides/BI_GUIDE.md) (start here), [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md), [DATASETS.md](../guides/DATASETS.md), [REPORTS.md](../guides/REPORTS.md), [BOARDS.md](../guides/BOARDS.md) and [BI_GOVERNANCE.md](../guides/BI_GOVERNANCE.md). The module names of section 17 (`drishti-bi-core`, `-query`, `-live`, `-ai`) are the design's: the code is one server package, with the same one-way dependencies.
 
 **The goal.** Drishti becomes a business-intelligence platform as nimble and as capable as commercial BI products, with
 **Power BI** as the benchmark, while keeping what Drishti already does that they do not: live data at
@@ -112,22 +114,22 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 | **Measure** | A named aggregation in the closed expression language (`sum($.notional)`, `ratio(sum($.pnl), sum($.notional))`), or a Python measure (section 13) | Measure (DAX) |
 | **Report** | Pages of visuals over one or more datasets, with filters at three levels, bookmarks and drill-through targets | Report |
 | **Visual** | One chart, table, matrix, card, slicer or Perspective grid, bound to fields and measures | Visual |
-| **Board** | A live, sorted list or grid of many result rows (LIVE_BI section 7.2), usable as a page or a visual | Streaming dashboard tile |
+| **Board** | **As built (phase 5):** a wall of tiles, each one visual of a report, with alert colours and a kiosk mode ([BOARDS.md](../guides/BOARDS.md)). The design's "live sorted list of many result rows" ([LIVE_BI.md](LIVE_BI.md) section 7.2) is a different, still proposed thing | Streaming dashboard tile |
 | **Catalogue entry** | A published report or board with an audience, a description, an owner, tags and an endorsement | App / Endorsed content |
 | **Endorsement** | `promoted` (an owner says it is good) or `certified` (a data steward says it is authoritative) | Promoted / Certified |
 | **Refresh** | For cached tables: a schedule, a data-load signal (`POST /api/v1/packs/{pack}/loads`), or both | Scheduled refresh |
 
 ## 4. Entering BI: the top bar, `BI <GO>` and URLs
 
-- **Top bar.** A new item **BI** (icon `bar-chart-line`) between **Views** and **Build**, with a menu: *BI home*, *My
+- **Top bar.** A new item **BI** (icon `bar-chart-line`) beside **Views**, with a menu: *BI home*, *My
   workspace*, *Catalogue*, *New report*, *Datasets*, and the user's three most recent reports. Shown to anyone with the
-  `bi` power (section 11); admins see *BI settings* in Admin.
+  `bi` power (section 11); admins see *BI settings* in Admin. **As built:** the menu holds *BI home*, *My workspace*, *Catalogue*, *Recent* (three items of any kind) and, for a `bi-admin`, *Administer: BI settings*; the bar's order is Views, BI, Forms, Reports, Build, Admin, Help; the **Reports** menu also lists *BI reports* (the catalogue filtered to reports). The rail's *Datasets* and *Designer* are pages of their own, not menu entries.
 - **Command line.** `BI <GO>` opens the BI home page (`RUPAKA` is kept as an alias for every form below). `BI <report-or-board> <GO>` opens a report (type-ahead offers
   report titles and ids the user may open, as it offers entity ids today). `BI WORKSPACE <GO>` opens my workspace and
   `BI CATALOGUE <GO>` the catalogue (type-ahead completes both after `BI `). `BI` and `RUPAKA` are reserved keywords: a pack
   cannot define a mnemonic with either name (pack checks refuse it), and case does not matter (`rupaka <GO>` and `bi <GO>` work).
 - **URLs.** `/bi` (home), `/bi/w/<workspace>` , `/bi/r/<report>[/<page>]`, `/bi/d/<dataset>`, `/bi/catalogue`,
-  `/bi/design/<draft>`; filters and bookmarks in the query string (`?f=region:EMEA`) so a link reproduces what was seen.
+  `/bi/design/<draft>`; filters and bookmarks in the query string (`?f=region:EMEA`) so a link reproduces what was seen. **As built:** also `/bi/workspaces`, `/bi/i/<item>`, `/bi/datasets`, `/bi/m/<dataset>` (the Model view), `/bi/b/<board>`, `/bi/environments`, `/bi/explore` (a placeholder) and `/admin/bi`; a drill-through carries its value as `?carry=` and a board's kiosk is `?kiosk=1` ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 2).
 - **A separate shell.** The BI page shares the top bar, sign-in, themes, inbox and help with the terminal, but has its
   own layout: a left navigation rail, a wide canvas and its own keys. The terminal's F-key footer is not shown. From any
   BI visual, *Open in terminal* goes to the record's view; from a terminal view, *Analyse in BI* opens a report over the
@@ -136,7 +138,7 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 ## 5. The BI page
 
 ```
-┌ top bar: DRISHTI · command line · date · Live · Views  BI  Build  Admin  Help · bell · user ───────────────────────┐
+┌ top bar: DRISHTI · command line · date · Live · Views BI Forms Reports Build Admin Help · bell · user ───────────┐
 │ ┌ rail ───────┐ ┌ canvas ──────────────────────────────────────────────────────────────────────────────────────┐ │
 │ │ Home        │ │ Home: Recent · Favourites · Certified for you · Shared with me · What changed                 │ │
 │ │ Catalogue   │ │  ┌ card ────────────┐ ┌ card ────────────┐ ┌ card ────────────┐                             │ │
@@ -160,7 +162,7 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 | **Explore** | Free exploration of a dataset with Graphic Walker; *Save as visual* to a draft | authors and analysts |
 
 Keys on the BI page: `/` search the catalogue, `g h` home, `g c` catalogue, `g w` my workspace, `n` new report, `?` the
-keys. All of it works at phone width (section 15).
+keys. All of it works at phone width (section 15). **As built:** the rail also has *Environments* (phase 4), *Explore* is a placeholder until phase 9, and the keys are `/`, `g h`, `g c`, `g w` and `?` (there is no `n`).
 
 ## 6. Datasets: the semantic model
 
@@ -267,7 +269,9 @@ config/bi/
   README.md
   datasets/   <id>.dataset.yaml   section 6
   reports/    <id>.report.yaml    section 8
-  python/                         section 13: typed implementations, their manifests and tests
+  boards/     <id>.board.yaml     phase 5 ([BOARDS.md](../guides/BOARDS.md))
+  notebooks/  <id>.notebook.yaml  stored, not run (phase 9)
+  python/                         section 13: typed implementations, their manifests and tests (phase 6: not built)
 ```
 
 - **Never inside a pack.** A pack describes data (kinds, Sutras, links, vocabulary). A dataset may combine kinds from several
@@ -276,7 +280,7 @@ config/bi/
 - **Datasets name connectors** by logical name ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)), as packs do.
 - **Workspace drafts and published versions** live in the identity database (section 21, decision 1); the folder holds the
   reviewed content shipped with a site.
-- The folders may be empty or absent. Since phase 2 the `datasets/` files are parsed, validated and queried (section 20.2); the other kinds are stored items.
+- The folders may be empty or absent. The `datasets/` files are parsed, validated and queried (phase 2, section 20.2), the `reports/` files drawn (phase 3, 20.3) and the `boards/` files drawn (phase 5, 20.5); `notebooks/` files are stored items, not run. The folder is watched live ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 10).
 
 ## 7. The query engine
 
@@ -544,7 +548,6 @@ audited like every result. The server's quant service (QUANT_SERVICE.md) impleme
 quant and production pricing share one path. Status: designed; built when QLRisk's API is declared stable.
 
 ## 10. Workspaces, publishing and the catalogue
-## 10. Workspaces, publishing and the catalogue
 
 - **Workspace roles:** `viewer` (open published content), `contributor` (create and edit drafts), `member` (publish),
   `admin` (members and settings). A workspace may require **review before publish** (four eyes: the Build workbench's
@@ -557,7 +560,7 @@ quant and production pricing share one path. Status: designed; built when QLRisk
 - **Endorsement:** owners mark `promoted`; data stewards (a `bi-steward` power) mark `certified`. Certified content is
   pinned first in search and on Home.
 - **Environments:** a workspace's content exports as a pack bundle (the existing pack deploy with preview and rollback), so
-  development, test and production are pack deployments, not copies by hand.
+  development, test and production are pack deployments, not copies by hand. **As built (phase 4):** a BI bundle is **its own checksummed file** with a dry-run import (`DRS-9041`, `9042`), not part of a pack archive, and there is no rollback beyond restoring the saved state an import keeps ([BI_GOVERNANCE.md section 7](../guides/BI_GOVERNANCE.md#7-environments-bundles)).
 - **Lineage and impact:** changing a dataset shows every report and visual that uses each changed field before saving.
 
 ## 11. Access, security and governance
@@ -750,12 +753,14 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 
 ## 20. Build plan
 
+Phases 1 to 5 each have an "as built" subsection below (20.0 is phase 1, 20.2 phase 2, 20.3 phase 3, 20.4 phase 4, 20.5 phase 5: the numbers are kept because code and documents cite them; 20.1, the three stages, follows them). Phases 6, 7 and 9 are the plan; there is no phase 8.
+
 | Phase | What | Size | Done when |
 |---|---|---|---|
 | 0 | **Proof of concept**: Perspective live grid fed by Drishti's live path; masked Arrow out of a server DuckDB query; DuckDB-Wasm slicing it; CSP and size measured | M | a page shows a live pivot at target rates and a cached query under target, with masks proven |
 | 0a | **Interactive Sutras** (sections 8.1, 8.2; query by form is built first, in the terminal): Excel-style column filters on every table, then `controls:` and `ctl.*` with URL view state, then cross-filtering | M | a desk filters a trade's cashflows by leg and date from a dropdown, and any table by column filters, by mouse, keyboard and touch. **Built** in the terminal (column filters: delivery 1; controls, URL view state and cross-filtering: delivery 2); the Rūpaka side (slicers on a report) waits for stage 1 |
 | 1 | **Shell and catalogue**: BI top bar item, `RUPAKA <GO>`, `/bi` home, catalogue, workspaces (personal and shared), powers, audit | M | a published report appears for its audience only |
-| 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows | **Built** except refresh by cron schedule and the items listed in 20.2; the three sample reports that answer on it are phase 3 (20.3) |
+| 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows. **Built** except refresh by cron schedule and the items listed in 20.2; the sample reports that answer on it are phase 3 (20.3) |
 | 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test). **Built** except the usability test and the items listed in 20.3 |
 | 4 | **Publishing and governance**: review before publish, versions, endorsement, lineage, impact of dataset changes, pack bundles for environments | M | certified content and lineage shown; deployment by bundle with rollback. **Built** except bundles inside a pack archive and rollback of an import (20.4) |
 | 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run. **Built** except incremental aggregates by group and the LOAD_AND_MEMORY capacity run (20.5) |
@@ -771,7 +776,7 @@ measured, as every Drishti feature does. Phases 0 to 3 are the minimum lovable B
 Phase 1 (shell and catalogue) is built; the user guide is [BI_GUIDE.md](../guides/BI_GUIDE.md). **Built:** the **BI** top-bar menu (people with the `bi` power) and the reserved
 `RUPAKA` keyword (`RUPAKA <GO>`, `RUPAKA <report> <GO>`, `RUPAKA WORKSPACE`, `RUPAKA CATALOGUE`, `RUPAKA SETTINGS`, any case, with type-ahead; the pack loader and
 `pack check` refuse a pack mnemonic named `RUPAKA` or `FORM`); the shell at `/bi`, `/bi/w/<workspace>`, `/bi/catalogue`, `/bi/workspaces`, `/bi/i/<item>` with its own layout
-(left rail Home, Catalogue, My workspace, Workspaces, Datasets, Designer, Explore; keys `/`, `g h`, `g c`, `g w`, `?`), working at 390 px with 44 px targets in every theme;
+(left rail Home, Catalogue, My workspace, Workspaces, Datasets, Designer, Explore, and from phase 4 Environments; keys `/`, `g h`, `g c`, `g w`, `?`), working at 390 px with 44 px targets in every theme;
 workspaces (personal per user, shared with roles viewer, contributor, member, admin; a creation policy; optional review before publish); catalogue entries (title, description,
 owner, workspace, tags, audience of roles, users and packs, endorsement promoted and certified, freshness, 30-day views); **items as typed placeholders** (`dataset`, `report`,
 `board`, `notebook`) whose YAML body is stored, versioned and published but **not executed**; the lifecycle draft, proposed, published with version history and restore, review
@@ -782,7 +787,7 @@ changed and deleted files are picked up with no restart; a bad file keeps its la
 DRS-9006; `drishti.py bi workspace|catalogue list|get|publish`. **Not built in phase 1 (datasets and the query engine are phase 2, section 20.2):** everything of phases 3 to 9; the Designer and
 Explore rail entries are placeholders; "what changed since your last visit" on Home; searching by fields used and filtering by live or cached; the version diff; a workspace as a pack
 bundle; dataset lineage and impact; per-entry export rules and classification tags (section 11 controls that need data); `Analyse in BI`. The shipped-file version number counts changes
-since the server started and only the current body is kept.
+since the server started and only the current body is kept. (Phases 2 to 5, below, built what this list defers, except what each lists as not built; notebooks are still stored, not run.)
 
 ### 20.2 Phase 2, as built
 
@@ -807,7 +812,7 @@ Phase 2 (datasets and the query engine) is built; the references are [DATASETS.m
   **Arrow IPC** (the phase 0 writer, moved into the engine package) or JSON for small answers; the **result cache** is keyed by dataset version, query, the reader's row rules and masks and the data generation; **limits** (time, rows, bytes, server and per-user concurrency) are settings with
   `DRS-9022` to `9025`; engine and source failures are `9026` and `9027`.
 * **API and pages.** `/api/v1/bi/datasets`, `/{id}`, `/validate`, `/{id}/query`, `/{id}/layers`, `/{id}/refresh`, `/model/*`, `/engine`; the console's Datasets list, Start-from-packs and one dataset's page with a query preview grid. The phase 0 query endpoint now runs its typed
-  and rollup layouts through this engine. Three **sample datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`) with a tutorial.
+  and rollup layouts through this engine. Three **sample datasets** (`trades-basic`, `trading-risk`, `trading-cashflows`) with a tutorial (phase 5 added the two live ones).
 * **Phase 0 adjustments.** Static files are served compressed (gzip, Brotli when installed; the 36 MB wasm is 8 MB). The BI-page style policy is **decided**: strict `style-src 'self'` on every BI page, no `unsafe-inline`; the hash list the POC page needs for Perspective's `<style>`
   elements stays on the POC page only, and phase 5 generated its list on the real pages (`tools/perspective-style-hashes.py`: four hashes, not six) with a Chromium test that fails when a library update adds one. **Perspective retest: done in phase 5** (RUPAKA_POC.md section 12): the second-tab trap does not reproduce on the report page in Chromium 153, Chrome 155, Firefox 155 or WebKit 26.6; the fallback (Drishti's own table) stays in force for a tab where WebAssembly fails.
 
@@ -895,7 +900,7 @@ and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS
 * **A history of a live table** (every update kept: append mode) and server-side time series of an aggregate: a live table holds current state with retention; the rolling chart's points live in the browser from the moment the page opened. Time buckets (`second`, `minute`) on `updatedAt` are not date parts.
 * **Per-visual frame rates** (the design's 4 and 30 a second): one cadence for a report.
 * **Perspective charts** (d3fc), the Perspective settings panel (its `<style>` and `style=` needs are beyond the four hashes), a Perspective visual over several tables, a Perspective visual in the designer's canvas (a note is shown).
-* **Notifications** from boards and alerts (email, chat, webhook): phase 7; `notify:` is refused (`DRS-9053`). A **designer for boards**, interaction between tiles, slicers on a board. Boards in bundles, lineage and impact.
+* **Notifications** from boards and alerts (email, chat, webhook): phase 7; `notify:` is refused (`DRS-9053`). A **designer for boards**, interaction between tiles, slicers on a board. Boards in lineage and impact analysis; a board item can be put in a bundle, but its reports are not added as dependencies and its body is not checked on import ([BI_GOVERNANCE.md section 7](../guides/BI_GOVERNANCE.md#7-environments-bundles)).
 * **Live tables over arrays** (`each`), in `direct` queries, and a Delta, file or JDBC connector that pushes (only the demo source, Kafka and Redis implement `subscribe`; others are read again every 30 s).
 * Safari was tested through Playwright's WebKit build (26.6), not Safari itself.
 

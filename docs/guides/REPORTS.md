@@ -16,8 +16,8 @@
 # Reports: the YAML, the visuals and how they behave
 
 A **report** is pages of **visuals** on a 12-column grid, bound to the fields and measures of one **dataset** ([DATASETS.md](DATASETS.md)). This is the reference for the file, for the visual
-catalogue, for how a visual becomes a query, and for what people can do with a report on the page. To read or build one step by step see [BI_TUTORIAL.md](BI_TUTORIAL.md) (chapters 10 to 15); for the
-pages (viewer, designer, Model view) see [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16. The design is [RUPAKA.md](../architecture/RUPAKA.md) sections 8 and 9; what is built is its section 20.3.
+catalogue, for how a visual becomes a query, and for what people can do with a report on the page. To read or build one step by step see [BI_TUTORIAL.md](BI_TUTORIAL.md) (chapters 10 to 15, and 18 for a live report); for the
+pages (viewer, designer, Model view) see [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16 and 18. The design is [RUPAKA.md](../architecture/RUPAKA.md) sections 8 and 9; what is built is its sections 20.3 and 20.5.
 
 Three sample reports ship in `config/bi/reports/`, each marked `sample: true` and commented line by line: **Trades overview** (on `trades-basic`), **Counterparty risk** (cross-pack, on
 `trading-risk`) and **Cashflow ladder** (deep trades, on `trading-cashflows`); phase 5 adds **Live trading desk** (on the live dataset `live-trading`: cards, a bar, a rolling line, two tables, a Perspective grid and a pivot) and
@@ -110,7 +110,7 @@ The viewer's keyboard order is the picture's: visuals are read top to bottom, th
 ## 3. The visuals and their wells
 
 A **well** holds fields (`table.column`, or `table.column.year|quarter|month|week|day` for a date), measures (names of the dataset) or either, and takes a few items. Charts draw with ECharts
-(vendored); everything else is plain elements. Required wells must be filled.
+(vendored); everything else is plain elements. Required wells must be filled. The designer's Visualizations pane offers the first 21 types below (`bar` to `button`); `live-chart`, `perspective-grid` and `perspective-pivot` (phase 5) are written in the YAML, and the designer's canvas shows a note for a Perspective visual (its page has no WebAssembly).
 
 | Type | Group | Wells (kind, how many) | What it draws |
 |---|---|---|---|
@@ -136,7 +136,7 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 | `perspective-grid` | perspective | `columns` fields of **one table** (required) | the table's rows in a Perspective grid, masked for the reader and updated as the table changes (section 13) |
 | `perspective-pivot` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | the same rows pivoted by Perspective in the browser: `rows` down, `columns` across, `values` aggregated (`format: { aggregates: { trade.mtm: sum } }`) |
 
-Reserved and **refused with `DRS-9033`** (not built): `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view`, `shape`. (`live-grid`, `live-pivot` of the first design are **not** names: use `perspective-grid` and `perspective-pivot`; `live-chart` is built.)
+Reserved and **refused with `DRS-9033`** (not built): `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view`, `shape`.
 
 A measure in a field well, a field in a measure well, an unknown well, a required well left empty or one over its number of items is `DRS-9032`; a name the dataset does not have is `DRS-9031`.
 Totals in a matrix are the sum of the shown figures, so they are computed for measures that add up (a `sum` or a `count`) and shown as `–` for the others (an average, a ratio, a distinct count):
@@ -257,12 +257,12 @@ colour with a contrast ratio under 3 against the theme's background), `LAYOUT` (
 ## 11. Settings
 
 `drishti.bi.report.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3)): `chart-rows` (500), `table-rows` (1000), `slicer-values` (1000), `show-rows` (1000),
-`top-candidates` (10000), `perspective-rows` (20000: the most rows a Perspective visual is sent). The query limits are `drishti.bi.query.*`; the live ones `drishti.bi.live.*`; the console's `bi.live.*` (section 13).
+`top-candidates` (10000), `perspective-rows` (20000: the most rows a Perspective visual is sent). The query limits are `drishti.bi.query.*`; the live ones `drishti.bi.live.*`; the console's `bi.live.min_interval_ms` and `bi.live.stale_seconds` (section 13).
 
 ## 12. Built and not built
 
 Built: the report model and its parser, validator and writer (DRS-9030 to 9035); the visual catalogue above; filters at three levels with top-N; slicers (list, dropdown, range); cross-filter, highlight (bar and
-column), drill-down, drill-through, show the rows, show as a table, open in the terminal; bookmarks; palettes; the viewer, the designer and the Model view; three sample reports; the API.
+column), drill-down, drill-through, show the rows, show as a table, open in the terminal; bookmarks; palettes; the viewer, the designer and the Model view; the three stored sample reports; the API.
 
 Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the Perspective grid and pivot; the sample live reports.
 
@@ -300,7 +300,7 @@ A real stream, first events (abridged; the table's counters are in `tables`):
 
 ```text
 event:hello
-data:{"generation":95,"lastUpdate":"2026-10-11T11:50:03.684098666Z","state":"live","at":"2026-10-11T11:50:04.732755792Z","tables":[{"table":"trade","kind":"trade","state":"live","rows":750,"entities":750,"subscribed":360,"pushes":true,"seq":33503,"epoch":0,"generation":95,...}]}
+data:{"generation":95,"lastUpdate":"2026-10-11T11:50:03.684098666Z","state":"live","at":"2026-10-11T11:50:04.732755792Z","tables":[{"table":"trade","kind":"trade","state":"live","rows":750,"entities":750,"subscribed":750,"pushes":true,"seq":33503,"epoch":0,"generation":95,...}]}
 
 event:tick
 data:{"generation":96,"lastUpdate":"2026-10-11T11:50:04.545007543Z","state":"live","at":"2026-10-11T11:50:05.484058137Z","tables":[{"table":"trade",...,"seq":33863,"epoch":0,"generation":96,...}]}

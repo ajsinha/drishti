@@ -15,7 +15,7 @@
 -->
 # Publishing and governance in BI: versions, review, certification, lineage, impact, environments
 
-This is the reference for Rūpaka **phase 4**. A dataset or report is not just a file: it is saved, reviewed, certified, and moved between servers, and a change to a dataset can break the reports built on it. This page says exactly how each of those works, what each person sees, which refusal comes back, and what is **not built**. For the pages see [BI_GUIDE.md](BI_GUIDE.md) section 17; for the walk-through with pictures see [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 17; the design is [RUPAKA.md](../architecture/RUPAKA.md) sections 10 and 11 and what is built is its section 20.4. The settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibigovernance--publishing-and-governance-phase-4).
+This is the reference for Rūpaka **phase 4**. A dataset or report is not just a file: it is saved, reviewed, certified, and moved between servers, and a change to a dataset can break the reports built on it. This page says exactly how each of those works, what each person sees, which refusal comes back, and what is **not built**. For the pages see [BI_GUIDE.md](BI_GUIDE.md) section 17; for the walk-through with pictures see [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 17; the design is [RUPAKA.md](../architecture/RUPAKA.md) sections 10 and 11 and what is built is its section 20.4. The settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibigovernance--publishing-and-governance-phase-4): `revisions-keep`, `preview-rows`, `refuse-breaking`, `revoke-certification`, `bundle-max-bytes` and `tell-people` (the inbox notices; off, the audit log and the history still record everything).
 
 ## Contents
 
@@ -117,7 +117,7 @@ POST /api/v1/bi/items/bi-f99d2f18d5/publish  { "note": "drop book", "force": tru
 * A **dataset**: **Comes from**: each table with its pack kind, the packs that define the kind, the connector's logical name (or "whichever serves the kind"), the mode, and whether it is one row per element of an array. **Read by**: the reports (published, and drafts for their authors) that name the dataset, with the fields and measures each uses.
 * A **report**: **Reads dataset** (with its endorsement and status), **Uses** (the fields, measures and hierarchies it names), and **Comes from**: the tables, kinds, packs and connectors behind the fields it uses.
 
-A report in a list is named only if you could open it; the rest are counted ("2 more reports you cannot open"). Boards and notebooks are not built, so they have no lineage.
+A report in a list is named only if you could open it; the rest are counted ("2 more reports you cannot open"). Boards are not in the lineage (a board names reports, and a report that loses a visual a board uses is found when the board is read, [BOARDS.md section 10](BOARDS.md#10-built-and-not-built)) and notebooks are not run, so they have none.
 
 ```
 GET /api/v1/bi/items/bi-f99d2f18d5/lineage
@@ -230,6 +230,14 @@ All under `/api/v1/bi`; answers are as the caller. Token scopes: writes need `bi
 | `GET /bundle?items=&workspace=&dependencies=` | the bundle | 9002, 9001 |
 | `POST /bundle/import {bundle, dryRun, overwrite, force, workspace, workspaces, owners}` | dry run or import | **9041**, **9042**, 9002 |
 
+The codes this phase adds (the item and workspace codes `DRS-9001` to `9006` are in [BI_GUIDE.md section 12](BI_GUIDE.md#12-problems)):
+
+| Code | HTTP | Meaning |
+|---|---|---|
+| `DRS-9040` | 409 | publishing or approving a dataset would break published reports (a field, measure or hierarchy they use is removed or renamed); a `bi-admin` may force it |
+| `DRS-9041` | 422 | a bundle is not readable, fails its checksums, is over `bundle-max-bytes`, or holds an invalid item |
+| `DRS-9042` | 409 | a bundle import would overwrite what differs here (conflicts), or names a workspace or owner that cannot be mapped |
+
 ## 10. Built and not built
 
 Built: saved states for every save, restore, publish and import, the history list, the side-by-side diff of any two states, restore as a new draft; review with a steward as reviewer, the review page (request, diff, Check, impact, data preview), approve and reject with comments, four-eyes, inbox notifications; promoted and certified badges in the catalogue, search and Home, certification only by a steward, automatic revocation with a warning; lineage of datasets and reports; impact analysis by name, used on publish, approve, the review page and import, the refusal `DRS-9040` and the bi-admin's force; bundles with versions, sample flags, ownership and workspace mapping, checksums and a dry run; the audit trail of all of it.
@@ -239,8 +247,8 @@ Built: saved states for every save, restore, publish and import, the history lis
 * **A bundle inside a pack archive.** A BI bundle is its own file. Deploying a pack (Admin, Packs, Deploy) does not import BI content, and there is no rollback of an import beyond restoring the saved state it kept (*before import by ...*).
 * **Renames are not recognised as renames.** A renamed field is a removed field plus a new one; nothing offers to rewrite the reports that use it.
 * **Impact is by name.** Changes that keep a name but change its meaning or type (a column's type, a measure's expression, a row rule) are not flagged; relationships are not compared. A report's names are read from its wells, filters, sorts, drill-through, hierarchy and bookmarks.
-* **Lineage stops at the connector.** It does not follow a connector to the system behind it, and boards and notebooks (not built) have no lineage.
+* **Lineage stops at the connector.** It does not follow a connector to the system behind it, and boards and notebooks have no lineage. (A board item does travel in a bundle when you name it or export its workspace, but the reports it shows are not added as dependencies and its body is not checked on import: export the reports with it.)
 * **Saved states before the upgrade.** History starts at the upgrade; older published versions are in Versions.
 * **No comments on a line.** A review has one comment per decision, not threaded comments on diff lines.
 * **No scheduled re-certification or expiry**, and no approval chains of more than one reviewer.
-* **Impact on boards and notebooks, usage-based impact ("who opened this report last week")** and *what changed since your last visit* on Home.
+* **Impact on boards (a change that removes a visual a board uses is not found at publish) and on notebooks, usage-based impact ("who opened this report last week")** and *what changed since your last visit* on Home.

@@ -17,7 +17,7 @@
     DRISHTI_BI_DELTA_ROOT=<a Delta lake made with tools/packgen/banking/make_data.py --lake <dir> --days 3> \\
         drishti-console/.venv/bin/python drishti-console/tests/bi_data_shots.py <pictures dir> <captures.json>
 
-Ports 18989 (server) and 17989 (console), a scratch directory, the shipped sample datasets. Pictures are desktop (1400 px) and one phone (390 px)."""
+Ports 18989 (server) and 17989 (console), a scratch directory, the shipped sample datasets. Pictures are desktop (1600 px: the top bar needs it) and one phone (390 px)."""
 import json
 import sys
 import tempfile
@@ -30,7 +30,7 @@ from bi_data_stack import CONSOLE_URL, PASSWORD, api
 
 
 def sign_in(browser, user, **ctx):
-    context = browser.new_context(**{"viewport": {"width": 1400, "height": 900}, **ctx})
+    context = browser.new_context(**{"viewport": {"width": 1600, "height": 900}, **ctx})
     page = context.new_page()
     page.goto(CONSOLE_URL + "/login?next=/bi/datasets")
     page.fill("#lu", user)

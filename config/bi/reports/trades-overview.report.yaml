@@ -14,7 +14,7 @@
 
 # SAMPLE REPORT 1 of 3: "Trades overview". Four cards, a bar chart of MTM by desk that drills down to books, a line of notional by trade date, a table, and
 # a slicer. It reads the sample dataset trades-basic (config/bi/datasets/trades-basic.dataset.yaml): one table, four measures, a desk-to-book hierarchy.
-# Tutorial: docs/guides/BI_TUTORIAL.md (build it from scratch in the designer). Reference: docs/guides/REPORTS.md.
+# Tutorial: docs/guides/BI_TUTORIAL.md, chapters 10 and 13 (build it from scratch in the designer). Reference: docs/guides/REPORTS.md.
 #
 # A report is pages; a page is visuals on a 12-column grid. Every visual says WHERE it sits (`at`: column x, row y, width w in columns, height h in rows) and
 # WHAT it shows (`wells`: the fields it groups by and the measures it adds up, all names of the dataset). Nothing here is SQL: the server turns each visual into

@@ -15,11 +15,20 @@
 -->
 # Tutorial: learn BI from the sample datasets and reports
 
-Three sample datasets ship with Drishti, built on the trades, so you can learn what a **dataset** is by reading and querying real ones, and three sample **reports** on them, so you can learn what a report
-is by using them and then **building one from scratch in the designer**. Chapters 0 to 9 open each dataset, read its model, run preview queries, change a measure in a copy of your own, and show row rules and masks with two users;
-chapters 10 to 15 open the reports, build one step by step, draw a relationship in the Model view, and use a report on a phone; chapter 17 publishes and governs them (saved states, review, certification, lineage, impact, bundles); chapters 18 and 19 are the **streaming** half: a live dataset, a report that redraws as the trades tick, a Perspective grid and pivot, and a wall of live tiles for a screen in the room. Every output below was
-captured from a real server over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit). Reference:
-[DATASETS.md](DATASETS.md) and [REPORTS.md](REPORTS.md); the pages themselves: [BI_GUIDE.md](BI_GUIDE.md).
+Drishti ships five sample **datasets**, five sample **reports** and one **board** (all in `config/bi`, all read-only), built on the trades, so you can learn what each is by using it and then **building your own**. The tutorial is the walk-through; the pages themselves are described in [BI_GUIDE.md](BI_GUIDE.md) (read its sections 2 to 4 first if you have never opened BI), and the references are [DATASETS.md](DATASETS.md), [REPORTS.md](REPORTS.md), [BOARDS.md](BOARDS.md) and [BI_GOVERNANCE.md](BI_GOVERNANCE.md).
+
+**Start here, in this order.** Chapter 0 sets up a server, a console and four people (about ten minutes). Then:
+
+| Chapters | You learn | Minutes |
+|---|---|---|
+| 1 to 5 | what a **dataset** is: open the three stored ones, read the model, run preview queries, see relationships across packs, a rollup, nested arrays | 30 |
+| 6 to 9 | change a measure in a copy of your own, see an invalid dataset refused, start a model from the packs, row rules and masks with two users, a phone | 30 |
+| 10 to 12 | what a **report** is: open the three stored ones, click, drill down, drill through, matrices, row rules at work | 20 |
+| 13 to 16 | **build** a report from scratch in the designer, draw a relationship in the Model view, a report on a phone, what to read next | 40 |
+| 17 | **publish and govern**: saved states, review, certification, lineage, impact, bundles (its own small stack) | 30 |
+| 18, 19 | the **streaming** half: a live dataset, a report that redraws as the trades tick, a Perspective grid and pivot, a wall of live tiles for a screen | 30 |
+
+Every output below was captured from a real server (the pictures and numbers of chapters 1 to 9 by `drishti-console/tests/bi_data_shots.py`, 10 to 15 by `bi_report_shots.py`, 17 by `bi_gov_shots.py`, 18 and 19 by `bi_live_shots.py`) over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit), except where a chapter says its data differs. Your numbers are the same for chapters 1 to 15 if you build the lake as chapter 0 says.
 
 | Sample | What it teaches | Tables |
 |---|---|---|
@@ -33,24 +42,39 @@ captured from a real server over a generated Delta lake (750 trades a day, three
 | `counterparty-risk` | a cross-pack report: a top-10 filter, report-wide slicers, drill-through to a page about one counterparty, row rules and masks at work | `trading-risk` |
 | `cashflow-ladder` | deep trades: a date hierarchy to drill from year to day, a matrix over legs | `trading-cashflows` |
 
-They are marked `sample: true`: with **Admin, Packs, hide samples** set to developers-only or hidden, business users do not see them (as with sample packs).
+The live ones (`live-trading`, `live-exposure`, the reports **Live trading desk** and **Live exposure**, the board **Desk wall**) are chapters 18 and 19. All are marked `sample: true`: with **Admin, Packs, Hide samples from business users** (or *from everyone*), business users do not see them (as with sample packs).
 
 ## 0. Set up
 
+From the repository root, after `./mvnw -q package -DskipTests` (the server jar) and `pip install -r drishti-console/requirements.txt` (or a venv, [QUICKSTART.md](QUICKSTART.md)):
+
 ```
 uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta --days 3
-DRISHTI_PACKS=trading,counterparty-risk DRISHTI_SECURITY_ENABLED=true DRISHTI_TOKEN_SECRET=... java -jar drishti-server/target/drishti-server-*-exec.jar
+export DRISHTI_PACKS=trading,counterparty-risk DRISHTI_SECURITY_ENABLED=true DRISHTI_TOKEN_SECRET=change-me-to-a-long-random-string-0123456789
+java -jar drishti-server/target/drishti-server-*-exec.jar
+```
+
+and, in a second terminal, the console with sign-in on (the same token secret, and a session secret):
+
+```
+export DRISHTI_AUTH_ENABLED=true DRISHTI_TOKEN_SECRET=change-me-to-a-long-random-string-0123456789 DRISHTI_SESSION_SECRET=another-long-random-string-0123456789abcd
 python drishti-console/run_drishti_web.py
 ```
 
-Create four people in **Admin, Users** (or let `drishti-console/tests/bi_data_stack.py` do it, as it does for the pictures here): `wes` with a role holding `bi` and `bi-author`;
-`rita` with a role named **`risk`** (`bi`, and the **raw** power); `hana` with a role named **`desk-head`** (`bi`, raw) and **desk `DESK-FX`** on her profile; `ann` with a role named
-**`analyst`** (`bi`, *no* raw). The role names matter: the dataset's row rules name them. Assign them the `trading` and `counterparty-risk` packs.
+Open http://localhost:17480 and sign in as `drishti-dev-admin` with `drishti-dev-admin123` (change it later; [GETTING_STARTED.md](GETTING_STARTED.md)). The server reads `data/delta` by default, and `config/bi` is the BI folder, so the five datasets are there already. (The numbers in this tutorial were made on other ports and in a scratch folder; yours are the same.)
+
+Now make four people. The role names matter: the dataset's row rules name them.
+
+1. **Admin, Roles, New role**, four times: `bi-writer`, `risk`, `desk-head` (name, tick **Opens every kind** and **See every field unmasked**, the raw power), and `analyst` (**Opens every kind**, *not* raw).
+2. **Admin, BI settings**: in the table of roles tick `bi` for `risk`, `desk-head` and `analyst`, and `bi` and `bi-author` for `bi-writer`, pressing **Save** on each row.
+3. **Admin, Users, New user**, four times: `wes` with role `bi-writer`; `rita` with `risk`; `hana` with `desk-head` and **Desk** `DESK-FX`; `ann` with `analyst`. Give each the password `long-enough-pass-1`, untick *Must change at first sign-in*, and leave the packs ticked.
+
+So: **wes** writes (`bi`, `bi-author`, raw), **rita** is risk (`bi`, raw), **hana** is a desk head (`bi`, raw, desk `DESK-FX`) and **ann** is an analyst (`bi`, *no* raw). (`drishti-console/tests/bi_data_stack.py` does exactly this by API, which is how the pictures here were made.) Sign in as `wes` for chapters 1 to 15, switching to the others where a chapter says so; use a second browser or a private window to be two people at once.
 
 ## 1. Open the catalogue and the datasets
 
-Type `BI <GO>` (or `RUPAKA <GO>`) and choose **Datasets** in the rail, or open the catalogue and filter by kind **dataset**. The three samples show as *promoted* and *sample*.
-As an author (`wes`) the page also offers **Start a model from the packs** (step 8).
+Type `BI <GO>` (or `RUPAKA <GO>`) in the command line, or choose **BI** in the top bar, then **Datasets** in the rail. The five samples show as *promoted* and *sample* (the first three are chapters 2 to 5; the two live ones are chapter 18).
+As an author (`wes`) the page also offers **Start a model from the packs** (chapter 8).
 
 ![the datasets page](img/bi-datasets/datasets-list.png)
 
@@ -186,8 +210,8 @@ leg, and the server refuses (`DRS-9020`). Because arrays cannot come from promot
 
 Shipped files are read-only. Copy one and edit the copy, which is private to you until you publish it.
 
-1. In **My workspace** choose **New item**, kind **dataset**, title *My copy*, and paste the YAML of `trades-basic` into the body (or `POST /api/v1/bi/workspaces/me/items`).
-2. Change a measure, for example add `Big trades: { expr: "sum(trade.notional, trade.notional > 100000000)" }`, and **Save draft**.
+1. In **My workspace** (rail) fill **New item**: kind **dataset**, title *My copy*, **Create item** (or `POST /api/v1/bi/workspaces/me/items`). The item's page opens with an empty body: press **Edit** and paste the YAML of `trades-basic` (from `config/bi/datasets/`) into **Body (YAML)**, changing `dataset: trades-basic` to `dataset: my-copy`.
+2. Change a measure, for example add `Big trades: { expr: "sum(trade.notional, trade.notional > 100000000)" }` under `measures:`, write a note in *What changed*, and press **Save draft** (*Draft saved.*).
 3. Open the item, then **Open the model and run a query**. The draft is validated as you open it (`POST /api/v1/bi/datasets/validate` does the same with no item). A mistake, say `sum(trade.nope)`, is `DRS-9011` with the path
    `measures.Big trades` and the columns the table does have.
 4. Run *Big trades* by `trade.desk`. Another person cannot open your draft (`404 DRS-9001`); publish it to a shared workspace (with review, if the workspace asks) and it appears in the catalogue. Publishing an invalid dataset is refused.
@@ -463,12 +487,12 @@ At 390 px a report is one column in reading order, the buttons are 44 px, and no
 
 ## 16. What to look at next
 
-The engine's counters and limits (`GET /api/v1/bi/engine`, BI administrators): in this walk-through 17 queries, 1 cache hit, 9 layer builds, answered `columns` 12 and `rollup` 1. Reports, the designer and the Model view are phase 3 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.3: what is built and what is not). Publishing and lineage are phase 4 (chapter 17), live tables, Perspective and boards phase 5 (chapters 18 and 19).
+The engine's counters and limits (`GET /api/v1/bi/engine`, BI administrators): after this walk-through the counters count queries, cache hits, layer builds and the layer that answered (`columns`, `rollup`). Reports, the designer and the Model view are phase 3 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.3: what is built and what is not). Publishing and lineage are phase 4 (chapter 17), live tables, Perspective and boards phase 5 (chapters 18 and 19); Python, distribution and the analyst workbench are planned (phases 6, 7 and 9: [BI_GUIDE.md section 11](BI_GUIDE.md#11-built-and-not-built)).
 What is not built yet for datasets is listed in [DATASETS.md section 10](DATASETS.md#10-what-is-not-built), for reports in [REPORTS.md section 12](REPORTS.md#12-built-and-not-built).
 
 ## 17. Publish and govern: versions, review, certification, impact, environments
 
-Chapters 1 to 16 were about building. This one is about letting other people rely on what you built. It uses a small stack of its own: the trading pack with a 120-trade lake, a workspace *Rates Desk*, a published and certified dataset *Trades model* and a published and certified report *Trades report* on it, and four people: **ann** writes, **sue** is a steward, **root** is an administrator, **cat** reads. Every output is real.
+Chapters 1 to 16 were about building. This one is about letting other people rely on what you built. It uses a small stack of its own, made by `drishti-console/tests/bi_gov_stack.py`: the trading pack with a 120-trade lake, a shared workspace *Rates Desk*, a published and certified dataset *Trades model* (a copy of `trades-basic`) and a published and certified report *Trades report* on it, and four people: **ann** writes (`bi`, `bi-author`), **sue** is a steward (`bi`, `bi-steward`), **root** is an administrator, **cat** reads (`bi`). Every output is real. To follow along on your chapter 0 stack, make the same people with those powers (chapter 0, steps 1 to 3), create the workspace in **Workspaces**, copy `trades-basic` into it as *Trades model* and publish it, design *Trades report* on it (a card, a bar by `trade.desk` and a table of `trade.desk`, `trade.book`, MTM; chapter 13), publish it, and have **sue** certify both; the YAML bodies the pictures used are at the top of `bi_gov_stack.py`. Your ids, times and row counts will differ.
 
 ### 17.1 Save twice, compare, restore
 
@@ -641,8 +665,8 @@ The reference for all of this, with what is not built, is [BI_GOVERNANCE.md](BI_
 ## 18. A live desk: a dataset, a report and a Perspective grid that follow the trades
 
 Everything so far read data **as it was** when a layer was built. Phase 5 adds data **as it is**: a `mode: live` table that the engine keeps in memory and updates as the source pushes changes. This chapter uses the shipped samples `live-trading` (dataset) and
-**Live trading desk** (report) over the demo source, whose 360 live trades tick in a batch about twice a second (a few hundred row changes a second). They need no lake: set up the server as in chapter 0 (the `trading` and `counterparty-risk` packs are enough; the default demo source ticks) and sign in as `rita` (`bi`, raw) and `ann` (`bi`, no raw).
-The pictures were made by `drishti-console/tests/bi_live_shots.py` (ports 18995 and 17995).
+**Live trading desk** (report) over the demo source, whose 360 live trades tick in a batch about twice a second (a few hundred row changes a second). They need no lake of their own: the stack of chapter 0 works as it is (the live table follows the `trade` kind and the demo source changes 360 of the 750 trades in every batch, every 400 ms by default; the pictures were made with `--drishti.sources.plugins.demo.settings.tick-ms=200` for a livelier chart). Sign in as `rita` (`bi`, raw) and `ann` (`bi`, no raw).
+The pictures were made by `drishti-console/tests/bi_live_shots.py`.
 
 ### 18.1 The dataset
 
@@ -673,10 +697,10 @@ Under *Layers* the table has no dates on disk: it says how the in-memory table i
 The same, from the API (`GET /api/v1/bi/datasets/file:dataset:live-trading/layers`, a minute after the first query):
 
 ```json
-{"table": "trade", "mode": "live", "partitions": [], "live": {"state": "live", "rows": 750, "entities": 750, "subscribed": 360, "pushes": true, "seq": 34943, "epoch": 0, "applied": 34943, "skipped": 7, "evicted": 0, "deleted": 0, "error": null, ...}}
+{"table": "trade", "mode": "live", "partitions": [], "live": {"state": "live", "rows": 750, "entities": 750, "subscribed": 750, "pushes": true, "seq": 38239, "epoch": 0, "applied": 38239, "skipped": 8, "evicted": 0, "deleted": 0, "error": null, ...}}
 ```
 
-750 entities followed, 360 of them **push** (the demo source ticks its live samples; the other 390 are static), 34,943 row writes so far, 7 skipped because the values did not change. A table starts on first use and is closed after ten idle minutes ([DATASETS.md 7.1](DATASETS.md#71-live-tables-phase-5)).
+750 entities followed and subscribed (the demo source changes 360 of them in every batch), 38,239 row writes so far, 8 skipped because the values did not change. A table starts on first use and is closed after ten idle minutes ([DATASETS.md 7.1](DATASETS.md#71-live-tables-phase-5)).
 
 ### 18.2 The report
 
@@ -686,7 +710,7 @@ Open **Catalogue, Live trading desk**. Above the pages is the live indicator, an
 
 What to look at:
 
-* **The indicator** (*Live*, *Last update 07:49:57*): the time the table last changed. Press **Pause**: the pictures hold, the word says *Paused*, the server keeps ticking; **Resume** catches up at once.
+* **The indicator** (*Live*, *Last update 13:17:39*): the time the table last changed. Press **Pause**: the pictures hold, the word says *Paused*, the server keeps ticking; **Resume** catches up at once.
 
 ![Live, then paused](img/bi-live/live-indicator.png) ![Paused](img/bi-live/live-paused.png)
 
@@ -715,7 +739,7 @@ Its first read is the rows as **masked Apache Arrow** (`POST .../query?format=ar
 ```
 as ann   columns: tradeId, desk, book, productType, currency, direction, trader, notional, mtm, pnl1d, id, updateSeq     masked: ["trader"]
          ["BBG-60000001","DESK-FI","BOOK-FI-3","GOVT_BOND","CHF","Short","•••",198000000.0,-978378.0,-23374.0,"BBG-60000001",1]
-as rita  state: {"since": 34943}  ->  rowCount: 360 (every updateSeq above 34943)
+as rita  state: {"since": 38239}  ->  rowCount: 360 (every updateSeq above 38239)
 ```
 
 ![The same grid for ann: the trader column reads the mask](img/bi-live/perspective-grid-masked.png)

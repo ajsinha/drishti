@@ -18,7 +18,7 @@ test: run it by hand).
     drishti-console/.venv/bin/python drishti-console/tests/bi_live_shots.py <pictures dir> <captures.json>
 
 Ports 18995 (server) and 17995 (console), a scratch directory, the shipped live samples over the demo source ticking every 200 ms (750 trades of which 360 tick, 66 netting sets).
-Pictures are desktop (1400 px) and the phone (390 px)."""
+Pictures are desktop (1600 px: the top bar needs it) and the phone (390 px)."""
 import json
 import sys
 import tempfile
@@ -33,7 +33,7 @@ from bi_live_stack import BOARD, CONSOLE_URL, EXPOSURE, PASSWORD, REPORT
 
 
 def sign_in(browser, user="rita", **ctx):
-    context = browser.new_context(**{"viewport": {"width": 1400, "height": 900}, **ctx})
+    context = browser.new_context(**{"viewport": {"width": 1600, "height": 900}, **ctx})
     page = context.new_page()
     page.goto(CONSOLE_URL + "/login?next=/bi")
     page.fill("#lu", user)

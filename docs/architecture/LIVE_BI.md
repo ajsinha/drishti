@@ -57,13 +57,13 @@ Contents
 | **Producer** | The system that computes results: Pravaha, Flink, ksqlDB, Materialize, a custom BI server, a batch job that republishes. Drishti never runs inside it. |
 | **Result row** | One keyed output row of a producer's query: a desk's exposure, a region's sales today, one cell row of a pivot. It has an identity that does not change while its values do. |
 | **Result kind** | A Drishti kind whose entities are result rows (`desk-exposure`, `region-sales`). It lives in a pack like any other kind. |
-| **Board** | A live list of many result rows of one kind, sorted and cut to a top N (proposed, section 7.2). |
+| **Board** | A live list of many result rows of one kind, sorted and cut to a top N (proposed, section 7.2; not the board of tiles Rūpaka built in phase 5). |
 | **Members** | The input records a result row summarises (the trades behind a desk's exposure). |
 | **Generation** | The producer's own version of its output (a commit number, a checkpoint id, a watermark); it says which input a row reflects. |
 
 ## 2. What Drishti already does
 
-Everything here exists in 1.18 and is reused, not rebuilt.
+Everything here exists (since 1.18, and in 1.20 as shipped) and is reused, not rebuilt. Rūpaka phase 5 added to it a live table inside the BI engine ([RUPAKA.md](RUPAKA.md) section 20.5), which this note does not need but can feed.
 
 | Capability | What it gives BI | Where |
 |---|---|---|
@@ -245,6 +245,8 @@ lists as tables, `members` as a link). The four reference panels for BI already 
 matrix. Nothing new is needed.
 
 ### 7.2 A board: a live list of many rows (proposed)
+
+*Naming:* Rūpaka's **board** (phase 5, built: [BOARDS.md](../guides/BOARDS.md)) is a wall of tiles, each one visual of a report, and is a different thing from the board of this section, a live sorted list of many result rows of one kind. This one is still only proposed; if it is built it will need a name of its own (the name "board" is taken).
 
 Monitors stream up to 50 named entities and only their strips. BI needs more: *all* rows of a kind (or those matching
 a predicate), sorted by a field, cut to the top N, with rows entering and leaving as values change. Proposal:

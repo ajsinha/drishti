@@ -12,9 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# SAMPLE 3 of 3: a nested model. A trade document holds ARRAYS: its legs and its payment schedule. A table with `each:` has one row
+# STORED SAMPLE 3 of 3: a nested model. A trade document holds ARRAYS: its legs and its payment schedule. A table with `each:` has one row
 # per array element, so legs and cashflows become tables in their own right, one-to-many from the trade.
-# Tutorial: docs/guides/BI_TUTORIAL.md. Reference: docs/guides/DATASETS.md.
+# Tutorial: docs/guides/BI_TUTORIAL.md, chapter 5. Reference: docs/guides/DATASETS.md.
 
 rachana: 1
 dataset: trading-cashflows

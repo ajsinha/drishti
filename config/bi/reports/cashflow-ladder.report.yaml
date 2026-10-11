@@ -15,7 +15,7 @@
 # SAMPLE REPORT 3 of 3: "Cashflow ladder". Deep trades: each trade document holds a list of legs and a payment schedule, and the dataset trading-cashflows
 # makes both of them tables (`each: legs`, `each: schedule`). This report lays the scheduled cashflows out by pay date (click a column's drill button to go
 # from year to quarter to month to day) and shows the legs as a matrix.
-# Reference: docs/guides/REPORTS.md.
+# Tutorial: docs/guides/BI_TUTORIAL.md, chapter 12. Reference: docs/guides/REPORTS.md.
 
 rachana: 1
 report: cashflow-ladder

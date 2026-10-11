@@ -40,7 +40,7 @@ MARK = """([vis, category]) => {
 
 
 def sign_in(browser, user, next_path="/bi", **ctx):
-    context = browser.new_context(**{"viewport": {"width": 1400, "height": 900}, **ctx})
+    context = browser.new_context(**{"viewport": {"width": 1600, "height": 900}, **ctx})
     context.add_init_script(VIOLATIONS)
     page = context.new_page()
     errors = []

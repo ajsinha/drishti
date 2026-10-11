@@ -15,7 +15,7 @@
 -->
 # Boards: a wall of live tiles
 
-A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. Each tile is one visual of a report; the board lays them out, keeps them up to date as the data ticks, turns its pages by itself in **kiosk** mode, and colours a tile amber or red when its number crosses a threshold. This is the reference for boards in Rūpaka **phase 5**. For the live tables behind them see [DATASETS.md](DATASETS.md#71-live-tables-phase-5); for the visuals see [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5); for the pages see [BI_GUIDE.md](BI_GUIDE.md) section 18; for a walk-through with pictures see [BI_TUTORIAL.md](BI_TUTORIAL.md) chapters 18 and 19; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 12 and what is built is its section 20.5.
+A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. Each tile is one visual of a report; the board lays them out, keeps them up to date as the data ticks, turns its pages by itself in **kiosk** mode, and colours a tile amber or red when its number crosses a threshold. This is the reference for boards in Rūpaka **phase 5**. For the live tables behind them see [DATASETS.md](DATASETS.md#71-live-tables-phase-5); for the visuals see [REPORTS.md](REPORTS.md#13-live-visuals-and-perspective-phase-5); for the pages see [BI_GUIDE.md](BI_GUIDE.md) section 18 (and section 1 for the whole picture); for a walk-through with pictures see [BI_TUTORIAL.md](BI_TUTORIAL.md) chapters 18 and 19; the design is [RUPAKA.md](../architecture/RUPAKA.md) section 12 and what is built is its section 20.5.
 
 ## Contents
 
@@ -103,7 +103,7 @@ Thresholds are compared with the value the reader's own query returns, so a read
 
 ## 5. The viewer, kiosk and rotation
 
-Open a board at `/bi/b/<id>` (from the item page: **Open the board**; `BI` menu, Catalogue; or by typing the address). The page has the title, the **pages as tabs**, previous and next buttons, the **live indicator** with Pause and Resume ([BI_GUIDE.md](BI_GUIDE.md#18-live-reports-and-boards-phase-5)) and the **Kiosk** button.
+Open a board at `/bi/b/<id>` (from the catalogue, then the item page's **Open the board**; `BI desk wall <GO>` opens that item page; or type the address). The page has the title, the **pages as tabs**, previous and next buttons, the **live indicator** with Pause and Resume ([BI_GUIDE.md](BI_GUIDE.md#18-live-reports-and-boards-phase-5)) and the **Kiosk** button.
 
 ![The Desk wall: two tiles amber, the rest live](img/bi-live/board-wall.png)
 
@@ -191,7 +191,7 @@ The tiles' data comes from the report endpoints (`POST /api/v1/bi/reports/{id}/q
 * **Notifications from a board or a tile** (email, chat, webhook): phase 7. `notify:` is refused (`DRS-9053`), not ignored.
 * **A designer for boards**: edit the YAML (the item's Edit form, or the file); the report designer does not place tiles.
 * **Interaction between tiles** (clicking a mark filters other tiles), slicers on a board, drill-down and drill-through from a tile.
-* **Lineage and impact for boards**: a report change that removes a visual a board uses is found when the board is read (the tile says so), not at the report's publish; boards are not in the lineage panel or in bundles.
+* **Lineage and impact for boards**: a report change that removes a visual a board uses is found when the board is read (the tile says so), not at the report's publish; boards are not in the lineage panel. A board item can be put in a bundle (by name, or with its workspace), but the reports it shows are not added as dependencies and its body is not checked on import: export the reports with it ([BI_GOVERNANCE.md section 7](BI_GOVERNANCE.md#7-environments-bundles)).
 * **Per-tile refresh settings**: a board redraws its live tiles together, at the console's `min_interval_ms`.
 * **A tile of a report that has no live table** is drawn once; it is not re-read on a timer.
 * **Per-screen layouts**: a phone stacks the grid in reading order; there are no different layouts per device.

@@ -126,7 +126,7 @@ class DataStack:
         work = self.tmp / "server"
         bi = work / "config" / "bi" / "datasets"
         bi.mkdir(parents=True)
-        wanted = ["trades-basic"] if not self.delta_root else ["trades-basic", "trading-risk", "trading-cashflows"]
+        wanted = ["trades-basic"] if not self.delta_root else ["trades-basic", "trading-risk", "trading-cashflows", "live-trading", "live-exposure"]   # every shipped sample, as a learner sees them
         for name in wanted:
             shutil.copy(ROOT / "config" / "bi" / "datasets" / f"{name}.dataset.yaml", bi)
         env = dict(os.environ, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_SECURITY_ENABLED="true", DRISHTI_TOKEN_SECRET=SECRET,

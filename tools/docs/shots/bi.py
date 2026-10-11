@@ -49,7 +49,7 @@ def sign_in(c: Ctx, user: str, password: str = "long-enough-pass-1", to: str = "
 
 
 def desktop(c: Ctx, height: int = 900) -> None:
-    c.page.set_viewport_size({"width": 1440, "height": height})
+    c.page.set_viewport_size({"width": 1600, "height": height})
 
 
 def phone(c: Ctx, user: str, to: str, name: str, full: bool = False) -> None:
@@ -90,7 +90,7 @@ def menu(c: Ctx):
     c.page.goto(c.base + "/bi")
     c.page.locator("button:has-text('BI')").first.click()
     c.page.wait_for_timeout(500)
-    c.save("02-bi-menu.jpg", clip={"x": 0, "y": 0, "width": 1440, "height": 420})
+    c.save("02-bi-menu.jpg", clip={"x": 0, "y": 0, "width": 1600, "height": 420})
 
 
 @shot("03-keyword.jpg")
@@ -100,7 +100,7 @@ def keyword(c: Ctx):
     c.page.fill("#cmdInput", "rupaka ")
     c.page.locator("#cmdList li").first.wait_for()
     c.page.wait_for_timeout(500)
-    c.save("03-keyword.jpg", clip={"x": 0, "y": 0, "width": 1440, "height": 420})
+    c.save("03-keyword.jpg", clip={"x": 0, "y": 0, "width": 1600, "height": 420})
     c.page.fill("#cmdInput", "")
 
 
@@ -158,12 +158,12 @@ def review(c: Ctx):
     c.page.click('[data-actions] button:text-is("Propose for review")')
     c.page.locator("[data-badges]:has-text('proposed')").wait_for()
     c.page.wait_for_timeout(400)
-    c.save("08-review.jpg", clip={"x": 0, "y": 150, "width": 1440, "height": 520})
+    c.save("08-review.jpg", clip={"x": 0, "y": 150, "width": 1600, "height": 520})
     sign_in(c, "bob", to="/bi")
     c.page.goto(url)
     c.page.locator('[data-actions] button:has-text("Approve")').wait_for()
     c.page.fill(".bi-note", "Checked against the trades pack")
-    c.save("09-approve.jpg", clip={"x": 0, "y": 150, "width": 1440, "height": 520})
+    c.save("09-approve.jpg", clip={"x": 0, "y": 150, "width": 1600, "height": 520})
     c.page.click('[data-actions] button:has-text("Approve")')
     c.page.locator("[data-meta]:has-text('published v1')").wait_for()
     c.page.request.put(c.base + "/bi/api/workspaces/rates-desk", data='{"reviewRequired": false}', headers={"Content-Type": "application/json"})

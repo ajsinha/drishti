@@ -15,30 +15,37 @@
 -->
 # config/bi: where Drishti Rūpaka (business intelligence) files live
 
-This folder is the one home of BI content. It is read by the server and the console from `drishti.bi.dir`
+This folder is the one home of BI content shipped with a site. It is read by the server and the console from `drishti.bi.dir`
 (environment variable `DRISHTI_BI_DIR`, default `./config/bi`). BI files are never placed inside a pack: a pack
 describes data (Sutras, links, vocabulary); BI content may combine kinds from many packs and is deployed on its own.
 
 ```
 config/bi/
-  datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures; queried since phase 2 (three commented samples ship here)
-  reports/    <id>.report.yaml    pages of visuals over a dataset: filters, bookmarks, drill-through, theme; drawn since phase 3 (three commented samples ship here)
-  boards/     <id>.board.yaml     a live board (stored in phase 1, not run)
-  notebooks/  <id>.notebook.yaml  an analyst notebook (stored in phase 1, not run)
-  python/                         typed Python implementations (transforms, measures, visuals) and their manifests and tests
+  datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures, row rules and masks; queried since phase 2
+                                  (five commented samples ship: trades-basic, trading-risk, trading-cashflows, and the live live-trading and live-exposure)
+  reports/    <id>.report.yaml    pages of visuals over a dataset: filters, bookmarks, drill-through, theme; drawn since phase 3
+                                  (five commented samples: trades-overview, counterparty-risk, cashflow-ladder, live-trading-desk, live-exposure)
+  boards/     <id>.board.yaml     a wall of live tiles from several reports, with alerts and kiosk mode; drawn since phase 5 (one commented sample: desk-wall)
+  notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9)
+  python/                         typed Python implementations (transforms, measures, visuals) and their manifests and tests (phase 6: not built, the folder is reserved)
 ```
 
-See `docs/architecture/RUPAKA.md` (sections 6, 8 and 13, and "Where BI files live") for the formats, and
-`docs/architecture/RUPAKA_POC.md` for what the phase 0 proof of concept does with this folder today (it lists the
-dataset files it finds). Phase 1 reads the four kinds of file as read-only, published items of the catalogue (workspace "Shipped content"): the keys `title`, `description`,
-`owner`, `tags`, `endorsement` (none, promoted, certified) and `audience` (`roles`, `users`, `packs`) describe the entry, and the whole file is its body (stored, not run).
+Every file is a **published, read-only item of the catalogue** (workspace "Shipped content", id `file:<kind>:<name>`). The keys `title`, `description`, `owner`, `tags`, `endorsement` (none, promoted,
+certified), `audience` (`roles`, `users`, `packs`) and `sample` describe the catalogue entry; the whole file is its body. The samples are marked `sample: true`, so *Admin, Packs, Hide samples* hides them from business users, as it hides sample packs.
+
 The folder is **watched live** (`drishti.bi.watch`: auto, poll, off): add a file and it appears, change it and it becomes the next version, delete it and it goes; a file that
-does not parse keeps its last good version and shows as a problem in Admin, BI settings and on Health. No restart. See `docs/guides/BI_GUIDE.md`.
+does not parse keeps its last good version and shows as a problem in Admin, BI settings and on Health. No restart. The folders may be empty: nothing here is required for the rest of Drishti to run.
+The layers a dataset builds are written to the BI store (`drishti.bi.query.store-dir`, `./data/bi-store`), never into this folder.
 
-The folders may be empty: nothing here is required for the rest of Drishti to run.
+Where to read more, in the order a newcomer wants it:
 
-**Datasets** (`datasets/*.dataset.yaml`) are parsed, validated and **queried** since phase 2: see `docs/guides/DATASETS.md` for the format, `docs/guides/BI_TUTORIAL.md` for a walk-through of the three samples in this folder (`trades-basic`, `trading-risk`, `trading-cashflows`, each marked `sample: true` so the sample-visibility setting can hide them), and
-`docs/guides/BI_GUIDE.md` section 13. A dataset that does not parse keeps its last good version and is reported; the layers it builds are written to the BI store (`drishti.bi.query.store-dir`, `./data/bi-store`), never into this folder.
+| For | Read |
+|---|---|
+| a tour of the pages and a walk-through with the samples in this folder | [docs/guides/BI_GUIDE.md](../../docs/guides/BI_GUIDE.md) (start here), [docs/guides/BI_TUTORIAL.md](../../docs/guides/BI_TUTORIAL.md) |
+| the dataset format (`datasets/`) | [docs/guides/DATASETS.md](../../docs/guides/DATASETS.md) |
+| the report format (`reports/`): a report names its dataset with `dataset:` (a catalogue id, a file name such as `trades-basic`, or the dataset's name) | [docs/guides/REPORTS.md](../../docs/guides/REPORTS.md) |
+| the board format (`boards/`) | [docs/guides/BOARDS.md](../../docs/guides/BOARDS.md) |
+| publishing, review, certification and moving content between servers | [docs/guides/BI_GOVERNANCE.md](../../docs/guides/BI_GOVERNANCE.md) |
+| the design and what each phase built | [docs/architecture/RUPAKA.md](../../docs/architecture/RUPAKA.md) (sections 6, 8 and 13, "Where BI files live", and section 20) |
 
-**Reports** (`reports/*.report.yaml`) are parsed, validated against their dataset and **drawn** since phase 3: see `docs/guides/REPORTS.md` for the format and `docs/guides/BI_TUTORIAL.md` (chapters 10 to 15) for a walk-through of the three samples in this folder (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, each marked `sample: true`) and for building one in the designer.
-A report names its dataset with `dataset:` (a catalogue id, a file name such as `trades-basic`, or the dataset's name). The folder is watched live: edit a sample and the next open of the report shows it. A report that does not parse keeps its last good version and is reported.
+Edit a sample and the next open shows it. To keep your own version of a sample, copy it to a workspace item (*Save a copy* in the Model view for a dataset or in the designer for a report, or *New item* in My workspace) rather than editing the shipped file.

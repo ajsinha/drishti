@@ -17,7 +17,7 @@
     drishti-console/.venv/bin/python drishti-console/tests/bi_report_shots.py <pictures dir> <captures.json>
 
 Ports 18990 (server) and 17990 (console), a scratch directory, the three sample datasets and the three sample reports over a small Delta lake (made with
-tools/packgen/banking/make_data.py --lake, or DRISHTI_BI_DELTA_ROOT). Pictures are desktop (1400 px) and the phone (390 px). It builds the tutorial's report
+tools/packgen/banking/make_data.py --lake, or DRISHTI_BI_DELTA_ROOT). Pictures are desktop (1600 px: the top bar needs it) and the phone (390 px). It builds the tutorial's report
 from scratch with the designer, so the pictures show the real steps."""
 import json
 import sys
