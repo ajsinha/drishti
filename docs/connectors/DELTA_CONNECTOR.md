@@ -938,7 +938,7 @@ connectors:
 ```
 
 `config/packs/finance/pack.yaml` declares its lake without `kinds`, so it serves every table it finds:
-`finance-lake: { plugin: delta, enabled: ${DRISHTI_LAKE_ENABLED:true}, settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: finance, lookback-days: 10 } }`.
+`finance-lake: { plugin: delta, enabled: "${DRISHTI_LAKE_ENABLED:true}", settings: { root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", domain: finance, lookback-days: 10 } }`.
 
 **Site form**, your own domain, as the connector file `config/connectors/treasury-lake.yaml`:
 
