@@ -274,7 +274,7 @@ misreading old files; `description`, `notes` and a per-panel `description` carry
 `<name>.v<N>.sutra.yaml` and are found by scanning, recursively, the site directories (`drishti.rachana.dirs`, default `./sutras`) and every enabled
 pack's `sutras/` folder (`config/packs/<pack>/sutras/<area>/…`). `SutraBuilder` validates each one at load against the panel
 kinds' required and allowed options and reports problems with line and column (codes `DRS-2001`, `DRS-2002`; the
-detailed checks are 2009–2027). Any other file in a Sutra folder (a `.sutra.md` from before 1.11, a plain `.yaml`)
+detailed checks are 2009–2012 and 2020–2039; the About files add 2040–2047, search forms 2060). Any other file in a Sutra folder (a `.sutra.md` from before 1.11, a plain `.yaml`)
 is reported as `DRS-2004` with the fix. Because the grammar is plain YAML, `RachanaSchema` generates a JSON Schema of
 it from `PanelKind`, the formats and the served kinds, served at `GET /api/v1/rachana/schema`; Studio's editor and
 any schema-aware editor complete and check Sutras with it. With `hot-reload` on, a `WatchService` reloads changed files (debounced 250 ms); an
