@@ -18,7 +18,7 @@
 
 Real public economic data for about 200 economies: output, growth, prices, jobs, debt and external balance (World Bank, IMF, CIA World Factbook), IMF forecasts, and World Bank regions and income groups.
 
-The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0), the IMF World Economic Outlook (reuse with attribution), and the CIA World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` (see docs/guides/REAL_DATA.md).
+The figures are published data, not samples: World Bank World Development Indicators (CC BY 4.0), the IMF World Economic Outlook (reuse with attribution), and the CIA World Factbook (public domain). Every document names its source, dataset, retrieval date and licence in its Data source panel. An economy links to its region and income group, labour market, fiscal position, IMF forecast and its headline indicators; the groups link back to their economies. Refresh with `tools/realdata/realdata.py` (see docs/guides/REAL_DATA.md). The IMF figures (the forecasts, and the debt and net lending behind each fiscal position) are for **internal demonstrations only**: the IMF requires its permission for commercial use, so raise it before any client or external use (docs/guides/REAL_DATA.md, licence note).
 
 **Extends:** nothing · **Kinds:** 6
 
@@ -34,6 +34,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `ECON <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `ECON <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `ECON <GO>` | Lists every economy. |
+| `FORM economics <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `ECO <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## Where the data comes from
 
@@ -99,3 +101,7 @@ A World Bank region or income group (or the world): output, population, growth a
 **Fields its Sutra reads:** `name`, `groupType`, `economies`, `gdpUsdBn`, `gdpPerCapita`, `populationM`, `growth`, `growthPath`, `topEconomies`, `gdpPath`, `provenance`.
 
 **Links:** `memberEconomies` → Economies (`economy`).
+
+## Who can see it
+
+Role `economist`: kinds `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `country-group`, raw JSON.

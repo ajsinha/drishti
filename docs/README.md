@@ -22,11 +22,12 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | Folder | What is in it |
 |---|---|
-| [guides/](guides/) | getting started, the user, developer, API and Rachana guides, packs, clients and troubleshooting |
+| [guides/](guides/) | getting started, the user guide, business intelligence (Rūpaka), packs and the command line, the Sutra and Rachana guides, clients, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the connector and plugin guides, a design document per store (Delta Lake, PostgreSQL, Aerospike, files …) and demo data |
 | [admin/](admin/) | running Drishti: operations, configuration, users and roles, performance, and the runbooks |
 | [qa/](qa/) | quality assurance runs: each with its activity logs, findings by severity, and the scripts that reproduce them |
-| [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates), the implementation plan and the decision records (ADRs) |
+| [architecture/](architecture/) | how Drishti is built: the architecture, design notes (inference, live updates, Rūpaka, Elements, collaboration, the AI layer), the implementation plan and the decision records (ADRs) |
+| [requirements/](requirements/), [publications/](publications/) | the reference mockups and logo; the design-and-evidence presentation |
 
 ## If you want to…
 
@@ -36,16 +37,15 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 |---|---|
 | Get it running in ten minutes | [QUICKSTART.md](guides/QUICKSTART.md) |
 | Install and start it with every step explained | [GETTING_STARTED.md](guides/GETTING_STARTED.md) |
-| Tell Drishti a batch of data has landed (API, CLI, Airflow, cron, DishtaYantra), flag late data | [DATA_LOADS.md](guides/DATA_LOADS.md) | why Drishti does not ingest, the load API and CLI, expectations and late data, the Data loads page, the token scope, recipes |
-| Open business intelligence: `RUPAKA <GO>`, the catalogue, workspaces, publish and review, certify | [BI_GUIDE.md](guides/BI_GUIDE.md) | what phases 1 and 2 build (and not), the BI menu and keyword, the four powers, workspace roles, items and versions, audiences, shipped files, BI settings, the CLI |
-| Learn BI from three sample datasets on the trades: read a model, query it, row rules and masks, start a model from the packs | [BI_TUTORIAL.md](guides/BI_TUTORIAL.md) | open the catalogue, the three samples, relationships from the packs, rollups, two users and the same query, nested legs and cashflows, a copy with a changed measure; then the three sample reports, building one from scratch in the designer, the Model view, a phone |
-| Write or read a report: pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer, how a visual becomes a query, DRS-9030 to 9035 | [REPORTS.md](guides/REPORTS.md) | the YAML reference, the 24 visuals and their wells, filters and top-N, format, how the page's state becomes a dataset query, what people can do, checking, security, what is not built |
-| Publish BI safely: versions and diffs, review, certification, lineage, impact of a dataset change, bundles between environments, DRS-9040 to 9042 | [BI_GOVERNANCE.md](guides/BI_GOVERNANCE.md) | saved states and published versions, the diff, who reviews and what they see, when certification falls, what impact analysis compares, the bundle and its dry run, the audit actions, what is not built |
-| Build live BI: boards (a wall of live tiles, kiosk, tile alerts), live tables, live visuals, Perspective, DRS-9050 to 9053 | [BOARDS.md](guides/BOARDS.md) | the board file and its tiles, alerts, the viewer and kiosk, who sees what, the checks and their codes, settings, the API, what is not built (live tables: [DATASETS.md](guides/DATASETS.md#71-live-tables-phase-5); live visuals and Perspective: [REPORTS.md](guides/REPORTS.md#13-live-visuals-and-perspective-phase-5)) |
-| Write or read a dataset: tables, relationships, measures, the expression language, row rules, masks, layers | [DATASETS.md](guides/DATASETS.md) | the YAML reference, aggregates and functions, security, modes, layers and rollups, the query, DRS-9010 to 9027, what is not built |
-| Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) | the offline path: artifacts and where each goes, `pack bundle|verify|deploy|rollback`, CI, permissions, Docker and Kubernetes, troubleshooting |
-| Install and run it on Windows (PowerShell, no Hadoop) | [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load|landed|loads`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes, running it from PyCharm |
-| [WINDOWS.md](guides/WINDOWS.md) |
+| Tell Drishti a batch of data has landed (API, CLI, Airflow, cron, DishtaYantra), flag late data | [DATA_LOADS.md](guides/DATA_LOADS.md) |
+| Open business intelligence: `RUPAKA <GO>`, the catalogue, workspaces, publish and review, certify | [BI_GUIDE.md](guides/BI_GUIDE.md) |
+| Learn BI from three sample datasets on the trades: read a model, query it, row rules and masks, start a model from the packs | [BI_TUTORIAL.md](guides/BI_TUTORIAL.md) |
+| Write or read a report: pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer, how a visual becomes a query, DRS-9030 to 9035 | [REPORTS.md](guides/REPORTS.md) |
+| Publish BI safely: versions and diffs, review, certification, lineage, impact of a dataset change, bundles between environments, DRS-9040 to 9042 | [BI_GOVERNANCE.md](guides/BI_GOVERNANCE.md) |
+| Build live BI: boards (a wall of live tiles, kiosk, tile alerts), live tables, live visuals, Perspective, DRS-9050 to 9053 | [BOARDS.md](guides/BOARDS.md) |
+| Write or read a dataset: tables, relationships, measures, the expression language, row rules, masks, layers | [DATASETS.md](guides/DATASETS.md) |
+| Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) |
+| Install and run it on Windows (PowerShell, no Hadoop) | [WINDOWS.md](guides/WINDOWS.md) |
 | Run and debug the server in IntelliJ IDEA and the console in PyCharm | [IDE_GUIDE.md](guides/IDE_GUIDE.md) |
 | Build a pack from JSON Lines, check it in CI, load data and drive the Screen Designer's review from a terminal | [CLI_GUIDE.md](guides/CLI_GUIDE.md) |
 | Find your way around the top bar and its menus | [USER_GUIDE.md › The top bar](guides/USER_GUIDE.md#the-top-bar) |
@@ -57,6 +57,9 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Filter a table like Excel: tick values, conditions, dates, top 10 | [USER_GUIDE.md › Filter a table like Excel](guides/USER_GUIDE.md#filter-a-table-like-excel) |
 | Understand what a view is showing you | [USER_GUIDE.md › Reading a view](guides/USER_GUIDE.md#reading-a-view) |
 | Find entities by value (`TRD where mtm > 1m …`) | [USER_GUIDE.md › Search by value](guides/USER_GUIDE.md#search-by-value) |
+| Fill in a form instead of writing a search (`FORM trading <GO>`, the Forms menu) | [USER_GUIDE.md › Search with a form](guides/USER_GUIDE.md#search-with-a-form-form-pack) |
+| Choose what a panel shows with dropdowns, toggles and sliders; read a trade down to its fixings | [USER_GUIDE.md › Controls](guides/USER_GUIDE.md#controls-on-a-screen-choose-what-a-panel-shows), [A deep trade](guides/USER_GUIDE.md#a-deep-trade-legs-cashflows-and-fixings) |
+| Read what is in the economics and politics-society packs, where it comes from and under what licence (IMF data: internal demonstrations only) | [REAL_DATA.md](guides/REAL_DATA.md) |
 | Look at a past date, or compare two dates | [USER_GUIDE.md › Business dates](guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past), [Compare](guides/USER_GUIDE.md#compare-what-changed) |
 | See what depends on an entity (F8) | [Impact guide](../drishti-console/web/guides/impact.md) |
 | Download CSV or JSON, print, or share a link | [USER_GUIDE.md › Export, print and share](guides/USER_GUIDE.md#export-print-and-share) |
@@ -66,6 +69,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Put several views on one screen | [Workspaces guide](../drishti-console/web/guides/workspaces.md) |
 | Change your theme, landing page or password | [USER_GUIDE.md › Your settings](guides/USER_GUIDE.md#your-settings) |
 | Choose which packs you see | [USER_GUIDE.md › Domain packs](guides/USER_GUIDE.md#domain-packs-choosing-what-you-see) |
+| Ask a model about the page you are on (off unless an administrator turns it on); connect model providers and MCP servers | [USER_GUIDE.md › Ask about this page](guides/USER_GUIDE.md#ask-about-this-page-when-your-administrator-has-turned-it-on), [AI_PROVIDERS.md](architecture/AI_PROVIDERS.md), [MCP_CLIENT.md](architecture/MCP_CLIENT.md) |
 | Find the commands for a pack | [PACKS.md › The packs that ship](guides/PACKS.md#the-packs-that-ship), and the pack's own guide under *Help → Domain packs* |
 
 ### Change how screens look
@@ -88,11 +92,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Design of the Screen Builder (JSON files → shape → visual designer → Sutra) | [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) |
 | The Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan | [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) |
 | Design of *About this page*: context-aware help built from the page's data, pack glossaries, the explain API and the plan | [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) |
+| Design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI, and what its phase 0 proof of concept measured | [RUPAKA.md](architecture/RUPAKA.md), [RUPAKA_POC.md](architecture/RUPAKA_POC.md) |
 | Collaboration: share a view with a note, comment threads anchored to the data, the inbox, email, retention and legal hold; the design, what was built and the plan | [COLLABORATION.md](architecture/COLLABORATION.md) |
-| [ELEMENTS.md](architecture/ELEMENTS.md) | you want to know how Drishti Elements will put live views into other web applications without iframes: `<drishti-view>` in a Shadow DOM, HTML over the wire from the console, one connection per page, embed tokens by token exchange (RFC 8693), security, the decisions and the build plan (proposed) |
-| [LIVE_BI.md](architecture/LIVE_BI.md) | you want Drishti as the live front end of a streaming BI producer: the result-stream contract, Kafka with no code, a `bi` plugin, boards, drill-down, consistency (design note) |
-| [RUPAKA.md](architecture/RUPAKA.md) | you want the design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI: the BI page (`RUPAKA <GO>`), datasets, the query engine, reports, the designer, workspaces and catalogue, streaming BI, Python interfaces, AI hooks off by default, build plan (design) |
-| [RUPAKA_POC.md](architecture/RUPAKA_POC.md) | you want what the Rūpaka phase 0 proof of concept built and measured (Perspective live grid, masked Arrow out of DuckDB, DuckDB-Wasm in the browser, CSP with WebAssembly, JSON vs typed vs rollup) and the go / adjust verdict for phase 1 (off by default) |
 | Show Drishti's live views inside another web application without iframes (Drishti Elements: Web Components, embed API, token exchange) | [ELEMENTS.md](architecture/ELEMENTS.md) |
 | Put live BI results (aggregates, pivots, rankings streamed by Pravaha, Flink or a custom BI server) in front of people as live views and boards | [LIVE_BI.md](architecture/LIVE_BI.md) |
 
@@ -100,8 +101,8 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | If you want to… | Read |
 |---|---|
-| Build a pack, from an empty folder to a working view | [REAL_DATA.md](guides/REAL_DATA.md) | you use or refresh the real public data in the economics and politics-society packs: sources, licences, attribution, coverage, the `tools/realdata` tool |
-| [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) |
+| Build a pack, from an empty folder to a working view | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) |
+| Make a pack from JSON Schema files and/or a folder of JSON Lines (Build → New pack, or the command line) | [SCHEMA_TO_PACK.md](guides/SCHEMA_TO_PACK.md) |
 | Load packs, switch them off and on, assign them to users | [PACKS.md](guides/PACKS.md#turning-packs-on) |
 | Generate a full pack from Python (Sutras, samples, guide, lake) | [PACK_DEVELOPER_GUIDE.md › Generators](guides/PACK_DEVELOPER_GUIDE.md) |
 | Define a connector as a file, change it without a restart, manage it in Admin → Connectors | [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) |
@@ -120,7 +121,7 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Deploy, secure and monitor it; keep the lake bounded | [OPERATIONS.md](admin/OPERATIONS.md) |
 | Fix something that is not working | [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md), then the runbooks below |
 | Know how fast it is, and how that is measured | [PERFORMANCE.md](admin/PERFORMANCE.md) |
-| [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) | you need to know how many users a server holds, whether memory stays flat over a day, and how to load-test and memory-profile the server, the console and the browser (strategy, tools, gates, build plan) |
+| Know how many users a server holds, whether memory stays flat over a day, and how to load-test it | [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) |
 | Compare the stores at several sizes, see how each scales, and run the scale benchmark yourself | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) |
 | Serve millions of entities a day for years from Delta Lake | [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) |
 | Run the server on Windows, or choose the Delta engine (native or Hadoop) | [WINDOWS.md](guides/WINDOWS.md), [DELTA_CONNECTOR.md › Engines](connectors/DELTA_CONNECTOR.md#16-engines-native-and-hadoop) |
@@ -136,9 +137,10 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Show live entities from RabbitMQ queues | [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) |
 | Serve public rates and FX (NY Fed SOFR, ECB €STR and FX, US Treasury, FRED) | [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) |
 | Write a connector that computes its data on demand, and see two (news headlines for a name, a quote for a ticker) | [NEWS.md](connectors/NEWS.md), [YFINANCE.md](connectors/YFINANCE.md), [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md#connectors-that-compute-data-on-demand) |
-| Understand the sample data every pack ships, and its live ticks | [NEWS.md](connectors/NEWS.md) | you switch on the news connector or write one like it: ids, the filtering steps, settings, privacy, failures, how it is built |
-| [YFINANCE.md](connectors/YFINANCE.md) | you switch on the Yahoo Finance quote connector (samples only): ids, figures, settings, failures |
-| [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
+| Switch on the Yahoo Finance quote connector | [YFINANCE.md](connectors/YFINANCE.md) |
+| See what the sample connector serves and how to switch it off | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
+| Connect your data in the short version (a connector file) | [CONNECTOR_GUIDE.md](connectors/CONNECTOR_GUIDE.md) |
+| Understand the sample data every pack ships, and its live ticks | [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) |
 | Read your own database with your own SQL: several queries per kind | [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) |
 | Serve millions of entities a day from Apache Iceberg (Snowflake, Glue, Polaris, Trino) | [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) |
 | Serve a large book from one embedded DuckDB file, with no database server | [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) |
@@ -161,7 +163,9 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 ## Every document, and when to read it
 
-### In this folder
+Every file under `docs/`, by folder. Documents marked *moved* are short pointers kept so old links still open.
+
+### Guides (`guides/`)
 
 | Document | Read this when… |
 |---|---|
@@ -170,55 +174,102 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | [IDE_GUIDE.md](guides/IDE_GUIDE.md) | you run the server from IntelliJ IDEA and the console from PyCharm: JDK and interpreter setup, run configurations, debugging, reloading changes, tests in the IDE |
 | [WINDOWS.md](guides/WINDOWS.md) | you run Drishti on Windows: a JDK 21 or newer (production runs 21) and Python, building or copying the jar, the native Delta engine (no Hadoop, no `winutils.exe`), the PowerShell scripts, what does not work there, troubleshooting |
 | [USER_GUIDE.md](guides/USER_GUIDE.md) | you use the console: top bar, command line, pick lists, tables, views, dates, search, export, monitors, alerts, workspaces, settings, the Build workbench, administration |
+| [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
+| [CLIENTS.md](guides/CLIENTS.md) | you read Drishti from a script, a notebook or Excel: personal API tokens and scopes, the Python client, Power Query |
+| [PYTHON_CALC.md](guides/PYTHON_CALC.md) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
 | [PACKS.md](guides/PACKS.md) | you load, switch, assign or change a domain pack |
 | [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md) | you build a pack or need any `pack.yaml` key: kinds, links, roles, Sutras, tests, generators, signing; a worked help-desk pack |
-| [PYTHON_CALC.md](guides/PYTHON_CALC.md) | you run Python on a view (`Alt+C`): the `drishti` module, output, packs' snippets, roles, the security model, installing the runtime, measured sizes and speed, limits |
+| [SCHEMA_TO_PACK.md](guides/SCHEMA_TO_PACK.md) | you have JSON Schema (and perhaps JSON Lines) and want a whole pack: the rules, the `x-drishti-*` annotations, Build → New pack, the command line |
+| [CLI_GUIDE.md](guides/CLI_GUIDE.md) | you work from a terminal or a pipeline: `tools/drishti.py` (`sutra`, `pack new|check|about-check|publish|install`, `data ingest|load|landed|loads`, `server packs`, `design create|check|propose|approve`), every option with real output, recipes, JSON formats, exit codes |
+| [DATA_LOADS.md](guides/DATA_LOADS.md) | your ETL has loaded a batch and Drishti should refresh, verify, check alerts, tell people and flag late data: the load API and CLI, expectations, the Data loads page, the token scope, recipes |
+| [OPERATIONALISING.md](guides/OPERATIONALISING.md) | you ship what you built to servers by copying: bundle, verify, deploy, promote, roll back (no API) |
+| [REAL_DATA.md](guides/REAL_DATA.md) | you use or refresh the real public data in the economics and politics-society packs: sources, licences (IMF data: internal demonstrations only), the pipeline that regenerates them |
+| [BI_GUIDE.md](guides/BI_GUIDE.md) | what phases 1 and 2 build (and not), the BI menu and keyword, the four powers, workspace roles, items and versions, audiences, shipped files, BI settings, the CLI |
+| [BI_TUTORIAL.md](guides/BI_TUTORIAL.md) | open the catalogue, the three samples, relationships from the packs, rollups, two users and the same query, nested legs and cashflows, a copy with a changed measure; then the three sample reports, building one from scratch in the designer, the Model view, a phone |
+| [DATASETS.md](guides/DATASETS.md) | the YAML reference, aggregates and functions, security, modes, layers and rollups, the query, DRS-9010 to 9027, what is not built |
+| [REPORTS.md](guides/REPORTS.md) | the YAML reference, the 24 visuals and their wells, filters and top-N, format, how the page's state becomes a dataset query, what people can do, checking, security, what is not built |
+| [BI_GOVERNANCE.md](guides/BI_GOVERNANCE.md) | saved states and published versions, the diff, who reviews and what they see, when certification falls, what impact analysis compares, the bundle and its dry run, the audit actions, what is not built |
+| [BOARDS.md](guides/BOARDS.md) | the board file and its tiles, alerts, the viewer and kiosk, who sees what, the checks and their codes, settings, the API, what is not built (live tables: [DATASETS.md](guides/DATASETS.md#71-live-tables-phase-5); live visuals and Perspective: [REPORTS.md](guides/REPORTS.md#13-live-visuals-and-perspective-phase-5)) |
 | [BUILD_WORKBENCH_TUTORIAL.md](guides/BUILD_WORKBENCH_TUTORIAL.md) | you are new to the Build workbench: four complete projects with a picture of each step |
+| [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
 | [SUTRA_DEVELOPER_GUIDE.md](guides/SUTRA_DEVELOPER_GUIDE.md) | you are learning to write Sutras: anatomy, matching, labels, paths, source, row groups, testing and CI, the checklist |
 | [RACHANA_REFERENCE.md](guides/RACHANA_REFERENCE.md) | you are writing a Sutra and need the exact key, panel option, format, expression or problem code |
 | [PANEL_KINDS.md](guides/PANEL_KINDS.md) | you choose, configure or debug a panel: all twenty-one kinds, what each means, how it behaves, an example and a picture |
 | [PANEL_DEVELOPER_GUIDE.md](guides/PANEL_DEVELOPER_GUIDE.md) | you add a new panel kind to Drishti |
+| [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
+| [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
+
+### Pointers to guides that moved
+
+| Document | Read this when… |
+|---|---|
+| [PANELS.md](guides/PANELS.md) | you followed an old link to the panels guide (moved to PANEL_KINDS.md) |
+| [RACHANA_GUIDE.md](guides/RACHANA_GUIDE.md) | you followed an old link to the Rachana guide (moved to SUTRA_DEVELOPER_GUIDE.md) |
+| [SUTRA_CLI.md](guides/SUTRA_CLI.md) | you followed an old link to the headless Sutra tool (moved to SUTRA_DEVELOPER_GUIDE.md section 15) |
+
+### Architecture and design (`architecture/`)
+
+| Document | Read this when… |
+|---|---|
 | [HOW_IT_FITS.md](architecture/HOW_IT_FITS.md) | you are new and want the whole working: how connectors, packs and Sutras relate, and how a command becomes a live screen |
+| [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
 | [INFERENCE.md](architecture/INFERENCE.md) | a view looks different from what you expected and *How this view was built* says `inference` |
-| [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) | you define connectors: one YAML file each in `config/connectors`, an example per store, how packs and files fit, live reload, Admin → Connectors, the API and CLI, moving off `application.yaml` |
-| [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) | you choose a connector, write a new source plugin, or test one with the testkit contracts; each connector's settings and walk-through are in its own `*_CONNECTOR.md` |
 | [LIVE.md](architecture/LIVE.md) | you need to know how values tick: streams, frames, coalescing, reconnects, one channel per browser, shared by its tabs |
+| [SCREEN_BUILDER.md](architecture/SCREEN_BUILDER.md) | you want the design of the Screen Builder: JSON files to a shape, to a visual design, to a Sutra |
+| [BUILD_WORKBENCH.md](architecture/BUILD_WORKBENCH.md) | you want the design of the Build workbench: Designs, one page for data, canvas, YAML and tests, and the plan |
+| [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) | you want the design of *About this page*: the page's data, pack glossaries and `about.yaml`, the explain API, the Ask layer and the plan |
+| [COLLABORATION.md](architecture/COLLABORATION.md) | you want to know how *share with a note* and comment threads work and why: pins to the business date and generation, recipients' own rights, masks on user text, the inbox and email outbox, retention, legal hold, export, with a note on what was built differently from the design (steps 1 to 7 built; chat bridges and snapshots, phase 2, are not) |
+| [RUPAKA.md](architecture/RUPAKA.md) | you want the design of Drishti Rūpaka, BI inside Drishti benchmarked against Power BI: the BI page (`RUPAKA <GO>`), datasets, the query engine, reports, the designer, workspaces and catalogue, streaming BI, Python interfaces, AI hooks off by default, build plan (design) |
+| [RUPAKA_POC.md](architecture/RUPAKA_POC.md) | you want what the Rūpaka phase 0 proof of concept built and measured (Perspective live grid, masked Arrow out of DuckDB, DuckDB-Wasm in the browser, CSP with WebAssembly, JSON vs typed vs rollup) and the go / adjust verdict for phase 1 (off by default) |
+| [LIVE_BI.md](architecture/LIVE_BI.md) | you want Drishti as the live front end of a streaming BI producer: the result-stream contract, Kafka with no code, a `bi` plugin, boards, drill-down, consistency (design note) |
+| [ELEMENTS.md](architecture/ELEMENTS.md) | you want Drishti Elements: live views inside other web applications as `<drishti-view>` Web Components, no iframes; the embed API, token exchange, host registration, and which build steps are done |
+| [AI_PROVIDERS.md](architecture/AI_PROVIDERS.md) | you configure or build on the model providers: one interface, one file per provider in `config/ai/`, off by default, the admin page and the API |
+| [MCP_CLIENT.md](architecture/MCP_CLIENT.md) | you connect MCP servers (their tools, resources and prompts) behind Drishti's policy: one file per server in `config/mcp/`, off by default |
+| [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md) | you want the design of server-side pricing (QuantLib) and how it would reach the screen (proposed, not built; ADR-019) |
+| [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) | you want to know which waves shipped in which release, and what is still open |
+
+### Connectors (`connectors/`)
+
+| Document | Read this when… |
+|---|---|
+| [CONNECTOR_GUIDE.md](connectors/CONNECTOR_GUIDE.md) | you want the short version of connecting data: choose a connector, write it as a connector file |
+| [CONNECTOR_DEVELOPER_GUIDE.md](connectors/CONNECTOR_DEVELOPER_GUIDE.md) | you choose a connector, write a new source plugin, or test one with the testkit contracts; each connector's settings and walk-through are in its own `*_CONNECTOR.md` |
+| [CONNECTOR_FILES.md](connectors/CONNECTOR_FILES.md) | you define connectors: one YAML file each in `config/connectors`, an example per store, how packs and files fit, live reload, Admin → Connectors, the API and CLI, moving off `application.yaml` |
+| [TLS.md](connectors/TLS.md) | a connector must talk TLS: the shared `tls.*` settings, PEM, PKCS12 and JKS, mutual TLS, converting certificates, expiry warnings, rotation, troubleshooting |
+| [PROXY.md](connectors/PROXY.md) | a site reaches the internet only through a forward proxy: `proxy:` per connector, AI provider or MCP server, the site default `drishti.http.proxy.*`, no-proxy, https via CONNECT, masking, what each connector does, troubleshooting |
+| [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
+| [DEMO_DATA.md](connectors/DEMO_DATA.md) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
+| [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) | you serve data from JSON-lines files: the layout, one file per kind per day, the index of a day, loading, sizes, measurements |
+| [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) | you run Drishti over a large Delta Lake (a million trades a day for seven years): layout, writers, reads, memory, maintenance, measurements, and the two engines (native without Hadoop, or Hadoop) |
+| [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements |
+| [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) | you run Drishti on one embedded DuckDB file: the layout, the loader and its file swap, the shared read-only instance, read paths, retention, sizing, memory, measurements |
+| [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) | you run Drishti on PostgreSQL at scale: partitioned table, promoted columns, COPY loader, monthly retention, sizing, measurements |
+| [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) | you read your own schema with SQL: the entity, its parts, ids, columns and reverse queries, parameters, naming, performance |
+| [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) | you run Drishti on MongoDB: a document per entity per day, the narrow columns collection, indexes, parallel day reads, retention, sharding, measurements |
+| [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) | you run Drishti on Redis: key layout, zstd dictionaries, column chunks, live pub/sub, TTL, sizing, measurements |
+| [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
+| [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) | you serve documents from S3 or an S3-compatible store: the key layout, listing and caching, credentials, cost of large buckets |
+| [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) | you read entities from an HTTP/JSON service: paths, headers, generations, timeouts, what it cannot do, load on the service |
+| [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) | you switch on the public feeds: each source's URL and parsing, entities and ids, schedules, history, offline mirrors |
+| [NEWS.md](connectors/NEWS.md) | you switch on the news connector or write one like it: ids, the filtering steps, settings, privacy, failures, how it is built |
+| [YFINANCE.md](connectors/YFINANCE.md) | you switch on the Yahoo Finance quote connector (samples only): ids, figures, settings, failures |
+| [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) | you serve live entities from Kafka: state and ticks modes, the index and disk cache, offsets, ordering, restarts, reconnection, pairing with a lake; TLS, SASL, Confluent and Schema Registry |
+| [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) | you serve live entities from ActiveMQ: queues and durable topics, the state store, its durability and disk budget, acknowledgement, failover, sizing |
+| [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) | you serve live entities from RabbitMQ: queues and bindings, prefetch and acknowledgement, the state store, its durability and disk budget, recovery, sizing |
+| [PLUGIN_GUIDE.md](connectors/PLUGIN_GUIDE.md) | you followed an old link to the plugin guide (moved to CONNECTOR_DEVELOPER_GUIDE.md) |
+
+### Running it (`admin/`)
+
+| Document | Read this when… |
+|---|---|
 | [USER_MANAGEMENT.md](admin/USER_MANAGEMENT.md) | you create users, define roles, assign packs, reset passwords, set up single sign-on or read the audit log |
 | [CONFIGURATION.md](admin/CONFIGURATION.md) | you need a setting's name, default and environment variable |
 | [OPERATIONS.md](admin/OPERATIONS.md) | you deploy, secure, monitor, back up or upgrade a server and console |
 | [PERFORMANCE.md](admin/PERFORMANCE.md) | you want the measured numbers, to measure your own installation, or to tune it |
+| [LOAD_AND_MEMORY.md](admin/LOAD_AND_MEMORY.md) | you need to know how many users a server holds, whether memory stays flat over a day, and how to load-test and memory-profile the server, the console and the browser (strategy, tools, gates, build plan) |
 | [SCALE_BENCHMARK.md](admin/SCALE_BENCHMARK.md) | you choose a store or size a server: every store measured at 10,000, 25,000 and 50,000 trades a day, linear scaling fits, labelled extrapolations to a million, and the harness (`tools/bench/`) to run it at a million on a real server |
-| [DELTA_CONNECTOR.md](connectors/DELTA_CONNECTOR.md) | you run Drishti over a large Delta Lake (a million trades a day for seven years): layout, writers, reads, memory, maintenance, measurements, and the two engines (native without Hadoop, or Hadoop) |
-| [FILE_CONNECTOR.md](connectors/FILE_CONNECTOR.md) | you serve data from JSON-lines files: the layout, one file per kind per day, the index of a day, loading, sizes, measurements |
-| [POSTGRES_CONNECTOR.md](connectors/POSTGRES_CONNECTOR.md) | you run Drishti on PostgreSQL at scale: partitioned table, promoted columns, COPY loader, monthly retention, sizing, measurements |
-| [DEMO_DATA.md](connectors/DEMO_DATA.md) | you need demo data in Delta Lake, PostgreSQL or Aerospike, small for a laptop or a million trades a day |
-| [AEROSPIKE_CONNECTOR.md](connectors/AEROSPIKE_CONNECTOR.md) | you run Drishti on Aerospike at scale: record layout, loader, partition-parallel scans, TTL retention, sizing, measurements |
-| [JDBC_QUERIES.md](connectors/JDBC_QUERIES.md) | you read your own schema with SQL: the entity, its parts, ids, columns and reverse queries, parameters, naming, performance |
-| [ICEBERG_CONNECTOR.md](connectors/ICEBERG_CONNECTOR.md) | you run Drishti over Apache Iceberg: the layout, path-based and REST catalogs, delete files, time travel, the loader and maintenance, sizing, measurements |
-| [DUCKDB_CONNECTOR.md](connectors/DUCKDB_CONNECTOR.md) | you run Drishti on one embedded DuckDB file: the layout, the loader and its file swap, the shared read-only instance, read paths, retention, sizing, memory, measurements |
-| [MONGODB_CONNECTOR.md](connectors/MONGODB_CONNECTOR.md) | you run Drishti on MongoDB: a document per entity per day, the narrow columns collection, indexes, parallel day reads, retention, sharding, measurements |
-| [REDIS_CONNECTOR.md](connectors/REDIS_CONNECTOR.md) | you run Drishti on Redis: key layout, zstd dictionaries, column chunks, live pub/sub, TTL, sizing, measurements |
-| [S3_CONNECTOR.md](connectors/S3_CONNECTOR.md) | you serve documents from S3 or an S3-compatible store: the key layout, listing and caching, credentials, cost of large buckets |
-| [REST_CONNECTOR.md](connectors/REST_CONNECTOR.md) | you read entities from an HTTP/JSON service: paths, headers, generations, timeouts, what it cannot do, load on the service |
-| [KAFKA_CONNECTOR.md](connectors/KAFKA_CONNECTOR.md) | you serve live entities from Kafka: state and ticks modes, the index and disk cache, offsets, ordering, restarts, reconnection, pairing with a lake; TLS, SASL, Confluent and Schema Registry |
-| [PROXY.md](connectors/PROXY.md) | a site reaches the internet only through a forward proxy: `proxy:` per connector, AI provider or MCP server, the site default `drishti.http.proxy.*`, no-proxy, https via CONNECT, masking, what each connector does, troubleshooting |
-| [TLS.md](connectors/TLS.md) | a connector must talk TLS: the shared `tls.*` settings, PEM, PKCS12 and JKS, mutual TLS, converting certificates, expiry warnings, rotation, troubleshooting |
-| [ACTIVEMQ_CONNECTOR.md](connectors/ACTIVEMQ_CONNECTOR.md) | you serve live entities from ActiveMQ: queues and durable topics, the state store, its durability and disk budget, acknowledgement, failover, sizing |
-| [RABBITMQ_CONNECTOR.md](connectors/RABBITMQ_CONNECTOR.md) | you serve live entities from RabbitMQ: queues and bindings, prefetch and acknowledgement, the state store, its durability and disk budget, recovery, sizing |
-| [FEEDS_CONNECTOR.md](connectors/FEEDS_CONNECTOR.md) | you switch on the public feeds: each source's URL and parsing, entities and ids, schedules, history, offline mirrors |
-| [DEMO_CONNECTOR.md](connectors/DEMO_CONNECTOR.md) | you want to know what the sample connector serves, how it ticks, how packs supply samples, and how to switch it off |
-| [TROUBLESHOOTING.md](guides/TROUBLESHOOTING.md) | something is not working: each problem has what you see, how to check and the fix |
-| [DEVELOPER_GUIDE.md](guides/DEVELOPER_GUIDE.md) | you change Drishti's code: layout, build, tests, gates, and recipes |
-| [qa/2026-10-01](qa/2026-10-01/README.md) | you want the adversarial QA of 1.13.0: what was tested, every finding by severity with reproduction steps, what held up, and the proposed fix order |
-| [qa/2026-10-03](qa/2026-10-03/README.md) | you want the adversarial QA of the Build workbench (round 2, before 1.14.0): what was tested, every finding by severity, and how each was fixed |
-| [CONTEXT_HELP.md](architecture/CONTEXT_HELP.md) | you want to know how *About this page* will explain a view (what it shows, what each number means, where the data came from, why the layout, where next): the PageContext, the explain API, pack `about.yaml`, masking rules and the build plan (proposed) |
-| [COLLABORATION.md](architecture/COLLABORATION.md) | you want to know how *share with a note* and comment threads work and why: pins to the business date and generation, recipients' own rights, masks on user text, the inbox and email outbox, retention, legal hold, export, with a note on what was built differently from the design (steps 1 to 7 built; chat bridges and snapshots, phase 2, are not) |
-| [QUANT_SERVICE.md](architecture/QUANT_SERVICE.md) | you want to know how server-side pricing (QuantLib) will work with Drishti and reach the screen: the design and phases (proposed, on the roadmap) |
-| [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | you want to understand how the pieces fit: pipeline, grammar, inference, graph, modules |
-| [API_GUIDE.md](guides/API_GUIDE.md) | you call the REST API from a program, or need the ViewModel contract |
-| [IMPLEMENTATION_PLAN.md](architecture/IMPLEMENTATION_PLAN.md) | you want to know which waves shipped in which release, and what is still open |
 
-### Runbooks (`runbooks/`)
+### Runbooks (`admin/runbooks/`)
 
 | Runbook | Read this when… |
 |---|---|
@@ -231,19 +282,92 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 
 | Guide | Read this when… |
 |---|---|
-| [SCHEMA_TO_PACK.md](guides/SCHEMA_TO_PACK.md) | you have JSON Schema (and perhaps JSON Lines) and want a whole pack: the rules, the `x-drishti-*` annotations, Build → New pack, the command line |
-| [SCREEN_DESIGNER.md](guides/SCREEN_DESIGNER.md) | you design or edit a Sutra in the browser, save it and submit it for review |
 | [nested-data.md](../drishti-console/web/guides/nested-data.md) | your documents hold lists inside lists |
 | [impact.md](../drishti-console/web/guides/impact.md) | you use or configure F8 impact |
 | [monitors-and-alerts.md](../drishti-console/web/guides/monitors-and-alerts.md) | you set up watchlists and alert rules |
 | [workspaces.md](../drishti-console/web/guides/workspaces.md) | you arrange several live views on one screen |
+| [sharing-and-discussion.md](../drishti-console/web/guides/sharing-and-discussion.md) | you send a view with a note, read your inbox or discuss a number |
+| [layout-mode.md](../drishti-console/web/guides/layout-mode.md) | you arrange a view's panels for yourself (`Alt+L`) |
+| [pivot-tab.md](../drishti-console/web/guides/pivot-tab.md) | you slice a table in the Pivot tab |
+| [screen-builder.md](../drishti-console/web/guides/screen-builder.md) | you turn sample JSON files into a shape, the first two steps of the builder |
+
+### Examples (`guides/examples/`)
+
+Eleven working Sutras with their data, introduced in [guides/examples/README.md](guides/examples/README.md); each has the Sutra, a JSON document and a note, and opens as a copy in the workbench.
+
+| Note | Shows |
+|---|---|
+| [all-panels-showcase.md](guides/examples/all-panels-showcase.md) | All twenty-one panel kinds on one screen, reading one self-contained bond trade. |
+| [exposure-profile.md](guides/examples/exposure-profile.md) | Expected and potential future exposure over tenor, against a limit. |
+| [linked-sources.md](guides/examples/linked-sources.md) | Panels that read other entities with `source: "link(id, kind)"`: the counterparty's netting sets, a netting set's exposure and a desk's pivot, all fetched live. |
+| [market-charts.md](guides/examples/market-charts.md) | Market data: daily bars, a line of closes and a volatility surface. |
+| [metric.md](guides/examples/metric.md) | A desk's headline numbers as big-number tiles: one large formatted, toned figure each, with a small change, a unit and a caption. |
+| [operations-status.md](guides/examples/operations-status.md) | The back office on one screen: where a trade stands and what comes next. |
+| [pivot-row-groups.md](guides/examples/pivot-row-groups.md) | A pivot whose `by` is a list: desks hold books, books hold product families, each level with a subtotal. |
+| [pnl-explain.md](guides/examples/pnl-explain.md) | Where a trade's P&L came from, and how sensitive it is. |
+| [relationships.md](guides/examples/relationships.md) | How entities relate: a group and its agreements as a graph, netting sets as tabs, and the entities a document refers to. |
+| [risk-distribution.md](guides/examples/risk-distribution.md) | How risk is spread: scenario P&L as a histogram with VaR lines, books as points, a limit as a dial. |
+| [tree-table.md](guides/examples/tree-table.md) | Tables and ladders whose rows hold their own children: an organisation of units, each with sub-units, to any depth. |
+| [pack/helpdesk/guides/helpdesk.md](guides/examples/pack/helpdesk/guides/helpdesk.md) | the help-desk teaching pack's own guide, built step by step in the pack developer guide |
+
+### Decision records (`architecture/adr/`)
+
+The index is [adr/README.md](architecture/adr/README.md); the 20 records:
+
+| Record |
+|---|
+| [001-backend-is-a-spring-boot-application.md](architecture/adr/001-backend-is-a-spring-boot-application.md): ADR-001: Backend is a spring boot application |
+| [002-layout-is-sutra-plus-inference.md](architecture/adr/002-layout-is-sutra-plus-inference.md): ADR-002: Layout is sutra plus inference |
+| [003-sutra-is-yaml-with-a-closed-expression-language.md](architecture/adr/003-sutra-is-yaml-with-a-closed-expression-language.md): ADR-003: Sutra is yaml with a closed expression language |
+| [004-server-returns-a-view-model.md](architecture/adr/004-server-returns-a-view-model.md): ADR-004: Server returns a view model |
+| [005-server-sent-events-for-live-updates.md](architecture/adr/005-server-sent-events-for-live-updates.md): ADR-005: Server sent events for live updates |
+| [006-vendored-front-end-without-a-build-pipeline.md](architecture/adr/006-vendored-front-end-without-a-build-pipeline.md): ADR-006: Vendored front end without a build pipeline |
+| [007-build-gates-in-tests.md](architecture/adr/007-build-gates-in-tests.md): ADR-007: Build gates in tests |
+| [008-rachana-is-the-grammar-a-sutra-is-a-layout.md](architecture/adr/008-rachana-is-the-grammar-a-sutra-is-a-layout.md): ADR-008: Rachana is the grammar, a Sutra is a layout |
+| [009-users-live-in-the-server.md](architecture/adr/009-users-live-in-the-server.md): ADR-009: Users live in the server |
+| [010-industries-are-domain-packs.md](architecture/adr/010-industries-are-domain-packs.md): ADR-010: Industries are domain packs |
+| [011-sutras-are-markdown-documents.md](architecture/adr/011-sutras-are-markdown-documents.md): ADR-011: Sutras are Markdown documents |
+| [012-business-dates-and-delta-lake.md](architecture/adr/012-business-dates-and-delta-lake.md): ADR-012: Every read is for a business date; history lives in Delta Lake |
+| [013-sutras-go-live-through-review.md](architecture/adr/013-sutras-go-live-through-review.md): ADR-013: Sutras go live through review |
+| [014-single-sign-on-verified-by-the-server.md](architecture/adr/014-single-sign-on-verified-by-the-server.md): ADR-014: Single sign-on, verified by the server |
+| [015-packs-inherit.md](architecture/adr/015-packs-inherit.md): ADR-015: Packs inherit, and the more specific pack wins |
+| [016-one-console-many-servers.md](architecture/adr/016-one-console-many-servers.md): ADR-016: One console, many servers; the user picks one and signs in to it |
+| [017-sutras-are-yaml.md](architecture/adr/017-sutras-are-yaml.md): ADR-017: Sutras are YAML, through and through |
+| [018-signed-pack-registry.md](architecture/adr/018-signed-pack-registry.md): ADR-018: Packs come from a signed, versioned registry |
+| [019-pricing-is-a-quantlib-service-behind-the-server.md](architecture/adr/019-pricing-is-a-quantlib-service-behind-the-server.md): ADR-019: Pricing is a QuantLib service behind the Drishti server |
+| [020-collaboration-records-live-in-the-identity-database.md](architecture/adr/020-collaboration-records-live-in-the-identity-database.md): ADR-020: Collaboration records live in the identity database; the notice is a link, never  |
+
+### Quality assurance runs (`qa/`)
+
+Each run has a README (what was tested, findings by severity, how each was fixed), activity logs and the scripts that reproduce the findings.
+
+| Document | What it holds |
+|---|---|
+| [qa/2026-10-01/README.md](qa/2026-10-01/README.md) | 2026-10-01: the summary of the run |
+| [qa/2026-10-01/data/FINDINGS.md](qa/2026-10-01/data/FINDINGS.md) | 2026-10-01/data: findings by severity, with steps to reproduce |
+| [qa/2026-10-01/data/LOG.md](qa/2026-10-01/data/LOG.md) | 2026-10-01/data: the activity log |
+| [qa/2026-10-01/security/FINDINGS.md](qa/2026-10-01/security/FINDINGS.md) | 2026-10-01/security: findings by severity, with steps to reproduce |
+| [qa/2026-10-01/security/LOG.md](qa/2026-10-01/security/LOG.md) | 2026-10-01/security: the activity log |
+| [qa/2026-10-01/security/matrix_console.md](qa/2026-10-01/security/matrix_console.md) | 2026-10-01/security: the console route by role access matrix |
+| [qa/2026-10-01/security/matrix_server.md](qa/2026-10-01/security/matrix_server.md) | 2026-10-01/security: the server endpoint by role access matrix |
+| [qa/2026-10-01/ux/FINDINGS.md](qa/2026-10-01/ux/FINDINGS.md) | 2026-10-01/ux: findings by severity, with steps to reproduce |
+| [qa/2026-10-01/ux/LOG.md](qa/2026-10-01/ux/LOG.md) | 2026-10-01/ux: the activity log |
+| [qa/2026-10-03/README.md](qa/2026-10-03/README.md) | 2026-10-03: the summary of the run |
+| [qa/2026-10-03/data/FINDINGS.md](qa/2026-10-03/data/FINDINGS.md) | 2026-10-03/data: findings by severity, with steps to reproduce |
+| [qa/2026-10-03/data/LOG.md](qa/2026-10-03/data/LOG.md) | 2026-10-03/data: the activity log |
+| [qa/2026-10-03/security/FINDINGS.md](qa/2026-10-03/security/FINDINGS.md) | 2026-10-03/security: findings by severity, with steps to reproduce |
+| [qa/2026-10-03/security/LOG.md](qa/2026-10-03/security/LOG.md) | 2026-10-03/security: the activity log |
+| [qa/2026-10-03/ux/FINDINGS.md](qa/2026-10-03/ux/FINDINGS.md) | 2026-10-03/ux: findings by severity, with steps to reproduce |
+| [qa/2026-10-03/ux/LOG.md](qa/2026-10-03/ux/LOG.md) | 2026-10-03/ux: the activity log |
+| [qa/2026-10-05/BEHAVIOUR.md](qa/2026-10-05/BEHAVIOUR.md) | 2026-10-05: behaviour pass: collaboration, About/Ask, time, failure modes |
+| [qa/2026-10-05/DATA_SAFETY.md](qa/2026-10-05/DATA_SAFETY.md) | 2026-10-05: data-safety pass: collaboration, explain, Ask, bridges, email, snapshots |
 
 ### Records
 
 | Folder | Read this when… |
 |---|---|
-| [adr/](architecture/adr/README.md) | you want the reason behind a design decision (seventeen records; ADR-017 made Sutras YAML only) |
-| [requirements/](requirements/) | you want the four reference mockups the first views reproduced |
+| [requirements/](requirements/) | you want the four reference mockups the first views reproduced, and the logo and icon |
+| [publications/](publications/) | you want the design-and-evidence presentation (`Drishti-Design-and-Evidence.pptx`) |
 
 ## Words you will meet
 
@@ -259,7 +383,9 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | **Rachana** | The grammar Sutras are written in; **Rachana-EL** is its expression language (`$.mtm > 0`) |
 | **Inference** | Drishti laying out a view by itself from the shape of the data |
 | **Pack** | An industry's commands, layouts, links, roles and sample data, in `config/packs/<name>/` |
-| **Source / connector** | Where documents come from: the demo samples, Delta Lake, PostgreSQL, Kafka, … |
+| **Source / connector** | Where documents come from: the demo samples, Delta Lake, PostgreSQL, Kafka, … A connector is one YAML file in `config/connectors` |
+| **Rūpaka (BI)** | Business intelligence inside Drishti: datasets, reports, boards; the `BI` menu and keyword (`RUPAKA` is its older name) |
+| **Form** | A pack's search form for a kind: `FORM <pack> <GO>` |
 | **Business date** | The day you are looking at: **Live** (today, ticking) or a picked past date |
 | **Known at** | A moment in time; the data as it was known then, before later corrections |
 

@@ -34,6 +34,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `LOSS <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `LOSS <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `LOSS <GO>` | Lists every operational loss event. |
+| `FORM operational-risk <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `OPR <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## Where the data comes from
 
@@ -115,3 +117,7 @@ Basel III standardised approach (SMA): business indicator, loss component and ca
 **Fields its Sutra reads:** `legalEntityName`, `bi`, `bic`, `ilm`, `capital`, `rwa`, `components`, `annualLosses`.
 
 **Links:** `legalEntity` → Legal entity (`legal-entity`).
+
+## Who can see it
+
+Role `oprisk`: kinds `loss-event`, `risk-control`, `key-risk-indicator`, `issue`, `oprisk-scenario`, `third-party`, `cyber-incident`, `oprisk-capital`, `desk`, `legal-entity`, raw JSON.

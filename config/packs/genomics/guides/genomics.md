@@ -34,6 +34,8 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 | `GENE <start of an id> <GO>` | A pick list: one match opens, several give a table with the kind's key fields. `*` is a wildcard, and case never matters. |
 | `GENE <field>=<value> <GO>` | Lists by field value. Compare with `<` and `>`, combine with `and`, sort with `order by <field> desc`. |
 | `GENE <GO>` | Lists every gene. |
+| `FORM genomics <GO>` | The pack's search form: boxes for the key fields of each kind instead of a written search. |
+| `GENO <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## Where the data comes from
 
@@ -111,3 +113,7 @@ A targeted-therapy trial: phase, biomarker, arms and enrolment against target.
 **Fields its Sutra reads:** `title`, `phase`, `status`, `enrolled`, `target`, `biomarkerName`, `enrolment`, `arms`.
 
 **Links:** `gene` → Target gene (`gene`), `biomarker` → Biomarker (`variant`).
+
+## Who can see it
+
+Role `scientist`: kinds `gene`, `variant`, `protein`, `pathway`, `sample`, `sequencing-run`, `expression-study`, `clinical-trial`, raw JSON.

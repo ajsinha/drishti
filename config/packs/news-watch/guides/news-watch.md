@@ -59,5 +59,9 @@ While the connector is off the headline panels are empty and say `waiting for NE
 - **Filters:** `relevance`, `allow-sources`, `deny-sources`, `max-items`, `cache-ttl-seconds` and the rest in the connector file; see [NEWS.md](../../../../docs/connectors/NEWS.md#6-settings).
 - **Another pack's entity:** give it a field holding `NEWS-<name>` and a panel with `source: "link($.newsId, 'news')"`; the `market-watch` pack does so for companies.
 
+## Who can see it
+
+Role `news-analyst`: kinds `news-topic` and `news`.
+
 This is a sample pack: it is hidden from business users when `drishti.packs.samples` is `developers`, and it demonstrates a connector that
 is code rather than a store. See [Domain packs](../../../../docs/guides/PACKS.md).
