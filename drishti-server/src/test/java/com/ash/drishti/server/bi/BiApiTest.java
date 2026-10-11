@@ -221,7 +221,7 @@ class BiApiTest {
         assertThat(ok(call("GET", "/api/v1/bi/catalogue", cat(), null)).path("items").toString()).contains("Members only");     // cat is a workspace member
         refused(call("GET", "/api/v1/bi/items/" + other.path("id").asText(), sue(), null), 404, "DRS-9001");
         // editing a published item leaves the published version visible and the draft pending
-        ok(call("PUT", "/api/v1/bi/items/" + item, ann(), Map.of("body", "pages: [a]\n")));
+        ok(call("PUT", "/api/v1/bi/items/" + item, ann(), Map.of("body", REPORT_BODY + "title: second\n")));
         JsonNode viewer = ok(call("GET", "/api/v1/bi/items/" + item, cat(), null));
         assertThat(viewer.path("body").asText()).isEqualTo(REPORT_BODY);
         assertThat(viewer.path("bodyIs").asText()).isEqualTo("published");

@@ -468,6 +468,133 @@ def test_a_shipped_report_opens_read_only_and_can_be_saved_as_a_copy(stack, brow
     clean(page)
 
 
+EVERY_TYPE = """rachana: 1
+report: every-type
+dataset: trades-basic
+theme: colour-blind
+pages:
+  - id: all
+    title: Every visual
+    visuals:
+      - { id: bar, type: bar, title: Bar, at: { x: 0, y: 0, w: 4, h: 4 }, wells: { axis: [trade.desk], values: [MTM] } }
+      - { id: column, type: column, title: Column, at: { x: 4, y: 0, w: 4, h: 4 }, wells: { axis: [trade.desk], legend: [trade.currency], values: [Notional] }, format: { stacked: true, labels: true } }
+      - { id: line, type: line, title: Line, at: { x: 8, y: 0, w: 4, h: 4 }, wells: { axis: [trade.tradeDate], values: [Notional] } }
+      - { id: area, type: area, title: Area, at: { x: 0, y: 4, w: 4, h: 4 }, wells: { axis: [trade.tradeDate], values: [Notional] } }
+      - { id: combo, type: combo, title: Combo, at: { x: 4, y: 4, w: 4, h: 4 }, wells: { axis: [trade.desk], values: [Notional], secondary: [MTM] } }
+      - { id: scatter, type: scatter, title: Scatter, at: { x: 8, y: 4, w: 4, h: 4 }, wells: { details: [trade.book], x: [Notional], y: [MTM], size: [Trades] } }
+      - { id: pie, type: pie, title: Pie, at: { x: 0, y: 8, w: 3, h: 4 }, wells: { axis: [trade.productType], values: [Notional] } }
+      - { id: donut, type: donut, title: Donut, at: { x: 3, y: 8, w: 3, h: 4 }, wells: { axis: [trade.productType], values: [Notional] } }
+      - { id: waterfall, type: waterfall, title: Waterfall, at: { x: 6, y: 8, w: 3, h: 4 }, wells: { axis: [trade.desk], values: [MTM] } }
+      - { id: treemap, type: treemap, title: Treemap, at: { x: 9, y: 8, w: 3, h: 4 }, wells: { axis: [trade.desk, trade.book], values: [Notional] } }
+      - { id: heatmap, type: heatmap, title: Heatmap, at: { x: 0, y: 12, w: 4, h: 4 }, wells: { axis: [trade.desk], legend: [trade.currency], values: [Trades] } }
+      - { id: card, type: card, title: Card, at: { x: 4, y: 12, w: 2, h: 2 }, wells: { values: [MTM] } }
+      - { id: multi, type: multirow-card, title: Multi-row card, at: { x: 6, y: 12, w: 3, h: 3 }, wells: { axis: [trade.desk], values: [Trades, MTM] } }
+      - { id: kpi, type: kpi, title: KPI, at: { x: 9, y: 12, w: 3, h: 3 }, wells: { values: [MTM], target: [Notional] } }
+      - { id: gauge, type: gauge, title: Gauge, at: { x: 4, y: 14, w: 2, h: 3 }, wells: { values: [Trades] }, format: { max: 100 } }
+      - { id: table, type: table, title: Table, at: { x: 0, y: 16, w: 4, h: 4 }, wells: { columns: [trade.tradeId, trade.desk, MTM] }, limit: 5 }
+      - { id: matrix, type: matrix, title: Matrix, at: { x: 4, y: 17, w: 4, h: 4 }, wells: { rows: [trade.desk, trade.book], columns: [trade.currency], values: [Trades] }, format: { subtotals: true } }
+      - { id: s-list, type: slicer, title: List slicer, at: { x: 8, y: 15, w: 2, h: 4 }, wells: { field: [trade.currency] } }
+      - { id: s-drop, type: slicer, title: Dropdown slicer, at: { x: 10, y: 15, w: 2, h: 2 }, wells: { field: [trade.desk] }, format: { mode: dropdown } }
+      - { id: s-range, type: slicer, title: Range slicer, at: { x: 10, y: 17, w: 2, h: 2 }, wells: { field: [trade.notional] }, format: { mode: range } }
+      - { id: text, type: text, at: { x: 0, y: 20, w: 4, h: 1 }, text: A text visual, format: { size: heading } }
+      - { id: image, type: image, at: { x: 4, y: 21, w: 2, h: 2 }, src: /static/img/drishti-icon.png, alt: The Drishti eye }
+      - { id: button, type: button, at: { x: 6, y: 21, w: 3, h: 1 }, text: Go to the first page, action: { navigate: all } }
+"""
+
+
+def test_every_visual_type_draws_with_data(stack, browser):
+    page = sign_in(browser, "wes")
+    page.goto(CONSOLE_URL + "/bi/designer")
+    made = page.evaluate("""async (body) => { const r = await fetch('/bi/api/workspaces/me/items', {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({kind: 'report', title: 'Every visual', description: '', body})}); return await r.json(); }""", EVERY_TYPE)
+    open_report(page, made["id"])
+    settled(page)
+    failed = page.evaluate("[...document.querySelectorAll('.bi-vis-failed')].map(v => v.getAttribute('data-visual') + ': ' + v.textContent.slice(0, 160))")
+    assert failed == [], failed
+    rows = day_trades()
+    desks = sorted({t["desk"] for t in rows})
+    for vis in ("bar", "column", "line", "area", "combo", "scatter", "pie", "donut", "waterfall", "treemap", "heatmap", "gauge"):
+        assert page.locator(f'[data-visual="{vis}"] .bi-chart').count() == 1, vis                 # an ECharts canvas for every chart
+    assert sorted(chart(page, "bar")["categories"]) == desks
+    col = chart(page, "column")                                                                    # one series per currency, stacked
+    assert len(col["series"]) == 3 and sum(sum(v for v in s["values"] if v) for s in col["series"]) == sum(t["notional"] for t in rows)
+    combo = chart(page, "combo")
+    assert [s["type"] for s in combo["series"]] == ["bar", "line"]                                 # columns and a line on the second axis
+    assert len(chart(page, "waterfall")["series"][0]["values"]) == len(desks) + 1                  # a step per desk and the total
+    assert card_value(page, "card") == sum(t["mtm"] for t in rows)
+    assert float(page.locator('[data-visual="gauge"] .bi-chart').count()) == 1
+    assert "▲" in page.locator('[data-visual="kpi"]').inner_text() or "▼" in page.locator('[data-visual="kpi"]').inner_text()     # the KPI says how it stands against its target
+    assert page.locator('[data-visual="multi"] [role=listitem]').count() == 3
+    assert page.locator('[data-visual="table"] tbody tr').count() == 5
+    expect(page.locator('[data-visual="matrix"] tr[data-subtotal]')).to_have_count(3)                # a subtotal per desk, collapsible
+    page.click('[data-visual="matrix"] [data-group="DESK-FX"]')
+    expect(page.locator('[data-visual="matrix"] tr[data-row^="DESK-FX"]')).to_have_count(0)
+    page.click('[data-visual="matrix"] [data-group="DESK-FX"]')
+    expect(page.locator('[data-visual="matrix"] tr[data-row^="DESK-FX"]')).to_have_count(1)
+    assert page.locator('[data-visual="s-list"] [data-slicer-value]').count() == 3
+    page.click('[data-visual="s-drop"] summary')
+    assert page.locator('[data-visual="s-drop"] [data-slicer-value]').count() == 3
+    page.keyboard.press("Escape")
+    page.fill('[data-visual="s-range"] [data-range="from"]', "3000000")
+    page.press('[data-visual="s-range"] [data-range="from"]', "Enter")
+    settled(page)
+    assert card_value(page, "card") == sum(t["mtm"] for t in rows if t["notional"] >= 3000000)      # a range slicer filters like any other
+    assert page.locator('[data-visual="text"] h3.bi-text').inner_text() == "A text visual"
+    assert page.locator('[data-visual="image"] img').get_attribute("alt") == "The Drishti eye"
+    page.click('[data-visual="button"] button')
+    assert page.url.endswith("/all")
+    expect(page.locator("[data-chip]")).to_have_count(1)
+    clean(page)
+
+
+def test_designer_filters_advanced_and_top_n_the_suggestions_and_conditional_colours(stack, browser):
+    page = sign_in(browser, "wes")
+    new_draft(page)
+    page.drag_and_drop('[data-field="trade.desk"]', "[data-canvas-grid]", target_position={"x": 60, "y": 40})
+    page.wait_for_selector('.bi-dvis[data-type="table"]')
+    page.drag_and_drop('[data-field="MTM"]', ".bi-dvis")
+    page.wait_for_selector('.bi-dvis[data-type="bar"]')
+    settled_design(page)
+    # an advanced filter on the visual: notional at least 3,000,000
+    page.click('[data-scope="visual"] [data-add-filter]')
+    page.select_option('[data-filter-editor] [name="field"]', "trade.notional")
+    page.select_option('[data-filter-editor] [name="mode"]', "advanced")
+    page.select_option('[data-filter-editor] [name="op"]', "ge")
+    page.fill('[data-filter-editor] [name="v1"]', "3000000")
+    page.click('[data-filter-editor] button[type=submit]')
+    settled_design(page)
+    assert model(page)["pages"][0]["visuals"][0]["filters"] == [{"field": "trade.notional", "op": "ge", "values": [3000000]}]
+    big = [t for t in day_trades() if t["notional"] >= 3000000]
+    got = page.evaluate("(() => { const o = echarts.getInstanceByDom(document.querySelector('.bi-dvis .bi-chart')).getOption(); return [o.yAxis[0].data, o.series[0].data.map(d => d.value)]; })()")
+    assert dict(zip(*got)) == by("desk", "mtm", big)
+    # top 2 desks by notional, on the report: the pick-from-the-data list is there too
+    page.click('[data-scope="report"] [data-add-filter]')
+    page.select_option('[data-filter-editor] [name="field"]', "trade.desk")
+    page.click("[data-load-values]")
+    page.wait_for_selector("[data-pick-value]")
+    assert page.locator("[data-pick-value]").count() == 3
+    page.select_option('[data-filter-editor] [name="mode"]', "top")
+    page.fill('[data-filter-editor] [name="n"]', "2")
+    page.click('[data-filter-editor] button[type=submit]')
+    settled_design(page)
+    assert model(page)["filters"] == [{"field": "trade.desk", "op": "top", "n": 2, "by": "Notional", "dir": "desc"}]
+    got = page.evaluate("(() => { const o = echarts.getInstanceByDom(document.querySelector('.bi-dvis .bi-chart')).getOption(); return o.yAxis[0].data; })()")
+    top2 = sorted(by("desk", "notional").items(), key=lambda kv: -kv[1])[:2]
+    assert sorted(got) == sorted(k for k, _ in top2) or sorted(got) == sorted({t["desk"] for t in big} & {k for k, _ in top2})
+    # the filter is edited and removed again
+    page.click('[data-scope="report"] [data-remove-filter]')
+    assert "filters" not in model(page)
+    # conditional colour on the measure
+    page.click("[data-ptab='format']")
+    page.click("[data-add-conditional]")
+    assert model(page)["pages"][0]["visuals"][0]["format"]["conditional"][0]["measure"] == "MTM"
+    # the YAML tab offers what fits the cursor
+    page.click('[data-tab="yaml"]')
+    page.evaluate("""() => { const cm = document.querySelector('.CodeMirror').CodeMirror; cm.focus(); const n = cm.lineCount(); cm.setCursor({line: n - 1, ch: 0}); cm.replaceRange('      - { type: ', {line: n - 1, ch: cm.getLine(n - 1).length}); cm.setCursor({line: cm.lineCount() - 1, ch: 100}); }""")
+    page.wait_for_function("() => [...document.querySelectorAll('[data-suggest] .bi-suggest')].some(b => b.textContent === 'waterfall')", timeout=10000)
+    clean(page)
+
+
 @pytest.mark.parametrize("width,height", [(390, 844), (2560, 1440)])
 def test_the_viewer_and_the_designer_do_not_scroll_sideways_on_a_phone_or_a_wide_screen(stack, browser, width, height):
     page = sign_in(browser, "wes", viewport={"width": width, "height": height})

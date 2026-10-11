@@ -312,6 +312,7 @@
     function payload(e) {
       try { const t = e.dataTransfer.getData(MIME); return t ? JSON.parse(t) : null; } catch (err) { return null; }
     }
+    grid.addEventListener('click', (e) => { if (e.target === grid && D.selected) { D.select(null); } });          // a click on the empty canvas lets go of the selection
     grid.addEventListener('dragover', (e) => { if (e.dataTransfer && [...e.dataTransfer.types].indexOf(MIME) >= 0) { e.preventDefault(); } });
     grid.addEventListener('drop', (e) => {
       const p = payload(e);

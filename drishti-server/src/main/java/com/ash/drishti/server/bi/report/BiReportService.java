@@ -28,8 +28,6 @@ import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.security.Principal;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -45,8 +43,7 @@ import java.util.Map;
  */
 public final class BiReportService {
 
-    private static final ObjectMapper YAML_OUT = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-            .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).enable(YAMLGenerator.Feature.INDENT_ARRAYS_WITH_INDICATOR));
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     /** A report with what is needed to use it. */
     private record Loaded(BiStore.Item item, ReportParser.Result parsed, BiStore.Item datasetItem, Dataset dataset, List<ReportParser.Problem> problems) {}
@@ -197,11 +194,9 @@ public final class BiReportService {
         if (model == null || !model.isObject()) {
             throw new DrishtiException(ErrorCode.REPORT_INVALID, "send the report as an object");
         }
-        try {
-            return Map.of("yaml", YAML_OUT.writeValueAsString(model));
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            throw new DrishtiException(ErrorCode.REPORT_INVALID, "the report cannot be written as YAML: " + e.getOriginalMessage());
-        }
+        @SuppressWarnings("unchecked")
+        Map<String, Object> m = JSON.convertValue(model, LinkedHashMap.class);
+        return Map.of("yaml", ReportYaml.write(m));
     }
 
     /** The visual catalogue: types, their groups and wells. */

@@ -90,11 +90,32 @@ class ReportParserTest {
     }
 
     @Test
-    void theModelRoundTripsThroughItsMap() throws IOException {
-        Report r = ReportParser.parse(report("counterparty-risk")).report();
-        var again = ReportParser.parse(new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()).writeValueAsString(r.toMap()));
-        assertThat(again.problems().stream().filter(Problem::error)).isEmpty();
-        assertThat(again.report().toMap()).isEqualTo(r.toMap());
+    void theModelRoundTripsThroughItsMapAndThroughTheWriter() throws IOException {
+        for (String name : List.of("trades-overview", "counterparty-risk", "cashflow-ladder")) {
+            Report r = ReportParser.parse(report(name)).report();
+            String yaml = ReportYaml.write(r.toMap());
+            var again = ReportParser.parse(yaml);
+            assertThat(again.problems().stream().filter(Problem::error)).as(name + "\n" + yaml).isEmpty();
+            assertThat(again.report().toMap()).as(name).isEqualTo(r.toMap());
+        }
+    }
+
+    @Test
+    void theWriterLooksLikeYamlAPersonWrote() throws IOException {
+        Report r = ReportParser.parse(report("trades-overview")).report();
+        String yaml = ReportYaml.write(r.toMap());
+        assertThat(yaml).contains("report: trades-overview\n").contains("      - id: mtm\n        type: card\n        title: Mark to market\n        at: { x: 6, y: 0, w: 3, h: 2 }\n        wells: { values: [MTM] }\n");
+        assertThat(yaml).contains("pages:\n  - id: overview\n    title: Overview\n    visuals:\n").doesNotContain("\"y\"");
+        assertThat(yaml.lines().filter(l -> l.startsWith("        ") && l.length() > 170)).as("a visual's lines stay readable").isEmpty();
+    }
+
+    @Test
+    void theWriterQuotesWhatWouldOtherwiseBeReadAsSomethingElse() {
+        String yaml = ReportYaml.write(new java.util.LinkedHashMap<>(java.util.Map.of("report", "x", "dataset", "file:dataset:a", "title", "true", "description", "12, a: b # c\nnext")));
+        var again = ReportParser.parse(yaml + "pages:\n  - { id: p, visuals: [] }\n");
+        assertThat(again.report().dataset()).isEqualTo("file:dataset:a");
+        assertThat(again.report().title()).isEqualTo("true");
+        assertThat(again.report().description()).isEqualTo("12, a: b # c\nnext");
     }
 
     @Test

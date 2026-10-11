@@ -164,7 +164,8 @@ class VisualQueriesTest {
         // a date hierarchy starts where the axis starts
         QueryRequest y = build(report("cashflow-ladder"), "ladder", "by-pay-date", "{\"drill\":[2027,3]}", "trading-cashflows").query();
         assertThat(y.fields()).containsExactly("cashflows.payDate.month");
-        assertThat(y.filters()).containsExactly(new QueryRequest.Filter("cashflows.payDate.year", "eq", List.of(2027L)), new QueryRequest.Filter("cashflows.payDate.quarter", "eq", List.of(3L)));
+        assertThat(y.filters()).containsExactly(new QueryRequest.Filter("cashflows.payDate", "not-null", List.of()), new QueryRequest.Filter("cashflows.payDate.year", "eq", List.of(2027L)),
+                new QueryRequest.Filter("cashflows.payDate.quarter", "eq", List.of(3L)));          // the visual's own filter, then the path clicked
     }
 
     @Test

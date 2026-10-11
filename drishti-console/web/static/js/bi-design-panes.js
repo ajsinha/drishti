@@ -279,7 +279,7 @@
       if (v.type === 'matrix') { fmt.appendChild(checkbox('Subtotals and totals', f.subtotals, (x) => setFmt(v, 'subtotals', x), { 'data-format-subtotals': '' })); }
       if (['card', 'kpi', 'gauge', 'table', 'matrix', 'bar', 'column', 'multirow-card'].indexOf(v.type) >= 0) { conditionalEditor(v, f); }
       if (v.type === 'slicer') {
-        fmt.appendChild(frow('Mode', selectInput([['list', 'list'], ['dropdown', 'dropdown'], ['range', 'range (numbers and dates)']], f.mode || 'list', (x) => setFmt(v, 'mode', x), { 'data-format-mode': '' })));
+        fmt.appendChild(frow('Mode', selectInput([['list', 'list'], ['dropdown', 'dropdown'], ['range', 'range (numbers and dates)']], f.mode || 'list', (x) => { setFmt(v, 'mode', x); if (x !== 'list' && v.at.h > 2) { D.change('Resize a slicer', () => { v.at.h = 2; }); } }, { 'data-format-mode': '' })));
         fmt.appendChild(frow('Filters', selectInput([['page', 'this page'], ['report', 'every page']], f.scope || 'page', (x) => setFmt(v, 'scope', x), { 'data-format-scope': '' })));
       }
       if (v.type === 'text') {
@@ -432,7 +432,7 @@
           const ed = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Edit the filter on ' + f.field }, B.icon('pencil'));
           ed.addEventListener('click', () => { editing = { scope, index: i }; drawFilters(); });
           const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove the filter on ' + f.field, 'data-remove-filter': f.field }, B.icon('x-lg'));
-          rm.addEventListener('click', () => D.change('Remove a filter', () => { scopeFilters(scope, true).splice(i, 1); }));
+          rm.addEventListener('click', () => D.change('Remove a filter', () => { scopeFilters(scope, true).splice(i, 1); if (!scopeFilters(scope, true).length) { delete (scope === 'report' ? D.model : scope === 'page' ? D.page() : D.sel()).filters; } }));
           li.appendChild(ed); li.appendChild(rm);
           ul.appendChild(li);
         });

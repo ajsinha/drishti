@@ -33,8 +33,9 @@
     const head = h('header', { class: 'bi-vis-head' }, title, tools);
     const body = h('div', { class: 'bi-vis-body' });
     const foot = h('footer', { class: 'bi-vis-foot', 'aria-live': 'polite' });
-    const el = h('section', { class: 'bi-vis bi-vis-' + spec.type, 'data-visual': spec.id, 'data-type': spec.type, 'aria-label': spec.title || spec.type + ' ' + spec.id }, spec.title || o.buttons ? head : null, body, foot);
-    if (!spec.title && !(o.buttons && o.buttons.length)) { el.classList.add('bi-vis-bare'); }
+    const hasHead = !!spec.title || !!(o.buttons && o.buttons.length);                       // no empty heading for a visual with neither a title nor a button
+    const el = h('section', { class: 'bi-vis bi-vis-' + spec.type, 'data-visual': spec.id, 'data-type': spec.type, 'aria-label': spec.title || spec.type + ' ' + spec.id }, hasHead ? head : null, body, foot);
+    if (!hasHead) { el.classList.add('bi-vis-bare'); }
     let handle = null;
     const drop = () => { if (handle) { handle.dispose(); handle = null; } };
     const api = {

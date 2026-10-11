@@ -100,9 +100,12 @@
       if (adj[a] && adj[b] && a !== b) { adj[a].push(b); adj[b].push(a); }
     });
     const names = tables.map((t) => t.name).sort((x, y) => adj[y].length - adj[x].length);
+    const cols = {};
+    tables.forEach((t) => { cols[t.name] = t.columns.length; });
+    const height = (n) => 52 + Math.min(cols[n] * 24, 224) + 34;                        // a box: its header, its columns (the list scrolls past 14 rem), and a gap
     const placed = {};
     const seen = new Set();
-    const BAND = 270, COL = BOX_W + 56;
+    const COL = BOX_W + 56;
     let y = 24;
     names.filter((n) => adj[n].length).forEach((root) => {
       if (seen.has(root)) { return; }
@@ -119,14 +122,14 @@
         }));
         frontier = next;
       }
-      const lo = Math.min(...Object.values(col)), rows = {};
+      const lo = Math.min(...Object.values(col)), at = {};
       Object.keys(col).sort((x, z) => adj[z].length - adj[x].length).forEach((n) => {
         const c = col[n] - lo;
-        rows[c] = rows[c] || 0;
-        placed[n] = { x: 24 + c * COL, y: y + rows[c] * BAND };
-        rows[c]++;
+        at[c] = at[c] === undefined ? y : at[c];
+        placed[n] = { x: 24 + c * COL, y: at[c] };
+        at[c] += height(n);
       });
-      y += Math.max(...Object.values(rows)) * BAND;
+      y = Math.max(...Object.values(at));
     });
     names.filter((n) => !seen.has(n)).forEach((n, i) => { placed[n] = { x: 24 + i * COL, y }; });
     return placed;
