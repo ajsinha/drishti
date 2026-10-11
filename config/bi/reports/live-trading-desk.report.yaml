@@ -33,6 +33,16 @@ tags: [sample, trading, live, streaming, tutorial]
 dataset: live-trading
 theme: { palette: default }
 
+# On a phone (640 px and narrower) the Desk page shows net MTM and the trade count first, then the desk chart (5 rows tall), the worst trades, notional and P&L;
+# the rolling line, the losses card and the latest changes are left out. Without `layouts` a page is one column in the grid's reading order.
+# Reference: docs/guides/REPORTS.md ("Phone layouts"). The designer's Phone tab writes this.
+layouts:
+  phone:
+    desk:
+      order: [mtm, trades, by-desk, movers]
+      hide: [rolling, losses, latest]
+      span: { by-desk: 5 }
+
 pages:
   - id: desk
     title: Desk

@@ -30,9 +30,10 @@ import java.util.Map;
  * @param dataset the dataset it reads: a catalogue id, a shipped file's name, or the dataset's own name
  * @param theme the colours the visuals use: {@code palette} (a name the console knows) and optional {@code background}
  * @param dates the business dates the report reads (null: each query reads the latest date)
+ * @param layouts per device class (today only {@code phone}), per page id, how the page is arranged at 640 px and narrower; empty: the automatic one column
  */
 public record Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
-        List<Page> pages, List<Bookmark> bookmarks) {
+        List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts) {
 
     /** The grid is always this many columns wide. */
     public static final int COLUMNS = 12;
@@ -109,6 +110,27 @@ public record Report(String name, int version, String title, String description,
         }
     }
 
+    /**
+     * How one page is arranged on a phone (at most 640 px wide): the visuals in {@code order} first (others follow in the grid's reading order), those in
+     * {@code hide} not drawn, and {@code span} the height in grid rows of a visual (1 to 40; the width is always the whole screen).
+     */
+    public record PhonePage(List<String> order, List<String> hide, Map<String, Integer> span) {
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            if (!order.isEmpty()) {
+                m.put("order", order);
+            }
+            if (!hide.isEmpty()) {
+                m.put("hide", hide);
+            }
+            if (!span.isEmpty()) {
+                m.put("span", span);
+            }
+            return m;
+        }
+    }
+
     /** A saved state: a page, slicer selections (by slicer visual id) and extra filters. */
     public record Bookmark(String name, String page, Map<String, List<Object>> slicers, List<Filter> filters) {}
 
@@ -159,6 +181,15 @@ public record Report(String name, int version, String title, String description,
                 }
                 return x;
             }).toList());
+        }
+        if (!layouts.isEmpty()) {
+            Map<String, Object> l = new LinkedHashMap<>();
+            layouts.forEach((device, byPage) -> {
+                Map<String, Object> pm = new LinkedHashMap<>();
+                byPage.forEach((page, lay) -> pm.put(page, lay.toMap()));
+                l.put(device, pm);
+            });
+            m.put("layouts", l);
         }
         List<Object> ps = new ArrayList<>();
         for (Page p : pages) {

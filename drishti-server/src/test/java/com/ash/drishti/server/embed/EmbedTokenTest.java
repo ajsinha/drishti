@@ -427,6 +427,34 @@ class EmbedTokenTest {
     }
 
     @Test
+    void aReportOpensOnlyWithTheReportScopeAndOnlyForTheReportsTheApplicationLists() throws Exception {
+        String user = uid("rue");
+        user(user, "full");
+        String plainApp = uid("crm-");
+        String viewOnly = token(plainApp, register(plainApp, Map.of("scopes", List.of("embed:view"))), user);
+        refused(call(viewOnly, CRM, "/api/v1/bi/reports/trades-overview"), 403, "DRS-5002");                    // embed:report was not granted
+        refused(run(post("/api/v1/bi/reports/trades-overview/query").header("Authorization", "Bearer " + viewOnly).contentType(MediaType.APPLICATION_JSON).content("{}")), 403, "DRS-5002");
+
+        String narrow = uid("rep-");
+        String tok = token(narrow, register(narrow, Map.of("scopes", List.of("embed:report"), "kinds", List.of("report:trades-overview"))), user);
+        refused(call(tok, CRM, "/api/v1/bi/reports/counterparty-risk"), 400, "DRS-8005");                      // not on the application's list
+        refused(call(tok, CRM, "/api/v1/bi/reports/dataset"), 403, "DRS-5002");                                  // authoring calls are never for an embed token
+        refused(call(tok, CRM, VIEW), 403, "DRS-5002");                                                          // views need embed:view
+        for (String ok : new String[] {"/api/v1/bi/reports/trades-overview", "/api/v1/bi/reports/catalogue"}) {
+            assertThat(call(tok, CRM, ok).getResponse().getContentAsString()).as(ok).doesNotContain("DRS-8005").doesNotContain("DRS-5002");
+        }
+        MvcResult q = run(post("/api/v1/bi/reports/trades-overview/query").header("Authorization", "Bearer " + tok).header("Origin", CRM)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"page\":\"overview\",\"visual\":\"by-desk\"}"));
+        assertThat(q.getResponse().getContentAsString()).doesNotContain("DRS-8005").doesNotContain("DRS-5002");
+        refused(run(post("/api/v1/bi/reports/trades-overview/versions").header("Authorization", "Bearer " + tok).contentType(MediaType.APPLICATION_JSON).content("{}")), 403, "DRS-5002");
+
+        String any = uid("rep-");
+        String all = token(any, register(any, Map.of("scopes", List.of("embed:report"), "kinds", List.of("report:*"))), user);
+        assertThat(call(all, CRM, "/api/v1/bi/reports/counterparty-risk").getResponse().getContentAsString()).doesNotContain("DRS-8005");
+        refused(call(all, CRM, VIEW), 403, "DRS-5002");
+    }
+
+    @Test
     void callsAreRateLimitedPerApplicationAndPerUser() throws Exception {
         String app = uid("crm-"), u = uid("val"), w = uid("wes");
         String secret = register(app, Map.of("callsPerMinute", 100, "userCallsPerMinute", 3));

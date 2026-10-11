@@ -415,6 +415,9 @@ public final class EmbedTokenService {
                     + String.join(" ", granted) + ")");
         }
         String kind = kindOf(path);
+        if (kind != null && kind.startsWith(REPORT_KIND) && REPORT_AUTHORING.contains(kind.substring(REPORT_KIND.length()))) {
+            throw new EmbedException(ErrorCode.FORBIDDEN, 403, "insufficient_scope", "an embed token reads published reports: '" + kind.substring(REPORT_KIND.length()) + "' is for authors");
+        }
         if (kind != null && !app.allowsKind(kind)) {
             throw new EmbedException(ErrorCode.EMBED_KIND, 400, "access_denied", "the host application may not show the kind '" + kind + "'");
         }
@@ -444,8 +447,20 @@ public final class EmbedTokenService {
         return false;
     }
 
-    /** The entity kind a call is about ({@code /api/v1/views/{kind}/...}), or null. */
+    /** The kind an app lists for a report: {@code report:<id>}; {@code report:*} allows every report. */
+    static final String REPORT_KIND = "report:";
+    /** Names under {@code /api/v1/bi/reports/} that are authoring calls, not report ids. */
+    private static final java.util.Set<String> REPORT_AUTHORING = java.util.Set.of("dataset", "validate", "format", "query");
+
+    /** The kind a call is about: {@code /api/v1/views/{kind}/...} gives the kind, {@code /api/v1/bi/reports/{id}/...} gives {@code report:<id>}; else null. */
     static String kindOf(String path) {
+        String reports = "/api/v1/bi/reports/";
+        if (path.startsWith(reports)) {
+            String rest = path.substring(reports.length());
+            int slash = rest.indexOf('/');
+            String id = slash < 0 ? rest : rest.substring(0, slash);
+            return "catalogue".equals(id) ? null : REPORT_KIND + id;
+        }
         String prefix = "/api/v1/views/";
         if (!path.startsWith(prefix)) {
             return null;

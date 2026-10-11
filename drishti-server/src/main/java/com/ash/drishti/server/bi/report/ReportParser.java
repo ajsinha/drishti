@@ -72,7 +72,7 @@ public final class ReportParser {
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}");
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
-    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "pages",
+    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "pages",
             "owner", "tags", "endorsement", "endorsedBy", "audience");
     private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
@@ -121,7 +121,7 @@ public final class ReportParser {
         List<Report.Page> pages = pages(root.path("pages"), out);
         List<Report.Bookmark> bookmarks = bookmarks(root.path("bookmarks"), out);
         Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset, theme, dates,
-                filters, pages, bookmarks);
+                filters, pages, bookmarks, layouts(root.path("layouts"), out));
         return new Result(r, out);
     }
 
@@ -477,6 +477,60 @@ public final class ReportParser {
             list.add(new Report.Bookmark(name, b.path("page").asText(), slicers, filters(b.path("filters"), p + ".filters", out)));
         }
         return list;
+    }
+
+    /** {@code layouts: { phone: { <page id>: { order: [visual ids], hide: [visual ids], span: { <visual id>: rows } } } }}; references are checked by the validator. */
+    private static Map<String, Map<String, Report.PhonePage>> layouts(JsonNode n, List<Problem> out) {
+        Map<String, Map<String, Report.PhonePage>> all = new LinkedHashMap<>();
+        if (n.isMissingNode() || n.isNull()) {
+            return all;
+        }
+        if (!n.isObject()) {
+            out.add(error(INVALID, "layouts", "layouts is { phone: { <page id>: { order, hide, span } } }"));
+            return all;
+        }
+        n.fields().forEachRemaining(dev -> {
+            String dp = "layouts." + dev.getKey();
+            if (!"phone".equals(dev.getKey())) {
+                out.add(new Problem("warning", INVALID, dp, "unknown layout '" + dev.getKey() + "' is ignored (phone)"));
+                return;
+            }
+            if (!dev.getValue().isObject()) {
+                out.add(error(INVALID, dp, "phone maps a page's id to { order, hide, span }"));
+                return;
+            }
+            Map<String, Report.PhonePage> pages = new LinkedHashMap<>();
+            dev.getValue().fields().forEachRemaining(pg -> {
+                String pp = dp + "." + pg.getKey();
+                JsonNode v = pg.getValue();
+                if (!v.isObject()) {
+                    out.add(error(INVALID, pp, "a page's phone layout is { order: [visual ids], hide: [visual ids], span: { <visual id>: rows } }"));
+                    return;
+                }
+                v.fieldNames().forEachRemaining(k -> {
+                    if (!Set.of("order", "hide", "span").contains(k)) {
+                        out.add(new Problem("warning", INVALID, pp + "." + k, "unknown key '" + k + "' is ignored (order, hide, span)"));
+                    }
+                });
+                Map<String, Integer> span = new LinkedHashMap<>();
+                JsonNode sp = v.path("span");
+                if (sp.isObject()) {
+                    sp.fields().forEachRemaining(e -> {
+                        int rows = e.getValue().asInt(0);
+                        if (!e.getValue().canConvertToInt() || rows < 1 || rows > 40) {
+                            out.add(error(INVALID, pp + ".span." + e.getKey(), "span is the height in grid rows, 1 to 40"));
+                        } else {
+                            span.put(e.getKey(), rows);
+                        }
+                    });
+                } else if (!sp.isMissingNode() && !sp.isNull()) {
+                    out.add(error(INVALID, pp + ".span", "span maps a visual's id to its height in grid rows"));
+                }
+                pages.put(pg.getKey(), new Report.PhonePage(strings(v.path("order")), strings(v.path("hide")), span));
+            });
+            all.put(dev.getKey(), pages);
+        });
+        return all;
     }
 
     // ---- helpers -----------------------------------------------------------------------------------------------------
