@@ -60,7 +60,7 @@
           <input id="{{ f.id }}" class="qf-v mono" type="{{ 'text' if f.op == 'relative' else 'date' }}" name="v.{{ f.path }}" value="{{ f.held[0] if f.held }}" list="qf-presets"{{ ' required' if f.required }}>
           <input class="qf-v2 mono" type="date" name="v2.{{ f.path }}" value="{{ f.held2 }}" aria-label="{{ f.label }}: end date"{{ ' hidden' if f.op != 'between' }}>
         {% elif f.type == 'enum' %}
-          <div id="{{ f.id }}" class="qf-enum" role="group" aria-label="{{ f.label }}"{% if f['values']|length > 6 %} data-ms{% endif %}>{% for v in f['values'] %}
+          <div id="{{ f.id }}" class="qf-enum" role="group" aria-label="{{ f.label }}"{% if f['values']|length > 3 %} data-ms{% endif %}>{% for v in f['values'] %}
             <label class="qf-chk"><input type="checkbox" name="v.{{ f.path }}" value="{{ v }}"{{ ' checked' if v in f.held }}> <span>{{ v }}</span></label>{% endfor %}
             {% if not f['values'] %}<span class="text-muted-d">no values known yet</span>{% endif %}</div>
         {% elif f.type == 'id' %}

@@ -1400,7 +1400,7 @@ do not use `100vw` or `vh` for something inside the element's tree where the ele
 `static/js/multiselect.js` (vendored with the console, no library) is the one multi-select the console draws: a `<details>` whose `<summary>` shows
 "All", the value, or "3 selected: ABS, REPO, +1", and whose pop-up holds a search box, *Select all* / *Clear* and a labelled group of **real checkboxes**
 (so form submission, keyboard and screen readers are the browser's own; 44 px rows on touch; theme tokens in `css/controls.css`). Two callers:
-the query-by-form renderer marks every enum field with more than 6 values `data-ms` (`terminal/form.html`; up to 6 stay a checkbox row, so the renderer
+the query-by-form renderer marks every enum field with more than 3 values `data-ms` (`terminal/form.html`; up to 3 stay a checkbox row, so the renderer
 decides by option count and no pack is hard-coded) and `multiselect.js` wraps it on load, keeping the checkboxes' names and so the criteria encoding;
 and `controls.js` builds the `multi-select` control from `window.drishtiModules.multiselect.decorate(details, {label, boxes, onChange})`. Inside
 `<drishti-view>` it is one of the allow-listed enhancer scripts (`routes/embed_routes.py` `ENHANCERS`, `web/embed/assets.js`), loaded before `controls`.
