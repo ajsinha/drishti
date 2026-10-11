@@ -662,6 +662,8 @@ Below is the complete `config/packs/logistics/pack.yaml`, annotated. Then the ke
 | Key | Read by | One-line example | What it does | Details |
 |---|---|---|---|---|
 | `pack` | server | `pack: helpdesk` | The pack's name; must equal the folder name | below |
+| `sample` | server | `sample: true` | Marks the pack as a demonstration: an administrator can hide sample packs from business users (`drishti.packs.samples`) | [Sample packs](PACKS.md#sample-packs) |
+| `loads` | server | `loads: { … }` | Which kinds the ETL is expected to land each business day, by when, and who is told | [DATA_LOADS.md](DATA_LOADS.md#6-configuration-reference) |
 | `code` | server | `code: HELP` | The pack's short code: typed alone on the command line it opens the pack's overview (`/p/<pack>`). It must not equal a mnemonic (a mnemonic wins) | [Pack codes](PACKS.md#pack-codes) |
 | `version` | server | `version: 1.2.0` | Shown in About, Admin → Health and Admin → Packs | [Versioning](#versioning-a-pack) |
 | `title`, `description` | both | `title: Help desk` | The pack's name and paragraph in menus, help and admin pages | below |
@@ -1821,7 +1823,7 @@ help cards from one description. Each generated file says so in a comment near t
 |---|---|
 | `banking-core`, `market-data`, `trading`, `market-risk`, `counterparty-risk` | `tools/packgen/banking/`: `make_packs.py` the manifests and the Calc snippets (`python/*.py`, from `snippets/<pack>/*.py` through `calc_snippets.py`), `make_sutras.py` the 171 Sutras, `make_docs.py` the guides, `make_data.py` the documents and the lake |
 | `liquidity-risk`, `climate-risk`, `operational-risk`, `retail-banking`, `genomics`, `politics-society`, `economics` | `tools/packgen/<area>/make.py` (`liquidity`, `climate`, `oprisk`, `retail`, `genomics`, `politics`, `economics`), all on the common builder `tools/packgen/common/packbuild.py` |
-| `finance`, `logistics` | hand-written; their samples come from `config/packs/<name>/tools/` |
+| `finance`, `logistics`, `news-watch`, `market-watch` | hand-written; where a pack has a `tools/` folder (`finance`, `logistics`, `news-watch`) its samples come from there |
 
 ### Never edit a generated file by hand
 
@@ -2258,7 +2260,7 @@ The other way round: *New screen → Or import a pack* takes a zip or a folder (
 into a design, with the pack's `tests/` and `samples/` documents as its samples. Use it to revise a shipped pack's Sutra
 in the workbench, then bring the new version back as a fragment (or propose it, for the live registry: the workbench's
 *Ship → Propose* path puts it through review and approval). Stored-entity samples are references, not data, so they are
-not exported; export from synthetic or uploaded samples. The ten examples of
+not exported; export from synthetic or uploaded samples. The eleven examples of
 [docs/guides/examples](examples/README.md) each open as a design in the workbench, which is the quickest way to see a
 fragment of each panel family.
 
