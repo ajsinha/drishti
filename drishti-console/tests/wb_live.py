@@ -82,7 +82,7 @@ def free_port() -> int:
 
 
 def jar() -> Path | None:
-    found = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"))
+    found = sorted((ROOT / "drishti-server" / "target").glob("drishti-server-*-exec.jar"), key=lambda p: p.stat().st_mtime)
     return found[-1] if found else None
 
 

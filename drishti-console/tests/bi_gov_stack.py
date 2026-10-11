@@ -145,7 +145,7 @@ class Stack:
     def _start(self) -> "Stack":
         for port in (SERVER_PORT, CONSOLE_PORT):
             assert port not in FORBIDDEN and not listening(port), f"port {port} is in use: stop whatever listens there"
-        jars = glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar"))
+        jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)  # newest build first: target may hold older versions
         java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
         if not jars or not Path(java).exists():
             raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
