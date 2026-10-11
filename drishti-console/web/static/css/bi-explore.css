@@ -25,7 +25,7 @@
 .bx-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
 .bx-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .15rem .3rem .15rem .6rem; border: 1px solid var(--d-border); border-radius: 999px; background: var(--d-surface); cursor: grab; font-size: .85rem; }
 .bx-mini { min-width: 1.6rem; min-height: 1.6rem; border: 1px solid var(--d-border); border-radius: 50%; background: transparent; color: var(--d-muted); font-size: .72rem; cursor: pointer; padding: 0; }
-.bx-mini:hover, .bx-mini:focus-visible { color: var(--d-text); border-color: var(--d-accent, currentColor); }
+.bx-mini:hover, .bx-mini:focus-visible { color: var(--d-ink); border-color: var(--d-accent, currentColor); }
 .bx-zones { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .6rem; margin: .6rem 0; }
 .bx-zone { border: 1px dashed var(--d-border); border-radius: var(--d-radius); padding: .4rem .6rem; min-height: 4.5rem; }
 .bx-zone h3 { margin: 0 0 .3rem; font-size: .85rem; color: var(--d-muted); }

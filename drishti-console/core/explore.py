@@ -37,7 +37,7 @@ _SAFE = re.compile(r"[^A-Za-z0-9_]")
 
 
 class ExploreError(Exception):
-    """A refusal of Analyse with the DRS code to answer with (9080 the request is wrong, 9081 a limit, 9082 the SQL is refused)."""
+    """A refusal of Analyse with the DRS code to answer with (the Python items' codes: 9070 the request is invalid, 9072 a limit, 9073 refused, 9074 not available)."""
 
     def __init__(self, code: str, status: int, detail: str):
         super().__init__(detail)
@@ -146,9 +146,9 @@ def query_body(fields: list[str], limit: int, filters=None, dates=None) -> dict:
 
 def check_fields(fields, limits: Limits) -> list[str]:
     if not isinstance(fields, list) or not fields or not all(isinstance(f, str) and re.fullmatch(r"[A-Za-z0-9_.\- ]{1,128}", f) for f in fields):
-        raise ExploreError("DRS-9080", 422, "send fields: a list of the dataset's columns, such as [\"trade.desk\", \"trade.mtm\"]")
+        raise ExploreError("DRS-9070", 422, "send fields: a list of the dataset's columns, such as [\"trade.desk\", \"trade.mtm\"]")
     if len(fields) > limits.max_fields:
-        raise ExploreError("DRS-9081", 413, f"{len(fields)} fields asked; the limit is {limits.max_fields} (bi.explore.max_fields)")
+        raise ExploreError("DRS-9072", 413, f"{len(fields)} fields asked; the limit is {limits.max_fields} (bi.explore.max_fields)")
     return fields
 
 
@@ -167,9 +167,9 @@ def run_sql(extract: Extract, sql: str, limits: Limits) -> dict:
     """Runs one SELECT over ``extract`` (the table ``extract``). Answers ``{columns, rows, rowCount, truncated, ms}``; refusals are :class:`ExploreError`."""
     sql = (sql or "").strip().rstrip(";").strip()
     if not sql:
-        raise ExploreError("DRS-9080", 422, "write a SELECT over the table extract")
+        raise ExploreError("DRS-9070", 422, "write a SELECT over the table extract")
     if len(sql) > limits.sql_max_chars:
-        raise ExploreError("DRS-9081", 413, f"the SQL is {len(sql):,} characters; the limit is {limits.sql_max_chars:,} (bi.explore.sql_max_chars)")
+        raise ExploreError("DRS-9072", 413, f"the SQL is {len(sql):,} characters; the limit is {limits.sql_max_chars:,} (bi.explore.sql_max_chars)")
     t0 = time.monotonic()
     db = sqlite3.connect(":memory:", check_same_thread=False)
     try:
@@ -187,18 +187,15 @@ def run_sql(extract: Extract, sql: str, limits: Limits) -> dict:
         try:
             cur = db.execute(sql)
             rows = cur.fetchmany(limits.sql_max_rows + 1)
-        except sqlite3.OperationalError as e:
-            if "interrupted" in str(e):
-                raise ExploreError("DRS-9081", 504, f"the query ran longer than {limits.sql_max_seconds:g} s and was stopped (bi.explore.sql_max_seconds)") from None
-            if "not authorized" in str(e):
-                raise ExploreError("DRS-9082", 403, "only a single SELECT over the table extract is allowed") from None
-            raise ExploreError("DRS-9082", 422, str(e)) from None
-        except (sqlite3.Warning, sqlite3.ProgrammingError) as e:
-            raise ExploreError("DRS-9082", 422, "only one statement is allowed" if "one statement" in str(e) else str(e)) from None
-        except sqlite3.DatabaseError as e:
-            raise ExploreError("DRS-9082", 422, str(e)) from None
+        except (sqlite3.Warning, sqlite3.Error) as e:
+            text = str(e)
+            if "interrupted" in text:
+                raise ExploreError("DRS-9072", 504, f"the query ran longer than {limits.sql_max_seconds:g} s and was stopped (bi.explore.sql_max_seconds)") from None
+            if "not authorized" in text:
+                raise ExploreError("DRS-9073", 403, "only a single SELECT over the table extract is allowed") from None
+            raise ExploreError("DRS-9070", 422, "only one statement is allowed" if "one statement" in text else text) from None
         if cur.description is None:
-            raise ExploreError("DRS-9082", 422, "the statement returned no rows: use a SELECT")
+            raise ExploreError("DRS-9070", 422, "the statement returned no rows: use a SELECT")
         cut = len(rows) > limits.sql_max_rows
         rows = [[(v.hex() if isinstance(v, bytes) else v) for v in r] for r in rows[:limits.sql_max_rows]]
         return {"columns": [d[0] for d in cur.description], "rows": rows, "rowCount": len(rows), "truncated": cut, "ms": round((time.monotonic() - t0) * 1000)}
@@ -212,23 +209,23 @@ def parse_notebook(text: str, limits: Limits) -> dict:
     try:
         doc = yaml.safe_load(text or "") or {}
     except yaml.YAMLError as e:
-        raise ExploreError("DRS-9080", 422, f"the notebook is not YAML: {e}") from None
+        raise ExploreError("DRS-9070", 422, f"the notebook is not YAML: {e}") from None
     if not isinstance(doc, dict):
-        raise ExploreError("DRS-9080", 422, "a notebook is a YAML mapping")
+        raise ExploreError("DRS-9070", 422, "a notebook is a YAML mapping")
     extra = sorted(set(doc) - NOTEBOOK_KEYS)
     if extra:
-        raise ExploreError("DRS-9080", 422, f"unknown notebook key(s): {', '.join(extra)}")
+        raise ExploreError("DRS-9070", 422, f"unknown notebook key(s): {', '.join(extra)}")
     cells = doc.get("cells") or []
     if not isinstance(cells, list) or len(cells) > limits.max_cells:
-        raise ExploreError("DRS-9081", 413, f"a notebook holds a list of up to {limits.max_cells} cells (bi.explore.max_cells)")
+        raise ExploreError("DRS-9072", 413, f"a notebook holds a list of up to {limits.max_cells} cells (bi.explore.max_cells)")
     for i, c in enumerate(cells):
         if not isinstance(c, dict) or c.get("type") not in CELL_TYPES:
-            raise ExploreError("DRS-9080", 422, f"cell {i + 1}: type is one of {', '.join(CELL_TYPES)}")
+            raise ExploreError("DRS-9070", 422, f"cell {i + 1}: type is one of {', '.join(CELL_TYPES)}")
         if c["type"] == "slice":
             if not isinstance(c.get("slice"), dict):
-                raise ExploreError("DRS-9080", 422, f"cell {i + 1}: a slice cell holds slice: {{rows, columns, values, filters}}")
+                raise ExploreError("DRS-9070", 422, f"cell {i + 1}: a slice cell holds slice: {{rows, columns, values, filters}}")
         elif not isinstance(c.get("source"), str) or len(c["source"]) > limits.cell_max_chars:
-            raise ExploreError("DRS-9081", 422, f"cell {i + 1}: source is text up to {limits.cell_max_chars:,} characters")
+            raise ExploreError("DRS-9072", 422, f"cell {i + 1}: source is text up to {limits.cell_max_chars:,} characters")
     if doc.get("fields") is not None:
         check_fields(doc["fields"], limits)
     return doc
@@ -240,7 +237,7 @@ def promote_python(cell_source: str, name: str, interface: str, columns: list[st
     A measure's function must return one number; a visual's an ECharts option, SVG or PNG. The author checks and edits the draft before publishing;
     nothing is published by promoting."""
     if interface not in ("measure", "visual"):
-        raise ExploreError("DRS-9080", 422, "interface is measure or visual")
+        raise ExploreError("DRS-9070", 422, "interface is measure or visual")
     entry = "compute" if interface == "measure" else "render"
     body = "\n".join(("    " + ln) if ln.strip() else "" for ln in cell_source.splitlines()) or "    pass"
     ret = "    return result" if "result" in cell_source else "    return None"

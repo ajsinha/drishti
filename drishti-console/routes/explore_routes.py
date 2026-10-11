@@ -68,7 +68,7 @@ async def extract_for(request: Request, spec: dict) -> Extract:
     if spec.get("report"):
         page, visual = str(spec.get("page", "")), str(spec.get("visual", ""))
         if not page or not visual:
-            raise ExploreError("DRS-9080", 422, "send {report, page, visual} to open a visual's data")
+            raise ExploreError("DRS-9070", 422, "send {report, page, visual} to open a visual's data")
         if not arrow:
             raise ExploreError("DRS-9074", 503, "opening a visual's data needs pyarrow on the console (pip install -r drishti-console/requirements.txt)")
         content, headers = await backend.bi_arrow("/reports/" + quote(str(spec["report"]), safe=":") + "/query", me,
@@ -77,7 +77,7 @@ async def extract_for(request: Request, spec: dict) -> Extract:
         return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
     dataset = str(spec.get("dataset") or "")
     if not dataset:
-        raise ExploreError("DRS-9080", 422, "send {dataset, fields} or {report, page, visual}")
+        raise ExploreError("DRS-9070", 422, "send {dataset, fields} or {report, page, visual}")
     body = query_body(check_fields(spec.get("fields"), limits), cap, spec.get("filters"), spec.get("dates"))
     path = "/datasets/" + quote(dataset, safe=":") + "/query"
     if arrow:
@@ -157,7 +157,7 @@ async def python(request: Request):
         if not author:
             raise ExploreError("DRS-9073", 403, "running Python cells needs the bi-author power")
         if not source.strip() or len(source) > limits.cell_max_chars:
-            raise ExploreError("DRS-9081", 413, f"a cell holds 1 to {limits.cell_max_chars:,} characters (bi.explore.cell_max_chars)")
+            raise ExploreError("DRS-9072", 413, f"a cell holds 1 to {limits.cell_max_chars:,} characters (bi.explore.cell_max_chars)")
         packages = cell_packages(source, runner.packages)
         ex = await extract_for(request, body.get("extract") or {})
         if ex.arrow is None:
@@ -205,7 +205,7 @@ async def promote(request: Request):
         if to in ("measure", "visual"):
             source = str(body.get("source", ""))
             if not source.strip() or len(source) > limits.cell_max_chars:
-                raise ExploreError("DRS-9080", 422, "the cell is empty or too long to promote")
+                raise ExploreError("DRS-9070", 422, "the cell is empty or too long to promote")
             cols = [str(c) for c in body.get("columns") or []][:limits.max_fields]
             text = promote_python(source, name, to, cols, cell_packages(source, request.app.state.pyrunner.packages))
             notes = ["The cell's df became the function's table; a measure must return one number and a visual an ECharts option, SVG or PNG.",
@@ -213,7 +213,7 @@ async def promote(request: Request):
             return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers={"Cache-Control": "no-store"})
         if to == "report":
             return JSONResponse(await _slice_report(request, body, name), headers={"Cache-Control": "no-store"})
-        raise ExploreError("DRS-9080", 422, "to is measure, visual or report")
+        raise ExploreError("DRS-9070", 422, "to is measure, visual or report")
     except (BackendError, ExploreError) as e:
         return _fail(e)
 
@@ -223,7 +223,7 @@ async def _slice_report(request: Request, body: dict, name: str) -> dict:
     import yaml
     dataset, sl = str(body.get("dataset") or ""), body.get("slice") or {}
     if not dataset or not isinstance(sl, dict):
-        raise ExploreError("DRS-9080", 422, "send {dataset, slice: {rows, columns, values: [{field, agg}]}}")
+        raise ExploreError("DRS-9070", 422, "send {dataset, slice: {rows, columns, values: [{field, agg}]}}")
     model = await request.app.state.backend.bi("GET", "/datasets/" + quote(dataset, safe=":"), ident(request))
     rows, cols = [str(f) for f in sl.get("rows") or []], [str(f) for f in sl.get("columns") or []]
     notes, measures = [], []
@@ -239,7 +239,7 @@ async def _slice_report(request: Request, body: dict, name: str) -> dict:
     elif rows or cols:
         visual = {"id": "slice", "type": "table", "title": name, "at": {"x": 0, "y": 0, "w": 12, "h": 6}, "wells": {"columns": rows + cols}}
     else:
-        raise ExploreError("DRS-9080", 422, "the slice has no rows or columns to build a visual from")
+        raise ExploreError("DRS-9070", 422, "the slice has no rows or columns to build a visual from")
     if not visual["wells"].get("columns"):
         visual["wells"].pop("columns", None)
     slug = re.sub(r"[^A-Za-z0-9_-]", "-", name).strip("-")[:48] or "from-analyse"

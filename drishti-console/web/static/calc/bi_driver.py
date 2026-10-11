@@ -62,7 +62,7 @@ def _bi_number(v, where):
 
 
 class _NoQuant:
-    """``quant`` in a browser cell: the console's quant engine runs on the server target only (docs/guides/QUANT_SERVICE.md)."""
+    """``quant`` in a browser cell: the console's quant engine runs on the server target only (docs/architecture/QUANT_SERVICE.md section 16)."""
 
     def price(self, *a, **k):
         raise ValueError("quant: the quant engine is available on the server target only; run this cell on the server")

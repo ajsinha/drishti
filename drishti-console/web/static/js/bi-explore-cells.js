@@ -84,7 +84,7 @@
       X.table(host, r.table.columns, r.table.rows, 200);
     } else if (r.option || r.svg || r.png) {
       var box = h('div', { class: 'bx-chart' }); out.appendChild(box);
-      B.python.draw(box, { title: 'Python result', alt: 'Result of the Python cell' }, { t: null, palette: null }, { kind: r.option ? 'echarts' : r.svg ? 'svg' : 'png', option: r.option, svg: r.svg, png: r.png });
+      B.python.draw(box, { title: 'Python result', alt: 'Result of the Python cell' }, { t: B.tokens(box), palette: null }, { kind: r.option ? 'echarts' : r.svg ? 'svg' : 'png', option: r.option, svg: r.svg, png: r.png });
     } else if (r.value !== undefined) { out.appendChild(h('pre', { class: 'bx-pre', 'data-value': '', text: typeof r.value === 'string' ? r.value : JSON.stringify(r.value, null, 1) })); }
   }
 

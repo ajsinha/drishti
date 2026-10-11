@@ -1089,3 +1089,38 @@ Make the function divide by zero and open a report that uses it: you see `DRS-90
 
 Reference: [PYTHON_BI.md](PYTHON_BI.md) (the manifest, the sandbox, the settings, the codes), [DATASETS.md section 4.2](DATASETS.md#42-python-measures-phase-6), [REPORTS.md section 3.3](REPORTS.md#33-the-python-visual-phase-6).
 
+## 25. Analyse: slice, SQL and Python on your own rows
+
+*Phase 9. This chapter uses the stack of `drishti-console/tests/test_bi_explore_browser.py` (server 18956, console 17956) as the author `wes`; the pictures are at the end, made by `tests/analyse_shots.py`.
+You need `pandas` and `pyarrow` in the console's environment for the Python step.*
+
+**1. Open an extract.** Rail, **Analyse**. Choose the dataset *Trades, the basics*, leave the first eight fields ticked and press **Open the extract**. The line under the form says `60 rows, 8 columns.`
+(and `Masked for you: ...` if your role has masked columns). These are *your* rows: a colleague with other row rules would open fewer.
+
+**2. Slice.** On the Slice tab press **R** on `desk` and **V** on `notional` (or drag the chips into the zones). A pivot of notional by desk appears at once. Add `book` to Columns with **C**, or set the
+aggregation to `avg`. **F** on `status` adds a filter you choose a value for. This pivot is over the extract the page holds.
+
+**3. SQL.** On the SQL tab write `SELECT desk, COUNT(*) AS trades, SUM(notional) AS notional FROM extract GROUP BY desk ORDER BY notional DESC` and **Run**. The sums equal the pivot's. Try `DROP TABLE extract`: `DRS-9073`,
+because a SQL cell is one read-only SELECT.
+
+**4. Python.** On the Python tab:
+
+```python
+g = df.groupby("desk", as_index=False)["notional"].sum()
+print(round(quant.price("black_scholes", spot=100, strike=100, rate=0.05, vol=0.2, years=1), 4))
+result = {"title": {"text": "Notional by desk"}, "xAxis": {"type": "category", "data": list(g["desk"])},
+          "yAxis": {"type": "value"}, "series": [{"type": "bar", "data": [float(v) for v in g["notional"]]}]}
+```
+
+**Run**: `10.4506` is printed (the quant stand-in) and the chart is drawn. Switch the cell's selector to *Browser (Pyodide)* and the same cell runs in your browser (without `quant`).
+
+**5. Save and promote.** Give the notebook a title and **Save as a notebook**; *Open the item* shows it in the catalogue with versions like any item. Back in Analyse, **Promote to a visual** on the Python cell and
+**Promote to a report draft** on the slice each save a draft in your workspace; open them from the links, check, and publish when you are happy.
+
+Reference: [ANALYSE.md](ANALYSE.md).
+
+![The Slice tab](img/analyse/slice.png)
+
+![A SQL cell](img/analyse/sql.png)
+
+![A Python cell with a chart](img/analyse/python.png)

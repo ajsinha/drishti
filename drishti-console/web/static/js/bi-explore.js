@@ -58,7 +58,8 @@
   var dsSel = q('[data-dataset]', root), fieldsBox = q('[data-fields-box]', root), fieldsEl = q('[data-fields]', root), go = q('[data-open-go]', root);
 
   function loadDatasets() {
-    return B.api('GET', '/datasets').then(function (list) {
+    return B.api('GET', '/datasets').then(function (d) {
+      var list = Array.isArray(d) ? d : (d.datasets || []);
       clear(dsSel);
       dsSel.appendChild(h('option', { value: '', text: '(choose a dataset)' }));
       list.forEach(function (d) { dsSel.appendChild(h('option', { value: d.id, text: d.title || d.id })); });

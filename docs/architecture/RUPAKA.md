@@ -129,7 +129,7 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
   `BI CATALOGUE <GO>` the catalogue (type-ahead completes both after `BI `). `BI` and `RUPAKA` are reserved keywords: a pack
   cannot define a mnemonic with either name (pack checks refuse it), and case does not matter (`rupaka <GO>` and `bi <GO>` work).
 - **URLs.** `/bi` (home), `/bi/w/<workspace>` , `/bi/r/<report>[/<page>]`, `/bi/d/<dataset>`, `/bi/catalogue`,
-  `/bi/design/<draft>`; filters and bookmarks in the query string (`?f=region:EMEA`) so a link reproduces what was seen. **As built:** also `/bi/workspaces`, `/bi/i/<item>`, `/bi/datasets`, `/bi/m/<dataset>` (the Model view), `/bi/b/<board>`, `/bi/environments`, `/bi/explore` (a placeholder) and `/admin/bi`; a drill-through carries its value as `?carry=` and a board's kiosk is `?kiosk=1` ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 2).
+  `/bi/design/<draft>`; filters and bookmarks in the query string (`?f=region:EMEA`) so a link reproduces what was seen. **As built:** also `/bi/workspaces`, `/bi/i/<item>`, `/bi/datasets`, `/bi/m/<dataset>` (the Model view), `/bi/b/<board>`, `/bi/environments`, `/bi/explore` (Analyse, phase 9: 20.9) and `/admin/bi`; a drill-through carries its value as `?carry=` and a board's kiosk is `?kiosk=1` ([BI_GUIDE.md](../guides/BI_GUIDE.md) section 2).
 - **A separate shell.** The BI page shares the top bar, sign-in, themes, inbox and help with the terminal, but has its
   own layout: a left navigation rail, a wide canvas and its own keys. The terminal's F-key footer is not shown. From any
   BI visual, *Open in terminal* goes to the record's view; from a terminal view, *Analyse in BI* opens a report over the
@@ -162,7 +162,7 @@ bookmarks, export, subscriptions, and a good catalogue. Everything in this list 
 | **Explore** | Free exploration of a dataset with Graphic Walker; *Save as visual* to a draft | authors and analysts |
 
 Keys on the BI page: `/` search the catalogue, `g h` home, `g c` catalogue, `g w` my workspace, `n` new report, `?` the
-keys. All of it works at phone width (section 15). **As built:** the rail also has *Environments* (phase 4), *Explore* is a placeholder until phase 9, and the keys are `/`, `g h`, `g c`, `g w` and `?` (there is no `n`).
+keys. All of it works at phone width (section 15). **As built:** the rail also has *Environments* (phase 4), *Analyse* (phase 9, lean: 20.9) takes the place of *Explore*, and the keys are `/`, `g h`, `g c`, `g w` and `?` (there is no `n`).
 
 ## 6. Datasets: the semantic model
 
@@ -1060,3 +1060,25 @@ changes (so suggestions can arrive as diffs).
 | 5 | Python runner host | inside the console process; worker subprocesses of the console; a separate service | **Worker subprocesses of the console, started on demand**: no extra deployment, and a runaway transform never stalls the web process; a separate service only when load measurements call for it |
 | 6 | Command keyword for BI | `BI`; `RUP`; `RUPAKA` | **`BI`** (reserved, as is `RUPAKA`, kept as an alias), with `BI WORKSPACE` and `BI CATALOGUE` |
 | 7 | Product name in the UI | "BI"; "Rūpaka" | **"BI"** in the top bar, "Drishti Rūpaka" in documentation and marketing |
+
+### 20.9 Analyse (phase 9, lean), as built
+
+References: [ANALYSE.md](../guides/ANALYSE.md) (the reference), [QUANT_SERVICE.md](QUANT_SERVICE.md) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapter 25,
+the console's `bi.explore.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
+
+**Built (a lean slice of the phase).**
+
+* **The page** at `/bi/explore` (the rail's *Analyse*, no longer a placeholder): open a dataset (or, over the route, one report visual's data) as a **masked extract**: the server's dataset query *as the reader* (masks, row rules), the table's own rows with
+  their `id`, cut to `bi.explore.max_rows`, rebuilt on every call and never kept. Tabs **Slice**, **SQL**, **Python**; keyboard- and phone-friendly (field chips with R, C, V, F buttons as well as drag).
+* **Slice** in plain JavaScript over the extract the page holds (rows, columns, values with `sum`, `avg`, `count`, `min`, `max`, filters).
+* **SQL** cells over the table `extract` on the **console**, read-only (an authorizer: one SELECT), with limits on text, time and rows (`DRS-9070`, `9072`, `9073`).
+* **Python** cells over `df` with `result` drawn as a table, a chart (ECharts option, SVG, PNG) or a value, plus `quant`, on the phase 6 runner (server target, `bi-author`) or in Pyodide in Calc's worker (browser target); the Analyse page keeps the strict policy.
+* **Notebooks** as a BI item kind `notebook` (the kind already existed as a placeholder), body YAML checked by the console (`POST /bi/explore/notebook/check`), saved and versioned through the item API; **Promote**: a Python cell to a Python Measure or Visual draft item, a slice to a report draft
+  (matching dataset measures by expression).
+* **`QuantEngine`** (`drishti-console/core/quant/`): `price(instrument, **params)` with a stand-in (Black-Scholes, bond price, NPV) and a documented slot for QLRisk (not imported, not modified); `quant.price(...)` in a server Python cell.
+* A test that the server's `drishti.bi.report.python-packages` and the console's `bi.python.packages` list the same packages.
+
+**Decisions that differ from the design above.** DuckDB-Wasm is **not** used: it is not vendored (only the phase 0 proof of concept fetches it), so Slice is JavaScript and SQL runs on the console in SQLite, over the same masked extract (a different dialect from the server's DuckDB). The
+page therefore has no WebAssembly of its own. Python cells are for `bi-author`. The codes are the Python items' (`DRS-9070` to `9074`); no new code.
+
+**Not built, and not faked.** DuckDB-Wasm in the page and with it million-row extracts; Perspective and Graphic Walker in Analyse; the *Data* and *Notes* tabs; outputs saved with a notebook, scheduled notebook runs, parameters; *Analyse this* from a report visual or a terminal view; promotion to a Transform and cell tests; grand totals in Slice; the real quant engine and its sensitivities, scenarios, VaR and exposure.

@@ -97,7 +97,7 @@ def test_the_row_limit_cuts_the_extract():
 
 def test_a_bad_extract_request_is_refused_with_a_code():
     client, _ = make()
-    assert client.post("/bi/explore/extract", json={"dataset": DS}).json()["code"] == "DRS-9080"
+    assert client.post("/bi/explore/extract", json={"dataset": DS}).json()["code"] == "DRS-9070"
     assert client.post("/bi/explore/extract", json={"dataset": DS, "fields": ["a;drop"]}).status_code == 422
     assert client.post("/bi/explore/extract", json={"fields": FIELDS}).status_code == 422
     assert client.post("/bi/explore/extract", data="x", headers={"content-type": "text/plain"}).status_code in (403, 415, 422)
@@ -121,23 +121,23 @@ def test_sql_runs_a_select_over_the_extract():
 def test_sql_is_read_only(text):
     client, _ = make()
     r = sql(client, text)
-    assert r.status_code in (403, 422) and r.json()["code"] == "DRS-9082"
+    assert r.status_code in (403, 422) and r.json()["code"] == "DRS-9073"
 
 
 def test_sql_takes_one_statement_and_one_table():
     client, _ = make()
-    assert sql(client, "SELECT 1; DROP TABLE extract").json()["code"] == "DRS-9082"
+    assert sql(client, "SELECT 1; DROP TABLE extract").json()["code"] == "DRS-9070"
     assert sql(client, "SELECT * FROM sqlite_master").status_code in (200, 403, 422)                          # the catalogue holds only the extract's own definition
-    assert sql(client, "").json()["code"] == "DRS-9080"
+    assert sql(client, "").json()["code"] == "DRS-9070"
 
 
 def test_sql_limits_rows_text_and_time():
     client, _ = make(sql_max_rows=2, sql_max_chars=100, sql_max_seconds=0.5)
     r = sql(client, "SELECT * FROM extract").json()
     assert r["rowCount"] == 2 and r["truncated"] is True                                                      # cut to sql_max_rows
-    assert sql(client, "SELECT " + "1," * 60 + "1 FROM extract").json()["code"] == "DRS-9081"                 # too long
+    assert sql(client, "SELECT " + "1," * 60 + "1 FROM extract").json()["code"] == "DRS-9072"                 # too long
     slow = sql(client, "WITH RECURSIVE c(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM c) SELECT COUNT(*) FROM c")
-    assert slow.status_code == 504 and slow.json()["code"] == "DRS-9081"                                      # the deadline stops it
+    assert slow.status_code == 504 and slow.json()["code"] == "DRS-9072"                                      # the deadline stops it
 
 
 def test_run_sql_on_an_empty_extract_works():
@@ -182,7 +182,7 @@ def test_python_cells_need_the_author_power_and_respect_the_text_limit():
     client, _ = make(powers=("bi",))
     assert cell(client, "print(1)").json()["code"] == "DRS-9073"
     client, _ = make(cell_max_chars=100)
-    assert cell(client, "x = 1\n" * 40).json()["code"] == "DRS-9081"
+    assert cell(client, "x = 1\n" * 40).json()["code"] == "DRS-9072"
 
 
 # ---- the quant stand-in -----------------------------------------------------------------------------------------------------------
@@ -233,7 +233,7 @@ def test_promote_a_python_cell_to_a_measure_and_a_visual_draft():
     assert ns["compute"](pd.DataFrame({"mtm": [1.0, 3.0]}), {}) == pytest.approx(1.4142135, abs=1e-6)
     v = client.post("/bi/explore/promote", json={"to": "visual", "name": "Chart", "source": "result = {}", "columns": []}).json()
     assert "interface: visual" in v["yaml"] and "output: echarts" in v["yaml"] and "render(table, params)" in v["yaml"]
-    assert client.post("/bi/explore/promote", json={"to": "board"}).json()["code"] == "DRS-9080"
+    assert client.post("/bi/explore/promote", json={"to": "board"}).json()["code"] == "DRS-9070"
     assert promote_python("x = 1", "n", "visual", [], []).count("def render") == 1
 
 
@@ -248,7 +248,7 @@ def test_promote_a_slice_to_a_report_draft_names_the_measures_it_found():
                                                   "slice": {"rows": ["trade.desk"], "columns": [], "values": [{"field": "trade.mtm", "agg": "sum"}, {"field": "trade.notional", "agg": "sum"}]}}).json()
     assert r["kind"] == "report" and "type: matrix" in r["yaml"] and "dataset: trades-basic" in r["yaml"] and "MTM" in r["yaml"]
     assert len(r["notes"]) == 1 and "sum(trade.notional)" in r["notes"][0]
-    assert client.post("/bi/explore/promote", json={"to": "report", "dataset": DS, "slice": {}}).json()["code"] == "DRS-9080"
+    assert client.post("/bi/explore/promote", json={"to": "report", "dataset": DS, "slice": {}}).json()["code"] == "DRS-9070"
 
 
 # ---- the page and the settings ---------------------------------------------------------------------------------------------------------

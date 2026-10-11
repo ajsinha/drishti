@@ -1063,6 +1063,18 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 - **Cause:** the console has no free worker (`bi.python.workers`, waits `bi.python.queue_seconds`), the runner is off (`bi.python.enabled: false`), `pandas` or `pyarrow` is not installed in the console's Python (`GET /bi/python/status` says `ready: false` and lists `missing`), the item lists a package that is allowed but not installed, or a browser run has no Pyodide (`tools/fetch-pyodide.sh`).
 - **Fix:** read `GET /bi/python/status` (`enabled`, `ready`, `missing`, `installed`, `running`, `isolation`); `pip install -r drishti-console/requirements.txt` in the console's environment; raise `workers`; for the browser target run `tools/fetch-pyodide.sh`. With `network_namespace: require` the machine must allow `unshare --user --net`, else use `auto`.
 
+
+### Analyse: the extract is short, a SQL cell is refused, a Python cell will not run
+
+* **"60 rows of 4,000 (cut to the row limit)".** The extract holds the first `bi.explore.max_rows` (10,000) of the rows *you* may see. Pick fewer fields, add a filter in the Slice or in SQL, or ask an administrator to raise the limit. Slice and SQL work on the cut extract, so their totals are the extract's, not the dataset's (use a report for true totals).
+* **A column is empty and the info line says "Masked for you".** The server masks that column for your role; the extract carries only what it was given. SQL and Python see the same empty column. Ask the dataset's owner for access, not Analyse.
+* **`DRS-9073` "only a single SELECT over the table extract is allowed".** The SQL cell is read-only: one `SELECT` (or `WITH ... SELECT`) over the table `extract`. `INSERT`, `UPDATE`, `DROP`, `ATTACH`, `PRAGMA` and `load_extension` are refused. `DRS-9070` is a syntax error, or two statements.
+* **`DRS-9072` on SQL.** More than `bi.explore.sql_max_chars` characters, or the query ran past `bi.explore.sql_max_seconds` (a runaway join or recursion). Rows past `bi.explore.sql_max_rows` are cut, not refused.
+* **A Python cell says `DRS-9073` "needs the bi-author power".** Running Python needs the `bi-author` power (the code runs in the console's sandbox). Slice and SQL need only `bi`.
+* **`DRS-9074` on a Python cell.** The runner is off, busy or lacks `pandas`/`pyarrow`: see the Python visual entry above. The *browser* target also needs Pyodide (`tools/fetch-pyodide.sh`), and `quant` is not available there (`ValueError: quant: ... server target only`).
+* **`ValueError: quant: unknown instrument`.** `quant.instruments()` lists what the engine prices; the stand-in prices `black_scholes`, `bond` and `npv`.
+* **A saved notebook will not open.** `DRS-9070` names the cell: a notebook is YAML with `cells` of type `slice`, `sql` or `python`. Open the item page to see and fix the body.
+
 ### A python visual says `DRS-9071`, `DRS-9072` or `DRS-9073`
 
 - **Cause:** `9071`: the code raised (the message names the exception; people with `bi-author` also see the traceback, whose line numbers are the item's source) or returned the wrong thing (a measure: one number per group; a visual: an ECharts option, SVG text or PNG bytes). `9072`: it ran over its `timeout` (504) or its `memory`, or the rows in or the answer out were too big (413). `9073`: it imported a package it did not list, or tried the network, a file outside its scratch folder, or a process.
