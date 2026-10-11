@@ -250,7 +250,7 @@ def test_the_model_view_draws_five_boxes_and_five_lines_and_edits_the_yaml_both_
     expect(page.locator("svg.bi-lines g[data-rel]")).to_have_count(4)
     after = yaml_text(page)
     assert "trades.book" not in after.split("relationships:")[1].split("measures:")[0] and after.count("cardinality:") == base.count("cardinality:") - 1
-    assert "# SAMPLE 2 of 3" in after and "rollups:" in after                                           # the rest of the file, comments included, is as it was
+    assert "# STORED SAMPLE 2 of 3" in after and "rollups:" in after                                           # the rest of the file, comments included, is as it was
     # drag trades.book onto books.id: the form is filled in with a many-to-one, and Add writes it
     page.drag_and_drop('[data-column="trades.book"]', '[data-column="books.id"]')
     assert page.input_value("[data-nr-from-t]") == "trades" and page.input_value("[data-nr-from-c]") == "book"

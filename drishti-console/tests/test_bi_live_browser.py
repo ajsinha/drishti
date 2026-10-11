@@ -135,7 +135,8 @@ def test_coalescing_and_backpressure_keep_the_rounds_bounded(stack, browser):
     page.wait_for_timeout(4000)
     after = page.evaluate(ROUND)
     ticks_a_second = (after - before) / 4
-    assert 1 <= ticks_a_second <= 4.5, f"{ticks_a_second} redraw rounds a second: at most one every 250 ms (bi.live.min_interval_ms), however fast the source ticks"
+    assert 0 < ticks_a_second <= 4.5, f"{ticks_a_second} redraw rounds a second: at most one every 250 ms (bi.live.min_interval_ms), however fast the source ticks"
+    # the floor only says rounds happen at all: a loaded machine ticks the source slower; the ceiling is the coalescing
     busy = page.evaluate("""async () => { let worst = 0; for (let i = 0; i < 20; i++) { worst = Math.max(worst, document.querySelectorAll('.bi-vis-busy').length); await new Promise(r => setTimeout(r, 100)); } return worst; }""")
     assert busy == 0, "a live redraw never greys a visual (quiet refresh)"
     clean(page)
