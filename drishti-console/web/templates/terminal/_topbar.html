@@ -118,9 +118,6 @@
            {% if bd.earliest %}min="{{ bd.earliest }}"{% endif %} {% if bd.current %}max="{{ bd.current }}"{% endif %}
            data-holidays="{{ (bd.holidays or []) | join(',') }}" data-current="{{ bd.current or '' }}">
     {% set live_on = asof == 'live' %}{% set live_tip = 'Live updates on — click to pause' if live_on else 'Live updates paused — click to resume' %}
-    <button type="button" class="asof-live{% if live_on %} on{% endif %}" data-asof-live aria-pressed="{{ 'true' if live_on else 'false' }}"
-            aria-label="{{ live_tip }}" title="{{ live_tip }}"
-            data-live-href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" data-pause-href="/asof?d={{ bd.current or '' }}&amp;next={{ request.url.path | urlencode }}"><span class="dot" aria-hidden="true"></span></button>
     {% if asof != 'live' %}
     <label for="asofKnown" class="visually-hidden">Known at</label>
     <span class="asof-known{% if known_at %} on{% endif %}" title="Time travel: show this date as it was known at a time ({{ bd.zone or 'America/New_York' }}). Blank for the latest.">
@@ -197,6 +194,10 @@
     </div>
     {% endif %}
     {% include "_theme_menu.html" %}
+    {# Live: left of the person's initials; a toggle (green live, red paused at the current business date) #}
+    <button type="button" class="asof-live{% if live_on %} on{% endif %}" data-asof-live aria-pressed="{{ 'true' if live_on else 'false' }}"
+            aria-label="{{ live_tip }}" title="{{ live_tip }}"
+            data-live-href="/asof?d=live&amp;next={{ request.url.path | urlencode }}" data-pause-href="/asof?d={{ bd.current or '' }}&amp;next={{ request.url.path | urlencode }}"><span class="ring" aria-hidden="true"><span class="dot"></span></span></button>
     <div class="dropdown">
       {% set who = me.display if me else USER %}
       <button class="tool user" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ who }}">
