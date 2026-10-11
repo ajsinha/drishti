@@ -62,7 +62,7 @@ def shown_prefix(spec) -> str:
     return "MX-…`, `CLY-…`, `END-…`, `IMG-…`, `BBG-…`, `WSS-" if spec.kind == "trade" else spec.prefix
 
 
-def finding(mnemonic: str, label: str, prefix: str, field_example: str = "") -> list[str]:
+def finding(mnemonic: str, label: str, prefix: str, field_example: str = "", pack: str = "", code: str = "") -> list[str]:
     """How to open and search a pack's documents, with placeholders rather than sample ids: the guides describe the
     pack, and the documents a site holds are its own."""
     what = label if any(c.isupper() for c in label.split()[0][1:]) else label[:1].lower() + label[1:]
@@ -76,7 +76,9 @@ def finding(mnemonic: str, label: str, prefix: str, field_example: str = "") -> 
         [f"`{mnemonic} <start of an id> <GO>`", "A pick list: one match opens, several give a table with the kind's key fields. "
                                                  "`*` is a wildcard, and case never matters."],
         [f"`{mnemonic} <field>=<value> <GO>`", by_field],
-        [f"`{mnemonic} <GO>`", f"Lists every {what}."]])
+        [f"`{mnemonic} <GO>`", f"Lists every {what}."]] + (
+        [[f"`FORM {pack} <GO>`", "The pack's search form: boxes for the key fields of each kind instead of a written search."]] if pack else []) + (
+        [[f"`{code} <GO>`", "The pack's overview: its kinds, their mnemonics and how many documents each holds."]] if code else []))
 
 
 def overview(name: str, docs: dict) -> str:
@@ -90,7 +92,7 @@ def overview(name: str, docs: dict) -> str:
               f"**Kinds:** {len(kinds)}", "",
               "Enable it with `DRISHTI_PACKS=" + name + "` (the packs it extends come with it; where they differ, the more specific wins).", ""]
     first = SPEC["trade"] if "trade" in kinds else SPEC[kinds[0]]
-    lines += finding(first.mnemonic, first.label, shown_prefix(first), "productType=IRS_FIXFLOAT" if first.kind == "trade" else "")
+    lines += finding(first.mnemonic, first.label, shown_prefix(first), "productType=IRS_FIXFLOAT" if first.kind == "trade" else "", name, make_packs.CODES[name])
     lines += ["## Where the data comes from", "",
               "Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by "
               "business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.", ""]

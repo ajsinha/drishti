@@ -43,6 +43,7 @@ exchange, sector, country) is static reference data in `samples/listed-company/`
 | `CO sector=Energy <GO>` | Lists the energy companies. |
 | `FORM market-watch <GO>` | The search form: id, ticker, name, other names, exchange, sector, country. |
 | `QUOTE QUOTE-MSFT <GO>` | The quote and the table of bars for any ticker. |
+| `MKTW <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 ## What you will see
 
@@ -60,5 +61,9 @@ ticker is simply not found.
 - **Companies:** edit the list in `config/packs/news-watch/tools/make_samples.py` and run it (it also rewrites the aliases of the news connector template).
 - **History:** `range` and `interval` in `config/connectors/yfinance.yaml` (for example `1y` and `1wk`); caching and retries in the same file; see [YFINANCE.md](../../../../docs/connectors/YFINANCE.md#6-settings).
 - **Percent format:** the pack defines `pc2` (a value already in percent, with a sign and ` %`).
+
+## Who can see it
+
+Role `market-analyst`: kinds `listed-company`, `quote`, `news-topic` and `news` (the last two come from `news-watch`).
 
 This is a sample pack of the kind `drishti.packs.samples` can hide from business users. See [Domain packs](../../../../docs/guides/PACKS.md).

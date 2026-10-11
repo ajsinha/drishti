@@ -37,6 +37,8 @@ Type each command in the terminal (`/t`) and press `Enter`:
 | `SHP <start of an id> <GO>` | A pick list: one match opens, several give a table to pick from. `*` is a wildcard, and case never matters. |
 | `SHP <field>=<value> <GO>` | Lists shipments by field value, for example `SHP status=Delivered`. |
 | `SHP <GO>` | Lists every shipment. |
+| `FORM logistics <GO>` | The search form: boxes for the key fields of each kind instead of a written search. |
+| `LOGI <GO>` | The pack's overview: its kinds, their mnemonics and how many documents each holds. |
 
 `CTR`, `VSL` and `PORT` work the same way for containers, vessels and ports.
 
@@ -60,6 +62,10 @@ vessel's speed and each port's berth wait.
 A shipment in any other status (delivered, say) does not match the Sutra. Inference lays it out from
 the pack's vocabulary instead: weights, temperatures and delays are recognised and formatted.
 Containers, vessels and ports have no Sutra and are always inferred.
+
+## Who can see it
+
+Role `ops`: the pack's kinds (shipments, containers, vessels and ports).
 
 !!! note "Turning the pack on or off"
     `DRISHTI_PACKS=finance,logistics` (the default is `finance`). See [Domain packs](../../../../docs/guides/PACKS.md).
