@@ -17,6 +17,7 @@ its type-ahead, the BI menu (shown to people with the bi power only), the home, 
 shared from the page, publishing with review, the keys, a phone (390 px, finger-sized), both themes, and no policy violation anywhere.
 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
+import re
 import pytest
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
@@ -84,8 +85,8 @@ def test_the_keyword_opens_home_catalogue_and_my_workspace_in_any_case(stack, br
     page.goto(CONSOLE_URL + "/t")
     page.fill("#cmdInput", "rupaka Desk P&L")                     # a report by its title
     page.press("#cmdInput", "Enter")
-    page.wait_for_url("**/bi/i/*")
-    expect(page.locator("[data-title]")).to_have_text("Desk P&L")
+    page.wait_for_url(re.compile(r".*/bi/r/[^/]+"))                      # a report opens in the viewer (phase 3)
+    expect(page.locator("h1").first).to_contain_text("Desk P&L")
     clean(page)
 
 
@@ -379,8 +380,8 @@ def test_the_bi_keyword_types_ahead_opens_an_item_and_alone_opens_home(stack, br
     expect(page.locator("#cmdList")).to_contain_text("Counterparty exposure")
     page.fill("#cmdInput", "BI Desk P&L")
     page.press("#cmdInput", "Enter")
-    page.wait_for_url("**/bi/i/*")
-    expect(page.locator("[data-title]")).to_have_text("Desk P&L")
+    page.wait_for_url(re.compile(r".*/bi/r/[^/]+"))                      # a report opens in the viewer (phase 3)
+    expect(page.locator("h1").first).to_contain_text("Desk P&L")
     page.goto(CONSOLE_URL + "/t")
     page.fill("#cmdInput", "BI")
     page.press("#cmdInput", "Enter")
