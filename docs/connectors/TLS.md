@@ -59,6 +59,8 @@ Every connector with a network client reads these settings. This is what each do
 | [Redis](REDIS_CONNECTOR.md#security-tls-and-credentials) | `rediss://` | yes | yes | yes (chain only) | yes | Redis 8.2 in Docker, `tls-auth-clients yes` |
 | [REST](REST_CONNECTOR.md#tls-for-the-rest-connector) | `https://` `base-url` | yes | yes | yes | yes | an HTTPS server in the test process |
 | [Feeds](FEEDS_CONNECTOR.md#10-security) (a mirror) | `https://` `url` | yes | yes | yes | yes | an HTTPS server in the test process |
+| [News](NEWS.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | no TLS-specific test: it applies the shared `TlsHttp` as REST and Feeds do |
+| [yfinance](YFINANCE.md) (a mirror or proxy) | `https://` `base-url` | yes | yes | yes | no | as News |
 | [S3](S3_CONNECTOR.md#tls-for-the-s3-connector) | `https://` `endpoint` | yes | checked, not narrowed | **refused** (the AWS client always checks) | yes | an HTTPS stand-in S3 in the test process |
 | [MongoDB](MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials) | `tls.enabled` or `tls=true` in the `uri` | yes (also the log-in, `auth-mechanism: x509`) | checked, not narrowed | yes | yes | MongoDB 7 in Docker, `requireTLS`, x.509 user |
 | [PostgreSQL](POSTGRES_CONNECTOR.md#security-tls-and-credentials) (`jdbc:postgresql:`) | `tls.enabled` | yes (also the log-in, `cert` in `pg_hba.conf`) | yes | yes (`sslmode=require`) | yes | PostgreSQL 18 in Docker, `ssl=on` |

@@ -31,3 +31,6 @@ A plugin may describe the settings it reads by overriding one optional SPI metho
 required, to warn about a setting nobody reads, and to refuse a literal value for a `secret` setting. The shipped plugins are described in
 `drishti-engine/src/main/resources/drishti/plugin-settings.yaml`; a plugin that declares its own wins. The record and an example are in
 [CONNECTOR_DEVELOPER_GUIDE.md](CONNECTOR_DEVELOPER_GUIDE.md#settingspecs-describing-your-settings).
+
+A plugin that connects over the network reads TLS through the shared module ([TLS for a connector](CONNECTOR_DEVELOPER_GUIDE.md#tls-for-a-connector-the-shared-module)), and one that speaks HTTP honours the site proxy
+through [the shared proxy module](CONNECTOR_DEVELOPER_GUIDE.md#outbound-http-proxy-the-shared-module); both add their `tls.*` / `proxy.*` sections to the connector form without the plugin listing them.

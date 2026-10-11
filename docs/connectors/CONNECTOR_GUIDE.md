@@ -46,6 +46,7 @@ settings:                         # the plugin's settings; nesting is flattened 
   Kafka schema registry), AI provider and MCP server: `drishti.http.proxy.*` in `application.yaml`, or a `proxy:` block (`url`, `username`, `password` as `${ENV}`, `no-proxy`)
   in one connector's `settings:`, or `proxy: none` to go direct. https targets are tunnelled with `CONNECT` and keep their `tls.*`. Admin → Connectors shows the effective proxy,
   masked, and where it came from. See [PROXY.md](PROXY.md).
+- A connector over the network takes the shared `tls.*` settings for a private CA or a client certificate ([TLS.md](TLS.md), with a matrix of what each does) and, when it speaks HTTP, the shared `proxy:` block ([PROXY.md](PROXY.md)).
 - `drishti.sources.connectors` in `application.yaml` and the per-store profiles (`SPRING_PROFILES_ACTIVE=postgres`, …) still work but are **deprecated**.
 
 ### Precedence

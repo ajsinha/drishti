@@ -84,6 +84,8 @@ Open the console, press **Sign in** and use `asha`. Everything below happens und
 
 The other ways in (a JSON Schema, entities from a store, an example, an existing Sutra, a pack) are in [section 1 of the guide](SCREEN_DESIGNER.md#1-start-bring-data); project 3 uses the registry.
 
+A whole *pack* (kinds, Sutras, tests, a `pack.yaml`) from schema files or a folder of JSON Lines is a different entry, **Build → New pack**; that flow is in [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md) and is not part of these four projects.
+
 ### Step 3. Name it, give it a kind, leave auto-design on
 
 Scroll to **2. Start from**. Keep *Auto-design a first screen from the samples*, name the design `Rates trade screen` and set the kind of entity to `trade`.

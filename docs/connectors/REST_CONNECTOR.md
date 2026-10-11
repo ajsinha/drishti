@@ -489,9 +489,8 @@ settings:
   header.Authorization: Bearer ${PRICING_TOKEN}
   tls:
     enabled: true
-    truststore:
-      path: /etc/drishti/tls/ca.p12
-      password: ${PRICING_TRUSTSTORE_PASSWORD}
+    truststore: /etc/drishti/tls/ca.p12
+    truststore-password: ${PRICING_TRUSTSTORE_PASSWORD}
 ```
 
 The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). The same over TLS is `config/connectors.examples/other/pricing-api.yaml`.

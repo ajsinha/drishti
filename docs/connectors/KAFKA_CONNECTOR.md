@@ -937,8 +937,10 @@ settings:
     max-gb: '10'
   tls:                          # the shared TLS block; see CONNECTOR_FILES.md
     enabled: true
-    truststore: { path: /etc/drishti/tls/ca.p12, password: ${KAFKA_TRUSTSTORE_PASSWORD} }
-    keystore:   { path: /etc/drishti/tls/client.p12, password: ${KAFKA_KEYSTORE_PASSWORD} }
+    truststore: /etc/drishti/tls/ca.p12
+    truststore-password: ${KAFKA_TRUSTSTORE_PASSWORD}
+    keystore: /etc/drishti/tls/client.p12
+    keystore-password: ${KAFKA_KEYSTORE_PASSWORD}
 ```
 
 The file is applied to the running server within seconds, without a restart, and is edited in the editor of your choice, in **Admin → Connectors** (a form generated from this document's settings, a YAML tab, **Test connection**, history) or with `drishti.py connector apply`. The folder, the format, live reload, precedence and the deprecated `drishti.sources.connectors` form are in [CONNECTOR_FILES.md](CONNECTOR_FILES.md). The same over TLS is `config/connectors.examples/other/trading-stream.yaml`.

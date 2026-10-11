@@ -15,7 +15,8 @@
 -->
 # Screen Builder: from JSON files to a working screen in minutes
 
-Status: design, agreed before building. Owner: the Build menu (console) and the engine's inference.
+Status: built (version 1.20.0). This is the design document the builder was made from; where the shipped screens and API differ from the
+first plan, the sections below say so and point to the current guide ([SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md), [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md), [API_GUIDE.md](../guides/API_GUIDE.md)). Owner: the Build menu (console) and the engine's inference.
 
 Someone has a folder of JSON documents (trades, shipments, patients, sensor readings) and wants a screen for them. Today
 they write a Sutra by hand, or start from inference on one document and edit YAML. The Screen Builder turns that into
@@ -43,7 +44,7 @@ The result is always an ordinary Sutra: nothing here adds a second layout langua
 6. [Where it lives in the console](#where-it-lives-in-the-console)
 7. [Server API](#server-api)
 8. [Security, limits and accessibility](#security-limits-and-accessibility)
-9. [How it will be built, step by step](#how-it-will-be-built-step-by-step)
+9. [How it was built, step by step](#how-it-was-built-step-by-step)
 10. [What we chose not to do](#what-we-chose-not-to-do)
 
 ## Design principles
@@ -268,39 +269,45 @@ the set. The same check warns at design time when a binding uses a field with lo
 
 ## Where it lives in the console
 
-The Build menu gains a third group:
+The first plan gave Build three pages (`/build`, `/build/shape`, `/build/design`). As built, everything is one workbench around a persisted
+*design* ([BUILD_WORKBENCH.md](BUILD_WORKBENCH.md)). The top bar's **Build** menu now holds:
 
 ```
 Build ▾
-  Layouts      Sutra Studio · Reviews
-  Screen Builder   New screen from JSON files      (/build)          wizard: samples → shape → design
-                   Shape extractor                 (/build/shape)    step 1 on its own
-                   Designer                        (/build/design)   step 2 on its own (open a shape or a Sutra)
-  Learn        Sutra guide · Build a pack · Screen Builder guide
+  Create   New screen (/build/new) · New pack (/build/pack/new) · My designs (/build) · Examples (/build/new#examples)
+  Govern   Reviews (/build/reviews)
+  Learn    Build workbench tutorial · Schema to pack · Screen designer guide · Sutra developer guide · Panel kinds ·
+           Rachana reference · Pack developer guide
 ```
 
-Studio gains **Open in Designer** (for the Sutra in the editor) and the designer **Open in Studio**, so both tools work
-on the same file.
+A design opens at `/build/d/{id}`. `/build/shape` is only a redirect to the Data step of *New screen*. The Sutra is edited in the workbench's
+YAML tab, and *Propose* sends it to the same review flow Studio uses.
 
 ## Server API
 
-All under `/api/v1/builder`, open to every signed-in user (designing is not saving: the `author` power is needed only to save or propose a Sutra), none writing to stores.
+All under `/api/v1/builder`. Designing is not saving: shaping, drafting, suggesting, previewing and checking are open to every signed-in user and
+write nothing; the `author` power is needed to propose a Sutra. The stateless calls take the samples in the body; the workbench uses the
+per-design calls under `/builder/designs/{id}` (full list: [API_GUIDE.md](../guides/API_GUIDE.md#designs-your-work-kept-on-the-server)).
 
 | Endpoint | Does |
 |---|---|
-| `POST /builder/samples` | upload JSON/JSONL documents (multipart); returns a sample-set id, counts and per-file problems |
-| `POST /builder/samples/from-store` | `{kind, count}`: sample entities through the normal sources, masks applied |
-| `POST /builder/shape` | `{samples}` or `{sampleSet}`: returns the shape (schema + roles + report) |
-| `POST /builder/design` | `{samples}` or `{shape, samples}` (+ `kind`): auto-design; returns `{yaml, reasons, alternatives, pruned, preview, samples}`. **Built.** |
-| `POST /builder/suggest` | `{shape, path, at?}` (or `samples`): ranked panel kinds for a field, or for the pair `path` + `at`, each with filled options and a reason. **Built.** |
+| `POST /builder/shape` | `{samples}`: returns the shape (schema + roles + report) |
+| `POST /builder/design` | `{samples}` or `{shape, samples}` (+ `kind`): auto-design; returns `{yaml, reasons, alternatives, pruned, preview, samples}` |
+| `POST /builder/suggest` | `{shape, path, at?}` (or `samples`): ranked panel kinds for a field, or for the pair `path` + `at`, each with filled options and a reason |
 | `POST /builder/edit` | `{yaml, ops[]}`: applies operations with the Sutra editor, returns new YAML, problems, preview |
-| `POST /builder/check` | `{yaml, sampleSet}`: the panel × sample matrix |
-| `POST /builder/pack` | `{yaml, sampleSet, kind, mnemonic}`: the pack scaffold zip |
+| `POST /builder/check` | `{yaml, kind?, samples}`: the panel × sample matrix |
+| `POST /builder/preview` | `{yaml, ...}`: the Sutra drawn against one sample |
+| `/builder/designs/{id}/...` | the persisted design: `ops`, `undo`, `redo`, `autodesign`, `check`, `shape`, `samples`, `versions`, `propose`, `rebase`, `share`, `export` (a pack fragment), `bind` / `sync` / `save-file` (development servers), and `about` and `form` |
+| `POST /builder/designs/import` | a pack fragment or folder (zip) into a new design |
+
+The first plan had `POST /builder/samples`, `/samples/from-store` and `/pack`: they were not built as such. Samples are added to a design
+(`POST /builder/designs/{id}/samples`, and stored entities as `refs` through the same call), and the pack scaffold is the design's `export`.
 
 Operations are small JSON objects: `{"op":"addPanel","kind":"line","at":{"area":"main","after":"terms"}}`,
-`{"op":"set","panel":"pnl","option":"y","value":"pnl"}`, `{"op":"bind","panel":"pnl","path":"$.pnlHistory"}`,
+`{"op":"setOption","panel":"pnl","option":"y","value":"pnl"}` (a `null` value removes the option), `{"op":"bind","panel":"pnl","path":"$.pnlHistory"}`,
 `{"op":"move","panel":"pnl","area":"main","before":"dv01","span":6}`, `{"op":"remove","panel":"pnl"}`,
-`{"op":"setTitle"|"setStrip"|"setKeys"|"setMatch",...}`.
+`{"op":"setTitle"|"setStrip"|"setControls"|"setKeys"|"setMatch",...}` and `{"op":"text",...}` (the YAML tab's typing). A refused
+operation answers its own `DRS-5020` to `DRS-5024`; the Rachana reference lists the Sutra's codes.
 
 Engine placement: a `shape` package in `drishti-engine` (merging, roles), next to the inference it shares rules with;
 operations extend `SutraLayoutEditor` in `drishti-rachana`. The console adds templates and vendored JavaScript only;
@@ -323,7 +330,7 @@ no new framework.
 - **Accessibility**: every drag has a keyboard alternative (an *Add panel* menu; move and resize with keys as in layout
   mode), announced through a live region; the canvas panels are focusable with their kind and title as names.
 
-## How it will be built, step by step
+## How it was built, step by step
 
 > Steps 4–7 below are superseded by [BUILD_WORKBENCH.md](BUILD_WORKBENCH.md), which organises all Build tools around one
 > persisted *Design* and one workbench page (steps 4–8 there). Steps 1–3 here are built and stay.
@@ -334,11 +341,11 @@ Each step ships on its own, ends with tests that fail before it, its docs, and a
 |---|---|---|
 | **1. Shape engine** | `drishti-engine` `shape` package: merge, types, formats, enums, maps, trees, roles with reasons; `POST /builder/shape` | unit tests per rule; a property test that **every sample validates against its inferred schema**; the 10 examples' JSON infer the roles their panels need. **Done in 2d525b4.** |
 | **2. Shape extractor page** | `/build/shape`: upload (≤ 50), schema tree with roles and presence, conflicts report, downloads; Build menu entry; sample sets per user | console tests; Playwright upload-and-download; limits refused cleanly. **Done**: [user guide](../../drishti-console/web/guides/screen-builder.md); sample sets are kept in the console's memory per user for `builder.ttl_hours`; "Open in Studio" pastes the first sample (no Sutra drafted until step 3). |
-| **3. Auto-design and suggest** | inference rules generalised from one document to a shape (`LayoutPacker`, `PanelRecipes`, shared column rules); `AutoDesigner` with reasons, ranked alternatives, sample-aware strip and charts, pruning against every sample; `POST /builder/design` and `/suggest`; "Draft a screen" on `/build/shape` with **Open in Studio** | auto-design of each example's samples renders with no panel errors and uses the expected kinds; a field missing in most samples gets its panel pruned with a reason; suggest's first choice per role; runtime inference unchanged on the existing tests. **Done**: see "As built (step 3)" under *Start: auto-design*; the visual designer (step 5) is still to build on top. |
-| **4. Edit operations** | operations on `SutraLayoutEditor`; `POST /builder/edit` with undo-safe results | round-trip tests: operations keep comments and order; every op on every kind; bad ops are located problems |
-| **5. Designer** | `/build/design`: canvas over the real preview with handles, palette, field drops with suggestions, inspector from the Rachana schema, YAML tab, undo, keyboard alternatives | Playwright: build the all-panels showcase from its shape without typing YAML; keyboard-only path; phone width |
-| **6. Check every sample** | `POST /builder/check`, the matrix, design-time presence and conflict warnings | a sample set with a missing field shows the right empty/error cells |
-| **7. Save, export, guide** | propose with evidence attached, pack scaffold, store sampling, the user guide in help with a walkthrough, Studio ↔ Designer links | an end-to-end test: upload samples → auto-design → edit → check → propose → approve → the view serves |
+| **3. Auto-design and suggest** | inference rules generalised from one document to a shape (`LayoutPacker`, `PanelRecipes`, shared column rules); `AutoDesigner` with reasons, ranked alternatives, sample-aware strip and charts, pruning against every sample; `POST /builder/design` and `/suggest`; "Draft a screen" on `/build/shape` with **Open in Studio** | auto-design of each example's samples renders with no panel errors and uses the expected kinds; a field missing in most samples gets its panel pruned with a reason; suggest's first choice per role; runtime inference unchanged on the existing tests. **Done**: see "As built (step 3)" under *Start: auto-design*; the visual designer (step 5) is built on top. |
+| **4. Edit operations** | operations on `SutraLayoutEditor`; `POST /builder/edit` with undo-safe results | round-trip tests: operations keep comments and order; every op on every kind; bad ops are located problems **Done**, in the workbench (see [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)). |
+| **5. Designer** | `/build/design`: canvas over the real preview with handles, palette, field drops with suggestions, inspector from the Rachana schema, YAML tab, undo, keyboard alternatives | Playwright: build the all-panels showcase from its shape without typing YAML; keyboard-only path; phone width **Done**, in the workbench (see [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)). |
+| **6. Check every sample** | `POST /builder/check`, the matrix, design-time presence and conflict warnings | a sample set with a missing field shows the right empty/error cells **Done**, in the workbench (see [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)). |
+| **7. Save, export, guide** | propose with evidence attached, pack scaffold, store sampling, the user guide in help with a walkthrough, Studio ↔ Designer links | an end-to-end test: upload samples → auto-design → edit → check → propose → approve → the view serves **Done**, in the workbench (see [SCREEN_DESIGNER.md](../guides/SCREEN_DESIGNER.md)). |
 
 Steps 1 to 3 already give authors a useful tool (shape + a drafted Sutra to refine in Studio); steps 4 and 5 are the
 visual designer; 6 and 7 make it safe to ship screens from it.
