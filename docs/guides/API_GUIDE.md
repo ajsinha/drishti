@@ -1088,7 +1088,7 @@ You should see `{"proposal":{"id":"â€¦","name":"my-swap","version":1,"status":"â
 ### Using the shape API
 
 The Screen Builder's first step turns sample JSON documents into one JSON Schema (draft 2020-12) and tells you what each
-field is for. It needs the `author` role (as Studio), reads and writes nothing in Drishti, and keeps no copy of what you send.
+field is for. It is open to every signed-in user (designing is not saving; saving, proposing and shipping a Design need the `author` role), reads and writes nothing in Drishti, and keeps no copy of what you send.
 
 | Method | Path | Notes |
 |---|---|---|
@@ -1194,7 +1194,7 @@ user; a design is reachable only by its owner (anyone else gets `404 DRS-5006`);
 | `POST` | `/builder/design` | body `{"samples": [...], "kind": "trade"}` (or `{"shape": {schema, roles}, "samples": [...]}`); answers `{yaml, reasons, alternatives, pruned, preview, samples}` |
 | `POST` | `/builder/suggest` | body `{"shape": {schema, roles}, "path": "$.profile", "at": "$.rows[].mtm"}` (or `samples` instead of `shape`); answers `{path, at, suggestions}` |
 
-Both need the `author` role, write nothing, keep no copy and take the same limits as `/builder/shape`
+Both are open to every signed-in user, write nothing, keep no copy and take the same limits as `/builder/shape`
 (`413 DRS-5005`, `400 DRS-5001`, `403 DRS-5002`).
 
 - `design`: `yaml` is a complete Sutra (title, strip of at most six figures, panels chosen from the fields' roles, keys

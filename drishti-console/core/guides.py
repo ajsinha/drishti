@@ -36,6 +36,7 @@ from pathlib import Path
 import markdown
 import yaml
 
+_ALIGN = re.compile(r'\s+style="text-align:\s*(left|right|center);?"')
 _CODE = re.compile(r'<pre><code(?: class="language-([\w+-]+)")?>(.*?)</code></pre>', re.S)
 _BOX = {"tip": "tip", "warning": "warn", "danger": "warn", "note": "concept", "info": "concept", "example": "concept"}
 _TAG = re.compile(r"<[^>]+>")
@@ -174,6 +175,7 @@ class Library:
         body = re.sub(r'<div class="admonition (\w+)">\s*<p class="admonition-title">',
                       lambda m: f'<div class="help-box {_BOX.get(m.group(1), "concept")}">\n<p class="hb-title">', body)
         body = body.replace("<table>", '<div class="tbl-wrap"><table class="tbl help-tbl">').replace("</table>", "</table></div>")
+        body = _ALIGN.sub(r' class="ta-\1"', body)                                   # aligned columns: a class, never an inline style (CSP)
         body = re.sub(r"<h1[^>]*>.*?</h1>", "", body, count=1, flags=re.S)       # the page template writes the one <h1>
         body = re.sub(r"<(/?)h1\b", r"<\1h2", body)                                  # any other becomes a section heading (UX-18)
         body = _RELATIVE_SRC.sub(lambda m: self._picture(path, m), body)         # a picture beside a guide in docs/ is served at /help/files/

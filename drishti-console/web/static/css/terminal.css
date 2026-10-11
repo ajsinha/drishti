@@ -749,3 +749,8 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .pnl-help, .tbl-pg-b, tr.tbl-filter button, .skip-link, .tbar-row1 a, .tbar-tools a { min-width: 24px; min-height: 24px; box-sizing: border-box; }
 .pnl-help, .tbl-pg-b { display: inline-flex; align-items: center; justify-content: center; }
 .skip-link { padding: 3px 8px; }
+
+/* column alignment from Markdown tables (help guides, About): classes, as the CSP forbids inline styles */
+.ta-left { text-align: left; }
+.ta-center { text-align: center; }
+.ta-right { text-align: right; }

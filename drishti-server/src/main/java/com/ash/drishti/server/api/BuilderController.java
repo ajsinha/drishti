@@ -66,7 +66,8 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Screen Builder: step 1, {@code POST /api/v1/builder/shape}, then step 3, {@code POST /api/v1/builder/design} and
  * {@code /suggest}. Step 1: {@code POST /api/v1/builder/shape} turns up to {@code drishti.builder.max-samples} JSON
- * documents into one JSON Schema with roles and a report. For authors only (as Studio); writes nothing anywhere;
+ * documents into one JSON Schema with roles and a report. Open to every signed-in user (designing is not saving, as the other
+ * workbench steps); writes nothing anywhere;
  * logs counts, never content. The body is size-checked before it is read and parsed one sample at a time, so an
  * over-limit request is refused before everything is parsed.
  */

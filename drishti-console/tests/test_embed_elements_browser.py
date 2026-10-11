@@ -273,6 +273,9 @@ def host(browser):
 # ---- 1. the host page shows the live trade, under the host's CSP -------------------------------------------------------
 def test_first_view_is_live_and_the_csp_holds(host, stack, browser):
     h = host()
+    # The host keeps every CSP report of the run; the hostile-markup test (another browser's) leaves its own on purpose,
+    # so this page counts only the reports made while it is open.
+    before = len(json.loads(urllib.request.urlopen(HOST + "/api/csp-reports").read()))
     t0 = time.time()
     h.open()
     assert h.title() == MAIN_ID
@@ -280,8 +283,8 @@ def test_first_view_is_live_and_the_csp_holds(host, stack, browser):
     assert "MTM" in strip
     h.until(lambda: len(h.events("tick", "main")) >= 2, 20, "two ticks of the main view")        # the MTM cell ticks at the demo rate
     assert h.js("window.__viol") == []
-    reports = json.loads(urllib.request.urlopen(HOST + "/api/csp-reports").read())
-    assert reports == [], reports
+    reports = json.loads(urllib.request.urlopen(HOST + "/api/csp-reports").read())[before:]
+    assert reports == [], json.dumps(reports)
     loaded = h.events("loaded", "main")[0]
     stack.record(f"{browser.browser_type.name}.first_loaded_ms_since_navigation", round(loaded[3]))
     stack.record(f"{browser.browser_type.name}.first_load_wall_s", round(time.time() - t0, 2))
