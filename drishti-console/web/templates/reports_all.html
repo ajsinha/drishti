@@ -27,7 +27,7 @@
   {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
   <section class="pnl"><header class="pnl-h"><h3>All subscriptions</h3><span class="pnl-code">{{ items | length }}</span><a class="lnk dist-link" href="/reports">Your own</a></header><div class="pnl-b">
     {% if items %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
-      <thead><tr><th>Owner</th><th>Name</th><th>What</th><th>When</th><th>To</th><th>Next run</th><th>Last run</th><th></th></tr></thead>
+      <thead><tr><th>Owner</th><th>Name</th><th>What</th><th>When</th><th>To</th><th>Next run (UTC)</th><th>Last run</th><th></th></tr></thead>
       <tbody>{% for s in items %}{% set last = (s.runs or [None])[0] %}
         <tr data-row-owner="{{ s.owner }}" data-row-name="{{ s.name }}"><td>{{ s.owner }}</td>
           <td>{{ s.name }}{% if not s.enabled %} <span class="badge-kind">paused</span>{% endif %}</td>

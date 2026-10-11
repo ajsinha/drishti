@@ -28,6 +28,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | Write or read a dataset (tables, relationships, measures, row rules, masks, live tables) | [DATASETS.md](DATASETS.md) |
 | Write or read a report (visuals, filters, slicers, live visuals, Perspective) | [REPORTS.md](REPORTS.md) |
 | Put a wall of live tiles on a screen | [BOARDS.md](BOARDS.md) |
+| Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email | [DISTRIBUTION.md](DISTRIBUTION.md) |
 | Publish, review, certify, trace lineage, move content between servers | [BI_GOVERNANCE.md](BI_GOVERNANCE.md) |
 | See what ships in `config/bi` and how the folder is read | [config/bi/README.md](../../config/bi/README.md) |
 | Grant the powers, set the limits | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
@@ -531,3 +532,12 @@ under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the scre
 **Not built, and not faked.** Notifications from boards and alerts (phase 7); a designer for boards; interaction between tiles; running totals by group maintained as changes arrive (a live table is maintained incrementally, its measures are recomputed over it); a history of a live table (it holds current state; the rolling chart's
 points live in the browser from the moment the page opened); Perspective charts and its settings panel; live tables over arrays and in `direct` queries; boards in bundles, in lineage and in impact analysis. If a live table's feed is quiet, the page says **Stale** only when the source
 that pushes has gone silent for 30 s: a source that changes rarely is quiet, not stale, when it does not push at all (its state then reads `pushes: false` and the table is read again every 30 s).
+
+## 19. Export and subscriptions (phase 7, part 1)
+
+A report page, one visual, or a Sutra view leaves Drishti as **PDF, PNG, Excel or CSV** (the *Export* bar under the page tabs) and by **email on a schedule** (*Subscribe*). Both are made for the person who
+gets them: the engine is asked as that person, so their row rules and masks apply. A subscription takes a schedule (`business-days 07:30`, `weekly mon 07:30 business`, `monthly last 18:00 business`,
+`after-load`), a form (the tables in the email, a PDF or an Excel file) and recipients (users and `role:NAME`; outside addresses only if an administrator allows). *Run now*, *Pause*, a history with each
+delivery's status, retries with the shared retry policy, an audit trail. The list is on **Reports** in the top bar, merged with the scheduled reports. Reference: [DISTRIBUTION.md](DISTRIBUTION.md); walk-through:
+[BI_TUTORIAL.md](BI_TUTORIAL.md#20-export-and-subscribe); settings `drishti.distribution.*`; codes `DRS-9060` and `DRS-9061`. Not built: alerts to the bell and chat bridges, embedding, a hand-made phone layout, narrative summaries
+(phase 7, part 2).

@@ -350,7 +350,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 What failed is tried again by itself, with exponential backoff and jitter; see [OPERATIONS.md](OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
 The server reads `drishti.retry.*` (packs refused, connectors, AI providers, MCP servers) and the console reads `retry.*` (its own AI
 providers and MCP servers; server names with hyphens, console names with underscores). A per-area override replaces any key for one
-area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `ai`, `mcp`) and `retry.<area>.<key>` in the console
+area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `ai`, `mcp`, `distribution`) and `retry.<area>.<key>` in the console
 (areas `ai`, `mcp`).
 
 | Server | Console | Default | Meaning |
@@ -1113,6 +1113,41 @@ Live tables kept in memory by the engine and the streams that tell browsers they
 | `stale-after` | `30s` | A feed that pushes but has delivered nothing for this long is shown as **stale**. |
 | `max-streams` | `100` | Live report streams open at once on the server (`429 DRS-9051`). |
 | `max-streams-per-user` | `10` | Live report streams open at once for one person (`429 DRS-9051`). A browser holds one per distinct report on its open reports and boards. |
+
+### `drishti.distribution`: export and subscriptions
+
+Export of a BI report, page, visual or Sutra view as PDF, PNG, Excel or CSV, and subscriptions (email on a schedule), [DISTRIBUTION.md](../guides/DISTRIBUTION.md). Mail goes through the server's
+mail settings (`spring.mail.host`, `spring.mail.port`, `drishti.collab.email.from`, `drishti.collab.console-url`). Retries use the shared policy with its own area: `drishti.retry.distribution.*` (see Retries above), falling back to
+`drishti.retry.*`.
+
+Under `drishti.distribution.export`:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | `false` turns every export off (`422 DRS-9060`) |
+| `max-rows` | `50000` | Most rows of one table in an Excel or CSV export; a table is cut there and its sheet says so |
+| `pdf-max-rows` | `500` | Most rows drawn per table in a PDF or PNG |
+| `max-bytes` | `26214400` | Largest file an export may produce (`422 DRS-9060` over it) |
+| `timeout` | `60s` | Longest an export may take |
+| `max-visuals` | `40` | Most visuals one export holds |
+| `width` | `1000` | Width of the page layout in pixels (the PDF scales it to the page; at least 600) |
+| `landscape` | `true` | PDF pages are landscape A4; `false`: portrait |
+| `png-max-height` | `12000` | Tallest PNG in pixels; past it a line says how much is left out |
+
+Under `drishti.distribution.subscriptions`:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `enabled` | `true` | `false` stops the scheduler and refuses new subscriptions (existing ones are kept). Run the scheduler on one server of a group |
+| `per-user` | `20` | Most subscriptions one person keeps (the preference store allows 50) |
+| `max-recipients` | `200` | Most recipients (roles expanded) one run reaches; over it the run fails and says so |
+| `external-recipients` | `false` | `true` lets a subscription name email addresses that are not users. They have no rights of their own and receive the render of the subscription's owner |
+| `external-domains` | none | With external recipients on, only addresses at these domains |
+| `tick` | `30s` | How often due subscriptions and retries are looked for |
+| `keep-runs` | `30` | Runs kept in a subscription's history |
+| `max-attempts` | `4` | Tries for one delivery, with the shared retry policy between them |
+| `email-rows` | `25` | Most rows per table in an email whose body holds the report (`html` format) |
+| `load-delay` | `5s` | After a data load, wait this long before an `after-load` subscription runs, so the BI layers rebuild |
 
 ### `drishti.bi.governance` — publishing and governance (phase 4)
 

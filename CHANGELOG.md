@@ -16,6 +16,9 @@
 # Changelog
 
 ## Unreleased
+- **Added: distribution, part 1 (Rūpaka phase 7).** Export a BI report, page or visual, or a Sutra view, as PDF (paged, with a running header), PNG, Excel (a typed sheet per visual) or CSV, made for the requester with their masks and row rules; and **subscriptions**: a report, page, visual or view by email on a schedule (`business-days`, `weekly`, `monthly`, business-day aware with the pack calendar) or after a data load, as the email itself, a PDF or an Excel file, to users and roles, each recipient getting their own render. Pause, resume, run now, a history, retries with the shared retry policy, audit. *Export* and *Subscribe* on the report bar and the view header; subscriptions in one list with the scheduled reports under **Reports**; settings `drishti.distribution.*`; `DRS-9060` and `DRS-9061`; [DISTRIBUTION.md](docs/guides/DISTRIBUTION.md), BI_TUTORIAL chapter 20.
+- **Fixed:** email and bridge posts name a panel by the title the sender's view showed (the filtered title), not the unfiltered one.
+
 
 ## 1.21.0 — BI governance and streaming, connectors behind a proxy, Forms and Reports in the top bar, docs checked against the code (2026-10-11)
 - **Fixed:** the top bar no longer overlaps at 1280 to 1500 px (the Views menu sat over the business-date box once there were five menus): menu labels collapse to icons below 1500 px and the command line may shrink to 160 px; `test_topbar_widths_browser.py` checks 1024 to 1920 px on `/t`, `/bi` and a view for overlapping controls and sideways scroll. BI copy no longer says boards are "not run yet" or "phase 1"; a **board in a BI bundle** now brings its reports (and their datasets) on export and has its body validated (DRS-905x) in the import dry run, with a warning for a tile report that is neither in the bundle nor here; the help centre summary of the BI guide covers phases 1 to 5.

@@ -1106,5 +1106,22 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 | `DRS-9051` | too many live streams are open (HTTP 429), for the server (`drishti.bi.live.max-streams`, 100) or for you (`max-streams-per-user`, 10). Each open live report holds one, a board one per distinct report on it: close a tab or a board. The page says **Disconnected** with the reason |
 | `DRS-9052` | a board is not valid (HTTP 422): not YAML, a bad name or id, a tile off the 12-column grid, an alert threshold that is not `{ op: lt, value: 0 }`, or a tile that names a report you cannot open, a page or visual it does not have, or a slicer. The problem names the path ([BOARDS.md](BOARDS.md#7-checking-a-board-drs-9052-and-drs-9053)) |
 | `DRS-9053` | a board uses a reserved setting (HTTP 501): `notify`, `notifications`, `subscriptions`. Notifications arrive with distribution (phase 7); a tile only changes colour |
+| `DRS-9060` | an export could not be made (HTTP 422): exports are off (`drishti.distribution.export.enabled`), the format is not `pdf`, `png`, `xlsx` or `csv`, the report or view cannot be read, the file is over `max-bytes` (export one page or visual, or narrow the filters), or it took longer than `timeout`. The message names the setting |
+| `DRS-9061` | a subscription is not valid (HTTP 422): a schedule that is not one of `daily`, `weekdays`, `business-days`, `weekly mon HH:MM`, `monthly 1\|last HH:MM` (add `business`), `hourly`, `cron`, `after-load`; a format other than `html`, `pdf`, `xlsx`; an outside address while `external-recipients` is off; a role or another person when you are not a BI author; a target you cannot open yourself; or more than `per-user` subscriptions |
 | `DRS-9404` | raised by the console only (HTTP 404): an embedding page asked for a Drishti Elements module or enhancer script the console does not ship (`/embed/v1/m/<name>.js`, or `/embed/v1/js/<name>.js` for a script that is not one of the console's enhancers); check the file name and the library version in the `<script>` tag |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |
+
+
+## A subscription, an export (Rūpaka distribution)
+
+| You see | Why, and what to do |
+|---|---|
+| The history says `no SMTP host: set spring.mail.host` | the server has no mail host. Set `spring.mail.host` (and `drishti.collab.email.from`); the same settings as share mail. It is not retried, so press *Run now* after fixing it |
+| A delivery says `retry`, with an attempt count | the mail server did not take it; the shared retry policy tries again (`drishti.retry.distribution.*`) up to `drishti.distribution.subscriptions.max-attempts`, then it says `failed`. A refused address is `failed` at once |
+| A recipient is `skipped: no email address on file` | the user has no email in Admin, Users |
+| A recipient is `skipped` with a refusal | they may not open the report or kind now (their role changed). It is by design: they are not mailed a refusal |
+| An `after-load` subscription never runs | it waits for a load that **finished ready** (Admin, Data loads). With `after-load TRD` only a `TRD` load counts. The next run column says "after a data load" |
+| A monthly subscription ran a day late | a holiday: with `business` after the schedule a holiday moves to the next business day (`monthly last 18:00 business` is the last business day) |
+| "MTM by desk: Not available: DRS-9021 'MTM' is masked for you" in a file | that visual sorts on a column your role may not see; every other visual is still there |
+| The PDF has fewer rows than the screen | PDF and PNG draw `pdf-max-rows` (500) rows a table and say so under the table; Excel holds up to `max-rows` (50,000) |
+| `a view is named kind/id` | export a view as `kind/id`, for example `trade/IRS-48213` |

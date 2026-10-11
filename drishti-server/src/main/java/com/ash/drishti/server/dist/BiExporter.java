@@ -130,7 +130,9 @@ public final class BiExporter {
             }
             String note = null;
             List<List<Object>> kept = rows;
-            if (rows.size() > limits.maxRows()) {
+            if (ExportDoc.CARD.equals(type) && rows.size() > 1) {
+                kept = new ArrayList<>(rows.subList(0, 1));                  // a card is one value (a masked measure may come back as many empty rows)
+            } else if (rows.size() > limits.maxRows()) {
                 kept = new ArrayList<>(rows.subList(0, limits.maxRows()));
                 note = "Cut at " + limits.maxRows() + " rows (drishti.distribution.export.max-rows).";
             }

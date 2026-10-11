@@ -120,7 +120,7 @@ async def subscribe_save(request: Request):
     name = f.get("name", "").strip()
     form = {"name": name, "title": f.get("title", ""), "target": target, "schedule": f.get("schedule", ""), "format": f.get("format", "html"), "date": f.get("date", "today"),
             "recipients": ", ".join(recipients)}
-    body = {"target": target, "schedule": form["schedule"], "format": form["format"], "date": form["date"], "recipients": recipients,
+    body = {"title": form["title"], "target": target, "schedule": form["schedule"], "format": form["format"], "date": form["date"], "recipients": recipients,
             "enabled": f.get("enabled", "on") == "on"}
     try:
         await request.app.state.backend.save_subscription(name, body, ident(request))

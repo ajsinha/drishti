@@ -904,6 +904,32 @@ and the Perspective retest [RUPAKA_POC.md](RUPAKA_POC.md) section 12. Codes `DRS
 * **Live tables over arrays** (`each`), in `direct` queries, and a Delta, file or JDBC connector that pushes (only the demo source, Kafka and Redis implement `subscribe`; others are read again every 30 s).
 * Safari was tested through Playwright's WebKit build (26.6), not Safari itself.
 
+### 20.6 Phase 7, part 1, as built
+
+Phase 7 (distribution) is built in two parts. Part 1 is **export and subscriptions**; the references are [DISTRIBUTION.md](../guides/DISTRIBUTION.md), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 19, the walk-through
+[BI_TUTORIAL.md](../guides/BI_TUTORIAL.md#20-export-and-subscribe), the API [API_GUIDE.md](../guides/API_GUIDE.md#export-and-subscriptions-apiv1), the settings `drishti.distribution.*` and the retry area
+`drishti.retry.distribution.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). Codes `DRS-9060` and `DRS-9061`.
+
+**Built.**
+
+* **Export** of a report, a page or one visual, and of a Sutra view, as **Excel** (a sheet per visual or table-like panel, typed cells, a frozen bold header, an `About` sheet), **CSV**, **PDF** (paged, a running
+  header with the title and the as-of date, a footer, no row split by a page edge, a repeated table header) and **PNG**. **No headless browser**: the project has none in production, so the server draws the files itself with the JDK
+  (Java2D for the picture; a small PDF 1.4 writer; the `.xlsx` as zipped XML), nothing downloaded and nothing vendored. Masks and row rules are the requesting user's, because every number comes from the same
+  engine call the screen makes. Limits are settings (rows, bytes, time, visuals, size).
+* **Subscriptions** to a report, a page, a visual or a view, with the view state (slicers, selections, drill path, carried values, the business-date rule `today`, `previous` or `load`; a view's controls and filters),
+  on a schedule (`daily`, `weekdays`, `business-days`, `weekly`, `monthly`, each business-day aware with the pack calendar; `hourly`, `cron`) or **after a data load** (the load signal), as the email itself, a PDF or an Excel file, to users and roles
+  (outside addresses only if an administrator allows). **Each recipient gets their own render**, with their masks and row rules; a recipient who cannot open it is skipped with a reason. Pause, resume, run now, a history with each
+  delivery's status, **retries with the shared retry policy**, and an audit trail.
+* **The console**: *Export* on the report bar and the view header, *Subscribe*, **Reports** in the top bar with the scheduled reports and the subscriptions in one list (existing scheduled reports unchanged), *All subscriptions* for administrators; phone-sized.
+* **The known gap closed**: an email, or a bridge post, that names a panel uses the **title the sender's view showed** (the filtered title), not the unfiltered one.
+
+**Not built, and not faked.**
+
+* **Alerts** from a measure or a board tile to the bell, inbox, email and chat bridges, board `notify:` (still `DRS-9053`), **embedding** and the hand-made **phone layout**, **narrative summaries**: part 2.
+* **Pixel-faithful pages**: the PDF and PNG draw the tables and, for a chart, bars of its first measure; colours, heatmaps, scatters and maps are shown as their data. A view is drawn by the snapshot layout (charts included).
+* **Charts or pivot tables inside the Excel workbook**; **a notice in the inbox when a delivery fails for good** (the history and the audit have it); outside addresses with rights of their own (they get the owner's render, which is why the setting is off).
+* **A real-mail test**: tests use a local fake SMTP (GreenMail in Java; a small server in the Chromium test), by design.
+
 ### 20.1 Three stages
 
 The work is done in three stages, in this order; each is complete and useful on its own.

@@ -70,7 +70,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Alerts | `/alerts` | Your alert rules and recent alerts |
 | Workspaces | `/w` | Several live views on one screen |
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
-| Reports | `/reports` | Saved searches delivered as CSV on a schedule ([Scheduled reports](#scheduled-reports)) |
+| Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](#export-and-subscriptions)) |
 | BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/b/<id>`, `/bi/datasets`, `/bi/designer` | Rūpaka business intelligence, for people with the `bi` power ([BI_GUIDE.md](BI_GUIDE.md)) |
 | Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
 | My account | `/account` | Your profile, settings and password |
@@ -105,7 +105,7 @@ you are on is highlighted.
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
 | **Forms** (icon: a checklist card; tooltip *Forms — query by form*) | Query by form | *All forms* (`/forms`: the [forms home](#the-forms-home)) |
 | | Packs with forms | one entry per switched-on pack that declares a `form:` section, opening `/form/<pack>` |
-| **Reports** (icon: a bar-chart page; tooltip *Reports — saved and scheduled reports, and BI reports*) | Reports | *Saved and scheduled reports* (`/reports`, [Scheduled reports](#scheduled-reports)); with the `bi` power also *BI reports* (the BI catalogue filtered to reports) and the BI reports you opened last |
+| **Reports** (icon: a bar-chart page; tooltip *Reports — saved and scheduled reports, subscriptions, and BI reports*) | Reports | *Saved and scheduled reports* (`/reports`, [Scheduled reports](#scheduled-reports)); with the `bi` power also *BI reports* (the BI catalogue filtered to reports) and the BI reports you opened last |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK.md)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
@@ -1647,6 +1647,17 @@ file went, or the error); **Run now** runs one at once. Worked example: name `Bi
 `TRD where mtm < -10000000`, when `business-days 18:30`, deliver to the folder. At 18:30 on each business day a file
 such as `data/reports/ash/Big_losers/Big_losers-2026-10-01-1830.csv` appears, starting
 `kind,id,title,MTM (USD),…`.
+
+### Export, and subscriptions
+
+**Export.** On a BI report, *Export* under the page tabs saves **this page** or one visual as **PDF**, a **PNG** picture, an **Excel** workbook (a sheet per visual, numbers as numbers) or **CSV**. On a
+view, *Export* in the header does the same for the view. What you save is what **you** may see: your masks and your row rules apply, and the slicers, controls and filters you set are in it, written in the header with the
+business date. A file made for you can be shared; it holds no one else's numbers.
+
+**Subscribe.** *Subscribe* (next to Export) sends the report or view to you by email, on a schedule: every business day at 07:30, every Monday, the last business day of the month, or **after the day's data
+lands**. You choose the form (the tables in the email, a PDF or an Excel file attached). A BI author or an administrator can also subscribe other people or a role; each of them receives a render made for
+them. Your subscriptions are on **Reports** in the top bar, in one list with your scheduled reports: *Run now*, *Pause*, *Resume*, *Delete*, and *History* (who was sent what, and if it failed, why). Reference:
+[DISTRIBUTION.md](DISTRIBUTION.md); walk-through: [BI_TUTORIAL.md chapter 20](BI_TUTORIAL.md#20-export-and-subscribe).
 
 ## Alerts
 

@@ -801,3 +801,57 @@ On a phone the wall is one column:
 ![The board at 390 px](img/bi-live/phone-board-390.png)
 
 The reference for boards, with what is not built, is [BOARDS.md](BOARDS.md); for live tables [DATASETS.md 7.1](DATASETS.md#71-live-tables-phase-5); for live visuals and Perspective [REPORTS.md 13](REPORTS.md#13-live-visuals-and-perspective-phase-5).
+
+## 20. Export and subscribe
+
+This chapter uses the sample report **Trades overview** and three people: **rita** sees every desk and every figure, **hana** is a desk head (her desk only) and **ann** is an analyst whose `mtm` column is masked.
+(The dataset got a `security:` block for this chapter: row rules per role and `masked: [mtm]`; wes, a BI author, does the work. The same stack, with a fake mail server, is `drishti-console/tests/dist_stack.py`.)
+
+**1. Export.** Open the report. Under the page tabs is the *Export* bar: choose **this page** (or one visual) and press **PDF**, **PNG**, **Excel** or **CSV**.
+
+![The export bar](img/bi-dist/report-export-bar.png)
+
+The picture of the page is the server's own drawing of the tables, as the person who asked sees them:
+
+![The PNG](img/bi-dist/export-page.png)
+
+The Excel file is `Trades overview.xlsx`: a sheet `About` with the title, the as-of date and the filters, then one sheet per visual. `Trades`, `Notional` and the cards hold one typed number; `MTM by desk` holds
+`desk` and `MTM`; the date column of `Notional by trade date` is a real Excel date. The CSV of one visual, chosen in *Export*:
+
+```
+desk,MTM
+DESK-EQD,425000
+DESK-FI,-75000
+DESK-FX,-575000
+```
+
+On a view the *Export* menu is in the header (PDF, image, Excel, CSV); a view's file carries the controls and column filters you had set.
+
+![A view's Export menu](img/bi-dist/view-export-menu.png)
+
+**2. Subscribe.** Press *Subscribe*. The form knows what you were looking at (the page, the slicers you set). Name it, say *when* (`business-days 07:30`, or `after-load` to run after the day's data lands),
+*send as* (the tables in the email, a PDF or an Excel file) and *to*: `rita, hana, ann`.
+
+![The Subscribe form](img/bi-dist/subscribe-form.png)
+
+**3. Run now.** Back on **Reports**, the subscription is in the list with your scheduled reports. *Run now* sends it: `Morning desk pack: 3 sent`. The history says who was sent what:
+
+![The list and its history](img/bi-dist/subscriptions-list.png)
+
+**4. Three mails, three renders.** What arrived, from the test mail server (nothing leaves the machine). Rita's has every desk and `-225,000`; Hana's only DESK-FX (`Trades 20`, notional `79,000,000`); Ann's has
+the `MTM` card **masked** ("Masked for you: MTM.") and, honestly, `MTM by desk` as *Not available: DRS-9021 'MTM' is masked for you: it cannot be sorted on*:
+
+![Rita's mail](img/bi-dist/mail-rita.png)
+
+![Hana's mail](img/bi-dist/mail-hana.png)
+
+![Ann's mail](img/bi-dist/mail-ann.png)
+
+**5. A PDF subscription, a calendar that knows holidays.** A second subscription with `monthly last 18:00 business` and *send as* PDF mails the file (`Trades overview.pdf`, 2942 bytes); "last business day" is
+computed with the server's holiday calendar. *Pause* and *Resume* are buttons in the list; a resumed subscription is scheduled from now.
+
+On a phone the list scrolls sideways and every button is 44 px:
+
+![The list at 390 px](img/bi-dist/list-phone-390.png)
+
+The reference, with the schedule grammar, limits and what is not built, is [DISTRIBUTION.md](DISTRIBUTION.md).

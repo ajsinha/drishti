@@ -120,7 +120,7 @@ public final class DocLayout {
         for (int c = 0; c < n; c++) {
             int x = M + 6 + c * w;
             pen.text(x, pen.y + 12, fit(s.columns().get(c), w - 8, 10), 10, false, GREY);
-            pen.text(x, pen.y + 36, fit(DocFmt.cell(c < row.size() ? row.get(c) : null), w - 8, 20), 20, true, INK);
+            pen.text(x, pen.y + 36, fit(DocHtml.cardValue(s, row, c), w - 8, 20), 20, true, INK);
         }
         pen.y += 52;
     }

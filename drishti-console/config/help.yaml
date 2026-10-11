@@ -40,6 +40,7 @@ categories:
       - { slug: datasets, doc: guides/DATASETS.md, title: "BI datasets", icon: database, summary: "Tables, relationships, measures, the expression language, row rules, masks, layers and rollups, live tables." }
       - { slug: reports, doc: guides/REPORTS.md, title: "BI reports", icon: bar-chart, summary: "Pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer and the designer, checks and codes." }
       - { slug: bi-governance, doc: guides/BI_GOVERNANCE.md, title: "Publishing BI safely", icon: shield-check, summary: "Versions and diffs, review, certification, lineage, impact of a change, bundles between environments." }
+      - { slug: distribution, doc: guides/DISTRIBUTION.md, title: "Export and subscriptions", icon: envelope-paper, summary: "A report or view as PDF, PNG, Excel or CSV; subscriptions by email, each recipient with their own masks." }
       - { slug: boards, doc: guides/BOARDS.md, title: "BI boards and live BI", icon: speedometer2, summary: "A wall of live tiles, kiosk mode, tile alerts, live tables, live visuals and Perspective." }
       - { slug: using-the-terminal, doc: guides/USER_GUIDE.md, title: Using the terminal, icon: terminal, summary: "Commands, type-ahead, every key, and how to read the strip, panels, links and provenance." }
   - id: layouts

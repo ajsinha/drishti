@@ -1623,7 +1623,9 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9050 | 422 | Live table | A live table cannot be kept: it is over an array (`each`) or its `live:` block is wrong |
 | DRS-9051 | 429 | Live streams | Too many live streams are open for the server or for this user (`drishti.bi.live.max-streams`, `max-streams-per-user`) |
 | DRS-9052 | 422 | Board invalid | A board is malformed, or names a report, page or visual the caller cannot open or that does not exist, a tile off the grid, a slicer, or a threshold that is not `{op, value}` |
-| DRS-9053 | 501 | Board not built | A board uses a reserved setting: `notify`, `notifications`, `subscriptions` (phase 7) |
+| DRS-9053 | 501 | Board not built | A board uses a reserved setting: `notify`, `notifications`, `subscriptions` (notifications from a board: phase 7 part 2) |
+| DRS-9060 | 422 | Export failed | An export is off, names an unknown format or a target that cannot be read, is over `max-bytes`, or took longer than `timeout` |
+| DRS-9061 | 422 | Subscription not valid | A subscription's target, schedule, format, date rule or recipients are wrong, there are too many, or subscriptions are off |
 
 `DRS-5003` (503, "backend unreachable") and `DRS-9404` (404, an unknown Drishti Elements module or script) are raised by the console, never by the server, so they are not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1821,6 +1823,36 @@ POST /api/v1/bi/boards/validate   {"yaml": "board: bad\npages:\n  - id: p\n    t
 ```
 
 Publishing a board (`POST /bi/items/{id}/publish`) checks its structure and refuses `422 DRS-9052`. From the console the calls are under `/bi/api/boards/...` and the stream is the channel subscription `bilive:<report id>` ([LIVE.md](../architecture/LIVE.md#live-bi-a-reports-live-tables)).
+
+## Export and subscriptions: `/api/v1`
+
+Distribution ([DISTRIBUTION.md](DISTRIBUTION.md) is the reference). The file or the mail is made for the **caller** (or, for a subscription, each recipient): row rules and masks apply as for the screen.
+Errors are `DRS-9060` (an export) and `DRS-9061` (a subscription); an unreadable report is `403 DRS-9002` or `404 DRS-9001` as everywhere in BI.
+
+| Method | Path | What it does |
+|---|---|---|
+| `POST` | `/export/{format}` | `format` is `pdf`, `png`, `xlsx` or `csv`. Body `{type: "report", id, page?, visual?, state?, date?}` (`state` is the report's view state: `slicers`, `selections`, `drill`, `carry`, `dates`) or `{type: "view", id: "kind/id", date?, view?}` (`view` is the query text of the control values and column filters, `ctl.x=1&f.panel.col=gt:5`). Answers the file with `Content-Disposition: attachment` and `X-Export-Rows`. `422 DRS-9060`: exports off, an unknown format, a target that does not exist, over `max-bytes`, over `timeout` |
+| `GET` | `/me/subscriptions` | your subscriptions: `{name, owner, title, target, schedule, date, format, recipients, enabled, nextRun, loadDate?, runs[]}`; a run is `{id, at, trigger, status, sent, skipped, failed, retrying, deliveries[{to, status, attempts, error?, nextAttempt?}]}` |
+| `GET` | `/me/subscriptions/{name}` | one |
+| `PUT` | `/me/subscriptions/{name}` | save: `{target: {type, id, page?, visual?, state?, view?}, schedule, format: html\|pdf\|xlsx, recipients: [user \| role:NAME \| address], date?: today\|previous\|load, enabled?, title?}`. `422 DRS-9061` says what is wrong |
+| `DELETE` | `/me/subscriptions/{name}` | delete (`204`) |
+| `POST` | `/me/subscriptions/{name}/run` | run now: one render and one mail per recipient, as that recipient; answers the run |
+| `POST` | `/me/subscriptions/{name}/pause` · `/me/subscriptions/{name}/resume` | pause or resume (a resumed one is scheduled from now) |
+| `POST` | `/subscriptions/preview` | `{schedule}`: `{next: [3 instants]}` (empty for `after-load`) |
+| `GET` | `/admin/subscriptions` | everyone's (administrators) |
+| `POST` | `/admin/subscriptions/{owner}/{name}/pause` · `/admin/subscriptions/{owner}/{name}/resume` | administrators |
+| `DELETE` | `/admin/subscriptions/{owner}/{name}` | administrators (`204`) |
+
+From the console: `GET /dist/bi/<report id>.<format>?page=&visual=&state=&date=` and `GET /dist/view/<kind>/<id>.<format>` download the files; the forms are on `/reports`.
+
+Captured from a real server: exporting the sample page as Excel, and what the first lines of the response are:
+
+```
+POST /api/v1/export/xlsx  {{"type":"report","id":"file:report:trades-overview","page":"overview","state":{{"slicers":{{}}}}}}
+200  Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+     Content-Disposition: attachment; filename="{cap['xlsx_name']}"
+     {cap['xlsx_bytes']} bytes, sheets: {', '.join(cap['xlsx_sheets'])}
+```
 
 ## Publishing and governance: `/api/v1/bi` (phase 4)
 

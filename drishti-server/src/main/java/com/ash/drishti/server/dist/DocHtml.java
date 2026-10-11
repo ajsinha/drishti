@@ -78,7 +78,7 @@ public final class DocHtml {
         b.append("<table style=\"border-collapse:collapse;\"><tr>");
         for (int c = 0; c < s.columns().size(); c++) {
             b.append("<td style=\"padding:6px 18px 6px 0;\"><div style=\"color:#6b7686;font-size:12px;\">").append(esc(s.columns().get(c)))
-                    .append("</div><div style=\"font-size:20px;font-weight:bold;\">").append(esc(DocFmt.cell(c < row.size() ? row.get(c) : null))).append("</div></td>");
+                    .append("</div><div style=\"font-size:20px;font-weight:bold;\">").append(esc(cardValue(s, row, c))).append("</div></td>");
         }
         b.append("</tr></table>");
     }
@@ -108,6 +108,12 @@ public final class DocHtml {
         return b.toString();
     }
 
+    /** A card's value as a page shows it; for a masked measure with nothing to show, the word that says why. */
+    static String cardValue(ExportDoc.Section s, List<Object> row, int c) {
+        String v = DocFmt.cell(c < row.size() ? row.get(c) : null);
+        return v.isEmpty() && s.masked().contains(s.columns().get(c)) ? "(masked)" : v;
+    }
+
     public static String text(ExportDoc doc, int maxRows) {
         StringBuilder b = new StringBuilder(doc.title()).append('\n');
         if (doc.subtitle() != null && !doc.subtitle().isBlank()) {
@@ -121,6 +127,12 @@ public final class DocHtml {
             }
             if (s.rows().isEmpty()) {
                 b.append("No data\n");
+                continue;
+            }
+            if (ExportDoc.CARD.equals(s.type())) {
+                for (int c = 0; c < s.columns().size(); c++) {
+                    b.append(s.columns().get(c)).append(": ").append(cardValue(s, s.rows().get(0), c)).append('\n');
+                }
                 continue;
             }
             b.append(String.join(" | ", s.columns())).append('\n');

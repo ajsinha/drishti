@@ -37,26 +37,8 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 import bi_report_stack  # noqa: E402
 from bi_report_helpers import clean, open_report, settled, sign_in  # noqa: E402
 from bi_report_stack import CONSOLE_URL  # noqa: E402
+from dist_stack import REPORT, DistStack  # noqa: E402
 from fake_smtp import FakeSmtp  # noqa: E402
-
-REPORT = "file:report:trades-overview"
-SECURITY = """
-security:
-  rows:
-    - { role: desk-head, where: "trade.desk in user.desks" }
-    - { role: risk, where: "true" }
-    - { role: analyst, where: "true" }
-    - { role: bi-writer, where: "true" }
-    - { role: admin, where: "true" }
-  masked: [mtm]
-"""
-
-
-class DistStack(bi_report_stack.ReportStack):
-    def prepare(self, work):
-        ds = work / "config" / "bi" / "datasets" / "trades-basic.dataset.yaml"
-        ds.write_text(ds.read_text() + SECURITY)
-
 
 @pytest.fixture(scope="module")
 def smtp():
@@ -70,9 +52,7 @@ def stack(tmp_path_factory, smtp):
     for port in (bi_report_stack.SERVER_PORT, bi_report_stack.CONSOLE_PORT):
         if bi_report_stack.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
-    s = DistStack(tmp_path_factory.mktemp("dist"), delta_root="")
-    s.server_args = ["--spring.mail.host=127.0.0.1", f"--spring.mail.port={smtp.port}", f"--drishti.collab.console-url={CONSOLE_URL}", "--drishti.collab.email.from=drishti@desk.test",
-                     "--drishti.distribution.subscriptions.tick=1h"]
+    s = DistStack(tmp_path_factory.mktemp("dist"), smtp.port)
     try:
         s.start()
     except FileNotFoundError as e:

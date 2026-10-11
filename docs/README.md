@@ -42,7 +42,9 @@ explained. If you will change the code, continue with [DEVELOPER_GUIDE.md](guide
 | Learn BI from three sample datasets on the trades: read a model, query it, row rules and masks, start a model from the packs | [BI_TUTORIAL.md](guides/BI_TUTORIAL.md) |
 | Write or read a report: pages, visuals, wells, filters, slicers, drill-down and drill-through, the viewer, how a visual becomes a query, DRS-9030 to 9035 | [REPORTS.md](guides/REPORTS.md) |
 | Publish BI safely: versions and diffs, review, certification, lineage, impact of a dataset change, bundles between environments, DRS-9040 to 9042 | [BI_GOVERNANCE.md](guides/BI_GOVERNANCE.md) |
-| Build live BI: boards (a wall of live tiles, kiosk, tile alerts), live tables, live visuals, Perspective, DRS-9050 to 9053 | [BOARDS.md](guides/BOARDS.md) |
+| Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email, each with their own masks, DRS-9060 and 9061 | [DISTRIBUTION.md](guides/DISTRIBUTION.md) |
+| Build live BI: boards (a wall of live tiles, kiosk, tile alerts), live tables, live visuals, Perspective, DRS-9050 to 9053 | [DISTRIBUTION.md](guides/DISTRIBUTION.md) | export (PDF, PNG, Excel, CSV), subscriptions (schedules, per-recipient renders, retries, history), the console list, limits, what is not built |
+| [BOARDS.md](guides/BOARDS.md) |
 | Write or read a dataset: tables, relationships, measures, the expression language, row rules, masks, layers | [DATASETS.md](guides/DATASETS.md) |
 | Ship packs, Sutras and data to servers by copying: bundle, verify, deploy, promote, roll back | [OPERATIONALISING.md](guides/OPERATIONALISING.md) |
 | Install and run it on Windows (PowerShell, no Hadoop) | [WINDOWS.md](guides/WINDOWS.md) |

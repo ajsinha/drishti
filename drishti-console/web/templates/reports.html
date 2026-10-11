@@ -29,7 +29,7 @@
   <section class="pnl" id="subscriptions"><header class="pnl-h"><h3>Your reports and subscriptions</h3><span class="pnl-code">{{ rows | length }}</span>
     {% if me and me.is_admin %}<a class="lnk dist-link" href="/reports/all">Everyone's subscriptions</a>{% endif %}</header><div class="pnl-b">
     {% if rows %}<div class="tbl-wrap"><table class="tbl dist-tbl" data-plain>
-      <thead><tr><th>Name</th><th>What</th><th>When</th><th>To</th><th>Next run</th><th>Last run</th><th></th></tr></thead>
+      <thead><tr><th>Name</th><th>What</th><th>When</th><th>To</th><th>Next run (UTC)</th><th>Last run</th><th></th></tr></thead>
       <tbody>{% for r in rows %}{% set last = (r.runs or [None])[0] %}
         <tr data-row-kind="{{ r.kind }}" data-row-name="{{ r.name }}"><td>{{ r.name }} <span class="badge-kind">{{ 'subscription' if r.kind == 'subscription' else 'report' }}</span>{% if not r.enabled %} <span class="badge-kind">paused</span>{% endif %}</td>
           <td><a class="lnk dist-link{{ ' mono' if r.kind == 'report' else '' }}" href="{{ r.href }}">{{ r.what }}</a>{% if r.note %}<div class="cmp-path">{{ r.note }}</div>{% endif %}</td>
