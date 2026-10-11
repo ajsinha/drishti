@@ -248,7 +248,7 @@ never bind to connectors directly.
 - **The Model view** in the designer is the relationship diagram: tables as boxes with their columns, measures and
   hierarchies; drag a column onto another to relate them; each line shows cardinality (one-to-one, one-to-many,
   many-to-one, many-to-many) and filter direction (single or both); a relationship can be inactive and used by a measure
-  explicitly. The diagram and the YAML (section 6) are two views of the same draft; the layout is saved with it.
+  explicitly. The diagram and the YAML (section 6) are two views of the same draft; the layout is saved with it. *Built in phase 3 (20.3), except the explicit use of an inactive relationship by a measure and the filter direction `both` in queries.*
 - **BI only.** Model relationships drive joins and cross-filtering in BI. The terminal keeps navigating by pack links;
   editing a model never changes a pack.
 - **Access per pack.** A reader sees a model's tables only from the packs assigned to them (and not from packs switched
@@ -324,6 +324,8 @@ a connector, with Drishti still adding row rules and applying masks to the resul
 The phase 0 POC measures the JSON, columns and rollup paths side by side (RUPAKA_POC.md).
 
 ## 8. Reports and visuals
+
+*Phase 3 builds this section for ECharts, cards, tables and matrices, slicers and the interactions; Perspective, the map, the Python visual and the entity view are not built. What is built is in 20.3; the reference is [REPORTS.md](../guides/REPORTS.md).*
 
 A report is `<drishti.bi.dir>/reports/<id>.report.yaml` (by default `config/bi/reports/`): pages, each a 12-column grid of visuals; filters at report, page and visual
 level; bookmarks; drill-through targets; a theme.
@@ -459,6 +461,8 @@ Rūpaka slicers and the visual, page and report filters of the designer.
   same grid, so the two paths meet.
 
 ## 9. The designer
+
+*Phase 3 builds the four panes, the YAML tab, data while designing, Check and undo. Explore to visual, the "expected values" tests of Check and a schema-completion popup in the YAML tab are not built. What is built is in 20.3; the guide is [BI_GUIDE.md](../guides/BI_GUIDE.md) section 15.*
 
 Power BI authors find the same panes in the same places:
 
@@ -741,8 +745,8 @@ section 3.4 pattern, server-side, four-eyes, off by default).
 | 0 | **Proof of concept**: Perspective live grid fed by Drishti's live path; masked Arrow out of a server DuckDB query; DuckDB-Wasm slicing it; CSP and size measured | M | a page shows a live pivot at target rates and a cached query under target, with masks proven |
 | 0a | **Interactive Sutras** (sections 8.1, 8.2; query by form is built first, in the terminal): Excel-style column filters on every table, then `controls:` and `ctl.*` with URL view state, then cross-filtering | M | a desk filters a trade's cashflows by leg and date from a dropdown, and any table by column filters, by mouse, keyboard and touch. **Built** in the terminal (column filters: delivery 1; controls, URL view state and cross-filtering: delivery 2); the Rūpaka side (slicers on a report) waits for stage 1 |
 | 1 | **Shell and catalogue**: BI top bar item, `RUPAKA <GO>`, `/bi` home, catalogue, workspaces (personal and shared), powers, audit | M | a published report appears for its audience only |
-| 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows | **Built** except refresh by cron schedule and the items listed in 20.2; the demo report is phase 3 |
-| 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test) |
+| 2 | **Datasets and query engine**: dataset YAML, cached and direct modes, the columns and rollup layers (section 7.1), the engine interface, expression language aggregation, compile to DuckDB, row rules, masks, Arrow delivery, caching, refresh by schedule and data load | L | the reference dataset answers every visual of the demo report within targets for three roles with different rows | **Built** except refresh by cron schedule and the items listed in 20.2; the three sample reports that answer on it are phase 3 (20.3) |
+| 3 | **Reports and the designer**: report YAML, the visual catalogue, filters, cross-filter, drill-down and through, the four panes, YAML tab, preview with data, check | L | a Power BI author rebuilds a supplied reference report without help in under an hour (usability test). **Built** except the usability test and the items listed in 20.3 |
 | 4 | **Publishing and governance**: review before publish, versions, endorsement, lineage, impact of dataset changes, pack bundles for environments | M | certified content and lineage shown; deployment by bundle with rollback |
 | 5 | **Streaming BI**: live tables, incremental aggregates, Perspective visuals, coalescing and backpressure, boards as pages | M | live targets met under the LOAD_AND_MEMORY capacity run |
 | 6 | **Python**: the interfaces, the server runner and sandbox, browser target, manifests and tests, Calc client and PygWalker | M | a Transform, a Measure and a Visual ship in a pack with tests and run on both targets |
@@ -783,7 +787,7 @@ Phase 2 (datasets and the query engine) is built; the references are [DATASETS.m
   aggregation (`sum avg min max count distinct ratio percentile`, a condition as the last argument, `[Measure]` references, `in`, `user.<attr>` in rules, date parts), compiled to SQL by its **own** compiler (the Rachana-EL closures evaluate documents, not columns).
 * **The model from packs (6.2).** Every kind the reader may open is offered as a table with the connector's promoted columns typed from the data (else from the pack's sample documents); the packs' link graph (`graph.fields`) becomes relationships, across packs;
   relationships are **proposed by value matching** with the match rate, cardinality and a few unmatched values (profiling, no AI), from the promoted columns or, for connectors that promote none, from documents. API `/bi/model/kinds|start|infer`; a minimal read-only
-  model page lists tables, relationships, measures, rules and layers (the diagram is phase 3).
+  model page lists tables, relationships, measures, rules and layers (the diagram is the Model view of 20.3).
 * **Connector capabilities (6.1).** Optional SPI methods `scan(ScanRequest)` (column batches in the Arrow type model, without Arrow's memory libraries) and `sqlTarget()`; Delta, DuckDB, JDBC table mode and file scan over their promoted columns, DuckDB and JDBC expose a SQL
   target; everything else falls back to record reads with a warning ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#bulk-reads-for-bi-scan-and-sqltarget)).
 * **The query engine (7, 7.1).** `AnalyticEngine` with the embedded DuckDB (no extension downloaded at run time: Parquet and the connector, not the `delta` extension). A visual query (fields, measures, filters, dates, order) compiles to one **parameterised** SQL
@@ -801,7 +805,45 @@ Phase 2 (datasets and the query engine) is built; the references are [DATASETS.m
 **Not built, and not faked.** Refresh by the cron `refresh.schedule` (stored and validated; refresh is by data-load signal and `POST /datasets/{id}/refresh`); time intelligence (`ytd`, `mtd`, `same_period_last_year`) and window functions (`running`, `lag`, `rank`), refused with `DRS-9013`;
 Python measures (stored, not run, phase 6); queries whose measures aggregate several unrelated fact tables; filter direction `both`, many-to-many semantics and inactive relationships used by a measure; live tables as an incrementally updated in-memory table fed by the hot path
 (phase 5); the BI store as a configured connector (a folder today; mount S3 to put it there); engines other than DuckDB (the interface exists); pushdown of scan filters into Delta and file storage; lineage, impact and classification tags (phase 4); the designer, the Model diagram
-and reports (phase 3). The columns layer is **per dataset table**, not shared per kind as 7.1 sketches (a kind read by two datasets is read twice).
+and reports (built in phase 3, section 20.3). The columns layer is **per dataset table**, not shared per kind as 7.1 sketches (a kind read by two datasets is read twice).
+
+### 20.3 Phase 3, as built
+
+Phase 3 (reports, the visual catalogue, filters and interactions, the designer, the Model view) is built; the reference is [REPORTS.md](../guides/REPORTS.md), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 14 to 16, the walk-through
+is [BI_TUTORIAL.md](../guides/BI_TUTORIAL.md) chapters 10 to 15, the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+
+**Built.**
+
+* **The report model (section 8).** `config/bi/reports/<id>.report.yaml` and `report` items: pages, a 12-column grid (`at: { x, y, w, h }`), visuals with `wells`, filters at report, page and visual level, bookmarks, drill-through pages, a theme
+  (`default`, `colour-blind`, `mono`). A parser, a validator against the dataset and a **writer** that produces the YAML the way a person writes it (flow style for `at`, `wells` and filters, the reference's key order, quotes only where needed;
+  every sample report round-trips). Problems come back whole, with path and code: `DRS-9030` structure, `9031` a name the dataset or report lacks, `9032` a visual built wrongly, `9033` reserved and not built, `9034` the dataset, `9035` the state
+  of a visual query. Publishing a report checks its structure. Stored as BI items and shipped in `config/bi/reports` (watched live).
+* **The visual catalogue.** 21 types: bar, column, line, area, combo, scatter, pie, donut, waterfall, treemap, heatmap (ECharts, vendored, tooltips drawn on the canvas so the strict style policy holds), card, multi-row card, KPI (with a sparkline), gauge,
+  table (sort, data bars, conditional colours, key columns that open the entity in the terminal), matrix (subtotals, collapse, totals for measures that add up), slicers (list, dropdown through the shared multi-select, range), text, image, button.
+* **Queries.** Each visual is one dataset query built on the server from the visual and the page's state, in a fixed order of authority (report, page, visual, slicers, selections on other visuals, drill-through values, the drill path), run through the
+  phase 2 engine as the reader (their row rules and masks); **top-N filters** are resolved first in the context of the other filters; a measure may be filtered (a comparison on the total). `POST /bi/reports/{id}/query`, `/query` for drafts, `/validate`,
+  `/format`, `/catalogue`, `/dataset`, `GET /bi/reports/{id}`.
+* **Interactions.** Cross-filter and **highlight** (bar and column charts ask twice, the whole and the highlighted answer), drill-down and up along a dataset hierarchy, **drill-through** to a page with the value carried in the URL, **Show the rows**
+  (every column of the table behind the visual, masked as for the reader), **Show as a table**, **Open in the terminal**, bookmarks, a business-date picker, filter chips, keyboard operation (marks by arrows, `t`, `r`, `d`, `u`, `Esc`), a phone layout (one
+  column, 44 px targets). The page asks **three queries at a time** (the per-person limit of phase 2) and retries a refusal for busy.
+* **The designer (section 9).** Fields (tables, columns with date parts, measures, hierarchies, search; drag or button), Visualizations (the catalogue, **Build** wells with chips, reorder and selects, **Format** with theme colours, number formats, conditional
+  colours, data bars, slicer mode and scope), Filters (basic with values from the data, advanced, top-N, at three levels), page tabs (add, rename, move, delete, drill-through target), the canvas (drag and resize on the grid with overlaps pushed down, **fully keyboard
+  operable**), the **YAML tab** two ways with a strip of suggestions at the cursor, **real data and the query time on every visual**, **Check** (validation plus accessibility, layout and performance warnings), undo and redo (100 steps), save, save a copy
+  (shipped content opens read-only), a start page. A field dropped on the canvas makes the best visual (measure: card; column: table) and improves it as more arrive (category and measure: bar; date and measure: line; two categories and a measure: matrix).
+* **The Model view (section 6.2).** Tables as boxes with their columns, relationships as lines with `1` and `*` and the direction in the title, drag a column onto another to relate (a form confirms the guessed cardinality), edit cardinality, direction and
+  active, remove; **proposals from the data** accepted one by one; positions saved in the YAML under `layout:`; the YAML beside it, rewritten only in `relationships:` and `layout:`. `POST /bi/datasets/validate` now also returns the parsed model.
+* **Samples and documentation.** Three sample reports (`trades-overview`, `counterparty-risk`, `cashflow-ladder`; `sample: true`), [REPORTS.md](../guides/REPORTS.md), the tutorial's designer chapters with pictures, `BI <report> <GO>` opens the viewer, the rail's
+  Designer is live.
+
+**Measured** (a laptop, the generated Delta lake of the tutorial: 750 trades a day, three business days; the numbers are what the page shows under each visual): opening *Trades overview* (8 queries, three at a time) took 487 ms to the last visual on the first open
+after the server started (the sum of the queries 18 ms, the slowest 4 ms), 244 ms with every answer from the cache; *Counterparty risk* 281 ms and 212 ms; *Cashflow ladder* 299 ms and 255 ms. Selecting a mark re-asks the other seven visuals: 200 ms to the last
+answer. No visual of a sample report reached the one-second hint of Check.
+
+**Not built, and not faked.** Perspective visuals and live grids, pivots and charts (phase 5); the visuals `bubble`, `funnel`, `histogram`, `box`, `map`, `python`, `entity-view` and `shape` (refused with `DRS-9033`); the relative-date slicer (refused); a report over
+**several datasets** (one dataset a report); true subtotals for measures that do not add up (a matrix shows `–`: the figures it totals are the ones it shows); highlight for charts other than bar and column (the others are filtered); capturing a bookmark's slicer
+choices from the page (written in the YAML); different layouts per device (a phone stacks the grid in reading order); the *Check* that runs a report's expected values on sample data, and a schema-completion popup in the YAML tab (a strip of suggestions instead);
+the designer's *Explore to visual* (phase 9) and the **usability test** the phase asks for (an hour, a Power BI author, a reference report); export, subscriptions, alerts, embedding (phase 7); a filter direction of `both`, many-to-many semantics and inactive
+relationships used by a measure (the engine joins as written, 20.2); several fact tables in one visual's query (20.2). The Model view lays out by a simple rule (the most connected table in the middle) and does not route lines around boxes.
 
 ### 20.1 Three stages
 

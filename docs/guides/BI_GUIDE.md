@@ -16,17 +16,19 @@
 # Business intelligence (Rupaka): the BI page
 
 Rupaka is Drishti's business-intelligence layer. This guide describes **what is built today: phase 1 (the shell and the
-catalogue) and phase 2 (datasets and the query engine)**. You can open the BI page, keep drafts in a personal workspace, share workspaces
+catalogue), phase 2 (datasets and the query engine) and phase 3 (reports, the designer and the Model view)**. You can open the BI page, keep drafts in a personal workspace, share workspaces
 with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them, and find what you
 may open in a catalogue. A **dataset** item is now parsed, validated and **queried**: tables from pack kinds through connectors,
 relationships, measures, row rules and masks, answered by an embedded DuckDB (section 13; the reference is [DATASETS.md](DATASETS.md) and the
-walk-through [BI_TUTORIAL.md](BI_TUTORIAL.md)). **Reports and boards are not run yet**: such an item holds a YAML body that Drishti stores,
-versions and publishes but does not execute or draw. The designer and exploration are later phases; section 11 lists exactly what is and is not
+walk-through [BI_TUTORIAL.md](BI_TUTORIAL.md)). A **report** item is now **drawn**: pages of visuals (bar, line, table, matrix, cards, slicers and more) that
+query the dataset as the person looking, with cross-filtering, drill-down and drill-through (section 14; the reference is [REPORTS.md](REPORTS.md)); the **designer** builds one by dragging fields onto a canvas
+(section 15) and the **Model view** draws a dataset's relationships as a diagram (section 16). **Boards and notebooks are not run yet**: such an item holds a YAML body that Drishti stores,
+versions and publishes but does not execute or draw. Live BI and exploration are later phases; section 11 lists exactly what is and is not
 there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan is its section 20.
 
 ## Contents
 
-1. [What phases 1 and 2 are, and are not](#1-what-phases-1-and-2-are-and-are-not)
+1. [What phases 1 to 3 are, and are not](#1-what-phases-1-to-3-are-and-are-not)
 2. [Getting in: the BI menu and RUPAKA](#2-getting-in-the-bi-menu-and-rupaka)
 3. [Who may do what: the four powers](#3-who-may-do-what-the-four-powers)
 4. [The page and its rail](#4-the-page-and-its-rail)
@@ -39,15 +41,21 @@ there. The design is in [RUPAKA.md](../architecture/RUPAKA.md); the build plan i
 11. [Built and not built](#11-built-and-not-built)
 12. [Problems](#12-problems)
 13. [Datasets and the query engine (phase 2)](#13-datasets-and-the-query-engine-phase-2)
+14. [Reports: the viewer (phase 3)](#14-reports-the-viewer-phase-3)
+15. [The designer (phase 3)](#15-the-designer-phase-3)
+16. [The Model view (phase 3)](#16-the-model-view-phase-3)
 
-## 1. What phases 1 and 2 are, and are not
+## 1. What phases 1 to 3 are, and are not
 
 | You can | You cannot yet |
 |---|---|
-| Open BI from the top bar or with `RUPAKA <GO>` | Draw a visual, or open a report as a report (phase 3) |
-| Keep drafts in a personal workspace, move them to a shared one | Design a report, explore a dataset, use Perspective, DuckDB or Python in BI (later phases) |
-| Create typed items (`dataset`, `report`, `board`, `notebook`) with a YAML body | Run a `report`, `board` or `notebook` body: it is stored as text. A `dataset` body is validated and queried (section 13) |
-| Open a dataset: its model, and a **query preview** with the server's row rules and masks | Design a report on it, or see its model as a diagram (phase 3) |
+| Open BI from the top bar or with `BI <GO>` | Stream live data into a visual, use Perspective or Python in BI (later phases) |
+| Keep drafts in a personal workspace, move them to a shared one | Explore a dataset freely (phase 9) |
+| Create typed items (`dataset`, `report`, `board`, `notebook`) with a YAML body | Run a `board` or `notebook` body: it is stored as text. A `dataset` body is validated and queried (section 13), a `report` body is drawn (section 14) |
+| Open a dataset: its model, and a **query preview** with the server's row rules and masks | Version-diff a dataset, or see what a change to it breaks (phase 4) |
+| Open a report: tabs, slicers, click a bar to filter the page, drill down, drill through, show the rows, open in the terminal (section 14) | Export it, subscribe to it or embed it (phase 7) |
+| Design a report by dragging fields onto a canvas, with the YAML beside it, real data and the query time on every visual, Check, undo and redo (section 15) | Have the designer suggest a report from words (stage 2), or save an Explore view as a visual (phase 9) |
+| See a dataset's tables and relationships as a diagram and draw a relationship by dragging a column onto another (section 16) | Change a pack from the diagram: it never does |
 | Start a dataset from the packs' kinds, links across packs, proposed relationships | Schedule a refresh by cron, time intelligence, Python measures (DATASETS.md section 10) |
 | Publish versions, restore an old one, propose for review, approve (four-eyes) | See a diff between versions, or the dataset-change impact (phase 4) |
 | Promote or certify items, set an audience of roles, users and packs | Export, subscribe, alert or embed (phase 7) |
@@ -71,7 +79,7 @@ Everything the page does, the server decides: the page is a shell that asks the 
 | `BI <GO>` | the BI home (`/bi`) |
 | `BI WORKSPACE <GO>` | your personal workspace (`/bi/w/me`) |
 | `BI CATALOGUE <GO>` | the catalogue (`/bi/catalogue`) |
-| `BI <report-or-board> <GO>` | an item by its id or its title (any case); if the words match several items, the catalogue searched for them (a pick list); until the report engine exists it opens the item's page |
+| `BI <report-or-board> <GO>` | an item by its id or its title (any case); a **report opens drawn** (`/bi/r/<id>`), any other item opens its page; if the words match several items, the catalogue searched for them (a pick list) |
 | `BI SETTINGS <GO>` | Admin, BI settings (needs `bi-admin`) |
 
 ![Type-ahead after RUPAKA](img/bi/03-keyword.jpg)
@@ -82,8 +90,8 @@ missing. **A pack may not define a mnemonic named `BI` or `RUPAKA`** (or `FORM`,
 `pack 'x' defines the mnemonic 'BI', which is a reserved command word (BI, FORM, RUPAKA): choose another`, so `pack check` fails
 the same way.
 
-URLs: `/bi` (home), `/bi/catalogue`, `/bi/workspaces`, `/bi/w/<workspace>` (`me` is your personal one), `/bi/i/<item>`, and the
-placeholders `/bi/datasets`, `/bi/designer`, `/bi/explore`. Admin: `/admin/bi`.
+URLs: `/bi` (home), `/bi/catalogue`, `/bi/workspaces`, `/bi/w/<workspace>` (`me` is your personal one), `/bi/i/<item>`, `/bi/datasets` and `/bi/d/<dataset>` (phase 2),
+`/bi/r/<report>[/<page>]` (the viewer), `/bi/designer` and `/bi/design/<draft>` (the designer), `/bi/m/<dataset>` (the Model view), and the placeholder `/bi/explore`. Admin: `/admin/bi`.
 
 ## 3. Who may do what: the four powers
 
@@ -113,8 +121,8 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 | Catalogue | search, filters and sort over what you may open | built |
 | My workspace | your personal workspace | built |
 | Workspaces | the workspaces you belong to; create one | built |
-| Datasets | the semantic models | placeholder, "phase 2" |
-| Designer | the report designer | placeholder, "phase 3" |
+| Datasets | the semantic models, their pages and the Model view | built (phases 2 and 3) |
+| Designer | your report drafts, a new report on a dataset, and the designer | built (phase 3) |
 | Explore | free exploration of a dataset | placeholder, "phase 9" |
 
 **Keys** (shown by `?`): `/` search the catalogue (from another BI page it takes you to the catalogue with the search focused),
@@ -297,10 +305,16 @@ rollup layers rebuilt per business date on data-load signals, `direct` tables pu
 Arrow and JSON answers; the result cache; limits (DRS-9020 to 9027); the Datasets list and dataset pages; three sample datasets; compressed static
 files. The details, and the list of what is **not** built, are in [DATASETS.md](DATASETS.md) section 10 and [RUPAKA.md](../architecture/RUPAKA.md) section 20.2.
 
-Not built (and not faked): reports, visuals, the designer, filters, bookmarks and drill-through (phase 3); version diff, lineage and impact,
+Built in phase 3: the report YAML with its parser, validator and writer (DRS-9030 to 9035); the viewer with 21 visual types, three levels of filters with top-N, slicers, cross-filter and highlight, drill-down,
+drill-through, show the rows, bookmarks and palettes; publishing checks a report; the designer (Fields, Visualizations with Build and Format, Filters, pages, the canvas on the 12-column grid with the keyboard, the YAML tab,
+real data and query time while designing, Check, undo and redo, save and save a copy); the Model view; three sample reports; `BI <report> <GO>` opens a report; `drishti.bi.report.*`. The reference is
+[REPORTS.md](REPORTS.md) and [RUPAKA.md](../architecture/RUPAKA.md) section 20.3, which also lists what is **not** built (Perspective and live visuals, the map, funnel, histogram, box, bubble, Python and entity visuals,
+the relative-date slicer, true totals for measures that do not add up, a Check that runs expected values).
+
+Not built (and not faked): version diff, lineage and impact,
 deploying a workspace as a pack bundle (phase 4); streaming BI and Perspective (phase 5); Python in BI (phase 6); export, subscriptions, alerts,
 embedding (phase 7); the analyst workbench and Explore (phase 9); *Analyse in BI* from a terminal view; "what changed since your last visit";
-AI features (stage 2). The rail's Designer and Explore are placeholders that say so.
+AI features (stage 2). The rail's Explore is a placeholder that says so.
 
 ## 12. Problems
 
@@ -312,6 +326,8 @@ AI features (stage 2). The rail's Designer and Explore are placeholders that say
 | `DRS-9004` | 409 | the state forbids it: name taken, nothing new to publish, already proposed, personal workspace (private, cannot publish or be shared), last admin, workspace not empty, shipped content is read-only |
 | `DRS-9005` | 403 | four-eyes: you proposed it, so you may not approve or reject it |
 | `DRS-9006` | 403 | BI is switched off on this server (`drishti.bi.enabled`) |
+
+The dataset, query and report codes (`DRS-9010` to `9035`) are in [TROUBLESHOOTING.md](TROUBLESHOOTING.md#error-codes) and [REPORTS.md](REPORTS.md#9-checking-a-report-drs-9030-to-drs-9035).
 
 The menu is missing: you hold no BI power (ask an administrator to grant `bi` on one of your roles in Admin, Roles), the console's
 `bi.enabled` is off, or the server could not be asked (the menu then hides rather than failing the page). *Publish* is not offered:
@@ -333,3 +349,119 @@ columns, and the layers on disk) and a **query preview**: choose fields, measure
 * **Refresh.** Layers are rebuilt per business date when a data-load signal names the date ([DATA_LOADS.md](DATA_LOADS.md)); an author can also clear and rebuild the current date from the API
   (`POST /api/v1/bi/datasets/{id}/refresh`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
 * **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9013 (the dataset) and 9020 to 9027 (the query) in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
+## 14. Reports: the viewer (phase 3)
+
+A **report** is pages of visuals over one dataset ([REPORTS.md](REPORTS.md) is the reference). Open one from the catalogue (a report's page has **Open the report**), with `BI <report> <GO>`, or at
+`/bi/r/<id>` (and `/bi/r/<id>/<page>`). Three samples ship, over the three sample datasets: **Trades overview**, **Counterparty risk** and **Cashflow ladder**.
+
+![The Trades overview report](img/bi-reports/viewer-overview.png)
+
+The toolbar holds the **business date** (empty: the latest the data has), **Bookmarks** (saved states of the report), *Click a mark to* **filter the page** or **highlight**, and **Reset**; the filters in force are
+chips under the page tabs. Every visual has a header with its title and the buttons that fit it, and a line under it that says how many rows came back, the milliseconds the query took (or "from the cache")
+and the layer that answered (`columns`, `rollup`, `direct`, `live`); *masked* is added when the server masked a column for you.
+
+* **Click a mark.** The other visuals filter to it. Here DESK-COMM was clicked: the cards, the line and the table are that desk's, the bar keeps all desks but dims the others, and a chip says what is selected.
+  Click it again, press `Esc`, or use the visual's clear button to let go; Ctrl or Shift adds marks. With **highlight** the bar and column charts keep the whole answer and draw the chosen share over it.
+
+  ![A selected bar filters the page](img/bi-reports/viewer-select.png)
+
+* **Drill down and up.** With a mark selected the drill-down button goes one level down the visual's hierarchy (desk to book); the title shows the path; the up button comes back.
+
+  ![Drilled from a desk to its books](img/bi-reports/viewer-drilldown.png)
+
+* **Show the rows** (`r`) replaces the visual with a table of the rows behind it (every column of the table it reads, the selected mark's rows when one is selected); **Show as a table** (`t`) shows the visual's own
+  numbers (and is what a screen reader reads). Masked columns read `•••` here too.
+
+  ![The rows behind a bar](img/bi-reports/viewer-rows.png)
+
+* **Drill through.** In **Counterparty risk**, select a counterparty's bar and press *Drill through to Counterparty*: the page about that counterparty opens with the counterparty carried as a chip (it is in the URL, so the
+  link can be shared) and a **Back** button. A trade in its table opens in the terminal (*Open in the terminal*, or the link in the key column).
+
+  ![Selecting a counterparty and drilling through](img/bi-reports/viewer-counterparty.png)
+
+  ![The counterparty page](img/bi-reports/viewer-drillthrough.png)
+
+* **The rows you may see are yours.** The report asks the dataset as **you**. A desk head sees the trades of their desk, and the exposure visuals say, with the code, why they cannot be drawn for someone whose row
+  rule is on the trades (`DRS-9020`); someone without the raw power sees the counterparty name as `•••`:
+
+  ![The same report for a desk head](img/bi-reports/viewer-counterparty-deskhead.png)
+
+  ![The same report for an analyst: the masked name is one bar](img/bi-reports/viewer-counterparty-analyst.png)
+
+* **Cashflow ladder** drills from the pay year to the quarter, month and day, and lays the legs out as a matrix with totals:
+
+  ![Cashflows drilled from a year to its quarters](img/bi-reports/viewer-ladder.png)
+
+  ![Legs by pay or receive and rate type, with subtotals](img/bi-reports/viewer-matrix.png)
+
+* **Keys.** `Tab` walks the visuals in reading order (top to bottom, left to right); in a chart `Left` and `Right` move between marks and `Enter` selects; `Esc` clears; `t`, `r`, `d`, `u` (table, rows, drill down, up) act
+  on the focused visual; `?` lists them.
+* **A phone** (390 px) shows one column in reading order, 44 px buttons and no sideways scroll:
+
+  ![A report on a phone](img/bi-reports/viewer-phone-390.png)
+
+The page asks the server for each visual's data **one query at a time, three at once** (the server allows three a person, and the page retries a refusal for busy); a visual that is refused shows the
+code and words in its frame with a Retry button while the others carry on. Nothing is drawn from the data except through the same dataset engine, so the limits and the cache of section 13 apply.
+
+## 15. The designer (phase 3)
+
+**Designer** in the rail lists your report drafts and starts a new one on a dataset; a draft opens at `/bi/design/<draft>` (a shipped report opens read-only, with **Save a copy**). The panes are where Power BI
+authors expect them: the canvas on the left, then **Filters**, **Visualizations** (with **Build** and **Format**) and **Fields**. The rail steps aside so the designer has the whole width.
+
+![The designer, with a report of two cards, a bar, a line and a slicer](img/bi-reports/design-two-visuals.png)
+
+* **Fields.** The dataset's tables, their columns (a date opens into its parts: year, quarter, month, week, day), its measures and its hierarchies, with a search box. **Drag a field onto the canvas** and the best
+  visual for it appears: a measure is a card, a column is a table; **drag another onto that visual** and it improves: a category with a measure becomes a bar, a date with a measure a line, two categories with a
+  measure a matrix. Without a mouse, the field's button adds it to the selected visual (or makes a new one). A hierarchy added to a chart makes it drillable.
+* **Visualizations.** The 21 types; choosing one changes the selected visual (its fields follow where they fit) or adds a new one. **Build** shows the wells of the selected visual: each takes fields or measures, with
+  chips you can remove or reorder and a select that adds without dragging; drill down along a hierarchy and drill through to a page are set here too. **Format**: title and alt text, data labels, stacking, legend,
+  axis titles, **colours from the theme** (swatches of the report's palette), number format, conditional colours, data bars, subtotals, gauge range, slicer mode and scope, whether other visuals filter it, most rows,
+  sort. With no visual selected, Format is the **page** (title, move, delete, the fields it takes as a drill-through target) and the **report** (title, description, palette, business dates, bookmarks).
+* **Filters.** *On all pages*, *On this page*, *On this visual*. **Basic** picks values (type them, or *Pick from the data* to tick them), **Advanced** is a condition (is, is not, less than, between, contains, starts with,
+  is empty ...), **Top N** keeps the N values with the highest (or lowest) measure.
+
+  ![A top-5 filter on the bar](img/bi-reports/design-filter.png)
+
+* **The canvas** is the 12-column grid. Drag a visual by its header and drag the corner to resize: both snap to the grid, and what a move would overlap is pushed down. **Keyboard:** focus a visual and `Arrow` moves it a
+  cell, `Shift` with an arrow resizes it, `Ctrl+D` duplicates, `Delete` removes, `Enter` goes to its title in Format. A click on the empty canvas lets go of the selection.
+* **Real data while you design.** Every visual is drawn from the dataset (as you: your rows, your masks), with the rows and the **query time** under it; **Preview with data** can be turned off to design without queries.
+* **YAML.** The tab shows the same draft as text, written the way the sample reports are. Edit either view and the other follows at once; a mistake in the text is reported with its code and path (`DRS-9031`, ...)
+  and the canvas keeps the last good draft. A strip of **suggestions** follows the cursor: visual types after `type:`, operators, hierarchies, pages, and the dataset's fields and measures in a well.
+
+  ![The YAML tab](img/bi-reports/design-yaml.png)
+
+* **Check** validates the draft and adds the quality checks: a chart, table, card or image with no title or alt text, a chosen colour that is too pale for the background, visuals that overlap, a visual whose preview
+  took over a second (clicking a finding goes to the visual).
+
+  ![Check lists what needs a title](img/bi-reports/design-check.png)
+
+* **Undo and redo** (`Ctrl+Z`, `Ctrl+Y`) walk the last 100 changes; **Save** (`Ctrl+S`) keeps the draft in your workspace; the page warns before you leave with unsaved changes. **Publish** is on the item page
+  (review, versions and audience as for any item); a report with errors is refused (`DRS-9030`).
+
+The designer needs the `bi-author` power. Its step-by-step use is [BI_TUTORIAL.md](BI_TUTORIAL.md) chapter 13.
+
+## 16. The Model view (phase 3)
+
+On a dataset's page, **Model view** (authors) opens `/bi/m/<dataset>`: the dataset's **tables as boxes** with their columns (keys marked), its **relationships as lines** with `1` and `*` at the ends (hover a line for its
+cardinality and filter direction; a dashed line is inactive), and the YAML below. The diagram and the YAML are **two views of one draft**.
+
+![The cross-pack model as a diagram](img/bi-reports/model-shipped.png)
+
+* **Relate by dragging.** Drag a column onto a column of another table: the form on the right fills in (from the many side, to the one side) with a cardinality guessed from the keys. Check it and press **Add
+  relationship**; nothing is written before. The form also works without dragging (choose the tables and columns), and from the keyboard (`Enter` on a column, then `Enter` on another).
+
+  ![Dragging trades.book onto books.id](img/bi-reports/model-relate.png)
+
+* **Edit a relationship** in the list: its cardinality (`many-to-one`, `one-to-many`, `one-to-one`, `many-to-many`), whether it filters one way or both, whether it is active, or remove it. Each change rewrites the
+  `relationships:` block of the YAML (in flow style) and the diagram redraws; edit the YAML and the diagram follows.
+* **Proposals from the data.** *Look for relationships in the data* asks the server to find columns whose values are ids of another table (profiling, no AI). Each proposal shows the match rate; **Accept** adds it, nothing
+  changes until you do. (Links a pack already declares are not proposed: they are in the model from the start.)
+
+  ![A proposal with its match rate](img/bi-reports/model-proposals.png)
+
+* **Layout.** Drag a box by its header; where each table sits is saved in the YAML under `layout:` (`trades: { x: 24, y: 24 }`), which the dataset language ignores.
+* **What it changes, and what it leaves.** Only the `relationships:` and `layout:` blocks are rewritten; the rest of the file, comments included, stays as you wrote it (comments inside those two blocks are not kept).
+  A shipped dataset opens read-only with **Save a copy**. The diagram never changes a pack: a model's relationships drive BI joins and cross-filtering only.
+
+The Model view calls the dataset checks (`POST /api/v1/bi/datasets/validate`, which now also returns the model it parsed) and, for proposals, `POST /api/v1/bi/model/infer`; both need `bi-author`.

@@ -153,7 +153,8 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-rellist { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
 .bi-rel { border: 1px solid var(--d-border); border-radius: 6px; padding: .3rem .45rem; font-size: .8rem; background: var(--d-surface-2); }
 .bi-rel.bi-selected { border-color: var(--d-accent); }
-.bi-rel code { overflow-wrap: anywhere; }
+.bi-rel code { overflow-wrap: anywhere; display: block; }
+.bi-rel small { display: block; margin: .15rem 0; }
 @media (max-width: 1100px) { .bi-model { grid-template-columns: minmax(0, 1fr); } }
 .bi-cond2 { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem; margin: .25rem 0; }
 .bi-nr { max-width: none; border: 0; padding: 0; margin: 0; background: none; display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }

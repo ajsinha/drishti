@@ -1058,6 +1058,18 @@ answers with its own code (the codes are in [API_GUIDE.md](../guides/API_GUIDE.m
 | `infer-sample` | `5000` | Values of a column the relationship finder looks at, and documents it reads for a table whose connector promotes no columns. |
 | `infer-min-match` | `0.8` | The share of a column's distinct values found among another table's ids for a relationship to be proposed. |
 
+### `drishti.bi.report` — reports (phase 3)
+
+How many rows each kind of visual asks the engine for ([REPORTS.md](../guides/REPORTS.md) section 11). The engine's own limits (`drishti.bi.query.*`, above) still apply on top; a visual's own `limit:` replaces the default of its kind.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `chart-rows` | `500` | Most categories one chart asks for (a chart says when it was cut). |
+| `table-rows` | `1000` | Most rows a table or matrix asks for. |
+| `slicer-values` | `1000` | Most distinct values a slicer lists. |
+| `show-rows` | `1000` | Most rows *Show the rows* returns. |
+| `top-candidates` | `10000` | Most values a top-N filter ranks before it keeps its N. |
+
 ### `drishti.bi.poc` — Rupaka phase 0 proof of concept
 
 **Throw-away code**, off by default, that tests the risky parts of the BI design (`docs/architecture/RUPAKA_POC.md`):

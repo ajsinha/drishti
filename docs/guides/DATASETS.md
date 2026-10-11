@@ -46,6 +46,7 @@ measures: { ... }           # section 4
 hierarchies: { ... }        # section 5
 security: { rows: [...], masked: [...] }   # section 6
 rollups: [ ... ]            # section 7
+layout: { ... }             # where the Model view draws each table (written by the diagram; the language ignores it)
 ```
 
 Unknown top-level keys are a warning. Three complete, commented examples ship in `config/bi/datasets/`: `trades-basic` (one table),
@@ -156,7 +157,7 @@ hierarchies:
 ```
 
 An ordered list of levels, coarse to fine; each is `table.column` or `table.column.part` (a bare column name is accepted when it is in one table only). They are validated and
-returned with the model for the designer (phase 3) to drill with; a query names the levels as ordinary fields.
+returned with the model for the designer and the viewer (phase 3) to drill with: a visual's `hierarchy:` drills down them ([REPORTS.md](REPORTS.md)); a query names the levels as ordinary fields.
 
 ## 6. Security: row rules and masks
 
@@ -260,4 +261,4 @@ Marked so nothing is mistaken for working: **time intelligence** (`ytd`, `mtd`, 
 the **cron `refresh.schedule`** (stored and validated; refresh is by data-load signal and on demand, `POST /datasets/{id}/refresh`); **queries whose measures aggregate several unrelated fact tables**;
 **filter direction `both`** and **many-to-many** semantics, and **inactive relationships used by a measure**; **live tables as an incrementally updated in-memory table** from the hot path (a short-lived snapshot today);
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector
-honours them (the engine reads through the connector, not the files); **lineage and impact**, **classification tags**, **per-entry export rules**. The designer and its Model diagram are phase 3.
+honours them (the engine reads through the connector, not the files); **lineage and impact**, **classification tags**, **per-entry export rules**. Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [REPORTS.md](REPORTS.md), [BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16.

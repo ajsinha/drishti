@@ -334,6 +334,7 @@
       errors.forEach((p) => ul.appendChild(h('li', {}, h('strong', { text: p.code + ' ' }), h('code', { text: p.path }), ': ' + p.message)));
       if (!r.report || !r.dataset) { q('[data-report]').hidden = true; return; }
     }
+    B.api('POST', '/items/' + B.id2path(reportId) + '/open', {}).catch(() => {});             // a view is counted, and the report goes under Recent
     idx = B.index(r.dataset);
     tokens = B.tokens();
     palette = B.palette((r.report.theme || {}).palette, tokens);

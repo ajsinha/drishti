@@ -22,7 +22,7 @@ describes data (Sutras, links, vocabulary); BI content may combine kinds from ma
 ```
 config/bi/
   datasets/   <id>.dataset.yaml   the semantic model: tables over connectors (by logical name), relationships, measures; queried since phase 2 (three commented samples ship here)
-  reports/    <id>.report.yaml    pages of visuals over datasets: filters, bookmarks, drill-through, theme
+  reports/    <id>.report.yaml    pages of visuals over a dataset: filters, bookmarks, drill-through, theme; drawn since phase 3 (three commented samples ship here)
   boards/     <id>.board.yaml     a live board (stored in phase 1, not run)
   notebooks/  <id>.notebook.yaml  an analyst notebook (stored in phase 1, not run)
   python/                         typed Python implementations (transforms, measures, visuals) and their manifests and tests
@@ -39,3 +39,6 @@ The folders may be empty: nothing here is required for the rest of Drishti to ru
 
 **Datasets** (`datasets/*.dataset.yaml`) are parsed, validated and **queried** since phase 2: see `docs/guides/DATASETS.md` for the format, `docs/guides/BI_TUTORIAL.md` for a walk-through of the three samples in this folder (`trades-basic`, `trading-risk`, `trading-cashflows`, each marked `sample: true` so the sample-visibility setting can hide them), and
 `docs/guides/BI_GUIDE.md` section 13. A dataset that does not parse keeps its last good version and is reported; the layers it builds are written to the BI store (`drishti.bi.query.store-dir`, `./data/bi-store`), never into this folder.
+
+**Reports** (`reports/*.report.yaml`) are parsed, validated against their dataset and **drawn** since phase 3: see `docs/guides/REPORTS.md` for the format and `docs/guides/BI_TUTORIAL.md` (chapters 10 to 15) for a walk-through of the three samples in this folder (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, each marked `sample: true`) and for building one in the designer.
+A report names its dataset with `dataset:` (a catalogue id, a file name such as `trades-basic`, or the dataset's name). The folder is watched live: edit a sample and the next open of the report shows it. A report that does not parse keeps its last good version and is reported.

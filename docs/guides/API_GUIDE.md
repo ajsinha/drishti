@@ -1543,6 +1543,12 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9025 | 429 | Query busy | Too many queries at once for the server (`max-concurrent`) or the user (`max-concurrent-per-user`) |
 | DRS-9026 | 502 | Query source | A table's connector is not running, or is not a SQL store for a `direct` table |
 | DRS-9027 | 500 | Query engine | The engine failed on the compiled query; the message says how |
+| DRS-9030 | 422 | Report invalid | The report YAML is malformed, or a key, id, grid position, filter or setting is not valid (the problem names the path of the key); publishing such a report is refused with it |
+| DRS-9031 | 422 | Report reference | A field, measure, hierarchy, page, bookmark or slicer the report names does not exist in its dataset or in the report |
+| DRS-9032 | 422 | Report visual | A visual is built wrongly: a well it does not have, a measure in a field well or a field in a measure well, a required well empty, too many items in a well |
+| DRS-9033 | 501 | Report not built | The report uses a visual type, slicer mode or setting the grammar reserves and this server does not build yet |
+| DRS-9034 | 422 | Report dataset | The report's dataset cannot be found or has errors, so the report cannot be drawn |
+| DRS-9035 | 422 | Report state | A visual query names a page, visual or slicer the report lacks, or its state (slicers, selections, drill path, carried values, dates) is not valid |
 
 `DRS-5003` (503, "backend unreachable") is raised by the console, never by the server, so it is not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1614,7 +1620,7 @@ decided as for any item (`404 DRS-9001` otherwise), what the answer shows is dec
 |---|---|---|
 | `GET` | `/bi/datasets` | `{datasets: [{id, title, description, endorsement, tags, sample, shipped, valid, errors, tables, measures, relationships}]}`: the published datasets the caller may see (samples are left out for those who may not see sample content) |
 | `GET` | `/bi/datasets/{id}` | the model for this caller: `{id, title, name, version, valid, problems[{level, code, path, message}], tables[{name, connector, kind, each, mode, access, columns[{name, path, type, key, calculated, expr, masked}]}], relationships[], measures[{name, expr, rollups}], hierarchies, security{rows[{role, where, appliesToYou}], masked, rowRulesEnforced}, rollups, layers}` |
-| `POST` | `/bi/datasets/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], tables, measures}` without storing anything |
+| `POST` | `/bi/datasets/validate` | `{yaml}` (needs `bi-author`): `{valid, problems[], tables, measures, model}` without storing anything; `model` (when the structure parsed) is the shape the Model view draws: `{tables[{name, kind, columns[...]}], relationships[{from, to, cardinality, direction, active}], measures[], hierarchies}` |
 | `POST` | `/bi/datasets/{id}/query` | runs a query (below); `?format=json` (default) or `arrow`; `?explain=true` adds the SQL (BI authors only) and skips the result cache |
 | `GET` | `/bi/datasets/{id}/layers` | what the BI store holds per table: dates, rows, how each was read |
 | `POST` | `/bi/datasets/{id}/refresh` | (needs `bi-author`) clears the current business date's layers of this dataset and reads them again in the background |
@@ -1643,6 +1649,40 @@ POST /api/v1/bi/datasets/file:dataset:trading-risk/query     {"fields":["desks.n
 
 Refusals are the standard problem body with the code: `403 DRS-9021` (filtering a masked column), `422 DRS-9020`, `413 DRS-9022`/`9023`, `504 DRS-9024`, `429 DRS-9025`, `502 DRS-9026`, `500 DRS-9027`, and `422 DRS-9010` when the dataset itself has errors.
 Every query is audited (`bi-query`: the counts, the rows, the layer). From the console the calls are under `/bi/api/datasets/...` and `/bi/api/model/...`.
+
+## Reports: `/api/v1/bi/reports` (phase 3)
+
+Phase 3 of Rūpaka ([BI_GUIDE.md](BI_GUIDE.md) sections 14 to 16, [REPORTS.md](REPORTS.md), [BI_TUTORIAL.md](BI_TUTORIAL.md)). A report is a BI item of kind `report` (id `bi-<hex>`, or `file:report:<name>` for a shipped file). Who may read the item is decided as for
+any item (`404 DRS-9001` otherwise); what a visual shows is the dataset engine's answer for the caller (their row rules and masks). A personal token reaches the reads and the queries (they change nothing).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/bi/reports/{id}` | the report for this caller: `{id, title, description, status, shipped, sample, valid, problems[{level, code, path, message}], report, dataset, mayEdit}`; `report` is the model (the YAML's structure with defaults filled in), `dataset` the model of the dataset it reads (tables with columns, measures, hierarchies, relationships; no row rules) |
+| `POST` | `/bi/reports/{id}/query` | one visual's data: body `{page, visual, state}`; the answer is the dataset query's JSON answer plus `highlight`, `visual` and `query` (what was asked); `?explain=true` adds the SQL for BI authors |
+| `POST` | `/bi/reports/query` | the same for a draft (needs `bi-author`): `{report \| yaml, page, visual, state}` |
+| `POST` | `/bi/reports/validate` | `{yaml, quality?}` (needs `bi-author`): `{valid, problems[], report}`; `quality: true` adds the accessibility, layout checks |
+| `POST` | `/bi/reports/format` | `{report: {...}}`: the model written as YAML the way a person writes it: `{yaml}` |
+| `GET` | `/bi/reports/catalogue` | `{visuals: {type: {group, wells: {name: {kind, required, max}}}}, reserved[], slicerModes[]}` |
+| `GET` | `/bi/reports/dataset?ref=` | (needs `bi-author`) the model of the dataset a report names (a catalogue id, a file name or the dataset's name): what the designer's Fields pane shows |
+
+**The state** of a visual query is what the person has done on the page: `{"slicers": {"currency": ["USD"], "notional": {"from": 1000000, "to": 3000000}}, "selections": [{"visual": "by-desk", "field": "trade.desk", "values": ["DESK-FX"], "highlight": false}],
+"drill": ["DESK-FX"], "carry": [{"field": "counterparties.name", "op": "in", "values": ["Orbital"]}], "dates": {"from": "2026-10-01", "to": "2026-10-08"}, "rows": true, "limit": 200}`. Slicers are by the slicer's visual id (a list, or `{from, to}`); selections are the marks selected on
+other visuals (`highlight: true` asks a bar or column chart for the highlighted answer as well); `drill` is the values clicked down the visual's hierarchy; `carry` is what a drill-through or a bookmark carries; `rows` shows the rows behind the visual
+(`true`, or `{field, values}` for one mark). Anything wrong is `422 DRS-9035`.
+
+Captured from a real server (the bar of *Trades overview*; `rita` holds the raw power):
+
+```
+POST /api/v1/bi/reports/file:report:trades-overview/query   {"page": "overview", "visual": "by-desk", "state": {"selections": [], "drill": []}}
+200  {"columns": [{"name": "trade.desk", "type": "string", "masked": false}, {"name": "MTM", "type": "decimal", "masked": false}],
+      "rows": [["DESK-RATES", 161766771.0], ["DESK-COMM", 16954390.0], ["DESK-STRUCT", 15784130.0], ...], "rowCount": 10,
+      "meta": {"layer": "columns", "rows": 10, "millis": 0.0, "cached": true, "dates": ["2026-09-30"], "tables": ["trade"], "masked": [], "warnings": []},
+      "highlight": null, "visual": "by-desk",
+      "query": {"fields": ["trade.desk"], "measures": ["MTM"], "filters": [], "orderBy": ["MTM desc"], "limit": 500}}
+```
+
+Refusals are the standard problem body with the code: `422 DRS-9030` to `9032` (the report), `501 DRS-9033` (not built), `422 DRS-9034` (the dataset), `422 DRS-9035` (the state), and every dataset query code (`9020` to `9027`, `403 DRS-9021` for a masked column,
+`422 DRS-9020` when a row rule makes a visual unanswerable). Every query is audited like a dataset query. From the console the calls are under `/bi/api/reports/...`; the console's page asks three queries at a time (the server allows three per person) and retries a `429`.
 
 ## Embedding views in another web application
 

@@ -13,18 +13,25 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial: learn BI from the sample datasets
+# Tutorial: learn BI from the sample datasets and reports
 
-Three sample datasets ship with Drishti, built on the trades, so you can learn what a **dataset** is by reading and querying real ones. This walk-through opens
-each, reads its model, runs preview queries, changes a measure in a copy of your own, and shows row rules and masks with two users. Every output below was
+Three sample datasets ship with Drishti, built on the trades, so you can learn what a **dataset** is by reading and querying real ones, and three sample **reports** on them, so you can learn what a report
+is by using them and then **building one from scratch in the designer**. Chapters 0 to 9 open each dataset, read its model, run preview queries, change a measure in a copy of your own, and show row rules and masks with two users;
+chapters 10 to 15 open the reports, build one step by step, draw a relationship in the Model view, and use a report on a phone. Every output below was
 captured from a real server over a generated Delta lake (750 trades a day, three business days: well under the 10,000-a-day local limit). Reference:
-[DATASETS.md](DATASETS.md); the page itself: [BI_GUIDE.md](BI_GUIDE.md).
+[DATASETS.md](DATASETS.md) and [REPORTS.md](REPORTS.md); the pages themselves: [BI_GUIDE.md](BI_GUIDE.md).
 
 | Sample | What it teaches | Tables |
 |---|---|---|
 | `trades-basic` | the "hello world": one table, four measures, a hierarchy | `trade` |
 | `trading-risk` | the real one: three packs, relationships from the packs' links, a rollup, a row rule, masks | `trades`, `netting_sets`, `counterparties`, `desks`, `books` |
 | `trading-cashflows` | nested documents: legs and cashflows as tables, one-to-many | `trades`, `legs`, `cashflows` |
+
+| Sample report | What it teaches | Dataset |
+|---|---|---|
+| `trades-overview` | cards, a bar that drills from desk to book, a line, a table, a slicer, a matrix; the first report to read | `trades-basic` |
+| `counterparty-risk` | a cross-pack report: a top-10 filter, report-wide slicers, drill-through to a page about one counterparty, row rules and masks at work | `trading-risk` |
+| `cashflow-ladder` | deep trades: a date hierarchy to drill from year to day, a matrix over legs | `trading-cashflows` |
 
 They are marked `sample: true`: with **Admin, Packs, hide samples** set to developers-only or hidden, business users do not see them (as with sample packs).
 
@@ -220,7 +227,238 @@ The pages work at 390 px: the rail scrolls sideways, the form stacks, tables scr
 
 ![phone](img/bi-datasets/dataset-phone-390.png)
 
-## 10. What to look at next
+## 10. Open the sample reports: Trades overview
 
-The engine's counters and limits (`GET /api/v1/bi/engine`, BI administrators): in this walk-through 17 queries, 1 cache hit, 9 layer builds, answered `columns` 12 and `rollup` 1. The designer, reports and the Model diagram are phase 3
-([RUPAKA.md](../architecture/RUPAKA.md) section 20). What is not built yet is listed in [DATASETS.md section 10](DATASETS.md#10-what-is-not-built).
+Choose **Catalogue**, filter by kind **report**, and open **Trades overview** (or type `BI trades overview <GO>`: a report opens drawn). Its YAML, `config/bi/reports/trades-overview.report.yaml`, is commented line by line; each visual says where it
+sits (`at: { x, y, w, h }` on the 12-column grid) and what it shows (`wells`). The page shows the day's 750 trades: 92,558,000,000 notional, +138,562,638 mark to market, an average of +184,750 a trade.
+
+![Trades overview](img/bi-reports/viewer-overview.png)
+
+Under every visual is the line the server gave back: rows, milliseconds (or "from the cache") and the layer that answered. Each visual is **one dataset query, as you**: the page asks for them three at a time. The bar's request is
+`POST /api/v1/bi/reports/file:report:trades-overview/query` with `{"page": "overview", "visual": "by-desk", "state": {...}}` and its answer is the dataset engine's, plus the query the server built:
+
+```
+"rowCount": 10, "visual": "by-desk",
+"query": {"fields": ["trade.desk"], "measures": ["MTM"], "filters": [], "orderBy": ["MTM desc"], "limit": 500}
+rows: DESK-RATES 161,766,771 | DESK-COMM 16,954,390 | DESK-STRUCT 15,784,130 | ...
+meta: layer columns, 10 rows, answered from the cache the second time
+```
+
+**Click a bar.** DESK-COMM was clicked: every other visual now answers for that desk (90 trades, +16,954,390) and the bar dims the others. The request of the card now carries the selection:
+
+```
+{"page": "overview", "visual": "mtm", "state": {"carry": [], "slicers": {},
+  "selections": [{"visual": "by-desk", "field": "trade.desk", "values": ["DESK-COMM"], "highlight": false}], "drill": []}}
+```
+
+![A selected bar filters the page](img/bi-reports/viewer-select.png)
+
+Switch *Click a mark to* **highlight** and a bar or column chart keeps the whole answer and draws the chosen share over it (the cards and the line are filtered, since they cannot draw a highlight).
+
+**Drill down.** With the bar selected, the drill-down button moves the axis from the desk to the book (`hierarchy: Desk and book` in the YAML); the title shows the path and the up button comes back.
+
+![From a desk to its books](img/bi-reports/viewer-drilldown.png)
+
+**Show the rows.** The list button replaces the visual with the rows behind it: every column of the trade table for the selected desk, under the same filters (`"drill": ["DESK-COMM"], "rows": true`).
+
+![The rows behind the bar](img/bi-reports/viewer-rows.png)
+
+Open **By product** for a donut, a **matrix** with subtotals and a stacked column, and the bookmark *FX desk only* in the toolbar. Press `?` for the keys: `Tab` walks the visuals, in a chart the arrows move between marks and `Enter`
+selects, `t` shows the visual as a table, `r` shows its rows.
+
+## 11. Counterparty risk: slicers, drill-through, row rules
+
+Open **Counterparty risk** (`trading-risk`: trades from the trading pack, counterparties from banking-core, netting sets from counterparty-risk). The two slicers at the top have `scope: report`: a choice filters every page and the visuals
+reach it **through the relationships** (a sector chosen on counterparties filters the trades and the netting sets). The bar is the ten counterparties with the highest expected exposure:
+`filters: [{ field: counterparties.id, op: top, n: 10, by: Exposure (EE peak) }]`; the server ranks the counterparties first, in the context of the slicers, and keeps ten.
+
+![Counterparty risk for a risk person](img/bi-reports/viewer-counterparty.png)
+
+Select **Halcyon Shipping plc**'s bar. The visual's buttons now offer **Drill through to Counterparty**, because the page `counterparty` says `drillthrough: { fields: [counterparties.name] }`.
+
+![A selected counterparty](img/bi-reports/viewer-mark.png)
+
+The page opens with the name carried as a chip and in the URL, so the link can be shared, and **Back** returns. Its trades table has a key column: a trade opens in the terminal.
+
+```
+/bi/r/file:report:counterparty-risk/counterparty?carry=%5B%7B%22field%22%3A%22counterparties.name%22%2C%22values%22%3A%5B%22Halcyon%20Shipping%20plc%22%5D%7D%5D
+```
+
+![The counterparty's own page](img/bi-reports/viewer-drillthrough.png)
+
+**Row rules at work.** Open the same report as `hana` (role `desk-head`, desk `DESK-FX`). The dataset's rule `trades.desk in user.desks` is on the trades and applies to every query she runs. The trades table
+shows only her desk. A netting set does not reach the trades many-to-one, so the exposure visuals **cannot be answered under her rule and say so** rather than answer too much:
+
+```
+ee: DRS-9020 the model has no relationship path joining [netting_sets, trades] to the measures' table without repeating its rows
+    (each join must go many-to-one); your row rule reads [trades] and is applied to every query you run, so the table the measures aggregate must reach it many-to-one
+```
+
+![The report for a desk head](img/bi-reports/viewer-counterparty-deskhead.png)
+
+As `ann` (role `analyst`, no raw power) the counterparty name is masked by the dataset: the bar has **one** category, `•••`, and the visual's line says *masked*. A filter on a masked column would be refused
+(`DRS-9021`), which is why the top-10 ranks by `counterparties.id`.
+
+![The same report for an analyst](img/bi-reports/viewer-counterparty-analyst.png)
+
+## 12. Cashflow ladder: a hierarchy and a matrix
+
+**Cashflow ladder** (`trading-cashflows`: each trade document holds legs and a payment schedule, both tables of the dataset). The column chart starts at the pay **year** and `hierarchy: Pay date` goes year, quarter, month,
+day. Select a year and press drill down: the axis becomes its quarters and the title shows the path. A visual filter, `{ field: cashflows.payDate, op: not-null }`, keeps the cashflows with no date off the ladder.
+
+![A year drilled into its quarters](img/bi-reports/viewer-ladder.png)
+
+The **Legs** page is a matrix: rows are pay or receive, columns the rate type, the values the number of legs and their notional, with subtotals (`format: { subtotals: true }`). A total is the sum of the shown figures, so it is shown for a
+count and a sum and as `–` for a measure that does not add up.
+
+![Legs by pay or receive and rate type](img/bi-reports/viewer-matrix.png)
+
+## 13. Build a report from scratch in the designer
+
+As an author (`wes`), choose **Designer** in the rail. Choose the dataset **Trades, the basics**, a title and **Start designing**. A draft report appears in your workspace.
+
+![The designer's start](img/bi-reports/design-start.png)
+
+1. **The empty canvas.** Four panes: the canvas (with the page tabs and the Canvas and YAML views), **Filters**, **Visualizations** and **Fields**. The Fields pane is the dataset: the table `trade` with its columns (a date opens into its
+   parts), the four measures, the hierarchy.
+
+   ![The empty designer](img/bi-reports/design-empty.png)
+
+2. **Drag a measure onto the canvas.** *MTM* becomes a **card**, with the real figure from the dataset and the query time under it. A measure alone is a card; a column alone would be a table. Drag *Notional* beside it for a second card.
+
+   ![A card from a measure](img/bi-reports/design-card.png)
+
+3. **Drag a column onto a visual to improve it.** Drag `trade.desk` onto the canvas (a table), then *MTM* onto that table: a category with a measure becomes a **bar**. **Build** shows the wells: `axis` holds `trade.desk`, `values` holds
+   `MTM`. Add *Notional* with the select under `values` (no dragging needed). Add `trade.tradeDate` and *Notional* the same way for a **line**.
+
+   ![The bar and its wells](img/bi-reports/design-bar.png)
+
+4. **A slicer.** With nothing selected (click an empty part of the canvas) choose **slicer** in Visualizations, add `trade.currency` to its `field` well, and in Format set the mode to **dropdown**; drag it by its header to the top right. The visual snaps
+   to the grid and what it would overlap is pushed down.
+
+   ![A dropdown slicer, in Format](img/bi-reports/design-format.png)
+
+5. **Check.** The button validates the draft and adds the accessibility and layout checks. None of the visuals has a title yet:
+
+   ```
+   0 errors, 4 warnings. | A11Y pages[0].visuals[0]: the card has no title and no alt text: a screen reader announces nothing about it || A11Y pages[0].visuals[1]: the card has no title and no alt text: a screen reader announces nothing about it || A11Y pages[0].visuals[2]: the bar has no title and no alt text: a screen reader announces nothing about it || A11Y pages[0].visuals[3]: the line has no title and no alt text: a screen reader announces nothing about it
+   ```
+
+   ![Check](img/bi-reports/design-check.png)
+
+   Select each visual and give it a **Title** in Format (*Mark to market*, *Notional*, *MTM and notional by desk*, *Notional by trade date*, *Currency*).
+
+6. **Filter.** Select the bar and, under *On this visual*, **Add a filter**: field `trade.desk`, type **Top N**, 5 by *Notional*. The bar keeps the five largest desks; the other filter types are Basic (tick values, or *Pick from the data*) and Advanced
+   (a condition). Tick *Data labels* in Format.
+
+   ![A top-5 filter](img/bi-reports/design-filter.png)
+
+7. **The result.** Two cards, a bar with its labels, a line, a slicer, each with its title and its real data:
+
+   ![The finished canvas](img/bi-reports/design-two-visuals.png)
+
+8. **The YAML.** The tab shows the same draft as text, written as the sample reports are. Edit the text and the canvas follows; a mistake is reported with its code. A strip of suggestions follows the cursor.
+
+   ![The YAML tab](img/bi-reports/design-yaml.png)
+
+   ```yaml
+   rachana: 1
+   report: desk-overview
+   version: 1
+   title: Desk overview
+   dataset: "file:dataset:trades-basic"
+   pages:
+     - id: page1
+       title: Page 1
+       visuals:
+         - id: card-1
+           type: card
+           title: Mark to market
+           at: { x: 0, y: 0, w: 3, h: 2 }
+           wells: { values: [MTM] }
+         - id: card-2
+           type: card
+           title: Notional
+           at: { x: 3, y: 0, w: 3, h: 2 }
+           wells: { values: [Notional] }
+         - id: bar-1
+           type: bar
+           title: MTM and notional by desk
+           at: { x: 0, y: 2, w: 6, h: 5 }
+           wells: { axis: [trade.desk], values: [MTM, Notional] }
+           filters:
+             - { field: trade.desk, op: top, n: 5, by: Notional, dir: desc }
+           format: { labels: true }
+         - id: line-1
+           type: line
+           title: Notional by trade date
+           at: { x: 6, y: 2, w: 6, h: 5 }
+           wells: { axis: [trade.tradeDate], values: [Notional] }
+         - id: slicer-1
+           type: slicer
+           title: Currency
+           at: { x: 9, y: 0, w: 3, h: 2 }
+           wells: { field: [trade.currency] }
+           format: { mode: dropdown }
+   ```
+
+9. **Check again, save, view.** Check now says *Nothing to report: the draft is valid and passes the basic accessibility checks.* **Save** keeps the draft (`Ctrl+S`); **View** draws it as a reader sees it, with the same interactions:
+
+   ![The saved draft in the viewer](img/bi-reports/design-viewer.png)
+
+10. **Publish** from the item page: propose, review and approve if the workspace asks for it, and choose the audience. A report with errors is refused at publishing with `DRS-9030`.
+
+**A mistake, with its code.** The validate endpoint returns every problem at once, with the path. This body has a grid that is too wide, a column that does not exist, a field where a measure belongs, and a visual that is reserved:
+
+```
+POST /api/v1/bi/reports/validate   {"yaml": "report: x\ndataset: trades-basic\npages:\n  - id: p\n    visuals:\n      - { id: a, type: bar, at: {x: 0, y: 0, w: 14, h: 4}, wells: { axis: [trade.nope], values: [trade.mtm] } }\n      - { id: b, type: map, at: {x: 0, y: 4, w: 4, h: 4} }\n"}
+valid: false
+DRS-9030 pages[0].visuals[0].at           x is 0 to 11 and w is 1 to 12, and x + w is at most 12 (the grid has 12 columns); this is x=0, w=14
+DRS-9033 pages[0].visuals[1].type         the visual 'map' is reserved and not built yet (RUPAKA.md section 20.3); built: bar, column, line, area, combo, scatter, ...
+DRS-9031 pages[0].visuals[0].wells.axis   table 'trade' has no column 'nope' (it has tradeId, desk, book, productType, currency, status, notional, mtm, pnl1d, tradeDate, mtmInMillions)
+DRS-9032 pages[0].visuals[0].wells.values 'trade.mtm' is a field; the values well takes measures (Notional, MTM, Trades, Average MTM per trade)
+```
+
+## 14. The Model view: relate tables by dragging
+
+On a dataset's page choose **Model view** (authors). Open **Trading and counterparty risk**: five tables as boxes, five relationships as lines with `1` and `*` at the ends (hover a line for its cardinality and direction). A shipped dataset opens
+read-only; **Save a copy** makes a draft of your own.
+
+![The cross-pack model](img/bi-reports/model-shipped.png)
+
+**Remove one and draw it back.** In the list on the right remove `trades.book -> books.id`: the line goes, the YAML loses the line, and `books` is related to nothing, so it moves to a band of its own. Now drag the column `book` of `trades` onto
+`id` of `books`: the form fills in, with a many-to-one guessed from the keys. Nothing is written until **Add relationship**.
+
+![Dragging trades.book onto books.id](img/bi-reports/model-relate.png)
+
+![Related again; the YAML has the line](img/bi-reports/model-related.png)
+
+```
+relationships:
+  - { from: trades.desk,    to: desks.id,          cardinality: many-to-one }
+  - { from: trades.book,    to: books.id,          cardinality: many-to-one }
+  ...
+```
+
+**Proposals from the data.** For tables with no declared link, **Look for relationships in the data** finds columns whose values are ids of another table. Here a draft with the trades and the desk P&L (two kinds the packs do not link) gets a
+proposal with its match rate; nothing changes until you **Accept**:
+
+![A proposal from the data](img/bi-reports/model-proposals.png)
+
+```
+trades.desk → desk_pnl.id  100% of 10 values match (many-to-one)
+accepted: { from: trades.desk, to: desk_pnl.id, cardinality: many-to-one }   (written into the YAML; the model checks as valid)
+```
+
+Drag a box by its header and its place is kept in the YAML under `layout:`. Only the `relationships:` and `layout:` blocks are rewritten; the rest of the file, comments included, stays as you wrote it.
+
+## 15. A report on a phone
+
+At 390 px a report is one column in reading order, the buttons are 44 px, and nothing scrolls sideways. The slicers, the cross-filter and the drill buttons work by touch; a chart's marks are tapped.
+
+![Trades overview on a phone](img/bi-reports/viewer-phone-390.png)
+
+## 16. What to look at next
+
+The engine's counters and limits (`GET /api/v1/bi/engine`, BI administrators): in this walk-through 17 queries, 1 cache hit, 9 layer builds, answered `columns` 12 and `rollup` 1. Reports, the designer and the Model view are phase 3 ([RUPAKA.md](../architecture/RUPAKA.md) section 20.3: what is built and what is not). Publishing and lineage are phase 4, live visuals phase 5.
+What is not built yet for datasets is listed in [DATASETS.md section 10](DATASETS.md#10-what-is-not-built), for reports in [REPORTS.md section 12](REPORTS.md#12-built-and-not-built).

@@ -363,7 +363,7 @@ def test_designer_undo_redo_and_the_yaml_tab_work_both_ways(stack, browser):
     page.click('[data-tab="yaml"]')
     page.wait_for_function("() => document.querySelector('.CodeMirror').CodeMirror.getValue().includes('values:')")
     text = page.evaluate("document.querySelector('.CodeMirror').CodeMirror.getValue()")
-    assert "type: card" in text and "- Trades" in text
+    assert "type: card" in text and "wells: { values: [Trades] }" in text
     # YAML to canvas: a second visual typed in the text appears on the canvas, and Undo takes it away again
     edited = text.replace("    visuals:\n", "    visuals:\n      - id: typed\n        type: card\n        title: Typed in YAML\n        at: { x: 6, y: 0, w: 3, h: 2 }\n        wells: { values: [MTM] }\n", 1) if "    visuals:\n" in text else text
     page.evaluate("t => document.querySelector('.CodeMirror').CodeMirror.setValue(t)", edited)
