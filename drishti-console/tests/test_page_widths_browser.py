@@ -135,7 +135,8 @@ CONTENT = r"""() => {
 
 # Visible controls smaller than 44 px in their smaller side (the console's own bar for touch). Not counted: a link inside a
 # sentence of running text (the inline exception of WCAG 2.5.8: its size is set by the line), a control whose label or wrapping
-# link/button gives it a 44 px hit area, and the page footer.
+# link/button gives it a 44 px hit area, the page footer, and
+# CodeMirror's hidden input proxy inside an editor (the editor itself is the target).
 TARGETS = r"""() => {
   const out = [], seen = new Set();
   const vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e);
@@ -146,6 +147,7 @@ TARGETS = r"""() => {
     return p && (p.textContent || '').trim().length > (e.textContent || '').trim().length + 12; };
   for (const e of document.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea, [role=button], summary')) {
     if (!vis(e) || e.closest('footer')) continue;
+    if (e.tagName === 'TEXTAREA' && e.closest('.CodeMirror')) continue;   // the editor's hidden input proxy: people tap the editor itself
     const r = e.getBoundingClientRect();
     const label = e.labels && e.labels[0] && vis(e.labels[0]) ? e.labels[0].getBoundingClientRect() : null;
     if (big(r) || (label && big(label)) || inline(e)) continue;
@@ -166,6 +168,7 @@ CLIPPED = r"""() => {
     const s = getComputedStyle(e);
     if (s.overflowX !== 'hidden' && s.overflowX !== 'clip') continue;
     if (e.scrollWidth <= e.clientWidth + 1 || !e.clientWidth || s.textOverflow === 'ellipsis' || s.display === 'none') continue;
+    if (e.classList.contains('CodeMirror')) continue;   // CodeMirror hides native scrollbars with a -50 px margin on its own scroller; it scrolls, it does not clip
     if (!e.textContent.trim() || e.closest('[aria-hidden=true], svg, canvas, .chart, .xchart, .surface, .visually-hidden, .sr-only, .asof-live-l')) continue;
     out.push(e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/)[0] : '') + ' ' + e.scrollWidth + '>' + e.clientWidth);
   }
