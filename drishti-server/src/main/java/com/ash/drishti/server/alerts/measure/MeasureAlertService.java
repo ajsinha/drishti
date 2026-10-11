@@ -573,9 +573,9 @@ public final class MeasureAlertService implements AutoCloseable {
         if (o.action() == Action.FIRE) {
             entry = fire(spec, person, o, cur, now, trigger);
         } else if (o.action() == Action.CLEAR) {
-            entry = entry(now, person, "cleared", spec.severity(), cur, o, "back inside the limit" + (spec.hysteresis() > 0 ? " by " + AlertSpec.num(spec.hysteresis()) : ""), trigger);
+            entry = entry(spec, now, person, "cleared", spec.severity(), cur, o, "back inside the limit" + (spec.hysteresis() > 0 ? " by " + AlertSpec.num(spec.hysteresis()) : ""), trigger);
         } else if ((o.action() == Action.SKIP || o.action() == Action.HELD) && !why.equals(st.note())) {
-            entry = entry(now, person, o.action() == Action.SKIP ? "skipped" : "held", spec.severity(), cur, o, o.why(), trigger);
+            entry = entry(spec, now, person, o.action() == Action.SKIP ? "skipped" : "held", spec.severity(), cur, o, o.why(), trigger);
         }
         ObjectNode written = entry;
         update(spec, h -> {
@@ -602,7 +602,7 @@ public final class MeasureAlertService implements AutoCloseable {
         boolean bridgeOn = spec.delivery().bridge() && props.bridges();
         delivered.put("bridge", !bridgeOn ? "off" : claimBridge(spec, now) ? safe(() -> channels.bridge(f)) : "skipped: already posted for this alert within its cooldown");
         audit.record(person.username(), "alert.fire", "alert/" + spec.key(), spec.title() + " · " + trigger);
-        ObjectNode e = entry(now, person, "fired", spec.severity(), cur, o, message, trigger);
+        ObjectNode e = entry(spec, now, person, "fired", spec.severity(), cur, o, message, trigger);
         e.put("id", id);
         e.set("delivered", delivered);
         return e;
@@ -622,10 +622,10 @@ public final class MeasureAlertService implements AutoCloseable {
         return won[0];
     }
 
-    private ObjectNode entry(Instant at, Person p, String action, String severity, Reading cur, Outcome o, String message, String trigger) {
+    private ObjectNode entry(AlertSpec spec, Instant at, Person p, String action, String severity, Reading cur, Outcome o, String message, String trigger) {
         ObjectNode e = JSON.createObjectNode();
         e.put("at", at.toString()).put("user", p.username()).put("action", action).put("severity", severity).put("trigger", trigger);
-        if (cur.isOk()) {
+        if (cur.isOk() && !spec.condition().type().equals("level")) {           // a tile's level is a colour, not a number
             e.put("value", cur.value());
         }
         if (cur.asOf() != null) {

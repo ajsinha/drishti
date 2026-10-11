@@ -72,8 +72,9 @@ public final class ServerAlertChannels implements AlertChannels {
         }
         try {
             String link = consoleUrl + f.link();
-            String text = f.message() + "\n\nSeverity: " + f.severity() + "\nWatching: " + f.spec().source().label() + "\nCondition: " + f.spec().describe();
-            String html = "<p style=\"font-size:16px;\"><b>" + HtmlUtils.htmlEscape(f.message()) + "</b></p><p style=\"color:#555;\">Severity: " + HtmlUtils.htmlEscape(f.severity())
+            String line = f.message().startsWith(f.spec().title() + " — ") ? f.message().substring(f.spec().title().length() + 3) : f.message();      // the title is the headline already
+            String text = line + "\n\nSeverity: " + f.severity() + "\nWatching: " + f.spec().source().label() + "\nCondition: " + f.spec().describe();
+            String html = "<p style=\"font-size:16px;\"><b>" + HtmlUtils.htmlEscape(line) + "</b></p><p style=\"color:#555;\">Severity: " + HtmlUtils.htmlEscape(f.severity())
                     + " &middot; Watching: " + HtmlUtils.htmlEscape(f.spec().source().label()) + " &middot; Condition: " + HtmlUtils.htmlEscape(f.spec().describe()) + "</p>";
             RenderedMail m = mail.renderBody("alert", f.spec().title(), text, html, link, to, "<alert." + UUID.randomUUID().toString().replace("-", "") + "@" + mail.host() + ">",
                     List.of());
