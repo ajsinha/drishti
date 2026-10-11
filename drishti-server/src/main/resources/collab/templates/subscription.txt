@@ -1,0 +1,8 @@
+${headline}
+
+${detail}
+Open it in ${product}:
+${link}
+
+You are receiving this because you are a recipient of a subscription in ${product}. The figures are the ones you are entitled to see; they are rendered for you, not copied from the sender.
+Ask the owner of the subscription, or an administrator, to change or stop it.

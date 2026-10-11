@@ -157,6 +157,19 @@ public final class BiReportService {
         return m;
     }
 
+    /** A report the caller may read, parsed, for the export and subscription code that asks each visual itself; refused as {@code DRS-9031} when it cannot be read. */
+    public record Opened(String id, String title, Report report) {}
+
+    public Opened open(Principal p, String id) {
+        Loaded l = loadItem(p, id);
+        if (l.parsed().report() == null || !ok(l.problems())) {
+            String why = l.problems().stream().filter(ReportParser.Problem::error).findFirst().map(x -> x.code() + " " + x.path() + ": " + x.message()).orElse("the report cannot be read");
+            throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report has errors, so it cannot be exported: " + why);
+        }
+        String t = l.parsed().report().title();
+        return new Opened(l.item().id(), t == null || t.isBlank() ? l.item().title() : t, l.parsed().report());
+    }
+
     private Map<String, Object> datasetSummary(Principal p, BiStore.Item dsItem) {
         Map<String, Object> d = new LinkedHashMap<>(datasets.modelOf(p, dsItem));
         d.remove("layers");

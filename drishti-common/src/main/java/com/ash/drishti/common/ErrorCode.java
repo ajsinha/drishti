@@ -199,7 +199,11 @@ public enum ErrorCode {
     /** Streaming BI: a board's YAML is malformed, or it names a report, page or visual that does not exist, or a tile or alert rule is not valid. */
     BOARD_INVALID("DRS-9052", 422),
     /** Streaming BI: the board uses a setting the grammar reserves and this server does not build yet (notifications, phase 7). */
-    BOARD_NOT_BUILT("DRS-9053", 501);
+    BOARD_NOT_BUILT("DRS-9053", 501),
+    /** Distribution: an export could not be made (exports are off, the target does not exist or cannot be read, the file is over the size limit, or it took too long). */
+    EXPORT_FAILED("DRS-9060", 422),
+    /** Distribution: a subscription is not valid (its target, schedule, format, recipients or view state), or the person has too many, or subscriptions are off. */
+    SUBSCRIPTION_INVALID("DRS-9061", 422);
 
     private final String code;
     private final int httpStatus;

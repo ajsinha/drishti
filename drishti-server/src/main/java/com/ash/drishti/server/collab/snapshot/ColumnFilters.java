@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  * A value filter is a checked list; a condition tests the cell by the column's detected type (number, date or text). A masked cell
  * never matches a condition. A filter on a column that does not exist is ignored; nothing here can fail a render.
  */
-final class ColumnFilters {
+public final class ColumnFilters {
 
     private static final String MASK = "•••";
     private static final Pattern NUMBER = Pattern.compile("^([+-]?)(\\d+(?:\\.\\d+)?)(k|m|mm|bn|b|tn)?(%|bp)?$", Pattern.CASE_INSENSITIVE);
@@ -50,7 +50,7 @@ final class ColumnFilters {
     private ColumnFilters() {}
 
     /** The view with every filtered table's rows reduced; the same view when no filter is present. */
-    static ViewModel apply(ViewModel v, ViewState state, LocalDate today) {
+    public static ViewModel apply(ViewModel v, ViewState state, LocalDate today) {
         if (state == null || !state.hasFilters()) {
             return v;
         }

@@ -34,11 +34,17 @@ import java.util.List;
 public final class SnapshotLayout {
 
     /** What the watermark says. {@code recipients} is already "3 recipients" or a list of names; {@code asOf} the data's date or "live". */
-    public record Watermark(String sender, String recipients, String when, String asOf, long generation, String link) {
+    public record Watermark(String sender, String recipients, String when, String asOf, long generation, String link, String lead) {
 
-        /** The two band lines. */
+        /** A share's watermark ("Shared by … with …"). */
+        public Watermark(String sender, String recipients, String when, String asOf, long generation, String link) {
+            this(sender, recipients, when, asOf, generation, link, null);
+        }
+
+        /** The two band lines; an export says "{lead} {sender} on {when} for {recipients}" instead of the share's wording. */
         List<String> lines() {
-            return List.of("Shared by " + sender + " with " + recipients + " on " + when,
+            return List.of(lead == null ? "Shared by " + sender + " with " + recipients + " on " + when
+                            : lead + " " + sender + " on " + when + (recipients == null || recipients.isBlank() ? "" : " · for " + recipients),
                     "Data as of " + asOf + " · generation " + generation + " · " + link);
         }
 

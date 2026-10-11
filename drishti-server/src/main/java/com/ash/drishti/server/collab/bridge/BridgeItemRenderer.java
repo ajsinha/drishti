@@ -96,7 +96,7 @@ public final class BridgeItemRenderer {
         String mode = policy.modeFor(s.kind());
         String text = MailContentPolicy.COMMENT.equals(mode) ? note(s.kind(), s.entityId(), s.pin(), s.body(), s.maskedSpans(), reader) : null;
         return message(BridgeRegistry.SHARE, s.id(), name(s.sender()) + " shared a view", mode, s.kind(), s.entityId(), s.panelId(), s.pin(), text,
-                links.share(s.id()), reader, s.createdAt());
+                links.share(s.id()), reader, s.createdAt(), com.ash.drishti.server.collab.snapshot.SnapshotService.viewState(s));
     }
 
     private BridgeMessage comment(OutboxItem item, Principal reader) {
@@ -109,15 +109,15 @@ public final class BridgeItemRenderer {
         String text = MailContentPolicy.COMMENT.equals(mode) ? note(t.kind(), t.entityId(), c.pin(), c.body(), c.maskedSpans(), reader) : null;
         String verb = BridgeRegistry.MENTION.equals(item.template()) ? " mentioned a colleague in a comment" : " commented on a view";
         return message(item.template(), c.id(), name(c.author()) + verb, mode, t.kind(), t.entityId(), t.panelId(), c.pin(), text,
-                links.view(t.kind(), t.entityId(), c.pin(), t.panelId()), reader, c.createdAt());
+                links.view(t.kind(), t.entityId(), c.pin(), t.panelId()), reader, c.createdAt(), com.ash.drishti.engine.control.ViewState.NONE);
     }
 
     private BridgeMessage message(String event, String id, String headline, String mode, String kind, String entityId, String panel, Pin pin,
-            String note, String link, Principal reader, java.time.Instant at) {
+            String note, String link, Principal reader, java.time.Instant at, com.ash.drishti.engine.control.ViewState view) {
         boolean linkOnly = MailContentPolicy.LINK_ONLY.equals(mode);
         String when = linkOnly || pin == null ? null : pin.live() || pin.businessDate() == null ? "live when shared" : pin.businessDate().toString();
         return new BridgeMessage(event, id, product, line(headline), linkOnly ? null : label(kind), linkOnly ? null : entityId,
-                linkOnly ? null : line(titles.title(kind, entityId, panel, reader)), when, note, link, at == null ? clock.instant() : at);
+                linkOnly ? null : line(titles.title(kind, entityId, panel, reader, view)), when, note, link, at == null ? clock.instant() : at);
     }
 
     /**

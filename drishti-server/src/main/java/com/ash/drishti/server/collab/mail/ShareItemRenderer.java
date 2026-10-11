@@ -88,7 +88,7 @@ public final class ShareItemRenderer implements ItemRenderer {
                 ? CommentRenderer.text(comments.parts(s.kind(), s.entityId(), s.pin(), s.body(), s.maskedSpans(), java.util.Set.of(), who)) : null;
         String when = linkOnly ? null : s.pin().live() || s.pin().businessDate() == null ? "live when shared" : s.pin().businessDate().toString();
         return new MailRenderer.Content("share", sender + " shared a view with you", linkOnly ? null : label(s.kind()),
-                linkOnly ? null : s.entityId(), linkOnly ? null : titles.title(s.kind(), s.entityId(), s.panelId(), who), when, note, link(s.id()),
+                linkOnly ? null : s.entityId(), linkOnly ? null : titles.title(s.kind(), s.entityId(), s.panelId(), who, SnapshotService.viewState(s)), when, note, link(s.id()),
                 MailContentPolicy.COMMENT.equals(mode) ? picture(s) : null);
     }
 

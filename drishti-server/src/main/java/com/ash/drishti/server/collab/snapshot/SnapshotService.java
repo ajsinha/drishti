@@ -254,7 +254,7 @@ public final class SnapshotService {
     }
 
     /** The control values and column filters the sender had on screen; none for a share sent without them (or one that cannot be read). */
-    static ViewState viewState(Share share) {
+    public static ViewState viewState(Share share) {
         try {
             return ViewState.parse(share.view(), Integer.MAX_VALUE);
         } catch (IllegalArgumentException e) {

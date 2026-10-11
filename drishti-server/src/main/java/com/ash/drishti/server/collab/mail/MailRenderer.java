@@ -52,6 +52,31 @@ public final class MailRenderer {
                 MailTemplates.fill(templates.load(c.template(), "html"), html), "<" + seq + "." + safeId(ref) + "@" + host + ">", c.image());
     }
 
+    /**
+     * A message whose body the caller built: {@code detailHtml} must already be escaped and {@code detailText} is plain text. Used by subscriptions, whose body
+     * is a report's tables for this recipient. The headline and link go through the template like every other message.
+     */
+    public RenderedMail renderBody(String template, String headline, String detailText, String detailHtml, String link, String to, String messageId,
+            java.util.List<RenderedMail.Attachment> files) {
+        Map<String, String> text = new LinkedHashMap<>();
+        text.put("product", product);
+        text.put("headline", headline);
+        text.put("detail", detailText);
+        text.put("link", link);
+        Map<String, String> html = new LinkedHashMap<>(text);
+        html.put("product", esc(product, true));
+        html.put("headline", esc(headline, true));
+        html.put("detail", detailHtml);
+        html.put("link", esc(link, true));
+        String subject = oneLine(MailTemplates.fill(templates.load(template, "subject"), text));
+        return new RenderedMail(oneLine(to), subject, MailTemplates.fill(templates.load(template, "txt"), text), MailTemplates.fill(templates.load(template, "html"), html),
+                messageId, null, files);
+    }
+
+    public String host() {
+        return host;
+    }
+
     /** One message for several notices to the same person: each notice's headline, details and link under the {@code digest} template. */
     public RenderedMail renderDigest(java.util.List<Content> items, String to, long seq, String ref) {
         Map<String, String> text = digestVars(items, false);

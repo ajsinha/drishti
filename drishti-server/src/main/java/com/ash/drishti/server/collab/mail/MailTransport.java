@@ -44,6 +44,9 @@ public interface MailTransport {
                 if (mail.image() != null) {
                     h.addAttachment("drishti-snapshot.png", new org.springframework.core.io.ByteArrayResource(mail.image()), "image/png");
                 }
+                for (RenderedMail.Attachment a : mail.files()) {
+                    h.addAttachment(a.name(), new org.springframework.core.io.ByteArrayResource(a.bytes()), a.type());
+                }
                 m.setHeader("Auto-Submitted", "auto-generated");
                 m.setHeader("X-Auto-Response-Suppress", "All");
                 sender.send(m);

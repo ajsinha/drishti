@@ -18,6 +18,7 @@ package com.ash.drishti.server.collab;
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.engine.ViewPipeline;
+import com.ash.drishti.engine.control.ViewState;
 import com.ash.drishti.engine.view.ViewModel.PanelView;
 import com.ash.drishti.engine.view.ViewModel;
 import com.ash.drishti.server.security.Entitlements;
@@ -43,6 +44,11 @@ public final class PanelTitles {
     @FunctionalInterface
     public interface Source {
         Map<String, String> titles(String kind, String entityId, Principal reader);
+
+        /** The titles with the control values a sender had on screen (a panel's title may carry the filter: "Cashflows - counterparty X"). */
+        default Map<String, String> titles(String kind, String entityId, Principal reader, ViewState state) {
+            return titles(kind, entityId, reader);
+        }
     }
 
     private final Source source;
@@ -56,27 +62,46 @@ public final class PanelTitles {
 
     /** The titles read from the view pipeline. */
     public static Source fromPipeline(ViewPipeline pipeline, Entitlements entitlements) {
-        return (kind, entityId, reader) -> {
-            Map<String, String> out = new LinkedHashMap<>();
-            ViewModel v = entitlements.restrict(reader, pipeline.view(EntityRef.of(kind, entityId), AsOf.LATEST, entitlements.redactor(reader),
-                    k -> entitlements.mayOpen(reader, k)));
-            for (PanelView p : v.panels()) {
-                out.put(p.id(), p.title());
+        return new Source() {
+            @Override
+            public Map<String, String> titles(String kind, String entityId, Principal reader) {
+                return titles(kind, entityId, reader, ViewState.NONE);
             }
-            return out;
+
+            @Override
+            public Map<String, String> titles(String kind, String entityId, Principal reader, ViewState state) {
+                Map<String, String> out = new LinkedHashMap<>();
+                ViewModel raw = state == null || state.isEmpty()
+                        ? pipeline.view(EntityRef.of(kind, entityId), AsOf.LATEST, entitlements.redactor(reader), k -> entitlements.mayOpen(reader, k))
+                        : pipeline.view(EntityRef.of(kind, entityId), AsOf.LATEST, entitlements.redactor(reader), k -> entitlements.mayOpen(reader, k),
+                                state.controls());
+                for (PanelView p : entitlements.restrict(reader, raw).panels()) {
+                    out.put(p.id(), p.title());
+                }
+                return out;
+            }
         };
     }
 
     /** The title of {@code panelId} in the entity's view for {@code reader}; the id itself when unknown; null for no panel. */
     public String title(String kind, String entityId, String panelId, Principal reader) {
+        return title(kind, entityId, panelId, reader, ViewState.NONE);
+    }
+
+    /**
+     * As above, for the view as the sender had it on screen: a panel whose title follows a control (the filtered title) is named as the
+     * recipient will see it, not by its unfiltered title.
+     */
+    public String title(String kind, String entityId, String panelId, Principal reader, ViewState state) {
         if (panelId == null || panelId.isBlank()) {
             return null;
         }
-        String key = kind + '\u0000' + entityId + '\u0000' + entitlements.masks(reader);
+        ViewState st = state == null ? ViewState.NONE : state;
+        String key = kind + '\u0000' + entityId + '\u0000' + entitlements.masks(reader) + '\u0000' + st.text();
         Map<String, String> titles = cache.getIfPresent(key);
         if (titles == null) {
             try {
-                titles = source.titles(kind, entityId, reader);
+                titles = source.titles(kind, entityId, reader, st);
             } catch (RuntimeException e) {
                 LOG.debug("no panel titles for {} {}: {}", kind, entityId, e.toString());
                 titles = Map.of();
