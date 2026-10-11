@@ -27,9 +27,9 @@
 
   const ICONS = { bar: 'bar-chart-steps', column: 'bar-chart-line', line: 'graph-up', area: 'graph-up-arrow', combo: 'bar-chart', scatter: 'diagram-3', pie: 'pie-chart', donut: 'pie-chart-fill',
     waterfall: 'reception-4', treemap: 'grid-1x2', heatmap: 'grid-3x3', card: 'card-heading', 'multirow-card': 'list-columns', kpi: 'speedometer2', gauge: 'speedometer', table: 'table',
-    matrix: 'grid-3x3-gap', bubble: 'record-circle', funnel: 'filter-circle', histogram: 'bar-chart-fill', box: 'distribute-vertical', map: 'globe2', slicer: 'funnel', text: 'fonts', image: 'image', button: 'hand-index' };
+    matrix: 'grid-3x3-gap', bubble: 'record-circle', funnel: 'filter-circle', histogram: 'bar-chart-fill', box: 'distribute-vertical', map: 'globe2', slicer: 'funnel', python: 'filetype-py', text: 'fonts', image: 'image', button: 'hand-index' };
   const GROUPS = [['Charts', ['bar', 'column', 'line', 'area', 'combo', 'scatter', 'bubble', 'pie', 'donut', 'funnel', 'waterfall', 'treemap', 'heatmap', 'histogram', 'box', 'map']], ['Cards', ['card', 'multirow-card', 'kpi', 'gauge']],
-    ['Tables', ['table', 'matrix']], ['Filter and other', ['slicer', 'text', 'image', 'button']]];
+    ['Tables', ['table', 'matrix']], ['Python', ['python']], ['Filter and other', ['slicer', 'text', 'image', 'button']]];
   const TYPE_ICON = { string: 'fonts', integer: '123', decimal: '123', boolean: 'check2-square', date: 'calendar3', timestamp: 'clock' };
   const PARTS = ['year', 'quarter', 'month', 'week', 'day'];
   const NUMBER_FORMATS = ['', 'amount0', 'signed0', 'signed2', 'compact', 'pct'];
@@ -257,6 +257,14 @@
       const f = v.format || {};
       fmt.appendChild(frow('Title', textInput(v.title, (x) => setTop(v, 'title', x.trim()), { 'data-format-title': '' })));
       fmt.appendChild(frow('Alt text', textInput(v.alt, (x) => setTop(v, 'alt', x.trim()), { 'data-format-alt': '' }), 'What a screen reader says about it.'));
+      if (group === 'python') {
+        fmt.appendChild(frow('Python item', textInput(f.python, (x) => setFmt(v, 'python', x.trim()), { 'data-format-python': '', placeholder: 'pnl-histogram' }), 'The Python item (catalogue id, file name or title) that draws this from the columns. Leave it empty when the values well holds a Python measure of the dataset.'));
+        fmt.appendChild(frow('Run on', selectInput([['', 'auto'], ['server', 'the console (sandboxed)'], ['browser', 'the browser (Pyodide)']], f.run, (x) => setFmt(v, 'run', x), { 'data-format-run': '' }), 'auto: the console, then the browser when the console cannot run it.'));
+        fmt.appendChild(frow('Parameters (JSON)', textInput(f.params ? JSON.stringify(f.params) : '', (x) => {
+          if (x.trim() === '') { setFmt(v, 'params', ''); return; }
+          try { const o = JSON.parse(x); if (o && typeof o === 'object' && !Array.isArray(o)) { setFmt(v, 'params', o); } } catch (e) { /* keep what was there until it parses */ }
+        }, { 'data-format-params': '', placeholder: '{"bins": 24}' }), 'Handed to the function as its params; they override the item\'s defaults.'));
+      }
       if (group === 'chart') {
         fmt.appendChild(checkbox('Data labels', f.labels, (x) => setFmt(v, 'labels', x), { 'data-format-labels': '' }));
         if (['bar', 'column', 'area'].indexOf(v.type) >= 0) { fmt.appendChild(checkbox('Stacked', f.stacked, (x) => setFmt(v, 'stacked', x), { 'data-format-stacked': '' })); }

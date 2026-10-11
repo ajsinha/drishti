@@ -83,6 +83,7 @@
     };
     const group = VGROUP[spec.type];
     if (group === 'static' || spec.type === 'slicer') { return out; }
+    if (group === 'python') { return out; }                                        // a Python result is drawn from rows Python was handed: no alert, drill or marks
     out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)
     if (group === 'perspective' || group === 'live') { return out; }
     const sel = state.selections.find((s) => s.visual === spec.id);
@@ -147,6 +148,7 @@
     const token = ++entry.token;
     if (VGROUP[spec.type] === 'static') { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(spec), null)); return Promise.resolve(); }
     if (VGROUP[spec.type] === 'perspective') { return loadPerspective(spec, entry, token, quiet); }
+    if (VGROUP[spec.type] === 'python') { return loadPython(spec, entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
     return B.enqueue(() => B.api('POST', '/reports/' + B.id2path(reportId) + '/query', { page: pageId, visual: spec.id, state: stateFor(spec) })).then((res) => {
       if (token !== entry.token) { return; }
@@ -157,6 +159,23 @@
     }, (e) => {
       if (token !== entry.token) { return; }
       if (quiet && entry.res) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); } else { entry.frame.error(e); }
+    });
+  }
+
+  /** A python visual (bi-python.js): the Python item runs on the rows this person may see, on the server or in the browser, and what it returns is drawn. */
+  function loadPython(spec, entry, token, quiet) {
+    if (!B.python) { entry.frame.error({ code: 'DRS-9074', detail: 'The Python visual script did not load.' }); return Promise.resolve(); }
+    if (!quiet) { entry.frame.busy(); }
+    return B.python.run(spec, { report: reportId, page: pageId, state: stateFor(spec) }).then((res) => {
+      if (token !== entry.token) { return; }
+      entry.frame.result(null, (host) => B.python.draw(host, spec, ctxFor(spec), res), quiet ? { keep: true } : undefined);
+      B.python.footer(entry.frame.foot, res);
+      B.live.markStale(entry.frame, false);
+    }, (e) => {
+      if (token !== entry.token) { return; }
+      if (quiet && entry.frame.body.querySelector('.bi-py-chart,.bi-py-img')) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); return; }
+      entry.frame.error(e);
+      if (e.traceback) { entry.frame.body.appendChild(B.h('pre', { class: 'bi-py-trace', 'data-py-trace': '', text: e.traceback })); }
     });
   }
 

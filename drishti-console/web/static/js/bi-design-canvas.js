@@ -146,6 +146,14 @@
       const group = (D.catalogue.visuals[v.type] || {}).group;
       const spec = Object.assign({}, v, { title: v.title || '' });
       if (group === 'static') { e.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(v), null)); return; }
+      if (group === 'python') {                                           // Python runs when the report is viewed (server or browser), never while designing
+        const item = (v.format && v.format.python) || ((v.wells.values || [])[0] ? 'the measure ' + v.wells.values[0] : '');
+        B.clear(e.frame.body).appendChild(h('div', { class: 'bi-vis-empty bi-dropnote', role: 'status', 'data-py-placeholder': '' }, B.icon('filetype-py'), ' Python visual' + (item ? ' · ' + item : ''), h('br'),
+          item ? 'It runs when the report is opened, on the rows the viewer may see.' : 'Name the Python item in Format, or put a Python measure in the values well.'));
+        e.frame.foot.textContent = '';
+        e.frame.el.classList.remove('bi-vis-busy');
+        return;
+      }
       const missing = Object.keys(D.wellSpecs(v.type)).filter((w) => D.wellSpecs(v.type)[w].required && !(v.wells[w] || []).length);
       if (missing.length) {
         B.clear(e.frame.body).appendChild(h('div', { class: 'bi-vis-empty bi-dropnote', role: 'status' }, B.icon('plus-circle'), ' Add a ' + (D.wellSpecs(v.type)[missing[0]].kind === 'measure' ? 'measure' : 'field') + ' to the ' + missing[0] + ' well', h('br'), describe(v)));

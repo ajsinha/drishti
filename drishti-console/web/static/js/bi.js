@@ -77,7 +77,7 @@
     return Math.round(s / 86400) + ' days ago';
   }
   function stamp(iso) { return iso ? iso.replace('T', ' ').replace(/\.\d+Z?$|Z$/, '') : ''; }
-  var KIND_ICON = { report: 'bar-chart-line', dataset: 'hdd-stack', board: 'speedometer2', notebook: 'journal-code' };
+  var KIND_ICON = { report: 'bar-chart-line', dataset: 'hdd-stack', board: 'speedometer2', notebook: 'journal-code', python: 'filetype-py' };
   var RANK = { viewer: 0, contributor: 1, member: 2, admin: 3 };
 
   function badge(text, cls, ic) { return h('span', { class: 'bi-badge ' + (cls || '') }, ic ? icon(ic) : null, ' ' + text); }
@@ -290,11 +290,22 @@
       return api('POST', path + '/' + sub, body || {}).then(function (n) { say(done || 'Done.'); show(n); return n; })
         .catch(function (e) { fail(e); document.dispatchEvent(new CustomEvent('bi:refused', { detail: { code: e.code, message: e.message, sub: sub } })); });
     }
+    /** A Python item's manifest checks (the server's) and source checks (the console's): every problem, in the warnings box. */
+    function checkPython() {
+      fetch('/bi/python/check', { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ yaml: it.body || '' }) })
+        .then(function (r) { return r.json(); }).then(function (d) {
+          var w = q('[data-warnings]'); clear(w); w.hidden = false;
+          var list = d.problems || (d.code ? [{ level: 'error', code: d.code, path: '', message: d.detail }] : []);
+          if (!list.length) { w.appendChild(h('p', { 'data-py-check': 'ok', text: 'The Python item checks out: the manifest is valid and the source parses.' })); }
+          list.forEach(function (p) { w.appendChild(h('p', { 'data-py-check': p.level, text: p.level + ' ' + p.code + (p.path ? ' ' + p.path : '') + ': ' + p.message })); });
+        }).catch(fail);
+    }
     function actions() {
       var box = q('[data-actions]'), c = it.can; clear(box);
       note = h('input', { class: 'studio-in bi-note', type: 'text', placeholder: 'Note or reason (optional)', 'aria-label': 'Note or reason', maxlength: '500' });
       var any = c.propose || c.publish || c.approve || c.withdraw;
       if (any) { box.appendChild(note); }
+      if (it.kind === 'python') { box.appendChild(act('Check the Python', checkPython)); }
       if (c.edit) { box.appendChild(act('Edit', function () { var f = q('[data-edit]'); f.hidden = !f.hidden; if (!f.hidden) { f.elements.title.focus(); } })); }
       if (c.propose) { box.appendChild(act('Propose for review', function () { post('propose', { note: note.value }, 'Proposed. A second person approves it.'); })); }
       if (c.publish) { box.appendChild(act('Publish', function () { post('publish', { note: note.value }, 'Published.'); }, 'btn-accent')); }

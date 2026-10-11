@@ -311,6 +311,9 @@ def create_app(settings: Settings) -> FastAPI:
     from core.calc import Calc
 
     app.state.calc = Calc(settings, WEB)
+    from core.pyrunner import PyRunner
+
+    app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/PYTHON_BI.md)
     from core.layouts import Layouts
 
     app.state.layouts = Layouts(settings)
@@ -348,9 +351,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)
     if app.state.bi_on:
-        from routes import bi_routes
+        from routes import bi_routes, python_routes
 
         app.include_router(bi_routes.router)
+        app.include_router(python_routes.router)
     if str(settings.get("bi.poc_enabled", False)).lower() in ("true", "1", "yes", "on"):   # off by default: no /bi/poc paths exist otherwise
         from routes import bi_poc_routes
 

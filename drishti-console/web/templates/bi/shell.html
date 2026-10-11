@@ -40,7 +40,9 @@
   </nav>
   <section class="bi-canvas" id="biCanvas" data-bi-page="{{ bi_page }}" data-workspace="{{ workspace | default('') }}" data-item="{{ item | default('') }}"
            data-user="{{ me.user if me else '' }}"
-           data-perspective="{{ perspective | default('') }}" data-live-min="{{ BI_LIVE.min_interval_ms }}" data-live-stale="{{ BI_LIVE.stale_seconds }}" data-rotate="{{ BI_LIVE.rotate_seconds }}">
+           data-perspective="{{ perspective | default('') }}"
+           data-author="{{ 'true' if 'bi-author' in (bi_me.powers or []) else 'false' }}" {% set pyrt = request.app.state.calc.runtime %}{% if pyrt.installed %}data-py-runtime="{{ pyrt.base }}" data-py-worker="/static/js/calc-worker.js?v={{ ASSET_V }}" data-py-module="/static/calc/drishti.py?v={{ ASSET_V }}" {% endif %}data-py-driver="/static/calc/bi_driver.py?v={{ ASSET_V }}"
+           data-live-min="{{ BI_LIVE.min_interval_ms }}" data-live-stale="{{ BI_LIVE.stale_seconds }}" data-rotate="{{ BI_LIVE.rotate_seconds }}">
     {% block bi_main %}{% endblock %}
   </section>
 </div>

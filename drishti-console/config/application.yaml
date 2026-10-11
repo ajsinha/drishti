@@ -187,3 +187,17 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1) and,
     stale_seconds: ${DRISHTI_BI_LIVE_STALE_SECONDS:30}        # no tick or status from the server for this long: the report says "Stale"; 5 to 600
   board:
     rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600
+  # Rupaka phase 6 (docs/guides/PYTHON_BI.md): the Python runner. A python visual or measure runs in a short-lived, sandboxed worker process of the console
+  # (no network, a scratch folder only, CPU, memory, time and output limits) on the rows the person looking may see; or in the browser (Pyodide) when its manifest allows.
+  python:
+    enabled: ${DRISHTI_BI_PYTHON_ENABLED:true}                 # false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it)
+    workers: ${DRISHTI_BI_PYTHON_WORKERS:2}                    # worker processes at once; a call waits queue_seconds for a place, then DRS-9074
+    queue_seconds: ${DRISHTI_BI_PYTHON_QUEUE_SECONDS:5}
+    packages: [pandas, numpy, pyarrow, scipy, statsmodels]     # the allow-list; a package that is not installed is refused when used. Keep the server's drishti.bi.report.python-packages equal
+    max_timeout_seconds: ${DRISHTI_BI_PYTHON_MAX_TIMEOUT:60}   # the most a manifest may ask for; the CPU and wall-clock limit of one call
+    max_memory_mb: ${DRISHTI_BI_PYTHON_MAX_MEMORY_MB:1024}     # the most memory a manifest may ask for, on top of what the interpreter and its packages need to start
+    max_input_bytes: ${DRISHTI_BI_PYTHON_MAX_INPUT_BYTES:16000000}    # largest Arrow table handed to Python
+    max_output_bytes: ${DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES:1000000}   # largest result (a chart option, an image or a measure's rows)
+    max_groups: 5000                                            # most groups a measure is called for
+    network_namespace: auto                                     # auto: also run the worker in a network namespace with no interfaces when the machine allows it (unshare); require; off
+    scratch_dir: ""                                             # where each call's scratch folder is made; empty: the system temporary folder
