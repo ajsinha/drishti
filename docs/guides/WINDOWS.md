@@ -158,16 +158,16 @@ The first run makes the console's Python environment and installs its libraries 
 `python -m venv` and pip). Open **http://localhost:17480/t**. Options: `-Port` (17480), `-Backend`
 (`http://127.0.0.1:18480`), `-Python` (the Python to build the environment with), `-Reinstall`.
 
-> **Known problem.** In this checkout `start-console.ps1` still looks for the console in a folder called `console\`, but the folder
-> is `drishti-console\`, so on a clone the script stops with a missing-file error. Until the script is fixed, start the console by hand:
->
-> ```powershell
-> uv venv drishti-console\.venv
-> uv pip install --python drishti-console\.venv\Scripts\python.exe -r drishti-console\requirements.txt
-> drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py
-> ```
->
-> (without uv: `python -m venv drishti-console\.venv`, then `drishti-console\.venv\Scripts\pip install -r drishti-console\requirements.txt`).
+To start the console by hand instead (the same steps the script takes):
+
+```powershell
+uv venv drishti-console\.venv
+uv pip install --python drishti-console\.venv\Scripts\python.exe -r drishti-console\requirements.txt
+drishti-console\.venv\Scripts\python.exe drishti-console\run_drishti_web.py
+```
+
+(without uv: `python -m venv drishti-console\.venv`, then `drishti-console\.venv\Scripts\pip install -r drishti-console\requirements.txt`).
+
 > The settings are the console's own: `DRISHTI_CONSOLE_PORT`, `DRISHTI_BACKEND_URL`.
 
 From here the [QUICKSTART.md](QUICKSTART.md#7-your-first-ten-commands) steps 7 to 9 are the same.
