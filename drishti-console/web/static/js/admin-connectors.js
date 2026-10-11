@@ -58,7 +58,7 @@
     var text = filter.value.trim().toLowerCase(), st = stateSel.value, org = originSel.value, shown = 0;
     $$('[data-list] tbody tr[data-conn]').forEach(function (tr) {
       var hit = (!text || tr.textContent.toLowerCase().indexOf(text) >= 0)
-        && (!st || (st === 'problem' ? tr.getAttribute('data-problem') === 'yes' : tr.getAttribute('data-state') === st))
+        && (!st || (st === 'problem' ? tr.getAttribute('data-has-problem') === 'yes' : tr.getAttribute('data-state') === st))
         && (!org || tr.getAttribute('data-origin') === org);
       tr.hidden = !hit; if (hit) { shown++; }
     });

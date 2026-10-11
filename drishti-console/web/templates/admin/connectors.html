@@ -53,7 +53,7 @@
     <thead><tr><th scope="col">Connector</th><th scope="col">Origin</th><th scope="col">Plugin</th><th scope="col">Kinds</th><th scope="col">Status</th>
       <th scope="col">Used by</th><th scope="col">Changed</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
     <tbody data-rows>{% for c in connectors %}
-      <tr data-conn="{{ c.name }}" data-state="{{ c.state }}" data-origin="{{ c.origin }}" data-problem="{{ 'yes' if c.problems else 'no' }}">
+      <tr data-conn="{{ c.name }}" data-state="{{ c.state }}" data-origin="{{ c.origin }}" data-has-problem="{{ 'yes' if c.problems else 'no' }}">
         <th scope="row" class="conn-name"><a class="mono" href="/admin/connectors/{{ c.name }}" data-detail-link title="Open {{ c.name }}: settings, packs, file and history">{{ c.name }}</a>{% if c.description %}<br><span class="text-muted-d">{{ c.description }}</span>{% endif %}</th>
         <td><span class="st{{ '' if c.origin == 'file' else ' st-warn' }}" title="{{ {'file': 'Defined by its file in the connectors folder', 'pack': 'Defined by a pack; no file yet', 'application': 'Defined in the server\'s own configuration (deprecated)'}[c.origin] }}">{{ c.origin }}</span></td>
         <td class="mono">{{ c.plugin or '—' }}</td>
