@@ -120,7 +120,7 @@ public record AlertSpec(String name, String owner, String title, String severity
             throw invalid("delivery names at least one of inbox, email, bridge");
         }
         String title = body.path("title").asText("").strip();
-        return new AlertSpec(name, owner, title.isEmpty() ? defaultTitle(source, condition) : title, severity, body.path("enabled").asBoolean(true), source, condition, trigger,
+        return new AlertSpec(name, owner, title.isEmpty() ? name : title, severity, body.path("enabled").asBoolean(true), source, condition, trigger,
                 hysteresis, cooldown, delivery, null);
     }
 
@@ -325,12 +325,12 @@ public record AlertSpec(String name, String owner, String title, String severity
         };
     }
 
+    /** A number as a person reads it: thousands separators, up to four decimals, no trailing zeros. */
     public static String num(double v) {
-        return v == Math.rint(v) && Math.abs(v) < 1e15 ? String.valueOf((long) v) : String.format(Locale.ROOT, "%,.4f", v).replaceAll("0+$", "").replaceAll("\\.$", "");
-    }
-
-    private static String defaultTitle(Source s, Condition c) {
-        return s.label() + " " + new AlertSpec("x", "x", "", "warn", true, s, c, null, 0, Duration.ZERO, null, null).describe();
+        if (v == Math.rint(v) && Math.abs(v) < 1e15) {
+            return String.format(Locale.ROOT, "%,d", (long) v);
+        }
+        return String.format(Locale.ROOT, "%,.4f", v).replaceAll("0+$", "").replaceAll("\\.$", "");
     }
 
     // ---- helpers -------------------------------------------------------------------------------------------------------------

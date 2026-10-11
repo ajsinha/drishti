@@ -58,7 +58,7 @@
     <ul class="alert-sugg">{% for s in suggestions %}<li><button type="button" class="fk" data-suggest="{{ s | tojson | forceescape }}"><b>{{ s.kind }}</b> {{ s.name }}</button> <code>{{ s.when }}</code></li>{% endfor %}</ul>{% endif %}
   </div></section>
   <section class="pnl"><header class="pnl-h"><h3>Your rules</h3><span class="pnl-code">{{ rules | length }}</span></header><div class="pnl-b">
-    <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Name</th><th>Entity</th><th>When</th><th>Severity</th><th></th></tr></thead><tbody>
+    <div class="tbl-wrap"><table class="tbl" data-plain><thead><tr><th>Name</th><th>Entity</th><th>When</th><th>Severity</th><th></th></tr></thead><tbody>
     {% for r in rules %}<tr><td>{{ r.name }}</td><td><a class="lnk mono" href="/v/{{ r.ref.kind }}/{{ r.ref.id }}">{{ r.ref.id }}</a></td>
       <td class="mono">{{ r.when }}</td><td><span class="st st-{{ {'critical': 'bad', 'warn': 'warn'}.get(r.severity, 'ok') }}">{{ r.severity }}</span></td>
       <td><button type="button" class="fk" data-delete-rule="{{ r.name }}">Delete</button></td></tr>

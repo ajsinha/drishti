@@ -53,7 +53,7 @@ class AlertSpecTest {
         assertThat(s.cooldown()).isEqualTo(Duration.ofHours(1));
         assertThat(s.delivery().email()).isTrue();
         assertThat(s.describe()).isEqualTo("between 10 and 20");
-        assertThat(s.title()).contains("daily-risk").contains("between 10 and 20");
+        assertThat(s.title()).isEqualTo("Net");                                    // the name, unless the alert was given a title
         AlertSpec back = AlertSpec.parse("alice", "Net", s.toJson(), PROPS);
         assertThat(back).isEqualTo(s);
     }

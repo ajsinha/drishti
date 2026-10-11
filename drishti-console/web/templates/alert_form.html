@@ -33,7 +33,7 @@
   <section class="pnl"><header class="pnl-h"><h3>{{ 'Change it' if editing else 'What to watch, and when to tell you' }}</h3></header><div class="pnl-b">
     <form class="alert-form al-form" method="post" action="{{ '/alerts/measure/' ~ (alert.name | urlencode) if editing else '/alerts/new' }}" data-alert-form>
       <label>Name<input name="name" class="studio-in" value="{{ f.name or '' }}" required maxlength="64"{% if editing %} readonly{% endif %}></label>
-      <label class="wide">Title (optional)<input name="title" class="studio-in" value="{{ f.title or '' }}" maxlength="200" placeholder="what the message calls it"></label>
+      <label class="wide">Title (optional)<input name="title" class="studio-in" value="{{ f.title or '' }}" maxlength="200" placeholder="defaults to the name; the message starts with it"></label>
       <label>Severity<select name="severity" class="studio-select">{% for s in ['info', 'warn', 'critical'] %}<option{% if f.severity == s %} selected{% endif %}>{{ s }}</option>{% endfor %}</select></label>
 
       <fieldset class="al-src wide2"><legend>Watch</legend>

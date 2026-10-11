@@ -16,6 +16,7 @@
 {# The inbox (COLLABORATION.md, Inbox): shares (and later mentions and replies) as the server renders them for this reader now. #}
 {% extends "base.html" %}
 {% block title %}Inbox · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}

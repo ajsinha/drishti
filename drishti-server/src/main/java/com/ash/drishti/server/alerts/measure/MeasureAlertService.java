@@ -594,7 +594,7 @@ public final class MeasureAlertService implements AutoCloseable {
 
     private ObjectNode fire(AlertSpec spec, Person person, Outcome o, Reading cur, Instant now, String trigger) {
         long id = ids.incrementAndGet();
-        String message = message(spec, o, cur);
+        String message = message(spec, o);
         AlertChannels.Fired f = new AlertChannels.Fired(id, now, spec, person, spec.key(), message, spec.severity(), link(spec));
         ObjectNode delivered = JSON.createObjectNode();
         delivered.put("inbox", spec.delivery().inbox() ? safe(() -> channels.inbox(f)) : "off");
@@ -641,16 +641,17 @@ public final class MeasureAlertService implements AutoCloseable {
         return e;
     }
 
-    private String message(AlertSpec spec, Outcome o, Reading cur) {
+    /** The one line the person is told: the alert's title (its name unless it was given one), then the number as they read it and the condition. */
+    private String message(AlertSpec spec, Outcome o) {
         AlertSpec.Condition c = spec.condition();
-        String body = switch (c.type()) {
-            case "threshold" -> "now " + AlertSpec.num(o.value()) + " (" + spec.describe() + ")";
-            case "change" -> "now " + AlertSpec.num(o.value()) + ", " + (o.delta() >= 0 ? "up " : "down ") + AlertSpec.num(Math.abs(round(o.delta()))) + (c.mode().equals("pct") ? "%" : "")
-                    + " from " + AlertSpec.num(o.reference()) + " (" + c.against().replace('-', ' ') + ")";
-            case "nodata" -> "no data for " + dates.current() + " yet (expected by " + c.by() + ")";
-            default -> "is now " + TileLevel.word(o.value());
+        String who = spec.title() + " — ";
+        return switch (c.type()) {
+            case "threshold" -> who + "now " + AlertSpec.num(o.value()) + " (" + spec.describe() + ")";
+            case "change" -> who + "now " + AlertSpec.num(o.value()) + ", " + (o.delta() >= 0 ? "up " : "down ") + AlertSpec.num(Math.abs(round(o.delta())))
+                    + (c.mode().equals("pct") ? "%" : "") + " from " + AlertSpec.num(o.reference()) + " (" + c.against().replace('-', ' ') + ")";
+            case "nodata" -> who + "no data for " + dates.current() + " yet (expected by " + c.by() + ")";
+            default -> who + "is now " + TileLevel.word(o.value());
         };
-        return spec.title().equals(spec.source().label()) ? spec.title() + ": " + body : spec.title() + " — " + body;
     }
 
     private static double round(double v) {
@@ -740,7 +741,7 @@ public final class MeasureAlertService implements AutoCloseable {
         if (spec.board() == null) {
             return store.get(spec.owner(), NS, spec.name()).map(d -> (ObjectNode) d.deepCopy()).orElseGet(JSON::createObjectNode);
         }
-        JsonNode d = store.get(BOARD_OWNER, BOARD_NS, spec.board().board()).orElse(null);
+        JsonNode d = store.get(BOARD_OWNER, BOARD_NS, boardKey(spec.board().board())).orElse(null);
         JsonNode t = d == null ? null : d.path("tiles").path(spec.board().page() + "/" + spec.board().tile());
         return t != null && t.isObject() ? (ObjectNode) t.deepCopy() : JSON.createObjectNode();
     }
@@ -758,15 +759,24 @@ public final class MeasureAlertService implements AutoCloseable {
                 change.accept(doc);
                 store.put(spec.owner(), NS, spec.name(), doc);
             } else {
-                ObjectNode doc = store.get(BOARD_OWNER, BOARD_NS, spec.board().board()).map(d -> (ObjectNode) d.deepCopy()).orElseGet(JSON::createObjectNode);
+                ObjectNode doc = store.get(BOARD_OWNER, BOARD_NS, boardKey(spec.board().board())).map(d -> (ObjectNode) d.deepCopy()).orElseGet(JSON::createObjectNode);
                 ObjectNode tile = child(child(doc, "tiles"), spec.board().page() + "/" + spec.board().tile());
                 change.accept(tile);
                 fit(doc);
-                store.put(BOARD_OWNER, BOARD_NS, spec.board().board(), doc);
+                store.put(BOARD_OWNER, BOARD_NS, boardKey(spec.board().board()), doc);
             }
         } finally {
             lock.unlock();
         }
+    }
+
+    /** The preference store's key for a board: its id with the characters the store refuses (a catalogue id has colons) replaced, and cut with a hash when long. */
+    static String boardKey(String boardId) {
+        String clean = boardId.replaceAll("[^A-Za-z0-9 ._-]", "_");
+        if (clean.equals(boardId) && clean.length() <= 64) {
+            return clean;
+        }
+        return clean.substring(0, Math.min(clean.length(), 50)) + "-" + Integer.toHexString(boardId.hashCode());
     }
 
     /** Keeps a board's document within the preference store's size: states of people who are not active go first, then the oldest history. */

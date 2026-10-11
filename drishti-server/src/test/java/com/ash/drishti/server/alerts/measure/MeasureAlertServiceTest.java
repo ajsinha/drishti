@@ -461,7 +461,7 @@ class MeasureAlertServiceTest {
     AlertSpec tile(String cooldown, boolean bridge) {
         return new AlertSpec("t1", "alice", "Desk wall · Net exposure", "critical", true, new AlertSpec.Source("tile", "desk", "", "net", null, "", "", "first", null, "", "", "", null),
                 new AlertSpec.Condition("level", "", 0, 0, "", "", null, "crit"), new AlertSpec.Trigger("after-load", "", "", Duration.ZERO), 0,
-                cooldown.equals("0") ? Duration.ZERO : Duration.ofHours(1), new AlertSpec.Delivery(true, true, bridge), new AlertSpec.BoardRef("wall", "p1", "t1"));
+                cooldown.equals("0") ? Duration.ZERO : Duration.ofHours(1), new AlertSpec.Delivery(true, true, bridge), new AlertSpec.BoardRef("file:board:wall", "p1", "t1"));
     }
 
     @Test
@@ -485,6 +485,14 @@ class MeasureAlertServiceTest {
     }
 
     @Test
+    void aBoardIdWithColonsIsKeptUnderANameTheStoreAccepts() {
+        assertThat(MeasureAlertService.boardKey("wall")).isEqualTo("wall");
+        assertThat(MeasureAlertService.boardKey("file:board:desk-alerts")).startsWith("file_board_desk-alerts-").matches("[A-Za-z0-9 ._-]{1,64}");
+        assertThat(MeasureAlertService.boardKey("file:board:" + "x".repeat(100))).hasSizeLessThanOrEqualTo(64);
+        assertThat(MeasureAlertService.boardKey("a:b")).isNotEqualTo(MeasureAlertService.boardKey("a_b"));
+    }
+
+    @Test
     void aBridgePostIsOneForTheTileNotOnePerReader() {
         boardSpecs.add(tile("1h", true));
         boardAudience.addAll(List.of(alice, carol));
@@ -495,7 +503,7 @@ class MeasureAlertServiceTest {
         service.tick();
         assertThat(inbox).hasSize(2);
         assertThat(bridge).hasSize(1);
-        assertThat(bridge.get(0)).isEqualTo("board:wall/p1/t1");
+        assertThat(bridge.get(0)).isEqualTo("board:file:board:wall/p1/t1");
     }
 
     @Test

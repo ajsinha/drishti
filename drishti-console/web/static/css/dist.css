@@ -61,3 +61,11 @@
   .al-check input { width: 24px; height: 24px; }
   .al-actions .btn-pill, .al-act-row .fk, .al-facts a { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; }
 }
+
+/* the older rule form on the Alerts page, on a phone */
+@media (max-width: 640px), (pointer: coarse) {
+  [data-alerts] .alert-form input, [data-alerts] .alert-form select, [data-alerts] .alert-form button, [data-alerts] .fk, [data-alerts] .lnk { min-height: 44px; }
+  [data-alerts] .alert-form input, [data-alerts] .alert-form select { font-size: 16px; }
+  [data-alerts] .fk, [data-alerts] .lnk { display: inline-flex; align-items: center; min-width: 44px; }
+  .inbox .fk, .inbox .inbox-open { min-height: 44px; display: inline-flex; align-items: center; min-width: 44px; }
+}
