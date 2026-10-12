@@ -130,10 +130,9 @@ def test_a_pack_named_in_the_site_configuration_is_not_uninstalled(stack, browse
     page = open_page(browser)
     row(page, "lab-core").get_by_role("button", name="Uninstall lab-core").click()
     dlg = page.locator("[data-uninstall-dialog]")
-    expect(dlg.locator("[data-art-text]")).to_contain_text("Nothing depends on lab-core")
-    dlg.locator("[data-art-go]").click()
-    expect(dlg.locator("[data-art-msg]")).to_contain_text("DRS-5044")
-    expect(dlg.locator("[data-art-msg]")).to_contain_text("drishti.packs.enabled")
+    # the dialog says up front that a pack named in the configuration can only be disabled, and offers no Uninstall
+    expect(dlg.locator("[data-art-text]")).to_contain_text("named in drishti.packs.enabled")
+    expect(dlg.locator("[data-art-go]")).to_be_hidden()
     dlg.locator("[data-art-keep]").click()
 
 
