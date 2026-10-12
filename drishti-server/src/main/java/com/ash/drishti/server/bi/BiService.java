@@ -1399,7 +1399,7 @@ public final class BiService {
                     throw new DrishtiException(ErrorCode.BI_INVALID, "the body is YAML with a mapping at the top (key: value)");
                 }
             } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-                throw new DrishtiException(ErrorCode.BI_INVALID, "the body is not valid YAML: " + e.getOriginalMessage());
+                throw new DrishtiException(ErrorCode.BI_INVALID, "the body is not valid YAML: " + YamlErrors.describe(e));
             }
         }
         return s;

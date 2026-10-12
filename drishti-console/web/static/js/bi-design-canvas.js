@@ -237,7 +237,7 @@
     function makeFrame(v) {
       const del = h('button', { type: 'button', class: 'bi-vis-btn', 'aria-label': 'Delete this visual', title: 'Delete', 'data-act': 'delete' }, B.icon('trash'));
       const dup = h('button', { type: 'button', class: 'bi-vis-btn', 'aria-label': 'Duplicate this visual', title: 'Duplicate', 'data-act': 'duplicate' }, B.icon('files'));
-      const f = B.frame(v, { buttons: [dup, del] });
+      const f = B.frame(v, { buttons: [dup, del], onRetry: () => { const e = frames.get(v.id); if (e) { e.key = null; drawEntry(v.id); } } });          // a design error card has Retry too: fix the model, then ask again
       f.el.classList.add('bi-dvis');
       f.el.tabIndex = 0;
       f.head.classList.add('bi-dhandle');
@@ -302,7 +302,7 @@
     // ---- actions on a visual -----------------------------------------------------------------------------------------
     function remove(id) {
       const next = D.page().visuals.filter((v) => v.id !== id)[0];
-      D.change('Delete a visual', (m) => { const p = m.pages.find((x) => x.id === D.pageId); p.visuals = p.visuals.filter((v) => v.id !== id); });
+      if (D.readOnly || !D.change('Delete a visual', (m) => { const p = m.pages.find((x) => x.id === D.pageId); p.visuals = p.visuals.filter((v) => v.id !== id); })) { return; }       // refused (frozen, shipped): D.change said so, and nothing was deleted
       D.select(next ? next.id : null);
       D.say('Visual deleted. Undo brings it back.');
     }

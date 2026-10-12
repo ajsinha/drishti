@@ -247,15 +247,22 @@
       const nums = values.map((v) => (type === 'number' ? Number(v) : String(v))).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
       const from = h('input', { type, class: 'studio-in', 'aria-label': 'From', 'data-range': 'from', placeholder: nums.length ? String(nums[0]) : '', value: cur && cur.from != null ? String(cur.from) : '' });
       const to = h('input', { type, class: 'studio-in', 'aria-label': 'To', 'data-range': 'to', placeholder: nums.length ? String(nums[nums.length - 1]) : '', value: cur && cur.to != null ? String(cur.to) : '' });
+      const hint = h('p', { class: 'bi-vis-note bi-bad', role: 'alert', 'data-range-hint': '', hidden: '' });
       const apply = () => {
         const f = from.value === '' ? null : type === 'number' ? Number(from.value) : from.value;
         const t = to.value === '' ? null : type === 'number' ? Number(to.value) : to.value;
+        const inverted = f != null && t != null && f > t;
+        hint.textContent = inverted ? 'From is after To, so nothing can match: swap them.' : '';
+        hint.hidden = !inverted;
+        from.setAttribute('aria-invalid', inverted ? 'true' : 'false');
+        to.setAttribute('aria-invalid', inverted ? 'true' : 'false');
         set(f == null && t == null ? null : { from: f, to: t });
       };
       from.addEventListener('change', apply);
       to.addEventListener('change', apply);
       wrap.appendChild(h('label', { class: 'bi-range' }, h('span', { text: 'From' }), from));
       wrap.appendChild(h('label', { class: 'bi-range' }, h('span', { text: 'To' }), to));
+      wrap.appendChild(hint);
       wrap.appendChild(h('p', { class: 'bi-vis-note', text: nums.length ? 'Values run from ' + nums[0] + ' to ' + nums[nums.length - 1] + '.' : 'No values.' }));
       B.clear(host).appendChild(wrap);
       return NONE;

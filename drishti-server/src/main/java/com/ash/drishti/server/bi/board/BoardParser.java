@@ -72,7 +72,7 @@ public final class BoardParser {
         try {
             root = yaml == null || yaml.isBlank() ? null : YAML.readTree(yaml);
         } catch (JsonProcessingException e) {
-            out.add(error("", "the YAML is not valid: " + e.getOriginalMessage()));
+            out.add(error("", "the YAML is not valid: " + com.ash.drishti.server.bi.YamlErrors.describe(e)));
             return new Result(null, out);
         }
         if (root == null || !root.isObject()) {

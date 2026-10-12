@@ -567,6 +567,7 @@
     viewAs.hidden = false;
     viewAs.addEventListener('change', () => { q('[data-view-link]').href = viewHref(); });
     q('[data-save-copy]').hidden = !D.readOnly;
+    q('[data-dmain]').classList.toggle('bi-ro', D.readOnly);                       // the palette, the fields and the visuals' delete look switched off, as they are
     q('[data-publish-label]').textContent = item.workspaceReviewRequired ? 'Propose' : 'Publish';
     q('[data-publish]').hidden = D.readOnly || !(item.can && (item.can.publish || item.can.propose));
     const ro = q('[data-readonly]');

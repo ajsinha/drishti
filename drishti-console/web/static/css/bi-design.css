@@ -227,3 +227,8 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
   .bi-pane-vis { resize: none; min-height: 0; }
 }
 @media (pointer: coarse) { .bi-pane-head button, .bi-addvisual .btn-pill, .bi-addvisual select, .bi-chipbtn, .bi-vtype { min-height: 44px; min-width: 44px; } }
+
+/* a draft that cannot be changed (proposed, shipped, no edit power): what would change it looks switched off */
+.bi-ro .bi-vtype, .bi-ro .bi-field, .bi-ro .bi-vis-btn[data-act="delete"], .bi-ro .bi-vis-btn[data-act="duplicate"], .bi-ro .bi-resize { opacity: .45; cursor: not-allowed; }
+.bi-ro .bi-vtype:hover { border-color: var(--d-border); }
+.bi-ro [data-save]:disabled { opacity: .45; cursor: not-allowed; }

@@ -167,6 +167,7 @@
     return B.enqueue(() => B.api('POST', '/reports/' + B.id2path(reportId) + '/query', { page: pageId, visual: spec.id, state: stateFor(spec) })).then((res) => {
       if (token !== entry.token) { return; }
       entry.res = res;
+      asOfNote(res);
       sawLive(res);
       B.live.markStale(entry.frame, false);
       draw(spec.id, quiet);
@@ -174,6 +175,16 @@
       if (token !== entry.token) { return; }
       if (quiet && entry.res) { B.live.markStale(entry.frame, true, e.code ? e.code + ' ' + e.detail : e.message); } else { entry.frame.error(e); }
     });
+  }
+
+  /** The date the data is as of, beside the Business date control: what the engine read (the newest date of the answer), which may be older than the day in the top bar. */
+  function asOfNote(res) {
+    const note = q('[data-asof-note]');
+    const ds = res && res.meta && res.meta.dates;
+    if (!note || !ds || !ds.length) { return; }
+    const day = ds[ds.length - 1];
+    const top = document.querySelector('form[data-asof] input[type="date"]');
+    note.textContent = 'Data as of ' + day + (top && top.value && top.value !== day && !state.dates ? ' (the top bar says ' + top.value + ': no later data)' : '');
   }
 
   /** A python visual (bi-python.js): the Python item runs on the rows this person may see, on the server or in the browser, and what it returns is drawn. */
@@ -426,6 +437,7 @@
     state.asTable = {};
     state.dates = null;
     q('[data-date]').value = '';
+    { const t = document.querySelector('form[data-asof] input[type="date"]'); if (t && t.value) { q('[data-date]').value = t.value; } }
     Object.keys(state.drills).forEach((k) => { delete state.drills[k]; });
     refreshAll(null);
     drawGrid();
@@ -433,7 +445,9 @@
 
   function bar() {
     const date = q('[data-date]');
-    date.addEventListener('change', () => { state.dates = date.value ? { from: date.value, to: date.value } : null; refreshAll(null); });
+    const topDate = document.querySelector('form[data-asof] input[type="date"]');
+    if (topDate && topDate.value && !date.value) { date.value = topDate.value; date.setAttribute('data-from-topbar', ''); }          // the control shows the day the top bar has; it asks for nothing until it is changed
+    date.addEventListener('change', () => { date.removeAttribute('data-from-topbar'); state.dates = date.value ? { from: date.value, to: date.value } : null; refreshAll(null); });
     const mode = q('[data-mode]');
     mode.addEventListener('change', () => { state.mode = mode.value; if (state.selections.length) { refreshAll(null); } });
     q('[data-reset]').addEventListener('click', reset);

@@ -165,4 +165,11 @@ class DatasetParserTest {
         assertThat(new Resolver(d).column("trades", "index")).isNull();
         assertThat(DatasetParser.parse("dataset: legs\ntables:\n  t: { source: { kind: k }, columns: { index: string } }").problems()).anyMatch(p -> p.path().endsWith("index"));
     }
+
+    @Test
+    void aSyntaxErrorSaysTheLineAndColumnAndNotTheReaderSource() {
+        DatasetParser.Result r = DatasetParser.parse("rachana: 1\ndataset: x\ntables: [a, b\nmeasures: {}\n");
+        String message = r.problems().get(0).message();
+        assertThat(message).startsWith("the YAML is not valid: line ").doesNotContain("reader").doesNotContain("\n");
+    }
 }
