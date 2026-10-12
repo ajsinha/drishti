@@ -286,6 +286,9 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Roadmap
 
+**Proposed after 2.1.0 (not yet agreed):** Power BI parity for Rūpaka, phases 2.2 to 3.0 — see
+[BI_PARITY_PLAN.md](BI_PARITY_PLAN.md) (gap analysis, ranked gaps, redesigns R1–R8, what is deliberately not copied).
+
 Everything planned up to 2.1.0 is built (see the changelog, [What 2.0.0 contains](#what-200-contains) and [What 2.1.0 contains](#what-210-contains)). The roadmap has no dated waves open.
 
 The long tail of BI gaps that the product owner trimmed on 2026-10-11 (window functions, several fact tables in one query, relative-date slicers, per-device layouts, rename detection, BI in pack archives, import rollback, incremental aggregates, live-table history, a board designer) was built after all, in 2.1.0. The platform loose ends (live bridges and plugin jars, proxy gaps, AI streaming and stdio MCP) remain candidates, not plans.
