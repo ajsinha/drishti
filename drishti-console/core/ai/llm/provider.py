@@ -29,6 +29,12 @@ from core.ai.llm.model import ChatModel, EmbeddingModel, HealthStatus, ModelCapa
 from core.ai.types import CHAT, EMBEDDINGS, JSON_MODE, STREAMING, TOOL_CALLS, ChatMessage as WireMessage, ChatRequest, LlmError, ToolSpec
 
 
+def masked_settings(settings: dict) -> dict:
+    """The provider file's other settings with every credential (key, token, secret, password, auth header) shown as ``********``."""
+    from core.ai.providers.http_base import SECRETISH
+    return {k: ("********" if SECRETISH.match(k.split(".")[-1]) and v else v) for k, v in sorted(settings.items())}
+
+
 def to_wire(req: ChatCompletionRequest, ctx: Optional[dict] = None, model: Optional[str] = None, timeout: Optional[float] = None) -> ChatRequest:
     """The wire request for a canonical one. ``system`` / ``developer`` messages stay in ``messages`` (the providers fold them into the system text)."""
     msgs = tuple(WireMessage("system" if m.role in ("system", "developer") else m.role, m.text) for m in req.messages)
@@ -142,12 +148,49 @@ class ProviderBase(LLMProvider):
         return _WireEmbed(self, w)
 
     def health(self) -> HealthStatus:
-        return HealthStatus("ok", "configured; no call is made to find out") if self.cfg.enabled else HealthStatus("down", "enabled: false")
+        """No network: ``enabled`` and, for the types that have one, the readiness check (a key, a region). ``aprobe`` makes the live call."""
+        if not self.cfg.enabled:
+            return HealthStatus("down", "enabled: false")
+        check = getattr(self._wire, "check", None)
+        ok, why = check() if check else (True, "configured; no call is made to find out")
+        note = getattr(self._wire, "tls_note", lambda: "")()
+        return HealthStatus("ok" if ok else "down", why + (f" ({note})" if ok and note else ""))
+
+    async def aprobe(self) -> HealthStatus:
+        """One cheap live call to the endpoint (a model list; Ollama: ``/api/tags``), if the type has one; the readiness check otherwise."""
+        if not self.cfg.enabled:
+            return HealthStatus("down", "enabled: false")
+        probe = getattr(self._wire, "probe", None)
+        if probe is None:
+            return self.health()
+        ok, why = await probe()
+        return HealthStatus("ok" if ok else "down", why)
+
+    def probe(self) -> HealthStatus:
+        return run_sync(self.aprobe())
+
+    async def alive_models(self) -> List[ModelInfo]:
+        """The models the endpoint reports now (Ollama: the ones pulled; the keyless OpenAI-compatible servers: ``GET /models``), as catalogue entries with source ``live``
+        for what is not already in ``models()``. Empty for a type whose API has no listing."""
+        live = getattr(self._wire, "live_models", None)
+        if live is None:
+            return []
+        known = {m.id for m in self._wire.models()} | {m.id for m in self.models()}
+        out = []
+        for m in await live():
+            if m["id"] not in known:
+                out.append(ModelInfo(m["id"], self.name, m["kind"], ModelCapabilities(chat=m["kind"] != "embedding", embedding=m["kind"] == "embedding", streaming=True),
+                                     m["id"], "live"))
+        return out
+
+    def live_models(self) -> List[ModelInfo]:
+        return run_sync(self.alive_models())
 
     def describe_config(self) -> Dict[str, Any]:
         c = self.cfg
         return {"name": c.name, "type": c.type, "enabled": c.enabled, "baseUrl": c.base_url, "apiKey": "********" if c.api_key else "",
-                "timeoutSeconds": c.timeout, "defaultModel": c.default_model, "models": [m.id for m in self.models()]}
+                "timeoutSeconds": c.timeout, "defaultModel": c.default_model, "models": [m.id for m in self.models()],
+                "settings": masked_settings(c.settings), "tls": getattr(getattr(self._wire, "tls", None), "describe", lambda: [])()}
 
     def close(self) -> None:
         run_sync(self._wire.aclose())

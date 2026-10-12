@@ -18,6 +18,7 @@ scripted) and ``server`` (delegates to the Drishti server, so credentials and po
 from __future__ import annotations
 
 import itertools
+import os
 import json
 import time
 from dataclasses import dataclass, field
@@ -83,18 +84,9 @@ class StreamableHttpClient:
         if not cfg["url"]:
             raise LlmError("config", "url is missing")
         self.cfg, self.server = cfg, cfg["name"]
-        s = {k: v for k, v in cfg["settings"].items() if k.startswith("tls.")}
-        if s and not cfg["url"].lower().startswith("https://"):
-            raise LlmError("config", "tls.* is set but the URL is not https://: use an https:// address")
-        verify: object = True
-        if cfg["url"].lower().startswith("https://"):
-            import ssl
-            try:
-                verify = ssl.create_default_context(cafile=s.get("tls.ca-file") or None)
-                if s.get("tls.cert-file"):
-                    verify.load_cert_chain(s["tls.cert-file"], s.get("tls.key-file") or None)
-            except (OSError, ssl.SSLError):
-                raise LlmError("config", "cannot create the TLS context") from None
+        from core.ai import tls as tls_mod
+        self.tls = tls_mod.build(cfg["settings"], cfg["url"], os.environ.get)
+        verify = self.tls.context
         args, self.proxy = client_args(cfg["settings"], cfg["url"])
         self._http = httpx.AsyncClient(verify=verify, timeout=cfg["timeout"], follow_redirects=False, trust_env=False, **args)
         self._ids = itertools.count(1)

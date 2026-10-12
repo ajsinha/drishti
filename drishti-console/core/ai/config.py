@@ -24,6 +24,7 @@ from typing import Callable
 import yaml
 
 from core.ai import proxy as proxy_mod
+from core.ai.providers import catalog
 from core.ai.types import CAPABILITIES, LlmError, ProviderConfig
 
 _ENV = re.compile(r"^\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-?([^}]*))?\}$")
@@ -46,6 +47,22 @@ def resolve_key(raw: str, env) -> str:
         raise LlmError("config", "api-key must be an ${ENV_NAME} placeholder; keys are never written into a file")
     v = env(m.group(1))
     return v.strip() if v and v.strip() else (m.group(2) or "")
+
+
+_TLS_SECRETS = ("tls.truststore-password", "tls.keystore-password", "tls.key-password")
+
+
+def resolve_secret(name: str, raw: str, env, required: bool = False) -> str:
+    """A secret setting: an ${ENV_NAME} placeholder, resolved here; a literal is refused. ``required``: an unset variable without a default is an error naming it."""
+    m = _ENV.match(raw.strip())
+    if not m:
+        raise LlmError("config", f"{name} must be an ${{ENV_NAME}} placeholder; secrets are never written into a file")
+    v = env(m.group(1))
+    if v and v.strip():
+        return v.strip()
+    if m.group(2) is None and required:
+        raise LlmError("config", f"{name}: the environment variable {m.group(1)} is not set")
+    return m.group(2) or ""
 
 
 def resolve_header(name: str, raw: str, env) -> str:
@@ -132,10 +149,52 @@ def provider_from_dict(data: dict, default_name: str, env) -> ProviderConfig:
         models.append({"name": mn, "id": str(m.get("id") or mn), "kind": str(m.get("kind") or "chat").lower(), "max_tokens": m.get("max-tokens"),
                        "temperature": m.get("temperature"), "capabilities": caps, "cost_per_1k_input": float(m.get("cost-per-1k-input") or 0),
                        "cost_per_1k_output": float(m.get("cost-per-1k-output") or 0)})
-    return ProviderConfig(name=name, type=typ, enabled=bool(data.get("enabled", True)), base_url=str(data.get("base-url") or "").strip(),
-                          api_key=resolve_key(str(data.get("api-key") or ""), env), timeout=_duration(data.get("timeout"), 60.0),
-                          retries=int(data.get("retries") or 0), default_model=str(data.get("default-model") or "").strip(), settings=settings,
+    base_url, api_key, default_model = str(data.get("base-url") or "").strip(), resolve_key(str(data.get("api-key") or ""), env), str(data.get("default-model") or "").strip()
+    for k in catalog.CREDENTIAL_SETTINGS:
+        if settings.get(k):
+            settings[k] = resolve_secret(k, settings[k], env)
+    resolve_tls_secrets(settings, env)
+    pre = catalog.preset(typ)
+    if pre:
+        base_url, api_key, models, default_model = _preset_defaults(typ, pre, settings, models, base_url, api_key, default_model, env)
+    return ProviderConfig(name=name, type=typ, enabled=bool(data.get("enabled", True)), base_url=base_url,
+                          api_key=api_key, timeout=_duration(data.get("timeout"), 60.0),
+                          retries=int(data.get("retries") or 0), default_model=default_model, settings=settings,
                           models=tuple(models))
+
+
+def resolve_tls_secrets(settings: dict, env) -> None:
+    if settings.get("tls.insecure-trust-all", "").lower() == "true":
+        if (env("DRISHTI_ALLOW_INSECURE_TLS") or "").lower() != "true":
+            raise LlmError("config", "tls.insecure-trust-all is refused unless DRISHTI_ALLOW_INSECURE_TLS=true is in the environment")
+        settings["tls.insecure-allowed"] = "true"
+    for k in _TLS_SECRETS:
+        if settings.get(k):
+            settings[k] = resolve_secret(k, settings[k], env, required=True)
+
+
+def _preset_defaults(typ, pre, settings, models, base_url, api_key, default_model, env):
+    """What a preset type fills in when the file leaves it out: the base URL (or ``base-url-env``), the key from the vendor's environment variable, the catalogue
+    models (a model of the file with the same name wins; ``catalogue: false`` keeps only the file's), the vendor's settings-from-environment and the default model."""
+    base_url = base_url or catalog.first_env(pre.get("base-url-env"), env) or pre["base-url"]
+    api_key = api_key or catalog.first_env(pre.get("key-env"), env)
+    for k, names in (pre.get("settings-env") or {}).items():
+        if not settings.get(k) and catalog.first_env(names, env):
+            settings[k] = catalog.first_env(names, env)
+    have = {m["name"] for m in models}
+    if settings.get("catalogue", "true").lower() != "false":
+        models = list(models) + [m for m in catalog.catalog_models(typ) if m["name"] not in have]
+    if typ == "azure_openai":                                    # deployments.<model id>: <deployment name> are this resource's models
+        have = {m["name"] for m in models}
+        for k in sorted(k for k in settings if k.startswith("deployments.")):
+            mid = k[len("deployments."):]
+            if catalog.logical_name(mid) not in have:
+                models.append({"name": catalog.logical_name(mid), "id": mid, "kind": "embedding" if "embed" in mid else "chat", "max_tokens": None, "temperature": None,
+                               "capabilities": ("embeddings",) if "embed" in mid else ("chat", "tool-calls", "json-mode"), "cost_per_1k_input": 0.0, "cost_per_1k_output": 0.0})
+    default_model = default_model or catalog.default_model(typ)
+    if default_model and default_model not in {m["name"] for m in models}:
+        default_model = ""
+    return base_url, api_key, models, default_model
 
 
 def load_providers(directory, env=None) -> tuple[list[ProviderConfig], dict[str, str]]:
@@ -163,6 +222,7 @@ def parse_mcp(path: Path, env) -> dict:
     for k, v in data.items():
         if k not in _MCP_KEYS:
             flatten(k, v, settings)
+    resolve_tls_secrets(settings, env)
     headers = {str(k): resolve_header(str(k), str(v), env) for k, v in (data.get("headers") or {}).items()}
     proxy_mod.check_password(settings, env)
     return {"name": name, "transport": str(data.get("transport") or "streamable-http"), "enabled": bool(data.get("enabled", True)),

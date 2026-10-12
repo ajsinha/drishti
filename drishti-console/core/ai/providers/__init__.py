@@ -16,9 +16,13 @@
 bookkeeping), a ``factory(config, runtime)``, and add it here (or call ``register``)."""
 from __future__ import annotations
 
-from core.ai.providers import anthropic, mock, openai_compat, server
+from core.ai.providers import anthropic, azure, bedrock, cohere, gemini, mock, ollama, openai_compat, server
 
-FACTORIES = {"openai": openai_compat.factory, "anthropic": anthropic.factory, "server": server.factory, "mock": mock.factory}
+FACTORIES = {"openai": openai_compat.factory, "anthropic": anthropic.factory, "server": server.factory, "mock": mock.factory,
+             # the providers of sajhamcpserver (docs/architecture/AI_PROVIDERS.md section 11): the OpenAI-compatible presets, then one class each
+             **{t: openai_compat.factory for t in ("openai_compatible", "groq", "together", "fireworks", "deepseek", "xai", "openrouter", "perplexity",
+                                                   "huggingface", "vllm", "lmstudio", "mistral")},
+             "azure_openai": azure.factory, "gemini": gemini.factory, "cohere": cohere.factory, "ollama": ollama.factory, "bedrock": bedrock.factory}
 
 
 def register(type_name: str, factory) -> None:

@@ -16,30 +16,20 @@
 from __future__ import annotations
 
 import os
-import ssl
-
 import httpx
 
 from core.ai import proxy as proxy_mod
+from core.ai import tls as tls_mod
 from core.ai.types import CHAT, EMBEDDINGS, JSON_MODE, TOOL_CALLS, ChatRequest, LlmError, ModelInfo, ProviderConfig
 
 
+def tls_result(cfg: ProviderConfig, url: str):
+    """The shared ``tls.*`` settings (``core/ai/tls.py``, docs/connectors/TLS.md) as a context plus the certificates' expiry."""
+    return tls_mod.build(cfg.settings, url, os.environ.get)
+
+
 def ssl_context(cfg: ProviderConfig, url: str):
-    """``https://`` trusts the system authorities unless ``tls.ca-file`` names others; ``tls.cert-file`` + ``tls.key-file`` give a client identity.
-    A ``tls.*`` key against an ``http://`` URL is a configuration error, never a silent downgrade."""
-    tls = {k: v for k, v in cfg.settings.items() if k.startswith("tls.")}
-    https = url.lower().startswith("https://")
-    if not https:
-        if tls:
-            raise LlmError("config", "tls.* is set but the URL is not https://: use an https:// address")
-        return True
-    try:
-        ctx = ssl.create_default_context(cafile=cfg.setting("tls.ca-file") or None)
-        if cfg.setting("tls.cert-file"):
-            ctx.load_cert_chain(cfg.setting("tls.cert-file"), cfg.setting("tls.key-file") or None)
-        return ctx
-    except (OSError, ssl.SSLError) as e:
-        raise LlmError("config", f"cannot create the TLS context ({type(e).__name__})") from None
+    return tls_result(cfg, url).context
 
 
 def client_args(settings: dict, url: str) -> tuple[dict, "proxy_mod.Proxy"]:
@@ -71,6 +61,12 @@ class BaseProvider:
                 caps = caps + self.default_caps
             self._models.append(ModelInfo(m["name"], cfg.name, m["id"], m["kind"], caps, m["max_tokens"], m["temperature"],
                                           m["cost_per_1k_input"], m["cost_per_1k_output"]))
+
+    tls = None                                   # a core.ai.tls.TlsResult once the provider has built its client
+
+    def tls_note(self) -> str:
+        """The soonest certificate expiry, when less than 30 days away (Admin -> AI shows it with the health)."""
+        return self.tls.note() if self.tls else ""
 
     def models(self) -> list[ModelInfo]:
         return list(self._models)
