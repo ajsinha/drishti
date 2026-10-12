@@ -43,6 +43,8 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     assert "DEGRADED" in page and "2 of 3 connectors up" in page.replace("<b>", "").replace("</b>", "")
     assert "trading-store" in page and "connection refused (reconnecting)" in page and "SQLException: refused" in page
     assert "feed-fred" in page and "no API key" in page and "unknown panel kind" in page and "open streams" in page
+    assert 'href="/admin/connectors/trading-store"' in page and 'href="/admin/connectors/feed-fred"' in page   # names open their pages
+    assert 'href="/admin/packs/trading"' in page
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text
