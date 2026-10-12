@@ -371,11 +371,12 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(ai_routes.router)
     if app.state.bi_on:
         from core.explore import Limits
-        from routes import bi_routes, explore_routes, python_routes, wizard_routes
+        from routes import bi_routes, explore_routes, model_routes, python_routes, wizard_routes
 
         app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/ANALYSE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
         app.include_router(wizard_routes.router)
+        app.include_router(model_routes.router)
         app.include_router(python_routes.router)
         app.include_router(explore_routes.router)
     if str(settings.get("bi.poc_enabled", False)).lower() in ("true", "1", "yes", "on"):   # off by default: no /bi/poc paths exist otherwise
