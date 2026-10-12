@@ -38,7 +38,7 @@
   <form class="bi-form" data-new-item hidden aria-label="New item">
     <h3>New item</h3>
     <label>Kind<select name="kind" class="studio-select"><option value="report">report</option><option value="dataset">dataset</option><option value="model">model</option><option value="board">board</option><option value="notebook">notebook</option><option value="python">python</option></select></label>
-    <label data-dataset-row>Main dataset<select name="dataset" class="studio-select" data-new-dataset><option value="">Choose a dataset</option></select></label>
+    <label data-dataset-row>Model or dataset<select name="dataset" class="studio-select" data-new-dataset><option value="">Choose a model or a dataset</option></select></label>
     <label data-dataset-row>Also add (optional)<select name="also" class="studio-select" data-new-also multiple size="4" aria-label="More datasets to open in the Fields pane"></select>
       <small class="text-muted-d">Hold Ctrl or Shift to choose several. They open beside the main dataset in the designer's Fields pane.</small></label>
     <fieldset class="bi-pyrow" data-python-row hidden><legend>What does it make?</legend>
@@ -72,4 +72,4 @@
 </section>
 {% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/collab.css?v={{ ASSET_V }}">{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/people.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-extras.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/people.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-extras.js?v={{ ASSET_V }}"></script>{% endblock %}

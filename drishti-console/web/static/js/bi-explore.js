@@ -58,13 +58,20 @@
   // ---- opening an extract -----------------------------------------------------------------------------------------------------
   var dsSel = q('[data-dataset]', root), fieldsBox = q('[data-fields-box]', root), fieldsEl = q('[data-fields]', root), go = q('[data-open-go]', root);
 
+  /** The sources a person can open, grouped: models, their datasets, each pack's datasets, then the version 1 datasets. Shared with the extra extracts (bi-explore-extracts.js). */
+  X.sources = function () {
+    return B.layer.groups({ legacy: function () { return B.api('GET', '/datasets').then(function (d) { return Array.isArray(d) ? d : (d.datasets || []); }); } });
+  };
+  /** The fields of a source in the extract's shape ({title, tables[{name, columns[]}]}): a model or a dataset through its model, a version 1 dataset as it is. */
+  X.fieldsOf = function (value) {
+    if (/^(mq|dataset):/.test(value)) {
+      var ref = value.indexOf('mq:') === 0 ? value.slice(3) : value;
+      return B.layer.get('fields?ref=' + encodeURIComponent(ref));
+    }
+    return B.api('GET', '/datasets/' + B.id2path(value));
+  };
   function loadDatasets() {
-    return B.api('GET', '/datasets').then(function (d) {
-      var list = Array.isArray(d) ? d : (d.datasets || []);
-      clear(dsSel);
-      dsSel.appendChild(h('option', { value: '', text: '(choose a dataset)' }));
-      list.forEach(function (d) { dsSel.appendChild(h('option', { value: d.id, text: d.title || d.id })); });
-    });
+    return X.sources().then(function (groups) { B.layer.fillSelect(dsSel, groups, '(choose a model or a dataset)'); });
   }
 
   var NUMERIC = /^(int|integer|long|short|float|double|decimal|number|numeric|bigint)/i;
@@ -72,7 +79,7 @@
   function loadModel(id, ticked) {
     X.model = null; clear(fieldsEl); fieldsBox.hidden = true; go.disabled = true;
     if (!id) { return Promise.resolve(); }
-    return B.api('GET', '/datasets/' + B.id2path(id)).then(function (m) {
+    return X.fieldsOf(id).then(function (m) {
       X.model = m;
       (m.tables || []).forEach(function (t) {
         var cols = (t.columns || []).filter(function (c) { return c.name !== 'id'; });

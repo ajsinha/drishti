@@ -31,7 +31,10 @@
   let W = { step: 1, src: '', extends: '', connector: '', query: '', python: '', model: '', picks: [], columns: [], keys: [], says: '', where: '', time: 'snapshot', refresh: 'on-load', title: '', name: '', masks: [] };
   let base = null, saved = null, dirty = false;
   const keep = () => { dirty = true; try { window.sessionStorage.setItem(KEEP, JSON.stringify(W)); } catch (e) { /* not kept */ } };
-  const sel = (opts, v, attrs) => h('select', Object.assign({ class: 'studio-select' }, attrs || {}), opts.map((o) => h('option', { value: o, text: o || '—', selected: o === v })));
+  const sel = (opts, v, attrs, words) => h('select', Object.assign({ class: 'studio-select' }, attrs || {}), opts.map((o) => h('option', { value: o, text: (words && words[o]) || o || '—', selected: o === v })));
+  const ADDS = { yes: 'yes', last: 'not over time (last value)', never: 'no' };
+  const NUMERIC = ['integer', 'decimal'];
+  const addsDefault = (c) => (NUMERIC.indexOf(c.type) >= 0 && c.role !== 'key' ? 'yes' : 'never');          // text, dates and flags are never added up
 
   function show(step) {
     W.step = step;
@@ -58,7 +61,7 @@
       if (c.meaning) { x.meaning = c.meaning; }
       if (c.references) { x.references = c.references; }
       if (c.currency) { x.unit = { currency: c.currency }; }
-      if (c.additive === 'never') { x.additive = false; } else if (c.additive === 'last') { x.additive = { 'over-time': 'last' }; } else if (['amount', 'quantity'].indexOf(c.role) >= 0) { x.additive = true; x.aggregate = 'sum'; }
+      if (c.additive === 'never') { if (NUMERIC.indexOf(c.type) >= 0 || ['amount', 'quantity', 'ratio'].indexOf(c.role) >= 0) { x.additive = false; } } else if (c.additive === 'last') { x.additive = { 'over-time': 'last' }; } else if (['amount', 'quantity'].indexOf(c.role) >= 0) { x.additive = true; x.aggregate = 'sum'; }
       if (c.expr) { x.expr = c.expr; }
       cols[c.name] = x;
     });
@@ -120,14 +123,15 @@
         base = d.info;
         W.columns = d.info.columns.map((c) => ({ name: c.name, type: c.type, role: c.role, meaning: c.meaning, references: c.references, currency: c.currency, additive: c.additive === false ? 'never' : c.additive && c.additive['over-time'] ? 'last' : 'yes', expr: '', base: true }));
         if (!W.title) { W.title = d.info.title + ' (narrowed)'; }
+        if (!W.keys.length && d.info.grain && d.info.grain.keys) { W.keys = d.info.grain.keys.slice(); if (!W.says && d.info.grain.says) { W.says = d.info.grain.says; } }
       });
     }
     if (W.src === 'model') {
-      W.columns = W.picks.map((p) => { const n = p.name.split('.').pop().replace(/[^A-Za-z0-9_]/g, '_'); return { name: n, type: p.type || 'string', role: p.kind === 'measure' ? 'amount' : 'dimension', additive: 'yes' }; });
+      W.columns = W.picks.map((p) => { const n = p.name.split('.').pop().replace(/[^A-Za-z0-9_]/g, '_'); return { name: n, type: p.type || 'string', role: p.kind === 'measure' ? 'amount' : 'dimension', additive: p.kind === 'measure' ? 'yes' : 'never' }; });
       W.keys = W.picks.filter((p) => p.kind === 'field').map((p) => p.name.split('.').pop().replace(/[^A-Za-z0-9_]/g, '_'));
       return Promise.resolve();
     }
-    W.columns = [{ name: '', type: 'string', role: 'dimension', additive: 'yes' }];
+    W.columns = [{ name: '', type: 'string', role: 'dimension', additive: 'never' }];
     return Promise.resolve();
   }
   function drawColumns() {
@@ -144,12 +148,13 @@
       W.columns.forEach((c, i) => {
         const ro = c.base && !c.changed && W.src === 'extends';
         const inp = (key, attrs) => { const x = h('input', Object.assign({ class: 'studio-in', value: c[key] || '', 'aria-label': key + ' of column ' + (i + 1), ['data-col-' + key]: i }, attrs || {})); x.addEventListener('change', () => { c[key] = x.value.trim(); if (c.base) { c.changed = true; } keep(); drawKeys(); }); return x; };
-        const pick = (key, opts) => { const x = sel(opts, c[key] || '', { 'aria-label': key + ' of column ' + (i + 1), ['data-col-' + key]: i }); x.addEventListener('change', () => { c[key] = x.value; if (c.base) { c.changed = true; } keep(); }); return x; };
+        const pick = (key, opts) => { const x = sel(opts, c[key] || '', { 'aria-label': key + ' of column ' + (i + 1), ['data-col-' + key]: i }, key === 'additive' ? ADDS : null); x.addEventListener('change', () => { c[key] = x.value; if (key === 'type' && !c.base && !c.addsTouched) { c.additive = addsDefault(c); drawColumns(); } if (key === 'additive') { c.addsTouched = true; } if (c.base) { c.changed = true; } keep(); }); return x; };
         const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove column ' + (c.name || i + 1), disabled: !!c.base }, B.icon('x-lg'));
         rm.addEventListener('click', () => { W.columns.splice(i, 1); keep(); drawColumns(); });
-        tb.appendChild(h('tr', { class: ro ? 'text-muted-d' : '', 'data-col-row': c.name || String(i) }, h('td', {}, inp('name', { disabled: !!c.base })), h('td', {}, pick('type', TYPES)), h('td', {}, pick('role', ROLES)),
-          h('td', {}, inp('meaning')), h('td', {}, inp('references', { placeholder: 'desk' })), h('td', {}, inp('currency', { placeholder: 'currency or USD' })),
-          h('td', {}, pick('additive', ['yes', 'last', 'never'])), h('td', {}, inp('expr', { class: 'studio-in mono', placeholder: c.base ? '' : 'mtm / 1000', disabled: !!c.base })), h('td', {}, rm)));
+        const cell = (label, node) => h('td', { 'data-label': label }, node);
+        tb.appendChild(h('tr', { class: ro ? 'bi-lw-base text-muted-d' : '', 'data-col-row': c.name || String(i), title: ro ? 'A column of the base dataset: kept as it is' : null }, cell('Column', inp('name', { disabled: !!c.base })), cell('Type', pick('type', TYPES)), cell('Role', pick('role', ROLES)),
+          cell('Meaning', inp('meaning')), cell('References', inp('references', { placeholder: 'desk' })), cell('Currency', inp('currency', { placeholder: 'currency or USD' })),
+          cell('Adds up', pick('additive', ['yes', 'last', 'never'])), cell('Formula', inp('expr', { class: 'studio-in mono', placeholder: c.base ? '' : 'mtm / 1000', disabled: !!c.base })), h('td', { 'data-label': '' }, rm)));
       });
       drawKeys();
     }).catch((e) => say(e.message, true));

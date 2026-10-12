@@ -203,6 +203,7 @@ def test_pack_dataset_to_model_to_report(browser):
     page = sign_in(browser, "wes")
     # 1. the pack-generated datasets are listed, read-only and certified; one opens with its grain, keys, meanings and time mode
     expect(page.locator('[data-models-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
+    page.click('[data-pack-group="trading"] summary')                    # the packs' datasets are grouped by pack, collapsed
     card = page.locator('[data-layer-card="pack.trading.trade"]')
     expect(card).to_be_visible()
     expect(card).to_contain_text("certified")

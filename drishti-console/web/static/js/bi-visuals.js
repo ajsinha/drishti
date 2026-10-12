@@ -54,6 +54,7 @@
     if (old && old.getAttribute('data-value') !== el.getAttribute('data-value')) { el.classList.add('bi-flash'); }
   };
 
+  var NO_DATA = 'No data for this selection. If you expected rows: the filters may exclude them, or none of your roles has access to the rows here (ask the owner of the data).';
   function emptyNote(host, text) {
     B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text }));
     return { dispose() {}, resize() {} };
@@ -200,7 +201,7 @@
     const type = spec.type;
     const horizontal = type === 'bar';
     const s = seriesOf(spec, ctx, res, type === 'combo' ? spec.wells.secondary || [] : []);
-    if (!s.cats.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!s.cats.length) { return emptyNote(host, NO_DATA); }
     const sel = selectedSet(ctx, spec);
     const hl = res.highlight ? seriesOf(spec, ctx, res.highlight, []) : null;
     const dimmed = !!(sel || hl);
@@ -241,7 +242,7 @@
   function pieChart(host, spec, ctx, res) {
     const f = spec.format || {};
     const s = seriesOf(spec, ctx, res, []);
-    if (!s.cats.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!s.cats.length) { return emptyNote(host, NO_DATA); }
     const sel = selectedSet(ctx, spec);
     const sr = s.series[0];
     const total = sr.values.reduce((a, v) => a + (typeof v === 'number' ? Math.max(v, 0) : 0), 0);
@@ -259,7 +260,7 @@
     const f = spec.format || {};
     const t = ctx.t;
     const s = seriesOf(spec, ctx, res, []);
-    if (!s.cats.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!s.cats.length) { return emptyNote(host, NO_DATA); }
     const sr = s.series[0];
     const steps = [];
     let run = 0;
@@ -287,7 +288,7 @@
     const axes = spec.wells.axis || [];
     const m = spec.wells.values[0], mi = tb.at(m);
     const cols = axes.map((a) => tb.at(a));
-    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!tb.rows.length) { return emptyNote(host, NO_DATA); }
     const roots = new Map();
     tb.rows.forEach((r) => {
       const v = typeof r[mi] === 'number' ? Math.max(r[mi], 0) : 0;
@@ -312,7 +313,7 @@
     const tb = V.table(res);
     const xf = spec.wells.axis[0], yf = spec.wells.legend[0], m = spec.wells.values[0];
     const xi = tb.at(xf), yi = tb.at(yf), mi = tb.at(m);
-    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!tb.rows.length) { return emptyNote(host, NO_DATA); }
     const xs = [], ys = [];
     tb.rows.forEach((r) => { if (xs.indexOf(String(r[xi])) < 0) { xs.push(String(r[xi])); } if (ys.indexOf(String(r[yi])) < 0) { ys.push(String(r[yi])); } });
     const vals = tb.rows.map((r) => [xs.indexOf(String(r[xi])), ys.indexOf(String(r[yi])), r[mi]]);
@@ -334,7 +335,7 @@
   function scatter(host, spec, ctx, res) {
     const tb = V.table(res);
     const d = spec.wells.details[0], xm = spec.wells.x[0], ym = spec.wells.y[0], sm = (spec.wells.size || [])[0];
-    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!tb.rows.length) { return emptyNote(host, NO_DATA); }
     const di = tb.at(d), xi = tb.at(xm), yi = tb.at(ym), si = sm ? tb.at(sm) : -1;
     const sizes = si >= 0 ? tb.rows.map((r) => Math.abs(Number(r[si]) || 0)) : [];
     const maxS = Math.max(1, ...sizes);
@@ -488,7 +489,7 @@
   function funnel(host, spec, ctx, res) {
     const f = spec.format || {};
     const s = seriesOf(spec, ctx, res, []);
-    if (!s.cats.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!s.cats.length) { return emptyNote(host, NO_DATA); }
     const sr = s.series[0];
     const sel = selectedSet(ctx, spec);
     const data = s.labels.map((l, i) => ({ name: l, value: typeof sr.values[i] === 'number' ? sr.values[i] : 0, itemStyle: { opacity: sel && !sel.has(String(s.cats[i])) ? 0.35 : 1 } }));
@@ -510,7 +511,7 @@
     const bi = tb.at('bin'), ci = tb.at('count');
     const measure = (spec.wells.values || [])[0];
     if (tb.isMasked('count') || (res.meta && (res.meta.masked || []).indexOf(measure) >= 0)) { return emptyNote(host, '•••'); }
-    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!tb.rows.length) { return emptyNote(host, NO_DATA); }
     const t = ctx.t;
     const f = spec.format || {};
     const fi = tb.at('from');
@@ -534,7 +535,7 @@
     const measure = (spec.wells.values || [])[0];
     const field = (spec.wells.axis || [])[0] || null;
     if (res.meta && (res.meta.masked || []).indexOf(measure) >= 0) { return emptyNote(host, '•••'); }
-    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!tb.rows.length) { return emptyNote(host, NO_DATA); }
     const t = ctx.t;
     const cat = 0, nf = V.numFmt(spec, ctx, measure);
     const names = tb.rows.map((r) => String(r[cat]));
@@ -599,7 +600,7 @@
     const nf = V.numFmt(spec, ctx, measure);
     const maskedValue = tb.isMasked(measure);
     host.querySelectorAll(':scope > .bi-map-note, :scope > .bi-map-crumb').forEach((n) => n.remove());
-    if (!tb.rows.length) { return emptyNote(host, 'No data for this selection.'); }
+    if (!tb.rows.length) { return emptyNote(host, NO_DATA); }
     const loc = (spec.wells.location || [])[0];
     if (loc) { return drawPlaces(host, spec, ctx, tb, w, { loc, mi, nf, maskedValue, t, f }); }
     const lat = tb.at((spec.wells.latitude || [])[0]), lon = tb.at((spec.wells.longitude || [])[0]);

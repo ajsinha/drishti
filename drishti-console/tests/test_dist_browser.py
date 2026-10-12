@@ -112,6 +112,7 @@ def test_export_subscribe_run_now_and_the_list(stack, browser, smtp, tmp_path):
     page.fill('input[name="name"]', "Morning desk pack")
     page.fill('input[name="recipients"]', "rita, hana, ann")
     page.select_option('select[name="format"]', "html")
+    page.click("[data-when] summary")                                                   # the schedule text sits under Advanced
     page.fill('input[name="schedule"]', "business-days 07:30")
     page.click("[data-subscribe-form] button[type=submit]")
     page.wait_for_url("**/reports?msg=**")

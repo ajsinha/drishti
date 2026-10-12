@@ -39,17 +39,29 @@
       <fieldset class="al-src wide2"><legend>Watch</legend>
         <label>A<select name="source_type" class="studio-select" data-pick="source">
           <option value="visual"{% if f.source_type == 'visual' %} selected{% endif %}>visual of a BI report</option>
-          <option value="dataset"{% if f.source_type == 'dataset' %} selected{% endif %}>measure of a dataset</option>
+          <option value="model"{% if f.source_type == 'model' %} selected{% endif %}>measure of a model</option>
+          <option value="dataset"{% if f.source_type == 'dataset' %} selected{% endif %}>measure of a version 1 dataset</option>
           <option value="field"{% if f.source_type == 'field' %} selected{% endif %}>field of a Sutra entity</option></select></label>
         <div class="al-grp" data-group="source" data-when="visual">
           <label>Report<input name="report" class="studio-in mono" value="{{ f.report or '' }}" placeholder="file:report:daily-risk"></label>
           <label>Page<input name="page" class="studio-in mono" value="{{ f.page or '' }}"></label>
           <label>Visual<input name="visual" class="studio-in mono" value="{{ f.visual or '' }}"></label>
           <p class="text-muted-d wide" data-visual-titles aria-live="polite"></p>
-          <label>Column (blank: the first number)<input name="measure" class="studio-in mono" value="{{ f.measure or '' }}"></label>
-          <label>Many rows become one number by<select name="reduce" class="studio-select">{% for r in ['first', 'sum', 'max', 'min', 'avg', 'count', 'last'] %}<option{% if f.reduce == r %} selected{% endif %}>{{ r }}</option>{% endfor %}</select></label>
+          <label>Which column to watch<input name="measure" class="studio-in mono" value="{{ f.measure or '' }}" placeholder="blank: the first number" data-visual-column></label>
+          <label>A visual with several rows has several cells. Watch<select name="reduce" class="studio-select" data-reduce>{% for r, w in [('first', 'the first row'), ('sum', 'the sum of all rows'), ('max', 'the largest row'), ('min', 'the smallest row'), ('avg', 'the average of the rows'), ('count', 'the number of rows'), ('last', 'the last row')] %}<option value="{{ r }}"{% if f.reduce == r %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
+          <p class="text-muted-d wide" data-visual-cells aria-live="polite"></p>
           <input type="hidden" name="state" value="{{ f.state or '' }}">
           {% if f.state %}<p class="text-muted-d wide">With the filters you had set on the screen (slicers, selections, drill path) when you pressed <b>Alert me</b>.</p>{% endif %}
+        </div>
+        <div class="al-grp" data-group="source" data-when="model">
+          <label>Model<select name="model_ref" class="studio-select" data-al-model data-value="{{ f.model_ref or '' }}"><option value="">(loading the models)</option></select></label>
+          <label>Measure<select name="model_measure" class="studio-select" data-al-measure><option value="">(choose a model first)</option></select></label>
+          <fieldset class="al-filters wide" data-al-filters-box><legend>Only rows where (optional)</legend>
+            <div data-al-filters></div>
+            <p><button type="button" class="btn-pill btn-ghost" data-al-addfilter>Add a filter</button></p></fieldset>
+          <label>If it answers with several rows, watch<select name="model_reduce" class="studio-select">{% for r, w in [('first', 'the first row'), ('sum', 'the sum of all rows'), ('max', 'the largest row'), ('min', 'the smallest row'), ('avg', 'the average of the rows'), ('last', 'the last row')] %}<option value="{{ r }}"{% if f.model_reduce == r %} selected{% endif %}>{{ w }}</option>{% endfor %}</select></label>
+          <input type="hidden" name="model_query" value="{{ f.model_query or '' }}">
+          <p class="text-muted-d wide" data-al-model-note>The number is the model's measure read as you, with your row rules and masks.</p>
         </div>
         <div class="al-grp" data-group="source" data-when="dataset">
           <label>Dataset<input name="dataset" class="studio-in mono" value="{{ f.dataset or '' }}" placeholder="file:dataset:trading"></label>

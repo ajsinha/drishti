@@ -17,6 +17,20 @@
 
 ## Unreleased
 
+- **Console: the W1 QA findings.** Analyse reads **models and pack datasets** (a grouped *Model or dataset* picker; extracts and slices go through the model
+  query, shape rows; promoting a model slice to a report says it is not available yet). Alerts get a **measure of a model** source with pickers (model, measure,
+  filters; no typed ids), the visual source asks which column and which row or aggregate to watch, and a masked number cannot be saved (Save looks first and says
+  why). The model designer: Publish returns for a newer saved version of a published model, a private-workspace model shows Publish disabled with the reason and
+  **Move to a workspace**, the security rule has a **Roles** picker (`GET /bi/model-api/roles`) with *roles without a rule see no rows*, the header agrees with the
+  Security tab, a fresh canvas shows hints not errors, the Datasets list leaves the Security, Measures and Contract tabs, and **Used by**, **New report on this
+  model** and **New board on this model** make plain that a report references a model and never owns it (`GET /bi/model-api/consumers`, `POST
+  /bi/model-api/rebind`; **Make it a model** offers to move the other reports on the dataset; a used model cannot be deleted, a report's deletion never touches its
+  model; a report-only measure is labelled with **Move to the model**). The Fields pane lists Measures first and says whether a measure is a default or the model's.
+  One **New dataset** entry (the guided tables builder is linked from its first step), the wizard fits 390 px and its column table is readable (base columns greyed,
+  *Adds up* no for text, *One row per* preselects the base key); the designer's start and *New item* offer models and pack datasets in groups; the Models page lists
+  your models and datasets first and the packs' datasets in collapsible groups; Subscribe's **When** is built from choices; masked matrix cells read `•••` everywhere;
+  wide matrices scroll inside their visual; a Check on a board clears when the board changes; a non-member is told so. Docs: BI_GUIDE section 23, tutorial 10.
+
 - **Changed: every BI consumer asks through the model query language** (wave W1 packages S4 and S5, [BI_MODEL_SPEC.md](docs/architecture/BI_MODEL_SPEC.md)
   section 5.9). Report visuals (and with them exports, subscriptions, board and live tiles, the embedded report element), Analyse extracts (`POST
   /datasets/{id}/query`), alerts, dataset tests and AI ask/explain become model queries on the dataset's model and run through the one validator and compiler, as the

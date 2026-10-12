@@ -36,16 +36,17 @@
   <div class="bi-layer-picks" data-nm-picks role="group" aria-label="Datasets for the new model"></div>
   <p class="bi-actions"><button type="button" class="btn-pill btn-accent" data-nm-go>Create and open the designer</button> <button type="button" class="btn-pill btn-ghost" data-nm-cancel>Cancel</button></p>
 </section>
-<section class="bi-sec" aria-labelledby="pdH"><h2 id="pdH"><i class="bi bi-box-seam" aria-hidden="true"></i> Datasets from the packs</h2>
-  <input type="search" class="studio-in bi-layer-search" data-search placeholder="Search datasets (name, pack, kind)" aria-label="Search datasets">
-  <div class="bi-cards" data-packs></div>
-  <p class="bi-empty" data-packs-empty hidden>No pack dataset you may open: ask an administrator for a pack, or make a dataset from a connector query.</p></section>
+<input type="search" class="studio-in bi-layer-search" data-search placeholder="Search models and datasets (name, pack, kind)" aria-label="Search models and datasets">
+<section class="bi-sec" aria-labelledby="mdH"><h2 id="mdH"><i class="bi bi-diagram-3" aria-hidden="true"></i> Your models</h2>
+  <div class="bi-cards" data-models></div>
+  <p class="bi-empty" data-models-empty hidden>No model yet. <strong>New model</strong> above, or <strong>Make it a model</strong> on any dataset.</p></section>
 <section class="bi-sec" aria-labelledby="udH"><h2 id="udH"><i class="bi bi-hdd-stack" aria-hidden="true"></i> Your datasets</h2>
   <div class="bi-cards" data-items></div>
   <p class="bi-empty" data-items-empty hidden>None yet. <a href="/bi/datasets/new-layer">New dataset</a> makes one from a connector query, a Python table, a model's answer or a narrowed pack dataset.</p></section>
-<section class="bi-sec" aria-labelledby="mdH"><h2 id="mdH"><i class="bi bi-diagram-3" aria-hidden="true"></i> Models</h2>
-  <div class="bi-cards" data-models></div>
-  <p class="bi-empty" data-models-empty hidden>No model yet. <strong>New model</strong> above, or <strong>Make it a model</strong> on any dataset.</p></section>
+<section class="bi-sec" aria-labelledby="pdH"><h2 id="pdH"><i class="bi bi-box-seam" aria-hidden="true"></i> Datasets from the packs</h2>
+  <p class="text-muted-d bi-small-note">One group per pack; open a group to see its datasets. A kind with no columns is not listed.</p>
+  <div data-packs></div>
+  <p class="bi-empty" data-packs-empty hidden>No pack dataset you may open: ask an administrator for a pack, or make a dataset from a connector query.</p></section>
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-models.js?v={{ ASSET_V }}"></script>{% endblock %}
