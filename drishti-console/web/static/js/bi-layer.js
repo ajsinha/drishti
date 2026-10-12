@@ -42,6 +42,60 @@
     href: (ref) => (ref.indexOf('dataset:') === 0 ? '/bi/ds/' + encodeURIComponent(ref.slice(8)) : '')
   };
 
+  /**
+   * The things a consumer can read, grouped for a picker: Models (published first, each with its version and state so a draft and a published copy of one
+   * name are told apart), Your datasets, then the packs' datasets, one group per pack (a kind with no columns is left out: there is nothing to read in it).
+   * Every entry is {value, label, ref, kind}: `ref` is what a consumer binds (`name@major` for a model, `dataset:<name>` for a dataset), `value` is `mq:`+ref
+   * for a model and `dataset:`+name for a dataset (the form Analyse's extract takes). `opts.legacy` adds the version 1 datasets as a last group.
+   */
+  B.layer.groups = function (opts) {
+    opts = opts || {};
+    return B.layer.get('datasets').then((d) => {
+      const groups = [];
+      const stateOf = (m) => (m.status === 'published' ? 'published' : m.status || 'draft');
+      const models = (d.models || []).filter((m) => m.kind !== 'compat').slice().sort((a, b) => (a.status === 'published' ? 0 : 1) - (b.status === 'published' ? 0 : 1) || String(a.title).localeCompare(String(b.title)));
+      if (models.length) {
+        groups.push({ label: 'Models', items: models.map((m) => {
+          const ref = m.query || (m.name + '@1');
+          return { value: 'mq:' + ref, ref, kind: 'model', label: (m.title || m.name) + ' (model ' + (m.version || ref.split('@')[1] || '1') + ', ' + stateOf(m) + ')', title: m.title || m.name };
+        }) });
+      }
+      if ((d.items || []).length) {
+        groups.push({ label: 'Your datasets', items: d.items.map((x) => ({ value: 'dataset:' + x.name, ref: 'dataset:' + x.name, kind: 'dataset', label: x.title || x.name, title: x.title || x.name })) });
+      }
+      const byPack = {};
+      (d.packs || []).filter((x) => x.columns == null || x.columns > 0).forEach((x) => { (byPack[x.pack] = byPack[x.pack] || []).push(x); });
+      Object.keys(byPack).sort().forEach((pk) => groups.push({ label: 'Pack ' + pk, items: byPack[pk].map((x) => ({ value: 'dataset:' + x.name, ref: 'dataset:' + x.name, kind: 'dataset', label: x.title || x.name, title: x.title || x.name })) }));
+      return opts.legacy ? opts.legacy().then((list) => {
+        if (list && list.length) { groups.push({ label: 'Other datasets (version 1)', items: list.map((x) => ({ value: x.id, ref: x.id, kind: 'legacy', label: x.title || x.id, title: x.title || x.id })) }); }
+        return groups;
+      }, () => groups) : groups;
+    });
+  };
+  /** Fills a select with `groups` (optgroups) after a placeholder option. */
+  B.layer.fillSelect = function (sel, groups, placeholder) {
+    B.clear(sel);
+    sel.appendChild(B.h('option', { value: '', text: placeholder || '(choose)' }));
+    groups.forEach((g) => sel.appendChild(B.h('optgroup', { label: g.label }, g.items.map((i) => B.h('option', { value: i.value, text: i.label })))));
+  };
+
+  /** Who uses a model: {known, consumers[{kind, id, title, href}]} from the server's consumers list. A report references a model, it never owns it. */
+  B.layer.consumers = (ref) => B.layer.get('consumers?ref=' + encodeURIComponent(ref)).catch(() => ({ known: false, consumers: [] }));
+  const KIND_WORD = { report: 'Reports', board: 'Boards', alert: 'Alerts', subscription: 'Subscriptions', notebook: 'Notebooks' };
+  /** Draws the "Used by" list into `host`, grouped by kind; says so when the server cannot list the consumers yet. Returns the answer. */
+  B.layer.drawUsedBy = (host, ref) => B.layer.consumers(ref).then((r) => {
+    B.clear(host);
+    if (!r.known) { host.appendChild(B.h('p', { class: 'text-muted-d bi-small-note', 'data-used-by-unknown': '', text: 'The list of what uses this model is not available from the server yet.' })); return r; }
+    if (!r.consumers.length) { host.appendChild(B.h('p', { class: 'text-muted-d', 'data-used-by-none': '', text: 'Nothing uses this model yet. Start a report or a board on it: they will share it, and a change to the model reaches them all.' })); return r; }
+    Object.keys(KIND_WORD).forEach((k) => {
+      const list = r.consumers.filter((c) => c.kind === k);
+      if (!list.length) { return; }
+      host.appendChild(B.h('h4', { text: KIND_WORD[k] + ' (' + list.length + ')' }));
+      host.appendChild(B.h('ul', { class: 'bi-layer-list', 'data-used-by': k }, list.map((c) => B.h('li', {}, B.h('a', { href: c.href, text: c.title })))));
+    });
+    return r;
+  });
+
   // ---- one visual as a model query ----------------------------------------------------------------------------------
   const OPS = { eq: 'eq', ne: 'ne', in: 'in', 'not-in': 'not-in', lt: 'lt', le: 'le', gt: 'gt', ge: 'ge', between: 'between', contains: 'contains', 'starts-with': 'starts-with', 'is-null': 'is-null', 'not-null': 'not-null', relative: 'relative', top: 'top' };
 

@@ -48,16 +48,26 @@
         h('p', { class: 'bi-card-meta mono', text: kind === 'model' ? (d.name || '') : d.name }),
         h('p', { class: 'bi-card-badges' }, d.endorsement === 'certified' ? badge('certified', 'bi-certified', 'patch-check') : null, kind === 'pack' ? badge('read-only', '', 'lock') : null),
         h('p', { class: 'bi-card-meta', text: meta }),
+        d.description ? h('p', { class: 'bi-card-desc text-muted-d', text: String(d.description).slice(0, 160) }) : null,
         h('p', { class: 'bi-actions' }, use, ' ', h('a', { class: 'btn-pill btn-ghost bi-small', href: open, text: kind === 'model' && d.kind !== 'compat' ? 'Open the designer' : 'Open' })));
     }
     function draw() {
       const t = (q('[data-search]').value || '').trim().toLowerCase();
-      [['packs', 'pack'], ['items', 'item'], ['models', 'model']].forEach(([key, kind]) => {
+      const match = (d) => !t || (d.name + ' ' + d.title + ' ' + (d.pack || '') + ' ' + (d.kind || '')).toLowerCase().indexOf(t) >= 0;
+      [['items', 'item'], ['models', 'model']].forEach(([key, kind]) => {
         const box = B.clear(q('[data-' + key + ']'));
-        const list = all[key].filter((d) => !t || (d.name + ' ' + d.title + ' ' + (d.pack || '') + ' ' + (d.kind || '')).toLowerCase().indexOf(t) >= 0);
+        const list = all[key].filter(match);
         list.forEach((d) => box.appendChild(card(d, kind)));
         q('[data-' + key + '-empty]').hidden = list.length > 0;
       });
+      // the packs' datasets, one collapsible group per pack (a kind with no columns has nothing to read and is left out)
+      const packs = B.clear(q('[data-packs]')), by = {};
+      all.packs.filter((d) => d.columns == null || d.columns > 0).filter(match).forEach((d) => { (by[d.pack] = by[d.pack] || []).push(d); });
+      Object.keys(by).sort().forEach((pk) => {
+        const cards = h('div', { class: 'bi-cards' }, by[pk].map((d) => card(d, 'pack')));
+        packs.appendChild(h('details', { class: 'bi-packgroup', 'data-pack-group': pk, open: !!t || Object.keys(by).length === 1 }, h('summary', {}, h('strong', { text: pk }), h('small', { class: 'text-muted-d', text: ' ' + by[pk].length + (by[pk].length === 1 ? ' dataset' : ' datasets') })), cards));
+      });
+      q('[data-packs-empty]').hidden = Object.keys(by).length > 0;
     }
     q('[data-search]').addEventListener('input', draw);
     // New model: a title, a workspace, the datasets to start with

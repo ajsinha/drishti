@@ -728,5 +728,35 @@ for a narrowed dataset), the grain keys as chips, time and refresh, with the ser
 review, **Save draft** or **Save and publish**, then *Open the dataset*, *Start a report on it* or *Use it in a new model*. Every kind of dataset answers
 queries: pack and narrowed datasets, connector queries, Python Transforms and other models' answers, each asked as the reader ([DATASETS.md section 13](DATASETS.md)).
 
-**Analyse** opens a model's rows as one model query of shape `rows` (`{model, fields}` on `/bi/explore/extract`); a dataset extract is unchanged.
+**Analyse** (`/bi/explore`) offers a **Model or dataset** picker in groups: *Models* (each with its version and state, so a draft and a published copy of
+one name are told apart), *Your datasets*, one group per pack (a kind with no columns is left out) and *Other datasets (version 1)*. A model or a pack dataset
+opens as one model query of shape `rows` (`POST /bi/explore/extract` with `{dataset: "mq:trades-and-desks@1", fields}` or `{dataset: "dataset:pack.trading.trade",
+fields}`; `{model, fields}` also works); slices, SQL and Python cells and the extra extracts of a notebook read the same sources. A slice of a model cannot be
+promoted to a report from here yet (`DRS-9070` says so): start a report on the model with **Use** and build the visual in the designer.
+
+**An alert on a model** (`/alerts/new`, *Watch: measure of a model*): pick the model (or a pack dataset), then one of **its measures**, then optional filters
+(a field, an operator and values, chosen from the model's fields; nothing is typed as an id). The console writes the model query
+(`source: {type: model, model, query: {select: {fields: [], measures: [one]}, where: [...]}, reduce}`); if the query could answer several rows, *watch* says
+which row counts (first, sum, largest, ...). The visual source asks the same of a visual with several rows: which column, and which cell or aggregate. A number
+masked for you cannot be saved as an alert: Save looks first and says why, as *Check now* does.
+
+**A report references a model, it never owns it.** Many reports, boards, alerts, subscriptions and notebooks share one model. The model designer shows **Used
+by** (from the server's consumers list, `GET /models/{ref}/consumers`; where an older server has none the panel says the list is not available) with **New
+report on this model** and **New board on this model**. **Make it a model** creates a *shared* model from an implicit one, binds this report to it and offers to
+move the other reports on the same dataset onto it too (`POST /bi/model-api/rebind`); the report designer's Fields header says "this report references the
+model" and how many reports a change reaches. A measure that belongs to one report only is labelled *this report only* with **Move to the model**, which
+opens the model designer with the measure added to the draft to check, save and publish. **Delete** of a model is refused while anything uses it and names
+what does; deleting a report never touches its model.
+
+**In the model designer** a model in your **private workspace** shows Publish disabled with the reason and **Move to a workspace** beside it (a workspace
+picker; no dead end); a published model with a newer saved version shows Publish again once it checks clean. **Security**: the *Roles* choice lists the roles
+the server knows (`GET /bi/model-api/roles`; where the server has no list, the roles your account carries and those the model already names, and any other
+role can be typed) with the note *roles without a rule see no rows*. The header badge agrees with the Security tab (*Valid, 1 to fix before publishing*), a
+fresh canvas shows hints rather than red errors until you act, and the Datasets list leaves the Security, Measures and Contract tabs (a *Skip to the canvas* link
+comes first). The Fields pane lists **Measures first**, labelled *default* (made from a column) or *model* (written in the model) where both exist.
+The Models page lists *Your models* and *Your datasets* first, then the packs' datasets in a collapsible group per pack under one full-width search.
+**New dataset** is one entry everywhere (`/bi/datasets/new-layer`); its guided tables builder (a version 1 dataset from several kinds) is linked from step 1.
+The designer's start and a workspace's *New item* offer **Model or dataset** in groups (a report reads one model; a dataset reads as its own small model).
+The Subscribe form's **When** is built from choices (every day, every business day, every week on a day, the last business day of the month, every hour) with the
+schedule text under *Advanced*.
 

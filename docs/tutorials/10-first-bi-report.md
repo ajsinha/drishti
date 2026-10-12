@@ -44,7 +44,7 @@ About 60 minutes.
 - the **Counterparty risk** sample: slicers that reach across packs, a selected bar, and drill-through;
 - **two datasets in one report**: a dataset composed of two others, joined in YAML, and a slicer of one dataset that filters the visuals of the other;
 - (step 13) **a dataset of your own, built in the wizard**: pick a connector, tick columns, add a measure, set a refresh, save a draft, publish it and start a report on it, with no YAML typed.
-- (preview, 2.2.0) **models**: a pack dataset with nothing to build, a report on it at once, then a model of trades and desks with a suggested relationship, a measure, a row rule and the security safeguard, in the UI, over the API and as YAML.
+- (preview, 2.2.0) **models**: a pack dataset with nothing to build, a report on it at once, then a model of trades and desks with a suggested relationship, a measure, a row rule and the security safeguard, published, opened in Analyse and watched by an alert, in the UI, over the API and as YAML.
 
 ## Step 1 · Look at the dataset
 
@@ -481,9 +481,19 @@ browser test's small lake (two days of 60 trades over three desks); yours differ
    pack)*): press **Add**.
 4. **Measures**: dataset `trade`, column `mtm`, **Add measure**: `Sum of mtm`, `sum(trade.mtm)`, adds up: yes.
 5. **Security**: on `trade`, roles `desk-head`, *the column matches the reader*, column `desk`, *the reader's desks*, **Add the rule**. The tab shows ⚠ 1:
-   *The role desk-head is restricted elsewhere in this model, but desk has no rule*. Press **desk-head may see every row of desk** (desks are not
-   secret); the ⚠ goes. Add a second rule so you see every trade yourself: your role, *every row*.
-6. **Save** (the badge says *Valid*), then **Start a report**: the Fields pane's header says *Model Trades and desks*.
+   *The role desk-head is restricted elsewhere in this model, but desk has no rule*, and the header badge agrees (*Valid, 1 to fix before publishing*).
+   Press **desk-head may see every row of desk** (desks are not secret); the ⚠ goes. Add a second rule so you see every trade yourself: under **Roles**
+   tick your own role (the list holds the roles the server knows; any other can be typed under it), *every row*. The note under the list says *roles
+   without a rule see no rows*: a reader no rule matches reads nothing of that dataset.
+6. **Save** (the badge says *Valid*), then **New report on this model**: the Fields pane's header says *Model Trades and desks*, *this report
+   references the model*. A model is shared: **Used by** (above the tabs) lists the reports, boards, alerts, subscriptions and notebooks that read it, and
+   **New board on this model** starts a board on it. Deleting a report never deletes its model, and a model that is used cannot be deleted.
+7. **Publish.** In your private workspace Publish is disabled with the reason and **Move to a workspace** beside it: choose a shared workspace and Move, then
+   **Publish** (it checks the model and its security safeguard first). A report on the published model publishes the same way from its item page.
+8. **Analyse it.** Open **Analyse** (`/bi/explore`): the *Model or dataset* picker lists *Models*, *Your datasets* and one group per pack. Choose
+   **Trades and desks (model 1.0.0, published)**, tick `trade.desk`, `trade.mtm` and `desk.name`, **Open the extract**: the rows you may see, as one model query.
+9. **Alert on it.** **Alerts → New**, *Watch: measure of a model*: choose the model, then the measure `Sum of mtm`, a filter (`trade.desk is one of DESK-FX`),
+   *Tell me when* it is above a limit, **Check now** (it reads your own number; a masked one cannot be saved) and **Save alert**.
 
 **CLI.** The same through the REST API, with the token of tutorial 1. The pack datasets, then a question to the implicit model of Trade:
 
@@ -528,8 +538,29 @@ security:
     desk: [desk-head]
 ```
 
-and the report of step 6 says `model: trades-and-desks@1` where the reports above say `dataset:`. In W1 such a report is designed and viewed; publishing
-it waits for the server to bind reports to models ([REPORTS.md section 18](../guides/REPORTS.md#18-a-report-on-a-model-wave-w1)).
+and the report of step 6 says `model: trades-and-desks@1` where the reports above say `dataset:`. It publishes like any report once its model is published and
+passes its safeguard ([REPORTS.md section 18](../guides/REPORTS.md#18-a-report-on-a-model-wave-w1)).
+
+**CLI and YAML for steps 7 to 9.** Publish the model and ask it (through the console the same two calls are `/bi/api/items/<id>/publish` and
+**`/bi/api/mq`**; the console's own `/bi/model-api/...` routes are the designer's helpers and have no `mq`), and the alert the form writes:
+
+```
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' -d '{"note":"from the tutorial"}' \
+    http://localhost:18480/api/v1/bi/items/<model item id>/publish
+$ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' \
+    -d '{"mq":1,"model":"trades-and-desks@1","select":{"fields":["desk.name"],"measures":["Sum of mtm"]},"shape":"rows"}' \
+    http://localhost:18480/api/v1/bi/mq
+```
+
+```yaml
+# an alert on a measure of the model (what Alerts -> New writes as PUT /api/v1/me/measure-alerts/<name>, with title, severity, trigger and delivery around it)
+source:
+  type: model
+  model: trades-and-desks@1
+  query: {select: {fields: [], measures: ["Sum of mtm"]}, where: [{field: trade.desk, op: in, values: [DESK-FX]}]}
+  reduce: first
+condition: {type: threshold, op: above, value: 1000000}
+```
 
 ## Next steps
 

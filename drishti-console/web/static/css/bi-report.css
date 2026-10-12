@@ -153,3 +153,7 @@ h3.bi-text { font-size: 1.1rem; }
 /* an entity view: the Drishti view of the selected entity, in a frame of the visual's size */
 .bi-entity-frame { display: block; width: 100%; height: 100%; min-height: 12rem; border: 0; background: var(--d-bg); }
 .bi-entity-note { display: flex; align-items: center; justify-content: center; text-align: center; height: 100%; }
+
+/* Wave 1 QA: a wide matrix scrolls inside its visual instead of being squeezed or clipped; touch targets at phone width */
+.bi-matrix { width: max-content; min-width: 100%; }
+@media (max-width: 480px) { .bi-vis-btn, .bi-vis-head .btn-pill, .bi-chipbtn { min-height: 44px; min-width: 44px; } }

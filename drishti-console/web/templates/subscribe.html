@@ -30,8 +30,17 @@
       <input type="hidden" name="target" value="{{ target_json }}">
       <input type="hidden" name="title" value="{{ form.title or '' }}">
       <label>Name<input name="name" class="studio-in" value="{{ form.name or '' }}" required maxlength="64"></label>
-      <label>When<input name="schedule" class="studio-in mono" value="{{ form.schedule or '' }}" list="subWhen" required data-schedule></label>
-      <datalist id="subWhen">{% for w in when %}<option value="{{ w }}">{% endfor %}</datalist>
+      <fieldset class="wide dist-when" data-when><legend>When</legend>
+        <label>Send<select class="studio-select" data-when-kind aria-label="How often">
+          <option value="daily">every day</option><option value="business-days">every business day</option><option value="weekly">every week on</option>
+          <option value="month-end">on the last business day of the month</option><option value="hourly">every hour</option><option value="custom">on a schedule I write (advanced)</option></select></label>
+        <label data-when-day-row hidden>Day<select class="studio-select" data-when-day><option value="mon">Monday</option><option value="tue">Tuesday</option><option value="wed">Wednesday</option><option value="thu">Thursday</option><option value="fri">Friday</option><option value="sat">Saturday</option><option value="sun">Sunday</option></select></label>
+        <label data-when-time-row>At<input type="time" class="studio-in" data-when-time value="07:30"></label>
+        <p class="text-muted-d wide" data-when-says aria-live="polite"></p>
+        <p class="text-muted-d wide" data-model-note aria-live="polite"></p>
+        <details class="wide"><summary>Advanced: the schedule as text</summary>
+          <label>Schedule<input name="schedule" class="studio-in mono" value="{{ form.schedule or '' }}" list="subWhen" required data-schedule></label>
+          <datalist id="subWhen">{% for w in when %}<option value="{{ w }}">{% endfor %}</datalist></details></fieldset>
       <label>Data for<select name="date" class="studio-select">
         <option value="today"{% if form.date == 'today' %} selected{% endif %}>the current business day</option>
         <option value="previous"{% if form.date == 'previous' %} selected{% endif %}>the business day before</option>
@@ -67,4 +76,4 @@
   </div></section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/people.js?v={{ ASSET_V }}"></script><script src="/static/js/subscribe-recipients.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/people.js?v={{ ASSET_V }}"></script><script src="/static/js/subscribe-recipients.js?v={{ ASSET_V }}"></script><script src="/static/js/subscribe-when.js?v={{ ASSET_V }}"></script>{% endblock %}

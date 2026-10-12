@@ -121,9 +121,10 @@
         const mk = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-make-model': '', text: 'Make it a model' });
         mk.addEventListener('click', () => promote(mk));
         head.append(h('p', {}, B.icon('boxes'), ' ', h('strong', { text: f.title || 'Implicit model' })),
-          h('p', { class: 'text-muted-d bi-small-note', text: 'Made from one dataset: its pack dimensions come along. To add another fact, relationships, measures or security, make it a model.' }), mk);
+          h('p', { class: 'text-muted-d bi-small-note', text: 'Made from one dataset: its pack dimensions come along. Make it a model creates a shared model that this and other reports reference (it is not part of this report); you can then move the other reports on the same dataset onto it. To add another fact, relationships, measures or security, make it a model.' }), mk);
       } else {
         head.append(h('p', {}, B.icon('boxes'), ' Model ', h('strong', { text: f.title || S.ref }), ' ', h('code', { text: S.ref })),
+          h('p', { class: 'text-muted-d bi-small-note' }, 'This report references the model; it does not own it. ', h('span', { 'data-affects': '' })),
           h('p', {}, h('a', { class: 'btn-pill btn-ghost bi-small', href: '/bi/models', 'data-open-model': '', text: 'Open the model' })));
       }
     };
@@ -139,6 +140,14 @@
         const a = head.querySelector('[data-open-model]');
         if (a && it) { a.href = '/bi/md/' + B.id2path(it.id); }
       }).catch(() => {});
+    }
+    if (!m.implicit) {
+      B.layer.consumers(S.ref).then((r) => {
+        const span = head.querySelector('[data-affects]');
+        if (!span || !r.known) { return; }
+        const n = r.consumers.filter((c) => c.kind === 'report').length;
+        span.textContent = 'Changes to the model affect ' + n + (n === 1 ? ' report' : ' reports') + (r.consumers.length > n ? ' and ' + (r.consumers.length - n) + ' other item' + (r.consumers.length - n === 1 ? '' : 's') : '') + '.';
+      });
     }
     // Query: the selected visual's model query
     const qbox = h('details', { class: 'bi-md-query', 'data-visual-query': '' }, h('summary', { text: 'Query of the selected visual' }), h('pre', { class: 'bi-body mono', 'data-visual-query-text': '', tabindex: '0' }));
@@ -156,8 +165,24 @@
   function promote(btn) {
     const go = () => B.busy(btn, () => B.layer.post('promote', { report: S.reportId, title: (D.model && D.model.title ? D.model.title : 'Report') + ' model', etag: D.item && D.item.etag })).then((r) => {
       D.dirty = false;
-      B.near(btn, 'Made the model ' + r.ref + ' (a draft) and moved this report onto it. Opening it…', false);
-      window.setTimeout(() => { window.location.href = r.href; }, 900);
+      return B.layer.consumers('dataset:' + r.dataset).then((c) => {
+        const others = (c.known ? c.consumers : []).filter((x) => x.kind === 'report' && x.id !== S.reportId);
+        if (!others.length) {
+          B.near(btn, 'Made the shared model ' + r.ref + ' (a draft) and moved this report onto it. Opening it…', false);
+          window.setTimeout(() => { window.location.href = r.href; }, 900);
+          return null;
+        }
+        const box = h('div', { class: 'bi-warn', 'data-rebind-box': '', role: 'group', 'aria-label': 'Other reports on the same dataset' }, h('p', { text: 'Made the shared model ' + r.ref + ' (a draft); this report now references it. ' + others.length + ' other report' + (others.length === 1 ? '' : 's') + ' read the same dataset. Move them onto the model too?' }),
+          h('ul', { class: 'bi-layer-list' }, others.map((x) => h('li', {}, h('label', {}, h('input', { type: 'checkbox', checked: true, 'data-rebind': x.id }), ' ' + x.title)))));
+        const yes = h('button', { type: 'button', class: 'btn-pill btn-accent bi-small', 'data-rebind-go': '', text: 'Move the ticked reports' });
+        const no = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-rebind-skip': '', text: 'Leave them' });
+        const leave = () => { window.location.href = r.href; };
+        yes.addEventListener('click', () => B.busy(yes, () => B.layer.post('rebind', { ref: r.ref, reports: B.qa('[data-rebind]', box).filter((i) => i.checked).map((i) => i.getAttribute('data-rebind')) })).then(leave).catch((e) => B.near(yes, e.message, true)));
+        no.addEventListener('click', leave);
+        box.append(yes, ' ', no);
+        btn.after(box);
+        return null;
+      });
     }).catch((e) => B.near(btn, e.message, true));
     if (D.dirty) { return B.confirm(btn, 'Save the report first? Make it a model saves the report bound to the new model.', 'Save and continue').then((yes) => { if (yes) { const s = canvas.querySelector('[data-save]'); if (s) { s.click(); } window.setTimeout(() => { if (!D.dirty) { go(); } }, 1500); } }); }
     return go();

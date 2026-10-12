@@ -25,6 +25,7 @@
   const h = M.h, q = M.q;
   const FORMATS = ['', 'amount0', 'amount2', 'signed0', 'signed2', 'pct', 'integer', 'decimal2'];
   const AGGS = [['', 'the column\'s default'], ['sum', 'sum'], ['avg', 'average'], ['min', 'minimum'], ['max', 'maximum'], ['count', 'count'], ['distinct', 'distinct count']];
+  const FORMAT_WORDS = { amount0: 'amount, no decimals', amount2: 'amount, 2 decimals', signed0: 'signed amount, no decimals', signed2: 'signed amount, 2 decimals', pct: 'percent', integer: 'whole number', decimal2: 'number, 2 decimals' };
   const ATTRS = [['user.desks', 'the reader\'s desks'], ['user.roles', 'the reader\'s roles']];
   const sel = (options, value, attrs) => h('select', Object.assign({ class: 'studio-select' }, attrs || {}), options.map((o) => { const [v, t] = Array.isArray(o) ? o : [o, o || '(none)']; return h('option', { value: v, text: t, selected: String(value == null ? '' : value) === v }); }));
   const fieldsOf = (filter) => { const out = []; Object.keys(M.infos).forEach((a) => M.infos[a].columns.forEach((c) => { if (!filter || filter(c)) { out.push(a + '.' + c.name); } })); return out; };
@@ -72,7 +73,8 @@
     const aliases = Object.keys(M.doc.datasets || {});
     q('[data-count-measures]').textContent = Object.keys(M.doc.measures || {}).length || '';
     // new measure from a column
-    const dsSel = sel(aliases, aliases[0], { 'data-nm-alias': '', 'aria-label': 'Dataset', disabled: M.readOnly });
+    const fact = aliases.find((a) => (M.doc.datasets[a] || {}).role === 'fact') || aliases.find((a) => (M.doc.datasets[a] || {}).role !== 'dimension') || aliases[0];
+    const dsSel = sel(aliases, fact, { 'data-nm-alias': '', 'aria-label': 'Dataset', disabled: M.readOnly });
     const colSel = h('select', { class: 'studio-select', 'data-nm-column': '', 'aria-label': 'Column', disabled: M.readOnly });
     const aggSel = sel(AGGS, '', { 'data-nm-agg': '', 'aria-label': 'Aggregation', disabled: M.readOnly });
     const fillCols = () => {
@@ -116,7 +118,7 @@
       nm.addEventListener('change', () => renameMeasure(name, nm.value, nm));
       const ex = h('input', { class: 'studio-in mono', value: m.expr || (m.python ? 'python: ' + m.python : ''), list: 'mdFormulaWords', 'aria-label': 'Formula of ' + name, 'data-m-expr': name, disabled: M.readOnly || !!m.python });
       ex.addEventListener('change', () => M.edit((doc) => { doc.measures[name].expr = ex.value.trim(); }, true));
-      const fm = sel(FORMATS.indexOf(m.format || '') < 0 ? FORMATS.concat([m.format]) : FORMATS, m.format || '', { 'aria-label': 'Format of ' + name, 'data-m-format': name, disabled: M.readOnly });
+      const fm = sel((FORMATS.indexOf(m.format || '') < 0 ? FORMATS.concat([m.format]) : FORMATS).map((f) => (f ? [f, FORMAT_WORDS[f] || f] : ['', 'from the column\'s meaning'])), m.format || '', { 'aria-label': 'Format of ' + name, 'data-m-format': name, disabled: M.readOnly });
       fm.addEventListener('change', () => M.edit((doc) => { if (fm.value) { doc.measures[name].format = fm.value; } else { delete doc.measures[name].format; } }, true));
       const addv = m.additive === false ? 'never' : m.additive && m.additive['over-time'] ? 'last' : 'yes';
       const ad = sel([['yes', 'yes'], ['last', 'not over time (last)'], ['never', 'never']], addv, { 'aria-label': 'Additivity of ' + name, 'data-m-additive': name, disabled: M.readOnly });
@@ -135,7 +137,7 @@
     if (implicit.length) {
       pane.appendChild(h('section', { class: 'bi-sec' }, h('h3', { text: 'Default measures (there without writing them)' }),
         h('p', { class: 'text-muted-d bi-small-note', text: 'One per column with an aggregation, and a count per dataset. Reports may use them by these names.' }),
-        h('p', { class: 'bi-chips' }, implicit.map((n) => h('span', { class: 'bi-chip', 'data-implicit-measure': n, text: n })))));
+        h('ul', { class: 'bi-md-defaults', role: 'list' }, implicit.map((n) => h('li', { 'data-implicit-measure': n, text: n })))));
     }
   }
   function previewMeasure(name, btn) {
@@ -221,8 +223,8 @@
     if (aliases.length && !M.readOnly) {
       const d = draft || {};
       const aSel = sel(aliases, d.alias || aliases[0], { 'data-rule-alias': '', 'aria-label': 'Dataset' });
-      const roles = h('input', { class: 'studio-in', 'data-rule-roles': '', value: d.roles || '', placeholder: 'desk-head', 'aria-label': 'Roles (comma-separated)', list: 'mdRoles' });
-      const known = new Set();
+      const roles = h('input', { class: 'studio-in', 'data-rule-roles': '', value: '', placeholder: 'another role, e.g. desk-head', 'aria-label': 'Another role (comma-separated)', list: 'mdRoles' });
+      const known = new Set((roleList && roleList.roles) || []);
       Object.values((M.doc.security || {}).rows || {}).forEach((rs) => rs.forEach((r) => [].concat(r.role).forEach((x) => known.add(x))));
       Object.values(M.infos).forEach((i) => (i.rows || []).forEach((r) => [].concat(r.role).forEach((x) => known.add(x))));
       const kind = sel([['attr', 'the column matches the reader'], ['value', 'the column equals a value'], ['all', 'every row']], 'attr', { 'data-rule-kind': '', 'aria-label': 'Which rows' });
@@ -234,19 +236,25 @@
       const val = h('input', { class: 'studio-in', 'data-rule-value': '', placeholder: 'DESK-FX', 'aria-label': 'Value', hidden: true });
       kind.addEventListener('change', () => { field.hidden = kind.value === 'all'; attr.hidden = kind.value !== 'attr'; val.hidden = kind.value !== 'value'; });
       const go = h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-rule-add': '', text: 'Add the rule' });
+      const picked = new Set([].concat(d.roles || []));
+      const roleBox = h('div', { class: 'bi-roles', 'data-role-picker': '', role: 'group', 'aria-label': 'Roles the rule is for' },
+        Array.from(known).sort().map((r) => { const cb = h('input', { type: 'checkbox', value: r, 'data-role-pick': r, checked: picked.has(r) }); return h('label', { class: 'bi-checkrow' }, cb, ' ' + r); }));
       go.addEventListener('click', () => {
-        const rs = roles.value.split(',').map((x) => x.trim()).filter(Boolean);
+        const rs = B.qa('[data-role-pick]', roleBox).filter((c) => c.checked).map((c) => c.value).concat(roles.value.split(',').map((x) => x.trim()).filter(Boolean)).filter((x, i, a) => a.indexOf(x) === i);
         if (!rs.length) { near(go, 'Name the role (or roles) the rule is for.', true); roles.focus(); return; }
         const where = kind.value === 'all' ? 'true' : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
         if (kind.value === 'value' && !val.value.trim()) { near(go, 'Give the value.', true); val.focus(); return; }
         draft = null;
         roles.value = '';
+        B.qa('[data-role-pick]', roleBox).forEach((c) => { c.checked = false; });
         addRule(aSel.value, rs, where);
         near(go, 'Added: ' + rs.join(', ') + ' sees ' + where + '.', false);
       });
       pane.appendChild(h('section', { class: 'bi-sec bi-form', 'data-rule-form': '', 'data-keep': '' }, h('h3', { text: 'Add a rule for this model' }),
         h('datalist', { id: 'mdRoles' }, Array.from(known).map((r) => h('option', { value: r }))),
-        h('div', { class: 'bi-md-row' }, h('label', {}, 'On ', aSel), h('label', {}, 'Roles ', roles), h('label', {}, 'see rows where ', kind), field, attr, val, go)));
+        h('p', { class: 'text-muted-d bi-small-note', 'data-roles-note': '', text: 'Roles without a rule see no rows of the dataset: a rule says which rows a role may read.' + (roleList && roleList.source === 'identity' ? ' The roles listed are the ones your account carries and the ones already used in this model; type any other role below.' : '') }),
+        h('fieldset', { class: 'bi-roles-box' }, h('legend', { text: 'Roles' }), roleBox, roles),
+        h('div', { class: 'bi-md-row' }, h('label', {}, 'On ', aSel), h('label', {}, 'see rows where ', kind), field, attr, val, go)));
       // masks
       const masked = (M.doc.security || {}).masked || [];
       const mf = sel(fieldsOf(), '', { 'data-mask-field': '', 'aria-label': 'Column to mask' });
@@ -258,7 +266,8 @@
     }
     void sec;
   }
-  let draft = null;
+  let draft = null, roleList = null;
+  B.layer.get('roles').then((r) => { roleList = r; if (M.tab === 'security') { M.emit('redraw'); } }).catch(() => {});
 
   // ---- contract ------------------------------------------------------------------------------------------------------
   function drawContract() {

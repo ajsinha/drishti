@@ -77,7 +77,7 @@
       const ref = q('[data-new-dataset]').value, title = q('[data-new-title]').value.trim() || defaultTitle();
       if (!ref) { say('Choose a dataset.', true); return; }
       const name = B.slug(title) || 'my-report';
-      const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + ref + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
+      const body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\n' + B.sourceLine(ref) + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
       const go = q('[data-new] [type=submit]');
       const also = Array.prototype.filter.call(q('[data-new-also]').selectedOptions, (o) => o.value !== ref).map((o) => o.value.replace(/^file:dataset:/, ''));
       B.busy(go, () => B.api('POST', '/workspaces/' + encodeURIComponent(wsSel.value || 'me') + '/items', { kind: 'report', title, description: '', body }).then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id) + (also.length ? '?also=' + encodeURIComponent(also.join(',')) : ''); }).catch((err) => B.near(go, err.message, true)));
