@@ -748,8 +748,50 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 3153,
-   "legs.0.cashflows.4.fixings.1.rate": 0.000151
+   "legs.0.cashflows.4.fixings.1.rate": 0.000151,
+   "legs.0.pv": {
+    "step": 3153,
+    "places": 2,
+    "with": [
+     {
+      "path": "legs.1.pv",
+      "scale": -0.3,
+      "places": 2
+     }
+    ]
+   },
+   "derive": [
+    {
+     "set": "mtm",
+     "expr": "sum(legs.*.pv)"
+    },
+    {
+     "set": "legs.0.cashflows.*.pv",
+     "scaleTo": "$.legs.0.pv",
+     "places": 2
+    },
+    {
+     "set": "legs.1.cashflows.*.pv",
+     "scaleTo": "$.legs.1.pv",
+     "places": 2
+    },
+    {
+     "set": "valuation.npv",
+     "expr": "$.mtm"
+    },
+    {
+     "set": "valuation.cleanPv",
+     "expr": "$.mtm - valuation.accrued"
+    },
+    {
+     "set": "pnl1d",
+     "expr": "$.mtm - pnlExplain.0.pnl"
+    },
+    {
+     "set": "pnlExplain.3.pnl",
+     "expr": "pnlExplain.3.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+    }
+   ]
   }
  }
 }

@@ -111,7 +111,19 @@
   "generation": 512,
   "live": true,
   "walk": {
-   "currentC": 0.15
+   "currentC": 0.15,
+   "append": [
+    {
+     "to": "readings",
+     "key": "hour",
+     "format": "'H'k",
+     "keep": 24,
+     "places": 1,
+     "row": {
+      "celsius": "$.currentC"
+     }
+    }
+   ]
   }
  }
 }

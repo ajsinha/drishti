@@ -31,6 +31,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "common"))
 sys.path.insert(0, str(HERE.parent / "banking"))
 import packbuild as PB  # noqa: E402
+import walks as WALKS  # noqa: E402
 import make_data as BANK  # noqa: E402
 import taxonomy as T  # noqa: E402
 from risk_model import Kind, Panel as P  # noqa: E402
@@ -245,6 +246,9 @@ def build(bank: dict) -> dict[str, dict[str, dict]]:
         dq = [{"month": m, "rate": round(base_pd * 0.9 * r.uniform(0.8, 1.3), 4)} for m in months(18)]
         docs["retail-portfolio"][pid] = {"portfolioId": pid, "name": name, "exposure": exp, "ecl": ecl, "coverage": round(ecl / exp, 4), "dpd30": dq[-1]["rate"],
                                          "stages": stages, "delinquency": dq, "legalEntity": le, "_meta": {"source": "impairment-engine", "generation": 1}}
+    for kind, ds in docs.items():                       # the coherent live walk of each kind (common/walks.py)
+        for d in ds.values():
+            WALKS.apply(kind, d)
     return docs
 
 

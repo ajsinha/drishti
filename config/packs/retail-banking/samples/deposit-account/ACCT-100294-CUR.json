@@ -124,7 +124,27 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "balance": 25.0
+   "balance": {
+    "step": 25.0,
+    "places": 2
+   },
+   "derive": [
+    {
+     "set": "transactions.0.balance",
+     "expr": "$.balance",
+     "places": 2
+    },
+    {
+     "set": "transactions.0.amount",
+     "expr": "$.balance - transactions.1.balance",
+     "places": 2
+    },
+    {
+     "set": "history.-1.balance",
+     "expr": "$.balance",
+     "places": 2
+    }
+   ]
   }
  }
 }

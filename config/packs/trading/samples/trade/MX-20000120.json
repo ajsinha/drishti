@@ -351,7 +351,25 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 3503
+   "mtm": 3503,
+   "derive": [
+    {
+     "set": "valuation.npv",
+     "expr": "$.mtm"
+    },
+    {
+     "set": "valuation.cleanPv",
+     "expr": "$.mtm - valuation.accrued"
+    },
+    {
+     "set": "pnl1d",
+     "expr": "$.mtm - pnlExplain.0.pnl"
+    },
+    {
+     "set": "pnlExplain.6.pnl",
+     "expr": "pnlExplain.6.pnl + ($.mtm - sum(pnlExplain.*.pnl))"
+    }
+   ]
   }
  }
 }

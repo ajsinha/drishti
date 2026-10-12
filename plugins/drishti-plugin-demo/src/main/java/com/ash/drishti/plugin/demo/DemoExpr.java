@@ -26,7 +26,7 @@ import java.util.function.DoubleUnaryOperator;
  * comparisons, {@code a ? b : c}, field paths and a few functions. A bare name is looked up in the element a derive is
  * working on (the point of {@code points.*.df}) and then in the document; {@code $.name} is always the document, and
  * {@code last.name} is the previous row of a series being appended to. A path with {@code *} is a list, for
- * {@code sum(legs.*.pv)}. Functions: exp ln sqrt abs pow round min max sum avg count clamp tenor noise.
+ * {@code sum(legs.*.pv)}. Functions: exp ln sqrt abs pow round min max sum sumpos sumneg avg count clamp tenor noise.
  * Compiled once per text and cached; thread-safe.
  */
 final class DemoExpr {
@@ -282,6 +282,8 @@ final class DemoExpr {
             case "max" -> c -> flatten(args, c).stream().mapToDouble(Double::doubleValue).max().orElse(Double.NaN);
             case "sum" -> c -> flatten(args, c).stream().mapToDouble(Double::doubleValue).sum();
             case "avg" -> c -> flatten(args, c).stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
+            case "sumneg" -> c -> flatten(args, c).stream().filter(x -> x < 0).mapToDouble(Double::doubleValue).sum();
+            case "sumpos" -> c -> flatten(args, c).stream().filter(x -> x > 0).mapToDouble(Double::doubleValue).sum();
             case "count" -> c -> (double) flatten(args, c).size();
             case "noise" -> c -> c.noise().applyAsDouble(num(args.get(0).eval(c)));
             case "tenor" -> c -> tenorYears(String.valueOf(args.get(0).eval(c)));

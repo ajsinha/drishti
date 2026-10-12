@@ -126,7 +126,22 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mtm": 5000
+   "topTrades.0.mtm": 9110,
+   "topTrades.1.mtm": 9032,
+   "topTrades.2.mtm": 7228,
+   "topTrades.3.mtm": 7110,
+   "topTrades.4.mtm": 5968,
+   "topTrades.5.mtm": 5167,
+   "topTrades.6.mtm": 3794,
+   "topTrades.7.mtm": 3760,
+   "topTrades.8.mtm": 3618,
+   "topTrades.9.mtm": 3580,
+   "derive": [
+    {
+     "set": "mtm",
+     "expr": "-3973920 + sum(topTrades.*.mtm)"
+    }
+   ]
   }
  }
 }

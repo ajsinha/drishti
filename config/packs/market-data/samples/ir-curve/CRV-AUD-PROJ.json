@@ -152,7 +152,37 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "tenY": 0.0003
+   "tenY": {
+    "step": 0.0003,
+    "scale": 100,
+    "shape": "twist",
+    "jitter": 0.15,
+    "with": [
+     "points.*.zeroRate",
+     {
+      "path": "points.*.quote",
+      "scale": 1
+     },
+     "forwards.*.rate"
+    ]
+   },
+   "derive": [
+    {
+     "set": "points.*.df",
+     "expr": "exp(-zeroRate / 100 * tenor(tenor))",
+     "places": 6
+    },
+    {
+     "set": "tenY",
+     "expr": "points.tenor=10Y.zeroRate / 100",
+     "places": 6
+    },
+    {
+     "set": "slope2s10s",
+     "expr": "(points.tenor=10Y.zeroRate - points.tenor=2Y.zeroRate) * 100",
+     "places": 1
+    }
+   ]
   }
  }
 }

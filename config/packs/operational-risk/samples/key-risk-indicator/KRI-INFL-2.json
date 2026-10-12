@@ -100,7 +100,22 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "value": 0.3
+   "value": {
+    "step": 0.2,
+    "places": 2,
+    "min": 0
+   },
+   "derive": [
+    {
+     "set": "status",
+     "expr": "value >= red ? 'Red' : value >= amber ? 'Amber' : 'Green'"
+    },
+    {
+     "set": "history.-1.value",
+     "expr": "$.value",
+     "places": 2
+    }
+   ]
   }
  }
 }

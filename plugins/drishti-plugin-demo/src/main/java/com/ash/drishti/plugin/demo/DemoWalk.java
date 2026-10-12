@@ -87,61 +87,102 @@ final class DemoWalk {
         if (!(spec instanceof DataNode.Obj group)) {
             DemoPaths.Slot slot = DemoPaths.first(doc, field);
             if (slot != null && slot.get() instanceof Number n) {
-                move(slot, n.doubleValue() + gauss.applyAsDouble(spec.asDouble()), spec.asDouble());
+                move(slot, n.doubleValue() + gauss.applyAsDouble(spec.asDouble()), spec.asDouble(), null);
             }
             return;
         }
         double sd = group.get("step").asDouble();
-        double scale = group.get("scale") instanceof DataNode.Val ? group.get("scale").asDouble() : 1;
-        String shape = group.get("shape") instanceof DataNode.Val ? group.get("shape").asText() : "parallel";
-        double jitter = group.get("jitter") instanceof DataNode.Val ? group.get("jitter").asDouble() : 0;
+        double scale = number(group, "scale", 1);
+        boolean relative = "rel".equals(text(group, "mode"));
+        boolean twist = "twist".equals(text(group, "shape"));
+        double jitter = number(group, "jitter", 0);
         double shift = gauss.applyAsDouble(sd);
-        double tilt = "twist".equals(shape) ? gauss.applyAsDouble(sd * 0.6) : 0;
+        double tilt = twist ? gauss.applyAsDouble(sd * 0.6) : 0;
         Integer places = group.get("places") instanceof DataNode.Val ? (int) group.get("places").asDouble() : null;
         DemoPaths.Slot main = DemoPaths.first(doc, field);
         if (main != null && main.get() instanceof Number n) {
-            double v = n.doubleValue() + shift;
+            double v = relative ? n.doubleValue() * (1 + shift) : n.doubleValue() + shift;
             if (group.get("min") instanceof DataNode.Val) {
                 v = Math.max(group.get("min").asDouble(), v);
             }
             if (group.get("max") instanceof DataNode.Val) {
                 v = Math.min(group.get("max").asDouble(), v);
             }
-            move(main, v, sd, places);
+            move(main, v, relative ? 0 : sd, places);
         }
         if (group.get("with") instanceof DataNode.Arr with) {
             for (DataNode w : with.elements()) {
                 String path = w instanceof DataNode.Obj o ? o.get("path").asText() : w.asText();
-                double s = w instanceof DataNode.Obj o && o.get("scale") instanceof DataNode.Val ? o.get("scale").asDouble() : scale;
+                double s = w instanceof DataNode.Obj o ? number(o, "scale", scale) : scale;
+                Integer wPlaces = w instanceof DataNode.Obj o && o.get("places") instanceof DataNode.Val ? Integer.valueOf((int) o.get("places").asDouble()) : places;
                 for (DemoPaths.Slot slot : DemoPaths.find(doc, path)) {
                     if (slot.get() instanceof Number n) {
                         double weight = slot.count() > 1 ? 2.0 * slot.pos() / (slot.count() - 1) - 1 : 0;
-                        double delta = (shift + tilt * weight + (jitter > 0 ? gauss.applyAsDouble(sd * jitter) : 0)) * s;
-                        move(slot, n.doubleValue() + delta, Math.abs(sd * s), places);
+                        double move = (shift + tilt * weight + (jitter > 0 ? gauss.applyAsDouble(sd * jitter) : 0)) * s;
+                        move(slot, relative ? n.doubleValue() * (1 + move) : n.doubleValue() + move, relative ? 0 : Math.abs(sd * s), wPlaces);
                     }
                 }
             }
         }
     }
 
-    private static void move(DemoPaths.Slot slot, double v, double sd) {
-        move(slot, v, sd, null);
+    private static double number(DataNode o, String key, double fallback) {
+        return o.get(key) instanceof DataNode.Val ? o.get(key).asDouble() : fallback;
     }
 
-    /** Stores {@code v} keeping the step's precision: an FX spot walking by 0.0005 must not round back to two decimals and freeze. */
+    private static String text(DataNode o, String key) {
+        return o.get(key) instanceof DataNode.Val ? o.get(key).asText() : "";
+    }
+
+    /**
+     * Stores {@code v} keeping precision: a step of 0.0005 must not round back to two decimals and freeze, so the places come
+     * from the step ({@code sd}); {@code sd} 0 means a relative move, which keeps the old value's decimals. A whole number
+     * stays whole when its step is a whole number or more.
+     */
     private static void move(DemoPaths.Slot slot, double v, double sd, Integer places) {
-        int p = places != null ? places : sd <= 0 ? 2 : Math.max(2, (int) Math.ceil(-Math.log10(sd)) + 2);
-        slot.set(sd >= 1 ? (Object) Math.round(v) : (Object) round(v, p));
+        Object old = slot.get();
+        boolean whole = old instanceof Long || old instanceof Integer;
+        if (whole && (sd >= 1 || sd == 0)) {
+            slot.set(Math.round(v));
+            return;
+        }
+        int p;
+        if (places != null) {
+            p = places;
+        } else if (sd > 0) {
+            p = Math.max(2, (int) Math.ceil(-Math.log10(sd)) + 2);
+        } else {
+            p = old instanceof Double od ? Math.min(8, decimals(od)) : 2;
+        }
+        slot.set(round(v, p));
     }
 
     // ---- derive ----------------------------------------------------------------------------------------------
     private void derive(Map<String, Object> doc, DataNode spec) {
         String set = spec.get("set").asText();
-        String expr = spec.get("expr").asText();
+        String expr = spec.get("scaleTo") instanceof DataNode.Val ? "" : spec.get("expr").asText();
         Integer places = spec.get("places") instanceof DataNode.Val ? (int) spec.get("places").asDouble() : null;
+        if (spec.get("scaleTo") instanceof DataNode.Val target) {
+            scaleTo(doc, set, target.asText(), places);
+            return;
+        }
         for (DemoPaths.Slot slot : DemoPaths.find(doc, set)) {
             Object v = DemoExpr.eval(expr, new DemoExpr.Ctx(doc, slot.holder(), null, gauss));
             store(slot, v, places);
+        }
+    }
+
+    /** Rescales every number the path reaches by one factor so that they add up to {@code target}: the cashflow PVs follow their leg's PV. */
+    private void scaleTo(Map<String, Object> doc, String set, String target, Integer places) {
+        List<DemoPaths.Slot> slots = DemoPaths.find(doc, set).stream().filter(x -> x.get() instanceof Number).toList();
+        double total = slots.stream().mapToDouble(x -> ((Number) x.get()).doubleValue()).sum();
+        Object to = DemoExpr.eval(target, new DemoExpr.Ctx(doc, null, null, gauss));
+        if (total == 0 || !(to instanceof Double want) || want.isNaN()) {
+            return;
+        }
+        double factor = want / total;
+        for (DemoPaths.Slot slot : slots) {
+            store(slot, ((Number) slot.get()).doubleValue() * factor, places);
         }
     }
 
@@ -176,13 +217,19 @@ final class DemoWalk {
         Integer places = spec.get("places") instanceof DataNode.Val ? (int) spec.get("places").asDouble() : null;
         List<Object> rows = new ArrayList<>(old);
         Map<String, Object> last = !rows.isEmpty() && rows.get(rows.size() - 1) instanceof Map<?, ?> m ? (Map<String, Object>) m : null;
-        boolean sameBucket = last != null && label.equals(String.valueOf(last.get(key)));
-        Map<String, Object> row = sameBucket ? last : new LinkedHashMap<>();
-        Map<String, Object> before = last == null ? Map.of() : new LinkedHashMap<>(last);
+        Map<String, Object> existing = null;
+        for (int i = rows.size() - 1; i >= 0 && existing == null; i--) {
+            if (rows.get(i) instanceof Map<?, ?> m && label.equals(String.valueOf(m.get(key)))) {
+                existing = (Map<String, Object>) m;
+            }
+        }
+        boolean sameBucket = existing != null;
+        Map<String, Object> row = sameBucket ? existing : new LinkedHashMap<>();
+        Map<String, Object> before = existing != null ? new LinkedHashMap<>(existing) : last == null ? Map.of() : new LinkedHashMap<>(last);
         row.put(key, label);
         if (spec.get("row") instanceof DataNode.Obj fields) {
             fields.fields().forEach((name, expr) -> {
-                Object v = DemoExpr.eval(expr.asText(), new DemoExpr.Ctx(doc, null, sameBucket ? before : last, gauss));
+                Object v = DemoExpr.eval(expr.asText(), new DemoExpr.Ctx(doc, null, before, gauss));
                 if (v instanceof Double d) {
                     Object prev = before.get(name);
                     int p = places != null ? places : prev instanceof Double pd ? Math.min(8, Math.max(2, decimals(pd))) : 0;

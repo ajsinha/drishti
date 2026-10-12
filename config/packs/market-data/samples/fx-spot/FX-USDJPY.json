@@ -143,7 +143,32 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "mid": 0.0004
+   "mid": {
+    "step": 0.09,
+    "places": 5,
+    "with": [
+     {
+      "path": "bid",
+      "places": 5
+     },
+     {
+      "path": "ask",
+      "places": 5
+     }
+    ]
+   },
+   "derive": [
+    {
+     "set": "change1d",
+     "expr": "mid / history.-2.mid - 1",
+     "places": 5
+    },
+    {
+     "set": "history.-1.mid",
+     "expr": "$.mid",
+     "places": 5
+    }
+   ]
   }
  }
 }

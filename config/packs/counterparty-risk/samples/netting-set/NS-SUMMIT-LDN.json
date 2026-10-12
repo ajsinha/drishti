@@ -414,7 +414,67 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 1599
+   "trades.0.mtm": 8080,
+   "trades.1.mtm": 6687,
+   "trades.2.mtm": 6612,
+   "trades.3.mtm": 5914,
+   "trades.4.mtm": 4841,
+   "trades.5.mtm": 3786,
+   "trades.6.mtm": 3721,
+   "trades.7.mtm": 3581,
+   "trades.8.mtm": 3532,
+   "trades.9.mtm": 3396,
+   "trades.10.mtm": 3045,
+   "trades.11.mtm": 2655,
+   "trades.12.mtm": 1991,
+   "trades.13.mtm": 1662,
+   "trades.14.mtm": 1602,
+   "trades.15.mtm": 1535,
+   "trades.16.mtm": 1489,
+   "trades.17.mtm": 1261,
+   "trades.18.mtm": 1210,
+   "trades.19.mtm": 1208,
+   "trades.20.mtm": 1102,
+   "trades.21.mtm": 1096,
+   "trades.22.mtm": 919,
+   "trades.23.mtm": 874,
+   "trades.24.mtm": 824,
+   "trades.25.mtm": 797,
+   "trades.26.mtm": 763,
+   "trades.27.mtm": 721,
+   "trades.28.mtm": 510,
+   "trades.29.mtm": 492,
+   "eePeak": {
+    "step": 0.004,
+    "mode": "rel",
+    "with": [
+     "profile.*.ee",
+     "profile.*.pfe"
+    ]
+   },
+   "derive": [
+    {
+     "set": "byAsset.0.mtm",
+     "expr": "trades.0.mtm + trades.1.mtm + trades.2.mtm + trades.3.mtm + trades.4.mtm + trades.5.mtm + trades.6.mtm + trades.7.mtm + trades.8.mtm + trades.9.mtm + trades.10.mtm + trades.11.mtm + trades.12.mtm + trades.13.mtm + trades.14.mtm + trades.15.mtm + trades.16.mtm + trades.17.mtm + trades.18.mtm + trades.19.mtm + trades.20.mtm + trades.21.mtm + trades.22.mtm + trades.23.mtm + trades.24.mtm + trades.25.mtm + trades.26.mtm + trades.27.mtm + trades.28.mtm + trades.29.mtm"
+    },
+    {
+     "set": "netMtm",
+     "expr": "sum(trades.*.mtm)"
+    },
+    {
+     "set": "eePeak",
+     "expr": "max(profile.*.ee)"
+    },
+    {
+     "set": "pfePeak",
+     "expr": "max(profile.*.pfe)"
+    },
+    {
+     "set": "utilisation",
+     "expr": "pfePeak / limit",
+     "places": 4
+    }
+   ]
   }
  }
 }

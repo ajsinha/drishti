@@ -224,7 +224,57 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "netMtm": 2277
+   "trades.0.mtm": 4483,
+   "trades.1.mtm": 4014,
+   "trades.2.mtm": 3218,
+   "trades.3.mtm": 2952,
+   "trades.4.mtm": 1523,
+   "trades.5.mtm": 1151,
+   "trades.6.mtm": 1111,
+   "trades.7.mtm": 883,
+   "trades.8.mtm": 831,
+   "trades.9.mtm": 719,
+   "trades.10.mtm": 633,
+   "trades.11.mtm": 471,
+   "eePeak": {
+    "step": 0.004,
+    "mode": "rel",
+    "with": [
+     "profile.*.ee",
+     "profile.*.pfe"
+    ]
+   },
+   "derive": [
+    {
+     "set": "byAsset.0.mtm",
+     "expr": "trades.2.mtm + trades.5.mtm + trades.7.mtm + trades.9.mtm + trades.11.mtm"
+    },
+    {
+     "set": "byAsset.1.mtm",
+     "expr": "trades.0.mtm + trades.1.mtm + trades.3.mtm + trades.6.mtm"
+    },
+    {
+     "set": "byAsset.2.mtm",
+     "expr": "trades.4.mtm + trades.8.mtm + trades.10.mtm"
+    },
+    {
+     "set": "netMtm",
+     "expr": "sum(trades.*.mtm)"
+    },
+    {
+     "set": "eePeak",
+     "expr": "max(profile.*.ee)"
+    },
+    {
+     "set": "pfePeak",
+     "expr": "max(profile.*.pfe)"
+    },
+    {
+     "set": "utilisation",
+     "expr": "pfePeak / limit",
+     "places": 4
+    }
+   ]
   }
  }
 }

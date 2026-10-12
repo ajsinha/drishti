@@ -104,7 +104,22 @@
   "generation": 1,
   "live": true,
   "walk": {
-   "peakUsage": 250000
+   "usage.-1.used": {
+    "step": 0.004,
+    "mode": "rel",
+    "min": 0
+   },
+   "derive": [
+    {
+     "set": "peakUsage",
+     "expr": "max(usage.*.used)"
+    },
+    {
+     "set": "usagePct",
+     "expr": "peakUsage / available",
+     "places": 4
+    }
+   ]
   }
  }
 }
