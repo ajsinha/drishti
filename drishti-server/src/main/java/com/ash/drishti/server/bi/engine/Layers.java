@@ -145,8 +145,8 @@ public final class Layers {
             long now = clock.millis();
             LocalDate current = sources.currentDate();
             Partition today = current == null ? null : valid(dir, current, sig);
-            if (today != null) {
-                return new Layer(List.of(today), warnings, 0);              // the current business date is built: a data-load signal would have cleared it
+            if (today != null && today.rows() > 0) {
+                return new Layer(List.of(today), warnings, 0);              // the current business date is built (and has rows: an empty one is never served as 'the latest')
             }
             if (l != null && now - l.at() < props.latestTtl().toMillis()) {
                 Partition p = valid(dir, l.date(), sig);

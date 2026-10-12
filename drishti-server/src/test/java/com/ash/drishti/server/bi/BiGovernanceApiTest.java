@@ -206,6 +206,13 @@ class BiGovernanceApiTest {
         assertThat(ok(call("GET", "/api/v1/me/inbox?limit=20", ann(), null)).toString()).contains("bi-decision").contains("name the columns");
         // four eyes: bob proposes, bob may not approve
         call("POST", itemPath(ds) + "/propose", ann(), Map.of()).andExpect(status().isOk());
+        // a double click proposes once: the same person asking again changes nothing and tells nobody again
+        int told = ok(call("GET", "/api/v1/me/inbox?limit=50", sue(), null)).toString().split("asks for review", -1).length;
+        call("POST", itemPath(ds) + "/propose", ann(), Map.of()).andExpect(status().isOk());
+        assertThat(ok(call("GET", "/api/v1/me/inbox?limit=50", sue(), null)).toString().split("asks for review", -1).length).isEqualTo(told);
+        // while it is proposed it cannot be published past the review: approve, reject or withdraw first
+        refused(call("POST", itemPath(ds) + "/publish", ann(), Map.of("note", "skip the review")), 409, "DRS-9004");
+        assertThat(ok(call("GET", itemPath(ds), ann(), null)).path("can").path("publish").asBoolean()).isFalse();
         JsonNode other = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", bob(), Map.of("kind", "dataset", "title", "Bob's", "body", DATASET.replace("gov-ds", "bobs"))));
         call("POST", itemPath(other.path("id").asText()) + "/propose", bob(), Map.of()).andExpect(status().isOk());
         refused(call("POST", itemPath(other.path("id").asText()) + "/approve", bob(), Map.of()), 403, "DRS-9005");

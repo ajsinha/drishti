@@ -448,7 +448,7 @@ public final class BiService {
         Map<String, Object> can = new LinkedHashMap<>();
         can.put("edit", edit);
         can.put("propose", edit && !w.personal() && !i.status().equals("proposed") && !i.status().equals("published"));
-        can.put("publish", publish && !i.status().equals("published"));
+        can.put("publish", publish && !i.status().equals("published") && !i.status().equals("proposed"));
         can.put("approve", approve);
         can.put("withdraw", !shipped && i.status().equals("proposed") && (i.proposedBy().equals(p.user()) || rank >= BiAccess.rank("admin")));
         can.put("promote", !shipped && i.isPublished() && (i.owner().equals(p.user()) || rank >= BiAccess.rank("member")));
@@ -806,13 +806,29 @@ public final class BiService {
         return propose(p, id, note, false);
     }
 
+    /** One proposal at a time per item: a double click (two requests at once) proposes once and tells the reviewers once. */
+    private final Map<String, java.util.concurrent.locks.ReentrantLock> proposing = new java.util.concurrent.ConcurrentHashMap<>();
+
     public Map<String, Object> propose(Principal p, String id, String note, boolean force) {
+        java.util.concurrent.locks.ReentrantLock lock = proposing.computeIfAbsent(id, k -> new java.util.concurrent.locks.ReentrantLock());
+        lock.lock();
+        try {
+            return proposeLocked(p, id, note, force);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private Map<String, Object> proposeLocked(Principal p, String id, String note, boolean force) {
         BiStore.Item i = editable(p, id, "proposing");
         BiStore.Workspace w = workspaceOf(i.workspace());
         if (w.personal()) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "move the item to a shared workspace before proposing it");
         }
         if (i.status().equals("proposed")) {
+            if (i.proposedBy().equals(p.user())) {
+                return item(p, id, false);                                    // idempotent: the same person asking again changes nothing and tells nobody again
+            }
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is proposed already");
         }
         if (i.status().equals("published")) {
@@ -917,6 +933,9 @@ public final class BiService {
         }
         if (i.status().equals("published")) {
             throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' has no changes since version " + i.publishedVersion());
+        }
+        if (i.status().equals("proposed")) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, "'" + i.title() + "' is proposed by " + i.proposedBy() + ": it must be approved, rejected or withdrawn before it can be published");
         }
         return publishNow(p, i, note(note), force, applyRenames);
     }

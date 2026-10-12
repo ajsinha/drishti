@@ -300,9 +300,10 @@ public final class DatasetRefresher implements AutoCloseable {
             st.failures.set(0);
             st.retryAt = null;
             st.error = r.warnings().isEmpty() ? null : String.join("; ", r.warnings());
-            st.status = "ok";
+            boolean warned = r.warnings().stream().anyMatch(w -> w.startsWith("warning: "));
+            st.status = warned ? "warning" : "ok";
             st.runs.incrementAndGet();
-            st.remember(entry(started, trigger, "ok", r.rows(), r.millis(), r.date(), st.error), props.history());
+            st.remember(entry(started, trigger, st.status, r.rows(), r.millis(), r.date(), st.error), props.history());
             LOG.info("BI refresh {} {}: {} rows in {} ms ({})", j.key(), r.date(), r.rows(), r.millis(), trigger);
             audit.record("system", "bi-dataset-refresh", j.ds().id(), trigger + ": " + r.rows() + " rows of " + r.tables() + " for " + r.date());
         } catch (RuntimeException e) {

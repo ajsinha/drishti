@@ -289,10 +289,10 @@
     function history(list) {
       var tb = q('[data-refresh-history] tbody'); clear(tb);
       list.forEach(function (x) {
-        var bad = x.status !== 'ok';
+        var bad = x.status !== 'ok' && x.status !== 'warning';
         tb.appendChild(h('tr', { 'data-history-row': x.status }, h('th', { scope: 'row', text: new Date(x.at).toLocaleString() }), h('td', { text: x.trigger || '' }),
           h('td', {}, badge(x.status, bad ? 'bi-status' : 'bi-promoted', bad ? 'exclamation-triangle' : 'check-circle')), h('td', { text: x.date || '' }),
-          h('td', { text: x.status === 'ok' ? num(x.rows) : '–' }), h('td', { text: x.status === 'ok' ? num(x.durationMs) + ' ms' : '–' }), h('td', { text: x.error || '' })));
+          h('td', { text: x.status === 'ok' || x.status === 'warning' ? num(x.rows) : '–' }), h('td', { text: x.status === 'ok' || x.status === 'warning' ? num(x.durationMs) + ' ms' : '–' }), h('td', { text: x.error || '' })));
       });
       q('[data-refresh-history]').hidden = list.length === 0;
       q('[data-refresh-history-head]').hidden = list.length === 0;
@@ -314,8 +314,8 @@
                 var d = st.dataset || {};
                 if (d.status === 'running' && tries++ < 120) { setTimeout(poll, 1000); return; }
                 btn.disabled = false;
-                msg.textContent = d.status === 'ok' ? 'Refreshed ' + num(d.lastRows) + ' rows in ' + num(d.lastDurationMs) + ' ms.' : 'Refresh ' + (d.status || 'did not finish') + (d.error ? ': ' + d.error : '') + '.';
-                msg.classList.toggle('bi-bad', d.status !== 'ok');
+                msg.textContent = d.status === 'ok' || d.status === 'warning' ? 'Refreshed ' + num(d.lastRows) + ' rows in ' + num(d.lastDurationMs) + ' ms' + (d.status === 'warning' && d.error ? ' (' + d.error + ')' : '') + '.' : 'Refresh ' + (d.status || 'did not finish') + (d.error ? ': ' + d.error : '') + '.';
+                msg.classList.toggle('bi-bad', d.status !== 'ok' && d.status !== 'warning');
                 api('GET', path).then(draw);
               }).catch(function (e) { btn.disabled = false; msg.textContent = e.message; msg.classList.add('bi-bad'); });
             })();

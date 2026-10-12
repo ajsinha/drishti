@@ -563,8 +563,24 @@ public final class QueryService implements AutoCloseable {
         }
         long rows = 0;
         List<String> warnings = new ArrayList<>();
+        String shown = date.toString();
         for (Dataset.Table t : tables) {
             Layers.Layer l = layers.columns(ds.key(), t, date, date);
+            if (l.rows() == 0) {
+                // The business date has no data in this source: do not keep an empty layer for it. Resolve the as-of as a query does (the latest the source
+                // holds) and say so, so the dataset keeps answering from real rows.
+                layers.invalidate(ds.key(), ds.dataset(), t.kind(), date);
+                Layers.Layer latest = layers.columns(ds.key(), t, null, null);
+                String found = latest.partitions().stream().filter(x -> x.rows() > 0).map(x -> String.valueOf(x.date())).findFirst().orElse(null);
+                if (found == null) {
+                    layers.invalidate(ds.key(), ds.dataset(), t.kind(), date);
+                    warnings.add("warning: 0 rows for " + date + " in " + t.name() + "; the source holds no data");
+                } else {
+                    warnings.add("warning: 0 rows for " + date + "; latest data " + found);
+                    shown = found;
+                    l = latest;
+                }
+            }
             rows += l.rows();
             warnings.addAll(l.warnings());
             for (Dataset.Rollup r : ds.dataset().rollups()) {
@@ -573,7 +589,7 @@ public final class QueryService implements AutoCloseable {
                 }
             }
         }
-        return new Refreshed(date.toString(), tables.stream().map(Dataset.Table::name).toList(), rows, Math.round((System.nanoTime() - t0) / 1e6), warnings.stream().distinct().toList());
+        return new Refreshed(shown, tables.stream().map(Dataset.Table::name).toList(), rows, Math.round((System.nanoTime() - t0) / 1e6), warnings.stream().distinct().toList());
     }
 
     private void rebuild(Loaded ds, Dataset.Table t, LocalDate date) {

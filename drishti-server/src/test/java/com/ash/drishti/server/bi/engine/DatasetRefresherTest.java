@@ -313,4 +313,25 @@ class DatasetRefresherTest {
         assertThat(table.dataset().tables().get("trades").schedule()).isEqualTo("daily 06:00");
         assertThat(Dataset.Refresh.NONE.scheduled()).isFalse();
     }
+
+    @Test
+    void aRefreshForADateTheSourceHasNoDataForFallsBackToTheLatestAndSaysSo() throws Exception {
+        clock.now = java.time.ZonedDateTime.of(2026, 10, 14, 6, 0, 0, 0, NY).toInstant();   // two business days past the last data (9 October)
+        start("daily 06:00", BiRefreshProperties.defaults());
+        refresher.runNow(ds, "wes");
+        awaitStatus("warning");
+        assertThat(String.valueOf(dataset().get("error"))).startsWith("warning: 0 rows for 2026-10-1").contains("latest data 2026-10-09");
+        assertThat(dataset().get("lastDate")).isEqualTo("2026-10-09");
+        assertThat((Long) dataset().get("lastRows")).isPositive();
+        QueryService.Caller risk = new QueryService.Caller("rita", java.util.Set.of("risk"), true,
+                com.ash.drishti.server.bi.dataset.UserAttributes.of("rita", List.of("risk"), "", null), SqlCompiler.Masks.NONE);
+        QueryService.Result r = service.query(ds, new QueryRequest(List.of(), List.of("Trades"), List.of(), null, null, List.of(), 100, "auto"), risk, false);
+        assertThat(((Number) r.columns().get(0).values()[0]).doubleValue()).as("the dataset answers from the latest date, not from an empty layer").isEqualTo(40.0);
+        refresher.runNow(ds, "wes");                                                         // a second refresh keeps it so
+        for (int i = 0; i < 200 && "running".equals(dataset().get("status")); i++) {
+            Thread.sleep(25);
+        }
+        QueryService.Result again = service.query(ds, new QueryRequest(List.of(), List.of("Trades"), List.of(), null, null, List.of(), 100, "auto"), risk, false);
+        assertThat(((Number) again.columns().get(0).values()[0]).doubleValue()).isEqualTo(40.0);
+    }
 }
