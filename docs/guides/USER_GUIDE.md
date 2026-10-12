@@ -1212,16 +1212,7 @@ The round **Live** button beside the box is a toggle, the same on a laptop and a
 You can still pick another date while paused. The choice is kept as you move between pages. A screen reader hears
 *Live updates on — click to pause* or *Live updates paused — click to resume*, which is also its tooltip.
 
-Worked example (needs the sample history; see [GETTING_STARTED.md](GETTING_STARTED.md), Step 5):
-
-1. Open `TRD MX-20000001`.
-2. Click the date box and pick `2026-09-29`.
-3. You should see the same layout with that day's figures. The footer reads `… as of 2026-09-29`, the
-   MTM no longer ticks, and a **Compare** button appears in the title line.
-4. Open `NSET NS-MERIDIAN-RE-NY` with `F7`: it opens on the same date. Links, impact, search and
-   suggestions all follow the date you picked.
-5. Pick Saturday `2026-09-26`. The box shows `↩ 2026-09-26` and the data is for Friday `2026-09-25`.
-6. Click the red **Live** button to return to today: it turns green.
+Step by step, with pictures (a past date, the same layout with that day's figures, a Saturday, back to Live): [tutorial 2](../tutorials/02-look-up-anything.md), step 5. It needs the sample history ([GETTING_STARTED.md](GETTING_STARTED.md), Step 5).
 
 What the banners mean:
 
@@ -1247,16 +1238,9 @@ a search names it and says *partial*. Undated sources have only one version and 
 
 Compare lists every field that differs in one entity between two business dates.
 
-Worked example:
-
-1. Pick `2026-09-30` in the date box and open `TRD MX-20000001`.
-2. Click **Compare**. You should see *What changed in MX-20000001*, comparing `2026-09-30` with the business
-   day before, `2026-09-29`.
-3. Each row shows the field's label and path, the value on each date, and the change for numbers
-   (see the example below).
-4. Choose any two dates at the top to compare further apart, or give the earlier side a *known at* time
-   to see what was restated on the same date.
-5. Filter to *changed*, *added* or *removed*. **CSV** downloads the comparison.
+Click **Compare** (it appears in the title line when you have picked a date): *What changed in MX-20000001* compares the picked date with the business day before. Each row shows the field's label and path, the value on each date and the
+change for numbers; choose any two dates at the top to compare further apart, or give the earlier side a *known at* time to see what was restated on the same date; filter to *changed*, *added* or *removed*; **CSV** downloads
+the comparison. Walk-through: [tutorial 2](../tutorials/02-look-up-anything.md), step 6.
 
 Example rows for `MX-20000001`, 2026-09-29 against 2026-09-30:
 
@@ -1518,15 +1502,7 @@ strip) as they tick. Rows can be of different kinds.
 saves a copy to your account. (The `finance` pack offers *Credit watch* and `logistics` *Fleet watch*;
 the banking packs offer none, so start from a search.)
 
-Worked example: build a monitor from a search.
-
-1. Type `NSET where utilisation > 0.7 order by utilisation desc` and press Enter.
-2. In the box beside **Watch as a monitor**, replace `NSET search` with `High utilisation`.
-3. Click **Watch as a monitor**. The monitor page opens: rows such as `NS-CASCADIA-TKY`,
-   `NS-NORTHBRIDGE-NY`, `NS-SUMMIT-LDN`, each with its strip: Trades, Net MTM, Collateral, EE peak,
-   PFE 95 peak, Limit, Utilisation and CVA.
-4. In **Add an entity**, type `TRD MX-20000001` and press Enter. The trade joins the list.
-5. Click **×** on a row to remove it. **Delete monitor** removes the whole monitor.
+Step by step (a search, **Watch as a monitor**, adding an entity, removing a row), with pictures: [tutorial 3](../tutorials/03-query-by-form.md) (save a search and a monitor).
 
 The monitor is saved on the server under your account, so it follows you to any browser. All rows share
 one live connection.

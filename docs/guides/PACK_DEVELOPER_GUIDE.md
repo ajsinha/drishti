@@ -126,6 +126,9 @@ a restart (see [Versioning a pack](#versioning-a-pack) for what a change needs, 
 
 ## Build it, step by step
 
+This is the pack **by hand**, to show every file. If your data is JSON Lines or has a JSON Schema, you do not need to write these files: [tutorial 5](../tutorials/05-build-a-pack.md) turns a schema and a folder into a pack,
+deploys it and rolls it back in half an hour (the rules are in [SCHEMA_TO_PACK.md](SCHEMA_TO_PACK.md)), and [tutorial 6](../tutorials/06-design-a-screen.md) designs its screen.
+
 Each step says what to type and what you should see. The outputs are real: they were produced by running the steps
 on the finished pack. (Your counts and ticking numbers may differ a little: the ticket's age walks up and down.)
 

@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-New to the workbench? Follow [the step-by-step tutorial](../tutorials/06-design-a-screen.md): four complete projects, a picture of almost every step.
+New to the workbench? Follow [tutorial 6 · Design a screen](../tutorials/06-design-a-screen.md) (and [tutorial 5](../tutorials/05-build-a-pack.md) to build a pack), with a picture of every step. This page is the reference for everything the workbench does, by mouse or keyboard.
 
 # Screen designer: from JSON files to a screen, without writing YAML
 

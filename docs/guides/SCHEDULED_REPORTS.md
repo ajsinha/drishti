@@ -37,10 +37,7 @@ headers). Email needs SMTP settings on the server and is not offered until then.
 
 A report runs **as you**: it sees what your roles let you see when it runs, with the same masked fields. If your
 account is disabled or deleted, it stops. The list shows each report's next run and its last run (rows, where the
-file went, or the error); **Run now** runs one at once. Worked example: name `Big losers`, search
-`TRD where mtm < -10000000`, when `business-days 18:30`, deliver to the folder. At 18:30 on each business day a file
-such as `data/reports/ash/Big_losers/Big_losers-2026-10-01-1830.csv` appears, starting
-`kind,id,title,MTM (USD),…`.
+file went, or the error); **Run now** runs one at once. The walk-through (name, search, when, deliver to, and the file that appears) is [tutorial 9](../tutorials/09-reports.md).
 
 ### Export, and subscriptions
 

@@ -111,125 +111,15 @@ look-back window). It is flagged once: a notice to the people the pack names, an
 
 ## 3. Your first load in five minutes
 
-Everything below was run against a scratch server (`drishti-server` with the QUICKSTART packs, sign-in off, so no token is shown; with
-sign-in on, add `-H "Authorization: Bearer $DRISHTI_TOKEN"`, see [Permissions](#10-permissions)). The pack is `market-risk`; its kind `var`
-has data on the server.
-
-**1. Say what you expect** (optional, but it is what makes late data visible). Save it as the pack's override from the page, or by API:
+The walk-through, with real output and pictures, is [tutorial 7 · Load data daily](../tutorials/07-load-data-daily.md): say when you expect data (step 1), announce a load from the command line (step 2), a failed
+batch (step 3), the same through the API (step 4), the history and what is due (step 5) and an alert for a missing day (step 6). In short: **announce** a batch when your ETL has written it,
 
 ```
-$ curl -s -X PUT http://127.0.0.1:18970/api/v1/admin/loads/market-risk/config -H 'Content-Type: application/json' -d '{
-    "notify": {"roles": ["admin"], "users": [], "email": false},
-    "smoke": 2,
-    "expect": {"var": {"by": "23:59", "zone": "America/New_York", "calendar": "USNY"},
-               "stress-result": {"by": "00:01"},
-               "pnl-explain": {"by": "07:30", "zone": "Europe/London", "calendar": "GBLO"}}}'
+$ python tools/drishti.py data landed --server http://127.0.0.1:18970 --pack market-risk --kind var --date 2026-10-05 --rows 1200 --batch eod-20261005-1
 ```
 
-**2. Announce a batch.**
-
-```
-$ curl -s -i -X POST http://127.0.0.1:18970/api/v1/packs/market-risk/loads -H 'Content-Type: application/json' -d '{
-    "kind": "var", "businessDate": "2026-10-05", "status": "ready", "rows": 1200, "rejected": 3,
-    "source": "nightly-risk-etl", "batchId": "eod-20261005-1"}'
-HTTP/1.1 201
-{
-  "id": "muwrizvm-1",
-  "pack": "market-risk",
-  "kind": "var",
-  "businessDate": "2026-10-05",
-  "status": "ready",
-  "rows": 1200,
-  "rejected": 3,
-  "source": "nightly-risk-etl",
-  "batchId": "eod-20261005-1",
-  "receivedAt": "2026-10-06T14:17:13.762877563Z",
-  "receivedBy": "anonymous",
-  "attempt": 1,
-  "reload": false,
-  "verified": "verified",
-  "entities": 10,
-  "alerts": 0,
-  "notices": 1,
-  "steps": [
-    { "name": "record",  "status": "ok",      "detail": "recorded", "ms": 0 },
-    { "name": "refresh", "status": "ok",      "detail": "caches dropped: demo, file, risk-store", "ms": 2 },
-    { "name": "verify",  "status": "ok",      "detail": "10 var entities on 2026-10-05", "ms": 5 },
-    { "name": "alerts",  "status": "ok",      "detail": "0 alerts fired", "ms": 0 },
-    { "name": "smoke",   "status": "skipped", "detail": "not asked for (loads.smoke is 0)", "ms": 0 },
-    { "name": "notices", "status": "ok",      "detail": "1 person told", "ms": 0 }
-  ],
-  "durationMs": 18,
-  "done": true,
-  "summary": "var for 2026-10-05 loaded: 1,200 rows, 3 rejected; 0 alerts fired",
-  "duplicate": false
-}
-```
-
-(The `smoke` step above ran before step 1 set `smoke: 2`; later loads show `opened 2 of 2 sample entities`.)
-
-**3. Announce it again.** Nothing runs twice:
-
-```
-$ curl -s -w '\nHTTP %{http_code}\n' -X POST .../config/packs/market-risk/loads -d '{ ...the same body... }'
-{ ...the same record, "duplicate": true }
-HTTP 200
-```
-
-**4. The batch fails afterwards.** A different outcome for the same key is a new record, `attempt` 2:
-
-```
-$ curl -s -X POST .../config/packs/market-risk/loads -d '{"kind":"var","businessDate":"2026-10-05","status":"failed","batchId":"eod-20261005-1","note":"copy stopped: disk full"}'
-{"id":"muwrjapj-2","pack":"market-risk","kind":"var","businessDate":"2026-10-05","status":"failed","batchId":"eod-20261005-1",
- "note":"copy stopped: disk full","attempt":2,"reload":false,"verified":"skipped","alerts":0,"notices":1,
- "steps":[{"name":"record","status":"ok","detail":"recorded as attempt 2","ms":0},
-          {"name":"late","status":"skipped","detail":"a failed load does not clear a late-data flag","ms":0},
-          {"name":"notices","status":"ok","detail":"1 person told","ms":0}],
- "summary":"var load for 2026-10-05 FAILED: copy stopped: disk full","duplicate":false}   -> HTTP 201
-```
-
-**5. A corrected batch lands** (a different batch id, so a reload):
-
-```
-$ curl -s -X POST .../config/packs/market-risk/loads -d '{"kind":"var","businessDate":"2026-10-05","status":"ready","rows":1250,"rejected":0,"batchId":"eod-20261005-2"}'
-... "reload": true, ... "summary": "var for 2026-10-05 reloaded: 1,250 rows, 0 rejected; 0 alerts fired"   -> HTTP 201
-```
-
-**6. The same from the command line** (exit code 1 only when a `ready` load is not verified):
-
-```
-$ python tools/drishti.py data landed --server http://127.0.0.1:18970 --pack market-risk --kind stress-result \
-      --date 2026-10-05 --rows 840 --rejected 0 --batch eod-20261005-1 --source nightly-risk-etl
-stress-result for 2026-10-05 loaded: 840 rows, 0 rejected; 0 alerts fired
-  load muwrjavp-5  status ready  verified verified  attempt 1
-  record  ok      recorded
-  refresh ok      caches dropped: demo, file, risk-store
-  verify  ok      80 stress-result entities on 2026-10-05
-  alerts  ok      0 alerts fired
-  smoke   ok      opened 2 of 2 sample entities
-  notices ok      1 person told
-$ echo $?
-0
-```
-
-**7. Read the history and what is due:**
-
-```
-$ python tools/drishti.py data loads --server http://127.0.0.1:18970 --pack market-risk --limit 6 --expectations
-received             kind              date        status        rows    rej  verified  alerts told  batch / source
-2026-10-06 14:17:28  var               2026-10-06  failed                     skipped        0    1  eod-today
-2026-10-06 14:17:28  stress-result     2026-10-05  ready          840      0  verified       0    1  eod-20261005-1 nightly-risk-etl
-2026-10-06 14:17:27  var               2026-10-05  ready         1250      0  verified       0    1  eod-20261005-2 nightly-risk-etl
-2026-10-06 14:17:27  var               2026-10-05  failed                     skipped        0    1  eod-20261005-1
-expectations:
-  2026-10-06  pnl-explain       by 07:30 Europe/London       late
-  2026-10-06  stress-result     by 00:01 America/New_York    late
-  2026-10-06  var               by 23:59 America/New_York    failed
-  2026-10-05  pnl-explain       by 07:30 Europe/London       missing
-  2026-10-05  stress-result     by 00:01 America/New_York    landed-late
-```
-
-**8. Look at it.** Open Admin → Packs → *Data loads* for the pack ([section 9](#9-the-data-loads-page)), and Admin → Health for the late data.
+or `POST /api/v1/packs/{pack}/loads` ([section 4](#4-the-api-reference)); Drishti then records it, refreshes the caches, verifies that the rows are readable, checks alerts, runs a smoke test and tells people
+([section 7](#7-what-happens-step-by-step)). Reading the history is `data loads` ([section 5](#5-the-command-line-reference)); the expectations that make late data visible are [section 8](#8-expectations-and-late-data).
 
 ## 4. The API reference
 
