@@ -18,7 +18,9 @@
 *Agreed with the product owner on 2026-10-12.* This settles the BI architecture before more features are added, and
 replaces the roadmap part of [BI_PARITY_PLAN.md](BI_PARITY_PLAN.md) (its gap analysis still stands). Nothing here is
 built yet. Drishti is not in production, so these are breaking changes on purpose; the foundation stays **YAML,
-Python, datasets and data models**. No Power Query-like tool: Python is the data-prep path.
+Python, datasets and data models**. No Power Query-like tool: Python is the data-prep path. The design
+specification of wave W1 (the dataset and model YAML, the model query language v1, pack-generated datasets, the
+migration, the UX flows and the build plan) is [BI_MODEL_SPEC.md](BI_MODEL_SPEC.md).
 
 ## 1. Decisions
 
