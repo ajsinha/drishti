@@ -212,12 +212,19 @@ def _load_quant(req: dict):
     return Quant()
 
 
-def _cell(req: dict, df, ns: dict, quant) -> dict:
-    """A notebook cell of Analyse: runs the source with ``df`` (the reader's extract), ``params`` and ``quant``; answers what it printed and its ``result``
-    (an ECharts option, SVG text, PNG bytes, a table, or a value)."""
+def _cell(req: dict, df, ns: dict, quant, others: dict | None = None) -> dict:
+    """A notebook cell of Analyse: runs the source with ``df`` (the reader's extract), ``params``, ``quant`` and ``extract(name)`` (any other extract of the
+    notebook, as the same reader sees it); answers what it printed and its ``result`` (an ECharts option, SVG text, PNG bytes, a table, or a value)."""
     import io
     import contextlib
-    ns.update(df=df, params=dict(req["params"]), quant=quant)
+    frames = others or {}
+
+    def extract(name):
+        if name not in frames:
+            raise KeyError(f"no extract '{name}' in this notebook (extracts: {', '.join(sorted(frames)) or 'none'})")
+        return frames[name].copy()
+
+    ns.update(df=df, params=dict(req["params"]), quant=quant, extract=extract)
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
         exec(compile(req["source"], FILE, "exec"), ns)
@@ -230,7 +237,8 @@ def _cell(req: dict, df, ns: dict, quant) -> dict:
         result = result.to_frame()
     if hasattr(result, "columns") and hasattr(result, "head"):
         shown = result.head(int(req.get("table_rows") or 200))
-        answer["table"] = json.loads(json.dumps({"columns": [str(c) for c in shown.columns], "rows": shown.values.tolist(), "rowCount": int(len(result))},
+        answer["table"] = json.loads(json.dumps({"columns": [str(c) for c in shown.columns], "rows": shown.astype(object).where(shown.notna(), None).values.tolist(),
+                                                  "rowCount": int(len(result))},
                                                 default=_plain, allow_nan=False))
     elif isinstance(result, dict):
         answer["option"] = _clean(json.loads(json.dumps(result, default=_plain, allow_nan=False)))
@@ -333,12 +341,19 @@ def _run(req: dict, tmp: str) -> dict:
     df = df.drop(columns=[c for c in ("id",) if c in df.columns and c not in req["inputs"] and c not in (req["group_by"] or [])])
     cell = req["interface"] == "cell"
     quant = _load_quant(req) if cell else None             # imported before the hook, like the packages
+    others, by_file = {}, {}
+    for ename, fname in (req.get("extracts") or {}).items():          # the notebook's other extracts, read before the sandbox closes
+        if fname not in by_file:
+            with open(os.path.join(tmp, fname), "rb") as f:
+                frame = pa.ipc.open_stream(f).read_all().to_pandas()
+            by_file[fname] = frame.drop(columns=[c for c in ("id",) if c in frame.columns])
+        others[ename] = by_file[fname]
     _limits(req)
     sys.dont_write_bytecode = True
     _install_hook(tmp)
     ns = {"__name__": "python_item", "__builtins__": _builtins(allowed)}
     if cell:
-        return _cell(req, df, ns, quant)
+        return _cell(req, df, ns, quant, others)
     exec(compile(req["source"], FILE, "exec"), ns)          # the worker's own exec; the author's code is not given it
     fn = ns.get(req["entry"])
     if not callable(fn):

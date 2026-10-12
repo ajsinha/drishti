@@ -39,3 +39,8 @@
 .bx-chart { height: 18rem; min-width: 0; }
 .bx-chart .bi-chart { height: 100%; }
 @media (max-width: 600px) { .bx-zones { grid-template-columns: 1fr; } .bx-bar > * { flex: 1 1 auto; } }
+.bx-more { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .4rem .8rem; }
+.bx-more summary { cursor: pointer; font-weight: 600; }
+.bx-extras { list-style: none; margin: .4rem 0; padding: 0; display: flex; flex-direction: column; gap: .25rem; }
+.bx-extra { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.bx-small { min-height: 1.8rem; padding: .1rem .5rem; }

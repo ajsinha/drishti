@@ -36,6 +36,10 @@
   const OPS = { eq: 'is', ne: 'is not', lt: 'is less than', le: 'is at most', gt: 'is greater than', ge: 'is at least', between: 'is between', contains: 'contains', 'starts-with': 'starts with', 'is-null': 'is empty', 'not-null': 'is not empty' };
 
   D.modules.push(function () {
+    B.api('GET', '/datasets').then((r) => {                           // the datasets a visual may name for itself
+      const dl = document.getElementById('biDatasetNames');
+      (r.datasets || []).filter((d) => d.valid).forEach((d) => dl.appendChild(h('option', { value: d.id.replace(/^file:dataset:/, ''), label: d.title })));
+    }).catch(() => {});
     const q = D.q;
 
     // ---- Fields --------------------------------------------------------------------------------------------------------
@@ -257,6 +261,10 @@
       const f = v.format || {};
       fmt.appendChild(frow('Title', textInput(v.title, (x) => setTop(v, 'title', x.trim()), { 'data-format-title': '' })));
       fmt.appendChild(frow('Alt text', textInput(v.alt, (x) => setTop(v, 'alt', x.trim()), { 'data-format-alt': '' }), 'What a screen reader says about it.'));
+      if (group !== 'static') {                                                                    // a visual may read a dataset of its own (RUPAKA.md section 20.10)
+        fmt.appendChild(frow('Dataset', textInput(v.dataset, (x) => setTop(v, 'dataset', x.trim()), { 'data-format-dataset': '', list: 'biDatasetNames', placeholder: D.model.dataset }),
+          'Blank: the report\'s dataset (' + D.model.dataset + '). Another dataset: its fields are written in the wells in the YAML tab, and a link (Report, below the page) connects its slicers to the others.'));
+      }
       if (group === 'python') {
         fmt.appendChild(frow('Python item', textInput(f.python, (x) => setFmt(v, 'python', x.trim()), { 'data-format-python': '', placeholder: 'pnl-histogram' }), 'The Python item (catalogue id, file name or title) that draws this from the columns. Leave it empty when the values well holds a Python measure of the dataset.'));
         fmt.appendChild(frow('Run on', selectInput([['', 'auto'], ['server', 'the console (sandboxed)'], ['browser', 'the browser (Pyodide)']], f.run, (x) => setFmt(v, 'run', x), { 'data-format-run': '' }), 'auto: the console, then the browser when the console cannot run it.'));
@@ -408,6 +416,24 @@
       fmt.appendChild(frow('Business date from', textInput(dates.from, (x) => setDates({ from: x }), { type: 'date' })));
       fmt.appendChild(frow('Business date to', textInput(dates.to, (x) => setDates({ to: x }), { type: 'date' })));
       fmt.appendChild(frow('Dataset', h('code', { text: m.dataset })));
+      const lk = h('fieldset', { class: 'bi-fieldset', 'data-links': '' }, h('legend', { text: 'Links between datasets' }));
+      (m.links || []).forEach((l, i) => {
+        const li = h('div', { class: 'bi-cond' }, h('code', { text: l.fields.join(' = ') }));
+        const x = h('button', { type: 'button', class: 'bi-chipbtn', 'aria-label': 'Remove the link ' + l.fields.join(', ') }, B.icon('x-lg'));
+        x.addEventListener('click', () => D.change('Remove a link', () => { m.links.splice(i, 1); if (!m.links.length) { delete m.links; } }));
+        li.appendChild(x);
+        lk.appendChild(li);
+      });
+      const lf = h('input', { type: 'text', class: 'studio-in', placeholder: 'counterparties.sector, joined.sector', 'aria-label': 'Fields that mean the same, separated by commas', 'data-link-fields': '' });
+      const addL = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', text: 'Link these fields', 'data-add-link': '' });
+      addL.addEventListener('click', () => {
+        const fields = lf.value.split(',').map((x) => x.trim()).filter(Boolean);
+        if (fields.length >= 2) { D.change('Add a link', () => { (m.links = m.links || []).push({ fields }); }); } else { D.say('A link names two or more fields (table.column), separated by commas.', true); }
+      });
+      lk.appendChild(lf);
+      lk.appendChild(addL);
+      lk.appendChild(h('small', { class: 'text-muted-d', text: 'Fields of different datasets that mean the same thing: a slicer or a click on one filters the visuals of the other.' }));
+      fmt.appendChild(lk);
       const bm = h('fieldset', { class: 'bi-fieldset' }, h('legend', { text: 'Bookmarks' }));
       (m.bookmarks || []).forEach((b, i) => {
         const li = h('div', { class: 'bi-cond' }, h('span', { text: b.name + ' → ' + b.page }));

@@ -31,9 +31,9 @@ import java.util.regex.Pattern;
  */
 public final class ReportYaml {
 
-    private static final List<String> TOP = List.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "pages");
+    private static final List<String> TOP = List.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "links", "pages");
     private static final List<String> PAGE = List.of("id", "title", "drillthrough", "filters", "visuals");
-    private static final List<String> VISUAL = List.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
+    private static final List<String> VISUAL = List.of("id", "type", "title", "dataset", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
             "interacts", "action");
     private static final Pattern PLAIN = Pattern.compile("[A-Za-z_][A-Za-z0-9_ ./()&%+\\-]*");
     private static final Pattern NUMBER = Pattern.compile("[-+]?(\\d+\\.?\\d*|\\.\\d+)([eE][-+]?\\d+)?");

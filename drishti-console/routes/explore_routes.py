@@ -30,7 +30,8 @@ from fastapi.responses import JSONResponse
 
 from core.backend import BackendError
 from core.csrf import json_body
-from core.explore import ExploreError, Extract, Limits, check_fields, from_arrow, from_json, parse_notebook, promote_python, query_body, run_sql
+from core.explore import (ExploreError, Extract, Limits, check_extracts, check_fields, from_arrow, from_json, parse_notebook, promote_python, promote_transform, query_body,
+                          run_sql)
 from core.pyrunner import PyError
 from core.quant import get_engine
 from routes.bi_routes import _page
@@ -87,6 +88,20 @@ async def extract_for(request: Request, spec: dict) -> Extract:
     return from_json(await backend.bi("POST", path, me, body, format="json"), cap)
 
 
+async def extras_for(request: Request, specs) -> list[tuple[dict, Extract]]:
+    """The other extracts of a notebook (``[{name, dataset, fields}]``), each built by the server for the signed-in person, as the first is."""
+    return [(s, await extract_for(request, {"dataset": s["dataset"], "fields": s["fields"]})) for s in check_extracts(specs or [], _limits(request))]
+
+
+async def primary_for(request: Request, spec, extras: list[tuple[dict, Extract]]) -> Extract:
+    """The extract ``df`` and the table ``extract`` are: the one named, else (a notebook that only joins) the first of the others."""
+    if spec:
+        return await extract_for(request, spec)
+    if extras:
+        return extras[0][1]
+    raise ExploreError("DRS-9070", 422, "send {extract: {dataset, fields}} or {extracts: [{name, dataset, fields}]}")
+
+
 @router.get("/bi/explore")
 async def page(request: Request):
     limits = _limits(request)
@@ -115,13 +130,15 @@ async def extract(request: Request):
 
 @router.post("/bi/explore/sql")
 async def sql(request: Request):
-    """Body ``{extract: {...as above}, sql}``: one SELECT over the table ``extract``; ``{columns, rows, rowCount, truncated, ms, inputRows, masked}``."""
+    """Body ``{extract: {...as above}, extracts?: [{name, dataset, fields}], sql}``: one SELECT over the table ``extract`` and a table for each other extract
+    (named as the extract is); ``{columns, rows, rowCount, truncated, ms, inputRows, masked}``."""
     body = await json_body(request)
     limits = _limits(request)
     try:
-        ex = await extract_for(request, body.get("extract") or {})
+        extras = await extras_for(request, body.get("extracts"))
+        ex = await primary_for(request, body.get("extract"), extras)
         async with _SQL_SLOTS:
-            out = await asyncio.to_thread(run_sql, ex, str(body.get("sql", "")), limits)
+            out = await asyncio.to_thread(run_sql, ex, str(body.get("sql", "")), limits, {s["name"]: e for s, e in extras})
     except (BackendError, ExploreError) as e:
         return _fail(e)
     return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers={"Cache-Control": "no-store"})
@@ -147,7 +164,8 @@ def cell_packages(source: str, allowed: list[str]) -> list[str]:
 
 @router.post("/bi/explore/python")
 async def python(request: Request):
-    """Body ``{extract, source, params?}``: runs one Python cell on the server over ``df`` (the extract as a pandas table) with ``quant``; answers
+    """Body ``{extract, extracts?, source, params?}``: runs one Python cell on the server over ``df`` (the extract as a pandas table), ``extract("<name>")`` (any
+    other extract of the notebook, by its name or its dataset) and ``quant``; answers
     ``{kind: cell, stdout, table|option|svg|png|value}`` plus ``ms``, ``inputRows``, ``masked``. Needs ``bi-author``. Failures are DRS-9070 to 9074."""
     body = await json_body(request)
     limits, runner = _limits(request), request.app.state.pyrunner
@@ -159,16 +177,22 @@ async def python(request: Request):
         if not source.strip() or len(source) > limits.cell_max_chars:
             raise ExploreError("DRS-9072", 413, f"a cell holds 1 to {limits.cell_max_chars:,} characters (bi.explore.cell_max_chars)")
         packages = cell_packages(source, runner.packages)
-        ex = await extract_for(request, body.get("extract") or {})
-        if ex.arrow is None:
+        extras = await extras_for(request, body.get("extracts"))
+        ex = await primary_for(request, body.get("extract"), extras)
+        if ex.arrow is None or any(e.arrow is None for _, e in extras):
             raise ExploreError("DRS-9074", 503, "Python cells need pyarrow on the console (pip install -r drishti-console/requirements.txt)")
         manifest = {"name": "analyse-cell", "interface": "cell", "source": source, "packages": packages, "inputs": [], "target": "server",
                     "timeout": limits.cell_timeout, "memory": limits.cell_memory, "quant_root": str(CONSOLE), "quant_engine": limits.quant_engine,
                     "params": body.get("params") if isinstance(body.get("params"), dict) else {}}
-        answer = await runner.run({"manifest": manifest}, ex.arrow)
+        blobs: dict[str, bytes] = {}
+        for s, e in extras:                                              # an extract is read by its name or by the dataset it came from (the first of a dataset)
+            blobs[s["name"]] = e.arrow
+            blobs.setdefault(s["dataset"], e.arrow)
+        answer = await runner.run({"manifest": manifest}, ex.arrow, extracts=blobs)
     except (BackendError, ExploreError, PyError) as e:
         return _fail(e, author)
-    answer.update(inputRows=len(ex.rows), masked=ex.masked, target="server", truncatedInput=ex.truncated)
+    answer.update(inputRows=len(ex.rows), masked=sorted({m for m in ex.masked} | {m for _, e in extras for m in e.masked}), target="server", truncatedInput=ex.truncated,
+                  extracts=[{"name": s["name"], "rows": len(e.rows), "masked": e.masked} for s, e in extras])
     return JSONResponse(answer, headers={"Cache-Control": "no-store"})
 
 
@@ -211,9 +235,18 @@ async def promote(request: Request):
             notes = ["The cell's df became the function's table; a measure must return one number and a visual an ECharts option, SVG or PNG.",
                      "Check it (Check the Python on the item page), then publish. A measure also needs a dataset measure that names it."]
             return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers={"Cache-Control": "no-store"})
+        if to == "transform":
+            source = str(body.get("source", ""))
+            if not source.strip() or len(source) > limits.cell_max_chars:
+                raise ExploreError("DRS-9070", 422, "the cell is empty or too long to promote")
+            text = promote_transform(source, name, check_extracts(body.get("extracts") or [], limits), cell_packages(source, request.app.state.pyrunner.packages))
+            notes = ["Each extract(\"name\") became a parameter of run(); the cell's result is returned and must be a pandas DataFrame with usable column names.",
+                     "Check it (Check the Python on the item page) and publish it, then make a derived dataset: derived: { transform: <this item>, inputs: { alias: { dataset, by, measures } } }, "
+                     "one input per dataset, in this order (docs/guides/DATASETS.md section 11)."]
+            return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers={"Cache-Control": "no-store"})
         if to == "report":
             return JSONResponse(await _slice_report(request, body, name), headers={"Cache-Control": "no-store"})
-        raise ExploreError("DRS-9070", 422, "to is measure, visual or report")
+        raise ExploreError("DRS-9070", 422, "to is measure, visual, transform or report")
     except (BackendError, ExploreError) as e:
         return _fail(e)
 

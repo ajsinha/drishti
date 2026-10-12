@@ -212,4 +212,5 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1) and,
     cell_memory_mb: 512                                         # a Python cell's memory on the server (also capped by bi.python.max_memory_mb)
     cell_max_chars: 65536                                       # longest Python cell
     max_cells: 60                                               # most cells in a notebook
+    max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
     quant_engine: stand-in                                      # the engine behind quant.price(...) in a Python cell (docs/guides/QUANT_SERVICE.md)

@@ -42,7 +42,7 @@
         target.value = cell.target || 'server';
         target.addEventListener('change', function () { cell.target = target.value; });
         bar.appendChild(target);
-        [['measure', 'Promote to a measure'], ['visual', 'Promote to a visual']].forEach(function (p) {
+        [['measure', 'Promote to a measure'], ['visual', 'Promote to a visual']].concat(X.extras.length ? [['transform', 'Promote to a Transform']] : []).forEach(function (p) {
           var b = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote': p[0], text: p[1] });
           b.addEventListener('click', function () { promote(cell, p[0]); });
           bar.appendChild(b);
@@ -61,7 +61,7 @@
     if (!X.ex) { note(cell.out, 'Open an extract first.', true); return Promise.resolve(); }
     note(cell.out, 'Running…');
     if (kind === 'sql') {
-      return X.post('/bi/explore/sql', { extract: spec(), sql: cell.source }).then(function (r) {
+      return X.post('/bi/explore/sql', { extract: spec(), extracts: X.extras, sql: cell.source }).then(function (r) {
         clear(cell.out);
         cell.out.appendChild(h('p', { class: 'bi-result-meta', text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms' }));
         var host = h('div', { class: 'tbl-wrap' });
@@ -72,7 +72,7 @@
     var done = function (r) { show(cell.out, r); };
     var fail = function (e) { note(cell.out, e.message, true); if (e.traceback) { cell.out.appendChild(h('pre', { class: 'bx-pre', text: e.traceback })); } };
     if (cell.target === 'browser') { return B.python.runCell(cell.source, X.ex).then(done, fail); }
-    return X.post('/bi/explore/python', { extract: spec(), source: cell.source }).then(done, fail);
+    return X.post('/bi/explore/python', { extract: spec(), extracts: X.extras, source: cell.source }).then(done, fail);
   }
 
   function show(out, r) {
@@ -90,7 +90,7 @@
 
   function promote(cell, to) {
     var title = (q('input[name=title]', root).value || 'Analyse cell') + ' (' + to + ')';
-    X.post('/bi/explore/promote', { to: to, name: title, source: cell.source, columns: X.ex ? X.ex.columns.map(function (c) { return c.name; }) : [] })
+    X.post('/bi/explore/promote', { to: to, name: title, source: cell.source, extracts: X.extras, columns: X.ex ? X.ex.columns.map(function (c) { return c.name; }) : [] })
       .then(function (d) { return X.createItem('python', d.title, d.yaml).then(function (it) { X.say('Python ' + to + ' draft saved in your workspace: ' + it.title + '. ' + d.notes.join(' ')); X.link(it); }); })
       .catch(function (e) { X.say(e.message, true); });
   }
@@ -103,6 +103,7 @@
     q('[data-add=' + kind + ']', root).addEventListener('click', function () { X.cells[kind].push({ source: STARTER[kind], target: 'server' }); draw(kind); });
     q('[data-run-all=' + kind + ']', root).addEventListener('click', function () { runAll(kind); });
   });
+  document.addEventListener('bx:extras', function () { draw('python'); });                        // a cell that reads extract(...) can be promoted to a Transform
   document.addEventListener('bx:extract', function () {
     ['sql', 'python'].forEach(function (kind) { if (!X.cells[kind].length) { X.cells[kind].push({ source: STARTER[kind], target: 'server' }); } draw(kind); });
   });

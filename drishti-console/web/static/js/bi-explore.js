@@ -27,6 +27,7 @@
     spec: null,                                 // what to send to rebuild it: {dataset, fields}
     qual: [],                                   // the qualified field names asked for, in the order of the extract's columns
     slice: { rows: [], columns: [], values: [], filters: [] },
+    extras: [],                                 // the notebook's other extracts: [{name, dataset, fields}], read by a cell as extract("name")
     mayPython: root.getAttribute('data-may-python') === 'true',
     item: null,                                 // the notebook item being edited
     model: null
@@ -239,8 +240,10 @@
     var cells = [{ type: 'slice', slice: JSON.parse(JSON.stringify(X.slice)) }];
     X.cells.sql.forEach(function (c) { cells.push({ type: 'sql', source: c.source }); });
     X.cells.python.forEach(function (c) { cells.push({ type: 'python', source: c.source, target: c.target || 'server' }); });
-    return { rachana: 1, notebook: B.slug(q('input[name=title]', root).value || 'analysis') || 'analysis', title: q('input[name=title]', root).value || 'Analysis',
+    var nb = { rachana: 1, notebook: B.slug(q('input[name=title]', root).value || 'analysis') || 'analysis', title: q('input[name=title]', root).value || 'Analysis',
       dataset: X.spec.dataset, fields: X.spec.fields, cells: cells };
+    if (X.extras.length) { nb.extracts = X.extras.map(function (e) { return { name: e.name, dataset: e.dataset, fields: e.fields }; }); }
+    return nb;
   };
   q('[data-save]', root).addEventListener('submit', function (e) {
     e.preventDefault();
@@ -260,6 +263,8 @@
       if (c.type === 'slice') { X.slice = Object.assign({ rows: [], columns: [], values: [], filters: [] }, c.slice); } else if (c.type === 'sql') { X.cells.sql.push({ source: c.source }); } else { X.cells.python.push({ source: c.source, target: c.target || 'server' }); }
     });
     q('input[name=title]', root).value = nb.title || '';
+    X.extras = (nb.extracts || []).map(function (e) { return { name: e.name, dataset: e.dataset, fields: e.fields }; });
+    document.dispatchEvent(new CustomEvent('bx:extras'));
     return X.open({ dataset: nb.dataset, fields: nb.fields });
   };
 

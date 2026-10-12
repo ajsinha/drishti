@@ -137,7 +137,38 @@
       q('[data-problems-sec]').hidden = m.problems.length === 0;
       if (!m.tables) { return; }
       q('[data-meta]').textContent = 'dataset ' + m.name + ' · version ' + m.version + ' · engine ' + m.engine + ' · ' + m.tables.length + ' tables · ' + m.measures.length + ' measures';
-      tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); preview(m);
+      built(m); tables(m); relationships(m); measures(m); security(m); layers(m); refresh(m); preview(m);
+    }
+
+    /** A composed or derived dataset (RUPAKA.md section 20.10): the datasets it asks as you and how the answers are joined, or the Python Transform that reads them. */
+    function built(m) {
+      var c = m.composition, sec = q('[data-built-sec]');
+      sec.hidden = !c;
+      if (!c) { return; }
+      q('[data-built-note]').textContent = c.kind === 'composed'
+        ? 'This dataset has no tables of its own. Each source below is asked as you, so its row rules and masks apply before the answers are joined into the table "joined".'
+        : 'This dataset is made by the Python Transform ' + c.transform + ': each source below is asked as you, the answers are handed to the Transform as pandas frames, and the frame it returns is the table "result", kept for you until a source changes.';
+      var tb = q('[data-built] tbody'); clear(tb);
+      c.sources.forEach(function (s) {
+        tb.appendChild(h('tr', { 'data-source': s.alias }, h('th', { scope: 'row', class: 'mono', text: s.alias }), h('td', {}, h('a', { href: '/bi/d/' + id2path(s.dataset), text: s.dataset })),
+          h('td', { class: 'mono', text: (s.by.length ? s.by : s.fields).join(', ') }), h('td', { class: 'mono', text: s.measures.join(', ') }), h('td', { class: 'mono', text: s.filters.join('; ') })));
+      });
+      var js = q('[data-built-joins]'); clear(js);
+      (c.joins || []).forEach(function (j) { js.appendChild(h('li', {}, h('code', { text: j.left + ' ' + j.type + ' join ' + j.right + ' on ' + j.on.join(', ') }))); });
+      var run = q('[data-run-wrap]');
+      run.hidden = c.kind !== 'derived';
+      if (c.kind === 'derived') {
+        api('GET', '/me').then(function (me) {
+          if (me.powers.indexOf('bi-author') < 0) { run.hidden = true; return; }
+          q('[data-run-transform]').onclick = function () {
+            q('[data-run-result]').textContent = 'Running the Transform...';
+            api('POST', path + '/transform/run', {}).then(function (r) {
+              q('[data-run-result]').textContent = r.rows + ' rows, ' + r.columns.map(function (x) { return x.name + ' (' + x.type + ')'; }).join(', ') + (r.cached ? ' · already kept for you' : ' · ' + r.millis + ' ms');
+              api('GET', path).then(draw);
+            }).catch(function (e) { q('[data-run-result]').textContent = e.message; });
+          };
+        }).catch(function () { run.hidden = true; });
+      }
     }
 
     function tables(m) {

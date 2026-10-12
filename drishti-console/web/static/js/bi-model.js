@@ -135,17 +135,64 @@
     return placed;
   }
 
+  // ---- a composed or derived dataset (RUPAKA.md section 20.10): its sources as boxes, the joins or the Transform between them, the table they make ----------
+  const composed = () => !!(model && model.composition);
+  const frameName = (text) => { const m = /^(.*\S)\s+as\s+(\S.*)$/i.exec(text); return m ? m[2] : text.split('.').pop(); };
+  /** Each source of the dataset as a box (the columns it is grouped by, then its measures), then the Transform (derived) and the table the rest make. */
+  function compositionTables(comp, own) {
+    const keys = {};
+    (comp.joins || []).forEach((j) => j.on.forEach((o) => { const [l, r] = o.indexOf('=') >= 0 ? o.split('=').map((x) => x.trim()) : [o, o]; (keys[j.left] = keys[j.left] || new Set()).add(l); (keys[j.right] = keys[j.right] || new Set()).add(r); }));
+    const typeOf = (alias, name) => { const f = (comp.frame || []).find((x) => x.from === alias && x.name === name); return f ? f.type : 'string'; };
+    const out = comp.sources.map((src) => ({
+      name: src.alias, kind: 'dataset ' + src.dataset,
+      columns: [...(src.by.length ? src.by : src.fields).map(frameName).map((n) => ({ name: n, type: typeOf(src.alias, n), key: !!(keys[src.alias] && keys[src.alias].has(n)) })),
+        ...src.measures.map(frameName).map((n) => ({ name: n, type: 'measure', calculated: true }))],
+    }));
+    if (comp.kind === 'derived') { out.push({ name: 'transform', kind: 'Python Transform', columns: [{ name: comp.transform, type: 'item' }] }); }
+    return out.concat(own);
+  }
+  /** The joins as lines between the key columns, and each source's line to the table it feeds (dashed). */
+  function compositionRels(comp, own) {
+    const out = [];
+    (comp.joins || []).forEach((j) => j.on.forEach((o) => {
+      const [l, r] = o.indexOf('=') >= 0 ? o.split('=').map((x) => x.trim()) : [o, o];
+      out.push({ from: j.left + '.' + l, to: j.right + '.' + r, cardinality: 'many-to-one', direction: 'single', active: true, join: j.type });
+    }));
+    const sink = comp.kind === 'derived' ? 'transform' : own.name;
+    const sinkCol = comp.kind === 'derived' ? comp.transform : own.columns[0].name;
+    comp.sources.forEach((src) => {
+      const col = (src.by.length ? src.by : src.fields).map(frameName)[0] || src.measures.map(frameName)[0];
+      if (col) { out.push({ from: src.alias + '.' + col, to: sink + '.' + sinkCol, cardinality: 'many-to-one', direction: 'single', active: true, feed: true }); }
+    });
+    if (comp.kind === 'derived') { out.push({ from: 'transform.' + comp.transform, to: own.name + '.' + own.columns[0].name, cardinality: 'many-to-one', direction: 'single', active: true, feed: true }); }
+    return out;
+  }
+  function placeComposition(tables) {
+    const placed = {};
+    const COL = BOX_W + 96;
+    const own = tables[tables.length - 1];
+    const sources = tables.filter((t) => t !== own && t.name !== 'transform');
+    let y = 24;
+    sources.forEach((t) => { placed[t.name] = { x: 24, y }; y += 52 + Math.min(t.columns.length * 24, 224) + 34; });
+    const hasTransform = tables.some((t) => t.name === 'transform');
+    if (hasTransform) { placed.transform = { x: 24 + COL, y: 24 }; }
+    placed[own.name] = { x: 24 + COL * (hasTransform ? 2 : 1), y: 24 };
+    return placed;
+  }
+
   function draw() {
     boxes.forEach((b) => b.el.remove());
     boxes.clear();
-    const tables = model.tables;
-    const auto = autoPlace(tables);
+    const comp = model.composition;
+    const tables = comp ? compositionTables(comp, model.tables) : model.tables;
+    if (comp) { rels = compositionRels(comp, model.tables[0]); }
+    const auto = comp ? placeComposition(tables) : autoPlace(tables);
     tables.forEach((t) => {
       const pos = layout[t.name] || auto[t.name];
       const list = h('ul', { role: 'list' });
       t.columns.forEach((c) => {
-        const li = h('li', { class: 'bi-col', tabindex: '0', draggable: readOnly ? 'false' : 'true', 'data-column': t.name + '.' + c.name,
-          'aria-label': t.name + '.' + c.name + ', ' + c.type + (c.key ? ', key' : '') + (readOnly ? '' : '. Drag onto a column of another table to relate them') },
+        const li = h('li', { class: 'bi-col', tabindex: '0', draggable: readOnly || comp ? 'false' : 'true', 'data-column': t.name + '.' + c.name,
+          'aria-label': t.name + '.' + c.name + ', ' + c.type + (c.key ? ', key' : '') + (readOnly || comp ? '' : '. Drag onto a column of another table to relate them') },
           B.icon(c.key ? 'key' : c.calculated ? 'calculator' : 'dot'), h('span', { text: c.name }), h('span', { class: 'bi-coltype', text: c.type }));
         li.addEventListener('dragstart', (e) => { e.dataTransfer.setData('application/x-drishti-col', t.name + '.' + c.name); e.dataTransfer.effectAllowed = 'link'; });
         li.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].indexOf('application/x-drishti-col') >= 0) { e.preventDefault(); li.classList.add('bi-over'); } });
@@ -218,6 +265,28 @@
     rels.forEach((r, i) => {
       const a = anchor(r.from, r.to), b = anchor(r.to, r.from);
       if (!a || !b) { return; }
+      if (r.feed || r.join) {
+        const dx = Math.max(40, Math.abs(b.x - a.x) / 2);
+        const g = document.createElementNS(NS, 'g');
+        g.setAttribute('data-rel', String(i));
+        const path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', 'M ' + a.x + ' ' + a.y + ' C ' + (a.x + (a.right ? dx : -dx)) + ' ' + a.y + ', ' + (b.x + (b.right ? dx : -dx)) + ' ' + b.y + ', ' + b.x + ' ' + b.y);
+        path.setAttribute('class', r.feed ? 'bi-line-feed' : '');
+        g.appendChild(path);
+        if (r.join) {
+          const t = document.createElementNS(NS, 'text');
+          t.setAttribute('x', (a.x + b.x) / 2);
+          t.setAttribute('y', (a.y + b.y) / 2 - 8);
+          t.setAttribute('text-anchor', 'middle');
+          t.textContent = r.join + ' join';
+          g.appendChild(t);
+        }
+        const title = document.createElementNS(NS, 'title');
+        title.textContent = r.feed ? 'feeds ' + r.to.split('.')[0] : r.from + ' = ' + r.to + ': ' + r.join + ' join';
+        g.appendChild(title);
+        svg.appendChild(g);
+        return;
+      }
       const dx = Math.max(40, Math.abs(b.x - a.x) / 2);
       const d = 'M ' + a.x + ' ' + a.y + ' C ' + (a.x + (a.right ? dx : -dx)) + ' ' + a.y + ', ' + (b.x + (b.right ? dx : -dx)) + ' ' + b.y + ', ' + b.x + ' ' + b.y;
       const g = document.createElementNS(NS, 'g');
@@ -260,7 +329,15 @@
   // ---- relationships: the list, the form, proposals ------------------------------------------------------------------
   function drawRelList() {
     const ul = B.clear(q('[data-rels]'));
-    q('[data-no-rels]').hidden = rels.length > 0;
+    q('[data-no-rels]').hidden = rels.length > 0 || composed();
+    q('[data-add-wrap]').hidden = readOnly || composed();
+    q('[data-infer]').hidden = readOnly || composed();
+    if (composed()) {                                                         // the joins are written in the YAML (from: and join:), not drawn into it
+      model.composition.joins && model.composition.joins.forEach((j) => ul.appendChild(h('li', { class: 'bi-rel', 'data-join-row': j.left + '-' + j.right },
+        h('code', { text: j.left + ' ' + j.type + ' join ' + j.right + ' on ' + j.on.join(', ') }))));
+      if (model.composition.kind === 'derived') { ul.appendChild(h('li', { class: 'bi-rel', 'data-transform-row': '' }, h('code', { text: 'Python Transform ' + model.composition.transform }))); }
+      return;
+    }
     rels.forEach((r, i) => {
       const card = r.cardinality, dir = r.direction || 'single';
       const sc = h('select', { class: 'studio-select', 'aria-label': 'Cardinality of ' + r.from + ' to ' + r.to, 'data-cardinality': '' }, ['many-to-one', 'one-to-many', 'one-to-one', 'many-to-many'].map((c) => h('option', { value: c, text: c })));
@@ -377,7 +454,7 @@
       const box = B.clear(q('[data-problems]'));
       (r.problems || []).forEach((p) => box.appendChild(h('li', { class: 'bi-problem bi-problem-' + p.level, 'data-code': p.code }, h('strong', { text: p.code + ' ' }), h('code', { text: p.path }), ': ' + p.message)));
       if (r.model) {
-        model = { tables: r.model.tables };
+        model = { tables: r.model.tables, composition: r.model.composition || null };
         rels = r.model.relationships.map((x) => ({ from: x.from, to: x.to, cardinality: x.cardinality, direction: x.direction, active: x.active }));
         layout = readLayout(text());
         draw();
@@ -422,7 +499,7 @@
     (r.problems || []).forEach((p) => box.appendChild(h('li', { class: 'bi-problem bi-problem-' + p.level, 'data-code': p.code }, h('strong', { text: p.code + ' ' }), h('code', { text: p.path }), ': ' + p.message)));
     q('[data-valid]').textContent = r.valid ? 'Valid' : 'Has errors';
     if (r.model) {
-      model = { tables: r.model.tables };
+      model = { tables: r.model.tables, composition: r.model.composition || null };
       rels = r.model.relationships.map((x) => ({ from: x.from, to: x.to, cardinality: x.cardinality, direction: x.direction, active: x.active }));
       layout = readLayout(text());
       draw();

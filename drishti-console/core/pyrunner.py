@@ -130,11 +130,11 @@ class PyRunner:
         return self._unshare
 
     # ---- a call ------------------------------------------------------------------------------------------------------------
-    async def run(self, item: dict, arrow: bytes, *, group_by: list[str] | None = None, params: dict | None = None) -> dict:
+    async def run(self, item: dict, arrow: bytes, *, group_by: list[str] | None = None, params: dict | None = None, extracts: dict[str, bytes] | None = None) -> dict:
         """Runs the item described by the server (``manifest`` with its source) on ``arrow`` (Arrow IPC stream bytes). Returns the worker's answer
         (``kind`` measure, echarts, svg or png) plus ``ms``; raises :class:`PyError`."""
         m = item["manifest"]
-        self._check(m, arrow)
+        self._check(m, arrow + b"".join({id(b): b for b in (extracts or {}).values()}.values()))
         if self._sem is None:
             self._sem = asyncio.Semaphore(self.workers)
         try:
@@ -144,7 +144,7 @@ class PyRunner:
         self.running += 1
         self.calls += 1
         try:
-            return await self._spawn(m, arrow, group_by, {**(m.get("params") or {}), **(params or {})})
+            return await self._spawn(m, arrow, group_by, {**(m.get("params") or {}), **(params or {})}, extracts=extracts)
         except PyError:
             self.failures += 1
             raise
@@ -191,7 +191,7 @@ class PyRunner:
         if len(arrow) > self.max_input:
             raise PyError("DRS-9072", 413, f"the rows handed to Python are {len(arrow):,} bytes; the limit is {self.max_input:,} (bi.python.max_input_bytes)")
 
-    async def _spawn(self, m: dict, arrow, group_by, params: dict, *, dest: str | None = None, max_rows: int = 0) -> dict:
+    async def _spawn(self, m: dict, arrow, group_by, params: dict, *, dest: str | None = None, max_rows: int = 0, extracts: dict[str, bytes] | None = None) -> dict:
         timeout = min(int(m.get("timeout") or 10), self.max_timeout)
         memory = min(int(m.get("memory") or 256), self.max_memory)
         tmp = tempfile.mkdtemp(prefix="drishti-py-", dir=self.scratch)
@@ -205,7 +205,14 @@ class PyRunner:
                     files.append(f"in_{i}.arrow")
             else:
                 (Path(tmp) / "in.arrow").write_bytes(arrow)
-            req = {"interface": m["interface"], "entry": m.get("entry") or ("compute" if m["interface"] == "measure" else "run" if m["interface"] == "transform" else "render"),
+            more: dict[str, str] = {}                                    # a notebook cell's other extracts: name -> file (two names of one extract share it)
+            written: dict[int, str] = {}
+            for ename, blob in (extracts or {}).items():
+                if id(blob) not in written:
+                    written[id(blob)] = f"ex_{len(written)}.arrow"
+                    (Path(tmp) / written[id(blob)]).write_bytes(blob)
+                more[ename] = written[id(blob)]
+            req = {"extracts": more, "interface": m["interface"], "entry": m.get("entry") or ("compute" if m["interface"] == "measure" else "run" if m["interface"] == "transform" else "render"),
                    "source": m["source"], "inputs_files": files, "max_rows": max_rows,
                    "inputs": [] if m["interface"] == "transform" else list(m.get("inputs") or []), "group_by": group_by, "params": params, "packages": list(m.get("packages") or []),
                    "output": m.get("output") or "echarts", "quant_root": m.get("quant_root"), "quant_engine": m.get("quant_engine"),

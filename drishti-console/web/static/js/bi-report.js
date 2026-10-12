@@ -39,7 +39,13 @@
   const pageOf = (id) => rep.report.pages.find((p) => p.id === id);
   const visualOf = (id) => pageOf(pageId).visuals.find((v) => v.id === id);
 
-  function levels(spec) { return spec.hierarchy && idx.hierarchies[spec.hierarchy] ? idx.hierarchies[spec.hierarchy] : null; }
+  /** The index of the dataset a visual reads: its own when it names one (the server sends the models of the report's other datasets), else the report's. */
+  const idxs = {};
+  function idxOf(spec) {
+    if (spec && spec.dataset && rep && rep.datasets && rep.datasets[spec.dataset]) { return idxs[spec.dataset] || (idxs[spec.dataset] = B.index(rep.datasets[spec.dataset])); }
+    return idx;
+  }
+  function levels(spec) { const ix = idxOf(spec); return spec.hierarchy && ix.hierarchies[spec.hierarchy] ? ix.hierarchies[spec.hierarchy] : null; }
   function firstWell(spec) { return spec.wells.axis ? 'axis' : spec.wells.rows ? 'rows' : null; }
   function startLevel(spec) { const lv = levels(spec); const w = firstWell(spec); return lv && w ? Math.max(0, lv.indexOf(spec.wells[w][0])) : 0; }
 
@@ -68,7 +74,7 @@
   function ctxFor(spec) {
     const sel = state.selections.find((s) => s.visual === spec.id);
     return {
-      index: idx, palette, t: tokens, interactive: true, selected: sel || null, rolling,
+      index: idxOf(spec), palette, t: tokens, interactive: true, selected: sel || null, rolling,
       onMark: (mark) => selectMark(spec, mark), navigate: (a) => navigate(a),
       slicer: spec.type === 'slicer' ? { value: state.slicers[spec.id] == null ? null : state.slicers[spec.id], onChange: (v) => { state.slicers[spec.id] = v; refreshAll(spec.id); } } : null
     };
@@ -128,7 +134,7 @@
 
   function terminalTarget(spec, sel) {
     if (!sel || sel.values.length !== 1) { return null; }
-    const col = idx.columns[sel.field];
+    const col = idxOf(spec).columns[sel.field];
     return col && col.kind && (col.key || col.name === 'id') ? { kind: col.kind, value: sel.values[0] } : null;
   }
 

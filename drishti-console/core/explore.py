@@ -31,7 +31,7 @@ from dataclasses import dataclass, field
 
 import yaml
 
-NOTEBOOK_KEYS = {"rachana", "notebook", "title", "description", "dataset", "fields", "cells", "version"}
+NOTEBOOK_KEYS = {"rachana", "notebook", "title", "description", "dataset", "fields", "extracts", "cells", "version", "sample", "tags", "endorsement", "owner", "audience"}
 CELL_TYPES = ("slice", "sql", "python")
 _SAFE = re.compile(r"[^A-Za-z0-9_]")
 
@@ -56,6 +56,7 @@ class Limits:
     cell_memory: int = 512
     cell_max_chars: int = 65_536
     max_cells: int = 60
+    max_extracts: int = 6
     quant_engine: str = "stand-in"
 
     @classmethod
@@ -68,7 +69,7 @@ class Limits:
         return cls(max_rows=g("max_rows", 10_000, 10, 100_000), max_fields=g("max_fields", 60, 1, 500), sql_max_rows=g("sql_max_rows", 5_000, 1, 100_000),
                    sql_max_seconds=g("sql_max_seconds", 5.0, 0.5, 60.0), sql_max_chars=g("sql_max_chars", 20_000, 100, 200_000),
                    cell_timeout=g("cell_timeout_seconds", 20, 1, 60), cell_memory=g("cell_memory_mb", 512, 64, 4096),
-                   cell_max_chars=g("cell_max_chars", 65_536, 100, 500_000), max_cells=g("max_cells", 60, 1, 500),
+                   cell_max_chars=g("cell_max_chars", 65_536, 100, 500_000), max_cells=g("max_cells", 60, 1, 500), max_extracts=g("max_extracts", 6, 1, 20),
                    quant_engine=str(settings.get("bi.explore.quant_engine", "stand-in")))
 
 
@@ -163,8 +164,22 @@ def _authorizer(action, arg1, arg2, db, source):
     return sqlite3.SQLITE_OK if action in _ALLOWED else sqlite3.SQLITE_DENY
 
 
-def run_sql(extract: Extract, sql: str, limits: Limits) -> dict:
-    """Runs one SELECT over ``extract`` (the table ``extract``). Answers ``{columns, rows, rowCount, truncated, ms}``; refusals are :class:`ExploreError`."""
+def table_name(name: str) -> str:
+    """The SQL table an extra extract is read as: its name with anything but letters, digits and underscore replaced (``extract`` itself is the primary extract)."""
+    t = _SAFE.sub("_", name) or "x"
+    return ("x" + t) if t[0].isdigit() else t
+
+
+def _load(db: sqlite3.Connection, table: str, extract: Extract) -> None:
+    kinds = {"integer": "INTEGER", "decimal": "REAL"}
+    db.execute(f'CREATE TABLE "{table}" (' + ", ".join(f'"{c}" {kinds.get(t, "TEXT")}' for c, t in zip(extract.columns, extract.types)) + ")")
+    if extract.rows:
+        db.executemany(f'INSERT INTO "{table}" VALUES (' + ",".join("?" * len(extract.columns)) + ")", extract.rows)
+
+
+def run_sql(extract: Extract, sql: str, limits: Limits, extras: dict[str, Extract] | None = None) -> dict:
+    """Runs one SELECT over ``extract`` (the table ``extract``) and, when the notebook has more extracts, over those too (a table each, named as the extract is).
+    Answers ``{columns, rows, rowCount, truncated, ms}``; refusals are :class:`ExploreError`."""
     sql = (sql or "").strip().rstrip(";").strip()
     if not sql:
         raise ExploreError("DRS-9070", 422, "write a SELECT over the table extract")
@@ -173,10 +188,10 @@ def run_sql(extract: Extract, sql: str, limits: Limits) -> dict:
     t0 = time.monotonic()
     db = sqlite3.connect(":memory:", check_same_thread=False)
     try:
-        kinds = {"integer": "INTEGER", "decimal": "REAL"}
-        db.execute("CREATE TABLE extract (" + ", ".join(f'"{c}" {kinds.get(t, "TEXT")}' for c, t in zip(extract.columns, extract.types)) + ")")
-        if extract.rows:
-            db.executemany("INSERT INTO extract VALUES (" + ",".join("?" * len(extract.columns)) + ")", extract.rows)
+        _load(db, "extract", extract)
+        for name, other in (extras or {}).items():
+            if table_name(name) != "extract":
+                _load(db, table_name(name), other)
         for name, value in (("SQLITE_LIMIT_SQL_LENGTH", limits.sql_max_chars), ("SQLITE_LIMIT_LENGTH", 1_000_000), ("SQLITE_LIMIT_COMPOUND_SELECT", 20),
                             ("SQLITE_LIMIT_ATTACHED", 0), ("SQLITE_LIMIT_FUNCTION_ARG", 16)):
             if hasattr(sqlite3, name):
@@ -228,7 +243,66 @@ def parse_notebook(text: str, limits: Limits) -> dict:
             raise ExploreError("DRS-9072", 422, f"cell {i + 1}: source is text up to {limits.cell_max_chars:,} characters")
     if doc.get("fields") is not None:
         check_fields(doc["fields"], limits)
+    if doc.get("extracts") is not None:
+        check_extracts(doc["extracts"], limits)
     return doc
+
+
+def check_extracts(specs, limits: Limits) -> list[dict]:
+    """The extra extracts of a notebook: ``[{name, dataset, fields}]``, each a masked extract of a dataset that a cell reads as ``extract("<name>")``."""
+    if not isinstance(specs, list) or len(specs) > limits.max_extracts:
+        raise ExploreError("DRS-9072", 413, f"a notebook holds a list of up to {limits.max_extracts} extracts (bi.explore.max_extracts)")
+    seen = set()
+    for i, s in enumerate(specs):
+        if not isinstance(s, dict) or not isinstance(s.get("dataset"), str) or not s["dataset"].strip():
+            raise ExploreError("DRS-9070", 422, f"extract {i + 1}: send {{name, dataset, fields}}")
+        name = s.get("name")
+        if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.\- ]{0,63}", name):
+            raise ExploreError("DRS-9070", 422, f"extract {i + 1}: name is 1 to 64 letters, digits, space, hyphen, dot or underscore")
+        if name in seen or table_name(name) == "extract":
+            raise ExploreError("DRS-9070", 422, f"extract {i + 1}: the name '{name}' is already taken (and 'extract' is the first extract's)")
+        seen.add(name)
+        check_fields(s.get("fields"), limits)
+    return specs
+
+
+def transform_name(name: str, used: list[str]) -> str:
+    """A Python parameter name for an extract: letters, digits and underscore, not starting with a digit, not already used."""
+    t = _SAFE.sub("_", name).strip("_") or "frame"
+    t = ("x" + t) if t[0].isdigit() else t
+    n, out = 2, t
+    while out in used:
+        out, n = f"{t}_{n}", n + 1
+    return out
+
+
+def promote_transform(cell_source: str, name: str, extracts: list[dict], packages: list[str]) -> str:
+    """A Python cell that joins several extracts as the YAML of a Python Transform draft (PYTHON_BI.md section 13): each ``extract("x")`` becomes the function's
+    parameter for that extract, ``result`` is returned and must be a pandas DataFrame. The inputs are the datasets of the extracts, in order; nothing is published."""
+    if not extracts:
+        raise ExploreError("DRS-9070", 422, "a Transform reads datasets: open the extracts the cell uses first")
+    params: list[str] = []
+    by_name: dict[str, str] = {}
+    for e in extracts:
+        p = transform_name(e["name"], params)
+        params.append(p)
+        by_name[e["name"]] = p
+        by_name.setdefault(e["dataset"], p)
+
+    def swap(m):
+        key = m.group(2)
+        if key not in by_name:
+            raise ExploreError("DRS-9070", 422, f"the cell reads extract(\"{key}\"), which is not one of the notebook's extracts ({', '.join(by_name)})")
+        return by_name[key]
+    body_src = re.sub(r"extract\(\s*([\"'])(.+?)\1\s*\)", swap, cell_source)
+    lines = body_src.splitlines()
+    if re.search(r"\bdf\b", body_src) and not re.search(r"^\s*df\s*=", body_src, re.M):
+        lines.insert(0, f"df = {params[0]}")
+    body = "\n".join(("    " + ln) if ln.strip() else "" for ln in lines) or "    pass"
+    source = f"def run({', '.join(params)}):\n{body}\n    return result\n"
+    doc: dict = {"rachana": 1, "python": re.sub(r"[^A-Za-z0-9_-]", "-", name).strip("-")[:64] or "from-analyse", "title": name, "interface": "transform",
+                 "inputs": [e["dataset"] for e in extracts], "packages": packages, "target": "server", "source": source}
+    return yaml.safe_dump(doc, sort_keys=False, default_flow_style=None, width=200)
 
 
 def promote_python(cell_source: str, name: str, interface: str, columns: list[str], packages: list[str]) -> str:

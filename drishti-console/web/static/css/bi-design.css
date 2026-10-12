@@ -134,6 +134,7 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-lines { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
 .bi-lines line, .bi-lines path { stroke: var(--d-link); stroke-width: 2; fill: none; }
 .bi-lines .bi-line-off { stroke-dasharray: 5 4; stroke: var(--d-muted); }
+.bi-lines .bi-line-feed { stroke-dasharray: 2 5; stroke: var(--d-muted); stroke-width: 1.5; }
 .bi-lines .bi-line-hit { pointer-events: stroke; stroke: transparent; stroke-width: 12; cursor: pointer; }
 .bi-lines text { fill: var(--d-ink); font-size: 12px; font-family: var(--d-font-mono); paint-order: stroke; stroke: var(--d-surface); stroke-width: 3px; }
 .bi-lines .bi-line-sel { stroke: var(--d-accent); stroke-width: 3; }
