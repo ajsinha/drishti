@@ -52,8 +52,7 @@ def test_the_board_designer_builds_a_board_with_an_alert_and_a_hysteresis(stack,
     design_board(page)
     assert page.inner_text("[data-title]") == "Wave B wall"
     add_tile(page)
-    tile = page.locator("[data-tile]").first
-    assert "Live trading desk" in tile.inner_text()
+    page.wait_for_function("() => document.querySelector('[data-tile]').innerText.includes('Live trading desk')", timeout=15000)       # the server resolves what the tile names
     # the tile's form: title, place, the alert with its hysteresis, tell the readers
     page.wait_for_selector("[data-tile-edit]")
     page.fill("[data-tile-edit] [name=title]", "Net MTM")
@@ -73,7 +72,7 @@ def test_the_board_designer_builds_a_board_with_an_alert_and_a_hysteresis(stack,
     page.click("[data-tab=yaml]")
     page.wait_for_function("() => /hysteresis: 5000000/.test(document.querySelector('[data-view=yaml]').innerText)")
     yaml = page.evaluate("document.querySelector('.CodeMirror') ? document.querySelector('.CodeMirror').CodeMirror.getValue() : document.querySelector('[data-yaml]').value")
-    assert "report: file:report:live-trading-desk" in yaml and "x: 1" in yaml and "notify:" in yaml and "title: Net MTM" in yaml
+    assert 'report: "file:report:live-trading-desk"' in yaml and "x: 1" in yaml and "notify:" in yaml and "title: Net MTM" in yaml
     # an edit in the YAML shows on the grid
     page.evaluate("(t) => { const cm = document.querySelector('.CodeMirror'); if (cm) { cm.CodeMirror.setValue(t); } else { const ta = document.querySelector('[data-yaml]'); ta.value = t; ta.dispatchEvent(new Event('input')); } }",
                   yaml.replace("title: Net MTM", "title: Renamed in YAML"))
@@ -101,7 +100,6 @@ def test_the_designer_controls_are_finger_sized_on_a_phone(stack, browser):
     for sel in ("[data-save]", "[data-add-btn]", "[data-undo]", "[data-check]", "[data-tab=yaml]", "[data-tile] [data-act=delete]", "[data-b-title]", "[data-p-delete]"):
         box = page.locator(sel).first.bounding_box()
         assert box["height"] >= 43.5 and box["width"] >= 43.5, (sel, box)
-    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1") or True       # the grid may scroll sideways; the controls may not hide
     clean(page)
 
 
