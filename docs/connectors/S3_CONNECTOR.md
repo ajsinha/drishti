@@ -253,6 +253,8 @@ another store).
 connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
 ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). The listing that already runs every `rescan-seconds` fills the kept days (dated folders `<date>/<kind>/<id>.json`), so a day rewritten in the bucket is picked up at the next rescan; the S3 connector keeps its days on the heap (no segment files).
 
+Past days are checked against the bucket every `index.reload-every` (10 minutes; S3 gives a day no version, so each past day is re-listed once per cycle), and **Admin → Connectors → this connector → Index** reloads any day by hand ([OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+
 ### 5.3 Dated reads
 
 See [section 6](#6-dates). A picked date is a static snapshot; the connector has no live push, so a view it answers

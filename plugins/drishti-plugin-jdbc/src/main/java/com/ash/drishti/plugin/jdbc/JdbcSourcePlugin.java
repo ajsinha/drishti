@@ -317,6 +317,11 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<com.ash.drishti.api.DatedHitIndex> typeAheadIndex() {
+        return catalog != null && catalog.dated().enabled() ? java.util.Optional.of(catalog.dated()) : java.util.Optional.empty();
+    }
+
+    @Override
     public Map<String, Object> cacheStats() {
         return catalog != null ? catalog.stats() : queryMode != null ? queryMode.stats() : Map.of();
     }

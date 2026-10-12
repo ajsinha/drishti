@@ -610,6 +610,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<com.ash.drishti.api.DatedHitIndex> typeAheadIndex() {
+        return dated.enabled() ? java.util.Optional.of(dated) : java.util.Optional.empty();
+    }
+
+    @Override
     public Map<String, Object> cacheStats() {
         Map<String, Object> m = new java.util.LinkedHashMap<>(Map.of("engine", lake.engineName(), "partitions", parts.synchronous().estimatedSize(), "tables",
                 latest.synchronous().estimatedSize(), "timeTravel", travelled.synchronous().estimatedSize(), "idMaps",

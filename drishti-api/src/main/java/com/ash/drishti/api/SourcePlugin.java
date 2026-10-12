@@ -162,6 +162,14 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * This source's multi-day type-ahead index ({@code index.days} above 1), for the admin's index page and reload; empty when
+     * it keeps one day or has none. Reload is by {@link DatedHitIndex#reload}.
+     */
+    default Optional<DatedHitIndex> typeAheadIndex() {
+        return Optional.empty();
+    }
+
+    /**
      * The state of this source's database connection pool (open, in use, idle, waiting, longest borrow), for Admin and the
      * health page; empty for a source that holds no pooled database connections (files, queues, REST, and the embedded
      * SQLite and DuckDB, which are not pooled).

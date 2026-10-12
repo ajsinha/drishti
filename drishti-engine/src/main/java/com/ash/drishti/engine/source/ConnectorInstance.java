@@ -157,6 +157,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<com.ash.drishti.api.DatedHitIndex> typeAheadIndex() {
+        return delegate.typeAheadIndex();
+    }
+
+    @Override
     public java.util.Optional<com.ash.drishti.api.pool.PoolStats> poolStats() {
         return delegate.poolStats();
     }

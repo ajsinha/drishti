@@ -301,6 +301,8 @@ From memory: the newest day's ids, sorted, searched by prefix; no query per keys
 connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
 ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). A load that replaces the file is the signal: the kept past days are rebuilt in the background, and a segment file survives a restart only while the file's `loaded_at` is unchanged.
 
+A past day restated with no signal is caught by the check every `index.reload-every` (10 minutes, compared with the recorded watermark), and **Admin → Connectors → this connector → Index** reloads any day by hand ([OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+
 ### 5.5 A day's columns
 
 Searches, pick lists, derived kinds, impact and reverse lookups need a few fields of every trade of a day. The

@@ -539,6 +539,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<com.ash.drishti.api.DatedHitIndex> typeAheadIndex() {
+        return dated.enabled() ? java.util.Optional.of(dated) : java.util.Optional.empty();
+    }
+
+    @Override
     public Map<String, Object> cacheStats() {
         long deletes = 0;
         for (String kind : tables.keySet()) {

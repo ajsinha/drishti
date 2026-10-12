@@ -21,6 +21,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -28,9 +29,13 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.CRC32;
 import java.util.zip.DataFormatException;
 import java.util.zip.Deflater;
@@ -38,9 +43,14 @@ import java.util.zip.Inflater;
 
 /**
  * One closed business day of one kind's ids on disk: entries sorted by lower-cased id, in blocks of {@value #BLOCK}
- * compressed with Deflate, read through a memory-mapped file. A prefix lookup binary-searches the block index (the first
- * key of each block, held in memory) and decodes the one or two blocks that hold the prefix, so it stays sub-millisecond
- * without the day's ids on the heap. A file is written once under a temporary name in the same folder and moved into
+ * compressed with Deflate, read with positional reads of an open file channel (no memory map, so the operating system can
+ * free a deleted file's blocks the moment the channel closes). A prefix lookup binary-searches the block index (the first
+ * key of each block, held in memory) and decodes the one or two blocks that hold the prefix, with a small bounded cache of
+ * decoded blocks, so it stays sub-millisecond without the day's ids on the heap.
+ *
+ * <p>Release is deterministic: every lookup holds the segment (a reader count) while it reads; {@link #retire} marks it
+ * retired, removes the file if asked, and closes the channel when the last reader lets go. A lookup that meets a retired
+ * segment answers {@code false} so the caller looks again at the index's current segment. A file is written once under a temporary name in the same folder and moved into
  * place atomically, so a reader never sees a half-written segment; it ends in a CRC, and a file that fails the check is
  * deleted and treated as absent. It records the {@code watermark} of the source it was built from (a load time, a table
  * version), so a restart reuses it only while the source is unchanged.
@@ -58,10 +68,15 @@ public final class DaySegment {
     private final long[] offsets;
     private final int[] compressed;
     private final int[] raw;
-    private final ByteBuffer map;
+    private final FileChannel channel;
     private final long bytes;
+    private final int cacheBlocks;
+    private final Map<Integer, List<EntityHit>> cache;
+    private final AtomicInteger readers = new AtomicInteger();
+    private volatile boolean retired;
+    private final AtomicBoolean closed = new AtomicBoolean();
 
-    private DaySegment(Path file, String watermark, int count, String[] firstKeys, long[] offsets, int[] compressed, int[] raw, ByteBuffer map, long bytes) {
+    private DaySegment(Path file, String watermark, int count, String[] firstKeys, long[] offsets, int[] compressed, int[] raw, FileChannel channel, long bytes, int cacheBlocks) {
         this.file = file;
         this.watermark = watermark;
         this.count = count;
@@ -69,8 +84,72 @@ public final class DaySegment {
         this.offsets = offsets;
         this.compressed = compressed;
         this.raw = raw;
-        this.map = map;
+        this.channel = channel;
         this.bytes = bytes;
+        this.cacheBlocks = Math.max(0, cacheBlocks);
+        this.cache = new LinkedHashMap<>(16, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Integer, List<EntityHit>> e) {
+                return size() > DaySegment.this.cacheBlocks;
+            }
+        };
+    }
+
+    /** The decoded blocks a segment keeps unless told otherwise ({@code index.block-cache}). */
+    public static final int DEFAULT_CACHE_BLOCKS = 16;
+
+    private boolean acquire() {
+        readers.incrementAndGet();
+        if (retired) {
+            release();
+            return false;
+        }
+        return true;
+    }
+
+    private void release() {
+        if (readers.decrementAndGet() == 0 && retired) {
+            close();
+        }
+    }
+
+    private void close() {
+        if (readers.get() == 0 && closed.compareAndSet(false, true)) {
+            try {
+                channel.close();
+            } catch (IOException e) {
+                // nothing more to release
+            }
+            synchronized (cache) {
+                cache.clear();
+            }
+        }
+    }
+
+    /** True once {@link #retire} was called (the segment answers no more lookups). */
+    public boolean retired() {
+        return retired;
+    }
+
+    /** True once the file channel is closed (every reader let go after retirement). */
+    public boolean released() {
+        return closed.get();
+    }
+
+    /**
+     * Takes the segment out of service: later lookups answer false, the file is removed when {@code deleteFile} (not when a
+     * newer file now holds the same name), and the channel closes as soon as the last running lookup finishes.
+     */
+    public void retire(boolean deleteFile) {
+        retired = true;
+        if (deleteFile) {
+            try {
+                Files.deleteIfExists(file);
+            } catch (IOException e) {
+                // removed with the folder's next clean
+            }
+        }
+        close();
     }
 
     public Path file() {
@@ -90,12 +169,9 @@ public final class DaySegment {
         return bytes;
     }
 
+    /** Retires the segment and removes its file. */
     public void delete() {
-        try {
-            Files.deleteIfExists(file);
-        } catch (IOException e) {
-            // a mapped file that cannot be removed now is removed with its folder's next clean
-        }
+        retire(true);
     }
 
     // ---- write ---------------------------------------------------------------------------------------------------
@@ -106,6 +182,11 @@ public final class DaySegment {
      * @throws UncheckedIOException when the disk refuses
      */
     public static DaySegment write(Path target, String watermark, List<EntityHit> hits) {
+        return write(target, watermark, hits, DEFAULT_CACHE_BLOCKS);
+    }
+
+    /** As {@link #write(Path, String, List)} with a decoded-block cache of {@code cacheBlocks} blocks. */
+    public static DaySegment write(Path target, String watermark, List<EntityHit> hits, int cacheBlocks) {
         List<EntityHit> sorted = new ArrayList<>(hits);
         sorted.sort((a, b) -> {
             int c = a.ref().id().toLowerCase(Locale.ROOT).compareTo(b.ref().id().toLowerCase(Locale.ROOT));
@@ -176,7 +257,7 @@ public final class DaySegment {
             }
             throw new UncheckedIOException(e);
         }
-        return open(target).orElseThrow(() -> new UncheckedIOException(new IOException("segment unreadable after write: " + target)));
+        return open(target, cacheBlocks).orElseThrow(() -> new UncheckedIOException(new IOException("segment unreadable after write: " + target)));
     }
 
     private static byte[] deflate(byte[] raw) {
@@ -194,53 +275,78 @@ public final class DaySegment {
 
     // ---- open ----------------------------------------------------------------------------------------------------
 
-    /** Maps {@code file}; a file that is truncated, from another version or fails its CRC is deleted and yields empty. */
+    /** Opens {@code file}; a file that is truncated, from another version or fails its CRC is deleted and yields empty. */
     public static Optional<DaySegment> open(Path file) {
+        return open(file, DEFAULT_CACHE_BLOCKS);
+    }
+
+    /** As {@link #open(Path)} with a decoded-block cache of {@code cacheBlocks} blocks. */
+    public static Optional<DaySegment> open(Path file, int cacheBlocks) {
         if (!Files.isRegularFile(file)) {
             return Optional.empty();
         }
-        try (FileChannel ch = FileChannel.open(file, StandardOpenOption.READ)) {
+        FileChannel ch = null;
+        try {
+            ch = FileChannel.open(file, StandardOpenOption.READ);
             long size = ch.size();
-            if (size < 32 || size > Integer.MAX_VALUE) {
+            if (size < 32) {
                 throw new IOException("size");
             }
-            ByteBuffer map = ch.map(FileChannel.MapMode.READ_ONLY, 0, size);
             CRC32 crc = new CRC32();
-            ByteBuffer body = map.duplicate();
-            body.limit((int) size - 8);
-            crc.update(body);
-            if (crc.getValue() != map.getLong((int) size - 8)) {
+            ByteBuffer buf = ByteBuffer.allocate(65536);
+            long pos = 0;
+            while (pos < size - 8) {
+                buf.clear().limit((int) Math.min(buf.capacity(), size - 8 - pos));
+                int n = ch.read(buf, pos);
+                if (n <= 0) {
+                    throw new IOException("short");
+                }
+                crc.update(buf.array(), 0, n);
+                pos += n;
+            }
+            ByteBuffer tail = ByteBuffer.allocate(8);
+            if (ch.read(tail, size - 8) != 8 || crc.getValue() != tail.flip().getLong()) {
                 throw new IOException("crc");
             }
-            ByteBuffer in = map.duplicate();
-            if (in.getInt() != MAGIC || in.getInt() != VERSION) {
+            ch.position(0);
+            DataInputStream in = new DataInputStream(new java.io.BufferedInputStream(Channels.newInputStream(ch), 65536));
+            if (in.readInt() != MAGIC || in.readInt() != VERSION) {
                 throw new IOException("magic");
             }
-            int count = in.getInt();
-            int blocks = in.getInt();
-            boolean hasWm = in.get() != 0;
-            byte[] wm = new byte[in.getInt()];
-            in.get(wm);
+            int count = in.readInt();
+            int blocks = in.readInt();
+            boolean hasWm = in.readBoolean();
+            byte[] wm = new byte[in.readInt()];
+            in.readFully(wm);
+            long at = 21 + wm.length;
             String[] keys = new String[blocks];
             long[] offsets = new long[blocks];
             int[] comp = new int[blocks];
             int[] raw = new int[blocks];
-            long[] lens = new long[blocks];
             for (int b = 0; b < blocks; b++) {
-                comp[b] = in.getInt();
-                raw[b] = in.getInt();
-                byte[] k = new byte[in.getInt()];
-                in.get(k);
+                comp[b] = in.readInt();
+                raw[b] = in.readInt();
+                byte[] k = new byte[in.readInt()];
+                in.readFully(k);
                 keys[b] = new String(k, StandardCharsets.UTF_8);
-                lens[b] = comp[b];
+                at += 12 + k.length;
             }
-            long at = in.position();
             for (int b = 0; b < blocks; b++) {
                 offsets[b] = at;
-                at += lens[b];
+                at += comp[b];
             }
-            return Optional.of(new DaySegment(file, hasWm ? new String(wm, StandardCharsets.UTF_8) : null, count, keys, offsets, comp, raw, map, size));
+            if (at + 8 != size) {
+                throw new IOException("length");
+            }
+            return Optional.of(new DaySegment(file, hasWm ? new String(wm, StandardCharsets.UTF_8) : null, count, keys, offsets, comp, raw, ch, size, cacheBlocks));
         } catch (IOException | RuntimeException e) {
+            if (ch != null) {
+                try {
+                    ch.close();
+                } catch (IOException ignored) {
+                    // already failing
+                }
+            }
             try {
                 Files.deleteIfExists(file);
             } catch (IOException ignored) {
@@ -253,10 +359,35 @@ public final class DaySegment {
     // ---- read ----------------------------------------------------------------------------------------------------
 
     private List<EntityHit> block(int b) {
-        ByteBuffer slice = map.duplicate();
-        slice.position((int) offsets[b]).limit((int) offsets[b] + compressed[b]);
-        byte[] comp = new byte[compressed[b]];
-        slice.get(comp);
+        synchronized (cache) {
+            List<EntityHit> hit = cache.get(b);
+            if (hit != null) {
+                return hit;
+            }
+        }
+        List<EntityHit> decoded = decode(b);
+        if (cacheBlocks > 0) {
+            synchronized (cache) {
+                cache.put(b, decoded);
+            }
+        }
+        return decoded;
+    }
+
+    private List<EntityHit> decode(int b) {
+        ByteBuffer slice = ByteBuffer.allocate(compressed[b]);
+        try {
+            long at = offsets[b];
+            while (slice.hasRemaining()) {
+                int n = channel.read(slice, at + slice.position());
+                if (n < 0) {
+                    throw new IOException("end of file");
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(new IOException("segment block unreadable: " + file, e));
+        }
+        byte[] comp = slice.array();
         Inflater inf = new Inflater();
         try {
             inf.setInput(comp);
@@ -291,17 +422,36 @@ public final class DaySegment {
     /** All ids, in order (restart checks, tests, rebuilds). */
     public List<EntityHit> all() {
         List<EntityHit> out = new ArrayList<>(count);
-        for (int b = 0; b < firstKeys.length; b++) {
-            out.addAll(block(b));
+        if (!acquire()) {
+            return out;
+        }
+        try {
+            for (int b = 0; b < firstKeys.length; b++) {
+                out.addAll(block(b));
+            }
+        } finally {
+            release();
         }
         return out;
     }
 
     /** Appends up to {@code room} hits for {@code q} (already lower-cased), ranked as {@link HitIndex}: prefix, id contains, text contains. */
-    public void search(String q, int room, List<EntityHit> out) {
+    public boolean search(String q, int room, List<EntityHit> out) {
         if (room <= 0 || firstKeys.length == 0) {
-            return;
+            return true;
         }
+        if (!acquire()) {
+            return false;
+        }
+        try {
+            find(q, room, out);
+            return true;
+        } finally {
+            release();
+        }
+    }
+
+    private void find(String q, int room, List<EntityHit> out) {
         int start = out.size();
         int b = Math.max(0, lastBefore(q));
         outer:

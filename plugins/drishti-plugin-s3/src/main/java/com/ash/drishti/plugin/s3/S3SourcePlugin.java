@@ -108,7 +108,7 @@ public final class S3SourcePlugin implements SourcePlugin {
     public void start(SourceContext ctx) {
         this.context = ctx;
         this.sourceName = ctx.setting("source-name", "s3");
-        this.dated = new DatedHitIndex(ctx.settings(), null);
+        this.dated = new DatedHitIndex(ctx.settings(), this::dayHits);
         this.bucket = ctx.setting("bucket", "");
         if (bucket.isBlank()) {
             throw new IllegalStateException("s3 plugin needs settings.bucket");
@@ -187,6 +187,22 @@ public final class S3SourcePlugin implements SourcePlugin {
                     + "name): give the endpoint a name the certificate carries, or use a certificate with the endpoint's name as a SAN");
         }
         return TlsContexts.build(ts);
+    }
+
+    /** The ids of one kind in one dated folder (the type-ahead index reloads a day from this); S3 has no version for a day. */
+    private List<EntityHit> dayHits(String kind, LocalDate day) {
+        List<EntityHit> out = new ArrayList<>();
+        String folder = prefix + day + "/" + kind + "/";
+        for (var page : s3.listObjectsV2Paginator(ListObjectsV2Request.builder().bucket(bucket).prefix(folder).build())) {
+            for (S3Object o : page.contents()) {
+                String name = o.key().substring(folder.length());
+                if (name.endsWith(".json") && name.indexOf('/') < 0) {
+                    EntityRef ref = EntityRef.of(kind, name.substring(0, name.length() - 5));
+                    out.add(new EntityHit(ref, ref.id(), ref.kind() + " · " + sourceName));
+                }
+            }
+        }
+        return out;
     }
 
     /** Lists the dated folders and every object, for dated reads and search; keeps the last good listing on failure. */
@@ -305,6 +321,11 @@ public final class S3SourcePlugin implements SourcePlugin {
             }
         }
         return index.search(kind, text, limit);
+    }
+
+    @Override
+    public java.util.Optional<com.ash.drishti.api.DatedHitIndex> typeAheadIndex() {
+        return dated.enabled() ? java.util.Optional.of(dated) : java.util.Optional.empty();
     }
 
     @Override

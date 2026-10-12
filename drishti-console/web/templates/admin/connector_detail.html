@@ -84,6 +84,19 @@
     {% else %}<li class="text-muted-d">No pack uses it.</li>{% endfor %}</ul>
   </section>
 
+  <section aria-labelledby="cdIndex" class="det-sec" data-index-panel data-connector="{{ c.name }}" hidden>
+    <h2 class="ws-h" id="cdIndex">Index</h2>
+    <p class="text-muted-d">The type-ahead index of this connector, by kind and business day. <b>Reload</b> rebuilds a day from the source in the background;
+      the old day keeps answering until the new one replaces it. One reload runs at a time.</p>
+    <p class="adm-actions det-actions"><button type="button" class="fk" data-index-reload data-connector="{{ c.name }}">Reload all</button>
+      <span class="adm-msg" data-index-msg role="status" aria-live="polite"></span></p>
+    <p class="mono text-muted-d" data-index-auto></p>
+    <div class="tbl-wrap"><table class="tbl adm-tbl idx-tbl" data-plain data-index-table>
+      <caption class="visually-hidden">Kinds by days in the index, with size, build time and state</caption>
+      <thead><tr><th scope="col">Kind</th><th scope="col">Day</th><th scope="col">Where</th><th scope="col" class="num">Ids</th><th scope="col" class="num">Size</th><th scope="col">Built</th><th scope="col">State</th><th scope="col">Reload</th></tr></thead>
+      <tbody></tbody></table></div>
+  </section>
+
   <section aria-labelledby="cdSettings" class="det-sec">
     <h2 class="ws-h" id="cdSettings">Settings in effect</h2>
     {% if c.settings %}<div class="tbl-wrap"><table class="tbl adm-tbl" data-plain data-settings>
@@ -112,4 +125,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-index.js?v={{ ASSET_V }}"></script>{% endblock %}

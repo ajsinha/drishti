@@ -408,7 +408,7 @@ averaged over 5,000 lookups after warm-up):
 | Tier | Prefix lookup | Notes |
 |---|---|---|
 | Heap (dictionary and bitmap) | 0.002 ms | lock-free; the day is a bitmap test |
-| Memory-mapped segment file | 0.03 ms | 548 KB on disk for 100,000 ids; one or two 128-entry blocks decoded |
+| Segment file (positional reads, 16-block cache) | 0.04 ms | 548 KB on disk for 100,000 ids; one or two 128-entry blocks read and decoded. Measured with `DatedHitIndexReloadTest` over 200,000 ids: 0.045 ms per lookup (the earlier memory-mapped read was 0.03 ms; the cost buys a file that frees its disk the moment it is retired) |
 | Day not indexed yet | the newest day's ids as before | the day builds in the background |
 
 Both are far below the 30 ms type-ahead budget; the cost of several days is memory or disk, not latency

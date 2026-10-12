@@ -351,6 +351,8 @@ again.
 connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
 ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). A new Delta commit is the data-load signal: the kept past days are rebuilt from the id column in the background, and a segment file left by an earlier run is reused only while the table version it was built at is unchanged.
 
+A past day restated with no signal is caught by the check every `index.reload-every` (10 minutes, compared with the recorded watermark), and **Admin → Connectors → this connector → Index** reloads any day by hand ([OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+
 ### 6.5 The column set of a day
 
 The first search of a business day reads the day's **column set**: the id and every promoted column, nothing else.

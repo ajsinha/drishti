@@ -16,8 +16,10 @@
 package com.ash.drishti.api;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,10 +32,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -89,8 +95,11 @@ public final class DatedHitIndex {
         final ReentrantLock lock = new ReentrantLock();
         final AtomicReference<Snap> snap = new AtomicReference<>(Snap.EMPTY);
         final AtomicReference<TreeMap<LocalDate, DaySegment>> spilled = new AtomicReference<>(new TreeMap<>());
+        final Map<LocalDate, Instant> built = new ConcurrentHashMap<>();   // when each day was last (re)built
+        final Map<LocalDate, String> errors = new ConcurrentHashMap<>();   // why the last reload of a day failed
         final Map<LocalDate, String> marks = new HashMap<>();            // the source watermark each day was read at (under lock)
         volatile NavigableSet<LocalDate> wanted = new TreeSet<>();
+        volatile Instant nextCheck;                                        // when the automatic check of this kind is due
 
         LocalDate newest() {
             Snap s = snap.get();
@@ -105,6 +114,9 @@ public final class DatedHitIndex {
     private final ConcurrentLinkedDeque<Runnable> warmQueue = new ConcurrentLinkedDeque<>();
     private final AtomicBoolean warming = new AtomicBoolean();
     private final AtomicInteger warmPending = new AtomicInteger();
+    private final AtomicBoolean reloading = new AtomicBoolean();
+    private final Set<String> building = ConcurrentHashMap.newKeySet();     // "kind|day" of the days a reload is rebuilding now
+    private volatile ReloadProgress progress = new ReloadProgress(false, null, 0, 0, null, null, null, null);
     private final DayLoader loader;
     private final Watermark watermark;
     private final Path dir;                                              // this connector's segment folder, or null (no disk tier)
@@ -130,6 +142,9 @@ public final class DatedHitIndex {
     /** {@code drishti.index.dir}, default {@code <data dir>/index} (never the temporary folder). */
     public static Path defaultRoot() {
         String p = System.getProperty("drishti.index.dir");
+        if (p == null || p.isBlank()) {
+            p = System.getenv("DRISHTI_INDEX_DIR");
+        }
         return Path.of(p == null || p.isBlank() ? DataDir.under("index") : p).toAbsolutePath().normalize();
     }
 
@@ -194,12 +209,17 @@ public final class DatedHitIndex {
             boolean toDisk = dir != null
                     && (sp.containsKey(day) || cfg.storage() == DayIndexSettings.Storage.MMAP && newest != null && day.isBefore(newest));
             ki.marks.put(day, mark);
+            ki.built.put(day, Instant.now());
+            ki.errors.remove(day);
             if (toDisk) {
                 try {
-                    DaySegment seg = DaySegment.write(segmentPath(kind, day), mark, new ArrayList<>(distinct(hits).values()));
+                    DaySegment seg = DaySegment.write(segmentPath(kind, day), mark, new ArrayList<>(distinct(hits).values()), cfg.blockCache());
                     TreeMap<LocalDate, DaySegment> next = new TreeMap<>(sp);
-                    next.put(day, seg);
+                    DaySegment replaced = next.put(day, seg);
                     ki.spilled.set(next);
+                    if (replaced != null && replaced != seg) {
+                        replaced.retire(false);                         // the new file took its name: only the old reader goes
+                    }
                     Snap cur = old;
                     if (old.days().containsKey(day)) {
                         TreeMap<LocalDate, BitSet> d = new TreeMap<>(old.days());
@@ -258,6 +278,7 @@ public final class DatedHitIndex {
             want.add(d);
         }
         ki.wanted = want;
+        ensureAuto();
         locked(ki, () -> {
             Snap cur = ki.snap.get();
             TreeMap<LocalDate, BitSet> d = new TreeMap<>(cur.days());
@@ -296,11 +317,12 @@ public final class DatedHitIndex {
             }
             String now = watermark.of(kind, d);
             Path f = segmentPath(kind, d);
-            Optional<DaySegment> seg = now == null ? Optional.empty() : DaySegment.open(f);
+            Optional<DaySegment> seg = now == null ? Optional.empty() : DaySegment.open(f, settingsFor(kind).blockCache());
             if (seg.isPresent() && now.equals(seg.get().watermark())) {
                 sp.put(d, seg.get());
                 ki.marks.put(d, now);
             } else if (Files.exists(f)) {
+                seg.ifPresent(x -> x.retire(false));
                 try {
                     Files.deleteIfExists(f);                            // the source changed since: rebuilt below
                 } catch (IOException e) {
@@ -478,7 +500,7 @@ public final class DatedHitIndex {
             hits.add(s.hits()[i]);
         }
         try {
-            sp.put(day, DaySegment.write(segmentPath(kind, day), ki.marks.get(day), hits));
+            sp.put(day, DaySegment.write(segmentPath(kind, day), ki.marks.get(day), hits, settingsFor(kind).blockCache()));
         } catch (java.io.UncheckedIOException e) {
             return dropHeap(s, day, ki);
         }
@@ -627,7 +649,13 @@ public final class DatedHitIndex {
             if (d == null) {
                 continue;
             }
-            if (!searchDay(s, sp, d, q, limit - out.size(), out)) {
+            boolean served = searchDay(s, sp, d, q, limit - out.size(), out);
+            for (int again = 0; !served && again < 3 && has(k, d); again++) {          // a segment retired under us: look at the new one
+                s = ki.snap.get();
+                sp = ki.spilled.get();
+                served = searchDay(s, sp, d, q, limit - out.size(), out);
+            }
+            if (!served) {
                 if (ki.wanted.contains(d) && settingsFor(k).warm() == DayIndexSettings.Warm.LAZY) {
                     enqueue(k, d);
                 }
@@ -652,11 +680,7 @@ public final class DatedHitIndex {
             return true;
         }
         DaySegment seg = sp.get(day);
-        if (seg != null) {
-            seg.search(q, room, out);
-            return true;
-        }
-        return false;
+        return seg != null && seg.search(q, room, out);
     }
 
     private static boolean holds(Snap s, Map<LocalDate, DaySegment> sp, LocalDate day, String id) {
@@ -670,7 +694,9 @@ public final class DatedHitIndex {
             return false;
         }
         List<EntityHit> probe = new ArrayList<>();
-        seg.search(id.toLowerCase(Locale.ROOT), 4, probe);
+        if (!seg.search(id.toLowerCase(Locale.ROOT), 4, probe)) {
+            return false;
+        }
         return probe.stream().anyMatch(h -> h.ref().id().equals(id));
     }
 
@@ -750,6 +776,260 @@ public final class DatedHitIndex {
         return lo;
     }
 
+    // ---- admin reload --------------------------------------------------------------------------------------------
+
+    /** One day of one kind as the admin page lists it. {@code tier} is heap, disk or none (in the window, not built yet). */
+    public record DayStatus(String kind, LocalDate day, int ids, String tier, long bytes, Instant builtAt, boolean building, String lastError) {}
+
+    /** How far the current (or last) admin reload is. */
+    public record ReloadProgress(boolean running, String trigger, int total, int done, String current, Instant startedAt, Instant finishedAt, String error) {}
+
+    /** Every kind's kept days (and window days not built yet), newest first, with sizes, build time, and any reload error. */
+    public List<DayStatus> status() {
+        List<DayStatus> out = new ArrayList<>();
+        for (String kind : new TreeSet<>(kinds.keySet())) {
+            KindIndex ki = kinds.get(kind);
+            Snap s = ki.snap.get();
+            TreeMap<LocalDate, DaySegment> sp = ki.spilled.get();
+            TreeSet<LocalDate> days = union(s, sp);
+            days.addAll(ki.wanted);
+            long total = Math.max(1, s.hits().length);
+            long mem = memory(s);
+            for (LocalDate d : days.descendingSet()) {
+                BitSet bits = s.days().get(d);
+                DaySegment seg = sp.get(d);
+                int ids = bits != null ? bits.cardinality() : seg != null ? seg.count() : 0;
+                String tier = bits != null ? "heap" : seg != null ? "disk" : "none";
+                long bytes = bits != null ? mem * ids / total : seg != null ? seg.bytes() : 0;
+                out.add(new DayStatus(kind, d, ids, tier, bytes, ki.built.get(d), building.contains(kind + "|" + d), ki.errors.get(d)));
+            }
+        }
+        return out;
+    }
+
+    public ReloadProgress reloadProgress() {
+        return progress;
+    }
+
+    /**
+     * Rebuilds days from the source on a background thread: {@code kind} null is every kind, {@code day} null is every kept
+     * day of the kind. Each day is read first and swapped in whole, so the old day keeps answering lookups until the new one
+     * replaces it (a heap day's bitmap, a disk day's file and map); a day that cannot be read keeps its old content and shows
+     * the error. One reload runs at a time.
+     *
+     * @return the number of days queued
+     * @throws IllegalStateException when a reload is already running, or this index cannot load days
+     * @throws IllegalArgumentException for a kind or day the index does not hold
+     */
+    public int reload(String kind, LocalDate day) {
+        if (loader == null) {
+            throw new IllegalStateException("this connector's index has no loader to rebuild from");
+        }
+        List<String[]> plan = new ArrayList<>();
+        List<String> names = kind == null ? new ArrayList<>(new TreeSet<>(kinds.keySet())) : List.of(kind);
+        for (String k : names) {
+            KindIndex ki = kinds.get(k);
+            if (ki == null) {
+                throw new IllegalArgumentException("no indexed kind '" + k + "'");
+            }
+            TreeSet<LocalDate> days = union(ki.snap.get(), ki.spilled.get());
+            days.addAll(ki.wanted);
+            if (day != null && !days.contains(day)) {
+                if (kind == null) {
+                    continue;
+                }
+                throw new IllegalArgumentException("day " + day + " is not in the window of " + k);
+            }
+            for (LocalDate d : days.descendingSet()) {
+                if (day == null || day.equals(d)) {
+                    plan.add(new String[] {k, d.toString()});
+                }
+            }
+        }
+        if (plan.isEmpty()) {
+            throw new IllegalArgumentException("nothing to reload: the index holds no such day");
+        }
+        if (!start(plan, "manual")) {
+            throw new IllegalStateException("a reload is already running (" + progress.done() + " of " + progress.total() + " days)");
+        }
+        return plan.size();
+    }
+
+    /** Starts the job unless one runs (manual and automatic reloads share this one slot, so they never overlap). */
+    private boolean start(List<String[]> plan, String trigger) {
+        if (!reloading.compareAndSet(false, true)) {
+            return false;
+        }
+        Instant started = Instant.now();
+        progress = new ReloadProgress(true, trigger, plan.size(), 0, null, started, null, null);
+        plan.forEach(t -> building.add(t[0] + "|" + t[1]));
+        long stagger = "auto".equals(trigger) ? staggerMaxMillis : 0;
+        Thread.ofVirtual().name("dated-index-reload").start(() -> runReload(plan, started, trigger, stagger));
+        return true;
+    }
+
+    // ---- automatic reload ----------------------------------------------------------------------------------------
+
+    private static final ScheduledExecutorService TICKER = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "dated-index-auto");
+        t.setDaemon(true);
+        return t;
+    });
+
+    /** What Health and Admin show of the automatic check. */
+    public record AutoCheck(boolean enabled, long everyMillis, Instant lastCheck, Instant nextCheck, Instant lastChange, String lastChangeWhat) {}
+
+    private volatile Instant lastCheck;
+    private volatile Instant lastChange;
+    private volatile String lastChangeWhat;
+    private volatile long staggerMaxMillis = 1000;
+    private final AtomicBoolean autoStarted = new AtomicBoolean();
+
+    /** Test hook: the longest random pause between two rebuilt days of an automatic cycle. */
+    void staggerMax(long millis) {
+        this.staggerMaxMillis = Math.max(0, millis);
+    }
+
+    private void ensureAuto() {
+        if (loader != null && autoStarted.compareAndSet(false, true)) {
+            WeakReference<DatedHitIndex> ref = new WeakReference<>(this);
+            TICKER.schedule(() -> tick(ref), 200, java.util.concurrent.TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private static void tick(WeakReference<DatedHitIndex> ref) {
+        DatedHitIndex me = ref.get();
+        if (me == null) {
+            return;                                                  // the connector went away: the chain ends
+        }
+        long next = 5000;
+        try {
+            me.autoCheck(Instant.now(), false);
+            long min = me.shortestInterval();
+            next = min <= 0 ? 30_000 : Math.max(200, Math.min(30_000, min / 4));
+        } catch (RuntimeException e) {
+            // a failed cycle never stops the chain
+        }
+        TICKER.schedule(() -> tick(ref), next, java.util.concurrent.TimeUnit.MILLISECONDS);
+    }
+
+    private long shortestInterval() {
+        long min = 0;
+        for (String k : kinds.keySet()) {
+            long e = settingsFor(k).reloadEveryMillis();
+            if (e > 0 && (min == 0 || e < min)) {
+                min = e;
+            }
+        }
+        return min;
+    }
+
+    /**
+     * One automatic cycle. For every kind whose check is due (or all, when {@code force}), each past day (not the newest,
+     * which has its own faster refresh) is compared with its source: a day whose watermark changed is rebuilt; a day whose
+     * source gives no watermark is rebuilt every cycle. The rebuild runs in the same single slot as a manual reload, with a
+     * random pause between days, so the two never overlap (a cycle that finds one running is skipped).
+     *
+     * @return the days queued
+     */
+    int autoCheck(Instant now, boolean force) {
+        List<String[]> plan = new ArrayList<>();
+        for (Map.Entry<String, KindIndex> e : kinds.entrySet()) {
+            long every = settingsFor(e.getKey()).reloadEveryMillis();
+            KindIndex ki = e.getValue();
+            if (every <= 0) {
+                ki.nextCheck = null;
+                continue;
+            }
+            if (ki.nextCheck == null && !force) {
+                ki.nextCheck = now.plusMillis(every + ThreadLocalRandom.current().nextLong(every / 2 + 1));
+                continue;
+            }
+            if (!force && now.isBefore(ki.nextCheck)) {
+                continue;
+            }
+            ki.nextCheck = now.plusMillis(every + ThreadLocalRandom.current().nextLong(every / 10 + 1));
+            TreeSet<LocalDate> days = union(ki.snap.get(), ki.spilled.get());
+            LocalDate newest = days.isEmpty() ? null : days.last();
+            for (LocalDate d : days) {
+                if (d.equals(newest)) {
+                    continue;
+                }
+                String had = markOf(ki, d);
+                String nowMark = watermark == null ? null : watermark.of(e.getKey(), d);
+                if (nowMark == null || !nowMark.equals(had)) {
+                    plan.add(new String[] {e.getKey(), d.toString()});
+                }
+            }
+        }
+        lastCheck = now;
+        if (!plan.isEmpty() && start(plan, "auto")) {
+            lastChange = now;
+            lastChangeWhat = plan.size() + (plan.size() == 1 ? " day: " : " days: ")
+                    + plan.stream().limit(3).map(t -> t[0] + " " + t[1]).collect(java.util.stream.Collectors.joining(", "));
+            return plan.size();
+        }
+        return 0;
+    }
+
+    private static String markOf(KindIndex ki, LocalDate d) {
+        ki.lock.lock();
+        try {
+            return ki.marks.get(d);
+        } finally {
+            ki.lock.unlock();
+        }
+    }
+
+    public AutoCheck autoCheckInfo() {
+        long min = shortestInterval();
+        Instant next = null;
+        for (KindIndex ki : kinds.values()) {
+            Instant n = ki.nextCheck;
+            if (n != null && (next == null || n.isBefore(next))) {
+                next = n;
+            }
+        }
+        return new AutoCheck(min > 0, min, lastCheck, next, lastChange, lastChangeWhat);
+    }
+
+    private void runReload(List<String[]> plan, Instant started, String trigger, long staggerMax) {
+        int done = 0;
+        int failed = 0;
+        String lastError = null;
+        try {
+            for (String[] t : plan) {
+                if (staggerMax > 0 && done > 0) {
+                    try {
+                        Thread.sleep(ThreadLocalRandom.current().nextLong(staggerMax + 1));
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                LocalDate d = LocalDate.parse(t[1]);
+                progress = new ReloadProgress(true, trigger, plan.size(), done, t[0] + " " + (UNDATED.equals(d) ? "undated" : d), started, null, lastError);
+                try {
+                    String mark = watermark == null ? null : watermark.of(t[0], d);
+                    put(t[0], d, loader.load(t[0], d), mark);
+                } catch (Exception e) {
+                    failed++;
+                    lastError = t[0] + " " + d + ": " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
+                    KindIndex ki = kinds.get(t[0]);
+                    if (ki != null) {
+                        ki.errors.put(d, lastError);
+                    }
+                } finally {
+                    building.remove(t[0] + "|" + t[1]);
+                    done++;
+                }
+            }
+        } finally {
+            plan.forEach(t -> building.remove(t[0] + "|" + t[1]));
+            progress = new ReloadProgress(false, trigger, plan.size(), done, null, started, Instant.now(), failed == 0 ? null : failed + " of " + plan.size() + " days failed; last: " + lastError);
+            reloading.set(false);
+        }
+    }
+
     // ---- stats ---------------------------------------------------------------------------------------------------
 
     /** A rough size of one kind's heap snapshot: dictionary strings and hits, the order array and the bitmaps. */
@@ -808,6 +1088,12 @@ public final class DatedHitIndex {
         m.put("indexMemoryMb", Math.round(st.memoryBytes() / 1048.576) / 1000.0);
         m.put("indexDiskMb", Math.round(st.diskBytes() / 1048.576) / 1000.0);
         m.put("indexWarm", st.warm());
+        AutoCheck ac = autoCheckInfo();
+        m.put("indexReloadEvery", ac.enabled() ? ac.everyMillis() / 1000 + "s" : "off");
+        m.put("indexLastCheck", ac.lastCheck() == null ? null : ac.lastCheck().toString());
+        m.put("indexNextCheck", ac.nextCheck() == null ? null : ac.nextCheck().toString());
+        m.put("indexLastChange", ac.lastChange() == null ? null : ac.lastChange() + " (" + ac.lastChangeWhat() + ")");
+        m.put("indexReloading", progress.running());
         return m;
     }
 }

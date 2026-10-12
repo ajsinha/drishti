@@ -85,6 +85,11 @@ drishti:
     # The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the
     # pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default.
     dir: ${DRISHTI_DATA_DIR:./data}
+  index:
+    # Where the connectors' multi-day type-ahead index keeps closed days as block-compressed segment files (one subfolder per
+    # connector). Blank: <data dir>/index, i.e. ./data/index. Size is capped per connector by its index.max-disk; a day that
+    # rolls out of the window, is evicted by the cap or is rebuilt gives its disk back at once.
+    dir: ${DRISHTI_INDEX_DIR:}
   branding:
     # The product's name and legal notices, wherever people see them (pages, the About answer, messages). Change them
     # here, not in code; the console has the same keys under ui: in drishti-console/config/application.yaml.
@@ -280,6 +285,7 @@ drishti:
       - "* /api/v1/admin/users/**"
       - "* /api/v1/admin/role-definitions/**"
       - "* /api/v1/admin/caches/**"
+      - "* /api/v1/admin/connectors/*/index/**"   # reloading a connector's type-ahead index: an admin from the console, not a token
       - "* /api/v1/admin/loads/**"
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"

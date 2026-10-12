@@ -501,6 +501,11 @@ public final class FileSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<com.ash.drishti.api.DatedHitIndex> typeAheadIndex() {
+        return datedIdx != null && datedIdx.enabled() ? java.util.Optional.of(datedIdx.index()) : java.util.Optional.empty();
+    }
+
+    @Override
     public java.util.Map<String, Object> cacheStats() {
         java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
         m.put("jsonlKinds", jsonl.size());

@@ -341,6 +341,8 @@ when a snapshot changes; no document is read. Measured: `TRD CLY-4000` in 4–13
 connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
 ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). A new snapshot of a table is the signal: the kept past days are rebuilt from the id column in the background, and a segment file survives a restart only while the snapshot id is unchanged.
 
+A past day restated with no signal is caught by the check every `index.reload-every` (10 minutes, compared with the recorded watermark), and **Admin → Connectors → this connector → Index** reloads any day by hand ([OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+
 ### 7.5 The column set of a day
 
 `id` and every promoted column of the day's files, each file on its own virtual thread, repeated text shared. Kept by

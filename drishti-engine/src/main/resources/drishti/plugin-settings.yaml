@@ -65,6 +65,8 @@ plugins:
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
       - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
       - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
+      - { name: index.reload-every, default: "10m", desc: "How often each past day is checked against its source and rebuilt when the source changed (a source with no version is rebuilt every cycle); 0 = never; the newest day has its own faster refresh", group: tuning }
+      - { name: index.block-cache, type: int, default: "16", desc: "Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   duckdb:
     settings:
@@ -88,6 +90,8 @@ plugins:
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
       - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
       - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
+      - { name: index.reload-every, default: "10m", desc: "How often each past day is checked against its source and rebuilt when the source changed (a source with no version is rebuilt every cycle); 0 = never; the newest day has its own faster refresh", group: tuning }
+      - { name: index.block-cache, type: int, default: "16", desc: "Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   delta:
     tls: true
@@ -124,6 +128,8 @@ plugins:
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
       - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
       - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
+      - { name: index.reload-every, default: "10m", desc: "How often each past day is checked against its source and rebuilt when the source changed (a source with no version is rebuilt every cycle); 0 = never; the newest day has its own faster refresh", group: tuning }
+      - { name: index.block-cache, type: int, default: "16", desc: "Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   iceberg:
     tls: true
@@ -158,6 +164,8 @@ plugins:
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
       - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
       - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
+      - { name: index.reload-every, default: "10m", desc: "How often each past day is checked against its source and rebuilt when the source changed (a source with no version is rebuilt every cycle); 0 = never; the newest day has its own faster refresh", group: tuning }
+      - { name: index.block-cache, type: int, default: "16", desc: "Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   aerospike:
     tls: true
@@ -270,6 +278,8 @@ plugins:
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
       - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
       - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
+      - { name: index.reload-every, default: "10m", desc: "How often each past day is checked against its source and rebuilt when the source changed (a source with no version is rebuilt every cycle); 0 = never; the newest day has its own faster refresh", group: tuning }
+      - { name: index.block-cache, type: int, default: "16", desc: "Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   demo:
     settings:
@@ -362,6 +372,8 @@ plugins:
       - { name: index.any-recent-day, type: boolean, default: "false", desc: "A bare id on the newest day also suggests ids seen only on earlier kept days (marked last seen)", group: tuning }
       - { name: index.storage, type: "enum:heap|mmap", default: "heap", desc: "heap: closed days stay in memory until max-memory, then move to memory-mapped files; mmap: closed days go to files at once", group: tuning }
       - { name: index.max-disk, default: "2GB", desc: "Most disk the connector's index segment files may use (under drishti.index.dir); the oldest days drop above it; 0 = no cap", group: tuning }
+      - { name: index.reload-every, default: "10m", desc: "How often each past day is checked against its source and rebuilt when the source changed (a source with no version is rebuilt every cycle); 0 = never; the newest day has its own faster refresh", group: tuning }
+      - { name: index.block-cache, type: int, default: "16", desc: "Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file); 0 = none", group: tuning }
       - { name: "index.kinds.*", desc: "Per-kind override of any index setting (index.kinds.<kind>.days)", group: tuning }
   kafka:
     tls: true

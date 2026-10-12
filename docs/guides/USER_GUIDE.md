@@ -1994,6 +1994,22 @@ Both pages are for administrators, work in both themes and on a phone, where eve
 
 ![The connector page on a phone](../connectors/img/connector_files/13-connector-detail-phone.jpg) ![The pack page on a phone](../connectors/img/connector_files/14-pack-detail-phone.jpg)
 
+### Admin → Connectors → Index: reload type-ahead for a past day
+
+Worked example: a trade was corrected in last Friday's data and type-ahead for that date still misses it.
+
+1. Open *Admin → Connectors* and click the connector (for example `trading-lake`). Under **Index** every kind is listed by
+   business day with where it is held (memory or disk), its ids, size and when it was built, and the line above says when the
+   automatic check last ran, runs next and last found a change.
+2. Click **Reload** on Friday's row (or **Reload kind** for the kind, or **Reload all**). The row changes to
+   *rebuilding* with a progress message, then to *fresh* with a new build time. Type-ahead for that date keeps answering from
+   the old day until the new one is ready.
+3. If a reload of the connector is already running, the message says so; wait for it. If a day cannot be read, its row
+   shows *failed* and the reason, and the old day stays in use.
+
+*Admin → Health* has **Reload index** on each connector that keeps several days. Reloads are for administrators only and are
+written to the audit log. See [OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index).
+
 ### Admin → Health: is everything up?
 
 Worked example: check that every data source is up.

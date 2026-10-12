@@ -1349,9 +1349,31 @@ holds, per kind, one dictionary of its distinct ids and one bitmap per kept day.
   0.3 MB, warm`. `warming (N days to build)` means the background build is still running: searches for those dates
   answer from the newest day's ids until it finishes. A memory figure close to the cap with all days on disk is normal
   with `index.storage: mmap`.
+- **Disk is managed.** The folder is `drishti.index.dir` (`DRISHTI_INDEX_DIR`; default `./data/index`), one subfolder per
+  connector. `index.max-disk` is checked against the files' real sizes; a day that rolls out of the window, is evicted by
+  the cap, or is replaced by a reload gives its disk back at once (the file is removed and its descriptor closed when the
+  last lookup lets go; a mapped file would have been counted by `df` until a garbage collection). Health and the
+  connector page show the real bytes on disk per connector, kind and day.
 - **Cleaning.** Segment files of days that left the window are deleted at the roll; files from an earlier run that no
   longer match their source, and temporary files left by a crash, are deleted at the next start. The folder can be
   deleted at any time: the days are rebuilt.
+
+**When to reload.** The index follows its source by itself: a data-load signal rebuilds the kept past days, and every
+`index.reload-every` (10 minutes) each past day is compared with the source and rebuilt if it changed, so a corrected
+past day usually appears within one cycle. Reload by hand when you cannot wait for the cycle, when `index.reload-every`
+is `0`, when type-ahead for a past date misses ids you know are in the source (a past day restated with no signal), or
+after repairing a source that a day failed to read from. In **Admin → Connectors → (the connector) → Index** each
+kind and day has a **Reload**, each kind has **Reload kind**, and **Reload all** rebuilds everything; **Admin → Health**
+has **Reload index** per connector. The row shows *rebuilding* with progress while it runs and *fresh* with the new
+build time when it is done; a failure keeps the old day and shows the error. Only one reload runs per connector at a
+time (a second click says it is already running), the old day answers lookups until the new one swaps in, and each
+reload is written to the audit log (who, what, when, and again with the result). The page also shows the automatic
+check: last check, next check, last change found.
+
+```text
+$ curl -s -X POST $B/admin/connectors/trading-lake/index/reload -H 'Content-Type: application/json' -d '{"kind":"trade","date":"2026-10-05"}' | jq -c '{queued, reload}'
+{"queued":1,"reload":{"running":true,"trigger":"manual","total":1,"done":0,"current":"trade 2026-10-05"}}
+```
 
 ## 13. Monitoring
 

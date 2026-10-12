@@ -30,3 +30,9 @@
   .det-kv dd { margin-bottom: .5rem; }
   .det-sec .fk, .det-list a, .adm-crumb a, .conn-name a, .pk-name a, .det-tbl a { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; }
 }
+/* Index section: kinds by days with a Reload each; on a phone every button is a 44 px target. */
+.idx-tbl td, .idx-tbl th { vertical-align: middle; }
+.idx-health { margin-top: .25rem; }
+@media (max-width: 640px) {
+  .idx-tbl .fk, .idx-health .fk { min-height: 44px; min-width: 44px; }
+}

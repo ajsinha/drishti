@@ -40,6 +40,12 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         if (System.getProperty(com.ash.drishti.api.DataDir.PROPERTY) == null) {           // plugins have no Spring environment: hand them the umbrella
             System.setProperty(com.ash.drishti.api.DataDir.PROPERTY, PackPaths.dataDir(env));
         }
+        if (System.getProperty("drishti.index.dir") == null) {                              // the type-ahead segment folder, for the same reason
+            String idx = env.getProperty("drishti.index.dir", "");
+            if (!idx.isBlank()) {
+                System.setProperty("drishti.index.dir", idx);
+            }
+        }
         String enabled = env.getProperty("drishti.packs.enabled", "finance");
         java.util.LinkedHashSet<String> names = new java.util.LinkedHashSet<>(
                 Arrays.stream(enabled.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toList());

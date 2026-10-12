@@ -409,10 +409,16 @@ type-ahead for a past business date answers from that day's own ids, never from 
   prefix search is a binary search in the dictionary and a membership test in the day's bitmap.
 - **Tiers.** The newest day and, by default, the closed days are on the heap. When the connector's `index.max-memory` is
   reached (or `index.storage: mmap` is set) a closed day is written once to a **segment file** (`DaySegment`): ids sorted
-  and compressed in blocks of 128, read through a memory map (`FileChannel.map`). A prefix search binary-searches the
-  block index and decodes one or two blocks. A day neither tier holds is built on demand: the connector answers as it
+  and compressed in blocks of 128, read with **positional reads** of an open file channel (no memory map: a mapped
+  file's blocks are freed only when the garbage collector unmaps it, so `df` would keep counting a deleted day). The
+  block index (first id and offset per block) is on the heap; a prefix search binary-searches it, reads and decodes one
+  or two blocks, and keeps a small bounded LRU of decoded blocks per segment (`index.block-cache`, 16). **Release is
+  deterministic**: every lookup holds the segment (a reader count); a roll, a disk-cap eviction, a reload swap or a
+  stale or corrupt file *retires* it, which removes the file and closes the channel as soon as the last running lookup
+  lets go, so the disk is free at once and a lookup racing a retirement never fails (it looks again at the current
+  segment). A day neither tier holds is built on demand: the connector answers as it
   always did (the newest day's ids) while the day is built in the background.
-- **Files.** Under `drishti.index.dir` (default `<data dir>/index`, never the temporary folder), one folder per
+- **Files.** Under `drishti.index.dir` (`DRISHTI_INDEX_DIR`; default `<data dir>/index`, which is `./data/index`; never the temporary folder), one folder per
   connector, capped by `index.max-disk`. A file is written under a temporary name in its folder and moved into place
   atomically, ends in a CRC, and records the **watermark** of its source (a load time, a table version, a snapshot, a
   folder's modification time). After a restart a file is reused only if the source's watermark is unchanged; otherwise
@@ -424,17 +430,33 @@ type-ahead for a past business date answers from that day's own ids, never from 
   moves (one immutable snapshot swap, so readers are lock-free and never see a half-rolled index), the oldest day's
   bitmap or file is dropped, and dictionary ids no kept day holds are purged: memory and disk stay flat. `max-memory` moves
   the oldest closed days to disk (or drops them without a disk) early; `index.max-disk` drops the oldest segments.
+- **Reload (admin and automatic).** `DatedHitIndex.reload(kind, day)` rebuilds chosen days from the source on a
+  background thread: the new day is read in full, written (a heap day's bitmap; a disk day's temporary file, then an
+  atomic move), and swapped in in one step, so the old day keeps answering until the new one replaces it and a reader
+  never sees a mix. A day that cannot be read keeps its old content and shows the error. **One job per connector**: a
+  manual reload and the automatic check share the same slot (a second request is refused with `409 DRS-5032`; an
+  automatic cycle that finds a job running is skipped), so they never overlap. The automatic check
+  (`index.reload-every`, default `10m`, `0` = off; per kind with `index.kinds.<kind>.reload-every`) runs on one shared
+  daemon scheduler: each connector's first check is jittered, and a cycle compares every *past* day (the newest day has
+  its own faster refresh) with the watermark recorded when it was built (load time, Delta commit, Iceberg snapshot,
+  file modification time) and rebuilds only the days whose watermark changed; a source with no reliable watermark (S3,
+  a table without a load time) has each past day rebuilt once per cycle. Rebuilds of one cycle are spaced by a random
+  pause so a lake is not hit all at once. This is what catches a **past day restated with no signal**. Admin: `GET` and
+  `POST /api/v1/admin/connectors/{name}/index[/reload]` ([API_GUIDE.md](../guides/API_GUIDE.md)); the status gives, per
+  kind and day, ids, tier, bytes, build time, whether it is rebuilding and the last error, and the automatic check's
+  last check, next check and last change found.
 - **Warm-up.** After start, past days are built in the background, newest first; start-up is not delayed.
   `index.warm: lazy` builds a day on the first search for it instead.
 - **`index.any-recent-day: true`.** A bare id on the newest date may also suggest ids seen only on earlier kept days,
   marked `last seen <date>` in the subtitle.
 - **Health.** Admin, Health and the connector page show per connector: `type-ahead index: 5 days (4 on disk, 0.1 MB),
   1,200 ids, 0.3 MB, warm`. The connector's cache statistics add `indexDays`, `indexDaysOnDisk`, `indexIds`,
-  `indexMemoryMb`, `indexDiskMb`, `indexWarm`.
+  `indexMemoryMb`, `indexDiskMb` (the segment files' real size), `indexWarm`, `indexReloadEvery`, `indexLastCheck`,
+  `indexNextCheck`, `indexLastChange`, `indexReloading`.
 
 The settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index). Streaming
 connectors keep the newest day only. Measured: a prefix lookup over 100,000 ids a day for five days takes 0.002 ms on
-the heap and 0.03 ms from a mapped file (548 KB on disk for 100,000 ids)
+the heap and 0.04 ms from a segment file read with positional reads (548 KB on disk for 100,000 ids)
 ([PERFORMANCE.md](../admin/PERFORMANCE.md#multi-day-type-ahead)).
 
 ---

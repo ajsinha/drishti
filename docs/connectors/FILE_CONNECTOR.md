@@ -215,6 +215,8 @@ index.
 connector also keeps the ids of the last five business days, so a type-ahead for a past date answers from that date's own
 ids ([ARCHITECTURE.md section 9.1](../architecture/ARCHITECTURE.md#91-several-business-days)). The days are the dated folders (`<date>/<kind>/<id>.json`, `<date>/<kind>.jsonl`); a folder or file whose modification time changes is a restated day and is rebuilt in the background at the next `rescan-seconds`; a segment file survives a restart only while that time is unchanged.
 
+A past day restated with no signal is caught by the check every `index.reload-every` (10 minutes, compared with the recorded watermark), and **Admin → Connectors → this connector → Index** reloads any day by hand ([OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)).
+
 ### 6.5 Searches, pick lists, derived kinds and impact
 
 From the day's promoted columns in the index, exactly as on Delta Lake: a search is exact over every entity of the day

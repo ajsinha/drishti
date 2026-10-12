@@ -30,8 +30,10 @@ import java.util.Map;
  * @param storage {@code heap}: closed days stay on the heap until {@code max-memory}, then move to memory-mapped files;
  *     {@code mmap}: closed days go to files at once
  * @param maxDiskBytes the most the connector's segment files may use; the oldest days drop above it; 0 = no cap
+ * @param blockCache decoded 128-id blocks each disk day keeps in memory ({@code index.block-cache}); 0 = none
+ * @param reloadEveryMillis how often each past day is checked against its source and rebuilt if the source changed ({@code index.reload-every}); 0 = never
  */
-public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean anyRecentDay, Storage storage, long maxDiskBytes) {
+public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean anyRecentDay, Storage storage, long maxDiskBytes, long reloadEveryMillis, int blockCache) {
 
     /** How past days are built. */
     public enum Warm {
@@ -45,12 +47,14 @@ public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean
         MMAP
     }
 
-    public static final DayIndexSettings DEFAULT = new DayIndexSettings(1, 600L << 20, Warm.BACKGROUND, false, Storage.HEAP, 2L << 30);
+    public static final DayIndexSettings DEFAULT = new DayIndexSettings(1, 600L << 20, Warm.BACKGROUND, false, Storage.HEAP, 2L << 30, 600_000L, DaySegment.DEFAULT_CACHE_BLOCKS);
 
     public DayIndexSettings {
         days = Math.max(1, days);
         maxMemoryBytes = Math.max(0, maxMemoryBytes);
         maxDiskBytes = Math.max(0, maxDiskBytes);
+        reloadEveryMillis = Math.max(0, reloadEveryMillis);
+        blockCache = Math.max(0, blockCache);
     }
 
     /** True when more than the newest day is kept. */
@@ -66,7 +70,9 @@ public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean
         String recent = text(settings, kind, "any-recent-day", "false");
         long disk = number(settings, kind, "max-disk", DEFAULT.maxDiskBytes(), true);
         Storage storage = "mmap".equalsIgnoreCase(text(settings, kind, "storage", "heap")) ? Storage.MMAP : Storage.HEAP;
-        return new DayIndexSettings(days, mem, "lazy".equalsIgnoreCase(warm) ? Warm.LAZY : Warm.BACKGROUND, Boolean.parseBoolean(recent), storage, disk);
+        return new DayIndexSettings(days, mem, "lazy".equalsIgnoreCase(warm) ? Warm.LAZY : Warm.BACKGROUND, Boolean.parseBoolean(recent), storage, disk,
+                duration(text(settings, kind, "reload-every", null), DEFAULT.reloadEveryMillis()),
+                (int) number(settings, kind, "block-cache", DEFAULT.blockCache(), false));
     }
 
     private static String text(Map<String, String> s, String kind, String key, String fallback) {
@@ -84,6 +90,33 @@ public record DayIndexSettings(int days, long maxMemoryBytes, Warm warm, boolean
         }
         try {
             return size ? bytes(v) : Long.parseLong(v);
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    /** {@code 10m}, {@code 30s}, {@code 500ms}, {@code 2h}, {@code 1d}; a plain number is seconds; 0 is off. */
+    static long duration(String text, long fallback) {
+        if (text == null) {
+            return fallback;
+        }
+        String t = text.trim().toLowerCase(Locale.ROOT);
+        try {
+            long unit = 1000;
+            String digits = t;
+            if (t.endsWith("ms")) {
+                unit = 1;
+                digits = t.substring(0, t.length() - 2);
+            } else if (t.endsWith("s") || t.endsWith("m") || t.endsWith("h") || t.endsWith("d")) {
+                unit = switch (t.charAt(t.length() - 1)) {
+                    case 'm' -> 60_000L;
+                    case 'h' -> 3_600_000L;
+                    case 'd' -> 86_400_000L;
+                    default -> 1000L;
+                };
+                digits = t.substring(0, t.length() - 1);
+            }
+            return (long) (Double.parseDouble(digits.trim()) * unit);
         } catch (NumberFormatException e) {
             return fallback;
         }

@@ -61,7 +61,9 @@
       <td class="num mono">{{ r.p50Ms if r.p50Ms is not none else '' }}</td>
       <td class="num mono">{{ r.p99Ms if r.p99Ms is not none else '' }}</td>
       <td class="hl-err">{% if r.lastError %}{{ r.lastError[:140] }}<div class="cmp-path mono">{{ (r.lastErrorAt or '')[:19] | replace('T', ' ') }} UTC</div>{% endif %}</td>
-      <td class="mono cmp-path">{% for k, v in (s.cache or {}).items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</td>
+      <td class="mono cmp-path">{% for k, v in (s.cache or {}).items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}
+        {% if s.cache and s.cache.indexDays is defined and s.name in connectors %}<div class="idx-health"><button type="button" class="fk" data-index-reload data-connector="{{ s.name }}" aria-label="Reload the type-ahead index of {{ s.name }}">Reload index</button>
+          <span class="adm-msg" data-index-msg role="status" aria-live="polite">{% if s.cache.indexNextCheck %}next check {{ s.cache.indexNextCheck[:19] | replace('T', ' ') }} UTC{% endif %}</span></div>{% endif %}</td>
       <td class="mono cmp-path" data-pool="{{ s.name }}">{% if s.pool %}{{ pool_line(s.pool) }}{% endif %}</td>
     </tr>{% endfor %}
     {% for name, why in (h.failedToStart or {}).items() %}

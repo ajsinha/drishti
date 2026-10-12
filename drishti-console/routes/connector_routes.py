@@ -100,6 +100,26 @@ async def api_plugins(request: Request):
         return _problem(e)
 
 
+@router.get("/api/{name}/index")
+async def api_index(request: Request, name: str):
+    """The connector's multi-day type-ahead index by kind and day, the reload in progress and the automatic check."""
+    try:
+        return await _server(request, "GET", f"/{quote(name)}/index")
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/{name}/index/reload")
+async def api_index_reload(request: Request, name: str):
+    """Rebuilds days of the index from the source in the background. Body: optional ``kind``, optional ``date`` (a business date or ``all``)."""
+    body = await json_body(request)
+    pick = {k: body[k] for k in ("kind", "date") if body.get(k)}
+    try:
+        return await _server(request, "POST", f"/{quote(name)}/index/reload", pick)
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.get("/api/{name}")
 async def api_get(request: Request, name: str):
     try:

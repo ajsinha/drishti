@@ -1066,14 +1066,16 @@ overrides any of them with `index.kinds.<kind>.<setting>`.
 |---|---|---|
 | `index.days` | `1` | Business days kept. 1 is today's behaviour. |
 | `index.max-memory` | `600MB` | Most the kept days may use on the heap (an estimate, summed over the connector's kinds). Above it the oldest closed days move to disk (or are dropped when there is no disk). `0` = no cap. |
-| `index.storage` | `heap` | `heap`: closed days stay in memory until `max-memory`. `mmap`: closed days go to memory-mapped files at once; only the newest day stays on the heap. |
+| `index.storage` | `heap` | `heap`: closed days stay in memory until `max-memory`. `mmap`: closed days go to segment files at once (read with positional reads, not a memory map, so a removed file frees its disk immediately); only the newest day stays on the heap. |
 | `index.max-disk` | `2GB` | Most disk the connector's segment files may use; the oldest days drop above it. `0` = no cap. |
+| `index.reload-every` | `10m` | How often each *past* day is compared with its source and rebuilt when the source changed (a source with no version, such as S3, is rebuilt every cycle). `30s`, `10m`, `2h`, `1d`; a plain number is seconds; `0` = never. The newest day keeps its own faster refresh. Per kind: `index.kinds.<kind>.reload-every`. Admin can also reload by hand ([OPERATIONS.md section 12.2](OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index)). |
+| `index.block-cache` | `16` | Decoded 128-id blocks each on-disk day keeps in memory (a lookup reads one or two blocks from the file). `0` = none. |
 | `index.warm` | `background` | `background`: past days are built after start, newest first. `lazy`: a day is built on the first search for it. |
 | `index.any-recent-day` | `false` | A bare id on the newest date also suggests ids seen only on earlier kept days, marked `last seen <date>`. |
 
 | Server setting | Default | Meaning |
 |---|---|---|
-| `drishti.index.dir` (system property; `-Ddrishti.index.dir=/var/lib/drishti/index`) | `<data dir>/index` | Where segment files live, one folder per connector. Never the temporary folder, so they survive a restart and are reused when the source is unchanged. |
+| `drishti.index.dir` (`DRISHTI_INDEX_DIR`; or `-Ddrishti.index.dir=/var/lib/drishti/index`) | `<data dir>/index` (`./data/index`) | Where segment files live, one folder per connector. Never the temporary folder, so they survive a restart and are reused when the source is unchanged. |
 
 ```yaml
 # config/connectors/trading-lake.yaml

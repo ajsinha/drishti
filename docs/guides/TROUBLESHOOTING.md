@@ -540,6 +540,17 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** for a custom source, declare `search` in the plugin and index ids in memory with `HitIndex`
   ([CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md)). `/api/v1/sources` shows `"search": true` for sources that can suggest.
 
+### Type-ahead misses a corrected past day
+
+- **Cause:** the connector keeps several days of ids (`index.days`) and the source was restated for a past day without a
+  data-load signal; the index still holds the day as it built it. The automatic check (`index.reload-every`, 10 minutes)
+  catches it within a cycle, unless it is `0` or the day's source has no readable version.
+- **Check:** *Admin → Connectors → (connector) → Index* shows each day's build time and any error; *Admin → Health* shows
+  `indexLastCheck` and `indexNextCheck` in the connector's cache column.
+- **Fix:** click **Reload** on that day (or **Reload all**), or **Reload index** in *Admin → Health*; the row shows
+  *rebuilding*, then *fresh*. A second click while one runs says it is already running. An error on the row names why the
+  day could not be read; the old day stays in use. See [OPERATIONS.md section 12.2](../admin/OPERATIONS.md#122-sizing-the-multi-day-type-ahead-index).
+
 ### A panel says "No data available"
 
 - **Cause:** the document lacks what that panel needs, or has it in another shape. The rest of the view renders
