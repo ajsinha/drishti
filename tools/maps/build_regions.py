@@ -30,6 +30,7 @@ Nothing is fetched at run time by the console: this tool is run by a developer a
 """
 import argparse
 import json
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -104,7 +105,10 @@ def bbox(polys: list):
 
 def code_of(props: dict) -> str:
     c = (props.get("iso_3166_2") or "").replace("~", "")
-    return c or "%s-%s" % ((props.get("iso_a2") or props["adm0_a3"])[:3], props.get("adm1_code", "X")[-4:])
+    if re.fullmatch(r"[A-Z]{2}-[A-Z0-9]{1,4}", c):
+        return c
+    a2 = props.get("iso_a2") if re.fullmatch(r"[A-Z]{2}", props.get("iso_a2") or "") else props["adm0_a3"][:2]     # -99 and the like: a territory with no ISO code of its own
+    return "%s-%s" % (a2, re.sub(r"[^A-Z0-9]", "", (props.get("adm1_code") or "X").upper())[-3:] or "X")
 
 
 def unwrap(merged: dict) -> bool:

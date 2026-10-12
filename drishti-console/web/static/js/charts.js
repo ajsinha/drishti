@@ -301,6 +301,7 @@
       var highlight = d.highlight == null ? [] : [codeFor(d.highlight)].filter(Boolean);
       if (d.highlight != null && !highlight.length) { notes.push('Not on the map: ' + d.highlight); }
       if (shade && shade.note) { notes.push('Not shaded: ' + shade.note); }
+      if (items.length) { notes.push('Shaded by ' + ((shade && shade.label) || 'value') + (d.unit ? ' (' + d.unit + ')' : '')); }
       var clickable = null, make = null;
       if (link) {
         var tk = TOKEN.exec(link.template);

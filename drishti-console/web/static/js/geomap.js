@@ -58,7 +58,10 @@
           if (p.iso2) { by.iso2[p.iso2.toUpperCase()] = c; }
           by.name[p.name.toLowerCase()] = c;
         });
-        window.echarts.registerMap(WORLD, geo);
+        // a region is named by its ISO code, so a series' data finds it by name
+        window.echarts.registerMap(WORLD, { type: 'FeatureCollection', features: geo.features.map(function (ft) {
+          return { type: 'Feature', properties: { name: ft.properties.iso3, fullName: ft.properties.name }, geometry: ft.geometry };
+        }) });
         return { name: WORLD, by: by, list: list, points: list.filter(function (c) { return c.point; }) };
       });
       cache.world.catch(function () { cache.world = null; });
@@ -85,7 +88,9 @@
             geometry: { type: 'Polygon', coordinates: [[[bb[0] - 1, bb[1] - 1], [bb[2] + 1, bb[1] - 1], [bb[2] + 1, bb[3] + 1], [bb[0] - 1, bb[3] + 1], [bb[0] - 1, bb[1] - 1]]] } });
         }
         var name = 'drishti-region-' + k;
-        window.echarts.registerMap(name, { type: 'FeatureCollection', features: polys });
+        window.echarts.registerMap(name, { type: 'FeatureCollection', features: polys.map(function (ft) {
+          return { type: 'Feature', properties: { name: ft.properties.code }, geometry: ft.geometry };
+        }) });
         return { iso3: k, name: name, features: features, points: pts, by: by, bbox: bb, shapes: polys.filter(function (f) { return f.properties.code !== '__frame__'; }).length };
       });
       cache.regions[k].catch(function () { delete cache.regions[k]; });
@@ -138,7 +143,12 @@
     items.forEach(function (i) { byCode[String(i.code)] = i; });
     var nums = items.map(function (i) { return i.value; }).filter(function (v) { return typeof v === 'number' && isFinite(v); });
     var lo = nums.length ? Math.min(0, Math.min.apply(null, nums)) : 0, hiV = nums.length ? Math.max(1, Math.max.apply(null, nums)) : 1;
-    var base = t['bg-2'] || t.surface, top = t.link;
+    var clipped = false;
+    if (nums.length >= 20) {        // a few extremes (Monaco's GDP per head) would leave every other place one colour: the scale ends at the 95th percentile
+      var sorted = nums.slice().sort(function (a, b) { return a - b; }), p95 = sorted[Math.floor((sorted.length - 1) * 0.95)];
+      if (p95 > lo && p95 < hiV) { hiV = p95; clipped = true; }
+    }
+    var base = blend(t.surface, t.muted, 0.3), top = t.link;
     function nameOf(code) {
       if (isWorld) { var c = geo.by.iso3[code]; return c ? c.name : code; }
       var r = geo.by.code[String(code).toUpperCase()]; return r ? r.name : code;
@@ -147,15 +157,22 @@
       var i = byCode[code];
       return i && typeof i.value === 'number' ? blend(base, top, Math.max(0, Math.min(1, (i.value - lo) / ((hiV - lo) || 1)))) : null;
     }
-    var data = [];
+    var data = [], regions = [];
     var seen = {};
     function add(code) {
       if (seen[code]) { return; }
       seen[code] = 1;
-      var i = byCode[code], d = { name: code, value: i && typeof i.value === 'number' ? i.value : null };
-      if (sel && !sel.has(code)) { d.itemStyle = { opacity: 0.4 }; }
-      if (hi.has(code)) { d.itemStyle = { areaColor: t.accent, borderColor: t.ink, borderWidth: 1.2 }; d.emphasis = { itemStyle: { areaColor: t.accent } }; d.label = { show: true, color: t.ink, fontSize: 11, fontWeight: 600, formatter: nameOf(code) }; }
-      data.push(d);
+      var i = byCode[code];
+      data.push({ name: code, value: i && typeof i.value === 'number' ? i.value : null });
+      // the style of one place goes on the geo component's region (the map series shares its shapes)
+      var r = { name: code };
+      if (sel && !sel.has(code)) { r.itemStyle = { opacity: 0.4 }; }
+      if (hi.has(code)) {
+        r.itemStyle = { areaColor: t.accent, borderColor: t.ink, borderWidth: 1.2 };
+        r.emphasis = { itemStyle: { areaColor: t.accent }, label: { show: true, color: t.ink } };
+        r.label = { show: true, color: t.ink, fontSize: 11, fontWeight: 600, formatter: nameOf(code) };
+      }
+      if (r.itemStyle || r.label) { regions.push(r); }
     }
     items.forEach(function (i) { add(String(i.code)); });
     hi.forEach(function (c) { add(c); });
@@ -182,16 +199,16 @@
           if (cfg.linked) { line += '<br>' + (!ok || ok.has(code) ? (cfg.openText || 'click to open') : (cfg.closedText || 'no page for this ' + (isWorld ? 'country' : 'region'))); }
           return line;
         } },
-      geo: { map: geo.name, nameProperty: isWorld ? 'iso3' : 'code', roam: false, left: 6, right: 6, top: 6, bottom: shaded ? 40 : 6,
+      geo: { map: geo.name, roam: false, left: 6, right: 6, top: 6, bottom: shaded ? 40 : 6,
         aspectScale: isWorld ? 0.75 : Math.max(0.35, Math.cos(midLat * Math.PI / 180)),
         itemStyle: { areaColor: base, borderColor: t.border, borderWidth: 0.6 },
-        label: { show: labelled, color: t.ink, fontSize: 10 },
-        emphasis: { label: { show: labelled, color: t.ink }, itemStyle: { areaColor: t.pos || t.link } }, select: { disabled: true } },
+        label: { show: labelled, color: t.ink, fontSize: 10, formatter: function (p) { return nameOf(p.name); } },
+        emphasis: { label: { show: labelled, color: t.ink }, itemStyle: { areaColor: t.pos || t.link } }, select: { disabled: true }, regions: regions },
       series: series
     };
     if (shaded) {
       o.visualMap = { type: 'continuous', min: lo, max: hiV, seriesIndex: 0, calculable: false, orient: 'horizontal', left: 'center', bottom: 0, itemWidth: 12, itemHeight: 110,
-        inRange: { color: [base, top] }, outOfRange: { color: [base] }, textStyle: { color: t.muted, fontSize: 10 }, text: [cfg.numText ? cfg.numText(hiV) : String(hiV), cfg.numText ? cfg.numText(lo) : String(lo)] };
+        inRange: { color: [base, top] }, outOfRange: { color: [base] }, textStyle: { color: t.muted, fontSize: 10 }, text: [(cfg.numText ? cfg.numText(hiV) : String(hiV)) + (clipped ? '+' : ''), cfg.numText ? cfg.numText(lo) : String(lo)] };
     }
     return o;
   }

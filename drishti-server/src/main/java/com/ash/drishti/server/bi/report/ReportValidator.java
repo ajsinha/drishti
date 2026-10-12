@@ -254,7 +254,7 @@ public final class ReportValidator {
         boolean lat = !v.well("latitude").isEmpty();
         boolean lon = !v.well("longitude").isEmpty();
         if (!place && !lat && !lon) {
-            err(ReportParser.VISUAL, p + ".wells", "a map needs a location (a country or ISO 3166-2 region code field) or a latitude and a longitude");
+            err(ReportParser.VISUAL, p + ".wells", "a map needs a location (a country code or ISO 3166-2 region code field) or a latitude and a longitude");
         } else if (place && (lat || lon)) {
             err(ReportParser.VISUAL, p + ".wells", "a map shades countries (location) or marks points (latitude and longitude), not both");
         } else if (lat != lon) {

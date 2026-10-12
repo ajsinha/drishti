@@ -217,6 +217,30 @@ The states of a tile, and the same panel in the dark theme and at phone width:
 
 A tile is built end to end in [PANEL_DEVELOPER_GUIDE.md](PANEL_DEVELOPER_GUIDE.md).
 
+### map
+
+The world with a country highlighted, shaded by a figure and clickable; or, with `region`, one country's regions. The shapes are shipped with the console (Natural Earth, public domain): no map tiles, no map service, nothing leaves the network. A click on a country opens that country's entity (`link`), a country with no entity says so on hover, and the places a click opens are also listed under the map as links.
+
+![A map panel](img/panels/kind-map.jpg)
+
+- **Use it when:** An entity belongs to a country and the reader should see where, and move to the neighbours: a jurisdiction, an economy, a counterparty's country of risk. `shade` colours every country by one field of a kind (GDP per head), with a legend.
+- **Not when:** Points at latitude and longitude, or a map of streets: not drawn (there are no tiles). Figures by country over a report's data: the BI `map` visual, which also drills to regions.
+- **Key options:** `highlight` and `region` (expressions), `link` (`kind`, `id` with `{iso3}`, `{iso2}` or `{code}`), `shade` (`kind`, `field`, `by`, `fmt`, `label`), `unit`. Every option and its values: [reference](RACHANA_REFERENCE.md#map).
+- **Empty when** `region` names no country the shapes know; a world map is never empty.
+- **Masked:** a masked `highlight` highlights nothing, a masked shade field shades nothing and the panel says so; which countries have a page is not secret.
+- **No access:** a `link` or `shade` of a kind the user may not open lists nothing and says *no access to <kind>*.
+- **Live:** the whole panel is replaced; the shapes are loaded once and kept.
+- **Phone:** the map is shorter and the places list is one column of 44 px links.
+- **CSV:** Code, the shade's label, Highlighted, Opens a page.
+
+From [map](examples/map.sutra.yaml):
+
+```yaml
+  - { id: world, kind: map, title: The world, highlight: $.iso3, span: 6, height: 12 }
+```
+
+The politics-society pack's `jurisdiction` Sutra and the economics pack's `economy` Sutra carry one, with a `link` to their own kind (and, for the economy, a GDP-per-head `shade`).
+
 ## Tables
 
 ### table

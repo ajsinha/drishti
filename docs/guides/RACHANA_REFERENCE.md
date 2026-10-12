@@ -700,6 +700,7 @@ what it does when empty, masked or live, and a screenshot: [PANEL_KINDS.md](PANE
 | [`timeline`](#timeline) | `rows` | `date`, `label`, `detail`, `status`, `tone` | dated events with toned status | no |
 | [`pivot`](#pivot) | `rows`, `by`, `across` | `value`, `agg`, `fmt`, `tone`, `heat`, `totals`, `expand` | aggregate table with totals and heat | no |
 | [`metric`](#metric) | `value` | `label`, `fmt`, `tone`, `delta`, `deltaFmt`, `deltaTone`, `unit`, `caption` | a big-number KPI tile with its change | no |
+| [`map`](#map) | | `highlight`, `region`, `link`, `shade`, `fmt`, `unit` | the world with a country highlighted, shaded and clickable; or one country's regions | no |
 
 Which option values are expressions, which are field names, and which are plain text matters: only
 expressions and templates are compiled at load time.
@@ -725,6 +726,7 @@ expressions and templates are compiled at load time.
 | `timeline` | `rows` | `date`, `label`, `detail`, `status` | `tone` |
 | `pivot` | `rows` | `by` (one field or a list), `across`, `value` | `agg` (`sum`, `count`, `avg`, `min`, `max`), `heat`, `totals` (`true`/`false`), `expand` (whole number or `all`), `fmt`, `tone` |
 | `metric` | `value`, `delta`, `caption` (a template) | | `label`, `fmt`, `tone`, `deltaFmt`, `deltaTone`, `unit` |
+| `map` | `highlight`, `region`, `shade.field`, `shade.by` | | `link` (`kind`, `id` template), `shade.kind`, `shade.fmt`, `shade.label`, `fmt`, `unit` |
 
 For the seven kinds from `waterfall` on, a field name may also be a dotted path (`counterparty.name`) or an
 expression over the row when it starts with `@` or `$` (`y: "@.pnl / 1000"`). Values outside the allowed set
@@ -1449,6 +1451,41 @@ works as for any panel.
 The runnable version is the [metric example](examples/metric.md); its catalogue entry is
 [PANEL_KINDS.md](PANEL_KINDS.md#metric).
 
+#### map
+
+A map of the world with a country highlighted, shaded by a figure and clickable, or of one country's regions. It reads the document for
+the place to show (`highlight`, `region`) and, across a whole kind, for which countries have a page (`link`) and what shades them
+(`shade`). The shapes are Natural Earth, shipped with the console (countries at 1:110m, regions below a country at 1:10m, public
+domain): nothing is fetched from the internet, there are no map tiles and no map service.
+
+| Option | Required | Default | Meaning |
+|---|---|---|---|
+| `highlight` | | | Expression for the country to highlight: an ISO 3166-1 alpha-3 or alpha-2 code (`AUS`, `AU`) or the English name. In `region` mode, an ISO 3166-2 region code (`AU-NSW`). A masked value highlights nothing. |
+| `region` | | | Expression for a country (same forms as `highlight`). The map then shows that country's regions, with ISO 3166-2 codes, instead of the world. A document with no such country makes the panel empty. |
+| `link` | | | `{ kind: jurisdiction, id: "JUR-{iso3}" }`: a click on a country opens that entity. The template holds `{iso3}`, `{iso2}` or (regions) `{code}`. The server lists the entities of the kind: a country with no such entity is not clickable and says so on hover; a kind the reader may not open lists nothing and the panel says *no access*. |
+| `shade` | | | `{ kind: economy, field: $.gdpPerCapita, by: $.iso3, fmt: amount0, label: GDP per capita (USD) }`: colour each country by `field` of the entity of `kind` that `by` names (default `$.iso3`), with a legend. Read as the caller may see it: a masked field shades nothing and the panel says so. |
+| `fmt`, `unit` | | | Format of the shade's figures when `shade` has none, and a unit shown in the legend and tooltip. |
+
+`highlight`, `region`, `shade.field` and `shade.by` are expressions compiled when the Sutra loads (`DRS-2101`); `link` and `shade`
+that are not mappings of the shape above, a link template with no code, and a `highlight` that is a list are `DRS-2029`. The
+entities are read once per kind and kept for `drishti.panels.map-cache-seconds` (60), at most `drishti.panels.map-entities`
+(1,000), within `drishti.panels.map-budget-millis` (5,000): a slower read leaves the map unshaded, with the reason under it.
+Countries too small for the world shapes (Cayman Islands, Bermuda, ...) and regions that are tiny at their country's scale are
+drawn as dots, so they can still be clicked. Under the map, *Open a country* lists the same places as links (the way in from a
+keyboard, a screen reader or a phone).
+
+```yaml
+  - id: geography
+    kind: map
+    title: Where it is
+    highlight: $.iso3
+    link: { kind: jurisdiction, id: "JUR-{iso3}" }
+    height: 11
+```
+
+The runnable version is the [map example](examples/map.md); its catalogue entry is [PANEL_KINDS.md](PANEL_KINDS.md#map). A BI report's map
+visual draws with the same shapes and drills from the world to a country and its regions: [REPORTS.md](REPORTS.md#31-the-map-funnel-histogram-box-plot-and-bubble).
+
 ## Controls
 
 A Sutra may declare **controls**: dropdowns, date ranges, a search box. The reader sets them on the screen; panels read their values in
@@ -2074,7 +2111,7 @@ A Sutra file that fails any check is not loaded (or keeps its last good version,
 | `DRS-2011` | `unknown key 'pannels' in top level` (also `in match`, `in title`, `in strip item`, `in column`) | a misspelt or unsupported key | fix the spelling; panel options are reported as `DRS-2023` instead |
 | `DRS-2012` | `'panels' must be a list`, `'keys' must be a mapping of F-key to action`, `a column must be a mapping (label, bind, fmt, tone, total, link)`, `'kind' must be text`, `action for F7 must be text`, `'notes' is plain text`, `'kind' in match is an entity kind written as text (such as trade), not '42'`, `'priority' in match must be a whole number (higher is tried first), not 'high'` | a value of the wrong shape | write the shape shown in the message |
 | `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer up to 2147483647, not '0'` | bad name or version (also a version too large for any number, which is not reported as YAML syntax) | `irs-vanilla`; `version: 3` unquoted |
-| `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric` | a kind that does not exist | use one of the 22 kinds |
+| `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric, map` | a kind that does not exist | use one of the 22 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
 | `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `only 'tabs' panels take 'panels'`, `a 'line' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric`, `a panel inside a tab cannot hold tabs of its own`, `a panel inside a tab cannot have a Pivot tab; put the table in a panel of its own`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
 | `DRS-2024` | `duplicate panel id 'legs'`, `two panels of this tab are called 'terms'` | two panels with one id | rename one |

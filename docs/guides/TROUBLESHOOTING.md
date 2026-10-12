@@ -1041,7 +1041,8 @@ Connectors are files, one per connector, in `config/connectors/` (the file name 
 ### A map shows fewer countries than the data has
 
 - **Cause:** the map matches the `location` field to a vendored list of countries (ISO alpha-2 or alpha-3 code, or the English name). Small territories and codes that are not countries are not on it; the visual names them under the map (`Not on the map: KY`).
-- **Fix:** put an ISO country code in the field (a calculated column in the dataset can map your own code); for points use `latitude` and `longitude`. The file is `static/vendor/echarts/maps/world-countries.json`; nothing is loaded from outside, so a map in a closed network works.
+- **Fix:** put an ISO country code in the field (a calculated column in the dataset can map your own code); for points use `latitude` and `longitude`. The file is `static/vendor/echarts/maps/world-countries.json`; nothing is loaded from outside, so a map in a closed network works. A region is an ISO 3166-2 code (`AU-NSW`); one the region file of its country does not hold is named under the map in the same way.
+- **A drilled map shows no figures for a country:** the field holds countries, not their regions; drilling shows the shapes of the regions and says so (*No figures at region level for Australia*). Add a region code field to the dataset if the figures are regional.
 
 ### A total shows `–` where the other cells have numbers
 

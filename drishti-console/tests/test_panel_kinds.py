@@ -28,7 +28,7 @@ ROOT = CONSOLE.parent
 DOCS = ROOT / "docs" / "guides"
 KINDS_DOC = DOCS / "PANEL_KINDS.md"
 DEV_DOC = DOCS / "PANEL_DEVELOPER_GUIDE.md"
-KINDS = ["kv", "status", "provenance", "metric", "table", "ladder", "tabs", "pivot", "line", "area", "hbar", "gauge", "surface", "candlestick",
+KINDS = ["kv", "status", "provenance", "metric", "map", "table", "ladder", "tabs", "pivot", "line", "area", "hbar", "gauge", "surface", "candlestick",
          "histogram", "scatter", "waterfall", "graph", "links", "timeline", "markdown"]
 HEADING = re.compile(r"^(#{2,3}) (.+?)\s*$", re.M)          # the help centre's table of contents covers levels 2 and 3
 
@@ -42,7 +42,7 @@ def anchors(text: str) -> dict:
     return out
 
 
-def test_the_catalogue_lists_all_twenty_one_kinds_each_with_its_own_anchor():
+def test_the_catalogue_lists_all_twenty_two_kinds_each_with_its_own_anchor():
     assert len(KINDS) == 22 and len(set(KINDS)) == 22
     found = anchors(KINDS_DOC.read_text())
     for kind in KINDS:
@@ -50,7 +50,7 @@ def test_the_catalogue_lists_all_twenty_one_kinds_each_with_its_own_anchor():
     assert "# The twenty-two panel kinds" in KINDS_DOC.read_text()
 
 
-def test_the_kinds_of_the_grammar_are_exactly_these_twenty_one():
+def test_the_kinds_of_the_grammar_are_exactly_these_twenty_two():
     java = (ROOT / "drishti-rachana" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "rachana" / "model" / "PanelKind.java").read_text()
     declared = re.findall(r"^    ([A-Z]+)\(Set\.of", java, re.M)
     assert sorted(k.lower() for k in declared) == sorted(KINDS)
@@ -95,14 +95,14 @@ def test_the_catalogue_does_not_copy_option_tables_from_the_reference():
 def test_the_developer_guide_walks_through_metric_with_the_real_code():
     text = DEV_DOC.read_text()
     sources = {
-        "drishti-rachana/src/main/java/com/ash/drishti/rachana/model/PanelKind.java": 'METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption"));',
+        "drishti-rachana/src/main/java/com/ash/drishti/rachana/model/PanelKind.java": 'METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption")),',
         "drishti-engine/src/main/java/com/ash/drishti/engine/view/PanelData.java": "record Metric(Cell value, Cell delta, String unit, String caption) implements PanelData {}",
         "drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java": "case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));",
         "drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java": "case METRIC -> metric(p, c);",
         "drishti-console/core/export.py": "if isinstance(d.get(\"value\"), dict):",
         "drishti-console/web/static/js/build/palette.js": "['metric', 'hash',",
         "drishti-console/web/static/css/terminal.css": ".metric-v { font-size: clamp(1.1rem, 16cqi, 2.2rem);",
-        "drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java": '"sum", "delta");',
+        "drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java": '"sum", "delta", "highlight", "region");',
     }
     for path, snippet in sources.items():
         assert snippet in (ROOT / path).read_text(), f"{path} no longer has the snippet the guide quotes"

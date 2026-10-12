@@ -182,7 +182,7 @@ Then run the whole set: [15.4](#154-how-to-run-them). The sections that follow t
      * One large formatted, toned figure (a KPI tile), with an optional small change beside it ({@code delta}, with its own
      * format and tone), a {@code unit} and a {@code caption} under it.
      */
-    METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption"));
+    METRIC(Set.of("value"), Set.of("label", "fmt", "tone", "delta", "deltaFmt", "deltaTone", "unit", "caption")),
 ```
 
 The two sets are the **required** and the **optional** options. The parser rejects a kind it does not know
@@ -620,7 +620,7 @@ one of them, and `roles(kind)` (what the drop menu offers) is derived from this 
 
 ```java
     private static final Set<String> BINDABLE = Set.of("rows", "x", "y", "value", "label", "size", "group", "open", "high", "low", "close",
-            "volume", "date", "detail", "status", "tone", "by", "across", "nodes", "edges", "source", "each", "max", "total", "sum", "delta");
+            "volume", "date", "detail", "status", "tone", "by", "across", "nodes", "edges", "source", "each", "max", "total", "sum", "delta", "highlight", "region");
 ```
 
 `metric` already had `value`; it needed `delta` added. A new option name is not bindable until it is here. **No guard
