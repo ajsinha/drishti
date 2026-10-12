@@ -43,28 +43,28 @@ import java.util.concurrent.atomic.AtomicInteger;
  * connector), and trades with nested legs for the array table. Sizes are tiny on purpose. Implements {@link SourceGateway} the way the server does,
  * over in-memory data, so the engine runs unchanged.
  */
-class TestLake implements SourceGateway {
+public class TestLake implements SourceGateway {
 
-    static final LocalDate DAY1 = LocalDate.of(2026, 10, 8);
-    static final LocalDate DAY2 = LocalDate.of(2026, 10, 9);
-    static final List<String> DESKS = List.of("DESK-A", "DESK-B", "DESK-C");
+    public static final LocalDate DAY1 = LocalDate.of(2026, 10, 8);
+    public static final LocalDate DAY2 = LocalDate.of(2026, 10, 9);
+    public static final List<String> DESKS = List.of("DESK-A", "DESK-B", "DESK-C");
 
-    record Trade(String id, String desk, String ccy, String cpty, double notional, double mtm, String tradeDate, List<Map<String, Object>> legs) {}
+    public record Trade(String id, String desk, String ccy, String cpty, double notional, double mtm, String tradeDate, List<Map<String, Object>> legs) {}
 
-    final Map<LocalDate, List<Trade>> trades = new LinkedHashMap<>();
-    final AtomicInteger scans = new AtomicInteger();
+    public final Map<LocalDate, List<Trade>> trades = new LinkedHashMap<>();
+    public final AtomicInteger scans = new AtomicInteger();
     final AtomicInteger recordReads = new AtomicInteger();
     volatile long scanDelayMillis;
     final boolean promoted;
     final LocalDate current = DAY2;
 
     /** @param promoted false makes the trades connector unable to scan, so the engine reads documents */
-    TestLake(boolean promoted) {
+    public TestLake(boolean promoted) {
         this(promoted, 40);
     }
 
     /** @param rowsPerDay trades on each of the two days (the measurements use 10,000, the most a local test may hold) */
-    TestLake(boolean promoted, int rowsPerDay) {
+    public TestLake(boolean promoted, int rowsPerDay) {
         this.promoted = promoted;
         for (LocalDate day : List.of(DAY1, DAY2)) {
             List<Trade> list = new ArrayList<>();
@@ -79,7 +79,7 @@ class TestLake implements SourceGateway {
         }
     }
 
-    static String yaml() {
+    public static String yaml() {
         return """
                 rachana: 1
                 dataset: lake-test
@@ -205,8 +205,8 @@ class TestLake implements SourceGateway {
     };
 
     /** A second fact table, undated: seven limits over the three desks (four, two and one), so a join to the trades would repeat rows. */
-    static final String[] LIMIT_DESKS = {"DESK-A", "DESK-A", "DESK-A", "DESK-A", "DESK-B", "DESK-B", "DESK-C"};
-    static final double[] LIMIT_AMOUNTS = {10, 20, 30, 40, 5, 6, 7};
+    public static final String[] LIMIT_DESKS = {"DESK-A", "DESK-A", "DESK-A", "DESK-A", "DESK-B", "DESK-B", "DESK-C"};
+    public static final double[] LIMIT_AMOUNTS = {10, 20, 30, 40, 5, 6, 7};
 
     final SourcePlugin limitLake = new Base() {
         @Override

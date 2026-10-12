@@ -199,7 +199,7 @@ public final class DatasetService {
 
     // ---- the reader --------------------------------------------------------------------------------------------------
 
-    QueryService.Caller caller(Principal p, Dataset ds) {
+    public QueryService.Caller caller(Principal p, Dataset ds) {
         Optional<User> u = security.enabled() ? users.find(p.user()) : Optional.empty();
         Map<String, List<Object>> attrs = UserAttributes.of(p.user(), p.roles(), u.map(User::desk).orElse(""), u.map(User::email).orElse(""));
         Set<String> denied = new java.util.HashSet<>();
@@ -212,7 +212,7 @@ public final class DatasetService {
     }
 
     /** A column is masked for the caller when Drishti's field masks name it ({@code drishti.security.redact}) or the dataset lists it and the caller lacks {@code raw}. */
-    SqlCompiler.Masks masks(Principal p, Dataset ds) {
+    public SqlCompiler.Masks masks(Principal p, Dataset ds) {
         boolean raw = entitlements.raw(p);
         return (table, column) -> {
             Dataset.Table t = ds.tables().get(table);
@@ -465,6 +465,32 @@ public final class DatasetService {
         audit.record(p.user(), "bi-query", id, q.fields().size() + " fields, " + q.measures().size() + " measures, " + r.rows() + " rows from " + r.meta().layer()
                 + (r.meta().cached() ? " (cached)" : ""));
         return r;
+    }
+
+    /**
+     * Runs a query against a dataset item as the caller with the dataset widened (a model query's local measures, the currency guard's counts): the item's
+     * own layers, frames and security; {@code salt} keeps such answers apart in the result cache.
+     */
+    public QueryService.Result queryWith(Principal p, BiStore.Item item, Dataset ds, String salt, QueryRequest q, boolean explain) {
+        QueryService.Loaded base = loaded(p, item);
+        QueryService.Loaded wide = new QueryService.Loaded(base.id(), base.key(), ds, base.hash() + "|" + salt);
+        QueryService.Result r = queries.query(wide, q, caller(p, ds), explain, framesOf(p, wide, q));
+        audit.record(p.user(), "bi-query", item.id(), "model query: " + q.fields().size() + " fields, " + q.measures().size() + " measures, " + r.rows() + " rows from " + r.meta().layer());
+        return r;
+    }
+
+    /** Runs a query against a data model's flattened dataset as the caller (its security per dataset, the caller's masks and kinds). Audited as {@code bi-mq}. */
+    public QueryService.Result queryModel(Principal p, String id, String key, Dataset ds, String hash, QueryRequest q, boolean explain) {
+        QueryService.Result r = queries.query(new QueryService.Loaded(id, key, ds, hash), q, caller(p, ds), explain);
+        audit.record(p.user(), "bi-mq", id, q.fields().size() + " fields, " + q.measures().size() + " measures, " + r.rows() + " rows from " + r.meta().layer()
+                + (r.meta().cached() ? " (cached)" : ""));
+        return r;
+    }
+
+    /** The data generation of a dataset's layers and live tables (starting its live tables): what a standing query watches. */
+    public long generation(String id, String key, Dataset ds) {
+        Object live = queries.liveTick(new QueryService.Loaded(id, key, ds, "")).get("generation");
+        return queries.layers().generation(key) * 1_000_003L + (live instanceof Number n ? n.longValue() : 0L);
     }
 
     private com.ash.drishti.server.bi.engine.Frames framesOf(Principal p, QueryService.Loaded ds, QueryRequest q) {

@@ -63,6 +63,16 @@ public final class DatasetParser {
 
     private DatasetParser() {}
 
+    /** The checks of a parsed dataset's expressions, relationships, hierarchies and rollups (what the model layer runs over a flattened model). */
+    public static List<Problem> check(Dataset ds) {
+        return DatasetValidator.validate(ds);
+    }
+
+    /** The dataset with the history tables of its live tables added (problems to {@code out}), as a parsed dataset gets them. */
+    public static Dataset withHistories(Dataset ds, List<Problem> out) {
+        return Histories.expand(ds, out);
+    }
+
     public static Result parse(String yaml) {
         List<Problem> out = new ArrayList<>();
         JsonNode root;
@@ -76,12 +86,15 @@ public final class DatasetParser {
             out.add(error("", "a dataset is a YAML mapping (key: value) with at least `dataset:` and `tables:`"));
             return new Result(null, out);
         }
+        int rachana = root.path("rachana").asInt(1);
+        if (rachana == com.ash.drishti.server.bi.layer.DatasetDef.RACHANA && root.has("dataset")) {
+            return com.ash.drishti.server.bi.layer.Standalone.asVersion1(yaml);       // a model-layer dataset, read as the one-table dataset of its implicit model
+        }
         root.fieldNames().forEachRemaining(k -> {
             if (!TOP.contains(k)) {
                 out.add(new Problem("warning", INVALID, k, "unknown key '" + k + "' is ignored"));
             }
         });
-        int rachana = root.path("rachana").asInt(1);
         if (rachana != 1) {
             out.add(error("rachana", "this server reads Rachana version 1, not " + rachana));
         }

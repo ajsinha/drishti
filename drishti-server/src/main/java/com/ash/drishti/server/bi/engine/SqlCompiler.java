@@ -211,6 +211,13 @@ public final class SqlCompiler {
             }
             denied = rules.isEmpty();
         }
+        if (ds.security().perTable()) {
+            // a data model: each table's rules bind to that table; a dimension's rules reach the facts that reference it (docs/architecture/BI_MODEL_SPEC.md 2.6)
+            tables.addAll(TableRules.reached(ds, tables));
+            TableRules.Bound bound = TableRules.bind(ds, tables, reader);
+            rules = new ArrayList<>(bound.rules());
+            denied = bound.denied();
+        }
         if (tables.isEmpty()) {
             throw invalid("the query names no table");
         }
@@ -365,7 +372,22 @@ public final class SqlCompiler {
                 uses.add(u != null ? u : new Use(name, new Node.MeasureRef(name), columnsOfMeasure(name).stream().anyMatch(c -> c.column() != null && reader.masks().masked(c.table(), c.column()))));
             }
             QueryRequest pq = new QueryRequest(q.fields(), groups.get(i), dims.stream().map(FilterUse::filter).toList(), q.from(), q.to(), List.of(), null, q.layer());
-            parts.add(new Plan(ds, pq, whole.fields(), uses, dims, whole.rules(), whole.denied(), allOf(base, joins), base, joins, null));
+            List<Node> rules = whole.rules();
+            boolean denied = whole.denied();
+            if (ds.security().perTable()) {
+                // each fact part reads its own tables, so only their rules (and those of the dimensions this fact reaches) apply to it
+                Set<String> partTables = union(union(groupTables.get(i), dimTables), Set.of(base));
+                partTables.addAll(TableRules.reached(ds, partTables));
+                List<Join> more = tree(base, partTables, edges, true);
+                if (more == null) {
+                    return null;
+                }
+                joins = more;
+                TableRules.Bound bound = TableRules.bind(ds, allOf(base, joins), reader);
+                rules = bound.rules();
+                denied = bound.denied();
+            }
+            parts.add(new Plan(ds, pq, whole.fields(), uses, dims, rules, denied, allOf(base, joins), base, joins, null));
             all.addAll(allOf(base, joins));
         }
         return new Plan(ds, q, whole.fields(), whole.measures(), whole.filters(), whole.rules(), whole.denied(), all, parts.get(0).base(), List.of(), parts, whole.derived());

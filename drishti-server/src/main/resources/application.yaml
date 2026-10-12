@@ -180,6 +180,11 @@ drishti:
       - /api/v1/bi/poc/query            # Rupaka phase 0 proof of concept: a read (an Arrow answer), only when drishti.bi.poc.enabled
       - /api/v1/bi/datasets/*/query     # Rupaka phase 2: a dataset query (fields, measures, filters in the body), masked and row-ruled, changes nothing
       - /api/v1/bi/datasets/validate    # checks a dataset's YAML without storing it
+      - /api/v1/bi/mq                   # the model query language (docs/architecture/BI_MODEL_SPEC.md section 5): one query of a model as the caller, changes nothing
+      - /api/v1/bi/models/*/query       # the same with the model in the path
+      - /api/v1/bi/mq/validate          # checks a model query without reading data
+      - /api/v1/bi/models/validate      # checks a model's or a rachana 2 dataset's YAML without storing it
+      - /api/v1/bi/mq/subscribe         # a standing query: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
       - /api/v1/bi/model/start          # a draft dataset from pack kinds: reads connectors, stores nothing
       - /api/v1/bi/model/infer          # relationships proposed by value matching: reads connectors, stores nothing
       - /api/v1/bi/reports/*/query      # Rupaka phase 3: one visual of a report under the page's state, through the dataset engine, masked and row-ruled
@@ -229,6 +234,7 @@ drishti:
           - POST /api/v1/bi/items/*/impact
           - POST /api/v1/bi/datasets/*/refresh
           - POST /api/v1/bi/datasets/*/transform/run
+          - DELETE /api/v1/bi/mq/subscribe/*
           - PUT /api/v1/bi/items/*
           - PUT /api/v1/bi/items/*/favourite
           - DELETE /api/v1/bi/items/*
