@@ -98,6 +98,21 @@ public final class TableRules {
         return false;
     }
 
+    /** The tables of a query a layer of whose row rules names none of the reader's roles: the reader sees none of their rows. */
+    static List<String> deniedTables(Dataset ds, Set<String> tables, SqlCompiler.Reader reader) {
+        List<String> out = new ArrayList<>();
+        if (!reader.enforceRows()) {
+            return out;
+        }
+        for (String t : tables) {
+            Dataset.TableSecurity s = ds.security().tables().get(t);
+            if (s != null && s.layers().stream().anyMatch(l -> !l.isEmpty() && l.stream().noneMatch(r -> reader.roles().contains(r.role())))) {
+                out.add(t);
+            }
+        }
+        return out;
+    }
+
     /** The condition for the tables a query reads, as this reader. */
     static Bound bind(Dataset ds, Set<String> tables, SqlCompiler.Reader reader) {
         List<Node> all = new ArrayList<>();

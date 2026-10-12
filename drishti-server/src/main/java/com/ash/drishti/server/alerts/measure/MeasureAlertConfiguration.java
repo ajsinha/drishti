@@ -104,7 +104,8 @@ public class MeasureAlertConfiguration {
     @SuppressWarnings("java:S107")
     public MeasureAlertService measureAlertService(PreferenceStore store, BiValueReader bi, FieldValueReader fields, ServerAlertSources sources, BoardAlertSource boards,
             AlertChannels channels, UserService users, Principals principals, SecurityProperties security, AuditLog audit, MeasureAlertProperties props, BusinessDates dates, LoadService loads,
-            ObjectProvider<BridgeItemRenderer> renderer, CollabProperties collab, org.springframework.core.env.Environment env, @Value("${drishti.branding.product:Drishti}") String product) {
+            ObjectProvider<BridgeItemRenderer> renderer, CollabProperties collab, org.springframework.core.env.Environment env, @Value("${drishti.branding.product:Drishti}") String product,
+            ObjectProvider<com.ash.drishti.server.bi.mq.ModelCatalog> models) {
         ValueReader reader = (spec, who, date) -> spec.source().type().equals("field") ? fields.read(spec, who, date) : bi.read(spec, who, date);
         // with security off the signed-in name need not be a user of the directory: it is still a person to alert (no email address, the rights security-off gives)
         AlertEnvironment.People people = name -> users.find(name)
@@ -114,6 +115,13 @@ public class MeasureAlertConfiguration {
         MeasureAlertService s = new MeasureAlertService(store, reader, sources, people, sources, boards, channels, audit, props, dates, Clock.systemUTC(), true);
         s.retryWith(com.ash.drishti.common.RetryPolicy.of(env::getProperty, "alerts"));       // drishti.retry.alerts.*
         loads.onReady(r -> s.onLoad(r.kind(), r.businessDate()));                      // the data-load signal
+        com.ash.drishti.server.bi.mq.ModelCatalog catalog = models.getIfAvailable();
+        if (catalog != null) {                                                          // an alert on a model query is one of the model's consumers
+            catalog.consumers().source(names -> s.all().stream().filter(a -> "model".equals(a.path("source").path("type").asText()) && names.test(a.path("source").path("model").asText()))
+                    .map(a -> java.util.Map.<String, Object>of("kind", "alert", "id", a.path("owner").asText() + "/" + a.path("name").asText(),
+                            "title", a.path("title").asText(a.path("name").asText()), "status", a.path("enabled").asBoolean(true) ? "enabled" : "paused", "owner", a.path("owner").asText()))
+                    .toList());
+        }
         BridgeItemRenderer br = renderer.getIfAvailable();
         if (br != null) {
             String base = collab.consoleUrl() == null ? "" : collab.consoleUrl().replaceAll("/+$", "");

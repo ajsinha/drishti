@@ -132,7 +132,7 @@ public final class Flattener {
             if (r == null || !use.fact()) {
                 continue;
             }
-            add(out, "Count of " + use.alias(), "count(" + use.alias() + ")", use.alias(), "true", null, null);
+            add(out, "Count of " + use.alias(), "count(" + use.alias() + ")", use.alias(), "true", INTEGER, null);
             for (DatasetDef.Col c : r.def().columns().values()) {
                 if (c.aggregate() == null) {
                     continue;
@@ -147,10 +147,27 @@ public final class Flattener {
                 };
                 String additive = "sum".equals(c.aggregate()) || "count".equals(c.aggregate()) ? c.additive() : "false";
                 String currency = c.perRowCurrency(r.def().columns()) ? use.alias() + "." + c.unitCurrency() : null;          // a fixed currency always adds
-                add(out, name, c.aggregate() + "(" + use.alias() + "." + c.name() + ")", use.alias(), additive, c.format(), "sum".equals(c.aggregate()) ? currency : null);
+                add(out, name, c.aggregate() + "(" + use.alias() + "." + c.name() + ")", use.alias(), additive, defaultFormat(c), "sum".equals(c.aggregate()) ? currency : null);
             }
         }
         return out;
+    }
+
+    /** The format a default measure takes when its column names none (section 2.4): counts are whole numbers, amounts show two decimals. */
+    static final String INTEGER = "integer";
+    static final String AMOUNT = "amount2";
+
+    static String defaultFormat(DatasetDef.Col c) {
+        if (c.format() != null && !c.format().isBlank()) {
+            return c.format();
+        }
+        if ("count".equals(c.aggregate()) || "distinct".equals(c.aggregate())) {
+            return INTEGER;
+        }
+        if ("amount".equals(c.role())) {
+            return AMOUNT;
+        }
+        return "quantity".equals(c.role()) && "integer".equals(c.type()) ? INTEGER : null;
     }
 
     private static void add(Map<String, ModelDef.Meas> out, String name, String expr, String alias, String additive, String format, String currency) {

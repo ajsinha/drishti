@@ -224,6 +224,49 @@ public final class PackDatasets {
         m.put("grain", Map.of("says", d.grain().says(), "keys", d.grain().keys(), "date", d.grain().date()));
         m.put("time", Map.of("mode", d.time().mode(), "as-of", d.time().asOf()));
         m.put("refresh", Map.of("on-load", true));
+        Map<String, Object> cols = columns(d);
+        m.put("columns", cols);
+        m.put("tests", List.of(Map.of("name", "One row per " + d.source().kind(), "unique", d.grain().keys())));
+        return write(m);
+    }
+
+    /** A dataset that extends another, as it reads once the chain is folded in (the base's source, grain, time and columns, every layer's row rules). */
+    public static String resolvedYaml(ResolvedDataset r) {
+        DatasetDef d = r.def();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("rachana", 2);
+        m.put("dataset", d.name());
+        m.put("version", d.version());
+        m.put("id", d.id());
+        m.put("title", d.title());
+        m.put("description", d.description());
+        if (d.extendsRef() != null) {
+            m.put("extends", d.extendsRef());
+        }
+        if (d.source() != null && DatasetDef.Source.PACK.equals(d.source().type())) {
+            m.put("source", Map.of("pack", d.source().pack(), "kind", d.source().kind()));
+        }
+        if (d.grain() != null) {
+            m.put("grain", Map.of("says", d.grain().says() == null ? "" : d.grain().says(), "keys", d.grain().keys(), "date", d.grain().date() == null ? "" : d.grain().date()));
+        }
+        if (d.time() != null) {
+            m.put("time", Map.of("mode", d.time().mode(), "as-of", d.time().asOf() == null ? "business-date" : d.time().asOf()));
+        }
+        m.put("columns", columns(d));
+        List<Map<String, Object>> rows = new ArrayList<>();
+        r.layers().forEach(l -> l.forEach(rule -> rows.add(Map.of("roles", rule.roles(), "where", rule.where()))));
+        Map<String, Object> sec = new LinkedHashMap<>();
+        sec.put("rows", rows);
+        sec.put("masked", new ArrayList<>(r.masked()));
+        m.put("security", sec);
+        if (!r.filters().isEmpty()) {
+            m.put("where", String.join(" and ", r.filters()));
+        }
+        m.put("chain", r.chain());
+        return write(m);
+    }
+
+    private static Map<String, Object> columns(DatasetDef d) {
         Map<String, Object> cols = new LinkedHashMap<>();
         for (DatasetDef.Col c : d.columns().values()) {
             Map<String, Object> cm = new LinkedHashMap<>();
@@ -248,8 +291,10 @@ public final class PackDatasets {
             cm.put("id", c.id());
             cols.put(c.name(), cm);
         }
-        m.put("columns", cols);
-        m.put("tests", List.of(Map.of("name", "One row per " + d.source().kind(), "unique", d.grain().keys())));
+        return cols;
+    }
+
+    private static String write(Map<String, Object> m) {
         try {
             return new com.fasterxml.jackson.databind.ObjectMapper(new com.fasterxml.jackson.dataformat.yaml.YAMLFactory()
                     .disable(com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER)

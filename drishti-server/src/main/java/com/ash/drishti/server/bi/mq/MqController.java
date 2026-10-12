@@ -125,6 +125,7 @@ public class MqController {
                     .header("X-Bi-Masked", String.join(",", a.result().meta() == null ? List.of() : a.result().meta().masked()))
                     .header("X-Bi-Model", String.valueOf(((Map<?, ?>) a.body().get("model")).get("id")))
                     .header("X-Bi-Generation", String.valueOf(meta.get("generation")))
+                    .header("X-Bi-No-Access", String.join(",", (List<String>) meta.get("noAccess")))
                     .header(HttpHeaders.CACHE_CONTROL, "no-store")
                     .body(bytes);
         }
@@ -152,6 +153,31 @@ public class MqController {
     public Map<String, Object> describe(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         return catalog.describe(p, id);
+    }
+
+    /** The roles a model's row rules can name (the security tab's role picker): each with what it is for and the pack kinds it opens ({@code *}: all). */
+    @GetMapping("/models/roles")
+    public Map<String, Object> roles(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (ModelRoles.Role r : catalog.roles().all()) {
+            out.add(Map.of("name", r.name(), "description", r.description() == null ? "" : r.description()));
+        }
+        return Map.of("roles", out);
+    }
+
+    /** A {@code rachana: 2} dataset item as stored and with its {@code extends} chain folded in ({@code resolved}), and its Check. */
+    @GetMapping("/layer-datasets/{id}")
+    public Map<String, Object> layerDataset(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        return catalog.layerDataset(p, id);
+    }
+
+    /** Who reads the model (reports, boards, notebooks, datasets on its answer, alerts, live subscriptions), as far as the caller may see them. */
+    @GetMapping("/models/{id}/consumers")
+    public Map<String, Object> consumers(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        bi.requirePower(p, BiAccess.BI);
+        return catalog.usedBy(p, id);
     }
 
     /** Checks a model's or a {@code rachana: 2} dataset's YAML (body {@code {yaml}}) without storing it: the problems with their codes, and the safeguard's findings. */

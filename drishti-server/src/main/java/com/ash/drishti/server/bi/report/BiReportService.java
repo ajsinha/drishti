@@ -256,7 +256,7 @@ public final class BiReportService {
         Loaded l = load(p, item, item.body(), false);
         List<String> out = new ArrayList<>(l.problems().stream().filter(ReportParser.Problem::error).map(ReportParser.Problem::message).toList());
         if (l.parsed().report() != null && l.parsed().report().model() != null && out.isEmpty()) {
-            out.addAll(datasets.modelPublishProblems(l.parsed().report().model()));          // readers reach a published model only, which passed its safeguard
+            out.addAll(datasets.modelPublishProblems(p, l.parsed().report().model()));          // readers reach a published model only, which passed its safeguard
         }
         return out;
     }

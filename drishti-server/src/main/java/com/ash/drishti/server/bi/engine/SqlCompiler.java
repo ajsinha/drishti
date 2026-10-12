@@ -627,7 +627,9 @@ public final class SqlCompiler {
         }
         if (p.denied()) {
             preds.add("1 = 0");
-            notes.add("no row rule of this dataset covers your roles: no rows");
+            List<String> shut = ds.security().perTable() ? TableRules.deniedTables(ds, p.tables(), reader) : List.of();
+            notes.add(shut.isEmpty() ? "no row rule of this dataset covers your roles: no rows"
+                    : "you have no access to rows of " + String.join(", ", shut) + " in this model: no row rule names your roles");
         } else if (!p.rules().isEmpty()) {
             List<String> ors = new ArrayList<>();
             for (Node rule : p.rules()) {
@@ -642,7 +644,7 @@ public final class SqlCompiler {
             }
         }
         StringBuilder sql = new StringBuilder("SELECT ");
-        if (p.measures().isEmpty() && !p.fields().isEmpty()) {
+        if (p.measures().isEmpty() && !p.fields().isEmpty() && !q.detail()) {             // shape rows keeps every row of the fact (no DISTINCT)
             sql.append("DISTINCT ");
         }
         sql.append(String.join(", ", items)).append(" FROM ").append(from);

@@ -130,6 +130,11 @@ public final class DatasetService {
 
         /** Why a report bound to the model cannot be published (a draft model, its Check, the security safeguard); empty when it can. */
         List<String> publishProblems(String model);
+
+        /** As {@link #publishProblems(String)} for one publisher: they must also read the model (a report uses a model by reference, with read on it). */
+        default List<String> publishProblems(Principal p, String model) {
+            return publishProblems(model);
+        }
     }
 
     /** The kind of {@link #modelRef}: an item that stands for a model a consumer is bound to, not a stored item. */
@@ -216,6 +221,11 @@ public final class DatasetService {
     /** Why a report bound to the model cannot be published; empty when it can. */
     public List<String> modelPublishProblems(String model) {
         return requireGateway().publishProblems(model);
+    }
+
+    /** As above, for one publisher (who must read the model). */
+    public List<String> modelPublishProblems(Principal p, String model) {
+        return requireGateway().publishProblems(p, model);
     }
 
     /** The model as the caller sees it. */
