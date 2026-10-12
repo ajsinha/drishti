@@ -46,15 +46,15 @@
     const tree = q('[data-fields-tree]');
     const search = q('[data-fields-search]');
 
-    function fieldButton(name, kind, label, icon, title, masked) {
+    function fieldButton(name, kind, label, icon, title, masked, ref) {
       const b = h('button', { type: 'button', class: 'bi-field', draggable: 'true', 'data-field': name, 'data-kind': kind, title: title || name, 'aria-label': 'Add ' + name + ' to the report' }, B.icon(icon), ' ', h('span', { class: 'bi-field-name', text: label }),
         masked ? h('small', { class: 'bi-badge', text: 'masked' }) : null);
       b.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData(D.MIME, JSON.stringify({ name, kind }));
+        e.dataTransfer.setData(D.MIME, JSON.stringify({ name, kind, dataset: ref || '' }));
         e.dataTransfer.setData('text/plain', name);
         e.dataTransfer.effectAllowed = 'copy';
       });
-      b.addEventListener('click', () => D.addField(name, kind, { useSelected: true }));
+      b.addEventListener('click', () => D.addField(name, kind, { useSelected: true, dataset: ref || '' }));
       return b;
     }
 
@@ -65,16 +65,15 @@
         rank: 'rank', dense_rank: 'dense rank', percent_rank: 'percent rank', moving_avg: 'moving average', moving_sum: 'moving sum', moving_min: 'moving min', moving_max: 'moving max' })[m[1]] || m[1] : null;
     }
 
-    function drawFields() {
-      B.clear(tree);
-      (D.dataset.tables || []).forEach((t) => {
+    function drawTree(tree, ds, idx, ref) {
+      (ds.tables || []).forEach((t) => {
         const ul = h('ul', { class: 'bi-fieldlist' });
         t.columns.forEach((c) => {
           const name = t.name + '.' + c.name;
-          const li = h('li', { 'data-search': (name + ' ' + (c.description || '')).toLowerCase() }, fieldButton(name, 'field', c.name + (c.key ? ' · key' : ''), TYPE_ICON[c.type] || 'fonts', name + ' (' + c.type + ')' + (c.description ? ': ' + c.description : ''), c.masked));
+          const li = h('li', { 'data-search': (name + ' ' + (c.description || '')).toLowerCase() }, fieldButton(name, 'field', c.name + (c.key ? ' · key' : ''), TYPE_ICON[c.type] || 'fonts', name + ' (' + c.type + ')' + (c.description ? ': ' + c.description : ''), c.masked, ref));
           if (c.type === 'date' || c.type === 'timestamp') {
             const sub = h('ul', { class: 'bi-fieldlist bi-parts' });
-            PARTS.forEach((p) => sub.appendChild(h('li', { 'data-search': (name + ' ' + p).toLowerCase() }, fieldButton(name + '.' + p, 'field', p, 'calendar3-week', name + '.' + p))));
+            PARTS.forEach((p) => sub.appendChild(h('li', { 'data-search': (name + ' ' + p).toLowerCase() }, fieldButton(name + '.' + p, 'field', p, 'calendar3-week', name + '.' + p, false, ref))));
             li.appendChild(h('details', { class: 'bi-fieldparts' }, h('summary', { text: 'date parts' }), sub));
           }
           ul.appendChild(li);
@@ -82,18 +81,42 @@
         tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': t.name }, h('summary', {}, B.icon('table'), ' ' + t.name, h('small', { class: 'text-muted-d', text: ' ' + (t.kind || '') })), ul));
       });
       const ms = h('ul', { class: 'bi-fieldlist' });
-      (D.dataset.measures || []).forEach((m) => {
+      (ds.measures || []).forEach((m) => {
         const time = timeKind(m.expr);
-        const btn = fieldButton(m.name, 'measure', m.name, time ? 'calendar-range' : 'calculator', (time ? '[' + time + '] ' : '') + m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : ''));
+        const btn = fieldButton(m.name, 'measure', m.name, time ? 'calendar-range' : 'calculator', (time ? '[' + time + '] ' : '') + m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : ''), false, ref);
         if (time) { btn.appendChild(h('small', { class: 'bi-badge', 'data-time': time, text: time })); }
         ms.appendChild(h('li', { 'data-search': (m.name + ' ' + (m.description || '') + ' ' + (time ? 'time ' + time : '')).toLowerCase() }, btn));
       });
       tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': 'measures' }, h('summary', {}, B.icon('calculator'), ' Measures'), ms));
       const hs = h('ul', { class: 'bi-fieldlist' });
-      Object.keys(D.idx.hierarchies).forEach((n) => hs.appendChild(h('li', { 'data-search': n.toLowerCase() }, fieldButton(n, 'hierarchy', n, 'diagram-2', n + ': ' + D.idx.hierarchies[n].join(' > ')))));
+      Object.keys(idx.hierarchies).forEach((n) => hs.appendChild(h('li', { 'data-search': n.toLowerCase() }, fieldButton(n, 'hierarchy', n, 'diagram-2', n + ': ' + idx.hierarchies[n].join(' > '), false, ref))));
       if (hs.children.length) { tree.appendChild(h('details', { class: 'bi-fieldtable', 'data-table': 'hierarchies' }, h('summary', {}, B.icon('diagram-2'), ' Hierarchies'), hs)); }
+    }
+
+    /** The Fields pane: one tree for the report's dataset and, when datasets were added, one collapsible tree for each (labelled, removable when no visual uses it). */
+    function drawFields() {
+      B.clear(tree);
+      const extra = D.extraEntries ? D.extraEntries() : [];
+      if (!extra.length) { drawTree(tree, D.dataset, D.idx, ''); } else {
+        const wrap = (ref, ds, idx, title, main) => {
+          const box = h('div', { class: 'bi-dstree-body' });
+          drawTree(box, ds, idx, ref);
+          const sum = h('summary', {}, B.icon('hdd-stack'), ' ' + title + (main ? ' (main)' : ''));
+          const det = h('details', { class: 'bi-dstree', open: true, 'data-dataset-tree': ds.id || ref }, sum, box);
+          if (!main) {
+            const used = D.datasetUsed(ref);
+            const rm = h('button', { type: 'button', class: 'bi-chipbtn', 'data-remove-dataset': ds.id || ref, 'aria-label': used ? 'Remove ' + title + ' (a visual reads it)' : 'Remove ' + title, disabled: used, title: used ? 'A visual reads this dataset' : 'Remove from the Fields pane' }, B.icon('x-lg'));
+            rm.addEventListener('click', (e) => { e.preventDefault(); D.removeDataset(ref); });
+            sum.appendChild(rm);
+          }
+          tree.appendChild(det);
+        };
+        wrap('', D.dataset, D.idx, D.dataset.title || D.dataset.id || D.model.dataset, true);
+        extra.forEach((x) => wrap(x.ref, x.dataset, x.idx, x.title, false));
+      }
       q('[data-model-link]').href = '/bi/m/' + B.id2path(D.dataset.id || '');
     }
+    D.drawFields = drawFields;
 
     search.addEventListener('input', () => {
       const t = search.value.trim().toLowerCase();
@@ -122,6 +145,7 @@
       if (!v) { D.addVisual(type); return; }
       if (v.type === type) { return; }
       const was = v.type;
+      D.curIdx = D.idxOf(v);
       D.change('Change to a ' + type, () => {
         const old = v.wells;
         const specs = D.wellSpecs(type);
@@ -134,6 +158,7 @@
         if (type === 'slicer') { v.format = Object.assign({ mode: 'list', scope: 'page' }, v.format); }
         if (v.id.indexOf(was + '-') === 0 && was !== 'slicer' && type !== 'slicer') { v.id = D.newVisualId(type); }          // the id says what the visual is
       });
+      D.curIdx = null;
       D.select(v.id);
     }
 
@@ -144,10 +169,11 @@
 
     // ---- Build: wells --------------------------------------------------------------------------------------------------
     const build = q('[data-build]');
-    function optionsFor(kind) {
+    function optionsFor(kind, ds0) {
+      const ds = ds0 || D.dataset;
       const frag = document.createDocumentFragment();
       if (kind !== 'measure') {
-        (D.dataset.tables || []).forEach((t) => {
+        (ds.tables || []).forEach((t) => {
           const g = h('optgroup', { label: t.name });
           t.columns.forEach((c) => g.appendChild(h('option', { value: t.name + '.' + c.name, text: c.name })));
           frag.appendChild(g);
@@ -155,7 +181,7 @@
       }
       if (kind !== 'field') {
         const g = h('optgroup', { label: 'Measures' });
-        (D.dataset.measures || []).forEach((m) => g.appendChild(h('option', { value: m.name, text: m.name })));
+        (ds.measures || []).forEach((m) => g.appendChild(h('option', { value: m.name, text: m.name })));
         frag.appendChild(g);
       }
       return frag;
@@ -185,11 +211,11 @@
           li.appendChild(x);
           ul.appendChild(li);
         });
-        const add = h('select', { class: 'studio-select bi-wadd', 'aria-label': 'Add to ' + w, 'data-add': w }, h('option', { value: '', text: spec.kind === 'measure' ? 'Add a measure…' : spec.kind === 'field' ? 'Add a field…' : 'Add a field or measure…' }), optionsFor(spec.kind));
+        const add = h('select', { class: 'studio-select bi-wadd', 'aria-label': 'Add to ' + w, 'data-add': w }, h('option', { value: '', text: spec.kind === 'measure' ? 'Add a measure…' : spec.kind === 'field' ? 'Add a field…' : 'Add a field or measure…' }), optionsFor(spec.kind, D.dsOf(v).dataset));
         add.addEventListener('change', () => {
           if (!add.value) { return; }
           const name = add.value;
-          D.change('Add ' + B.label(name), () => { D.putInWell(v, w, name); D.auto.delete(v.id); });
+          D.withIdx(D.idxOf(v), () => D.change('Add ' + B.label(name), () => { D.putInWell(v, w, name); D.auto.delete(v.id); }));
         });
         const fs = h('fieldset', { class: 'bi-well', 'data-well': w }, h('legend', {}, w, h('small', { class: 'text-muted-d', text: ' ' + (spec.kind === 'any' ? 'fields and measures' : spec.kind + 's') + (spec.required ? ', needed' : '') + (spec.max ? ', up to ' + spec.max : '') })), ul, add);
         fs.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].indexOf(D.MIME) >= 0) { e.preventDefault(); fs.classList.add('bi-drop'); } });
@@ -201,13 +227,17 @@
           if (!p) { return; }
           e.preventDefault();
           e.stopPropagation();
-          if (!D.change('Add ' + B.label(p.name), () => { if (!D.putInWell(v, w, p.name)) { D.say(p.name + ' does not go in the ' + w + ' well.', true); } D.auto.delete(v.id); })) { D.say(p.name + ' does not go in the ' + w + ' well.', true); }
+          const clash = D.dsConflict(v, p.dataset || '');
+          if (clash) { D.say(clash, true); return; }
+          D.withIdx(D.idxForRef(p.dataset || ''), () => {
+            if (!D.change('Add ' + B.label(p.name), () => { D.dsClaim(v, p.dataset || ''); if (!D.putInWell(v, w, p.name)) { D.say(p.name + ' does not go in the ' + w + ' well.', true); } D.auto.delete(v.id); })) { D.say(p.name + ' does not go in the ' + w + ' well, or is already there.', true); }
+          });
         });
         build.appendChild(fs);
       });
       const group = (D.catalogue.visuals[v.type] || {}).group;
       if (group === 'chart' || group === 'table') {
-        const sel = h('select', { class: 'studio-select', 'aria-label': 'Drill down along a hierarchy', 'data-hierarchy': '' }, h('option', { value: '', text: 'none' }), Object.keys(D.idx.hierarchies).map((n) => h('option', { value: n, text: n })));
+        const sel = h('select', { class: 'studio-select', 'aria-label': 'Drill down along a hierarchy', 'data-hierarchy': '' }, h('option', { value: '', text: 'none' }), Object.keys(D.idxOf(v).hierarchies).map((n) => h('option', { value: n, text: n })));
         sel.value = v.hierarchy || '';
         sel.addEventListener('change', () => D.change('Set the hierarchy', () => { if (sel.value) { v.hierarchy = sel.value; } else { delete v.hierarchy; } }));
         build.appendChild(h('label', { class: 'bi-frow' }, h('span', { text: 'Drill down along' }), sel));
@@ -631,8 +661,7 @@
     function redraw() {
       markTypes();
       // do not rebuild a pane under a field that is being edited: the change handler already redraws after the change
-      drawBuild();
-      drawFormat();
+      D.withIdx(D.sel() ? D.idxOf(D.sel()) : null, () => { drawBuild(); drawFormat(); });
       if (!editing || !focusedInside(filtersBox)) { drawFilters(); }
     }
     drawFields();

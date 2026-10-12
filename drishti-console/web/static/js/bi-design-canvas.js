@@ -31,8 +31,8 @@
     D.timings = new Map();
 
     // ---- fields into wells -------------------------------------------------------------------------------------------
-    D.kindOf = (name) => (D.idx.measures[name] ? 'measure' : 'field');
-    D.isDate = (field) => { const c = B.column(D.idx, field); return !!c && (!!c.part || c.type === 'date' || c.type === 'timestamp'); };
+    D.kindOf = (name) => ((D.curIdx || D.idx).measures[name] ? 'measure' : 'field');
+    D.isDate = (field) => { const c = B.column(D.curIdx || D.idx, field); return !!c && (!!c.part || c.type === 'date' || c.type === 'timestamp'); };
     D.wellSpecs = (type) => (D.catalogue.visuals[type] || { wells: {} }).wells;
     const accepts = (spec, kind) => spec.kind === 'any' || spec.kind === kind;
 
@@ -62,7 +62,7 @@
 
     /** A better type for a visual made by dropping fields, as the fields arrive. */
     function autoRetype(v, extra) {
-      if (!D.auto.has(v.id)) { return; }
+      if (!D.auto.has(v.id)) { return false; }
       const all = Object.keys(v.wells).reduce((a, k) => a.concat(v.wells[k]), []).concat(extra ? [extra] : []).filter((x, i, a) => a.indexOf(x) === i);
       const fields = all.filter((x) => D.kindOf(x) === 'field'), measures = all.filter((x) => D.kindOf(x) === 'measure');
       let type = v.type, wells = null;
@@ -83,28 +83,57 @@
           D.settle(D.page(), v);
         }
       }
+      return !!wells;
     }
 
-    /** A field dropped, or added: into the given visual, else the selected one when `useSelected`, else a new best visual at the cell. */
+    /** Sets the dataset a visual reads: blank when it is the report's main one. */
+    function setDs(v, ref) { if (!ref || !D.isOtherRef(ref)) { delete v.dataset; } else { v.dataset = ref; } }
+
+    /** A field dropped, or added: into the given visual, else the selected one when `useSelected`, else a new best visual at the cell. `opt.dataset` is the
+        dataset the field belongs to ('' for the report's main one). A visual that already holds fields reads one dataset: a field of another is refused. */
     D.addField = function (name, kind, opt) {
       opt = opt || {};
       const target = opt.visual ? D.visual(opt.visual) : opt.useSelected ? D.sel() : null;
-      if (kind === 'hierarchy') {
-        if (!target) { D.say('Choose a visual first, then add the hierarchy.', true); return; }
-        D.change('Set the hierarchy', () => { target.hierarchy = name; });
-        return;
-      }
-      if (target && target.type !== 'text' && target.type !== 'image' && target.type !== 'button') {
-        const done = D.change('Add ' + B.label(name), () => { if (D.auto.has(target.id)) { autoRetype(target, name); } else { D.addToVisual(target, name); } });
-        if (!done) { D.say(B.label(name) + ' does not fit a ' + target.type + ': try another visual or well.', true); }
-        D.select(target.id);
-        return;
-      }
-      const type = D.kindOf(name) === 'measure' ? 'card' : 'table';
-      const tmp = { type, wells: {} };
-      D.addToVisual(tmp, name);
-      const v = D.addVisual(type, opt.x, opt.y, tmp.wells, 'Add ' + B.label(name));
-      if (v) { D.auto.add(v.id); }
+      const from = opt.dataset || '';
+      const where = target ? 'the ' + target.type + ' ' + (target.title ? '"' + target.title + '"' : target.id) : 'the canvas' + (opt.x != null ? ' (column ' + (opt.x + 1) + ', row ' + (opt.y + 1) + ')' : '');
+      D.curIdx = D.idxForRef(from);
+      try {
+        if (kind === 'hierarchy') {
+          if (!target) { D.say('Drop a hierarchy onto a visual, not onto ' + where + '.', true); return; }
+          D.change('Set the hierarchy', () => { target.hierarchy = name; });
+          return;
+        }
+        if (target && target.type !== 'text' && target.type !== 'image' && target.type !== 'button') {
+          const has = Object.keys(target.wells || {}).some((w) => (target.wells[w] || []).length);
+          const clash = D.dsConflict(target, from);
+          if (clash) {
+            D.say(clash, true);
+            D.select(target.id);
+            return;
+          }
+          let fits = true;
+          const done = D.change('Add ' + B.label(name), () => {
+            if (!has) { setDs(target, from); }
+            D.curIdx = D.idxForRef(from);
+            const handled = D.auto.has(target.id) && autoRetype(target, name);
+            if (!handled) { fits = D.addToVisual(target, name); }
+          });
+          if (!done) {
+            const present = Object.keys(target.wells || {}).some((w) => (target.wells[w] || []).indexOf(name) >= 0);
+            const wells = Object.keys(D.wellSpecs(target.type)).join(', ');
+            D.say(present ? B.label(name) + ' is already in ' + where + '.'
+              : B.label(name) + ' does not fit ' + where + ' (' + (fits ? 'nothing changed' : 'its wells are ' + wells + ', and none takes a ' + D.kindOf(name)) + '): drop it onto a visual\'s well, or onto an empty part of the canvas to start a new visual.', !present);
+          }
+          D.select(target.id);
+          return;
+        }
+        if (target) { D.say(B.label(name) + ' cannot go into ' + where + ': it takes no fields. Drop it onto a chart, card or table, or onto the canvas.', true); return; }
+        const type = D.kindOf(name) === 'measure' ? 'card' : 'table';
+        const tmp = { type, wells: {} };
+        D.addToVisual(tmp, name);
+        const v = D.addVisual(type, opt.x, opt.y, tmp.wells, 'Add ' + B.label(name));
+        if (v) { D.auto.add(v.id); if (D.isOtherRef(from)) { D.change('Set the dataset', () => { const mv = D.visual(v.id); if (mv) { setDs(mv, from); } }); } }
+      } finally { D.curIdx = null; }
     };
 
     D.removeFromWell = function (v, wellName, name) {
@@ -127,7 +156,7 @@
       const p = D.page();
       const c = Object.assign({}, v);
       delete c.at;
-      return JSON.stringify({ c, pf: p.filters || [], rf: D.model.filters || [], d: D.model.dates || null, ds: D.model.dataset });
+      return JSON.stringify({ c, pf: p.filters || [], rf: D.model.filters || [], d: D.model.dates || null, ds: D.model.dataset, dv: D.dsVersion || 0 });
     }
 
     function describe(v) {
@@ -136,7 +165,7 @@
     }
 
     function ctxFor(v) {
-      return { index: D.idx, palette: D.palette, t: D.tokens, interactive: false, selected: null, slicer: null, onMark: null, navigate: null };
+      return { index: D.idxOf(v), palette: D.palette, t: D.tokens, interactive: false, selected: null, slicer: null, onMark: null, navigate: null };
     }
 
     function drawEntry(id) {
@@ -168,11 +197,35 @@
       }
       const token = ++e.token;
       e.frame.busy();
-      B.enqueue(() => B.api('POST', '/reports/query', { report: D.model, page: D.pageId, visual: id, state: {} })).then((res) => {
+      B.enqueue(() => previewQuery(id)).then((res) => {
         if (token !== e.token) { return; }
         D.timings.set(id, res.meta.millis);
         e.frame.result(res, (host) => B.visuals.draw(host, spec, ctxFor(v), res));
       }, (err) => { if (token === e.token) { e.frame.error(err); } });
+    }
+
+    /** True when a visual cannot be asked yet: a required well is empty. The server refuses a report with any error, so the preview leaves such visuals out. */
+    function incomplete(v) {
+      const specs = D.wellSpecs(v.type) || {};
+      return Object.keys(specs).some((w) => specs[w].required && !((v.wells || {})[w] || []).length);
+    }
+
+    /** The preview asks for one visual, with the incomplete visuals left out, so one unfinished visual does not blank the others. If the server names another
+        visual's problem (a field its dataset lacks), that visual is left out too and the question is asked again. The published view is unchanged: it keeps
+        refusing a report with errors. */
+    function previewQuery(id) {
+      const skipped = new Set();
+      const attempt = (n) => {
+        const copy = JSON.parse(JSON.stringify(D.model));
+        copy.pages.forEach((pg) => { pg.visuals = pg.visuals.filter((x) => x.id === id || (!skipped.has(x.id) && !incomplete(x))); });
+        return B.api('POST', '/reports/query', { report: copy, page: D.pageId, visual: id, state: {} }).catch((err) => {
+          const m = /pages\[(\d+)\]\.visuals\[(\d+)\]/.exec(err.message || '');
+          const other = m && copy.pages[+m[1]] && copy.pages[+m[1]].visuals[+m[2]];
+          if (other && other.id !== id && n < 6) { skipped.add(other.id); return attempt(n + 1); }
+          throw err;
+        });
+      };
+      return attempt(0);
     }
 
     function makeFrame(v) {
@@ -196,9 +249,19 @@
       f.el.addEventListener('drop', (e) => {
         f.el.classList.remove('bi-drop');
         const p = payload(e);
-        if (p) { e.preventDefault(); e.stopPropagation(); D.addField(p.name, p.kind, { visual: v.id }); }
+        if (p) { e.preventDefault(); e.stopPropagation(); D.addField(p.name, p.kind, { visual: v.id, dataset: p.dataset || '' }); }
       });
       return f;
+    }
+
+    /** The small tag on a visual that reads a dataset other than the report's main one. */
+    function dsTag(e, v) {
+      let tag = e.frame.el.querySelector('[data-dataset-tag]');
+      const other = D.isOtherDataset(v);
+      if (!other) { if (tag) { tag.remove(); } return; }
+      if (!tag) { tag = h('span', { class: 'bi-dstag', 'data-dataset-tag': '' }); e.frame.el.appendChild(tag); }
+      tag.textContent = D.dsTitle(v.dataset);
+      tag.setAttribute('title', 'This visual reads the dataset ' + v.dataset);
     }
 
     function render() {
@@ -217,6 +280,7 @@
         e.frame.el.classList.toggle('bi-selected', D.selected === v.id);
         e.frame.el.setAttribute('aria-label', (v.title || v.type) + ' (' + v.type + '), column ' + (v.at.x + 1) + ' row ' + (v.at.y + 1) + ', ' + v.at.w + ' wide, ' + v.at.h + ' high. Arrow keys move it, Shift with arrows resizes it, Delete removes it');
         e.frame.title.textContent = v.title || '';
+        dsTag(e, v);
         const key = previewKey(v) + '|' + D.preview;
         if (e.key !== key) { e.key = key; drawEntry(v.id); }
       });
@@ -327,7 +391,7 @@
       if (!p) { return; }
       e.preventDefault();
       const r = grid.getBoundingClientRect(), m = metrics();
-      D.addField(p.name, p.kind, { x: Math.max(0, Math.min(11, Math.floor((e.clientX - r.left) / m.stepX))), y: Math.max(0, Math.floor((e.clientY - r.top) / m.stepY)) });
+      D.addField(p.name, p.kind, { dataset: p.dataset || '', x: Math.max(0, Math.min(11, Math.floor((e.clientX - r.left) / m.stepX))), y: Math.max(0, Math.floor((e.clientY - r.top) / m.stepY)) });
     });
     D.MIME = MIME;
   });

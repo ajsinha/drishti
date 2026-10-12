@@ -187,3 +187,17 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-tablet-frame { width: 800px; max-width: 100%; box-sizing: border-box; border: 2px solid var(--d-border); border-radius: 18px; padding: 16px; background: var(--d-surface-2); }
 .bi-tablet-screen { width: 768px; max-width: 100%; max-height: 640px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; background: var(--d-bg); }
 .bi-tablet-screen .bi-phone-card { min-width: 0; overflow: hidden; }
+/* several datasets: a tree for each, the dataset tag on a visual, the links panel */
+.bi-dstree { margin: 0 0 .5rem; border-bottom: 1px solid var(--d-border); }
+.bi-dstree > summary { cursor: pointer; font-weight: 700; font-size: .9rem; padding: .2rem 0; display: flex; align-items: center; gap: .3rem; }
+.bi-dstree > summary .bi-chipbtn { margin-left: auto; }
+.bi-dstag { position: absolute; top: .15rem; right: .4rem; z-index: 2; font-size: .7rem; padding: 0 .4rem; border-radius: 999px; background: var(--d-surface); border: 1px solid var(--d-border); color: var(--d-muted); max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+.bi-adddataset { margin: .3rem 0; }
+.bi-linkspanel { margin-top: .6rem; border-top: 1px solid var(--d-border); padding-top: .4rem; }
+.bi-linklist { list-style: none; margin: 0 0 .5rem; padding: 0; font-size: .82rem; }
+.bi-linklist li { padding: .15rem 0; overflow-wrap: anywhere; }
+.bi-composed-yaml { max-height: 14rem; overflow: auto; font-size: .75rem; background: var(--d-surface); border: 1px solid var(--d-border); padding: .4rem; white-space: pre; }
+@media (pointer: coarse) {
+  .bi-adddataset .btn-pill, .bi-adddataset .studio-select, .bi-linkspanel .btn-pill, .bi-dstree .bi-chipbtn, .bi-linklist input[type="checkbox"] { min-height: 44px; min-width: 44px; }
+}
+.bi-dvis { position: relative; }

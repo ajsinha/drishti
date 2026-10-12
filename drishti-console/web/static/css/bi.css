@@ -162,3 +162,13 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
   .bi-inline { flex-direction: column; align-items: stretch; }
   .bi-inline .btn-pill { width: 100%; }
 }
+/* the workspace item list: a pick column, short ids, the bulk delete bar and its confirmation */
+.bi-pick { width: 2.2rem; text-align: center; }
+.bi-shortid { font-family: var(--d-mono, monospace); font-size: .8rem; color: var(--d-muted); }
+.bi-bulk { margin: .4rem 0; }
+.bi-confirm { background: var(--d-surface); border: 1px solid var(--d-bad); border-radius: var(--d-radius); padding: .8rem 1rem; margin: .6rem 0; max-width: 46rem; }
+.bi-confirm[hidden] { display: none !important; }
+@media (pointer: coarse) {
+  .bi-pick input[type="checkbox"] { min-width: 44px; min-height: 44px; }
+  .bi-tbl .btn-pill, .bi-bulk .btn-pill, .bi-confirm .btn-pill { min-height: 44px; }
+}
