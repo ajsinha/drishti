@@ -130,6 +130,9 @@ class BedrockProvider(BaseProvider):
         if self._tmp is None and (t.ca_pem or t.cert_pem):
             self._tmp = tempfile.mkdtemp(prefix="drishti-tls-")
             os.chmod(self._tmp, 0o700)
+            import atexit
+            import shutil
+            atexit.register(shutil.rmtree, self._tmp, True)               # also when the provider is never closed
         ca = cert = None
         if t.ca_pem:
             ca = os.path.join(self._tmp, "ca.pem")
