@@ -41,6 +41,7 @@ from routes.common import ident
 router = APIRouter(include_in_schema=False)
 CONSOLE = Path(__file__).resolve().parent.parent
 _SQL_SLOTS = asyncio.Semaphore(4)
+MODEL_SOURCE = ("mq:", "dataset:")      # the prefixes of a source Analyse reads through the model query language (shape rows) rather than the version 1 dataset query
 
 
 def _limits(request: Request) -> Limits:
@@ -77,6 +78,9 @@ async def extract_for(request: Request, spec: dict) -> Extract:
                                                   {"page": page, "visual": visual, "state": spec.get("state") or {}}, format="arrow")
         low = {str(k).lower(): v for k, v in headers.items()}
         return from_arrow(content, cap, [x for x in (low.get("x-bi-masked") or "").split(",") if x])
+    source = str(spec.get("dataset") or "")
+    if not spec.get("model") and source.startswith(MODEL_SOURCE):          # Analyse's picker: "mq:<model>@<major>" is a model, "dataset:<name>" a pack or own dataset (its implicit model)
+        spec = {**spec, "model": source[len("mq:"):] if source.startswith("mq:") else source}
     if spec.get("model"):                                                 # a model (or dataset:<name>): the rows as one model query, shape rows (BI_MODEL_SPEC.md 5.1)
         mq = {"mq": 1, "model": str(spec["model"]), "select": {"fields": check_fields(spec.get("fields"), limits), "measures": []}, "shape": "rows", "limit": cap}
         if spec.get("filters"):
@@ -263,6 +267,8 @@ async def _slice_report(request: Request, body: dict, name: str) -> dict:
     import yaml
     dataset = str(body.get("dataset") or "")
     sl, sql = body.get("slice"), body.get("sql")
+    if dataset.startswith(MODEL_SOURCE):
+        raise ExploreError("DRS-9070", 422, "a slice of a model or a pack dataset cannot be promoted from here yet: start a report on it from Models and datasets (Use), then build the visual in the designer")
     if not dataset or not (isinstance(sl, dict) or isinstance(sql, str)):
         raise ExploreError("DRS-9070", 422, "send {dataset, slice: {rows, columns, values: [{field, agg}]}} or {dataset, sql, columns}")
     backend, me = request.app.state.backend, ident(request)

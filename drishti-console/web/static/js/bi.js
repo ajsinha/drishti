@@ -301,9 +301,9 @@
     // What each kind needs before it is useful: a report needs a dataset (then opens in the designer), a board opens the board designer; datasets, notebooks and
     // Python items start where they are authored (the Datasets page and Analyse), so this form sends you there rather than create an empty item.
     var START = {
-      report: { hint: 'A report draws one dataset: choose it, and the report opens in the designer.', go: 'Create and open in the designer' },
+      report: { hint: 'A report reads one model: choose a model (or a dataset, which reads as its own small model), and the report opens in the designer.', go: 'Create and open in the designer' },
       board: { hint: 'A board is laid out in the board designer: it opens there.', go: 'Create and open in the board designer' },
-      dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace. Or paste a dataset YAML document you already have.', go: 'Open the dataset wizard', href: '/bi/datasets/new?workspace=' },
+      dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace. Or paste a dataset YAML document you already have.', go: 'New dataset', href: '/bi/datasets/new-layer?workspace=' },
       model: { hint: 'A model puts datasets in a star with relationships, measures and security. It is made on the Models page (New model) and edited in the model designer.', go: 'Go to Models', href: '/bi/models' },
       notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells); Analyse saves it here with Save as a notebook.', go: 'Go to Analyse', href: '/bi/explore' },
       python: { hint: 'Choose what the Python item makes. It is created with a valid, commented starter body and opens in its editor, ready to change and Check.', go: 'Create and open the editor' }
@@ -356,7 +356,7 @@
       if (kind === 'report') {
         if (!f.elements.dataset.value) { say('Choose a main dataset: a report draws one.', true); f.elements.dataset.focus(); return; }
         also = Array.prototype.filter.call(f.elements.also.selectedOptions, function (o) { return o.value !== f.elements.dataset.value; }).map(function (o) { return o.value.replace(/^file:dataset:/, ''); });
-        body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\ndataset: ' + f.elements.dataset.value + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
+        body = 'rachana: 1\nreport: ' + name + '\ntitle: ' + JSON.stringify(title) + '\n' + window.drishtiBi.sourceLine(f.elements.dataset.value) + '\npages:\n  - id: page1\n    title: Page 1\n    visuals: []\n';
         to = '/bi/design/';
       } else if (kind === 'python') {
         var py = window.drishtiBi && window.drishtiBi.pythonStarter;
@@ -419,7 +419,7 @@
       var wiz = q('[data-open-wizard]');
       if (wiz) { wiz.hidden = !(it.kind === 'dataset' && it.can && it.can.edit && it.status !== 'proposed'); wiz.href = '/bi/datasets/new?edit=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }
-      if (mod && it.kind === 'model') { mod.hidden = false; mod.href = '/bi/md/' + enc; }           // a data model opens in the model designer
+      if (mod && it.kind === 'model') { mod.hidden = false; mod.href = '/bi/md/' + enc; mod.lastChild.textContent = ' Open in the designer'; }           // a data model opens in the model designer
       if (open && it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || '')) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
       document.dispatchEvent(new CustomEvent('bi:item', { detail: x }));          // bi-govern.js draws history, review, impact and lineage
     }
@@ -489,6 +489,17 @@
       box.appendChild(act('Duplicate…', function (b) { duplicate(b); }));
       if (c.delete) {
         box.appendChild(act('Delete', function (b) {
+          if (it.kind === 'model' && !b.getAttribute('data-sure')) {        // a model is shared: it is not deleted while anything uses it (a report only references it)
+            return fetch('/bi/model-api/consumers?ref=' + encodeURIComponent(it.id), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+              .then(function (r) { return r.ok ? r.json() : { known: false, consumers: [] }; }).then(function (c) {
+                if (c.known && c.consumers.length) {
+                  var w = h('span', { class: 'bi-delete-impact', 'data-delete-refused': '', role: 'alert' }, 'Not deleted: ' + c.consumers.length + ' item' + (c.consumers.length === 1 ? ' uses' : 's use') + ' this model (' + c.consumers.slice(0, 5).map(function (x) { return x.title; }).join(', ') + (c.consumers.length > 5 ? ', ...' : '') + '). Move them to another model first.');
+                  b.after(w); return;
+                }
+                b.setAttribute('data-sure', '1'); b.textContent = 'Confirm: delete';
+                impactOf(it.id, null, it.publishedVersion).then(function (t) { var w2 = h('span', { class: 'bi-delete-impact', 'data-delete-impact': '' }, t); b.after(w2); });
+              });
+          }
           if (!b.getAttribute('data-sure')) {
             b.setAttribute('data-sure', '1'); b.textContent = 'Confirm: delete';
             impactOf(it.id, null, it.publishedVersion).then(function (t) { var w = h('span', { class: 'bi-delete-impact', 'data-delete-impact': '' }, t); b.after(w); });
@@ -574,7 +585,7 @@
       q('[data-title]').textContent = 'Not found';
       Array.prototype.forEach.call(canvas.children, function (c) { if (!c.classList.contains('bi-head') && !c.hasAttribute('data-msg')) { c.hidden = true; } });
       ['[data-desc]', '[data-meta]', '[data-badges]', '[data-favourite]'].forEach(function (s) { var n = q(s); if (n) { n.hidden = true; } });
-      say(gone ? 'This item does not exist, or you may not see it.' : e.message, true);
+      say(e && e.status === 403 ? 'You are not a member of the workspace this item is in, so it is not shared with you. Ask an administrator of that workspace to add you.' : gone ? 'This item does not exist, or you may not see it.' : e.message, true);
     }
     api('POST', path + '/open').then(show).catch(notFound);
   }

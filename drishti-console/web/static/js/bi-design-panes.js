@@ -66,6 +66,23 @@
     }
 
     function drawTree(tree, ds, idx, ref) {
+      const mixed = (ds.measures || []).some((m) => m.implicit) && (ds.measures || []).some((m) => !m.implicit);   // both kinds in one list: say which is which
+      const ms = h('ul', { class: 'bi-fieldlist' });
+      (ds.measures || []).forEach((m) => {
+        const time = timeKind(m.expr);
+        const btn = fieldButton(m.name, 'measure', m.name, time ? 'calendar-range' : 'calculator', (time ? '[' + time + '] ' : '') + m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : '') + (mixed ? (m.implicit ? ' (a default measure, made from a column)' : ' (defined in the model)') : ''), m.masked, ref);
+        if (m.local) {
+          btn.appendChild(h('small', { class: 'bi-badge', 'data-origin': 'report', text: 'this report only' }));
+        }
+        if (mixed) { btn.appendChild(h('small', { class: 'bi-badge', 'data-origin': m.implicit ? 'default' : 'model', text: m.implicit ? 'default' : 'model' })); }
+        if (time) { btn.appendChild(h('small', { class: 'bi-badge', 'data-time': time, text: time })); }
+        const move = m.local && D.model && D.model.ref ? h('a', { class: 'bi-small', 'data-move-measure': m.name, href: '/bi/models', text: 'Move to the model' }) : null;
+        if (move) {
+          B.layer.get('datasets').then((d) => { const it = (d.models || []).find((x) => x.kind === 'model' && x.name === (D.model.name || '')); if (it) { move.href = '/bi/md/' + B.id2path(it.id) + '?measure=' + encodeURIComponent(m.name) + '&expr=' + encodeURIComponent(m.expr || ''); } else { move.hidden = true; } }).catch(() => { move.hidden = true; });
+        }
+        ms.appendChild(h('li', { 'data-search': (m.name + ' ' + (m.description || '') + ' ' + (time ? 'time ' + time : '')).toLowerCase() }, btn, move));
+      });
+      tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': 'measures' }, h('summary', {}, B.icon('calculator'), ' Measures'), ms));
       (ds.tables || []).forEach((t) => {
         const ul = h('ul', { class: 'bi-fieldlist' });
         t.columns.forEach((c) => {
@@ -80,14 +97,6 @@
         });
         tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': t.name }, h('summary', {}, B.icon('table'), ' ' + t.name, h('small', { class: 'text-muted-d', text: ' ' + (t.kind || '') })), ul));
       });
-      const ms = h('ul', { class: 'bi-fieldlist' });
-      (ds.measures || []).forEach((m) => {
-        const time = timeKind(m.expr);
-        const btn = fieldButton(m.name, 'measure', m.name, time ? 'calendar-range' : 'calculator', (time ? '[' + time + '] ' : '') + m.name + ': ' + m.expr + (m.description ? ' — ' + m.description : ''), false, ref);
-        if (time) { btn.appendChild(h('small', { class: 'bi-badge', 'data-time': time, text: time })); }
-        ms.appendChild(h('li', { 'data-search': (m.name + ' ' + (m.description || '') + ' ' + (time ? 'time ' + time : '')).toLowerCase() }, btn));
-      });
-      tree.appendChild(h('details', { class: 'bi-fieldtable', open: true, 'data-table': 'measures' }, h('summary', {}, B.icon('calculator'), ' Measures'), ms));
       const hs = h('ul', { class: 'bi-fieldlist' });
       Object.keys(idx.hierarchies).forEach((n) => hs.appendChild(h('li', { 'data-search': n.toLowerCase() }, fieldButton(n, 'hierarchy', n, 'diagram-2', n + ': ' + idx.hierarchies[n].join(' > '), false, ref))));
       if (hs.children.length) { tree.appendChild(h('details', { class: 'bi-fieldtable', 'data-table': 'hierarchies' }, h('summary', {}, B.icon('diagram-2'), ' Hierarchies'), hs)); }

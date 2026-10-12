@@ -36,17 +36,12 @@
   }
 
   function loadDatasets() {
-    return B.api('GET', '/datasets').then(function (d) {
-      var items = Array.isArray(d) ? d : (d.datasets || []);
-      clear(sel);
-      sel.appendChild(h('option', { value: '', text: '(choose a dataset)' }));
-      items.forEach(function (x) { sel.appendChild(h('option', { value: x.id, text: x.title || x.id })); });
-    });
+    return X.sources().then(function (groups) { B.layer.fillSelect(sel, groups, '(choose a model or a dataset)'); });
   }
   sel.addEventListener('change', function () {
     clear(fields); box.hidden = true; add.disabled = true;
     if (!sel.value) { return; }
-    B.api('GET', '/datasets/' + B.id2path(sel.value)).then(function (m) {
+    X.fieldsOf(sel.value).then(function (m) {
       (m.tables || []).forEach(function (t) {
         var cols = (t.columns || []).filter(function (c) { return c.name !== 'id'; });
         if (!cols.length) { return; }
@@ -55,7 +50,7 @@
         })));
       });
       var name = form.elements.ename;
-      if (!name.value) { name.value = (m.name || sel.value).replace(/[^A-Za-z0-9_]+/g, '_').slice(0, 40); }
+      if (!name.value) { name.value = (m.name || m.title || sel.value).replace(/[^A-Za-z0-9_]+/g, '_').slice(0, 40); }
       box.hidden = false; add.disabled = false;
     }).catch(function (e) { X.say(e.message, true); });
   });

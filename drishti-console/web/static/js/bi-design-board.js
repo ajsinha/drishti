@@ -79,6 +79,9 @@
   function changed() {
     if (!S.model.pages.some((p) => p.id === S.pageId)) { S.pageId = S.model.pages[0].id; }
     if (S.selected && !tile(S.selected)) { S.selected = null; }
+    const stale = q('[data-check-box]');
+    if (stale && !stale.hidden) { stale.hidden = true; }                      // a Check result describes the board as it was: it clears when the board changes
+    if (typeof near === 'function') { near(q('[data-check]'), '', false); }
     render();
     scheduleCheck();
   }

@@ -66,7 +66,10 @@ def _state(raw: str) -> dict | None:
 def body_from(f: dict) -> dict:
     """The server's alert body from the form's fields. What cannot be read is left out, so the server answers with the key that is missing."""
     kind = f.get("source_type", "visual")
-    if kind == "dataset":
+    if kind == "model":
+        query = _state(f.get("model_query", "")) or {}
+        source = {"type": "model", "model": f.get("model_ref", "").strip(), "query": query, "reduce": f.get("model_reduce", "first")}
+    elif kind == "dataset":
         source = {"type": "dataset", "dataset": f.get("dataset", "").strip(), "measure": f.get("ds_measure", "").strip()}
         filters = _filters(f.get("filters", ""))
         if filters:
@@ -118,6 +121,8 @@ def form_from(a: dict) -> dict:
          "report": s.get("report", ""), "page": s.get("page", ""), "visual": s.get("visual", ""), "measure": s.get("measure", "") if s.get("type") == "visual" else "",
          "reduce": s.get("reduce", "first"), "state": json.dumps(s["state"], separators=(",", ":")) if s.get("state") else "",
          "dataset": s.get("dataset", ""), "ds_measure": s.get("measure", "") if s.get("type") == "dataset" else "",
+         "model_ref": s.get("model", ""), "model_query": json.dumps(s["query"], separators=(",", ":")) if s.get("type") == "model" and s.get("query") else "",
+         "model_reduce": s.get("reduce", "first") if s.get("type") == "model" else "first",
          "filters": "\n".join(f"{x.get('field')} {x.get('op')} {', '.join(str(v) for v in x.get('values', []))}".strip() for x in s.get("filters", [])),
          "kind": s.get("kind", ""), "id": s.get("id", ""), "field": s.get("field", ""),
          "condition_type": c.get("type", "threshold"), "op": c.get("op", "above") if c.get("type") == "threshold" else "above", "value": c.get("value", "") if c.get("type") == "threshold" else "",
@@ -174,7 +179,8 @@ async def new_alert(request: Request, source: str = "visual", report: str = "", 
                     kind: str = "", id: str = "", field: str = "", title: str = ""):
     """The form, filled from the thing the person pressed *Alert me* on: a visual (with the filters on the screen), a dataset measure or a field."""
     q = request.query_params
-    f = {"name": alert_name(title or field or visual or measure) or "My alert", "title": "", "severity": "warn", "source_type": source if source in ("visual", "dataset", "field") else "visual",
+    f = {"name": alert_name(title or field or visual or measure) or "My alert", "title": "", "severity": "warn", "source_type": source if source in ("visual", "model", "dataset", "field") else "visual",
+         "model_ref": q.get("model", ""), "model_query": "", "model_reduce": "first",
          "report": report, "page": page, "visual": visual, "measure": measure, "reduce": q.get("reduce", "first"), "state": state if _state(state) else "",
          "dataset": dataset, "ds_measure": measure, "filters": "", "kind": kind, "id": id, "field": field, "condition_type": "threshold", "op": "above", "value": "", "high": "",
          "change_mode": "pct", "change_op": "moves", "change_value": "", "against": "previous-run", "by": "09:00", "trigger_mode": "schedule", "schedule": "hourly",

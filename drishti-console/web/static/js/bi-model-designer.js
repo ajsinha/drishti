@@ -42,6 +42,31 @@
     q('[data-undo]').disabled = !undo.length || M.readOnly;
     q('[data-redo]').disabled = !redo.length || M.readOnly;
     q('[data-state]').textContent = M.readOnly ? 'Read-only' : M.dirty ? 'Unsaved changes' : (M.item && M.item.status === 'published' ? 'Published' : 'Saved draft');
+    publishState();
+  }
+  /** Publish (or Propose) shows whenever the person could publish this model once it is saved: a published model with a newer saved or unsaved version included. In a
+   *  private workspace it is disabled with the reason and a Move button beside it (never a dead end). */
+  function publishState() {
+    const it = M.item, btn = q('[data-publish]'), mv = q('[data-move]');
+    if (!it) { return; }
+    const c = it.can || {};
+    const publishedAgain = it.status === 'published' && c.edit && !it.personal;
+    btn.hidden = M.readOnly || !(c.publish || c.propose || (it.personal && c.edit) || publishedAgain);
+    q('[data-publish-label]').textContent = it.workspaceReviewRequired ? 'Propose' : 'Publish';
+    const stuck = !!it.personal && !M.readOnly;
+    btn.disabled = stuck;
+    btn.title = stuck ? 'This model is in your private workspace, which cannot publish. Move it to a shared workspace first.' : '';
+    mv.hidden = !(stuck && c.move);
+  }
+  function moveModel() {
+    const btn = q('[data-move]');
+    return B.askWorkspace(btn, 'Move here', 'Move the model to').then((to) => {
+      if (to === 'me') { B.near(btn, 'Pick a shared workspace: your private workspace cannot publish.', true); return null; }
+      return B.busy(btn, () => B.api('POST', '/items/' + B.id2path(itemId) + '/move', { workspace: to }).then((n) => {
+        M.item = n; M.etag = n.etag; buttons();
+        B.near(q('[data-publish]').hidden ? btn : q('[data-publish]'), 'Moved to ' + (n.workspaceName || to) + '. Publish is available there.', false);
+      }));
+    }).catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
   }
   function keep() {
     try { window.localStorage.setItem(KEEP, JSON.stringify({ etag: M.etag, doc: M.doc, at: Date.now() })); } catch (e) { /* the browser keeps nothing; Save still works */ }
@@ -51,6 +76,7 @@
   /** Applies `fn(doc)` as one undoable edit, then checks the result. */
   M.edit = function (fn, quiet) {
     if (M.readOnly) { M.say('This model is read-only here: Save a copy to change it.', true); return; }
+    M.acted = true;
     undo.push(B.clone(M.doc));
     if (undo.length > 100) { undo.shift(); }
     redo.length = 0;
@@ -85,8 +111,12 @@
           M.infos = r.datasets || {};
           M.check = r.check;
           M.suggestions = r.suggestions || [];
-          q('[data-valid]').textContent = r.check.valid ? 'Valid' : 'Has errors';
-          q('[data-valid]').classList.toggle('bi-bad', !r.check.valid);
+          const nEx = ((r.check && r.check.exposures) || []).length, bare = !Object.keys(M.doc.datasets || {}).length;
+          const badge = q('[data-valid]');
+          // the header agrees with the Security tab: a model that checks clean but has a role exposed is not ready, said in words and in the warning colour (not the error one)
+          badge.textContent = bare ? 'Add a dataset to begin' : !r.check.valid ? (M.acted ? 'Has errors' : 'Not ready yet') : nEx ? 'Valid, ' + nEx + ' to fix before publishing' : 'Valid';
+          badge.classList.toggle('bi-bad', !bare && !r.check.valid && !!M.acted);
+          badge.classList.toggle('bi-warnbadge', !bare && (nEx > 0 || (!r.check.valid && !M.acted)));
           M.emit('checked');
           M.redraw();
           resolve();
@@ -262,7 +292,7 @@
       box.appendChild(h('li', { class: 'bi-rel' + (M.selected && M.selected.kind === 'rel' && M.selected.index === i ? ' bi-rel-sel' : ''), 'data-rel': relText(r) },
         h('code', { text: relText(r) }), ' ', h('span', { class: 'bi-badge', text: r.cardinality || 'many-to-one' }), r.active === false ? h('span', { class: 'bi-badge', text: 'inactive' }) : null,
         r.suggested ? h('span', { class: 'bi-badge', title: 'Accepted from a suggestion', text: 'from the pack' }) : null, ' ', open,
-        probs.length ? h('p', { class: 'bi-near bi-bad', text: probs[0].code + ' ' + probs[0].message }) : null));
+        probs.length ? h('p', { class: 'bi-near' + (M.acted ? ' bi-bad' : ' bi-hint'), text: probs[0].code + ' ' + probs[0].message }) : null));
     });
     if (!(M.doc.relationships || []).length) { box.appendChild(h('li', { class: 'text-muted-d', text: 'None yet: accept a suggestion above, or relate two columns by hand.' })); }
     const sbox = B.clear(q('[data-suggestions]'));
@@ -365,6 +395,8 @@
     B.qa('[data-tab]', canvas).forEach((b) => b.setAttribute('aria-selected', b.getAttribute('data-tab') === name ? 'true' : 'false'));
     B.qa('[data-pane]', canvas).forEach((p) => { p.hidden = p.getAttribute('data-pane') !== name; });
     q('[data-inspector]').hidden = name !== 'canvas';
+    q('.bi-md-side').hidden = name === 'security' || name === 'measures' || name === 'contract';          // the datasets list is for building the canvas
+    q('.bi-md-main').classList.toggle('bi-md-wide', name === 'security' || name === 'measures' || name === 'contract');
     M.tab = name;
     if (name === 'yaml') { setYaml(M.yaml); if (editor) { editor.refresh(); } }
     if (name === 'canvas') { lines(); }
@@ -411,7 +443,7 @@
   }
   function publish() {
     const btn = q('[data-publish]');
-    if (M.item && M.item.personal) { B.near(btn, 'This model is in your private workspace, which cannot publish. Move it to a shared workspace (its item page, Move), then publish it there.', true); return Promise.resolve(); }
+    if (M.item && M.item.personal) { B.near(btn, 'This model is in your private workspace, which cannot publish. Use Move beside Publish to choose a shared workspace.', true); return Promise.resolve(); }
     const review = M.item && M.item.workspaceReviewRequired;
     const go = () => B.api('POST', '/items/' + B.id2path(itemId) + '/' + (review ? 'propose' : 'publish'), { note: 'From the model designer' }).then((it) => {
       M.item = it; M.etag = it.etag; buttons();
@@ -423,6 +455,22 @@
     });
     if (M.dirty) { return B.confirm(btn, 'Save the changes first, then ' + (review ? 'propose' : 'publish') + '?', 'Save and continue').then((yes) => (yes ? B.busy(btn, () => after(save().then(() => (M.dirty ? null : go())))) : null)); }
     return B.busy(btn, () => after(go()));
+  }
+  function startBoard() {
+    const btn = q('[data-board]');
+    const ref = M.doc.model + '@' + String(M.doc.version || '1').split('.')[0];
+    const go = () => B.askWorkspace(btn, 'Start the board', 'Start the board in').then((ws) => {
+      const name = B.slug((M.doc.title || M.doc.model) + ' board') || 'board';
+      const body = 'rachana: 1\nboard: ' + name + '\ntitle: ' + JSON.stringify((M.doc.title || M.doc.model) + ' board') + '\nmodel: ' + ref + '\npages:\n  - id: page1\n    title: Page 1\n    tiles: []\n';
+      return B.api('POST', '/workspaces/' + encodeURIComponent(ws) + '/items', { kind: 'board', title: (M.doc.title || M.doc.model) + ' board', description: '', body });
+    }).then((it) => { window.location.href = '/bi/design/board/' + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { B.near(btn, e.message, true); } });
+    if (M.dirty) { return B.confirm(btn, 'A board reads the saved model. Save first?', 'Save and start').then((yes) => (yes ? save().then(() => (M.dirty ? null : go())) : null)); }
+    return go();
+  }
+  function usedBy() {
+    if (!M.doc) { return; }
+    const ref = M.doc.model + '@' + String(M.doc.version || '1').split('.')[0];
+    B.layer.drawUsedBy(q('[data-used-by-host]'), ref).then((r) => { q('[data-used-count]').textContent = r.known && r.consumers.length ? String(r.consumers.length) : ''; M.consumers = r; });
   }
   function startReport() {
     const btn = q('[data-report]');
@@ -466,8 +514,7 @@
     M.readOnly = !!it.shipped || it.status === 'proposed' || !(it.can && it.can.edit);
     q('[data-save]').disabled = M.readOnly;
     q('[data-save-copy]').hidden = !M.readOnly;
-    q('[data-publish]').hidden = M.readOnly || !(it.can && (it.can.publish || it.can.propose || (it.personal && it.can.edit)));
-    q('[data-publish-label]').textContent = it.workspaceReviewRequired ? 'Propose' : 'Publish';
+    publishState();
     if (M.readOnly) { const ro = q('[data-readonly]'); ro.hidden = false; ro.textContent = it.status === 'proposed' ? 'Proposed for review: frozen until approved or withdrawn (its item page). You can still look and save a copy.' : 'You can look at this model but not change it here; Save a copy makes a draft of your own.'; }
     return B.layer.post('parse', { yaml: it.body || '' });
   }).then((r) => {
@@ -487,7 +534,9 @@
     q('[data-save]').addEventListener('click', save);
     q('[data-save-copy]').addEventListener('click', saveCopy);
     q('[data-publish]').addEventListener('click', publish);
+    q('[data-move]').addEventListener('click', moveModel);
     q('[data-report]').addEventListener('click', startReport);
+    q('[data-board]').addEventListener('click', startBoard);
     document.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
       if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); save(); return; }
@@ -505,6 +554,13 @@
     }), M.compose(true)]);
   }).then(() => {
     M.redraw();
+    usedBy();
+    const want = new URLSearchParams(window.location.search);
+    if (want.get('measure') && want.get('expr') && !M.readOnly && !(M.doc.measures || {})[want.get('measure')]) {          // a report's own measure proposed as a change to the model
+      M.edit((doc) => { doc.measures = doc.measures || {}; doc.measures[want.get('measure')] = { expr: want.get('expr') }; }, true);
+      showTab('measures');
+      M.say('Proposed from a report: ' + want.get('measure') + ' is added to this draft. Check it, Save, and publish the model so every report can use it.');
+    }
     root.setAttribute('data-ready', 'yes');
   }).catch((e) => { M.say(e.message, true); root.setAttribute('data-ready', 'error'); });
 })();

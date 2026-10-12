@@ -173,7 +173,7 @@
     }
     const cellFor = (m, v, bold, totalOfNonAdditive) => {
       const td = h('td', { class: 'num' + (bold ? ' bi-total' : ''), 'data-measure': m });
-      td.textContent = totalOfNonAdditive ? '–' : B.fmt(v, V.numFmt(spec, ctx, m), tb.isMasked(m));
+      td.textContent = tb.isMasked(m) ? '•••' : totalOfNonAdditive ? '–' : B.fmt(v, V.numFmt(spec, ctx, m), false);          // a masked measure reads ••• in every cell, the empty ones too
       if (totalOfNonAdditive) { td.title = m + ' does not add up and the engine gave no total for it'; }
       else if (bold && !V.additive(ctx, m)) { td.setAttribute('data-true-total', ''); td.title = 'Worked out over all the rows of the group, not added up from the figures shown'; }
       const colour = V.conditional(spec, m, v);

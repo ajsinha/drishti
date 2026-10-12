@@ -87,3 +87,11 @@
 .dist-form .bi-people { position: relative; }
 .dist-binav { display: flex; flex-wrap: wrap; gap: .75rem; margin: 0 0 .5rem; }
 @media (max-width: 640px), (pointer: coarse) { .dist-binav a { display: inline-flex; align-items: center; min-height: 44px; } }
+
+/* the alert form's model source, and the Subscribe form's When choices */
+.al-filter { display: grid; grid-template-columns: minmax(8rem, 1.2fr) minmax(7rem, .8fr) minmax(8rem, 1.4fr) auto; gap: .4rem; margin: .3rem 0; align-items: center; }
+.al-filters { min-width: 0; }
+.dist-when { border: 1px solid var(--d-border); border-radius: 8px; padding: .6rem .8rem; margin: 0; min-width: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .6rem 1rem; grid-column: 1 / -1; }
+.dist-when legend { font-size: .85rem; color: var(--d-muted); padding: 0 .35rem; }
+.dist-when .wide { grid-column: 1 / -1; }
+@media (max-width: 640px) { .al-filter { grid-template-columns: minmax(0, 1fr); } .al-filter .btn-pill, .dist-when .studio-in, .dist-when .studio-select { min-height: 44px; } }

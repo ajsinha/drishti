@@ -314,15 +314,29 @@
   };
   /** Fills the Main dataset <select> and the Also add <select multiple> from GET /datasets; datasets that cannot be used are greyed with the reason. */
   B.fillDatasetPickers = function (main, also, want) {
-    return B.api('GET', '/datasets?drafts=1').then((d) => {
+    const groups = B.layer && B.layer.groups ? B.layer.groups().catch(() => []) : Promise.resolve([]);       // the models and the packs' datasets, grouped (a report reads one model)
+    return Promise.all([B.api('GET', '/datasets?drafts=1'), groups]).then(([d, grouped]) => {
+      grouped.forEach((g) => main.appendChild(B.h('optgroup', { label: g.label }, g.items.map((i) => B.h('option', { value: i.value, text: i.label })))));
+      const legacy = B.h('optgroup', { label: grouped.length ? 'Other datasets (version 1)' : 'Datasets' });
+      main.appendChild(legacy);
+      const same = {};
+      (d.datasets || []).forEach((x) => { same[x.title] = (same[x.title] || 0) + 1; });
       (d.datasets || []).forEach((x) => {
-        const why = B.datasetWhy(x), text = x.title + (why ? ' (' + why + ')' : '');
-        main.appendChild(B.h('option', { value: x.id, text, disabled: !!why }));
+        const why = B.datasetWhy(x), state = same[x.title] > 1 && x.status ? ', ' + x.status : '', text = x.title + (state || why ? ' (' + [why, state.slice(2)].filter(Boolean).join(', ') + ')' : '');
+        legacy.appendChild(B.h('option', { value: x.id, text, disabled: !!why }));
         if (also) { also.appendChild(B.h('option', { value: x.id, text, disabled: !!why })); }
       });
+      if (also && grouped.length) { const hide = () => { const one = /^(mq|dataset):/.test(main.value); also.disabled = one; if (one) { Array.prototype.forEach.call(also.options, (o) => { o.selected = false; }); } }; main.addEventListener('change', hide); }
       if (want) { const o = Array.prototype.find.call(main.options, (x) => !x.disabled && (x.value === want || x.value === 'file:dataset:' + want)); if (o) { main.value = o.value; } }
       return d.datasets || [];
     });
+  };
+
+  /** The line a new report draft starts with, for what the picker chose: a version 1 dataset (`dataset:`), a model or a pack dataset (`model:`; a report reads one model). */
+  B.sourceLine = function (value) {
+    if (value.indexOf('mq:') === 0) { return 'model: ' + value.slice(3); }
+    if (value.indexOf('dataset:') === 0) { return 'model: ' + value; }
+    return 'dataset: ' + value;
   };
 
   /** "Also add" never offers the main dataset: the option of the chosen main one is hidden and unselected, and follows the choice. */

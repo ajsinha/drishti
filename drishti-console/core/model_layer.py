@@ -340,7 +340,7 @@ def fields_shape(described: dict, ref: str) -> dict:
             cols.append({"name": name, "type": f.get("type") or "string", "format": f.get("format"), "masked": bool(f.get("masked")),
                          "description": f.get("description") or "", "meaning": f.get("meaning") or "", "role": f.get("role") or "", "references": f.get("references") or ""})
         tables.append({"name": alias, "kind": d.get("role") or "fact", "dataset": d.get("dataset"), "version": d.get("version"), "mode": d.get("mode"), "columns": cols})
-    measures = [{"name": m.get("name"), "expr": m.get("expr"), "format": m.get("format"), "masked": bool(m.get("masked")), "implicit": bool(m.get("implicit")),
+    measures = [{"name": m.get("name"), "expr": m.get("expr"), "format": m.get("format"), "masked": bool(m.get("masked")), "implicit": bool(m.get("implicit")), "local": bool(m.get("local")),
                  "additive": m.get("additive"), "description": m.get("description") or ""} for m in described.get("measures") or []]
     model = described.get("model") if isinstance(described.get("model"), dict) else {}
     mid = str(model.get("id") or described.get("id") or "")

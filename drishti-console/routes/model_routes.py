@@ -146,6 +146,21 @@ async def datasets(request: Request):
     return _ok({"packs": packs.get("datasets") or [], "items": items, "models": [m for m in models.get("models") or [] if m.get("kind") in ("model", "compat")]})
 
 
+@router.get("/bi/model-api/roles")
+async def roles(request: Request):
+    """The roles a security rule may name, for the designer's role picker: the server's roles list when it has one (``GET /models/roles``), else the roles the signed-in
+    identity carries (the wildcard left out). ``source`` says which, so the page can say that other roles exist."""
+    try:
+        got = await _bi(request, "GET", "/models/roles")
+        names = sorted({str(r.get("name") if isinstance(r, dict) else r) for r in (got.get("roles") if isinstance(got, dict) else got) or []})
+        if names:
+            return _ok({"roles": names, "source": "server"})
+    except BackendError:
+        pass                                                      # an older server has no roles list: the identity's own roles are what the console knows
+    mine = sorted(r for r in getattr(ident(request), "roles", ()) if r and r != "*")
+    return _ok({"roles": mine, "source": "identity"})
+
+
 @router.get("/bi/model-api/dataset")
 async def dataset(request: Request):
     name = request.query_params.get("name", "")
@@ -305,6 +320,47 @@ async def fields(request: Request):
     return _ok(ml.fields_shape(described, ref))
 
 
+@router.get("/bi/model-api/consumers")
+async def consumers(request: Request):
+    """Who uses a model (reports, boards, alerts, subscriptions, notebooks), from the server's consumers list (``GET /models/{ref}/consumers``). A report references a model,
+    it never owns it: many consumers share one. ``known`` is false when the server cannot say yet (an older server): the pages then say nothing rather than a wrong count."""
+    ref = request.query_params.get("ref", "")
+    if not ref:
+        return _refuse("?ref=<model>@<major> or dataset:<name>", "DRS-9140")
+    try:
+        # the server takes a model item id, <name>@<major> or dataset:<name>
+        got = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/consumers")
+    except BackendError:
+        return _ok({"known": False, "consumers": []})
+    rows = got.get("consumers") if isinstance(got, dict) else got
+    out = []
+    for c in rows or []:
+        if isinstance(c, dict):
+            kind, cid = str(c.get("kind") or c.get("type") or "item"), str(c.get("id") or "")
+            href = {"report": "/bi/d/", "board": "/bi/b/", "notebook": "/bi/i/", "alert": "/alerts/measure/", "subscription": "/reports"}.get(kind, "/bi/i/")
+            out.append({"kind": kind, "id": cid, "title": str(c.get("title") or c.get("name") or cid), "href": href + (quote(cid, safe=":") if kind != "subscription" else "")})
+    return _ok({"known": True, "consumers": out})
+
+
+@router.post("/bi/model-api/rebind")
+async def rebind(request: Request):
+    """``{ref, reports: [id...]}``: points each report (one the person may edit) at the model ``ref``, as *Make it a model* does for the first. Reports are only
+    re-pointed: nothing is copied and the model stays shared."""
+    body = await json_body(request)
+    ref, ids = str(body.get("ref") or ""), [str(x) for x in body.get("reports") or []][:50]
+    if not ref or not ids:
+        return _refuse("send {ref, reports: [report ids]}", "DRS-9140")
+    done, failed = [], []
+    for rid in ids:
+        try:
+            item = await _bi(request, "GET", "/items/" + quote(rid, safe=":"))
+            await _bi(request, "PUT", "/items/" + quote(rid, safe=":"), {"body": ml.rebind_report(item.get("body") or "", ref)})
+            done.append(rid)
+        except BackendError as e:
+            failed.append({"id": rid, "detail": e.detail})
+    return _ok({"rebound": done, "failed": failed})
+
+
 @router.post("/bi/model-api/promote")
 async def promote(request: Request):
     """*Make it a model* (spec 3, rule 5): ``{report}`` on an implicit model: writes the implicit model out as a draft model item in the report's workspace
@@ -340,27 +396,8 @@ async def promote(request: Request):
         return _problem(e)
     except ml.LayerError as e:
         return _refuse(str(e))
-    return _ok({"model": made["id"], "ref": ref, "reused": reused, "href": "/bi/md/" + made["id"], "report": saved.get("id", report), "etag": saved.get("etag"),
-                "others": others})
-
-
-@router.post("/bi/model-api/rebind")
-async def rebind(request: Request):
-    """``{reports: [ids], ref}``: moves other reports onto a model by reference (Make it a model offers the reports on the same dataset); each is saved
-    as a new state of its history, so it can be undone. Answers ``{rebound: [ids], failed: [{id, detail}]}``."""
-    body = await json_body(request)
-    ref = str(body.get("ref") or "")
-    if not ref or not isinstance(body.get("reports"), list):
-        return _refuse("send {reports: [ids], ref: <model>@<major>}")
-    done, failed = [], []
-    for rid in [str(x) for x in body["reports"]][:50]:
-        try:
-            it = await _bi(request, "GET", "/items/" + quote(rid, safe=":"))
-            await _bi(request, "PUT", "/items/" + quote(rid, safe=":"), {"body": ml.rebind_report(it.get("body") or "", ref), "baseEtag": it.get("etag")})
-            done.append(rid)
-        except BackendError as e:
-            failed.append({"id": rid, "detail": e.detail})
-    return _ok({"rebound": done, "failed": failed})
+    return _ok({"dataset": source, "model": made["id"], "ref": ref, "reused": reused, "href": "/bi/md/" + made["id"], "report": saved.get("id", report),
+                "etag": saved.get("etag"), "others": others})
 
 
 # ---- the new-dataset wizard ---------------------------------------------------------------------------------------------
