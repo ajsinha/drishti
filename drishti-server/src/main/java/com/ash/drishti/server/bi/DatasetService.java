@@ -118,6 +118,109 @@ public final class DatasetService {
      */
     public interface ModelGateway {
         Asked ask(Principal p, BiStore.Item item, QueryRequest q, boolean explain);
+
+        /** As {@link #ask} on a model named by reference ({@code trades@1}, {@code dataset:<name>}): a report bound with {@code model:}. */
+        Asked askModel(Principal p, String model, QueryRequest q, boolean explain);
+
+        /** The model's engine dataset as the caller reads it (what a model-bound report's visuals are built against). */
+        Dataset dataset(Principal p, String model);
+
+        /** The model as a designer or a reader of a report sees it ({@code GET /models/{id}/describe}). */
+        Map<String, Object> describe(Principal p, String model);
+
+        /** Why a report bound to the model cannot be published (a draft model, its Check, the security safeguard); empty when it can. */
+        List<String> publishProblems(String model);
+    }
+
+    /** The kind of {@link #modelRef}: an item that stands for a model a consumer is bound to, not a stored item. */
+    public static final String MODEL_REF = "model-ref";
+
+    /** A stand-in item for a model reference, so a consumer bound to a model ({@code model:} on a report) asks it through the same calls as a dataset item. */
+    public static BiStore.Item modelRef(String model) {
+        return new BiStore.Item(model, "", MODEL_REF, model, "", "", List.of(), "", "published", 1, "none", "", List.of(), List.of(), List.of(), "", null, null, null, "", null, "");
+    }
+
+    public static boolean isModelRef(BiStore.Item item) {
+        return item != null && MODEL_REF.equals(item.kind());
+    }
+
+    private ModelGateway requireGateway() {
+        ModelGateway g = gateway;
+        if (g == null) {
+            throw new DrishtiException(ErrorCode.REPORT_DATASET, "the model layer is not running on this server, so a report on a model cannot be read");
+        }
+        return g;
+    }
+
+    /** The engine dataset of a model, as the caller reads it. */
+    public Dataset modelDataset(Principal p, String model) {
+        return requireGateway().dataset(p, model);
+    }
+
+    /**
+     * Runs a connector-query dataset's SQL (docs/architecture/BI_MODEL_SPEC.md section 1.2 B) in its SQL-capable connector, the values bound (never
+     * interpolated). The reader must be able to open every kind the connector serves (the connector's entitlement); the dataset's own rules and masks apply
+     * where the rows are read, in the model.
+     */
+    public QueryService.Result connectorQuery(Principal p, String connector, String sql, List<Object> values, int maxRows) {
+        com.ash.drishti.api.SourcePlugin plugin = sources.plugin(connector, "")
+                .orElseThrow(() -> new DrishtiException(ErrorCode.LAYER_DATASET_SOURCE, "no running connector '" + connector + "'"));
+        for (String kind : plugin.manifest().kinds()) {
+            if (!entitlements.mayOpen(p, kind)) {
+                throw new DrishtiException(ErrorCode.QUERY_MASKED, "you may not open kind '" + kind + "' of connector '" + connector + "', so you may not read its queries");
+            }
+        }
+        com.ash.drishti.api.SqlTarget target = plugin.sqlTarget().orElseThrow(() -> new DrishtiException(ErrorCode.LAYER_DATASET_SOURCE,
+                "connector '" + connector + "' has no SQL target: a connector query runs in DuckDB or PostgreSQL connectors"));
+        long t0 = System.nanoTime();
+        List<com.ash.drishti.server.bi.engine.ArrowIpcWriter.Column> cols;
+        try {
+            cols = target.with(c -> {
+                try (java.sql.PreparedStatement ps = c.prepareStatement(sql)) {
+                    ps.setQueryTimeout((int) Math.max(1, props.timeout().toSeconds()));
+                    for (int i = 0; i < values.size(); i++) {
+                        ps.setObject(i + 1, values.get(i));
+                    }
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        return com.ash.drishti.server.bi.engine.DuckDbEngine.read(rs, maxRows + 1);
+                    }
+                }
+            });
+        } catch (DrishtiException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new DrishtiException(ErrorCode.LAYER_DATASET_SOURCE, "the query of connector '" + connector + "' failed: " + e.getMessage());
+        }
+        int rows = cols.isEmpty() ? 0 : cols.get(0).values().length;
+        if (rows > maxRows) {
+            throw new DrishtiException(ErrorCode.QUERY_ROWS, "the connector query answers more than " + maxRows + " rows (drishti.bi.query.max-rows)");
+        }
+        audit.record(p.user(), "bi-connector-query", connector, rows + " rows");
+        return new QueryService.Result(cols, rows, new QueryService.Meta("connector", null, rows, (System.nanoTime() - t0) / 1e6, false, List.of(), List.of(), List.of(), List.of(), null, 0));
+    }
+
+    /** Runs a Python-source dataset's Transform over its inputs (model queries already asked as the reader); see {@link FrameService#transformOf}. */
+    public QueryService.Result transform(Principal p, String datasetKey, String dataset, String python, Map<String, QueryService.Result> inputs, Map<String, Object> params,
+            Map<String, String> declared, String fingerprint) {
+        if (frames == null) {
+            throw new DrishtiException(ErrorCode.PYTHON_BUSY, "the Python Transform runner is not wired on this server");
+        }
+        return frames.transformOf(p, datasetKey, dataset, python, inputs, params, declared, fingerprint);
+    }
+
+    /** The largest answer one query may give (drishti.bi.query.max-rows). */
+    public int maxRows() {
+        return props.maxRows();
+    }
+
+    /** Why a report bound to the model cannot be published; empty when it can. */
+    public List<String> modelPublishProblems(String model) {
+        return requireGateway().publishProblems(model);
+    }
+
+    /** The model as the caller sees it. */
+    public Map<String, Object> describeModel(Principal p, String model) {
+        return requireGateway().describe(p, model);
     }
 
     /** A consumer's answer: the engine's result (the model query's warnings ahead of the engine's) and the canonical model query that ran (null without the gateway). */
@@ -134,6 +237,9 @@ public final class DatasetService {
      * extracts, AI). Without the model layer wired (unit tests of one service) the engine is asked directly.
      */
     public Asked asked(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
+        if (isModelRef(item)) {
+            return requireGateway().askModel(p, item.id(), q, explain);
+        }
         ModelGateway g = gateway;
         return g == null ? new Asked(queryItem(p, item, q, explain), null) : g.ask(p, item, q, explain);
     }

@@ -52,6 +52,16 @@ class ConsumerQueriesTest {
     }
 
     @Test
+    void aConnectorQueryBindsOnlyTheNamedDatesNeverText() {
+        LocalDate d = LocalDate.of(2026, 10, 8);
+        List<Object> values = new java.util.ArrayList<>();
+        String sql = DatasetSources.bind("SELECT a::text, :x FROM t WHERE as_of = :asOf AND d BETWEEN :f AND :t", java.util.Map.of("asOf", "as-of", "f", "from", "t", "to"),
+                d, d.minusDays(2), null, values);
+        assertThat(sql).isEqualTo("SELECT a::text, :x FROM t WHERE as_of = ? AND d BETWEEN ? AND ?");
+        assertThat(values).containsExactly(java.sql.Date.valueOf(d), java.sql.Date.valueOf(d.minusDays(2)), java.sql.Date.valueOf(d.minusDays(2)));
+    }
+
+    @Test
     void aRefusalKeepsTheEndpointsCodeAndTheLanguagesProblem() {
         MqException masked = new MqException(MqException.Problem.of("DRS-9161", "where[0].field", "masked")).legacy();
         assertThat(masked.errorCode()).isEqualTo(ErrorCode.QUERY_MASKED);

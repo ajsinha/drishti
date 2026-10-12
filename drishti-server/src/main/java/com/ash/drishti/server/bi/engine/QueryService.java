@@ -241,6 +241,15 @@ public final class QueryService implements AutoCloseable {
                 + "|denied:" + new java.util.TreeSet<>(who.denied()) + (who.enforce() ? TableRules.fingerprint(ds.dataset(), who.roles()) : "");
     }
 
+    /** The rows of a parquet file (a Python Transform's result) as an answer, at most {@code maxRows} (more is DRS-9022). */
+    public Result readParquet(java.nio.file.Path file, int maxRows) {
+        AnalyticEngine.Answer a = engine.query("SELECT * FROM read_parquet('" + TableBuilder.literal(file) + "')", List.of(), maxRows + 1, props.timeout());
+        if (a.rows() > maxRows) {
+            throw new DrishtiException(ErrorCode.QUERY_ROWS, "the Transform's result has more than " + maxRows + " rows");
+        }
+        return new Result(a.columns(), a.rows(), new Meta("transform", null, a.rows(), a.millis(), false, List.of(), List.of(), List.of(), List.of(), null, 0));
+    }
+
     /** The inner answers of the staged tables the query plans to read, asked as the reader. */
     private static Map<String, StagedTables.Answer> innerAnswers(Dataset d, QueryRequest q, Caller who, StagedTables staged) {
         SqlCompiler.Reader reader = new SqlCompiler.Reader(who.enforce(), who.roles(), who.attributes(), HistoryMasks.over(d, who.masks()));

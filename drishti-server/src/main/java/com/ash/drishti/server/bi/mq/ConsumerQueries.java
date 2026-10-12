@@ -53,6 +53,33 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
         }
     }
 
+    @Override
+    public DatasetService.Asked askModel(Principal p, String model, QueryRequest q, boolean explain) {
+        try {
+            MqService.Bound b = catalog.bind(p, model);
+            ModelQuery mq0 = of(b.view(), q).withModel(model);
+            MqService.Ran ran = mq.run(b, mq0, explain, true);
+            return new DatasetService.Asked(ran.withWarnings(), ran.canonical());
+        } catch (MqException e) {
+            throw e.legacy();
+        }
+    }
+
+    @Override
+    public Dataset dataset(Principal p, String model) {
+        return catalog.bind(p, model).view().flat();
+    }
+
+    @Override
+    public Map<String, Object> describe(Principal p, String model) {
+        return catalog.describe(p, model);
+    }
+
+    @Override
+    public List<String> publishProblems(String model) {
+        return catalog.publishProblems(model);
+    }
+
     /**
      * An engine request as a model query on a model: fields and measures as they are (a field without its table gets the table that has it), a filter on a
      * measure becomes a {@code having} ({@code between} two of them), the dates the {@code time} (one date an as-of, two a window), the sort, limit and layer

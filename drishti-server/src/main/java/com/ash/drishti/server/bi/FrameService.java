@@ -234,6 +234,40 @@ public final class FrameService implements DatasetRefresher.FramedHooks {
         return derivedOutput(p, ds, new QueryRequest(List.of(), List.of("-"), List.of(), null, null, List.of(), null, "auto"), new ArrayList<>());
     }
 
+    /**
+     * The rows of a {@code rachana: 2} dataset whose source is a Python Transform (docs/architecture/BI_MODEL_SPEC.md section 1.2 C): its inputs are model
+     * queries already asked as the reader, handed to the Transform in the order the dataset names them (columns by their last name part), and its result is
+     * kept per reader and inputs as a derived dataset's is.
+     *
+     * @param fingerprint what the inputs are now (their models' versions and data generations)
+     */
+    public QueryService.Result transformOf(Principal p, String datasetKey, String dataset, String python, Map<String, QueryService.Result> inputs, Map<String, Object> params,
+            Map<String, String> declared, String fingerprint) {
+        PythonItems.TransformItem t = pythons.transform(python);
+        if (t.manifest().inputs().size() != inputs.size()) {
+            throw new DrishtiException(ErrorCode.TRANSFORM_FAILED, "the Transform '" + t.title() + "' reads " + t.manifest().inputs().size() + " input(s) (" + t.manifest().inputs()
+                    + ") but dataset '" + dataset + "' gives it " + inputs.size() + " (" + inputs.keySet() + ")");
+        }
+        Map<String, Object> all = new LinkedHashMap<>(t.manifest().params());
+        all.putAll(params);
+        String key = readerKey(p) + "|" + datasetKey + "|" + fingerprint + "|" + t.id() + "@" + t.version() + "#" + hash(t.manifest().source() + t.manifest().params() + params);
+        TransformService.Output out = transforms.ensure(datasetKey, dataset, key, declared, () -> {
+            List<byte[]> frames = new ArrayList<>();
+            for (QueryService.Result r : inputs.values()) {
+                if (r.rows() > props.maxInputRows()) {
+                    throw new DrishtiException(ErrorCode.PYTHON_LIMIT, "an input of '" + dataset + "' has more than " + props.maxInputRows() + " rows (drishti.bi.transform.max-input-rows)");
+                }
+                List<ArrowIpcWriter.Column> cols = new ArrayList<>();
+                for (ArrowIpcWriter.Column c : r.columns()) {
+                    cols.add(new ArrowIpcWriter.Column(c.name().substring(c.name().lastIndexOf('.') + 1), c.kind(), c.values()));
+                }
+                frames.add(ArrowIpcWriter.write(cols, r.rows()));
+            }
+            return new TransformService.Prepared(t.manifest().toMap(), frames, all);
+        });
+        return queries.readParquet(out.file(), queries.properties().maxRows());
+    }
+
     private TransformService.Output derivedOutput(Principal p, QueryService.Loaded ds, QueryRequest outer, List<String> warnings) {
         Dataset d = ds.dataset();
         Dataset.Derived dv = d.derived();

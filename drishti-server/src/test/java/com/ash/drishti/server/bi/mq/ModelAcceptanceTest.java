@@ -158,7 +158,7 @@ class ModelAcceptanceTest {
                     security:
                       rows:
                         - { role: desk-head, where: "desk in user.desks" }
-                        - { role: [bi-risk, bi-analyst, admin], where: "true" }
+                        - { role: [bi-risk, bi-analyst, report-author, admin], where: "true" }
                       masked: [mtm]
                     """);
             Files.writeString(models.resolve("acc-model.model.yaml"), """
@@ -240,6 +240,7 @@ class ModelAcceptanceTest {
         return switch (name) {
             case "rita" -> as("rita", "bi-risk");
             case "hana" -> as("hana", "desk-head");
+            case "wes" -> as("wes", "report-author");
             default -> as("ann", "bi-analyst");
         };
     }
@@ -249,7 +250,8 @@ class ModelAcceptanceTest {
         role("bi-risk", true);
         role("desk-head", true);
         role("bi-analyst", false);
-        for (String u : List.of("rita:bi-risk:", "hana:desk-head:DESK-A", "ann:bi-analyst:")) {
+        role("report-author", true);
+        for (String u : List.of("rita:bi-risk:", "hana:desk-head:DESK-A", "ann:bi-analyst:", "wes:report-author:")) {
             String[] n = u.split(":", -1);
             mvc.perform(post("/api/v1/admin/users").header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
                     .content(json.writeValueAsString(Map.of("username", n[0], "displayName", n[0], "email", n[0] + "@desk.test", "desk", n[2], "roles", List.of(n[1]),
@@ -259,12 +261,16 @@ class ModelAcceptanceTest {
 
     void role(String name, boolean raw) throws Exception {
         var r = mvc.perform(put("/api/v1/admin/role-definitions/" + name).header("Authorization", admin()).contentType(MediaType.APPLICATION_JSON)
-                .content(json.writeValueAsString(Map.of("kinds", List.of("*"), "approve", false, "raw", raw, "bi", List.of("bi"))))).andReturn().getResponse();
+                .content(json.writeValueAsString(Map.of("kinds", List.of("*"), "approve", false, "raw", raw, "bi", "report-author".equals(name) ? List.of("bi", "bi-author") : List.of("bi"))))).andReturn().getResponse();
         assertThat(r.getStatus()).as(r.getContentAsString()).isEqualTo(200);
     }
 
     ResultActions call(String method, String path, String who, Object body) throws Exception {
-        var req = "POST".equals(method) ? post(java.net.URI.create(path)) : get(java.net.URI.create(path));
+        var req = switch (method) {
+            case "POST" -> post(java.net.URI.create(path));
+            case "PUT" -> put(java.net.URI.create(path));
+            default -> get(java.net.URI.create(path));
+        };
         req.header("Authorization", who);
         if (body != null) {
             req.contentType(MediaType.APPLICATION_JSON).content(body instanceof String s ? s : json.writeValueAsString(body));
@@ -426,5 +432,45 @@ class ModelAcceptanceTest {
                 Map.of("yaml", Files.readString(Path.of("target/mq-accept-folder/datasets/loop-a.dataset.yaml")))));
         assertThat(check.path("valid").asBoolean()).isFalse();
         assertThat(check.path("problems").toString()).contains("DRS-9109");
+    }
+
+    // ---- a report bound to a model -----------------------------------------------------------------------------------
+
+    @Test @Order(5)
+    void aReportOnAModelIsCheckedAskedPublishedAndExportedAndADraftModelIsListedButNotPublishedUnder() throws Exception {
+        String yaml = "report: on-model\nmodel: acc-model@1\npages:\n  - id: p\n    visuals:\n"
+                + "      - { id: a, type: bar, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] } }\n";
+        String state = "{\"page\":\"p\",\"visual\":\"a\",\"state\":{\"dates\":{\"from\":\"2026-10-07\",\"to\":\"2026-10-07\"}}}";
+        JsonNode checked = ok(call("POST", "/api/v1/bi/reports/validate", reader("wes"), Map.of("yaml", yaml)));
+        assertThat(checked.path("valid").asBoolean()).as(checked.path("problems").toString()).isTrue();
+        assertThat(checked.path("report").path("model").asText()).isEqualTo("acc-model@1");
+        String id = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "report", "title", "On a model", "body", yaml))).path("id").asText();
+        JsonNode mine = ok(call("POST", "/api/v1/bi/reports/" + id + "/query", reader("wes"), state));
+        assertThat(mine.path("rows")).hasSize(3);
+        assertThat(mine.path("mq").path("model").asText()).isEqualTo("acc-model@1");
+        String shared = ok(call("POST", "/api/v1/bi/workspaces", reader("wes"), Map.of("name", "Model desk", "description", "Reports on models"))).path("id").asText();
+        ok(call("PUT", "/api/v1/bi/workspaces/" + shared + "/members/hana", reader("wes"), Map.of("role", "viewer")));
+        ok(call("POST", "/api/v1/bi/items/" + id + "/move", reader("wes"), Map.of("workspace", shared)));
+        ok(call("POST", "/api/v1/bi/items/" + id + "/publish", reader("wes"), Map.of()));
+        // published: a desk-head reads it as herself, and the export is the same model query
+        JsonNode hers = ok(call("POST", "/api/v1/bi/reports/" + id + "/query", reader("hana"), state));
+        assertThat(hers.path("rows")).hasSize(1);
+        assertThat(hers.path("rows").get(0).get(0).asText()).isEqualTo("DESK-A");
+        var csv = call("POST", "/api/v1/export/csv", reader("hana"), "{\"type\":\"report\",\"id\":\"" + id + "\"," + state.substring(1)).andReturn().getResponse();
+        assertThat(csv.getStatus()).as(csv.getContentAsString()).isEqualTo(200);
+        assertThat(csv.getContentAsString()).contains("DESK-A").doesNotContain("DESK-B");
+        // a draft model: listed for its owner, readable by them, but a report on it cannot be published
+        String model = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "model", "title", "Draft model", "body",
+                "rachana: 2\nmodel: wes-draft\nversion: 1.0.0\ndatasets:\n  trades: { dataset: acc-trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")))
+                .path("id").asText();
+        JsonNode listed = ok(call("GET", "/api/v1/bi/models", reader("wes"), null));
+        assertThat(listed.path("models").toString()).contains("\"name\":\"wes-draft\"").contains("\"owner\":\"wes\"").contains("\"draft\":true");
+        String onDraft = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "report", "title", "On a draft", "body",
+                yaml.replace("report: on-model", "report: on-draft").replace("acc-model@1", "wes-draft@1")))).path("id").asText();
+        assertThat(ok(call("POST", "/api/v1/bi/reports/" + onDraft + "/query", reader("wes"), state)).path("rows")).hasSize(3);
+        ok(call("POST", "/api/v1/bi/items/" + onDraft + "/move", reader("wes"), Map.of("workspace", shared)));
+        call("POST", "/api/v1/bi/items/" + onDraft + "/publish", reader("wes"), Map.of()).andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("DRS-9030")).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("not published")));
+        assertThat(model).isNotBlank();
     }
 }

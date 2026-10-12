@@ -248,6 +248,8 @@ public enum ErrorCode {
     VEGA_FAILED("DRS-9077", 422),
     /** The model layer: a {@code rachana: 2} dataset that is not valid (its Check lists every problem); publishing it is refused. */
     LAYER_DATASET_INVALID("DRS-9100", 422),
+    /** The model layer: a dataset source the server cannot use when it is read (a connector that is not running or has no SQL target, a query that fails). */
+    LAYER_DATASET_SOURCE("DRS-9102", 422),
     /** The model layer: a pack-generated dataset is read-only (narrow it with {@code extends}). */
     LAYER_DATASET_GENERATED("DRS-9107", 409),
     /** The model layer: the query of a dataset whose source is a model does not validate, or its answer lacks a declared column. */

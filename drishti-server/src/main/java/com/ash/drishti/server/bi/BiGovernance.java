@@ -238,7 +238,9 @@ public final class BiGovernance {
         } else if ("report".equals(i.kind()) && !i.body().isBlank()) {
             ReportParser.Result r = ReportParser.parse(i.body());
             List<ReportParser.Problem> all = new ArrayList<>(r.problems());
-            if (r.report() != null) {
+            if (r.report() != null && r.report().model() != null) {
+                // a report on a model: its names are checked against the model when it is drawn and published (the report service's draw check)
+            } else if (r.report() != null) {
                 BiStore.Item dsItem = impact.datasetOf(i.body());
                 Dataset ds = dsItem == null ? null : DatasetParser.parse(impact.publishedBody(dsItem) != null ? impact.publishedBody(dsItem) : dsItem.body()).dataset();
                 if (ds != null) {

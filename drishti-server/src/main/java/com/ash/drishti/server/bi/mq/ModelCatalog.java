@@ -83,6 +83,10 @@ public final class ModelCatalog {
         return mq;
     }
 
+    DatasetService datasets() {
+        return datasets;
+    }
+
     // ---- binding -----------------------------------------------------------------------------------------------------
 
     /** The model the reference names, bound to the caller: how its requests run as them, and their side of the checks. */
@@ -108,19 +112,8 @@ public final class ModelCatalog {
             BiStore.Item item = f.item();
             run = (ds, q, explain) -> ds == v.flat() ? datasets.queryItem(p, item, q, explain) : datasets.queryWith(p, item, ds, salt(v.flat(), ds), q, explain);
         } else {
-            run = (ds, q, explain) -> {
-                Set<String> touched = new LinkedHashSet<>();
-                q.fields().forEach(x -> touched.add(x.substring(0, Math.max(0, x.indexOf('.')))));
-                q.filters().forEach(x -> touched.add(x.field().contains(".") ? x.field().substring(0, x.field().indexOf('.')) : ""));
-                q.measures().forEach(m -> touched.addAll(ModelView.tablesOf(ds, m)));
-                touched.retainAll(v.unbuilt());
-                Set<String> fromModels = ModelSources.aliases(v);
-                touched.removeAll(fromModels);
-                if (!touched.isEmpty()) {
-                    throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "the datasets " + touched + " are a connector query or a Python Transform: "
-                            + "this server reads pack kinds and other models' answers through models so far (the other sources are wave W1 package S4)");
-                }
-                ModelSources staged = fromModels.isEmpty() ? null : new ModelSources(this, p, v, q);
+            run = (ds, q, explain) -> {                             // connector, Python and model-answer datasets are staged for the query, as the reader
+                DatasetSources staged = DatasetSources.aliases(v).isEmpty() ? null : new DatasetSources(this, p, v, q);
                 return datasets.queryModel(p, v.id(), v.key(), ds, v.hash() + "|" + salt(v.flat(), ds), q, explain, staged);
             };
         }
@@ -218,7 +211,7 @@ public final class ModelCatalog {
         problems.stream().filter(DatasetParser.Problem::error).findFirst().ifPresent(x -> {
             throw new MqException(MqException.Problem.of("DRS-9151", "model", "the model '" + m.name() + "' has errors: " + x.code() + " " + x.path() + ": " + x.message()));
         });
-        ModelSources.cycle(this, "model:" + m.name(), resolved).ifPresent(x -> {
+        DatasetSources.cycle(this, "model:" + m.name(), resolved).ifPresent(x -> {
             throw new MqException(MqException.Problem.of("DRS-9109", "model", x));
         });
         Flattener.Flat flat = Flattener.flatten(m, resolved);
@@ -240,7 +233,7 @@ public final class ModelCatalog {
     }
 
     private Found implicitOf(ResolvedDataset d) {
-        ModelSources.cycle(this, "dataset:" + d.def().name(), Map.of(d.def().name(), d)).ifPresent(x -> {
+        DatasetSources.cycle(this, "dataset:" + d.def().name(), Map.of(d.def().name(), d)).ifPresent(x -> {
             throw new MqException(MqException.Problem.of("DRS-9109", "model", x));
         });
         ImplicitModels.Implicit im = ImplicitModels.of(d, kind -> packs.ofKind(kind).map(ResolvedDataset::of));
@@ -384,7 +377,7 @@ public final class ModelCatalog {
                     chain(d, new LinkedHashSet<>(), problems);
                 }
                 if (d.source() != null && DatasetDef.Source.MODEL.equals(d.source().type()) && r.ok()) {
-                    ModelSources.cycle(this, "dataset:" + d.name(), Map.of(d.name(), ResolvedDataset.of(d))).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "source.model", x)));
+                    DatasetSources.cycle(this, "dataset:" + d.name(), Map.of(d.name(), ResolvedDataset.of(d))).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "source.model", x)));
                 }
                 m.put("name", d.name());
                 m.put("version", d.version());
@@ -397,7 +390,7 @@ public final class ModelCatalog {
             if (r.model() != null) {
                 Map<String, ResolvedDataset> resolved = resolveAll(r.model(), problems);
                 problems.addAll(ModelChecker.check(r.model(), resolved));
-                ModelSources.cycle(this, "model:" + r.model().name(), resolved).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "datasets", x)));
+                DatasetSources.cycle(this, "model:" + r.model().name(), resolved).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "datasets", x)));
                 m.put("name", r.model().name());
                 m.put("version", r.model().version());
                 m.put("datasets", resolved.entrySet().stream().map(e -> Map.of("alias", e.getKey(), "dataset", e.getValue().def().name(), "version", e.getValue().def().version())).toList());
@@ -458,6 +451,44 @@ public final class ModelCatalog {
         List<String> notes = new ArrayList<>();
         r.model().security().maySeeAll().forEach((alias, roles) -> notes.add(alias + ": " + roles));
         return notes.isEmpty() ? "" : "version " + r.model().version() + " lets roles see every row of: " + String.join("; ", notes);
+    }
+
+    /**
+     * Why a report bound to {@code ref} cannot be published (empty when it can): every reader must reach a published model, so a draft model is refused, and
+     * the published model must pass its Check and the security safeguard ({@code DRS-9130}; a folder file is not gated when it is read, so it is checked here).
+     */
+    public List<String> publishProblems(String ref) {
+        if (ref.startsWith(ImplicitModels.QUERY_PREFIX)) {
+            String name = ref.substring(ImplicitModels.QUERY_PREFIX.length());
+            boolean found = resolveDataset(name, Semver.Range.ANY, new LinkedHashSet<>(), new ArrayList<>()).isPresent()
+                    || bi.datasetNamed(name).filter(BiStore.Item::isPublished).isPresent();
+            return found ? List.of() : List.of("no published dataset '" + name + "' for the report's model: publish the dataset first");
+        }
+        Semver.Ref r = Semver.Ref.parse(ref);
+        ModelDef best = null;
+        for (BiStore.Item i : bi.publishedOfKind("model")) {
+            ModelDef m = ModelDefParser.parse(bi.publishedBody(i)).model();
+            if (m != null && r != null && (m.name().equals(r.name()) || i.id().equals(r.name())) && r.range().matches(Semver.parse(m.version())) && !"retired".equals(m.lifecycle())
+                    && (best == null || Semver.parse(m.version()).compareTo(Semver.parse(best.version())) > 0)) {
+                best = m;
+            }
+        }
+        if (best == null) {
+            if (r != null && bi.datasetNamed(r.name()).filter(BiStore.Item::isPublished).isPresent()) {
+                return List.of();                                                // a version-1 dataset's name: its compatibility model
+            }
+            return List.of("the model '" + ref + "' is not published (a draft model is read by its author only): publish the model first, where its Check and security safeguard run");
+        }
+        List<DatasetParser.Problem> problems = new ArrayList<>();
+        Map<String, ResolvedDataset> resolved = resolveAll(best, problems);
+        problems.addAll(ModelChecker.check(best, resolved));
+        List<String> out = new ArrayList<>(problems.stream().filter(DatasetParser.Problem::error).map(x -> x.code() + " " + x.path() + ": " + x.message()).toList());
+        List<ModelChecker.Exposure> open = ModelChecker.exposures(best, resolved);
+        if (!open.isEmpty()) {
+            out.add("DRS-9130 the model '" + best.name() + "' would show every row of " + String.join("; ", open.stream().map(x -> x.alias() + " to " + x.role()).toList())
+                    + ": give each a row rule or a `may-see-all` note in the model before a report on it is published");
+        }
+        return out;
     }
 
     @SuppressWarnings("unchecked")
@@ -552,8 +583,17 @@ public final class ModelCatalog {
             try {
                 BiStore.Item r = bi.readableItem(p, i.id());
                 ModelDef m = ModelDefParser.parse(bi.bodyFor(p, r)).model();
-                out.add(Map.of("id", i.id(), "name", m == null ? i.title() : m.name(), "version", m == null ? "" : m.version(), "title", i.title(), "status", i.status(),
-                        "kind", "model"));
+                Map<String, Object> e = new LinkedHashMap<>();
+                e.put("id", i.id());
+                e.put("name", m == null ? i.title() : m.name());
+                e.put("version", m == null ? "" : m.version());
+                e.put("title", i.title());
+                e.put("status", i.status());
+                e.put("draft", !i.isPublished());                                 // the caller's own draft models are listed too
+                e.put("owner", i.owner());
+                e.put("workspace", i.workspace());
+                e.put("kind", "model");
+                out.add(e);
             } catch (DrishtiException e) {
                 // not readable by this caller
             }

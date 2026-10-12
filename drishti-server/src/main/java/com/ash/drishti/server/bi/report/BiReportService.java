@@ -116,6 +116,25 @@ public final class BiReportService {
         BiStore.Item dsItem = null;
         Dataset ds = null;
         DatasetSet sets = new DatasetSet();
+        if (parsed.report() != null && parsed.report().model() != null) {
+            String model = parsed.report().model();                             // a report bound to a model: its visuals are model queries on it
+            try {
+                ds = datasets.modelDataset(p, model);
+                dsItem = DatasetService.modelRef(model);
+                sets.put(parsed.report().dataset(), new DatasetSet.Entry(dsItem, ds));
+            } catch (DrishtiException e) {
+                problems.add(ReportParser.error(e.errorCode().code(), "model", e.getMessage()));
+            }
+            if (ds != null) {
+                for (String ref : parsed.report().datasets()) {
+                    if (sets.of(ref) == null) {
+                        problems.add(ReportParser.error("DRS-9141", "dataset", "a visual of a report on a model reads that model; '" + ref + "' is another dataset (add it to the model)"));
+                    }
+                }
+                problems.addAll(ReportValidator.validate(parsed.report(), ds, sets));
+            }
+            return new Loaded(item, parsed, dsItem, ds, problems, sets);
+        }
         if (parsed.report() != null && !parsed.report().dataset().isBlank()) {
             try {
                 dsItem = datasetFor(p, parsed.report().dataset(), viaPublished);
@@ -199,6 +218,9 @@ public final class BiReportService {
     }
 
     private Map<String, Object> datasetSummary(Principal p, BiStore.Item dsItem) {
+        if (DatasetService.isModelRef(dsItem)) {
+            return datasets.describeModel(p, dsItem.id());
+        }
         Map<String, Object> d = new LinkedHashMap<>(datasets.modelOf(p, dsItem));
         d.remove("layers");
         d.remove("security");
@@ -231,7 +253,12 @@ public final class BiReportService {
 
     /** The messages of the errors that stop a stored report being drawn (its dataset is missing, a visual names a field that is gone); empty when it draws. */
     public List<String> errors(Principal p, BiStore.Item item) {
-        return load(p, item, item.body(), false).problems().stream().filter(ReportParser.Problem::error).map(ReportParser.Problem::message).toList();
+        Loaded l = load(p, item, item.body(), false);
+        List<String> out = new ArrayList<>(l.problems().stream().filter(ReportParser.Problem::error).map(ReportParser.Problem::message).toList());
+        if (l.parsed().report() != null && l.parsed().report().model() != null && out.isEmpty()) {
+            out.addAll(datasets.modelPublishProblems(l.parsed().report().model()));          // readers reach a published model only, which passed its safeguard
+        }
+        return out;
     }
 
     /** Writes a report model (the structure {@link Report#toMap} has) as YAML. */
@@ -342,7 +369,7 @@ public final class BiReportService {
 
     /** The state of the live tables behind a report (for the indicator and for a client that keeps rows), or null when the dataset has none. */
     private Map<String, Object> liveOf(Principal p, Prepared pre) {
-        if (pre.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
+        if (DatasetService.isModelRef(pre.dsItem()) || pre.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
             return null;
         }
         return datasets.liveTick(p, pre.dsItem());
@@ -526,8 +553,8 @@ public final class BiReportService {
         if (l.datasetItem() == null || l.dataset() == null) {
             throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report's dataset cannot be found, so it has no live state");
         }
-        if (l.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
-            return null;
+        if (DatasetService.isModelRef(l.datasetItem()) || l.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
+            return null;                                                         // a report on a model follows its live data through standing queries (W3)
         }
         return datasets.liveWatch(p, l.datasetItem());
     }

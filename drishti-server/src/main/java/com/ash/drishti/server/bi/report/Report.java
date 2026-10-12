@@ -172,6 +172,14 @@ public record Report(String name, int version, String title, String description,
     /** A saved state: a page, slicer selections (by slicer visual id) and extra filters. */
     public record Bookmark(String name, String page, Map<String, List<Object>> slicers, List<Filter> filters) {}
 
+    /** How {@code dataset} holds the binding of a report to a model ({@code model: trades@1} in the YAML; docs/architecture/BI_MODEL_SPEC.md section 4.1). */
+    public static final String MODEL_PREFIX = "model:";
+
+    /** The model the report binds to ({@code model:}), or null for a report on a dataset. */
+    public String model() {
+        return dataset != null && dataset.startsWith(MODEL_PREFIX) ? dataset.substring(MODEL_PREFIX.length()) : null;
+    }
+
     /** The dataset a visual reads: its own, else the report's. */
     public String datasetOf(Visual v) {
         return v.dataset() == null || v.dataset().isBlank() ? dataset : v.dataset();
@@ -202,7 +210,11 @@ public record Report(String name, int version, String title, String description,
         if (sample) {
             m.put("sample", true);
         }
-        m.put("dataset", dataset);
+        if (model() != null) {
+            m.put("model", model());
+        } else {
+            m.put("dataset", dataset);
+        }
         if (!theme.isEmpty()) {
             m.put("theme", theme);
         }

@@ -145,7 +145,8 @@ public final class DuckDbEngine implements AnalyticEngine {
         }
     }
 
-    static List<ArrowIpcWriter.Column> read(ResultSet rs, int maxRows) throws SQLException {
+    /** The rows of a result set as typed columns (any JDBC source: also what a connector-query dataset reads). */
+    public static List<ArrowIpcWriter.Column> read(ResultSet rs, int maxRows) throws SQLException {
         ResultSetMetaData md = rs.getMetaData();
         int n = md.getColumnCount();
         ArrowIpcWriter.Kind[] kinds = new ArrowIpcWriter.Kind[n];

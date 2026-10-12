@@ -72,7 +72,7 @@ public final class ReportParser {
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}");
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
-    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
+    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "model", "theme", "dates", "filters", "bookmarks", "layouts", "links", "tests", "pages",
             "owner", "tags", "endorsement", "endorsedBy", "audience");
     private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
@@ -112,8 +112,13 @@ public final class ReportParser {
             out.add(error(INVALID, "report", "'" + name + "' is not a usable name (letters, digits, hyphen, underscore, dot; up to 64)"));
         }
         String dataset = text(root, "dataset", "");
-        if (dataset.isBlank()) {
-            out.add(error(INVALID, "dataset", "`dataset:` names the dataset the report reads (its catalogue id, file name or name)"));
+        String model = text(root, "model", "");
+        if (!model.isBlank() && !dataset.isBlank()) {
+            out.add(error("DRS-9140", "model", "a report reads one model: `model:` or `dataset:`, not both (docs/architecture/BI_MODEL_SPEC.md section 4.1)"));
+        } else if (!model.isBlank()) {
+            dataset = Report.MODEL_PREFIX + model;                              // a report bound to a model (wave W1): Report.model() names it
+        } else if (dataset.isBlank()) {
+            out.add(error(INVALID, "dataset", "`dataset:` names the dataset the report reads (its catalogue id, file name or name), or `model:` the model"));
         }
         Map<String, String> theme = theme(root.path("theme"), out);
         Report.Dates dates = dates(root.path("dates"), "dates", out);

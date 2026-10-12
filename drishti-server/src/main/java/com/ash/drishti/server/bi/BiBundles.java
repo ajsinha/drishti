@@ -456,7 +456,7 @@ public final class BiBundles {
         // a report's dataset
         if ("report".equals(kind)) {
             Report r = ReportParser.parse(body).report();
-            if (r != null && !r.dataset().isBlank() && !datasetKnown(r.dataset(), all)) {
+            if (r != null && r.model() == null && !r.dataset().isBlank() && !datasetKnown(r.dataset(), all)) {
                 warnings.add("its dataset '" + r.dataset() + "' is neither in the bundle nor here: the report cannot be drawn until it is");
             }
         }
