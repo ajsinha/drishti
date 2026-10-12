@@ -55,7 +55,7 @@
               <details class="dist-hist"><summary>History</summary>
                 <ol class="dist-runs">{% for run in r.runs %}<li><span class="mono">{{ run.at[:16] | replace('T', ' ') }}</span> {{ run.trigger }} · <b class="{{ 't-bad' if run.status in ['failed', 'partial'] else '' }}">{{ run.status }}</b>
                   · {{ run.sent }} sent{% if run.skipped %}, {{ run.skipped }} skipped{% endif %}{% if run.retrying %}, {{ run.retrying }} to retry{% endif %}{% if run.failed %}, {{ run.failed }} failed{% endif %}
-                  {% if run.deliveries %}<ul>{% for d in run.deliveries %}<li class="mono">{{ d.to }} · {{ d.status }}{% if d.attempts and d.attempts > 1 %} (attempt {{ d.attempts }}){% endif %}{% if d.error %} · {{ d.error }}{% endif %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ol>
+                  {% if run.deliveries %}<ul>{% for d in run.deliveries %}<li class="mono">{{ d.to }} · {{ d.status }}{% if d.attempts and d.attempts > 1 %} (attempt {{ d.attempts }}){% endif %}{% if d.error %} · {{ d.error }}{% endif %}{% if d.narrative %} · summary: {{ d.narrative }}{% endif %}</li>{% endfor %}</ul>{% endif %}</li>{% endfor %}</ol>
               </details>{% endif %}
             {% else %}—{% endif %}</td>
           <td class="rpt-actions">

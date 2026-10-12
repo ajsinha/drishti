@@ -227,6 +227,22 @@ default-model: llama-3.3-70b-versatile
 Everything about each type (settings, model catalogue, proxy, TLS, retries, errors that never carry a response body) is in [AI_PROVIDERS.md](../architecture/AI_PROVIDERS.md) section 11; the BI side (what the hooks send, `aggregates` mode, limits) is [BI_AI.md](../guides/BI_AI.md). Then use **Test connection** on the new row: the first honest answer tells you whether the key, the address and the network are right,
 before anyone asks the data a question. You should see `OK` or the reason on the new row.
 
+## Step 8 · Suggestions, plain-words checks and the dataset helper
+
+Three more hooks help an **author** (they need `bi-author`, and the policy features `bi-suggest`, `bi-explain-checks` and `bi-helper`). In the designer, **Suggest visuals** takes a goal in your words and proposes visuals, wells and filters for the report's dataset. Each has passed the report checker and shows the YAML it would add; nothing is applied until you press **Add to this page** (one undoable edit):
+
+![Suggest visuals: three suggestions with their YAML and an Add button](img/t15/09-suggest.jpg)
+
+You should see a bar, a slicer marked *filter* and a card, each with a sentence on why. Press **Add to this page** on one and it appears at the bottom of the canvas, selected; **Undo** takes it back. In the **Check** panel, **Explain in plain words** answers each problem with what it means and what to change:
+
+![Check, explained in plain words](img/t15/10-check-explained.jpg)
+
+On the **Model view** of a dataset, **Ask the AI helper** proposes relationships, measures (with descriptions) and column descriptions from the dataset's names and types, never a value. Accept the items one by one; each is written into the YAML and you Save when you are done:
+
+![The dataset helper: a measure and a column description, each with Accept](img/t15/11-dataset-helper.jpg)
+
+You should see only items that fit the model: a name that is not in it is never offered. The same layer writes the **summary at the top of a subscription's email** ([tutorial 11](11-bi-that-runs-itself.md), step 8). [BI_AI.md sections 9 to 11](../guides/BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email).
+
 ## Next steps
 
 - [Tutorial 16](16-embed-drishti.md): put a view or a report on another web page.

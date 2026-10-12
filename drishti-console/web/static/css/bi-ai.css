@@ -28,3 +28,11 @@
 .bi-ai-panel h2 { font-size: 1.05rem; margin: 0; }
 .bi-ai-lineage { padding-left: 1.2rem; }
 @media (pointer: coarse) { .bi-ai-form .btn-pill, .bi-ai-panel .btn-pill { min-height: 44px; } }
+
+/* the designer copilot's suggestions and explanations, and the dataset helper's proposals */
+.bi-ai-suggestions { list-style: none; padding: 0; margin: .5rem 0; display: grid; gap: .6rem; }
+.bi-ai-suggestion { padding: .5rem .7rem; border: 1px solid var(--d-border); border-radius: var(--d-radius); background: var(--d-surface); }
+.bi-ai-yaml { white-space: pre-wrap; overflow-wrap: anywhere; margin: .3rem 0; font-size: .8rem; }
+.bi-ai-checks { margin: .5rem 0; }
+.bi-ai-box[hidden] { display: none; }
+@media (pointer: coarse), (max-width: 640px) { .bi-ai-suggestion .btn-pill, .bi-ai-checks .btn-pill, .bi-ai-box .btn-pill { min-height: 44px; } }

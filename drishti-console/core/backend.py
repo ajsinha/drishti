@@ -228,6 +228,10 @@ class BackendClient:
     async def suggest(self, q: str, ident, limit: int | None = None) -> list:
         return await self._get("/command/suggest", ident, q=q, **({"limit": limit} if limit else {}))
 
+    async def embed_search(self, q: str, ident, limit: int | None = None) -> dict:
+        """The search of ``<drishti-search>`` (scope embed:search): masked, cut to the host application's kinds by the server."""
+        return await self._get("/embed/search", ident, q=q, **({"limit": limit} if limit else {}))
+
     async def command(self, text: str, ident=None) -> dict:
         return await self._send("POST", "/command", ident, json={"text": text})
 
@@ -458,6 +462,13 @@ class BackendClient:
 
     async def save_subscription(self, name: str, body: dict, ident) -> dict:
         return await self._send("PUT", f"/me/subscriptions/{quote(name)}", ident, json=body)
+
+    async def notify_options(self, ident) -> dict:
+        """What alerts and subscriptions may use besides mail: the webhooks an administrator defined (names) and the text-message gateway."""
+        return await self._get("/notify/options", ident)
+
+    async def set_phone(self, phone: str, ident) -> dict:
+        return await self._send("PUT", "/me/phone", ident, json={"phone": phone})
 
     async def delete_subscription(self, name: str, ident) -> None:
         return await self._send("DELETE", f"/me/subscriptions/{quote(name)}", ident)

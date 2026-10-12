@@ -41,6 +41,16 @@
         <option value="xlsx"{% if form.format == 'xlsx' %} selected{% endif %}>an Excel workbook attached</option></select></label>
       <label class="wide">To (user names, <code>role:NAME</code> for everyone with a role, separated by commas)
         <input name="recipients" class="studio-in mono" value="{{ form.recipients or '' }}" required placeholder="alice, role:risk"></label>
+      {% if opts.ai %}<label class="wide"><input type="checkbox" name="narrative" data-narrative{% if form.narrative %} checked{% endif %}> Open the email with a short written summary
+        <span class="text-muted-d">Written by an AI model from <b>each recipient's own</b> figures (what they may see, masked values left out), through your administrator's AI policy.
+        {% if opts.mode != 'aggregates' %}The policy here lets the model see labels only, so the summary is left out of every email until an administrator sets <code>drishti.bi.ai.values: aggregates</code>.{% endif %}</span></label>{% endif %}
+      {% if opts.webhooks %}<fieldset class="wide dist-channels" data-webhooks><legend>Also post to a webhook</legend>
+        {% for w in opts.webhooks %}<label><input type="checkbox" name="webhooks" value="{{ w }}"{% if w in (form.webhooks or []) %} checked{% endif %}> {{ w }}</label> {% endfor %}
+        <span class="text-muted-d">One signed post per run: the title and a link to it, never a figure.</span></fieldset>{% endif %}
+      {% if opts.sms %}<fieldset class="wide dist-channels" data-sms><legend>Text messages</legend>
+        <label><input type="checkbox" name="sms"{% if form.sms %} checked{% endif %}> Text each recipient who has given a number a link to it</label>
+        <label>Your own mobile number<input name="phone" class="studio-in" type="tel" autocomplete="tel" placeholder="{{ opts.phone or '+44 20 7946 0000' }}" maxlength="24"></label>
+        <span class="text-muted-d">{% if opts.phone %}On file for you: {{ opts.phone }}. {% endif %}A text carries the title and a link, never a figure. Everyone gives their own number (here, or in their own subscription).</span></fieldset>{% endif %}
       <label><input type="checkbox" name="enabled" checked> Active</label>
       <button type="submit" class="btn-pill btn-accent dist-act">Subscribe</button>
       <a class="btn-pill btn-ghost dist-act" href="/reports">Cancel</a>

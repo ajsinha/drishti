@@ -13,11 +13,11 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Elements: the library entry (docs/architecture/ELEMENTS.md section 5). Importing it defines <drishti-view>, <drishti-panel> and <drishti-report> and publishes
+/* Drishti Elements: the library entry (docs/architecture/ELEMENTS.md section 5). Importing it defines <drishti-view>, <drishti-panel>, <drishti-report>, <drishti-about> and <drishti-search> and publishes
    window.DrishtiElements; importing it twice is harmless. The code is split into ES modules served under /embed/v1/m/:
    config, tokens, sanitize (allow-list and Trusted Types policy), assets (sheet, icon font, scripts), connection (one per page),
    enhancers (the console's scripts on the shadow root), frames (live patches), element (the state machine of <drishti-view>) and
-   report / report-page (<drishti-report>), panel (<drishti-panel>). */
+   report / report-page (<drishti-report>), panel (<drishti-panel>), about (<drishti-about>), search (<drishti-search>). */
 import { cfg, API, problem } from './m/config.js';
 import { authed, providerChanged, invalidateToken } from './m/tokens.js';
 import { connectionCount } from './m/connection.js';
@@ -25,6 +25,8 @@ import { trustedTypesActive } from './m/sanitize.js';
 import { DrishtiView } from './m/element.js';
 import { DrishtiReport } from './m/report.js';
 import { DrishtiPanel } from './m/panel.js';
+import { DrishtiAbout } from './m/about.js';
+import { DrishtiSearch } from './m/search.js';
 
 /** A typed command ("TRD 1000008", "counterparty ABC") to the entity it names: {ref, ...} or {ref: null, candidates}. */
 async function resolve(text, opts = {}) {
@@ -34,11 +36,11 @@ async function resolve(text, opts = {}) {
   return res.json();
 }
 window.DrishtiElements = Object.freeze({
-  version: '1.3.0',
+  version: '1.4.0',
   configure: (o) => { Object.assign(cfg, o || {}); if (cfg.tokenProvider) { providerChanged(); } },
   resolve,
   invalidateToken,                                     // the host's user changed: the next call asks the provider again
   connections: connectionCount,
   trustedTypes: trustedTypesActive                      // true when the `drishti-elements` Trusted Types policy is in use
 });
-export { DrishtiView, DrishtiPanel, DrishtiReport, resolve };
+export { DrishtiView, DrishtiPanel, DrishtiReport, DrishtiAbout, DrishtiSearch, resolve };

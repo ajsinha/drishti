@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drishti Elements in Angular 18</title>
+  <link rel="stylesheet" href="../sample.css">
+  <script type="module" src="__CONSOLE__/embed/v1/drishti-elements.js" crossorigin="anonymous"></script>
+  <!-- Angular's ES-module builds from the local vendor folder (fetch-vendor.sh). Angular has no UMD build, so the page maps its bare imports here.
+       This page runs Angular's JIT compiler, which needs 'unsafe-eval' and an inline import map: the demo host serves /samples/angular/ with that CSP and nothing else
+       relaxed. A real Angular application is built ahead of time (ng build) and needs neither; see the README. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@angular/core": "../vendor/angular/core/fesm2022/core.mjs",
+      "@angular/common": "../vendor/angular/common/fesm2022/common.mjs",
+      "@angular/compiler": "../vendor/angular/compiler/fesm2022/compiler.mjs",
+      "@angular/platform-browser": "../vendor/angular/platform-browser/fesm2022/platform-browser.mjs",
+      "rxjs": "../vendor/rxjs/dist/esm5/index.js",
+      "rxjs/operators": "../vendor/rxjs/dist/esm5/operators/index.js",
+      "tslib": "../vendor/tslib/tslib.es6.mjs"
+    }
+  }
+  </script>
+  <script type="module" src="./main.js"></script>
+</head>
+<body>
+  <harbour-app>Loading the sample&hellip;</harbour-app>
+</body>
+</html>

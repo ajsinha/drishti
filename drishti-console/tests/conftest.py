@@ -692,6 +692,28 @@ class FakeBackend:
 
     subs_kept = {}
     exports_made = []
+    # what a subscription or an alert may use besides mail, and whether the BI AI hooks are on (Wave D); tests change these per test
+    notify_kept = {"webhooks": [], "sms": {"configured": False, "maxChars": 160, "phone": ""}}
+    ai_status = {"enabled": False, "values": "labels-only", "assist": False}
+    phones_set = []
+
+    async def bi(self, method, path, ident, body=None, **params):
+        if path == "/ai/status":
+            return dict(self.ai_status)
+        raise BackendError(404, "DRS-9001", "no BI in this stand-in")
+
+    async def notify_options(self, ident):
+        return json.loads(json.dumps(self.notify_kept))
+
+    async def set_phone(self, phone, ident):
+        self.phones_set.append(phone)
+        return {"phone": "*" * max(0, len(phone) - 2) + phone[-2:]}
+
+    async def embed_search(self, q, ident, limit=None):
+        self.calls.append(("embed_search", q, ident.user, limit))
+        if q.strip() == "boom":
+            raise BackendError(403, "DRS-5002", "an embed token may only read views: this call is not in its scopes")
+        return {"query": q, "results": [{"type": "entity", "kind": "trade", "id": "MX-20000001", "mnemonic": "TRD", "title": "MX-20000001", "subtitle": "Rates"}]}
 
     async def export(self, fmt, target, ident):
         self.exports_made.append((fmt, target, ident.user))

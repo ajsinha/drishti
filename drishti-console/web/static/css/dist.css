@@ -22,6 +22,12 @@
 .dist-runs ul { margin: .15rem 0 .4rem 1rem; padding: 0; list-style: disc; }
 .dist-form { align-items: end; }
 .dist-form .btn-pill { align-self: end; }
+.dist-form .dist-channels { grid-column: span 2; border: 1px solid var(--d-border, #d5dae1); border-radius: .3rem; padding: .4rem .7rem; margin: 0; }
+.dist-form .dist-channels label, .dist-form label[data-narrative-row] { flex-direction: row; align-items: center; gap: .4rem; }
+.dist-form .dist-channels legend { font-size: .82rem; color: var(--d-muted); padding: 0 .3rem; }
+.dist-form .wide:has(> input[type=checkbox]) { flex-direction: row; align-items: flex-start; gap: .5rem; }
+@media (max-width: 640px) { .dist-form .dist-channels { grid-column: auto; } }
+@media (max-width: 640px), (pointer: coarse) { .dist-form .dist-channels label, .dist-form .wide:has(> input[type=checkbox]) { min-height: 44px; } .dist-form input[type=checkbox] { width: 24px; height: 24px; } }
 .bi-export { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
 .bi-export .btn-pill { min-height: 36px; }
 .vhead-export .dropdown-menu a { display: flex; align-items: center; gap: .5rem; min-height: 36px; }

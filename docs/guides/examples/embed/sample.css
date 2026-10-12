@@ -1,0 +1,10 @@
+/* The look of the three sample host pages: nothing of Drishti's, only what a host's own page would have. */
+body { margin: 0; font: 14px/1.45 system-ui, sans-serif; color: #1b2430; background: #f4f6f9; }
+.sample { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.sample header { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.sample h1 { font-size: 20px; margin: 0 .5rem 0 0; }
+.pill { display: inline-block; padding: .1rem .6rem; border-radius: 999px; background: #dfe7f3; font-size: 12px; }
+.sample section { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 1rem; margin: 1rem 0; }
+.sample drishti-search { margin-top: .8rem; }
+.sample drishti-view, .sample drishti-about, .sample drishti-report { background: #fff; border: 1px solid #d5dae1; border-radius: 6px; padding: .5rem; min-height: 4rem; }
+@media (max-width: 800px) { .sample section { grid-template-columns: minmax(0, 1fr); } }

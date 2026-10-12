@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Drishti Elements in React 18</title>
+  <link rel="stylesheet" href="../sample.css">
+  <!-- the one Drishti line: the library from your console (named in this page's CSP) -->
+  <script type="module" src="__CONSOLE__/embed/v1/drishti-elements.js" crossorigin="anonymous"></script>
+  <!-- React 18's UMD builds from the local vendor folder (fetch-vendor.sh); React 19 has no UMD build: with a bundler the JSX below is the same -->
+  <script src="../vendor/react/react.production.min.js"></script>
+  <script src="../vendor/react-dom/react-dom.production.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <div id="root">Loading the sample&hellip;</div>
+</body>
+</html>

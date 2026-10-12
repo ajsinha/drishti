@@ -16,11 +16,11 @@
 # @drishti/elements
 
 Drishti's live views and BI reports inside other web applications, as Web Components with a Shadow DOM and no iframes.
-Version 1.3.0; embed API contract 1.0. Proprietary: see LICENSE in the Drishti repository.
+Version 1.4.0; embed API contract 1.0. Proprietary: see LICENSE in the Drishti repository.
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.3.0/drishti-elements.js"
-        integrity="sha384-cDsyYzeSRsWbSXvEUFudkzcDsoAelqcNBsUgwt0bhliGWRRWyTsmZ3tfPW5RnMI0" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.0/drishti-elements.js"
+        integrity="sha384-pvij64CSRVluHv+fcqDASSyrKMkLEsv2I30yG6N8r0qUhSZ3smt6h1iVuKiIpp3O" crossorigin="anonymous"></script>
 <drishti-view kind="trade" entity="MX-20000001" theme="light"></drishti-view>
 <drishti-report report="file:report:trades-overview" theme="light"></drishti-report>
 ```
@@ -40,10 +40,10 @@ The element sheets, the icon font and the chart code are fetched from the consol
 
 | File | What |
 |---|---|
-| `dist/drishti-elements.js`, `dist/m/*.js` | the library: plain ES modules, the same bytes the console serves for version 1.3.0 |
+| `dist/drishti-elements.js`, `dist/m/*.js` | the library: plain ES modules, the same bytes the console serves for version 1.4.0 |
 | `types/index.d.ts` | classes, event detail types, `HTMLElementTagNameMap`, `HTMLElementEventMap` |
 | `types/react.d.ts` | `JSX.IntrinsicElements` entries for React |
-| `integrity.json` | SHA-384 of every file (subresource integrity), also served at `/embed/v1/elements/1.3.0/integrity.json` |
+| `integrity.json` | SHA-384 of every file (subresource integrity), also served at `/embed/v1/elements/1.4.0/integrity.json` |
 
 ## Reference
 
@@ -147,5 +147,70 @@ A published BI report, or one page or visual of it, with its slicers, cross-filt
 | `page-changed` | `{ page: string; title: string; visuals: string[]; phone: boolean }` | a page was drawn (first draw, a tab, `selectPage`, or a swap to or from the phone layout) |
 | `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
 | `tick` | `{ generation: number; seq?: number; latencyMs?: number; changed?: { strip: number[]; panels: string[] }; at?: string }` | live data was applied |
+| `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
+
+#### `<drishti-about>`
+
+The "About this page" layers of one view (sources, lineage, the masks and rules that applied to this reader) in a panel of the host's own.
+
+| Attribute | Type | Meaning |
+|---|---|---|
+| `server` | `string` | the console's base URL; default: the origin the module was loaded from |
+| `kind` | `string` | an entity kind (`trade`, `counterparty`, ...); required |
+| `entity` | `string` | the entity id; change it to show another entity's About; required |
+| `theme` | `string` | as `<drishti-view>` |
+| `label` | `string` | the element's accessible name (default `About this page`) |
+
+| Property | Type | Meaning |
+|---|---|---|
+| `tokenProvider` | `() => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>` | as `<drishti-view>` (the application's scopes must include `embed:about`) |
+| `state` (read-only) | `'idle' | 'loading' | 'loaded' | 'error'` | the state machine |
+| `lastError` (read-only) | `{ code: string; status: number; detail: string } | null` | the last error |
+
+| Method | Effect |
+|---|---|
+| `reload()` | ask the console for the About body again |
+
+| Event (`drishti:`) | `detail` | When |
+|---|---|---|
+| `error` | `{ code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number }` | a DRS code; `fatal: false` while the element retries by itself or a single visual failed |
+| `loaded` | `{ kind: string; entity: string }` | the About body was drawn |
+| `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
+| `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
+
+#### `<drishti-search>`
+
+Search across Drishti from a host page: a box and the entities that match, masked for the signed-in user.
+
+| Attribute | Type | Meaning |
+|---|---|---|
+| `server` | `string` | the console's base URL; default: the origin the module was loaded from |
+| `theme` | `string` | as `<drishti-view>` |
+| `placeholder` | `string` | the box's placeholder (default `Search`) |
+| `label` | `string` | the box's accessible name (default the placeholder) |
+| `limit` | `number` | most results asked for (1 to 50, default 10; the server caps it at `drishti.embed.search.max-results`) |
+| `min-chars` | `number` | shortest query searched (default 2) |
+| `delay` | `number` | milliseconds of quiet after the last key before a search is made (default 250) |
+| `target` | `string` | a CSS selector of a `<drishti-view>` or `<drishti-panel>`: picking a result points it at that entity (unless `drishti:select` is cancelled) |
+
+| Property | Type | Meaning |
+|---|---|---|
+| `tokenProvider` | `() => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>` | as `<drishti-view>` (the application's scopes must include `embed:search`) |
+| `value` | `string` | the text in the box (assign to search for it) |
+| `results` (read-only) | `{ type: string; kind: string; id: string; mnemonic: string; title: string; subtitle: string }[]` | the results now shown |
+| `state` (read-only) | `'idle' | 'loading' | 'error'` | the state machine |
+| `lastError` (read-only) | `{ code: string; status: number; detail: string } | null` | the last error |
+
+| Method | Effect |
+|---|---|
+| `search(q?` | search now (the box shows `q`); resolves with the results |
+| `clear(box?` | empty the list, and the box unless `box` is false |
+
+| Event (`drishti:`) | `detail` | When |
+|---|---|---|
+| `error` | `{ code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number }` | a DRS code; `fatal: false` while the element retries by itself or a single visual failed |
+| `results` | `{ query: string; results: { kind: string; id: string; mnemonic: string; title: string; subtitle: string }[] }` | a search answered |
+| `select` | `{ kind: string; id: string; mnemonic: string; title: string; type: string }` | **cancellable**: the user picked a result; not cancelled, the `target` view (if any) is pointed at it |
+| `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
 | `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
 

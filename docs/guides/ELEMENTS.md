@@ -16,13 +16,15 @@
 # Drishti Elements: developer guide
 
 Drishti Elements put Drishti's live views and BI reports inside **your own web application** as Web Components with a Shadow DOM and **no iframes**: your layout, your theme tokens, your keyboard focus, one network connection for the whole page, and your user signed in as themselves, with every
-masked field masked. There are three elements, one library, and one contract for tokens.
+masked field masked. There are five elements, one library, and one contract for tokens.
 
 | Element | Shows |
 |---|---|
 | `<drishti-view kind="trade" entity="MX-20000001">` | a live view of one entity: header, key figures, every panel, as the console draws them |
 | `<drishti-panel kind="trade" entity="MX-20000001" panel="legs">` | **one panel** of a view, in a card of your own |
 | `<drishti-report report="file:report:trades-overview">` | a published **BI report**, one page of it or one visual of it, with its slicers, cross-filter and live updates |
+| `<drishti-about kind="trade" entity="MX-20000001">` | the **About this page** layers of a view (where each number comes from, the masks and rules that applied to this reader) in a panel of your own |
+| `<drishti-search>` | **search across Drishti** from your page: a box and the entities that match, masked for the signed-in user |
 
 This is the developer's reference and cookbook. The design and its history are in [architecture/ELEMENTS.md](../architecture/ELEMENTS.md) and [ADR-021](../architecture/adr/021-embedding-is-html-over-the-wire.md); the administrator's side (registering a host application) is [Admin → Embedding](USER_GUIDE.md) and
 [API_GUIDE.md](API_GUIDE.md#embedding-views-in-another-web-application); the settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
@@ -35,19 +37,21 @@ This is the developer's reference and cookbook. The design and its history are i
 4. [Policy: what your page's CSP needs](#policy-what-your-pages-csp-needs)
 5. [The elements, one by one](#the-elements-one-by-one)
 6. [`<drishti-report>`](#drishti-report)
-7. [Theming and sizing](#theming-and-sizing)
-8. [Cookbook](#cookbook)
-9. [Troubleshooting by code](#troubleshooting-by-code)
+7. [`<drishti-about>` and `<drishti-search>`](#drishti-about-and-drishti-search)
+8. [React, Angular and Vue sample pages](#react-angular-and-vue-sample-pages)
+9. [Theming and sizing](#theming-and-sizing)
+10. [Cookbook](#cookbook)
+11. [Troubleshooting by code](#troubleshooting-by-code)
 
 ## Five minutes: a static page
 
 1. **Switch embedding on** (it is off by default): the server needs `drishti.embed.enabled=true` and `drishti.security.enabled=true`, and the console `embed.enabled=true` ([CONFIGURATION.md](../admin/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views)).
 2. **Register your application** in *Admin → Embedding* (or `POST /api/v1/admin/embed/apps`): an id, its **exact origins** (`https://crm.bank.example`, no path), how it signs in (a client secret shown **once**, a public key, or both), the **scopes** it may use (`embed:view` for views and panels,
-   `embed:about` for the About text, `embed:report` for BI reports) and the **kinds and reports** it may show (`trade`, `counterparty`, `report:<id>`, `report:*`; empty: everything the user's roles open).
+   `embed:about` for the About text and `<drishti-about>`, `embed:report` for BI reports, `embed:search` for `<drishti-search>`) and the **kinds and reports** it may show (`trade`, `counterparty`, `report:<id>`, `report:*`; empty: everything the user's roles open).
 3. **Give your page a token provider** that asks *your own backend* for a token (section 2), and add the one script line and an element:
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.3.0/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.0/drishti-elements.js" crossorigin="anonymous"></script>
 <script type="module">
   DrishtiElements.configure({
     tokenProvider: async () => {                      // your backend, not Drishti: it holds your client secret
@@ -123,8 +127,8 @@ The console serves the library at an **exact semantic version**, immutably, and 
 
 | URL | What |
 |---|---|
-| `/embed/v1/elements/1.3.0/drishti-elements.js` | the entry (imports `./m/<name>.js`, which are served beside it) |
-| `/embed/v1/elements/1.3.0/integrity.json` | `{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` |
+| `/embed/v1/elements/1.4.0/drishti-elements.js` | the entry (imports `./m/<name>.js`, which are served beside it) |
+| `/embed/v1/elements/1.4.0/integrity.json` | `{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` |
 | `/embed/v1/elements/1/…`, `/embed/v1/elements/1.1/…` | `302` to the exact version (for a host that accepts updates; SRI needs the exact one) |
 | `/embed/v1/drishti-elements.js` | the console's current library, revalidated on each load (a host that follows the console) |
 
@@ -265,6 +269,72 @@ A published BI report, or one page or visual of it, with its slicers, cross-filt
 | `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
 
 
+#### `<drishti-about>`
+
+The "About this page" layers of one view (sources, lineage, the masks and rules that applied to this reader) in a panel of the host's own.
+
+| Attribute | Type | Meaning |
+|---|---|---|
+| `server` | `string` | the console's base URL; default: the origin the module was loaded from |
+| `kind` | `string` | an entity kind (`trade`, `counterparty`, ...); required |
+| `entity` | `string` | the entity id; change it to show another entity's About; required |
+| `theme` | `string` | as `<drishti-view>` |
+| `label` | `string` | the element's accessible name (default `About this page`) |
+
+| Property | Type | Meaning |
+|---|---|---|
+| `tokenProvider` | `() => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>` | as `<drishti-view>` (the application's scopes must include `embed:about`) |
+| `state` (read-only) | `'idle' | 'loading' | 'loaded' | 'error'` | the state machine |
+| `lastError` (read-only) | `{ code: string; status: number; detail: string } | null` | the last error |
+
+| Method | Effect |
+|---|---|
+| `reload()` | ask the console for the About body again |
+
+| Event (`drishti:`) | `detail` | When |
+|---|---|---|
+| `error` | `{ code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number }` | a DRS code; `fatal: false` while the element retries by itself or a single visual failed |
+| `loaded` | `{ kind: string; entity: string }` | the About body was drawn |
+| `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
+| `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
+
+#### `<drishti-search>`
+
+Search across Drishti from a host page: a box and the entities that match, masked for the signed-in user.
+
+| Attribute | Type | Meaning |
+|---|---|---|
+| `server` | `string` | the console's base URL; default: the origin the module was loaded from |
+| `theme` | `string` | as `<drishti-view>` |
+| `placeholder` | `string` | the box's placeholder (default `Search`) |
+| `label` | `string` | the box's accessible name (default the placeholder) |
+| `limit` | `number` | most results asked for (1 to 50, default 10; the server caps it at `drishti.embed.search.max-results`) |
+| `min-chars` | `number` | shortest query searched (default 2) |
+| `delay` | `number` | milliseconds of quiet after the last key before a search is made (default 250) |
+| `target` | `string` | a CSS selector of a `<drishti-view>` or `<drishti-panel>`: picking a result points it at that entity (unless `drishti:select` is cancelled) |
+
+| Property | Type | Meaning |
+|---|---|---|
+| `tokenProvider` | `() => string | { token: string; expiresAt?: number } | Promise<string | { token: string; expiresAt?: number }>` | as `<drishti-view>` (the application's scopes must include `embed:search`) |
+| `value` | `string` | the text in the box (assign to search for it) |
+| `results` (read-only) | `{ type: string; kind: string; id: string; mnemonic: string; title: string; subtitle: string }[]` | the results now shown |
+| `state` (read-only) | `'idle' | 'loading' | 'error'` | the state machine |
+| `lastError` (read-only) | `{ code: string; status: number; detail: string } | null` | the last error |
+
+| Method | Effect |
+|---|---|
+| `search(q?` | search now (the box shows `q`); resolves with the results |
+| `clear(box?` | empty the list, and the box unless `box` is false |
+
+| Event (`drishti:`) | `detail` | When |
+|---|---|---|
+| `error` | `{ code: string; status: number; detail: string; fatal?: boolean; retryInMs?: number }` | a DRS code; `fatal: false` while the element retries by itself or a single visual failed |
+| `results` | `{ query: string; results: { kind: string; id: string; mnemonic: string; title: string; subtitle: string }[] }` | a search answered |
+| `select` | `{ kind: string; id: string; mnemonic: string; title: string; type: string }` | **cancellable**: the user picked a result; not cancelled, the `target` view (if any) is pointed at it |
+| `state` | `{ state: string; previous: string }` | every state change (drives a host's own live indicator) |
+| `token-needed` | `{ reason: 'missing' | 'refused' | 'provider-failed' }` | no token provider, the token was refused twice, or the provider threw: sign the user in again and set `tokenProvider` |
+
+
 **The token provider** (all elements; one per page): `DrishtiElements.configure({ server, tokenProvider })` or `element.tokenProvider = fn`. **`DrishtiElements`** also has `resolve(text)` (a typed command such as `TRD MX-20000001` to `{ref: {kind, id}}`, for your own search box), `invalidateToken()` (your user changed: the next call asks the
 provider again), `connections()` (how many live connections the page holds: one per console) and `version`.
 
@@ -302,6 +372,46 @@ report is embedded. A refusal is `DRS-8005` (`drishti:error`, `fatal: true`, the
 **On a phone.** The element measures **its own width**: at 640 px or narrower it draws the report's `layouts.phone` for the page when the report has one ([REPORTS.md section 14](REPORTS.md#14-phone-and-tablet-layouts)), else the automatic single column, and swaps back as it grows, with no reload. `drishti:page-changed` carries `phone: true` when the arranged page is on screen.
 
 ![The report in a host's card at 390 px, with its phone layout](img/bi-elements/host-phone-390.png)
+
+## `<drishti-about>` and `<drishti-search>`
+
+Two small elements for a host page that has its own layout around a view.
+
+**`<drishti-about>`** is the *About this page* body of a view without the view: where each number comes from (the sources, the lineage, the layers), what is masked for **this** reader and why, and the rules that applied. It asks the console for the same body the console's own drawer shows (`GET /embed/v1/views/{kind}/{id}/about`), draws it sanitised in a Shadow DOM and
+opens its links in a new tab on the console. The application needs the scope `embed:about`. Point it at the same entity as a view and put it where your page has room:
+
+```html
+<drishti-view id="v" kind="trade" entity="MX-20000001"></drishti-view>
+<drishti-about kind="trade" entity="MX-20000001" label="Where these numbers come from"></drishti-about>
+```
+
+**`<drishti-search>`** is a search box and a short list of what matches, the console's own type-ahead for the signed-in user: kinds they may not open are left out, fields masked for them (and, because it is an embed call, every field `drishti.security.redact` names) are neither shown nor matched, and the list is cut to the kinds
+the host application may show. The application needs the scope **`embed:search`**; the call is `GET /embed/v1/search?q=` (`GET /api/v1/embed/search` on the server), it reads and writes nothing, and it is rate-limited per user and application (`drishti.embed.limits.searches-per-user-per-minute`, default 30 a minute, on top of the call rates; `DRS-8004`
+with `Retry-After`). A query shorter than `drishti.embed.search.min-chars` (2) is not searched; at most `drishti.embed.search.max-results` (10) results come back. Results are 44 px targets and everything is drawn as text. Picking one fires the cancellable `drishti:select`; with `target="#v"` the element also points that
+`<drishti-view>` at the pick:
+
+```html
+<drishti-search placeholder="Find a trade or counterparty" target="#v"></drishti-search>
+<drishti-view id="v" kind="trade" entity="MX-20000001"></drishti-view>
+<script type="module">
+  document.querySelector('drishti-search').addEventListener('drishti:select', (e) => {
+    // e.detail = { kind: 'trade', id: 'MX-20000001', mnemonic: 'TRD', title: 'MX-20000001', type: 'entity' }
+    e.preventDefault();                       // take it over yourself instead of letting `target` follow
+    openInMyApp(e.detail.kind, e.detail.id);
+  });
+</script>
+```
+
+## React, Angular and Vue sample pages
+
+`docs/guides/examples/embed/` holds one host page for each framework, each embedding `<drishti-search>`, `<drishti-view>`, `<drishti-about>` and `<drishti-report>`, wired the way that framework wires custom elements: **React 18** (`createElement`, events bound with a ref, the same in JSX), **Vue 3** (the runtime-only build and render functions, so no
+`eval`), **Angular 18** (a standalone component with `CUSTOM_ELEMENTS_SCHEMA`, zoneless). They share `host.js` (the token provider) and `sample.css`, and run against the elements demo host (`tools/elements-demo/server.py`), which serves them at `/samples/<framework>/` under a strict policy (script-src `'self'` and the console, no inline script).
+
+The framework builds are **not in the repository**. `bash docs/guides/examples/embed/fetch-vendor.sh` downloads the pinned versions once (React 18.3.1 UMD, Vue 3.5.43 runtime build, Angular 18.2.14 ES modules, RxJS 7.8.2, tslib 2.8.1; all MIT) into `docs/guides/examples/embed/vendor/` (ignored by git), and the pages load them from there: no CDN, offline afterwards. React 19 has no UMD build; with a bundler the JSX is the one shown in the
+comments. Angular has no UMD build either, so its page uses an import map and Angular's JIT compiler, which needs `'unsafe-eval'` and an inline import map: the demo host relaxes its policy for `/samples/angular/` only. A real Angular application is compiled ahead of time (`ng build`) and needs neither; the component is the same.
+
+Events with a colon (`drishti:select`) are bound with `addEventListener` in all three, because Vue and Angular read the colon in a template; the samples bind in `onMounted` / `ngAfterViewInit` / a ref effect. `tests/test_embed_frameworks_browser.py` loads the React and Vue pages (and the Angular one) in Chromium against a real server and checks that each draws the view, the report and the About body, that a search pick changes the view, and that the policy reports no violation;
+it skips when the vendor folder is not there.
 
 ## Theming and sizing
 
@@ -375,7 +485,7 @@ ngAfterViewInit() { this.rep.nativeElement.addEventListener('drishti:filter-chan
 // template: <drishti-report #rep report="file:report:live-trading-desk"></drishti-report>
 ```
 
-**Vue 3**: `app.config.compilerOptions.isCustomElement = (t) => t.startsWith('drishti-')`, then `<drishti-report report="file:report:live-trading-desk" @drishti:filter-changed="onFilter" />`. *These three recipes follow the frameworks' documented custom-element support; no framework page runs in Drishti's own tests yet (the frameworks smoke of build step 11 is not built).*
+**Vue 3**: `app.config.compilerOptions.isCustomElement = (t) => t.startsWith('drishti-')`, then `<drishti-report report="file:report:live-trading-desk" @drishti:filter-changed="onFilter" />`. *These recipes follow the frameworks' documented custom-element support; the [sample pages](#react-angular-and-vue-sample-pages) run all three in Drishti's own browser tests.*
 
 **Testing a page that embeds Drishti.** The elements have **open** shadow roots, so a test reaches inside: Playwright's CSS selectors pierce them (`page.locator('#rep [data-visual="trades"] .bi-card-value')`), and `await expect(el).toHaveAttribute('data-state', 'live')` waits for the state machine. A report sets `data-ready="yes"` on itself when its first page has drawn.
 `tests/test_embed_report_browser.py` is a complete example: a host on its own origin under a strict policy against a real server.

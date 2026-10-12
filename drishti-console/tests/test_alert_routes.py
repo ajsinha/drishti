@@ -53,7 +53,7 @@ def test_saving_builds_the_servers_body_from_the_form(client, backend):
     assert a["source"] == {"type": "visual", "report": "file:report:daily", "page": "main", "visual": "net", "measure": "", "reduce": "first", "state": {"slicers": {"ccy": ["USD"]}}}
     assert a["condition"] == {"type": "threshold", "op": "above", "value": 1000.0}
     assert a["trigger"] == {"mode": "schedule", "schedule": "hourly"} and a["hysteresis"] == 50.0 and a["cooldown"] == "1h"
-    assert a["delivery"] == {"inbox": True, "email": False, "bridge": False} and a["enabled"] is True
+    assert a["delivery"] == {"inbox": True, "email": False, "bridge": False, "webhooks": [], "sms": False} and a["enabled"] is True
 
 
 def test_every_kind_of_source_condition_and_trigger_is_sent_in_the_servers_words(client, backend):
@@ -65,7 +65,7 @@ def test_every_kind_of_source_condition_and_trigger_is_sent_in_the_servers_words
     assert a["source"] == {"type": "dataset", "dataset": "file:dataset:trading", "measure": "exposure",
                            "filters": [{"field": "desk", "op": "eq", "values": ["FX", "Rates"]}, {"field": "ccy", "op": "ne", "values": ["USD"]}]}
     assert a["condition"] == {"type": "change", "mode": "pct", "op": "falls", "against": "previous-day", "value": 5.0}
-    assert a["trigger"] == {"mode": "after-load", "kind": "TRD"} and a["delivery"] == {"inbox": True, "email": True, "bridge": True}
+    assert a["trigger"] == {"mode": "after-load", "kind": "TRD"} and a["delivery"] == {"inbox": True, "email": True, "bridge": True, "webhooks": [], "sms": False}
     assert "hysteresis" not in a or a["hysteresis"] == 0
     client.post("/alerts/new", content=_form(name="F", source_type="field", kind="trade", id="IRS-48213", field="mtm", condition_type="nodata", by="09:00", trigger_mode="live",
                                               debounce="5s"), headers=FORM)
