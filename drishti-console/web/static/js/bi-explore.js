@@ -270,8 +270,12 @@
     X.promoteReport({ slice: { rows: s.rows, columns: s.columns, values: s.values.map(function (v) { return { field: v.field, agg: v.agg }; }) },
       filters: s.filters.filter(function (f) { return f.value !== '' && f.value != null; }).map(function (f) { return { field: f.field, op: 'in', values: [f.value] }; }) }, 'Slice');
   });
-  B.api('GET', '/catalogue?kind=report').then(function (d) {
-    (d.items || []).filter(function (it) { return !it.shipped; }).forEach(function (it) { targetSel.appendChild(h('option', { value: it.id, text: 'the report: ' + it.title })); });
+  B.api('GET', '/workspaces').then(function (list) {                                              // the report drafts you may edit: your workspace and the shared ones you contribute to
+    var mine = list.filter(function (w) { return !w.shipped && (w.personal || ['contributor', 'member', 'owner', 'admin'].indexOf(w.role) >= 0); }).slice(0, 8);
+    return Promise.all(mine.map(function (w) { return B.api('GET', '/workspaces/' + B.id2path(w.personal ? 'me' : w.id) + '/items').catch(function () { return []; }); }));
+  }).then(function (lists) {
+    [].concat.apply([], lists.map(function (l) { return Array.isArray(l) ? l : (l.items || []); })).filter(function (it) { return it.kind === 'report'; })
+      .forEach(function (it) { targetSel.appendChild(h('option', { value: it.id, text: 'the report: ' + it.title })); });
   }).catch(function () {});
   function link(it) { var a = q('[data-saved]', root); a.href = '/bi/i/' + B.id2path(it.id); a.hidden = false; }
   X.link = link;

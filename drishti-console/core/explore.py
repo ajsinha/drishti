@@ -58,6 +58,7 @@ class Limits:
     max_cells: int = 60
     max_extracts: int = 6
     quant_engine: str = "stand-in"
+    browser_start: float = 30.0        # seconds DuckDB-Wasm has to start in the browser before the console takes over
     browser_engine: str = "auto"       # auto: Slice and SQL run in the browser with DuckDB-Wasm when it is installed; server: always on the console
 
     @classmethod
@@ -72,6 +73,7 @@ class Limits:
                    cell_timeout=g("cell_timeout_seconds", 20, 1, 60), cell_memory=g("cell_memory_mb", 512, 64, 4096),
                    cell_max_chars=g("cell_max_chars", 65_536, 100, 500_000), max_cells=g("max_cells", 60, 1, 500), max_extracts=g("max_extracts", 6, 1, 20),
                    quant_engine=str(settings.get("bi.explore.quant_engine", "stand-in")),
+                   browser_start=g("browser_start_seconds", 30.0, 3.0, 300.0),
                    browser_engine="server" if str(settings.get("bi.explore.browser_engine", "auto")).lower() == "server" else "auto")
 
 

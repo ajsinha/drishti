@@ -22,7 +22,7 @@
 <header class="bi-head"><h1>Analyse</h1>
   <p class="text-muted-d">Open a dataset as an extract of the rows you may see (masked columns stay masked), then slice it, query it with SQL or work on it in Python. Save the work as a notebook; promote a cell or a slice into a Python item or a report draft.</p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
-<div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-seconds="{{ limits.sql_max_seconds }}" data-sql-chars="{{ limits.sql_max_chars }}" data-may-python="{{ 'true' if may_python else 'false' }}"{% if duckdb %} data-duckdb="{{ duckdb }}"{% endif %}>
+<div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-seconds="{{ limits.sql_max_seconds }}" data-sql-chars="{{ limits.sql_max_chars }}" data-duckdb-start="{{ limits.browser_start }}" data-may-python="{{ 'true' if may_python else 'false' }}"{% if duckdb %} data-duckdb="{{ duckdb }}"{% endif %}>
 <form class="bi-form bx-open" data-open aria-label="Open an extract">
   <h2>Extract</h2>
   <label>Dataset<select name="dataset" class="studio-select" data-dataset></select></label>

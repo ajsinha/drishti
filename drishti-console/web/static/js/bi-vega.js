@@ -115,7 +115,7 @@
       loader.load = refuse;
       loader.http = refuse;
       loader.sanitize = refuse;
-      return window.vegaEmbed(box, full, { actions: false, renderer: 'canvas', ast: true, expr: window.vegaInterpreter, loader, tooltip: false, mode: 'vega-lite' });
+      return window.vegaEmbed(box, full, { actions: false, renderer: 'canvas', ast: true, expr: window.vegaInterpreter, loader, tooltip: false, defaultStyle: false, mode: 'vega-lite' });
     }).then((r) => {
       if (!r) { return; }
       if (gone) { r.finalize(); return; }

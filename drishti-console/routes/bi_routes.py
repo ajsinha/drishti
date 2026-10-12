@@ -24,7 +24,8 @@ from fastapi.responses import JSONResponse, Response
 
 from core.backend import BackendError
 from core.csrf import json_body
-from core.perspective_csp import PERSPECTIVE_BASE, board_uses_perspective, policy as perspective_policy, uses_perspective
+from core.perspective_csp import (CHART_STYLE_HASHES, PERSPECTIVE_BASE, STYLE_HASHES, board_uses_chart, board_uses_perspective, policy as perspective_policy, uses_chart,
+                                  uses_perspective)
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -88,20 +89,21 @@ async def dataset(request: Request, item: str):
     return _page(request, "bi/dataset.html", "datasets", item=item)
 
 
-async def _holds_perspective(request: Request, path: str, test) -> bool:
-    """Whether the report or board at ``path`` holds a Perspective visual. Only then is its page given the narrow WebAssembly policy; a failure to ask is
-    the strict policy (the page then shows the plain table in place of Perspective)."""
+async def _holds_perspective(request: Request, path: str, test, chart=None) -> tuple[bool, bool]:
+    """Whether the report or board at ``path`` holds a Perspective visual, and whether one of them is a chart. Only then is its page given the narrow WebAssembly policy
+    (and the chart plugin's two styles, for a chart); a failure to ask is the strict policy (the page then shows the plain table in place of Perspective)."""
     try:
-        return bool(test(await request.app.state.backend.bi("GET", path, ident(request))))
+        model = await request.app.state.backend.bi("GET", path, ident(request))
+        return bool(test(model)), bool(chart and chart(model))
     except Exception:  # noqa: BLE001 - the page loads either way; the strict policy is the safe answer
-        return False
+        return False, False
 
 
-def _with_perspective(response, on: bool):
+def _with_perspective(response, on: bool, chart: bool = False):
     if on:
         from core.app import CSP
 
-        response.headers["Content-Security-Policy"] = perspective_policy(CSP)
+        response.headers["Content-Security-Policy"] = perspective_policy(CSP, STYLE_HASHES + CHART_STYLE_HASHES if chart else STYLE_HASHES)
     return response
 
 
@@ -111,8 +113,8 @@ async def report(request: Request, item: str, page: str = ""):
     """A report, drawn by ``bi-report.js``: its pages are tabs, its visuals ask the server for their data one query at a time (phase 3). One that holds a
     Perspective visual loads the vendored Perspective and has the narrow WebAssembly policy (phase 5); any other report has the strict one."""
     me = getattr(request.state, "bi_me", None) or {}
-    psp = bool(me.get("enabled")) and await _holds_perspective(request, f"/reports/{item}", uses_perspective)
-    return _with_perspective(_page(request, "bi/report.html", "report", item=item, report_page=page, perspective=PERSPECTIVE_BASE if psp else ""), psp)
+    psp, chart = (await _holds_perspective(request, f"/reports/{item}", uses_perspective, uses_chart)) if me.get("enabled") else (False, False)
+    return _with_perspective(_page(request, "bi/report.html", "report", item=item, report_page=page, perspective=PERSPECTIVE_BASE if psp else ""), psp, chart)
 
 
 @router.get("/bi/b/{item}")
@@ -120,8 +122,8 @@ async def board(request: Request, item: str):
     """A board, drawn by ``bi-board.js``: a wall of live tiles from several reports, page by page; ``?kiosk=1`` (or the button) fills the screen and turns the
     pages by itself (phase 5). The narrow WebAssembly policy applies only when a tile is a Perspective visual."""
     me = getattr(request.state, "bi_me", None) or {}
-    psp = bool(me.get("enabled")) and await _holds_perspective(request, f"/boards/{item}", board_uses_perspective)
-    return _with_perspective(_page(request, "bi/board.html", "board", item=item, perspective=PERSPECTIVE_BASE if psp else ""), psp)
+    psp, chart = (await _holds_perspective(request, f"/boards/{item}", board_uses_perspective, board_uses_chart)) if me.get("enabled") else (False, False)
+    return _with_perspective(_page(request, "bi/board.html", "board", item=item, perspective=PERSPECTIVE_BASE if psp else ""), psp, chart)
 
 
 @router.get("/bi/designer")

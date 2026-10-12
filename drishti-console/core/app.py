@@ -26,7 +26,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from urllib.parse import quote
 
-from core.perspective_csp import PERSPECTIVE_WORKERS, STYLE_HASHES, policy as perspective_policy
+from core.perspective_csp import CHART_STYLE_HASHES, PERSPECTIVE_WORKERS, STYLE_HASHES, policy as perspective_policy
 
 from fastapi.responses import JSONResponse, RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -81,7 +81,7 @@ WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 's
 POC_PAGE = "/bi/poc"
 # Perspective's viewer also writes <style> elements (its shadow roots' own CSS): not allowed by style-src 'self'. The hashes and the policy are in
 # core/perspective_csp.py, shared with the reports and boards of phase 5 that hold a Perspective visual.
-POC_EXTRA_HASHES = ("sha256-CjknTzl2uKtf8HzhOg2u184k8XVq0Q32LfRRPUqc0g4=", "sha256-ILUuaTblzLnuV4UciYvrUJkuNlQ570jCEpzE0t/Pe5s=")   # the phase 0 page also loads the chart plugin
+POC_EXTRA_HASHES = CHART_STYLE_HASHES   # the phase 0 page also loads the chart plugin
 POC_STYLE_HASHES = STYLE_HASHES + POC_EXTRA_HASHES
 POC_CSP = perspective_policy(CSP, POC_STYLE_HASHES)
 POC_WORKERS = PERSPECTIVE_WORKERS

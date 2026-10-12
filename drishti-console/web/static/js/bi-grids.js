@@ -347,6 +347,7 @@
     if (spec.type === 'matrix') { return V.matrix(host, spec, ctx, res); }
     if (spec.type === 'slicer') { return V.slicer(host, spec, ctx, res); }
     if (spec.type.indexOf('perspective-') === 0) { return V.perspectiveNote(host, spec); }
+    if (spec.type === 'vega-lite' && B.vega) { return B.vega.draw(host, spec, ctx, res); }
     return V.drawChartOrCard(host, spec, ctx, res) || NONE;
   };
 })();

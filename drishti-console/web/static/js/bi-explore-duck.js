@@ -34,10 +34,10 @@
   var SQL_ROWS = parseInt(root.getAttribute('data-sql-rows'), 10) || 5000;
   var SQL_SECONDS = parseFloat(root.getAttribute('data-sql-seconds')) || 5;
   var SQL_CHARS = parseInt(root.getAttribute('data-sql-chars'), 10) || 20000;
+  var START_SECONDS = parseFloat(root.getAttribute('data-duckdb-start')) || 30;
   var D = (X.duck = {});
   var engine = null;            // {db, conn, worker}
   var loading = null;
-  var loadedFor = null;         // the extract object the table `extract` holds
   var failed = '';
   var ALLOWED = /^(select|with|from|values|describe|summarize|explain)\b/i;
 
@@ -58,9 +58,13 @@
           document.body.setAttribute('data-duck-ready', 'true');
           return engine;
         });
-      }).catch(function (e) {
+      });
+      loading = Promise.race([loading, new Promise(function (_, reject) {
+        setTimeout(function () { reject(new Error('DuckDB-Wasm did not start within ' + START_SECONDS + ' s (bi.explore.browser_start_seconds)')); }, START_SECONDS * 1000);
+      })]).catch(function (e) {
         failed = String(e && e.message || e);
         loading = null;
+        reset();
         document.body.setAttribute('data-duck-failed', failed.slice(0, 200));
         throw e;
       });
@@ -69,29 +73,34 @@
   }
 
   var TYPES = { integer: 'BIGINT', decimal: 'DOUBLE' };
+  var tableFor = null, tablePromise = null;
 
-  /** Puts the extract in DuckDB as the table `extract` (once for each extract the page holds), then closes the doors: no files, no URLs, no further settings. */
+  /** Puts the extract in DuckDB as the table `extract` (once for each extract the page holds), then closes the doors: no files, no URLs, no further settings. Reading a file counts
+      as external access, so a new extract starts a new engine (its worker is ended) instead of loading into one that is locked. */
   function ensure() {
-    return start().then(function (e) {
-      if (loadedFor === X.ex) { return e; }
-      var ex = X.ex;
-      var cols = ex.columns.map(function (c) { return qi(c.name) + ' ' + (TYPES[c.type] || 'VARCHAR'); });
+    var ex = X.ex;
+    if (tableFor === ex && tablePromise) { return tablePromise; }
+    if (tableFor && tableFor !== ex) { reset(); }
+    tableFor = ex;
+    tablePromise = start().then(function (e) {
+      var cast = ex.columns.map(function (c) { return 'CAST(' + qi(c.name) + ' AS ' + (TYPES[c.type] || 'VARCHAR') + ') AS ' + qi(c.name); });
       var objs = ex.rows.map(function (r) { var o = {}; ex.columns.forEach(function (c, i) { o[c.name] = r[i]; }); return o; });
-      var file = 'extract-' + Date.now() + '.json';
-      var go = loadedFor ? e.conn.query('DROP TABLE IF EXISTS extract') : Promise.resolve();
-      return go.then(function () { return e.conn.query('CREATE TABLE extract (' + cols.join(', ') + ')'); })
-        .then(function () { return e.db.registerFileText(file, JSON.stringify(objs)); })
-        .then(function () { return e.conn.insertJSONFromPath(file, { name: 'extract', create: false, schema: 'main' }); })
+      var file = 'extract.json';
+      return e.db.registerFileText(file, JSON.stringify(objs))
+        .then(function () { return e.conn.insertJSONFromPath(file, { name: 'extract_raw', schema: 'main' }); })
+        .then(function () { return e.conn.query('CREATE TABLE extract AS SELECT ' + cast.join(', ') + ' FROM extract_raw'); })
+        .then(function () { return e.conn.query('DROP TABLE extract_raw'); })
         .then(function () { return e.db.dropFile(file); })
-        .then(function () { return loadedFor ? null : e.conn.query("SET enable_external_access = false"); })
-        .then(function () { return loadedFor ? null : e.conn.query("SET lock_configuration = true"); })
-        .then(function () { loadedFor = ex; return e; });
-    });
+        .then(function () { return e.conn.query('SET enable_external_access = false'); })
+        .then(function () { return e.conn.query('SET lock_configuration = true'); })
+        .then(function () { return e; });
+    }).catch(function (e) { tableFor = null; tablePromise = null; throw e; });
+    return tablePromise;
   }
 
   function reset() {
     if (engine) { try { engine.worker.terminate(); } catch (x) { /* gone */ } }
-    engine = null; loading = null; loadedFor = null;
+    engine = null; loading = null; tableFor = null; tablePromise = null;
   }
 
   function plain(v) {

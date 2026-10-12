@@ -31,11 +31,16 @@ PERSPECTIVE_VERSION = "3.8.0"
 PERSPECTIVE_BASE = f"/static/vendor/perspective/{PERSPECTIVE_VERSION}"
 PERSPECTIVE_WORKERS = (f"{PERSPECTIVE_BASE}/perspective/cdn/perspective-server.worker.js",)
 VISUAL_TYPES = ("perspective-grid", "perspective-pivot", "perspective-chart")
+CHART_TYPE = "perspective-chart"
 
 # the four <style> texts the viewer and the datagrid write for a grid and a pivot (settings panel closed) on the report page, measured on the real page by
 # tools/perspective-style-hashes.py (the phase 0 page, which also loads the chart plugin, needs two more: core/app.py POC_EXTRA_HASHES)
 STYLE_HASHES = ("sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=", "sha256-5ZnN0JqHgS1XbqCOd7qSJmy89TJJwbmeYjC8fPeSuwc=",
                 "sha256-TlH50xiDI4R2hMVrktT2rsnuNnNdfvL/RTinBMjapl0=", "sha256-rjC4ta+DkxJjU72hK9nIKZxg1UN00ALy4b/FYtZ7KHc=")
+
+
+# the two more <style> texts the chart plugin (d3fc) writes; only a page that holds a perspective-chart is given them (the settings panel, open, writes no others)
+CHART_STYLE_HASHES = ("sha256-CjknTzl2uKtf8HzhOg2u184k8XVq0Q32LfRRPUqc0g4=", "sha256-ILUuaTblzLnuV4UciYvrUJkuNlQ570jCEpzE0t/Pe5s=")
 
 
 def policy(strict: str, hashes: tuple[str, ...] = STYLE_HASHES) -> str:
@@ -48,6 +53,16 @@ def uses_perspective(model: dict | None) -> bool:
     """Whether a report (``/api/v1/bi/reports/<id>``) holds a Perspective visual on any page."""
     report = (model or {}).get("report") or {}
     return any(v.get("type") in VISUAL_TYPES for p in report.get("pages") or [] for v in p.get("visuals") or [])
+
+
+def uses_chart(model: dict | None) -> bool:
+    """Whether a report holds a ``perspective-chart`` (the chart plugin writes the two more styles of ``CHART_STYLE_HASHES``)."""
+    report = (model or {}).get("report") or {}
+    return any(v.get("type") == CHART_TYPE for p in report.get("pages") or [] for v in p.get("visuals") or [])
+
+
+def board_uses_chart(model: dict | None) -> bool:
+    return any((t or {}).get("type") == CHART_TYPE for t in ((model or {}).get("tiles") or {}).values())
 
 
 def board_uses_perspective(model: dict | None) -> bool:
