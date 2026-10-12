@@ -238,9 +238,10 @@ def readme_text(v: dict) -> str:
         w(f"    b. The data. Copy data/{sub}/ to the server's lake root, or keep it where it is and point the server at it:")
         w(f"           export {root_var}=/srv/drishti/{sub}      (the folder that CONTAINS the '{n}' folder)")
         w(f"       The layout under it is explained in step 5. If the lake already holds other packs' data, copy only data/{sub}/{n}/.")
-    w("    c. Switch the pack on, any one of:")
-    w(f"           DRISHTI_PACKS={n}[,other packs]  and restart the server;")
+    w("    c. Switch the pack on. A server that watches its packs folder (drishti.packs.watch, on by default) checks the copied pack and loads it")
+    w("       by itself within seconds, with no restart; a pack that does not check out is not loaded and Admin -> Packs says why. To do it at once, or to keep it for every start:")
     w(f"           Admin -> Packs -> Load '{n}' (or: python3 tools/drishti.py server packs load {n} --server http://HOST:18480 --token ...);")
+    w(f"           DRISHTI_PACKS={n}[,other packs]  for every start (a restart applies it);")
     w("           or copy the lines of config/drishti-site.yaml into the server's application.local.yaml.\n")
     w("4. VERIFY")
     w("-" * 72)
@@ -420,5 +421,6 @@ def make(a, cli) -> int:
     print(f"\npack make: {out}")
     print(f"  {len(groups)} Sutra group(s) for {len(docs)} {a.kind} document(s)" + (f", {len(by_date)} date(s) in data/{data_dir.name}" if date else ", no dated store")
           + f"; pack check {'passed' if chk == 0 else 'FAILED'}, pack verify {'passed' if ver == 0 else 'FAILED'}")
-    print(f"next: read {out / 'README.txt'}, then  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 {out / 'run-server.sh'}")
+    print(f"next: read {out / 'README.txt'}; for a new server  DRISHTI_JAR=<exec jar> DRISHTI_PORT=18480 {out / 'run-server.sh'}; "
+          f"on a running one, copy {out / 'pack' / a.name} into its packs folder and the server checks it and loads it by itself (no restart)")
     return 1 if (chk or ver) else 0

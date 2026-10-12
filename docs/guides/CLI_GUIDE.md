@@ -107,8 +107,8 @@ Concepts used throughout (each is explained in its own guide; this one only link
   [SCREEN_DESIGNER.md](SCREEN_DESIGNER.md).
 - A **dated store** is where a pack reads documents *per business date*: a Delta lake or the file connector's
   `<root>/<domain>/<date>/<kind>.jsonl` files.
-- A pack becomes known to a running server in **three ways**: the server is started with it in `DRISHTI_PACKS` (a restart),
-  an administrator loads it in **Admin → Packs** (it takes effect at once, with no restart), or it is installed from a registry.
+- A pack becomes known to a running server in **four ways**: its folder is copied into the packs folder the server watches (`pack deploy`, `pack make`'s `pack/<name>`: the server checks it and loads it by itself, no restart), the server is started with it in `DRISHTI_PACKS` (a restart),
+  an administrator loads it in **Admin → Packs** (at once), or it is installed from a registry.
   `drishti.py pack new --load`, `server packs load` and `pack install` are the command-line forms of the last two.
   [PACKS.md#loading-a-pack-while-the-server-runs](PACKS.md#loading-a-pack-while-the-server-runs) has the rules.
 

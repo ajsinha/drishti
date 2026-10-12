@@ -523,7 +523,7 @@ def cmd_pack_deploy(a, extra) -> int:
               + (f", moving {res['replaces']} to {res['backupDir']}" if res["replaces"] else " (a new pack)"))
     else:
         print(f"deployed {res['pack']} {res['version']} to {res['target']}" + (f"; previous {res['replaces']} kept at {res['backup']}" if res["backup"] else ""))
-        print("next: Admin > Packs > Load turns it on now (no restart), or add it to DRISHTI_PACKS for every start; Sutra edits of a loaded pack hot-reload")
+        print("next: a running server watches its packs folder (drishti.packs.watch): it checks the copied pack and loads it by itself within seconds, no restart; a pack that does not check out is shown in Admin > Packs and not loaded. Admin > Packs > Load does it at once, and DRISHTI_PACKS keeps it for every start")
     return 0
 
 
@@ -1055,7 +1055,7 @@ def build_parser() -> argparse.ArgumentParser:
     pv.add_argument("--public-key")
     pd = add(k, "deploy", cmd_pack_deploy, "pack deploy: verify, then copy a bundle or folder into a packs folder atomically, keeping the previous version (no server API)",
              [jvm, vparent], "example:\n  drishti.py pack deploy dist/my-bank-1.2.0.tar.gz --to /opt/drishti/packs --backup /opt/drishti/backups\n"
-             "It never touches a running server: load it with DRISHTI_PACKS + restart or Admin > Packs > Load.")
+             "It never calls a running server, but a server that watches its packs folder checks the copied pack and loads it by itself (PACKS.md, Live reload); Admin > Packs > Load does it at once, DRISHTI_PACKS keeps it for every start.")
     pd.add_argument("source", metavar="BUNDLE|FOLDER")
     pd.add_argument("--to", required=True, metavar="DIR", help="the server's packs folder (DRISHTI_PACKS_DIR) or drishti.packs.installed-dir")
     pd.add_argument("--backup", metavar="DIR", help="keep the replaced version here (default DIR/.previous under --to)")
