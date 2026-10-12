@@ -22,7 +22,7 @@
 {% block content %}
 {% from "_macros/retry.html" import retry_note, retry_button %}
 {% set states = {'RUNNING': ['running', 'st-ok'], 'FAILED': ['failed', 'st-bad'], 'DISABLED': ['disabled', ''], 'IDLE': ['idle', 'st-warn'], 'NOT_LOADED': ['not started', 'st-warn']} %}
-<div class="adm" data-connectors data-detail="{{ c.name }}" data-kinds="" data-directory="{{ c.directory }}">
+<div class="adm" data-connectors data-zone="{{ (business_date or {}).get('zone') or CLOCK_TZ or 'America/New_York' }}" data-watch="/admin/connectors/api/stamp" data-detail="{{ c.name }}" data-kinds="{{ (known_kinds or []) | join(',') }}" data-directory="{{ c.directory }}">
   {% with tab='connectors' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="adm-crumb"><a href="/admin/connectors">Connectors</a> <span aria-hidden="true">/</span> <span class="mono">{{ c.name }}</span></p>
   <h1 class="ws-h"><span class="mono">{{ c.name }}</span> <a class="emb-help" href="/help/connector-files" aria-label="Help: connector files and this page" title="Help: connector files and this page">?</a></h1>
@@ -36,8 +36,8 @@
       <dt>Origin</dt><dd><span class="st{{ '' if c.origin == 'file' else ' st-warn' }}">{{ c.origin }}</span>
         {% if c.file %}<span class="mono text-muted-d">{{ c.file }}</span>{% endif %}</dd>
       <dt>Switched</dt><dd><span class="st {{ 'st-ok' if c.enabled else '' }}" data-enabled>{{ 'on' if c.enabled else 'off' }}</span></dd>
-      <dt>Status</dt><dd>{% set st = states.get(c.state, [c.state | lower, '']) %}<span class="st {{ st[1] }}" data-state>{{ st[0] }}</span>
-        {% if c.health %}<span class="text-muted-d" data-health>{{ c.health }}</span>{% endif %}
+      <dt>Status</dt><dd><span class="st {{ {'ok': 'st-ok', 'down': 'st-bad', 'warn': 'st-warn'}.get(c.level, '') }}" data-state>{{ c.label or (c.state | lower) }}</span>
+        {% if c.health %}<span class="{{ 't-bad' if c.level == 'down' else 't-warn' if c.level == 'warn' else 'text-muted-d' }}" data-health>{{ c.health }}</span>{% endif %}
         {% for p in c.problems %}<div class="t-bad conn-problem">{{ p }}</div>{% endfor %}</dd>
       <dt>Last update</dt><dd class="mono">{{ when_local(c.lastUpdate) if c.lastUpdate else '—' }}</dd>
       <dt>File changed</dt><dd class="mono">{{ when_local(c.updated) if c.updated else '—' }}</dd>
@@ -68,10 +68,13 @@
       <button type="button" class="fk" data-act="test" aria-label="Test the connection of {{ c.name }}">Test connection</button>
       <button type="button" class="fk" data-act="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
       {% if c.template %}<button type="button" class="fk" data-act="reset" aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
-      {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-act="delete" aria-label="Delete {{ c.name }}">Delete</button>
-      <button type="button" class="fk emb-danger" data-uninstall data-kind="connector" data-name="{{ c.name }}" aria-label="Uninstall {{ c.name }}">Uninstall…</button>{% endif %}
+      {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-uninstall data-kind="connector" data-name="{{ c.name }}" aria-label="Uninstall {{ c.name }}">Uninstall…</button>{% endif %}
     </p>
   </section>
+
+  {% if c.plugin == 'file' %}<p class="text-muted-d" data-root-hint>The file connector reads JSON Lines from its <span class="mono">root</span> folder, laid out as
+    <span class="mono">&lt;root&gt;/&lt;domain&gt;/&lt;date&gt;/&lt;kind&gt;.jsonl</span>. Set <span class="mono">root</span> in the file, or, when it reads
+    <span class="mono">${DRISHTI_FILES_ROOT:…}</span>, set that environment variable and restart. Root now: <span class="mono">{{ (c.settings or {}).get('root', 'not set') }}</span>.</p>{% endif %}
 
   <section aria-labelledby="cdKinds" class="det-sec">
     <h2 class="ws-h" id="cdKinds">Kinds it serves</h2>
@@ -118,7 +121,7 @@
   <section aria-labelledby="cdHistory" class="det-sec">
     <h2 class="ws-h" id="cdHistory">History</h2>
     {% if c.history %}<p class="text-muted-d">Every earlier text is kept. <button type="button" class="fk" data-act="history">Compare or restore</button></p>
-    <ul class="det-list" data-history-list>{% for h in c.history %}<li class="mono">{{ h.id }} <span class="text-muted-d">{{ h.bytes }} bytes</span></li>{% endfor %}</ul>
+    <ul class="det-list" data-history-list>{% for h in c.history %}<li class="mono">{{ when_local(h.at) if h.at else h.id }} <span class="text-muted-d">{{ h.bytes }} bytes · version {{ h.id }}</span></li>{% endfor %}</ul>
     {% else %}<p class="text-muted-d">No earlier version yet: the first change keeps the text it replaces.</p>{% endif %}
   </section>
 
@@ -127,4 +130,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-index.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-index.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}

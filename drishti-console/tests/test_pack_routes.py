@@ -84,7 +84,7 @@ def test_page_tells_a_reader_without_the_author_power(client, backend, monkeypat
     async def settings(ident=None):
         return {"save": False, "author": False}
     monkeypatch.setattr(backend, "studio_settings", settings)
-    assert "does not have the author power" in client.get("/build/pack/new").text
+    assert "do not include the author power" in client.get("/build/pack/new").text
     assert 'data-can-author="false"' in client.get("/build/pack/new").text
 
 
@@ -103,7 +103,7 @@ def test_plan_from_schemas_alone(post):
     t = next(k for k in p["kinds"] if k["kind"] == "trade")
     assert t["key"] == "tradeId" and t["match"] == ["productType"] and t["synthetic"] is True and t["origKind"] == "trade"
     assert {(e["from"], e["to"]) for e in p["edges"]} == {("trade", "counterparty"), ("trade", "book"), ("counterparty", "counterparty")}
-    assert p["conflicts"] == {"packName": False, "mnemonics": [], "nameValid": True,
+    assert p["conflicts"] == {"packName": False, "mnemonics": [], "nameValid": True, "versionValid": True,
                               "kinds": {"book": "finance", "counterparty": "finance", "trade": "finance"}}      # the repository's finance pack defines them
     assert p["pack"]["name"] == "my-pack" and p["limits"]["sampleDocs"] == 200
 
@@ -113,7 +113,7 @@ def test_plan_with_data_assigns_files_to_kinds_and_real_samples_win(post):
     p = r.json()
     assert p["files"] == [{"name": "data/trades.jsonl", "rows": 12000, "sampled": 12, "bytes": 99999, "kind": "trade"}]
     t = next(k for k in p["kinds"] if k["kind"] == "trade")
-    assert t["samples"] == 12 and t["synthetic"] is False and t["template"] == "delta" and t["date"] == "tradeDate"
+    assert t["samples"] == 12 and t["synthetic"] is False and t["template"] == "file" and t["date"] == "tradeDate"       # the user's own JSON Lines: the File connector is the default source
     assert any("do not describe" in w or "does not describe" in w for w in t["warnings"])
 
 
@@ -195,6 +195,13 @@ def test_job_needs_a_key_and_a_valid_name(post):
     s = [{"name": "t.json", "text": json.dumps({"title": "Thing", "type": "object", "properties": {"label": {"type": "string"}}})}]
     r = post("/build/pack/api/jobs", {"schemas": s, "data": []})
     assert r.status_code == 400 and "key" in r.json()["detail"]
+
+
+def test_the_pack_version_is_x_y_z_in_the_plan_and_the_job(post):
+    assert post("/build/pack/api/plan", body(pack={"name": "lake", "version": "1.0"})).json()["conflicts"]["versionValid"] is False
+    assert post("/build/pack/api/plan", body(pack={"name": "lake", "version": "2.0.0-rc.1"})).json()["conflicts"]["versionValid"] is True
+    r = post("/build/pack/api/jobs", body(pack={"name": "lake", "version": "1.0"}))
+    assert r.status_code == 400 and "X.Y.Z" in r.json()["detail"]
 
 
 def test_one_sutra_rendered_on_a_sample(client, post):

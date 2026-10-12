@@ -29,7 +29,7 @@
         <label>Name<input class="studio-in mono" data-f-name maxlength="64" pattern="[a-z0-9][a-z0-9\-]*" autocomplete="off" spellcheck="false" aria-describedby="connNameHelp" placeholder="trading-lake"></label>
         <label>Plugin<select class="studio-in" data-f-plugin></select></label>
         <label class="chk conn-on"><input type="checkbox" data-f-enabled checked> Connector is on</label>
-        <label class="conn-wide">Description<input class="studio-in" data-f-description maxlength="200" autocomplete="off"></label>
+        <label class="conn-wide">Description<input class="studio-in" data-f-description maxlength="200" autocomplete="off" aria-describedby="connDescHelp"><span class="text-muted-d conn-hint" id="connDescHelp">One line saying what this connector reads; shown in the list.</span></label>
       </div>
       <p class="text-muted-d" id="connNameHelp">Lower case letters, digits and hyphens. The file is <span class="mono" data-file-name>name.yaml</span>; packs refer to the connector by this name.</p>
       <fieldset class="conn-set" data-kinds-set><legend>Kinds it serves</legend>
@@ -54,9 +54,9 @@
       <div data-history></div>
       <pre class="conn-diff" data-diff tabindex="0" aria-label="Differences between the chosen version and the current file" hidden></pre>
     </div>
-    <ul class="conn-problems" data-problems aria-live="polite"></ul>
-    <p class="adm-msg" data-edit-msg role="status" aria-live="polite"></p>
     <div class="adm-dlg-actions ds-actions">
+      <p class="adm-msg conn-edit-msg" data-edit-msg role="status" aria-live="polite"></p>
+      <ul class="conn-problems" data-problems aria-live="polite"></ul>
       <button type="button" class="btn-pill btn-ghost" data-test>Test connection</button>
       <button type="button" class="btn-pill btn-accent" data-save>Save</button>
     </div>

@@ -58,3 +58,26 @@
 .adm-tbl[data-packs] .pk-name { min-width: 11rem; }
 .adm-tbl[data-packs] .adm-actions { white-space: normal; min-width: 9rem; }
 .adm-tbl[data-packs] .adm-actions .fk { display: inline-flex; margin: 0 .4rem .3rem 0; }
+
+/* "About this page": the introduction of an Admin list. Open on a wide screen (its summary is hidden); folded on a phone (admin-cards.js). */
+.adm-about > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+@media (min-width: 641px) { .adm-about > summary { display: none; } }
+/* The Admin lists on a phone: each row is a card, each cell shows its column name before the value, and the actions are whole-width 44 px buttons. */
+@media (max-width: 640px) {
+  table[data-cards], table[data-cards] tbody, table[data-cards] tr, table[data-cards] td, table[data-cards] th { display: block; width: 100%; box-sizing: border-box; }
+  table[data-cards] thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  table[data-cards] tr { border: 1px solid var(--d-border); border-radius: 8px; margin: 0 0 .8rem; padding: .3rem .6rem; background: var(--d-surface); }
+  table[data-cards] td, table[data-cards] th { border: 0; padding: .3rem 0; white-space: normal; max-width: none; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+  table[data-cards] td[data-label]::before, table[data-cards] th[data-label]::before { content: attr(data-label); display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); }
+  table[data-cards] .adm-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+  table[data-cards] .adm-actions[data-label]::before { display: none; }
+  table[data-cards] .adm-actions .fk, table[data-cards] .adm-actions a.fk { flex: 1 1 8rem; min-height: 44px; margin: 0; justify-content: center; text-align: center; }
+  table[data-cards] a { display: inline-block; min-height: 44px; line-height: 44px; }
+  table[data-cards] .conn-name a, table[data-cards] .pk-name a { line-height: 1.4; min-height: 44px; padding: .7rem 0; box-sizing: border-box; }
+  table[data-cards] tr[data-none] td { border: 0; }
+  table[data-cards] tr[hidden], table[data-cards] [hidden] { display: none; }               /* the filter hides rows with the hidden attribute */
+  .adm-tbl[data-packs] .pk-desc, .adm-tbl[data-packs] td.mono, .adm-tbl[data-packs] .pk-name { min-width: 0; max-width: none; }
+  .dep-adv > summary { min-height: 44px; display: flex; align-items: center; }
+  .adm-changed { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  .adm-changed .fk { min-height: 44px; }
+}

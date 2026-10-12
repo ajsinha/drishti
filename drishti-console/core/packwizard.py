@@ -39,6 +39,8 @@ from core.schemakit import build, decorate, plan as P
 from core.schemakit.resolve import SchemaError
 
 NAME_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
+# a pack's version is semantic: X.Y.Z, optionally -pre-release and +build (the same rule as `pack bundle` and the server's deploy check)
+VERSION_RE = re.compile(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?")
 
 
 class WizardError(Exception):
@@ -177,6 +179,9 @@ async def plan_object(body: dict, lim: WizardLimits, backend, ident, packs_state
         plan = P.make_plan(schemas, by_kind, overrides, settings, existing_mnemonics=taken, pack_name=str(pack.get("name") or ""))
     except SchemaError as e:
         raise WizardError(422, str(e)) from None
+    for k in plan.kinds:                      # the user's own JSON Lines files: the File connector reads them as they are, so it is the default source
+        if k.real and k.date and k.template == "delta" and not (overrides.get(k.orig) or {}).get("template"):
+            k.template = "file"
     now = {k.orig: k.kind for k in plan.kinds}
     file_kind = {f: now.get(k, k) for f, k in file_kind.items()}                 # the names the user sees: after any rename
     for k in ("name", "code", "title", "description", "version", "connector"):
@@ -194,7 +199,8 @@ async def make_plan(body: dict, lim: WizardLimits, backend, ident, packs_state) 
     own = plan.pack["name"]
     out["conflicts"] = {"packName": own in names, "mnemonics": sorted({k.mnemonic for k in plan.kinds} & taken),
                         "kinds": {k.kind: other_kinds[k.kind] for k in plan.kinds if other_kinds.get(k.kind) not in (None, own)},
-                        "nameValid": bool(NAME_RE.fullmatch(plan.pack["name"]))}
+                        "nameValid": bool(NAME_RE.fullmatch(plan.pack["name"])),
+                        "versionValid": bool(VERSION_RE.fullmatch(str(plan.pack.get("version") or "")))}
     out["limits"] = lim.as_dict()
     return out
 

@@ -65,7 +65,12 @@ class PackBackend(FakeBackend):
     async def admin(self, method, path, ident, body=None, timeout=None, **params):
         if path == "/packs":
             return [{"name": "lakepack", "title": "Lake pack", "description": "Items", "version": self.version, "loaded": True, "added": False, "enabled": True,
-                     "extends": [], "requiredBy": [], "kinds": ["item", "thing"], "connectors": ["item-store", "thing-stream"], "mnemonics": ["ITM"]}]
+                     "extends": [], "requiredBy": ["retail-banking-core-extended"], "kinds": ["item", "thing"], "connectors": ["item-store", "thing-stream"], "mnemonics": ["ITM"]},
+                    {"name": "retail-banking-core-extended", "title": "Retail banking core, extended with a very long title for a phone", "version": "1.0.0", "loaded": True, "added": True,
+                     "enabled": True, "extends": ["lakepack"], "requiredBy": [], "kinds": ["account", "card"], "connectors": ["retail-banking-lake-primary", "card-feed-store"],
+                     "mnemonics": ["ACC", "CRD"], "description": "Accounts and cards with their balances, limits and statements, built on the lake pack " * 3,
+                     "sutraProblems": ["sutras/account/account-view.v1.sutra.yaml:12:5 DRS-2010 missing 'id' in title: the expression for the large identifier"],
+                     "updatedAt": "2026-10-05T10:00:00Z", "updatedBy": "files on disk"}]
         if path == "/registry":
             return {"url": "", "configured": False, "packs": []}
         if path == "/packs/history":
@@ -108,7 +113,7 @@ def packs_console():
 def test_an_archive_is_checked_previewed_and_deployed(browser, packs_console):
     url, backend = packs_console
     page = browser.new_page()
-    page.on("dialog", lambda d: d.accept())
+    page.on("dialog", lambda d: (_ for _ in ()).throw(AssertionError("the browser's own confirm must not be used")))
     page.goto(url + "/admin/packs")
     assert page.locator("[data-upload]").is_disabled()                                           # nothing chosen yet
     page.set_input_files("[data-file]", {"name": "lakepack-2.0.0.tar.gz", "mimeType": "application/gzip", "buffer": b"NOT-REALLY-A-TAR"})
@@ -116,7 +121,7 @@ def test_an_archive_is_checked_previewed_and_deployed(browser, packs_console):
     page.locator("[data-result]:not([hidden])").wait_for()
     result = page.locator("[data-result]").inner_text()
     for text in ("OK archive", "OK manifest", "NOTE signature", "kind removed", "thing", "1 breaking", "Breaking: monitors, workspaces, alerts or saved links may stop working",
-                 "1.0.0 (loaded) becomes 2.0.0"):
+                 "1.0.0 (loaded) becomes 2.0.0 (newer than the running one)"):
         assert text in result, text
     assert backend.sent["upload"]["headers"]["X-Drishti-Filename"] == "lakepack-2.0.0.tar.gz" and backend.sent["upload"]["size"] == 16   # the archive's own bytes
     assert page.locator(".dep-lv-breaking[role=alert]").is_visible()
@@ -125,6 +130,13 @@ def test_an_archive_is_checked_previewed_and_deployed(browser, packs_console):
     page.check("[data-ack]")
     assert go.is_enabled()
     go.click()
+    ask = page.locator("[data-ask-dialog]")
+    ask.wait_for()
+    assert "Deploy lakepack 2.0.0?" in ask.inner_text()
+    ask.locator("[data-ask-no]").click()
+    assert backend.version == "1.0.0"                                                            # "keep it" deploys nothing
+    go.click()
+    ask.locator("[data-ask-yes]").click()
     page.wait_for_function("() => document.querySelector('[data-history]').innerText.includes('2.0.0')", timeout=15000)   # the page reloads with the new history
     assert backend.sent["confirm"] == {"acceptBreaking": "true"} and backend.version == "2.0.0"
     table = page.locator("[data-history]").inner_text()
@@ -137,7 +149,7 @@ def test_the_data_source_lists_the_packs_connectors_and_links_to_edit_or_create_
     url, backend = packs_console
     page = browser.new_page()
     page.goto(url + "/admin/packs")
-    page.locator("[data-datasource]").click()
+    page.locator("[data-datasource]").first.click()
     dialog = page.locator("[data-ds-dialog]")
     dialog.locator("[data-connector]").first.wait_for()
     text = dialog.inner_text()
@@ -154,7 +166,7 @@ def test_the_data_source_panel_works_from_the_keyboard(browser, packs_console):
     url, backend = packs_console
     page = browser.new_page()
     page.goto(url + "/admin/packs")
-    page.locator("[data-datasource]").focus()
+    page.locator("[data-datasource]").first.focus()
     page.keyboard.press("Enter")
     dialog = page.locator("[data-ds-dialog]")
     dialog.locator("[data-connector]").first.wait_for()
@@ -172,7 +184,7 @@ def test_the_pack_pages_fit_a_phone_and_the_dark_theme(browser, packs_console):
     page = ctx.new_page()
     page.goto(url + "/admin/packs")
     assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")              # no sideways page scroll
-    page.locator("[data-datasource]").click()
+    page.locator("[data-datasource]").first.click()
     page.locator("[data-ds-dialog] [data-connector]").first.wait_for()
     box = page.locator("[data-ds-dialog]").bounding_box()
     assert box["x"] >= 0 and box["x"] + box["width"] <= 391
@@ -180,4 +192,47 @@ def test_the_pack_pages_fit_a_phone_and_the_dark_theme(browser, packs_console):
     colour = page.evaluate("() => getComputedStyle(document.querySelector('[data-ds-dialog]')).color")
     background = page.evaluate("() => getComputedStyle(document.querySelector('[data-ds-dialog]')).backgroundColor")
     assert colour != background                                                                               # readable in the dark theme too
+    ctx.close()
+
+
+def test_the_list_shows_sutra_problems_needed_by_text_and_asks_in_the_pages_own_dialog(browser, packs_console):
+    url, backend = packs_console
+    page = browser.new_page()
+    page.goto(url + "/admin/packs")
+    row = page.locator("tr[data-pack='retail-banking-core-extended']")
+    assert "1 Sutra problem" in row.inner_text() and "account-view.v1.sutra.yaml:12:5 DRS-2010" in row.inner_text()      # on the row, with file and line
+    assert "retail-banking-lake-primary" in row.inner_text() and "card-feed-store" in row.inner_text()
+    assert "files on disk" in row.inner_text()                                                                          # Changed is filled
+    assert "Needed by retail-banking-core-extended" in page.locator("[data-packs] tr[data-pack='lakepack']").inner_text()            # visible, not only a tooltip
+    page.locator("tr[data-pack='retail-banking-core-extended'] [data-switch]").click()
+    ask = page.locator("[data-ask-dialog]")
+    ask.wait_for()
+    assert "Switch retail-banking-core-extended off?" in ask.inner_text()
+    ask.locator("[data-ask-no]").click()
+    page.close()
+
+
+def test_the_lists_are_cards_on_a_phone_without_sideways_scroll_and_the_intro_is_folded(browser, packs_console):
+    url, backend = packs_console
+    ctx = browser.new_context(viewport={"width": 390, "height": 800}, is_mobile=True, has_touch=True)
+    page = ctx.new_page()
+    page.goto(url + "/admin/packs")
+    assert page.evaluate("() => document.documentElement.scrollWidth <= window.innerWidth + 1")
+    assert page.locator("details.adm-about").get_attribute("open") is None                      # "About this page" is folded: the list comes first
+    assert page.locator("details.adm-about > summary").is_visible()
+    row = page.locator("tr[data-pack='retail-banking-core-extended']")
+    assert row.locator("td[data-label='Connectors']").count() == 1                              # each cell names its column
+    box = row.bounding_box()
+    assert box["x"] >= 0 and box["x"] + box["width"] <= 391
+    small = page.evaluate("""() => [...document.querySelectorAll('[data-packs] .adm-actions .fk, [data-packs] .adm-actions a, [data-packs] td a, summary')]
+        .filter(e => e.offsetParent !== null).map(e => [e.textContent.trim().slice(0, 24), Math.round(e.getBoundingClientRect().height)]).filter(x => x[1] < 44)""")
+    assert small == [], small                                                                                   # finger-sized actions and links
+    assert row.locator("[data-switch]").is_visible() and row.locator("[data-datasource]").is_visible()          # the actions are on the card
+    page.locator("details.adm-about > summary").click()
+    assert page.locator("details.adm-about").get_attribute("open") is not None
+    ctx.close()
+    ctx = browser.new_context(viewport={"width": 1280, "height": 800})
+    page = ctx.new_page()
+    page.goto(url + "/admin/packs")
+    assert page.locator("details.adm-about").get_attribute("open") is not None and not page.locator("details.adm-about > summary").is_visible()   # open on a desktop
     ctx.close()

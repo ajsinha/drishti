@@ -19,19 +19,37 @@
   'use strict';
   // Admin → Packs: switch a pack on or off for everyone.
   var packs = document.querySelector('[data-pack-admin]');
+  // a plain yes or no in the page's own dialog (artifact-uninstall.js); the browser's confirm only when that script is absent
+  function ask(title, text, ok, danger) {
+    return window.drishtiAsk ? window.drishtiAsk({ title: title, text: text, ok: ok, danger: danger }) : Promise.resolve(window.confirm(text));
+  }
+  function reloadSoon(ms) { setTimeout(function () { location.reload(); }, ms); }
+  // a row that changed under the administrator (the pack was unloaded, deleted or switched elsewhere): say so and show the current list
+  function staleRow(body, msgNode) {
+    var code = body && body.code;
+    if (code === 'DRS-5001' || code === 'DRS-1001') {
+      msgNode.textContent = drsMessage(body) + ' The list is out of date; refreshing it.';
+      reloadSoon(1800);
+      return true;
+    }
+    return false;
+  }
   if (packs) {
     var pmsg = packs.querySelector('[data-msg]');
     packs.querySelectorAll('[data-switch]').forEach(function (b) {
       b.addEventListener('click', function () {
         var name = b.closest('[data-pack]').getAttribute('data-pack'), on = b.getAttribute('data-switch') === 'on';
-        if (!on && !window.confirm('Switch ' + name + ' off for everyone? Its kinds cannot be opened until it is switched on again.')) { return; }
-        fetch('/admin/api/packs/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: on }) })
-          .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
-          .then(function (res) {
-            pmsg.textContent = res.ok ? name + ' is ' + (on ? 'on' : 'off') + '.' : drsMessage(res.body);
-            pmsg.classList.toggle('t-bad', !res.ok);
-            if (res.ok) { setTimeout(function () { location.reload(); }, 400); }
-          });
+        var go = on ? Promise.resolve(true) : ask('Switch ' + name + ' off?', 'Switch ' + name + ' off for everyone? Its kinds cannot be opened until it is switched on again.', 'Switch off', true);
+        go.then(function (yes) {
+          if (!yes) { return; }
+          fetch('/admin/api/packs/' + encodeURIComponent(name), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: on }) })
+            .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+            .then(function (res) {
+              pmsg.textContent = res.ok ? name + ' is ' + (on ? 'on' : 'off') + '.' : drsMessage(res.body);
+              pmsg.classList.toggle('t-bad', !res.ok);
+              if (res.ok) { reloadSoon(400); } else { staleRow(res.body, pmsg); }
+            });
+        });
       });
     });
   }
@@ -45,26 +63,28 @@
           ? '/admin/api/registry/' + encodeURIComponent(name) + (action === 'install' ? '/' + encodeURIComponent(version) + '/install' : '/rollback')
           : '/admin/api/packs/' + encodeURIComponent(name) + '/' + action;
         var verb = { load: 'Load ', unload: 'Unload ', install: 'Install ', rollback: 'Roll back ' }[action];
-        if (!window.confirm(verb + name + (action === 'install' ? ' ' + version : '') + '? It takes effect now, with no restart.')) { return; }
-        lmsg.classList.remove('t-bad');
-        lmsg.textContent = (action === 'unload' ? 'Unloading ' : 'Checking ') + name + '…';
-        fetch(url, { method: 'POST' })
-          .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
-          .then(function (res) {
-            if (!res.ok) { lmsg.textContent = drsMessage(res.body); lmsg.classList.add('t-bad'); return; }
-            lmsg.textContent = res.body.note;
-            if (!res.body.restarting) { setTimeout(function () { location.reload(); }, 1200); return; }
-            // wait for the server to go and come back, then show the new state
-            var seenDown = false, started = Date.now();
-            (function poll() {
-              fetch('/readyz', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
-                if (s.status !== 'UP') { seenDown = true; }
-                if (s.status === 'UP' && (seenDown || Date.now() - started > 15000)) { location.reload(); return; }
-                lmsg.textContent = 'Restarting the server… ' + Math.round((Date.now() - started) / 1000) + ' s';
-                setTimeout(poll, 1000);
-              }).catch(function () { seenDown = true; setTimeout(poll, 1000); });
-            })();
-          });
+        ask(verb + name + '?', verb + name + (action === 'install' ? ' ' + version : '') + '? It takes effect now, with no restart.', verb.trim(), action === 'unload').then(function (yes) {
+          if (!yes) { return; }
+          lmsg.classList.remove('t-bad');
+          lmsg.textContent = (action === 'unload' ? 'Unloading ' : 'Checking ') + name + '…';
+          fetch(url, { method: 'POST' })
+            .then(function (r) { return r.json().then(function (body) { return { ok: r.ok, body: body }; }); })
+            .then(function (res) {
+              if (!res.ok) { lmsg.textContent = drsMessage(res.body); lmsg.classList.add('t-bad'); staleRow(res.body, lmsg); return; }
+              lmsg.textContent = res.body.note;
+              if (!res.body.restarting) { reloadSoon(1200); return; }
+              // wait for the server to go and come back, then show the new state
+              var seenDown = false, started = Date.now();
+              (function poll() {
+                fetch('/readyz', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+                  if (s.status !== 'UP') { seenDown = true; }
+                  if (s.status === 'UP' && (seenDown || Date.now() - started > 15000)) { location.reload(); return; }
+                  lmsg.textContent = 'Restarting the server… ' + Math.round((Date.now() - started) / 1000) + ' s';
+                  setTimeout(poll, 1000);
+                }).catch(function () { seenDown = true; setTimeout(poll, 1000); });
+              })();
+            });
+        });
       });
     });
   }

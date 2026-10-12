@@ -19,7 +19,12 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="thome"><h1>Administration</h1>
-  <p class="pnl-err" role="alert"><i class="bi bi-lock" aria-hidden="true"></i> {% if error %}{{ error.code }} · {{ error.detail }}{% else %}Only administrators can manage users.{% endif %}</p>
+  <p class="pnl-err" role="alert"><i class="bi bi-lock" aria-hidden="true"></i> {% if error %}{{ error.code }} · {{ error.detail }}{% else %}{% set area = {'users': 'manage users', 'roles': 'manage roles', 'tokens': 'see and revoke every access token', 'packs': 'load, switch, deploy and roll back packs',
+    'connectors': 'create, test and change connectors', 'artifacts': 'install, disable and uninstall packs, connectors and BI files', 'health': 'see the server\'s health',
+    'audit': 'read the audit log', 'caches': 'manage the caches', 'loads': 'see the data loads of every pack', 'embedding': 'manage embedded applications',
+    'ai': 'manage the AI providers', 'collab': 'manage collaboration', 'access': 'see who may open what'} %}
+    {% set seg = (request.url.path.split('/')[2] if request.url.path.split('/') | length > 2 else '') %}
+    Only administrators can {{ area.get(seg, 'use the administration pages') }}.{% endif %}</p>
   <p><a href="/t">Back to the terminal</a></p></div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script>{% endblock %}

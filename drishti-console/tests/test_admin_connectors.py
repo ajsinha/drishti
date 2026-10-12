@@ -51,11 +51,12 @@ def test_the_page_lists_connectors_with_origin_status_and_users(client, backend,
     for text in ("Connectors", "trading-lake", "Trading lake", "running", "failed", "disabled", "data-new", "data-edit", "Reset to pack default",
                  "application", "legacy", "Upper.yaml", "WATCHING", "admin-connectors.js", "admin-connectors.css", "/help/connector-files",
                  'data-kinds="trade,item"', "/srv/drishti/config/connectors", "deprecated", 'role="tablist"', 'role="tab"', 'aria-selected="true"', 'aria-labelledby="connTitle"',
-                 "Filter by name", "Any status", "Disable trading-lake", "Enable off-one", "Delete off-one"):
+                 "Filter by name", "Any status", "Disable trading-lake", "Enable off-one", "Uninstall off-one"):
         assert text in page, text
     assert 'aria-current="page"' in page.split('href="/admin/connectors"')[1][:60]
     assert page.count('href="/admin/connectors"') >= 2                       # the Admin tabs and the top bar's Admin menu
     assert "Delete trading-lake" not in page                                  # a pack's connector is reset or disabled, never deleted
+    assert "data-delete" not in page and "Delete off-one" not in page         # one way out for a file connector: Uninstall (archived, restorable from Artifacts)
 
 
 def test_the_page_is_closed_to_non_admins_and_shows_server_errors(client, backend, monkeypatch):
@@ -121,3 +122,42 @@ def test_the_detail_page_shows_the_connection_pool_and_a_leak_warning(client, ba
     assert "embedded, in-process file: not pooled. 1 read running of 4 allowed at once, 0 waiting." in flat
     detail["pool"] = None
     assert "Connection pool" not in client.get("/admin/connectors/trading-lake").text
+
+
+def test_the_badge_uses_the_servers_words_so_a_down_connector_is_never_running(client, backend, monkeypatch):
+    rows = [dict(LIST["connectors"][0], level="down", label="down, retrying", health="DOWN: no directory /lake"),
+            dict(LIST["connectors"][2], level="off", label="disabled"),
+            dict(LIST["connectors"][0], name="note-files", level="warn", label="running, with a warning", state="RUNNING",
+                 health="UP (0 rows served for 2026-10-12: 'note' holds 2099-01-05, none on or before 2026-10-12)")]
+
+    async def admin(method, path, ident, body=None, timeout=None, headers=None, **params):
+        if path == "/connectors":
+            return dict(LIST, connectors=rows)
+        return {"plugins": []} if path == "/connectors/plugins" else {}
+    monkeypatch.setattr(backend, "admin", admin)
+    page = client.get("/admin/connectors").text
+    assert "down, retrying" in page and "running, with a warning" in page and "disabled" in page
+    assert "DOWN: no directory /lake" in page and "0 rows served for 2026-10-12" in page          # the hint is text on the row, not a tooltip
+    assert 'data-level="down"' in page and 'data-level="warn"' in page
+    assert "admin-watch.js" in page and 'data-watch="/admin/connectors/api/stamp"' in page
+
+
+def test_the_stamp_is_a_short_digest_that_moves_when_a_connector_changes_but_not_for_a_health_sentence(client, backend, monkeypatch):
+    state = {"rows": [dict(LIST["connectors"][0], level="ok", label="running", health="UP")]}
+
+    async def admin(method, path, ident, body=None, timeout=None, headers=None, **params):
+        return dict(LIST, connectors=state["rows"])
+    monkeypatch.setattr(backend, "admin", admin)
+    first = client.get("/admin/connectors/api/stamp").json()
+    assert first["rows"][0]["name"] == "trading-lake" and len(first["stamp"]) == 40
+    state["rows"] = [dict(state["rows"][0], health="UP (ping 12 ms)")]
+    assert client.get("/admin/connectors/api/stamp").json()["stamp"] == first["stamp"]            # a changing figure is not a change
+    state["rows"] = [dict(state["rows"][0], level="down", label="down, retrying")]
+    assert client.get("/admin/connectors/api/stamp").json()["stamp"] != first["stamp"]
+
+
+def test_the_history_and_the_editor_say_what_the_buttons_are_for(client, backend, monkeypatch):
+    with_connectors(backend, monkeypatch, [])
+    page = client.get("/admin/connectors").text
+    assert 'data-edit-msg' in page and page.index("data-edit-msg") > page.index("adm-dlg-actions ds-actions")       # the message sits in the sticky bar beside Save
+    assert 'data-zone=' in page and "connDescHelp" in page                                                         # history times in the page's zone; Description has its own help

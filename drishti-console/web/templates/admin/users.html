@@ -60,6 +60,7 @@
       <fieldset><legend>Roles</legend>
         {% for r in roles %}<label class="chk"><input type="checkbox" name="roles" value="{{ r }}"> {{ r }}</label>{% endfor %}</fieldset>
       {% if status and status.installedPacks %}<fieldset><legend>Packs</legend>
+        <p class="text-muted-d adm-pack-hint">Tick the packs this person may use. Untick every pack and they see none (every kind answers no access). Packs are saved as a list; the server default applies only to people never given a list.</p>
         {% for p in status.installedPacks %}<label class="chk"><input type="checkbox" name="packs" value="{{ p }}" checked> {{ p }}</label>{% endfor %}</fieldset>{% endif %}
       <label class="chk"><input type="checkbox" name="enabled" checked> Enabled</label>
       <label data-pw>Initial password<input name="password" type="password" class="studio-in" autocomplete="new-password"></label>

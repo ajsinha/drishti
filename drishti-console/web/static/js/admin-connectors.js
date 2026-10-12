@@ -133,20 +133,6 @@
       });
     });
   }
-  function remove(name) {
-    fetchDetail(name).then(function (d) {
-      if (!d.ok) { say(msg, why(d), true); return; }
-      var uses = usesOf(d.body);
-      ask('Delete ' + name + '?', 'The connector stops and its file is removed (the text is kept in the history). ' + (uses.length ? 'These packs read through it and will have nothing to read:' : 'No pack uses it.'), uses, 'Delete').then(function (yes) {
-        if (!yes) { return; }
-        call('DELETE', '/' + q(name), null, d.body.etag ? { 'If-Match': d.body.etag } : {}, uses.length ? '?confirm=true' : '').then(function (r) {
-          if (!r.ok) { say(msg, why(r), true); return; }
-          say(msg, name + ' is deleted.');
-          reloadSoon(true);
-        });
-      });
-    });
-  }
   root.addEventListener('click', function (e) {
     var b = e.target.closest('button');
     var tr = b && b.closest('tr[data-conn]');
@@ -155,7 +141,6 @@
     if (b.hasAttribute('data-edit')) { openExisting(name, b); }
     else if (b.hasAttribute('data-toggle')) { toggle(name, b.getAttribute('data-toggle') === 'enable', b); }
     else if (b.hasAttribute('data-reset')) { reset(name); }
-    else if (b.hasAttribute('data-delete')) { remove(name); }
   });
 
   // ---- the editor ---------------------------------------------------------------------------------------------------------
@@ -188,12 +173,35 @@
       if (on && focus) { t.focus(); }
     });
     panes.forEach(function (p) { p.hidden = p.getAttribute('data-pane') !== name; });
+    // History restores a kept file by itself: there is nothing in the draft to test or save on that tab
+    $('[data-test]').hidden = name === 'history';
+    $('[data-save]').hidden = name === 'history';
   }
-  function showProblems(list) {
+  function fieldOf(field) {
+    var m = /^settings\.(.+)$/.exec(field || '');
+    return m ? $$('[data-setting]', groupsHost).filter(function (n) { return n.getAttribute('data-setting') === m[1]; })[0] : null;
+  }
+  // the first failing field is shown, focused and scrolled into view: the form is long and the Save bar is sticky
+  function focusField(n) {
+    if (!n || tab !== 'form') { return; }
+    n.scrollIntoView({ block: 'center' });
+    n.focus({ preventScroll: true });
+  }
+  function showProblems(list, focusFirst) {
     problemsList.textContent = '';
+    $$('[data-field-err]', groupsHost).forEach(function (e) { if (!e.getAttribute('data-secret-err')) { e.textContent = ''; } });
+    $$('[aria-invalid="true"]', groupsHost).forEach(function (n) { if (!n.hasAttribute('data-secret')) { n.removeAttribute('aria-invalid'); } });
+    var first = null;
     (list || []).forEach(function (p) {
       problemsList.appendChild(el('li', { class: p.level === 'error' ? 't-bad' : 't-warn' }, [el('b', { text: (p.level === 'error' ? 'Error' : 'Note') + ' ' }), el('span', { class: 'mono', text: p.field + ': ' }), p.message]));
+      var n = fieldOf(p.field);
+      if (n) {
+        var err = $('[data-field-err]', n.closest('.conn-field'));
+        if (err && !err.textContent) { err.textContent = p.message; }
+        if (p.level === 'error') { n.setAttribute('aria-invalid', 'true'); if (!first) { first = n; } }
+      }
     });
+    if (focusFirst && first) { focusField(first); }
   }
 
   // draft <-> form
@@ -225,7 +233,7 @@
       input = el('input', { class: 'studio-in' + (t === 'path' || spec.secret ? ' mono' : ''), id: id, 'data-setting': spec.name, autocomplete: 'off', spellcheck: 'false',
         placeholder: spec.secret ? '${ENV_VAR} or file:/run/secrets/name' : (spec.default != null ? spec.default : '') });
     }
-    if (spec.secret) { input.setAttribute('data-secret', ''); input.setAttribute('type', 'text'); }
+    if (spec.secret) { input.setAttribute('data-secret', ''); input.setAttribute('type', 'password'); input.setAttribute('autocomplete', 'new-password'); }
     if (spec.required) { input.setAttribute('aria-required', 'true'); }
     if (value != null) {
       if (input.tagName === 'SELECT' && !Array.prototype.some.call(input.options, function (o) { return o.value === value; })) { input.appendChild(el('option', { value: value, text: value })); }
@@ -284,12 +292,16 @@
     draft.kinds.forEach(function (k) {
       var rm = el('button', { type: 'button', class: 'conn-chip-x', 'aria-label': 'Remove kind ' + k, text: '×' });
       rm.addEventListener('click', function () { draft.kinds = draft.kinds.filter(function (x) { return x !== k; }); chips(); });
-      chipsHost.appendChild(el('span', { class: 'conn-chip mono' }, [k, rm]));
+      var odd = known.length > 0 && known.indexOf(k) < 0;
+      chipsHost.appendChild(el('span', { class: 'conn-chip mono' + (odd ? ' conn-chip-odd' : ''), title: odd ? 'No loaded pack owns this kind: it is kept, and reads nothing until a pack does' : null }, [k, odd ? el('span', { class: 't-warn', text: ' (no pack owns it)' }) : null, rm]));
     });
   }
   function addKind() {
     var inp = $('[data-kind-in]'), k = inp.value.trim();
-    if (k && draft.kinds.indexOf(k) < 0) { draft.kinds.push(k); chips(); }
+    if (k && draft.kinds.indexOf(k) < 0) {
+      draft.kinds.push(k); chips();
+      if (known.length && known.indexOf(k) < 0) { say(editMsg, 'Note: no loaded pack owns the kind ' + k + '. It is kept, and reads nothing until a pack does.', false); }
+    }
     inp.value = ''; inp.focus();
   }
   $('[data-kind-add]').addEventListener('click', addKind);
@@ -312,9 +324,10 @@
     $$('[data-secret]', groupsHost).forEach(function (n) {
       var holder = n.closest('.conn-field'), err = $('[data-field-err]', holder), v = n.value.trim();
       var wrong = v !== '' && !SECRET_OK.test(v);
+      if (wrong) { err.setAttribute('data-secret-err', '1'); } else { err.removeAttribute('data-secret-err'); }
       err.textContent = wrong ? 'A credential is never written into a connector file. Use an environment reference such as ${' + n.getAttribute('data-setting').replace(/[^A-Za-z0-9]+/g, '_').toUpperCase() + '} or file:/run/secrets/name.' : '';
       n.setAttribute('aria-invalid', wrong ? 'true' : 'false');
-      if (wrong) { bad++; if (bad === 1) { n.focus(); } }
+      if (wrong) { bad++; if (bad === 1) { focusField(n); } }
     });
     $$('[data-extra-row]', groupsHost).forEach(function (r) {
       var k = $('[data-extra-key]', r), v = $('[data-extra-val]', r);
@@ -451,7 +464,10 @@
       el('thead', {}, [el('tr', {}, ['Kind', 'Business date', 'Rows', ''].map(function (h) { return el('th', { scope: 'col', text: h }); }))]), tb])]));
   }
   $('[data-test]').addEventListener('click', function () {
-    if (tab === 'form' && !checkSecrets()) { return; }
+    if (tab === 'form' && !checkSecrets()) {
+      say(editMsg, 'Not tried: a credential holds the value itself. Use a ${ENV_VAR} or file: reference, then test again.', true);
+      return;
+    }
     var name = nameNow() || 'draft';
     say(editMsg, 'Trying the settings on the real source…');
     go('test').then(function () {
@@ -466,21 +482,24 @@
 
   // ---- save ---------------------------------------------------------------------------------------------------------------
   function save(confirmed) {
-    if (tab === 'form' && !checkSecrets()) { return; }
+    if (tab === 'form' && !checkSecrets()) { say(editMsg, 'Not saved: a credential holds the value itself. Use a ${ENV_VAR} or file: reference.', true); return; }
     var name = nameNow();
-    if (!name) { say(editMsg, 'Give the connector a name.', true); f.name.focus(); return; }
+    if (!name) { say(editMsg, 'Give the connector a name.', true); f.name.setAttribute('aria-invalid', 'true'); setTab('form'); f.name.focus(); return; }
+    f.name.removeAttribute('aria-invalid');
+    var idle = busy($('[data-save]'), 'Saving…');
     say(editMsg, 'Saving…');
     var headers = draft.etag ? { 'If-Match': draft.etag } : {};
     call('PUT', '/' + q(name), bodyNow(), headers, confirmed ? '?confirm=true' : '').then(function (r) {
       if (!r.ok) {
-        say(editMsg, why(r), true);
+        idle('Save');
+        say(editMsg, 'Not saved: ' + why(r), true);
         if (r.status === 409 && /changed since you read it|already exists/.test(r.body.detail || '')) {
           var reload = el('button', { type: 'button', class: 'fk', text: 'Load the current version' });
           reload.addEventListener('click', function () { hide(dlg); openExisting(name, opener); });
           editMsg.appendChild(document.createTextNode(' '));
           editMsg.appendChild(reload);
         }
-        if (r.status === 422) { call('POST', '/' + q(name) + '/validate', bodyNow()).then(function (v) { if (v.ok) { showProblems(v.body.problems); } }); }
+        if (r.status === 422) { call('POST', '/' + q(name) + '/validate', bodyNow()).then(function (v) { if (v.ok) { showProblems(v.body.problems, true); } }); }
         return;
       }
       var c = r.body, warn = (c.warnings || []);
@@ -517,6 +536,17 @@
     });
     pre.hidden = false;
   }
+  // when a version was kept, in the zone the page shows (the top bar's "known at" zone), with the zone named: 2026-10-06 05:00:00 EDT
+  var zone = root.getAttribute('data-zone') || '';
+  function savedAt(h) {
+    var m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/.exec(h.id), when = h.at ? new Date(h.at) : (m ? new Date(Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6])) : null);
+    if (!when || isNaN(when.getTime())) { return h.id; }
+    try {
+      var o = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZoneName: 'short' };
+      if (zone) { o.timeZone = zone; }
+      return new Intl.DateTimeFormat('sv-SE', o).format(when);
+    } catch (e) { return when.toISOString().replace('T', ' ').slice(0, 19) + ' UTC'; }
+  }
   function loadHistory() {
     var host = $('[data-history]');
     host.textContent = 'Reading the history…';
@@ -543,10 +573,10 @@
             });
           });
         });
-        tb.appendChild(el('tr', {}, [el('td', { class: 'mono', text: h.id.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2}).*/, '$1-$2-$3 $4:$5:$6') }), el('td', { class: 'mono', text: h.bytes + ' bytes' }), el('td', {}, [view, put])]));
+        tb.appendChild(el('tr', {}, [el('td', { class: 'mono', text: savedAt(h) }), el('td', { class: 'mono', text: h.bytes + ' bytes' }), el('td', {}, [view, put])]));
       });
       host.appendChild(el('div', { class: 'tbl-wrap' }, [el('table', { class: 'tbl adm-tbl', 'data-plain': true }, [el('caption', { class: 'visually-hidden', text: 'Kept earlier versions, newest first' }),
-        el('thead', {}, [el('tr', {}, ['Version', 'Size', ''].map(function (h) { return el('th', { scope: 'col', text: h }); }))]), tb])]));
+        el('thead', {}, [el('tr', {}, ['Saved', 'Size', ''].map(function (h) { return el('th', { scope: 'col', text: h }); }))]), tb])]));
     });
   }
 
@@ -580,7 +610,6 @@
       else if (act === 'test') { openExisting(me, b).then(function () { $('[data-test]').click(); }); }
       else if (act === 'enable' || act === 'disable') { toggle(me, act === 'enable', b); }
       else if (act === 'reset') { reset(me); }
-      else if (act === 'delete') { remove(me); }
     });
   }
 })();

@@ -410,7 +410,7 @@ What is **not** live: a connector defined in the server's own configuration (`ap
 
 ![Admin → Connectors: every connector with origin, plugin, kinds, status, who uses it and when it changed](img/connector_files/01-connectors-list.jpg)
 
-**Uninstalling safely.** *Delete* keeps the previous text in `.history/`; **Uninstall…** (on a connector that has a file) goes further: it asks what depends on the connector (the
+**Uninstalling safely.** The page has one way out for a connector that has a file, **Uninstall…** (there is no separate Delete button; `DELETE /{name}` remains for scripts and keeps the text in `.history/`). It: it asks what depends on the connector (the
 packs and kinds that read through it, BI datasets that scan it, whether a pack's template would write it back), refuses while anything does, and otherwise **moves the file**
 to `data/uninstalled/` where **Admin → Artifacts → Uninstalled** restores it. A connector a pack's template names is only disabled or reset. See [ARTIFACTS.md](../admin/ARTIFACTS.md).
 
@@ -432,8 +432,7 @@ whether the host name is checked, and each configured certificate (client certif
 (links), the **settings in effect** (credentials shown as `***`), the file as **read-only text**, and the **history** of kept versions.
 
 Buttons: **Edit** opens the editor described below, **Test connection** opens it on the Test tab and runs the test on the saved file, **Compare or restore** opens the History
-tab, **Disable / Enable**, **Reset to pack default** and **Delete** behave as on the list (a pack's connector is never deleted; the page asks before it disables or deletes one packs use,
-and after a delete it returns to the list). The editor also opens by address: `/admin/connectors?name=<name>&tab=history` or `&tab=test`.
+tab, **Disable / Enable**, **Reset to pack default** and **Uninstall…** behave as on the list (a pack's connector is never uninstalled; the page asks before it disables one packs use). The editor also opens by address: `/admin/connectors?name=<name>&tab=history` or `&tab=test`.
 
 ![The connector's page on a phone: one column, targets of at least 44 px](img/connector_files/13-connector-detail-phone.jpg)
 
@@ -473,8 +472,7 @@ what state it reached. **Two editors cannot overwrite each other**: the page sen
 refuses a stale one with *changed since you read it*, offering **Load the current version**.
 
 Row actions: **Disable / Enable** (keeps the rest of the file), **Reset to pack default** (for a connector a pack suggests: the
-file is replaced by the suggestion and your text is kept in the history), and **Delete** (a file no pack suggests; its text is kept
-in the history). A connector a pack suggests is never deleted: reset it or disable it. Before you disable or delete a connector that
+file is replaced by the suggestion and your text is kept in the history), and **Uninstall…** (a file no pack suggests; it moves to the archive and **Admin → Artifacts → Uninstalled** restores it). A connector a pack suggests is never uninstalled: reset it or disable it. Before you disable or uninstall a connector that
 packs use, the page lists them and asks:
 
 ![Disabling a connector a pack uses asks first](img/connector_files/09-disable-asks.jpg)
@@ -746,3 +744,17 @@ no free connection in the pool-test pool within 250 ms (1 of 1 in use, 0 waiting
 
 Sizing the pools against the database's `max_connections` is in [OPERATIONS.md](../admin/OPERATIONS.md#sizing-the-database-connection-pools); the symptoms and
 what to do are in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#a-connector-says-no-free-connection-in-the--pool).
+
+
+## Status words, warnings and what the page tells you
+
+The badge never says *running* for a connector that is not serving. **running** means up and healthy; **running, with a warning** means up with something to read
+beside it (unreadable lines, or every dated folder is after today: *0 rows served for 2026-10-12: 'note' holds 2099-01-05 to 2099-01-06, none on or before
+2026-10-12*); **down, retrying** is a connector that runs but reports DOWN or is being retried; **failed**, **disabled** and **not started** keep their words. The
+list, the connector's page, a pack's *Data source* panel and `drishti.py connector list|get` use the same words. The pages poll every 5 seconds: a connector's own page
+updates its status as it starts, and the list and the Packs list offer a **Refresh** banner when something changed on disk, in the CLI or by another administrator.
+
+In the editor, a refused Save or Test shows its message in the bar beside **Save** (never below a long form), names the failing field, focuses it and scrolls to it;
+**Save** is disabled and says *Saving…* while it works. Credential fields are masked while you type; a literal credential is refused and **Test connection** says it did
+not try. **History** lists each kept version with the time in the page's zone and hides Test and Save (restoring is its own button). A file connector made from a
+generated template says in its description to set `root` (or the `DRISHTI_FILES_ROOT` environment variable); its page repeats it with the root now in effect.

@@ -255,7 +255,7 @@ Four lists decide what a user sees. Each one narrows the one before it:
 |---|---|---|
 | **Loaded** | `DRISHTI_PACKS`, at start-up | what the server runs (the listed packs and their parents) |
 | **Switched on** | an administrator, for everyone (*Admin → Packs*) | which loaded packs are in use; all of them unless switched off ([above](#switching-packs-off-and-on-admin--packs)) |
-| **Assigned** | an administrator, per user (*Admin → Users*) | what this user may use. A user with no assignment gets `drishti.packs.default-for-users` (`DRISHTI_DEFAULT_PACKS`; empty means every switched-on pack). |
+| **Assigned** | an administrator, per user (*Admin → Users*) | what this user may use. A user who was never given a list of packs (for example one created through the API without `packs`) gets `drishti.packs.default-for-users` (`DRISHTI_DEFAULT_PACKS`; empty means every switched-on pack). A user given an **empty list** (every pack unticked in the dialog, or `"packs": []`) sees no pack: every kind answers `DRS-5002` no access. |
 | **Active** | the user, with the pack menu in the top bar | which of their assigned packs they want to see now |
 
 Example: the server loads twelve packs; an admin switches `operational-risk` off; Priya is assigned
@@ -529,3 +529,15 @@ pack without a restart, switch it off in *Admin → Packs* instead.
   `admin`, `calc`).
 - Calc's runtime and its `drishti` module; packs only switch it on and ship snippets.
 - The generic help: using the terminal, panel kinds, the Build workbench, workspaces, and every reference.
+
+
+## What Admin → Packs shows about a pack
+
+The list names every connector a pack uses (its `connectors:` list, its `connector-templates:` and the connectors its `routes:` send kinds to). **Changed** shows the
+time of the last switch or, when the pack's files changed later (a deploy, an edit), that time with *files on disk*. A Sutra that does not parse in a pack's folder is
+listed on the row and on the pack's page as `file:line:column DRS-2010 message` (the file relative to the pack's folder); the pack stays on, the Sutra is not in use.
+A `pack.yaml` with a syntax error says `<pack>/pack.yaml has a syntax error at line L, column C: ...`; it is not retried until the file changes. A version must be
+**X.Y.Z** (`1.4.0`, `2.0.0-rc.1`): the wizard, `drishti.py pack bundle|make` and the server's deploy check all say so. Redeploying the same version keeps no duplicate;
+the running version is not offered as a rollback target. A pack named in `drishti.packs.enabled` (`DRISHTI_PACKS`) can only be disabled in Artifacts: the dialog says so
+first. Switch off, Unload, Load and Deploy ask in the page's own dialog. The page notices changes on disk within 5 seconds and offers **Refresh**; on a phone each
+pack is a card and the introduction folds behind *About this page*.

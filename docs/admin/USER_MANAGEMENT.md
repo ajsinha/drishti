@@ -196,10 +196,10 @@ may open trade MX-20000001  =  one of my roles opens "trade"          (roles: se
 A pack is a domain's worth of kinds, mnemonics, layouts and roles (see PACKS.md). The server may have many
 installed; each person sees the ones assigned to them.
 
-- **Default packs.** A new user who is given no packs sees the packs in `drishti.packs.default-for-users`, or every
+- **Default packs.** A user who was never given a list of packs (the field left out, not an empty list) sees the packs in `drishti.packs.default-for-users`, or every
   installed pack when that is empty. In the Users list this shows as *default packs*.
-- **Assigned packs.** Tick packs in the user dialog to give exactly those. Untick all of them, and the user sees
-  none.
+- **Assigned packs.** Tick packs in the user dialog to give exactly those. Untick all of them (an empty list, `"packs": []`), and the user sees
+  none: every kind answers `DRS-5002`. This is not the same as the default.
 - **Choosing among them.** Someone with several packs picks which to see from the pack switcher in the top bar.
   That choice is theirs, and it is saved with their settings.
 

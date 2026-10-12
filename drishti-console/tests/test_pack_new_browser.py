@@ -147,7 +147,7 @@ def test_the_whole_flow_three_schemas_and_a_folder_to_a_downloaded_bundle(browse
     page.fill("#pkp-title", "Browser test pack")
     page.locator("#pkp-name").dispatch_event("change")
     page.locator("table select[aria-label='Source of trade']").wait_for()
-    assert page.locator("table select[aria-label='Source of trade']").input_value() == "delta"       # real, dated documents: a lake
+    assert page.locator("table select[aria-label='Source of trade']").input_value() == "file"        # real, dated JSON Lines: the File connector reads them as they are
     assert page.locator("table select[aria-label='Source of book']").input_value() == "samples"
     # 4. preview
     page.click("[data-next]")
@@ -421,4 +421,36 @@ def test_themes_keep_the_page_readable(browser, pack_console):
         color = page.evaluate("getComputedStyle(document.querySelector('.pk-step[aria-current=step]')).color")
         bg = page.evaluate("getComputedStyle(document.querySelector('.pk-step[aria-current=step]')).backgroundColor")
         assert color != bg
+    page.close()
+
+
+def test_back_and_reload_keep_the_work_and_the_version_must_be_x_y_z(browser, pack_console):
+    url, _ = pack_console
+    page = browser.new_page()
+    page.goto(url + "/build/pack/new")
+    page.locator("summary:has-text('Paste a schema')").click()
+    page.fill("[data-paste]", json.dumps({"title": "Thing", "type": "object", "required": ["thingId"], "properties": {"thingId": {"type": "string"}}}))
+    page.click("[data-paste-add]")
+    page.locator("[data-sources]:has-text('pasted')").wait_for()
+    page.click("[data-next]")
+    page.locator(".pk-card").first.wait_for()
+    page.click("[data-next]")
+    page.locator("[data-pack-field='version']").wait_for()
+    page.fill("[data-pack-field='version']", "1.0")
+    page.locator("[data-pack-field='version']").dispatch_event("change")
+    page.click("[data-next]")
+    assert "X.Y.Z" in page.locator("[data-msg]").inner_text()                                       # the version rule, in words, on the field
+    assert page.get_attribute("[data-pack-field='version']", "aria-invalid") == "true"
+    page.fill("[data-pack-field='version']", "1.0.0")
+    page.locator("[data-pack-field='version']").dispatch_event("change")
+    # the browser's Back moves between steps instead of leaving the page and its work
+    page.go_back()
+    page.locator(".pk-card").first.wait_for()
+    assert page.locator("[data-step='2']").is_visible()
+    page.go_back()
+    assert page.locator("[data-step='1']").is_visible() and "pasted" in page.locator("[data-sources]").inner_text()
+    page.wait_for_timeout(400)
+    page.reload()                                                                                    # a reload brings the sources back from this tab's storage
+    page.locator("[data-sources]:has-text('pasted')").wait_for()
+    assert "restored" in page.locator("[data-msg]").inner_text()
     page.close()

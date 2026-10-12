@@ -24,9 +24,11 @@
 <div class="adm" data-artifacts data-tab="{{ tab }}">
   {% with tab='artifacts' %}{% include "admin/_nav.html" %}{% endwith %}
   <h1 class="ws-h">Artifacts <a class="emb-help" href="/help/admin-artifacts" aria-label="Help: installing and uninstalling packs, connectors and BI files" title="Help: installing and uninstalling packs, connectors and BI files">?</a></h1>
+  <details class="adm-about" open><summary>About this page</summary>
   <p class="text-muted-d">Everything installed, in one list: domain packs, connector files and the BI files in <span class="mono">config/bi</span>. <b>Disable</b> keeps
     an artifact and switches it off. <b>Uninstall</b> asks first what depends on it, then <em>moves</em> it to <span class="mono">{{ uninstalled_dir }}</span>; nothing is deleted
     for {{ keep_days }} days, and <b>Restore</b> puts it back. <span class="mono">/</span> focuses the filter.</p>
+  </details>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   <div class="conn-tabs" role="tablist" aria-label="Artifacts" data-art-tabs>
     <button type="button" role="tab" id="artTabInstalled" aria-controls="artPaneInstalled" aria-selected="{{ 'true' if tab == 'installed' else 'false' }}"{% if tab != 'installed' %} tabindex="-1"{% endif %} data-tab="installed">Installed ({{ artifacts | length }})</button>
@@ -111,4 +113,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-artifacts.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-cards.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-artifacts.js?v={{ ASSET_V }}"></script>{% endblock %}

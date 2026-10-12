@@ -53,6 +53,24 @@ DS = {"pack": "my", "directory": "/srv/config/connectors", "missing": ["thing-st
                      {"name": "thing-stream", "defined": False, "state": "NOT_CONFIGURED", "kinds": ["thing"], "problems": ["connector thing-stream is not configured"]}]}
 
 
+class VersionRule(unittest.TestCase):
+    """A pack's version is X.Y.Z (the server's deploy check and the wizard say the same)."""
+
+    def test_bundle_refuses_a_version_that_is_not_semantic(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = pathlib.Path(t)
+            for version, ok in (("1.0", False), ("v1", False), ("1.0.0", True), ("2.0.0-rc.1", True), ("1.4.0+build.5", True), ("01.0.0", False)):
+                pack = root / f"p-{version}"
+                pack.mkdir()
+                (pack / "pack.yaml").write_text(f"pack: lakepack\nversion: {version}\nkinds: [item]\n")
+                if ok:
+                    PB.bundle(pack, root / "out", {}, None)
+                else:
+                    with self.assertRaises(PB.BundleError) as e:
+                        PB.bundle(pack, root / "out", {}, None)
+                    self.assertIn("X.Y.Z", str(e.exception))
+
+
 class Fake(BaseHTTPRequestHandler):
     routes: dict = {}
     seen: list = []

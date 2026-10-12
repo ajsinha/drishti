@@ -51,6 +51,26 @@
     location.reload();
   }
 
+  // ---- a plain yes or no in the page's own dialog (never the browser's window.confirm) ---------------------------------------------
+  var askDlg = document.querySelector('[data-ask-dialog]');
+  function ask(opts) {
+    return new Promise(function (resolve) {
+      if (!askDlg) { resolve(window.confirm(opts.text)); return; }
+      var yes = askDlg.querySelector('[data-ask-yes]'), no = askDlg.querySelector('[data-ask-no]'), settled = false;
+      askDlg.querySelector('[data-ask-title]').textContent = opts.title || 'Are you sure?';
+      askDlg.querySelector('[data-ask-text]').textContent = opts.text || '';
+      yes.textContent = opts.ok || 'Go ahead';
+      no.textContent = opts.cancel || 'Keep it as it is';
+      yes.classList.toggle('emb-danger-btn', !!opts.danger);
+      function finish(v) { if (settled) { return; } settled = true; yes.onclick = null; no.onclick = null; askDlg.onclose = null; hide(askDlg); resolve(v); }
+      yes.onclick = function () { finish(true); };
+      no.onclick = function () { finish(false); };
+      askDlg.onclose = function () { finish(false); };
+      show(askDlg);
+      no.focus();
+    });
+  }
+
   // ---- a name to type, for the destructive cases -------------------------------------------------------------------------------
   function typed(opts) {
     return new Promise(function (resolve) {
@@ -163,6 +183,8 @@
           : 'Disabling keeps ' + name + ' on disk and switches it off. Nothing depends on it.';
         casRow.hidden = !(what === 'pack' && impact.blocked);
         casLabel.textContent = 'Also disable the packs that build on it';
+      } else if (impact.configPinned) {
+        text.textContent = name + ' is named in drishti.packs.enabled (DRISHTI_PACKS), so it can only be disabled here: it stays on disk, switched off. To remove it, take it out of that setting and restart.';
       } else if (impact.templated) {
         text.textContent = name + ' cannot be uninstalled: a pack\'s template would write it back. Disable it, or reset it to the pack\'s default, instead.';
       } else if (impact.blocked) {
@@ -174,6 +196,7 @@
       }
       if (impact.templated && mode === 'uninstall') { dis.hidden = false; }
       refresh();
+      if (impact.configPinned && mode === 'uninstall') { go.hidden = true; casRow.hidden = true; typedRow.hidden = true; dis.hidden = false; }
       (dis.hidden ? (go.hidden ? keep : go) : dis).focus();
     });
   }
@@ -183,5 +206,6 @@
     if (b) { e.preventDefault(); open({ kind: b.getAttribute('data-kind'), subtype: b.getAttribute('data-subtype'), name: b.getAttribute('data-name'), mode: b.getAttribute('data-mode') }); }
   });
   showStoredFlash();
-  window.DrishtiArtifacts = { call: call, typed: typed, open: open, flash: flash, done: done, words: words, el: el };
+  window.drishtiAsk = ask;
+  window.DrishtiArtifacts = { call: call, ask: ask, typed: typed, open: open, flash: flash, done: done, words: words, el: el };
 })();

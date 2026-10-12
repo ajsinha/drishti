@@ -25,6 +25,8 @@
   var el = U.el, api = U.api;
   var $ = function (s) { return root.querySelector(s); };
   var NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
+  // a pack's version is semantic: X.Y.Z, optionally -pre-release and +build (the same rule as `pack bundle` and the server's deploy check)
+  var VERSION_RE = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$/;
   var cfg = {
     sampleDocs: parseInt(root.dataset.sampleDocs, 10) || 200, readRows: parseInt(root.dataset.readRows, 10) || 500000, readMb: parseInt(root.dataset.readMb, 10) || 1024,
     canAuthor: root.dataset.canAuthor === 'true', isAdmin: root.dataset.isAdmin === 'true'
@@ -66,6 +68,7 @@
     }
     if (n === 3) {
       if (!NAME_RE.test(S.pack.name)) { say('The pack name is lower-case letters, digits and "-".', true); return false; }
+      if (!VERSION_RE.test(S.pack.version || '')) { say('The version must be X.Y.Z, such as 1.0.0 or 2.0.0-rc.1.', true); var vf = root.querySelector('[data-pack-field="version"]'); if (vf) { vf.setAttribute('aria-invalid', 'true'); vf.focus(); } return false; }
       var clash = S.plan ? Object.keys(S.plan.conflicts.kinds || {}) : [];
       if (clash.length) { say('Another pack on the server already defines the kind ' + clash.join(', ') + ', and unrelated packs may not share a kind: go back to step 2 and rename it on its card.', true); return false; }
       if (S.plan && S.plan.conflicts.mnemonics.length) { say('A mnemonic is already used by another pack: ' + S.plan.conflicts.mnemonics.join(', ') + '.', true); return false; }
@@ -75,14 +78,24 @@
     return true;
   }
 
-  function go(n) {
-    if (!canLeave(S.step, n)) { return; }
+  // each step is a history entry: Back and Forward move between the steps instead of leaving the page (and the work in it)
+  function go(n, fromHistory) {
+    if (!canLeave(S.step, n)) {
+      if (fromHistory) { history.pushState({ pkStep: S.step }, '', '#step' + S.step); }      // a refused Forward/Back: stay where the user is
+      return;
+    }
     say('');
     if (n >= 2 && S.step !== n) { autosave(); }
+    if (!fromHistory && n !== S.step) { history.pushState({ pkStep: n }, '', '#step' + n); }
     show(n);
+    persist();
     if (n === 2) { loadPlan(); } else if (n === 3) { drawPackForm(); } else if (n === 4) { startPreview(); } else if (n === 5) { drawOutput(); }
   }
 
+  window.addEventListener('popstate', function (e) {
+    var n = e.state && e.state.pkStep;
+    if (n && n !== S.step) { go(n, true); }
+  });
   nextB.addEventListener('click', function () { go(S.step + 1); });
   backB.addEventListener('click', function () { go(S.step - 1); });
   Array.prototype.forEach.call(root.querySelectorAll('[data-go]'), function (b) {
@@ -118,7 +131,7 @@
     nextB.disabled = S.reading;
   }
 
-  function invalidate() { S.plan = null; S.planKey = ''; S.job = null; S.jobKey = ''; S.jobView = null; }
+  function invalidate() { persist(); S.plan = null; S.planKey = ''; S.job = null; S.jobKey = ''; S.jobView = null; }
 
   function readAll(entries) {
     S.reading = true; S.stop = false;
@@ -246,7 +259,7 @@
       fld('Pack name', 'name', 'Lower-case letters, digits and "-". It is the folder name and the identity of the pack. ' + warnName, { mono: true }),
       fld('Pack code', 'code', 'Typed alone in the terminal to open the pack\'s overview.', { mono: true }),
       fld('Title', 'title', 'Shown in the pack switcher and the Admin pages.'),
-      fld('Version', 'version', 'A plain version such as 1.0.0. Deploying an older or equal version is allowed but flagged.', { mono: true }),
+      fld('Version', 'version', 'X.Y.Z, such as 1.0.0 (or 2.0.0-rc.1). Deploying an older or equal version is allowed but flagged.', { mono: true }),
       fld('Description', 'description', 'One or two sentences for the Admin → Packs list.', { area: true })]));
     var cnt = el('div', { class: 'pk-grid' });
     var sIn = el('input', { type: 'number', min: '1', max: '20', value: String(S.samples), class: 'studio-in', id: 'pkSamples' });
@@ -369,7 +382,7 @@
   function save(quiet) {
     if (!(S.schemas.length || S.data.length)) { if (!quiet) { U.say(saveMsg, 'Nothing to save yet.', true); } return Promise.resolve(); }
     return api('POST', '/build/pack/api/drafts', { id: S.draftId || undefined, name: draftName(), state: state() }).then(function (r) {
-      if (r.ok) { S.draftId = r.body.id; U.say(saveMsg, 'Draft saved as the design "New pack: ' + r.body.name + '". Resume it from this page.'); $('[data-discard]').hidden = false; }
+      if (r.ok) { S.draftId = r.body.id; savedKey = key(); persist(); U.say(saveMsg, 'Draft saved as the design "New pack: ' + r.body.name + '". Resume it from this page.'); $('[data-discard]').hidden = false; }
       else if (!quiet) { U.say(saveMsg, U.why(r), true); } else { U.say(saveMsg, 'Not saved: ' + U.why(r), true); }
     });
   }
@@ -398,6 +411,39 @@
     box.appendChild(el('label', { for: 'pkDraft', text: 'Resume a draft ' })); box.appendChild(sel); box.appendChild(b); box.hidden = false;
   });
 
-  show(1);
+  // ---- keeping the work: a tab's own storage and a leave-the-page guard ------------------------------------------------------------
+  var STORE = 'drishti.packnew.v1', savedKey = '', persistTimer = null;
+  function persist() {
+    clearTimeout(persistTimer);
+    persistTimer = setTimeout(function () {
+      try {
+        if (!(S.schemas.length || S.data.length)) { sessionStorage.removeItem(STORE); return; }
+        sessionStorage.setItem(STORE, JSON.stringify({ v: 1, step: S.step, draftId: S.draftId, schemas: S.schemas, kindOf: S.kindOf, overrides: S.overrides, pack: S.pack, samples: S.samples, strip: S.strip,
+          data: S.data.map(function (d) { return { name: d.name, rows: d.rows, bytes: d.bytes, docs: d.docs, truncated: d.truncated, bad: d.bad }; }) }));
+      } catch (e) { /* storage full or off: the draft on the server and the leave guard remain */ }
+    }, 250);
+  }
+  function restore() {
+    var raw = null, v;
+    try { raw = sessionStorage.getItem(STORE); } catch (e) { return false; }
+    if (!raw || new URLSearchParams(location.search).get('draft')) { return false; }
+    try { v = JSON.parse(raw); } catch (e) { return false; }
+    if (!v || v.v !== 1 || !((v.schemas || []).length || (v.data || []).length)) { return false; }
+    S.schemas = v.schemas || []; S.data = (v.data || []).map(function (d) { d.reading = false; d.bytesRead = d.bytes; return d; }); S.kindOf = v.kindOf || {}; S.overrides = v.overrides || {};
+    S.pack = Object.assign(S.pack, v.pack || {}); S.samples = v.samples || 5; S.strip = v.strip || 6; S.draftId = v.draftId || null;
+    return Math.min(Math.max(v.step || 1, 1), 3);                          // the preview is drafted again from step 3; steps 1 to 3 come back as they were
+  }
+  root.addEventListener('change', persist);
+  window.addEventListener('beforeunload', function (e) {
+    if ((S.schemas.length || S.data.length) && S.step < 5 && savedKey !== key()) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  var back = restore();
+  history.replaceState({ pkStep: back || 1 }, '', location.pathname + location.search + '#step' + (back || 1));
   renderSources();
+  show(back || 1);
+  if (back) {
+    say('Your unsaved work in this tab was restored.');
+    if (back === 2) { loadPlan(); } else if (back === 3) { loadPlan(function () { drawPackForm(); }); }
+  }
 })();

@@ -108,6 +108,8 @@ async def start_job(request: Request):
         plan_obj, *_ = await W.plan_object(body, lim, request.app.state.backend, me, request.app.state.packs)
         if not W.NAME_RE.fullmatch(plan_obj.pack["name"]):
             return _problem(400, "the pack name is lower-case letters, digits and '-'")
+        if not W.VERSION_RE.fullmatch(str(plan_obj.pack.get("version") or "")):
+            return _problem(400, "the pack version must be X.Y.Z, such as 1.0.0 or 2.0.0-rc.1")
         if not plan_obj.kinds:
             return _problem(400, "no kind could be read from these files")
         nokey = [k.kind for k in plan_obj.kinds if not k.key]

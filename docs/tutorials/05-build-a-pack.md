@@ -88,7 +88,7 @@ You should see the **bundle** `desk-quotes-1.0.0.tar.gz` with its SHA-256 and th
 
 You should see the server unpack the archive and check it: checksum, unsigned (a note, not an error), no path leaves the pack folder, `pack.yaml`, every file listed and matching, the server version it
 needs, `sutra lint` and `sutra test` passed. Under **What it changes**: `desk-quotes 1.0.0 is a new pack: it is loaded when you deploy it`, with counters for breaking, selection, layout and other changes
-(all 0 for a new pack). Press **Deploy desk-quotes 1.0.0** and confirm.
+(all 0 for a new pack). Press **Deploy desk-quotes 1.0.0** and confirm in the page's own dialog (the version must be X.Y.Z, as here).
 
 ![The history: a deploy of desk-quotes 1.0.0 by you](img/t05/08-deployed.jpg)
 
@@ -109,7 +109,7 @@ Build the pack a second time with the version `1.1.0` (it takes the same steps) 
 
 ![Versions kept for a rollback, and the history of deployments](img/t05/10-versions-kept.jpg)
 
-You should see a table **Versions kept for a rollback**: `desk-quotes 1.0.0`, with a **Roll back to this** button, above the history. Press it and confirm.
+You should see a table **Versions kept for a rollback**: `desk-quotes 1.0.0`, with a **Roll back to this** button, above the history. Press it and confirm in the dialog. The running version is never offered here, and a version deployed twice is kept once.
 
 ![After the rollback the history shows it, and the pack is back at 1.0.0](img/t05/11-rolled-back.jpg)
 

@@ -38,6 +38,10 @@
   function why(r) { return window.drsMessage ? window.drsMessage({ code: r.body.code || ('HTTP ' + r.status), detail: r.body.detail }, 'The request failed') : (r.body.detail || 'The request failed'); }
   function say(node, text, bad) { node.textContent = text; node.classList.toggle('t-bad', !!bad); node.classList.toggle('t-ok', !bad && !!text); }
   function q(s) { return encodeURIComponent(s); }
+  // a plain yes or no in the page's own dialog (artifact-uninstall.js)
+  function ask(title, text, ok, danger) {
+    return window.drishtiAsk ? window.drishtiAsk({ title: title, text: text, ok: ok, danger: danger }) : Promise.resolve(window.confirm(text));
+  }
 
   // After a change that restarts the server in place: wait for it to go and come back, then show the new state.
   function afterChange(msgNode, body) {
@@ -140,7 +144,7 @@
       if (!rep.ok) { out.appendChild(el('p', { class: 'dep-refused t-bad', role: 'alert', text: 'Refused: nothing was changed. Fix the failed checks and upload again.' })); return; }
       var pv = rep.preview || {}, run = pv.running, counts = pv.counts || {}, breaking = counts.breaking || 0;
       out.appendChild(el('h3', { text: 'What it changes' }));
-      out.appendChild(el('p', { class: 'dep-ver', text: run ? rep.pack + ': ' + run.version + ' (' + run.where + ') becomes ' + rep.version + ' (' + pv.versionOrder + ' than the running one)'
+      out.appendChild(el('p', { class: 'dep-ver', text: run ? rep.pack + ': ' + run.version + ' (' + run.where + ') becomes ' + rep.version + ' (' + ({ newer: 'newer than', older: 'older than', same: 'the same as' }[pv.versionOrder] || pv.versionOrder) + ' the running one)'
         : rep.pack + ' ' + rep.version + ' is a new pack: it is loaded when you deploy it.' }));
       if (pv.versionOrder === 'same' || pv.versionOrder === 'older') {
         out.appendChild(el('p', { class: 't-warn', text: 'This version is ' + (pv.versionOrder === 'same' ? 'the same as' : 'older than') + ' the running one. You can still deploy it.' }));
@@ -172,12 +176,14 @@
         call('DELETE', '/admin/api/packs/deploy/' + q(rep.uploadId)).then(function () { out.hidden = true; say(msg, 'Discarded. Nothing was changed.'); file.value = ''; up.disabled = true; });
       });
       go.addEventListener('click', function () {
-        if (!window.confirm('Deploy ' + rep.pack + ' ' + rep.version + '? It takes effect now, with no restart. If the pack cannot be used, the old files are put back.')) { return; }
-        go.disabled = no.disabled = true;
-        say(msg, 'Deploying ' + rep.pack + ' ' + rep.version + '…');
-        call('POST', '/admin/api/packs/deploy/' + q(rep.uploadId), { acceptBreaking: !!(ack && ack.checked) }).then(function (r) {
-          if (!r.ok) { say(msg, why(r), true); go.disabled = no.disabled = false; return; }
-          afterChange(msg, r.body);
+        ask('Deploy ' + rep.pack + ' ' + rep.version + '?', 'Deploy ' + rep.pack + ' ' + rep.version + '? It takes effect now, with no restart. If the pack cannot be used, the old files are put back.', 'Deploy').then(function (yes) {
+          if (!yes) { return; }
+          go.disabled = no.disabled = true;
+          say(msg, 'Deploying ' + rep.pack + ' ' + rep.version + '…');
+          call('POST', '/admin/api/packs/deploy/' + q(rep.uploadId), { acceptBreaking: !!(ack && ack.checked) }).then(function (r) {
+            if (!r.ok) { say(msg, why(r), true); go.disabled = no.disabled = false; return; }
+            afterChange(msg, r.body);
+          });
         });
       });
     }
@@ -187,12 +193,14 @@
   root.querySelectorAll('[data-rollback]').forEach(function (b) {
     b.addEventListener('click', function () {
       var row = b.closest('tr'), name = row.getAttribute('data-pack'), version = row.getAttribute('data-version');
-      if (!window.confirm('Roll ' + name + ' back to ' + (version === 'shipped' ? 'the version that ships with the server' : version) + '? It takes effect now, with no restart.')) { return; }
       var m = root.querySelector('[data-msg]');
-      say(m, 'Rolling ' + name + ' back…');
-      call('POST', '/admin/api/packs/' + q(name) + '/rollback', { version: version }).then(function (r) {
-        if (!r.ok) { say(m, why(r), true); return; }
-        afterChange(m, r.body);
+      ask('Roll ' + name + ' back?', 'Roll ' + name + ' back to ' + (version === 'shipped' ? 'the version that ships with the server' : version) + '? It takes effect now, with no restart.', 'Roll back').then(function (yes) {
+        if (!yes) { return; }
+        say(m, 'Rolling ' + name + ' back…');
+        call('POST', '/admin/api/packs/' + q(name) + '/rollback', { version: version }).then(function (r) {
+          if (!r.ok) { say(m, why(r), true); return; }
+          afterChange(m, r.body);
+        });
       });
     });
   });
@@ -202,12 +210,15 @@
   root.querySelectorAll('[data-samples-set]').forEach(function (b) {
     b.addEventListener('click', function () {
       var mode = b.getAttribute('data-samples-set'), m = root.querySelector('[data-msg]');
-      if (mode === 'hidden' && !window.confirm('Hide the sample packs from everyone, developers too? They are unloaded and their connectors stop.')) { return; }
-      say(m, 'Saving\u2026');
-      call('POST', '/admin/api/pack-samples', { mode: mode }).then(function (r) {
-        if (!r.ok) { say(m, why(r), true); return; }
-        say(m, 'Saved: sample packs are now ' + r.body.mode + '.');
-        setTimeout(function () { location.reload(); }, 700);
+      var go = mode === 'hidden' ? ask('Hide the sample packs?', 'Hide the sample packs from everyone, developers too? They are unloaded and their connectors stop.', 'Hide them', true) : Promise.resolve(true);
+      go.then(function (yes) {
+        if (!yes) { return; }
+        say(m, 'Saving\u2026');
+        call('POST', '/admin/api/pack-samples', { mode: mode }).then(function (r) {
+          if (!r.ok) { say(m, why(r), true); return; }
+          say(m, 'Saved: sample packs are now ' + r.body.mode + '.');
+          setTimeout(function () { location.reload(); }, 700);
+        });
       });
     });
   });
@@ -234,6 +245,7 @@
     var tb = el('tbody');
     ds.connectors.forEach(function (c) {
       var st = STATE[c.state] || ['st', String(c.state || '').toLowerCase()];
+      if (c.label) { st = [{ ok: 'st st-ok', down: 'st st-bad', warn: 'st st-warn' }[c.level] || 'st', c.label]; }       // the same words as Admin → Connectors and the CLI
       var link = c.defined
         ? el('a', { class: 'fk', href: c.editUrl, text: 'Edit', 'aria-label': 'Edit connector ' + c.name })
         : el('a', { class: 'fk', href: c.createUrl, text: 'Create', 'aria-label': 'Create connector ' + c.name });

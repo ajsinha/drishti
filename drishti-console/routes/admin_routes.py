@@ -16,6 +16,8 @@
 the admin role on every call; the console also hides these pages from non-admins."""
 from __future__ import annotations
 
+import hashlib
+import json
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
@@ -208,6 +210,19 @@ async def deploy_discard(request: Request, upload_id: str):
         return await request.app.state.backend.admin("DELETE", f"/packs/deploy/{quote(upload_id)}", ident(request))
     except BackendError as e:
         return _problem(e)
+
+
+@router.get("/api/packs/stamp")
+async def packs_stamp(request: Request):
+    """What the Packs page polls every few seconds: one short row per pack and a digest of them (the page offers a refresh when it moves)."""
+    try:
+        listing = await request.app.state.backend.admin("GET", "/packs", ident(request))
+    except BackendError as e:
+        return _problem(e)
+    rows = [{"name": p.get("name"), "version": p.get("version"), "loaded": p.get("loaded"), "enabled": p.get("enabled"), "problem": p.get("problem"),
+             "sutraProblems": len(p.get("sutraProblems") or []), "updatedAt": p.get("updatedAt")} for p in listing]
+    digest = hashlib.sha1(json.dumps(rows, sort_keys=True, default=str).encode()).hexdigest()
+    return {"stamp": digest, "rows": rows}
 
 
 @router.get("/api/packs/history")

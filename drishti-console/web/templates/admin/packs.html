@@ -21,9 +21,10 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% from "_macros/retry.html" import retry_note, retry_button %}
-<div class="adm" data-pack-admin>
+<div class="adm" data-pack-admin data-watch="/admin/api/packs/stamp">
   <h1>Packs</h1>
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
+  <details class="adm-about" open><summary>About this page</summary>
   <p class="text-muted-d">A pack brings a domain: its kinds, mnemonics, layouts and connectors. Switch a loaded pack off and, at
     everyone's next click, its kinds cannot be opened, its mnemonics and suggestions disappear, and it leaves every pack menu.
     Switch it on and it all returns. A pack another pack builds on stays on until that one is off; switching a pack on switches on
@@ -35,6 +36,7 @@
     <b>Sample</b> packs are demonstrations; once real packs exist, hide them from business users (below). <b>Deploy an archive</b> (below) brings a new version of a pack from a file: it is checked, you see what it changes,
     and only then is it deployed; the version it replaces is kept so you can <b>Roll back</b>. <b>Data source</b> shows the connectors a
     loaded pack reads through, with links to <a href="/admin/connectors">Admin &rarr; Connectors</a>, where they are created, tested and changed.</p>
+  </details>
   <p class="adm-msg" data-msg role="status" aria-live="polite"></p>
   {% set sample_names = samples.samples or [] %}
   {% if sample_names %}
@@ -65,16 +67,18 @@
         <td>{% if not p.loaded %}<span class="st" title="On disk; Load it from here, or name it in drishti.packs.enabled (DRISHTI_PACKS)">not loaded</span>
             {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
             {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{{ retry_note(p.retry) }}{% endif %}
+            {% if p.sutraProblems %}<div class="t-bad" data-sutra-problems title="{{ p.sutraProblems | join(' | ') }}"><a href="/admin/packs/{{ p.name }}#pdSummary">{{ p.sutraProblems | length }} Sutra problem{{ '' if p.sutraProblems | length == 1 else 's' }}</a>: {{ p.sutraProblems[0] }}</div>{% endif %}
 </td>
         <td class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if p.loaded %}
           <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
             {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
+          {% if p.enabled and p.requiredBy %}<div class="text-muted-d pk-needed" data-needed-note>Needed by {{ p.requiredBy | join(', ') }}: switch those off first.</div>{% endif %}
           <button type="button" class="fk" data-datasource title="The connectors this pack reads through, and where to change them (Admin → Connectors)">Data source</button>
           <a class="fk" href="/admin/packs/{{ p.name }}/loads" title="Batches your ETL has announced, what is expected by when, and what is late">Data loads</a>
           {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from this page: unload it now (no restart)">Unload</button>{% endif %}
         {% else %}<button type="button" class="fk" data-load="load" title="Check the pack with the loaded ones, then load it now (no restart)">Load</button>{% endif %}
-          <button type="button" class="fk emb-danger" data-uninstall data-kind="pack" data-name="{{ p.name }}" aria-label="Uninstall {{ p.name }}" title="See what depends on it, then move it to the archive (Restore is in Admin → Artifacts)">Uninstall…</button></td>
+          <button type="button" class="fk emb-danger" data-uninstall data-kind="pack" data-name="{{ p.name }}" aria-label="Uninstall {{ p.name }}" title="See what depends on it, then move it to the archive (Restore is in Admin → Artifacts → Uninstalled)">Uninstall…</button></td>
       </tr>
     {% endfor %}
     </tbody>
@@ -159,4 +163,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-cards.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -121,3 +121,44 @@ def test_deploy_routes_do_not_shadow_the_existing_pack_actions(client, backend, 
     client.post("/admin/api/packs/trading", json={"enabled": False})            # the switch
     client.post("/admin/api/packs/genomics/load")                               # the load
     assert [(m, p) for m, p, b, q in calls] == [("PUT", "/packs/trading"), ("POST", "/packs/genomics/load")]
+
+
+def test_the_packs_list_shows_sutra_problems_connectors_the_change_time_and_polls(client, backend, monkeypatch):
+    def extra(method, path, body, params):
+        if path == "/packs":
+            return [{"name": "trading", "title": "Trading", "description": "", "version": "1.1.0", "loaded": True, "added": False, "enabled": True, "extends": ["core"],
+                     "requiredBy": ["credit"], "kinds": ["trade"], "connectors": ["lake", "trading-store"], "mnemonics": ["TRD"], "updatedAt": "2026-10-05T10:00:00Z",
+                     "updatedBy": "files on disk", "sutraProblems": ["sutras/trade.v1.sutra.yaml:7:3 DRS-2010 missing 'id' in title"]}]
+        return None
+    with_admin(backend, monkeypatch, [], extra)
+    page = client.get("/admin/packs").text
+    assert "1 Sutra problem" in page and "sutras/trade.v1.sutra.yaml:7:3 DRS-2010" in page            # file and line, on the row itself
+    assert ">trading-store<" in page                                                                    # a connector the pack names by template or route
+    assert "2026-10-05 10:00" in page and "files on disk" in page                                      # Changed is filled after a deploy
+    assert "Needed by credit: switch those off first" in page and 'data-needed-note' in page          # visible text, not only a tooltip
+    assert 'data-watch="/admin/api/packs/stamp"' in page and "admin-watch.js" in page
+    assert "data-ask-dialog" in page                                                                   # Switch off, Unload and Load use the styled dialog
+
+
+def test_the_stamp_digest_moves_when_a_pack_changes(client, backend, monkeypatch):
+    state = {"enabled": True}
+
+    def extra(method, path, body, params):
+        if path == "/packs":
+            return [{"name": "trading", "version": "1.1.0", "loaded": True, "enabled": state["enabled"], "problem": None, "sutraProblems": [], "updatedAt": None}]
+        return None
+    with_admin(backend, monkeypatch, [], extra)
+    a = client.get("/admin/api/packs/stamp").json()
+    assert a["rows"][0]["name"] == "trading" and len(a["stamp"]) == 40
+    state["enabled"] = False
+    assert client.get("/admin/api/packs/stamp").json()["stamp"] != a["stamp"]
+
+
+def test_a_non_admin_is_told_the_power_that_page_needs(client, backend, monkeypatch):
+    from core.backend import BackendError
+
+    async def admin(method, path, ident, body=None, timeout=None, **params):
+        raise BackendError(403, "DRS-5002", "not an administrator")
+    monkeypatch.setattr(backend, "admin", admin)
+    r = client.get("/admin/packs")
+    assert r.status_code == 403

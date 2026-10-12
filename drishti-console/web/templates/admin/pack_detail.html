@@ -15,14 +15,14 @@
 #}
 {% extends "base.html" %}
 {% block title %}{{ p.title or p.name }} · Packs · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-detail.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% from "_macros/retry.html" import retry_note, retry_button %}
 {% set loaded = p.loaded %}
-<div class="adm" data-pack-admin data-pack-detail="{{ p.name }}">
+<div class="adm" data-pack-admin data-pack-detail="{{ p.name }}" data-watch="/admin/api/packs/stamp">
   {% with tab='packs' %}{% include "admin/_nav.html" %}{% endwith %}
   <p class="adm-crumb"><a href="/admin/packs">Packs</a> <span aria-hidden="true">/</span> <span class="mono">{{ p.name }}</span></p>
   <h1 class="ws-h">{{ p.title or p.name }}{% if p.sample %} <span class="st st-warn" data-sample-badge title="A sample pack: a demonstration, shown or hidden by the sample-pack setting">Sample</span>{% endif %}
@@ -39,6 +39,8 @@
         {% elif not loaded %}<span class="st" title="On disk; Load it from here">not loaded</span>
         {% elif p.enabled %}<span class="st st-ok">on</span>{% else %}<span class="st st-bad">off</span>{% endif %}
         {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{% endif %}{{ retry_note(p.retry) }}
+        {% if p.sutraProblems %}<div class="t-bad" data-sutra-problems><b>{{ p.sutraProblems | length }} Sutra problem{{ '' if p.sutraProblems | length == 1 else 's' }}</b> (the pack is {{ 'on' if p.enabled else 'off' }}, and the Sutra concerned is not in use):
+          <ul class="det-list">{% for x in p.sutraProblems[:20] %}<li class="mono">{{ x }}</li>{% endfor %}{% if p.sutraProblems | length > 20 %}<li class="text-muted-d">and {{ p.sutraProblems | length - 20 }} more</li>{% endif %}</ul></div>{% endif %}
         {% if p.retry %}{{ retry_button('packs') }}{% endif %}</dd>
       <dt>Changed</dt><dd class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} by {{ p.updatedBy }}{% else %}—{% endif %}</dd>
       <dt>Builds on</dt><dd data-extends>{% for x in p.extends or [] %}<a class="mono" href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">nothing</span>{% endfor %}</dd>
@@ -47,6 +49,7 @@
     <p class="adm-actions det-actions">{% if loaded %}
       <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
         {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
+      {% if p.enabled and p.requiredBy %}<span class="text-muted-d" data-needed-note>Needed by {{ p.requiredBy | join(', ') }}: switch those off first.</span>{% endif %}
       {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from the Packs page: unload it now (no restart)">Unload</button>{% endif %}
       {% else %}<button type="button" class="fk" data-load="load" title="Check the pack with the loaded ones, then load it now (no restart)">Load</button>{% endif %}
     </p>
@@ -88,7 +91,8 @@
       <thead><tr><th scope="col">Connector</th><th scope="col">Status</th><th scope="col">Kinds from this pack</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
       <tbody>{% for c in sources.connectors %}<tr data-connector="{{ c.name }}">
         <th scope="row" class="mono">{% if c.defined %}<a href="/admin/connectors/{{ c.name | urlencode }}">{{ c.name }}</a>{% else %}{{ c.name }}{% endif %}</th>
-        <td>{% if c.defined %}<span class="st {{ {'RUNNING': 'st-ok', 'FAILED': 'st-bad'}.get(c.state, 'st-warn' if c.state in ('IDLE', 'NOT_LOADED') else '') }}">{{ c.state | lower | replace('_', ' ') }}</span>
+        <td>{% if c.defined %}<span class="st {{ {'ok': 'st-ok', 'down': 'st-bad', 'warn': 'st-warn'}.get(c.level, '') }}" data-badge>{{ c.label or (c.state | lower | replace('_', ' ')) }}</span>
+          {% if c.level in ('warn', 'down') and c.health %}<div class="{{ 't-bad' if c.level == 'down' else 't-warn' }}">{{ c.health }}</div>{% endif %}
           {% else %}<span class="st st-bad">missing</span> <span class="text-muted-d">nothing defines it</span>{% endif %}</td>
         <td class="mono">{{ (c.kinds or []) | join(', ') or '—' }}</td>
         <td>{% if c.defined %}<a class="fk" href="/admin/connectors/{{ c.name | urlencode }}">Open</a>{% else %}<a class="fk" href="{{ c.createUrl }}" aria-label="Create connector {{ c.name }}">Create</a>{% endif %}</td></tr>
@@ -131,7 +135,8 @@
         <td class="mono">{{ r.previous or '—' }}</td><td>{{ r.by }}</td><td class="cmp-path">{{ r.detail }}</td></tr>
       {% else %}<tr><td colspan="6" class="text-muted-d">Nothing has been deployed from the console for this pack.</td></tr>{% endfor %}</tbody></table></div>
   </section>
+  {% include "admin/_uninstall_dialog.html" %}
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/roles.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-packs.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -2318,3 +2318,11 @@ for today's business date: three sample tickets and the exported one.
 6. A role without `raw` sees `•••` for the fields the site masks, and the views still make sense.
 7. The guide renders in the help centre and its links open.
 8. The pack's **version** is bumped, and the registry archive (`packreg verify`) is current.
+
+
+### Version rule and the wizard
+
+`version:` in `pack.yaml` is **X.Y.Z** (optionally `-pre-release` and `+build`, such as `2.0.0-rc.1`). `pack bundle`, `pack make --version`, Build → New pack and the server's
+deploy check refuse anything else with that sentence. Build → New pack keeps your work: each step is a history entry (the browser's Back moves between steps), a reload
+restores the sources and choices from the tab's storage, and leaving with unsaved work asks first. For your own JSON Lines files the default source is the **File
+connector** (its generated template tells you to set `root`).

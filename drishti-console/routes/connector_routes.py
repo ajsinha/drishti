@@ -19,6 +19,8 @@ carries the administrator's requests as same-origin JSON: a connector's version 
 people cannot overwrite each other, and ``confirm=true`` is sent only after the administrator has seen which packs a change affects."""
 from __future__ import annotations
 
+import hashlib
+import json
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
@@ -81,7 +83,26 @@ async def detail_page(request: Request, name: str):
         status = await request.app.state.backend.admin("GET", "/status", me)
     except BackendError as e:
         return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
-    return render(request, "admin/connector_detail.html", c=c, status=status)
+    try:                                         # the kinds the editor offers as a pick-list: a hint, so its absence never closes the page
+        known = (await _server(request, "GET", "")).get("knownKinds", [])
+    except BackendError:
+        known = []
+    return render(request, "admin/connector_detail.html", c=c, status=status, known_kinds=known)
+
+
+@router.get("/api/stamp")
+async def api_stamp(request: Request):
+    """What the page polls every few seconds: one short row per connector (state, words, version of the file) and a digest of them. The page
+    compares the digest with the one it first saw and offers a refresh when it moved; on a connector's own page it also updates the status."""
+    try:
+        listing = await _server(request, "GET", "")
+    except BackendError as e:
+        return _problem(e)
+    rows = [{"name": c.get("name"), "state": c.get("state"), "level": c.get("level"), "label": c.get("label"), "enabled": c.get("enabled"),
+             "etag": c.get("etag"), "kinds": c.get("kinds"), "origin": c.get("origin"), "health": c.get("health")} for c in listing.get("connectors", [])]
+    keyed = [{k: v for k, v in r.items() if k != "health"} for r in rows]       # a health sentence may carry a changing figure: it does not count as a change
+    digest = hashlib.sha1(json.dumps(keyed, sort_keys=True, default=str).encode()).hexdigest()
+    return {"stamp": digest, "rows": rows}
 
 
 @router.get("/api/list")

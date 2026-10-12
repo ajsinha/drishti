@@ -144,6 +144,9 @@ class ConnectorBackend(FakeBackend):
         if action == "render":
             return {"text": self.draft_text(body)}
         if action == "validate":
+            text = self.draft_text(body)
+            if re.search(r"pool-size: (?!\d+$)", text, re.M):
+                return {"ok": False, "problems": [{"level": "error", "field": "settings.pool-size", "message": "a whole number"}]}
             return {"ok": True, "problems": []}
         if action == "test":
             text = self.draft_text(body) if body else self.files[name]["text"]
@@ -164,6 +167,8 @@ class ConnectorBackend(FakeBackend):
         if method == "PUT":
             text = self.draft_text(body)
             d = _flat(text)
+            if re.search(r"pool-size: (?!\d+$)", text, re.M):
+                raise BackendError(422, "DRS-5031", "the connector is not valid: settings.pool-size: a whole number")
             if re.search(r"password: (?!\$\{)", text):
                 raise BackendError(422, "DRS-5031", "the connector is not valid: settings.password: a credential is never written into a connector file")
             f = self.files.get(name)
@@ -214,7 +219,7 @@ def conn_console():
     thread.join(10)
 
 
-def test_create_test_save_edit_disable_delete(browser, conn_console):
+def test_create_test_save_edit_disable_and_uninstall_is_the_only_way_out(browser, conn_console):
     url, backend = conn_console
     page = browser.new_page()
     page.on("dialog", lambda d: d.accept())
@@ -252,6 +257,10 @@ def test_create_test_save_edit_disable_delete(browser, conn_console):
     assert "never written into a connector file" in err and "${PASSWORD}" in err
     assert dlg.locator("[data-setting='password']").get_attribute("aria-invalid") == "true"
     assert not any(c[0] == "PUT" for c in backend.calls[sent:])
+    assert dlg.locator("[data-setting='password']").get_attribute("type") == "password"            # a secret field is masked while it is typed
+    assert "Not saved" in dlg.locator("[data-edit-msg]").inner_text()
+    dlg.locator("[data-test]").click()                                                              # Test connection says why it did not try, instead of nothing
+    assert "Not tried" in dlg.locator("[data-edit-msg]").inner_text()
     dlg.locator("[data-setting='password']").fill("${ORDERS_DB_PASSWORD}")
 
     # test: the Test tab shows what the throwaway instance found
@@ -301,6 +310,8 @@ def test_create_test_save_edit_disable_delete(browser, conn_console):
     page.locator("tr[data-conn='orders-db']").get_by_role("button", name="Edit orders-db").click()
     dlg = page.locator("[data-edit-dialog]")
     dlg.locator("[data-tab='history']").click()
+    assert not dlg.locator("[data-save]").is_visible() and not dlg.locator("[data-test]").is_visible()   # nothing in the draft to test or save on this tab
+    assert re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \S+", dlg.locator("[data-history] td").first.inner_text())     # when, in the page's zone, with the zone named
     dlg.get_by_role("button", name=re.compile("Show what changed")).first.click()
     dlg.locator("[data-diff]:not([hidden])").wait_for()
     diff = dlg.locator("[data-diff]").inner_text()
@@ -312,17 +323,10 @@ def test_create_test_save_edit_disable_delete(browser, conn_console):
     page.wait_for_function("() => document.querySelector('tr[data-conn=\"orders-db\"]').innerText.includes('disabled')", timeout=15000)
     assert _flat(backend.files["orders-db"]["text"])["enabled"] is False
 
-    # --- delete, with a confirmation
-    page.locator("tr[data-conn='orders-db']").get_by_role("button", name="Delete orders-db").click()
-    conf = page.locator("[data-confirm-dialog]")
-    conf.wait_for()
-    assert "Delete orders-db?" in conf.inner_text()
-    conf.locator("[data-confirm-no]").click()
-    assert "orders-db" in backend.files                                                            # "keep it" keeps it
-    page.locator("tr[data-conn='orders-db']").get_by_role("button", name="Delete orders-db").click()
-    conf.locator("[data-confirm-yes]").click()
-    page.wait_for_function("() => document.querySelector('tr[data-conn=\"orders-db\"]') === null", timeout=15000)
-    assert "orders-db" not in backend.files
+    # --- one way out for a file connector: Uninstall (archived, restorable), no separate Delete
+    row = page.locator("tr[data-conn='orders-db']")
+    assert row.get_by_role("button", name="Delete orders-db").count() == 0
+    assert row.get_by_role("button", name="Uninstall orders-db").count() == 1
     page.close()
 
 
@@ -413,3 +417,53 @@ def test_the_page_fits_a_phone_and_the_dark_theme_with_big_targets(browser, conn
     background = page.evaluate("() => getComputedStyle(document.querySelector('[data-edit-dialog]')).backgroundColor")
     assert colour != background
     ctx.close()
+
+
+def test_a_refused_save_shows_its_error_beside_save_and_on_the_field(browser, conn_console):
+    url, backend = conn_console
+    page = browser.new_page(viewport={"width": 1100, "height": 700})
+    page.goto(url + "/admin/connectors")
+    page.click("[data-new]")
+    dlg = page.locator("[data-edit-dialog]")
+    dlg.locator("[data-f-name]").wait_for()
+    dlg.locator("[data-f-plugin]").select_option("jdbc")
+    dlg.locator("[data-f-name]").fill("bad-db")
+    dlg.locator("[data-setting='url']").fill("jdbc:postgresql://db.example.com/x")
+    dlg.locator("[data-setting='pool-size']").fill("abc")
+    dlg.locator("[data-save]").click()
+    dlg.locator("[data-edit-msg].t-bad").wait_for()
+    page.wait_for_function("() => document.querySelector('[data-setting=\"pool-size\"]').getAttribute('aria-invalid') === 'true'")
+    msg = dlg.locator("[data-edit-msg]")
+    assert "Not saved" in msg.inner_text() and "whole number" in msg.inner_text()
+    save = dlg.locator("[data-save]").bounding_box()
+    box = msg.bounding_box()
+    assert box["y"] + box["height"] <= save["y"] + save["height"] + 1 and box["y"] + box["height"] <= 700      # in the sticky bar, on screen, not below the long form
+    assert "whole number" in dlg.locator("div.conn-field:has([data-setting='pool-size']) [data-field-err]").inner_text()
+    assert page.evaluate("() => document.activeElement.getAttribute('data-setting')") == "pool-size"           # focused and scrolled to
+    assert dlg.locator("[data-save]").is_enabled() and dlg.locator("[data-save]").inner_text() == "Save"       # not stuck on Saving...
+    assert "bad-db" not in backend.files
+    page.close()
+
+
+def test_the_connector_page_follows_the_server_status_and_the_list_offers_a_refresh(browser, conn_console):
+    url, backend = conn_console
+    page = browser.new_page()
+    page.goto(url + "/admin/connectors/item-store")
+    page.locator("[data-state]").wait_for()
+    page.wait_for_timeout(300)
+    f = backend.files["item-store"]
+    d = _flat(f["text"])
+    d["enabled"] = False                                                                                  # changed behind the page's back (another admin, the CLI, a file on disk)
+    f["text"], f["v"] = _text(d), f["v"] + 1
+    page.wait_for_function("() => document.querySelector('[data-state]').innerText.includes('disabled')", timeout=20000)   # polls every 5 s
+    d["enabled"] = True
+    f["text"], f["v"] = _text(d), f["v"] + 1
+    page.goto(url + "/admin/connectors")
+    page.wait_for_timeout(500)
+    d["enabled"] = False
+    f["text"], f["v"] = _text(d), f["v"] + 1
+    page.locator("[data-changed]").wait_for(timeout=20000)
+    assert "Changed on the server" in page.locator("[data-changed]").inner_text() and page.locator("[data-changed-refresh]").is_visible()
+    d["enabled"] = True
+    f["text"], f["v"] = _text(d), f["v"] + 1
+    page.close()

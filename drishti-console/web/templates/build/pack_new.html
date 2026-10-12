@@ -27,7 +27,7 @@
   <p class="text-muted-d">Bring one or many <b>schema files</b> (JSON Schema, JSON or YAML) and/or <b>JSON Lines data</b>, check what was detected, preview every
     Sutra it makes, then download the pack or deploy it. Your files are read in this browser; only a <b>sample</b> of the documents and the
     counts are sent, never the whole folder. The same rules run on the command line: <code>drishti.py pack make --schema</code>.</p>
-  {% if not can_author %}<p class="pk-warn" role="note">Your role does not have the author power: you can plan and preview, but downloading and deploying are off.</p>{% endif %}
+  {% if not can_author %}<p class="pk-warn" role="note">Your roles do not include the author power (the built-in author and admin roles hold it, and an administrator can give it to another role in Admin → Roles). Without it you can plan and preview, but downloading the bundle is off; deploying also needs an administrator.</p>{% endif %}
   <div class="pk-resume bs-bar" data-resume hidden></div>
 
   <ol class="pk-steps" aria-label="Steps">

@@ -21,14 +21,16 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% from "_macros/retry.html" import retry_note, retry_button %}
-<div class="adm" data-connectors data-kinds="{{ (listing.knownKinds or []) | join(',') }}" data-directory="{{ listing.directory }}">
+<div class="adm" data-connectors data-zone="{{ (business_date or {}).get('zone') or CLOCK_TZ or 'America/New_York' }}" data-watch="/admin/connectors/api/stamp" data-kinds="{{ (listing.knownKinds or []) | join(',') }}" data-directory="{{ listing.directory }}">
   {% with tab='connectors' %}{% include "admin/_nav.html" %}{% endwith %}
   <h1 class="ws-h">Connectors <a class="emb-help" href="/help/connector-files" aria-label="Help: connector files and this page" title="Help: connector files and this page">?</a></h1>
+  <details class="adm-about" open><summary>About this page</summary>
   <p class="text-muted-d">Where {{ PRODUCT }} reads its data. Each connector is one file in <span class="mono">{{ listing.directory }}</span>, and the file name is the
     connector's name; packs refer to connectors by that name. A saved change restarts only that connector, in place, and the previous text is kept so you can
     restore it. Watching the folder: <span class="mono">{{ listing.watch }}</span>, so a file you edit by hand is picked up too.
     <span class="mono">n</span> creates a connector, <span class="mono">/</span> focuses the filter.
     See <a href="/help/connector-files">Connector files</a>.</p>
+  </details>
   {% if listing.deprecated %}<p class="adm-warn" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
     {{ listing.deprecated | length }} connector{{ '' if listing.deprecated | length == 1 else 's' }} still {{ 'is' if listing.deprecated | length == 1 else 'are' }} defined in the server's own
     configuration (application.yaml or a profile): <span class="mono">{{ listing.deprecated | join(', ') }}</span>. That works but is deprecated; open one and save it to
@@ -53,21 +55,20 @@
     <thead><tr><th scope="col">Connector</th><th scope="col">Origin</th><th scope="col">Plugin</th><th scope="col">Kinds</th><th scope="col">Status</th>
       <th scope="col">Used by</th><th scope="col">Changed</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead>
     <tbody data-rows>{% for c in connectors %}
-      <tr data-conn="{{ c.name }}" data-state="{{ c.state }}" data-origin="{{ c.origin }}" data-has-problem="{{ 'yes' if c.problems else 'no' }}">
+      <tr data-conn="{{ c.name }}" data-state="{{ c.state }}" data-level="{{ c.level }}" data-origin="{{ c.origin }}" data-has-problem="{{ 'yes' if c.problems else 'no' }}">
         <th scope="row" class="conn-name"><a class="mono" href="/admin/connectors/{{ c.name }}" data-detail-link title="Open {{ c.name }}: settings, packs, file and history">{{ c.name }}</a>{% if c.description %}<br><span class="text-muted-d">{{ c.description }}</span>{% endif %}</th>
         <td><span class="st{{ '' if c.origin == 'file' else ' st-warn' }}" title="{{ {'file': 'Defined by its file in the connectors folder', 'pack': 'Defined by a pack; no file yet', 'application': 'Defined in the server\'s own configuration (deprecated)'}[c.origin] }}">{{ c.origin }}</span></td>
         <td class="mono">{{ c.plugin or '—' }}</td>
         <td class="mono conn-kinds"{% if c.kinds | length > 3 %} title="{{ c.kinds | join(', ') }}"{% endif %}>{% if c.kinds %}{{ c.kinds[:3] | join(', ') }}{% if c.kinds | length > 3 %} <span class="text-muted-d">+{{ c.kinds | length - 3 }} more</span>{% endif %}{% else %}—{% endif %}</td>
-        <td><span class="st {{ {'RUNNING': 'st-ok', 'FAILED': 'st-bad', 'DISABLED': '', 'IDLE': 'st-warn', 'NOT_LOADED': 'st-warn'}.get(c.state, '') }}">{{ {'RUNNING': 'running', 'FAILED': 'failed', 'DISABLED': 'disabled', 'IDLE': 'idle', 'NOT_LOADED': 'not started'}.get(c.state, c.state | lower) }}</span>
-          {% if c.health %}<span class="text-muted-d conn-health" title="{{ c.health }}">{{ c.health[:60] }}{{ '…' if c.health | length > 60 }}</span>{% endif %}
+        <td><span class="st {{ {'ok': 'st-ok', 'down': 'st-bad', 'warn': 'st-warn'}.get(c.level, '') }}" data-badge>{{ c.label or (c.state | lower) }}</span>
+          {% if c.health and c.level in ('warn', 'down') %}<div class="{{ 't-bad' if c.level == 'down' else 't-warn' }} conn-health-hint" data-health-hint>{{ c.health }}</div>{% elif c.health %}<span class="text-muted-d conn-health" title="{{ c.health }}">{{ c.health[:60] }}{{ '…' if c.health | length > 60 }}</span>{% endif %}
           {% for p in c.problems %}<div class="t-bad conn-problem">{{ p }}</div>{% endfor %}{{ retry_note(c.retry) }}</td>
         <td class="conn-used">{% for u in c.usedBy %}<div><a class="mono" href="/admin/packs/{{ u.pack }}">{{ u.pack }}</a>{% if u.kinds %} <span class="text-muted-d" title="{{ u.kinds | join(', ') }}">{{ u.kinds[:2] | join(', ') }}{{ ' +' ~ (u.kinds | length - 2) if u.kinds | length > 2 }}</span>{% endif %}</div>{% else %}<span class="text-muted-d">no pack</span>{% endfor %}</td>
         <td class="mono">{{ when_local(c.updated) if c.updated else '—' }}</td>
         <td class="adm-actions"><button type="button" class="fk" data-edit aria-label="Edit {{ c.name }}">Edit</button>
           <button type="button" class="fk" data-toggle="{{ 'disable' if c.enabled else 'enable' }}" aria-label="{{ 'Disable' if c.enabled else 'Enable' }} {{ c.name }}">{{ 'Disable' if c.enabled else 'Enable' }}</button>
           {% if c.template %}<button type="button" class="fk" data-reset aria-label="Reset {{ c.name }} to the default of pack {{ c.template }}">Reset to pack default</button>
-          {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-delete aria-label="Delete {{ c.name }}">Delete</button>
-          <button type="button" class="fk emb-danger" data-uninstall data-kind="connector" data-name="{{ c.name }}" aria-label="Uninstall {{ c.name }}" title="See what depends on it, then move the file to the archive (Restore is in Admin → Artifacts)">Uninstall…</button>{% endif %}</td></tr>
+          {% elif c.origin == 'file' %}<button type="button" class="fk emb-danger" data-uninstall data-kind="connector" data-name="{{ c.name }}" aria-label="Uninstall {{ c.name }}" title="See what depends on it, then move the file to the archive (Restore is in Admin → Artifacts → Uninstalled)">Uninstall…</button>{% endif %}</td></tr>
     {% else %}<tr data-none><td colspan="8" class="text-muted-d">No connector is defined. Use <b>New connector</b>, or load a pack: a pack that suggests connectors gets a file for each at start.</td></tr>{% endfor %}</tbody>
   </table></div>
   <p class="text-muted-d" data-filter-none hidden>No connector matches the filter.</p>
@@ -77,4 +78,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-cards.js?v={{ ASSET_V }}"></script><script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-connectors.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-retry.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-watch.js?v={{ ASSET_V }}"></script>{% endblock %}

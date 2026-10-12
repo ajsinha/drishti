@@ -68,3 +68,9 @@
 }
 @media (pointer: coarse) { .conn-dialog .fk, .adm-actions .fk, .conn-tabs [role="tab"] { min-height: 44px; } }
 .conn-dialog td .fk + .fk { margin-left: .6rem; }
+
+/* the message and the problems sit in the sticky bar beside Save, so an error is never below the fold of a long form */
+.conn-dialog .ds-actions .conn-edit-msg, .conn-dialog .ds-actions .conn-problems { flex: 1 0 100%; margin: 0; max-height: 7rem; overflow: auto; }
+.conn-dialog .ds-actions .conn-problems:empty, .conn-dialog .ds-actions .conn-edit-msg:empty { display: none; }
+.conn-dialog [aria-invalid="true"] { outline: 2px solid var(--d-bad, #c0392b); outline-offset: 1px; }
+.conn-dialog [hidden] { display: none !important; }

@@ -294,6 +294,9 @@ class ArtifactApiTest {
         mvc.perform(post("/api/v1/admin/artifacts/uninstall").contentType(MediaType.APPLICATION_JSON).content("{\"kind\":\"pack\",\"name\":\"finance\",\"cascade\":true,\"confirm\":\"finance\"}"))
                 .andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-5044"))
                 .andExpect(jsonPath("$.detail").value(containsString("drishti.packs.enabled")));
+        // the dialog says so up front: the impact flags a configuration-named pack, so only Disable is offered
+        mvc.perform(get("/api/v1/admin/artifacts/impact?kind=pack&name=finance")).andExpect(status().isOk()).andExpect(jsonPath("$.configPinned").value(true));
+        mvc.perform(get("/api/v1/admin/artifacts/impact?kind=pack&name=artbase")).andExpect(status().isOk()).andExpect(jsonPath("$.configPinned").value(false));
     }
 
     @Test
