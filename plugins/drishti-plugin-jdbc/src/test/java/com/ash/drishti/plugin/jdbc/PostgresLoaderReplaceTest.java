@@ -298,7 +298,7 @@ class PostgresLoaderReplaceTest {
             }
         };
         TableCatalog catalog = new TableCatalog(new EntityTable("mixed.entities", "kind", "id", "business_date", "doc", Map.of(), 10), db, "mixed-pg",
-                k -> false, 10, Map.of("trade", List.of("mtm")), 2, 64, Duration.ofMinutes(5));
+                k -> false, 10, Map.of("trade", List.of("mtm")), 2, 64, Duration.ofMinutes(5), Map.of());
         assertThat(catalog.refresh(List.of())).isTrue();
         ColumnSet c = catalog.columns("trade", List.of("mtm"), LocalDate.parse(D2)).orElseThrow();
         assertThat(reloaded).as("the day was loaded again while it was read").isTrue();
