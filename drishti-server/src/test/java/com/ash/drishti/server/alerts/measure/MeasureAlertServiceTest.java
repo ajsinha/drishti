@@ -282,15 +282,20 @@ class MeasureAlertServiceTest {
     @Test
     void aNumberMaskedForThePersonIsNeverJudgedOrSent() {
         readings.put("bob", Reading.masked("exposure"));
+        assertThatThrownBy(() -> service.save("bob", "Exposure", body(alert(ABOVE_100, HOURLY, ""))))     // masked when saved: refused, it could never be read
+                .hasMessageContaining("masked for you");
+        readings.put("bob", ok(50));
         service.save("bob", "Exposure", body(alert(ABOVE_100, HOURLY, "")));
+        readings.put("bob", Reading.masked("exposure"));                           // a mask added after the alert was saved
+        service.check("bob", "Exposure");
         assertThat(inbox).isEmpty();
         List<JsonNode> h = history("bob", "Exposure");
-        assertThat(h).hasSize(1);
-        assertThat(h.get(0).path("action").asText()).isEqualTo("skipped");
-        assertThat(h.get(0).path("message").asText()).contains("masked for you");
-        assertThat(h.get(0).has("value")).isFalse();
+        JsonNode last = h.get(h.size() - 1);
+        assertThat(last.path("action").asText()).isEqualTo("skipped");
+        assertThat(last.path("message").asText()).contains("masked for you");
+        assertThat(last.has("value")).isFalse();
         service.check("bob", "Exposure");
-        assertThat(history("bob", "Exposure")).hasSize(1);                           // the same reason is not written again
+        assertThat(history("bob", "Exposure")).hasSize(h.size());                    // the same reason is not written again
     }
 
     @Test

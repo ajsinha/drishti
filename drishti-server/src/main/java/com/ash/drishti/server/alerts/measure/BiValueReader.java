@@ -253,7 +253,22 @@ public final class BiValueReader {
             case "count" -> values.size();
             default -> values.get(0);
         };
-        return Reading.ok(v, asOf(answer));
+        return values.size() > 1 ? new Reading(Reading.Status.OK, v, asOf(answer), MANY + values.size() + " rows, reduced by " + how) : Reading.ok(v, asOf(answer));
+    }
+
+    /** The note of a reading made of several rows: {@code one number of <n> rows, reduced by <how>}. */
+    static final String MANY = "one number of ";
+
+    /** How many rows a reading was reduced from (1 when it was one number already). */
+    static int rowsOf(Reading r) {
+        if (r.note() == null || !r.note().startsWith(MANY)) {
+            return 1;
+        }
+        try {
+            return Integer.parseInt(r.note().substring(MANY.length(), r.note().indexOf(' ', MANY.length())));
+        } catch (RuntimeException e) {
+            return 1;
+        }
     }
 
     @SuppressWarnings("unchecked")

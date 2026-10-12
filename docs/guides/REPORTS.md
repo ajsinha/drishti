@@ -752,9 +752,20 @@ report**): the draft opens in the designer. Everything of sections 2 to 8 applie
     measures: [Sum of mtm]
   ```
 * A filter's value picker lists the field's values from the model, as you.
-* **Make it a model** (implicit models only) writes a draft model item in the report's workspace (the dataset as the fact, its pack dimensions one hop
-  away with their relationships, the default measures; `implicit-from:` says where it came from) and rebinds the report to `<model>@1`; the model opens in
-  the designer.
+* **Make it a model** (implicit models only: `model: dataset:<name>`, quoted or not, as the designer saves it) writes a draft model item in the report's
+  workspace (the dataset as the fact, its pack dimensions one hop away with their relationships, the default measures; `implicit-from:` says where it came
+  from) and rebinds the report to `<model>@1`; the model opens in the designer. **A model is shared, never a per-report copy**: when the workspace already
+  has a model written out from the same dataset, the report is rebound to that one (`"reused": true`), and the answer lists the **other reports on the same
+  dataset** (`others`) so they can be moved onto the model too (`POST /bi/model-api/rebind {ref, reports}`). Two reports made from `pack.trading.trade`,
+  promoted one after the other:
+
+  ```json
+  {"dataset":"pack.trading.trade","model":"bi-00e4ef5375","ref":"r-one-model@1","reused":false, ...,"others":[{"kind":"report","id":"bi-d158511020","title":"R two", ...}]}
+  {"dataset":"pack.trading.trade","model":"bi-00e4ef5375","ref":"r-one-model@1","reused":true, ...,"others":[]}
+  ```
+
+  On a report that already reads a model of its own the answer is `DRS-9140` *this report already reads a model of its own (or none): Make it a model only
+  writes out the implicit model of a report made straight from a dataset (model: dataset:<name>). Open the model it reads to change it.*
 
 **The answer is the same as the old path.** A model query over a pack dataset returns the numbers the version-1 dataset query returns over the same rows;
 on the browser test's lake (two days of 60 trades), the model query
@@ -770,5 +781,14 @@ answers `["Equity derivatives", 425000], ["Bonds and securitised", -75000], ["G1
 names the model), exports, subscriptions, board tiles and embeds ask each visual as one model query on the model, as the reader. A report names `model:` or
 `dataset:`, never both (`DRS-9140`). **Publishing** a report on a model needs that model **published** (a draft model is read by its author only) and
 passing its Check and the security safeguard; otherwise publish is refused with `DRS-9030`, for example *the model 'wes-draft@1' is not published (a draft
-model is read by its author only): publish the model first, where its Check and security safeguard run*. The sample reports keep `dataset:` (the migration
-wave W4 moves them).
+model is read by its author only): publish the model first, where its Check and security safeguard run*. The publisher must also **read the model** (a
+member of its workspace, or in its audience): a report uses a model by reference, so *you may not read the model '…' this report reads, so you cannot publish a
+report on it* refuses it otherwise; `POST /bi/mq` refuses such a model the same way (`DRS-9151` *no model '…' that you may read*). The sample reports keep
+`dataset:` (the migration wave W4 moves them).
+
+**Reports reference a model; they never own it.** Deleting a report never touches its model. A model item is **not deleted while anything reads it**:
+`DELETE /bi/items/<model>` answers `409 DRS-9004` *'Shared model' cannot be deleted: 1 report still read it. A model is shared, never owned by what reads it:
+rebind or delete those first (its page lists them under Used by; GET /api/v1/bi/models/<id>/consumers)*. `GET /bi/models/{ref}/consumers` (a model item id,
+`<name>@<major>` or `dataset:<name>`) lists the reports, boards (through the reports they show), notebooks, datasets read from the model's answer, alerts on
+a model query and live subscriptions, as far as the caller may read them (`hidden` counts the rest); the model's `describe` carries the same list as
+`usedBy`.

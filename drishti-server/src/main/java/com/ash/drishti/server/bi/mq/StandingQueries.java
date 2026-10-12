@@ -81,6 +81,12 @@ public final class StandingQueries {
         }
     }
 
+    /** The live subscriptions on a model (one entry each, for the model's Used by). */
+    List<Map<String, Object>> on(java.util.function.Predicate<String> names) {
+        return subs.values().stream().filter(s -> names.test(s.query.model()))
+                .map(s -> Map.<String, Object>of("kind", "subscription", "id", s.id, "title", "live query (" + s.deliver + ")", "status", s.state, "owner", s.owner.user())).toList();
+    }
+
     public StandingQueries(ModelCatalog catalog, MqService mq, MqProperties props, Clock clock) {
         this.catalog = catalog;
         this.mq = mq;

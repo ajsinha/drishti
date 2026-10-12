@@ -244,6 +244,28 @@ public final class MeasureAlertService implements AutoCloseable {
 
     // ---- writing -------------------------------------------------------------------------------------------------------------
 
+    /**
+     * The number an alert on BI watches must be one its owner may see and one number: a value masked for the owner is refused (an alert never reads a value
+     * its owner may not see, so it could never fire), and a visual or model query that answers several rows needs the cell to watch (a state that filters it to
+     * one row) or how its rows become one number ({@code source.reduce}).
+     */
+    private void watchable(AlertSpec spec, JsonNode body, com.ash.drishti.server.security.Principal owner) {
+        String type = spec.source().type();
+        if (!Set.of("visual", "dataset", "model").contains(type)) {
+            return;
+        }
+        AlertLogic.Reading probe = reader.read(spec, owner, null);
+        if (probe.status() == AlertLogic.Reading.Status.MASKED) {
+            throw AlertSpec.invalid("the value this alert watches (" + probe.note() + ") is masked for you, so it could never be read: an alert only watches a value "
+                    + "its owner may see. Choose a measure that is not masked for you");
+        }
+        int rows = BiValueReader.rowsOf(probe);
+        if (rows > 1 && !"dataset".equals(type) && !body.path("source").has("reduce")) {
+            throw AlertSpec.invalid("this " + ("visual".equals(type) ? "visual" : "query") + " answers " + rows + " rows, so say which number to watch: one cell "
+                    + "(filter it to one row with source.state) or an aggregate of the rows (source.reduce: sum, min, max, avg, count, first or last)");
+        }
+    }
+
     /** Saves an alert for {@code owner} (a new one is armed now: if it already holds, it fires once). Body: see {@link AlertSpec#parse}. */
     public JsonNode save(String owner, String name, JsonNode body) {
         if (!props.enabled()) {
@@ -260,6 +282,7 @@ public final class MeasureAlertService implements AutoCloseable {
         } catch (DrishtiException e) {
             throw AlertSpec.invalid("you cannot use this source yourself, so it cannot be watched: " + e.getMessage());
         }
+        watchable(spec, body, me.principal());
         if (spec.trigger().mode().equals("live") && live.generation(spec, me.principal()) < 0) {
             throw AlertSpec.invalid("trigger live needs a source with a live table behind it; use a schedule or after-load for this one");
         }

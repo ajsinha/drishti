@@ -867,3 +867,23 @@ a **model-answer** dataset asks its inner query as the reader. Each answer becom
 rules and masks. A declared column the answer lacks is `DRS-9108`, a model that reaches itself `DRS-9109`, a connector that is not running or has no SQL
 target `DRS-9102`. Models, the model designer and reports on a model:
 [BI_GUIDE.md section 23](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1) and [REPORTS.md section 18](REPORTS.md#18-a-report-on-a-model-wave-w1).
+
+### A narrowed dataset reads as its base
+
+A dataset that only says `extends:` is complete: it **inherits** the base's source, grain, keys, columns with their roles and meanings, time mode and every
+row rule and mask (its own rules and masks only add). The wizard's *Narrow it* saves exactly this:
+
+```yaml
+rachana: 2
+dataset: trade-narrowed
+version: 1.0.0
+id: ds_aafb0350
+title: Trade (narrowed)
+extends: pack.trading.trade@^1
+```
+
+and Check (`POST /bi/models/validate`) answers it valid with the base's columns and grain:
+`{"kind":"dataset","name":"trade-narrowed","valid":true,"extends":"pack.trading.trade@^1","chain":["trade-narrowed","pack.trading.trade"],"columns":[...10 columns...],"grain":{"keys":["id"],"says":"One row per trade per business date"}}`.
+`GET /bi/layer-datasets/<item>` returns the item as stored (`yaml`) and **as it reads** (`resolved`: the chain folded in, the base's columns, grain and
+time, every layer's row rules under `security.rows`, `chain`), with Check's `problems`; the dataset page and the model designer show the resolved form. The
+draft is listed under *Your datasets* at once (`draft: true`); a model can use it once it is published.

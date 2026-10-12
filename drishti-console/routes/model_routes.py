@@ -88,7 +88,13 @@ async def _dataset_info(request: Request, name: str) -> dict:
         got = await _bi(request, "GET", "/pack-datasets/" + quote(name, safe=""))
         return ml.dataset_info(got.get("yaml") or "", read_only=True)
     item = await _bi(request, "GET", "/items/" + quote(name, safe=":"))
-    info = ml.dataset_info(item.get("body") or "", read_only=not ((item.get("can") or {}).get("edit")), item=item.get("id", ""))
+    body = item.get("body") or ""
+    if "extends:" in body:                                              # a narrowed dataset reads as its base folded in (the server resolves the chain)
+        try:
+            body = (await _bi(request, "GET", "/layer-datasets/" + quote(item.get("id", name), safe=":"))).get("resolved") or body
+        except BackendError:
+            pass
+    info = ml.dataset_info(body, read_only=not ((item.get("can") or {}).get("edit")), item=item.get("id", ""))
     info["status"] = item.get("status")
     return info
 
@@ -322,13 +328,7 @@ async def consumers(request: Request):
     if not ref:
         return _refuse("?ref=<model>@<major> or dataset:<name>", "DRS-9140")
     try:
-        if "@" not in ref and not ref.startswith("dataset:"):                 # an item id: the model it holds is named in its body
-            import re
-            item = await _bi(request, "GET", "/items/" + quote(ref, safe=":"))
-            name = re.search(r"(?m)^model:\s*(\S+)", item.get("body") or "")
-            if not name:
-                return _ok({"known": False, "consumers": []})
-            ref = name.group(1) + "@" + str(item.get("publishedVersion") or 1)
+        # the server takes a model item id, <name>@<major> or dataset:<name>
         got = await _bi(request, "GET", "/models/" + quote(ref, safe="") + "/consumers")
     except BackendError:
         return _ok({"known": False, "consumers": []})
@@ -369,22 +369,35 @@ async def promote(request: Request):
     report = str(body.get("report") or "")
     try:
         item = await _bi(request, "GET", "/items/" + quote(report, safe=":"))
-        import re
-        m = re.search(r"(?m)^model:\s*dataset:(\S+)", item.get("body") or "")
-        if not m:
-            return _refuse("this report does not read an implicit model (model: dataset:<name>)", "DRS-9140")
+        source = ml.implicit_source(item.get("body") or "")
+        if not source:
+            return _refuse("this report already reads a model of its own (or none): Make it a model only writes out the implicit model of a report made "
+                           "straight from a dataset (model: dataset:<name>). Open the model it reads to change it.", "DRS-9140")
         title = str(body.get("title") or "").strip() or (item.get("title") or "Report") + " model"
-        doc = await _implicit(request, m.group(1), title)
         ws = item.get("workspace") or "me"
-        made = await _bi(request, "POST", "/workspaces/" + quote(ws, safe="") + "/items", {"kind": "model", "title": title, "description": "Made from " + m.group(1), "body": ml.to_yaml(doc)})
-        ref = doc["model"] + "@1"
+        # a model is shared, never a per-report copy: a model already written out from this dataset in the report's workspace is reused
+        listing = (await _bi(request, "GET", "/models")).get("models") or []
+        same = next((m for m in listing if m.get("kind") == "model" and m.get("implicitFrom") == source
+                     and m.get("workspace") == ws), None)
+        if same:
+            made, ref, reused = {"id": same["id"]}, f"{same['name']}@{(str(same.get('version') or '1').split('.')[0])}", True
+        else:
+            doc = await _implicit(request, source, title)
+            made = await _bi(request, "POST", "/workspaces/" + quote(ws, safe="") + "/items", {"kind": "model", "title": title, "description": "Made from " + source, "body": ml.to_yaml(doc)})
+            ref, reused = doc["model"] + "@1", False
         new_body = ml.rebind_report(item.get("body") or "", ref)
         saved = await _bi(request, "PUT", "/items/" + quote(report, safe=":"), {"body": new_body, "baseEtag": body.get("etag")} if body.get("etag") else {"body": new_body})
+        try:                                                        # the other reports on the same dataset: offered to move onto the model too
+            used = await _bi(request, "GET", "/models/" + quote("dataset:" + source, safe="") + "/consumers")
+            others = [c for c in used.get("consumers") or [] if c.get("kind") == "report" and c.get("id") != report]
+        except BackendError:
+            others = []
     except BackendError as e:
         return _problem(e)
     except ml.LayerError as e:
         return _refuse(str(e))
-    return _ok({"dataset": m.group(1), "model": made["id"], "ref": ref, "href": "/bi/md/" + made["id"], "report": saved.get("id", report), "etag": saved.get("etag")})
+    return _ok({"dataset": source, "model": made["id"], "ref": ref, "reused": reused, "href": "/bi/md/" + made["id"], "report": saved.get("id", report),
+                "etag": saved.get("etag"), "others": others})
 
 
 # ---- the new-dataset wizard ---------------------------------------------------------------------------------------------

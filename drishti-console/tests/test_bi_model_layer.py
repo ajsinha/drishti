@@ -263,3 +263,12 @@ def test_an_analyse_extract_of_a_model_is_one_model_query_of_rows():
     r = client.post("/bi/explore/extract", json={"model": "dataset:pack.trading.trade", "fields": ["trade.desk", "trade.notional"]})
     assert r.status_code == 200, r.text
     assert sent[0][0] == "/mq" and sent[0][1]["shape"] == "rows" and sent[0][1]["select"] == {"fields": ["trade.desk", "trade.notional"], "measures": []}
+
+
+def test_make_it_a_model_reads_the_implicit_dataset_however_the_designer_wrote_it():
+    """The designer saves ``model: "dataset:..."`` quoted (W1 QA P1-2): Make it a model reads it quoted, single-quoted or plain, and nothing else."""
+    for line in ('model: "dataset:pack.trading.trade"', "model: 'dataset:pack.trading.trade'", "model: dataset:pack.trading.trade"):
+        assert ml.implicit_source("report: r\n" + line + "\npages: []\n") == "pack.trading.trade"
+    assert ml.implicit_source("report: r\nmodel: trades@1\n") is None
+    assert ml.implicit_source("report: r\n") is None
+    assert ml.rebind_report('report: r\nmodel: "dataset:pack.trading.trade"\n', "trade-model@1") == "report: r\nmodel: trade-model@1\n"

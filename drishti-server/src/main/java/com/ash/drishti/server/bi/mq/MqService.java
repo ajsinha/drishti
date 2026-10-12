@@ -157,6 +157,7 @@ public final class MqService {
             all.addAll(mm.warnings());
         }
         meta.put("warnings", all);
+        meta.put("noAccess", noAccess(all));
         meta.put("cached", mm != null && mm.cached());
         meta.put("millis", Math.round((System.nanoTime() - t0) / 1e5) / 10.0);
         meta.put("generation", "g-" + (mm == null ? 0 : mm.generation()));
@@ -164,6 +165,25 @@ public final class MqService {
         meta.put("sql", mm == null ? null : mm.sql());
         body.put("meta", meta);
         return new Answer(body, shown);
+    }
+
+    /** The prefix of the engine's note when a row rule of the model shuts the reader out of a dataset (SqlCompiler). */
+    static final String NO_ACCESS = "you have no access to rows of ";
+
+    /** The datasets (model aliases) the reader may see no row of, from the engine's notes: the viewer says so instead of "no rows for this selection". */
+    public static List<String> noAccess(List<String> warnings) {
+        List<String> out = new ArrayList<>();
+        for (String w : warnings) {
+            int end = w.indexOf(" in this model");
+            if (w.startsWith(NO_ACCESS) && end > NO_ACCESS.length()) {
+                for (String a : w.substring(NO_ACCESS.length(), end).split(",\\s*")) {
+                    if (!out.contains(a)) {
+                        out.add(a);
+                    }
+                }
+            }
+        }
+        return out;
     }
 
     private static int factCount(ModelView v, MqValidator.Checked c) {

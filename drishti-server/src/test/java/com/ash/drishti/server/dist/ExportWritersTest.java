@@ -174,9 +174,9 @@ class ExportWritersTest {
         ExportDoc d = new ExportDoc("Risk", "Data as of 2026-10-09", List.of(),
                 List.of(new ExportDoc.Section("m", "Mark to market", ExportDoc.CARD, List.of("MTM"), List.of(java.util.Collections.singletonList(null)), "Masked for you: MTM.", List.of("MTM")),
                         new ExportDoc.Section("n", "Notional", ExportDoc.CARD, List.of("Notional"), List.of(List.of(234000000L)), null, List.of())));
-        assertThat(DocHtml.html(d, 5)).contains("(masked)").contains("234,000,000");
-        assertThat(DocHtml.text(d, 5)).contains("MTM: (masked)").contains("Notional: 234,000,000").doesNotContain(" | ");
-        assertThat(new DocLayout(1000, 0, 50, 5000).build(d).allText()).contains("(masked)");
+        assertThat(DocHtml.html(d, 5)).contains(ExportDoc.MASK).contains("234,000,000");
+        assertThat(DocHtml.text(d, 5)).contains("MTM: " + ExportDoc.MASK).contains("Notional: 234,000,000").doesNotContain(" | ");
+        assertThat(new DocLayout(1000, 0, 50, 5000).build(d).allText()).contains(ExportDoc.MASK);
     }
 
     @Test

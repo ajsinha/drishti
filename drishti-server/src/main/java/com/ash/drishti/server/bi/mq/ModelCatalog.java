@@ -62,6 +62,8 @@ public final class ModelCatalog {
     private final DatasetService datasets;
     private final PackDatasets packs;
     private final MqService mq;
+    private final ModelRoles roles = new ModelRoles();
+    private final ModelConsumers consumers;
 
     public ModelCatalog(BiService bi, DatasetService datasets, PackDatasets packs) {
         this(bi, datasets, packs, new MqService(MqProperties.defaults()));
@@ -73,6 +75,80 @@ public final class ModelCatalog {
         this.datasets = datasets;
         this.packs = packs;
         this.mq = mq;
+        this.consumers = new ModelConsumers(bi);
+    }
+
+    /** Who reads which model (reports, boards, notebooks, datasets on a model's answer, alerts, live subscriptions). */
+    public ModelConsumers consumers() {
+        return consumers;
+    }
+
+    /**
+     * The consumers of the model {@code ref} names, as the caller may see them: {@code {model, consumers[{kind, id, title, status, owner, workspace}], hidden}}
+     * ({@code hidden} counts those the caller may not read). The caller must read the model.
+     */
+    public Map<String, Object> usedBy(Principal p, String ref) {
+        Found f = find(p, ref);
+        List<Map<String, Object>> all;
+        if (ref.startsWith(ImplicitModels.QUERY_PREFIX)) {
+            all = consumers.find(ModelConsumers.namesImplicit(ref.substring(ImplicitModels.QUERY_PREFIX.length())), "");
+        } else if (f.item() != null && !f.view().compat()) {
+            all = consumers.of(f.item());
+        } else {
+            all = List.of();
+        }
+        List<Map<String, Object>> shown = new ArrayList<>();
+        int hidden = 0;
+        for (Map<String, Object> c : all) {
+            boolean item = Set.of("report", "board", "notebook", "dataset").contains(String.valueOf(c.get("kind")));
+            boolean visible;
+            if (item) {
+                try {
+                    bi.readableItem(p, String.valueOf(c.get("id")));
+                    visible = true;
+                } catch (DrishtiException e) {
+                    visible = false;
+                }
+            } else {
+                visible = p.user().equals(c.get("owner"));
+            }
+            if (visible) {
+                shown.add(c);
+            } else {
+                hidden++;
+            }
+        }
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("model", f.view().id());
+        m.put("consumers", shown);
+        m.put("hidden", hidden);
+        return m;
+    }
+
+    /** The roles that may read every dataset of the model {@code ref} names (the role picker of its security tab); the caller must read the model. */
+    public Set<String> readers(Principal p, String ref) {
+        ModelView v = find(p, ref).view();
+        Set<String> out = new LinkedHashSet<>(roles.all().stream().map(ModelRoles.Role::name).toList());
+        v.datasets().values().forEach(d -> out.retainAll(roles.readers(d)));
+        return out;
+    }
+
+    /** Why a model item may not be deleted: something still reads it (counted by kind; the consumers API names those the caller may see). Empty when free. */
+    public String deleteHold(BiStore.Item model) {
+        List<Map<String, Object>> all = consumers.of(model);
+        if (all.isEmpty()) {
+            return "";
+        }
+        Map<String, Integer> byKind = new java.util.TreeMap<>();
+        all.forEach(c -> byKind.merge(String.valueOf(c.get("kind")), 1, Integer::sum));
+        List<String> counts = byKind.entrySet().stream().map(e -> e.getValue() + " " + e.getKey() + (e.getValue() == 1 ? "" : "s")).toList();
+        return "'" + model.title() + "' cannot be deleted: " + String.join(", ", counts) + " still read it. A model is shared, never owned by what reads it: "
+                + "rebind or delete those first (its page lists them under Used by; GET /api/v1/bi/models/" + model.id() + "/consumers)";
+    }
+
+    /** The identity roles as the model layer sees them (the security tab's role picker, Check's DRS-9131). */
+    public ModelRoles roles() {
+        return roles;
     }
 
     public PackDatasets packs() {
@@ -222,6 +298,9 @@ public final class ModelCatalog {
 
     private Found implicit(Principal p, String name) {
         Optional<ResolvedDataset> d = resolveDataset(name, Semver.Range.ANY, new LinkedHashSet<>(), new ArrayList<>());
+        if (d.isPresent() && !name.startsWith(DatasetDef.PACK_PREFIX) && !mayReadDataset(p, name)) {
+            d = Optional.empty();                                          // the implicit model of an item reads with the item's audience (a pack's: its kinds)
+        }
         if (d.isPresent()) {
             return implicitOf(d.get());
         }
@@ -242,6 +321,22 @@ public final class ModelCatalog {
         StringBuilder text = new StringBuilder();
         im.datasets().values().forEach(r -> text.append(r.def().name()).append('@').append(r.def().version()).append(r.def().columns().keySet()).append(r.layers()));
         return new Found(new ModelView(id, Layers.key(id), hash(text.toString()), im.model(), flat.dataset(), im.datasets(), flat.unbuilt(), false), null);
+    }
+
+    /** Whether the caller may read a published {@code rachana: 2} dataset item of this name (or id). */
+    private boolean mayReadDataset(Principal p, String name) {
+        for (BiStore.Item i : bi.publishedOfKind("dataset")) {
+            DatasetDef d = DatasetDefParser.isVersion2(bi.publishedBody(i)) ? DatasetDefParser.parse(bi.publishedBody(i)).dataset() : null;
+            if (d != null && (d.name().equals(name) || i.id().equals(name) || i.id().equals("file:dataset:" + name))) {
+                try {
+                    bi.readableItem(p, i.id());
+                    return true;
+                } catch (DrishtiException e) {
+                    // not this caller's: another item of the name may be
+                }
+            }
+        }
+        return false;
     }
 
     /** A version-1 dataset item as the caller reads it: a {@code rachana: 2} body is an implicit model; else the compatibility reader's model. */
@@ -373,8 +468,11 @@ public final class ModelCatalog {
                         && packs.named(DatasetDef.PACK_PREFIX + d.source().pack() + "." + d.source().kind()).isEmpty()) {
                     problems.add(new DatasetParser.Problem("error", "DRS-9102", "source", "no pack '" + d.source().pack() + "' with the kind '" + d.source().kind() + "' is enabled"));
                 }
-                if (d.extendsRef() != null && r.ok()) {
-                    chain(d, new LinkedHashSet<>(), problems);
+                ResolvedDataset folded = d.extendsRef() != null && r.ok() ? chain(d, new LinkedHashSet<>(), problems) : null;
+                if (folded != null) {                                         // a narrowing dataset: the base's columns, grain and keys are its own
+                    d = folded.def();
+                    m.put("extends", d.extendsRef());
+                    m.put("chain", folded.chain());
                 }
                 if (d.source() != null && DatasetDef.Source.MODEL.equals(d.source().type()) && r.ok()) {
                     DatasetSources.cycle(this, "dataset:" + d.name(), Map.of(d.name(), ResolvedDataset.of(d))).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "source.model", x)));
@@ -382,6 +480,9 @@ public final class ModelCatalog {
                 m.put("name", d.name());
                 m.put("version", d.version());
                 m.put("columns", d.columns().keySet());
+                if (d.grain() != null) {
+                    m.put("grain", Map.of("keys", d.grain().keys(), "says", d.grain().says() == null ? "" : d.grain().says()));
+                }
             }
         } else {
             ModelDefParser.Result r = ModelDefParser.parse(yaml);
@@ -390,6 +491,7 @@ public final class ModelCatalog {
             if (r.model() != null) {
                 Map<String, ResolvedDataset> resolved = resolveAll(r.model(), problems);
                 problems.addAll(ModelChecker.check(r.model(), resolved));
+                problems.addAll(roles.warnings(r.model(), resolved));
                 DatasetSources.cycle(this, "model:" + r.model().name(), resolved).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "datasets", x)));
                 m.put("name", r.model().name());
                 m.put("version", r.model().version());
@@ -457,6 +559,16 @@ public final class ModelCatalog {
      * Why a report bound to {@code ref} cannot be published (empty when it can): every reader must reach a published model, so a draft model is refused, and
      * the published model must pass its Check and the security safeguard ({@code DRS-9130}; a folder file is not gated when it is read, so it is checked here).
      */
+    public List<String> publishProblems(Principal p, String ref) {
+        try {
+            find(p, ref);
+        } catch (DrishtiException e) {
+            return List.of("you may not read the model '" + ref + "' this report reads, so you cannot publish a report on it: a report uses a model by reference, "
+                    + "which needs read on the model (a member of its workspace, or in its audience). Ask its owner to share it");
+        }
+        return publishProblems(ref);
+    }
+
     public List<String> publishProblems(String ref) {
         if (ref.startsWith(ImplicitModels.QUERY_PREFIX)) {
             String name = ref.substring(ImplicitModels.QUERY_PREFIX.length());
@@ -565,6 +677,13 @@ public final class ModelCatalog {
         m.put("contract", Map.of("exposes", v.def().contract().exposes(), "fields", v.def().contract().fields(), "measures", v.def().contract().measures(),
                 "deprecated", v.def().contract().deprecated()));
         m.put("ai", v.def().ai());
+        try {
+            Map<String, Object> used = usedBy(p, ref);
+            m.put("usedBy", used.get("consumers"));
+            m.put("usedByHidden", used.get("hidden"));
+        } catch (RuntimeException e) {
+            m.put("usedBy", List.of());
+        }
         return m;
     }
 
@@ -574,6 +693,39 @@ public final class ModelCatalog {
         } catch (RuntimeException e) {
             return false;
         }
+    }
+
+    /**
+     * A {@code rachana: 2} dataset item the caller may read, as stored and as it reads with its {@code extends} chain folded in ({@code resolved}: the base's
+     * columns, grain, keys, meanings and every layer's row rules), with Check's problems: what the dataset page and the model designer show for a narrowed dataset.
+     */
+    public Map<String, Object> layerDataset(Principal p, String id) {
+        BiStore.Item i = bi.readableItem(p, id);
+        if (!"dataset".equals(i.kind())) {
+            throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + id + "' is not a dataset");
+        }
+        String body = bi.bodyFor(p, i);
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", i.id());
+        m.put("status", i.status());
+        m.put("draft", !i.isPublished());
+        m.put("yaml", body);
+        List<DatasetParser.Problem> problems = new ArrayList<>();
+        String resolved = body;
+        if (DatasetDefParser.isVersion2(body)) {
+            DatasetDefParser.Result r = DatasetDefParser.parse(body);
+            problems.addAll(r.problems());
+            if (r.dataset() != null && r.ok() && r.dataset().extendsRef() != null) {
+                ResolvedDataset folded = chain(r.dataset(), new LinkedHashSet<>(), problems);
+                if (folded != null) {
+                    resolved = PackDatasets.resolvedYaml(folded);
+                }
+            }
+        }
+        m.put("resolved", resolved);
+        m.put("valid", problems.stream().noneMatch(DatasetParser.Problem::error));
+        m.put("problems", problems.stream().map(x -> Map.of("level", x.level(), "code", x.code(), "path", x.path(), "message", x.message())).toList());
+        return m;
     }
 
     /** The models the caller may read: model items, and the version-1 datasets the compatibility reader serves as models. */
@@ -593,18 +745,31 @@ public final class ModelCatalog {
                 e.put("owner", i.owner());
                 e.put("workspace", i.workspace());
                 e.put("kind", "model");
+                e.put("implicitFrom", m == null ? null : m.implicitFrom());          // written out from a dataset (Make it a model reuses it)
                 out.add(e);
             } catch (DrishtiException e) {
                 // not readable by this caller
             }
         }
-        for (BiStore.Item i : bi.datasetItems(p)) {
+        List<BiStore.Item> sets = new ArrayList<>(bi.datasetItems(p));
+        Set<String> seen = new java.util.HashSet<>(sets.stream().map(BiStore.Item::id).toList());
+        bi.draftDatasets(p).stream().filter(i -> seen.add(i.id())).forEach(sets::add);    // the caller's own drafts too (a narrowed dataset before it is published)
+        for (BiStore.Item i : sets) {
             String body = bi.bodyFor(p, i);
             boolean v2 = DatasetDefParser.isVersion2(body);
             String name = v2 ? Optional.ofNullable(DatasetDefParser.parse(body).dataset()).map(DatasetDef::name).orElse(i.title())
                     : com.ash.drishti.server.bi.gov.ImpactAnalyzer.declaredName(body);
-            out.add(Map.of("id", i.id(), "name", name, "title", i.title(), "status", i.status(), "kind", v2 ? "implicit" : "compat", "query",
-                    v2 ? ImplicitModels.QUERY_PREFIX + name : name));
+            Map<String, Object> e = new LinkedHashMap<>();
+            e.put("id", i.id());
+            e.put("name", name);
+            e.put("title", i.title());
+            e.put("status", i.status());
+            e.put("kind", v2 ? "implicit" : "compat");
+            e.put("query", v2 ? ImplicitModels.QUERY_PREFIX + name : name);
+            e.put("draft", !i.isPublished());
+            e.put("owner", i.owner());
+            e.put("workspace", i.workspace());
+            out.add(e);
         }
         return out;
     }

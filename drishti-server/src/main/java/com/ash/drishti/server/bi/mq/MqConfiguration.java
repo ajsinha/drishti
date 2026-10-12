@@ -49,9 +49,19 @@ public class MqConfiguration {
     }
 
     @Bean
-    public ModelCatalog modelCatalog(BiService bi, DatasetService datasets, PackDatasets packs, MqService mq) {
+    public ModelCatalog modelCatalog(BiService bi, DatasetService datasets, PackDatasets packs, MqService mq,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.security.RoleCatalog> roleCatalog) {
         ModelCatalog catalog = new ModelCatalog(bi, datasets, packs, mq);
-        bi.layerCheck(catalog::gate);                                    // publishing a model or a rachana: 2 dataset runs its Check, contract and safeguard
+        com.ash.drishti.server.security.RoleCatalog rc = roleCatalog.getIfAvailable();
+        if (rc != null) {                                                 // the roles that may use BI (a bi power, or an administrator's), for DRS-9131 and the role picker
+            catalog.roles().source(() -> {
+                java.util.List<com.ash.drishti.identity.RoleDefinition> all = rc.all();
+                java.util.List<com.ash.drishti.identity.RoleDefinition> bi0 = all.stream().filter(r -> r.admin() || !r.bi().isEmpty()).toList();
+                return (bi0.isEmpty() ? all : bi0).stream().map(r -> new ModelRoles.Role(r.name(), r.description(), r::mayOpen)).toList();
+            });
+        }
+        bi.layerCheck(catalog::gate);
+        bi.deleteGuard(i -> "model".equals(i.kind()) ? catalog.deleteHold(i) : "");      // a model is referenced, never owned: kept while consumers read it                                    // publishing a model or a rachana: 2 dataset runs its Check, contract and safeguard
         datasets.attach(new ConsumerQueries(catalog, mq));               // every consumer's question goes through the model query language
         return catalog;
     }
@@ -63,7 +73,9 @@ public class MqConfiguration {
 
     @Bean
     public StandingQueries standingQueries(ModelCatalog catalog, MqService mq, MqProperties props) {
-        return new StandingQueries(catalog, mq, props, Clock.systemUTC());
+        StandingQueries standing = new StandingQueries(catalog, mq, props, Clock.systemUTC());
+        catalog.consumers().source(standing::on);                         // a live subscription reads the model too
+        return standing;
     }
 
     @Bean

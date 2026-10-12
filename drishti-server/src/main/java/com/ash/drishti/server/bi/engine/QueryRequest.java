@@ -37,9 +37,17 @@ import java.util.Set;
  * @param dates {@code from} and {@code to} (inclusive), or null for the latest business date
  * @param layer {@code auto} (the planner picks rollup, columns or the source), or force {@code columns} / {@code rollup} / {@code direct}
  * @param limit rows wanted, or null for the server's maximum
+ * @param detail one row per row of the base (fact) table, duplicates kept (a model query's {@code shape: rows}, BI_MODEL_SPEC.md 5.1); false: a query
+ *        with fields and no measures answers each distinct combination once
  */
 public record QueryRequest(List<String> fields, List<String> measures, List<Filter> filters, LocalDate from, LocalDate to, List<Sort> orderBy,
-        Integer limit, String layer) {
+        Integer limit, String layer, boolean detail) {
+
+    /** A query that groups (no measures: each distinct combination of the fields once). */
+    public QueryRequest(List<String> fields, List<String> measures, List<Filter> filters, LocalDate from, LocalDate to, List<Sort> orderBy, Integer limit,
+            String layer) {
+        this(fields, measures, filters, from, to, orderBy, limit, layer, false);
+    }
 
     /** The comparisons a filter may make. */
     public static final Set<String> OPS = Set.of("eq", "ne", "in", "not-in", "lt", "le", "gt", "ge", "between", "contains", "starts-with", "is-null", "not-null");

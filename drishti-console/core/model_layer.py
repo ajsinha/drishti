@@ -356,6 +356,20 @@ def report_body(slug: str, title: str, ref: str) -> str:
     return yaml.safe_dump({"report": slug, "title": title, "model": ref, "pages": [{"id": "main", "title": "Main", "visuals": []}]}, sort_keys=False, allow_unicode=True)
 
 
+def implicit_source(body: str) -> str | None:
+    """The dataset a report's implicit model is made from (``model: dataset:<name>``, quoted or not, as the designer or a hand saves it), else None."""
+    try:
+        doc = yaml.safe_load(body or "")
+    except yaml.YAMLError:
+        doc = None
+    ref = doc.get("model") if isinstance(doc, dict) else None
+    if not isinstance(ref, str):
+        m = re.search(r"""(?m)^model:\s*["']?(dataset:[^\s"']+)""", body or "")
+        ref = m.group(1) if m else None
+    ref = (ref or "").strip()
+    return ref[len("dataset:"):] if ref.startswith("dataset:") and len(ref) > len("dataset:") else None
+
+
 def rebind_report(body: str, ref: str) -> str:
     """The report's ``model:`` line pointed at another model (Make it a model rebinds the report to the model it wrote), the rest untouched."""
     if re.search(r"(?m)^model:\s*\S.*$", body or ""):

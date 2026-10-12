@@ -716,6 +716,20 @@ public final class BiService {
         this.pythonCheck = check;
     }
 
+    /** Every item, stored (drafts and published) and shipped, whoever may read it: what the model catalogue finds a model's consumers among. */
+    public List<BiStore.Item> allItems() {
+        List<BiStore.Item> all = new ArrayList<>(store.items());
+        all.addAll(folder.items());
+        return all;
+    }
+
+    /** Set once by the model catalogue: why an item may not be deleted (a model that consumers still read), or an empty text. */
+    private volatile java.util.function.Function<BiStore.Item, String> deleteGuard;
+
+    public void deleteGuard(java.util.function.Function<BiStore.Item, String> guard) {
+        this.deleteGuard = guard;
+    }
+
     /** Every published board, whoever may read it (no caller): what board notifications are derived from. */
     public List<BiStore.Item> allBoards() {
         List<BiStore.Item> all = new ArrayList<>(store.published());
@@ -815,6 +829,11 @@ public final class BiService {
         BiStore.Workspace w = workspaceOf(i.workspace());
         if (!i.owner().equals(p.user())) {
             requireRole(w, p, "member", "deleting someone else's item");
+        }
+        java.util.function.Function<BiStore.Item, String> guard = deleteGuard;
+        String held = guard == null ? "" : guard.apply(i);                // a model is referenced, never owned: it stays while consumers read it
+        if (!held.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BI_CONFLICT, held);
         }
         store.deleteItem(id);
         audit.record(p.user(), "bi-item-deleted", id, i.kind() + " '" + i.title() + "'");

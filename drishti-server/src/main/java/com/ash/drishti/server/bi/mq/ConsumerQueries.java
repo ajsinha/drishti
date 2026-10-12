@@ -80,6 +80,11 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
         return catalog.publishProblems(model);
     }
 
+    @Override
+    public List<String> publishProblems(Principal p, String model) {
+        return catalog.publishProblems(p, model);
+    }
+
     /**
      * An engine request as a model query on a model: fields and measures as they are (a field without its table gets the table that has it), a filter on a
      * measure becomes a {@code having} ({@code between} two of them), the dates the {@code time} (one date an as-of, two a window), the sort, limit and layer

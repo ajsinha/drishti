@@ -113,7 +113,7 @@ public final class MqCompiler {
         }
         List<QueryRequest.Sort> sort = q.sort().stream().map(s -> new QueryRequest.Sort(s.by(), s.desc())).toList();
         int limit = Math.min(props.maxLimit(), q.limit() != null ? q.limit() : q.rows() ? props.rowsLimit() : props.groupedLimit());
-        QueryRequest main = new QueryRequest(c.fields(), measures, filters, from, to, sort, limit, layer);
+        QueryRequest main = new QueryRequest(c.fields(), measures, filters, from, to, sort, limit, layer, q.rows() && measures.isEmpty());
         List<Level> levels = new ArrayList<>();
         if (q.totals() != null && !q.rows()) {
             final Dataset finalDs = ds;
