@@ -113,7 +113,7 @@ def test_the_menu_has_my_subscriptions_and_the_admin_list_is_for_administrators(
     backend.subs_kept.clear()
     client.post("/reports/subscribe", content="name=Morning&schedule=daily+07%3A00&date=today&format=xlsx&recipients=ash&target=" + quote(_target()), headers=FORM)
     page = client.get("/reports").text
-    assert "My subscriptions" in page and "/reports#subscriptions" in page
+    assert "My subscriptions" in page and 'href="#subscriptions"' in page and "data-rep-filter" in page   # the reports page links and finds
     everyone = client.get("/reports/all", follow_redirects=True).text
     assert "Everyone&#39;s subscriptions" in everyone or "Everyone's subscriptions" in everyone
     assert 'data-row-owner="' in everyone and "Morning" in everyone

@@ -24,7 +24,8 @@
     ('Look up', [
       ('/t', 'terminal', 'Terminal', 'Type a command or an id, then <GO>', '/t'),
       ('/s', 'search', 'Search & pick lists', 'TRD MX-200000, TRD productType=Revolver, TRD where …', '/s'),
-      ('/forms', 'card-checklist', 'Forms', 'Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM <GO>', '/form')]),
+      ('/forms', 'card-checklist', 'Forms', 'Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM <GO>', '/form'),
+      ('/reports', 'file-earmark-bar-graph', 'Reports', 'Every report you have: scheduled reports, subscriptions, alerts, and BI reports', '/reports')]),
     ('Watch', [
       ('/w', 'grid-1x2', 'Workspaces', 'Several live views on one screen', '/w'),
       ('/m', 'list-columns', 'Monitors', 'Live watchlists of entities', '/m'),
@@ -51,25 +52,13 @@
       ('/bi', 'house', 'BI home', 'Recent, favourites, certified for you, shared with me. Also: RUPAKA <GO>', '/bi'),
       ('/bi/w/me', 'person-workspace', 'My workspace', 'Your drafts, and the shared workspaces you belong to. Also: RUPAKA WORKSPACE', '/bi/w/'),
       ('/bi/catalogue', 'collection', 'Catalogue', 'Every published report and board you may open. Also: RUPAKA CATALOGUE', '/bi/catalogue')])] %}
-{% set ns_bi = namespace(recent=[]) %}{% for r in bi_me.recent %}{% set ns_bi.recent = ns_bi.recent + [('/bi/i/' ~ r.id, 'clock-history', r.title, r.kind ~ ' you opened recently', '/bi/i/' ~ r.id)] %}{% endfor %}
-{% if ns_bi.recent %}{% set BI_COLS = BI_COLS + [('Recent', ns_bi.recent)] %}{% endif %}
 {% if 'bi-admin' in bi_me.powers or (me and me.is_admin and BI_POC) %}{% set BI_COLS = BI_COLS + [('Administer', (
       [('/admin/bi', 'sliders', 'BI settings', 'Powers per role, who creates workspaces', '/admin/bi')] if 'bi-admin' in bi_me.powers else []) + (
       [('/bi/poc', 'speedometer2', 'Proof of concept', 'Phase 0: Perspective live grid, a masked Arrow extract (admins; bi.poc_enabled)', '/bi/poc')] if (me and me.is_admin and BI_POC) else []))] %}{% endif %}
 {% set MENU = MENU[:1] + [('BI', 'bar-chart-line', BI_COLS)] + MENU[1:] %}
 {% endif %}
-{% set nsf = namespace(rep=[]) %}
-{% set REPORT_ITEMS = [('/reports', 'calendar-check', 'Saved and scheduled reports', 'Searches delivered as CSV on a schedule, with your subscriptions in one list', '/reports'),
-  ('/reports#subscriptions', 'envelope-paper', 'My subscriptions', 'Reports and views sent to you or to others by email, on a schedule', None),
-  ('/alerts#measure', 'bell', 'My alerts', 'Be told when a number crosses a limit, moves too far or does not arrive; your inbox has them', None)] %}
-{% if me and me.is_admin %}{% set REPORT_ITEMS = REPORT_ITEMS + [('/reports/all', 'envelope-paper-heart', 'All subscriptions', 'Administrators: everyone\'s subscriptions, pause or remove', '/reports/all'),
-  ('/alerts/all', 'bell-fill', 'All alerts', 'Administrators: everyone\'s alerts on numbers and the board tiles that notify', '/alerts/all')] %}{% endif %}
-{% if bi_me and bi_me.enabled %}{% set REPORT_ITEMS = REPORT_ITEMS + [('/bi/catalogue?kind=report', 'bar-chart-line', 'BI reports', 'Published reports and boards you may open. Also: RUPAKA CATALOGUE', None)] %}
-{% for r in bi_me.recent if r.kind == 'report' %}{% set nsf.rep = nsf.rep + [('/bi/i/' ~ r.id, 'clock-history', r.title, 'BI report you opened recently', '/bi/i/' ~ r.id)] %}{% endfor %}{% set REPORT_ITEMS = REPORT_ITEMS + nsf.rep %}{% endif %}
 {# Forms is an entry of Views (the forms home): a menu of every pack's forms would run off the screen #}{% set MENU_LINKS = {} %}
-{% set TIPS = {'Forms': 'Forms — query by form', 'Reports': 'Reports — saved and scheduled reports, subscriptions, and BI reports'} %}
-{% set POS = 2 if (bi_me and bi_me.enabled) else 1 %}
-{% set MENU = MENU[:POS] + [('Reports', 'file-earmark-bar-graph', [('Reports', REPORT_ITEMS)])] + MENU[POS:] %}
+{% set TIPS = {} %}
 {% if me and me.is_admin %}{% set MENU = MENU + [
   ('Admin', 'shield-lock', [
     ('People & access', [

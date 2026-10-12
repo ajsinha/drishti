@@ -268,14 +268,13 @@ def test_the_dropdown_has_finger_sized_rows_on_a_phone(browser, url):
 
 def test_the_forms_and_reports_icons_in_the_top_bar_open_the_forms_home_and_a_kind_opens_its_form(page, url, be):
     page.goto(url + "/t", wait_until="load")
-    views, reports = page.locator('.tbar-menu-btn', has_text="Views"), page.locator('.tbar-menu-btn[aria-label^="Reports"]')
-    assert page.locator('.tbar-menu-btn[aria-label^="Forms"]').count() == 0 and reports.count() == 1   # Forms is an entry of Views
-    assert reports.get_attribute("title").startswith("Reports — saved and scheduled")
+    views = page.locator('.tbar-menu-btn', has_text="Views")
+    assert page.locator('.tbar-menu-btn[aria-label^="Forms"]').count() == 0 and page.locator('.tbar-menu-btn[aria-label^="Reports"]').count() == 0
     views.click()
+    assert page.locator('.mega-item[href="/reports"]').count() == 1                                 # Reports is an entry of Views too
     page.click('.mega-item[href="/forms"]')
     page.wait_for_url("**/forms")
     assert "active" in page.locator('.tbar-menu-btn', has_text="Views").get_attribute("class")         # Views is lit on the forms home
-    assert "active" not in page.locator('.tbar-menu-btn[aria-label^="Reports"]').get_attribute("class")
     page.fill("[data-forms-filter]", "zzz")
     assert page.locator("[data-forms-none]").is_visible() and not page.locator("[data-forms-pack]").first.is_visible()
     page.fill("[data-forms-filter]", "trade")
@@ -285,7 +284,7 @@ def test_the_forms_and_reports_icons_in_the_top_bar_open_the_forms_home_and_a_ki
     page.goto(url + "/forms", wait_until="load")
     assert "Trading" in page.locator("[data-forms-recent-list]").inner_text()                             # the form just opened is a recent form
     page.goto(url + "/reports", wait_until="load")
-    assert "active" in page.locator('.tbar-menu-btn[aria-label^="Reports"]').get_attribute("class")
+    assert "active" in page.locator('.tbar-menu-btn', has_text="Views").get_attribute("class")          # Views is lit on the reports page
 
 
 def test_the_forms_home_and_the_icons_fit_a_laptop_and_a_phone(browser, url):

@@ -78,7 +78,7 @@ def test_the_menu_is_shown_to_people_with_the_bi_power_only(bi):
     client, _ = bi
     top = client.get("/t").text
     assert "bar-chart-line" in top and 'href="/bi"' in top and 'href="/bi/catalogue"' in top and 'href="/bi/w/me"' in top
-    assert "Desk P&amp;L" in top                                                          # a recent item
+    assert "Desk P&amp;L" not in top                                                      # no report names in the menu: hundreds would not fit
     assert top.index(">Views<") < top.index(">BI<") < top.index(">Build<")
     for powers in ((), ):
         none, _ = make(powers=powers)

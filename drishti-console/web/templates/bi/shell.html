@@ -17,7 +17,7 @@
    Pages fill `bi_main`; everything dynamic is drawn by static/js/bi.js from the same-origin JSON (/bi/api/...). #}
 {% extends "base.html" %}
 {% block title %}{% block bi_title %}BI{% endblock %} · {{ PRODUCT }}{% endblock %}
-{% block body_class %}terminal bi-body{% endblock %}
+{% block body_class %}terminal bi-page{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}">{% endblock %}
 {% block footer %}{% endblock %}

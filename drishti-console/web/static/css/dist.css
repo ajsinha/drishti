@@ -69,3 +69,10 @@
   [data-alerts] .fk, [data-alerts] .lnk { display: inline-flex; align-items: center; min-width: 44px; }
   .inbox .fk, .inbox .inbox-open { min-height: 44px; display: inline-flex; align-items: center; min-width: 44px; }
 }
+
+/* the reports page: the places that used to sit in the Reports menu, and one box to find a row */
+.rep-links { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin: .4rem 0 .8rem; }
+.rep-links a { color: var(--d-link); font-weight: 600; text-decoration: none; padding: .3rem 0; }
+.rep-links a:hover, .rep-links a:focus-visible { text-decoration: underline; }
+.rep-find { display: block; max-width: 34rem; margin: 0 0 .8rem; }
+.rep-find input { width: 100%; }
