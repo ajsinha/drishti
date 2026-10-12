@@ -48,6 +48,7 @@
     document.querySelectorAll('[data-retry] [data-retry-in]').forEach(function (n) {
       var v = parseInt(n.textContent, 10);
       if (!isNaN(v) && v > 0) { n.textContent = String(v - 1); }
+      if (v === 1 && n.parentNode && n.parentNode.hasAttribute('data-retry-wrap')) { n.parentNode.textContent = 'retrying now'; }
     });
   }, 1000);
 })();

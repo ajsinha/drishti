@@ -475,7 +475,7 @@
       const reportLink = () => h('a', { class: 'btn-pill btn-accent', href: '/bi/designer?dataset=' + encodeURIComponent(it.id), 'data-wiz-new-report': '', text: 'New report on this dataset' });
       const box = h('div', { class: 'wiz-after', 'data-wiz-after': '' }, h('p', { class: 'wiz-ok', text: 'Saved as a draft: ' + (it.title || title) + '.' }),
         h('a', { class: 'btn-pill btn-accent', href: '/bi/m/' + B.id2path(it.id), 'data-wiz-open-model': '', text: 'Open the Model view' }));
-      const rest = [h('a', { class: 'btn-pill btn-ghost', href: '/bi/d/' + B.id2path(it.id), text: 'Open the dataset page' }), h('a', { class: 'btn-pill btn-ghost', href: '/bi/i/' + B.id2path(it.id), text: 'Open the item (propose, share)' })];
+      const rest = [h('a', { class: 'btn-pill btn-ghost', href: '/bi/d/' + B.id2path(it.id), text: 'Open it (the dataset page)' }), h('a', { class: 'btn-pill btn-ghost', href: '/bi/i/' + B.id2path(it.id), text: 'Open the item (propose, share)' })];
       if (it.publishedVersion) { box.appendChild(reportLink()); }
       else if (it.can && it.can.publish) {
         const pub = btn('Publish it, then start a report', () => {

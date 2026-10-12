@@ -775,3 +775,4 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .ta-right { text-align: right; }
 
 @media (max-width: 640px) { .chart.xmap, .vmain .chart.xmap { height: 220px; } .xmap-list { grid-template-columns: 1fr; } }
+.dist-err-near { display: inline-block; margin-left: .6rem; font-weight: 600; vertical-align: middle; }

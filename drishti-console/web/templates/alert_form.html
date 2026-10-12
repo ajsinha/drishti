@@ -45,6 +45,7 @@
           <label>Report<input name="report" class="studio-in mono" value="{{ f.report or '' }}" placeholder="file:report:daily-risk"></label>
           <label>Page<input name="page" class="studio-in mono" value="{{ f.page or '' }}"></label>
           <label>Visual<input name="visual" class="studio-in mono" value="{{ f.visual or '' }}"></label>
+          <p class="text-muted-d wide" data-visual-titles aria-live="polite"></p>
           <label>Column (blank: the first number)<input name="measure" class="studio-in mono" value="{{ f.measure or '' }}"></label>
           <label>Many rows become one number by<select name="reduce" class="studio-select">{% for r in ['first', 'sum', 'max', 'min', 'avg', 'count', 'last'] %}<option{% if f.reduce == r %} selected{% endif %}>{{ r }}</option>{% endfor %}</select></label>
           <input type="hidden" name="state" value="{{ f.state or '' }}">

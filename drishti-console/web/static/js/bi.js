@@ -438,7 +438,7 @@
         box.appendChild(act('Approve and publish', function (b) { post('approve', { note: note.value }, 'Approved and published.', b); }, 'btn-accent'));
         box.appendChild(act('Reject', function (b) { post('reject', { reason: note.value }, 'Rejected: a draft again.', b); }));
       }
-      if (c.promote) { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function (b) { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, it.endorsement === 'promoted' ? 'Promotion removed.' : 'Promoted: it is listed first for others.', b); })); }
+      if (c.promote && it.endorsement !== 'certified') { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function (b) { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, it.endorsement === 'promoted' ? 'Promotion removed.' : 'Promoted: it is listed first for others.', b); })); }
       if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function (b) { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, it.endorsement === 'certified' ? 'Certification removed.' : 'Certified.', b); })); }
       if (c.move) { box.appendChild(act('Move to workspace…', function (b) { moveTo(b); })); }
       box.appendChild(act('Duplicate…', function (b) { duplicate(b); }));

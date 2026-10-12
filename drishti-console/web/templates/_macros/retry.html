@@ -20,7 +20,7 @@
 #}
 {% macro retry_note(r) -%}
 {%- if r %}<div class="t-warn retry-note" data-retry data-attempt="{{ r.attempt }}" data-next="{{ r.nextRetryInSeconds }}">failed &mdash;
-  {% if r.nextRetryInSeconds < 0 %}retrying is off{% else %}{{ 'looks permanent, ' if r.permanent }}next retry in <span data-retry-in>{{ r.nextRetryInSeconds }}</span>s{% endif %} (attempt {{ r.attempt }}){% if r.lastError %}
+  {% if r.nextRetryInSeconds < 0 %}retrying is off{% else %}{{ 'looks permanent, ' if r.permanent }}{% if r.nextRetryInSeconds == 0 %}<span data-retry-wrap>retrying now</span>{% else %}<span data-retry-wrap>next retry in <span data-retry-in>{{ r.nextRetryInSeconds }}</span>s</span>{% endif %}{% endif %} (attempt {{ r.attempt }}){% if r.lastError %}
   <span class="text-muted-d retry-error">last error: {{ r.lastError[:200] }}</span>{% endif %}</div>{% endif -%}
 {%- endmacro %}
 

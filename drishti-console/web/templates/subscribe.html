@@ -57,6 +57,7 @@
         <span class="text-muted-d">{% if opts.phone %}On file for you: {{ opts.phone }}. {% endif %}A text carries the title and a link, never a figure. Everyone gives their own number (here, or in their own subscription).</span></fieldset>{% endif %}
       <label class="dist-check"><input type="checkbox" name="enabled" checked> Active</label>
       <button type="submit" class="btn-pill btn-accent dist-act">Subscribe</button>
+      {% if error %}<span class="pnl-err dist-err-near" data-subscribe-err>{{ error }}</span>{% endif %}
       <a class="btn-pill btn-ghost dist-act" href="/reports">Cancel</a>
     </form>
     <p class="text-muted-d"><code>daily HH:MM</code>, <code>weekdays HH:MM</code>, <code>business-days HH:MM</code> (skips holidays in the pack calendar), <code>weekly mon HH:MM</code>,

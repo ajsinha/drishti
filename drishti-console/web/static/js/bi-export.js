@@ -61,13 +61,18 @@
     const bytes = q[1].replace(/_/g, ' ').replace(/=([0-9A-F]{2})/gi, (all, hex) => '%' + hex);
     try { return decodeURIComponent(bytes); } catch (e) { return bytes; }
   }
+  /** One status line for the whole export bar: saying something beside one control clears what was said beside the others. */
+  function tell(anchor, text, bad) {
+    box.querySelectorAll('.bi-near').forEach((n) => { if (n.previousElementSibling !== anchor) { n.textContent = ''; } });
+    return B.near(anchor, text, bad);
+  }
   const DROPPED = ' The filters on the screen were too long to carry, so this does not include them.';
 
   box.querySelectorAll('[data-export-fmt]').forEach((a) => {
     a.addEventListener('click', (e) => {
       e.preventDefault();
       const fmt = a.getAttribute('data-export-fmt'), p = query();
-      B.near(a, 'Preparing the ' + fmt.toUpperCase() + '...', false);
+      tell(a, 'Preparing the ' + fmt.toUpperCase() + '...', false);
       // fetched, not navigated to, so a refusal (switched off, over a limit, a visual that cannot be drawn) is said beside the button instead of replacing the report
       fetch('/dist/bi/' + B.id2path(B.reportView.id) + '.' + fmt + '?' + p.toString(), { credentials: 'same-origin' }).then((r) => {
         if (!r.ok) { return r.json().catch(() => ({})).then((d) => { throw new Error((d.code ? d.code + ' ' : '') + (d.detail || d.title || r.statusText)); }); }
@@ -76,8 +81,8 @@
         const url = URL.createObjectURL(blob), dl = document.createElement('a');
         dl.href = url; dl.download = name; document.body.appendChild(dl); dl.click(); dl.remove();
         window.setTimeout(() => URL.revokeObjectURL(url), 10000);
-        B.near(a, 'Downloaded ' + name + '.' + (p.dropped ? DROPPED : ''), false);
-      }).catch((err) => B.near(a, err.message, true));
+        tell(a, 'Downloaded ' + name + '.' + (p.dropped ? DROPPED : ''), false);
+      }).catch((err) => tell(a, err.message, true));
     });
   });
   const sub = box.querySelector('[data-subscribe]');
@@ -87,7 +92,7 @@
     p.set('type', 'report');
     p.set('id', B.reportView.id);
     p.set('title', B.reportView.title);
-    B.near(sub, 'Opening the subscription form...' + (p.dropped ? DROPPED : ''), false);
+    tell(sub, 'Opening the subscription form...' + (p.dropped ? DROPPED : ''), false);
     window.setTimeout(() => window.location.assign('/reports/subscribe?' + p.toString()), p.dropped ? 1800 : 0);
   });
 

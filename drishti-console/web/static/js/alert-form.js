@@ -33,6 +33,31 @@
   form.addEventListener('change', sync);
   sync();
 
+  /** The report, page and visual by their titles (the fields hold their ids): "Report: Daily risk, Page: Overview, Visual: MTM by desk". */
+  var titles = form.querySelector('[data-visual-titles]');
+  var titleTimer = null;
+  function showTitles() {
+    if (!titles) { return; }
+    var rid = form.elements.report && form.elements.report.value.trim();
+    if (!rid) { titles.textContent = ''; return; }
+    fetch('/bi/api/reports/' + encodeURIComponent(rid).replace(/%3A/g, ':'), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rep) {
+        if (!rep) { titles.textContent = 'No report with that id is visible to you.'; return; }
+        var pid = form.elements.page.value.trim(), vid = form.elements.visual.value.trim();
+        var pages = (rep.report && rep.report.pages) || [];
+        var page = pages.filter(function (p) { return p.id === pid; })[0];
+        var vis = page && (page.visuals || []).filter(function (v) { return v.id === vid; })[0];
+        var text = 'Report: ' + (rep.title || rid);
+        if (pid) { text += ' / Page: ' + (page ? page.title || page.id : pid + ' (not in this report)'); }
+        if (vid) { text += ' / Visual: ' + (vis ? vis.title || vis.id : vid + ' (not on this page)'); }
+        titles.textContent = text;
+      })
+      .catch(function () { titles.textContent = ''; });
+  }
+  ['report', 'page', 'visual'].forEach(function (n) { if (form.elements[n]) { form.elements[n].addEventListener('input', function () { clearTimeout(titleTimer); titleTimer = setTimeout(showTitles, 300); }); } });
+  showTitles();
+
   var out = form.querySelector('[data-check-out]');
   var button = form.querySelector('[data-check-now]');
   function fields() {
