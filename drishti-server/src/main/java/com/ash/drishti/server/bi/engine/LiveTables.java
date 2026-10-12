@@ -76,7 +76,7 @@ public final class LiveTables implements AutoCloseable {
      */
     public LiveTable ensure(String dsKey, Dataset ds, Dataset.Table t) {
         String key = dsKey + "|" + t.name();
-        String signature = t.toString();
+        String signature = t.toString() + ds.rollups().stream().filter(r -> r.table().equals(t.name())).toList() + props.incrementalAggregates();
         Entry e = entries.get(key);
         if (e != null && e.signature().equals(signature)) {
             e.used().set(clock.instant());
@@ -98,7 +98,17 @@ public final class LiveTables implements AutoCloseable {
                 throw new DrishtiException(ErrorCode.QUERY_SOURCE,
                         "no running connector serves kind '" + t.kind() + "'" + (t.connector().isBlank() ? "" : " under the name '" + t.connector() + "'") + ": check Admin, Connectors");
             }
-            LiveTable table = new LiveTable("live_" + names.incrementAndGet(), t, engine, props, clock);
+            String sqlName = "live_" + names.incrementAndGet();
+            List<LiveAggregate> kept = new ArrayList<>();
+            if (props.incrementalAggregates()) {
+                for (Dataset.Rollup r : ds.rollups()) {
+                    LiveAggregate a = r.table().equals(t.name()) ? LiveAggregate.of(ds, r, t.physical(), sqlName, sqlName + "_agg" + kept.size()) : null;
+                    if (a != null) {
+                        kept.add(a);
+                    }
+                }
+            }
+            LiveTable table = new LiveTable(sqlName, t, engine, props, clock, kept);
             LiveFeed feed = new LiveFeed(table, t, sources, props, scheduler, io);
             Entry made = new Entry(signature, table, feed, new java.util.concurrent.atomic.AtomicReference<>(clock.instant()));
             feed.start();
@@ -159,7 +169,9 @@ public final class LiveTables implements AutoCloseable {
         List<Map<String, Object>> tables = new ArrayList<>();
         for (LiveTable t : list) {
             LiveTable.Status s = t.status();
-            tables.add(s.toMap());
+            Map<String, Object> one = s.toMap();
+            one.put("aggregates", t.aggregateStats());
+            tables.add(one);
             if (s.lastUpdate() != null && (newest == null || s.lastUpdate().isAfter(newest))) {
                 newest = s.lastUpdate();
             }

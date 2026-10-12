@@ -261,14 +261,18 @@ public final class QueryService implements AutoCloseable {
             cols.put(t, layer);
             warnings.addAll(layer.warnings());
         }
-        Dataset.Rollup rollup = "columns".equals(q.layer()) || plan.tables().stream().anyMatch(who.denied()::contains) ? null : route(d, plan, q);
+        Dataset.Rollup rollup = "columns".equals(q.layer()) || plan.tables().stream().anyMatch(who.denied()::contains) ? null : route(d, plan, q, inMemory);
         if ("rollup".equals(q.layer()) && rollup == null) {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "no rollup of this dataset can answer the query (layer: rollup was asked for)");
         }
         Map<String, SqlCompiler.Source> from = new LinkedHashMap<>();
         Map<String, String> components = null;
         String layerName = modes.contains("live") ? "live" : "columns";
-        if (rollup != null) {
+        if (rollup != null && inMemory.get(rollup.table()) != null) {
+            LiveAggregate kept = inMemory.get(rollup.table()).aggregate(rollup.name()).orElseThrow();
+            components = Layers.componentColumns(d, rollup);
+            from.put(rollup.table(), new SqlCompiler.Source("(SELECT * FROM " + kept.table() + ") AS " + Dialect.quote(rollup.table()), List.of()));
+        } else if (rollup != null) {
             Layers.Layer rl = layers.rollup(ds.key(), d, rollup, cols.get(rollup.table()));
             components = Layers.componentColumns(d, rollup);
             String rel = rl.files().isEmpty() ? emptyRollup(d, rollup, components) : "SELECT * FROM " + files(rl.files());
@@ -375,13 +379,14 @@ public final class QueryService implements AutoCloseable {
     // ---- routing -----------------------------------------------------------------------------------------------------
 
     /** The first rollup that can answer the plan, or null: one table, only its grouped columns, only measures made of its stored aggregates. */
-    Dataset.Rollup route(Dataset d, SqlCompiler.Plan plan, QueryRequest q) {
+    Dataset.Rollup route(Dataset d, SqlCompiler.Plan plan, QueryRequest q, Map<String, LiveTable> inMemory) {
         if (d.rollups().isEmpty() || plan.measures().isEmpty() || plan.tables().size() != 1) {
             return null;
         }
         String table = plan.tables().iterator().next();
-        if ("live".equals(d.tables().get(table).mode())) {
-            return null;
+        boolean live = "live".equals(d.tables().get(table).mode());
+        if (live && inMemory.get(table) == null) {
+            return null;                                                       // a live table kept as a snapshot has no aggregates to read
         }
         if (plan.filters().stream().anyMatch(f -> f.measure() != null)) {
             return null;
@@ -391,7 +396,7 @@ public final class QueryService implements AutoCloseable {
             used.add(rc.substring(rc.indexOf('.') + 1));
         }
         for (Dataset.Rollup r : d.rollups()) {
-            if (!r.table().equals(table)) {
+            if (!r.table().equals(table) || live && inMemory.get(table).aggregate(r.name()).isEmpty()) {
                 continue;
             }
             Set<String> by = new LinkedHashSet<>(r.by());

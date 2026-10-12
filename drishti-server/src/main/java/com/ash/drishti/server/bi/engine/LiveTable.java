@@ -111,7 +111,15 @@ public final class LiveTable implements AutoCloseable {
     private volatile String error;
     private volatile LocalDate fallbackDate = LocalDate.now(ZoneOffset.UTC);
 
+    private final List<LiveAggregate> aggregates;
+
     LiveTable(String sqlName, Dataset.Table def, AnalyticEngine engine, BiLiveProperties props, Clock clock) {
+        this(sqlName, def, engine, props, clock, List.of());
+    }
+
+    /** @param aggregates the rollups of this table kept by group as rows change (empty: every measure is computed over the rows) */
+    LiveTable(String sqlName, Dataset.Table def, AnalyticEngine engine, BiLiveProperties props, Clock clock, List<LiveAggregate> aggregates) {
+        this.aggregates = List.copyOf(aggregates);
         this.sqlName = sqlName;
         this.def = def;
         this.cols = def.physical();
@@ -144,6 +152,61 @@ public final class LiveTable implements AutoCloseable {
         }
         sql.append(", \"updateSeq\" BIGINT, \"updatedAt\" TIMESTAMP)");
         engine.execute(sql.toString(), List.of());
+        aggregates.forEach(a -> a.create(engine));
+    }
+
+    /** The incremental aggregate of the rollup, when this table keeps one. */
+    java.util.Optional<LiveAggregate> aggregate(String rollup) {
+        return aggregates.stream().filter(a -> a.name().equals(rollup)).findFirst();
+    }
+
+    /** Per kept rollup: its groups and how many rows moved by difference or had a group read again. */
+    public List<Map<String, Object>> aggregateStats() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (LiveAggregate a : aggregates) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("rollup", a.name());
+            m.put("groups", a.groups());
+            m.put("incremental", a.incremental());
+            m.put("recomputedGroups", a.recomputed());
+            out.add(m);
+        }
+        return out;
+    }
+
+    /** Works out and writes the aggregates for a batch, inside its transaction; the prepared changes are kept once it commits. */
+    private void maintain(java.sql.Connection c, Map<String, Object[]> write, List<String> removals, List<String> gone, List<LiveAggregate.Delta> out) throws java.sql.SQLException {
+        if (aggregates.isEmpty()) {
+            return;
+        }
+        java.util.Set<String> goneIds = new java.util.HashSet<>(gone);
+        java.util.Set<String> affected = new java.util.LinkedHashSet<>(write.keySet());
+        affected.addAll(removals);
+        affected.addAll(gone);
+        List<Object[]> removed = new ArrayList<>();
+        for (String id : affected) {
+            Object[] before = last.get(id);
+            if (before != null) {
+                removed.add(before);
+            }
+        }
+        List<Object[]> added = new ArrayList<>();
+        write.forEach((id, row) -> {
+            if (!goneIds.contains(id)) {
+                added.add(row);
+            }
+        });
+        for (LiveAggregate a : aggregates) {
+            LiveAggregate.Delta d = a.prepare(c, removed, added);
+            a.write(c, d);
+            out.add(d);
+        }
+    }
+
+    private void keep(List<LiveAggregate.Delta> deltas) {
+        for (int i = 0; i < deltas.size(); i++) {
+            aggregates.get(i).commit(deltas.get(i));
+        }
     }
 
     // ---- the counters ------------------------------------------------------------------------------------------------
@@ -257,6 +320,7 @@ public final class LiveTable implements AutoCloseable {
             long firstSeq = seq.get();
             long[] after = new long[1];
             LocalDateTime stamp = LocalDateTime.ofInstant(now, ZoneOffset.UTC);
+            List<LiveAggregate.Delta> deltas = new ArrayList<>();
             engine.with(c -> {
                 c.setAutoCommit(false);
                 try {
@@ -292,6 +356,7 @@ public final class LiveTable implements AutoCloseable {
                         }
                     }
                     gone.addAll(evict(c, now));
+                    maintain(c, rowsToWrite, removals, gone, deltas);
                     c.commit();
                 } catch (Exception e) {
                     c.rollback();
@@ -299,6 +364,7 @@ public final class LiveTable implements AutoCloseable {
                 }
                 return null;
             });
+            keep(deltas);
             if (after[0] > 0) {
                 seq.set(after[0]);
             }
@@ -374,12 +440,20 @@ public final class LiveTable implements AutoCloseable {
         try {
             Instant now = clock.instant();
             List<String> gone = new ArrayList<>();
+            List<LiveAggregate.Delta> deltas = new ArrayList<>();
             engine.with(c -> {
                 c.setAutoCommit(false);
-                gone.addAll(evict(c, now));
-                c.commit();
+                try {
+                    gone.addAll(evict(c, now));
+                    maintain(c, Map.of(), List.of(), gone, deltas);
+                    c.commit();
+                } catch (Exception e) {
+                    c.rollback();
+                    throw e;
+                }
                 return null;
             });
+            keep(deltas);
             if (!gone.isEmpty()) {
                 evicted.addAndGet(gone.size());
                 gone.forEach(last::remove);
@@ -469,6 +543,9 @@ public final class LiveTable implements AutoCloseable {
             closed = true;
             try {
                 engine.execute("DROP TABLE IF EXISTS " + sqlName, List.of());
+                for (LiveAggregate a : aggregates) {
+                    engine.execute("DROP TABLE IF EXISTS " + a.table(), List.of());
+                }
             } catch (DrishtiException e) {
                 // the engine is shutting down
             }
