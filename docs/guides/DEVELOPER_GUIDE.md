@@ -420,7 +420,7 @@ drishti:
           user: ${PG_USER:drishti}
           password: ${PG_PASSWORD:}
           table: orders.entities
-          pool-size: 8
+          # pool-size: inherits drishti.db.pool.size (20)
           refresh-seconds: 60
       ledger-sql:                    # query mode: one SELECT per kind
         plugin: jdbc
@@ -428,7 +428,7 @@ drishti:
           url: ${LEDGER_URL:jdbc:postgresql://localhost:5432/ledger}
           user: ${LEDGER_USER:drishti}
           password: ${LEDGER_PASSWORD:}
-          pool-size: 4
+          pool-size: 6                    # this connector only
           source-name: ledger
           query.position: >-
             SELECT position_id AS id, book, instrument, quantity, market_value FROM positions

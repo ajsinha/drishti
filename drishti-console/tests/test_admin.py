@@ -26,10 +26,15 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
             "server": {"version": "1.9.0", "uptimeSeconds": 3725, "java": "21", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8},
             "sources": [{"name": "trading-store", "status": "DOWN", "health": "DOWN: connection refused (reconnecting)", "kinds": ["trade"], "live": False,
                          "dated": True, "search": True, "reads": {"reads": 12, "found": 9, "notHeld": 1, "errors": 2, "lastError": "SQLException: refused",
-                                                                   "lastErrorAt": "2026-09-30T20:01:02Z", "p50Ms": 1.2, "p99Ms": 9.5}, "cache": {}},
+                                                                   "lastErrorAt": "2026-09-30T20:01:02Z", "p50Ms": 1.2, "p99Ms": 9.5}, "cache": {},
+                         "pool": {"type": "jdbc", "exempt": False, "max": 20, "open": 20, "inUse": 20, "idle": 0, "waiting": 3, "longestBorrowMillis": 41500,
+                                  "leaksDetected": 1, "timeouts": 2}},
                         {"name": "demo", "status": "UP", "health": "UP", "kinds": ["trade"], "live": True, "dated": False, "search": True,
                          "reads": {"reads": 0}, "cache": {"entries": 36}}],
             "failedToStart": {"feed-fred": "no API key"},
+            "identityPool": {"type": "identity", "exempt": False, "max": 20, "open": 3, "inUse": 1, "idle": 2, "waiting": 0, "longestBorrowMillis": -1,
+                             "leaksDetected": 0, "timeouts": 0},
+            "poolsAttention": ["trading-store: every connection is in use and callers are waiting (raise pool-size, or find what holds connections)"],
             "packs": [{"name": "trading", "title": "Trading", "version": "1.0.0", "requires": ["market-data"], "kinds": 1, "sutras": 125,
                        "sutraProblems": [{"file": "rates/x.v1.sutra.md", "problems": ["DRS-2021 unknown panel kind"]}], "connectors": ["trading-store"],
                        "connectorsDown": ["trading-store"], "connectorsOff": [], "status": "DEGRADED"}],
@@ -43,6 +48,10 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     assert "DEGRADED" in page and "2 of 3 connectors up" in page.replace("<b>", "").replace("</b>", "")
     assert "trading-store" in page and "connection refused (reconnecting)" in page and "SQLException: refused" in page
     assert "feed-fred" in page and "no API key" in page and "unknown panel kind" in page and "open streams" in page
+    flat = " ".join(__import__("re").sub(r"<[^>]+>", "", page).split())
+    assert "20/20 in use · 0 idle · 3 waiting · longest borrow 41.5 s · 1 leak warning · 2 timeouts" in flat      # the connector's pool
+    assert "Identity database pool (PostgreSQL): 1/20 in use · 2 idle · 0 waiting · longest borrow n/a" in flat
+    assert "data-pool-attention" in page and "every connection is in use" in page
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
     assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text

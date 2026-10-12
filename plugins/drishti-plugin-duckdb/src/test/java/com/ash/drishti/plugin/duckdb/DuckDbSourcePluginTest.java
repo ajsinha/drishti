@@ -149,6 +149,24 @@ class DuckDbSourcePluginTest extends DatedSourceContract {
     }
 
     @Test
+    void duckDbIsEmbeddedSoItsPoolIsOnlyAReadLimitAndIsExempt() throws Exception {
+        plugin();
+        DuckDbSourcePlugin p = new DuckDbSourcePlugin();
+        p.start(context(settings(DIR.resolve("desk.duckdb"))));
+        try {
+            p.fetch(EntityRef.of("trade", "T-1"));
+            var stats = p.poolStats().orElseThrow();
+            assertThat(stats.embedded()).isTrue();
+            assertThat(stats.toMap()).containsEntry("exempt", true);
+            assertThat(stats.max()).isEqualTo(4);                        // pool-size here is the reads at once, default 4
+            assertThat(stats.inUse()).isZero();
+            assertThat(stats.waiting()).isZero();
+        } finally {
+            p.close();
+        }
+    }
+
+    @Test
     void eachDayIsWrittenSortedById() throws Exception {
         plugin();
         assertThat(query(DIR.resolve("desk.duckdb"), "SELECT string_agg(kind || ':' || business_date || ':' || id, ',') FROM desk.entities"))

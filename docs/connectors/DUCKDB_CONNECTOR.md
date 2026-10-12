@@ -582,3 +582,10 @@ the `delta` and `iceberg` extensions are not bundled and DuckDB would download t
 not download extensions at run time, so a `lake` mode (`delta_scan('data/delta/trading/trade')` per day, with the same
 column sets) is left for when the extensions can be shipped with Drishti or installed from a local repository. Reading
 the lake's Parquet files directly without the Delta log is not safe (it would see removed files), so it is not offered.
+
+## Connection pool
+
+DuckDB is **not pooled**: the file is opened inside the server process, so there is no network, no database connection limit and no idle timeout, and the site
+pool settings (`drishti.db.pool.*`, `pool-leak-threshold`, ...) do not apply. A read takes a cheap duplicate of the one in-process handle, uses it for one query
+and closes it (try-with-resources, covered by `ConnectionDisciplineTest`). `pool-size` (default 4) is a limit on reads at once, and a read that waits more than
+5 seconds fails. Admin shows the reads running and waiting, marked *embedded, not pooled*. See [CONNECTOR_FILES.md, section 14](CONNECTOR_FILES.md#14-connection-pools).

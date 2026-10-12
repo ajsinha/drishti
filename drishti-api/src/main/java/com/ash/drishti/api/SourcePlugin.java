@@ -162,6 +162,15 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * The state of this source's database connection pool (open, in use, idle, waiting, longest borrow), for Admin and the
+     * health page; empty for a source that holds no pooled database connections (files, queues, REST, and the embedded
+     * SQLite and DuckDB, which are not pooled).
+     */
+    default Optional<com.ash.drishti.api.pool.PoolStats> poolStats() {
+        return Optional.empty();
+    }
+
+    /**
      * Drops everything this source caches (memory and disk); the next reads refill from the source of truth.
      * Called by an admin at any time; must be safe while reads are in flight.
      */

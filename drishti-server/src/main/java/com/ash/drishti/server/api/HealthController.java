@@ -63,11 +63,16 @@ public class HealthController {
     private final com.ash.drishti.server.connectors.ConnectorManager connectors;
     private final com.ash.drishti.server.bi.BiFolder biFolder;
     private final com.ash.drishti.server.RetryService retry;
+    private final ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource;
+    private final com.ash.drishti.identity.IdentityProperties identity;
 
     public HealthController(SourceRegistry registry, SourceRouter router, PackRegistry packs, SutraRegistry sutras, LiveMetrics live,
             TopicHub hub, LiveStreamSlots slots, Entitlements entitlements, ObjectProvider<BuildProperties> build,
             org.springframework.core.env.Environment env, com.ash.drishti.server.loads.ExpectationService expectations, com.ash.drishti.server.connectors.ConnectorManager connectors,
-            com.ash.drishti.server.bi.BiFolder biFolder, com.ash.drishti.server.RetryService retry) {
+            com.ash.drishti.server.bi.BiFolder biFolder, com.ash.drishti.server.RetryService retry,
+            ObjectProvider<com.zaxxer.hikari.HikariDataSource> identityDataSource, com.ash.drishti.identity.IdentityProperties identity) {
+        this.identityDataSource = identityDataSource;
+        this.identity = identity;
         this.biFolder = biFolder;
         this.retry = retry;
         this.expectations = expectations;
@@ -89,6 +94,7 @@ public class HealthController {
     public Map<String, Object> health(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
         List<Map<String, Object>> sources = new ArrayList<>();
+        List<String> poolsAttention = new ArrayList<>();
         int down = 0;
         int degraded = 0;
         int stale = 0;
@@ -120,6 +126,12 @@ public class HealthController {
             } catch (RuntimeException e) {
                 row.put("cache", Map.of());
             }
+            Map<String, Object> pool = PoolReport.of(s);              // open, in use, idle, waiting, longest borrow; null for a source with no database
+            row.put("pool", pool);
+            if (PoolReport.needsAttention(pool)) {
+                poolsAttention.add(m.name() + (((Number) pool.get("leaksDetected")).longValue() > 0 ? ": a connection was held past pool-leak-threshold (see the log)"
+                        : ": every connection is in use and callers are waiting (raise pool-size, or find what holds connections)"));
+            }
             sources.add(row);
         }
         List<String> attention = List.of("DOWN", "DEGRADED", "UP");                // what needs attention first
@@ -139,6 +151,12 @@ public class HealthController {
                 "packs", packRows.size(), "packsWithProblems", packProblems));
         out.put("server", server());
         out.put("sources", sources);
+        Map<String, Object> identityPool = PoolReport.identity(identityDataSource.getIfAvailable(), identity.sqlite()).map(com.ash.drishti.api.pool.PoolStats::toMap).orElse(null);
+        out.put("identityPool", identityPool);                        // the identity database's pool (SQLite: embedded, exempt)
+        if (PoolReport.needsAttention(identityPool)) {
+            poolsAttention.add("identity: every connection is in use and callers are waiting, or a connection was held past leak-threshold");
+        }
+        out.put("poolsAttention", poolsAttention);
         out.put("failedToStart", failures);
         out.put("packs", packRows);
         Map<String, String> loadedNames = new LinkedHashMap<>();

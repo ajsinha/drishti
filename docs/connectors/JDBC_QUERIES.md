@@ -70,7 +70,7 @@ settings:
   url: ${DRISHTI_TRADES_URL:jdbc:postgresql://db:5432/trades}
   user: ${DRISHTI_TRADES_USER:drishti}
   password: ${DRISHTI_TRADES_PASSWORD}
-  pool-size: 8
+  # pool-size: inherits drishti.db.pool.size (20)
   query.trade: >
     SELECT … FROM trades WHERE trade_id = :id AND business_date = :asOf
   query.trade.legs: SELECT … FROM trade_legs WHERE trade_id = :id ORDER BY leg_no
@@ -259,7 +259,7 @@ The connector:
 plugin: jdbc
 settings:
   url: ${DRISHTI_TRADES_URL}
-  pool-size: 12
+  pool-size: 40                                      # this connector only; the site default is 20
   query.trade: SELECT * FROM trades WHERE trade_id = :id AND business_date = :asOf
   query.trade.legs: SELECT leg_no, pay_receive, fixed_rate, index_name FROM trade_legs WHERE trade_id = :id ORDER BY leg_no
   query.trade.counterparty: >
@@ -337,7 +337,7 @@ The connector's tests (`QueryModeTest`) run this shape against an in-memory data
 | Setting | Default | Meaning |
 |---|---|---|
 | `url`, `user`, `password` | empty | the connection; the driver comes with the server for PostgreSQL, otherwise on the class path |
-| `pool-size` | `4` | connections kept |
+| `pool-size` | `20` | connections at most (site default `drishti.db.pool.size`); the other `pool-*` keys and `statement-timeout`: [CONNECTOR_FILES.md, section 14](CONNECTOR_FILES.md#14-connection-pools) |
 | `query.<kind>` | — | the entity |
 | `query.<kind>.<part>` | none | a part of the entity, as the field `<part>` |
 | `part-shape.<kind>.<part>` | `list` | `object` takes the first row |
@@ -410,7 +410,7 @@ settings:
   url: ${DESK_DB_URL:jdbc:postgresql://db.bank.example:5432/desk}
   user: ${DESK_DB_USER:}                             # credentials from the environment, never in the file
   password: ${DESK_DB_PASSWORD}
-  pool-size: 4                                       # connections, each opened on first use
+  # pool-size: inherits drishti.db.pool.size (20); each connection is opened on first use
   # the newest row on or before the date asked
   query.trade: >-
     SELECT trade_id, business_date, product, counterparty, notional, mtm, currency
@@ -431,7 +431,7 @@ connectors:
       url: ${DESK_DB_URL:jdbc:postgresql://localhost:5432/drishti}
       user: ${DESK_DB_USER:drishti}
       password: ${DESK_DB_PASSWORD}
-      pool-size: 4
+      # pool-size: inherits drishti.db.pool.size (20)
       query.trade: >-
         SELECT trade_id, business_date, product, counterparty, notional, mtm, currency FROM desk.trades
         WHERE trade_id = :id AND business_date = (SELECT MAX(business_date) FROM desk.trades

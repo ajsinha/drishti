@@ -49,7 +49,7 @@
   var known = (root.getAttribute('data-kinds') || '').split(',').filter(Boolean);
   var SECRET_OK = /^(\$\{[A-Za-z_][A-Za-z0-9_]*\}|file:.+)$/;
   var SECRET_KEY = /password|passwd|secret|token|api[-_.]?key|access[-_.]?key|private[-_.]?key|credential/i;
-  var GROUPS = [['connection', 'Connection'], ['tls', 'TLS'], ['proxy', 'Proxy'], ['mapping', 'What it reads'], ['tuning', 'Tuning'], ['s3', 'S3 storage'], ['security', 'Security'], ['general', 'General']];
+  var GROUPS = [['connection', 'Connection'], ['tls', 'TLS'], ['proxy', 'Proxy'], ['mapping', 'What it reads'], ['tuning', 'Tuning'], ['pool', 'Connection pool'], ['s3', 'S3 storage'], ['security', 'Security'], ['general', 'General']];
 
   // ---- the list: filter ---------------------------------------------------------------------------------------------------
   var filter = $('[data-filter]'), none = $('[data-filter-none]'), stateSel = $('[data-state-filter]'), originSel = $('[data-origin-filter]');

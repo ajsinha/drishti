@@ -151,7 +151,7 @@ drishti:
     connectors:
       trading-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}",
                        user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD}",
-                       table: trading.entities, pool-size: "12" } }
+                       table: trading.entities } }
 ```
 
 The connector serves a path as a column only when the table has that column; a declared path the table lacks shows in
@@ -355,7 +355,7 @@ configuration; replace `aerospike` by `jdbc` and its settings).
 
 Documents are not cached by the connector: PostgreSQL's own buffers keep what is read often. Measured server heap in
 use with a million trades a day: **2.2 GB**. Give the server at least 8 GB of heap per million entities a day, and a
-`pool-size` of at least `scan-threads` plus the reads you expect at once (the `postgres` profile uses 12 for the trading
+`pool-size` of at least `scan-threads` plus the reads you expect at once (the default of 20 covers that; the `postgres` profile used 12 for the trading
 store).
 
 **PostgreSQL itself**: give it `shared_buffers` of a quarter of its memory and `effective_cache_size` of three
@@ -591,7 +591,7 @@ settings:
   user: ${DRISHTI_PG_USER:drishti}
   password: ${DRISHTI_PG_PASSWORD}      # or file:/run/secrets/pg-password
   table: trading.entities               # schema.table; setting table turns table mode on
-  pool-size: '12'
+  # pool-size: inherits drishti.db.pool.size (20)
   mode.trade: snapshot                  # effective for reference data
   lookback-days: '10'
   layout:
@@ -613,7 +613,7 @@ In the connector file's `settings:` in table mode (see [As a connector file](#as
 |---|---|---|
 | `url`, `user`, `password` | empty | the connection; keep the password in the environment |
 | `table` | empty | `schema.table`; setting it turns table mode on |
-| `pool-size` | `4` | connections kept; at least `scan-threads` plus the concurrent reads you expect |
+| `pool-size` | `20` | connections at most (the site default `drishti.db.pool.size`); at least `scan-threads` plus the concurrent reads you expect. All the [pool settings](#connection-pool) are read too |
 | `kinds` | the kinds the table holds | comma list of kinds to serve |
 | `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
 | `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
@@ -639,7 +639,7 @@ Loader options (`PostgresLoader`, through `tools/load-postgres.sh`): `--user`, `
 2. Load each business day whole, in one transaction, and record it in `entity_dates`; vacuum the partition after.
 3. Choose the history PostgreSQL keeps and drop older months (`--keep-months`); keep the full history in Delta Lake.
 4. Size the database for 3.7 GB per million entities a day, and the Drishti server for 8 GB of heap per million.
-5. Set `pool-size` to at least `scan-threads` plus your concurrent reads.
+5. Leave `pool-size` at the site default (20) unless the database's `max_connections` says otherwise; it must be at least `scan-threads` plus your concurrent reads.
 6. Check Admin → Health, then measure on your data (`elapsedMs`, `scanned` and `partial` of a search).
 
 ## 14. Query mode: your own SQL
@@ -695,7 +695,7 @@ settings:
   user: ${DRISHTI_PG_USER:drishti}
   password: ${DRISHTI_PG_PASSWORD}             # an environment (or file:) reference, never the value
   table: trading.entities                      # setting table turns table mode on
-  pool-size: '8'
+  # pool-size: inherits drishti.db.pool.size (20)
 ```
 
 **Pack form, a pack that owns its PostgreSQL store** (its suggested template; the server writes it to `config/connectors/trading-store.yaml` at the first start):
@@ -744,3 +744,16 @@ You should see `"source":"trading-store"` and `"businessDate":"2026-09-29"`.
 date: the *Netting sets* panel lists the four netting sets that mention the counterparty, and impact analysis (F8, or
 `GET /api/v1/impact/counterparty/CP-NORTHBRIDGE?asOf=2026-09-29`) lists them with its 35 trades: reverse lookups by
 SQL. (*Linked entities* shows the ids the counterparty itself refers to: its group and credit limit.)
+
+## Connection pool
+
+Every connection to PostgreSQL comes from a pool, **20 connections by default** (`pool-size`, or the site default `drishti.db.pool.size`), opened on first use,
+so the connector starts while the database is down. A read borrows one for one query and returns it at once; nothing holds a connection across a stream to a
+client or while waiting on the network. Settings (all optional, under `settings:`): `pool-size` (20), `pool-min-idle` (2), `pool-idle-timeout` (10m),
+`pool-max-lifetime` (30m), `pool-connection-timeout` (10s), `pool-leak-threshold` (60s, a borrow held longer is logged with the borrower's stack) and
+`statement-timeout` (5m, set as the connection's `statement_timeout`). The full table, the monitoring and the sizing rule are in
+[CONNECTOR_FILES.md, section 14](CONNECTOR_FILES.md#14-connection-pools) and [OPERATIONS.md](../admin/OPERATIONS.md#sizing-the-database-connection-pools).
+
+The loader (`tools/load-postgres.sh`) uses a pool too: one connection for the whole load (it holds the advisory lock) and one per batch written, never more than
+`--pool-size N` (default 20, or `DRISHTI_DB_POOL_SIZE`) in all; `--writers` is capped at one less. Each batch and each day's publish borrows a connection and
+returns it.

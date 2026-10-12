@@ -226,6 +226,27 @@ settings in the connector file (saving starts the count again) or press **Retry 
 The plugin reports `DOWN` in its health. After three looks it is started afresh; if it still says DOWN the plugin cannot reach the store from this machine. Test the connection from
 Admin → Connectors (Test connection shows the plugin's own message).
 
+### A connector says "no free connection in the … pool"
+
+The full message: `no free connection in the trading-store pool within 10000 ms (20 of 20 in use, 3 waiting, longest borrow 41500 ms); raise pool-size or find
+what holds connections`. Every connection of that connector's pool (`pool-size`, 20 by default) was borrowed for longer than `pool-connection-timeout` (10 s).
+Open the connector's page (Admin → Connectors): *Connection pool* shows in use, waiting and the **longest current borrow**.
+
+- A **long borrow** (tens of seconds) is a slow query or a database that stopped answering: look at the database's own `pg_stat_activity` for the statements, or the
+  connector's `Last error`. `statement-timeout` (5 minutes) ends a statement that never returns; lower it for a connector whose queries should be quick.
+- **Many short borrows and many waiting** is plain load: raise `pool-size` for the connector (or `drishti.db.pool.size`), but check the database first
+  ([OPERATIONS.md, Sizing the database connection pools](../admin/OPERATIONS.md#sizing-the-database-connection-pools)): `FATAL: sorry, too many clients already`
+  means the database's `max_connections` is smaller than the pools together.
+- `scan-threads` larger than `pool-size` makes a day's column read queue behind itself; keep `pool-size` at `scan-threads` plus the reads you expect.
+
+### The log says "connection leak suspected in the … pool"
+
+A connection was borrowed for longer than `pool-leak-threshold` (60 seconds) and has not been returned. The line names the thread and carries, as an exception,
+the **stack of the code that borrowed it**: the first frames are the pool's, the next are the borrower's. Most often it is a legitimately long statement (a
+bulk query, a maintenance task); if it is, raise `pool-leak-threshold` for that connector. If the same line keeps coming for short work, it is a bug: a borrow not
+in a `try`-with-resources. Report it with the stack. The count is on the connector's page and in `drishti_db_pool_leaks`. The connection is returned
+when its borrower finishes; nothing is closed from outside.
+
 ### An AI provider shows ERROR, an MCP server shows DOWN
 
 ERROR: the provider or server could not be set up (type or transport not installed, an `${ENV}` value not set); fix it and it is built again by itself, or press **Retry now** on Admin → AI.

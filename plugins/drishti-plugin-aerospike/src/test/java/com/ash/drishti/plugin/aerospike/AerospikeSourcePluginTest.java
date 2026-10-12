@@ -88,6 +88,17 @@ class AerospikeSourcePluginTest extends DatedSourceContract {
     }
 
     @org.junit.jupiter.api.Test
+    void theConnectionPoolIsTwentyPerNodeAndIdleBetweenReads() throws Exception {
+        SourcePlugin p = plugin();
+        p.fetch(com.ash.drishti.api.EntityRef.of("trade", "T-1"));
+        var stats = p.poolStats().orElseThrow();
+        org.assertj.core.api.Assertions.assertThat(stats.type()).isEqualTo("aerospike");
+        org.assertj.core.api.Assertions.assertThat(stats.max()).isEqualTo(20);       // pool-size per node (default 20), one node here
+        org.assertj.core.api.Assertions.assertThat(stats.inUse()).isZero();
+        org.assertj.core.api.Assertions.assertThat(stats.waiting()).isZero();
+    }
+
+    @org.junit.jupiter.api.Test
     void aDaysPromotedBinsAnswerSearchesAndReverseLookupsWithoutDocuments() throws Exception {
         SourcePlugin p = plugin();
         org.assertj.core.api.Assertions.assertThat(p.columnar("trade")).containsExactlyInAnyOrder("mtm", "nettingSet");

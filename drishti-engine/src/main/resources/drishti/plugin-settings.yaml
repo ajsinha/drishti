@@ -40,7 +40,13 @@ plugins:
       - { name: json-columns, type: list, desc: "Columns that hold JSON", group: mapping }
       - { name: kinds, type: list, desc: "Kinds to read", group: mapping }
       - { name: zone, desc: "Time zone of the date column", group: mapping }
-      - { name: pool-size, type: int, default: "4", desc: "Connections in the pool", group: tuning }
+      - { name: pool-size, type: int, default: "20", desc: "Most connections open at once (default: drishti.db.pool.size)", group: pool }
+      - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
+      - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
+      - { name: pool-max-lifetime, type: duration, default: "30m", desc: "A connection is replaced after this long", group: pool }
+      - { name: pool-connection-timeout, type: duration, default: "10s", desc: "How long a caller waits for a free connection before failing", group: pool }
+      - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
+      - { name: statement-timeout, type: duration, default: "5m", desc: "Longest one statement or operation may run; 0 = none", group: pool }
       - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
       - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
@@ -138,7 +144,19 @@ plugins:
       - { name: password, secret: true, desc: "Password: ${ENV_VAR} or file:/path", group: connection }
       - { name: auth-mode, type: "enum:internal|external|pki", desc: "pki logs in with the client certificate (tls.cert-file + tls.key-file, or tls.keystore)", group: security }
       - { name: tls-name, desc: "The name the server certificate carries (the server's tls-name); default: each host's own name", group: security }
+      - { name: pool-size, type: int, default: "20", desc: "Connections to each node at most (default: drishti.db.pool.size)", group: pool }
+      - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
+      - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
+      - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
+      - { name: statement-timeout, type: duration, default: "5m", desc: "Longest one statement or operation may run; 0 = none", group: pool }
       - { name: connect-timeout-ms, type: int, desc: "Connect timeout", group: tuning }
+      - { name: pool-size, type: int, default: "20", desc: "Most connections open at once (default: drishti.db.pool.size)", group: pool }
+      - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
+      - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
+      - { name: pool-max-lifetime, type: duration, default: "30m", desc: "A connection is replaced after this long", group: pool }
+      - { name: pool-connection-timeout, type: duration, default: "10s", desc: "How long a caller waits for a free connection before failing", group: pool }
+      - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
+      - { name: statement-timeout, type: duration, default: "5m", desc: "Longest one statement or operation may run; 0 = none", group: pool }
       - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
       - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }
@@ -186,6 +204,11 @@ plugins:
       - { name: live, type: boolean, desc: "Subscribe to live updates", group: tuning }
       - { name: fail-fast, type: boolean, desc: "Fail at start when unreachable", group: tuning }
       - { name: timeout-ms, type: int, desc: "Command timeout", group: tuning }
+      - { name: pool-size, type: int, default: "20", desc: "Most connections open at once (default: drishti.db.pool.size); more are opened only when the open ones are busy", group: pool }
+      - { name: pool-min-idle, type: int, default: "2", desc: "Idle connections kept when quiet (default: drishti.db.pool.min-idle)", group: pool }
+      - { name: pool-idle-timeout, type: duration, default: "10m", desc: "An idle connection beyond pool-min-idle is closed after this long", group: pool }
+      - { name: pool-leak-threshold, type: duration, default: "60s", desc: "A connection borrowed (or a command in flight) longer than this is logged with the borrower's stack; 0 = off", group: pool }
+      - { name: pool-pipeline-depth, type: int, default: "32", desc: "Commands in flight on every open connection before another is opened", group: pool }
       - { name: refresh-seconds, type: int, desc: "Re-read interval", group: tuning }
       - { name: lookback-days, type: int, desc: "Days of history to index", group: tuning }
       - { name: max-load-rows, type: int, desc: "Rows to load at most", group: tuning }

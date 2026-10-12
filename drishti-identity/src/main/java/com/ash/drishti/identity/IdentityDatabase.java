@@ -53,7 +53,7 @@ public class IdentityDatabase {
     private static final Logger LOG = LoggerFactory.getLogger(IdentityDatabase.class);
 
     @Bean(destroyMethod = "close")
-    public HikariDataSource identityDataSource(IdentityProperties props) {
+    public HikariDataSource identityDataSource(IdentityProperties props, org.springframework.core.env.Environment env) {
         HikariConfig c = new HikariConfig();
         c.setPoolName("drishti-identity");
         c.setJdbcUrl(props.databaseUrl());
@@ -78,13 +78,50 @@ public class IdentityDatabase {
             c.setUsername(props.databaseUser());
             c.setPassword(props.databasePassword());
         }
-        c.setMaximumPoolSize(props.databasePoolSize());
-        c.setMinimumIdle(1);
+        applyPool(c, props, env);
         // Start even when PostgreSQL is not up yet (the pool connects on first use); the schema step below then waits.
         c.setInitializationFailTimeout(-1);
         HikariDataSource ds = new HikariDataSource(c);
         applySchema(ds, props);
         return ds;
+    }
+
+    /**
+     * The pool: {@code drishti.identity.database-pool-size}, else the site default {@code drishti.db.pool.size} (20) on
+     * PostgreSQL; SQLite is an embedded file with one writer at a time, so it keeps a small pool (8) and is exempt from the site
+     * default. The times are the site's {@code drishti.db.pool.*} too. A connection is borrowed per transaction and returned at
+     * once; one held past {@code leak-threshold} is logged by Hikari with the borrower's stack.
+     */
+    static void applyPool(HikariConfig c, IdentityProperties props, org.springframework.core.env.Environment env) {
+        String p = "drishti.db.pool.";
+        int size = props.databasePoolSize() != null ? props.databasePoolSize() : props.sqlite() ? 8 : env.getProperty(p + "size", Integer.class, 20);
+        c.setMaximumPoolSize(size);
+        c.setMinimumIdle(Math.min(size, env.getProperty(p + "min-idle", Integer.class, 2)));
+        c.setIdleTimeout(millis(env, p + "idle-timeout", 600_000));
+        c.setMaxLifetime(millis(env, p + "max-lifetime", 1_800_000));
+        c.setConnectionTimeout(Math.max(250, millis(env, p + "connection-timeout", 10_000)));
+        c.setLeakDetectionThreshold(millis(env, p + "leak-threshold", 60_000));
+        long statement = millis(env, p + "statement-timeout", 300_000);
+        if (!props.sqlite() && statement > 0) {
+            c.addDataSourceProperty("options", "-c statement_timeout=" + statement);
+        }
+    }
+
+    private static long millis(org.springframework.core.env.Environment env, String key, long fallback) {
+        String v = env.getProperty(key);
+        if (v == null || v.isBlank()) {
+            return fallback;
+        }
+        String t = v.strip().toLowerCase(java.util.Locale.ROOT);
+        try {
+            if (t.endsWith("ms")) {
+                return Long.parseLong(t.substring(0, t.length() - 2).strip());
+            }
+            long unit = t.endsWith("h") ? 3_600_000 : t.endsWith("m") ? 60_000 : 1_000;
+            return Long.parseLong(t.replaceAll("[hms]$", "").strip()) * unit;
+        } catch (NumberFormatException e) {
+            throw new IllegalStateException(key + " must be a time such as 30, 500ms, 30s, 10m or 1h, not '" + v + "'");
+        }
     }
 
     static void applySchema(DataSource ds, IdentityProperties props) {

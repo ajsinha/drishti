@@ -28,7 +28,7 @@ together, live reload, the **Admin → Connectors** page, the REST API, the `dri
 Contents: [1](#1-the-model-in-one-minute) the model · [2](#2-the-folder) the folder · [3](#3-the-file) the file ·
 [4](#4-examples-one-per-store) examples · [5](#5-credentials-and-tls) credentials and TLS · [6](#6-how-packs-and-files-fit-together) packs and files ·
 [7](#7-live-reload) live reload · [8](#8-admin--connectors) the page · [9](#9-the-rest-api) the API · [10](#10-the-cli) the CLI ·
-[11](#11-moving-off-applicationyaml-and-the-old-data-source-override) migration · [12](#12-health-and-problems) health · [13](#13-decisions) decisions
+[11](#11-moving-off-applicationyaml-and-the-old-data-source-override) migration · [12](#12-health-and-problems) health · [13](#13-decisions) decisions · [14](#14-connection-pools) connection pools
 
 ## 1. The model in one minute
 
@@ -664,3 +664,81 @@ The panel itself is now a **view** of the pack's connectors with links to Admin 
   and the new instance's start the connector's kinds are not served.
 - **Pack files shipped in this repository keep their inline `connectors:` mappings**; they are read as templates and work as they did.
   Pack authors writing new packs may prefer the list form plus `connector-templates:`.
+
+## 14. Connection pools
+
+Every database connection a connector opens comes from a **pool** of a size you set, **20 by default**. The rules, which an architecture test
+(`ConnectionDisciplineTest`) enforces on the source:
+
+- **One unit of work, then back.** A connection is borrowed in a `try`-with-resources block for a query, a batch or a day's publish and
+  returned at once, whatever happens (an exception, a timeout, a cancelled request). It is never held across a stream to a client, a wait on
+  the network, a live subscription or a person's think-time, and no field of any class holds a `Connection`, `Statement` or `ResultSet`.
+  A returned connection with an open transaction is rolled back and its auto-commit restored; a broken one is closed and replaced.
+- **No statement runs for ever.** `statement-timeout` (default 5 minutes) is set on every connection (PostgreSQL `statement_timeout`).
+- **Leaks are visible.** A connection borrowed longer than `pool-leak-threshold` (default 60 seconds) is logged once with the stack of
+  the code that borrowed it, counted, and shown on the connector's page and Admin → Health; it goes back when the borrower finishes.
+- **Waiting is bounded.** A caller waits `pool-connection-timeout` (default 10 seconds) for a free connection, then fails with a message that
+  says how busy the pool is.
+
+The settings are the same for every database connector, under its `settings:`; a connector that sets none inherits the **site default**,
+`drishti.db.pool.*` in `application.yaml` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtidbpool--database-connection-pools)). The example
+files in `config/connectors.examples/` set none, so they follow the site.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `pool-size` | `20` | The most connections the connector opens at once. A caller beyond it waits `pool-connection-timeout`. |
+| `pool-min-idle` | `2` | Idle connections kept when quiet. |
+| `pool-idle-timeout` | `10m` | An idle connection beyond `pool-min-idle` is closed after this long. |
+| `pool-max-lifetime` | `30m` | A connection is replaced after this long, so a firewall or a failover never meets an old one. |
+| `pool-connection-timeout` | `10s` | How long a caller waits for a free connection before it fails. |
+| `pool-leak-threshold` | `60s` | A connection borrowed longer than this is logged once as a WARNING with the stack of the code that borrowed it; `0` turns it off. |
+| `statement-timeout` | `5m` | The longest one statement may run (PostgreSQL `statement_timeout`); `0` for none. |
+
+| Store | What is pooled | Notes |
+|---|---|---|
+| PostgreSQL / any JDBC ([POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md#connection-pool)) | JDBC connections, opened on first use | all settings above; the loader takes `--pool-size` |
+| MongoDB ([MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md#connection-pool)) | the driver's pool (`maxPoolSize`, `minPoolSize`, `maxWaitTime`) | the statement timeout is the socket read timeout |
+| Redis ([REDIS_CONNECTOR.md](REDIS_CONNECTOR.md#connection-pool)) | Lettuce connections, each multiplexed | another is opened only when the open ones are busy (`pool-pipeline-depth`); `pool-max-lifetime` and `pool-connection-timeout` do not apply |
+| Aerospike ([AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md#connection-pool)) | the client's pool **per node** | `pool-size` is per node; `pool-connection-timeout` and `pool-max-lifetime` do not apply; borrows are not timed |
+| The identity database on PostgreSQL | a Hikari pool (`drishti.identity.database-pool-size`, else the site default) | leak detection is Hikari's |
+| **SQLite** (the default identity database) and **DuckDB** | **not pooled** | see below |
+
+**Why SQLite and DuckDB are exempt.** Both are embedded files opened inside the server process: no network, no server-side connection limit, no idle
+timeout to meet, nothing a pool protects. SQLite allows one writer at a time whatever the number of connections, so the identity database keeps a
+small fixed pool (8) on SQLite; a DuckDB connector's `pool-size` (default 4) is a limit on reads at once. Both still close everything they open
+(try-with-resources; `ConnectionDisciplineTest` covers them) and appear on Admin with their reads running and waiting, marked *embedded, not pooled*.
+
+**Seeing it.** The connector's page (Admin → Connectors → the connector) has a *Connection pool* line: *4 of 20 in use, 2 idle, 6 open, 0 waiting,
+longest current borrow 2.3 s*, with a note when a borrow passed the leak threshold or callers gave up waiting. Admin → Health shows the same in a column, the
+identity database below the connectors, and a red line when every connection is in use with callers waiting, or a borrow was held past the threshold.
+`GET /api/v1/admin/health` carries it as `sources[].pool` and `identityPool` (real output of the default SQLite identity database; a pool that cannot time
+borrows reports `longestBorrowMillis: -1`):
+
+```json
+"identityPool": { "type": "sqlite", "exempt": true, "max": 8, "open": 2, "inUse": 0, "idle": 2, "waiting": 0,
+                  "longestBorrowMillis": -1, "leaksDetected": 0, "timeouts": 0 },
+"poolsAttention": []
+```
+
+A connector's pool looks the same with `"type": "jdbc"` and `"exempt": false`. Prometheus has one series per connector (`connector` and `type` labels):
+`drishti_db_pool_max`, `_open`, `_in_use`, `_idle`, `_waiting`, `_longest_borrow_seconds`, `_leaks` and `_timeouts`
+([OPERATIONS.md, Monitoring](../admin/OPERATIONS.md#134-prometheus-and-grafana)).
+
+What the log says when a borrow is held (from the pool's test, `pool-leak-threshold: 150ms`; the frames after the first two are the borrower's):
+
+```
+WARNING: connection leak suspected in the pool-test pool: borrowed by thread main for 150 ms (pool-leak-threshold 150 ms); borrowed at
+java.lang.Throwable: borrowed by main
+	at com.ash.drishti.api.pool.ResourcePool$Lease.<init>(ResourcePool.java:99)
+	at com.ash.drishti.api.pool.ResourcePool.borrow(ResourcePool.java:178)
+	at com.ash.drishti.plugin.jdbc.JdbcPoolTest.aConnectionHeldPastTheLeakThresholdIsCountedAndReleasedWhenClosed(JdbcPoolTest.java:204)
+```
+
+And when the pool is exhausted (`pool-size: 1`, `pool-connection-timeout: 250ms`):
+
+```
+no free connection in the pool-test pool within 250 ms (1 of 1 in use, 0 waiting, longest borrow 253 ms); raise pool-size or find what holds connections
+```
+
+Sizing the pools against the database's `max_connections` is in [OPERATIONS.md](../admin/OPERATIONS.md#sizing-the-database-connection-pools); the symptoms and
+what to do are in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#a-connector-says-no-free-connection-in-the--pool).

@@ -29,6 +29,7 @@ import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import com.ash.drishti.api.pool.PoolStats;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -70,6 +71,8 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
     private String sourceName = "duckdb";
     private SourceContext context;
     private int poolSize;
+    private final java.util.concurrent.atomic.AtomicInteger waiting = new java.util.concurrent.atomic.AtomicInteger();
+    private final java.util.Map<Long, Long> reading = new java.util.concurrent.ConcurrentHashMap<>();
     private int maxLoadRows = 200_000;
     private int lookbackDays = 10;
     private boolean reverseIndex = true;
@@ -136,14 +139,43 @@ public final class DuckDbSourcePlugin implements SourcePlugin {
     }
 
     private <T> T with(DuckDbFile.Work<T> work) throws Exception {
+        waiting.incrementAndGet();
+        boolean[] entered = new boolean[1];
         try {
-            T out = file.with(work);
+            T out = file.with(c -> {
+                entered[0] = true;
+                waiting.decrementAndGet();                         // has its place: now reading
+                Long id = Thread.currentThread().threadId();
+                reading.put(id, System.nanoTime());
+                try {
+                    return work.run(c);
+                } finally {
+                    reading.remove(id);
+                }
+            });
             lastError = null;
             return out;
         } catch (SQLException e) {
             lastError = e.getMessage();
             throw e;
+        } finally {
+            if (!entered[0]) {
+                waiting.decrementAndGet();                         // gave up waiting, or there was no file
+            }
         }
+    }
+
+    /**
+     * Reads running now and waiting for a place, against {@code pool-size}. DuckDB is an embedded, in-process file: there are no
+     * connections to pool (a read takes a cheap duplicate of the one handle and closes it), so this is not a connection pool and is
+     * exempt from {@code drishti.db.pool.*}; {@code pool-size} only bounds the reads at once.
+     */
+    @Override
+    public Optional<PoolStats> poolStats() {
+        long now = System.nanoTime();
+        long longest = reading.values().stream().mapToLong(t -> (now - t) / 1_000_000).max().orElse(0);
+        int running = reading.size();
+        return Optional.of(new PoolStats("duckdb", poolSize, running, running, 0, Math.max(0, waiting.get()), longest, 0, 0));
     }
 
     @Override

@@ -678,3 +678,13 @@ SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java 
 
 MongoDB 8.0 does not start on some recent Linux kernels; `mongo:7` does. Use a free host port if a MongoDB of yours
 already listens on 27017.
+
+## Connection pool
+
+The MongoDB driver keeps the pool; Drishti sets it from the connector's `pool-size` (the driver's `maxPoolSize`, **20 by default**, or the site default
+`drishti.db.pool.size`), `pool-min-idle` (`minPoolSize`, 2), `pool-idle-timeout` (`maxConnectionIdleTime`, 10m), `pool-max-lifetime`
+(`maxConnectionLifeTime`, 30m), `pool-connection-timeout` (`maxWaitTime`, 10s: an operation that finds every connection busy fails after this) and
+`statement-timeout` (the socket read timeout, 5m). Operations check a connection out for one call and in again (cursors are closed with their block); the
+connector counts the checkouts and shows open, in use, idle, waiting and the longest current checkout on Admin, and logs one held longer than
+`pool-leak-threshold` (60s) with the stack of the thread that took it. The loader takes `--pool-size N` (default 20): writes in flight never exceed it.
+See [CONNECTOR_FILES.md, section 14](CONNECTOR_FILES.md#14-connection-pools).

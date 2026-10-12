@@ -42,6 +42,12 @@
       <dt>Last update</dt><dd class="mono">{{ when_local(c.lastUpdate) if c.lastUpdate else '—' }}</dd>
       <dt>File changed</dt><dd class="mono">{{ when_local(c.updated) if c.updated else '—' }}</dd>
       {% if c.retry %}<dt>Retry</dt><dd data-retry-state>{{ retry_note(c.retry) }} {{ retry_button('connectors') }}</dd>{% endif %}
+      {% set pl = c.get('pool') %}{% if pl %}<dt>Connection pool</dt><dd data-pool>{% if pl.exempt %}<span class="text-muted-d">embedded, in-process file: not pooled. {{ pl.inUse }} read{{ 's' if pl.inUse != 1 }} running of {{ pl.max }} allowed at once, {{ pl.waiting }} waiting.</span>
+        {% else %}<span class="st {{ 'st-bad' if pl.waiting and pl.inUse >= pl.max else 'st-ok' }}">{{ pl.inUse }} of {{ pl.max }} in use</span>
+          <span class="text-muted-d">{{ pl.idle }} idle, {{ pl.open }} open, <span class="{{ 't-bad' if pl.waiting }}">{{ pl.waiting }} waiting</span>,
+          longest current borrow {{ ((pl.longestBorrowMillis / 1000) | round(1)) ~ ' s' if pl.longestBorrowMillis >= 0 else 'not reported' }}</span>
+          {% if pl.leaksDetected %}<div class="t-warn">{{ pl.leaksDetected }} borrow{{ 's' if pl.leaksDetected > 1 }} held past <span class="mono">pool-leak-threshold</span>: see the server log for the borrower's stack</div>{% endif %}
+          {% if pl.timeouts %}<div class="t-warn">{{ pl.timeouts }} caller{{ 's' if pl.timeouts > 1 }} gave up waiting for a connection</div>{% endif %}{% endif %}</dd>{% endif %}
       <dt>TLS</dt><dd data-tls>{% set t = c.tls %}{% if not t %}<span class="text-muted-d">not configured</span>
         {% elif t.error %}<span class="t-bad">{{ t.error }}</span>
         {% elif not t.enabled %}<span class="text-muted-d">configured but off (<span class="mono">tls.enabled</span> is false)</span>
