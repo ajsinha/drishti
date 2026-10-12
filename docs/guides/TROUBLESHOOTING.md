@@ -1330,6 +1330,43 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | `DRS-9075` | a Python Transform returned what a derived dataset cannot use (HTTP 422): a column the dataset declares is missing from its frame, or the Transform's inputs differ from the dataset's |
 | `DRS-9076` | a Python item's own tests failed, so it is not published (HTTP 422, raised by the console): Check shows each test (`passed`, `FAILED` with expected and got, or `could not run` with the DRS code); fix the item or the `expect:`, or a bi-admin publishes with `force`. A call made straight to the server is not gated |
 | `DRS-9077` | a Vega-Lite specification could not be drawn (shown in the visual's frame): it names a `url` or a `loader` (the data is the rows of the wells, or `data.values`), or the library did not load (check `/static/vendor/vega/6.4.0/` answers) |
+| `DRS-9100` | a `rachana: 2` dataset's structure (Check, or HTTP 422 when it is published): an unknown key (a warning), no `source:` or two, a name starting `pack.` (those are the packs'), a `version:` that is not semver such as `1.0.0` ([BI_MODEL_SPEC.md section 1.11](../architecture/BI_MODEL_SPEC.md#111-dataset-problems)) |
+| `DRS-9101` | a dataset column (Check): an unknown type, role, aggregate or additivity, `of:` naming no column, a `sum`/`avg` default on text, a query or Python dataset that declares no columns |
+| `DRS-9102` | a dataset source the server cannot use (Check): a pack or kind that is not enabled, a query parameter that is not `as-of`, `business-date`, `from` or `to`, a `:name` in the SQL that `params:` does not bind; a dataset that only the model layer reads, met where a version-1 dataset is read (ask it with `POST /api/v1/bi/mq` and `model: dataset:<name>`) |
+| `DRS-9103` | a time mode the source cannot give (Check): `live` over an array (`each`) or for a query or Python dataset, `history` with no `history:` block, a bad `every`, `age`, `storage` or `as-of` |
+| `DRS-9104` | the grain (Check): a key that is not a column, a query or Python dataset with no `grain:`, a `unique` test naming no column |
+| `DRS-9105` | `extends` (Check): the base is not published, a narrowing dataset with its own `source:` or a different column type, `where:` without `extends`, a chain that extends itself |
+| `DRS-9106` | a dataset's own security (Check): a rule naming another table's column (write it in a model), a mask naming no column |
+| `DRS-9107` | a pack-generated dataset was saved (HTTP 409): `pack.<pack>.<kind>` datasets are read-only; save a dataset that `extends: pack.<pack>.<kind>@1` to narrow it or add columns |
+| `DRS-9108` | an input of a Python dataset, or the query of a `model` source, is not a model query (Check); the inner query's own code follows |
+| `DRS-9120` | a data model's structure (Check, or HTTP 422 when it is published): a bad name, version, alias, lifecycle, a dataset not published at the version range it names, a rollup on no alias ([section 2.11](../architecture/BI_MODEL_SPEC.md#211-model-problems)) |
+| `DRS-9121` | a dataset of a model with no relationship to the others (a warning): it can be asked alone, never with their fields |
+| `DRS-9122` | a relationship naming no column, columns of two types, an unknown cardinality or direction |
+| `DRS-9123` | a relationship whose one side is not unique (not the grain key, nor a pack kind's `id`): one row would meet several; join to the key |
+| `DRS-9124` | two active paths between the same two datasets: make one inactive |
+| `DRS-9125` | model security that reaches across or loosens: a model rule naming another alias's column, `unmask`, a mask naming no column, rules given as a list instead of per alias |
+| `DRS-9126` | a breaking change published without a new major version (HTTP 409): a measure, column or relationship removed (by stable id or name), a relationship made inactive, a grain key or a column type changed; or the version goes down. Publish it as the next major (consumers bound to the old major do not move) |
+| `DRS-9127` | a model measure that does not compile (the engine's `DRS-9011` conditions, with the model's path), a measure with both `expr` and `python` or neither |
+| `DRS-9128` | a contract naming a field or measure the model lacks |
+| `DRS-9129` | a key of a later wave used now: non-empty `calc-groups` or `parameters` (W6), `via:` (W7), a `bridge` role, `many-to-many` or `direction: both` (W2) |
+| `DRS-9130` | the security safeguard (a warning in Check, HTTP 409 when the model is published): a role restricted by a row rule elsewhere in the model would see every row of a dataset that no rule restricts. Give that dataset a rule (in the dataset or in the model's `security.rows`), or say `may-see-all: { <alias>: [<role>] }` under the model's `security` (the publish audits it as `bi-model-may-see-all`) |
+| `DRS-9150` | a model query's shape (HTTP 422): an unknown key, a wrong type, `mq` missing or not 1, two time forms, a bad date, `params` (wave W6), a shape or format that is not one of the listed; the `fix` shows what to set |
+| `DRS-9151` | no model by that name and version that you may read (HTTP 404): check `GET /api/v1/bi/models`; a retired major, or a model whose Check has errors (the first is named) |
+| `DRS-9152` | a field, measure, hierarchy or stable id the model lacks (HTTP 422); `fix` names a near match (`trades.Desk` → `trades.desk`) |
+| `DRS-9153` | a field or measure outside the model's `contract: { exposes: listed }` (HTTP 422); a deprecated measure says what to use |
+| `DRS-9154` | a local measure (`define`) that shadows a model measure or does not compile (HTTP 422) |
+| `DRS-9155` | a filter the field's type does not allow (`contains` on a number), a value of the wrong type, an unknown relative window (`fix` lists the names), a `top` without `n` or `by`, a `having` that is not one number, a drill past the last level, a totals level that is not a field of the query (HTTP 422) |
+| `DRS-9156` | a field, filter or row rule that a measure's fact does not reach many-to-one (HTTP 422): group by a field every fact reaches (`fix` lists them) or ask the measures apart |
+| `DRS-9157` | the time (HTTP 422): a window longer than `drishti.bi.mq.max-days`, `live: true` on a model with no live dataset, a sliding window without a history field, an as-of after the current business date |
+| `DRS-9158` | a sum that adds amounts of several currencies in one group: in wave W1 a warning in `meta.warnings` naming the groups (split by the currency or filter one); refused from W2 |
+| `DRS-9159` | a balance (semi-additive) measure over several dates without the date as a field: in W1 the last date's value is answered with a warning; refused from W2 unless `last` is asked |
+| `DRS-9160` | a row extract (`shape: rows`) with fields of two facts (HTTP 422): each row of one would repeat for every row of the other; ask each fact's rows apart |
+| `DRS-9161` | a filter, sort or `top` on a field masked for you (HTTP 403, the body also names `DRS-9021`); `fix` offers the dataset's key, which identifies the same rows |
+| `DRS-9162` | a Python measure in a grouped model query (HTTP 422): a python visual runs it |
+| `DRS-9180` | no standing query of that id is yours (HTTP 404): it was ended, or dropped after `drishti.bi.mq.idle-close` without a stream reading it |
+| `DRS-9181` | the server holds `drishti.bi.mq.max-subscriptions` standing queries (HTTP 429) |
+| `DRS-9182` | you hold `drishti.bi.mq.max-subscriptions-per-user` standing queries (HTTP 429): end one (`DELETE /api/v1/bi/mq/subscribe/{id}`) |
+| `DRS-9183` | a subscription to an as-of date in the past (HTTP 422): it never changes, so ask it once |
 | `DRS-9404` | raised by the console only (HTTP 404): an embedding page asked for a Drishti Elements module or enhancer script the console does not ship (`/embed/v1/m/<name>.js`, or `/embed/v1/js/<name>.js` for a script that is not one of the console's enhancers); check the file name and the library version in the `<script>` tag |
 | `DRS-7016` | the picture could not be made (HTTP 503): it took longer than `snapshots.timeout`, is over `snapshots.max-bytes`, or the JDK has no font libraries (a minimal image: install the JDK's fontconfig and freetype packages); the message says which. Send without a picture, or raise the limit |
 

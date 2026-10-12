@@ -224,7 +224,7 @@ public final class QueryService implements AutoCloseable {
         }
         List<String> matched = ds.dataset().security().rows().stream().filter(r -> who.roles().contains(r.role())).map(r -> r.role() + "=" + r.where()).sorted().toList();
         return ds.key() + "|" + ds.hash() + "|g" + layers.generation(ds.key()) + "|L" + liveTables.generation(ds.key()) + "|" + q + "|rows:" + who.enforce() + matched + who.attributes() + "|masked:" + masked
-                + "|denied:" + new java.util.TreeSet<>(who.denied());
+                + "|denied:" + new java.util.TreeSet<>(who.denied()) + (who.enforce() ? TableRules.fingerprint(ds.dataset(), who.roles()) : "");
     }
 
     private Result run(Loaded ds, QueryRequest q, Caller who, boolean explain) {

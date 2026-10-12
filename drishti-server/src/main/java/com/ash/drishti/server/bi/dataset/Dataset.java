@@ -205,10 +205,46 @@ public record Dataset(String name, int version, String title, String description
         }
     }
 
-    /** Row rules and masked columns. */
-    public record Security(List<RowRule> rows, List<String> masked) {
+    /**
+     * Row rules and masked columns. {@code rows} are the rules of a version-1 dataset: they name any table and are joined into every query the reader runs
+     * (fail-closed). {@code tables} is the security of a data model (docs/architecture/BI_MODEL_SPEC.md section 2.6): each entry is bound to its own table,
+     * applied only where that table is read, and a dimension's rules reach the facts that reference it many-to-one. A dataset has one form or the other.
+     */
+    public record Security(List<RowRule> rows, List<String> masked, Map<String, TableSecurity> tables) {
 
         public static final Security NONE = new Security(List.of(), List.of());
+
+        /** The security of a version-1 dataset: rules joined into every query. */
+        public Security(List<RowRule> rows, List<String> masked) {
+            this(rows, masked, Map.of());
+        }
+
+        public Security {
+            tables = tables == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(tables));
+        }
+
+        /** True for a data model's security, bound per table. */
+        public boolean perTable() {
+            return !tables.isEmpty();
+        }
+    }
+
+    /**
+     * The security bound to one table of a data model. {@code filters} always apply (the {@code where:} of a dataset that {@code extends} another); each layer of
+     * {@code layers} is the OR of the reader's matching rules (a layer with rules and none for the reader gives no rows), and the layers are ANDed: the dataset's
+     * own rules, then the model's, so a model can only remove rows. {@code dimension} lets the rules reach the facts that reference this table many-to-one.
+     */
+    public record TableSecurity(List<String> filters, List<List<RowRule>> layers, boolean dimension) {
+
+        public TableSecurity {
+            filters = filters == null ? List.of() : List.copyOf(filters);
+            layers = layers == null ? List.of() : layers.stream().map(List::copyOf).toList();
+        }
+
+        /** True when nothing restricts the table. */
+        public boolean open() {
+            return filters.isEmpty() && layers.stream().allMatch(List::isEmpty);
+        }
     }
 
     /** A row rule: readers holding {@code role} see the rows where {@code where} is true. */

@@ -1670,6 +1670,28 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9075 | 422 | Transform result | A Python Transform returned what a derived dataset cannot use: a column the dataset declares is missing from its frame, or the Transform's inputs do not match the dataset's (a different count, or a different dataset in the same place) |
 | DRS-9076 | 422 | Python tests failed | A Python item that ships `tests:` is published (or approved) through the console while one of them fails or cannot run; a bi-admin may send `force: true` ([PYTHON_BI.md section 15](PYTHON_BI.md#15-tests-shipped-with-an-item)). Raised by the console only |
 | DRS-9077 | 422 | Vega-Lite not drawn | Shown in the visual's frame by the page, not an HTTP answer: a Vega-Lite specification that names a `url` or a `loader`, or a library that did not load ([REPORTS.md section 3.5](REPORTS.md#35-vega-lite-visuals)) |
+| DRS-9100 | 422 | Layer dataset invalid | Publishing a `rachana: 2` dataset whose Check has an error (the problem list uses `DRS-9100` to `DRS-9108`, [BI_MODEL_SPEC.md section 1.11](../architecture/BI_MODEL_SPEC.md#111-dataset-problems)) |
+| DRS-9107 | 409 | Generated dataset | Saving a dataset that a pack generates (`pack.<pack>.<kind>`, or one with `generated:`): it is read-only; save one that `extends` it |
+| DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [BI_MODEL_SPEC.md section 2.11](../architecture/BI_MODEL_SPEC.md#211-model-problems)) |
+| DRS-9126 | 409 | Breaking change | A published model or dataset loses a measure, column or relationship (by stable id or name), makes a relationship inactive or changes a grain key without a new major version; or the version goes down |
+| DRS-9130 | 409 | Security safeguard | A model where a role restricted by a row rule elsewhere would see every row of a dataset with no rule: give that dataset a rule, or write `may-see-all: { <alias>: [<role>] }` (audited `bi-model-may-see-all`) |
+| DRS-9150 | 422 | Model query shape | An unknown key, a wrong type, `mq` missing or not 1, two time forms, `params` before wave W6 |
+| DRS-9151 | 404 | Model not found | No model (or dataset, for `dataset:<name>`) of that name and version the caller may read, a retired major, or a model whose Check has errors |
+| DRS-9152 | 422 | Unknown name | A field, measure, hierarchy or stable id the model lacks (with `fix` when a near name exists) |
+| DRS-9153 | 422 | Outside the contract | A field or measure the model's `contract` does not expose (with the deprecation and `fix` when deprecated) |
+| DRS-9154 | 422 | Local measure | A `define` measure that shadows a model measure or does not compile |
+| DRS-9155 | 422 | Filter | An operator the field's type does not allow, a value of the wrong type, an unknown relative window, a `top` without `n`/`by`, a `having` that is not one number, a drill past the last level |
+| DRS-9156 | 422 | Not reachable | A field, filter or row rule not reachable many-to-one from a measure's fact (with `fix`: fields every fact reaches) |
+| DRS-9157 | 422 | Time | A window over `drishti.bi.mq.max-days`, `live` with no live dataset, a sliding window with no history, an as-of after the business date |
+| DRS-9158 | 422 | Several currencies | A sum adding rows of several currencies in a group: a warning in `meta.warnings` in wave W1, a refusal from W2 |
+| DRS-9159 | 422 | Semi-additive | A balance measure over a window of dates without the date as a field: a warning in W1 (the last date's value is answered), a refusal from W2 |
+| DRS-9160 | 422 | Repeats rows | A row extract (`shape: rows`) with fields of two facts |
+| DRS-9161 | 403 | Masked field | A filter, sort or `top` on a field masked for the caller (the body also names `DRS-9021`; `fix` offers the dataset's key) |
+| DRS-9162 | 422 | Python measure | A Python measure in a grouped query (a python visual runs it) |
+| DRS-9180 | 404 | No such subscription | A standing query id the caller does not hold |
+| DRS-9181 | 429 | Server subscriptions | `drishti.bi.mq.max-subscriptions` standing queries are open already |
+| DRS-9182 | 429 | Your subscriptions | `drishti.bi.mq.max-subscriptions-per-user` standing queries of yours are open already |
+| DRS-9183 | 422 | Past as-of | Subscribing to a query as of a past date, which never changes: ask it once |
 
 `DRS-5003` (503, "backend unreachable") and `DRS-9404` (404, an unknown Drishti Elements module or script) are raised by the console, never by the server, so they are not in this table. `DRS-8006` is in the table for completeness: the console raises it, the server never does. Sutra load problems listed by `/sutras/problems` and in `problems` use their own finer `DRS-2xxx` codes
 (for example `DRS-2004` for a `.sutra.md` or plain `.yaml` file in a Sutra folder, `DRS-2009` for a missing or
@@ -1785,6 +1807,99 @@ POST /api/v1/bi/datasets/file:dataset:trading-risk/query     {"fields":["desks.n
 
 Refusals are the standard problem body with the code: `403 DRS-9021` (filtering a masked column), `422 DRS-9020`, `413 DRS-9022`/`9023`, `504 DRS-9024`, `429 DRS-9025`, `502 DRS-9026`, `500 DRS-9027`, and `422 DRS-9010` when the dataset itself has errors.
 Every query is audited (`bi-query`: the counts, the rows, the layer). From the console the calls are under `/bi/api/datasets/...` and `/bi/api/model/...`.
+
+## Models and the model query language: `/api/v1/bi` (wave W1)
+
+Release 2.2 wave W1 ([BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md)): a **dataset** is one governed table (`rachana: 2`, item kind `dataset`), a **data model** puts
+datasets in a star with relationships, measures, model security (only tighter) and a semver contract (item kind `model`, shipped files in `config/bi/models/<name>.model.yaml`),
+and the **model query** (`mq: 1`, YAML or JSON) is the one request for data. Every pack kind gets a read-only dataset `pack.<pack>.<kind>` without anyone writing it.
+A query names its model as `name@major` (`desk-trading@1`), a catalogue id, `dataset:<name>` (the **implicit model** of one dataset: its default measures and, for a
+pack dataset, the pack dimensions its columns reference, one hop), or the name of a version-1 dataset file (read as a model by the **compatibility reader**, with its old
+security unchanged, until wave W4 converts the files). The old `POST /bi/datasets/{id}/query` is kept as it is until W4.
+
+| Method | Path | What it does |
+|---|---|---|
+| `POST` | `/bi/mq` | asks a model a model query (the body is the query, or `{yaml: "<the query as YAML>"}`); `?format=json` (default) or `arrow` (also `options.format`); `options.explain: true` adds the SQL for BI authors. Answers the shape below; refusals are `422`/`403`/`404` with `code`, `path`, `fix` and `problems` |
+| `POST` | `/bi/models/{id}/query` | the same with the model in the path (the body has no `model`; `mq` may be left out) |
+| `POST` | `/bi/mq/validate` | validation steps 1 to 9 without reading data: `{valid, model, warnings, currencyGuard, query, request, totals}` (`request` is the engine request it would run: a drill already a field and `eq` filters) or the refusal |
+| `GET` | `/bi/models` | the models the caller may read: `{models: [{id, name, version, title, status, kind: model \| implicit \| compat, query?}]}` (`query` is what to put in `model:` for a dataset) |
+| `GET` | `/bi/models/{id}/describe` | what a designer, an AI or a client needs to write a query, as the caller sees it: `{id, name, version, implicit, compat, title, lifecycle, datasets[{alias, dataset, version, role, mode, fields[{field, id, type, role, meaning, references, unit, format, masked, description}]}], relationships[], measures[{name, id, expr, format, additive, currency, implicit, masked}], hierarchies, contract, ai}`; masked fields marked, hidden ones (`hidden-for`) absent |
+| `POST` | `/bi/models/validate` | (needs `bi-author`) body `{yaml}` of a model or a `rachana: 2` dataset: Check without storing: `{kind, name, version, valid, problems[{level, code, path, message}], datasets[], measures[], exposures[{dataset, role}]}` (`exposures`: the security safeguard's findings) |
+| `GET` | `/bi/pack-datasets` | the pack-generated datasets of the kinds the caller may open: `{datasets: [{name, id, title, pack, kind, version, mode, endorsement, columns, query}]}` |
+| `GET` | `/bi/pack-datasets/{name}` | one generated dataset's YAML (read-only): `{name, version, readOnly: true, yaml}` |
+| `POST` | `/bi/mq/subscribe` | a standing query: body `{query, throttle: "1s", deliver: rows \| diff \| value}`; answers `{subscription: "sq_…", throttle, deliver, answer, cursor}` |
+| `GET` | `/bi/mq/stream` | `?ids=sq_a,sq_b` (all of the caller's when absent): server-sent events, `answer` (`{subscription, cursor, rows \| diff{upsert, delete} \| value, totals?}`) when a subscription's data moved on, at most one per its throttle, and `status` (`{subscription, state: live \| throttled \| failed, throttle, cursor}`) every `drishti.bi.live.status` |
+| `DELETE` | `/bi/mq/subscribe/{id}` | ends a subscription of the caller (`204`; `404 DRS-9180` for one they do not hold) |
+
+**The query** (every key, [BI_MODEL_SPEC.md section 5.1](../architecture/BI_MODEL_SPEC.md#51-the-object)): `mq: 1`, `model`, `define` (local measures), `select: {fields, measures}`
+(names or stable ids), `where` (the dataset query's operators plus `relative` with a `window` such as `last-30-days` and `top` with `n`, `by`, `dir`), `having` (a measure
+against one number), `time` (one of `as-of`, `window: {from, to}`, `window: {last: 1h}`, `live: true`), `sort`, `limit` (default `drishti.bi.mq.grouped-limit`), `totals`
+(`grand`, `subtotals` or `{levels}`: only the measures that do not add up are asked per level), `drill: {hierarchy, path}`, `shape: grouped | rows`, `params` (wave W6: empty),
+`options: {layer, explain, format}`. Validation runs ten steps in order before any data is read; the first step that fails answers with all its problems
+([section 5.3](../architecture/BI_MODEL_SPEC.md#53-validation-before-any-data-is-read)). In W1 the currency guard (`DRS-9158`) and the semi-additive rule (`DRS-9159`) are warnings in
+`meta.warnings`, not refusals.
+
+**An answer** (captured from a scratch server with the trading pack and its small file lake; the model `desk-trading` has a desk-head rule on its one dataset,
+`pack.trading.trade`). As `rita` (risk) and then as `hana` (desk-head of DESK-FX), the same query:
+
+```
+POST /api/v1/bi/mq   {"mq":1, "model":"desk-trading@1", "select":{"fields":["trades.desk"], "measures":["MTM","Trades","MTM per trade"]}, "sort":[{"by":"MTM","desc":true}]}
+rita: {"mq": 1, "model": {"id": "file:model:desk-trading", "name": "desk-trading", "version": "1.0.0", "implicit": false, "compat": false},
+       "columns": [{"name": "trades.desk", "id": "ds_pack_trading_trade/c_desk", "kind": "field", "type": "string", "masked": false},
+                   {"name": "MTM", "id": "m_mtm", "kind": "measure", "type": "decimal", "format": "signed0", "additive": true, "masked": false},
+                   {"name": "Trades", "id": "m_trades", "kind": "measure", "type": "integer", "format": null, "additive": true, "masked": false},
+                   {"name": "MTM per trade", "id": "m_avg", "kind": "measure", "type": "decimal", "format": null, "additive": false, "masked": false}],
+       "rows": [["DESK-EQD", 425000.0, 20, 21250.0], ["DESK-FI", -75000.0, 20, -3750.0], ["DESK-FX", -575000.0, 20, -28750.0]], "rowCount": 3,
+       "meta": {"asOf": "2026-10-08", "dates": ["2026-10-08"], "layer": "columns", "rollup": null, "parts": 1, "tables": ["trades"], "masked": [], "warnings": [],
+                "cached": false, "millis": 227.9, "generation": "g-0", "query": {"model": "desk-trading@1", "mq": 1, "options": {"format": "json", "layer": "auto"},
+                "select": {"fields": ["trades.desk"], "measures": ["MTM", "Trades", "MTM per trade"]}, "shape": "grouped", "sort": [{"by": "MTM", "desc": true}]}, "sql": null}}
+hana: ... "rows": [["DESK-FX", -575000.0, 20, -28750.0]], "rowCount": 1, ...
+```
+
+The implicit model of a pack dataset needs no model at all (`dataset:pack.trading.trade`; its default measures are named `Count of trade`, `Sum of mtm`, ...):
+
+```
+POST /api/v1/bi/mq   {"mq":1, "model":"dataset:pack.trading.trade", "select":{"fields":["trade.currency"], "measures":["Count of trade","Sum of mtm"]}}
+{"mq": 1, "model": {"id": "implicit:ds_pack_trading_trade@1", "name": "pack.trading.trade", "version": "1.0.0", "implicit": true, "compat": false},
+ "rows": [["EUR", 20, -75000.0], ["GBP", 20, 425000.0], ["USD", 20, -575000.0]], ...}
+```
+
+**A refusal** carries the step's code, the path in the query and a `fix` where one exists (the designer shows it as a one-click change; the AI repair loop sends it back once):
+
+```
+POST /api/v1/bi/mq   {"mq":1, "model":"desk-trading@1", "select":{"fields":["trades.Desk"], "measures":["MTM"]}}
+422 {"title": "mq name", "status": 422, "code": "DRS-9152", "path": "select.fields[0]",
+     "detail": "DRS-9152 table 'trades' has no column 'Desk' (it has book, currency, desk, mtm, notional, pnl1d, productType, status, tradeDate, tradeId)",
+     "fix": {"replace": "select.fields[0]", "with": ["trades.desk"]}, "problems": [ ...the same, one per problem of the step... ]}
+```
+
+**Check and the security safeguard.** Security binds to each dataset: a rule on trades no longer hides another dataset of the model. So that this is never a surprise,
+Check flags every dataset that no row rule restricts while a role is restricted elsewhere in the same model (`DRS-9130`, a warning in Check) and publishing the model is
+refused (`409 DRS-9130`) until the dataset gets a rule or the model says `may-see-all: { <alias>: [<role>] }` under `security` (the publish records it, audited
+`bi-model-may-see-all`). Captured (a second dataset added without a rule):
+
+```
+POST /api/v1/bi/models/validate   {"yaml": "...the desk-trading model with a second dataset desks..."}
+{"kind": "model", "name": "desk-trading-2", "valid": true, "exposures": [{"role": "desk-head", "dataset": "desks"}],
+ "problems": [{"level": "warning", "code": "DRS-9121", "path": "datasets.desks", "message": "'desks' has no relationship to the other datasets: ..."},
+              {"level": "warning", "code": "DRS-9130", "path": "security", "message": "the role 'desk-head' is restricted elsewhere in this model, but no row rule restricts 'desks'
+               (pack.trading.trade): that role sees every one of its rows. Add a rule for it on 'desks', or say so with `may-see-all: { desks: [desk-head] }` under security;
+               until then the model cannot be published"}]}
+```
+
+Publishing a model or a `rachana: 2` dataset also refuses a breaking change without a new major version (`409 DRS-9126`: a measure, column or relationship removed by
+its stable id, a relationship made inactive, a grain key changed). Saving one writes the stable ids it lacks into its YAML (`id: md_…`, `c_<column>`, `m_<measure>`,
+`r_<n>`; existing ids are never changed); saving a generated dataset is `409 DRS-9107`.
+
+**A standing query** (captured): `POST /api/v1/bi/mq/subscribe {"query": {"mq":1, "model":"desk-trading@1", "select":{"measures":["Trades"]}}, "throttle":"1s", "deliver":"value"}`
+answers `{"subscription": "sq_29e4946cc8662be8", "throttle": "1000ms", "deliver": "value", "answer": {...the answer, "rows": [[60]]...}, "cursor": "g-0"}`; its stream
+(`GET /api/v1/bi/mq/stream?ids=sq_29e4946cc8662be8`) opens with `event:status data:{"subscriptions":["sq_29e4946cc8662be8"]}` and, while the data does not move,
+says every five seconds `event:status data:{"throttle":"1000ms","state":"live","cursor":"g-0","subscription":"sq_29e4946cc8662be8"}`; `DELETE
+/api/v1/bi/mq/subscribe/sq_29e4946cc8662be8` answers `204` and the stream ends. In W1 a subscription is evaluated again, in full and as its owner, when a dataset of its model changes data
+generation (a load, a refresh, a live batch); the incremental rules are wave W3.
+
+**Tokens.** `POST /bi/mq`, `/bi/models/{id}/query`, `/bi/mq/validate`, `/bi/models/validate` and `/bi/mq/subscribe` are reads (`token-read-posts`); ending a subscription
+(`DELETE /bi/mq/subscribe/{id}`) needs `bi:write`. Every model query is audited: `bi-mq` for a model, `bi-query` for a version-1 file.
 
 ## Reports: `/api/v1/bi/reports` (phase 3)
 

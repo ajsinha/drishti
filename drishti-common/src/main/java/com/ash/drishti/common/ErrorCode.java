@@ -245,7 +245,51 @@ public enum ErrorCode {
     /** Python in BI: a test shipped with a Python item failed, so the item is not published (a bi-admin may force it). */
     PYTHON_TESTS("DRS-9076", 422),
     /** BI: a Vega-Lite specification could not be drawn (a url or loader in it, a library that did not load); raised by the page, in the visual's frame, and listed here so the code has one home. */
-    VEGA_FAILED("DRS-9077", 422);
+    VEGA_FAILED("DRS-9077", 422),
+    /** The model layer: a {@code rachana: 2} dataset that is not valid (its Check lists every problem); publishing it is refused. */
+    LAYER_DATASET_INVALID("DRS-9100", 422),
+    /** The model layer: a pack-generated dataset is read-only (narrow it with {@code extends}). */
+    LAYER_DATASET_GENERATED("DRS-9107", 409),
+    /** The model layer: a data model that is not valid (its Check lists every problem); publishing it is refused. */
+    LAYER_MODEL_INVALID("DRS-9120", 422),
+    /** The model layer: a breaking change (a measure, column or relationship removed) published without a new major version, or a version that goes down. */
+    LAYER_MODEL_BREAKING("DRS-9126", 409),
+    /** The model layer's security safeguard: a dataset a restricted role would see in full, with neither a row rule nor a {@code may-see-all} note. */
+    LAYER_MODEL_SAFEGUARD("DRS-9130", 409),
+    /** Model query: the shape (an unknown key, a wrong type, {@code mq} missing or not 1, two time forms). */
+    MQ_SHAPE("DRS-9150", 422),
+    /** Model query: the model is not found, not readable by the caller, retired, or a draft the caller may not query. */
+    MQ_MODEL("DRS-9151", 404),
+    /** Model query: a field, measure, hierarchy or id the model lacks. */
+    MQ_NAME("DRS-9152", 422),
+    /** Model query: a field or measure outside the model's contract. */
+    MQ_CONTRACT("DRS-9153", 422),
+    /** Model query: a local measure ({@code define}) that does not compile or shadows a model measure. */
+    MQ_DEFINE("DRS-9154", 422),
+    /** Model query: a filter with an operator or value the field's type does not allow, an unknown relative window, a top without n or by, a drill past the last level. */
+    MQ_FILTER("DRS-9155", 422),
+    /** Model query: a field, filter or row rule not reachable many-to-one from a measure's fact. */
+    MQ_REACH("DRS-9156", 422),
+    /** Model query: a time window over the limit, live with no live dataset, an as-of in the future. */
+    MQ_TIME("DRS-9157", 422),
+    /** Model query: amounts in several currencies added in one group (a warning in wave W1). */
+    MQ_CURRENCY("DRS-9158", 422),
+    /** Model query: a semi-additive measure across dates (a warning in wave W1). */
+    MQ_SEMI_ADDITIVE("DRS-9159", 422),
+    /** Model query: a path that repeats rows (row extracts across two facts). */
+    MQ_FANOUT("DRS-9160", 422),
+    /** Model query: a filter, sort or top on a field masked for the caller. */
+    MQ_MASKED("DRS-9161", 403),
+    /** Model query: a Python measure in a grouped query (a python visual runs it). */
+    MQ_PYTHON("DRS-9162", 422),
+    /** Standing query: no such subscription for the caller. */
+    SQ_NOT_FOUND("DRS-9180", 404),
+    /** Standing query: the server holds {@code drishti.bi.mq.max-subscriptions} already. */
+    SQ_SERVER_LIMIT("DRS-9181", 429),
+    /** Standing query: the caller holds {@code drishti.bi.mq.max-subscriptions-per-user} already. */
+    SQ_USER_LIMIT("DRS-9182", 429),
+    /** Standing query: a subscription to a past as-of date, which never changes. */
+    SQ_PAST("DRS-9183", 422);
 
     private final String code;
     private final int httpStatus;

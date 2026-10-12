@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  */
 public final class BiService {
 
-    public static final List<String> KINDS = List.of("dataset", "report", "board", "notebook", "python");
+    public static final List<String> KINDS = List.of("dataset", "model", "report", "board", "notebook", "python");
     public static final List<String> ENDORSEMENTS = List.of("none", "promoted", "certified");
     private static final Pattern SLUG = Pattern.compile("[a-z][a-z0-9-]{1,47}");
     private static final Pattern TAG = Pattern.compile("[A-Za-z0-9][A-Za-z0-9 ._:/-]{0,39}");
@@ -514,7 +514,7 @@ public final class BiService {
         }
         Instant now = Instant.now();
         String title = text(body, "title", 200, true);
-        String content = checkedBody(body.get("body"));
+        String content = com.ash.drishti.server.bi.layer.LayerBodies.onSave(kind, checkedBody(body.get("body")));
         if (BiTitles.KINDS.contains(kind) && BiTitles.of(content) != null && !title.equals(BiTitles.of(content))) {
             content = BiTitles.with(content, title);                                           // one title: the body carries the item's
         }
@@ -688,6 +688,29 @@ public final class BiService {
         this.testGate = gate;
     }
 
+    private volatile java.util.function.BiFunction<Principal, BiStore.Item, String> layerCheck;
+
+    /**
+     * Set once by the model catalogue: what publishing a data model or a {@code rachana: 2} dataset runs (Check, the contract's versioning, the security
+     * safeguard). It throws the refusal; it answers the {@code may-see-all} notes the publish relies on, which are audited (empty when none).
+     */
+    public void layerCheck(java.util.function.BiFunction<Principal, BiStore.Item, String> check) {
+        this.layerCheck = check;
+    }
+
+    /** Every published item of a kind, stored and shipped, whoever may read it (the model catalogue resolves names among them). */
+    public List<BiStore.Item> publishedOfKind(String kind) {
+        List<BiStore.Item> all = new ArrayList<>(store.published());
+        all.addAll(folder.items());
+        return all.stream().filter(i -> kind.equals(i.kind())).toList();
+    }
+
+    /** The caller's own unpublished items of a kind (they own them or belong to the workspace). */
+    public List<BiStore.Item> draftsOfKind(Principal p, String kind) {
+        Set<String> mine = myWorkspaces(p);
+        return store.items().stream().filter(i -> kind.equals(i.kind()) && !i.isPublished() && (i.owner().equals(p.user()) || mine.contains(i.workspace()))).toList();
+    }
+
     /** Set once by the Python items service: what publishing a Python item checks its manifest with (the first error, or an empty text). */
     public void pythonCheck(java.util.function.Function<String, String> check) {
         this.pythonCheck = check;
@@ -760,7 +783,7 @@ public final class BiService {
         if (base != null && !String.valueOf(base).isBlank() && !String.valueOf(base).equals(i.updatedAt() == null ? "" : i.updatedAt().toString())) {
             throw new DrishtiException(ErrorCode.BI_STALE, "'" + i.title() + "' was saved by " + i.updatedBy() + " since you opened it: reload it, save yours as a copy, or overwrite");
         }
-        String newBody = body.containsKey("body") ? checkedBody(body.get("body")) : i.body();
+        String newBody = body.containsKey("body") ? com.ash.drishti.server.bi.layer.LayerBodies.onSave(i.kind(), checkedBody(body.get("body"))) : i.body();
         String newTitle = body.containsKey("title") ? text(body, "title", 200, true) : i.title();
         if (BiTitles.KINDS.contains(i.kind())) {                                       // one title: the item's and the body's agree after every save
             String inBody = BiTitles.of(newBody);
@@ -955,7 +978,12 @@ public final class BiService {
     }
 
     private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force, boolean applyRenames) {
-        if ("dataset".equals(i.kind()) && !i.body().isBlank()) {
+        if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(i.body()))) {
+            String noted = layerCheck.apply(p, i);                                  // the model layer's checks, contract and security safeguard: refuses with its code
+            if (!noted.isEmpty()) {
+                audit.record(p.user(), "bi-model-may-see-all", i.id(), noted);
+            }
+        } else if ("dataset".equals(i.kind()) && !i.body().isBlank()) {
             com.ash.drishti.server.bi.dataset.DatasetParser.Result r = com.ash.drishti.server.bi.dataset.DatasetParser.parse(i.body());
             if (!r.ok()) {
                 throw new DrishtiException(ErrorCode.DATASET_INVALID, "'" + i.title() + "' cannot be published: " + r.firstError() + " (check it on its dataset page)");

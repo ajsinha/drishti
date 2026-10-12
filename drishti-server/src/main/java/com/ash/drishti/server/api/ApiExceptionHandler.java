@@ -64,6 +64,23 @@ public class ApiExceptionHandler {
                 .contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON).body(p);
     }
 
+    /**
+     * A model query refused (docs/architecture/BI_MODEL_SPEC.md section 5.7): the first problem's code, {@code path} and {@code fix}, and every problem of the
+     * step that failed. A masked field ({@code DRS-9161}) also names {@code DRS-9021}, the engine's code for the same refusal.
+     */
+    @ExceptionHandler(com.ash.drishti.server.bi.mq.MqException.class)
+    ProblemDetail modelQuery(com.ash.drishti.server.bi.mq.MqException e) {
+        ProblemDetail p = drishti(e);
+        com.ash.drishti.server.bi.mq.MqException.Problem first = e.problems().get(0);
+        p.setProperty("path", first.path());
+        p.setProperty("fix", first.fix());
+        p.setProperty("problems", e.problems());
+        if ("DRS-9161".equals(first.code())) {
+            p.setProperty("also", ErrorCode.QUERY_MASKED.code());
+        }
+        return p;
+    }
+
     @ExceptionHandler(DrishtiException.class)
     ProblemDetail drishti(DrishtiException e) {
         HttpStatus status = HttpStatus.valueOf(e.errorCode().httpStatus());
