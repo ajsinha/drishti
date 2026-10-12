@@ -112,6 +112,12 @@
     X.open({ dataset: dsSel.value, fields: fields }).catch(function () {});
   });
 
+  // ---- where Slice and SQL run: DuckDB-Wasm in this page when it is installed, else the console / this page's JavaScript --------------------------------------
+  var pick = q('[data-engine-pick]', root);
+  if (pick) {
+    pick.addEventListener('change', function () { X.engine = pick.value === 'server' ? 'server' : ''; if (X.ex) { drawPivot(); } });
+  }
+
   // ---- slice ---------------------------------------------------------------------------------------------------------------------
   var AGGS = ['sum', 'avg', 'count', 'min', 'max'];
   function colType(name) { var c = X.ex.columns.filter(function (x) { return x.name === name; })[0]; return c ? c.type : 'string'; }
@@ -195,19 +201,41 @@
         if (isFinite(num)) { c.sum += num; c.min = c.min === null ? num : Math.min(c.min, num); c.max = c.max === null ? num : Math.max(c.max, num); }
       });
     });
+    return X.pivotFrom(rk, ck, cells, vals, rows.length);
+  };
+
+  /** The pivot object from the aggregates of each (row key, column key): {n, sum, min, max} for each value. The JavaScript pivot and the DuckDB one both end here. */
+  X.pivotFrom = function (rk, ck, cells, vals, used) {
     var sortKeys = function (o) { return Object.keys(o).sort(function (x, y) { return x.localeCompare(y, undefined, { numeric: true }); }); };
     var out = function (c, v) { return !c ? '' : v.agg === 'count' ? c.n : v.agg === 'sum' ? c.sum : v.agg === 'avg' ? (c.n ? c.sum / c.n : '') : v.agg === 'min' ? c.min : c.max; };
     return {
-      rowKeys: sortKeys(rk).map(function (k) { return rk[k]; }), colKeys: sortKeys(ck).map(function (k) { return ck[k]; }), vals: vals, used: rows.length,
+      rowKeys: sortKeys(rk).map(function (k) { return rk[k]; }), colKeys: sortKeys(ck).map(function (k) { return ck[k]; }), vals: vals, used: used,
       cell: function (a, b) { var c = cells[a.join('\u0001') + '\u0002' + b.join('\u0001')]; return vals.map(function (v, i) { return out(c && c[i], v); }); }
     };
   };
 
+  var pivotRun = 0;
+  /** The pivot, worked out by DuckDB-Wasm in the browser when it is there (bi-explore-duck.js), else by the JavaScript pivot above; the engine is on the table's data-engine. */
   function drawPivot() {
     var host = clear(q('[data-pivot]', root)), s = X.slice, meta = q('[data-pivot-meta]', root);
     q('[data-promote-slice]', root).disabled = !(s.rows.length || s.columns.length);
     if (!X.ex || !(s.rows.length || s.columns.length || s.values.length)) { meta.textContent = 'Add fields to Rows, Columns or Values.'; return; }
-    var p = X.pivot(X.ex, s), many = p.vals.length > 1;
+    var run = ++pivotRun, ex = X.ex;
+    var finish = function (p, engine) { if (run === pivotRun && ex === X.ex) { showPivot(host, meta, s, p, engine); } };
+    if (X.duck && X.duck.usable() && X.engine !== 'server') {
+      meta.textContent = 'Working it out…';
+      X.duck.pivot(ex, s).then(function (p) { finish(p, 'duckdb-wasm'); }, function (e) {
+        if (run !== pivotRun) { return; }
+        if (e && e.code) { meta.textContent = e.message; return; }                                // a refusal, not an engine that is missing: say so
+        finish(X.pivot(ex, s), 'js');
+      });
+      return;
+    }
+    finish(X.pivot(ex, s), 'js');
+  }
+
+  function showPivot(host, meta, s, p, engine) {
+    var many = p.vals.length > 1;
     var head = s.rows.length ? s.rows.slice() : ['(all rows)'];
     var cols = p.colKeys.length && s.columns.length ? p.colKeys : [[]];
     var header = head.slice();
@@ -217,7 +245,8 @@
       cols.forEach(function (c) { p.cell(rk, c.length ? c : []).forEach(function (v) { row.push(typeof v === 'number' ? Math.round(v * 1e6) / 1e6 : v); }); });
       return row;
     });
-    meta.textContent = p.used + ' of ' + X.ex.rowCount + ' rows used; ' + body.length + ' pivot rows.';
+    meta.textContent = p.used + ' of ' + X.ex.rowCount + ' rows used; ' + body.length + ' pivot rows. ' + (engine === 'js' ? 'Worked out in this page.' : 'Worked out by DuckDB in this browser.');
+    meta.setAttribute('data-engine', engine);
     X.table(host, header, body, MAX_SHOWN);
   }
 

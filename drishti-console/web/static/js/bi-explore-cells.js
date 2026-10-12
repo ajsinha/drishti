@@ -61,13 +61,21 @@
     if (!X.ex) { note(cell.out, 'Open an extract first.', true); return Promise.resolve(); }
     note(cell.out, 'Running…');
     if (kind === 'sql') {
-      return X.post('/bi/explore/sql', { extract: spec(), extracts: X.extras, sql: cell.source }).then(function (r) {
+      var show = function (r, engine) {
         clear(cell.out);
-        cell.out.appendChild(h('p', { class: 'bi-result-meta', text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms' }));
+        cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': engine, text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms · ' + (engine === 'server' ? 'run by the console (SQLite)' : 'DuckDB in this browser') }));
         var host = h('div', { class: 'tbl-wrap' });
         cell.out.appendChild(host);
         X.table(host, r.columns, r.rows, 200);
-      }).catch(function (e) { note(cell.out, e.message, true); });
+      };
+      var viaServer = function () { return X.post('/bi/explore/sql', { extract: spec(), extracts: X.extras, sql: cell.source }).then(function (r) { show(r, 'server'); }); };
+      if (X.duck && X.duck.usable() && X.engine !== 'server') {                                  // DuckDB-Wasm on the extract in this page; the console's SQLite when it cannot start
+        return X.duck.sql(cell.source).then(function (r) { show(r, 'duckdb-wasm'); }, function (e) {
+          if (e && e.code) { throw e; }
+          return viaServer();
+        }).catch(function (e) { note(cell.out, e.message, true); });
+      }
+      return viaServer().catch(function (e) { note(cell.out, e.message, true); });
     }
     var done = function (r) { show(cell.out, r); };
     var fail = function (e) { note(cell.out, e.message, true); if (e.traceback) { cell.out.appendChild(h('pre', { class: 'bx-pre', text: e.traceback })); } };

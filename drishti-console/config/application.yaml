@@ -214,4 +214,5 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1) and,
     cell_max_chars: 65536                                       # longest Python cell
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
+    browser_engine: auto                                        # auto: Slice and SQL run in the browser on the extract with DuckDB-Wasm when tools/fetch-duckdb-wasm.sh has installed it (the console is the fallback); server: always on the console
     quant_engine: stand-in                                      # the engine behind quant.price(...) in a Python cell (docs/guides/QUANT_SERVICE.md)

@@ -104,9 +104,11 @@ async def primary_for(request: Request, spec, extras: list[tuple[dict, Extract]]
 
 @router.get("/bi/explore")
 async def page(request: Request):
+    from routes.bi_poc_routes import duckdb_base
     limits = _limits(request)
+    duck = "" if limits.browser_engine == "server" else duckdb_base(CONSOLE / "web" / "static")
     return _page(request, "bi/explore.html", "explore", limits=limits, may_python="bi-author" in _powers(request),
-                 quant=get_engine(limits.quant_engine).describe())
+                 quant=get_engine(limits.quant_engine).describe(), duckdb=duck)
 
 
 @router.get("/bi/explore/status")
