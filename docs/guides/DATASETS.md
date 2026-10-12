@@ -28,7 +28,7 @@ is executed: it is parsed, validated, compiled to SQL with **bound values**, and
 Contents: [1](#1-the-file) the file · [2](#2-tables-and-columns) tables and columns · [3](#3-relationships-and-how-queries-join) relationships ·
 [4](#4-measures-and-the-expression-language) measures and expressions (4.1: time intelligence, 4.2: Python measures) · [5](#5-hierarchies) hierarchies · [6](#6-security-row-rules-and-masks) security ·
 [7](#7-modes-layers-and-rollups) modes, layers and rollups (7.2: scheduled refresh) · [8](#8-the-query) the query · [9](#9-problems-and-drs-codes) problems and codes ·
-[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard
+[10](#10-what-is-not-built) what is not built (live tables: [7.1](#71-live-tables-phase-5)) · [11](#11-composed-and-derived-datasets) composed and derived datasets · [12](#12-build-a-dataset-in-the-browser-the-wizard) the wizard · [13](#13-model-layer-datasets-rachana-2-wave-w1) model-layer datasets (W1)
 
 ## 1. The file
 
@@ -816,3 +816,51 @@ The wizard keeps the dataset as one document and writes the same YAML sections 1
 After saving: **Open the Model view**, **Open the dataset page**, and (when you may publish) **Publish it, then start a report**. A report reads a *published* dataset and a draft in a personal workspace cannot be published, so save into a shared workspace of which you are a member, or **Move to workspace** later. A dataset page with no schedule offers **Set a schedule** to an author who may edit it: a choice and a time, written as `refresh:` into a new saved state (the same conversion, so nothing else changes).
 
 The console's two helper calls (`POST /bi/wizard/yaml` writes a JSON document as YAML, key order kept; `POST /bi/wizard/parse` reads YAML into the document and says whether it is `tables`, `composed` or `derived`) are same-origin and decide no access; saving goes through the BI calls and the server decides. A text over 400,000 characters is refused (`413`), an unparsable one or a text that is not a mapping `422 DRS-9003`. Walk-through: [tutorial 10, step 13](../tutorials/10-first-bi-report.md#step-13--a-dataset-of-your-own-in-the-wizard).
+
+## 13. Model-layer datasets (`rachana: 2`, wave W1)
+
+Everything above describes the version-1 dataset, which is still read as written. Wave W1 adds the **model layer**
+([BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md) section 1): a dataset becomes **one table** (a source, a grain, columns with roles, meanings, units
+and additivity, a time mode, its own security), and a **model** (`config/bi/models/<id>.model.yaml`, item kind `model`) puts datasets together with
+relationships and measures. Version-1 files keep working through a compatibility reader until the migration wave (W4).
+
+**Pack datasets: nothing to build.** Every kind of every pack you may open is a dataset `pack.<pack>.<kind>`, generated from the pack (its promoted
+columns, its vocabulary's meanings, its entity references), certified, read-only and versioned with the pack. In the console: **Models** in the BI rail
+(`/bi/models`) lists them; a dataset's page (`/bi/ds/pack.trading.trade`) shows what one row is, the keys, the time mode, the source and each column's
+type, role, meaning, referenced kind, unit, additivity and default measure, then the YAML Drishti wrote. From the API: `GET /api/v1/bi/pack-datasets`
+(the list) and `GET /api/v1/bi/pack-datasets/{name}` (the YAML). An entry of the list on a server with the trading and banking-core packs:
+
+```json
+{"name": "pack.banking-core.book", "id": "ds_pack_banking_core_book", "title": "Book", "pack": "banking-core", "kind": "book", "version": "1.0.0",
+ "mode": "snapshot", "endorsement": "certified", "columns": 10, "query": "dataset:pack.banking-core.book"}
+```
+
+`query` is how a model query names the dataset's **implicit model**: the dataset as a fact, its pack dimensions one hop away (a trade's `desk` brings
+`pack.banking-core.desk` as `desk`), and default measures (`Sum of mtm`, `Count of trade`). So a report can start from a bare dataset: the dataset page's
+**Start a report on it** does exactly that, and **Make it a model** writes the implicit model out as a draft model you can extend.
+
+**A dataset of your own** (`/bi/datasets/new-layer`, also *New dataset* on the Models page) is for what a pack does not give: a pack dataset **narrowed**
+(`extends:` with extra calculated columns, a row filter and more masks; the pack's own stays read-only), a **query in a SQL connector** (its only
+parameter is the as-of date, bound, never text), a **Python Transform** whose inputs are model queries, or **the answer of a model** (pick its fields and
+measures). Three steps, no YAML typed: the source; the table (each column's type, role, meaning, referenced kind, currency and additivity, the grain keys
+as chips, time and refresh, with the server's Check below); then title, name, workspace, masked columns, the YAML for review and **Save draft** or **Save
+and publish**. The draft survives a refresh and Back. What it writes for a connector query:
+
+```yaml
+rachana: 2
+dataset: desk-limits
+version: 1.0.0
+title: Desk limits
+source: {connector: risk-warehouse, query: 'SELECT desk_id, limit_type, limit_amount, currency FROM limits WHERE as_of = :asOf', params: {asOf: as-of}}
+grain: {says: One row per desk and limit type per date, keys: [desk_id, limit_type]}
+time: {mode: snapshot}
+refresh: {on-load: true}
+columns:
+  desk_id: {type: string, role: dimension, references: desk}
+  limit_amount: {type: decimal, role: amount, unit: {currency: currency}, additive: {over-time: last}}
+```
+
+Check (`POST /api/v1/bi/models/validate` with `{yaml}`) answers the problems with codes `DRS-9100` to `DRS-9108` (BI_MODEL_SPEC.md section 1.11). In W1 the
+server answers queries over pack and narrowed datasets; connector-query, Python and model-answer datasets are checked and saved, and answer once the
+server's source package (S4) lands (a query reading one is refused with `DRS-9013`, 501, until then). Models, the model designer and reports on a model:
+[BI_GUIDE.md section 23](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1) and [REPORTS.md section 18](REPORTS.md#18-a-report-on-a-model-wave-w1).

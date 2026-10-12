@@ -292,3 +292,27 @@ def test_pack_dataset_to_model_to_report(browser):
     assert sorted(map(tuple, new["body"]["rows"])) == sorted(map(tuple, old["body"]["rows"]))
     clean(page)
     page.context.close()
+
+
+def test_a_report_straight_from_a_dataset_reads_its_implicit_model_in_the_designer_and_the_viewer(browser):
+    page = sign_in(browser, "wes")
+    page.goto(CONSOLE_URL + "/bi/ds/pack.trading.trade")
+    expect(page.locator('[data-layer-dataset][data-ready="yes"]')).to_have_count(1, timeout=20000)
+    page.click("[data-use]")
+    page.click("[data-ask-go]")
+    page.wait_for_url("**/bi/design/**", timeout=20000)
+    expect(page.locator('[data-model-header="implicit"]')).to_contain_text("Implicit model of Trade", timeout=30000)
+    expect(page.locator("[data-make-model]")).to_be_visible()
+    expect(page.locator('[data-field="desk.name"]')).to_be_visible()                  # the pack dimension came along, one hop
+    page.drag_and_drop('[data-field="Sum of mtm"]', "[data-canvas-grid]", target_position={"x": 80, "y": 40})
+    page.drag_and_drop('[data-field="desk.name"]', ".bi-dvis")
+    expect(page.locator(".bi-dvis").first).to_contain_text("3 rows", timeout=15000)
+    page.click("[data-save]")
+    expect(page.locator(".bi-near").first).to_contain_text("Saved", timeout=15000)
+    report = page.url.rsplit("/", 1)[-1]
+    page.goto(CONSOLE_URL + "/bi/r/" + report)                                          # the viewer asks the same model query
+    expect(page.locator(".bi-vis").first).to_be_visible(timeout=20000)
+    expect(page.locator(".bi-vis canvas, .bi-vis svg").first).to_be_visible(timeout=15000)
+    expect(page.locator(".bi-vis-error")).to_have_count(0)
+    clean(page)
+    page.context.close()

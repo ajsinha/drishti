@@ -42,6 +42,7 @@ Three sample reports ship in `config/bi/reports/` (and a fourth for Python, **De
 15. [A report in another web application](#15-a-report-in-another-web-application)
 16. [Reports over several datasets](#16-reports-over-several-datasets)
 17. [Expected values: `tests:`](#17-expected-values-tests)
+18. [A report on a model (wave W1)](#18-a-report-on-a-model-wave-w1)
 
 ## 1. Where a report lives
 
@@ -716,3 +717,56 @@ The designer's **Check** runs the report's tests (of the text on the screen, sav
 ![A publish refused while a test fails: DRS-9043 names the test, the figure it expected and the figure it found](../tutorials/img/t11/17-publish-refused.jpg)
 
 `drishti.bi.governance.refuse-failing-tests` (on) turns the publish gate off (a failing test then only shows in Check). A test that cannot run (a source down, a role the publisher lacks) counts as failing at publish. Exports and subscriptions do not run tests.
+
+## 18. A report on a model (wave W1)
+
+With the model layer ([BI_MODEL_SPEC.md](../architecture/BI_MODEL_SPEC.md) sections 3, 4 and 9.4; [BI_GUIDE.md](BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1))
+a report binds to **one model** with `model:` in place of `dataset:`:
+
+```yaml
+report: trades-and-desks-report
+title: Trades and desks report
+model: trades-and-desks@1          # a model by name and major; or dataset:pack.trading.trade (that dataset's implicit model)
+pages:
+  - id: main
+    title: Main
+    visuals:
+      - { id: bar-1, type: bar, at: { x: 2, y: 1, w: 6, h: 5 }, wells: { axis: [trade.desk], values: [Sum of mtm] } }
+```
+
+**Start one** from *Models* (**Use** on a dataset or a model), from a dataset's page (**Start a report on it**), or from the model designer (**Start a
+report**): the draft opens in the designer. Everything of sections 2 to 8 applies; what differs:
+
+* **Fields** is the model as you see it: one group per dataset alias (`trade`, `desk`), its measures (the model's and the default ones such as
+  `Sum of notional`, `Count of trade`), masked fields marked. The header names the model: *Implicit model of Trade* with **Make it a model**, or
+  *Model Trades and desks* with **Open the model**. There is no *Add dataset*: a report reads one model, and another dataset is added to the model.
+* **Every visual's data is one model query** (`POST /api/v1/bi/mq`) built from its wells (fields and measures, in order), the report's, page's and
+  visual's filters (a filter on a measure becomes `having`), its sort and limit, and, in the viewer, the slicers and the other visuals' selections.
+  **Query of the selected visual** (under Fields) shows it as YAML, for example:
+
+  ```yaml
+  mq: 1
+  model: trades-and-desks@1
+  select:
+    fields: [trade.desk]
+    measures: [Sum of mtm]
+  ```
+* A filter's value picker lists the field's values from the model, as you.
+* **Make it a model** (implicit models only) writes a draft model item in the report's workspace (the dataset as the fact, its pack dimensions one hop
+  away with their relationships, the default measures; `implicit-from:` says where it came from) and rebinds the report to `<model>@1`; the model opens in
+  the designer.
+
+**The answer is the same as the old path.** A model query over a pack dataset returns the numbers the version-1 dataset query returns over the same rows;
+on the browser test's lake (two days of 60 trades), the model query
+
+```json
+{"mq": 1, "model": "trades-and-desks@1", "select": {"fields": ["desk.name"], "measures": ["Sum of mtm"]}, "sort": [{"by": "Sum of mtm", "desc": true}]}
+```
+
+answers `["Equity derivatives", 425000], ["Bonds and securitised", -75000], ["G10 and EM FX", -575000]`, and the version-1 query
+`{"fields": ["trade.desk"], "measures": ["MTM"]}` on `trades-basic` answers `["DESK-EQD", 425000], ["DESK-FI", -75000], ["DESK-FX", -575000]`.
+
+**Not yet in W1.** The server's report endpoints (validate, the report query, publish, exports, subscriptions, boards, embeds) still bind to `dataset:`;
+the console bridges the designer and the report page by asking `/mq` itself and by not counting the missing `dataset:` as a problem. Until the server's
+consumer package binds reports to models, a report on a model is a **draft you design and view**; publishing it is refused with `DRS-9030`
+(*`dataset:` names the dataset the report reads*), and the sample reports keep `dataset:` (the migration wave W4 moves them).

@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **Added: the BI model layer, wave W1 console package** ([BI_GUIDE.md section 23](docs/guides/BI_GUIDE.md#23-models-and-pack-datasets-the-model-layer-wave-w1)).
+  **Models** in the BI rail: the pack-generated datasets (Use starts a report on the implicit model at once), your datasets and the models; a dataset page with
+  its grain, keys, meanings, time mode and security. **The model designer** (`/bi/md/<item>`): datasets on a canvas with inferred star roles, relationships
+  suggested from the packs' entity references (one click; a second path or a fact-to-fact one offered inactive), relationship inspector, measures with the right
+  defaults from the column (aggregation, format, additivity, currency), security rules built without typing and **the safeguard** answered in one click (a rule,
+  or an audited `may-see-all`), contract and version, Check on every edit, undo and redo, unsaved work kept in the browser, stale saves caught, Publish or
+  Propose, a two-way YAML tab. **New dataset** (`/bi/datasets/new-layer`): a narrowed pack dataset, a connector query, a Python Transform or a model's answer, in
+  three steps that write `rachana: 2`. **Reports on a model** (`model:`): the Fields pane reads the model, every visual asks one model query (`/mq`) in the
+  designer and the viewer, *Query of the selected visual*, *Make it a model*. Analyse extracts of a model are one model query of rows. Publishing a report on a
+  model waits for the server's consumer package ([REPORTS.md section 18](docs/guides/REPORTS.md#18-a-report-on-a-model-wave-w1)); tutorial 10 has a models preview.
 - **Added: the BI model layer, wave W1 server package** ([BI_MODEL_SPEC.md](docs/architecture/BI_MODEL_SPEC.md)). New item kind `model` (shipped files in
   `config/bi/models/`) and `rachana: 2` datasets (one governed table: source, grain, typed columns with roles, units and additivity, time mode, own security), each with
   Check (`DRS-9100` to `DRS-9130`), stable ids written on save and semver contracts (a breaking change needs a new major, `DRS-9126`). Every pack kind publishes a
