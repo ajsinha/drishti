@@ -313,6 +313,7 @@ All under `/api/v1/bi`; answers are as the caller. Token scopes: writes need `bi
 | `GET /items/{id}/review` | request, diff, Check, impact, data preview | 9002, 9001 |
 | `GET /items/{id}/lineage` | upstream, downstream, uses | 9001 |
 | `GET /items/{id}/impact[?remove=a,b]`, `POST /items/{id}/impact {yaml}` | what breaks | 9001 |
+| `GET /items/{id}/dependants` | the reports on a dataset (and datasets built on it), the boards showing a report: the count and names the caller may read, for the delete confirmation | 9001, 9002 |
 | `POST /items/{id}/publish`, `/approve` with `{note, force, applyRenames}` | publish; `force` is for bi-admin; `applyRenames` rewrites the reports that use renamed names (section 6) | **9040**, 9002, 9004, 9005 |
 | `GET /imports`, `/imports/{id}` | the imports whose replaced states are kept; one with its items and whether each changed since (bi-steward) | 9002, 9001 |
 | `POST /imports/{id}/rollback {force}` | put back what the import replaced; `force` (bi-admin) restores items edited since | 9004, 9002, 9001 |

@@ -201,3 +201,9 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
   .bi-adddataset .btn-pill, .bi-adddataset .studio-select, .bi-linkspanel .btn-pill, .bi-dstree .bi-chipbtn, .bi-linklist input[type="checkbox"] { min-height: 44px; min-width: 44px; }
 }
 .bi-dvis { position: relative; }
+.bi-fieldset[data-format-options] { display: flex; flex-direction: column; gap: .15rem; }
+.bi-fieldset[data-format-options] label.bi-checkrow, [data-bookmarks] .bi-cond { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+@media (pointer: coarse) {
+  .bi-fieldset[data-format-options] label.bi-checkrow, [data-bookmarks] .btn-pill, [data-bookmarks] .studio-in { min-height: 44px; }
+  [data-bookmarks] .bi-chipbtn { min-height: 44px; min-width: 44px; }
+}

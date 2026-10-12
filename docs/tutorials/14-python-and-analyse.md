@@ -103,7 +103,13 @@ source: |
       }
 ```
 
-A Python item is a BI item like a dataset or a report: stored, versioned, reviewed and published. Create it in your workspace: **My workspace → New item**, kind *python*, title `Notional by desk chart`, paste the YAML from `data/notional-by-desk.python.yaml`, **Create item**. (The picture below moved it into `Economics desk`.)
+A Python item is a BI item like a dataset or a report: stored, versioned, reviewed and published. Create it in your workspace. **In the UI** that is a form, and you do not start from a blank page: **My workspace → New item**, kind *python*, and **What does it make?** asks for *a measure* (one number per group), *a visual* (a chart drawn by Python) or *a table* (a Transform, which joins datasets), and for the columns it reads (or, for a table, the datasets it reads). **Create and open the editor** makes the item with a valid, commented starter body (the manifest the server checks, a function of the right shape, and for a measure a test) and opens it with its editor ready, so you change the code and press **Check the Python**.
+
+![New item, kind python: it makes a measure, reads the column notional, titled Mean notional](img/t14/23-python-starter.jpg)
+
+![The starter body in the item's editor: params, a test of the mean of three values, and def compute(table, params)](img/t14/24-python-starter-editor.jpg)
+
+For this step choose *a visual* and replace the body with the tutorial's, or, **from the file**, paste the YAML from `data/notional-by-desk.python.yaml` into the same form's item page (**Edit**), the way it was done before the starter existed: kind *python*, title `Notional by desk chart`, **Create item**. (The picture below moved it into `Economics desk`.)
 
 ![The Python item's page: draft, with Check the Python, Edit, Propose for review, Publish](img/t14/02-python-item.jpg)
 
@@ -213,7 +219,7 @@ You should see `750` printed and a three-row table. Running Python needs `bi-aut
 
 ## Step 7 · Keep it as a notebook, promote it
 
-Under **Notebook** give it a title (`Desk notional, first look`) and press **Save as a notebook**.
+Under **Notebook** give it a title (`Desk notional, first look`) and press **Save as a notebook**. (**My workspace → New item → notebook** only points you here: a notebook is made from the work you did, not from a form.)
 
 ![The notebook card after saving: Save as a notebook and Open the item; the Python chart above](img/t14/09-saved.jpg)
 
@@ -249,7 +255,9 @@ You should see the cell (`df` is the trades; `extract("exposure")` is the nettin
 
 ![After promoting: "Python transform draft saved in your workspace: Join of P&L and exposure. Each extract("name") became a parameter of run()..."](img/t14/15-promote-transform.jpg)
 
-You should see the message that a Python Transform draft was saved in your workspace: each `extract("name")` became a parameter of `run(...)`, the cell's `result` is returned, and its inputs are the two datasets, in order. Open the draft, **Check the Python**, publish it, and write the derived dataset that names it (`derived: { transform: ..., inputs: { ... } }`), as the sample does. Nothing is published by promoting.
+You should see the message that a Python Transform draft was saved in your workspace: each `extract("name")` became a parameter of `run(...)`, the cell's `result` is returned, and its inputs are the two datasets, in order. Open the draft, **Check the Python**, publish it, and make the derived dataset that names it. Nothing is published by promoting.
+
+**In the UI** the derived dataset is the dataset wizard's last source choice ([tutorial 10, step 13](10-first-bi-report.md#step-13--a-dataset-of-your-own-in-the-wizard)): **Datasets → New dataset (guided) → A Python Transform**. Name the Transform (its title appears in the suggestions), add an input for each dataset it reads (give it a name, choose the dataset, and tick the fields and measures to hand over), and list the columns the Transform returns with their types; the next steps then offer measures over the `result` table, a refresh schedule and the review. **Save as a draft**, then open the dataset's page and press **Run the Transform now**. **From the YAML** (what the wizard writes, and what the sample does) it is `derived: { transform: ..., inputs: { ... } }` with a `columns:` block and the measures over `result`.
 
 ## Step 9 · Vega-Lite, and tests that ship with the item
 

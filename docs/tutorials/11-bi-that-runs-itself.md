@@ -39,7 +39,16 @@ About 40 minutes.
 
 ## Step 1 · A dataset that refreshes itself
 
-A dataset keeps its numbers in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 7](07-load-data-daily.md)), when someone asks, and on a **schedule you write in the dataset**. The tutorial's dataset is a small one over the trades:
+A dataset keeps its numbers in layers it builds from the source. They are rebuilt when a data load arrives ([tutorial 7](07-load-data-daily.md)), when someone asks, and on a **schedule** that is set on the dataset.
+
+**In the UI** there are two ways to set it, and neither needs the YAML:
+
+- **In the dataset wizard**, step 6 *Refresh and security* ([tutorial 10, step 13](10-first-bi-report.md#step-13--a-dataset-of-your-own-in-the-wizard)): choose *Every day at*, *Weekdays at*, *Business days at* (the pack's holiday calendar), *Every week on*, *Every hour*, *After a data load finishes*, or write one yourself; a line under the choice shows exactly what will be written (`refresh: business-days 06:30`).
+- **On the dataset's own page**, when it has no schedule: the **Refresh** section says *No refresh schedule* and, for an author who may edit the draft, offers **Set a schedule** (a choice and a time). It writes `refresh:` into a new saved state of the draft, keeping every other key; publish the dataset to start the schedule.
+
+![The Refresh section of a dataset with no schedule: the note, Refresh now, and the Set a schedule form with Business days at 06:30](img/t11/19-set-schedule.jpg)
+
+**From the YAML** (what both of them write) the tutorial's dataset is a small one over the trades:
 [data/trades-daily.dataset.yaml](data/trades-daily.dataset.yaml). The line that matters is the fourth:
 
 ```yaml
@@ -75,7 +84,7 @@ The status also carries a note. (This one says the demo connector reads the trad
 
 ## Step 2 · Subscribe a colleague to a report
 
-Open the shipped report **World economics** and press **Subscribe** in the toolbar (beside the export buttons).
+Open the shipped report **World economics** and press **Subscribe** in the toolbar (beside the export buttons). Subscribe and the export buttons appear only when they will work for you: when an administrator has switched exports or subscriptions off, or you already own the most subscriptions allowed, a line beside the bar says so and why (the server's `GET /api/v1/distribution/status` is what the page asks).
 
 ![The Subscribe form: name Morning economy pack, when business-days 07:30, send as an Excel workbook, to vera](img/t11/03-subscribe-form.jpg)
 
@@ -235,7 +244,7 @@ You should see a header row and one line per desk. Every export carries your **b
 
 ## Step 7 · Say what a number should be
 
-A report or a dataset may declare the numbers it must show, as `tests:`. Add this to a copy of the dataset (the tutorial's file, [data/trades-daily.dataset.yaml](data/trades-daily.dataset.yaml), is enough; the demo book holds 750 trades):
+A report or a dataset may declare the numbers it must show, as `tests:`. **In the UI** there is no form for tests yet (the dataset page runs them and the designer's **Check** lists them; a Python item's own tests are in [tutorial 14](14-python-and-analyse.md)): open the dataset in the wizard, go to **Review and save** and use **Edit as YAML**, or edit the body on the item page. Add this to a copy of the dataset (the tutorial's file, [data/trades-daily.dataset.yaml](data/trades-daily.dataset.yaml), is enough; the demo book holds 750 trades):
 
 ```yaml
 tests:
