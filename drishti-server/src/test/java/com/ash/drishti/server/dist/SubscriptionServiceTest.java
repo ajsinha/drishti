@@ -363,4 +363,130 @@ class SubscriptionServiceTest {
         assertThat(runs.get(4).path("sent").asInt()).isEqualTo(1);
         assertThat(service.all()).hasSize(1);
     }
+
+    // ---- narrative summaries, webhooks and texts (wave D) ----------------------------------------------------------------------------
+
+    final List<String> posts = new CopyOnWriteArrayList<>();
+    final List<String> texts = new CopyOnWriteArrayList<>();
+    final List<String> hookFailures = new CopyOnWriteArrayList<>();
+
+    private void wire(boolean aiOn) {
+        SubscriptionService.Narrator narrator = new SubscriptionService.Narrator() {
+            @Override
+            public String unavailable() {
+                return aiOn ? null : "it is switched off (drishti.ai.enabled)";
+            }
+
+            @Override
+            public SubscriptionService.Narration write(Principal p, ExportDoc doc) {
+                if (p.roles().contains("masked")) {
+                    return SubscriptionService.Narration.skipped("the AI policy lets the model see labels only for you");
+                }
+                return SubscriptionService.Narration.of("Exposure for FX is " + doc.sections().get(0).rows().get(0).get(1) + " today.");
+            }
+        };
+        SubscriptionService.Outbound out = new SubscriptionService.Outbound() {
+            @Override
+            public List<String> webhookNames() {
+                return List.of("ops");
+            }
+
+            @Override
+            public boolean smsConfigured() {
+                return true;
+            }
+
+            @Override
+            public Optional<String> phone(String username) {
+                return username.equals("alice") || username.equals("bob") ? Optional.of("+4420" + username.length()) : Optional.empty();
+            }
+
+            @Override
+            public void webhook(String name, com.fasterxml.jackson.databind.node.ObjectNode payload) {
+                if (!hookFailures.isEmpty()) {
+                    hookFailures.remove(0);
+                    throw new com.ash.drishti.server.notify.NotifyException("the webhook answered HTTP 503", false);
+                }
+                posts.add(name + " " + payload);
+            }
+
+            @Override
+            public void sms(String phone, String text) {
+                texts.add(phone + " " + text);
+            }
+        };
+        service.with(narrator, out);
+    }
+
+    @Test
+    void aNarrativeOpensTheMailFromTheRecipientsOwnFiguresAndIsLeftOutWhenThePolicySaysSo() {
+        wire(true);
+        save("story", "\"recipients\":[\"alice\",\"bob\"],\"narrative\":true");
+        JsonNode run = service.run("alice", "story", "by hand");
+        RenderedMail toAlice = sent.stream().filter(m -> m.to().startsWith("alice")).findFirst().orElseThrow();
+        RenderedMail toBob = sent.stream().filter(m -> m.to().startsWith("bob")).findFirst().orElseThrow();
+        assertThat(toAlice.html()).contains("written by an AI model").contains("Exposure for FX is secret-alice today.");
+        assertThat(toAlice.text()).contains("Summary (written by an AI model from your figures below): Exposure for FX is secret-alice today.");
+        assertThat(toBob.html()).doesNotContain("written by an AI model").doesNotContain("Exposure for FX");        // masked: the policy gave no summary
+        assertThat(toBob.html()).contains("****");
+        assertThat(run.path("deliveries").get(0).path("narrative").asText()).isEqualTo("written");
+        assertThat(run.path("deliveries").get(1).path("narrative").asText()).startsWith("skipped: the AI policy");
+        assertThat(service.get("alice", "story").orElseThrow().path("narrative").asBoolean()).isTrue();
+    }
+
+    @Test
+    void aNarrativeCannotBeSavedWhileTheAiLayerIsOff() {
+        wire(false);
+        assertThatThrownBy(() -> save("story", "\"recipients\":[\"alice\"],\"narrative\":true")).hasMessageContaining("needs the AI layer").hasMessageContaining("switched off");
+        save("plain", "\"recipients\":[\"alice\"]");                                // without it, nothing changes
+        service.run("alice", "plain", "by hand");
+        assertThat(sent.get(0).html()).doesNotContain("written by an AI model");
+    }
+
+    @Test
+    void aWebhookGetsOnePostPerRunAndATextGoesToEachRecipientWithANumberNeitherWithAFigure() {
+        wire(true);
+        save("out", "\"recipients\":[\"alice\",\"bob\",\"carol\",\"dave\"],\"webhooks\":[\"ops\"],\"sms\":true");
+        JsonNode run = service.run("alice", "out", "by hand");
+        assertThat(posts).hasSize(1);
+        assertThat(posts.get(0)).startsWith("ops ").contains("\"event\":\"subscription\"").contains("Report daily-risk").contains("http://console/bi/r/daily-risk/overview")
+                .doesNotContain("secret").doesNotContain("****");
+        assertThat(texts).hasSize(2);                                                    // alice and bob; carol has no number, dave cannot open the report
+        assertThat(texts).allSatisfy(t -> assertThat(t).contains("is ready: http://console/bi/r/daily-risk/overview").doesNotContain("secret").doesNotContain("****"));
+        List<String> status = new java.util.ArrayList<>();
+        run.path("deliveries").forEach(d -> status.add(d.path("channel").asText("email") + ":" + d.path("to").asText() + "=" + d.path("status").asText()));
+        assertThat(status).contains("webhook:webhook:ops=sent", "sms:sms:alice=sent", "sms:sms:bob=sent", "sms:sms:carol=skipped", "sms:sms:dave=skipped");
+        assertThatThrownBy(() -> save("bad", "\"recipients\":[\"alice\"],\"webhooks\":[\"nope\"]")).hasMessageContaining("no webhook named 'nope'");
+    }
+
+    @Test
+    void aFailedWebhookIsTriedAgainByTheSharedPolicy() {
+        wire(true);
+        save("hook", "\"recipients\":[\"alice\"],\"webhooks\":[\"ops\"]");
+        hookFailures.add("once");
+        JsonNode run = service.run("alice", "hook", "by hand");
+        JsonNode hook = run.path("deliveries").get(1);
+        assertThat(hook.path("status").asText()).isEqualTo("retry");
+        assertThat(hook.path("error").asText()).contains("HTTP 503");
+        clock.now = Instant.parse(hook.path("nextAttempt").asText()).plusSeconds(1);
+        service.retryDeliveries("alice", "hook");
+        assertThat(posts).hasSize(1);
+        JsonNode after = service.get("alice", "hook").orElseThrow().path("runs").get(0).path("deliveries").get(1);
+        assertThat(after.path("status").asText()).isEqualTo("sent");
+        assertThat(after.path("attempts").asInt()).isEqualTo(2);
+    }
+
+    @Test
+    void theNarrativeFactsLeaveOutMaskedColumnsAndCutLongTables() {
+        List<List<Object>> rows = new java.util.ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            rows.add(java.util.Arrays.asList("FX" + i, "****", (long) i));
+        }
+        ExportDoc doc = new ExportDoc("Daily risk", "Data as of 2026-11-25", List.of(), List.of(
+                new ExportDoc.Section("v", "Exposure", ExportDoc.TABLE, List.of("Desk", "MTM", "Trades"), rows, null, List.of("MTM")),
+                new ExportDoc.Section("c", "Total", ExportDoc.CARD, List.of("MTM"), List.of(java.util.Collections.singletonList("****")), null, List.of("MTM"))));
+        String facts = AiNarrator.facts(doc, 3);
+        assertThat(facts).contains("REPORT: Daily risk").contains("Desk | Trades").contains("FX2 | 2").doesNotContain("FX3").contains("(2 more rows not shown)");
+        assertThat(facts).doesNotContain("MTM").doesNotContain("****").doesNotContain("SECTION Total");
+    }
 }
