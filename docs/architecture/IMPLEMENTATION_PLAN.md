@@ -286,8 +286,8 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Roadmap
 
-**Proposed after 2.1.0 (not yet agreed):** Power BI parity for Rūpaka, phases 2.2 to 3.0 — see
-[BI_PARITY_PLAN.md](BI_PARITY_PLAN.md) (gap analysis, ranked gaps, redesigns R1–R8, what is deliberately not copied).
+**Agreed after 2.1.0 (2026-10-12):** the Rūpaka model architecture and waves W1–W16 for 2.2.0 to 3.0 — see
+[BI_MODEL_ARCHITECTURE.md](BI_MODEL_ARCHITECTURE.md); the gap analysis behind it is [BI_PARITY_PLAN.md](BI_PARITY_PLAN.md).
 
 Everything planned up to 2.1.0 is built (see the changelog, [What 2.0.0 contains](#what-200-contains) and [What 2.1.0 contains](#what-210-contains)). The roadmap has no dated waves open.
 

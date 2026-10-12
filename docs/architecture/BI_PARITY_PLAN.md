@@ -16,7 +16,7 @@
 
 # Drishti Rūpaka vs Microsoft Power BI: gap analysis and parity roadmap
 
-Status: proposal for agreement (not yet scheduled). Study date: 2026-10-12. Drishti version studied: 2.1.0 (`drishti-server/pom.xml`). Decisions already taken: no Power Query clone (Python is the data-prep path); breaking BI redesigns are acceptable before production; YAML, Python and datasets + data models stay the foundation.
+Status: the gap analysis behind the agreed plan in BI_MODEL_ARCHITECTURE.md (its roadmap section is superseded). Study date: 2026-10-12. Drishti version studied: 2.1.0 (`drishti-server/pom.xml`). Decisions already taken: no Power Query clone (Python is the data-prep path); breaking BI redesigns are acceptable before production; YAML, Python and datasets + data models stay the foundation.
 
 ## 0. Method, sources and confidence
 
