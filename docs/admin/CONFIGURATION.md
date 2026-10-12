@@ -1284,6 +1284,7 @@ Under `drishti.distribution.export`:
 | `enabled` | `true` | `false` turns every export off (`422 DRS-9060`) |
 | `max-rows` | `50000` | Most rows of one table in an Excel or CSV export; a table is cut there and its sheet says so |
 | `pdf-max-rows` | `500` | Most rows drawn per table in a PDF or PNG |
+| `pdf-chart-rows` | `15` | Most rows of the table that follows a chart in a PDF or PNG (the chart shows the shape; the Excel/CSV export holds the rows) |
 | `max-bytes` | `26214400` | Largest file an export may produce (`422 DRS-9060` over it) |
 | `timeout` | `60s` | Longest an export may take |
 | `max-visuals` | `40` | Most visuals one export holds |

@@ -340,7 +340,7 @@ Rank by a column that is not masked (`counterparties.id`, not the masked name): 
 
 A `slicer` visual lists the values of its field (from the dataset, under the reader's rows and masks) and filters the visuals in its **scope**.
 
-* `format.mode: list` (the default: a checkbox list with a search box), `dropdown` (the shared multi-select) or `range` (two inputs, for a number or a date field). `relative-date` is a choice of **dates relative to the report's date** (section 6.1).
+* `format.mode: list` (the default: a checkbox list with a search box), `dropdown` (the shared multi-select) or `range` (two inputs, **From** and **To**, side by side, for a number or a date field; it fits a slicer two grid rows high, and a From after To shows a hint instead of asking for nothing). `relative-date` is a choice of **dates relative to the report's date** (section 6.1).
 * `format.scope: page` (the default) filters this page; `report` filters every page, so a choice made on one page holds on the others.
 * A slicer never filters itself, and other slicers filter it. A visual a slicer cannot reach through the dataset's relationships answers `DRS-9020` and says so.
 

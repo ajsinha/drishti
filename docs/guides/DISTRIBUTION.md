@@ -88,7 +88,7 @@ The PDF is 2938 bytes on 2 pages. A view's file is named by its title and date, 
 ### Limits (settings)
 
 `drishti.distribution.export.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtidistribution-export-and-subscriptions)): rows per table in Excel and CSV (`max-rows`, 50,000; a table is cut there and its
-sheet says so), rows drawn per table in a PDF or PNG (`pdf-max-rows`, 500: the picture is for reading, Excel holds the rest), the largest file (`max-bytes`, 25 MB), the longest export (`timeout`, 60 s),
+sheet says so), rows drawn per table in a PDF or PNG (`pdf-max-rows`, 500: the picture is for reading, Excel holds the rest; the table under a chart is cut at `pdf-chart-rows`, 15, with a line saying how many more rows are in the Excel/CSV export. A **line or area chart** is drawn as lines over the whole series, sampled to 200 points; the other chart types are drawn as bars of their first 12 rows), the largest file (`max-bytes`, 25 MB), the longest export (`timeout`, 60 s),
 visuals per export (`max-visuals`, 40), the layout width, orientation and the tallest PNG. Over a limit the answer is `422 DRS-9060` and says which setting.
 
 ### The API
@@ -248,7 +248,7 @@ Ask the owner of the subscription, o
 
 ### A written summary at the top (`narrative`)
 
-Tick *Open the email with a short written summary* (or send `narrative: true`). Each recipient's email then opens with two or three sentences by an AI model that word **their own** figures: the model is called **as that recipient**
+The tick-box *Open the email with a short written summary* appears on the form **only when AI is switched on** for this server (`drishti.ai.enabled`); without AI there is nothing to tick (and `narrative: true` is refused). With it, tick it (or send `narrative: true`). Each recipient's email then opens with two or three sentences by an AI model that word **their own** figures: the model is called **as that recipient**
 under the feature `subscription-narrative`, from the tables as that recipient's render holds them with every masked column left out, and **only when the AI policy lets the model see values**
 (`drishti.bi.ai.values: aggregates`, [BI_AI.md section 9](BI_AI.md#9-a-written-summary-at-the-top-of-a-subscriptions-email)). Otherwise (labels-only, the AI layer off, the policy refusing the recipient, the provider failing) the mail
 is sent as usual **without** it and the delivery says `summary: skipped: <why>` in the history. The summary is labelled as AI-written.
