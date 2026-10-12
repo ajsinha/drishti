@@ -167,7 +167,7 @@ public final class ExpectedValueRunner {
         try {
             Principal as = as(p, role);
             QueryRequest q = new QueryRequest(t.by(), List.of(t.measure()), filters(t), date(t), date(t), List.of(), 5000, "auto");
-            QueryService.Result r = datasets.queryItem(as, item, q, false);
+            QueryService.Result r = datasets.ask(as, item, q, false);
             return judge(t, "measure", t.measure(), r, t.measure(), role);
         } catch (DrishtiException e) {
             return new Outcome(t.label(), "measure", t.measure(), t.expectText(), null, "error", e.getMessage(), role);
@@ -183,7 +183,7 @@ public final class ExpectedValueRunner {
             if (t.visual() == null) {
                 BiReportService.Base home = reports.target(p, item.id(), yaml);
                 QueryRequest q = new QueryRequest(t.by(), List.of(t.measure()), filters(t), date(t), date(t), List.of(), 5000, "auto");
-                return judge(t, kind, target, datasets.queryItem(as, home.dsItem(), q, false), t.measure(), role);
+                return judge(t, kind, target, datasets.ask(as, home.dsItem(), q, false), t.measure(), role);
             }
             Report.Page page = report.pages().stream().filter(x -> x.visual(t.visual()) != null).findFirst().orElseThrow(
                     () -> new DrishtiException(ErrorCode.REPORT_STATE, "the report has no visual '" + t.visual() + "'"));
@@ -204,7 +204,7 @@ public final class ExpectedValueRunner {
                 throw new DrishtiException(ErrorCode.REPORT_VISUAL, "the visual '" + t.visual() + "' asks for no measure, so it shows no number");
             }
             String column = t.column() != null ? t.column() : b.query().measures().get(0);
-            return judge(t, kind, target, datasets.queryItem(as, b.dsItem(), b.query(), false), column, role);
+            return judge(t, kind, target, datasets.ask(as, b.dsItem(), b.query(), false), column, role);
         } catch (DrishtiException e) {
             return new Outcome(t.label(), kind, target, t.expectText(), null, "error", e.getMessage(), role);
         }

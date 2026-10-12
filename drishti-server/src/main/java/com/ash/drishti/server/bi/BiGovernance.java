@@ -289,7 +289,7 @@ public final class BiGovernance {
                     m.put("reason", "the report names no field or measure yet");
                     return m;
                 }
-                QueryService.Result r = datasets.queryItem(p, dsItem, new QueryRequest(fields, measures, List.of(), null, null, List.of(), props.previewRows(), "auto"), false);
+                QueryService.Result r = datasets.ask(p, dsItem, new QueryRequest(fields, measures, List.of(), null, null, List.of(), props.previewRows(), "auto"), false);
                 return previewMap(r, "a sample of the data the report reads (dataset '" + dsItem.title() + "')");
             }
             m.put("available", false);

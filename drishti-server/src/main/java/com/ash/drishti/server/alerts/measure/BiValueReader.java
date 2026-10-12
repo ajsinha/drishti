@@ -22,6 +22,10 @@ import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.board.Board;
 import com.ash.drishti.server.bi.board.BiBoardService;
 import com.ash.drishti.server.bi.engine.QueryRequest;
+import com.ash.drishti.server.bi.mq.ModelCatalog;
+import com.ash.drishti.server.bi.mq.ModelQuery;
+import com.ash.drishti.server.bi.mq.MqParser;
+import com.ash.drishti.server.bi.mq.MqService;
 import com.ash.drishti.server.bi.report.BiReportService;
 import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.security.Principal;
@@ -35,8 +39,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Reads the number of a BI source as one person: a visual of a report, a measure of a dataset, or the level of a board tile. The query goes through the same
- * services as the screen (the report service, the dataset engine), so the person's row rules and masks are applied by the engine; a measure that is masked for
+ * Reads the number of a BI source as one person: a visual of a report, a measure of a dataset, a model query on a model, or the level of a board tile. Every
+ * one is a model query underneath (docs/architecture/BI_MODEL_SPEC.md section 5.9), through the same services as the screen, so the person's row rules and masks are applied by the engine; a measure that is masked for
  * the person is reported as masked and its value is never read.
  */
 public final class BiValueReader {
@@ -47,6 +51,8 @@ public final class BiValueReader {
     private final DatasetService datasets;
     private final BiBoardService boards;
     private final PythonAlertReader python;
+    private volatile ModelCatalog models;
+    private volatile MqService mq;
 
     public BiValueReader(BiReportService reports, DatasetService datasets, BiBoardService boards) {
         this(reports, datasets, boards, null);
@@ -60,12 +66,20 @@ public final class BiValueReader {
         this.python = python;
     }
 
+    /** The model layer, for {@code type: model} sources (set once at start-up). */
+    public BiValueReader withModels(ModelCatalog models, MqService mq) {
+        this.models = models;
+        this.mq = mq;
+        return this;
+    }
+
     public Reading read(AlertSpec spec, Principal who, LocalDate date) {
         AlertSpec.Source s = spec.source();
         try {
             return switch (s.type()) {
                 case "visual" -> visual(s, who, date);
                 case "dataset" -> dataset(s, who, date);
+                case "model" -> model(s, who, date);
                 default -> tile(s, who, date);
             };
         } catch (DrishtiException e) {
@@ -135,8 +149,29 @@ public final class BiValueReader {
             q.set("dates", JSON.createObjectNode().put("from", date.toString()).put("to", date.toString()));
         }
         q.put("limit", 1);
-        Map<String, Object> answer = datasets.json(datasets.query(who, s.dataset(), QueryRequest.of(q), false));
+        Map<String, Object> answer = datasets.json(datasets.ask(who, s.dataset(), QueryRequest.of(q), false));
         return reduce(answer, s.measure(), "first");
+    }
+
+    // ---- a model query -------------------------------------------------------------------------------------------------------
+
+    /** The model query of the source, asked as the person (at the evaluation's business date when it names no time), reduced to one number. */
+    private Reading model(AlertSpec.Source s, Principal who, LocalDate date) {
+        if (models == null) {
+            return Reading.error("the model layer is not running on this server");
+        }
+        Map<String, Object> answer = mq.ask(models.bind(who, s.model()), query(s, date), false).body();
+        return reduce(answer, s.measure(), s.reduce());
+    }
+
+    /** The source's query, as of {@code date} when it names no time. */
+    static ModelQuery query(AlertSpec.Source s, LocalDate date) {
+        ModelQuery q = MqParser.parse(s.query());
+        if (date == null || !q.time().equals(ModelQuery.Time.DEFAULT)) {
+            return q;
+        }
+        return new ModelQuery(q.mq(), q.model(), q.define(), q.fields(), q.measures(), q.where(), q.having(), new ModelQuery.Time(date, null, null, null, false), q.sort(),
+                q.limit(), q.totals(), q.drill(), q.shape(), q.params(), q.options());
     }
 
     // ---- a board tile --------------------------------------------------------------------------------------------------------

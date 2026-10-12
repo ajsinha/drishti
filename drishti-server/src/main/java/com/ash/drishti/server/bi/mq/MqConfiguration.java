@@ -49,9 +49,10 @@ public class MqConfiguration {
     }
 
     @Bean
-    public ModelCatalog modelCatalog(BiService bi, DatasetService datasets, PackDatasets packs) {
-        ModelCatalog catalog = new ModelCatalog(bi, datasets, packs);
+    public ModelCatalog modelCatalog(BiService bi, DatasetService datasets, PackDatasets packs, MqService mq) {
+        ModelCatalog catalog = new ModelCatalog(bi, datasets, packs, mq);
         bi.layerCheck(catalog::gate);                                    // publishing a model or a rachana: 2 dataset runs its Check, contract and safeguard
+        datasets.attach(new ConsumerQueries(catalog, mq));               // every consumer's question goes through the model query language
         return catalog;
     }
 

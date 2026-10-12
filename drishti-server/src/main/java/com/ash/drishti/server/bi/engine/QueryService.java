@@ -155,7 +155,7 @@ public final class QueryService implements AutoCloseable {
     // ---- query -------------------------------------------------------------------------------------------------------
 
     public Result query(Loaded ds, QueryRequest q, Caller who, boolean explain) {
-        return query(ds, q, who, explain, null);
+        return query(ds, q, who, explain, null, null);
     }
 
     /**
@@ -163,10 +163,24 @@ public final class QueryService implements AutoCloseable {
      * asked as the reader, or the Transform's result) when the result cache does not already hold the answer.
      */
     public Result query(Loaded ds, QueryRequest q, Caller who, boolean explain, Frames frames) {
+        return query(ds, q, who, explain, frames, null);
+    }
+
+    /** As {@link #query(Loaded, QueryRequest, Caller, boolean)} for a model with tables whose rows are another query's answer ({@code staged}, asked as the reader). */
+    public Result query(Loaded ds, QueryRequest q, Caller who, boolean explain, StagedTables staged) {
+        return query(ds, q, who, explain, null, staged);
+    }
+
+    private Result query(Loaded ds, QueryRequest q, Caller who, boolean explain, Frames frames, StagedTables staged) {
         queries.incrementAndGet();
         Frames.Rows rows = null;
         if (frames != null && ds.dataset().framed() && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + "|frames:" + frames.fingerprint()) == null)) {
             rows = frames.load();                   // the sources are asked before this query takes a place of its own: they are queries too, and must not wait for it
+        }
+        String stagedKey = staged == null ? "" : "|staged:" + staged.fingerprint();
+        Map<String, StagedTables.Answer> inner = Map.of();
+        if (staged != null && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + stagedKey) == null)) {
+            inner = innerAnswers(ds.dataset(), q, who, staged);               // likewise asked before this query takes its place
         }
         AtomicInteger mine = perUser.computeIfAbsent(who.user(), u -> new AtomicInteger());
         if (mine.incrementAndGet() > props.maxConcurrentPerUser()) {
@@ -176,7 +190,7 @@ public final class QueryService implements AutoCloseable {
         }
         boolean got = false;
         try {
-            String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint());
+            String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey;
             if (key != null && !explain) {
                 Result hit = cache.getIfPresent(key);
                 if (hit != null) {
@@ -194,7 +208,7 @@ public final class QueryService implements AutoCloseable {
                 rejected.incrementAndGet();
                 throw new DrishtiException(ErrorCode.QUERY_BUSY, "the server is running " + props.maxConcurrent() + " queries already (drishti.bi.query.max-concurrent); try again");
             }
-            Result r = ds.dataset().framed() ? runFramed(ds, q, who, rows != null || frames == null ? rows : frames.load(), explain) : run(ds, q, who, explain);
+            Result r = ds.dataset().framed() ? runFramed(ds, q, who, rows != null || frames == null ? rows : frames.load(), explain) : run(ds, q, who, explain, inner);
             if (key != null && !explain) {
                 cache.put(key, r);
             }
@@ -227,7 +241,54 @@ public final class QueryService implements AutoCloseable {
                 + "|denied:" + new java.util.TreeSet<>(who.denied()) + (who.enforce() ? TableRules.fingerprint(ds.dataset(), who.roles()) : "");
     }
 
-    private Result run(Loaded ds, QueryRequest q, Caller who, boolean explain) {
+    /** The inner answers of the staged tables the query plans to read, asked as the reader. */
+    private static Map<String, StagedTables.Answer> innerAnswers(Dataset d, QueryRequest q, Caller who, StagedTables staged) {
+        SqlCompiler.Reader reader = new SqlCompiler.Reader(who.enforce(), who.roles(), who.attributes(), HistoryMasks.over(d, who.masks()));
+        Map<String, StagedTables.Answer> out = new LinkedHashMap<>();
+        for (String t : new SqlCompiler(d, Dialect.DUCKDB).plan(q, reader).tables()) {
+            if (staged.has(t)) {
+                out.put(t, staged.answer(t));
+            }
+        }
+        return out;
+    }
+
+    /** Writes the inner answers as one partition each (files the caller deletes when the query is done). */
+    private Map<String, Layers.Layer> stage(Dataset d, Map<String, StagedTables.Answer> inner) {
+        Map<String, Layers.Layer> out = new LinkedHashMap<>();
+        if (inner.isEmpty()) {
+            return out;
+        }
+        java.nio.file.Path dir = java.nio.file.Path.of(props.storeDir(), "staged");
+        try {
+            java.nio.file.Files.createDirectories(dir);
+        } catch (java.io.IOException e) {
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, "cannot write the staged answers under " + dir + ": " + e.getMessage());
+        }
+        for (Map.Entry<String, StagedTables.Answer> e : inner.entrySet()) {
+            java.nio.file.Path file = dir.resolve("s-" + java.util.UUID.randomUUID() + ".parquet");
+            long n = engine.with(conn -> StagedTables.write(conn, file, d.tables().get(e.getKey()), e.getValue()));
+            out.put(e.getKey(), new Layers.Layer(List.of(new Layers.Partition(e.getValue().date(), file, n, "staged")), List.of(), 0));
+        }
+        return out;
+    }
+
+    private Result run(Loaded ds, QueryRequest q, Caller who, boolean explain, Map<String, StagedTables.Answer> inner) {
+        Map<String, Layers.Layer> staged = stage(ds.dataset(), inner);
+        try {
+            return run(ds, q, who, explain, staged, inner);
+        } finally {
+            staged.values().forEach(l -> l.partitions().forEach(p -> {
+                try {
+                    java.nio.file.Files.deleteIfExists(p.file());
+                } catch (java.io.IOException ignored) {
+                    // scratch: the next start of the store removes what is left
+                }
+            }));
+        }
+    }
+
+    private Result run(Loaded ds, QueryRequest q, Caller who, boolean explain, Map<String, Layers.Layer> staged, Map<String, StagedTables.Answer> inner) {
         Dataset d = ds.dataset();
         SqlCompiler.Reader reader = new SqlCompiler.Reader(who.enforce(), who.roles(), who.attributes(), HistoryMasks.over(d, who.masks()));
         Set<String> modes = new LinkedHashSet<>();
@@ -248,6 +309,11 @@ public final class QueryService implements AutoCloseable {
         Map<String, LiveHistory> histories = new LinkedHashMap<>();
         for (String t : plan.tables()) {
             Dataset.Table table = d.tables().get(t);
+            if (staged.containsKey(t)) {
+                cols.put(t, staged.get(t));
+                inner.get(t).result().meta().warnings().forEach(w -> warnings.add(t + ": " + w));
+                continue;
+            }
             if (who.denied().contains(t)) {
                 cols.put(t, new Layers.Layer(List.of(), List.of(), 0));
                 warnings.add("you may not open " + table.kind() + ": " + t + " has no rows for you");
@@ -277,7 +343,7 @@ public final class QueryService implements AutoCloseable {
             cols.put(t, layer);
             warnings.addAll(layer.warnings());
         }
-        Dataset.Rollup rollup = "columns".equals(q.layer()) || plan.tables().stream().anyMatch(who.denied()::contains) ? null : route(d, plan, q, inMemory);
+        Dataset.Rollup rollup = "columns".equals(q.layer()) || !staged.isEmpty() || plan.tables().stream().anyMatch(who.denied()::contains) ? null : route(d, plan, q, inMemory);
         if ("rollup".equals(q.layer()) && rollup == null) {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "no rollup of this dataset can answer the query (layer: rollup was asked for)");
         }

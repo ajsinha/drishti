@@ -145,11 +145,11 @@ public final class BiAiService {
             BiReportService.Base t = reports.target(p, report);
             model = t.model();
             target = String.valueOf(model.get("id"));
-            run = q -> datasets.json(datasets.queryItem(p, t.dsItem(), q, false));
+            run = q -> datasets.json(datasets.ask(p, t.dsItem(), q, false));
         } else if (dataset != null && !dataset.isBlank()) {
             model = datasets.model(p, dataset);
             target = dataset;
-            run = q -> datasets.json(datasets.query(p, dataset, q, false));
+            run = q -> datasets.json(datasets.ask(p, dataset, q, false));
         } else {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "name the report (report) or the dataset (dataset) the question is asked of");
         }
@@ -187,7 +187,7 @@ public final class BiAiService {
         out.put("measure", name);
         out.put("lineage", lineage(b.dataset(), b.model(), m));
         QueryRequest base = new QueryRequest(List.of(), List.of(name), b.query().filters(), b.query().from(), b.query().to(), List.of(), 1, b.query().layer());
-        Map<String, Object> total = datasets.json(datasets.queryItem(p, b.dsItem(), base, false));
+        Map<String, Object> total = datasets.json(datasets.ask(p, b.dsItem(), base, false));
         Object value = firstCell(total);
         out.put("value", value);
         List<Map<String, Object>> breakdown = new ArrayList<>();
@@ -198,7 +198,7 @@ public final class BiAiService {
             QueryRequest q = new QueryRequest(List.of(dim), List.of(name), b.query().filters(), b.query().from(), b.query().to(),
                     List.of(new QueryRequest.Sort(name, true)), props.explainMembers(), b.query().layer());
             try {
-                Map<String, Object> r = datasets.json(datasets.queryItem(p, b.dsItem(), q, false));
+                Map<String, Object> r = datasets.json(datasets.ask(p, b.dsItem(), q, false));
                 if (masked(r)) {
                     continue;                                                                // a field masked for this reader says nothing to them, or to the model
                 }

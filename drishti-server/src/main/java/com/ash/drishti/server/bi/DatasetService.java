@@ -111,6 +111,42 @@ public final class DatasetService {
         this.refresher = refresher;
     }
 
+    /**
+     * The one path every consumer's question takes (docs/architecture/BI_MODEL_SPEC.md section 5.9): an engine request on a dataset item becomes a model query
+     * on the item's model (the implicit model of a {@code rachana: 2} dataset, the compatibility reader's model of a version-1 one), validated and compiled by the
+     * model query compiler and run as the reader. Set once at start-up by the model layer.
+     */
+    public interface ModelGateway {
+        Asked ask(Principal p, BiStore.Item item, QueryRequest q, boolean explain);
+    }
+
+    /** A consumer's answer: the engine's result (the model query's warnings ahead of the engine's) and the canonical model query that ran (null without the gateway). */
+    public record Asked(QueryService.Result result, Map<String, Object> query) {}
+
+    private volatile ModelGateway gateway;
+
+    public void attach(ModelGateway gateway) {
+        this.gateway = gateway;
+    }
+
+    /**
+     * Asks a dataset item a consumer's question as the caller, through the model query language (reports, exports, subscriptions, boards, embeds, alerts,
+     * extracts, AI). Without the model layer wired (unit tests of one service) the engine is asked directly.
+     */
+    public Asked asked(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
+        ModelGateway g = gateway;
+        return g == null ? new Asked(queryItem(p, item, q, explain), null) : g.ask(p, item, q, explain);
+    }
+
+    public QueryService.Result ask(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
+        return asked(p, item, q, explain).result();
+    }
+
+    /** As {@link #ask(Principal, BiStore.Item, QueryRequest, boolean)} for a dataset the caller names (id, name or file name) and may read. */
+    public QueryService.Result ask(Principal p, String id, QueryRequest q, boolean explain) {
+        return ask(p, datasetItem(p, id), q, explain);
+    }
+
     /** Every published dataset that parses, ready to query: what the scheduler and a data-load signal work over. */
     public List<QueryService.Loaded> published() {
         List<QueryService.Loaded> all = new ArrayList<>();
@@ -481,7 +517,13 @@ public final class DatasetService {
 
     /** Runs a query against a data model's flattened dataset as the caller (its security per dataset, the caller's masks and kinds). Audited as {@code bi-mq}. */
     public QueryService.Result queryModel(Principal p, String id, String key, Dataset ds, String hash, QueryRequest q, boolean explain) {
-        QueryService.Result r = queries.query(new QueryService.Loaded(id, key, ds, hash), q, caller(p, ds), explain);
+        return queryModel(p, id, key, ds, hash, q, explain, null);
+    }
+
+    /** As {@link #queryModel(Principal, String, String, Dataset, String, QueryRequest, boolean)} with tables whose rows are another model's answer ({@code staged}). */
+    public QueryService.Result queryModel(Principal p, String id, String key, Dataset ds, String hash, QueryRequest q, boolean explain, com.ash.drishti.server.bi.engine.StagedTables staged) {
+        QueryService.Loaded loaded = new QueryService.Loaded(id, key, ds, hash);
+        QueryService.Result r = staged == null ? queries.query(loaded, q, caller(p, ds), explain) : queries.query(loaded, q, caller(p, ds), explain, staged);
         audit.record(p.user(), "bi-mq", id, q.fields().size() + " fields, " + q.measures().size() + " measures, " + r.rows() + " rows from " + r.meta().layer()
                 + (r.meta().cached() ? " (cached)" : ""));
         return r;

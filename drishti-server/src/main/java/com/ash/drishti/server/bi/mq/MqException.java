@@ -49,6 +49,26 @@ public final class MqException extends DrishtiException {
         this(List.of(p));
     }
 
+    /**
+     * A refusal answered under an older endpoint's code ({@code DRS-9020} for a query the engine would not take, {@code DRS-9021} for a masked field): the
+     * endpoints that predate the language keep their codes; the problems keep the model query's codes, paths and fixes.
+     */
+    public MqException(List<Problem> problems, ErrorCode legacy) {
+        super(legacy, problems.get(0).detail());
+        this.problems = List.copyOf(problems);
+    }
+
+    /** This refusal under the code the engine gave the same refusal before the model query language (see {@link #MqException(List, ErrorCode)}). */
+    public MqException legacy() {
+        String code = problems.get(0).code();
+        ErrorCode old = switch (code) {
+            case "DRS-9161" -> ErrorCode.QUERY_MASKED;
+            case "DRS-9151" -> errorCode();
+            default -> code.startsWith("DRS-915") || code.startsWith("DRS-916") ? ErrorCode.QUERY_INVALID : errorCode();
+        };
+        return old == errorCode() ? this : new MqException(problems, old);
+    }
+
     public List<Problem> problems() {
         return problems;
     }

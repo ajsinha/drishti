@@ -68,15 +68,16 @@ public class MeasureAlertConfiguration {
     }
 
     @Bean
-    public BiValueReader biValueReader(BiReportService reports, DatasetService datasets, BiBoardService boards, PythonAlertReader python) {
-        return new BiValueReader(reports, datasets, boards, python);
+    public BiValueReader biValueReader(BiReportService reports, DatasetService datasets, BiBoardService boards, PythonAlertReader python,
+            com.ash.drishti.server.bi.mq.ModelCatalog models, com.ash.drishti.server.bi.mq.MqService mq) {
+        return new BiValueReader(reports, datasets, boards, python).withModels(models, mq);
     }
 
     @Bean(destroyMethod = "close")
     @SuppressWarnings("java:S107")
     public ServerAlertSources serverAlertSources(BiReportService reports, DatasetService datasets, BiBoardService boards, BiService bi, Entitlements entitlements,
-            FieldValueReader fields, SourceRouter router, TopicHub hub) {
-        return new ServerAlertSources(reports, datasets, boards, bi, entitlements, fields, router, hub, Clock.systemUTC());
+            FieldValueReader fields, SourceRouter router, TopicHub hub, com.ash.drishti.server.bi.mq.ModelCatalog models, com.ash.drishti.server.bi.mq.MqService mq) {
+        return new ServerAlertSources(reports, datasets, boards, bi, entitlements, fields, router, hub, Clock.systemUTC()).withModels(models, mq);
     }
 
     @Bean

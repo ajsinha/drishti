@@ -143,9 +143,9 @@ public final class DatasetDefParser {
             y.error("DRS-9100", "source", "`source:` is a mapping");
             return null;
         }
-        boolean query = s.has("query");
-        boolean python = s.has("python");
         boolean model = s.has("model");
+        boolean query = s.has("query") && !model;                       // a model source's `query:` is its model query, not a connector's SQL
+        boolean python = s.has("python");
         boolean kind = s.has("kind");
         int n = (query ? 1 : 0) + (python ? 1 : 0) + (model ? 1 : 0) + (kind ? 1 : 0);
         if (n != 1) {

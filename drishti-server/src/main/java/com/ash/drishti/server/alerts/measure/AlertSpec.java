@@ -49,14 +49,20 @@ public record AlertSpec(String name, String owner, String title, String severity
 
     /**
      * Where the number comes from. {@code visual}: one visual of a report (the first number column, or {@code measure}, reduced to one number by
-     * {@code reduce}); {@code dataset}: one measure of a dataset under {@code filters}; {@code field}: a field of a Sutra entity; {@code tile}: the level of a
-     * board tile.
+     * {@code reduce}); {@code dataset}: one measure of a dataset under {@code filters}; {@code model}: a model query ({@code query}, on {@code model}) that
+     * selects one measure, reduced by {@code reduce} (docs/architecture/BI_MODEL_SPEC.md section 4.1); {@code field}: a field of a Sutra entity; {@code tile}:
+     * the level of a board tile.
      */
     public record Source(String type, String report, String page, String visual, JsonNode state, String dataset, String measure, String reduce, JsonNode filters,
-            String kind, String id, String field, Board.Alert tile) {
+            String kind, String id, String field, Board.Alert tile, String model, JsonNode query) {
+
+        public Source(String type, String report, String page, String visual, JsonNode state, String dataset, String measure, String reduce, JsonNode filters,
+                String kind, String id, String field, Board.Alert tile) {
+            this(type, report, page, visual, state, dataset, measure, reduce, filters, kind, id, field, tile, "", null);
+        }
 
         public boolean isBi() {
-            return type.equals("visual") || type.equals("dataset") || type.equals("tile");
+            return type.equals("visual") || type.equals("dataset") || type.equals("tile") || type.equals("model");
         }
 
         /** A short name for the history and the messages. */
@@ -64,6 +70,7 @@ public record AlertSpec(String name, String owner, String title, String severity
             return switch (type) {
                 case "visual" -> report + " · " + visual + (measure.isBlank() ? "" : " · " + measure);
                 case "dataset" -> dataset + " · " + measure;
+                case "model" -> model + " · " + measure;
                 case "field" -> kind + "/" + id + " · " + field;
                 default -> report + " · " + visual;
             };
@@ -153,7 +160,7 @@ public record AlertSpec(String name, String owner, String title, String severity
 
     private static Source source(JsonNode s) {
         if (!s.isObject()) {
-            throw invalid("source is { type: visual | dataset | field, ... }");
+            throw invalid("source is { type: visual | dataset | model | field, ... }");
         }
         String type = s.path("type").asText("");
         switch (type) {
@@ -190,12 +197,46 @@ public record AlertSpec(String name, String owner, String title, String severity
                 }
                 return new Source(type, "", "", "", null, dataset, measure, "first", filters.isArray() ? filters : null, "", "", "", null);
             }
+            case "model" -> {
+                return modelSource(s);
+            }
             case "field" -> {
                 return new Source(type, "", "", "", null, "", "", "first", null, need(s, "kind", "source.kind is the Sutra kind, for example TRD"), need(s, "id", "source.id is the entity id"),
                         need(s, "field", "source.field is the field, for example mtm or utilisation"), null);
             }
-            default -> throw invalid("source.type is visual, dataset or field");
+            default -> throw invalid("source.type is visual, dataset, model or field");
         }
+    }
+
+    /** A model query that answers one number: the model, the query (its {@code model} may be left out) and how its rows become one number. */
+    private static Source modelSource(JsonNode s) {
+        String model = need(s, "model", "source.model names the model (name@major, or dataset:<name> for one dataset)");
+        JsonNode q = s.path("query");
+        if (!q.isObject()) {
+            throw invalid("source.query is a model query: { select: { fields, measures: [one measure] }, where, having, time }");
+        }
+        ObjectNode full = ((ObjectNode) q).deepCopy();
+        if (!full.has("mq")) {
+            full.put("mq", 1);
+        }
+        if (full.has("model") && !model.equals(full.path("model").asText())) {
+            throw invalid("source.query names the model '" + full.path("model").asText() + "' but source.model is '" + model + "': leave it out of the query");
+        }
+        full.put("model", model);
+        com.ash.drishti.server.bi.mq.ModelQuery parsed;
+        try {
+            parsed = com.ash.drishti.server.bi.mq.MqParser.parse(full);
+        } catch (DrishtiException e) {
+            throw invalid("source.query: " + e.getMessage());
+        }
+        if (parsed.measures().size() != 1 || parsed.rows()) {
+            throw invalid("source.query answers one number: select exactly one measure");
+        }
+        String reduce = s.path("reduce").asText("first");
+        if (!REDUCERS.contains(reduce)) {
+            throw invalid("source.reduce is one of " + new java.util.TreeSet<>(REDUCERS) + " (how a query with many rows becomes one number)");
+        }
+        return new Source("model", "", "", "", null, "", parsed.measures().get(0), reduce, null, "", "", "", null, model, full);
     }
 
     private static Condition condition(JsonNode c, Source source) {
@@ -296,6 +337,10 @@ public record AlertSpec(String name, String owner, String title, String severity
                 if (source.filters() != null) {
                     s.set("filters", source.filters());
                 }
+            }
+            case "model" -> {
+                s.put("model", source.model()).put("measure", source.measure()).put("reduce", source.reduce());
+                s.set("query", source.query());
             }
             case "field" -> s.put("kind", source.kind()).put("id", source.id()).put("field", source.field());
             default -> {

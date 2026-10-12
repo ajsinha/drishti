@@ -65,6 +65,8 @@ public final class ServerAlertSources implements AlertEnvironment.Checker, Alert
     private final Clock clock;
     private final Map<String, Cached> watches = new ConcurrentHashMap<>();
     private final Map<EntityRef, FieldWatch> fieldWatches = new ConcurrentHashMap<>();
+    private volatile com.ash.drishti.server.bi.mq.ModelCatalog models;
+    private volatile com.ash.drishti.server.bi.mq.MqService mq;
 
     @SuppressWarnings("java:S107")
     public ServerAlertSources(BiReportService reports, DatasetService datasets, BiBoardService boards, BiService bi, Entitlements entitlements, FieldValueReader fields,
@@ -78,6 +80,13 @@ public final class ServerAlertSources implements AlertEnvironment.Checker, Alert
         this.router = router;
         this.hub = hub;
         this.clock = clock;
+    }
+
+    /** The model layer, for {@code type: model} sources (set once at start-up). */
+    public ServerAlertSources withModels(com.ash.drishti.server.bi.mq.ModelCatalog models, com.ash.drishti.server.bi.mq.MqService mq) {
+        this.models = models;
+        this.mq = mq;
+        return this;
     }
 
     // ---- may this person watch it? -------------------------------------------------------------------------------------------
@@ -103,6 +112,12 @@ public final class ServerAlertSources implements AlertEnvironment.Checker, Alert
                     throw new DrishtiException(ErrorCode.QUERY_INVALID, "dataset '" + s.dataset() + "' has no measure '" + s.measure() + "'");
                 }
             }
+            case "model" -> {
+                if (models == null) {
+                    throw new DrishtiException(ErrorCode.ALERT_INVALID, "the model layer is not running on this server");
+                }
+                mq.validate(models.bind(who, s.model()), BiValueReader.query(s, null));       // the query's refusal, with its code, path and fix
+            }
             case "field" -> {
                 entitlements.requireOpen(who, s.kind());
                 try {
@@ -111,7 +126,7 @@ public final class ServerAlertSources implements AlertEnvironment.Checker, Alert
                     throw new DrishtiException(ErrorCode.EL_SYNTAX, "field: " + e.getMessage());
                 }
             }
-            default -> throw new DrishtiException(ErrorCode.ALERT_INVALID, "source.type is visual, dataset or field");
+            default -> throw new DrishtiException(ErrorCode.ALERT_INVALID, "source.type is visual, dataset, model or field");
         }
     }
 
@@ -124,6 +139,7 @@ public final class ServerAlertSources implements AlertEnvironment.Checker, Alert
             return switch (s.type()) {
                 case "field" -> fieldGeneration(s, who);
                 case "dataset" -> generationOf(spec.key() + "|" + who.user(), () -> datasets.liveWatch(who, bi.readableItem(who, s.dataset())));
+                case "model" -> models == null ? -1 : models.generation(who, models.bind(who, s.model()).view());
                 case "tile" -> {
                     Optional<BiBoardService.TileTarget> t = boards.target(who, new Board.Tile("t", s.report(), s.page(), s.visual(), "", new Report.Grid(0, 0, 1, 1), s.tile()));
                     yield t.isEmpty() ? -1 : generationOf(spec.key() + "|" + who.user(), () -> reports.liveWatch(who, t.get().report()));

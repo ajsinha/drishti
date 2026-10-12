@@ -87,7 +87,7 @@ public class DatasetController {
     @PostMapping("/datasets/{id}/query")
     public ResponseEntity<?> query(@PathVariable String id, @RequestBody JsonNode body, @RequestParam(defaultValue = "json") String format,
             @RequestParam(defaultValue = "false") boolean explain, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        QueryService.Result r = datasets.query(p, id, QueryRequest.of(body), explain && bi.mayAuthor(p));         // the SQL names server paths: authors only
+        QueryService.Result r = datasets.ask(p, id, QueryRequest.of(body), explain && bi.mayAuthor(p));         // the SQL names server paths: authors only
         if ("arrow".equalsIgnoreCase(format)) {
             byte[] bytes = datasets.arrow(r);
             return ResponseEntity.ok().contentType(MediaType.parseMediaType(ARROW))

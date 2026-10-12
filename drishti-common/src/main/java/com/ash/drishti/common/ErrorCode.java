@@ -250,6 +250,10 @@ public enum ErrorCode {
     LAYER_DATASET_INVALID("DRS-9100", 422),
     /** The model layer: a pack-generated dataset is read-only (narrow it with {@code extends}). */
     LAYER_DATASET_GENERATED("DRS-9107", 409),
+    /** The model layer: the query of a dataset whose source is a model does not validate, or its answer lacks a declared column. */
+    LAYER_SOURCE_QUERY("DRS-9108", 422),
+    /** The model layer: a model that reaches itself through a dataset whose source is a model (a cycle). */
+    LAYER_SOURCE_CYCLE("DRS-9109", 422),
     /** The model layer: a data model that is not valid (its Check lists every problem); publishing it is refused. */
     LAYER_MODEL_INVALID("DRS-9120", 422),
     /** The model layer: a breaking change (a measure, column or relationship removed) published without a new major version, or a version that goes down. */

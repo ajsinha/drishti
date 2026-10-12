@@ -69,11 +69,49 @@ public final class MqService {
         return m;
     }
 
+    /**
+     * What one query ran to, before the answer is written: the main result with and without the currency guard's columns, the totals per level, the warnings
+     * (the validator's and the guard's) and when it started.
+     */
+    public record Ran(ModelQuery query, MqValidator.Checked checked, MqCompiler.Compiled compiled, QueryService.Result raw, QueryService.Result shown,
+            List<Map<String, Object>> totals, List<String> warnings, long started) {
+
+        /** The main result with the query's warnings ahead of the engine's: what a consumer that keeps the engine's answer shape shows. */
+        public QueryService.Result withWarnings() {
+            QueryService.Meta m = shown.meta();
+            if (m == null || warnings.isEmpty()) {
+                return shown;
+            }
+            List<String> all = new ArrayList<>(warnings);
+            m.warnings().stream().filter(w -> !all.contains(w)).forEach(all::add);
+            return new QueryService.Result(shown.columns(), shown.rows(), new QueryService.Meta(m.layer(), m.rollup(), m.rows(), m.millis(), m.cached(), m.dates(), m.tables(),
+                    m.masked(), all, m.sql(), m.generation()));
+        }
+
+        /** The canonical query that ran (section 5.2 {@code meta.query}). */
+        public Map<String, Object> canonical() {
+            return MqParser.canonical(checked.query());
+        }
+    }
+
     public Answer ask(Bound b, ModelQuery q, boolean explain) {
+        return answer(b, run(b, q, explain, false));
+    }
+
+    /**
+     * Validates, compiles and runs a query as the bound reader, without writing the answer. {@code engineLimit}: a query without a {@code limit} keeps the
+     * engine's rule (refused over {@code drishti.bi.query.max-rows}, {@code DRS-9022}) instead of the language's default cut; the consumers that predate the
+     * language (a report visual, an extract, an alert) ask that way, so their answers are what they were.
+     */
+    public Ran run(Bound b, ModelQuery q, boolean explain, boolean engineLimit) {
         long t0 = System.nanoTime();
         MqValidator.Checked c = MqValidator.validate(b.view(), q, b.context(), props);
         MqCompiler.Compiled compiled = MqCompiler.compile(b.view(), c, b.context(), props, tq -> b.runner().run(c.dataset(), tq, false));
-        QueryService.Result r = b.runner().run(compiled.dataset(), compiled.main(), explain);
+        QueryRequest main = compiled.main();
+        if (engineLimit && q.limit() == null) {
+            main = new QueryRequest(main.fields(), main.measures(), main.filters(), main.from(), main.to(), main.orderBy(), null, main.layer());
+        }
+        QueryService.Result r = b.runner().run(compiled.dataset(), main, explain);
         List<String> warnings = new ArrayList<>(c.warnings());
         warnings.addAll(guardWarnings(r, compiled.guards()));
         QueryService.Result shown = withoutGuards(r);
@@ -82,6 +120,19 @@ public final class MqService {
             QueryService.Result tr = b.runner().run(compiled.dataset(), level.query(), false);
             totals.add(Map.of("by", level.by(), "measures", level.query().measures(), "rows", rows(tr)));
         }
+        return new Ran(q, c, compiled, r, shown, totals, warnings, t0);
+    }
+
+    /** The answer of section 5.2 for a query that ran. */
+    public Answer answer(Bound b, Ran ran) {
+        ModelQuery q = ran.query();
+        MqValidator.Checked c = ran.checked();
+        MqCompiler.Compiled compiled = ran.compiled();
+        QueryService.Result r = ran.raw();
+        QueryService.Result shown = ran.shown();
+        List<Map<String, Object>> totals = ran.totals();
+        List<String> warnings = ran.warnings();
+        long t0 = ran.started();
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("mq", 1);
         body.put("model", model(b.view()));

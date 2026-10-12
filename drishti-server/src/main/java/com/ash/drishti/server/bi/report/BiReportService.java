@@ -255,21 +255,23 @@ public final class BiReportService {
      * Runs one visual of a stored report ({@code yaml} null) or of draft YAML ({@code yaml} given; authors only) under the page's state.
      *
      * @return the engine's JSON answer plus {@code highlight} (the same query under the highlighted marks, or null), {@code query} (what was asked of the
-     *     dataset) and {@code visual}
+     *     dataset), {@code mq} (the model query it ran as, canonical) and {@code visual}
      */
     public Map<String, Object> query(Principal p, String id, String yaml, String pageId, String visualId, JsonNode stateJson, boolean explain) {
         Prepared pre = prepare(p, id, yaml, pageId, visualId, stateJson);
         boolean author = bi.mayAuthor(p);
         Map<String, Object> live = liveOf(p, pre);                  // read before the query: rows that change meanwhile are above its seq, so a client asking "since" misses none
-        QueryService.Result r = shortNames(pre, datasets.queryItem(p, pre.dsItem(), pre.built().query(), explain && author));
+        DatasetService.Asked asked = datasets.asked(p, pre.dsItem(), pre.built().query(), explain && author);
+        QueryService.Result r = shortNames(pre, asked.result());
         Map<String, Object> out = new LinkedHashMap<>(VisualCatalogue.DISTRIBUTIONS.contains(pre.visual().type()) ? distribution(pre, r) : datasets.json(r));
         if (pre.built().highlight() != null) {
-            out.put("highlight", datasets.json(datasets.queryItem(p, pre.dsItem(), pre.built().highlight(), false)));
+            out.put("highlight", datasets.json(datasets.ask(p, pre.dsItem(), pre.built().highlight(), false)));
         } else {
             out.put("highlight", null);
         }
         out.put("visual", pre.visual().id());
         out.put("query", describe(pre.built().query()));
+        out.put("mq", asked.query());                                // the model query the visual ran (docs/architecture/BI_MODEL_SPEC.md section 5.9)
         List<Map<String, Object>> totals = totals(p, pre);
         if (!totals.isEmpty()) {
             out.put("totals", totals);
@@ -314,14 +316,14 @@ public final class BiReportService {
         List<Map<String, Object>> out = new ArrayList<>();
         for (Totals.Level level : levels) {
             try {
-                Map<String, Object> j = datasets.json(datasets.queryItem(p, pre.dsItem(), level.query(), false));
+                Map<String, Object> j = datasets.json(datasets.ask(p, pre.dsItem(), level.query(), false));
                 Map<String, Object> t = new LinkedHashMap<>();
                 t.put("by", level.by());
                 t.put("columns", ((List<?>) j.get("columns")).stream().map(c -> ((Map<?, ?>) c).get("name")).toList());
                 t.put("masked", ((List<?>) j.get("columns")).stream().filter(c -> Boolean.TRUE.equals(((Map<?, ?>) c).get("masked"))).map(c -> ((Map<?, ?>) c).get("name")).toList());
                 t.put("rows", j.get("rows"));
                 out.add(t);
-            } catch (DrishtiException e) {
+            } catch (DrishtiException e) {                           // a model query refusal is one too
                 // the figure stays a dash on the screen; the visual's own answer is unaffected
             }
         }
@@ -334,7 +336,7 @@ public final class BiReportService {
     public ArrowAnswer queryArrow(Principal p, String id, String pageId, String visualId, JsonNode stateJson) {
         Prepared pre = prepare(p, id, null, pageId, visualId, stateJson);
         Map<String, Object> live = liveOf(p, pre);
-        QueryService.Result r = shortNames(pre, datasets.queryItem(p, pre.dsItem(), pre.built().query(), false));
+        QueryService.Result r = shortNames(pre, datasets.ask(p, pre.dsItem(), pre.built().query(), false));
         return new ArrowAnswer(datasets.arrow(r), datasets.meta(r), live);
     }
 
@@ -532,7 +534,7 @@ public final class BiReportService {
 
     private List<Object> top(Principal p, BiStore.Item dsItem, String field, int n, String by, boolean desc, List<QueryRequest.Filter> context, LocalDate from, LocalDate to) {
         QueryRequest q = new QueryRequest(List.of(field), List.of(by), context, from, to, List.of(new QueryRequest.Sort(by, desc)), Math.min(n, props.topCandidates()), "auto");
-        QueryService.Result r = datasets.queryItem(p, dsItem, q, false);
+        QueryService.Result r = datasets.ask(p, dsItem, q, false);
         List<Object> values = new ArrayList<>();
         for (int i = 0; i < r.rows(); i++) {
             values.add(r.columns().get(0).values()[i]);

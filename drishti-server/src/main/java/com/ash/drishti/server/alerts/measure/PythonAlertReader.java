@@ -69,7 +69,7 @@ public final class PythonAlertReader {
     /** A Python measure of a dataset, over the latest business date ({@code date}), no grouping: one number. */
     public Reading ofDataset(Principal who, String dataset, Dataset.Measure m, JsonNode filters, LocalDate date) {
         ObjectNode q = rowsQuery(m, filters, date);
-        Map<String, Object> answer = datasets.json(datasets.query(who, dataset, QueryRequest.of(q), false));
+        Map<String, Object> answer = datasets.json(datasets.ask(who, dataset, QueryRequest.of(q), false));
         return run(who, m, answer, List.of(), "first", date);
     }
 

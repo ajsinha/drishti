@@ -61,22 +61,45 @@ public final class ModelCatalog {
     private final BiService bi;
     private final DatasetService datasets;
     private final PackDatasets packs;
+    private final MqService mq;
 
     public ModelCatalog(BiService bi, DatasetService datasets, PackDatasets packs) {
+        this(bi, datasets, packs, new MqService(MqProperties.defaults()));
+    }
+
+    /** @param mq asks the inner queries of datasets whose source is a model */
+    public ModelCatalog(BiService bi, DatasetService datasets, PackDatasets packs, MqService mq) {
         this.bi = bi;
         this.datasets = datasets;
         this.packs = packs;
+        this.mq = mq;
     }
 
     public PackDatasets packs() {
         return packs;
     }
 
+    MqService mq() {
+        return mq;
+    }
+
     // ---- binding -----------------------------------------------------------------------------------------------------
 
     /** The model the reference names, bound to the caller: how its requests run as them, and their side of the checks. */
     public MqService.Bound bind(Principal p, String ref) {
-        Found f = find(p, ref);
+        return bound(p, find(p, ref));
+    }
+
+    /**
+     * The model of a dataset item a consumer already holds (a report's dataset, an extract's, an alert's), bound to the caller: the implicit model of a
+     * {@code rachana: 2} dataset, else the compatibility reader's model. Whether the caller may reach the item was the consumer's decision (a published report
+     * reads its dataset with its publisher's grants); the caller's own row rules and masks still apply.
+     */
+    public MqService.Bound bindItem(Principal p, BiStore.Item item) {
+        return bound(p, ofItem(p, item, true));
+    }
+
+    private MqService.Bound bound(Principal p, Found f) {
         ModelView v = f.view();
         QueryService.Caller who = datasets.caller(p, v.flat());
         MqValidator.Context ctx = new MqValidator.Context(who.masks(), who.roles(), who.attributes(), who.enforce(), datasets.currentDate(), datasets.calendar());
@@ -91,11 +114,14 @@ public final class ModelCatalog {
                 q.filters().forEach(x -> touched.add(x.field().contains(".") ? x.field().substring(0, x.field().indexOf('.')) : ""));
                 q.measures().forEach(m -> touched.addAll(ModelView.tablesOf(ds, m)));
                 touched.retainAll(v.unbuilt());
+                Set<String> fromModels = ModelSources.aliases(v);
+                touched.removeAll(fromModels);
                 if (!touched.isEmpty()) {
-                    throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "the datasets " + touched + " are a connector query, a Python Transform or a model's answer: "
-                            + "this server reads pack kinds through models so far (the other sources are wave W1 package S4)");
+                    throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "the datasets " + touched + " are a connector query or a Python Transform: "
+                            + "this server reads pack kinds and other models' answers through models so far (the other sources are wave W1 package S4)");
                 }
-                return datasets.queryModel(p, v.id(), v.key(), ds, v.hash() + "|" + salt(v.flat(), ds), q, explain);
+                ModelSources staged = fromModels.isEmpty() ? null : new ModelSources(this, p, v, q);
+                return datasets.queryModel(p, v.id(), v.key(), ds, v.hash() + "|" + salt(v.flat(), ds), q, explain, staged);
             };
         }
         return new MqService.Bound(v, run, ctx);
@@ -192,6 +218,9 @@ public final class ModelCatalog {
         problems.stream().filter(DatasetParser.Problem::error).findFirst().ifPresent(x -> {
             throw new MqException(MqException.Problem.of("DRS-9151", "model", "the model '" + m.name() + "' has errors: " + x.code() + " " + x.path() + ": " + x.message()));
         });
+        ModelSources.cycle(this, "model:" + m.name(), resolved).ifPresent(x -> {
+            throw new MqException(MqException.Problem.of("DRS-9109", "model", x));
+        });
         Flattener.Flat flat = Flattener.flatten(m, resolved);
         StringBuilder text = new StringBuilder(body);
         resolved.values().forEach(r -> text.append('|').append(r.def().name()).append('@').append(r.def().version()).append(r.layers()).append(r.masked()));
@@ -211,6 +240,9 @@ public final class ModelCatalog {
     }
 
     private Found implicitOf(ResolvedDataset d) {
+        ModelSources.cycle(this, "dataset:" + d.def().name(), Map.of(d.def().name(), d)).ifPresent(x -> {
+            throw new MqException(MqException.Problem.of("DRS-9109", "model", x));
+        });
         ImplicitModels.Implicit im = ImplicitModels.of(d, kind -> packs.ofKind(kind).map(ResolvedDataset::of));
         Flattener.Flat flat = Flattener.flatten(im.model(), im.datasets());
         String id = im.model().id();
@@ -227,11 +259,15 @@ public final class ModelCatalog {
         } catch (DrishtiException e) {
             throw new MqException(MqException.Problem.of("DRS-9151", "model", "no model or dataset '" + item.title() + "' that you may read"));
         }
+        return ofItem(p, readable, false);
+    }
+
+    private Found ofItem(Principal p, BiStore.Item readable, boolean consumer) {
         String body = bi.bodyFor(p, readable);
         if (DatasetDefParser.isVersion2(body)) {
             DatasetDefParser.Result r = DatasetDefParser.parse(body);
             if (!r.ok()) {
-                throw new MqException(MqException.Problem.of("DRS-9151", "model", "the dataset '" + item.title() + "' has errors: " + r.firstError()));
+                throw new MqException(MqException.Problem.of("DRS-9151", "model", "the dataset '" + readable.title() + "' has errors: " + r.firstError()));
             }
             List<DatasetParser.Problem> problems = new ArrayList<>();
             ResolvedDataset d = chain(r.dataset(), new LinkedHashSet<>(), problems);
@@ -244,6 +280,9 @@ public final class ModelCatalog {
         try {
             ds = datasets.parsedDataset(p, readable);
         } catch (DrishtiException e) {
+            if (consumer) {
+                throw e;                                               // a consumer keeps the dataset's own refusal (DRS-9010)
+            }
             throw new MqException(MqException.Problem.of("DRS-9151", "model", e.getMessage().replaceFirst("^DRS-\\d+ ", "")));
         }
         ModelDef def = CompatReader.read(ds, readable.id());
@@ -290,6 +329,18 @@ public final class ModelCatalog {
         return best == null ? Optional.empty() : Optional.ofNullable(chain(best, visiting, problems));
     }
 
+    /** The published models of this name (or catalogue id), with their datasets resolved as far as they resolve: what the cycle check walks. */
+    List<Map<String, ResolvedDataset>> publishedModels(String name) {
+        List<Map<String, ResolvedDataset>> out = new ArrayList<>();
+        for (BiStore.Item i : bi.publishedOfKind("model")) {
+            ModelDef m = ModelDefParser.parse(bi.publishedBody(i)).model();
+            if (m != null && (m.name().equals(name) || i.id().equals(name) || i.id().equals("file:model:" + name))) {
+                out.add(resolveAll(m, new ArrayList<>()));
+            }
+        }
+        return out;
+    }
+
     private ResolvedDataset chain(DatasetDef d, Set<String> visiting, List<DatasetParser.Problem> problems) {
         if (d.extendsRef() == null) {
             return ResolvedDataset.of(d);
@@ -332,6 +383,9 @@ public final class ModelCatalog {
                 if (d.extendsRef() != null && r.ok()) {
                     chain(d, new LinkedHashSet<>(), problems);
                 }
+                if (d.source() != null && DatasetDef.Source.MODEL.equals(d.source().type()) && r.ok()) {
+                    ModelSources.cycle(this, "dataset:" + d.name(), Map.of(d.name(), ResolvedDataset.of(d))).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "source.model", x)));
+                }
                 m.put("name", d.name());
                 m.put("version", d.version());
                 m.put("columns", d.columns().keySet());
@@ -343,6 +397,7 @@ public final class ModelCatalog {
             if (r.model() != null) {
                 Map<String, ResolvedDataset> resolved = resolveAll(r.model(), problems);
                 problems.addAll(ModelChecker.check(r.model(), resolved));
+                ModelSources.cycle(this, "model:" + r.model().name(), resolved).ifPresent(x -> problems.add(new DatasetParser.Problem("error", "DRS-9109", "datasets", x)));
                 m.put("name", r.model().name());
                 m.put("version", r.model().version());
                 m.put("datasets", resolved.entrySet().stream().map(e -> Map.of("alias", e.getKey(), "dataset", e.getValue().def().name(), "version", e.getValue().def().version())).toList());
