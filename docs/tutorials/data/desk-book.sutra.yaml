@@ -1,0 +1,59 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+rachana: 1
+sutra: desk-book
+version: 1
+description: >
+  One desk on one page: the figures that matter, then a tab for each currency with its terms and its trades. A slider narrows the trades
+  by size and every column has its own filter.
+match: { kind: desk }
+title:
+  pill: "Desk · ${$.region}"
+  id: $.deskId
+  with: $.name
+strip:
+  - { label: Net MTM (USD), bind: $.mtm, fmt: signed0, tone: sign, emphasis: true }
+  - { label: VaR 99%, bind: $.var99, fmt: amount0 }
+  - { label: Limit used, bind: $.limitUse, fmt: pct0 }
+  - { label: Open trades, bind: $.openTrades, fmt: amount0 }
+  - { label: Head of desk, bind: $.headOfDesk }
+controls:
+  - { id: minNotional, kind: slider, label: Notional at least, min: 0, max: 250000000, step: 25000000, placement: strip }
+panels:
+  - id: bycurrency
+    kind: tabs
+    title: By currency
+    span: 12
+    each: $.currencies
+    tabTitle: "@.code"
+    panels:
+      - id: ccy-figures
+        kind: kv
+        title: Totals
+        columns:
+          - { label: Currency, bind: "@.code" }
+          - { label: Net MTM, bind: "@.netMtm", fmt: signed0, tone: sign }
+          - { label: Notional, bind: "@.notional", fmt: amount0 }
+      - id: ccy-trades
+        kind: table
+        title: Trades
+        rows: "@.trades"
+        where: "@.notional >= ctl.minNotional"
+        columns:
+          - { label: Trade, bind: "@.id" }
+          - { label: Product, bind: "@.product" }
+          - { label: Notional, bind: "@.notional", fmt: amount0 }
+          - { label: MTM, bind: "@.mtm", fmt: signed0, tone: sign }
+          - { label: Maturity, bind: "@.maturity", fmt: date }

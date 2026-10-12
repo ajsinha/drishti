@@ -1,0 +1,147 @@
+{
+  "deskId": "DESK-CREDIT",
+  "name": "Credit",
+  "region": "AMER",
+  "reportDate": "2026-09-30",
+  "headOfDesk": "Omar Haddad",
+  "mtm": 5296600,
+  "var99": 2600000,
+  "limit": 3000000,
+  "limitUse": 0.57,
+  "openTrades": 17,
+  "currencies": [
+    {
+      "code": "USD",
+      "trades": [
+        {
+          "id": "CRE-1001",
+          "product": "Index",
+          "notional": 5000000,
+          "mtm": -5300,
+          "maturity": "2030-01-25"
+        },
+        {
+          "id": "CRE-1002",
+          "product": "Index",
+          "notional": 75000000,
+          "mtm": 678000,
+          "maturity": "2027-11-04"
+        },
+        {
+          "id": "CRE-1003",
+          "product": "CDS",
+          "notional": 250000000,
+          "mtm": 1252300,
+          "maturity": "2032-02-22"
+        },
+        {
+          "id": "CRE-1004",
+          "product": "Index",
+          "notional": 50000000,
+          "mtm": 512200,
+          "maturity": "2031-03-23"
+        },
+        {
+          "id": "CRE-1005",
+          "product": "Tranche",
+          "notional": 5000000,
+          "mtm": 12200,
+          "maturity": "2027-03-08"
+        },
+        {
+          "id": "CRE-1006",
+          "product": "Bond",
+          "notional": 75000000,
+          "mtm": 192900,
+          "maturity": "2035-09-20"
+        },
+        {
+          "id": "CRE-1007",
+          "product": "Tranche",
+          "notional": 25000000,
+          "mtm": 272900,
+          "maturity": "2030-02-14"
+        },
+        {
+          "id": "CRE-1008",
+          "product": "Index",
+          "notional": 150000000,
+          "mtm": 24500,
+          "maturity": "2030-11-01"
+        }
+      ],
+      "netMtm": 2939700,
+      "notional": 635000000
+    },
+    {
+      "code": "EUR",
+      "trades": [
+        {
+          "id": "CRE-1009",
+          "product": "Tranche",
+          "notional": 100000000,
+          "mtm": -318500,
+          "maturity": "2030-02-24"
+        },
+        {
+          "id": "CRE-1010",
+          "product": "Index",
+          "notional": 10000000,
+          "mtm": -54600,
+          "maturity": "2033-02-10"
+        },
+        {
+          "id": "CRE-1011",
+          "product": "Bond",
+          "notional": 100000000,
+          "mtm": 1257000,
+          "maturity": "2027-06-17"
+        },
+        {
+          "id": "CRE-1012",
+          "product": "CDS",
+          "notional": 10000000,
+          "mtm": -1000,
+          "maturity": "2035-07-25"
+        },
+        {
+          "id": "CRE-1013",
+          "product": "Tranche",
+          "notional": 75000000,
+          "mtm": 962500,
+          "maturity": "2030-02-14"
+        },
+        {
+          "id": "CRE-1014",
+          "product": "Index",
+          "notional": 5000000,
+          "mtm": 12000,
+          "maturity": "2029-08-05"
+        },
+        {
+          "id": "CRE-1015",
+          "product": "Tranche",
+          "notional": 250000000,
+          "mtm": 907900,
+          "maturity": "2028-04-15"
+        },
+        {
+          "id": "CRE-1016",
+          "product": "Index",
+          "notional": 75000000,
+          "mtm": 158600,
+          "maturity": "2035-05-10"
+        },
+        {
+          "id": "CRE-1017",
+          "product": "Index",
+          "notional": 150000000,
+          "mtm": -567000,
+          "maturity": "2029-09-17"
+        }
+      ],
+      "netMtm": 2356900,
+      "notional": 775000000
+    }
+  ]
+}

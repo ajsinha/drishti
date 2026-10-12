@@ -1,0 +1,210 @@
+{
+  "deskId": "DESK-FX",
+  "name": "FX",
+  "region": "APAC",
+  "reportDate": "2026-09-30",
+  "headOfDesk": "Sara Novak",
+  "mtm": 6930500,
+  "var99": 1600000,
+  "limit": 3000000,
+  "limitUse": 0.61,
+  "openTrades": 25,
+  "currencies": [
+    {
+      "code": "JPY",
+      "trades": [
+        {
+          "id": "FX-1001",
+          "product": "Spot",
+          "notional": 50000000,
+          "mtm": -253100,
+          "maturity": "2036-08-10"
+        },
+        {
+          "id": "FX-1002",
+          "product": "Forward",
+          "notional": 25000000,
+          "mtm": -214700,
+          "maturity": "2034-09-21"
+        },
+        {
+          "id": "FX-1003",
+          "product": "Swap",
+          "notional": 10000000,
+          "mtm": -62700,
+          "maturity": "2030-12-01"
+        },
+        {
+          "id": "FX-1004",
+          "product": "Swap",
+          "notional": 10000000,
+          "mtm": -8900,
+          "maturity": "2030-01-02"
+        },
+        {
+          "id": "FX-1005",
+          "product": "Swap",
+          "notional": 25000000,
+          "mtm": -51100,
+          "maturity": "2036-03-03"
+        },
+        {
+          "id": "FX-1006",
+          "product": "Option",
+          "notional": 100000000,
+          "mtm": 1205500,
+          "maturity": "2032-11-24"
+        },
+        {
+          "id": "FX-1007",
+          "product": "Forward",
+          "notional": 25000000,
+          "mtm": 323400,
+          "maturity": "2034-06-23"
+        },
+        {
+          "id": "FX-1008",
+          "product": "Forward",
+          "notional": 75000000,
+          "mtm": -857000,
+          "maturity": "2028-08-03"
+        }
+      ],
+      "netMtm": 81400,
+      "notional": 320000000
+    },
+    {
+      "code": "USD",
+      "trades": [
+        {
+          "id": "FX-1009",
+          "product": "Option",
+          "notional": 100000000,
+          "mtm": 1498300,
+          "maturity": "2028-08-18"
+        },
+        {
+          "id": "FX-1010",
+          "product": "Forward",
+          "notional": 100000000,
+          "mtm": 1230500,
+          "maturity": "2029-06-12"
+        },
+        {
+          "id": "FX-1011",
+          "product": "Spot",
+          "notional": 10000000,
+          "mtm": 123200,
+          "maturity": "2033-01-28"
+        },
+        {
+          "id": "FX-1012",
+          "product": "Forward",
+          "notional": 250000000,
+          "mtm": 1218500,
+          "maturity": "2033-07-19"
+        },
+        {
+          "id": "FX-1013",
+          "product": "Forward",
+          "notional": 5000000,
+          "mtm": -49200,
+          "maturity": "2028-05-14"
+        },
+        {
+          "id": "FX-1014",
+          "product": "Spot",
+          "notional": 100000000,
+          "mtm": 1322500,
+          "maturity": "2036-08-15"
+        },
+        {
+          "id": "FX-1015",
+          "product": "Forward",
+          "notional": 250000000,
+          "mtm": 501200,
+          "maturity": "2035-01-10"
+        },
+        {
+          "id": "FX-1016",
+          "product": "Spot",
+          "notional": 10000000,
+          "mtm": -114000,
+          "maturity": "2028-08-25"
+        }
+      ],
+      "netMtm": 5731000,
+      "notional": 825000000
+    },
+    {
+      "code": "AUD",
+      "trades": [
+        {
+          "id": "FX-1017",
+          "product": "Forward",
+          "notional": 75000000,
+          "mtm": -154900,
+          "maturity": "2029-11-20"
+        },
+        {
+          "id": "FX-1018",
+          "product": "Option",
+          "notional": 50000000,
+          "mtm": 417600,
+          "maturity": "2032-11-15"
+        },
+        {
+          "id": "FX-1019",
+          "product": "Option",
+          "notional": 250000000,
+          "mtm": -793000,
+          "maturity": "2031-04-21"
+        },
+        {
+          "id": "FX-1020",
+          "product": "Option",
+          "notional": 150000000,
+          "mtm": 1765100,
+          "maturity": "2033-04-19"
+        },
+        {
+          "id": "FX-1021",
+          "product": "Option",
+          "notional": 100000000,
+          "mtm": -832300,
+          "maturity": "2034-06-27"
+        },
+        {
+          "id": "FX-1022",
+          "product": "Forward",
+          "notional": 5000000,
+          "mtm": 68300,
+          "maturity": "2031-03-04"
+        },
+        {
+          "id": "FX-1023",
+          "product": "Spot",
+          "notional": 250000000,
+          "mtm": -1142700,
+          "maturity": "2030-07-13"
+        },
+        {
+          "id": "FX-1024",
+          "product": "Swap",
+          "notional": 250000000,
+          "mtm": 1834900,
+          "maturity": "2036-08-11"
+        },
+        {
+          "id": "FX-1025",
+          "product": "Forward",
+          "notional": 10000000,
+          "mtm": -44900,
+          "maturity": "2036-01-22"
+        }
+      ],
+      "netMtm": 1118100,
+      "notional": 1140000000
+    }
+  ]
+}
