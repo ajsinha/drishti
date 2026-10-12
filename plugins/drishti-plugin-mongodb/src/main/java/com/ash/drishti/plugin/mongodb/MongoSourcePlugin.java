@@ -29,6 +29,7 @@ import com.ash.drishti.api.SourcePlugin;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.mongodb.ConnectionString;
+import com.ash.drishti.api.pool.PoolSettings;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
@@ -112,6 +113,7 @@ public final class MongoSourcePlugin implements SourcePlugin {
     private final AtomicLong reads = new AtomicLong();
     private final AtomicLong dayReads = new AtomicLong();
     private MongoClient client;
+    private MongoPool pool;
     private com.ash.drishti.api.tls.TlsMaterial tls;
     private MongoCollection<RawBsonDocument> docs;
     private MongoCollection<BsonDocument> rows;
@@ -172,6 +174,12 @@ public final class MongoSourcePlugin implements SourcePlugin {
                 .applyToClusterSettings(b -> b.serverSelectionTimeout(timeout, TimeUnit.MILLISECONDS))
                 .applyToSocketSettings(b -> b.connectTimeout(timeout, TimeUnit.MILLISECONDS));
         MongoTls.apply(builder, tlsPlan);
+        this.pool = new MongoPool(sourceName, PoolSettings.resolve(ctx.settings()));
+        pool.apply(builder);                                   // pool-size (default 20), pool-min-idle, the times and the leak watch
+        if (ctx.scheduler() != null) {
+            long tick = Math.max(1, PoolSettings.resolve(ctx.settings()).leakThreshold().toSeconds() / 2);
+            ctx.scheduler().scheduleWithFixedDelay(pool::sweep, tick, tick, TimeUnit.SECONDS);
+        }
         MongoClientSettings settings = builder.build();
         // the client connects in the background: start even when the server is not reachable yet (health says so)
         this.client = MongoClients.create(settings);
@@ -519,6 +527,11 @@ public final class MongoSourcePlugin implements SourcePlugin {
         String up = narrow || promoted.isEmpty() ? "UP"
                 : "UP (no " + MongoLayout.columnsCollection(collection) + " collection: a day's columns are read from the documents, 3 to 4 times slower)";
         return tls == null ? up : tls.annotate(up, java.time.Instant.now());
+    }
+
+    @Override
+    public java.util.Optional<com.ash.drishti.api.pool.PoolStats> poolStats() {
+        return pool == null ? java.util.Optional.empty() : java.util.Optional.of(pool.stats());
     }
 
     @Override

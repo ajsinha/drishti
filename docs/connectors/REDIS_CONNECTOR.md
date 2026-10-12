@@ -812,3 +812,14 @@ SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk java -j
 
 Use a free host port if a Redis of yours already listens on 6379 (`-p 16379:6379`, and the URI to match). Health
 should show `UP` with the catalogue counts; see [Diagnosing](#11-diagnosing) otherwise.
+
+## Connection pool
+
+Lettuce multiplexes: one connection carries any number of commands from any number of virtual threads, so a quiet connector holds **one** connection.
+The pool opens another only when every open connection already has `pool-pipeline-depth` (32) commands in flight, up to `pool-size` (**20 by default**, or the
+site default `drishti.db.pool.size`); each command goes to the least busy connection, and connections beyond `pool-min-idle` (2) that were idle for
+`pool-idle-timeout` (10m) are closed. A "borrow" is one command in flight, bounded by `timeout-ms`; one in flight longer than `pool-leak-threshold` (60s)
+is logged as a slow command. `pool-max-lifetime`, `pool-connection-timeout` and `statement-timeout` do not apply (commands wait in Lettuce's queue, not for
+a connection; `timeout-ms` is the command timeout). The pub/sub connection of `live: true` is one long-lived subscription, opened on demand and not
+pooled. Admin shows open, in use (connections with commands running), idle and the longest command in flight.
+See [CONNECTOR_FILES.md, section 14](CONNECTOR_FILES.md#14-connection-pools).

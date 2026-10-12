@@ -120,9 +120,11 @@ public final class MongoLoader {
                 options.put(args[i].substring(2), args[i + 1]);
             }
         }
-        int inFlight = Integer.parseInt(options.getOrDefault("in-flight", "16"));
+        // --pool-size N (default 20, or DRISHTI_DB_POOL_SIZE): connections the load may use; writes in flight never exceed it
+        int poolSize = Integer.parseInt(options.getOrDefault("pool-size", System.getenv().getOrDefault("DRISHTI_DB_POOL_SIZE", "20")));
+        int inFlight = Math.min(Integer.parseInt(options.getOrDefault("in-flight", "16")), poolSize);
         MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(new ConnectionString(uri))
-                .applyToConnectionPoolSettings(p -> p.maxSize(Math.max(100, inFlight + 8))).build();
+                .applyToConnectionPoolSettings(p -> p.maxSize(poolSize).maxWaitTime(6, java.util.concurrent.TimeUnit.HOURS)).build();
         try (MongoClient client = MongoClients.create(settings);
              BufferedReader in = file.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
                      : Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8)) {

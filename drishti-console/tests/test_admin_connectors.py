@@ -102,3 +102,22 @@ def test_bodies_must_be_json(client, backend, monkeypatch):
     with_connectors(backend, monkeypatch, [])
     r = client.put("/admin/connectors/api/x", content="plugin: file", headers={"Content-Type": "text/plain"})
     assert r.status_code == 415
+
+
+def test_the_detail_page_shows_the_connection_pool_and_a_leak_warning(client, backend, monkeypatch):
+    """Pool size, in use, idle, waiting and the longest current borrow; an embedded DuckDB file says it is not pooled."""
+    pool = {"type": "jdbc", "exempt": False, "max": 20, "open": 6, "inUse": 4, "idle": 2, "waiting": 0, "longestBorrowMillis": 2300, "leaksDetected": 1, "timeouts": 0}
+    detail = {**LIST["connectors"][0], "pool": pool, "settings": {}, "directory": "/srv/drishti/config/connectors", "history": [], "text": "plugin: jdbc\n", "tls": None}
+
+    async def admin(method, path, ident, body=None, timeout=None, headers=None, **params):
+        return {} if path == "/status" else detail
+    monkeypatch.setattr(backend, "admin", admin)
+    import re
+    flat = " ".join(re.sub(r"<[^>]+>", " ", client.get("/admin/connectors/trading-lake").text).replace(" ,", ",").replace(" .", ".").split())
+    assert "Connection pool 4 of 20 in use 2 idle, 6 open, 0 waiting, longest current borrow 2.3 s" in flat
+    assert "1 borrow held past pool-leak-threshold" in flat
+    detail["pool"] = {**pool, "type": "duckdb", "exempt": True, "max": 4, "inUse": 1, "waiting": 0}
+    flat = " ".join(re.sub(r"<[^>]+>", " ", client.get("/admin/connectors/trading-lake").text).replace(" ,", ",").replace(" .", ".").split())
+    assert "embedded, in-process file: not pooled. 1 read running of 4 allowed at once, 0 waiting." in flat
+    detail["pool"] = None
+    assert "Connection pool" not in client.get("/admin/connectors/trading-lake").text

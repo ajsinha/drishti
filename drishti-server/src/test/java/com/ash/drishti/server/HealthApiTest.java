@@ -37,6 +37,8 @@ class HealthApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.server.api.PoolMetrics pools;
+    @Autowired io.micrometer.core.instrument.MeterRegistry meters;
 
     private String as(String role) {
         return "Bearer " + tokens.mint("u-" + role, List.of(role), 60);
@@ -66,6 +68,22 @@ class HealthApiTest {
                 .andExpect(jsonPath("$.server.heapMaxMb").value(greaterThan(0)))
                 .andExpect(jsonPath("$.live.streams").exists());
         mvc.perform(get("/api/v1/admin/health").header("Authorization", as("trader"))).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void reportsTheIdentityDatabasePoolAndEverySourceCarriesAPoolField() throws Exception {
+        mvc.perform(get("/api/v1/admin/health").header("Authorization", as("admin")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.identityPool.exempt").value(true))                        // the default identity database is SQLite: embedded
+                .andExpect(jsonPath("$.identityPool.max").value(8))
+                .andExpect(jsonPath("$.identityPool.inUse").exists())
+                .andExpect(jsonPath("$.identityPool.waiting").exists())
+                .andExpect(jsonPath("$.identityPool.longestBorrowMillis").exists())
+                .andExpect(jsonPath("$.poolsAttention").isEmpty())
+                .andExpect(jsonPath("$.sources[?(@.name=='demo')].pool").value(hasItem(org.hamcrest.Matchers.nullValue())));   // the demo source holds no database
+        pools.refresh();                                                                        // the gauges, one series per connector
+        org.assertj.core.api.Assertions.assertThat(meters.find("drishti.db.pool.max").tag("connector", "identity").gauge().value()).isEqualTo(8);
+        org.assertj.core.api.Assertions.assertThat(meters.find("drishti.db.pool.in_use").tag("connector", "identity").gauge()).isNotNull();
     }
 
     @Test

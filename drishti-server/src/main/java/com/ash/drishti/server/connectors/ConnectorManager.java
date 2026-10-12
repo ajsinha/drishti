@@ -512,6 +512,8 @@ public final class ConnectorManager {
             last = registry.freshness(name).lastUpdate();
         }
         m.put("health", health);
+        // the connector's database pool (open, in use, idle, waiting, longest borrow); null when it has none
+        m.put("pool", plugin1.map(com.ash.drishti.server.api.PoolReport::of).orElse(null));
         m.put("lastUpdate", last);
         m.put("updated", updated.get(name));
         m.put("etag", d == null ? null : d.etag());

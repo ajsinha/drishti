@@ -46,4 +46,4 @@ settings:
   user: ${DRISHTI_PG_USER:drishti}
   password: ${DRISHTI_PG_PASSWORD}
   table: reference.entities
-  pool-size: '4'
+  # pool-size: inherits drishti.db.pool.size (20); set it here to size this connector's pool alone

@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -34,8 +33,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,12 +41,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import org.postgresql.PGConnection;
+import com.ash.drishti.api.pool.PoolSettings;
+import com.ash.drishti.api.pool.ResourcePool;
 
 /**
  * Loads rows into PostgreSQL in {@link PostgresLayout}: {@code java -cp <plugin classpath>
  * com.ash.drishti.plugin.jdbc.PostgresLoader FILE|- [jdbc-url] [--user U] [--password P] [--writers N] [--batch N]
  * [--recreate] [--keep-months N] [--as-of yyyy-MM-dd] [--future-days N] [--zone Z] [--max-drop-share F]
- * [--force-drop]}. Each line is {@code {"domain", "kind", "id", "date", "doc", "columns": {path: value}}}, as
+ * [--force-drop] [--pool-size N]}. Each line is {@code {"domain", "kind", "id", "date", "doc", "columns": {path: value}}}, as
  * {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; {@code -} reads a stream.
  *
  * <p>Each data domain goes to {@code <domain>.entities}. A kind's business date is replaced whole, and readers never
@@ -75,17 +74,22 @@ public final class PostgresLoader {
     private final String password;
     private final int writers;
     private final int batchSize;
+    private final PoolSettings poolSettings;
     private final boolean recreate;
     private final LoadGuard guard;
     private final Map<String, PostgresStage> stages = new LinkedHashMap<>();
     private final AtomicReference<Exception> failed = new AtomicReference<>();
     private final AtomicLong written = new AtomicLong();
 
-    private PostgresLoader(String url, String user, String password, int writers, int batchSize, boolean recreate, LoadGuard guard) {
+    private PostgresLoader(String url, String user, String password, int writers, int batchSize, boolean recreate, LoadGuard guard,
+            PoolSettings poolSettings) {
         this.url = url;
         this.user = user;
         this.password = password;
-        this.writers = Math.max(1, writers);
+        // the pool holds the admin connection (it keeps the load's advisory lock) and the writers: never more writers than it can lend
+        // units of work queue behind the connections for as long as a batch or a day takes; the admin lease lasts the whole load
+        this.poolSettings = poolSettings.withSize(Math.max(2, poolSettings.size())).withWaits(java.time.Duration.ofHours(6), java.time.Duration.ofHours(6));
+        this.writers = Math.min(Math.max(1, writers), this.poolSettings.size() - 1);
         this.batchSize = Math.max(1, batchSize);
         this.recreate = recreate;
         this.guard = guard;
@@ -100,7 +104,10 @@ public final class PostgresLoader {
         int batch = Integer.parseInt(option(args, "--batch", "2000"));
         int keepMonths = Integer.parseInt(option(args, "--keep-months", "0"));
         boolean recreate = List.of(args).contains("--recreate");
-        new PostgresLoader(url, user, password, writers, batch, recreate, LoadGuard.fromArgs(args)).load(file, keepMonths);
+        // --pool-size N (default 20, or DRISHTI_DB_POOL_SIZE): connections the load may hold at once, the admin connection included
+        Map<String, String> pool = new HashMap<>();
+        pool.put("pool-size", option(args, "--pool-size", env("DRISHTI_DB_POOL_SIZE", String.valueOf(PoolSettings.DEFAULT_SIZE))));
+        new PostgresLoader(url, user, password, writers, batch, recreate, LoadGuard.fromArgs(args), PoolSettings.resolve(pool)).load(file, keepMonths);
     }
 
     private static String env(String name, String fallback) {
@@ -119,19 +126,17 @@ public final class PostgresLoader {
 
     private void load(String file, int keepMonths) throws Exception {
         long t0 = System.nanoTime();
-        BlockingQueue<Connection> pool = new ArrayBlockingQueue<>(writers);
-        try (Connection admin = DriverManager.getConnection(url, user, password)) {
+        java.util.Properties props = new java.util.Properties();
+        props.setProperty("user", user);
+        props.setProperty("password", password);
+        try (ResourcePool<Connection> pool = JdbcPool.create("postgres-loader", poolSettings, url, props);
+             var adminLease = pool.borrow()) {                          // held for the whole load: it keeps the advisory lock
+            Connection admin = adminLease.get();
             try {
-                for (int i = 0; i < writers; i++) {
-                    pool.add(DriverManager.getConnection(url, user, password));
-                }
                 stage(admin, pool, file);
                 System.err.printf("postgres: %,d rows staged in %,.1f s%n", written.get(), (System.nanoTime() - t0) / 1e9);
                 publish(admin, pool);
             } finally {
-                for (Connection c : pool) {
-                    c.close();
-                }
                 for (PostgresStage s : stages.values()) {
                     try {
                         s.close(admin);                                // after a failure: the stage goes, the domain is as it was
@@ -148,7 +153,7 @@ public final class PostgresLoader {
     }
 
     /** Reads the stream and COPYs every row into its domain's stage, on {@code writers} connections at once. */
-    private void stage(Connection admin, BlockingQueue<Connection> pool, String file) throws Exception {
+    private void stage(Connection admin, ResourcePool<Connection> pool, String file) throws Exception {
         Semaphore inFlight = new Semaphore(writers * 2);
         JsonFactory json = new JsonFactory();
         try (BufferedReader in = file.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
@@ -202,7 +207,7 @@ public final class PostgresLoader {
         }
     }
 
-    private void submit(ExecutorService copy, BlockingQueue<Connection> pool, Semaphore inFlight, List<Row> batch) throws InterruptedException {
+    private void submit(ExecutorService copy, ResourcePool<Connection> pool, Semaphore inFlight, List<Row> batch) throws InterruptedException {
         PostgresStage s = stages.get(batch.get(0).schema());
         Map<String, Boolean> columns = new LinkedHashMap<>();                // the promoted columns these rows carry
         for (Row r : batch) {
@@ -216,10 +221,10 @@ public final class PostgresLoader {
         String into = s.into();
         inFlight.acquire();
         copy.execute(() -> {
-            Connection c = null;
             try {
-                c = pool.take();
-                write(c, into, batch, columns);
+                try (var lease = pool.borrow()) {                    // one batch, then back to the pool
+                    write(lease.get(), into, batch, columns);
+                }
                 written.addAndGet(batch.size());
                 if (written.get() / 100_000 != (written.get() - batch.size()) / 100_000) {
                     System.err.printf("postgres: %,d rows%n", written.get());
@@ -227,9 +232,6 @@ public final class PostgresLoader {
             } catch (Exception e) {
                 failed.compareAndSet(null, e);
             } finally {
-                if (c != null) {
-                    pool.add(c);
-                }
                 inFlight.release();
             }
         });
@@ -284,7 +286,7 @@ public final class PostgresLoader {
      * Publishes every staged day: a recreated domain swapped in whole; otherwise each (kind, date) in a transaction
      * of its own, up to {@code writers} at once. A day that fails to publish (a duplicate id) stays as it was.
      */
-    private void publish(Connection admin, BlockingQueue<Connection> pool) throws Exception {
+    private void publish(Connection admin, ResourcePool<Connection> pool) throws Exception {
         long t0 = System.nanoTime();
         int published = 0;
         List<Future<Long>> done = new ArrayList<>();
@@ -302,11 +304,8 @@ public final class PostgresLoader {
                 for (var k : s.days().entrySet()) {
                     for (LocalDate day : k.getValue().keySet()) {
                         done.add(swaps.submit(() -> {
-                            Connection c = pool.take();
-                            try {
-                                return s.publishDay(c, k.getKey(), day);
-                            } finally {
-                                pool.add(c);
+                            try (var lease = pool.borrow()) {            // one day, then back to the pool
+                                return s.publishDay(lease.get(), k.getKey(), day);
                             }
                         }));
                     }

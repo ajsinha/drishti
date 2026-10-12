@@ -178,6 +178,13 @@ public final class RedisSourcePlugin implements SourcePlugin {
         // start even when Redis is not reachable: health says so, and every refresh tries again
         refresh();
         long refresh = Long.parseLong(ctx.setting("refresh-seconds", "60"));
+        long poolTick = Math.max(1, Math.min(30, com.ash.drishti.api.pool.PoolSettings.resolve(ctx.settings()).leakThreshold().toSeconds() / 2 + 1));
+        ctx.scheduler().scheduleWithFixedDelay(() -> {
+            RedisConnection c = redis;
+            if (c != null) {
+                c.sweep();
+            }
+        }, poolTick, poolTick, TimeUnit.SECONDS);
         ctx.scheduler().scheduleWithFixedDelay(() -> Thread.ofVirtual().name("redis-refresh-" + sourceName).start(this::refresh), refresh, refresh,
                 TimeUnit.SECONDS);
     }
@@ -191,7 +198,8 @@ public final class RedisSourcePlugin implements SourcePlugin {
         connecting.lock();
         try {
             if (redis == null) {
-                redis = RedisConnection.open(uri, cluster, user, password, timeout, tls);
+                redis = RedisConnection.open(uri, cluster, user, password, timeout, tls, com.ash.drishti.api.pool.PoolSettings.resolve(context.settings()),
+                        Integer.parseInt(context.setting("pool-pipeline-depth", "32")));
                 if (live) {
                     listen(redis);
                 }
@@ -786,6 +794,12 @@ public final class RedisSourcePlugin implements SourcePlugin {
         }
         String failed = commandFailure;
         return failed == null ? null : "DOWN: " + failed;
+    }
+
+    @Override
+    public Optional<com.ash.drishti.api.pool.PoolStats> poolStats() {
+        RedisConnection c = redis;
+        return c == null ? Optional.empty() : Optional.of(c.stats());
     }
 
     @Override

@@ -157,6 +157,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public java.util.Optional<com.ash.drishti.api.pool.PoolStats> poolStats() {
+        return delegate.poolStats();
+    }
+
+    @Override
     public void purgeCaches() {
         delegate.purgeCaches();
     }

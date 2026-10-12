@@ -1287,7 +1287,7 @@ Nothing grows with the day's data without bound. Every cache has a size limit yo
 | ActiveMQ / RabbitMQ connectors | recently read documents in memory; the latest document of every entity on disk (RocksDB, LZ4, level compaction: size follows the entities held, not the messages). Writes are kept per `state.durability`: `sync` (default; write-ahead log synced, no acknowledged message lost on a crash or power loss), `wal` or `none`; a message the store cannot keep is not acknowledged and comes again | `cache-mb` (128); `state.max-gb` (10) per connector under `state.dir` (default `./data/state/<connector>`); past it `state.when-full: evict-oldest` (default) removes the entities written longest ago, logged and counted in `evicted`, or `warn` only says so in health |
 | Delta Lake connector | table partitions read recently | `cache-mb` (512) |
 | Aerospike connector | the kinds' dates and the ids (from the index set), and days of promoted bins for searches, impact and reverse lookups; not the days kept | `columns-cache-mb` (1024), kept `columns-seconds` (300) |
-| PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections |
+| PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections (20; [sizing](#sizing-the-database-connection-pools)) |
 | Engine | layouts, shape fingerprints, compiled expressions | `drishti.engine.layout-cache-size` (10,000), `fingerprint-cache-size` (100,000), `drishti.rachana.expression-cache-size` (10,000) |
 | Live views | the current document of each entity someone is watching | `drishti.live.max-streams` (20,000) |
 
@@ -1487,7 +1487,17 @@ frames per second, and JVM heap used.
 | Heap high | `sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"}) > 0.9` for 10 min | section 12 |
 | Lake maintenance failed | the job's exit code is 1, or a `"event": "failed"` line | the `error` in that line |
 | Message state store cannot write | an ActiveMQ or RabbitMQ connector's health ends `(messages are not acknowledged and come again)` | free or grow the disk under `state.root` |
+| A pool exhausted | `drishti_db_pool_waiting > 0` for 2 min, or `poolsAttention` not empty | [pool exhausted](../guides/TROUBLESHOOTING.md#a-connector-says-no-free-connection-in-the--pool) |
+| A connection held too long | `increase(drishti_db_pool_leaks[1h]) > 0`, or the log line `connection leak suspected` | the stack in that line names the code |
 | Message state store full | a health `UP (state store over its budget: …)`, or `evicted` rising in Admin → Caches | raise `state.max-gb` and the disk |
+
+### Connection pools in the monitoring
+
+Admin → Health has a *Connection pool* column for each connector (*in use / size, idle, waiting, longest borrow*), the identity database's pool below the
+table, and a red line when a pool needs attention; `GET /api/v1/admin/health` has `sources[].pool`, `identityPool` and `poolsAttention` (a list of sentences).
+Prometheus: `drishti_db_pool_max`, `_open`, `_in_use`, `_idle`, `_waiting`, `_longest_borrow_seconds`, `_leaks` and `_timeouts`, one series per connector
+(`connector`, `type` labels; the identity database is `connector="identity"`). Alert on `drishti_db_pool_waiting > 0` for 2 minutes, on
+`increase(drishti_db_pool_leaks[1h]) > 0`, and on `drishti_db_pool_in_use / drishti_db_pool_max > 0.9` for 10 minutes ([TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md#a-connector-says-no-free-connection-in-the--pool)).
 
 ### Retries: what failed is tried again by itself
 
@@ -1622,6 +1632,24 @@ Measured on a developer workstation; see [PERFORMANCE.md](PERFORMANCE.md) for ho
   waits for a disk sync, so a connector runs at about one message per sync of its disk, typically thousands a second
   on an SSD (not measured here). Split a heavy feed over several connectors, or use `wal` where losing the last
   moments before a power loss is acceptable. Disk: about twice `state.max-gb` per connector.
+
+### Sizing the database connection pools
+
+Every database connector, and the identity database on PostgreSQL, has its own pool of up to `pool-size` connections (20 by default,
+[CONFIGURATION.md](CONFIGURATION.md#drishtidbpool--database-connection-pools)). The database must be able to accept all of them at once:
+
+```
+max_connections  >=  (sum of the pool sizes of every connector that points at it  +  the identity pool  +  loaders  +  your own clients)  x  server instances
+```
+
+For example a PostgreSQL that serves the six banking connectors of the `postgres` profile (6 x 20 = 120), the identity database (20) and a loader (20) for two
+server instances needs 2 x 140 = 280 plus headroom for administrators: PostgreSQL's default `max_connections` of 100 is **not** enough, and the symptom is
+`FATAL: sorry, too many clients already` from the database, long before a Drishti pool is exhausted. Either raise `max_connections`, put PgBouncer (transaction
+mode) in front, or lower the pools: `pool-size` per connector, or the site default `drishti.db.pool.size`. A pool opens connections only as it is used and
+closes extras after `pool-idle-timeout`, so the sum is a ceiling, not the usual count (Admin shows the open count). Start from the busiest reads: a pool needs
+`scan-threads` plus the reads you expect at once, and a quiet connector needs 2 to 4. MongoDB, Redis and Aerospike have their own limits (`maxIncomingConnections`,
+`maxclients`, `proto-fd-max`); each Drishti server instance can open `pool-size` to a MongoDB or Redis deployment and `pool-size` per node to Aerospike.
+SQLite and DuckDB are embedded files and need no sizing.
 
 ## 17. Runbooks
 

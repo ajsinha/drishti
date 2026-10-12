@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Loads rows into Aerospike in {@link AerospikeLayout}: {@code java -cp <plugin classpath>
- * com.ash.drishti.plugin.aerospike.AerospikeLoader FILE|- [hosts] [namespace] [--ttl-days N] [--future-days N] [--zone Z]}. Each line is
+ * com.ash.drishti.plugin.aerospike.AerospikeLoader FILE|- [hosts] [namespace] [--pool-size N] [--ttl-days N] [--future-days N] [--zone Z]}. Each line is
  * {@code {"domain", "kind", "id", "date", "doc", "columns": {path: value}}} ({@code columns}, the fields the pack
  * promotes, is optional), as {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; {@code -} reads
  * a stream, so a book of millions loads without a file. Up to 128 writes are in flight; each kind's business dates are
@@ -73,10 +73,12 @@ public final class AerospikeLoader {
         Map<String, Set<LocalDate>> dates = new ConcurrentHashMap<>();     // "domain\u001fkind" -> its business dates
         AtomicLong n = new AtomicLong();
         AtomicReference<Exception> failed = new AtomicReference<>();
-        Semaphore inFlight = new Semaphore(128);
+        // --pool-size N (default 20, or DRISHTI_DB_POOL_SIZE): connections to each node; writes in flight never exceed it
+        int poolSize = Integer.parseInt(option(args, "--pool-size", System.getenv().getOrDefault("DRISHTI_DB_POOL_SIZE", "20")));
+        Semaphore inFlight = new Semaphore(poolSize);
         long t0 = System.nanoTime();
         ClientPolicy client = new ClientPolicy();
-        client.maxConnsPerNode = 256;                                       // above the writes in flight (the default is 100)
+        client.maxConnsPerNode = poolSize;                                  // never fewer than the writes in flight
         try (AerospikeClient c = new AerospikeClient(client, Host.parseHosts(hosts, 3000));
              BufferedReader in = file.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
                      : Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8);
@@ -106,7 +108,7 @@ public final class AerospikeLoader {
                     }
                 });
             }
-            inFlight.acquire(128);                                        // every write finished
+            inFlight.acquire(poolSize);                                        // every write finished
             if (failed.get() != null) {
                 throw failed.get();
             }
@@ -154,5 +156,14 @@ public final class AerospikeLoader {
             }
         }
         return new Row(domain, kind, id, LocalDate.parse(date), doc, columns);
+    }
+
+    private static String option(String[] args, String name, String fallback) {
+        for (int i = 0; i < args.length - 1; i++) {
+            if (args[i].equals(name)) {
+                return args[i + 1];
+            }
+        }
+        return fallback;
     }
 }

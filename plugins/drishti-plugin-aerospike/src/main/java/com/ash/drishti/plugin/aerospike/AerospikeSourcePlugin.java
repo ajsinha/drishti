@@ -78,6 +78,7 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
     private final HitIndex index = new HitIndex();
     private volatile Map<String, NavigableSet<LocalDate>> kindDates = Map.of();
     private AerospikeClient client;
+    private int poolSize = 20;
     private com.ash.drishti.api.tls.TlsMaterial tls;
     private SourceContext context;
     private String namespace;
@@ -128,6 +129,18 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
         // Start even when the cluster is not reachable or still initialising: the client keeps trying in the background,
         // reads fail (and health says so) until it answers, and the next refresh fills the catalogue.
         policy.failIfNotConnected = false;
+        // the client's connection pool is per node: pool-size connections to each node (default 20), pool-min-idle kept open, an idle
+        // one closed after pool-idle-timeout; statement-timeout bounds one read or write
+        com.ash.drishti.api.pool.PoolSettings pool = com.ash.drishti.api.pool.PoolSettings.resolve(ctx.settings());
+        this.poolSize = pool.size();
+        policy.maxConnsPerNode = pool.size();
+        policy.minConnsPerNode = pool.minIdle();
+        policy.maxSocketIdle = (int) Math.max(1, pool.idleTimeout().toSeconds());
+        if (!pool.statementTimeout().isZero()) {
+            int ms = (int) Math.min(Integer.MAX_VALUE, pool.statementTimeout().toMillis());
+            policy.readPolicyDefault.totalTimeout = ms;
+            policy.writePolicyDefault.totalTimeout = ms;
+        }
         AerospikeTls.Plan tlsPlan = AerospikeTls.plan(ctx.settings(), System::getenv);   // fails the start, naming the setting and the file
         this.tls = tlsPlan.tls();
         AerospikeTls.apply(policy, tlsPlan);
@@ -447,6 +460,23 @@ public final class AerospikeSourcePlugin implements SourcePlugin {
             return "DOWN: not connected to Aerospike";
         }
         return tls == null ? "UP" : tls.annotate("UP", java.time.Instant.now());
+    }
+
+    /** The client's pools added up over the nodes: pool-size per node, connections in use and in the pool. Aerospike does not time borrows. */
+    @Override
+    public java.util.Optional<com.ash.drishti.api.pool.PoolStats> poolStats() {
+        AerospikeClient c = client;
+        if (c == null) {
+            return java.util.Optional.empty();
+        }
+        com.aerospike.client.cluster.NodeStats[] nodes = c.getClusterStats().nodes;
+        int inUse = 0;
+        int idle = 0;
+        for (com.aerospike.client.cluster.NodeStats n : nodes) {
+            inUse += n.sync.inUse;
+            idle += n.sync.inPool;
+        }
+        return java.util.Optional.of(new com.ash.drishti.api.pool.PoolStats("aerospike", poolSize * Math.max(1, nodes.length), inUse + idle, inUse, idle, 0, -1, 0, 0));
     }
 
     @Override

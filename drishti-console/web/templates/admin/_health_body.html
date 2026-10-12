@@ -13,6 +13,12 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
+{% macro pool_line(p) -%}
+{%- if p.exempt -%}<span title="embedded, in-process file: not a connection pool">{{ p.inUse }} reading of {{ p.max }} · {{ p.waiting }} waiting (embedded, not pooled)</span>
+{%- else -%}<span class="{{ 't-neg' if p.waiting or p.leaksDetected else '' }}">{{ p.inUse }}/{{ p.max }} in use · {{ p.idle }} idle · {{ p.waiting }} waiting
+ · longest borrow {{ ((p.longestBorrowMillis / 1000) | round(1)) ~ ' s' if p.longestBorrowMillis >= 0 else 'n/a' }}{% if p.leaksDetected %} · {{ p.leaksDetected }} leak warning{{ 's' if p.leaksDetected > 1 }}{% endif %}{% if p.timeouts %} · {{ p.timeouts }} timeout{{ 's' if p.timeouts > 1 }}{% endif %}</span>
+{%- endif -%}
+{%- endmacro %}
 {% set tone = {'OK': 'ok', 'UP': 'ok', 'DEGRADED': 'warn', 'DOWN': 'bad'} %}
 <div class="hl-sum">
   <span class="hl-badge hl-{{ tone[h.status] }}"><i class="bi bi-{{ 'check-circle' if h.status == 'OK' else 'exclamation-triangle' }}" aria-hidden="true"></i> {{ h.status }}</span>
@@ -37,7 +43,7 @@
   {{ retry_button('all', 'Retry all now') }}</p></div></section>{% endif %}
 <h2 class="ws-h">Connectors</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">
-  <thead><tr><th>Connector</th><th>Status</th><th>Last update</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th></tr></thead>
+  <thead><tr><th>Connector</th><th>Status</th><th>Last update</th><th>Kinds</th><th class="num">Reads</th><th class="num">Errors</th><th class="num">p50 ms</th><th class="num">p99 ms</th><th>Last error</th><th>Cache</th><th>Connection pool</th></tr></thead>
   <tbody>{% for s in h.sources %}{% set r = s.reads %}
     <tr class="{{ 'hl-row-down' if s.status == 'DOWN' else '' }}">
       <td class="mono">{% if s.name in connectors %}<a href="/admin/connectors/{{ s.name | urlencode }}" title="Open connector {{ s.name }}">{{ s.name }}</a>{% else %}{{ s.name }}{% endif %}<div class="cmp-path">{{ [('live' if s.live else ''), ('dated' if s.dated else ''), ('search' if s.search else '')] | select | join(' · ') }}</div></td>
@@ -50,10 +56,14 @@
       <td class="num mono">{{ r.p99Ms if r.p99Ms is not none else '' }}</td>
       <td class="hl-err">{% if r.lastError %}{{ r.lastError[:140] }}<div class="cmp-path mono">{{ (r.lastErrorAt or '')[:19] | replace('T', ' ') }} UTC</div>{% endif %}</td>
       <td class="mono cmp-path">{% for k, v in (s.cache or {}).items() %}{{ k }} {{ v }}{% if not loop.last %} · {% endif %}{% endfor %}</td>
+      <td class="mono cmp-path" data-pool="{{ s.name }}">{% if s.pool %}{{ pool_line(s.pool) }}{% endif %}</td>
     </tr>{% endfor %}
     {% for name, why in (h.failedToStart or {}).items() %}
-    <tr class="hl-row-down"><td class="mono">{% if name in connectors %}<a href="/admin/connectors/{{ name | urlencode }}" title="Open connector {{ name }}">{{ name }}</a>{% else %}{{ name }}{% endif %}</td><td><span class="hl-badge hl-bad">FAILED</span></td><td colspan="7" class="hl-err">did not start: {{ why }}{{ retry_note((h.retry or {}).get('connectors', {}).get(name)) }}</td></tr>{% endfor %}
+    <tr class="hl-row-down"><td class="mono">{% if name in connectors %}<a href="/admin/connectors/{{ name | urlencode }}" title="Open connector {{ name }}">{{ name }}</a>{% else %}{{ name }}{% endif %}</td><td><span class="hl-badge hl-bad">FAILED</span></td><td colspan="8" class="hl-err">did not start: {{ why }}{{ retry_note((h.retry or {}).get('connectors', {}).get(name)) }}</td></tr>{% endfor %}
   </tbody></table></div></div></section>
+
+{% if h.identityPool %}<p class="mono cmp-path" data-identity-pool>Identity database pool ({{ 'SQLite' if h.identityPool.exempt else 'PostgreSQL' }}): {{ pool_line(h.identityPool) }}</p>{% endif %}
+{% for w in (h.poolsAttention or []) %}<p class="hl-err" role="alert" data-pool-attention><b>Connection pool</b> {{ w }}</p>{% endfor %}
 
 <h2 class="ws-h">Packs</h2>
 <section class="pnl"><div class="pnl-b"><div class="tbl-wrap"><table class="tbl hl-tbl">

@@ -17,9 +17,9 @@
 drishti:
   sources:
     connectors:
-      reference-store:  { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: reference.entities, pool-size: "4" } }
-      market-store:     { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: market.entities, pool-size: "4" } }
-      trading-store:    { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: trading.entities, pool-size: "12" } }
-      risk-store:       { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: risk.entities, pool-size: "4" } }
-      credit-store:     { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: credit.entities, pool-size: "4" } }
-      collateral-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: collateral.entities, pool-size: "4" } }
+      reference-store:  { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: reference.entities } }
+      market-store:     { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: market.entities } }
+      trading-store:    { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: trading.entities } }
+      risk-store:       { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: risk.entities } }
+      credit-store:     { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: credit.entities } }
+      collateral-store: { plugin: jdbc, settings: { url: "${DRISHTI_PG_URL:jdbc:postgresql://localhost:5432/drishti}", user: "${DRISHTI_PG_USER:drishti}", password: "${DRISHTI_PG_PASSWORD:drishti}", table: collateral.entities } }

@@ -124,7 +124,7 @@ drishti:
           user: ${DRISHTI_JDBC_USER:}
           password: ${DRISHTI_JDBC_PASSWORD:}
           source-name: jdbc
-          pool-size: 4
+          # pool-size: inherits drishti.db.pool.size (20); set it here for this connector only
           # Named parameters :id and :asOf (the business date) make it dated, e.g.
           # query.trade: SELECT json FROM trades WHERE trade_id = :id AND business_date = (SELECT MAX(business_date)
           #              FROM trades WHERE trade_id = :id AND business_date <= :asOf)
@@ -565,7 +565,7 @@ drishti:
     database-url: ${DRISHTI_IDENTITY_DB_URL:jdbc:sqlite:${drishti.data.dir}/identity/drishti.db}
     database-user: ${DRISHTI_IDENTITY_DB_USER:}
     database-password: ${DRISHTI_IDENTITY_DB_PASSWORD:}
-    database-pool-size: 8
+    # database-pool-size:           # unset: drishti.db.pool.size (20) on PostgreSQL; SQLite (embedded, one writer) keeps 8
     refresh-seconds: 15              # servers sharing one database see each other's role and pack changes this soon
     # The files of releases before 1.10, imported once into an empty database and renamed *.imported.
     users-file: ${DRISHTI_USERS_FILE:${drishti.data.dir}/identity/users.json}
@@ -608,6 +608,15 @@ drishti:
     layout-cache-size: 10000        # effective layouts, one per (Sutra version, kind, data shape)
     fingerprint-cache-size: 100000  # one per (entity, generation)
     bind-parallelism: 0             # 0 = one binding thread per core
+  db:
+    pool:                            # connection pools of every database connector and the identity database (docs/connectors/CONNECTOR_FILES.md)
+      size: 20                       # most connections open at once; a connector's own pool-size wins (SQLite and DuckDB are embedded and not pooled)
+      min-idle: 2                    # idle connections kept when quiet
+      idle-timeout: 10m              # an idle connection beyond min-idle is closed after this long
+      max-lifetime: 30m              # a connection is replaced after this long
+      connection-timeout: 10s        # a caller waits this long for a free connection, then fails
+      leak-threshold: 60s            # a connection borrowed longer than this is logged with the borrower's stack (0 = off)
+      statement-timeout: 5m          # longest one statement may run (PostgreSQL, MongoDB and Aerospike operations; 0 = none)
   http:
     proxy:                           # the site's outbound HTTP proxy (docs/connectors/PROXY.md): OFF unless url is set (or from-environment is true)
       url: ${DRISHTI_HTTP_PROXY_URL:}                 # http://host:port; http and https targets both go through it (https via CONNECT)

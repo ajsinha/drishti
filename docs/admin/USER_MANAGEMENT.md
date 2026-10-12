@@ -441,7 +441,7 @@ Deleting a user removes their role and pack rows with them (`ON DELETE CASCADE`)
        database-url: jdbc:postgresql://db.bank.example:5432/drishti
        database-user: drishti
        database-password: ${DRISHTI_IDENTITY_DB_PASSWORD}
-       database-pool-size: 8
+       # database-pool-size: unset = drishti.db.pool.size (20) on PostgreSQL
    ```
 
 3. Start the server. The log says:
@@ -557,7 +557,7 @@ drishti:
 | Development admin | created when the database has no users | `seed-admin` (`DRISHTI_SEED_ADMIN=false` in production), `seed-username`, `seed-password`, `seed-roles` |
 | Last admin | there is always one enabled admin: it cannot be disabled, demoted or deleted | — |
 | Self-protection | nobody can disable or delete their own account | — |
-| Database | SQLite file | `database-url` (`DRISHTI_IDENTITY_DB_URL`), `database-user`, `database-password`, `database-pool-size` (8) |
+| Database | SQLite file | `database-url` (`DRISHTI_IDENTITY_DB_URL`), `database-user`, `database-password`, `database-pool-size` (unset: `drishti.db.pool.size`, 20, on PostgreSQL; 8 on SQLite) |
 
 Every user can see their own profile and roles on **My account** (`/account`), change their password (giving
 the current one), and choose their theme, clock zone, density and landing page.

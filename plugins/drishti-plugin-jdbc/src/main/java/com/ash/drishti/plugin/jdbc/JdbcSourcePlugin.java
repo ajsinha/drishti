@@ -23,17 +23,17 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.api.pool.PoolSettings;
+import com.ash.drishti.api.pool.PoolStats;
+import com.ash.drishti.api.pool.ResourcePool;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
  * class path or in the plugin directory).
  *
  * <p>Settings: {@code url}, {@code user}, {@code password} (from the environment), {@code source-name}
- * (default {@code jdbc}), {@code pool-size} (default 4), and {@code query.<kind>}: SQL with one {@code ?}
+ * (default {@code jdbc}), {@code pool-size} (default 20, or the site's {@code drishti.db.pool.size}; with {@code pool-min-idle}, {@code pool-idle-timeout}, {@code pool-max-lifetime}, {@code pool-connection-timeout}, {@code pool-leak-threshold} and {@code statement-timeout}: see {@link JdbcPool}), and {@code query.<kind>}: SQL with one {@code ?}
  * for the id, or named parameters {@code :id} and {@code :asOf} (the business date, a SQL {@code DATE}). A query
  * that uses {@code :asOf} makes the source dated, for example
  * {@code ... WHERE trade_id = :id AND business_date = (SELECT MAX(business_date) FROM trades
@@ -51,8 +51,8 @@ import java.util.concurrent.TimeUnit;
  * More queries per kind ({@code query.<kind>.<part>} for nested parts, {@code ids.<kind>} for type-ahead,
  * {@code columns.<kind>} for searches over a day's promoted fields, {@code reverse.<kind>} for reverse lookups) are
  * described in {@link QueryMode} and {@code docs/connectors/JDBC_QUERIES.md}.
- * Connections are pooled in a small bounded queue of slots, each opened on first use and reopened whenever it is
- * found broken, so the connector starts while the database is down and recovers by itself when it comes back.
+ * Connections are pooled ({@link JdbcPool}), each opened on first use and replaced whenever it is found broken, so the
+ * connector starts while the database is down and recovers by itself when it comes back; every borrow is for one unit of work.
  *
  * <p><b>Table mode</b> ({@code table: reference.entities}): every kind of a data domain in one PostgreSQL table of
  * {@code (kind, id, business_date, doc jsonb)} rows, dated, with search and reverse lookups; {@code mode.<kind>}
@@ -68,12 +68,7 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     private int maxLoadRows = 200_000;
     private boolean reverseIndex = true;
     private volatile java.util.List<String> tableKinds = java.util.List.of();   // discovered later when the database starts after us
-    /** A pool slot: its connection is opened lazily and replaced when broken; only its borrower touches it. */
-    private static final class Slot {
-        Connection connection;
-    }
-
-    private BlockingQueue<Slot> pool;
+    private volatile ResourcePool<Connection> pool;
     /** The pool, for the table catalogue and query mode. */
     private final TableCatalog.Db db = new TableCatalog.Db() {
         @Override
@@ -102,58 +97,41 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * Runs {@code work} on a pooled connection, (re)connecting the slot when it has none or its connection is broken.
-     * A failure to connect fails this call only: the slot goes back empty and the next call tries again.
+     * Runs {@code work} on a pooled connection: borrowed for this call only and returned at once, whatever happens. A failure to
+     * connect fails this call only; the next call tries again.
      */
     private <T> T withConnection(SqlWork<T> work) throws Exception {
-        Slot s = pool.poll(5, TimeUnit.SECONDS);
-        if (s == null) {
-            throw new SQLException("no free connection in " + sourceName + " pool");
+        try (var lease = borrow()) {
+            Connection c = lease.get();
+            try {
+                T out = work.run(c);
+                lastError = null;
+                return out;
+            } catch (SQLException e) {
+                // the connection died mid-call, or its cached plans predate a table that was dropped and recreated (a reload,
+                // SQL state 0A000 "cached plan must not change result type"): the pool closes it instead of reusing it
+                boolean broken = !c.isValid(1);
+                if ("0A000".equals(e.getSQLState()) || broken) {
+                    lease.invalidate();
+                }
+                if (broken) {
+                    lastError = e.getMessage();   // the database went away: DOWN until a call succeeds
+                }
+                // else a statement failed on a live connection (bad SQL, a missing table): the caller reports it; the source
+                // is not down
+                throw e;
+            }
         }
+    }
+
+    private ResourcePool<Connection>.Lease borrow() throws Exception {
         try {
-            if (s.connection == null || !s.connection.isValid(1)) {
-                if (s.connection != null) {
-                    try {
-                        s.connection.close();
-                    } catch (SQLException ignored) {
-                        // already broken
-                    }
-                    s.connection = null;
-                }
-                try {
-                    java.util.Properties props = new java.util.Properties();
-                    props.putAll(tlsPlan.properties());
-                    props.setProperty("user", user);
-                    props.setProperty("password", password);
-                    s.connection = DriverManager.getConnection(url, props);
-                } catch (SQLException e) {
-                    lastError = e.getMessage();
-                    throw e;
-                }
-            }
-            T out = work.run(s.connection);
-            lastError = null;
-            return out;
+            return pool.borrow();
+        } catch (com.ash.drishti.api.pool.PoolExhaustedException e) {
+            throw new SQLException(e.getMessage(), e);
         } catch (SQLException e) {
-            // the connection died mid-call, or its cached plans predate a table that was dropped and recreated (a reload,
-            // SQL state 0A000 "cached plan must not change result type"): reconnect next time
-            boolean broken = s.connection == null || !s.connection.isValid(1);
-            if (s.connection != null && ("0A000".equals(e.getSQLState()) || broken)) {
-                try {
-                    s.connection.close();
-                } catch (SQLException ignored) {
-                    // already broken
-                }
-                s.connection = null;
-            }
-            if (broken) {
-                lastError = e.getMessage();   // the database went away: DOWN until a call succeeds
-            }
-            // else a statement failed on a live connection (bad SQL, a missing table): the caller reports it; the source
-            // is not down
+            lastError = e.getMessage();
             throw e;
-        } finally {
-            pool.offer(s);
         }
     }
 
@@ -223,11 +201,13 @@ public final class JdbcSourcePlugin implements SourcePlugin {
         this.user = ctx.setting("user", "");
         this.password = ctx.setting("password", "");
         this.sourceName = ctx.setting("source-name", "jdbc");
-        int size = Integer.parseInt(ctx.setting("pool-size", "4"));
-        this.pool = new ArrayBlockingQueue<>(size);
-        for (int i = 0; i < size; i++) {
-            pool.add(new Slot());                    // connected on first use: the database may still be starting
-        }
+        java.util.Properties props = new java.util.Properties();
+        props.putAll(tlsPlan.properties());
+        props.setProperty("user", user);
+        props.setProperty("password", password);
+        // pool-size (default 20, or the site's drishti.db.pool.size) and the other pool-* keys; connections open on first use,
+        // because the database may still be starting
+        this.pool = JdbcPool.create(sourceName, PoolSettings.resolve(ctx.settings()), url, props);
         String t = ctx.setting("table", "");
         if (t.isBlank()) {
             // query mode: your own SQL, several queries per kind; type-ahead ids now and every refresh-seconds
@@ -409,15 +389,13 @@ public final class JdbcSourcePlugin implements SourcePlugin {
     public void close() {
         PgSslFactory.unregister(tlsPlan.factoryId());
         if (pool != null) {
-            pool.forEach(s -> {
-                try {
-                    if (s.connection != null) {
-                        s.connection.close();
-                    }
-                } catch (SQLException ignored) {
-                    // shutting down
-                }
-            });
+            pool.close();
         }
+    }
+
+    @Override
+    public Optional<PoolStats> poolStats() {
+        ResourcePool<Connection> p = pool;
+        return p == null ? Optional.empty() : Optional.of(p.stats());
     }
 }

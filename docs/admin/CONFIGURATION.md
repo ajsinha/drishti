@@ -377,6 +377,30 @@ area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `
 | `drishti.retry.<area>.<key>` | `retry.<area>.<key>` | the general value | Per-area override of any key above |
 | (none) | `ai.poll_seconds` | `5` | How often the console looks at `config/ai` and `config/mcp` for a changed file and for a retry that is due |
 
+### `drishti.db.pool` — database connection pools
+
+Every database connection goes through a pool of a size you set, **20 by default**, and is borrowed for one unit of work (a query, a batch, a day's
+publish) and returned at once: never held across a stream to a client, a network wait, a live subscription or user think-time. This section is the site
+default; a connector's own `pool-*` keys (in its file under `config/connectors/`) win over it, and the shipped example files simply inherit it. Read once
+at start; a connector's own keys are live-reloaded with its file. Full guide: [CONNECTOR_FILES.md, Connection pools](../connectors/CONNECTOR_FILES.md#14-connection-pools).
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `size` (connector: `pool-size`) | `20` | The most connections the connector opens at once. A caller beyond it waits `pool-connection-timeout`. |
+| `min-idle` (`pool-min-idle`) | `2` | Idle connections kept when quiet. |
+| `idle-timeout` (`pool-idle-timeout`) | `10m` | An idle connection beyond `pool-min-idle` is closed after this long. |
+| `max-lifetime` (`pool-max-lifetime`) | `30m` | A connection is replaced after this long, so a firewall or a failover never meets an old one. |
+| `connection-timeout` (`pool-connection-timeout`) | `10s` | How long a caller waits for a free connection before it fails (`no free connection in the <name> pool within 10000 ms (20 of 20 in use, 3 waiting, longest borrow 41500 ms)`). |
+| `leak-threshold` (`pool-leak-threshold`) | `60s` | A connection borrowed longer than this is logged once as a WARNING with the stack of the code that borrowed it (`0` turns it off). |
+| `statement-timeout` (`statement-timeout`) | `5m` | The longest one statement or operation may run (PostgreSQL `statement_timeout`; MongoDB socket read timeout; Aerospike read and write `totalTimeout`; `0` for none). |
+
+Applies to the JDBC/PostgreSQL connector and its loader, MongoDB, Redis, Aerospike and the identity database on PostgreSQL. Not pooled, by design:
+**SQLite** (the default identity database) and **DuckDB**, embedded files opened inside the server process, with no network, no server connection limit and
+nothing to exhaust; they still close everything they open (an architecture test checks it). A time is seconds, or a number with `ms`, `s`, `m` or `h`.
+A value that does not parse stops the start naming the setting. Sizing: the database's `max_connections` must cover the sum of the pools of every
+server instance ([OPERATIONS.md, Sizing the connection pools](OPERATIONS.md#sizing-the-database-connection-pools)). Environment: the loaders read
+`DRISHTI_DB_POOL_SIZE`.
+
 ### `drishti.http.proxy` — the site's outbound HTTP proxy
 
 Every HTTP-based connector (REST, feeds, news, yfinance, S3, Delta and Iceberg on S3, the Kafka schema registry), AI provider and MCP server reaches its
@@ -568,7 +592,7 @@ What the bundled file sets under `plugins`:
 | `demo` | `true` (`DRISHTI_DEMO_ENABLED`) | sample directories come from the packs |
 | `file` | `true` | `root: ${DRISHTI_FEEDS:${drishti.data.dir:./data}/feeds}`, `source-name: feed-file`, `rescan-seconds: 30` |
 | `rest` | `false` (`DRISHTI_REST_ENABLED`) | `base-url: ${DRISHTI_REST_URL:http://localhost:9000/api}`, `path: /{kind}/{id}`, `source-name: rest`, `timeout-ms: 2000` |
-| `jdbc` | `false` (`DRISHTI_JDBC_ENABLED`) | `url`, `user`, `password` from `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD`; `source-name: jdbc`, `pool-size: 4` |
+| `jdbc` | `false` (`DRISHTI_JDBC_ENABLED`) | `url`, `user`, `password` from `DRISHTI_JDBC_URL`, `DRISHTI_JDBC_USER`, `DRISHTI_JDBC_PASSWORD`; `source-name: jdbc` (`pool-size` is inherited from [`drishti.db.pool`](#drishtidbpool--database-connection-pools)) |
 | `delta` | `false` | runs only as named connectors (the packs declare one per data domain) |
 | `aerospike` | `false` | runs only as named connectors (profile `aerospike`) |
 | `activemq` | `false` (`DRISHTI_ACTIVEMQ_ENABLED`) | configure it, or use it as a named connector |
@@ -690,7 +714,7 @@ servers). The environment variables of this section are in the [placeholder tabl
 | Key | Default | Meaning |
 |---|---|---|
 | `database-url` / `database-user` / `database-password` | `jdbc:sqlite:./data/identity/drishti.db` / empty / empty (`DRISHTI_IDENTITY_DB_URL`, `_USER`, `_PASSWORD`) | The database; `jdbc:postgresql://host:5432/drishti` for PostgreSQL. |
-| `database-pool-size` | `8` | Connections in the pool (SQLite allows one writer at a time whatever the size). |
+| `database-pool-size` | unset | Connections in the pool. Unset: PostgreSQL uses [`drishti.db.pool.size`](#drishtidbpool--database-connection-pools) (`20`), with its times and leak detection; SQLite is an embedded file with one writer at a time, is not pooled in that sense, and keeps `8`. |
 | `refresh-seconds` | `15` | How soon servers sharing one database see each other's role and pack changes. |
 | `iterations` | `240000` | PBKDF2-HMAC-SHA256 iterations for new password hashes. |
 | `min-password-length` | `10` | The shortest password accepted. |
@@ -1544,7 +1568,7 @@ The JDBC driver jar goes on the class path or in `plugin-dir`.
 | Setting | Default | Meaning |
 |---|---|---|
 | `url`, `user`, `password` | empty | Connection. Keep the password in the environment. |
-| `pool-size` | `4` | Connections kept. A broken connection is reopened; the connector starts even if the database is down. |
+| `pool-size` | `20` (`drishti.db.pool.size`) | Connections the pool opens at most; the rest of the [pool settings](#drishtidbpool--database-connection-pools) (`pool-min-idle`, `pool-idle-timeout`, `pool-max-lifetime`, `pool-connection-timeout`, `pool-leak-threshold`, `statement-timeout`) are read here too. A broken connection is replaced; the connector starts even if the database is down. |
 | `query.<kind>` | none | Query mode: SQL with one `?` for the id, or named `:id` and `:asOf` (the business date). The first row is the document: each column a field, or a column named `json` as the whole document; optional `generation` and `business_date` columns. A `json`/`jsonb` column becomes nested data. |
 | `query.<kind>.<part>`, `part-shape.<kind>.<part>` | none, `list` | Query mode: more of the entity from other tables; its rows become the field `<part>` (a list, or with `object` the first row). Parts run at once with the entity's query. |
 | `ids.<kind>` | none | Query mode: a day's ids (and optionally a title) for type-ahead, read every `refresh-seconds`. |
@@ -1766,7 +1790,7 @@ sizing and measurements: [DUCKDB_CONNECTOR.md](../connectors/DUCKDB_CONNECTOR.md
 | `table` | required | `schema.entities`, the data domain this connector serves |
 | `memory-limit` | `1GB` | DuckDB's memory limit for the shared instance (native memory, outside the Java heap); the first connector on a file sets it |
 | `threads` | every core | DuckDB's threads for the shared instance; the first connector on a file sets it |
-| `pool-size` | `4` | reads of this connector at once; at least `scan-threads` plus the concurrent reads you expect |
+| `pool-size` | `4` | reads of this connector at once; at least `scan-threads` plus the concurrent reads you expect. DuckDB is an embedded, in-process file, so there are no connections to pool: this is a limit on reads, not a [connection pool](#drishtidbpool--database-connection-pools), and `drishti.db.pool.*` does not apply |
 | `kinds` | the kinds the file holds | comma list of kinds to serve |
 | `mode.<kind>` | `snapshot` | `snapshot` or `effective` |
 | `lookback-days` | `10` | how far back a snapshot read looks for the newest day on or before the date asked |
@@ -1799,6 +1823,7 @@ A document per entity per business day, in a collection per data domain. Design,
 | `columns-cache-mb`, `columns-seconds` | `1024`, `300` | memory for days' column sets; after this a day is re-read in the background |
 | `max-load-rows`, `reverse-index` | `200000`, `true` | the most documents a reverse lookup reads without promoted fields; `false` turns reverse lookups off |
 | `connect-timeout-ms` | `3000` | connection and server-selection timeout |
+| `pool-size` and the other `pool-*` keys, `statement-timeout` | `20` ... | The driver's connection pool: `maxPoolSize`, `minPoolSize`, idle and life times, `maxWaitTime`, socket read timeout; see [`drishti.db.pool`](#drishtidbpool--database-connection-pools). |
 
 TLS and certificate log-in: `tls.enabled: true` (or `tls=true` in the `uri`) with the shared [`tls.*`](#tls--tls-for-connectors) settings, and `auth-mechanism: x509` (optionally `x509-user`) to log in with the client certificate ([MONGODB_CONNECTOR.md, Security](../connectors/MONGODB_CONNECTOR.md#security-tls-certificate-log-in-and-credentials)).
 
@@ -1820,6 +1845,7 @@ Today and recent days in memory, with live updates; history behind it in Delta L
 | `max-load-rows`, `reverse-index` | `200000`, `true` | the most documents a reverse lookup reads without promoted fields; `false` turns reverse lookups off |
 | `live` | `true` | subscribe to `<domain>:changes` and push changed entities to open views |
 | `timeout-ms` | `5000` | connect and command timeout |
+| `pool-size`, `pool-min-idle`, `pool-idle-timeout`, `pool-leak-threshold`, `pool-pipeline-depth` | `20`, `2`, `10m`, `60s`, `32` | The connection pool: Lettuce connections are multiplexed, so one carries many commands; another is opened only when every open one has `pool-pipeline-depth` commands in flight, up to `pool-size`, and extra idle ones are closed. See [`drishti.db.pool`](#drishtidbpool--database-connection-pools). |
 
 TLS: a `rediss://` `uri` with the shared [`tls.*`](#tls--tls-for-connectors) settings for a private CA or a client certificate; the Lettuce `verifyPeer` URI option still works, deprecated ([REDIS_CONNECTOR.md, Security](../connectors/REDIS_CONNECTOR.md#security-tls-and-credentials)).
 
@@ -1847,6 +1873,7 @@ and [AEROSPIKE_CONNECTOR.md](../connectors/AEROSPIKE_CONNECTOR.md).
 | `max-load-rows` | `200000` | Record limit of a reverse-lookup scan over documents (kinds without promoted bins). |
 | `connect-timeout-ms` | `3000` | |
 | `user`, `password` | none | Security-enabled clusters. |
+| `pool-size`, `pool-min-idle`, `pool-idle-timeout`, `statement-timeout` | `20`, `2`, `10m`, `5m` | The client's connection pool, **per node**: `maxConnsPerNode`, `minConnsPerNode`, `maxSocketIdle`, read and write `totalTimeout`. See [`drishti.db.pool`](#drishtidbpool--database-connection-pools). |
 | `source-name` | `aerospike` (a connector: its name) | Provenance source. |
 
 Retention is the records' time to live, set by the loader (`tools/load-aerospike.sh --ttl-days N`); the connector

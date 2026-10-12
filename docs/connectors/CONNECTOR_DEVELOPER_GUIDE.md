@@ -1705,8 +1705,13 @@ it.
   per million entities for its index and type-ahead (estimated); `activemq`/`rabbitmq` `cache-mb` (128) plus a few
   hundred bytes per entity held (estimated); `aerospike` `columns-cache-mb` (1024) of promoted
   bins plus one id per entity in the index set (not the days kept). Add them up across connectors when sizing the heap (`-Xmx`).
-- **Database connections**: `pool-size` (4) per `jdbc` connector, per server. The `postgres` profile uses 8 for
-  `trading-store`, the busiest domain.
+- **Database connections**: `pool-size` (20, the site default `drishti.db.pool.size`) per database connector, per server; the sum of the pools of all
+  servers must fit the database's `max_connections` ([OPERATIONS.md](../admin/OPERATIONS.md#sizing-the-database-connection-pools)).
+- **Writing a database connector**: do not open connections yourself. Build a `ResourcePool` from `com.ash.drishti.api.pool` with
+  `PoolSettings.resolve(ctx.settings())` (it reads `pool-size`, the site default and the other `pool-*` keys), borrow in a try-with-resources
+  (`try (var lease = pool.borrow()) { ... }`) for one unit of work, `lease.invalidate()` on a broken connection, and return `pool.stats()` from
+  `SourcePlugin.poolStats()` so Admin and Prometheus show it. For a driver with its own pool (MongoDB, Aerospike) map the same settings onto it. `ConnectionDisciplineTest`
+  fails the build on a connection opened outside a try-with-resources and on a field that holds one; the JDBC plugin's `JdbcPool` is the model.
 - **Background work**: `refresh-seconds` (Delta 10, with a search re-index every 6 × that; Aerospike 60),
   `rescan-seconds` (`file` 30, `s3` 60), `refresh-minutes` (feeds 60). Shorter means fresher search and more load on
   the store.

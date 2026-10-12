@@ -674,3 +674,12 @@ docker compose -f deploy/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 30
 SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=trading java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
+
+## Connection pool
+
+The Aerospike client keeps a pool of connections **per node**; Drishti sets it from `pool-size` (`maxConnsPerNode`, **20 by default**, or the site default
+`drishti.db.pool.size`), `pool-min-idle` (`minConnsPerNode`, 2), `pool-idle-timeout` (`maxSocketIdle`, 10m) and `statement-timeout` (the read and write
+`totalTimeout`, 5m). Admin adds the nodes up: open, in use and idle connections against `pool-size` times the number of nodes. The client does not time
+borrows (the longest borrow shows as not reported) and does not queue callers (a call finding the node's pool full fails at once), so `pool-connection-timeout`,
+`pool-max-lifetime` and `pool-leak-threshold` do not apply. The loader takes `--pool-size N` (default 20, per node) and keeps writes in flight within it.
+See [CONNECTOR_FILES.md, section 14](CONNECTOR_FILES.md#14-connection-pools).
