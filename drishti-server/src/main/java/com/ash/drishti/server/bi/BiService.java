@@ -513,8 +513,13 @@ public final class BiService {
             throw new DrishtiException(ErrorCode.BI_INVALID, "kind is one of " + KINDS);
         }
         Instant now = Instant.now();
-        BiStore.Item i = new BiStore.Item("bi-" + randomId(), w.id(), kind, text(body, "title", 200, true), text(body, "description", 2000, false), p.user(),
-                tags(body.get("tags")), checkedBody(body.get("body")), "draft", 0, "none", "", audienceList(body, "audienceRoles", true),
+        String title = text(body, "title", 200, true);
+        String content = checkedBody(body.get("body"));
+        if (BiTitles.KINDS.contains(kind) && BiTitles.of(content) != null && !title.equals(BiTitles.of(content))) {
+            content = BiTitles.with(content, title);                                           // one title: the body carries the item's
+        }
+        BiStore.Item i = new BiStore.Item("bi-" + randomId(), w.id(), kind, title, text(body, "description", 2000, false), p.user(),
+                tags(body.get("tags")), content, "draft", 0, "none", "", audienceList(body, "audienceRoles", true),
                 audienceList(body, "audienceUsers", false), audienceList(body, "audiencePacks", false), "", null, now, now, p.user(), null, "");
         store.saveItem(i);
         revise(i, i.body(), text(body, "message", 500, false).isEmpty() ? "created" : text(body, "message", 500, false), p.user(), "create", 0);
@@ -756,9 +761,18 @@ public final class BiService {
             throw new DrishtiException(ErrorCode.BI_STALE, "'" + i.title() + "' was saved by " + i.updatedBy() + " since you opened it: reload it, save yours as a copy, or overwrite");
         }
         String newBody = body.containsKey("body") ? checkedBody(body.get("body")) : i.body();
+        String newTitle = body.containsKey("title") ? text(body, "title", 200, true) : i.title();
+        if (BiTitles.KINDS.contains(i.kind())) {                                       // one title: the item's and the body's agree after every save
+            String inBody = BiTitles.of(newBody);
+            if (!newTitle.equals(i.title())) {
+                newBody = BiTitles.with(newBody, newTitle);                              // renamed on the item: the body follows
+            } else if (inBody != null && !inBody.isBlank() && !inBody.equals(BiTitles.of(i.body())) && inBody.length() <= 200) {
+                newTitle = inBody;                                                       // renamed in the body: the item follows
+            }
+        }
         boolean bodyChanged = !newBody.equals(i.body());
         boolean catalogueOnly = !bodyChanged;
-        BiStore.Item n = new BiStore.Item(i.id(), i.workspace(), i.kind(), body.containsKey("title") ? text(body, "title", 200, true) : i.title(),
+        BiStore.Item n = new BiStore.Item(i.id(), i.workspace(), i.kind(), newTitle,
                 body.containsKey("description") ? text(body, "description", 2000, false) : i.description(), i.owner(),
                 body.containsKey("tags") ? tags(body.get("tags")) : i.tags(), newBody, bodyChanged && i.isPublished() ? "draft" : i.status(), i.publishedVersion(),
                 i.endorsement(), i.endorsedBy(), body.containsKey("audienceRoles") ? audienceList(body, "audienceRoles", true) : i.audienceRoles(),

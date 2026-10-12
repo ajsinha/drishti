@@ -132,6 +132,8 @@ public final class ArtifactCatalog {
                     problems, "/admin/connectors/" + name);
             r.put("plugin", c.get("plugin"));
             r.put("connectorState", c.get("state"));
+            r.put("level", c.get("level"));                      // the same level and label as the Connectors page: "with a warning" is not "on"
+            r.put("label", c.get("label"));
             r.put("kinds", c.get("kinds"));
             r.put("hasFile", connectors.files().exists(name));
             out.add(r);
