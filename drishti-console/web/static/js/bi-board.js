@@ -75,7 +75,7 @@
     const rid = entry.info.report;
     const qpath = '/reports/' + B.id2path(rid) + '/query';
     if (['text', 'image', 'button'].indexOf(spec.type) >= 0) { entry.frame.result(null, (host) => B.visuals.draw(host, spec, ctxFor(entry), null)); return Promise.resolve(); }
-    if (['perspective-grid', 'perspective-pivot'].indexOf(spec.type) >= 0) { return loadPerspective(entry, token, quiet, qpath); }
+    if (['perspective-grid', 'perspective-pivot', 'perspective-chart'].indexOf(spec.type) >= 0) { return loadPerspective(entry, token, quiet, qpath); }
     if (spec.type === 'python') { return loadPython(entry, token, quiet); }
     if (!quiet) { entry.frame.busy(); }
     return B.enqueue(() => B.api('POST', qpath, { page: entry.info.page, visual: spec.id, state: {} })).then((res) => {

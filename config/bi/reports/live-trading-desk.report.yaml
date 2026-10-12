@@ -117,3 +117,14 @@ pages:
         wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm, trade.notional] }
         format: { aggregates: { trade.mtm: sum, trade.notional: sum } }
         alt: Pivot table of net mark to market and notional by desk and currency, recomputed as trades tick
+
+  - id: chart
+    title: Chart
+    visuals:
+      - id: mtm-chart
+        type: perspective-chart         # Perspective's chart plugin over the same pivot; the gear opens its settings panel and, for the report's editor, the view can be saved back here as format.view
+        title: Net MTM by desk and currency
+        at: { x: 0, y: 0, w: 12, h: 12 }
+        wells: { rows: [trade.desk], columns: [trade.currency], values: [trade.mtm] }
+        format: { plugin: Y Bar, aggregates: { trade.mtm: sum } }
+        alt: Bar chart of net mark to market for each desk, split by currency, redrawn as trades tick

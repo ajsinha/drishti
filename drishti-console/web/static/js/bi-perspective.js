@@ -50,6 +50,27 @@
   }
   P.boot = boot;
 
+  /** The chart plugin (d3fc: Y Bar, Y Line, X/Y Scatter, Heatmap, Treemap, Sunburst ...), loaded the first time a perspective-chart needs it. */
+  let charts = null;
+  function bootCharts() {
+    if (!charts) {
+      charts = import(BASE + '/d3fc/cdn/perspective-viewer-d3fc.js');
+      charts.catch(() => { charts = null; });
+    }
+    return charts;
+  }
+  const VIEW_DROP = ['settings', 'theme', 'title'];
+  /** The state of the settings panel as the report keeps it (format.view): Perspective's own save(), less what the page decides (theme, whether the panel is open) and what is empty. */
+  P.cleanView = function (saved) {
+    const out = {};
+    Object.keys(saved || {}).forEach((k) => {
+      const v = saved[k];
+      if (VIEW_DROP.indexOf(k) >= 0 || v == null || (Array.isArray(v) && !v.length) || (typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)) { return; }
+      out[k] = v;
+    });
+    return out;
+  };
+
   const theme = () => (/light|paper/.test(document.documentElement.dataset.theme || '') ? 'Pro Light' : 'Pro Dark');
   const short = (f) => String(f).slice(String(f).indexOf('.') + 1);
   const stylesReady = () => Promise.all(B.qa('link[rel=stylesheet]').map((l) => (l.sheet ? null : new Promise((r) => { l.addEventListener('load', r); l.addEventListener('error', r); }))));
@@ -57,17 +78,20 @@
   /** The viewer's settings for a visual: the columns of a grid; the rows, columns and aggregates of a pivot (sum for numbers, count for the rest). */
   async function config(spec, table) {
     const f = spec.format || {};
-    const base = { plugin: 'Datagrid', settings: false, theme: theme() };
+    const base = { plugin: spec.type === 'perspective-chart' ? (f.plugin || 'Y Bar') : 'Datagrid', settings: false, theme: theme() };
+    let made;
     if (spec.type === 'perspective-grid') {
-      return Object.assign(base, { columns: (spec.wells.columns || []).map(short) }, f.sort ? { sort: f.sort } : {});
+      made = Object.assign(base, { columns: (spec.wells.columns || []).map(short) }, f.sort ? { sort: f.sort } : {});
+    } else {
+      const schema = await table.schema();
+      const aggregates = {};
+      (spec.wells.values || []).map(short).forEach((c) => {
+        const named = f.aggregates && (f.aggregates[spec.wells.values.find((w) => short(w) === c)] || f.aggregates[c]);
+        aggregates[c] = named || (schema[c] === 'integer' || schema[c] === 'float' ? 'sum' : 'count');
+      });
+      made = Object.assign(base, { group_by: (spec.wells.rows || []).map(short), split_by: (spec.wells.columns || []).map(short), columns: Object.keys(aggregates), aggregates });
     }
-    const schema = await table.schema();
-    const aggregates = {};
-    (spec.wells.values || []).map(short).forEach((c) => {
-      const named = f.aggregates && (f.aggregates[spec.wells.values.find((w) => short(w) === c)] || f.aggregates[c]);
-      aggregates[c] = named || (schema[c] === 'integer' || schema[c] === 'float' ? 'sum' : 'count');
-    });
-    return Object.assign(base, { group_by: (spec.wells.rows || []).map(short), split_by: (spec.wells.columns || []).map(short), columns: Object.keys(aggregates), aggregates });
+    return f.view && typeof f.view === 'object' ? Object.assign(made, f.view, { settings: false, theme: made.theme }) : made;     // a saved view (format.view) is what the settings panel left
   }
 
   /** The state of one table of a live answer: the counters the next "since" is built from. */
@@ -99,6 +123,7 @@
 
     async function build(first) {
       const client = await boot();
+      if (spec.type === 'perspective-chart' || (spec.format && spec.format.view && /^(Y |X |X\/Y|Heatmap|Treemap|Sunburst|Candlestick|OHLC)/.test(spec.format.view.plugin || ''))) { await bootCharts(); }
       await stylesReady();
       table = await client.table(first.buffer, { index: 'id' });
       viewer = document.createElement('perspective-viewer');
@@ -173,6 +198,16 @@
         box.setAttribute('data-psp-rows', String(size));
         box.setAttribute('data-psp-changed', String(res.rowCount));
       },
+      /** Opens or closes Perspective's own settings panel (columns, group by, split by, aggregates, sort, filter, the plugin). Returns whether it is open. */
+      async toggleSettings() {
+        if (!viewer) { return false; }
+        await viewer.toggleConfig();
+        const open = !!(await viewer.save()).settings;
+        box.setAttribute('data-psp-settings', open ? 'open' : 'closed');
+        return open;
+      },
+      /** The state of the viewer as a report keeps it (format.view), or null when Perspective is not running (the plain table). */
+      async saveView() { return viewer ? P.cleanView(await viewer.save()) : null; },
       /** Rows now in the table, for tests and for the line under the visual. */
       size: () => (table ? table.size() : Promise.resolve(lastRes ? lastRes.rowCount : 0)),
       viewer: () => viewer,

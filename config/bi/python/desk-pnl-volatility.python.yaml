@@ -33,6 +33,19 @@ target: both                     # server, browser or both
 timeout: 10                      # seconds
 memory: 256                      # megabytes
 params: { min_trades: 2 }        # defaults the function reads; a visual may override them in format.params
+tests:                           # shipped with the item: Check runs them in the console's sandbox, and a publish through the console is refused while one fails
+  - name: the standard deviation of one desk
+    input: { columns: [pnl1d], rows: [[1.0], [2.0], [3.0], [4.0]] }
+    expect: 1.2909944
+    tolerance: 0.000001
+  - name: too few trades is zero
+    input: { columns: [pnl1d], rows: [[5.0]] }
+    expect: 0.0
+  - name: a desk of its own in a grouped call
+    input: { columns: [desk, pnl1d], rows: [[FX, 1.0], [FX, 3.0], [RATES, 10.0], [RATES, 14.0]] }
+    by: [desk]
+    expect: { FX: 1.4142136, RATES: 2.8284271 }
+    tolerance: 0.000001
 source: |
   def compute(table, params):
       """One number for the rows of one group."""

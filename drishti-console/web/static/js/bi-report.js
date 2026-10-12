@@ -92,6 +92,10 @@
     if (group === 'python') { return out; }                                        // a Python result is drawn from rows Python was handed: no alert, drill or marks
     if (B.ai && group !== 'python') { out.push(B.ai.explainButton(spec, mk)); }                                  // Explain this number: hidden unless the server's AI layer is on
     out.push(alertButton(spec, mk));                                               // Alert me: every visual that shows numbers, live ones too (a live source can alert on change)
+    if (group === 'perspective') {                                                  // Perspective's settings panel, and for the report's editor the view saved back into the YAML
+      out.push(mk('bi-psp-settings', 'sliders', 'Settings: columns, groups, aggregates, the chart', () => { const e = frames.get(spec.id); if (e && e.psp) { e.psp.toggleSettings().catch(() => {}); } }, { 'data-act': 'psp-settings' }));
+      if (rep && rep.mayEdit && !rep.shipped) { out.push(mk('bi-psp-save', 'floppy', 'Save this view into the report', () => { saveView(spec); }, { 'data-act': 'psp-save' })); }
+    }
     if (group === 'perspective' || group === 'live') { return out; }
     const sel = state.selections.find((s) => s.visual === spec.id);
     const path = state.drills[spec.id] || [];
@@ -184,6 +188,26 @@
       entry.frame.error(e);
       if (e.traceback) { entry.frame.body.appendChild(B.h('pre', { class: 'bi-py-trace', 'data-py-trace': '', text: e.traceback })); }
     });
+  }
+
+  /** The visual's view (what the settings panel left: plugin, columns, group by, split by, aggregates, sort, filter) written into the report's draft as format.view. */
+  function saveView(spec) {
+    const e = frames.get(spec.id);
+    if (!e || !e.psp) { return; }
+    e.psp.saveView().then((view) => {
+      if (!view) { say('Perspective is not running in this tab, so there is no view to save.', true); return null; }
+      const path = '/items/' + B.id2path(reportId);
+      return B.api('GET', path).then((item) => B.api('POST', '/reports/validate', { yaml: item.body || '' }).then((v) => {
+        if (!v.report) { throw new Error('The report cannot be read, so the view cannot be saved into it.'); }
+        const hit = [].concat.apply([], v.report.pages.map((p) => p.visuals)).find((x) => x.id === spec.id);
+        if (!hit) { throw new Error('The draft of the report no longer has the visual ' + spec.id + '.'); }
+        hit.format = Object.assign({}, hit.format, { view });
+        return B.api('POST', '/reports/format', { report: v.report });
+      }).then((f) => B.api('PUT', path, { body: f.yaml }))).then(() => {
+        say('View saved into the draft of the report (format.view of ' + spec.id + '). Publish the report for everyone to see it.');
+        canvas.setAttribute('data-view-saved', spec.id);
+      });
+    }).catch((err) => say(err.detail || err.message, true));
   }
 
   function sawLive(res) { if (res && res.live && res.live.generation > seenGeneration) { seenGeneration = res.live.generation; } }

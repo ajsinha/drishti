@@ -79,6 +79,8 @@ public final class VisualCatalogue {
         // streaming BI (phase 5): Perspective grids and pivots over the rows of one table, and a rolling line of measures
         put("perspective-grid", "perspective", "columns", new Well(Kind.FIELD, true, 0));
         put("perspective-pivot", "perspective", "rows", new Well(Kind.FIELD, true, 0), "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.FIELD, true, 0));
+        // a Perspective chart (wave C): the d3fc plugin over the same rows as a pivot, the plugin named in format.plugin
+        put("perspective-chart", "perspective", "rows", new Well(Kind.FIELD, true, 0), "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.FIELD, true, 0));
         // Python (RUPAKA.md section 20.8): the rows of one table (or a Python measure) go to the Python runner; the visual draws what the item returns
         put("python", "python", "columns", new Well(Kind.FIELD, false, 0), "values", new Well(Kind.MEASURE, false, 1));
         // a Vega-Lite specification written in the report (format.spec), its data the rows of these wells (wave C, RUPAKA.md section 20.13)

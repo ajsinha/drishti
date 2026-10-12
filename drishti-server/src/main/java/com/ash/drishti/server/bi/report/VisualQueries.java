@@ -176,7 +176,7 @@ public final class VisualQueries {
                 f.addAll(visual.well("details"));
             }
             case "table" -> visual.well("columns").stream().filter(x -> !ds.measures().containsKey(x)).forEach(f::add);
-            case "perspective-grid", "perspective-pivot" -> perspectiveFields(f);
+            case "perspective-grid", "perspective-pivot", "perspective-chart" -> perspectiveFields(f);
             case "python" -> pythonFields(f);
             case "live-chart" -> { }
             case "matrix" -> {
@@ -237,7 +237,7 @@ public final class VisualQueries {
     private List<String> measuresOf() {
         Set<String> m = new LinkedHashSet<>();
         switch (visual.type()) {
-            case "perspective-grid", "perspective-pivot", "python" -> { }
+            case "perspective-grid", "perspective-pivot", "perspective-chart", "python" -> { }
             case "scatter", "bubble" -> {
                 m.addAll(visual.well("x"));
                 m.addAll(visual.well("y"));

@@ -1,3 +1,17 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
 """Wave C, Calc's BI client (docs/guides/PYTHON_CALC.md "The BI client"): ``drishti_bi.query`` asks the page for the BI engine's answer as the person and returns a
 DataFrame; ``datasets`` and ``describe`` read the catalogue; ``walk`` hands a frame to the Graphic Walker frame, which is sandboxed under its own narrow policy.
 The module runs in Pyodide; here it is imported with the two Pyodide modules it needs stood in."""

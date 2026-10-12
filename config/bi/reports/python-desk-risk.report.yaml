@@ -12,8 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# SAMPLE REPORT: Python in a report (docs/guides/PYTHON_BI.md). One page, two python visuals over the trades-basic dataset:
-# a Python MEASURE (Desk P&L volatility, declared in the dataset and shown as bars) and a Python VISUAL (a P&L histogram).
+# SAMPLE REPORT: Python in a report (docs/guides/PYTHON_BI.md). Over the trades-basic dataset, three python visuals on one page:
+# a Python MEASURE (Desk P&L volatility, declared in the dataset and shown as bars), a Python VISUAL (a P&L histogram) and a Python VISUAL that returns a Vega-Lite
+# specification; and a second page with a vega-lite visual written in the report itself (REPORTS.md, "Vega-Lite visuals").
 # Each visual hands the Python runner the rows the person looking may see; the runner is the console's sandboxed worker, or the
 # browser's Pyodide (format.run: server, browser or auto).
 rachana: 1
@@ -45,3 +46,28 @@ pages:
         wells: { columns: [trade.desk, trade.pnl1d] }  # the rows handed to Python
         format: { python: pnl-histogram, params: { bins: 24 }, run: auto }
         alt: Histogram of one-day P&L
+      - id: strip
+        type: python
+        title: One-day P&L by desk (Python, Vega-Lite)
+        at: { x: 0, y: 6, w: 12, h: 6 }
+        wells: { columns: [trade.desk, trade.pnl1d] }
+        format: { python: pnl-vega, run: server }
+        alt: Dots of one-day P&L for each desk with each desk's median marked
+
+  - id: vega
+    title: Vega-Lite
+    visuals:
+      - id: mtm-by-desk
+        type: vega-lite                  # the specification is in format.spec; its data is the rows of the wells (put no data in it); fields are named without the table
+        title: Net MTM by desk (Vega-Lite)
+        at: { x: 0, y: 0, w: 8, h: 7 }
+        wells: { axis: [trade.desk], values: [MTM, Trades] }
+        format:
+          spec:
+            mark: { type: bar, cornerRadiusEnd: 3 }
+            encoding:
+              x: { field: desk, type: nominal, sort: "-y", title: Desk }
+              y: { field: MTM, type: quantitative, title: Net MTM }
+              color: { condition: { test: "datum.MTM < 0", value: "#b3261e" }, value: "#4f7cff" }
+              tooltip: [{ field: desk }, { field: MTM, format: ",.0f" }, { field: Trades }]
+        alt: Bars of net mark to market for each desk, red where it is negative

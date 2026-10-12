@@ -1,3 +1,18 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
 /* Wave C (docs/guides/ANALYSE.md "In the browser"): the Slice and SQL tabs of Analyse run in the browser, on the extract the page already holds, with DuckDB-Wasm
    (vendored, installed by tools/fetch-duckdb-wasm.sh, loaded the first time Slice or SQL needs it). The rows never leave the tab for this: they are the rows the server
    built for the person (row rules and masks applied), and DuckDB runs on a copy in memory. The server path stays as the fallback: no DuckDB-Wasm installed, a browser

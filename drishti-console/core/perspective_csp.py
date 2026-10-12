@@ -30,7 +30,7 @@ from __future__ import annotations
 PERSPECTIVE_VERSION = "3.8.0"
 PERSPECTIVE_BASE = f"/static/vendor/perspective/{PERSPECTIVE_VERSION}"
 PERSPECTIVE_WORKERS = (f"{PERSPECTIVE_BASE}/perspective/cdn/perspective-server.worker.js",)
-VISUAL_TYPES = ("perspective-grid", "perspective-pivot")
+VISUAL_TYPES = ("perspective-grid", "perspective-pivot", "perspective-chart")
 
 # the four <style> texts the viewer and the datagrid write for a grid and a pivot (settings panel closed) on the report page, measured on the real page by
 # tools/perspective-style-hashes.py (the phase 0 page, which also loads the chart plugin, needs two more: core/app.py POC_EXTRA_HASHES)

@@ -420,6 +420,39 @@ public final class ReportValidator {
     private static final Set<String> AGGREGATES = Set.of("sum", "avg", "count", "distinct count", "min", "max", "first", "last", "median", "dominant", "unique");
 
     /** A Perspective visual shows the rows of ONE table, unaggregated: its fields must all be columns of the same table; {@code format.aggregates} names columns of the pivot. */
+    /** The chart plugins of Perspective's d3fc package, and the keys of a saved view (what Perspective's own save() gives, less what the report decides). */
+    static final Set<String> CHART_PLUGINS = Set.of("Candlestick", "Heatmap", "OHLC", "Sunburst", "Treemap", "X Bar", "X/Y Line", "X/Y Scatter", "Y Area", "Y Bar", "Y Line", "Y Scatter");
+    static final Set<String> VIEW_KEYS = Set.of("plugin", "plugin_config", "columns", "group_by", "split_by", "aggregates", "sort", "filter", "expressions", "columns_config");
+    static final int VIEW_MAX_CHARS = 20_000;
+
+    /** {@code format.plugin} of a chart and {@code format.view}, the settings panel's state saved into the report (a mapping of Perspective's configuration keys). */
+    private void perspectiveView(Report.Visual v, String p) {
+        Object plugin = v.format().get("plugin");
+        if ("perspective-chart".equals(v.type()) && plugin != null && !CHART_PLUGINS.contains(String.valueOf(plugin))) {
+            err(ReportParser.VISUAL, p + ".format.plugin", "'" + plugin + "' is not a chart of Perspective; use " + String.join(", ", new java.util.TreeSet<>(CHART_PLUGINS)));
+        }
+        if (plugin != null && !"perspective-chart".equals(v.type())) {
+            err(ReportParser.VISUAL, p + ".format.plugin", "plugin is for a perspective-chart (the grid and the pivot are Perspective's datagrid)");
+        }
+        Object view = v.format().get("view");
+        if (view == null) {
+            return;
+        }
+        if (!(view instanceof Map<?, ?> m)) {
+            err(ReportParser.VISUAL, p + ".format.view", "view is the settings panel's state: a mapping of plugin, columns, group_by, split_by, aggregates, sort, filter, expressions");
+            return;
+        }
+        m.keySet().stream().filter(k -> !VIEW_KEYS.contains(String.valueOf(k)))
+                .forEach(k -> out.add(new Problem("warning", ReportParser.VISUAL, p + ".format.view." + k, "'" + k + "' is not a key of a saved view and is ignored (keys: " + String.join(", ", new java.util.TreeSet<>(VIEW_KEYS)) + ")")));
+        Object vp = m.get("plugin");
+        if (vp != null && !CHART_PLUGINS.contains(String.valueOf(vp)) && !"Datagrid".equals(String.valueOf(vp))) {
+            err(ReportParser.VISUAL, p + ".format.view.plugin", "'" + vp + "' is not a plugin of Perspective (Datagrid or one of " + String.join(", ", new java.util.TreeSet<>(CHART_PLUGINS)) + ")");
+        }
+        if (VegaSpecs.size(view) > VIEW_MAX_CHARS) {
+            err(ReportParser.VISUAL, p + ".format.view", "the saved view is over " + VIEW_MAX_CHARS + " characters");
+        }
+    }
+
     private void perspective(Report.Visual v, String p) {
         Set<String> tables = new java.util.LinkedHashSet<>();
         v.wells().values().forEach(l -> l.forEach(item -> {
@@ -437,6 +470,7 @@ public final class ReportValidator {
         if (tables.size() > 1) {
             err(ReportParser.VISUAL, p + ".wells", "a " + v.type() + " shows the rows of one table, not " + String.join(" and ", tables) + ": join them in a dataset table, or use a matrix");
         }
+        perspectiveView(v, p);
         Object agg = v.format().get("aggregates");
         if (agg != null) {
             if (!(agg instanceof java.util.Map<?, ?> m)) {
