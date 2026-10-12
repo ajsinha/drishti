@@ -113,6 +113,7 @@ public final class PackDatasets {
                     }
                     try {
                         DatasetDef d = generate(p, kind, map(map(bi.get("datasets")).get(kind)), vocabulary);
+                        d = withDescription(d, kindDescription(p, kind, d));
                         next.put(d.name(), d);
                     } catch (RuntimeException e) {
                         // a kind whose columns cannot be read now gets no dataset until the packs change again
@@ -130,6 +131,35 @@ public final class PackDatasets {
     @SuppressWarnings("unchecked")
     private static Map<String, Object> map(Object o) {
         return o instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
+    }
+
+    private static DatasetDef withDescription(DatasetDef d, String description) {
+        return new DatasetDef(d.name(), d.version(), d.id(), d.title(), description, d.owner(), d.sample(), d.endorsement(), d.generated(), d.source(), d.grain(),
+                d.columns(), d.time(), d.refresh(), d.security(), d.extendsRef(), d.where(), d.ai(), d.tests(), d.rollups());
+    }
+
+    /**
+     * What a dataset card says about one kind (not about the whole pack): the kind's {@code description:} in the pack's {@code config/about.yaml}
+     * ({@code kinds.<kind>.description}), else what its glossary says the kind is, else its grain in words with the pack's title.
+     */
+    static String kindDescription(Pack p, String kind, DatasetDef d) {
+        Path about = p.resolve("config/about.yaml");
+        if (Files.isRegularFile(about)) {
+            try {
+                JsonNode k = LayerYaml.YAML.readTree(Files.readString(about)).path("kinds").path(kind);
+                if (k.path("description").isTextual() && !k.path("description").asText().isBlank()) {
+                    return k.path("description").asText().strip();
+                }
+                JsonNode self = k.path("glossary").path(kind).path("means");
+                if (self.isTextual() && !self.asText().isBlank() && !self.asText().startsWith("The " + kind + " the line")) {
+                    return self.asText().strip();
+                }
+            } catch (java.io.IOException | RuntimeException e) {
+                // an unreadable about file: the words below
+            }
+        }
+        return d.title() + ": one row per " + kind.replace('-', ' ') + " per business date, from the " + (p.title() == null || p.title().isBlank() ? p.name() : p.title())
+                + " pack.";
     }
 
     /** The {@code vocabulary:} of the pack's {@code config/about.yaml}, or empty. */

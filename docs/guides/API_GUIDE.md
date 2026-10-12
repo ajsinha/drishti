@@ -1677,6 +1677,7 @@ The complete list (from `ErrorCode` in `drishti-common`). The first digit groups
 | DRS-9109 | 422 | Source cycle | A model that reaches itself through a dataset whose source is a model (Check, the bind of a query, or at run time): `model:a -> dataset:x -> model:a` |
 | DRS-9120 | 422 | Model invalid | Publishing a data model whose Check has an error (`DRS-9120` to `DRS-9129` in the problem list, [BI_MODEL_SPEC.md section 2.11](../architecture/BI_MODEL_SPEC.md#211-model-problems)) |
 | DRS-9126 | 409 | Breaking change | A published model or dataset loses a measure, column or relationship (by stable id or name), makes a relationship inactive or changes a grain key without a new major version; or the version goes down |
+| DRS-9131 | (warning) | Roles without a rule | Check names the readers of a dataset that no row rule of the model names: they see no rows (`meta.noAccess` in their answers) |
 | DRS-9130 | 409 | Security safeguard | A model where a role restricted by a row rule elsewhere would see every row of a dataset with no rule: give that dataset a rule, or write `may-see-all: { <alias>: [<role>] }` (audited `bi-model-may-see-all`) |
 | DRS-9150 | 422 | Model query shape | An unknown key, a wrong type, `mq` missing or not 1, two time forms, `params` before wave W6 |
 | DRS-9151 | 404 | Model not found | No model (or dataset, for `dataset:<name>`) of that name and version the caller may read, a retired major, or a model whose Check has errors |

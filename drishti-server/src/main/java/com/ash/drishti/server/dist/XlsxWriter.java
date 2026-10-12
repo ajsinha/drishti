@@ -198,7 +198,7 @@ public final class XlsxWriter {
         for (List<Object> values : s.rows()) {
             StringBuilder cells = new StringBuilder();
             for (int c = 0; c < values.size(); c++) {
-                cells.append(cell(col(c), r, values.get(c)));
+                cells.append(cell(col(c), r, s.shown(values, c)));
             }
             b.append(row(r++, cells.toString()));
         }

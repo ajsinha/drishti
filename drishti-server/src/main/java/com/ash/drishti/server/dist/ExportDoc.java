@@ -55,6 +55,12 @@ public record ExportDoc(String title, String subtitle, List<String> notes, List<
             masked = masked == null ? List.of() : List.copyOf(masked);
         }
 
+        /** What a cell shows: an empty cell of a column masked for this reader reads {@link ExportDoc#MASK}, in every format (as on the screen). */
+        public Object shown(List<Object> row, int column) {
+            Object v = column < row.size() ? row.get(column) : null;
+            return (v == null || "".equals(v)) && column < columns.size() && masked.contains(columns.get(column)) ? MASK : v;
+        }
+
         public boolean isNumeric(int column) {
             for (List<Object> r : rows) {
                 if (column < r.size() && r.get(column) != null) {
@@ -64,6 +70,9 @@ public record ExportDoc(String title, String subtitle, List<String> notes, List<
             return false;
         }
     }
+
+    /** The text of a masked cell in every format (CSV, Excel, PDF, PNG, email), as the screen shows it. */
+    public static final String MASK = "\u2022\u2022\u2022";
 
     public int rowCount() {
         return sections.stream().mapToInt(s -> s.rows().size()).sum();

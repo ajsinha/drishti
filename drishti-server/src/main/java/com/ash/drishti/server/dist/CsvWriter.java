@@ -40,7 +40,11 @@ public final class CsvWriter {
             }
             line(b, s.columns());
             for (List<Object> row : s.rows()) {
-                line(b, row.stream().map(CsvWriter::cell).toList());
+                List<String> cells = new java.util.ArrayList<>();
+                for (int c = 0; c < row.size(); c++) {
+                    cells.add(cell(s.shown(row, c)));                      // a masked cell reads as on the screen and in Excel
+                }
+                line(b, cells);
             }
         }
         return b.toString().getBytes(StandardCharsets.UTF_8);

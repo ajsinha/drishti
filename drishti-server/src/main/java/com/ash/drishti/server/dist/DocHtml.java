@@ -60,7 +60,7 @@ public final class DocHtml {
                 b.append("<tr>");
                 List<Object> row = s.rows().get(r);
                 for (int c = 0; c < s.columns().size(); c++) {
-                    Object v = c < row.size() ? row.get(c) : null;
+                    Object v = s.shown(row, c);
                     b.append("<td style=\"").append(TD).append(v instanceof Number ? "text-align:right;" : "").append("\">").append(esc(DocFmt.cell(v))).append("</td>");
                 }
                 b.append("</tr>");
@@ -111,7 +111,7 @@ public final class DocHtml {
     /** A card's value as a page shows it; for a masked measure with nothing to show, the word that says why. */
     static String cardValue(ExportDoc.Section s, List<Object> row, int c) {
         String v = DocFmt.cell(c < row.size() ? row.get(c) : null);
-        return v.isEmpty() && s.masked().contains(s.columns().get(c)) ? "(masked)" : v;
+        return v.isEmpty() && s.masked().contains(s.columns().get(c)) ? ExportDoc.MASK : v;
     }
 
     public static String text(ExportDoc doc, int maxRows) {
@@ -141,7 +141,7 @@ public final class DocHtml {
                 List<Object> row = s.rows().get(r);
                 StringBuilder line = new StringBuilder();
                 for (int c = 0; c < s.columns().size(); c++) {
-                    line.append(c > 0 ? " | " : "").append(DocFmt.cell(c < row.size() ? row.get(c) : null));
+                    line.append(c > 0 ? " | " : "").append(DocFmt.cell(s.shown(row, c)));
                 }
                 b.append(line).append('\n');
             }

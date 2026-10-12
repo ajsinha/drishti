@@ -779,7 +779,7 @@ options: { layer: auto, explain: false, format: json }   # auto | columns | roll
 | `time` | exactly one of `as-of`, `window`, `live`; absent: the model's default (today: the latest business date with rows) |
 | `totals` | `grand` (no fields), `subtotals` (every prefix of `fields`), or explicit `levels` (each a subset of `fields`). Only non-additive measures are computed per level; additive ones are summed by the client (REPORTS.md 3.2, now driven by declared additivity) |
 | `drill` | a hierarchy of the model and the values clicked; the compiler replaces the hierarchy's field by the next level and adds `eq` filters |
-| `shape: rows` | no measures; the rows of the fields' **one** dataset (plus many-to-one attributes), with its security; cut at `bi.explore.max_rows`; used by Analyse extracts and *Show the rows* |
+| `shape: rows` | no measures; **one row per row** of the fields' **one** dataset (plus many-to-one attributes), duplicates kept (never `DISTINCT`: the sums of a rows extract equal the measures), with its security; cut at `bi.explore.max_rows`; used by Analyse extracts and *Show the rows* |
 | `limit` | 1 to the server maximum; default 500 grouped, 10,000 rows |
 
 ### 5.2 The answer

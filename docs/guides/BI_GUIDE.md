@@ -651,7 +651,10 @@ sections 13 to 22 still works as written: version-1 datasets are read as models 
 * **Datasets from the packs.** Every kind of every pack you may open is already a dataset, named `pack.<pack>.<kind>`, certified by its pack, read-only,
   versioned with the pack. Nobody builds them. A card shows the pack, the time mode and the number of columns; **Use** starts a report on it straight away;
   the title opens the dataset's page.
-* **Your datasets**: the `rachana: 2` datasets you may read (a connector query, a Python table, a model's answer, a narrowed pack dataset).
+* **Your datasets**: the `rachana: 2` datasets you may read (a connector query, a Python table, a model's answer, a narrowed pack dataset), and your own
+  drafts (marked `draft: true` with their owner in `GET /bi/models`: a narrowed dataset is listed as soon as it is saved). A card's description is the
+  **kind's** (`kinds.<kind>.description` in the pack's `config/about.yaml`, else *Book: one row per book per business date, from the Banking core pack.*),
+  not the pack's.
 * **Models**: model items, and the version-1 datasets the compatibility reader serves as models. **Open the designer** edits one; **Use** starts a report.
 * **New model** asks a title and a workspace and offers every dataset as a tick box; the model opens in the designer. **New dataset** opens the wizard below.
 
@@ -713,7 +716,22 @@ DRS-9130 security: the role 'desk-head' is restricted elsewhere in this model, b
 every one of its rows. Add a rule for it on 'desk', or say so with `may-see-all: { desk: [desk-head] }` under security; until then the model cannot be published
 ```
 
-A reader no rule matches gets no rows of that dataset (the second rule above lets the author see every trade).
+A reader no rule matches gets no rows of that dataset (the second rule above lets the author see every trade). **Check names those readers** (a warning,
+`DRS-9131`, never a reason to refuse a publish: leaving a role out may be the point). The readers are the identity's roles that may use BI and open the
+dataset's pack kind; a model whose only rule on `trades` is `{ role: [bi-risk], where: "true" }` answers:
+
+```
+DRS-9131 security.rows.trades: roles without a rule see no rows of 'trades': admin, analyst, approver, author, ... Add a rule for them (where: "true" lets a
+role see every row), or leave them out on purpose: they get "you have no access to rows of trades in this model"
+```
+
+Such a reader's answer is empty and says why: the model query's `meta.warnings` holds *you have no access to rows of trades in this model: no row rule names
+your roles* and `meta.noAccess` lists the aliases (`["trades"]`; the Arrow answer carries it as `X-Bi-No-Access`), so the viewer shows that instead of *No
+rows for this selection*. The security tab's role picker reads `GET /bi/models/roles` (every role that may use BI; `?model=<ref>` keeps those that may read
+every dataset of the model).
+
+**Default measures** take their format from the column's meaning when the column names none: amounts `amount2`, counts (`Count of trade`, `count`,
+`distinct`) `integer`. Default measures are made for the model's **facts** only.
 
 **Reports on a model.** A report started from a dataset or a model says `model:` instead of `dataset:` ([REPORTS.md](REPORTS.md#18-a-report-on-a-model-wave-w1)).
 The designer's Fields pane reads the model as you see it (masked fields marked); its header says *Implicit model of Trade* with **Make it a model**, or

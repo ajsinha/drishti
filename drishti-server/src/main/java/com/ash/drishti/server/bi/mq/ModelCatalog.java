@@ -125,6 +125,14 @@ public final class ModelCatalog {
         return m;
     }
 
+    /** The roles that may read every dataset of the model {@code ref} names (the role picker of its security tab); the caller must read the model. */
+    public Set<String> readers(Principal p, String ref) {
+        ModelView v = find(p, ref).view();
+        Set<String> out = new LinkedHashSet<>(roles.all().stream().map(ModelRoles.Role::name).toList());
+        v.datasets().values().forEach(d -> out.retainAll(roles.readers(d)));
+        return out;
+    }
+
     /** Why a model item may not be deleted: something still reads it (counted by kind; the consumers API names those the caller may see). Empty when free. */
     public String deleteHold(BiStore.Item model) {
         List<Map<String, Object>> all = consumers.of(model);

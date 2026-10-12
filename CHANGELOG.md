@@ -17,6 +17,16 @@
 
 ## Unreleased
 
+- **Server: the W1 QA findings.** A model **rows** extract (`shape: rows`, Analyse, *Show the rows*) keeps one row per fact row (it was `DISTINCT`: 9 rows
+  for 60 trades); its sums equal the measures. **Make it a model** reads the designer's quoted `model: "dataset:..."`, reuses a model already written out
+  from the dataset in the workspace, and lists the other reports on the dataset to move. **Models are shared by reference**: `GET /bi/models/{ref}/consumers`
+  (and `usedBy` in `describe`) lists reports, boards, notebooks, model-answer datasets, alerts and live subscriptions; a model item is not deleted while
+  anything reads it (`409 DRS-9004`); `/mq` and report publish need read on the model, and `dataset:<item>` needs read on the dataset item. A **narrowed
+  dataset** reads as its base (Check returns the base's columns and grain; `GET /bi/layer-datasets/{id}` gives the folded YAML) and drafts are listed
+  under *Your datasets*. Check warns **`DRS-9131`** naming the roles a model's row rules leave out; their answer says *you have no access to rows of
+  <alias> in this model* (`meta.noAccess`, `X-Bi-No-Access`); `GET /bi/models/roles` feeds the role picker. Default measures format amounts `amount2` and
+  counts `integer`. Alerts refuse a number masked for their owner and a many-row visual or query without a cell or `reduce`. A masked cell reads `•••`
+  in CSV, Excel, PDF and mail too. Pack dataset cards carry the kind's description.
 - **Console: the W1 QA findings.** Analyse reads **models and pack datasets** (a grouped *Model or dataset* picker; extracts and slices go through the model
   query, shape rows; promoting a model slice to a report says it is not available yet). Alerts get a **measure of a model** source with pickers (model, measure,
   filters; no typed ids), the visual source asks which column and which row or aggregate to watch, and a masked number cannot be saved (Save looks first and says

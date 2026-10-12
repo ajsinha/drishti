@@ -23,7 +23,8 @@ Wave D: charts in Excel exports (section 1), a written summary at the top of a s
 The walk-throughs with pictures are [tutorial 11](../tutorials/11-bi-that-runs-itself.md) (export, subscribe and alerts); this is the reference.
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
-masks apply; nothing is copied from the sender's screen. A desk head's export holds her desk; an analyst whose column is masked gets the mask.
+masks apply; nothing is copied from the sender's screen. A desk head's export holds her desk; an analyst whose column is masked gets the mask. **A masked
+cell reads `•••` in every format** (CSV, Excel, PDF, PNG and the mail's body), as on the screen.
 
 ## 1. Export
 
@@ -182,11 +183,11 @@ Notional: 234,000,000
 
 Mark to market
 Masked for you: MTM.
-MTM: (masked)
+MTM: •••
 
 Average MTM per trade
 Masked for you: Average MTM per trade.
-Average MTM per trade: (masked)
+Average MTM per trade: •••
 
 MTM by desk (click a bar to filter the page)
 Not available: DRS-9021 'MTM' is masked for you: it cannot be sorted on
@@ -317,6 +318,11 @@ The `measure` of a dataset source may be a **Python measure** (a dataset measure
 3. the item's number for each group comes back and is reduced to **one number**: for a dataset source the whole input is one group (no grouping); for a visual source `reduce` (`first` by default; `sum`, `min`, `max`, `avg`, `last`, `count`) is applied to the groups, as for any visual with many rows.
 
 * A column **masked for the person** makes the reading *masked*: nothing is run and no figure is shown. The alert never judges a figure the person cannot see.
+  An alert whose number is masked for its owner **when it is saved** is refused (`422`, *the value this alert watches (MTM) is masked for you, so it could
+  never be read: an alert only watches a value its owner may see*); a mask added later makes its readings *masked*, as above.
+* A visual or model query that answers **several rows** needs the number chosen: one cell (a `state` that filters it to one row) or an aggregate
+  (`source.reduce`). Saving one without `reduce` is refused: *this visual answers 3 rows, so say which number to watch: one cell (filter it to one row with
+  source.state) or an aggregate of the rows (source.reduce: sum, min, max, avg, count, first or last)*.
 * A run that fails (the code raised, a limit, the sandbox refused something, no Python on the machine the server runs on, the runner switched off) is an **error reading** with the DRS code and its words in the history; an error reading never fires and never clears.
 * A python visual that draws a **chart** (no `measure` in its wells) has no number to watch: the alert reads as an error that says to watch a Python measure.
 * *Live* is as for the dataset behind it. A Python alert is not cheap (it starts a process for each person each time): prefer `schedule` or `after-load` to `live`.

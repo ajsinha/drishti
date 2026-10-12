@@ -264,7 +264,7 @@ public final class DocLayout {
             List<Object> row = s.rows().get(r);
             int x = M + 6;
             for (int c = 0; c < n; c++) {
-                Object v = c < row.size() ? row.get(c) : null;
+                Object v = s.shown(row, c);
                 cell(pen, x, pen.y + 12, w[c], DocFmt.cell(v), v instanceof Number, false);
                 x += w[c];
             }

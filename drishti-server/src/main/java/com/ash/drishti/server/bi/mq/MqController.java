@@ -157,10 +157,15 @@ public class MqController {
 
     /** The roles a model's row rules can name (the security tab's role picker): each with what it is for and the pack kinds it opens ({@code *}: all). */
     @GetMapping("/models/roles")
-    public Map<String, Object> roles(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+    public Map<String, Object> roles(@org.springframework.web.bind.annotation.RequestParam(required = false) String model,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
+        java.util.Set<String> readers = model == null || model.isBlank() ? null : catalog.readers(p, model);    // ?model=: those that may read its datasets
         List<Map<String, Object>> out = new ArrayList<>();
         for (ModelRoles.Role r : catalog.roles().all()) {
+            if (readers != null && !readers.contains(r.name())) {
+                continue;
+            }
             out.add(Map.of("name", r.name(), "description", r.description() == null ? "" : r.description()));
         }
         return Map.of("roles", out);
@@ -200,6 +205,7 @@ public class MqController {
             m.put("name", d.name());
             m.put("id", d.id());
             m.put("title", d.title());
+            m.put("description", d.description());                         // the kind's, not the pack's
             m.put("pack", d.generated().pack());
             m.put("kind", d.source().kind());
             m.put("version", d.version());

@@ -269,6 +269,7 @@ class ModelAcceptanceTest {
         var req = switch (method) {
             case "POST" -> post(java.net.URI.create(path));
             case "PUT" -> put(java.net.URI.create(path));
+            case "DELETE" -> org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete(java.net.URI.create(path));
             default -> get(java.net.URI.create(path));
         };
         req.header("Authorization", who);
@@ -472,5 +473,95 @@ class ModelAcceptanceTest {
         call("POST", "/api/v1/bi/items/" + onDraft + "/publish", reader("wes"), Map.of()).andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("DRS-9030")).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("not published")));
         assertThat(model).isNotBlank();
+    }
+
+    // ---- W1 QA: rows extracts, shared models, read on a model, roles without a rule, alerts that can be watched ---------------------
+
+    @Test @Order(6)
+    void aRowsExtractKeepsEveryFactRowSoItsSumsEqualTheMeasure() throws Exception {
+        Map<String, Object> time = Map.of("as-of", "2026-10-07");
+        JsonNode rows = ok(call("POST", "/api/v1/bi/mq", reader("rita"), Map.of("mq", 1, "model", "acc-model@1", "shape", "rows",
+                "select", Map.of("fields", List.of("trades.desk", "trades.notional"), "measures", List.of()), "time", time)));
+        JsonNode measure = ok(call("POST", "/api/v1/bi/mq", reader("rita"), Map.of("mq", 1, "model", "acc-model@1",
+                "select", Map.of("measures", List.of("Notional", "Trades")), "time", time)));
+        assertThat(rows.path("rowCount").asInt()).as("one row per trade, duplicates of (desk, notional) kept").isEqualTo(measure.path("rows").get(0).get(1).asInt());
+        double sum = 0;
+        for (JsonNode r : rows.path("rows")) {
+            sum += r.get(1).asDouble();
+        }
+        assertThat(sum).isEqualTo(measure.path("rows").get(0).get(0).asDouble());
+        JsonNode desks = ok(call("POST", "/api/v1/bi/mq", reader("rita"), Map.of("mq", 1, "model", "acc-model@1", "shape", "rows",
+                "select", Map.of("fields", List.of("trades.desk"), "measures", List.of()), "time", time)));
+        assertThat(desks.path("rowCount").asInt()).as("a rows extract is never DISTINCT").isEqualTo(24);
+    }
+
+    @Test @Order(7)
+    void aModelIsSharedByReferenceListsItsConsumersAndIsNotDeletedWhileTheyReadIt() throws Exception {
+        String model = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "model", "title", "Shared model", "body",
+                "rachana: 2\nmodel: wes-shared\nversion: 1.0.0\ndatasets:\n  trades: { dataset: acc-trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")))
+                .path("id").asText();
+        String body = "report: r%s\nmodel: wes-shared@1\npages:\n  - id: p\n    visuals:\n      - { id: a, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }\n";
+        String one = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "report", "title", "One", "body", body.formatted("1")))).path("id").asText();
+        String two = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "report", "title", "Two", "body", body.formatted("2")))).path("id").asText();
+        JsonNode used = ok(call("GET", "/api/v1/bi/models/" + model + "/consumers", reader("wes"), null));
+        assertThat(used.path("consumers").findValuesAsText("id")).containsExactlyInAnyOrder(one, two);
+        assertThat(ok(call("GET", "/api/v1/bi/models/wes-shared@1/describe", reader("wes"), null)).path("usedBy")).hasSize(2);
+        // deleting a report leaves the model; deleting the model is refused while a report reads it
+        call("DELETE", "/api/v1/bi/items/" + one, reader("wes"), null).andExpect(status().isNoContent());
+        ok(call("GET", "/api/v1/bi/items/" + model, reader("wes"), null));
+        call("DELETE", "/api/v1/bi/items/" + model, reader("wes"), null).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("DRS-9004"))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("1 report")));
+        call("DELETE", "/api/v1/bi/items/" + two, reader("wes"), null).andExpect(status().isNoContent());
+        call("DELETE", "/api/v1/bi/items/" + model, reader("wes"), null).andExpect(status().isNoContent());
+        // the implicit model is one shared model per dataset: every report made from the dataset is its consumer
+        String a = ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "report", "title", "Implicit A",
+                "body", body.formatted("3").replace("wes-shared@1", "\"dataset:acc-trade\"")))).path("id").asText();
+        JsonNode implicit = ok(call("GET", "/api/v1/bi/models/dataset:acc-trade/consumers", reader("wes"), null));
+        assertThat(implicit.path("consumers").findValuesAsText("id")).contains(a);
+        assertThat(ok(call("GET", "/api/v1/bi/models/dataset:acc-trade/consumers", reader("rita"), null)).path("hidden").asInt()).as("rita cannot read wes's draft").isPositive();
+    }
+
+    @Test @Order(8)
+    void usingAModelNeedsReadOnIt() throws Exception {
+        ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "model", "title", "Private model", "body",
+                "rachana: 2\nmodel: wes-private\nversion: 1.0.0\ndatasets:\n  trades: { dataset: acc-trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n")));
+        Map<String, Object> q = Map.of("mq", 1, "model", "wes-private@1", "select", Map.of("measures", List.of("Notional")));
+        ok(call("POST", "/api/v1/bi/mq", reader("wes"), q));
+        call("POST", "/api/v1/bi/mq", reader("rita"), q).andExpect(status().is4xxClientError()).andExpect(jsonPath("$.code").value("DRS-9151"));
+        call("GET", "/api/v1/bi/models/wes-private@1/consumers", reader("rita"), null).andExpect(status().is4xxClientError()).andExpect(jsonPath("$.code").value("DRS-9151"));
+    }
+
+    @Test @Order(9)
+    void rolesWithoutARuleAreNamedByCheckAndTheirEmptyAnswerSaysWhy() throws Exception {
+        String yaml = "rachana: 2\nmodel: wes-rules\nversion: 1.0.0\ndatasets:\n  trades: { dataset: acc-trade, role: fact }\nmeasures:\n  Notional: { expr: \"sum(trades.notional)\" }\n"
+                + "security:\n  rows:\n    trades:\n      - { role: [bi-risk], where: \"true\" }\n";
+        JsonNode check = ok(call("POST", "/api/v1/bi/models/validate", reader("wes"), Map.of("yaml", yaml)));
+        JsonNode warn = null;
+        for (JsonNode x : check.path("problems")) {
+            if ("DRS-9131".equals(x.path("code").asText())) {
+                warn = x;
+            }
+        }
+        assertThat(warn).as(check.toString()).isNotNull();
+        assertThat(warn.path("level").asText()).isEqualTo("warning");
+        assertThat(warn.path("message").asText()).contains("desk-head").contains("report-author").doesNotContain("bi-risk,");
+        assertThat(ok(call("GET", "/api/v1/bi/models/roles", reader("wes"), null)).path("roles").findValuesAsText("name")).contains("bi-risk", "desk-head");
+        ok(call("POST", "/api/v1/bi/workspaces/me/items", reader("wes"), Map.of("kind", "model", "title", "Rules", "body", yaml)));
+        JsonNode mine = ok(call("POST", "/api/v1/bi/mq", reader("wes"), Map.of("mq", 1, "model", "wes-rules@1", "select",
+                Map.of("fields", List.of("trades.desk"), "measures", List.of("Notional")))));
+        assertThat(mine.path("rows")).isEmpty();
+        assertThat(mine.path("meta").path("noAccess").toString()).contains("trades");
+        assertThat(mine.path("meta").path("warnings").toString()).contains("you have no access to rows of trades in this model");
+    }
+
+    @Test @Order(10)
+    void anAlertRefusesAValueMaskedForItsOwnerAndAManyRowVisualWithoutAChoice() throws Exception {
+        String cond = ",\"condition\":{\"type\":\"threshold\",\"op\":\"above\",\"value\":0},\"trigger\":{\"mode\":\"schedule\",\"schedule\":\"hourly\"}}";
+        call("PUT", "/api/v1/me/measure-alerts/mtm-watch", reader("ann"), "{\"title\":\"t\",\"source\":{\"type\":\"model\",\"model\":\"acc-trades\",\"query\":{\"select\":"
+                + "{\"measures\":[\"MTM\"]}}}" + cond).andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("masked for you")));
+        String visual = "{\"title\":\"t\",\"source\":{\"type\":\"visual\",\"report\":\"" + REPORT + "\",\"visual\":\"by-desk\"%s}" + cond;
+        call("PUT", "/api/v1/me/measure-alerts/by-desk", reader("rita"), visual.formatted("")).andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("rows, so say which number to watch")));
+        ok(call("PUT", "/api/v1/me/measure-alerts/by-desk", reader("rita"), visual.formatted(",\"reduce\":\"sum\"")));
     }
 }
