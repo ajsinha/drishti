@@ -43,13 +43,14 @@ the tutorials say what to do first.
 | 15 | [AI in Drishti](15-ai-in-drishti.md) | turn on the mock provider safely, the AI policy, report from words, ask the data, explain this number, the designer's suggestions and plain-words checks, the dataset helper, Test connection; the provider types | 30 min | written |
 | 16 | [Embed Drishti](16-embed-drishti.md) | register a host application, show a view and a report in its page under a strict CSP, tokens, limits; search and About elements, React, Vue and Angular samples | 40 min | written |
 | 17 | [Run it in production](17-run-it-in-production.md) | security on, your own administrator, roles and BI powers, tokens, backups, heap and connection pools, health, the type-ahead index and its reload, temp folders, upgrades, taking a pack, connector or BI file out safely | 60 min | written |
+| 18 | [Several datasets in one report](18-several-datasets-in-one-report.md) | a report with a visual on each of two datasets, links that carry a slicer or a click (and one that does not), why rows are never joined across datasets (the inflated total), a composed dataset and its checks, the same as a Python Transform, two readers with different rules, the join in Analyse, and a Power BI comparison | 60 min | written |
 
 ## What you need once
 
 Tutorials 1 to 3 need only [tutorial 1](01-first-15-minutes.md): Java 21 or newer, Python 3.11 or newer, `uv`, git, and the server and console started with sign-in on. Later tutorials say what else they need.
 Run commands from the repository root. Where a tutorial shows output, it was captured from a real server of this version (2.1.0); numbers that depend on the generated sample data (counts, MTM) may differ a little on your machine.
 
-The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t17`) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
+The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t18`) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
 
 ## The sample data
 

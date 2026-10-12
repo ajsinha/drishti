@@ -14,7 +14,7 @@
 
 """The hands-on tutorials (docs/tutorials/): every picture exists, every relative link and anchor resolves, and each tutorial has the parts a new reader needs.
 
-The pictures themselves are made by tools/docs/screenshots.py (guides t01 to t17); test_guide_images.py already fails for a picture no document shows or
+The pictures themselves are made by tools/docs/screenshots.py (guides t01 to t18); test_guide_images.py already fails for a picture no document shows or
 one the script cannot make. This file checks the tutorials as documents."""
 import re
 import subprocess
@@ -45,11 +45,11 @@ def anchors(path: Path) -> set:
     return {slug(h) for h in HEADING.findall(text)}
 
 
-def test_there_are_seventeen_written_tutorials_and_the_index_names_every_one():
-    assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in range(1, 18)]
+def test_there_are_eighteen_written_tutorials_and_the_index_names_every_one():
+    assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in range(1, 19)]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)
-    assert [int(r) for r in rows] == list(range(1, 18))
+    assert [int(r) for r in rows] == list(range(1, 19))
     assert "coming" not in index.split("## What you need once")[0].split("## The tutorials")[1]
     for p in WRITTEN:
         assert p.name in index, p.name
@@ -114,11 +114,11 @@ def test_no_tutorial_leaks_the_authors_scratch_folders_or_a_token(doc):
 
 
 def test_the_pictures_of_the_later_tutorials_are_made_by_the_script_and_shown_at_a_phone_width_where_it_matters():
-    """Tutorials 10 to 17: every picture is listed by the picture script (guides t10 to t17), and the ones about reports, embedding and governance show a phone."""
+    """Tutorials 10 to 18: every picture is listed by the picture script (guides t10 to t18), and the ones about reports, embedding and governance show a phone."""
     listed = []
-    for guide in (f"t{n}" for n in range(10, 18)):
+    for guide in (f"t{n}" for n in range(10, 19)):
         listed += subprocess.run([sys.executable, str(ROOT / "tools" / "docs" / "screenshots.py"), "--list", "--guide", guide], capture_output=True, text=True, cwd=ROOT).stdout.split()
-    for doc in sorted(TUTORIALS.glob("1[0-7]-*.md")):
+    for doc in sorted(TUTORIALS.glob("1[0-8]-*.md")):
         for rel in IMAGE.findall(doc.read_text()):
             if rel.startswith("img/t1"):
                 assert Path(rel).name in listed, f"{doc.name}: {rel} is not made by tools/docs/screenshots.py"
@@ -132,5 +132,6 @@ def test_the_sample_data_the_tutorials_use_is_in_the_repository():
     for name in ("schemas/quote.schema.json", "connectors/desk-quotes.yaml", "connectors/desk-ledger.yaml", "desk-book.sutra.yaml", "desks/desk-rates.json"):
         assert (data / name).is_file(), name
     for name in ("slicer-kinds.report.yaml", "trades-daily.dataset.yaml", "smtp-catcher.py", "trades-model.dataset.yaml", "trades-report.report.yaml", "notional-by-desk.python.yaml",
-                 "desk-python.report.yaml", "ai/mock.yaml", "ai/local-model.yaml", "pools.py"):
+                 "desk-python.report.yaml", "two-datasets.report.yaml", "wrong-link.report.yaml", "cp-pnl-exposure.dataset.yaml", "counterparty-view.report.yaml", "mtm-vs-exposure.python.yaml",
+                 "cp-pnl-exposure-py.dataset.yaml", "two-extracts.notebook.yaml", "ai/mock.yaml", "ai/local-model.yaml", "pools.py"):
         assert (data / name).is_file(), name
