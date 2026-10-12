@@ -37,9 +37,38 @@ import java.util.Set;
  * @param security row rules and masked columns
  * @param rollups the pre-aggregations the author asks for
  * @param refresh when the dataset's layers are rebuilt without a person asking (blank schedule: only by a data-load signal or on demand)
+ * @param compose for a composed dataset: the sources it reads as the reader and how they are joined (its {@code tables} then hold the one joined frame); else null
+ * @param derived for a derived dataset: the Python Transform that makes its table and the inputs it is given; else null
  */
 public record Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables,
-        List<Relationship> relationships, Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups, Refresh refresh) {
+        List<Relationship> relationships, Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups, Refresh refresh,
+        Compose compose, Derived derived) {
+
+    /** An ordinary dataset: tables from pack kinds, neither composed nor derived. */
+    public Dataset(String name, int version, String title, String description, boolean sample, String engine, Map<String, Table> tables, List<Relationship> relationships,
+            Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, List<Rollup> rollups, Refresh refresh) {
+        this(name, version, title, description, sample, engine, tables, relationships, measures, hierarchies, security, rollups, refresh, null, null);
+    }
+
+    /** The mode and the source kind of the one table of a composed or derived dataset: its rows are a frame the engine builds, not a connector's. */
+    public static final String FRAME = "frame";
+    /** The name of the one table a composed dataset has. */
+    public static final String JOINED = "joined";
+    /** The name of the one table a derived dataset has. */
+    public static final String RESULT = "result";
+
+    public boolean composed() {
+        return compose != null;
+    }
+
+    public boolean derivedFrame() {
+        return derived != null;
+    }
+
+    /** True when the dataset's table is a frame (composed or derived), not rows read from a connector. */
+    public boolean framed() {
+        return compose != null || derived != null;
+    }
 
     public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
     public static final Set<String> MODES = Set.of("live", "cached", "direct");
@@ -163,4 +192,59 @@ public record Dataset(String name, int version, String title, String description
     public List<Table> tablesOfKind(String kind) {
         return tables.values().stream().filter(t -> t.kind().equals(kind)).toList();
     }
+
+    /**
+     * One input of a composed dataset or a Python Transform: another dataset asked a question as the reader. {@code by} are the columns the answer is grouped by
+     * (each {@code table.column}, optionally {@code table.column as name}), {@code measures} the measures computed ({@code Name} or {@code Name as other}),
+     * {@code fields} the columns of a row-level extract instead (no measures), {@code filters} extra conditions of the same form a report's filter has.
+     *
+     * @param alias the name the join and the frame use
+     * @param dataset the dataset: a catalogue id, a file name or the dataset's own name
+     */
+    public record Input(String alias, String dataset, List<Named> by, List<Named> measures, List<Named> fields, List<InputFilter> filters) {
+
+        public Input {
+            by = List.copyOf(by);
+            measures = List.copyOf(measures);
+            fields = List.copyOf(fields);
+            filters = List.copyOf(filters);
+        }
+
+        /** True for a row-level extract ({@code fields}), false for a grouped answer. */
+        public boolean rows() {
+            return !fields.isEmpty();
+        }
+    }
+
+    /** A column or measure of a source and the name it has in the frame. */
+    public record Named(String source, String as) {}
+
+    /** A filter on a source, of the dataset query's form: {@code field}, {@code op} and {@code values}. */
+    public record InputFilter(String field, String op, List<Object> values) {}
+
+    /** A join of two sources on columns of their frames; {@code on} entries are {@code name} (same on both sides) or {@code left = right}. */
+    public record Join(String left, String right, List<String> on, String type) {
+
+        public static final Set<String> TYPES = Set.of("inner", "left", "full");
+    }
+
+    /**
+     * One column of the joined frame of a composed dataset: {@code name} in the frame, the {@code alias} of the input it comes from, {@code source} the column of
+     * that input's answer ({@code trades.desk} as the query named it, or the measure's name), its {@code type}, whether it is a {@code measure}, and
+     * {@code merged} the alias of another input whose same-named join key is folded into this column (null otherwise).
+     */
+    public record FrameColumn(String name, String alias, String source, String type, boolean measure, String merged) {}
+
+    /** What makes a composed dataset: the inputs, the joins between them and (after checking) the columns of the joined frame. */
+    public record Compose(Map<String, Input> from, List<Join> joins, List<FrameColumn> frame) {
+
+        public Compose {
+            from = java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(from));
+            joins = List.copyOf(joins);
+            frame = List.copyOf(frame);
+        }
+    }
+
+    /** What makes a derived dataset: the Python item (Transform interface) and the inputs it receives, in order, as masked pandas frames. */
+    public record Derived(String transform, Map<String, Input> inputs, Map<String, Object> params) {}
 }

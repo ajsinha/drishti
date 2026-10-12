@@ -34,7 +34,8 @@ import java.util.regex.Pattern;
  * <pre>
  * rachana: 1
  * python: desk-pnl-volatility
- * interface: measure            # measure: compute(table, params) -> a number per group; visual: render(table, params) -> a chart
+ * interface: measure            # measure: compute(table, params) -> a number per group; visual: render(table, params) -> a chart;
+ *                                # transform: run(*frames) -> a DataFrame (the table of a derived dataset); inputs are then dataset ids
  * inputs: [pnl1d]               # the columns the function reads (a measure's group columns come from the dataset measure's `by`)
  * packages: [pandas, numpy]
  * target: server                # server, browser or both
@@ -47,12 +48,14 @@ import java.util.regex.Pattern;
  */
 public final class PythonManifest {
 
-    public static final Set<String> INTERFACES = Set.of("measure", "visual");
+    public static final Set<String> INTERFACES = Set.of("measure", "visual", "transform");
     public static final Set<String> TARGETS = Set.of("server", "browser", "both");
     public static final Set<String> OUTPUTS = Set.of("echarts", "svg", "png");
     /** The most characters of source one item holds. */
     public static final int MAX_SOURCE = 65_536;
     private static final Pattern IDENT = Pattern.compile("[A-Za-z_][A-Za-z0-9_]{0,63}");
+    /** A dataset a Transform reads: its catalogue id, a file name or the dataset's name (letters, digits, and . _ : - ). */
+    private static final Pattern DATASET_REF = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}");
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,63}");
     private static final Set<String> TOP = Set.of("rachana", "python", "version", "title", "description", "sample", "owner", "tags", "endorsement", "audience", "interface",
             "entry", "inputs", "packages", "target", "timeout", "memory", "output", "params", "source");
@@ -127,9 +130,9 @@ public final class PythonManifest {
         }
         String iface = root.path("interface").asText("").toLowerCase(Locale.ROOT);
         if (!INTERFACES.contains(iface)) {
-            out.add(new Problem("error", "interface", "interface is measure (a number per group) or visual (a chart)"));
+            out.add(new Problem("error", "interface", "interface is measure (a number per group), visual (a chart) or transform (a table made from datasets)"));
         }
-        String entry = root.has("entry") ? root.path("entry").asText("") : "measure".equals(iface) ? "compute" : "render";
+        String entry = root.has("entry") ? root.path("entry").asText("") : "measure".equals(iface) ? "compute" : "transform".equals(iface) ? "run" : "render";
         if (!IDENT.matcher(entry).matches()) {
             out.add(new Problem("error", "entry", "entry is the name of the function in the source (compute for a measure, render for a visual by default)"));
         }
@@ -137,7 +140,15 @@ public final class PythonManifest {
         if ("measure".equals(iface) && inputs.isEmpty()) {
             out.add(new Problem("error", "inputs", "a measure lists the columns it reads: inputs: [pnl1d]"));
         }
-        inputs.stream().filter(c -> !IDENT.matcher(c).matches()).forEach(c -> out.add(new Problem("error", "inputs", "'" + c + "' is not a column name (as the table names it, without the table)")));
+        if ("transform".equals(iface)) {
+            if (inputs.isEmpty()) {
+                out.add(new Problem("error", "inputs", "a transform lists the datasets it reads, in the order its function receives them: inputs: [trading-risk, counterparty-exposure]"));
+            }
+            inputs.stream().filter(c -> !DATASET_REF.matcher(c).matches())
+                    .forEach(c -> out.add(new Problem("error", "inputs", "'" + c + "' is not a dataset (a catalogue id, a file name such as trades-basic, or the dataset's name)")));
+        } else {
+            inputs.stream().filter(c -> !IDENT.matcher(c).matches()).forEach(c -> out.add(new Problem("error", "inputs", "'" + c + "' is not a column name (as the table names it, without the table)")));
+        }
         List<String> packages = strings(root.path("packages"), "packages", out, true);
         for (String p : packages) {
             if (!allowed.contains(p)) {
@@ -156,6 +167,8 @@ public final class PythonManifest {
         }
         if ("measure".equals(iface)) {
             output = "number";
+        } else if ("transform".equals(iface)) {
+            output = "frame";
         }
         Map<String, Object> params = new LinkedHashMap<>();
         JsonNode pn = root.path("params");
@@ -171,8 +184,11 @@ public final class PythonManifest {
             out.add(new Problem("error", "source", "source holds the Python code: a function named " + entry));
         } else if (source.length() > MAX_SOURCE) {
             out.add(new Problem("error", "source", "the source is over " + MAX_SOURCE + " characters"));
-        } else if (!Pattern.compile("(?m)^(async\\s+)?def\\s+" + Pattern.quote(entry) + "\\s*\\(").matcher(source).find()) {
+        } else if (!Pattern.compile("(?m)^" + ("transform".equals(iface) ? "\\s*" : "") + "(async\\s+)?def\\s+" + Pattern.quote(entry) + "\\s*\\(").matcher(source).find()) {
             out.add(new Problem("error", "source", "the source defines no function '" + entry + "' (def " + entry + "(table, params): ...)"));
+        }
+        if ("transform".equals(iface) && !"server".equals(target)) {
+            out.add(new Problem("error", "target", "a transform runs on the server (target: server): it makes a table that is kept for the reader"));
         }
         if ("browser".equals(target) || "both".equals(target)) {
             packages.stream().filter(p -> !Set.of("pandas", "numpy", "scipy", "statsmodels").contains(p))

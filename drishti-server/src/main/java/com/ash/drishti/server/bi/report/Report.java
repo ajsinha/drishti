@@ -31,9 +31,22 @@ import java.util.Map;
  * @param theme the colours the visuals use: {@code palette} (a name the console knows) and optional {@code background}
  * @param dates the business dates the report reads (null: each query reads the latest date)
  * @param layouts per device class (today only {@code phone}), per page id, how the page is arranged at 640 px and narrower; empty: the automatic one column
+ * @param links which fields of different datasets mean the same thing, so a slicer or a selection on one filters the visuals of the others (RUPAKA.md section 20.10)
  */
 public record Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
-        List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts) {
+        List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts, List<Link> links) {
+
+    /** Compatibility: a report without links. */
+    public Report(String name, int version, String title, String description, boolean sample, String dataset, Map<String, String> theme, Dates dates, List<Filter> filters,
+            List<Page> pages, List<Bookmark> bookmarks, Map<String, Map<String, PhonePage>> layouts) {
+        this(name, version, title, description, sample, dataset, theme, dates, filters, pages, bookmarks, layouts, List.of());
+    }
+
+    /**
+     * Fields that mean the same thing in different datasets ({@code [trade.counterparty, exposure.counterparty]}). A choice on a field of one dataset filters the
+     * visuals that read another dataset through the linked field; a visual whose dataset has none of them is not filtered by it.
+     */
+    public record Link(List<String> fields) {}
 
     /** The grid is always this many columns wide. */
     public static final int COLUMNS = 12;
@@ -88,9 +101,16 @@ public record Report(String name, int version, String title, String description,
      * @param text the words of a text visual or a button
      * @param interacts false: other visuals' selections do not filter or highlight this one
      * @param alt a text alternative for people who cannot see the visual
+     * @param dataset the dataset this visual reads, when it is not the report's (null: the report's); a catalogue id, a file name or the dataset's name
      */
     public record Visual(String id, String type, String title, Grid at, Map<String, List<String>> wells, List<Filter> filters, Sort sort, Integer limit, String hierarchy,
-            DrillThrough drillThrough, Map<String, Object> format, String text, String src, String alt, boolean interacts, Map<String, Object> action) {
+            DrillThrough drillThrough, Map<String, Object> format, String text, String src, String alt, boolean interacts, Map<String, Object> action, String dataset) {
+
+        /** Compatibility: a visual that reads the report's own dataset. */
+        public Visual(String id, String type, String title, Grid at, Map<String, List<String>> wells, List<Filter> filters, Sort sort, Integer limit, String hierarchy,
+                DrillThrough drillThrough, Map<String, Object> format, String text, String src, String alt, boolean interacts, Map<String, Object> action) {
+            this(id, type, title, at, wells, filters, sort, limit, hierarchy, drillThrough, format, text, src, alt, interacts, action, null);
+        }
 
         public List<String> well(String name) {
             return wells.getOrDefault(name, List.of());
@@ -133,6 +153,19 @@ public record Report(String name, int version, String title, String description,
 
     /** A saved state: a page, slicer selections (by slicer visual id) and extra filters. */
     public record Bookmark(String name, String page, Map<String, List<Object>> slicers, List<Filter> filters) {}
+
+    /** The dataset a visual reads: its own, else the report's. */
+    public String datasetOf(Visual v) {
+        return v.dataset() == null || v.dataset().isBlank() ? dataset : v.dataset();
+    }
+
+    /** Every dataset the report reads, the report's own first. */
+    public List<String> datasets() {
+        java.util.LinkedHashSet<String> all = new java.util.LinkedHashSet<>();
+        all.add(dataset);
+        pages.forEach(p -> p.visuals().forEach(v -> all.add(datasetOf(v))));
+        return new ArrayList<>(all);
+    }
 
     public Page page(String id) {
         return pages.stream().filter(p -> p.id().equals(id)).findFirst().orElse(null);
@@ -182,6 +215,9 @@ public record Report(String name, int version, String title, String description,
                 return x;
             }).toList());
         }
+        if (!links.isEmpty()) {
+            m.put("links", links.stream().map(l -> Map.of("fields", l.fields())).toList());
+        }
         if (!layouts.isEmpty()) {
             Map<String, Object> l = new LinkedHashMap<>();
             layouts.forEach((device, byPage) -> {
@@ -217,6 +253,9 @@ public record Report(String name, int version, String title, String description,
             x.put("title", v.title());
         }
         x.put("at", v.at().toMap());
+        if (v.dataset() != null && !v.dataset().isBlank()) {
+            x.put("dataset", v.dataset());
+        }
         if (!v.wells().isEmpty()) {
             x.put("wells", v.wells());
         }

@@ -160,6 +160,14 @@ public enum ErrorCode {
     DATASET_RELATION("DRS-9012", 422),
     /** Datasets: the document uses a feature the grammar reserves and this server does not build yet (time intelligence, window functions, Python measures). */
     DATASET_NOT_BUILT("DRS-9013", 501),
+    /** Datasets: a composed dataset (from/join) names a source, column, measure or join key that does not exist, or joins keys of different types. */
+    DATASET_COMPOSE("DRS-9014", 422),
+    /** Datasets: a join that repeats rows (many-to-many, or the one side listed on the wrong end): measures of the repeated side add up too high. A warning of the check, not a refusal. */
+    DATASET_FANOUT("DRS-9015", 422),
+    /** Datasets: a dataset reads itself, directly or through the datasets it is composed of or derived from. */
+    DATASET_CYCLE("DRS-9016", 422),
+    /** Datasets: a derived dataset (made by a Python Transform) names no Transform, no inputs, or columns it cannot have. */
+    DATASET_DERIVED("DRS-9017", 422),
     /** Queries: the query names a field, measure, operator or value the dataset does not have or cannot take. */
     QUERY_INVALID("DRS-9020", 422),
     /** Queries: the query filters, sorts on or probes a column masked for the caller. */
@@ -217,7 +225,9 @@ public enum ErrorCode {
     /** Python in BI: the sandbox refused something the code tried (a package off the allow-list, the network, a file outside the scratch folder, a process). */
     PYTHON_SANDBOX("DRS-9073", 403),
     /** Python in BI: the runner has no free worker (bi.python.workers) or is switched off or not installed. */
-    PYTHON_BUSY("DRS-9074", 503);
+    PYTHON_BUSY("DRS-9074", 503),
+    /** Python in BI: a Transform returned something a derived dataset cannot use (not a frame, a declared column missing, too many rows) or its inputs do not match the dataset's. */
+    TRANSFORM_FAILED("DRS-9075", 422);
 
     private final String code;
     private final int httpStatus;

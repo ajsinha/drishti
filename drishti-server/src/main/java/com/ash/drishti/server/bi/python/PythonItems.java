@@ -83,6 +83,26 @@ public final class PythonItems {
         return out;
     }
 
+    /** A Transform item as the server runs it for a derived dataset: the item, its published version and its manifest. */
+    public record TransformItem(String id, String title, int version, PythonManifest.Manifest manifest) {}
+
+    /**
+     * The Transform a derived dataset names, as readers get it: the published version (the draft when it was never published). The dataset is what names the
+     * item, as a report names its Python item, so the reader needs the dataset, not the item. Refused as {@code DRS-9070} when it is not a transform.
+     */
+    public TransformItem transform(String ref) {
+        BiStore.Item item = find(null, ref);
+        String body = bi.sourceBody(item);
+        PythonManifest.Result r = parse(body);
+        if (!r.ok()) {
+            throw new DrishtiException(ErrorCode.PYTHON_INVALID, "Python item '" + item.title() + "' is not valid: " + r.firstError());
+        }
+        if (!"transform".equals(r.manifest().interfaceKind())) {
+            throw new DrishtiException(ErrorCode.PYTHON_INVALID, "Python item '" + item.title() + "' is a " + r.manifest().interfaceKind() + ", not a transform: a derived dataset needs interface: transform");
+        }
+        return new TransformItem(item.id(), item.title(), item.publishedVersion(), r.manifest());
+    }
+
     private BiStore.Item find(Principal p, String ref) {
         if (ref == null || ref.isBlank()) {
             throw new DrishtiException(ErrorCode.PYTHON_INVALID, "no Python item named");
@@ -97,6 +117,9 @@ public final class PythonItems {
             if (i.title().equalsIgnoreCase(ref)) {
                 return i;
             }
+        }
+        if (p == null) {
+            throw new DrishtiException(ErrorCode.PYTHON_INVALID, "no Python item '" + ref + "' (a catalogue id, a file name or a title of a published Python item)");
         }
         BiStore.Item mine = bi.readableItem(p, ref);
         if (!"python".equals(mine.kind())) {

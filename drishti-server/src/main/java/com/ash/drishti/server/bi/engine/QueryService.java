@@ -155,7 +155,19 @@ public final class QueryService implements AutoCloseable {
     // ---- query -------------------------------------------------------------------------------------------------------
 
     public Result query(Loaded ds, QueryRequest q, Caller who, boolean explain) {
+        return query(ds, q, who, explain, null);
+    }
+
+    /**
+     * As {@link #query(Loaded, QueryRequest, Caller, boolean)} for a composed or derived dataset: {@code frames} supplies the rows of its one table (the sources
+     * asked as the reader, or the Transform's result) when the result cache does not already hold the answer.
+     */
+    public Result query(Loaded ds, QueryRequest q, Caller who, boolean explain, Frames frames) {
         queries.incrementAndGet();
+        Frames.Rows rows = null;
+        if (frames != null && ds.dataset().framed() && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + "|frames:" + frames.fingerprint()) == null)) {
+            rows = frames.load();                   // the sources are asked before this query takes a place of its own: they are queries too, and must not wait for it
+        }
         AtomicInteger mine = perUser.computeIfAbsent(who.user(), u -> new AtomicInteger());
         if (mine.incrementAndGet() > props.maxConcurrentPerUser()) {
             mine.decrementAndGet();
@@ -164,7 +176,7 @@ public final class QueryService implements AutoCloseable {
         }
         boolean got = false;
         try {
-            String key = cache == null ? null : cacheKey(ds, q, who);
+            String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint());
             if (key != null && !explain) {
                 Result hit = cache.getIfPresent(key);
                 if (hit != null) {
@@ -182,7 +194,7 @@ public final class QueryService implements AutoCloseable {
                 rejected.incrementAndGet();
                 throw new DrishtiException(ErrorCode.QUERY_BUSY, "the server is running " + props.maxConcurrent() + " queries already (drishti.bi.query.max-concurrent); try again");
             }
-            Result r = run(ds, q, who, explain);
+            Result r = ds.dataset().framed() ? runFramed(ds, q, who, rows != null || frames == null ? rows : frames.load(), explain) : run(ds, q, who, explain);
             if (key != null && !explain) {
                 cache.put(key, r);
             }
@@ -279,6 +291,61 @@ public final class QueryService implements AutoCloseable {
         SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(q, dates));
         AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, props.timeout());
         return finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
+    }
+
+    /** The compiled query and its answer, from a connection that holds the staging tables. */
+    private record Framed(SqlCompiler.Compiled compiled, AnalyticEngine.Answer answer) {}
+
+    /**
+     * A composed or derived dataset's query (RUPAKA.md section 20.10): the one table is the join of the sources' answers (staged in the engine) or the
+     * Transform's result file, and the dataset's own measures, row rules and masks run over it like over any table. The sources were asked as the reader, so what
+     * the reader may not see never reaches this table.
+     */
+    private Result runFramed(Loaded ds, QueryRequest q, Caller who, Frames.Rows rows, boolean explain) {
+        Dataset d = ds.dataset();
+        if (rows == null) {
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, "dataset '" + d.name() + "' is " + (d.composed() ? "composed" : "derived") + ": it is queried through the dataset service, which asks its sources");
+        }
+        SqlCompiler.Reader reader = new SqlCompiler.Reader(who.enforce(), who.roles(), who.attributes(), who.masks());
+        SqlCompiler probe = new SqlCompiler(d, Dialect.DUCKDB);
+        SqlCompiler.Plan plan = probe.plan(q, reader);
+        int cap = q.limit() != null ? Math.min(q.limit(), props.maxRows()) : props.maxRows() + 1;
+        TimeWindows.Context time = timeContext(q, rows.dates());
+        Framed f = engine.with(conn -> {
+            Map<String, String> staged = Map.of();
+            try {
+                SqlCompiler.Source src;
+                if (d.composed()) {
+                    staged = FrameSql.stageAll(conn, d.compose(), rows.answers());
+                    src = new SqlCompiler.Source("(" + FrameSql.joined(d, staged) + ") AS " + Dialect.quote(Dataset.JOINED), List.of());
+                } else {
+                    Set<String> present = new LinkedHashSet<>();
+                    try (java.sql.Statement st = conn.createStatement(); ResultSet rs = st.executeQuery("SELECT column_name FROM (DESCRIBE SELECT * FROM read_parquet('"
+                            + TableBuilder.literal(rows.parquet()) + "'))")) {
+                        while (rs.next()) {
+                            present.add(rs.getString(1));
+                        }
+                    }
+                    src = FrameSql.parquet(d, rows.parquet(), present);
+                }
+                String table = d.composed() ? Dataset.JOINED : Dataset.RESULT;
+                SqlCompiler.Compiled c = probe.compile(plan, reader, Map.of(table, src), cap, null, time);
+                long t0 = System.nanoTime();
+                try (PreparedStatement ps = conn.prepareStatement(c.sql())) {
+                    ps.setQueryTimeout((int) Math.max(1, props.timeout().toSeconds()));
+                    for (int i = 0; i < c.params().size(); i++) {
+                        ps.setObject(i + 1, c.params().get(i));
+                    }
+                    try (ResultSet rs = ps.executeQuery()) {
+                        List<ArrowIpcWriter.Column> cols = DuckDbEngine.read(rs, cap);
+                        return new Framed(c, new AnalyticEngine.Answer(cols, cols.isEmpty() ? 0 : cols.get(0).values().length, (System.nanoTime() - t0) / 1e6));
+                    }
+                }
+            } finally {
+                FrameSql.drop(conn, staged.values());
+            }
+        });
+        return finish(ds, q, f.compiled(), f.answer(), d.composed() ? "composed" : "derived", null, rows.dates(), new ArrayList<>(rows.warnings()), explain);
     }
 
     /**

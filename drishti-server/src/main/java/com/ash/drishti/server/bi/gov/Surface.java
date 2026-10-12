@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.gov;
 
+import com.ash.drishti.server.bi.dataset.Composition;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.report.Report;
 import java.util.ArrayList;
@@ -102,17 +103,33 @@ public final class Surface {
      * anything else in a well or filter is a measure).
      */
     public static Refs refs(Report r, Set<String> tables) {
+        return refs(r, tables, ref -> true);
+    }
+
+    /**
+     * As {@link #refs(Report, Set)} for a report that reads several datasets: only what is read from the dataset {@code mine} accepts (a visual's own dataset, else
+     * the report's; the report's and the pages' filters and the bookmarks belong to the report's dataset).
+     */
+    public static Refs refs(Report r, Set<String> tables, java.util.function.Predicate<String> mine) {
         List<Use> fields = new ArrayList<>();
         List<Use> measures = new ArrayList<>();
         List<Use> hierarchies = new ArrayList<>();
         Collector c = new Collector(tables, fields, measures, hierarchies);
-        c.filters(r.filters(), "report filter");
+        boolean own = mine.test(r.dataset());
+        if (own) {
+            c.filters(r.filters(), "report filter");
+        }
         for (Report.Page p : r.pages()) {
-            c.filters(p.filters(), "page " + p.id());
-            if (p.drillThrough() != null) {
-                p.drillThrough().fields().forEach(f -> c.name(f, "page " + p.id() + " drill-through"));
+            if (own) {
+                c.filters(p.filters(), "page " + p.id());
+                if (p.drillThrough() != null) {
+                    p.drillThrough().fields().forEach(f -> c.name(f, "page " + p.id() + " drill-through"));
+                }
             }
             for (Report.Visual v : p.visuals()) {
+                if (!mine.test(r.datasetOf(v))) {
+                    continue;
+                }
                 String at = "page " + p.id() + ", visual " + v.id();
                 v.wells().values().forEach(l -> l.forEach(n -> c.name(n, at)));
                 c.filters(v.filters(), at);
@@ -127,7 +144,9 @@ public final class Surface {
                 }
             }
         }
-        r.bookmarks().forEach(b -> c.filters(b.filters(), "bookmark " + b.name()));
+        if (own) {
+            r.bookmarks().forEach(b -> c.filters(b.filters(), "bookmark " + b.name()));
+        }
         return new Refs(fields, measures, hierarchies);
     }
 
@@ -153,6 +172,27 @@ public final class Surface {
                 measures.add(new Use(n, at));
             }
         }
+    }
+
+    /**
+     * What a composed or derived dataset takes from the dataset {@code mine} accepts: the columns it groups by or reads (as {@code table.column}, a date part
+     * dropped), the measures it asks for, and the fields its filters name.
+     */
+    public static Refs refs(Dataset d, java.util.function.Predicate<String> mine, Set<String> tables) {
+        List<Use> fields = new ArrayList<>();
+        List<Use> measures = new ArrayList<>();
+        Collector c = new Collector(tables, fields, measures, new ArrayList<>());
+        for (Dataset.Input in : Composition.sources(d)) {
+            if (!mine.test(in.dataset())) {
+                continue;
+            }
+            String at = "source '" + in.alias() + "' of " + d.name();
+            in.by().forEach(n -> c.name(n.source(), at));
+            in.fields().forEach(n -> c.name(n.source(), at));
+            in.measures().forEach(n -> measures.add(new Use(n.source(), at)));
+            in.filters().forEach(f -> c.name(f.field(), at + " filter"));
+        }
+        return new Refs(fields, measures, List.of());
     }
 
     /** The uses of removed names: a report that names none of them is not in the answer. */

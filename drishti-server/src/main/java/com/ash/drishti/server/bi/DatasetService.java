@@ -23,6 +23,7 @@ import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.PackRegistry;
+import com.ash.drishti.server.bi.dataset.Composition;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
@@ -74,6 +75,7 @@ public final class DatasetService {
     private final SourceGateway sources;
     private final Map<String, Parsed> parsed = new ConcurrentHashMap<>();
     private volatile DatasetRefresher refresher;
+    private volatile FrameService frames;
 
     public DatasetService(BiService bi, QueryService queries, QueryProperties props, Entitlements entitlements, SecurityProperties security, UserService users, AuditLog audit,
             PackRegistry packs, ReferenceCatalog graph, SourceGateway sources) {
@@ -87,6 +89,12 @@ public final class DatasetService {
         this.packs = packs;
         this.graph = graph;
         this.sources = sources;
+    }
+
+    /** The service that asks the sources of composed and derived datasets (set once at start-up). */
+    public void attach(FrameService frames) {
+        this.frames = frames;
+        frames.attach(this);
     }
 
     /** The scheduler that rebuilds datasets on their {@code refresh:} (set once at start-up); the dataset page shows its state. */
@@ -119,6 +127,9 @@ public final class DatasetService {
 
     private DatasetParser.Result parse(String id, String body) {
         String h = hash(body);
+        if (Composition.dependsOnOthers(body)) {
+            return DatasetParser.parse(body);                      // its model depends on the datasets it is made of, which may have changed: never served from the cache
+        }
         Parsed p = parsed.get(id);
         if (p == null || !p.hash().equals(h)) {
             p = new Parsed(h, DatasetParser.parse(body));
@@ -150,7 +161,7 @@ public final class DatasetService {
         Optional<User> u = security.enabled() ? users.find(p.user()) : Optional.empty();
         Map<String, List<Object>> attrs = UserAttributes.of(p.user(), p.roles(), u.map(User::desk).orElse(""), u.map(User::email).orElse(""));
         Set<String> denied = new java.util.HashSet<>();
-        ds.tables().values().forEach(t -> {
+        ds.tables().values().stream().filter(t -> !Dataset.FRAME.equals(t.kind())).forEach(t -> {         // a composed or derived dataset's sources are checked in their own queries
             if (!entitlements.mayOpen(p, t.kind())) {
                 denied.add(t.name());
             }
@@ -292,6 +303,42 @@ public final class DatasetService {
         }
         m.put("measures", measures);
         m.put("hierarchies", d.hierarchies());
+        if (d.framed()) {
+            m.put("composition", composition(d));
+        }
+        return m;
+    }
+
+    /** What a composed or derived dataset is made of, for the Model view: its sources with what they are asked, and how they are joined or which Transform reads them. */
+    private static Map<String, Object> composition(Dataset d) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("kind", d.composed() ? "composed" : "derived");
+        List<Map<String, Object>> sources = new ArrayList<>();
+        for (Dataset.Input in : Composition.sources(d)) {
+            Map<String, Object> s = new LinkedHashMap<>();
+            s.put("alias", in.alias());
+            s.put("dataset", in.dataset());
+            s.put("by", in.by().stream().map(n -> n.as() == null ? n.source() : n.source() + " as " + n.as()).toList());
+            s.put("fields", in.fields().stream().map(n -> n.as() == null ? n.source() : n.source() + " as " + n.as()).toList());
+            s.put("measures", in.measures().stream().map(n -> n.as() == null ? n.source() : n.source() + " as " + n.as()).toList());
+            s.put("filters", in.filters().stream().map(f -> f.field() + " " + f.op() + " " + f.values()).toList());
+            sources.add(s);
+        }
+        m.put("sources", sources);
+        if (d.composed()) {
+            m.put("joins", d.compose().joins().stream().map(j -> {
+                Map<String, Object> jm = new LinkedHashMap<>();
+                jm.put("left", j.left());
+                jm.put("right", j.right());
+                jm.put("on", j.on());
+                jm.put("type", j.type());
+                return jm;
+            }).toList());
+            m.put("frame", d.compose().frame().stream().map(f -> Map.of("name", f.name(), "from", f.alias(), "type", f.type(), "measure", f.measure())).toList());
+        } else {
+            m.put("transform", d.derived().transform());
+            m.put("params", d.derived().params());
+        }
         return m;
     }
 
@@ -350,10 +397,23 @@ public final class DatasetService {
     public QueryService.Result queryItem(Principal p, BiStore.Item item, QueryRequest q, boolean explain) {
         String id = item.id();
         QueryService.Loaded ds = loaded(p, item);
-        QueryService.Result r = queries.query(ds, q, caller(p, ds.dataset()), explain);
+        QueryService.Result r = queries.query(ds, q, caller(p, ds.dataset()), explain, framesOf(p, ds, q));
         audit.record(p.user(), "bi-query", id, q.fields().size() + " fields, " + q.measures().size() + " measures, " + r.rows() + " rows from " + r.meta().layer()
                 + (r.meta().cached() ? " (cached)" : ""));
         return r;
+    }
+
+    private com.ash.drishti.server.bi.engine.Frames framesOf(Principal p, QueryService.Loaded ds, QueryRequest q) {
+        return ds.dataset().framed() && frames != null ? frames.framesFor(p, ds, q) : null;
+    }
+
+    /**
+     * Asks a source of a composed or derived dataset a question as the reader: their row rules, masks and entitlements apply inside it (a source is reached through
+     * the dataset that names it, as a report reaches its dataset). Not audited on its own: the query that needed it is.
+     */
+    public QueryService.Result querySource(Principal p, BiStore.Item source, QueryRequest q) {
+        QueryService.Loaded ds = loaded(p, source);
+        return queries.query(ds, q, caller(p, ds.dataset()), false, framesOf(p, ds, q));
     }
 
     /**
@@ -366,7 +426,7 @@ public final class DatasetService {
             throw new DrishtiException(ErrorCode.DATASET_INVALID, "the draft of '" + item.title() + "' has errors: " + r.firstError());
         }
         QueryService.Loaded ds = new QueryService.Loaded(item.id() + "~review", Layers.key(item.id() + "~review"), r.dataset(), hash(body));
-        QueryService.Result res = queries.query(ds, q, caller(p, ds.dataset()), false);
+        QueryService.Result res = queries.query(ds, q, caller(p, ds.dataset()), false, framesOf(p, ds, q));
         audit.record(p.user(), "bi-query", item.id(), "review preview: " + res.rows() + " rows from " + res.meta().layer());
         return res;
     }

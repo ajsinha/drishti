@@ -47,7 +47,8 @@ import org.springframework.context.annotation.Configuration;
  * connection on the first query, so a server that never runs a BI query pays nothing.
  */
 @Configuration
-@EnableConfigurationProperties({QueryProperties.class, BiReportProperties.class, BiLiveProperties.class, BiRefreshProperties.class})
+@EnableConfigurationProperties({QueryProperties.class, BiReportProperties.class, BiLiveProperties.class, BiRefreshProperties.class,
+        com.ash.drishti.server.bi.transform.TransformProperties.class})
 public class BiQueryConfiguration {
 
     @Bean(destroyMethod = "close")
@@ -63,6 +64,30 @@ public class BiQueryConfiguration {
     @Bean(destroyMethod = "")
     public QueryService biQueries(QueryProperties props, BiLiveProperties live, AnalyticEngine engine, SourceGateway sources) {
         return new QueryService(props, live, engine, sources, Clock.systemUTC());
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.transform.TransformRunner transformRunner(com.ash.drishti.server.bi.transform.TransformProperties props, QueryProperties query, BiReportProperties report) {
+        java.nio.file.Path scratch = props.workDir().isBlank() ? java.nio.file.Path.of(query.storeDir()).toAbsolutePath().resolve("transform-tmp") : java.nio.file.Path.of(props.workDir());
+        return new com.ash.drishti.server.bi.transform.ProcessTransformRunner(props, scratch, report.pythonPackages(), report.pythonMaxSeconds(), report.pythonMaxMemoryMb());
+    }
+
+    @Bean(destroyMethod = "close")
+    public com.ash.drishti.server.bi.transform.TransformService transformService(com.ash.drishti.server.bi.transform.TransformProperties props,
+            com.ash.drishti.server.bi.transform.TransformRunner runner, QueryProperties query, ImpactAnalyzer impact) {
+        com.ash.drishti.server.bi.transform.TransformService service = new com.ash.drishti.server.bi.transform.TransformService(props, runner,
+                java.nio.file.Path.of(query.storeDir()).toAbsolutePath().resolve("transform"), Clock.systemUTC());
+        impact.learnedColumns(service::learned);
+        return service;
+    }
+
+    @Bean
+    public FrameService frameService(BiService bi, QueryService queries, com.ash.drishti.server.bi.python.PythonItems pythonItems,
+            com.ash.drishti.server.bi.transform.TransformService transforms, com.ash.drishti.server.bi.transform.TransformProperties props, Entitlements entitlements,
+            DatasetService datasets) {
+        FrameService frames = new FrameService(bi, queries, pythonItems, transforms, props, entitlements);
+        datasets.attach(frames);
+        return frames;
     }
 
     @Bean

@@ -72,11 +72,11 @@ public final class ReportParser {
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}");
     private static final Pattern ID = Pattern.compile("[A-Za-z0-9][A-Za-z0-9_-]{0,39}");
     private static final Pattern DAY = Pattern.compile("\\d{4}-\\d{2}-\\d{2}");
-    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "pages",
+    private static final Set<String> TOP = Set.of("rachana", "report", "version", "title", "description", "sample", "dataset", "theme", "dates", "filters", "bookmarks", "layouts", "links", "pages",
             "owner", "tags", "endorsement", "endorsedBy", "audience");
     private static final Set<String> PAGE = Set.of("id", "title", "filters", "drillthrough", "visuals");
     private static final Set<String> VISUAL_KEYS = Set.of("id", "type", "title", "at", "wells", "filters", "sort", "limit", "hierarchy", "drillthrough", "format", "text", "src", "alt",
-            "interacts", "action");
+            "interacts", "action", "dataset");
     private static final Set<String> FILTER = Set.of("field", "op", "values", "value", "n", "by", "dir");
     /** Limits that keep one report a sensible size. */
     public static final int MAX_PAGES = 30;
@@ -121,7 +121,7 @@ public final class ReportParser {
         List<Report.Page> pages = pages(root.path("pages"), out);
         List<Report.Bookmark> bookmarks = bookmarks(root.path("bookmarks"), out);
         Report r = new Report(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false), dataset, theme, dates,
-                filters, pages, bookmarks, layouts(root.path("layouts"), out));
+                filters, pages, bookmarks, layouts(root.path("layouts"), out), links(root.path("links"), out));
         return new Result(r, out);
     }
 
@@ -401,7 +401,8 @@ public final class ReportParser {
             src = "";
         }
         return new Report.Visual(id, type, text(v, "title", ""), at, wells, filters(v.path("filters"), p + ".filters", out), sort, limit, v.path("hierarchy").isTextual()
-                ? v.path("hierarchy").asText() : null, dt, format, text(v, "text", ""), src, text(v, "alt", ""), v.path("interacts").asBoolean(true), action);
+                ? v.path("hierarchy").asText() : null, dt, format, text(v, "text", ""), src, text(v, "alt", ""), v.path("interacts").asBoolean(true), action,
+                text(v, "dataset", "").isBlank() ? null : text(v, "dataset", ""));
     }
 
     private static void checkSlicerMode(String type, Map<String, Object> format, String p, List<Problem> out) {
@@ -475,6 +476,31 @@ public final class ReportParser {
                 out.add(error(INVALID, p + ".slicers", "slicers maps a slicer's id to the values it selects"));
             }
             list.add(new Report.Bookmark(name, b.path("page").asText(), slicers, filters(b.path("filters"), p + ".filters", out)));
+        }
+        return list;
+    }
+
+    /** {@code links: [ { fields: [a.counterparty, b.counterparty] } ]}: fields of different datasets that mean the same thing; each field is table.column. */
+    private static List<Report.Link> links(JsonNode n, List<Problem> out) {
+        List<Report.Link> list = new ArrayList<>();
+        if (n.isMissingNode() || n.isNull()) {
+            return list;
+        }
+        if (!n.isArray()) {
+            out.add(error(INVALID, "links", "links is a list: - { fields: [trade.counterparty, exposure.counterparty] }"));
+            return list;
+        }
+        for (int i = 0; i < n.size(); i++) {
+            JsonNode l = n.get(i);
+            List<String> fields = new ArrayList<>();
+            if (l.path("fields").isArray()) {
+                l.path("fields").forEach(f -> fields.add(f.asText()));
+            }
+            if (fields.size() < 2 || fields.stream().anyMatch(f -> f.isBlank() || f.split("\\.").length < 2)) {
+                out.add(error(INVALID, "links[" + i + "]", "a link names two or more fields (table.column) of different datasets that mean the same: - { fields: [trade.counterparty, exposure.counterparty] }"));
+                continue;
+            }
+            list.add(new Report.Link(fields));
         }
         return list;
     }

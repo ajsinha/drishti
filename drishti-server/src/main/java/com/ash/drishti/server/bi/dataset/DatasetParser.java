@@ -59,7 +59,7 @@ public final class DatasetParser {
     /** Measure names may hold spaces and punctuation: they are labels, never SQL. */
     static final Pattern LABEL = Pattern.compile("[^\\p{Cntrl}\\[\\]]{1,80}");
     private static final Set<String> TOP = Set.of("rachana", "dataset", "version", "title", "description", "sample", "engine", "tables", "relationships", "measures",
-            "hierarchies", "security", "rollups", "refresh", "layout", "owner", "tags", "endorsement", "endorsedBy", "audience");
+            "hierarchies", "security", "rollups", "refresh", "layout", "owner", "tags", "endorsement", "endorsedBy", "audience", "from", "join", "derived", "columns");
 
     private DatasetParser() {}
 
@@ -91,6 +91,14 @@ public final class DatasetParser {
         } else if (!Pattern.matches("[A-Za-z0-9][A-Za-z0-9_.-]{0,63}", name)) {
             out.add(error("dataset", "'" + name + "' is not a usable name (letters, digits, hyphen, underscore, dot; up to 64)"));
         }
+        boolean composed = root.has("from");
+        boolean derived = root.has("derived");
+        if (composed && derived) {
+            out.add(error("derived", "a dataset is composed (`from:`) or derived (`derived:`), not both"));
+        }
+        if ((composed || derived) && root.has("tables")) {
+            out.add(error("tables", "a composed or derived dataset has no `tables:`: its one table is built from its sources"));
+        }
         Map<String, Dataset.Table> tables = tables(root.path("tables"), out);
         List<Dataset.Relationship> rels = relationships(root.path("relationships"), out);
         Map<String, Dataset.Measure> measures = measures(root.path("measures"), out);
@@ -98,13 +106,20 @@ public final class DatasetParser {
         Dataset.Security security = security(root.path("security"), out);
         List<Dataset.Rollup> rollups = rollups(root.path("rollups"), out);
         String engine = text(root, "engine", "duckdb");
+        Dataset.Compose compose = composed && !derived ? new Dataset.Compose(inputs(root.path("from"), "from", out), joins(root.path("join"), out), List.of()) : null;
+        Dataset.Derived derivedSpec = derived && !composed ? derived(root.path("derived"), out) : null;
         Dataset ds = new Dataset(name, root.path("version").asInt(1), text(root, "title", name), text(root, "description", ""), root.path("sample").asBoolean(false),
-                engine, tables, rels, measures, hierarchies, security, rollups, refresh(root.path("refresh"), "refresh", out));
+                engine, tables, rels, measures, hierarchies, security, rollups, refresh(root.path("refresh"), "refresh", out), compose, derivedSpec);
         if (!"duckdb".equals(engine)) {
             out.add(error("engine", "only the embedded engine `duckdb` is built; '" + engine + "' is planned (RUPAKA.md section 7.1)"));
         }
-        if (tables.isEmpty() && root.path("tables").isMissingNode()) {
-            out.add(error("tables", "a dataset needs `tables:`"));
+        if (ds.framed()) {
+            if (!rollups.isEmpty() || !rels.isEmpty()) {
+                out.add(error(rollups.isEmpty() ? "relationships" : "rollups", "a composed or derived dataset has one table built at query time: it takes no " + (rollups.isEmpty() ? "relationships" : "rollups")));
+            }
+            ds = Composition.expand(ds, declaredColumns(root.path("columns"), out), out);
+        } else if (tables.isEmpty() && root.path("tables").isMissingNode()) {
+            out.add(error("tables", "a dataset needs `tables:` (or `from:` to be composed of other datasets, or `derived:` to be made by a Python Transform)"));
         }
         out.addAll(DatasetValidator.validate(ds));
         return new Result(ds, out);
@@ -378,6 +393,152 @@ public final class DatasetParser {
             list.add(new Dataset.Rollup(name, text(r, "table", ""), by, ms));
         }
         return list;
+    }
+
+    // ---- composed and derived ----------------------------------------------------------------------------------------
+
+    private static final Pattern AS = Pattern.compile("^(.*\\S)\\s+as\\s+(\\S.*)$", Pattern.CASE_INSENSITIVE);
+
+    private static Dataset.Named named(String text) {
+        java.util.regex.Matcher m = AS.matcher(text.trim());
+        return m.matches() ? new Dataset.Named(m.group(1).trim(), m.group(2).trim()) : new Dataset.Named(text.trim(), null);
+    }
+
+    private static List<Dataset.Named> namedList(JsonNode n, String path, List<Problem> out) {
+        List<Dataset.Named> list = new ArrayList<>();
+        if (n.isMissingNode() || n.isNull()) {
+            return list;
+        }
+        if (!n.isArray()) {
+            out.add(error(path, "this is a list of names: [trade.desk, \"trade.cpty as counterparty\"]"));
+            return list;
+        }
+        for (JsonNode x : n) {
+            if (!x.isTextual() || x.asText().isBlank()) {
+                out.add(error(path, "each entry is text: a name, or \"name as other_name\""));
+                continue;
+            }
+            Dataset.Named nm = named(x.asText());
+            if (nm.as() != null && !LABEL.matcher(nm.as()).matches()) {
+                out.add(error(path, "'" + nm.as() + "' is not a usable name"));
+                continue;
+            }
+            list.add(nm);
+        }
+        return list;
+    }
+
+    private static Object scalar(JsonNode x) {
+        return x.isIntegralNumber() ? (Object) x.asLong() : x.isNumber() ? (Object) x.asDouble() : x.isBoolean() ? (Object) x.asBoolean() : x.asText();
+    }
+
+    /** {@code from:} of a composed dataset, or {@code derived.inputs:}: alias: { dataset, by, measures | fields, filters }. */
+    private static Map<String, Dataset.Input> inputs(JsonNode n, String path, List<Problem> out) {
+        Map<String, Dataset.Input> inputs = new LinkedHashMap<>();
+        if (!n.isObject()) {
+            out.add(new Problem("error", Composition.COMPOSE, path, "this is a mapping from an alias to a source: alias: { dataset: trades-basic, by: [...], measures: [...] }"));
+            return inputs;
+        }
+        n.fields().forEachRemaining(e -> {
+            String alias = e.getKey();
+            String p = path + "." + alias;
+            JsonNode v = e.getValue();
+            if (!IDENT.matcher(alias).matches()) {
+                out.add(new Problem("error", Composition.COMPOSE, p, "'" + alias + "' is not an alias (letters, digits, underscore; not starting with a digit)"));
+                return;
+            }
+            if (!v.isObject() || !v.path("dataset").isTextual() || v.path("dataset").asText().isBlank()) {
+                out.add(new Problem("error", Composition.COMPOSE, p, "a source is { dataset: <dataset>, by: [...], measures: [...] } (or `fields: [...]` for rows)"));
+                return;
+            }
+            v.fieldNames().forEachRemaining(k -> {
+                if (!Set.of("dataset", "by", "measures", "fields", "filters").contains(k)) {
+                    out.add(new Problem("warning", Composition.COMPOSE, p + "." + k, "unknown key '" + k + "' is ignored (dataset, by, measures, fields, filters)"));
+                }
+            });
+            List<Dataset.InputFilter> filters = new ArrayList<>();
+            JsonNode fs = v.path("filters");
+            if (!fs.isMissingNode() && !fs.isNull() && !fs.isArray()) {
+                out.add(new Problem("error", Composition.COMPOSE, p + ".filters", "filters is a list of { field, op, values }"));
+            } else {
+                for (JsonNode f : fs) {
+                    String op = f.path("op").asText("in").toLowerCase(java.util.Locale.ROOT);
+                    if (!f.path("field").isTextual() || !com.ash.drishti.server.bi.engine.QueryRequest.OPS.contains(op)) {
+                        out.add(new Problem("error", Composition.COMPOSE, p + ".filters", "a filter is { field, op, values }; op is one of "
+                                + new java.util.TreeSet<>(com.ash.drishti.server.bi.engine.QueryRequest.OPS)));
+                        continue;
+                    }
+                    List<Object> values = new ArrayList<>();
+                    JsonNode vs = f.has("values") ? f.get("values") : f.get("value");
+                    if (vs != null && vs.isArray()) {
+                        vs.forEach(x -> values.add(scalar(x)));
+                    } else if (vs != null && !vs.isNull()) {
+                        values.add(scalar(vs));
+                    }
+                    filters.add(new Dataset.InputFilter(f.path("field").asText(), op, values));
+                }
+            }
+            inputs.put(alias, new Dataset.Input(alias, v.path("dataset").asText(), namedList(v.path("by"), p + ".by", out), namedList(v.path("measures"), p + ".measures", out),
+                    namedList(v.path("fields"), p + ".fields", out), filters));
+        });
+        return inputs;
+    }
+
+    private static List<Dataset.Join> joins(JsonNode n, List<Problem> out) {
+        List<Dataset.Join> list = new ArrayList<>();
+        if (n.isMissingNode() || n.isNull()) {
+            return list;
+        }
+        if (!n.isArray()) {
+            out.add(new Problem("error", Composition.COMPOSE, "join", "join is a list: - { left: a, right: b, on: [field], type: inner }"));
+            return list;
+        }
+        for (int i = 0; i < n.size(); i++) {
+            JsonNode j = n.get(i);
+            List<String> on = new ArrayList<>();
+            if (j.path("on").isArray()) {
+                j.path("on").forEach(x -> on.add(x.asText()));
+            } else if (j.path("on").isTextual()) {
+                on.add(j.path("on").asText());
+            }
+            if (!j.path("left").isTextual() || !j.path("right").isTextual()) {
+                out.add(new Problem("error", Composition.COMPOSE, "join[" + i + "]", "a join is { left: <alias>, right: <alias>, on: [fields], type: inner|left|full }"));
+                continue;
+            }
+            list.add(new Dataset.Join(j.path("left").asText(), j.path("right").asText(), on, text(j, "type", "inner").toLowerCase(java.util.Locale.ROOT)));
+        }
+        return list;
+    }
+
+    private static Dataset.Derived derived(JsonNode n, List<Problem> out) {
+        if (!n.isObject()) {
+            out.add(new Problem("error", Composition.DERIVED, "derived", "derived is { transform: <python item>, inputs: { alias: { dataset, ... } }, params: {...} }"));
+            return new Dataset.Derived("", new LinkedHashMap<>(), Map.of());
+        }
+        n.fieldNames().forEachRemaining(k -> {
+            if (!Set.of("transform", "inputs", "params").contains(k)) {
+                out.add(new Problem("warning", Composition.DERIVED, "derived." + k, "unknown key '" + k + "' is ignored (transform, inputs, params)"));
+            }
+        });
+        Map<String, Object> params = new LinkedHashMap<>();
+        if (n.path("params").isObject()) {
+            n.path("params").fields().forEachRemaining(e -> params.put(e.getKey(), scalar(e.getValue())));
+        }
+        return new Dataset.Derived(text(n, "transform", ""), inputs(n.path("inputs"), "derived.inputs", out), params);
+    }
+
+    /** The {@code columns:} of a derived dataset: name: type. */
+    private static Map<String, String> declaredColumns(JsonNode n, List<Problem> out) {
+        Map<String, String> cols = new LinkedHashMap<>();
+        if (n.isMissingNode() || n.isNull()) {
+            return cols;
+        }
+        if (!n.isObject()) {
+            out.add(error("columns", "columns is a mapping from a column name to its type: pnl: decimal"));
+            return cols;
+        }
+        n.fields().forEachRemaining(e -> cols.put(e.getKey(), e.getValue().isObject() ? e.getValue().path("type").asText("string") : e.getValue().asText()));
+        return cols;
     }
 
     // ---- live tables -------------------------------------------------------------------------------------------------

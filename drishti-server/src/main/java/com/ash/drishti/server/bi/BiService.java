@@ -567,6 +567,17 @@ public final class BiService {
         return all.stream().filter(i -> "dataset".equals(i.kind())).toList();
     }
 
+    /** The dataset item a source of a composed dataset names (catalogue id, file name, the dataset's name or title): published before draft; empty when there is none. */
+    public java.util.Optional<BiStore.Item> datasetNamed(String ref) {
+        return impact.datasetNamed(ref);
+    }
+
+    /** The text a composed or derived dataset's source is read from: what is published, else (never published) the draft. */
+    public String sourceBody(BiStore.Item i) {
+        String published = impact.publishedBody(i);
+        return published != null ? published : i.body();
+    }
+
     /** Every published Python item, whoever may read it (no caller): what a report's python visual resolves its item among. */
     public List<BiStore.Item> allPythons() {
         List<BiStore.Item> all = new ArrayList<>(store.published());
