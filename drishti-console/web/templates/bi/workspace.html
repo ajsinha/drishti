@@ -44,10 +44,13 @@
     <fieldset class="bi-pyrow" data-python-row hidden><legend>What does it make?</legend>
       <label>It makes<select name="pyinterface" class="studio-select"><option value="measure">a measure (one number per group)</option><option value="visual">a visual (a chart drawn by Python)</option><option value="transform">a table (a Transform, joins datasets)</option></select></label>
       <label>Columns it reads, or for a table the datasets it reads (comma separated)<input name="pyinputs" class="studio-in" autocomplete="off" value="value" aria-label="Columns or datasets it reads"></label></fieldset>
-    <label>Title<input name="title" class="studio-in" maxlength="200" autocomplete="off" placeholder="Left empty: a title with the kind and the time"></label>
+    <label data-paste-row hidden>Dataset YAML (for experts)<textarea name="yamlbody" class="studio-in mono" rows="10" spellcheck="false" placeholder="rachana: 1&#10;dataset: my-dataset&#10;title: My dataset&#10;tables: ..."></textarea>
+      <small class="text-muted-d">The whole dataset document, as in the tutorials. It is saved as a draft: check it on its dataset page before you publish.</small></label>
+    <label data-title-row>Title<input name="title" class="studio-in" maxlength="200" autocomplete="off" placeholder="Left empty: a title with the kind and the time"></label>
     <label>Description<input name="description" class="studio-in" maxlength="2000" autocomplete="off"></label>
     <p class="text-muted-d" data-kind-hint></p>
     <button type="submit" class="btn-pill btn-accent" data-create data-new-dataset-wizard>Create item</button>
+    <button type="button" class="btn-pill btn-ghost" data-paste-dataset hidden><i class="bi bi-clipboard" aria-hidden="true"></i> <span data-paste-label>Paste YAML</span></button>
     <p class="text-muted-d">An item is a YAML body that is stored, versioned and published; open a dataset to query it, a report or a board to see it drawn. A notebook opens in Analyse.</p>
   </form>
 </section>

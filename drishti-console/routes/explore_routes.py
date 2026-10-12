@@ -277,7 +277,7 @@ async def _slice_report(request: Request, body: dict, name: str) -> dict:
         raise ExploreError("DRS-9070", 422, "the " + ("SQL" if vid == "sql" else "slice") + " has no fields or measures to build a visual from")
     target = str(body.get("target") or "")
     if not target:
-        slug = re.sub(r"[^A-Za-z0-9_-]", "-", name).strip("-")[:48] or "from-analyse"
+        slug = re.sub(r"-{2,}", "-", re.sub(r"[^a-z0-9_-]", "-", name.lower())).strip("-")[:48].strip("-") or "from-analyse"          # a readable id: "trades-the-basics-sql"
         report = {"rachana": 1, "report": slug, "version": 1, "title": name, "description": "Started from an Analyse " + ("SQL cell." if vid == "sql" else "slice."),
                   "dataset": model.get("name") or dataset, "pages": [{"id": vid, "title": "Slice" if vid == "slice" else "SQL", "visuals": [visual]}]}
         return {"kind": "report", "title": name, "yaml": yaml.safe_dump(report, sort_keys=False, default_flow_style=None, width=200), "notes": notes, "target": None}

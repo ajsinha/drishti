@@ -293,6 +293,9 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.packs = Packs(settings, console_dir)
     app.state.docs_dir = docs_dir if docs_dir.is_absolute() else (console_dir / docs_dir).resolve()
+    from core.guides import tutorial_count_word
+
+    templates.env.globals["TUTORIALS_WORD"] = tutorial_count_word(app.state.docs_dir)       # "Eighteen": the Tutorials card counts the written tutorials, it is never typed
     app.state.libraries = {}
     from core.examples import Examples
 

@@ -54,6 +54,7 @@
         q('[data-no-drafts]').hidden = list.children.length > 0;
       }).catch((e) => say(e.message, true));
     B.fillDatasetPickers(q('[data-new-dataset]'), q('[data-new-also]'), want).then((ds) => {
+      B.excludeMain(q('[data-new-dataset]'), q('[data-new-also]'))();
       q('[data-no-datasets]').hidden = ds.some((d) => !B.datasetWhy(d));
     }).catch((e) => say(e.message, true));
     B.api('GET', '/workspaces').then((all) => {
@@ -61,12 +62,13 @@
       return shipped ? B.api('GET', '/workspaces/' + encodeURIComponent(shipped.id) + '/items') : [];
     }).then((items) => {
       const box = q('[data-samples]');
-      items.filter((i) => i.kind === 'report').forEach((i) => {
+      items.filter((i) => i.kind === 'report' || i.kind === 'board').forEach((i) => {
+        const board = i.kind === 'board', open = board ? '/bi/design/board/' : '/bi/design/';
         const copy = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-sample-copy': i.id, 'aria-label': 'Copy and design ' + i.title, text: 'Copy and design' });
         copy.addEventListener('click', () => B.askWorkspace(copy, 'Copy and open', 'Copy ' + i.title + ' into').then((to) => B.api('GET', '/items/' + B.id2path(i.id)).then((full) =>
-          B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'report', title: i.title, description: i.description || '', body: B.copyBody(full.body) })))
-          .then((it) => { window.location.href = '/bi/design/' + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } }));
-        box.appendChild(h('li', { 'data-sample': i.id }, h('a', { href: '/bi/r/' + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: i.description || '' }), ' ', copy));
+          B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: i.kind, title: i.title, description: i.description || '', body: B.copyBody(full.body) })))
+          .then((it) => { window.location.href = open + B.id2path(it.id); }).catch((e) => { if (!e.cancelled) { say(e.message, true); } }));
+        box.appendChild(h('li', { 'data-sample': i.id }, h('a', { href: (board ? '/bi/b/' : '/bi/r/') + B.id2path(i.id), text: i.title }), ' ', h('span', { class: 'text-muted-d', text: (board ? 'Board. ' : '') + (i.description || '') }), ' ', copy));
       });
       q('[data-no-samples]').hidden = box.children.length > 0;
     }).catch(() => { q('[data-no-samples]').hidden = false; });
@@ -453,9 +455,9 @@
       updateButtons();
       const pub = it.workspaceReviewRequired;
       const word = 'Saved. It is a draft until you ' + (pub ? 'propose it for review' : 'publish it') + ' (the Publish button).';
-      say(word);
+      say('');                                                    // one message, beside the button
       B.near(btn, word, false);
-    })).catch((e) => { if (!e.cancelled) { say(e.message, true); B.near(btn, e.message, true); } });
+    })).catch((e) => { if (!e.cancelled) { say(''); B.near(btn, e.message, true); } });
   }
 
   function saveCopy(fromStale) {
@@ -468,6 +470,7 @@
   /** Publish...: saves first (asking when there are unsaved changes), then proposes for review where the workspace requires it, else publishes. Draft errors are named, and a bi-admin may force. */
   function publishNow() {
     const btn = q('[data-publish]');
+    if (D.item && D.item.personal && !D.item.shipped) { B.near(btn, 'This report is in your private workspace, which cannot publish. Move it to a shared workspace (Move on its item page), then publish it there.', true); return Promise.resolve(); }
     const go = () => {
       const review = D.item && D.item.workspaceReviewRequired;
       const verb = review ? 'propose' : 'publish';
@@ -519,8 +522,9 @@
     D.preview = true;
     document.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && k === 's') { e.preventDefault(); save(); return; }           // saves from anywhere, the YAML editor too, and never opens the browser's own Save dialog
       if ((e.ctrlKey || e.metaKey) && !e.target.closest('input,textarea,select,.CodeMirror')) {
-        if (k === 'z' && !e.shiftKey) { e.preventDefault(); D.undo(); } else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); D.redo(); } else if (k === 's') { e.preventDefault(); save(); }
+        if (k === 'z' && !e.shiftKey) { e.preventDefault(); D.undo(); } else if (k === 'y' || (k === 'z' && e.shiftKey)) { e.preventDefault(); D.redo(); }
       }
     });
     window.addEventListener('beforeunload', (e) => { if (D.dirty) { e.preventDefault(); e.returnValue = ''; } });
@@ -569,7 +573,7 @@
     q('[data-save-copy]').hidden = !D.readOnly;
     q('[data-dmain]').classList.toggle('bi-ro', D.readOnly);                       // the palette, the fields and the visuals' delete look switched off, as they are
     q('[data-publish-label]').textContent = item.workspaceReviewRequired ? 'Propose' : 'Publish';
-    q('[data-publish]').hidden = D.readOnly || !(item.can && (item.can.publish || item.can.propose));
+    q('[data-publish]').hidden = D.readOnly || !(item.can && (item.can.publish || item.can.propose || (item.personal && item.can.edit)));       // a private workspace shows Publish too: pressing it explains what to do
     const ro = q('[data-readonly]');
     if (D.readOnly) {
       ro.hidden = false;

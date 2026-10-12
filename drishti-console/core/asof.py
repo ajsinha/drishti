@@ -19,6 +19,7 @@ parameters). "live" means the current business date, streaming; any picked date 
 from __future__ import annotations
 
 import contextvars
+import logging
 import re
 import time
 from core.servers import scoped
@@ -142,8 +143,11 @@ class BusinessDates:
         try:
             data = await backend.business_date(ident)
         except Exception as e:  # noqa: BLE001 - the picker degrades to a plain date box; pages still render
+            if ident is not None:
+                logging.getLogger("uvicorn.error").warning("business date unavailable: %s", e)
             data = {"current": None, "selected": None if selected == "live" else selected, "live": selected == "live",
                     "holidays": [], "earliest": None, "calendar": "", "error": True,
                     "refused": selected != "live" and is_refusal(e)}   # the date itself: the page falls back to live
+            return data                      # a failure is never kept: the sign-in page (no identity yet) must not leave every page's date box empty for the next minute
         self._cache[scoped(selected)] = (time.monotonic(), data)
         return data

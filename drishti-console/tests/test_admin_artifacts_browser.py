@@ -169,8 +169,7 @@ def test_a_wrongly_typed_name_deletes_nothing_and_the_right_one_does(stack, brow
     typed = page.locator("[data-typed-dialog]")
     expect(typed).to_be_visible()
     typed.locator("[data-typed-input]").fill("lab-spar")
-    typed.locator("[data-typed-yes]").click()
-    expect(typed.locator("[data-typed-msg]")).to_contain_text("does not match")
+    expect(typed.locator("[data-typed-yes]")).to_be_disabled()                               # until the exact name is typed
     assert list((stack.work / "data" / "uninstalled").glob("*-bi-lab-spare"))                # still there
     typed.locator("[data-typed-input]").fill("lab-spare")
     typed.locator("[data-typed-yes]").click()

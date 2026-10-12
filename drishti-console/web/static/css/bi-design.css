@@ -24,6 +24,7 @@
 .bi-dtitle h1::before, .bi-dtitle h1::after { content: none; }
 .bi-dback { color: var(--d-muted); padding: .3rem; border-radius: 6px; }
 .bi-dactions { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.bi-dactions .bi-viewas { width: auto; flex: 0 0 auto; max-width: 13rem; }
 .bi-preview-toggle { margin: 0 .4rem; }
 .bi-checkpanel { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .9rem; background: var(--d-surface); }
 .bi-checkpanel h2 { font-size: 1rem; margin: 0 0 .3rem; }

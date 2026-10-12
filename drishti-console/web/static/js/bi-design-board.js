@@ -157,7 +157,7 @@
 
   function showProblems(list, problems) {
     B.clear(list);
-    problems.forEach((p) => list.appendChild(h('li', { class: 'bi-problem bi-problem-' + (p.level === 'error' ? 'error' : 'warning') },
+    problems.forEach((p) => list.appendChild(h('li', Object.assign({ class: 'bi-problem bi-problem-' + (p.level === 'error' ? 'error' : 'warning') }, p.draft ? { 'data-draft-warning': '' } : {}),
       h('strong', { text: (p.level || 'error').toUpperCase() + ' ' }), (p.path ? p.path + ': ' : '') + p.message)));
     list.hidden = !problems.length;
   }
@@ -235,7 +235,9 @@
     });
     q('[data-board-empty]').hidden = p.tiles.length > 0;
     renderTileForm();
-    q('[data-problem-count]').textContent = S.problems.filter((x) => x.level === 'error').length || '';
+    const badge = q('[data-problem-count]'), nProblems = allProblems().length;
+    badge.textContent = nProblems || '';
+    badge.hidden = !nProblems;
     updateButtons();
   }
 
@@ -452,21 +454,25 @@
   // ---- toolbar -----------------------------------------------------------------------------------------------------------------------
   q('[data-undo]').addEventListener('click', () => stepHistory(undo, redo, 'Undone'));
   q('[data-redo]').addEventListener('click', () => stepHistory(redo, undo, 'Redone'));
+  /** The server's problems and the draft-report warnings the page adds: the one list the Check panel, its summary and the badge all count. */
+  function allProblems() {
+    const out = S.problems.slice();
+    S.model.pages.forEach((pg) => pg.tiles.forEach((t) => {
+      const r = S.resolved[pg.id + '/' + t.id] || {};
+      if (r.report && drafts.has(r.report)) { out.push({ level: 'warning', path: '', draft: true, message: 'Page ' + (pg.title || pg.id) + ', tile ' + (t.title || t.visual) + ': the report \'' + r.reportTitle + '\' is a draft, so this board cannot be published until that report is.' }); }
+    }));
+    return out;
+  }
   q('[data-check]').addEventListener('click', () => flush().then(() => {
     const box = q('[data-check-box]');
     box.hidden = false;
-    showProblems(q('[data-check-list]'), S.problems);
-    const errors = S.problems.filter((p) => p.level === 'error').length;
-    const empty = S.model.pages.every((pg) => !pg.tiles.length) && S.problems.every((p) => /no tiles yet/.test(p.message || ''));
-    q('[data-check-sum]').textContent = empty ? 'This board has no tiles yet: add a tile. Choose a report and one of its visuals on the right, then press Add tile.' : S.problems.length ? errors + ' error' + (errors === 1 ? '' : 's') + ', ' + (S.problems.length - errors) + ' warning' + (S.problems.length - errors === 1 ? '' : 's') + '.' : 'No problems: every tile names a report and visual you can open.';
-    const draftTiles = [];
-    S.model.pages.forEach((pg) => pg.tiles.forEach((t) => { const r = (S.resolved[pg.id + '/' + t.id] || {}); if (r.report && drafts.has(r.report)) { draftTiles.push(pg.title || pg.id, t.title || t.visual, r.reportTitle); } }));
-    for (let k = 0; k < draftTiles.length; k += 3) {
-      q('[data-check-list]').appendChild(h('li', { class: 'bi-problem bi-problem-warning', 'data-draft-warning': '' }, h('strong', { text: 'WARNING ' }), 'Page ' + draftTiles[k] + ', tile ' + draftTiles[k + 1] + ': the report \'' + draftTiles[k + 2] + '\' is a draft, so this board cannot be published until that report is.'));
-      q('[data-check-list]').hidden = false;
-    }
+    const all = allProblems();
+    showProblems(q('[data-check-list]'), all);
+    const errors = all.filter((p) => p.level === 'error').length, warnings = all.length - errors;
+    const empty = S.model.pages.every((pg) => !pg.tiles.length) && all.every((p) => /no tiles yet/.test(p.message || ''));
+    q('[data-check-sum]').textContent = empty ? 'This board has no tiles yet: add a tile. Choose a report and one of its visuals on the right, then press Add tile.' : all.length ? errors + ' error' + (errors === 1 ? '' : 's') + ', ' + warnings + ' warning' + (warnings === 1 ? '' : 's') + '.' : 'No problems: every tile names a report and visual you can open.';
     q('[data-check-sum]').focus();
-    near(q('[data-check]'), (empty ? 'No tiles yet: add a tile.' : errors ? errors + ' error' + (errors === 1 ? '' : 's') : 'Checked: no errors.'), errors > 0 || empty);
+    near(q('[data-check]'), (empty ? 'No tiles yet: add a tile.' : errors ? errors + ' error' + (errors === 1 ? '' : 's') : warnings ? 'No errors, ' + warnings + ' warning' + (warnings === 1 ? '' : 's') : 'Checked: no errors.'), errors > 0 || empty);
   }).catch((e) => near(q('[data-check]'), e.message, true)));
   q('[data-check-close]').addEventListener('click', () => { q('[data-check-box]').hidden = true; });
   function save() {
@@ -478,9 +484,9 @@
       S.etag = it.etag;
       render();
       const word = 'Saved as a draft at ' + new Date().toTimeString().slice(0, 8) + '. Publish it from its item page when it is ready.';
-      say(word);
+      say('');                                                    // one message, beside the button
       near(btn, word, false);
-    }).catch((e) => { if (!e.cancelled) { say(e.message, true); near(btn, e.message, true); } });
+    }).catch((e) => { if (!e.cancelled) { say(''); near(btn, e.message, true); } });
   }
   q('[data-save]').addEventListener('click', save);
   q('[data-save-copy]').addEventListener('click', () => B.askWorkspace(q('[data-save-copy]'), 'Save the copy', 'Save the copy into').then((to) => flush().then((yaml) => B.api('POST', '/workspaces/' + encodeURIComponent(to) + '/items', { kind: 'board', title: (S.model.title || 'Board') + ' (copy)', description: S.model.description || '', body: yaml })))
@@ -506,6 +512,9 @@
     q('[data-view-link]').href = viewHref();
     viewAs.addEventListener('change', () => { q('[data-view-link]').href = viewHref(); });
     q('[data-item-link]').href = '/bi/i/' + B.id2path(itemId);
+    if (item.personal && !item.shipped) {
+      q('[data-item-link]').addEventListener('click', (e) => { e.preventDefault(); near(q('[data-item-link]'), 'This board is in your private workspace, which cannot publish. Move it to a shared workspace (Move on its item page), then publish it there.', true); });
+    }
     (reps || []).forEach((i) => repSel.appendChild(h('option', { value: i.id, text: i.title + (i.draft ? ' (draft)' : ''), 'data-draft': i.draft ? '1' : '' })));
     (reps || []).forEach((i) => { if (i.draft) { drafts.add(i.id); } });
     q('[data-draft-note]').hidden = !drafts.size;

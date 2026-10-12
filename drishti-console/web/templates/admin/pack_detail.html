@@ -42,7 +42,7 @@
         {% if p.sutraProblems %}<div class="t-bad" data-sutra-problems><b>{{ p.sutraProblems | length }} Sutra problem{{ '' if p.sutraProblems | length == 1 else 's' }}</b> (the pack is {{ 'on' if p.enabled else 'off' }}, and the Sutra concerned is not in use):
           <ul class="det-list">{% for x in p.sutraProblems[:20] %}<li class="mono">{{ x }}</li>{% endfor %}{% if p.sutraProblems | length > 20 %}<li class="text-muted-d">and {{ p.sutraProblems | length - 20 }} more</li>{% endif %}</ul></div>{% endif %}
         {% if p.retry %}{{ retry_button('packs') }}{% endif %}</dd>
-      <dt>Changed</dt><dd class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} by {{ p.updatedBy }}{% else %}—{% endif %}</dd>
+      <dt>Changed</dt><dd class="mono">{% if p.updatedAt %}{{ when_local(p.updatedAt) }} by {{ p.updatedBy }}{% else %}—{% endif %}</dd>
       <dt>Builds on</dt><dd data-extends>{% for x in p.extends or [] %}<a class="mono" href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">nothing</span>{% endfor %}</dd>
       <dt>Needed by</dt><dd data-needed-by>{% for x in p.requiredBy or [] %}<a class="mono" href="/admin/packs/{{ x }}">{{ x }}</a>{{ ', ' if not loop.last }}{% else %}<span class="text-muted-d">no other pack</span>{% endfor %}</dd>
     </dl>
@@ -126,12 +126,12 @@
       <thead><tr><th scope="col">Kept version</th><th scope="col">Kept at</th><th scope="col"><span class="visually-hidden">Action</span></th></tr></thead>
       <tbody>{% for k in kept %}<tr data-pack="{{ p.name }}" data-version="{{ k.version }}">
         <td class="mono">{% if k.version == 'shipped' %}shipped with the server ({{ k.shippedVersion }}){% else %}{{ k.version }}{% endif %}</td>
-        <td class="mono">{{ (k.keptAt or '')[:16] | replace('T', ' ') or '—' }}</td>
+        <td class="mono">{{ when_local(k.keptAt) if k.keptAt else '—' }}</td>
         <td class="adm-actions"><button type="button" class="fk" data-rollback>Roll back to this</button></td></tr>{% endfor %}</tbody></table></div>{% endif %}
     <div class="tbl-wrap"><table class="tbl adm-tbl" data-history data-plain>
       <caption class="visually-hidden">Deployments and rollbacks of this pack</caption>
       <thead><tr><th scope="col">When (UTC)</th><th scope="col">What</th><th scope="col">Version</th><th scope="col">Replaced</th><th scope="col">By</th><th scope="col">Detail</th></tr></thead>
-      <tbody>{% for r in history %}<tr><td class="mono">{{ r.at[:19] | replace('T', ' ') }}</td><td>{{ r.action }}</td><td class="mono">{{ r.version }}</td>
+      <tbody>{% for r in history %}<tr><td class="mono">{{ when_local(r.at) }}</td><td>{{ r.action }}</td><td class="mono">{{ r.version }}</td>
         <td class="mono">{{ r.previous or '—' }}</td><td>{{ r.by }}</td><td class="cmp-path">{{ r.detail }}</td></tr>
       {% else %}<tr><td colspan="6" class="text-muted-d">Nothing has been deployed from the console for this pack.</td></tr>{% endfor %}</tbody></table></div>
   </section>

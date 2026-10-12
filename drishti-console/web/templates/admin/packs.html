@@ -69,14 +69,15 @@
             {% if p.problem %}<div class="t-bad" data-pack-problem>{{ p.problem }}</div>{{ retry_note(p.retry) }}{% endif %}
             {% if p.sutraProblems %}<div class="t-bad" data-sutra-problems title="{{ p.sutraProblems | join(' | ') }}"><a href="/admin/packs/{{ p.name }}#pdSummary">{{ p.sutraProblems | length }} Sutra problem{{ '' if p.sutraProblems | length == 1 else 's' }}</a>: {{ p.sutraProblems[0] }}</div>{% endif %}
 </td>
-        <td class="mono">{% if p.updatedAt %}{{ p.updatedAt[:16] | replace('T', ' ') }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
+        <td class="mono">{% if p.updatedAt %}{{ when_local(p.updatedAt) }} · {{ p.updatedBy }}{% else %}—{% endif %}</td>
         <td class="adm-actions">{% if p.loaded %}
           <button type="button" class="fk" data-switch="{{ 'off' if p.enabled else 'on' }}"
             {% if p.enabled and p.requiredBy %}disabled title="Needed by {{ p.requiredBy | join(', ') }}: switch those off first"{% endif %}>{{ 'Switch off' if p.enabled else 'Switch on' }}</button>
           {% if p.enabled and p.requiredBy %}<div class="text-muted-d pk-needed" data-needed-note>Needed by {{ p.requiredBy | join(', ') }}: switch those off first.</div>{% endif %}
           <button type="button" class="fk" data-datasource title="The connectors this pack reads through, and where to change them (Admin → Connectors)">Data source</button>
           <a class="fk" href="/admin/packs/{{ p.name }}/loads" title="Batches your ETL has announced, what is expected by when, and what is late">Data loads</a>
-          {% if p.added %}<button type="button" class="fk" data-load="unload" title="Loaded from this page: unload it now (no restart)">Unload</button>{% endif %}
+          {% if p.added %}<button type="button" class="fk" data-load="unload"{% if p.requiredBy %} disabled title="Needed by {{ p.requiredBy | join(', ') }}: unload those first"{% else %} title="Loaded from this page: unload it now (no restart)"{% endif %}>Unload</button>
+          {% if p.requiredBy %}<div class="text-muted-d pk-needed" data-unload-note>Needed by {{ p.requiredBy | join(', ') }}: unload those first.</div>{% endif %}{% endif %}
         {% else %}<button type="button" class="fk" data-load="load" title="Check the pack with the loaded ones, then load it now (no restart)">Load</button>{% endif %}
           <button type="button" class="fk emb-danger" data-uninstall data-kind="pack" data-name="{{ p.name }}" aria-label="Uninstall {{ p.name }}" title="See what depends on it, then move it to the archive (Restore is in Admin → Artifacts → Uninstalled)">Uninstall…</button></td>
       </tr>
@@ -115,7 +116,7 @@
     <tbody>{% for n, ks in kept.items() %}{% for k in ks %}
       <tr data-pack="{{ n }}" data-version="{{ k.version }}"><td class="mono">{{ n }}</td>
         <td class="mono">{% if k.version == 'shipped' %}shipped with the server ({{ k.shippedVersion }}){% else %}{{ k.version }}{% endif %}</td>
-        <td class="mono">{{ (k.keptAt or '')[:16] | replace('T', ' ') or '—' }}</td>
+        <td class="mono">{{ when_local(k.keptAt) if k.keptAt else '—' }}</td>
         <td class="adm-actions"><button type="button" class="fk" data-rollback>Roll back to this</button></td></tr>
     {% endfor %}{% endfor %}</tbody></table></div>
   {% endif %}
@@ -123,7 +124,7 @@
     <caption class="sr-only">Deployments and rollbacks</caption>
     <thead><tr><th>When (UTC)</th><th>What</th><th>Pack</th><th>Version</th><th>Replaced</th><th>By</th><th>Detail</th></tr></thead>
     <tbody>{% for r in history.history %}
-      <tr><td class="mono">{{ r.at[:19] | replace('T', ' ') }}</td><td>{{ r.action }}</td><td class="mono"><a href="/admin/packs/{{ r.pack | urlencode }}">{{ r.pack }}</a></td><td class="mono">{{ r.version }}</td>
+      <tr><td class="mono">{{ when_local(r.at) }}</td><td>{{ r.action }}</td><td class="mono"><a href="/admin/packs/{{ r.pack | urlencode }}">{{ r.pack }}</a></td><td class="mono">{{ r.version }}</td>
         <td class="mono">{{ r.previous or '—' }}</td><td>{{ r.by }}</td><td class="cmp-path">{{ r.detail }}</td></tr>
     {% else %}<tr><td colspan="7" class="text-muted-d">Nothing has been deployed from here yet.</td></tr>{% endfor %}</tbody></table></div>
 

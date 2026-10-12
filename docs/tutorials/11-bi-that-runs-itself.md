@@ -58,7 +58,7 @@ refresh: "business-days 06:30"      # a schedule (daily 06:00, hourly, cron ...)
 ```
 
 The words are the ones of a scheduled report ([tutorial 9](09-reports.md)): `daily 06:00`, `weekdays 07:00`, `business-days 06:30` (skips holidays of the server's calendar), `hourly`, `cron ...`, or `after-load`. A table can have its own: `tables.trade.refresh: { schedule: "0 */15 * * *" }`.
-Put the file in a workspace (**My workspace → New item**, kind *dataset*, paste it, **Save draft**; move it to `Economics desk`; **Publish**: [tutorial 10](10-first-bi-report.md) step 7). Open the dataset and scroll to **Refresh**.
+Put the file in a workspace (**My workspace → New item**, kind *dataset*, **Paste YAML** (the button next to *Open the dataset wizard*), paste it, **Create from the YAML**; move it to `Economics desk`; **Publish**: [tutorial 10](10-first-bi-report.md) step 7). Open the dataset and scroll to **Refresh**.
 
 ![The Refresh section: the dataset, schedule business-days 06:30, a status of waiting for the scheduler](img/t11/01-refresh.jpg)
 

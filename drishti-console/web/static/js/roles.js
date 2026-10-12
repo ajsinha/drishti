@@ -27,7 +27,7 @@
   // a row that changed under the administrator (the pack was unloaded, deleted or switched elsewhere): say so and show the current list
   function staleRow(body, msgNode) {
     var code = body && body.code;
-    if (code === 'DRS-5001' || code === 'DRS-1001') {
+    if ((code === 'DRS-5001' || code === 'DRS-1001') && !/needed by|extends|builds on/i.test(body.detail || '')) {       // a refusal that names the reason is the answer, not a stale row
       msgNode.textContent = drsMessage(body) + ' The list is out of date; refreshing it.';
       reloadSoon(1800);
       return true;

@@ -42,15 +42,21 @@
         target.value = cell.target || 'server';
         target.addEventListener('change', function () { cell.target = target.value; });
         bar.appendChild(target);
-        [['measure', 'Promote to a measure'], ['visual', 'Promote to a visual']].concat(X.extras.length ? [['transform', 'Promote to a Transform']] : []).forEach(function (p) {
+        [['measure', 'Promote to a measure'], ['visual', 'Promote to a visual'], ['transform', 'Promote to a Transform']].forEach(function (p) {
           var b = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote': p[0], text: p[1] });
-          b.addEventListener('click', function () { promote(cell, p[0]); });
+          if (p[0] === 'transform' && !X.extras.length) {                                          // a Transform joins extracts: it needs a second one
+            b.disabled = true; b.setAttribute('aria-describedby', 'bxNoTransform' + i);
+            bar.appendChild(b);
+            bar.appendChild(h('small', { class: 'text-muted-d', id: 'bxNoTransform' + i, 'data-no-transform': '', text: 'Add a second extract first (More extracts, above).' }));
+            return;
+          }
+          b.addEventListener('click', function () { promote(cell, p[0], b); });
           bar.appendChild(b);
         });
       }
       if (kind === 'sql') {
         var pb = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote-report': '' }, 'Promote to a report visual');
-        pb.addEventListener('click', function () { X.promoteReport({ sql: cell.source }, 'SQL'); });
+        pb.addEventListener('click', function () { X.promoteReport({ sql: cell.source }, 'SQL', pb); });
         bar.appendChild(pb);
       }
       var del = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'aria-label': 'Delete cell ' + (i + 1) }, B.icon('trash'));
@@ -101,11 +107,15 @@
     } else if (r.value !== undefined) { out.appendChild(h('pre', { class: 'bx-pre', 'data-value': '', text: typeof r.value === 'string' ? r.value : JSON.stringify(r.value, null, 1) })); }
   }
 
-  function promote(cell, to) {
+  function promote(cell, to, anchor) {
     var title = (q('input[name=title]', root).value || 'Analyse cell') + ' (' + to + ')';
-    X.post('/bi/explore/promote', { to: to, name: title, source: cell.source, extracts: X.extras, columns: X.ex ? X.ex.columns.map(function (c) { return c.name; }) : [] })
-      .then(function (d) { return X.createItem('python', d.title, d.yaml).then(function (it) { X.say('Python ' + to + ' draft saved in your workspace: ' + it.title + '. ' + d.notes.join(' ')); X.link(it); }); })
-      .catch(function (e) { X.say(e.message, true); });
+    var body = { to: to, name: title, source: cell.source, extracts: X.extras, columns: X.ex ? X.ex.columns.map(function (c) { return c.name; }) : [] };
+    X.promoteOnce(anchor, 'python:' + to + ':' + cell.source, function (existing) {
+      return X.post('/bi/explore/promote', body).then(function (d) {
+        var saved = existing ? B.api('PUT', '/items/' + B.id2path(existing), { body: d.yaml }) : X.createItem('python', d.title, d.yaml);
+        return saved.then(function (it) { return { item: it, text: 'Python ' + to + (existing ? ' draft updated: ' : ' draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ') }; });
+      });
+    });
   }
 
   function runAll(kind) {

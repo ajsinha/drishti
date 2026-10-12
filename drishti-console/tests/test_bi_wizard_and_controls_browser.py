@@ -188,7 +188,7 @@ def test_a_report_is_started_on_it_from_the_wizard_and_gets_a_relative_date_slic
     page.press('[data-bookmark-rename="0"]', "Tab")
     expect(page.locator('[data-bookmark="USD last week"]')).to_be_visible()
     page.click("[data-save]")
-    page.wait_for_function("() => /^Saved/.test(document.querySelector('[data-msg]').textContent)", timeout=20000)
+    page.wait_for_function("() => /^Saved/.test((document.querySelector('[data-save] + .bi-near') || {}).textContent || '')", timeout=20000)
     body = item(state["report"])["body"]
     assert "mode: relative-date" in body and "default: last-30-days" in body and "last-90-days" not in body.split("options:")[1].split("]")[0]
     assert "op: top" in body and "n: 3" in body and "USD last week" in body and "relative: last-7-days" in body
@@ -341,7 +341,7 @@ def test_two_tabs_on_one_draft_the_second_save_is_refused_and_offers_reload_copy
     b.click("[data-add-visual]")                                                                         # an explicit Add visual
     expect(b.locator("[data-canvas-grid] .bi-vis")).to_have_count(1)
     b.click("[data-save]")
-    b.wait_for_function("() => /^Saved/.test(document.querySelector('[data-msg]').textContent)", timeout=20000)
+    b.wait_for_function("() => /^Saved/.test((document.querySelector('[data-save] + .bi-near') || {}).textContent || '')", timeout=20000)
     a.click("[data-add-visual]")
     a.click("[data-save]")
     a.wait_for_selector("[data-stale-choice]", timeout=20000)                                            # 409 DRS-9007: saved elsewhere since you opened it
@@ -349,7 +349,7 @@ def test_two_tabs_on_one_draft_the_second_save_is_refused_and_offers_reload_copy
         assert a.locator(f"[{want}]").count() == 1, want
     assert "visuals: []" not in item(rid)["body"] and item(rid)["body"].count("type:") == 1               # nothing of tab A was written
     a.click("[data-stale-overwrite]")
-    a.wait_for_function("() => /^Saved/.test(document.querySelector('[data-msg]').textContent)", timeout=20000)
+    a.wait_for_function("() => /^Saved/.test((document.querySelector('[data-save] + .bi-near') || {}).textContent || '')", timeout=20000)
     assert item(rid)["body"].count("type:") == 1                                                          # A overwrote with its own single visual
     clean(a)
     a.context.close()

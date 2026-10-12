@@ -95,7 +95,8 @@ def test_slice_sql_and_python_agree_and_the_notebook_saves(stack, browser):
     page.fill('[data-cells=sql] textarea', "SELECT desk d, SUM(notional) n FROM extract GROUP BY desk")
     page.click('[data-cells=sql] [data-promote-report]')
     expect(page.locator("[data-promoted-link]")).to_be_visible(timeout=30000)
-    assert "not read" not in page.inner_text("[data-msg]") and "left out" not in page.inner_text("[data-msg]").replace("ORDER BY and LIMIT were left out", "")
+    said = page.inner_text('[data-cells=sql] [data-promote-report] + .bi-near')                     # the answer is beside the button
+    assert "not read" not in said and "left out" not in said.replace("ORDER BY and LIMIT were left out", "")
     page.fill('[data-cells=sql] textarea', "SELECT desk, SUM(notional) AS n FROM extract GROUP BY desk ORDER BY desk")
 
     # PYTHON on the server: pandas over df, quant through the stand-in engine

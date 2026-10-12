@@ -67,7 +67,9 @@
     });
   }
 
-  function loadModel(id) {
+  var NUMERIC = /^(int|integer|long|short|float|double|decimal|number|numeric|bigint)/i;
+  /** Loads the dataset's fields as the checklist. `ticked` (the qualified names a notebook was saved with) decides the ticks; else the first eight columns of a table and every numeric one (the measures: notional, mtm, pnl1d) are ticked. */
+  function loadModel(id, ticked) {
     X.model = null; clear(fieldsEl); fieldsBox.hidden = true; go.disabled = true;
     if (!id) { return Promise.resolve(); }
     return B.api('GET', '/datasets/' + B.id2path(id)).then(function (m) {
@@ -77,7 +79,8 @@
         if (!cols.length) { return; }
         fieldsEl.appendChild(h('div', { class: 'bx-table' }, h('strong', { text: t.name }), cols.map(function (c) {
           var q2 = t.name + '.' + c.name;
-          return h('label', { class: 'bx-check' }, h('input', { type: 'checkbox', name: 'f', value: q2, checked: !c.masked && cols.indexOf(c) < 8 }),
+          var on = ticked ? ticked.indexOf(q2) >= 0 : !c.masked && (cols.indexOf(c) < 8 || NUMERIC.test(c.type || ''));
+          return h('label', { class: 'bx-check' }, h('input', { type: 'checkbox', name: 'f', value: q2, checked: on }),
             ' ' + c.name + (c.masked ? ' (masked)' : ''));
         })));
       });
@@ -254,21 +257,58 @@
   X.qualified = function (name) { var i = X.ex.columns.findIndex(function (c) { return c.name === name; }); return X.qual[i] || name; };
   X.createItem = function (kind, title, body) { return B.api('POST', '/workspaces/me/items', { kind: kind, title: title, description: 'Started in Analyse.', body: body }); };
   var targetSel = q('[data-promote-target]', root), pageIn = q('[data-promote-page]', root);
+  X.promotedItems = {};                           // what was promoted already, by the cell or slice: promoting it again offers to update that draft
+
+  /** The answer beside the button that asked for it (one message, never also at the top), with a link to the draft. */
+  X.tell = function (anchor, text, bad, item) {
+    say('');
+    var box = B.near(anchor, text, bad);
+    if (box && item && !bad) { box.appendChild(document.createTextNode(' ')); box.appendChild(h('a', { class: 'lnk', href: '/bi/i/' + B.id2path(item.id), 'data-promoted-link': '', text: 'Open the draft' })); }
+  };
+  /** Runs `make(existingItemId | null)` (resolves with {item, text}). When `key` was promoted before, asks beside the button: update that draft, or save another. */
+  X.promoteOnce = function (anchor, key, make) {
+    var old = root.querySelector('[data-promote-again]');
+    if (old) { old.remove(); }
+    var run = function (existing) {
+      return make(existing).then(function (r) { if (r) { X.promotedItems[key] = r.item.id; X.tell(anchor, r.text, false, r.item); } }).catch(function (e) { X.tell(anchor, e.message, true); });
+    };
+    var prior = X.promotedItems[key];
+    if (!prior) { return run(null); }
+    var upd = h('button', { type: 'button', class: 'btn-pill btn-accent', 'data-promote-update': '', text: 'Update that draft' });
+    var other = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote-another': '', text: 'Save another' });
+    var no = h('button', { type: 'button', class: 'btn-pill btn-ghost', text: 'Cancel' });
+    var box = h('span', { class: 'bi-ask', 'data-promote-again': '', role: 'group', 'aria-label': 'Already promoted' }, 'This is already a draft in your workspace. ', upd, other, no);
+    anchor.after(box);
+    upd.addEventListener('click', function () { box.remove(); run(prior); });
+    other.addEventListener('click', function () { box.remove(); run(null); });
+    no.addEventListener('click', function () { box.remove(); });
+    return Promise.resolve();
+  };
+  /** The title of the open dataset in words (the model's), not its id. */
+  X.datasetTitle = function () { return (X.model && X.model.title) || (dsSel.selectedOptions[0] && dsSel.selectedOptions[0].textContent) || X.spec.dataset || 'data'; };
   /** A slice or a SQL cell (`extra`: {slice, filters} or {sql}) as a visual in a new report draft, or added to the report chosen above (its draft is saved with the new visual). */
-  X.promoteReport = function (extra, label) {
-    if (!X.spec || !X.ex) { say('Open an extract first.', true); return Promise.resolve(); }
-    var title = (q('input[name=title]', root).value || label + ' of ' + (X.spec.dataset || 'data')).slice(0, 80);
+  X.promoteReport = function (extra, label, anchor) {
+    if (!X.spec || !X.ex) { X.tell(anchor, 'Open an extract first.', true); return Promise.resolve(); }
+    var typed = q('input[name=title]', root).value;
+    var title = (typed || (label === 'SQL' ? X.datasetTitle() + ' SQL' : label + ' of ' + (X.spec.dataset || 'data'))).slice(0, 80);
     var target = targetSel.value;
     var body = Object.assign({ to: 'report', name: title, dataset: X.spec.dataset, columns: X.ex.columns.map(function (c) { return c.name; }), qualified: X.qual, target: target || undefined, page: pageIn.value.trim() || undefined }, extra);
-    return X.post('/bi/explore/promote', body).then(function (d) {
-      var saved = target ? B.api('PUT', '/items/' + B.id2path(target), { body: d.yaml }) : X.createItem('report', d.title, d.yaml);
-      return saved.then(function (it) { say((target ? 'Visual ' + d.visual + ' added to the report draft: ' : 'Report draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ')); link(it); var m = q('[data-msg]'); if (m) { m.appendChild(document.createTextNode(' ')); m.appendChild(h('a', { class: 'lnk', href: '/bi/i/' + B.id2path(it.id), 'data-promoted-link': '', text: 'Open the draft' })); } X.lastPromoted = { item: it.id, visual: d.visual || (extra.sql ? 'sql' : 'slice') }; });
-    }).catch(function (e) { say(e.message, true); });
+    var make = function (existing) {
+      return X.post('/bi/explore/promote', body).then(function (d) {
+        var saved = target ? B.api('PUT', '/items/' + B.id2path(target), { body: d.yaml }) : existing ? B.api('PUT', '/items/' + B.id2path(existing), { body: d.yaml }) : X.createItem('report', d.title, d.yaml);
+        return saved.then(function (it) {
+          X.lastPromoted = { item: it.id, visual: d.visual || (extra.sql ? 'sql' : 'slice') };
+          return { item: it, text: (target ? 'Visual ' + d.visual + ' added to the report draft: ' : existing ? 'Report draft updated: ' : 'Report draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ') };
+        });
+      });
+    };
+    return target ? make(null).then(function (r) { X.tell(anchor, r.text, false, r.item); }).catch(function (e) { X.tell(anchor, e.message, true); })
+      : X.promoteOnce(anchor, 'report:' + JSON.stringify([X.spec.dataset, extra]), make);
   };
-  q('[data-promote-slice]', root).addEventListener('click', function () {
+  q('[data-promote-slice]', root).addEventListener('click', function (ev) {
     var s = X.slice;
     X.promoteReport({ slice: { rows: s.rows, columns: s.columns, values: s.values.map(function (v) { return { field: v.field, agg: v.agg }; }) },
-      filters: s.filters.filter(function (f) { return f.value !== '' && f.value != null; }).map(function (f) { return { field: f.field, op: 'in', values: [f.value] }; }) }, 'Slice');
+      filters: s.filters.filter(function (f) { return f.value !== '' && f.value != null; }).map(function (f) { return { field: f.field, op: 'in', values: [f.value] }; }) }, 'Slice', ev.currentTarget);
   });
   B.api('GET', '/workspaces').then(function (list) {                                              // the report drafts you may edit: your workspace and the shared ones you contribute to
     var mine = list.filter(function (w) { return !w.shipped && (w.personal || ['contributor', 'member', 'owner', 'admin'].indexOf(w.role) >= 0); }).slice(0, 8);
@@ -311,7 +351,9 @@
     q('input[name=title]', root).value = nb.title || '';
     X.extras = (nb.extracts || []).map(function (e) { return { name: e.name, dataset: e.dataset, fields: e.fields }; });
     document.dispatchEvent(new CustomEvent('bx:extras'));
-    return X.open({ dataset: nb.dataset, fields: nb.fields });
+    if (!Array.prototype.some.call(dsSel.options, function (o) { return o.value === nb.dataset; })) { dsSel.appendChild(h('option', { value: nb.dataset, text: nb.dataset })); }
+    dsSel.value = nb.dataset;                                                                       // the Dataset select and its fields show what the notebook was saved with
+    return loadModel(nb.dataset, nb.fields).catch(function () {}).then(function () { return X.open({ dataset: nb.dataset, fields: nb.fields }); });
   };
 
   var notebookSel = q('[data-notebooks]', root);
@@ -325,7 +367,9 @@
       return X.post('/bi/explore/notebook/check', { yaml: it.body || '' }).then(function (c) {
         if (!c.valid) { throw new Error(c.problems.map(function (p) { return p.code + ' ' + p.message; }).join('; ')); }
         X.item = it;
-        return X.restore(c.notebook);
+        if (!Array.prototype.some.call(notebookSel.options, function (o) { return o.value === it.id; })) { notebookSel.appendChild(h('option', { value: it.id, text: it.title })); }   // a draft is not in the catalogue
+        notebookSel.value = it.id;
+        return X.restore(c.notebook).then(function (r) { q('input[name=title]', root).value = it.title; link(it); return r; });      // the item's title is the notebook's name
       });
     });
   }

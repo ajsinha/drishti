@@ -303,7 +303,7 @@
     var START = {
       report: { hint: 'A report draws one dataset: choose it, and the report opens in the designer.', go: 'Create and open in the designer' },
       board: { hint: 'A board is laid out in the board designer: it opens there.', go: 'Create and open in the board designer' },
-      dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace.', go: 'Open the dataset wizard', href: '/bi/datasets/new?workspace=' },
+      dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace. Or paste a dataset YAML document you already have.', go: 'Open the dataset wizard', href: '/bi/datasets/new?workspace=' },
       notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells); Analyse saves it here with Save as a notebook.', go: 'Go to Analyse', href: '/bi/explore' },
       python: { hint: 'Choose what the Python item makes. It is created with a valid, commented starter body and opens in its editor, ready to change and Check.', go: 'Create and open the editor' }
     };
@@ -313,11 +313,38 @@
       q('[data-python-row]').hidden = k !== 'python';
       q('[data-kind-hint]').textContent = s.hint;
       q('[data-create]').textContent = s.go;
+      pasting = false;
+      q('[data-paste-dataset]').hidden = k !== 'dataset';
+      q('[data-paste-label]').textContent = 'Paste YAML';
+      q('[data-paste-dataset]').classList.add('btn-ghost'); q('[data-paste-dataset]').classList.remove('btn-accent');
+      q('[data-create]').classList.add('btn-accent'); q('[data-create]').classList.remove('btn-ghost');
+      q('[data-paste-row]').hidden = true;
       f.elements.title.closest('label').hidden = !!s.href; f.elements.description.closest('label').hidden = !!s.href;
     }
+    /** A dataset can also be created from a YAML document pasted here (experts); the wizard stays the default. */
+    var pasting = false;
+    q('[data-paste-dataset]').addEventListener('click', function () {
+      var f = q('[data-new-item]'), go = q('[data-paste-dataset]');
+      if (!pasting) {
+        pasting = true;
+        q('[data-paste-row]').hidden = false; f.elements.title.closest('label').hidden = false; f.elements.description.closest('label').hidden = false;
+        q('[data-paste-label]').textContent = 'Create from the YAML';
+        go.classList.remove('btn-ghost'); go.classList.add('btn-accent'); q('[data-create]').classList.remove('btn-accent'); q('[data-create]').classList.add('btn-ghost');
+        f.elements.yamlbody.focus();
+        return;
+      }
+      var text = f.elements.yamlbody.value;
+      if (!text.trim()) { near(go, 'Paste the dataset YAML first.', true); f.elements.yamlbody.focus(); return; }
+      var inYaml = /^title:[ \t]*["']?(.+?)["']?[ \t]*$/m.exec(text), named = /^dataset:[ \t]*["']?(.+?)["']?[ \t]*$/m.exec(text);
+      var title = f.elements.title.value.trim() || (inYaml && inYaml[1]) || (named && named[1]) || defaultTitle('dataset');
+      busy(go, function () {
+        return api('POST', '/workspaces/' + encodeURIComponent(id) + '/items', { kind: 'dataset', title: title, description: f.elements.description.value, body: text })
+          .then(function (it) { window.location.href = '/bi/i/' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }).catch(function (err) { near(go, err.message, true); });
+      });
+    });
     q('[data-new-item]').elements.kind.addEventListener('change', kindChanged);
     kindChanged();
-    var fillPickers = function () { var B = window.drishtiBi; if (B && B.fillDatasetPickers) { B.fillDatasetPickers(q('[data-new-dataset]'), q('[data-new-also]')).catch(function () {}); } else { setTimeout(fillPickers, 50); } };
+    var fillPickers = function () { var B = window.drishtiBi; if (B && B.fillDatasetPickers) { B.fillDatasetPickers(q('[data-new-dataset]'), q('[data-new-also]')).then(function () { B.excludeMain(q('[data-new-dataset]'), q('[data-new-also]'))(); }).catch(function () {}); } else { setTimeout(fillPickers, 50); } };
     fillPickers();
     q('[data-new-item]').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -401,6 +428,13 @@
     function post(sub, body, done, anchor) {
       var box = q('[data-actions]'), at = anchor ? Array.prototype.indexOf.call(qa('.btn-pill', box), anchor) : -1;
       return api('POST', path + '/' + sub, body || {}).then(function (n) {
+        if (!n || !n.can) {                                                                 // decided by someone who may not read the item afterwards (a steward outside its audience)
+          return api('GET', path).then(function (full) { return full; }, function () { return null; }).then(function (full) {
+            if (full && full.can) { say(done || 'Done.'); show(full); return full; }
+            leftBehind(sub === 'approve' ? 'Approved and published. It is now visible to its audience; you are not in it.' : (done || 'Done.'));
+            return n;
+          });
+        }
         say(done || 'Done.'); show(n);
         var now = qa('.btn-pill', q('[data-actions]'));                              // the actions were drawn again: the message goes beside the button now in the same place
         if (now.length) { near(now[Math.max(0, Math.min(at < 0 ? 0 : at, now.length - 1))], done || 'Done.', false); }
@@ -424,11 +458,19 @@
     function actions() {
       var box = q('[data-actions]'), c = it.can; clear(box);
       note = h('input', { class: 'studio-in bi-note', type: 'text', placeholder: 'Note or reason (optional)', 'aria-label': 'Note or reason', maxlength: '500' });
+      var privateDraft = !!(it.personal && c.edit && c.move && !it.shipped && it.status !== 'published' && it.status !== 'proposed');
       var any = c.propose || c.publish || c.approve || c.withdraw;
       if (any) { box.appendChild(note); }
       if (it.kind === 'python') { box.appendChild(act('Check the Python', checkPython)); }
       if (c.edit && it.status !== 'proposed') { box.appendChild(act('Edit', function () { var f = q('[data-edit]'); f.hidden = !f.hidden; if (!f.hidden) { f.elements.title.focus(); } })); }
       if (c.propose) { box.appendChild(act('Propose for review', function (b) { post('propose', { note: note.value }, 'Proposed. A second person approves it.', b); })); }
+      if (privateDraft) {
+        var pub = act('Publish', function () {}, 'btn-accent');
+        pub.disabled = true; pub.setAttribute('aria-disabled', 'true'); pub.setAttribute('data-publish-private', '');
+        box.appendChild(pub);
+        box.appendChild(h('small', { class: 'bi-near', 'data-private-hint': '', text: 'Move it to a shared workspace to publish.' }));
+        if (c.move) { box.appendChild(act('Move\u2026', function (b) { moveTo(b); })); }
+      }
       if (c.publish) { box.appendChild(act('Publish', function (b) { post('publish', { note: note.value }, 'Published.', b); }, 'btn-accent')); }
       if (it.status === 'proposed') {
         box.appendChild(h('p', { class: 'bi-approvers', 'data-approvers': '' }, h('strong', { text: 'Waiting for review. ' }), 'Frozen until decided or withdrawn. Who can approve: ' + (it.approveRule || 'a reviewer') + (it.approvers && it.approvers.length ? '. Told by notification: ' + it.approvers.join(', ') : '. Nobody is eligible yet: ask a steward, or give a member of the workspace a role with the approve power') + '.'));
@@ -440,7 +482,7 @@
       }
       if (c.promote && it.endorsement !== 'certified') { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function (b) { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, it.endorsement === 'promoted' ? 'Promotion removed.' : 'Promoted: it is listed first for others.', b); })); }
       if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function (b) { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, it.endorsement === 'certified' ? 'Certification removed.' : 'Certified.', b); })); }
-      if (c.move) { box.appendChild(act('Move to workspace…', function (b) { moveTo(b); })); }
+      if (c.move && !privateDraft) { box.appendChild(act('Move to workspace…', function (b) { moveTo(b); })); }
       box.appendChild(act('Duplicate…', function (b) { duplicate(b); }));
       if (c.delete) {
         box.appendChild(act('Delete', function (b) {
@@ -514,7 +556,24 @@
     }
     document.addEventListener('bi:reload', function (ev) { if (ev.detail && ev.detail.id) { show(ev.detail); } else { api('GET', path).then(show).catch(fail); } });
     q('[data-favourite]').addEventListener('click', function () { api('PUT', path + '/favourite', { on: !it.favourite }).then(show).catch(fail); });
-    api('POST', path + '/open').then(show).catch(function (e) { say(e.message, true); q('[data-title]').textContent = 'Not found'; });
+    /** The decision went through but this reader cannot open the item any more: the message and a way back, nothing of the item. */
+    function leftBehind(text) {
+      Array.prototype.forEach.call(canvas.children, function (c) { if (!c.classList.contains('bi-head') && !c.hasAttribute('data-msg')) { c.hidden = true; } });
+      ['[data-desc]', '[data-meta]', '[data-badges]', '[data-favourite]'].forEach(function (x) { var n = q(x); if (n) { n.hidden = true; } });
+      q('[data-title]').textContent = 'Decision recorded';
+      say(text, false);
+      var m = q('[data-msg]');
+      if (m && !m.querySelector('[data-back-inbox]')) { m.appendChild(document.createTextNode(' ')); m.appendChild(h('a', { class: 'lnk', href: '/inbox', 'data-back-inbox': '', text: 'Back to the inbox' })); }
+    }
+    /** An item that is not there, or that this reader may not see, shows the not-found message and nothing else: no empty sections, no actions, nothing of its content. */
+    function notFound(e) {
+      var gone = !e || e.status === 404 || e.status === 403;
+      q('[data-title]').textContent = 'Not found';
+      Array.prototype.forEach.call(canvas.children, function (c) { if (!c.classList.contains('bi-head') && !c.hasAttribute('data-msg')) { c.hidden = true; } });
+      ['[data-desc]', '[data-meta]', '[data-badges]', '[data-favourite]'].forEach(function (s) { var n = q(s); if (n) { n.hidden = true; } });
+      say(gone ? 'This item does not exist, or you may not see it.' : e.message, true);
+    }
+    api('POST', path + '/open').then(show).catch(notFound);
   }
 
   // -- Admin: BI settings -----------------------------------------------------------------------------------------------

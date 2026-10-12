@@ -451,7 +451,7 @@ public final class PackReloader implements AutoCloseable {
             } else if (last != null) {
                 problems.put(name, describe(e) + " (the last good version keeps running)");
             } else {
-                problems.put(name, describe(e) + " (not loaded)");
+                problems.put(name, notLoaded(describe(e)));
                 path.removeLast();
                 return;
             }
@@ -466,6 +466,11 @@ public final class PackReloader implements AutoCloseable {
         }
         path.removeLast();
         read.put(name, p);
+    }
+
+    /** The problem with " (not loaded)" after it, unless it already says the pack is not loaded ("... which is not loaded"). */
+    private static String notLoaded(String problem) {
+        return problem.endsWith("not loaded") ? problem : problem + " (not loaded)";
     }
 
     private static String describe(Throwable e) {
@@ -531,13 +536,13 @@ public final class PackReloader implements AutoCloseable {
         for (String n : suspects.reversed()) {                       // the most specific first: a pack before the packs it extends
             List<Pack> without = revert(candidate, current, Set.of(n));
             if (problem(loader, without) == null) {
-                problems.put(n, error + (current.containsKey(n) ? " (the last good version keeps running)" : " (not loaded)"));
+                problems.put(n, (current.containsKey(n) ? error + " (the last good version keeps running)" : notLoaded(error)));
                 return without;
             }
         }
         List<Pack> all = revert(candidate, current, new LinkedHashSet<>(suspects));
         String again = problem(loader, all);
-        suspects.forEach(n -> problems.put(n, error + (current.containsKey(n) ? " (the last good version keeps running)" : " (not loaded)")));
+        suspects.forEach(n -> problems.put(n, (current.containsKey(n) ? error + " (the last good version keeps running)" : notLoaded(error))));
         if (again == null) {
             return all;
         }
