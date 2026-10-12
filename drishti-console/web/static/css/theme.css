@@ -13,6 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+
+/* The wordmark and the tagline (A: Cinzel and Playfair Display italic, both SIL Open Font Licence, vendored in
+   static/vendor/fonts with their licences; Latin only, about 38 KB). Everything else stays on the system fonts. */
+@font-face { font-family: "Drishti Wordmark"; font-style: normal; font-weight: 700; font-display: swap; src: url("/static/vendor/fonts/cinzel-700-latin.woff2") format("woff2"); }
+@font-face { font-family: "Drishti Tagline"; font-style: italic; font-weight: 500; font-display: swap; src: url("/static/vendor/fonts/playfair-display-500-italic-latin.woff2") format("woff2"); }
+.tbar-name > span, .brand > span, .ab-hero h1 { font-family: "Drishti Wordmark", Georgia, "Times New Roman", serif; font-weight: 700; }
+.tbar-name small, .about-tag { font-family: "Drishti Tagline", Georgia, "Times New Roman", serif; font-style: italic; font-weight: 500; }
+
 /* Drishti components and Bootstrap overrides. Uses tokens.css variables only. */
 html, body { background: var(--d-bg); color: var(--d-ink); font-family: var(--d-font-sans); }
 body { min-height: 100vh; display: flex; flex-direction: column; }

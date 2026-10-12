@@ -16,6 +16,7 @@
 # Changelog
 
 ## Unreleased
+- **Changed:** the wordmark is set in Cinzel and the tagline in Playfair Display italic (both SIL OFL, vendored in `static/vendor/fonts`, Latin, 38 KB), in the top bar, the public pages and the About hero; the tagline is larger and on two lines, white on the coloured bars, and the logo's eye is white there too.
 - **Changed:** the Crimson, Crimson dark, Blue and Green themes are Maya's and Sajha's (Sajha's Dark is Drishti's Crimson dark; Blue and Green take Sajha's palettes, the blue accent one step darker for text contrast): a solid navigation gradient (crimson-deep → crimson → indigo) with white text and icons in the top bar, and deep-crimson page headings.
 - **Changed:** the top bar's separate live dot is gone: the **Live** button carries this page's stream too (glowing while ticks arrive, an amber ring while it reconnects, steady without a stream; red while paused), and its tooltip says both.
 - **Changed:** **Forms** is an entry of the **Views** menu (the forms home, `/forms`), not a top-bar menu listing every pack (that list ran off the screen); Views is lit on any form page. A test checks that a top-bar menu stays open until the person closes it.
